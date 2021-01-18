@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "DeepNet.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "StimuliProvider.hpp"
 #include "Cell/Cell.hpp"
 #include "Cell/NormalizeCell.hpp"

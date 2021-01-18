@@ -21,7 +21,7 @@
 #ifndef N2D2_ENVIRONMENTGENERATOR_H
 #define N2D2_ENVIRONMENTGENERATOR_H
 
-#include "Environment.hpp"
+#include "Xnet/Environment.hpp"
 #include "Generator/StimuliProviderGenerator.hpp"
 #include "utils/IniParser.hpp"
 

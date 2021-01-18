@@ -19,11 +19,11 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 
-#include "NodeNeuron.hpp"
-#include "SpikeEvent.hpp"
-#include "Xcell.hpp"
+#include "Xnet/NodeNeuron.hpp"
+#include "Xnet/SpikeEvent.hpp"
+#include "Xnet/Xcell.hpp"
 
 namespace N2D2 {
 const Time_T TimeFs = 1;

@@ -90,8 +90,10 @@ void N2D2::CPP_DeepNetExport::generate(DeepNet& deepNet,
 
     DeepNetExport::generateCells(deepNet, dirName, "CPP");
 
-    generateNetworkPropagateFile(deepNet, dirName + "/src/NetworkPropagate.cpp", 
-                                 memManager, memoryAlignment);
+    generateMemoryInfoHeader(deepNet, dirName + "/dnn/include/mem_info.hpp", 
+                             memManager, memoryAlignment);
+    generateNetworkPropagateFile(deepNet,
+                                 dirName + "/src/NetworkPropagate.cpp");
     printStats(deepNet, memManager);
 }
 
@@ -628,21 +630,30 @@ void N2D2::CPP_DeepNetExport::generateProgramUtils(std::ofstream& prog)
 
 }
 
-void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
-    const DeepNet& deepNet, 
-    const std::string& filePath, 
+void N2D2::CPP_DeepNetExport::generateMemoryInfoHeader(
+    const DeepNet& deepNet,
+    const std::string& fileName, 
     const MemoryManager& memManager,
-    int memoryAlignment) 
+    int memoryAlignment)
 {
-    std::stringstream includes;
-    std::stringstream buffers;
-    std::stringstream functionCalls;
+    std::ofstream memInfo(fileName.c_str());
 
-    // Fill in includes, buffers and functionCalls for each layer
-    buffers << "#define MEMORY_SIZE " << memManager.getPeakUsage() << "\n"
-        "#define MEMORY_ALIGNMENT " << memoryAlignment << "\n"
-        "static DATA_T mem[MEMORY_SIZE]"
-        " __attribute__((section(\".nn_memory\")));\n";
+    if (!memInfo.good())
+        throw std::runtime_error("Could not create CPP header file: " + fileName);
+
+    // Append date & time to the file.
+    const time_t now = std::time(0);
+    tm* localNow = std::localtime(&now);
+
+    memInfo << "// N2D2 auto-generated file.\n"
+                 "// @ " << std::asctime(localNow)
+              << "\n"; // std::asctime() already appends end of line
+
+    memInfo << "#ifndef N2D2_EXPORTCPP_MEM_INFO_H\n"
+               "#define N2D2_EXPORTCPP_MEM_INFO_H\n\n";
+
+    memInfo << "#define MEMORY_SIZE " << memManager.getPeakUsage() << "\n"
+        "#define MEMORY_ALIGNMENT " << memoryAlignment << "\n";
 
     // env
     const std::vector<N2D2::MemoryManager::MemoryPlane>& envMemPlanes
@@ -652,49 +663,31 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
         assert(envMemPlanes.size() == 1);
         const N2D2::MemoryManager::MemoryPlane& memPlane = envMemPlanes.back();
 
-        buffers << "#define ENV_MEM_SIZE " << memPlane.size <<"\n";
-        buffers << "#define ENV_MEM_STRIDE " << memPlane.stride <<"\n";
-        buffers << "#define ENV_MEM_LENGTH " << memPlane.length <<"\n";
-        buffers << "#define ENV_MEM_COUNT " << memPlane.count <<"\n";
+        memInfo << "#define ENV_MEM_SIZE " << memPlane.size <<"\n";
+        memInfo << "#define ENV_MEM_STRIDE " << memPlane.stride <<"\n";
+        memInfo << "#define ENV_MEM_LENGTH " << memPlane.length <<"\n";
+        memInfo << "#define ENV_MEM_COUNT " << memPlane.count <<"\n";
 
-        buffers << "#define ENV_MEM_CONT_OFFSET "
+        memInfo << "#define ENV_MEM_CONT_OFFSET "
             << memPlane.getContiguousOffset() <<"\n";
-        buffers << "#define ENV_MEM_CONT_SIZE "
+        memInfo << "#define ENV_MEM_CONT_SIZE "
             << memPlane.getContiguousSize() <<"\n";
-        buffers << "#define ENV_MEM_WRAP_OFFSET "
+        memInfo << "#define ENV_MEM_WRAP_OFFSET "
             << memPlane.getWrappedOffset() <<"\n";
-        buffers << "#define ENV_MEM_WRAP_SIZE "
+        memInfo << "#define ENV_MEM_WRAP_SIZE "
             << memPlane.getWrappedSize() <<"\n";
     }
     else {
-        buffers << "#define ENV_MEM_SIZE ENV_NB_OUTPUTS\n";
-        buffers << "#define ENV_MEM_STRIDE ENV_NB_OUTPUTS\n";
-        buffers << "#define ENV_MEM_LENGTH ENV_SIZE_X\n";
-        buffers << "#define ENV_MEM_COUNT ENV_SIZE_Y\n";
+        memInfo << "#define ENV_MEM_SIZE ENV_NB_OUTPUTS\n";
+        memInfo << "#define ENV_MEM_STRIDE ENV_NB_OUTPUTS\n";
+        memInfo << "#define ENV_MEM_LENGTH ENV_SIZE_X\n";
+        memInfo << "#define ENV_MEM_COUNT ENV_SIZE_Y\n";
 
-        buffers << "#define ENV_MEM_CONT_OFFSET 0\n";
-        buffers << "#define ENV_MEM_CONT_SIZE ENV_MEM_SIZE\n";
-        buffers << "#define ENV_MEM_WRAP_OFFSET 0\n";
-        buffers << "#define ENV_MEM_WRAP_SIZE 0\n";
+        memInfo << "#define ENV_MEM_CONT_OFFSET 0\n";
+        memInfo << "#define ENV_MEM_CONT_SIZE ENV_MEM_SIZE\n";
+        memInfo << "#define ENV_MEM_WRAP_OFFSET 0\n";
+        memInfo << "#define ENV_MEM_WRAP_SIZE 0\n";
     }
-
-    functionCalls << "#ifdef SAVE_OUTPUTS\n"
-                << "    std::ofstream env_stream(\"env_output.txt\");\n"
-                << "    saveOutputs("
-                << "ENV_NB_OUTPUTS, "
-                << "ENV_SIZE_Y, " 
-                << "ENV_SIZE_X, "
-                << "ENV_MEM_CONT_OFFSET, "
-                << "ENV_MEM_CONT_SIZE, "
-                << "ENV_MEM_WRAP_OFFSET, "
-                << "ENV_MEM_WRAP_SIZE, "
-                << "ENV_MEM_STRIDE, "
-                << "inputs, "
-                << "env_stream, "
-                << "Network::Format::CHW"
-                << ");\n"
-                << "    env_stream.close();\n"
-                << "#endif\n";
 
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
 
@@ -717,6 +710,76 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                 = N2D2::Utils::CIdentifier(cell->getName());
             const std::string prefix = Utils::upperCase(identifier);
 
+            memInfo << "#define " << prefix << "_MEM_SIZE "
+                << memPlane.size <<"\n";
+            memInfo << "#define " << prefix << "_MEM_STRIDE "
+                << memPlane.stride <<"\n";
+            memInfo << "#define " << prefix << "_MEM_LENGTH "
+                << memPlane.length <<"\n";
+            memInfo << "#define " << prefix << "_MEM_COUNT "
+                << memPlane.count <<"\n";
+
+            memInfo << "#define " << prefix << "_MEM_CONT_OFFSET "
+                << memPlane.getContiguousOffset() <<"\n";
+            memInfo << "#define " << prefix << "_MEM_CONT_SIZE "
+                << memPlane.getContiguousSize() <<"\n";
+            memInfo << "#define " << prefix << "_MEM_WRAP_OFFSET "
+                << memPlane.getWrappedOffset() <<"\n";
+            memInfo << "#define " << prefix << "_MEM_WRAP_SIZE "
+                << memPlane.getWrappedSize() <<"\n";
+        }
+    }
+
+    memInfo << "\n"
+              "#endif" << std::endl;
+    memInfo.close();
+}
+
+void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
+    const DeepNet& deepNet, 
+    const std::string& filePath) 
+{
+    std::stringstream includes;
+    std::stringstream buffers;
+    std::stringstream functionCalls;
+
+    // Fill in includes, buffers and functionCalls for each layer
+    buffers << "static DATA_T mem[MEMORY_SIZE]"
+        " N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_MEMORY);\n";
+
+    functionCalls << "#ifdef SAVE_OUTPUTS\n"
+                << "    FILE* env_stream = fopen(\"env_output.txt\", \"w\");\n"
+                << "    saveOutputs("
+                << "ENV_NB_OUTPUTS, "
+                << "ENV_SIZE_Y, " 
+                << "ENV_SIZE_X, "
+                << "ENV_MEM_CONT_OFFSET, "
+                << "ENV_MEM_CONT_SIZE, "
+                << "ENV_MEM_WRAP_OFFSET, "
+                << "ENV_MEM_WRAP_SIZE, "
+                << "ENV_MEM_STRIDE, "
+                << "inputs, "
+                << "env_stream, "
+                << "Network::Format::CHW"
+                << ");\n"
+                << "    fclose(env_stream);\n"
+                << "#endif\n";
+
+    const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
+
+    for (std::vector<std::vector<std::string> >::const_iterator itLayer
+        = layers.begin() + 1,
+        itLayerEnd = layers.end(); itLayer != itLayerEnd; ++itLayer)
+    {
+        for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
+            itEnd = (*itLayer).end();
+            it != itEnd; ++it)
+        {
+            const std::shared_ptr<Cell> cell = deepNet.getCell(*it);
+            const std::string identifier
+                = N2D2::Utils::CIdentifier(cell->getName());
+            const std::string prefix = Utils::upperCase(identifier);
+
             std::string dataType = DeepNetExport::isCellOutputUnsigned(*cell)
                 ? "UDATA_T" : "DATA_T";
 
@@ -725,31 +788,11 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                     ? "UDATA_T" : "DATA_T";
             }
 
-            // buffers
-            buffers << "#define " << prefix << "_MEM_SIZE "
-                << memPlane.size <<"\n";
-            buffers << "#define " << prefix << "_MEM_STRIDE "
-                << memPlane.stride <<"\n";
-            buffers << "#define " << prefix << "_MEM_LENGTH "
-                << memPlane.length <<"\n";
-            buffers << "#define " << prefix << "_MEM_COUNT "
-                << memPlane.count <<"\n";
-
-            buffers << "#define " << prefix << "_MEM_CONT_OFFSET "
-                << memPlane.getContiguousOffset() <<"\n";
-            buffers << "#define " << prefix << "_MEM_CONT_SIZE "
-                << memPlane.getContiguousSize() <<"\n";
-            buffers << "#define " << prefix << "_MEM_WRAP_OFFSET "
-                << memPlane.getWrappedOffset() <<"\n";
-            buffers << "#define " << prefix << "_MEM_WRAP_SIZE "
-                << memPlane.getWrappedSize() <<"\n";
-
-            buffers << dataType << "* " << identifier << "_output = "
-                << "(" << dataType << "*) mem + " 
-                << prefix << "_MEM_CONT_OFFSET" <<";\n";
-
             // functionCalls
             functionCalls << "    // " << cell->getName() << "\n";
+            functionCalls << "    " << dataType << "* " << identifier
+                << "_output = " << "(" << dataType << "*) mem + " 
+                << prefix << "_MEM_CONT_OFFSET" <<";\n\n";
 
             CPP_CellExport::getInstance(*cell)->generateCallCode(deepNet, *cell, 
                 includes, buffers, functionCalls);
@@ -778,7 +821,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
             << ");\n\n";
 
     functionCalls << "#ifdef SAVE_OUTPUTS\n"
-                << "    std::ofstream max_stream(\"max_output.txt\");\n"
+                << "    FILE* max_stream = fopen(\"max_output.txt\", \"w\");\n"
                 << "    saveOutputs("
                 << lastCellPrefix << "_NB_OUTPUTS, "
                 << lastCellPrefix << "_OUTPUTS_HEIGHT, " 
@@ -788,11 +831,11 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                 << lastCellPrefix << "_MEM_WRAP_OFFSET, "
                 << lastCellPrefix << "_MEM_WRAP_SIZE, "
                 << lastCellPrefix << "_MEM_STRIDE, "
-                << lastCellIdentifier << "_output, "
+                << "outputs, "
                 << "max_stream, "
                 << "Network::Format::CHW"
                 << ");\n"
-                << "    max_stream.close();\n"
+                << "    fclose(max_stream);\n"
                 << "#endif\n";
 
     // Write source file with includes, buffers and functionCalls
@@ -801,7 +844,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
     networkPropagateFile << "#include \"Network.hpp\"\n"
                          << "#include \"Scaling.hpp\"\n"
                          << "#include \"env.hpp\"\n"
-                         << "#include <fstream>\n"
+                         << "#include \"mem_info.hpp\"\n"
                          << "\n"
                          << includes.str()
                          << "\n\n";

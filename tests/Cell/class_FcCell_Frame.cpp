@@ -21,8 +21,8 @@
 #include "N2D2.hpp"
 
 #include "DeepNet.hpp"
-#include "Environment.hpp"
-#include "Network.hpp"
+#include "Xnet/Environment.hpp"
+#include "Xnet/Network.hpp"
 #include "Transformation/RescaleTransformation.hpp"
 #include "Database/MNIST_IDX_Database.hpp"
 #include "Cell/FcCell_Frame.hpp"

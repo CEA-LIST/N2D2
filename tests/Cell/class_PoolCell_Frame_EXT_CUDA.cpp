@@ -24,8 +24,8 @@
 
 #include "Database/MNIST_IDX_Database.hpp"
 #include "DeepNet.hpp"
-#include "Environment.hpp"
-#include "Network.hpp"
+#include "Xnet/Environment.hpp"
+#include "Xnet/Network.hpp"
 #include "Cell/PoolCell_Frame_EXT_CUDA.hpp"
 #include "third_party/half.hpp"
 #include "Transformation/ColorSpaceTransformation.hpp"

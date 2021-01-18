@@ -155,8 +155,12 @@ void N2D2::DeepNetQuantization::reportOutputsRange(std::unordered_map<std::strin
         }
     }
 
-#pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < (int)layers.size(); ++i) {
+#ifdef CUDA
+        CudaContext::setDevice();
+#endif
+
         for(auto itCell = layers[i].begin(); itCell != layers[i].end(); ++itCell) {
             std::shared_ptr<Cell_Frame_Top> cellFrame;
 
@@ -220,6 +224,10 @@ void N2D2::DeepNetQuantization::reportOutputsHistogram(
 
     #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < (int)layers.size(); ++i) {
+#ifdef CUDA
+        CudaContext::setDevice();
+#endif
+
         for(auto itCell = layers[i].begin(); itCell != layers[i].end(); ++itCell) {
             std::shared_ptr<Cell_Frame_Top> cellFrame;
 

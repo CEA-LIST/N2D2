@@ -19,10 +19,10 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Layer.hpp"
-#include "Environment.hpp"
-#include "HeteroEnvironment.hpp"
-#include "Network.hpp"
+#include "Xnet/Layer.hpp"
+#include "Xnet/Environment.hpp"
+#include "Xnet/HeteroEnvironment.hpp"
+#include "Xnet/Network.hpp"
 
 N2D2::Layer::Layer(Network& net, unsigned int nbCells) //: mNet(net)
 {

@@ -20,7 +20,7 @@
 */
 
 #ifdef PYBIND
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 
 #include <pybind11/pybind11.h>
 

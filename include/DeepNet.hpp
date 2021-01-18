@@ -27,7 +27,7 @@
 
 #include "Cell/Cell.hpp"
 #include "Database/Database.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "Target/Target.hpp"
 
 #ifdef CUDA

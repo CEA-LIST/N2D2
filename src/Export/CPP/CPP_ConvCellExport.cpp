@@ -121,7 +121,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderBias(const ConvCell& cell, std::ofs
     const std::string prefix = Utils::upperCase(identifier);
     
     header << "static const BDATA_T " << identifier << "_biases[" 
-           << prefix << "_NB_OUTPUTS] __attribute__((section(\".nn_biasses\"))) = {";
+           << prefix << "_NB_OUTPUTS] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_BIASSES) = {";
 
     Tensor<Float_T> bias;
     for (std::size_t output = 0; output < cell.getNbOutputs(); output++) {
@@ -167,7 +167,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeights(const ConvCell& cell, std::
     }
 
     header << "static const WDATA_T " << identifier << "_weights["
-           << prefix << "_WEIGHTS_SIZE] __attribute__((section(\".nn_weights\"))) = {";
+           << prefix << "_WEIGHTS_SIZE] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_WEIGHTS) = {";
 
     Tensor<Float_T> kernel;
 

@@ -23,7 +23,7 @@
 
 #include "FcCell_Spike.hpp"
 #include "DeepNet.hpp"
-#include "Synapse_RRAM.hpp"
+#include "Xnet/Synapse_RRAM.hpp"
 
 namespace N2D2 {
 class FcCell_Spike_RRAM : public FcCell_Spike {

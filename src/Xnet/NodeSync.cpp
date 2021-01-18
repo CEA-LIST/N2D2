@@ -19,20 +19,33 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "NodeEnv.hpp"
+#include "Xnet/NodeSync.hpp"
 
-N2D2::NodeEnv::NodeEnv(Network& net,
-                       double scale,
-                       double orientation,
-                       unsigned int x,
-                       unsigned int y)
-    : Node(net)
+#include "Xnet/Xcell.hpp"
+
+N2D2::NodeSync::NodeSync(Network& net, Xcell& cell)
+    : Node(net), mCell(cell), mLink(NULL)
 {
     // ctor
-    mScale = scale;
-    mOrientation = orientation;
-    mArea.x = x;
-    mArea.y = y;
-    mArea.width = 1;
-    mArea.height = 1;
+}
+
+void N2D2::NodeSync::addLink(Node* origin)
+{
+    if (mLink != NULL)
+        throw std::logic_error("A NodeSync object can only have one link.");
+
+    mLink = origin;
+    origin->addBranch(this);
+
+    mScale = origin->getScale();
+    mOrientation = origin->getOrientation();
+    mArea = origin->getArea();
+    mLayer = origin->getLayer() + 1;
+}
+
+void N2D2::NodeSync::incomingSpike(Node* /*origin*/,
+                                   Time_T /*timestamp*/,
+                                   EventType_T /*type*/)
+{
+    mCell.incomingSpike(this);
 }

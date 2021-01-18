@@ -1,6 +1,7 @@
 /*
     (C) Copyright 2013 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    Damien QUERLIOZ (damien.querlioz@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -18,27 +19,42 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Synapse_Normalized.hpp"
+#include "Xnet/Synapse_Behavioral.hpp"
 
-N2D2::Synapse_Normalized::Synapse_Normalized(Time_T delay_,
-                                             double weightIncrement_,
+N2D2::Synapse_Behavioral::Synapse_Behavioral(Time_T delay_,
+                                             Weight_T weightMin_,
+                                             Weight_T weightMax_,
+                                             Weight_T weightIncrement_,
                                              double weightIncrementDamping_,
-                                             double weightDecrement_,
+                                             Weight_T weightDecrement_,
                                              double weightDecrementDamping_,
-                                             double weightInit_)
+                                             Weight_T weightInit_)
     : delay(delay_),
+      weightMin(weightMin_),
+      weightMax(weightMax_),
       weightIncrement(weightIncrement_),
       weightIncrementDamping(weightIncrementDamping_),
       weightDecrement(weightDecrement_),
       weightDecrementDamping(weightDecrementDamping_)
 {
     // ctor
-    setRelativeWeight(weightInit_);
+    if (weightMax < weightMin) {
+        std::cout << "Notice: wmax is lower than wmin, set wmin = wmax = (wmin "
+                     "+ wmax)/2" << std::endl;
+        weightMax = weightMin = (weightMax + weightMin) / 2.0;
+    }
+
+    setRelativeWeight(
+        Utils::clamp((weightMin != weightMax)
+                         ? ((weightInit_ - weightMin) / (weightMax - weightMin))
+                         : 0.0,
+                     0.0,
+                     1.0));
 
     clearStats();
 }
 
-void N2D2::Synapse_Normalized::setRelativeWeight(double relWeight)
+void N2D2::Synapse_Behavioral::setRelativeWeight(double relWeight)
 {
     if (relWeight < 0.0 || relWeight > 1.0) {
         std::ostringstream msgStr;
@@ -48,12 +64,16 @@ void N2D2::Synapse_Normalized::setRelativeWeight(double relWeight)
         throw std::domain_error(msgStr.str());
     }
 
-    weight = relWeight;
+    weight = weightMin + relWeight * (weightMax - weightMin);
 }
 
-void N2D2::Synapse_Normalized::saveInternal(std::ofstream& dataFile) const
+void N2D2::Synapse_Behavioral::saveInternal(std::ofstream& dataFile) const
 {
     dataFile.write(reinterpret_cast<const char*>(&delay), sizeof(delay));
+    dataFile.write(reinterpret_cast<const char*>(&weightMin),
+                   sizeof(weightMin));
+    dataFile.write(reinterpret_cast<const char*>(&weightMax),
+                   sizeof(weightMax));
     dataFile.write(reinterpret_cast<const char*>(&weightIncrement),
                    sizeof(weightIncrement));
     dataFile.write(reinterpret_cast<const char*>(&weightIncrementDamping),
@@ -66,12 +86,14 @@ void N2D2::Synapse_Normalized::saveInternal(std::ofstream& dataFile) const
 
     if (!dataFile.good())
         throw std::runtime_error(
-            "Synapse_Normalized::saveInternal(): error writing data");
+            "Synapse_Behavioral::saveInternal(): error writing data");
 }
 
-void N2D2::Synapse_Normalized::loadInternal(std::ifstream& dataFile)
+void N2D2::Synapse_Behavioral::loadInternal(std::ifstream& dataFile)
 {
     dataFile.read(reinterpret_cast<char*>(&delay), sizeof(delay));
+    dataFile.read(reinterpret_cast<char*>(&weightMin), sizeof(weightMin));
+    dataFile.read(reinterpret_cast<char*>(&weightMax), sizeof(weightMax));
     dataFile.read(reinterpret_cast<char*>(&weightIncrement),
                   sizeof(weightIncrement));
     dataFile.read(reinterpret_cast<char*>(&weightIncrementDamping),
@@ -84,17 +106,17 @@ void N2D2::Synapse_Normalized::loadInternal(std::ifstream& dataFile)
 
     if (!dataFile.good())
         throw std::runtime_error(
-            "Synapse_Normalized::loadInternal(): error reading data");
+            "Synapse_Behavioral::loadInternal(): error reading data");
 }
 
-N2D2::Synapse_Normalized::Stats* N2D2::Synapse_Normalized::newStats() const
+N2D2::Synapse_Behavioral::Stats* N2D2::Synapse_Behavioral::newStats() const
 {
-    return new Stats_Normalized();
+    return new Stats_Behavioral();
 }
 
-void N2D2::Synapse_Normalized::getStats(Stats* statsObj) const
+void N2D2::Synapse_Behavioral::getStats(Stats* statsObj) const
 {
-    Stats_Normalized* myStats = static_cast<Stats_Normalized*>(statsObj);
+    Stats_Behavioral* myStats = static_cast<Stats_Behavioral*>(statsObj);
     ++myStats->nbSynapses;
     myStats->readEvents += statsReadEvents;
     myStats->maxReadEvents = std::max(myStats->maxReadEvents, statsReadEvents);
@@ -104,10 +126,10 @@ void N2D2::Synapse_Normalized::getStats(Stats* statsObj) const
     myStats->maxDecEvents = std::max(myStats->maxDecEvents, statsDecEvents);
 }
 
-void N2D2::Synapse_Normalized::logStats(std::ofstream& dataFile,
+void N2D2::Synapse_Behavioral::logStats(std::ofstream& dataFile,
                                         Stats* statsObj) const
 {
-    Stats_Normalized* myStats = static_cast<Stats_Normalized*>(statsObj);
+    Stats_Behavioral* myStats = static_cast<Stats_Behavioral*>(statsObj);
 
     dataFile << "Synapses: " << myStats->nbSynapses
              << "\n"
@@ -134,7 +156,7 @@ void N2D2::Synapse_Normalized::logStats(std::ofstream& dataFile,
              << "\n";
 }
 
-void N2D2::Synapse_Normalized::logStats(std::ofstream& dataFile,
+void N2D2::Synapse_Behavioral::logStats(std::ofstream& dataFile,
                                         const std::string& suffix) const
 {
     dataFile << "R " << statsReadEvents << " " << suffix << "\n"
@@ -144,7 +166,7 @@ void N2D2::Synapse_Normalized::logStats(std::ofstream& dataFile,
              << suffix << "\n";
 }
 
-void N2D2::Synapse_Normalized::clearStats()
+void N2D2::Synapse_Behavioral::clearStats()
 {
     statsReadEvents = 0;
     statsIncEvents = 0;

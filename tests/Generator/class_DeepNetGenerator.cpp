@@ -18,7 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Environment.hpp"
+#include "Xnet/Environment.hpp"
 #include "StimuliProvider.hpp"
 #include "Cell/ConvCell_Frame.hpp"
 #include "Database/MNIST_IDX_Database.hpp"

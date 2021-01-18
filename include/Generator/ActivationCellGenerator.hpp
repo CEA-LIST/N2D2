@@ -1,7 +1,6 @@
 /*
-    (C) Copyright 2010 CEA LIST. All Rights Reserved.
+    (C) Copyright 2016 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
-                    Damien QUERLIOZ (damien.querlioz@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -19,33 +18,29 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "NodeSync.hpp"
+#ifndef N2D2_ACTIVATIONCELLGENERATOR_H
+#define N2D2_ACTIVATIONCELLGENERATOR_H
 
-#include "Xcell.hpp"
+#include "Cell/ActivationCell.hpp"
+#include "Generator/CellGenerator.hpp"
+#include "utils/IniParser.hpp"
 
-N2D2::NodeSync::NodeSync(Network& net, Xcell& cell)
-    : Node(net), mCell(cell), mLink(NULL)
-{
-    // ctor
+namespace N2D2 {
+
+class DeepNet;
+
+class ActivationCellGenerator : public CellGenerator {
+public:
+    static std::shared_ptr<ActivationCell>
+    generate(Network& network, const DeepNet& deepNet,
+             StimuliProvider& sp,
+             const std::vector<std::shared_ptr<Cell> >& parents,
+             IniParser& iniConfig,
+             const std::string& section);
+
+private:
+    static Registrar<CellGenerator> mRegistrar;
+};
 }
 
-void N2D2::NodeSync::addLink(Node* origin)
-{
-    if (mLink != NULL)
-        throw std::logic_error("A NodeSync object can only have one link.");
-
-    mLink = origin;
-    origin->addBranch(this);
-
-    mScale = origin->getScale();
-    mOrientation = origin->getOrientation();
-    mArea = origin->getArea();
-    mLayer = origin->getLayer() + 1;
-}
-
-void N2D2::NodeSync::incomingSpike(Node* /*origin*/,
-                                   Time_T /*timestamp*/,
-                                   EventType_T /*type*/)
-{
-    mCell.incomingSpike(this);
-}
+#endif // N2D2_ACTIVATIONCELLGENERATOR_H

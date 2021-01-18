@@ -19,7 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "SpikeGenerator.hpp"
+#include "Xnet/SpikeGenerator.hpp"
 
 N2D2::SpikeGenerator::SpikeGenerator()
     : // IMPORTANT: Do not change the value of the parameters here! Use

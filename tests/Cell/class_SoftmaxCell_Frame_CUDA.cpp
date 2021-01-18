@@ -24,7 +24,7 @@
 
 #include "Cell/SoftmaxCell_Frame_CUDA.hpp"
 #include "DeepNet.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "third_party/half.hpp"
 #include "utils/UnitTest.hpp"
 

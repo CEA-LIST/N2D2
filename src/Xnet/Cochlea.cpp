@@ -18,9 +18,9 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Cochlea.hpp"
-#include "Aer.hpp"
-#include "AerEvent.hpp"
+#include "Xnet/Cochlea.hpp"
+#include "Xnet/Aer.hpp"
+#include "Xnet/AerEvent.hpp"
 #include "Sound.hpp"
 #include "utils/Gnuplot.hpp"
 

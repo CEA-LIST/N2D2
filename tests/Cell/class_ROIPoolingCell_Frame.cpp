@@ -22,8 +22,8 @@
 
 #include "Database/MNIST_IDX_Database.hpp"
 #include "DeepNet.hpp"
-#include "Environment.hpp"
-#include "Network.hpp"
+#include "Xnet/Environment.hpp"
+#include "Xnet/Network.hpp"
 #include "Cell/ConvCell_Frame.hpp"
 #include "Cell/ROIPoolingCell_Frame.hpp"
 #include "Transformation/ColorSpaceTransformation.hpp"

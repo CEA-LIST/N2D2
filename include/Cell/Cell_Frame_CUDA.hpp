@@ -31,7 +31,6 @@
 #include "Cell_Frame_CUDA_Kernels.hpp"
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "Environment.hpp" // Defines Float_T
 #include "GradientCheck.hpp"
 #include "containers/CudaTensor.hpp"
 #include "controler/CudaInterface.hpp"

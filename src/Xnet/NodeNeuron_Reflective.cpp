@@ -19,8 +19,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "NodeNeuron_Reflective.hpp"
-#include "SpikeEvent.hpp"
+#include "Xnet/NodeNeuron_Reflective.hpp"
+#include "Xnet/SpikeEvent.hpp"
 #include "utils/Gnuplot.hpp"
 
 N2D2::NodeNeuron_Reflective::NodeNeuron_Reflective(Network& net)

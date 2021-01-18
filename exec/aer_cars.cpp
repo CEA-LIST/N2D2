@@ -27,11 +27,11 @@
 #include <list>
 
 #include "N2D2.hpp"
-#include "Aer.hpp"
-#include "Environment.hpp"
-#include "Network.hpp"
-#include "Monitor.hpp"
-#include "Xcell.hpp"
+#include "Xnet/Aer.hpp"
+#include "Xnet/Environment.hpp"
+#include "Xnet/Network.hpp"
+#include "Xnet/Monitor.hpp"
+#include "Xnet/Xcell.hpp"
 #include "Transformation/FilterTransformation.hpp"
 #include "utils/ProgramOptions.hpp"
 

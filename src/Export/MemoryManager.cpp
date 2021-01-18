@@ -131,6 +131,13 @@ N2D2::MemoryManager::MemoryPlane N2D2::MemoryManager::reallocate(
                     / (double)(std::max(size, stride) * length))
                         * (std::max(size, stride) * length);
         }
+        else if (length > 1) {
+            // (requiredSize - offset) must be a multiple of stride
+            requiredSize = offset
+                + std::ceil((requiredSize - offset)
+                    / (double)std::max(size, stride))
+                        * std::max(size, stride);
+        }
     }
 
     if (requiredSize > memSpace->size || memSpace->released >= 0) {
@@ -173,15 +180,28 @@ N2D2::MemoryManager::MemoryPlane N2D2::MemoryManager::reallocate(
                     / (double)(std::max(size, stride) * length))
                         * (std::max(size, stride) * length);
         }
+        else if (length > 1) {
+            // (requiredSize - offset) must be a multiple of stride
+            requiredSize = initialOffset
+                + std::ceil((requiredSize - initialOffset)
+                    / (double)std::max(size, stride))
+                        * std::max(size, stride);
+        }
 
+        // Make sure that the intended margin with previous memPlane will be
+        // respected, as it may actually be lower because of the floor()
+        // in the memPlane getLimit() function.
         if (memPlane.count > 1) {
-            // Make sure that the intended margin with previous memPlane will be
-            // respected, as it may actually be lower because of the floor()
-            // in the memPlane getLimit() function.
             requiredSize = memPlane.offset
                 + std::ceil((requiredSize - memPlane.offset)
                     / (double)(memPlane.stride * memPlane.length))
                         * (memPlane.stride * memPlane.length);
+        }
+        else if (memPlane.length > 1) {
+            requiredSize = memPlane.offset
+                + std::ceil((requiredSize - memPlane.offset)
+                    / (double)memPlane.stride)
+                        * memPlane.stride;
         }
     }
 
@@ -578,13 +598,13 @@ N2D2::MemoryManager::getPlanes(const std::shared_ptr<Cell>& cell) const
     return (*it).second;
 }
 
-std::map<std::shared_ptr<N2D2::Cell>, std::vector<N2D2::MemoryManager::MemoryPlane> >
-N2D2::MemoryManager::getPlanes(std::shared_ptr<MemorySpace> memSpace) const
+N2D2::MemoryManager::MemMap_T
+N2D2::MemoryManager::getPlanes(std::shared_ptr<MemorySpace> memSpace)
+    const
 {
-    std::map<std::shared_ptr<Cell>, std::vector<MemoryPlane> > planes;
+    MemMap_T planes;
 
-    for (std::map<std::shared_ptr<Cell>, std::vector<MemoryPlane> >
-        ::const_iterator itCell = mMemPlanes.begin(),
+    for (MemMap_T::const_iterator itCell = mMemPlanes.begin(),
         itCellEnd = mMemPlanes.end(); itCell != itCellEnd; ++itCell)
     {
         for (std::vector<MemoryPlane>::const_iterator itPlane
@@ -660,7 +680,7 @@ void N2D2::MemoryManager::log(const std::string& fileName) const
     gnuplot.setXrange(0, maxLifetime + 1);
     gnuplot.setYrange(0, 1.05 * (peakUsage / 1024.0));
     gnuplot.setXlabel("Time");
-    gnuplot.setYlabel("Memory usage (KB)");
+    gnuplot.setYlabel("Memory usage (KWords)");
     gnuplot.set("style fill solid");
     gnuplot.set("grid");
     gnuplot.set("xtics", 1);
@@ -672,9 +692,6 @@ void N2D2::MemoryManager::log(const std::string& fileName) const
     unsigned int labelId = 1;
 
     memData << std::setfill('0');
-
-    std::map<std::shared_ptr<MemorySpace>,
-             std::pair<unsigned int, unsigned int> > memSpaceCount;
 
     for (std::map<std::shared_ptr<Cell>, std::vector<MemoryPlane> >
         ::const_iterator it = mMemPlanes.begin(), itEnd = mMemPlanes.end();
@@ -832,7 +849,7 @@ void N2D2::MemoryManager::log(const std::string& fileName) const
 
     setStr.str(std::string());
     setStr << "set label " << labelId << " 'Peak usage = "
-        << (peakUsage / 1024.0) << " KB' at 0," << (peakUsage / 1024.0)
+        << (peakUsage / 1024.0) << " KWords' at 0," << (peakUsage / 1024.0)
         << " textcolor lt 1 offset char 0.5,0.5";
     gnuplot << setStr.str();
 

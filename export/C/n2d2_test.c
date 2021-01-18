@@ -55,16 +55,7 @@ int main(int argc, char* argv[])
            "This binary  is the exclusive property of the CEA. (C) Copyright "
            "2016 CEA LIST\n\n");
 
-    unsigned int dimX = 1;
-    unsigned int dimY = 1;
-    if (OUTPUTS_WIDTH > 1 || OUTPUTS_HEIGHT > 1) {
-        dimX = ENV_SIZE_X;
-        dimY = ENV_SIZE_Y;
-    }
-
-    int32_t outputTargets[dimY][dimX];
-    double yRatio = ENV_SIZE_Y / OUTPUTS_HEIGHT;
-    double xRatio = ENV_SIZE_X / OUTPUTS_WIDTH;
+    int32_t outputTargets[OUTPUTS_HEIGHT][OUTPUTS_WIDTH];
     float successRate = 0.0;
     if (argc > 1) {
         // printf("Reading env input %s\n", argv[1]);
@@ -73,8 +64,8 @@ int main(int argc, char* argv[])
                  ENV_SIZE_Y,
                  ENV_SIZE_X,
                  env_data,
-                 dimY,
-                 dimX,
+                 OUTPUTS_HEIGHT,
+                 OUTPUTS_WIDTH,
                  outputTargets);
         network(env_data, outputEstimated);
 
@@ -83,19 +74,12 @@ int main(int argc, char* argv[])
 
         for (unsigned int oy = 0; oy < OUTPUTS_HEIGHT; ++oy) {
             for (unsigned int ox = 0; ox < OUTPUTS_WIDTH; ++ox) {
-                int iy = oy;
-                int ix = ox;
-                if (dimX > 1 || dimY > 1) {
-                    iy = (int)floor((oy + 0.5) * yRatio);
-                    ix = (int)floor((ox + 0.5) * xRatio);
-                }
-
-                if (outputTargets[iy][ix] >= 0) {
-                    confusion[outputTargets[iy][ix]]
+                if (outputTargets[oy][ox] >= 0) {
+                    confusion[outputTargets[oy][ox]]
                              [outputEstimated[oy][ox]] += 1;
 
                     nbPredictions++;
-                    if (outputTargets[iy][ix] == (int)outputEstimated[oy][ox]) {
+                    if (outputTargets[oy][ox] == (int)outputEstimated[oy][ox]) {
                         nbValidPredictions++;
                     }
                 }
@@ -131,8 +115,8 @@ int main(int argc, char* argv[])
                      ENV_SIZE_Y,
                      ENV_SIZE_X,
                      env_data,
-                     dimY,
-                     dimX,
+                     OUTPUTS_HEIGHT,
+                     OUTPUTS_WIDTH,
                      outputTargets);
             free(fileList[n]);
 
@@ -190,25 +174,17 @@ int main(int argc, char* argv[])
 
             unsigned int nbValidPredictions = 0;
             unsigned int nbPredictions = 0;
-            bool validPred = false;
+
             for (unsigned int oy = 0; oy < OUTPUTS_HEIGHT; ++oy) {
                 for (unsigned int ox = 0; ox < OUTPUTS_WIDTH; ++ox) {
-                    int iy = oy;
-                    int ix = ox;
-                    if (dimX > 1 || dimY > 1) {
-                        iy = (int)floor((oy + 0.5) * yRatio);
-                        ix = (int)floor((ox + 0.5) * xRatio);
-                    }
-
-                    if (outputTargets[iy][ix] >= 0) {
-                        confusion[outputTargets[iy][ix]]
+                    if (outputTargets[oy][ox] >= 0) {
+                        confusion[outputTargets[oy][ox]]
                                  [outputEstimated[oy][ox]] += 1;
                             
                         nbPredictions++;
-                        if (outputTargets[iy][ix] == (int)outputEstimated[oy][ox]) {
+                        if (outputTargets[oy][ox] == (int)outputEstimated[oy][ox]) {
                             nbValidPredictions++;
                         }
-                        validPred = true;
                     }
                 }
             }

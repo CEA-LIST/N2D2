@@ -22,7 +22,7 @@
 
 #include "Cell/PaddingCell_Frame.hpp"
 #include "DeepNet.hpp"
-#include "Network.hpp"
+#include "Xnet/Network.hpp"
 #include "utils/UnitTest.hpp"
 #include "utils/Random.hpp"
 
