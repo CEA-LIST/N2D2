@@ -22,6 +22,20 @@
 import n2d2
 import n2d2.utils
 
+
+def fc_layer():
+    net = n2d2.deepnet.Sequence([
+        n2d2.cell.Fc(NbOutputs=50, Name='fc1'),
+        n2d2.deepnet.Layer([n2d2.cell.Fc(NbOutputs=50, Name='fc2'), n2d2.cell.Fc(NbOutputs=50, Name='fc3')]),
+        n2d2.deepnet.Sequence([
+            n2d2.cell.Fc(NbOutputs=50, Name='fc4', NoBias=True),
+            n2d2.cell.Fc(NbOutputs=10, Name='fc5')
+        ]),
+        n2d2.cell.Softmax(NbOutputs=10, Name='soft1')
+    ])
+    return net
+
+
 def fc_base():
     net = n2d2.deepnet.Sequence([
         n2d2.deepnet.Sequence([

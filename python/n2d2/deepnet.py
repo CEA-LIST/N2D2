@@ -78,21 +78,30 @@ class Sequence:
         assert isinstance(sequences, list)
         if not sequences:
             raise ValueError("Got empty list as input. List must contain at least one element")
-        self._sequence_dict = collections.OrderedDict()
+        #self._sequence_dict = collections.OrderedDict()
         self._sequences = sequences
-        self._cells_sequence = []
+        # TODO: This is currently not really used
+        #self._cells_sequence = []
 
-        self._generate_graph(self, '')
+        #self._generate_graph(self, '')
 
-        print(self._sequence_dict)
+        #print(self._sequence_dict)
 
+        """
         previous = None
         for key, value in self._sequence_dict.items():
-            if isinstance(value, n2d2.cell.Cell):
+            if isinstance(value, n2d2.cell.Cell) or isinstance(value, n2d2.deepnet.Layer):
                 if previous is not None:
                     value.clear_input()
                     value.add_input(previous)
                 previous = value
+        """
+        previous = None
+        for elem in self._sequences:
+            if previous is not None:
+                elem.clear_input()
+                elem.add_input(previous)
+            previous = elem
 
 
     """Goes recursively through sequences"""
@@ -111,32 +120,35 @@ class Sequence:
         else:
             self._cells_sequence.append(sequence)
 
-    # TODO: Method that converts sequencial representation into correspondind N2D2 deepnet
+    # TODO: Method that converts sequential representation into corresponding N2D2 deepnet
 
-    def add_provider(self, provider):
-        self._cells_sequence[0].add_input(provider)
+    def add_input(self, inputs):
+        self.get_first().add_input(inputs)
 
-    def clear_provider(self):
-        self._cells_sequence[0].clear_input()
+    def get_inputs(self):
+        return self.get_first().get_intputs()
+
+    def clear_input(self):
+        self.get_first().clear_input()
 
     def initialize(self):
-        for cell in self._cells_sequence:
+        for cell in self._sequences:
             cell.initialize()
 
     def propagate(self, inference=False):
-        for cell in self._cells_sequence:
-            cell.N2D2().propagate(inference=inference)
+        for cell in self._sequences:
+            cell.propagate(inference)
 
     def back_propagate(self):
-        for cell in reversed(self._cells_sequence):
-            cell.N2D2().backPropagate()
+        for cell in reversed(self._sequences):
+            cell.back_propagate()
 
     def update(self):
-        for cell in self._cells_sequence:
-            cell.N2D2().update()
+        for cell in self._sequences:
+            cell.update()
 
-    def get_subsequence(self, name):
-        return self._sequence_dict[name]
+    def get_subsequence(self, idx):
+        return self._sequences[idx]
 
     def get_name(self):
         return self._Name
@@ -144,46 +156,109 @@ class Sequence:
     def set_name(self, Name):
         self._Name = Name
 
-    #def get_sequence_idx(self):
-    #    return self._sequence_idx
-
-    #def set_sequence_idx(self, idx):
-    #    self._sequence_idx = idx
-
     def get_sequences(self):
         return self._sequences
 
-    def get_output_cell(self):
-        return self._sequences[-1].get_output_cell()
+    def get_last(self):
+        return self._sequences[-1].get_last()
 
-    def get_input_cell(self):
-        return self._sequences[0].get_input_cell()
-
-    def get_cells(self):
+    def get_first(self):
+        return self._sequences[0].get_first()
+    """
+    def get_cells_sequence(self):
         return self._cells_sequence
+    """
 
-    def __str__(self):
-        output = "n2d2.cell.Sequence("
-        output += self._generate_str()
-        output += "\n)"
-        return output
-
+    """
     def convert_to_INI_section(self):
         output = ""
         for cell in self._cells_sequence:
             output += cell.convert_to_INI_section()
             output += "\n"
         return output
+    """
 
-    def _generate_str(self):
-        output = ""
-        for key, value in self._sequence_dict.items():
-            indent_level = key.count('.')
-            output += "\n" + (indent_level * "\t") + "(" + key + ")"
-            #if sequence.get_name() is not None:
-            #    output += " \'" + sequence.get_name() + "\'"
-            #output += ": n2d2.cell.Sequence("
-            if isinstance(value, n2d2.cell.Cell):
+    def __str__(self):
+        return self._generate_str(1)
+
+    def _generate_str(self, indent_level):
+        output = "Sequence("
+        for idx, value in enumerate(self._sequences):
+            output += "\n" + (indent_level * "\t") + "(" + str(idx) + ")"
+            if isinstance(value, n2d2.deepnet.Sequence):
+                output += ": " + value._generate_str(indent_level + 1)
+            elif isinstance(value, n2d2.deepnet.Layer):
+                output += ": " + value._generate_str(indent_level + 1)
+            else:
                 output += ": " + value.__str__()
+        output += "\n" + ((indent_level-1) * "\t") + ")"
+        return output
+
+
+
+
+class Layer:
+    def __init__(self, layer, Name=None):
+        if Name is not None:
+            assert isinstance(Name, str)
+        self._Name = Name
+        assert isinstance(layer, list)
+        if not layer:
+            raise ValueError("Got empty list as input. List must contain at least one element")
+        self._layer_dict = collections.OrderedDict()
+        self._layer = layer
+
+        for idx, elem in enumerate(self._layer):
+            self._layer_dict[str(idx)] = elem
+
+    # TODO: Method that converts layer representation into corresponding N2D2 deepnet
+
+    def add_input(self, input):
+        for cell in self._layer:
+            cell.add_input(input)
+
+    def clear_input(self):
+        for cell in self._layer:
+            cell.clear_input()
+
+    def get_last(self):
+        output = []
+        for cell in self._layer:
+            output.append(cell)
+        return output
+
+    def initialize(self):
+        for cell in self._layer:
+            cell.initialize()
+
+    def propagate(self, inference=False):
+        for cell in self._layer:
+            cell.propagate(inference)
+
+    def back_propagate(self):
+        for cell in reversed(self._layer):
+            cell.back_propagate()
+
+    def update(self):
+        for cell in self._layer:
+            cell.update()
+
+
+    def __str__(self):
+        return self._generate_str(0)
+
+    """
+    def convert_to_INI_section(self):
+        output = ""
+        for cell in self._layer:
+            output += cell.convert_to_INI_section()
+            output += "\n"
+        return output
+    """
+
+    def _generate_str(self, indent_level):
+        output = "Layer(\n"
+        for key, value in self._layer_dict.items():
+            output += (indent_level * "\t") + "[" + key + "]: " + value.__str__() + "\n"
         return output
         
