@@ -52,7 +52,7 @@ class DeepNet(N2D2_Interface):
 
 
 def load_from_ONNX(model_path, database, stimuliProvider):
-    # TODO : need to change the enrty to use n2d2 object
+    # TODO : need to change the enrty to use n2d2 objects
     network = N2D2.Network(1)
     deepNet = N2D2.DeepNet(network)
     iniParser = N2D2.IniParser()
@@ -61,6 +61,10 @@ def load_from_ONNX(model_path, database, stimuliProvider):
     deepNet = N2D2.DeepNetGenerator.generateFromONNX(network, model_path, iniParser, deepNet)
     return n2d2.converter.deepNet_converter(deepNet)
 
+def load_from_INI(path):
+    network = N2D2.Network(1)
+    deepNet = N2D2.DeepNetGenerator.generateFromINI(network, path)
+    return n2d2.converter.deepNet_converter(deepNet)
 """
 We should be able to create cells and sequences of cell incrementally
 We should be able to extract cell and sequences and run these subnetworks easily

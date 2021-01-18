@@ -82,8 +82,14 @@ def onnx_resnet():
     stimuli = N2D2.StimuliProvider(database.N2D2(), [224, 224, 3], batchSize, False)    
     n2d2.deepnet.load_from_ONNX(path, database.N2D2(), stimuli)
 
+def ini_mobilenet():
+    path = '../models/MobileNet_v1.ini'    
+    n2d2.deepnet.load_from_INI(path)
+
+
 # load_ILSVRC2012_model()
 # load_MNIST_model()
 # onnx_googlenet()
 # onnx_mobilenet()
-onnx_resnet()
+# onnx_resnet()
+ini_mobilenet()

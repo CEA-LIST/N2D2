@@ -35,7 +35,8 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_DeepNetGenerator(py::module &m) {
     py::class_<DeepNetGenerator>(m, "DeepNetGenerator")
-    .def_static("generateFromONNX", &DeepNetGenerator::generateFromONNX, py::arg("network"), py::arg("fileName"), py::arg("iniConifg"), py::arg("deepNet"));
+    .def_static("generateFromONNX", &DeepNetGenerator::generateFromONNX, py::arg("network"), py::arg("fileName"), py::arg("iniConifg"), py::arg("deepNet"))
+    .def_static("generateFromINI", &DeepNetGenerator::generateFromINI, py::arg("network"), py::arg("fileName"));
 }
 }
 
