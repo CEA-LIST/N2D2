@@ -25,8 +25,8 @@
 #include "Cell/ConvCell_Frame_CUDA.hpp"
 #include "Database/MNIST_IDX_Database.hpp"
 #include "DeepNet.hpp"
-#include "Environment.hpp"
-#include "Network.hpp"
+#include "Xnet/Environment.hpp"
+#include "Xnet/Network.hpp"
 #if CUDNN_VERSION >= 5000
 #include "Cell/DropoutCell_Frame_CUDA.hpp"
 #include "Cell/SoftmaxCell_Frame_CUDA.hpp"
