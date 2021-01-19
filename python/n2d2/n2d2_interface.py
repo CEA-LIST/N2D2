@@ -90,22 +90,26 @@ class N2D2_Interface:
         else:
             return str(value)
 
-
     def __str__(self):
-        output = "("
-        for key, value in self._constructor_arguments.items():
-            output += key + "=" + str(value) + ", "
-        for key, value in self._optional_constructor_arguments.items():
-            #output += key + "=" + str(value) + ", "
-            output += self._constructor_to_parameter_convention(key) + "=" + str(value) + ", "
-        #print(self._N2D2_object.getParameters())
-        #for key, value in self._N2D2_object.getParameters().items():
-        for key, value in self._config_parameters.items():
-            output += key + "=" + str(value) + ", "
-        if output is not "(":
-            output = output[:len(output) - 2]
+        def add_delimiter(condition, delimiter):
+            return delimiter+" " if condition else ""
+
+        output = ""
+        constructor_arg_len = len(self._constructor_arguments.items())
+        opt_constructor_arg_len = len(self._optional_constructor_arguments.items())
+        config_param_len = len(self._config_parameters.items())
+        if constructor_arg_len + opt_constructor_arg_len + config_param_len > 0:
+            output += "("
+        for idx, (key, value) in enumerate(self._constructor_arguments.items()):
+            output += key + "=" + str(value) + add_delimiter(not idx == constructor_arg_len-1, ",")
+        output += add_delimiter(opt_constructor_arg_len>0, ",")
+        for idx, (key, value) in enumerate(self._optional_constructor_arguments.items()):
+            output += self._constructor_to_parameter_convention(key) + "=" + str(value) + \
+                      add_delimiter(not idx == opt_constructor_arg_len-1, ",")
+        output += add_delimiter(config_param_len > 0, " |")
+        for idx, (key, value) in enumerate(self._config_parameters.items()):
+            output += key + "=" + str(value) + add_delimiter(not idx == config_param_len-1, ",")
+        if constructor_arg_len + opt_constructor_arg_len + config_param_len > 0:
             output += ")"
-        else:
-            output = ""
         return output
 

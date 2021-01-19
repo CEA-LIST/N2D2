@@ -36,9 +36,14 @@ N2D2.CudaContext.setDevice(3)
 
 n2d2.global_variables.default_DeepNet = n2d2.deepnet.DeepNet(N2D2.Network(n2d2.global_variables.default_seed), 'Frame_CUDA', n2d2.global_variables.default_DataType)
 
+#model = n2d2.model.fc_layer()
 model = n2d2.model.fc_base_named()
 
 print(model)
+
+#resnet = n2d2.model.resnet18()
+#print(resnet)
+#exit()
 
 #print("Create model")
 #model = n2d2.deepnet.Sequential(deepnet, model)
@@ -159,7 +164,7 @@ new_model = n2d2.deepnet.Sequence([sub, n2d2.cell.Softmax(NbOutputs=10, Name='so
 print(new_model)
 
 # Clear provider, otherwise second provider will be added in Classifier constructor
-new_model.clear_provider()
+new_model.clear_input()
 new_classifier = n2d2.application.Classifier(provider, new_model)
 
 

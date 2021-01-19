@@ -84,10 +84,10 @@ class Classifier(Application):
         self._provider = provider
 
         print("Add provider")
-        self._model.add_provider(self._provider)
+        self._model.add_input(self._provider)
 
         print("Create target")
-        self._target = n2d2.target.Score('softmax.Target', self._model.get_output_cell(), self._provider)
+        self._target = n2d2.target.Score('softmax.Target', self._model.get_last(), self._provider)
 
         self._model.initialize()
 

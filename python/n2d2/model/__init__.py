@@ -20,3 +20,4 @@
 """
 
 from n2d2.model.example import *
+from n2d2.model.resnet import *
