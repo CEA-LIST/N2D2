@@ -186,7 +186,7 @@ void init_Cell(py::module &m) {
     // .def("isFullMap", &Cell::isFullMap)
     // .def("groupMap", &Cell::groupMap)
     // .def("isUnitMap", &Cell::isUnitMap) 
-    // .def("saveFreeParameters", &Cell::saveFreeParameters, py::arg("fileName"))
+    .def("saveFreeParameters", &Cell::saveFreeParameters, py::arg("fileName"))
     // .def("loadFreeParameters", &Cell::loadFreeParameters, py::arg("fileName"), py::arg("ignoreNotExists") = false)
     // .def("getId", &Cell::getId)
     .def("getName", &Cell::getName,
@@ -205,15 +205,27 @@ void init_Cell(py::module &m) {
     // .def("getInputsDim", &Cell::getInputsDim, py::arg("dim"))
     // .def("getInputsDims", &Cell::getInputsDims)
     // .def("getInputsSize", &Cell::getInputsSize)
-    .def("getNbOutputs", &Cell::getNbOutputs)
-    // .def("getOutputsWidth", &Cell::getOutputsWidth)
-    // .def("getOutputsHeight", &Cell::getOutputsHeight)
+    .def("getNbOutputs", &Cell::getNbOutputs,
+    R"mydelimiter(
+     Returns number of output maps in the cell (or number of outputs for 1D cells)
+
+     )mydelimiter")
+    .def("getOutputsWidth", &Cell::getOutputsWidth,
+    R"mydelimiter(
+     Returns cell output maps width (returns 1 for 1D cells)
+
+     )mydelimiter")
+    .def("getOutputsHeight", &Cell::getOutputsHeight,
+    R"mydelimiter(
+     Returns cell output maps height (returns 1 for 1D cells)
+
+     )mydelimiter")
     // .def("getOutputsDim", &Cell::getOutputsDim, py::arg("dim"))
     // .def("getOutputsDims", &Cell::getOutputsDims)
     // .def("getOutputsSize", &Cell::getOutputsSize)
     // .def("getStats", &Cell::getStats)
     // .def("getReceptiveField", &Cell::getReceptiveField, py::arg("outputField") = std::vector<unsigned int>())
-    // .def("getAssociatedDeepNet", &Cell::getAssociatedDeepNet)
+    .def("getAssociatedDeepNet", &Cell::getAssociatedDeepNet)
     // .def("isConnection", &Cell::isConnection, py::arg("channel"), py::arg("output"))
     ;
 }

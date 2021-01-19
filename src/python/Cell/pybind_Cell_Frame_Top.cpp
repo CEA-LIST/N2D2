@@ -79,7 +79,7 @@ void init_Cell_Frame_Top(py::module &m) {
     // .def("addInput", &Cell_Frame_Top::addInput, py::arg("inputs"), py::arg("diffOutputs"))
     // .def("replaceInput", &Cell_Frame_Top::replaceInput, py::arg("oldInputs"), py::arg("newInputs"), py::arg("newDiffOutputs"))
     // .def("setOutputErrors", &Cell_Frame_Top::setOutputErrors, py::arg("errors"))
-    .def("getOutputs", (BaseTensor& (Cell_Frame_Top::*)()) &Cell_Frame_Top::getOutputs)
+    .def("getOutputs", (BaseTensor& (Cell_Frame_Top::*)()) &Cell_Frame_Top::getOutputs, py::return_value_policy::reference)
     // .def("getDiffInputs", (BaseTensor& (Cell_Frame_Top::*)()) &Cell_Frame_Top::getDiffInputs)
     // .def("checkGradient", &Cell_Frame_Top::checkGradient, py::arg("epsilon"), py::arg("maxError"))
     // .def("discretizeSignals", &Cell_Frame_Top::discretizeSignals, py::arg("nbLevels"), py::arg("signals") = Cell_Frame_Top::In)

@@ -22,14 +22,60 @@
 import n2d2
 import N2D2
 
-
 class Application:
+    _target = None
+    _provider = None
+    _mode = None
     def __init__(self, model):
         self._model = model
 
     def convert_to_INI(self, filename):
         n2d2.utils.convert_to_INI(filename, self._provider.get_database(), self._provider, self._model, self._target)
 
+    def getLoss(self, saveFile=""):
+        """
+        Return the list of loss.
+        """
+
+        if self._target:
+            loss = self._target.N2D2().getLoss()
+            if saveFile:
+                with open(saveFile, 'w') as file:
+                    for l in loss:
+                        file.write(l)
+            return loss
+        else:
+            raise RuntimeError("Target not initialized !")
+
+    def recognitionRate(self):
+        """
+        return the recognition rate
+        """
+        set = self._provider.get_database().StimuliSets[self._mode]
+        return self._target.N2D2().getAverageSuccess(set)
+
+    def logConfusionMatrix(self, path):
+        assert self._provider and self._mode and self._target
+        set = self._provider.get_database().StimuliSets[self._mode]
+        self._target.N2D2().logConfusionMatrix(path, set)
+
+    def logSuccess(self, path):
+        """
+        Save a graph of the loss and the validation score as a function of the step number.
+        """
+        assert self._provider and self._mode and self._target
+        set = self._provider.get_database().StimuliSets[self._mode]
+        self._target.N2D2().logSuccess(path, set)
+
+    # TODO : doesn't work for frame_CUDA and Spike
+    def show_outputs(self):
+        string = "Cells outputs :\n###############\n"
+        for cell in self._model.get_cells():
+            string += cell.getName() + ": "
+            for output in cell.getOutputs():
+                string += str(output) + " "
+            string += "\n"
+        print(string)
 
 class Classifier(Application):
     def __init__(self, provider, model):

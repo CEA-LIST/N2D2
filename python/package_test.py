@@ -100,7 +100,17 @@ for epoch in range(nb_epochs):
         print("Example: " + str(i*batch_size) + ", train success: "
               + "{0:.2f}".format(100*classifier.get_average_success(window=avg_window)) + "%", end='\r')
 
-
+    # Analysis tools :
+    # Print loss
+    print("Loss :\n",classifier.getLoss())
+    # Print Reocngition rate
+    print("Recognition rate :\n", classifier.recognitionRate())
+    # save a confusion matrix
+    classifier.logConfusionMatrix(str(epoch))
+    # save a graph of the loss and the validation score as a function of the number of steps
+    classifier.logSuccess(str(epoch))
+    # TODO : fix cell.getOutputs
+    classifier.show_outputs()
     print("\n### Validate Epoch: " + str(epoch) + " ###")
 
     classifier.set_mode('Validation')

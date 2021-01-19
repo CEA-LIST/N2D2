@@ -56,7 +56,9 @@ void init_TargetScore(py::module &m) {
     .def("clearSuccess", &TargetScore::clearSuccess, py::arg("set"))
     .def("clearScore", &TargetScore::clearScore, py::arg("set"))
     .def("clear", &TargetScore::clearScore, py::arg("set"))
-    .def("process", &TargetScore::process, py::arg("set"));
+    .def("process", &TargetScore::process, py::arg("set"))
+    .def("logSuccess", &TargetScore::logSuccess, py::arg("fileName"), py::arg("set"), py::arg("avgWindow") = 0)
+    .def("logConfusionMatrix", &TargetScore::logConfusionMatrix, py::arg("fileName"), py::arg("set"));
 }
 }
 #endif

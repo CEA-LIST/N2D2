@@ -52,7 +52,11 @@ class Cell(N2D2_Interface):
 
         self._initialized = False
 
+    def getName(self):
+        return self._Name
 
+    def getOutputs(self):
+        return self._N2D2_object.getOutputs()
 
     def get_output_cell(self):
         return self
