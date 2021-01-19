@@ -30,6 +30,7 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_DIR_Database(py::module &m) {
     py::class_<DIR_Database, std::shared_ptr<DIR_Database>, Database>(m, "DIR_Database")
+    .def(py::init<bool>(), py::arg("loadDataInMemory")=false)
     .def("loadDir", &DIR_Database::loadDir, 
         py::arg("dataPath"), 
         py::arg("depth") = 0, 
@@ -44,12 +45,7 @@ void init_DIR_Database(py::module &m) {
         :type labelName: str
         :param labelDepth: labelDepth = -1: no label for all stimuli (label ID = -1); labelDepth = 0: uses @p labelName string for all stimuli; labelDepth = 1: uses @p labelName string for stimuli in the current; directory (dirPath) and @p labelName + sub-directory name for stimuli in the sub-directories
         :type labelDepth: int
-        )mydelimiter")
-        
-    // TODO : Fix loadFile    
-    .def("loadFile", (Database::StimulusID (DIR_Database::*)(const std::string&))(&DIR_Database::loadFile), py::arg("fileName"))
-    .def("loadFile", (Database::StimulusID (DIR_Database::*)(const std::string&, const std::string&))(&DIR_Database::loadFile), py::arg("fileName"), py::arg("labelName"))
-    ;
+        )mydelimiter");
 }
 }
 #endif

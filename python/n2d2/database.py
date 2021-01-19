@@ -59,6 +59,18 @@ class Database(N2D2_Interface):
         #N2D2_Interface.create_INI_section()
         return output
 
+class DIR(Database):
+    _INI_type = 'DIR_Database'
+    _type = "DIR"
+    def __init__(self, **config_parameters):
+        Database.__init__(self, **config_parameters)
+        self._parse_optional_arguments(['LoadDataInMemory'])
+        self._N2D2_object = N2D2.DIR_Database(**self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)
+
+    def load(self, dataPath, depth=0, labelPath="", labelDepth=0):
+        self._N2D2_object.loadDir(dataPath, depth, labelPath, labelDepth)
+
 class MNIST(Database):
 
     _INI_type = 'MNIST_IDX_Database'
