@@ -668,41 +668,6 @@ N2D2::Cell_Frame_CUDA<T>::~Cell_Frame_CUDA()
     // dtor
 }
 
-template <class T>
-void N2D2::Cell_Frame_CUDA<T>::discretizeSignals(unsigned int nbLevels,
-                                              const Signals& signals)
-{
-    if (signals & In) {
-        mInputs.synchronizeDBasedToH();
-
-        for (CudaInterface<>::iterator itTensor = mInputs.begin(),
-            itTensorEnd = mInputs.end(); itTensor != itTensorEnd; ++itTensor)
-        {
-            Tensor<T> input = tensor_cast<T>(*(*itTensor));
-
-            //#pragma omp parallel for
-            for (int index = 0; index < (int)input.size(); ++index)
-                input(index) = Utils::round((nbLevels - 1) * input(index))
-                                  / (nbLevels - 1);
-
-            *(*itTensor) = input;
-        }
-
-        mInputs.synchronizeHToDBased();
-    }
-
-    if (signals & Out) {
-        mOutputs.synchronizeDToH();
-
-        //#pragma omp parallel for
-        for (int index = 0; index < (int)mOutputs.size(); ++index)
-            mOutputs(index) = Utils::round((nbLevels - 1) * mOutputs(index))
-                              / (nbLevels - 1);
-
-        mOutputs.synchronizeHToD();
-    }
-}
-
 namespace N2D2 {
     template class Cell_Frame_CUDA<half_float::half>;
     template class Cell_Frame_CUDA<float>;

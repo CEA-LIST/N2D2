@@ -106,7 +106,6 @@ public:
     virtual BaseTensor& getDiffInputs();
     virtual const BaseTensor& getDiffInputs() const;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
-    void discretizeSignals(unsigned int nbLevels, const Signals& signals = In);
     bool isCuda() const
     {
         return true;

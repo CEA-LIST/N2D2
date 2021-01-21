@@ -156,11 +156,6 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
 
     std::shared_ptr<DeepNet> deepNet(new DeepNet(network));
     deepNet->setParameter("Name", Utils::baseName(fileName));
-    deepNet->setParameter("SignalsDiscretization",
-        iniConfig.getProperty<unsigned int>("SignalsDiscretization", 0U));
-    deepNet->setParameter("FreeParametersDiscretization",
-        iniConfig.getProperty
-        <unsigned int>("FreeParametersDiscretization", 0U));
 
     if (iniConfig.isSection("database"))
         deepNet->setDatabase(

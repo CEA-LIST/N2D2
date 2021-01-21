@@ -47,10 +47,6 @@ TEST(DeepNet, DeepNet)
     ASSERT_EQUALS(deepNet.getLayer(0).size(), 1U);
     ASSERT_EQUALS(deepNet.getLayer(0)[0], "env");
     ASSERT_EQUALS(deepNet.getTargets().size(), 0U);
-    ASSERT_EQUALS(deepNet.getParameter<unsigned int>
-                  ("SignalsDiscretization"), 0U);
-    ASSERT_EQUALS(deepNet.getParameter<unsigned int>
-                  ("FreeParametersDiscretization"), 0U);
     ASSERT_THROW_ANY(deepNet.getTarget()->getDefaultTarget());
 }
 

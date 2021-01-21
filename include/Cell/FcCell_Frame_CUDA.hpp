@@ -76,7 +76,6 @@ public:
     void importFreeParameters(const std::string& fileName,
                               bool ignoreNotExists = false);
     void logFreeParametersDistrib(const std::string& fileName) const;
-    void discretizeFreeParameters(unsigned int nbLevels);
     
     std::pair<Float_T, Float_T> getFreeParametersRange(bool withAdditiveParameters = true) const;
     std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 

@@ -79,7 +79,6 @@ public:
     {
         return mRightPad;
     };
-    void discretizeFreeParameters(unsigned int /*nbLevels*/) {}; // no free
 
     void getStats(Stats& stats) const;
     std::vector<unsigned int> getReceptiveField(

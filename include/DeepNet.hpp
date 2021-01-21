@@ -221,8 +221,6 @@ public:
 
 protected:
     Parameter<std::string> mName;
-    Parameter<unsigned int> mSignalsDiscretization;
-    Parameter<unsigned int> mFreeParametersDiscretization;
 
 private:
     Network& mNet;
@@ -236,7 +234,6 @@ private:
 
     // cellName -> parentsNames
     std::multimap<std::string, std::string> mParentLayers;
-    bool mFreeParametersDiscretized;
     unsigned int mStreamIdx;
     unsigned int mStreamTestIdx;
 };

@@ -502,20 +502,6 @@ void N2D2::FcCell_Frame_CUDA<T>::logFreeParametersDistrib(const std::string
 }
 
 template <class T>
-void N2D2::FcCell_Frame_CUDA<T>::discretizeFreeParameters(unsigned int nbLevels)
-{
-    mSynapses.synchronizeDToH();
-    mBias.synchronizeDToH();
-
-    mSynchronized = true;
-    FcCell::discretizeFreeParameters(nbLevels);
-    mSynchronized = false;
-
-    mSynapses.synchronizeHToD();
-    mBias.synchronizeHToD();
-}
-
-template <class T>
 std::pair<N2D2::Float_T, N2D2::Float_T>
 N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRange(bool withAdditiveParameters) const
 {

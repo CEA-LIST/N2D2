@@ -374,32 +374,6 @@ void N2D2::FcCell::writeMap(const std::string& fileName) const
     */
 }
 
-void N2D2::FcCell::discretizeFreeParameters(unsigned int nbLevels)
-{
-    const unsigned int channelsSize = getInputsSize();
-
-#pragma omp parallel for if (getNbOutputs() > 32)
-    for (int output = 0; output < (int)getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
-            Tensor<double> weight;
-            getWeight(output, channel, weight);
-
-            weight(0) = Utils::round((nbLevels - 1) * weight(0))
-                            / (nbLevels - 1);
-
-            setWeight(output, channel, weight);
-        }
-
-        if (!mNoBias) {
-            Tensor<double> bias;
-            getBias(output, bias);
-            bias(0) = Utils::round((nbLevels - 1) * bias(0)) / (nbLevels - 1);
-
-            setBias(output, bias);
-        }
-    }
-}
-
 std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRange(bool withAdditiveParameters) const
 {
     const unsigned int channelsSize = getInputsSize();
