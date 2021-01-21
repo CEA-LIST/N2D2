@@ -35,9 +35,15 @@ public:
         return std::make_shared<SwishActivation_Frame<T> >();
     }
 
-    SwishActivation_Frame();
-    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
-    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
+    virtual void propagate(const Cell& cell,
+                           BaseTensor& input,
+                           BaseTensor& output,
+                           bool inference = false);
+    virtual void backPropagate(const Cell& cell,
+                               BaseTensor& input,
+                               BaseTensor& output,
+                               BaseTensor& diffInput,
+                               BaseTensor& diffOutput);
     virtual ~SwishActivation_Frame() {};
 
 protected:
@@ -49,44 +55,46 @@ private:
 }
 
 template <class T>
-N2D2::SwishActivation_Frame<T>::SwishActivation_Frame():
-    SwishActivation()
+void N2D2::SwishActivation_Frame<T>::propagate(
+    const Cell& cell, 
+    BaseTensor& baseInput,
+    BaseTensor& baseOutput,
+    bool /*inference*/)
 {
-    //ctor
-}
+    Tensor<T>& input = dynamic_cast<Tensor<T>&>(baseInput);
+    Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
 
-template <class T>
-void N2D2::SwishActivation_Frame<T>::propagate(const Cell& cell, BaseTensor& baseData,
-                                                   bool /*inference*/)
-{
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+    mScaling.propagate(cell, input, output);
 
-    mScaling.propagate(cell, data);
+    mSigmoid.resize(output.dims());
 
-    mSigmoid.resize(data.dims());
-
-#pragma omp parallel for if (data.size() > 1024)
-    for (int index = 0; index < (int)data.size(); ++index) {
-        const T sig(1.0f / (1.0f + std::exp(-data(index))));
+#pragma omp parallel for if (output.size() > 1024)
+    for (int index = 0; index < (int)output.size(); ++index) {
+        const T sig(1.0f / (1.0f + std::exp(-output(index))));
         mSigmoid(index) = sig;
-        data(index) = data(index) * sig;
+        output(index) = output(index) * sig;
     }
 }
 
 template <class T>
-void N2D2::SwishActivation_Frame<T>::backPropagate(const Cell& cell, 
-                                                       BaseTensor& baseData, BaseTensor& baseDiffData)
+void N2D2::SwishActivation_Frame<T>::backPropagate(
+    const Cell& cell, 
+    BaseTensor& /*baseInput*/,
+    BaseTensor& baseOutput,
+    BaseTensor& baseDiffInput,
+    BaseTensor& baseDiffOutput)
 {
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
-    Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
+    Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
+    Tensor<T>& diffInput = dynamic_cast<Tensor<T>&>(baseDiffInput);
+    Tensor<T>& diffOutput = dynamic_cast<Tensor<T>&>(baseDiffOutput);
 
-#pragma omp parallel for if (data.size() > 1024)
-    for (int index = 0; index < (int)diffData.size(); ++index) {
-        diffData(index) *= mSigmoid(index)
-            + data(index) * (1.0f - mSigmoid(index));
+#pragma omp parallel for if (output.size() > 1024)
+    for (int index = 0; index < (int)diffOutput.size(); ++index) {
+        diffOutput(index) = diffInput(index) * (mSigmoid(index)
+            + output(index) * (1.0f - mSigmoid(index)));
     }
     
-    mScaling.backPropagate(cell, data, diffData);
+    mScaling.backPropagate(cell, diffOutput, diffOutput);
 }
 
 #endif // N2D2_SWISHACTIVATION_FRAME_H

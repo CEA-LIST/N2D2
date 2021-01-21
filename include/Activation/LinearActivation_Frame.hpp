@@ -35,9 +35,15 @@ public:
         return std::make_shared<LinearActivation_Frame<T> >();
     }
 
-    LinearActivation_Frame();
-    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
-    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
+    virtual void propagate(const Cell& cell,
+                           BaseTensor& input,
+                           BaseTensor& output,
+                           bool inference = false);
+    virtual void backPropagate(const Cell& cell,
+                               BaseTensor& input,
+                               BaseTensor& output,
+                               BaseTensor& diffInput,
+                               BaseTensor& diffOutput);
     virtual ~LinearActivation_Frame() {};
 
 private:
@@ -46,46 +52,52 @@ private:
 }
 
 template <class T>
-N2D2::LinearActivation_Frame<T>::LinearActivation_Frame(): LinearActivation() {
-    // ctor
-}
-
-template <class T>
-void N2D2::LinearActivation_Frame<T>::propagate(const Cell& cell, BaseTensor& baseData,
-                                                bool /*inference*/)
+void N2D2::LinearActivation_Frame<T>::propagate(
+    const Cell& cell, 
+    BaseTensor& baseInput,
+    BaseTensor& baseOutput,
+    bool /*inference*/)
 {
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+    Tensor<T>& input = dynamic_cast<Tensor<T>&>(baseInput);
+    Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
 
-    mScaling.propagate(cell, data);
+    mScaling.propagate(cell, input, output);
 
     if (mClipping != 0.0 && !cell.isQuantized()) {
         const T clipping(mClipping);
 
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index)
-            data(index) = Utils::clamp<T>(data(index),
+#pragma omp parallel for if (output.size() > 1024)
+        for (int index = 0; index < (int)output.size(); ++index)
+            output(index) = Utils::clamp<T>(output(index),
                                              -clipping, clipping);
     }
 }
 
 template <class T>
-void N2D2::LinearActivation_Frame<T>::backPropagate(const Cell& cell, 
-                                                    BaseTensor& baseData, BaseTensor& baseDiffData)
+void N2D2::LinearActivation_Frame<T>::backPropagate(
+    const Cell& cell, 
+    BaseTensor& /*baseInput*/,
+    BaseTensor& baseOutput,
+    BaseTensor& baseDiffInput,
+    BaseTensor& baseDiffOutput)
 {
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
-    Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
+    Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
+    Tensor<T>& diffInput = dynamic_cast<Tensor<T>&>(baseDiffInput);
+    Tensor<T>& diffOutput = dynamic_cast<Tensor<T>&>(baseDiffOutput);
 
     if (mClipping != 0.0 && !cell.isQuantized()) {
         const T clipping(mClipping);
 
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)diffData.size(); ++index)
-            diffData(index)
-                *= (data(index) > -clipping && data(index) < clipping)
-                        ? 1.0f : 0.0f;
-    }
+#pragma omp parallel for if (output.size() > 1024)
+        for (int index = 0; index < (int)diffOutput.size(); ++index)
+            diffOutput(index) = diffInput(index)
+                * ((output(index) > -clipping && output(index) < clipping)
+                        ? 1.0f : 0.0f);
 
-    mScaling.backPropagate(cell, data, diffData);
+        mScaling.backPropagate(cell, diffOutput, diffOutput);
+    }
+    else
+        mScaling.backPropagate(cell, diffInput, diffOutput);
 }
 
 #endif // N2D2_LINEARACTIVATION_FRAME_H

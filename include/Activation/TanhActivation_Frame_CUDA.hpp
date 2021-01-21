@@ -38,12 +38,15 @@ public:
     }
 
     TanhActivation_Frame_CUDA();
-
-    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
-    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
-
-    void propagate(const Cell& cell, CudaTensor<T>& data, bool inference = false);
-
+    virtual void propagate(const Cell& cell,
+                           BaseTensor& input,
+                           BaseTensor& output,
+                           bool inference = false);
+    virtual void backPropagate(const Cell& cell,
+                               BaseTensor& input,
+                               BaseTensor& output,
+                               BaseTensor& diffInput,
+                               BaseTensor& diffOutput);
     virtual ~TanhActivation_Frame_CUDA();
 
 protected:
@@ -71,12 +74,16 @@ N2D2::TanhActivation_Frame_CUDA<T>::TanhActivation_Frame_CUDA()
 }
 
 template <class T>
-void N2D2::TanhActivation_Frame_CUDA<T>::propagate(const Cell& cell, 
-                                                   BaseTensor& data, bool /*inference*/)
+void N2D2::TanhActivation_Frame_CUDA<T>::propagate(
+    const Cell& cell, 
+    BaseTensor& baseInput,
+    BaseTensor& baseOutput,
+    bool /*inference*/)
 {
-    CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
+    CudaTensor<T>& input = dynamic_cast<CudaTensor<T>&>(baseInput);
+    CudaTensor<T>& output = dynamic_cast<CudaTensor<T>&>(baseOutput);
 
-    mScaling.propagate(cell, cudaData);
+    mScaling.propagate(cell, input, output);
 
     const typename Cuda::cudnn_scaling_type<T>::type alpha = mAlpha;
     const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
@@ -84,19 +91,24 @@ void N2D2::TanhActivation_Frame_CUDA<T>::propagate(const Cell& cell,
     CHECK_CUDNN_STATUS(cudnnActivationForward(CudaContext::cudnnHandle(),
                                               mActivationDesc,
                                               &alpha,
-                                              cudaData.getCudnnTensorDesc(),
-                                              cudaData.getDevicePtr(),
+                                              output.getCudnnTensorDesc(),
+                                              output.getDevicePtr(),
                                               &beta,
-                                              cudaData.getCudnnTensorDesc(),
-                                              cudaData.getDevicePtr()));
+                                              output.getCudnnTensorDesc(),
+                                              output.getDevicePtr()));
 }
 
 template <class T>
-void N2D2::TanhActivation_Frame_CUDA<T>::backPropagate(const Cell& cell, 
-                                                       BaseTensor& data, BaseTensor& diffData)
+void N2D2::TanhActivation_Frame_CUDA<T>::backPropagate(
+    const Cell& cell, 
+    BaseTensor& /*baseInput*/,
+    BaseTensor& baseOutput,
+    BaseTensor& baseDiffInput,
+    BaseTensor& baseDiffOutput)
 {
-    CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
-    CudaTensor<T>& cudaDiffData = dynamic_cast<CudaTensor<T>&>(diffData);
+    CudaTensor<T>& output = dynamic_cast<CudaTensor<T>&>(baseOutput);
+    CudaTensor<T>& diffInput = dynamic_cast<CudaTensor<T>&>(baseDiffInput);
+    CudaTensor<T>& diffOutput = dynamic_cast<CudaTensor<T>&>(baseDiffOutput);
 
     const typename Cuda::cudnn_scaling_type<T>::type alpha = mAlpha;
     const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
@@ -105,17 +117,17 @@ void N2D2::TanhActivation_Frame_CUDA<T>::backPropagate(const Cell& cell,
         cudnnActivationBackward(CudaContext::cudnnHandle(),
                                 mActivationDesc,
                                 &alpha,
-                                cudaData.getCudnnTensorDesc(),
-                                cudaData.getDevicePtr(),
-                                cudaDiffData.getCudnnTensorDesc(),
-                                cudaDiffData.getDevicePtr(),
-                                cudaData.getCudnnTensorDesc(),
-                                cudaData.getDevicePtr(),
+                                output.getCudnnTensorDesc(),
+                                output.getDevicePtr(),
+                                diffInput.getCudnnTensorDesc(),
+                                diffInput.getDevicePtr(),
+                                output.getCudnnTensorDesc(),
+                                output.getDevicePtr(),
                                 &beta,
-                                cudaDiffData.getCudnnTensorDesc(),
-                                cudaDiffData.getDevicePtr()));
+                                diffOutput.getCudnnTensorDesc(),
+                                diffOutput.getDevicePtr()));
     
-    mScaling.backPropagate(cell, cudaData, cudaDiffData);
+    mScaling.backPropagate(cell, diffOutput, diffOutput);
 }
 
 template <class T>

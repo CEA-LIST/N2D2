@@ -38,7 +38,6 @@ public:
     using Cell_Frame_CUDA<T>::mDiffInputs;
     using Cell_Frame_CUDA<T>::mDiffOutputs;
     using Cell_Frame_CUDA<T>::mActivation;
-    using Cell_Frame_CUDA<T>::mActivationDesc;
 
     ActivationCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                         unsigned int nbOutputs,

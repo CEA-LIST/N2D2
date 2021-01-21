@@ -37,11 +37,15 @@ public:
         return std::make_shared<SwishActivation_Frame_CUDA<T> >();
     }
 
-    SwishActivation_Frame_CUDA();
-
-    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
-    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
-
+    virtual void propagate(const Cell& cell,
+                           BaseTensor& input,
+                           BaseTensor& output,
+                           bool inference = false);
+    virtual void backPropagate(const Cell& cell,
+                               BaseTensor& input,
+                               BaseTensor& output,
+                               BaseTensor& diffInput,
+                               BaseTensor& diffOutput);
     virtual ~SwishActivation_Frame_CUDA() {};
 
 protected:
@@ -53,42 +57,45 @@ private:
 }
 
 template <class T>
-N2D2::SwishActivation_Frame_CUDA<T>::SwishActivation_Frame_CUDA():
-    SwishActivation()
+void N2D2::SwishActivation_Frame_CUDA<T>::propagate(
+    const Cell& cell, 
+    BaseTensor& baseInput,
+    BaseTensor& baseOutput,
+    bool /*inference*/)
 {
-    // ctor
-}
+    CudaTensor<T>& input = dynamic_cast<CudaTensor<T>&>(baseInput);
+    CudaTensor<T>& output = dynamic_cast<CudaTensor<T>&>(baseOutput);
 
-template <class T>
-void N2D2::SwishActivation_Frame_CUDA<T>::propagate(const Cell& cell, 
-                                                        BaseTensor& baseData, bool /*inference*/)
-{
-    CudaTensor<T>& data = dynamic_cast<CudaTensor<T>&>(baseData);
+    mScaling.propagate(cell, input, output);
 
-    mScaling.propagate(cell, data);
-
-    mSigmoid.resize(data.dims());
+    mSigmoid.resize(output.dims());
     cudaSwish_propagate(
-        data.getDevicePtr(),
-        data.getDevicePtr(),
+        output.getDevicePtr(),
+        output.getDevicePtr(),
         mSigmoid.getDevicePtr(),
-        data.size());
+        output.size());
 }
 
 template <class T>
-void N2D2::SwishActivation_Frame_CUDA<T>::backPropagate(const Cell& cell, 
-                                                            BaseTensor& baseData, BaseTensor& baseDiffData) 
+void N2D2::SwishActivation_Frame_CUDA<T>::backPropagate(
+    const Cell& cell, 
+    BaseTensor& /*baseInput*/,
+    BaseTensor& baseOutput,
+    BaseTensor& baseDiffInput,
+    BaseTensor& baseDiffOutput)
 {
-    CudaTensor<T>& data = dynamic_cast<CudaTensor<T>&>(baseData);
-    CudaTensor<T>& diffData = dynamic_cast<CudaTensor<T>&>(baseDiffData);
+    CudaTensor<T>& output = dynamic_cast<CudaTensor<T>&>(baseOutput);
+    CudaTensor<T>& diffInput = dynamic_cast<CudaTensor<T>&>(baseDiffInput);
+    CudaTensor<T>& diffOutput = dynamic_cast<CudaTensor<T>&>(baseDiffOutput);
 
     cudaSwish_backPropagate(
-        data.getDevicePtr(),
-        diffData.getDevicePtr(),
+        output.getDevicePtr(),
+        diffInput.getDevicePtr(),
+        diffOutput.getDevicePtr(),
         mSigmoid.getDevicePtr(),
-        data.size());
+        output.size());
     
-    mScaling.backPropagate(cell, data, diffData);
+    mScaling.backPropagate(cell, diffOutput, diffOutput);
 }
 
 #endif // N2D2_SWISHACTIVATION_FRAME_CUDA_H

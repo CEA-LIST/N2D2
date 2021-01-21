@@ -34,8 +34,15 @@ public:
         return std::make_shared<TanhActivation_Frame<T> >();
     }
 
-    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
-    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
+    virtual void propagate(const Cell& cell,
+                           BaseTensor& input,
+                           BaseTensor& output,
+                           bool inference = false);
+    virtual void backPropagate(const Cell& cell,
+                               BaseTensor& input,
+                               BaseTensor& output,
+                               BaseTensor& diffInput,
+                               BaseTensor& diffOutput);
     virtual ~TanhActivation_Frame() {};
 
 private:
@@ -44,46 +51,55 @@ private:
 }
 
 template <class T>
-void N2D2::TanhActivation_Frame<T>::propagate(const Cell& cell, BaseTensor& baseData,
-                                              bool /*inference*/)
+void N2D2::TanhActivation_Frame<T>::propagate(
+    const Cell& cell, 
+    BaseTensor& baseInput,
+    BaseTensor& baseOutput,
+    bool /*inference*/)
 {
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+    Tensor<T>& input = dynamic_cast<Tensor<T>&>(baseInput);
+    Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
 
-    mScaling.propagate(cell, data);
+    mScaling.propagate(cell, input, output);
 
     if (mAlpha != 1.0) {
         const T alpha(mAlpha);
 
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index)
-            data(index) = std::tanh(alpha * data(index));
+#pragma omp parallel for if (output.size() > 1024)
+        for (int index = 0; index < (int)output.size(); ++index)
+            output(index) = std::tanh(alpha * output(index));
     } else {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index)
-            data(index) = std::tanh(data(index));
+#pragma omp parallel for if (output.size() > 1024)
+        for (int index = 0; index < (int)output.size(); ++index)
+            output(index) = std::tanh(output(index));
     }
 }
 
 template <class T>
-void N2D2::TanhActivation_Frame<T>::backPropagate(const Cell& cell, 
-                                                  BaseTensor& baseData, BaseTensor& baseDiffData)
+void N2D2::TanhActivation_Frame<T>::backPropagate(
+    const Cell& cell, 
+    BaseTensor& /*baseInput*/,
+    BaseTensor& baseOutput,
+    BaseTensor& baseDiffInput,
+    BaseTensor& baseDiffOutput)
 {
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
-    Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
+    Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
+    Tensor<T>& diffInput = dynamic_cast<Tensor<T>&>(baseDiffInput);
+    Tensor<T>& diffOutput = dynamic_cast<Tensor<T>&>(baseDiffOutput);
 
     if (mAlpha != 1.0) {
         const T alpha(mAlpha);
 
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)diffData.size(); ++index)
-            diffData(index) *= alpha * (1.0f - data(index) * data(index));
+#pragma omp parallel for if (output.size() > 1024)
+        for (int index = 0; index < (int)diffOutput.size(); ++index)
+            diffOutput(index) = diffInput(index) * alpha * (1.0f - output(index) * output(index));
     } else {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)diffData.size(); ++index)
-            diffData(index) *= (1.0f - data(index) * data(index));
+#pragma omp parallel for if (output.size() > 1024)
+        for (int index = 0; index < (int)diffOutput.size(); ++index)
+            diffOutput(index) = diffInput(index) * (1.0f - output(index) * output(index));
     }
     
-    mScaling.backPropagate(cell, data, diffData);
+    mScaling.backPropagate(cell, diffOutput, diffOutput);
 }
 
 #endif // N2D2_TANHACTIVATION_FRAME_H

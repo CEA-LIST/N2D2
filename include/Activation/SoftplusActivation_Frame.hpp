@@ -38,8 +38,15 @@ public:
         return std::make_shared<SoftplusActivation_Frame<T> >();
     }
 
-    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
-    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
+    virtual void propagate(const Cell& cell,
+                           BaseTensor& input,
+                           BaseTensor& output,
+                           bool inference = false);
+    virtual void backPropagate(const Cell& cell,
+                               BaseTensor& input,
+                               BaseTensor& output,
+                               BaseTensor& diffInput,
+                               BaseTensor& diffOutput);
     virtual ~SoftplusActivation_Frame() {};
 
 private:
@@ -48,15 +55,19 @@ private:
 }
 
 template <class T>
-void N2D2::SoftplusActivation_Frame<T>::propagate(const Cell& cell, BaseTensor& baseData,
-                                                  bool /*inference*/)
+void N2D2::SoftplusActivation_Frame<T>::propagate(
+    const Cell& cell, 
+    BaseTensor& baseInput,
+    BaseTensor& baseOutput,
+    bool /*inference*/)
 {
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+    Tensor<T>& input = dynamic_cast<Tensor<T>&>(baseInput);
+    Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
 
-    mScaling.propagate(cell, data);
+    mScaling.propagate(cell, input, output);
 
-#pragma omp parallel for if (data.size() > 1024)
-    for (int index = 0; index < (int)data.size(); ++index) {
+#pragma omp parallel for if (output.size() > 1024)
+    for (int index = 0; index < (int)output.size(); ++index) {
 #if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
         // Disabling of FE_OVERFLOW must be INSIDE THE LOOP, because else it
         // only applies to the main thread when using OpenMP
@@ -64,7 +75,7 @@ void N2D2::SoftplusActivation_Frame<T>::propagate(const Cell& cell, BaseTensor& 
         fedisableexcept(FE_OVERFLOW);
 #endif
 
-        data(index) = std::log(1.0f + std::exp(data(index)));
+        output(index) = std::log(1.0f + std::exp(output(index)));
 
 #if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
         feenableexcept(excepts);
@@ -73,17 +84,22 @@ void N2D2::SoftplusActivation_Frame<T>::propagate(const Cell& cell, BaseTensor& 
 }
 
 template <class T>
-void N2D2::SoftplusActivation_Frame<T>::backPropagate(const Cell& cell, 
-                                                      BaseTensor& baseData, BaseTensor& baseDiffData)
+void N2D2::SoftplusActivation_Frame<T>::backPropagate(
+    const Cell& cell, 
+    BaseTensor& /*baseInput*/,
+    BaseTensor& baseOutput,
+    BaseTensor& baseDiffInput,
+    BaseTensor& baseDiffOutput)
 {
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
-    Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
+    Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
+    Tensor<T>& diffInput = dynamic_cast<Tensor<T>&>(baseDiffInput);
+    Tensor<T>& diffOutput = dynamic_cast<Tensor<T>&>(baseDiffOutput);
 
-#pragma omp parallel for if (data.size() > 1024)
-    for (int index = 0; index < (int)diffData.size(); ++index)
-        diffData(index) *= (1.0f - std::exp(-data(index)));
+#pragma omp parallel for if (output.size() > 1024)
+    for (int index = 0; index < (int)diffOutput.size(); ++index)
+        diffOutput(index) = diffInput(index) * (1.0f - std::exp(-output(index)));
     
-    mScaling.backPropagate(cell, data, diffData);
+    mScaling.backPropagate(cell, diffOutput, diffOutput);
 }
 
 #endif // N2D2_SOFTPLUSACTIVATION_FRAME_H

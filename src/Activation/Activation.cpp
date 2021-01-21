@@ -27,6 +27,19 @@ N2D2::Activation::Activation()
     // ctor
 }
 
+void N2D2::Activation::propagate(const Cell& cell,
+                                 BaseTensor& inOut,
+                                 bool inference)
+{
+    propagate(cell, inOut, inOut, inference);
+}
+
+void N2D2::Activation::backPropagate(const Cell& cell,
+                                     BaseTensor& output,
+                                     BaseTensor& diffInOut)
+{
+    backPropagate(cell, output, output, diffInOut, diffInOut);
+}
 
 const N2D2::Scaling& N2D2::Activation::getActivationScaling() const {
     return mScaling;

@@ -37,11 +37,15 @@ public:
         return std::make_shared<SoftplusActivation_Frame_CUDA<T> >();
     }
 
-    SoftplusActivation_Frame_CUDA();
-
-    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
-    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
-
+    virtual void propagate(const Cell& cell,
+                           BaseTensor& input,
+                           BaseTensor& output,
+                           bool inference = false);
+    virtual void backPropagate(const Cell& cell,
+                               BaseTensor& input,
+                               BaseTensor& output,
+                               BaseTensor& diffInput,
+                               BaseTensor& diffOutput);
     virtual ~SoftplusActivation_Frame_CUDA() {};
 
 private:
@@ -50,37 +54,40 @@ private:
 }
 
 template <class T>
-N2D2::SoftplusActivation_Frame_CUDA<T>::SoftplusActivation_Frame_CUDA()
-    : SoftplusActivation()
+void N2D2::SoftplusActivation_Frame_CUDA<T>::propagate(
+    const Cell& cell, 
+    BaseTensor& baseInput,
+    BaseTensor& baseOutput,
+    bool /*inference*/)
 {
-    // ctor
+    CudaTensor<T>& input = dynamic_cast<CudaTensor<T>&>(baseInput);
+    CudaTensor<T>& output = dynamic_cast<CudaTensor<T>&>(baseOutput);
+
+    mScaling.propagate(cell, input, output);
+
+    cudaSoftplus_propagate(output.getDevicePtr(),
+                            output.getDevicePtr(),
+                            output.size());
 }
 
 template <class T>
-void N2D2::SoftplusActivation_Frame_CUDA<T>::propagate(const Cell& cell, 
-                                                       BaseTensor& baseData, bool /*inference*/)
+void N2D2::SoftplusActivation_Frame_CUDA<T>::backPropagate(
+    const Cell& cell, 
+    BaseTensor& /*baseInput*/,
+    BaseTensor& baseOutput,
+    BaseTensor& baseDiffInput,
+    BaseTensor& baseDiffOutput)
 {
-    CudaTensor<T>& data = dynamic_cast<CudaTensor<T>&>(baseData);
+    CudaTensor<T>& output = dynamic_cast<CudaTensor<T>&>(baseOutput);
+    CudaTensor<T>& diffInput = dynamic_cast<CudaTensor<T>&>(baseDiffInput);
+    CudaTensor<T>& diffOutput = dynamic_cast<CudaTensor<T>&>(baseDiffOutput);
 
-    mScaling.propagate(cell, data);
-
-    cudaSoftplus_propagate(data.getDevicePtr(),
-                            data.getDevicePtr(),
-                            data.size());
-}
-
-template <class T>
-void N2D2::SoftplusActivation_Frame_CUDA<T>::backPropagate(const Cell& cell, 
-                                                           BaseTensor& baseData, BaseTensor& baseDiffData)
-{
-    CudaTensor<T>& data = dynamic_cast<CudaTensor<T>&>(baseData);
-    CudaTensor<T>& diffData = dynamic_cast<CudaTensor<T>&>(baseDiffData);
-
-    cudaSoftplus_backPropagate(data.getDevicePtr(),
-                                diffData.getDevicePtr(),
-                                data.size());
+    cudaSoftplus_backPropagate(output.getDevicePtr(),
+                                diffInput.getDevicePtr(),
+                                diffOutput.getDevicePtr(),
+                                output.size());
     
-    mScaling.backPropagate(cell, data, diffData);
+    mScaling.backPropagate(cell, diffOutput, diffOutput);
 }
 
 #endif // N2D2_SOFTPLUSACTIVATION_FRAME_CUDA_H

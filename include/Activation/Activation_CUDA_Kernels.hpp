@@ -38,8 +38,9 @@ void cudaRectifier_propagate(T* x,
                              T leakSlope,
                              T clipping);
 template <class T>
-void cudaRectifier_backPropagate(T* x,
+void cudaRectifier_backPropagate(T* y,
                                  T* dx,
+                                 T* dy,
                                  unsigned int size,
                                  T leakSlope,
                                  T clipping);
@@ -51,8 +52,9 @@ void cudaSaturation_propagate(T* x,
                               unsigned int size,
                               T threshold);
 template <class T>
-void cudaSaturation_backPropagate(T* x,
+void cudaSaturation_backPropagate(T* y,
                                   T* dx,
+                                  T* dy,
                                   unsigned int size,
                                   T threshold);
 
@@ -60,7 +62,10 @@ void cudaSaturation_backPropagate(T* x,
 template <class T>
 void cudaSoftplus_propagate(T* x, T* y, unsigned int size);
 template <class T>
-void cudaSoftplus_backPropagate(T* x, T* dx, unsigned int size);
+void cudaSoftplus_backPropagate(T* y,
+                                T* dx,
+                                T* dy,
+                                unsigned int size);
 
 // Swish
 template <class T>
@@ -69,8 +74,9 @@ void cudaSwish_propagate(T* x,
                          T* sigmoid,
                          unsigned int size);
 template <class T>
-void cudaSwish_backPropagate(T* x,
+void cudaSwish_backPropagate(T* y,
                              T* dx,
+                             T* dy,
                              T* sigmoid,
                              unsigned int size);
 }
