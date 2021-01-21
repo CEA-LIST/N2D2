@@ -96,22 +96,5 @@ private:
 };
 }
 
-namespace N2D2 {
-template <>
-void PoolCell_Frame_EXT_CUDA<half_float::half>::propagate(bool inference);
-template <>
-void PoolCell_Frame_EXT_CUDA<half_float::half>::backPropagate();
-
-template <>
-void PoolCell_Frame_EXT_CUDA<float>::propagate(bool inference);
-template <>
-void PoolCell_Frame_EXT_CUDA<float>::backPropagate();
-
-template <>
-void PoolCell_Frame_EXT_CUDA<double>::propagate(bool inference);
-template <>
-void PoolCell_Frame_EXT_CUDA<double>::backPropagate();
-}
-
 
 #endif // N2D2_POOLCELL_FRAME_EXT_CUDA_H

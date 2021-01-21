@@ -333,7 +333,15 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTarget(const Tensor<int>& targets)
                                     mTargets.dimY(),
                                     mTargets.dimX(),
                                     mTargets.dimB());
-        setOutputTargetsInternal();
+
+        cudaSetOutputTargets<T>(CudaContext::getDeviceProp(),
+                                    mTargets.getDevicePtr(),
+                                    mNbTargetOutputs.getDevicePtr(),
+                                    mDiffInputs.getDevicePtr(),
+                                    mDiffInputs.dimZ(), // = getNbOutputs()
+                                    mDiffInputs.dimY(),
+                                    mDiffInputs.dimX(),
+                                    mDiffInputs.dimB());
     }
 }
 
@@ -342,102 +350,19 @@ double N2D2::Cell_Frame_CUDA<T>::applyLoss(double targetVal,
                                            double defaultVal)
 {
     mLossMem.resize(mOutputs.dims());
-    const double loss = applyLossInternal(targetVal, defaultVal);
+    const double loss = cudaApplyLoss<T>(CudaContext::getDeviceProp(),
+                                 mLossMem.getDevicePtr(),
+                                 mOutputs.getDevicePtr(),
+                                 mDiffInputs.getDevicePtr(),
+                                 mDiffInputs.dimZ(), // = getNbOutputs()
+                                 mDiffInputs.dimY(),
+                                 mDiffInputs.dimX(),
+                                 mDiffInputs.dimB(),
+                                 T(targetVal),
+                                 T(defaultVal));
 
     mDiffInputs.setValid();
     return (loss / mOutputs.dimB());
-}
-
-namespace N2D2 {
-template <>
-void Cell_Frame_CUDA<half_float::half>::setOutputTargetsInternal()
-{
-    cudaHSetOutputTargets(CudaContext::getDeviceProp(),
-                                 mTargets.getDevicePtr(),
-                                 mNbTargetOutputs.getDevicePtr(),
-                                 mDiffInputs.getDevicePtr(),
-                                 mDiffInputs.dimZ(), // = getNbOutputs()
-                                 mDiffInputs.dimY(),
-                                 mDiffInputs.dimX(),
-                                 mDiffInputs.dimB());
-}
-
-template <>
-void Cell_Frame_CUDA<float>::setOutputTargetsInternal()
-{
-    cudaSSetOutputTargets(CudaContext::getDeviceProp(),
-                                 mTargets.getDevicePtr(),
-                                 mNbTargetOutputs.getDevicePtr(),
-                                 mDiffInputs.getDevicePtr(),
-                                 mDiffInputs.dimZ(), // = getNbOutputs()
-                                 mDiffInputs.dimY(),
-                                 mDiffInputs.dimX(),
-                                 mDiffInputs.dimB());
-}
-
-template <>
-void Cell_Frame_CUDA<double>::setOutputTargetsInternal()
-{
-    cudaDSetOutputTargets(CudaContext::getDeviceProp(),
-                                 mTargets.getDevicePtr(),
-                                 mNbTargetOutputs.getDevicePtr(),
-                                 mDiffInputs.getDevicePtr(),
-                                 mDiffInputs.dimZ(), // = getNbOutputs()
-                                 mDiffInputs.dimY(),
-                                 mDiffInputs.dimX(),
-                                 mDiffInputs.dimB());
-}
-
-template <>
-double Cell_Frame_CUDA<half_float::half>::applyLossInternal(
-    double targetVal,
-    double defaultVal)
-{
-    return cudaHApplyLoss(CudaContext::getDeviceProp(),
-                                 mLossMem.getDevicePtr(),
-                                 mOutputs.getDevicePtr(),
-                                 mDiffInputs.getDevicePtr(),
-                                 mDiffInputs.dimZ(), // = getNbOutputs()
-                                 mDiffInputs.dimY(),
-                                 mDiffInputs.dimX(),
-                                 mDiffInputs.dimB(),
-                                 half_float::half(targetVal),
-                                 half_float::half(defaultVal));
-}
-
-template <>
-double Cell_Frame_CUDA<float>::applyLossInternal(
-    double targetVal,
-    double defaultVal)
-{
-    return cudaSApplyLoss(CudaContext::getDeviceProp(),
-                                 mLossMem.getDevicePtr(),
-                                 mOutputs.getDevicePtr(),
-                                 mDiffInputs.getDevicePtr(),
-                                 mDiffInputs.dimZ(), // = getNbOutputs()
-                                 mDiffInputs.dimY(),
-                                 mDiffInputs.dimX(),
-                                 mDiffInputs.dimB(),
-                                 (float)targetVal,
-                                 (float)defaultVal);
-}
-
-template <>
-double Cell_Frame_CUDA<double>::applyLossInternal(
-    double targetVal,
-    double defaultVal)
-{
-    return cudaDApplyLoss(CudaContext::getDeviceProp(),
-                                 mLossMem.getDevicePtr(),
-                                 mOutputs.getDevicePtr(),
-                                 mDiffInputs.getDevicePtr(),
-                                 mDiffInputs.dimZ(), // = getNbOutputs()
-                                 mDiffInputs.dimY(),
-                                 mDiffInputs.dimX(),
-                                 mDiffInputs.dimB(),
-                                 targetVal,
-                                 defaultVal);
-}
 }
 
 template <class T>

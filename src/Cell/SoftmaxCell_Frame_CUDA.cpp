@@ -24,6 +24,7 @@
 #include "Cell/SoftmaxCell_Frame_CUDA.hpp"
 #include "DeepNet.hpp"
 #include "third_party/half.hpp"
+#include "CublasUtils.hpp"
 
 template <>
 N2D2::Registrar<N2D2::SoftmaxCell>
@@ -191,44 +192,18 @@ void N2D2::SoftmaxCell_Frame_CUDA<T>::backPropagate()
     mDiffOutputs.synchronizeDToHBased();
 }
 
-namespace N2D2 {
-template <>
-void N2D2::SoftmaxCell_Frame_CUDA<half_float::half>::backPropagateWithLoss() {
-    const half_float::half alpha(1.0f);
+template <class T>
+void N2D2::SoftmaxCell_Frame_CUDA<T>::backPropagateWithLoss() {
+    const T alpha(1.0f);
 
-    std::shared_ptr<CudaDeviceTensor<half_float::half> > diffOutput0
+    std::shared_ptr<CudaDeviceTensor<T> > diffOutput0
         = (mDiffOutputs[0].isValid())
-            ? cuda_device_tensor_cast<half_float::half>(mDiffOutputs[0])
-            : cuda_device_tensor_cast_nocopy<half_float::half>(mDiffOutputs[0]);
-
-    if (mDiffOutputs[0].isValid()) {
-        cudaHaxpy(mDiffOutputs[0].size(), // size of data
-                  alpha,
-                  mDiffInputs.getDevicePtr(),
-                  diffOutput0->getDevicePtr());
-    } else {
-        CHECK_CUDA_STATUS(
-            cudaMemcpy(diffOutput0->getDevicePtr(),
-                       mDiffInputs.getDevicePtr(),
-                       mDiffOutputs[0].size() * sizeof(half_float::half),
-                       cudaMemcpyDeviceToDevice));
-    }
-
-    mDiffOutputs[0].deviceTensor() = *diffOutput0;
-}
-
-template <>
-void N2D2::SoftmaxCell_Frame_CUDA<float>::backPropagateWithLoss() {
-    const float alpha = 1.0f;
-
-    std::shared_ptr<CudaDeviceTensor<float> > diffOutput0
-        = (mDiffOutputs[0].isValid())
-            ? cuda_device_tensor_cast<float>(mDiffOutputs[0])
-            : cuda_device_tensor_cast_nocopy<float>(mDiffOutputs[0]);
+            ? cuda_device_tensor_cast<T>(mDiffOutputs[0])
+            : cuda_device_tensor_cast_nocopy<T>(mDiffOutputs[0]);
 
     if (mDiffOutputs[0].isValid()) {
         CHECK_CUBLAS_STATUS(
-            cublasSaxpy(CudaContext::cublasHandle(),
+            cublasAxpy(CudaContext::cublasHandle(),
                         mDiffOutputs[0].size(), // size of data
                         &alpha,
                         mDiffInputs.getDevicePtr(),
@@ -239,7 +214,7 @@ void N2D2::SoftmaxCell_Frame_CUDA<float>::backPropagateWithLoss() {
         CHECK_CUDA_STATUS(
             cudaMemcpy(diffOutput0->getDevicePtr(),
                        mDiffInputs.getDevicePtr(),
-                       mDiffOutputs[0].size() * sizeof(float),
+                       mDiffOutputs[0].size() * sizeof(T),
                        cudaMemcpyDeviceToDevice));
     }
     /*
@@ -256,36 +231,6 @@ void N2D2::SoftmaxCell_Frame_CUDA<float>::backPropagateWithLoss() {
                 }
     */
     mDiffOutputs[0].deviceTensor() = *diffOutput0;
-}
-
-template <>
-void N2D2::SoftmaxCell_Frame_CUDA<double>::backPropagateWithLoss() {
-    const double alpha = 1.0;
-
-    std::shared_ptr<CudaDeviceTensor<double> > diffOutput0
-        = (mDiffOutputs[0].isValid())
-            ? cuda_device_tensor_cast<double>(mDiffOutputs[0])
-            : cuda_device_tensor_cast_nocopy<double>(mDiffOutputs[0]);
-
-    if (mDiffOutputs[0].isValid()) {
-        CHECK_CUBLAS_STATUS(
-            cublasDaxpy(CudaContext::cublasHandle(),
-                        mDiffOutputs[0].size(), // size of data
-                        &alpha,
-                        mDiffInputs.getDevicePtr(),
-                        1,
-                        diffOutput0->getDevicePtr(),
-                        1));
-    } else {
-        CHECK_CUDA_STATUS(
-            cudaMemcpy(diffOutput0->getDevicePtr(),
-                       mDiffInputs.getDevicePtr(),
-                       mDiffOutputs[0].size() * sizeof(double),
-                       cudaMemcpyDeviceToDevice));
-    }
-
-    mDiffOutputs[0].deviceTensor() = *diffOutput0;
-}
 }
 
 template <class T>

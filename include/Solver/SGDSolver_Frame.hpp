@@ -86,24 +86,8 @@ void N2D2::SGDSolver_Frame<T>::update(BaseTensor& baseData,
     if (rate == 0.0)
         return;
 
-    if (mQuantizationLevels > 0 && mContinuousData.empty()) {
-        mContinuousData.resize(data.dims());
-        std::copy(data.begin(), data.end(), mContinuousData.begin());
-    }
-
-    Tensor<T>& continuousData
-        = (mQuantizationLevels > 0) ? mContinuousData : data;
-
     // Normalize in function of the iteration size
     const T rateDiff(rate / (batchSize * (T)mIterationSize));
-
-    if (mQuantizationLevels > 0) {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index) {
-            diffData(index) = Utils::clamp<T>(diffData(index),
-                                              T(-1.0f), T(1.0f));
-        }
-    }
 
     T clampMin, clampMax;
     std::tie(clampMin, clampMax) = getClamping<T>();
@@ -115,15 +99,15 @@ void N2D2::SGDSolver_Frame<T>::update(BaseTensor& baseData,
             || clampMax != std::numeric_limits<T>::max())
         {
             for (int index = 0; index < (int)data.size(); ++index) {
-                continuousData(index) = Utils::clamp<T>(
-                    continuousData(index)
+                data(index) = Utils::clamp<T>(
+                    data(index)
                         + rateDiff * diffData(index), clampMin, clampMax);
             }
         }
         else {
             //#pragma omp parallel for
             for (int index = 0; index < (int)data.size(); ++index)
-                continuousData(index) += rateDiff * diffData(index);
+                data(index) += rateDiff * diffData(index);
         }
     } else {
         const T momentum(mMomentum);
@@ -144,33 +128,20 @@ void N2D2::SGDSolver_Frame<T>::update(BaseTensor& baseData,
                 const T alpha = -decay * rate;
 
                 // mMomentumData = mMomentumData - decay*rate*data
-                mMomentumData(index) += alpha * continuousData(index);
+                mMomentumData(index) += alpha * data(index);
             }
 
             // data = data + mMomentumData
             if (clampMin != std::numeric_limits<T>::lowest()
                 || clampMax != std::numeric_limits<T>::max())
             {
-                continuousData(index) = Utils::clamp<T>(
-                    continuousData(index) + mMomentumData(index),
+                data(index) = Utils::clamp<T>(
+                    data(index) + mMomentumData(index),
                         clampMin, clampMax);
             }
             else
-                continuousData(index) += mMomentumData(index);
+                data(index) += mMomentumData(index);
         }
-    }
-
-    if (mQuantizationLevels > 0) {
-        std::tie(mMinVal, mMaxVal) = minMax(continuousData);
-
-        rangeZeroAlign(mMinVal, mMaxVal,
-                       mMinValQuant, mMaxValQuant, mQuantizationLevels);
-
-        quantize(data,
-                 continuousData,
-                 T(mMinValQuant),
-                 T(mMaxValQuant),
-                 mQuantizationLevels);
     }
 }
 

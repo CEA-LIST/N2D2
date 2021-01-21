@@ -23,8 +23,6 @@
 const char* N2D2::SwishActivation::Type = "Swish";
 
 N2D2::SwishActivation::SwishActivation()
-    : mMaxValMA(0.0),
-      mMaxValQuant(0.0)
 {
     // ctor
 }
@@ -32,23 +30,4 @@ N2D2::SwishActivation::SwishActivation()
 std::pair<double, double> N2D2::SwishActivation::getOutputRange() const {
     const double max = std::numeric_limits<double>::infinity();
     return std::make_pair(-max, max);
-}
-
-void N2D2::SwishActivation::saveInternal(std::ostream& state,
-                                             std::ostream& log) const
-{
-    state.write(reinterpret_cast<const char*>(&mMaxValMA), sizeof(mMaxValMA));
-    state.write(reinterpret_cast<const char*>(&mMaxValQuant),
-                sizeof(mMaxValQuant));
-
-    log << "Range after moving average (*MA): [0, " << mMaxValMA << "]\n"
-        << "Quantization range (*Quant): [0, " << mMaxValQuant << "]\n"
-        << "Quantization range after rescaling: [0, "
-            << (mMaxValQuant / mPreQuantizeScaling) << "]" << std::endl;
-}
-
-void N2D2::SwishActivation::loadInternal(std::istream& state)
-{
-    state.read(reinterpret_cast<char*>(&mMaxValMA), sizeof(mMaxValMA));
-    state.read(reinterpret_cast<char*>(&mMaxValQuant), sizeof(mMaxValQuant));
 }

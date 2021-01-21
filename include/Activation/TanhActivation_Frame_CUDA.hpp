@@ -23,7 +23,6 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "Activation/Activation_Kernels.hpp"
 #include "Activation/Activation_CUDA_Kernels.hpp"
 #include "Activation/TanhActivation.hpp"
 #include "Cell/Cell.hpp"
@@ -73,7 +72,7 @@ N2D2::TanhActivation_Frame_CUDA<T>::TanhActivation_Frame_CUDA()
 
 template <class T>
 void N2D2::TanhActivation_Frame_CUDA<T>::propagate(const Cell& cell, 
-                                                   BaseTensor& data, bool inference)
+                                                   BaseTensor& data, bool /*inference*/)
 {
     CudaTensor<T>& cudaData = dynamic_cast<CudaTensor<T>&>(data);
 
@@ -90,23 +89,6 @@ void N2D2::TanhActivation_Frame_CUDA<T>::propagate(const Cell& cell,
                                               &beta,
                                               cudaData.getCudnnTensorDesc(),
                                               cudaData.getDevicePtr()));
-
-    propagate(cell, cudaData, inference);
-}
-
-namespace N2D2 {
-template <>
-void TanhActivation_Frame_CUDA<half_float::half>::propagate(const Cell& cell, 
-                                                            CudaTensor<half_float::half>& data, 
-                                                            bool inference);
-
-template <>
-void TanhActivation_Frame_CUDA<float>::propagate(const Cell& cell, 
-                                                 CudaTensor<float>& data, bool inference);
-
-template <>
-void TanhActivation_Frame_CUDA<double>::propagate(const Cell& cell, 
-                                                  CudaTensor<double>& data, bool inference);
 }
 
 template <class T>

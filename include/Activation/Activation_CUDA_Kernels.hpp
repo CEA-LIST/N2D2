@@ -31,97 +31,48 @@
 
 namespace N2D2 {
 // Rectifier
-void cudaHRectifier_propagate(half_float::half* x,
-                              half_float::half* y,
-                              unsigned int size,
-                              half_float::half leakSlope,
-                              half_float::half clipping);
-void cudaSRectifier_propagate(float* x,
-                              float* y,
-                              unsigned int size,
-                              float leakSlope,
-                              float clipping);
-void cudaDRectifier_propagate(double* x,
-                              double* y,
-                              unsigned int size,
-                              double leakSlope,
-                              double clipping);
-void cudaHRectifier_backPropagate(half_float::half* x,
-                                  half_float::half* dx,
-                                  unsigned int size,
-                                  half_float::half leakSlope,
-                                  half_float::half clipping);
-void cudaSRectifier_backPropagate(float* x,
-                                  float* dx,
-                                  unsigned int size,
-                                  float leakSlope,
-                                  float clipping);
-void cudaDRectifier_backPropagate(double* x,
-                                  double* dx,
-                                  unsigned int size,
-                                  double leakSlope,
-                                  double clipping);
+template <class T>
+void cudaRectifier_propagate(T* x,
+                             T* y,
+                             unsigned int size,
+                             T leakSlope,
+                             T clipping);
+template <class T>
+void cudaRectifier_backPropagate(T* x,
+                                 T* dx,
+                                 unsigned int size,
+                                 T leakSlope,
+                                 T clipping);
+
 // Saturation
-void cudaHSaturation_propagate(half_float::half* x,
-                               half_float::half* y,
-                               unsigned int size,
-                               half_float::half threshold);
-void cudaSSaturation_propagate(float* x,
-                               float* y,
-                               unsigned int size,
-                               float threshold);
-void cudaDSaturation_propagate(double* x,
-                               double* y,
-                               unsigned int size,
-                               double threshold);
-void cudaHSaturation_backPropagate(half_float::half* x,
-                                   half_float::half* dx,
-                                   unsigned int size,
-                                   half_float::half threshold);
-void cudaSSaturation_backPropagate(float* x,
-                                   float* dx,
-                                   unsigned int size,
-                                   float threshold);
-void cudaDSaturation_backPropagate(double* x,
-                                   double* dx,
-                                   unsigned int size,
-                                   double threshold);
+template <class T>
+void cudaSaturation_propagate(T* x,
+                              T* y,
+                              unsigned int size,
+                              T threshold);
+template <class T>
+void cudaSaturation_backPropagate(T* x,
+                                  T* dx,
+                                  unsigned int size,
+                                  T threshold);
+
 // Softplus
-void cudaHSoftplus_propagate(half_float::half* x,
-                             half_float::half* y,
-                             unsigned int size);
-void cudaSSoftplus_propagate(float* x, float* y, unsigned int size);
-void cudaDSoftplus_propagate(double* x, double* y, unsigned int size);
-void cudaHSoftplus_backPropagate(half_float::half* x, half_float::half* dx,
-                                 unsigned int size);
-void cudaSSoftplus_backPropagate(float* x, float* dx, unsigned int size);
-void cudaDSoftplus_backPropagate(double* x, double* dx, unsigned int size);
+template <class T>
+void cudaSoftplus_propagate(T* x, T* y, unsigned int size);
+template <class T>
+void cudaSoftplus_backPropagate(T* x, T* dx, unsigned int size);
 
 // Swish
-void cudaHSwish_propagate(half_float::half* x,
-                          half_float::half* y,
-                          half_float::half* sigmoid,
-                          unsigned int size);
-void cudaSSwish_propagate(float* x,
-                          float* y,
-                          float* sigmoid,
-                          unsigned int size);
-void cudaDSwish_propagate(double* x,
-                          double* y,
-                          double* sigmoid,
-                          unsigned int size);
-void cudaHSwish_backPropagate(half_float::half* x,
-                              half_float::half* dx,
-                              half_float::half* sigmoid,
-                              unsigned int size);
-void cudaSSwish_backPropagate(float* x,
-                              float* dx,
-                              float* sigmoid,
-                              unsigned int size);
-void cudaDSwish_backPropagate(double* x,
-                              double* dx,
-                              double* sigmoid,
-                              unsigned int size);
+template <class T>
+void cudaSwish_propagate(T* x,
+                         T* y,
+                         T* sigmoid,
+                         unsigned int size);
+template <class T>
+void cudaSwish_backPropagate(T* x,
+                             T* dx,
+                             T* sigmoid,
+                             unsigned int size);
 }
 
 #endif // N2D2_ACTIVATION_CUDA_KERNELS_H

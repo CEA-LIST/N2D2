@@ -61,14 +61,4 @@ protected:
 };
 }
 
-namespace N2D2 {
-template <> void NormalizeCell_Frame_CUDA<half_float::half>::propagate(bool inference);
-template <> void NormalizeCell_Frame_CUDA<float>::propagate(bool inference);
-template <> void NormalizeCell_Frame_CUDA<double>::propagate(bool inference);
-
-template <> void NormalizeCell_Frame_CUDA<half_float::half>::backPropagate();
-template <> void NormalizeCell_Frame_CUDA<float>::backPropagate();
-template <> void NormalizeCell_Frame_CUDA<double>::backPropagate();
-}
-
 #endif // N2D2_NORMALIZE_CELL_FRAME_CUDA_H

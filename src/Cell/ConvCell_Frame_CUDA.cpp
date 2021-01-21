@@ -845,13 +845,6 @@ void N2D2::ConvCell_Frame_CUDA<T>::update()
         }
     }
 
-    if (mActivation) {
-        double minVal, maxVal;
-        //TODO: implement common scaling for all the solvers in the cell
-        std::tie(minVal, maxVal) = mWeightsSolvers.back()->getQuantizedRange();
-        mActivation->setPreQuantizeScaling(maxVal);
-    }
-
     if (!mNoBias && mDiffBias.isValid())
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
 }

@@ -18,32 +18,41 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_FMPCELL_FRAME_CUDA_KERNELS_H
-#define N2D2_FMPCELL_FRAME_CUDA_KERNELS_H
+#ifndef N2D2_CUBLAS_UTILS_H
+#define N2D2_CUBLAS_UTILS_H
 
+#include <stdexcept>
 #include <cfloat>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#include <cuda_fp16.h>
 
 #include "CudaUtils.hpp"
+#include "third_party/half.hpp"
 
 namespace N2D2 {
+
 template <class T>
-void cudaFMPPropagate(const cudaDeviceProp& deviceProp,
-                       const T alpha,
-                       T* inputs,
-                       unsigned int* gridX,
-                       unsigned int* gridY,
-                       const T beta,
-                       T* outputs,
-                       unsigned int nbChannels,
-                       unsigned int channelsHeight,
-                       unsigned int channelsWidth,
-                       unsigned int nbOutputs,
-                       unsigned int outputsHeight,
-                       unsigned int outputsWidth,
-                       unsigned int batchSize,
-                       bool overlapping);
+cublasStatus_t  cublasScal(cublasHandle_t handle, int n,
+                                  const T           *alpha,
+                                  T           *x, int incx);
+
+template <class T>
+cublasStatus_t cublasAxpy(cublasHandle_t handle, int n,
+                           const T           *alpha,
+                           const T           *x, int incx,
+                           T                 *y, int incy);
+
+template <class T>
+cublasStatus_t cublasGemm(cublasHandle_t handle,
+                           cublasOperation_t transa, cublasOperation_t transb,
+                           int m, int n, int k,
+                           const T *alpha,
+                           const T *A, int lda,
+                           const T *B, int ldb,
+                           const T *beta,
+                           T *C, int ldc);
+
 }
 
-#endif // N2D2_FMPCELL_FRAME_CUDA_KERNELS_H
+#endif // N2D2_CUBLAS_UTILS_H

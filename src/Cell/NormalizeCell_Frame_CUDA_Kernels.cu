@@ -21,9 +21,54 @@
 #include "Cell/NormalizeCell_Frame_CUDA_Kernels.hpp"
 
 ////Forward
-//Half
+template <class T>
 __global__
-void cudaHNormalizeL2Forward_kernel(const __half alpha,
+void cudaNormalizeL2Forward_kernel(const T alpha,
+                                    T* inputs,
+                                    unsigned int nbChannels,
+                                    unsigned int channelsHeight,
+                                    unsigned int channelsWidth,
+                                    unsigned int batchSize,
+                                    const T beta,
+                                    T* outputs,
+                                    T* normData,
+                                    unsigned int nbOutputs,
+                                    unsigned int outputsHeight,
+                                    unsigned int outputsWidth)
+{
+    const unsigned int batchOffset = blockIdx.z * nbOutputs
+                                           * outputsHeight * outputsWidth;
+
+    for (unsigned int oy = threadIdx.y; oy < outputsHeight;
+            oy += blockDim.y) {
+        for (unsigned int ox = threadIdx.x; ox < outputsWidth;
+                ox += blockDim.x)
+        {
+            T sumSq = 0.0f;
+
+            for (unsigned int output = 0; output < nbOutputs; ++output) {
+                const unsigned int idx = batchOffset
+                    + ox + (oy + output * outputsHeight) * outputsWidth;
+
+                sumSq += inputs[idx] * inputs[idx];
+            }
+
+            const T scale = sqrt(sumSq + 1.0e-6);
+
+            for (unsigned int output = 0; output < nbOutputs; ++output) {
+                const unsigned int idx = batchOffset
+                    + ox + (oy + output * outputsHeight) * outputsWidth;
+
+                normData[idx] = scale;
+                outputs[idx] = inputs[idx] / scale;
+            }
+        }
+    }
+}
+
+template <>
+__global__
+void cudaNormalizeL2Forward_kernel<__half>(const __half alpha,
                                     __half* inputs,
                                     unsigned int nbChannels,
                                     unsigned int channelsHeight,
@@ -89,100 +134,60 @@ void cudaHNormalizeL2Forward_kernel(const __half alpha,
     }
 }
 
-//Float
-__global__
-void cudaSNormalizeL2Forward_kernel(const float alpha,
-                                    float* inputs,
-                                    unsigned int nbChannels,
-                                    unsigned int channelsHeight,
-                                    unsigned int channelsWidth,
-                                    unsigned int batchSize,
-                                    const float beta,
-                                    float* outputs,
-                                    float* normData,
-                                    unsigned int nbOutputs,
-                                    unsigned int outputsHeight,
-                                    unsigned int outputsWidth)
-{
-    const unsigned int batchOffset = blockIdx.z * nbOutputs
-                                           * outputsHeight * outputsWidth;
-
-    for (unsigned int oy = threadIdx.y; oy < outputsHeight;
-            oy += blockDim.y) {
-        for (unsigned int ox = threadIdx.x; ox < outputsWidth;
-                ox += blockDim.x)
-        {
-            float sumSq = 0.0f;
-
-            for (unsigned int output = 0; output < nbOutputs; ++output) {
-                const unsigned int idx = batchOffset
-                    + ox + (oy + output * outputsHeight) * outputsWidth;
-
-                sumSq += inputs[idx] * inputs[idx];
-            }
-
-            const float scale = sqrt(sumSq + 1.0e-6);
-
-            for (unsigned int output = 0; output < nbOutputs; ++output) {
-                const unsigned int idx = batchOffset
-                    + ox + (oy + output * outputsHeight) * outputsWidth;
-
-                normData[idx] = scale;
-                outputs[idx] = inputs[idx] / scale;
-            }
-        }
-    }
-}
-
-//Double
-__global__
-void cudaDNormalizeL2Forward_kernel(const double alpha,
-                                    double* inputs,
-                                    unsigned int nbChannels,
-                                    unsigned int channelsHeight,
-                                    unsigned int channelsWidth,
-                                    unsigned int batchSize,
-                                    const double beta,
-                                    double* outputs,
-                                    double* normData,
-                                    unsigned int nbOutputs,
-                                    unsigned int outputsHeight,
-                                    unsigned int outputsWidth)
-{
-    const unsigned int batchOffset = blockIdx.z * nbOutputs
-                                           * outputsHeight * outputsWidth;
-
-    for (unsigned int oy = threadIdx.y; oy < outputsHeight;
-            oy += blockDim.y) {
-        for (unsigned int ox = threadIdx.x; ox < outputsWidth;
-                ox += blockDim.x)
-        {
-            double sumSq = 0.0;
-
-            for (unsigned int output = 0; output < nbOutputs; ++output) {
-                const unsigned int idx = batchOffset
-                    + ox + (oy + output * outputsHeight) * outputsWidth;
-
-                sumSq += inputs[idx] * inputs[idx];
-            }
-
-            const double scale = sqrt(sumSq + 1.0e-6);
-
-            for (unsigned int output = 0; output < nbOutputs; ++output) {
-                const unsigned int idx = batchOffset
-                    + ox + (oy + output * outputsHeight) * outputsWidth;
-
-                normData[idx] = scale;
-                outputs[idx] = inputs[idx] / scale;
-            }
-        }
-    }
-}
-
 // Backward
-//Half
+template <class T>
 __global__
-void cudaHNormalizeL2Backward_kernel(const __half alpha,
+void cudaNormalizeL2Backward_kernel(const T alpha,
+                                     T* outputs,
+                                     T* normData,
+                                     T* diffInputs,
+                                     unsigned int nbOutputs,
+                                     unsigned int outputsHeight,
+                                     unsigned int outputsWidth,
+                                     unsigned int batchSize,
+                                     const T beta,
+                                     T* diffOutputs,
+                                     unsigned int nbChannels,
+                                     unsigned int channelsHeight,
+                                     unsigned int channelsWidth)
+{
+    const unsigned int batchOffset = blockIdx.z * nbOutputs
+                                           * outputsHeight * outputsWidth;
+
+    for (unsigned int oy = threadIdx.y; oy < outputsHeight;
+            oy += blockDim.y) {
+        for (unsigned int ox = threadIdx.x; ox < outputsWidth;
+                ox += blockDim.x)
+        {
+            T a = 0.0f;
+
+            for (unsigned int output = 0; output < nbOutputs; ++output) {
+                const unsigned int idx = batchOffset
+                    + ox + (oy + output * outputsHeight) * outputsWidth;
+
+                a += outputs[idx] * diffInputs[idx];
+            }
+
+            for (unsigned int output = 0; output < nbOutputs; ++output) {
+                const unsigned int idx = batchOffset
+                    + ox + (oy + output * outputsHeight) * outputsWidth;
+
+                if (beta != 0.0f) {
+                    diffOutputs[idx] = (diffInputs[idx] - outputs[idx] * a)
+                        / normData[idx] + beta * diffOutputs[idx];
+                }
+                else {
+                    diffOutputs[idx] = (diffInputs[idx] - outputs[idx] * a)
+                        / normData[idx];
+                }
+            }
+        }
+    }
+}
+
+template <>
+__global__
+void cudaNormalizeL2Backward_kernel<__half>(const __half alpha,
                                      __half* outputs,
                                      __half* normData,
                                      __half* diffInputs,
@@ -266,108 +271,102 @@ void cudaHNormalizeL2Backward_kernel(const __half alpha,
     }
 }
 
-//Float
-__global__
-void cudaSNormalizeL2Backward_kernel(const float alpha,
-                                     float* outputs,
-                                     float* normData,
-                                     float* diffInputs,
-                                     unsigned int nbOutputs,
-                                     unsigned int outputsHeight,
-                                     unsigned int outputsWidth,
-                                     unsigned int batchSize,
-                                     const float beta,
-                                     float* diffOutputs,
-                                     unsigned int nbChannels,
-                                     unsigned int channelsHeight,
-                                     unsigned int channelsWidth)
+namespace N2D2 {
+
+template <class T>
+void cudaNormalizeL2Forward(const cudaDeviceProp& deviceProp,
+                                   T alpha,
+                                   T* inputs,
+                                   unsigned int nbChannels,
+                                   unsigned int channelsHeight,
+                                   unsigned int channelsWidth,
+                                   unsigned int batchSize,
+                                   T beta,
+                                   T* outputs,
+                                   T* normData,
+                                   unsigned int nbOutputs,
+                                   unsigned int outputsHeight,
+                                   unsigned int outputsWidth)
 {
-    const unsigned int batchOffset = blockIdx.z * nbOutputs
-                                           * outputsHeight * outputsWidth;
+    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
-    for (unsigned int oy = threadIdx.y; oy < outputsHeight;
-            oy += blockDim.y) {
-        for (unsigned int ox = threadIdx.x; ox < outputsWidth;
-                ox += blockDim.x)
-        {
-            float a = 0.0f;
+    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
+                                       ? outputsWidth * outputsHeight
+                                       : maxSize;
 
-            for (unsigned int output = 0; output < nbOutputs; ++output) {
-                const unsigned int idx = batchOffset
-                    + ox + (oy + output * outputsHeight) * outputsWidth;
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
 
-                a += outputs[idx] * diffInputs[idx];
-            }
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
+    const dim3 blocksPerGrid = {1, 1, batchSize};
+    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-            for (unsigned int output = 0; output < nbOutputs; ++output) {
-                const unsigned int idx = batchOffset
-                    + ox + (oy + output * outputsHeight) * outputsWidth;
-
-                if (beta != 0.0f) {
-                    diffOutputs[idx] = (diffInputs[idx] - outputs[idx] * a)
-                        / normData[idx] + beta * diffOutputs[idx];
-                }
-                else {
-                    diffOutputs[idx] = (diffInputs[idx] - outputs[idx] * a)
-                        / normData[idx];
-                }
-            }
-        }
-    }
+    cudaNormalizeL2Forward_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (reinterpret_cast<typename Cuda::cuda_type<T>::type&>(alpha),
+           reinterpret_cast<typename Cuda::cuda_type<T>::type*>(inputs),
+           nbChannels,
+           channelsHeight,
+           channelsWidth,
+           batchSize,
+           reinterpret_cast<typename Cuda::cuda_type<T>::type&>(beta),
+           reinterpret_cast<typename Cuda::cuda_type<T>::type*>(outputs),
+           reinterpret_cast<typename Cuda::cuda_type<T>::type*>(normData),
+           nbOutputs,
+           outputsHeight,
+           outputsWidth);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-//Double
-__global__
-void cudaDNormalizeL2Backward_kernel(const double alpha,
-                                     double* outputs,
-                                     double* normData,
-                                     double* diffInputs,
-                                     unsigned int nbOutputs,
-                                     unsigned int outputsHeight,
-                                     unsigned int outputsWidth,
-                                     unsigned int batchSize,
-                                     const double beta,
-                                     double* diffOutputs,
-                                     unsigned int nbChannels,
-                                     unsigned int channelsHeight,
-                                     unsigned int channelsWidth)
+template <class T>
+void cudaNormalizeL2Backward(const cudaDeviceProp& deviceProp,
+                                    T alpha,
+                                    T* outputs,
+                                    T* normData,
+                                    T* diffInputs,
+                                    unsigned int nbOutputs,
+                                    unsigned int outputsHeight,
+                                    unsigned int outputsWidth,
+                                    unsigned int batchSize,
+                                    T beta,
+                                    T* diffOutputs,
+                                    unsigned int nbChannels,
+                                    unsigned int channelsHeight,
+                                    unsigned int channelsWidth)
 {
-    const unsigned int batchOffset = blockIdx.z * nbOutputs
-                                           * outputsHeight * outputsWidth;
+    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
-    for (unsigned int oy = threadIdx.y; oy < outputsHeight;
-            oy += blockDim.y) {
-        for (unsigned int ox = threadIdx.x; ox < outputsWidth;
-                ox += blockDim.x)
-        {
-            double a = 0.0;
+    const unsigned int groupSize = (channelsWidth * channelsHeight < maxSize)
+                                       ? channelsWidth * channelsHeight
+                                       : maxSize;
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
 
-            for (unsigned int output = 0; output < nbOutputs; ++output) {
-                const unsigned int idx = batchOffset
-                    + ox + (oy + output * outputsHeight) * outputsWidth;
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
 
-                a += outputs[idx] * diffInputs[idx];
-            }
+    const dim3 blocksPerGrid = {1, 1, batchSize};
+    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-            for (unsigned int output = 0; output < nbOutputs; ++output) {
-                const unsigned int idx = batchOffset
-                    + ox + (oy + output * outputsHeight) * outputsWidth;
-
-                if (beta != 0.0) {
-                    diffOutputs[idx] = (diffInputs[idx] - outputs[idx] * a)
-                        / normData[idx] + beta * diffOutputs[idx];
-                }
-                else {
-                    diffOutputs[idx] = (diffInputs[idx] - outputs[idx] * a)
-                        / normData[idx];
-                }
-            }
-        }
-    }
+    cudaNormalizeL2Backward_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (reinterpret_cast<typename Cuda::cuda_type<T>::type&>(alpha),
+           reinterpret_cast<typename Cuda::cuda_type<T>::type*>(outputs),
+           reinterpret_cast<typename Cuda::cuda_type<T>::type*>(normData),
+           reinterpret_cast<typename Cuda::cuda_type<T>::type*>(diffInputs),
+           nbOutputs,
+           outputsHeight,
+           outputsWidth,
+           batchSize,
+           reinterpret_cast<typename Cuda::cuda_type<T>::type&>(beta),
+           reinterpret_cast<typename Cuda::cuda_type<T>::type*>(diffOutputs),
+           nbChannels,
+           channelsHeight,
+           channelsWidth);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-//Half
-void N2D2::cudaHNormalizeL2Forward(const cudaDeviceProp& deviceProp,
+
+template void cudaNormalizeL2Forward(const cudaDeviceProp& deviceProp,
                                    half_float::half alpha,
                                    half_float::half* inputs,
                                    unsigned int nbChannels,
@@ -379,129 +378,35 @@ void N2D2::cudaHNormalizeL2Forward(const cudaDeviceProp& deviceProp,
                                    half_float::half* normData,
                                    unsigned int nbOutputs,
                                    unsigned int outputsHeight,
-                                   unsigned int outputsWidth)
-{
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
-    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
-
-    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
-                                       ? outputsWidth * outputsHeight
-                                       : maxSize;
-
-    const unsigned int reqWidth
-        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
-
-    const unsigned int groupWidth = min(prefMultiple, reqWidth);
-    const dim3 blocksPerGrid = {1, 1, batchSize};
-    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
-
-    cudaHNormalizeL2Forward_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (reinterpret_cast<__half&>(alpha),
-           reinterpret_cast<__half*>(inputs),
-           nbChannels,
-           channelsHeight,
-           channelsWidth,
-           batchSize,
-           reinterpret_cast<__half&>(beta),
-           reinterpret_cast<__half*>(outputs),
-           reinterpret_cast<__half*>(normData),
-           nbOutputs,
-           outputsHeight,
-           outputsWidth);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-}
-//Float
-void N2D2::cudaSNormalizeL2Forward(const cudaDeviceProp& deviceProp,
-                                   const float alpha,
+                                   unsigned int outputsWidth);
+template void cudaNormalizeL2Forward(const cudaDeviceProp& deviceProp,
+                                   float alpha,
                                    float* inputs,
                                    unsigned int nbChannels,
                                    unsigned int channelsHeight,
                                    unsigned int channelsWidth,
                                    unsigned int batchSize,
-                                   const float beta,
+                                   float beta,
                                    float* outputs,
                                    float* normData,
                                    unsigned int nbOutputs,
                                    unsigned int outputsHeight,
-                                   unsigned int outputsWidth)
-{
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
-    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
-
-    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
-                                       ? outputsWidth * outputsHeight
-                                       : maxSize;
-    const unsigned int reqWidth
-        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
-
-    const unsigned int groupWidth = min(prefMultiple, reqWidth);
-
-    const dim3 blocksPerGrid = {1, 1, batchSize};
-    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
-
-    cudaSNormalizeL2Forward_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (alpha,
-           inputs,
-           nbChannels,
-           channelsHeight,
-           channelsWidth,
-           batchSize,
-           beta,
-           outputs,
-           normData,
-           nbOutputs,
-           outputsHeight,
-           outputsWidth);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-}
-
-//Double
-void N2D2::cudaDNormalizeL2Forward(const cudaDeviceProp& deviceProp,
-                                   const double alpha,
+                                   unsigned int outputsWidth);
+template void cudaNormalizeL2Forward(const cudaDeviceProp& deviceProp,
+                                   double alpha,
                                    double* inputs,
                                    unsigned int nbChannels,
                                    unsigned int channelsHeight,
                                    unsigned int channelsWidth,
                                    unsigned int batchSize,
-                                   const double beta,
+                                   double beta,
                                    double* outputs,
                                    double* normData,
                                    unsigned int nbOutputs,
                                    unsigned int outputsHeight,
-                                   unsigned int outputsWidth)
-{
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
-    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
+                                   unsigned int outputsWidth);
 
-    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
-                                       ? outputsWidth * outputsHeight
-                                       : maxSize;
-    const unsigned int reqWidth
-        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
-
-    const unsigned int groupWidth = min(prefMultiple, reqWidth);
-
-    const dim3 blocksPerGrid = {1, 1, batchSize};
-    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
-
-    cudaDNormalizeL2Forward_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (alpha,
-           inputs,
-           nbChannels,
-           channelsHeight,
-           channelsWidth,
-           batchSize,
-           beta,
-           outputs,
-           normData,
-           nbOutputs,
-           outputsHeight,
-           outputsWidth);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-}
-
-//Half
-void N2D2::cudaHNormalizeL2Backward(const cudaDeviceProp& deviceProp,
+template void cudaNormalizeL2Backward(const cudaDeviceProp& deviceProp,
                                     half_float::half alpha,
                                     half_float::half* outputs,
                                     half_float::half* normData,
@@ -514,41 +419,9 @@ void N2D2::cudaHNormalizeL2Backward(const cudaDeviceProp& deviceProp,
                                     half_float::half* diffOutputs,
                                     unsigned int nbChannels,
                                     unsigned int channelsHeight,
-                                    unsigned int channelsWidth)
-{
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
-    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
-
-    const unsigned int groupSize = (channelsWidth * channelsHeight < maxSize)
-                                       ? channelsWidth * channelsHeight
-                                       : maxSize;
-    const unsigned int reqWidth
-        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
-
-    const unsigned int groupWidth = min(prefMultiple, reqWidth);
-
-    const dim3 blocksPerGrid = {1, 1, batchSize};
-    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
-
-    cudaHNormalizeL2Backward_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (reinterpret_cast<__half&>(alpha),
-           reinterpret_cast<__half*>(outputs),
-           reinterpret_cast<__half*>(normData),
-           reinterpret_cast<__half*>(diffInputs),
-           nbOutputs,
-           outputsHeight,
-           outputsWidth,
-           batchSize,
-           reinterpret_cast<__half&>(beta),
-           reinterpret_cast<__half*>(diffOutputs),
-           nbChannels,
-           channelsHeight,
-           channelsWidth);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-}
-//Float
-void N2D2::cudaSNormalizeL2Backward(const cudaDeviceProp& deviceProp,
-                                    const float alpha,
+                                    unsigned int channelsWidth);
+template void cudaNormalizeL2Backward(const cudaDeviceProp& deviceProp,
+                                    float alpha,
                                     float* outputs,
                                     float* normData,
                                     float* diffInputs,
@@ -556,45 +429,13 @@ void N2D2::cudaSNormalizeL2Backward(const cudaDeviceProp& deviceProp,
                                     unsigned int outputsHeight,
                                     unsigned int outputsWidth,
                                     unsigned int batchSize,
-                                    const float beta,
+                                    float beta,
                                     float* diffOutputs,
                                     unsigned int nbChannels,
                                     unsigned int channelsHeight,
-                                    unsigned int channelsWidth)
-{
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
-    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
-
-    const unsigned int groupSize = (channelsWidth * channelsHeight < maxSize)
-                                       ? channelsWidth * channelsHeight
-                                       : maxSize;
-    const unsigned int reqWidth
-        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
-
-    const unsigned int groupWidth = min(prefMultiple, reqWidth);
-
-    const dim3 blocksPerGrid = {1, 1, batchSize};
-    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
-
-    cudaSNormalizeL2Backward_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (alpha,
-           outputs,
-           normData,
-           diffInputs,
-           nbOutputs,
-           outputsHeight,
-           outputsWidth,
-           batchSize,
-           beta,
-           diffOutputs,
-           nbChannels,
-           channelsHeight,
-           channelsWidth);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-}
-//Double
-void N2D2::cudaDNormalizeL2Backward(const cudaDeviceProp& deviceProp,
-                                    const double alpha,
+                                    unsigned int channelsWidth);
+template void cudaNormalizeL2Backward(const cudaDeviceProp& deviceProp,
+                                    double alpha,
                                     double* outputs,
                                     double* normData,
                                     double* diffInputs,
@@ -602,39 +443,10 @@ void N2D2::cudaDNormalizeL2Backward(const cudaDeviceProp& deviceProp,
                                     unsigned int outputsHeight,
                                     unsigned int outputsWidth,
                                     unsigned int batchSize,
-                                    const double beta,
+                                    double beta,
                                     double* diffOutputs,
                                     unsigned int nbChannels,
                                     unsigned int channelsHeight,
-                                    unsigned int channelsWidth)
-{
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
-    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
+                                    unsigned int channelsWidth);
 
-    const unsigned int groupSize = (channelsWidth * channelsHeight < maxSize)
-                                       ? channelsWidth * channelsHeight
-                                       : maxSize;
-    const unsigned int reqWidth
-        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
-
-    const unsigned int groupWidth = min(prefMultiple, reqWidth);
-
-    const dim3 blocksPerGrid = {1, 1, batchSize};
-    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
-
-    cudaDNormalizeL2Backward_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (alpha,
-           outputs,
-           normData,
-           diffInputs,
-           nbOutputs,
-           outputsHeight,
-           outputsWidth,
-           batchSize,
-           beta,
-           diffOutputs,
-           nbChannels,
-           channelsHeight,
-           channelsWidth);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }

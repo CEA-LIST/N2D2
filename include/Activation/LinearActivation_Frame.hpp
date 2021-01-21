@@ -21,7 +21,6 @@
 #ifndef N2D2_LINEARACTIVATION_FRAME_H
 #define N2D2_LINEARACTIVATION_FRAME_H
 
-#include "Activation/Activation_Kernels.hpp"
 #include "Activation/LinearActivation.hpp"
 #include "Cell/Cell.hpp"
 #include "containers/Tensor.hpp"
@@ -53,7 +52,7 @@ N2D2::LinearActivation_Frame<T>::LinearActivation_Frame(): LinearActivation() {
 
 template <class T>
 void N2D2::LinearActivation_Frame<T>::propagate(const Cell& cell, BaseTensor& baseData,
-                                                bool inference)
+                                                bool /*inference*/)
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
 
@@ -67,30 +66,6 @@ void N2D2::LinearActivation_Frame<T>::propagate(const Cell& cell, BaseTensor& ba
             data(index) = Utils::clamp<T>(data(index),
                                              -clipping, clipping);
     }
-
-    if (mQuantizationLevels > 0) {
-        if (!inference) {
-            T minVal, maxVal;
-            std::tie(minVal, maxVal) = minMax(data);
-
-            rangeAveraging(minVal, maxVal, mMinValMA, mMaxValMA,
-                           mNbSteps, mMovingAverage, mMA_Window, mEMA_Alpha);
-            rangeZeroAlign(mMinValMA, mMaxValMA, mMinValAligned, mMaxValAligned,
-                           mQuantizationLevels);
-
-            if (mLog2RoundingRate > 0.0) {
-                mMinValQuant = log2Round(mMinValAligned / mPreQuantizeScaling,
-                                         mLog2RoundingRate, mLog2RoundingPower)
-                                            * mPreQuantizeScaling;
-                mMaxValQuant = (mMinValQuant / mMinValAligned) * mMaxValAligned;
-            }
-        }
-
-        if (mNbSteps > mQuantizationDelay || inference) {
-            quantize(data, data, T(mMinValQuant), T(mMaxValQuant),
-                     (unsigned int)mQuantizationLevels);
-        }
-    }
 }
 
 template <class T>
@@ -99,16 +74,6 @@ void N2D2::LinearActivation_Frame<T>::backPropagate(const Cell& cell,
 {
     Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
     Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
-
-    if (mQuantizationLevels > 0) {
-#pragma omp parallel for if (diffData.size() > 1024)
-        for (int index = 0; index < (int)diffData.size(); ++index) {
-            diffData(index) = Utils::clamp<T>(diffData(index),
-                                              T(-1.0f), T(1.0f));
-        }
-    }
-
-
 
     if (mClipping != 0.0 && !cell.isQuantized()) {
         const T clipping(mClipping);

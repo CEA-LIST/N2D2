@@ -114,10 +114,6 @@ public:
     virtual ~Cell_Frame_CUDA();
 
 protected:
-    virtual void setOutputTargetsInternal();
-    virtual double applyLossInternal(double targetVal = 1.0,
-                                     double defaultVal = 0.0);
-
     // Internal
     /*
         Structures shared by all kind of layer :
@@ -144,32 +140,6 @@ protected:
     cudnnActivationMode_t mActivationDesc;
 #endif
 };
-}
-
-namespace N2D2 {
-template <>
-void Cell_Frame_CUDA<half_float::half>::setOutputTargetsInternal();
-
-template <>
-void Cell_Frame_CUDA<float>::setOutputTargetsInternal();
-
-template <>
-void Cell_Frame_CUDA<double>::setOutputTargetsInternal();
-
-template <>
-double Cell_Frame_CUDA<half_float::half>::applyLossInternal(
-    double targetVal,
-    double defaultVal);
-
-template <>
-double Cell_Frame_CUDA<float>::applyLossInternal(
-    double targetVal,
-    double defaultVal);
-
-template <>
-double Cell_Frame_CUDA<double>::applyLossInternal(
-    double targetVal,
-    double defaultVal);
 }
 
 #endif // N2D2_CELL_FRAME_CUDA_H

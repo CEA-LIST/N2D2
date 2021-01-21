@@ -60,12 +60,4 @@ public:
 };
 }
 
-namespace N2D2 {
-template <> void TargetBiasCell_Frame_CUDA<float>::propagate(bool inference);
-
-template <> void TargetBiasCell_Frame_CUDA<half_float::half>::backPropagate();
-template <> void TargetBiasCell_Frame_CUDA<float>::backPropagate();
-template <> void TargetBiasCell_Frame_CUDA<double>::backPropagate();
-}
-
 #endif // N2D2_TARGETBIAS_CELL_FRAME_CUDA_H

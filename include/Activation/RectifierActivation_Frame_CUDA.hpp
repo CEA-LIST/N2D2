@@ -23,7 +23,6 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "Activation/Activation_Kernels.hpp"
 #include "Activation/Activation_CUDA_Kernels.hpp"
 #include "Activation/RectifierActivation.hpp"
 #include "Cell/Cell.hpp"
@@ -42,9 +41,6 @@ public:
 
     virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
     virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
-
-    void propagate(const Cell& cell, CudaTensor<T>& data, bool inference = false);
-    void backPropagate(const Cell& cell, CudaTensor<T>& data, CudaTensor<T>& diffData);
 
     virtual ~RectifierActivation_Frame_CUDA();
 
@@ -75,45 +71,71 @@ N2D2::RectifierActivation_Frame_CUDA<T>::RectifierActivation_Frame_CUDA():
 
 template <class T>
 void N2D2::RectifierActivation_Frame_CUDA<T>::propagate(const Cell& cell, 
-                                                        BaseTensor& data, bool inference)
+                                                        BaseTensor& baseData, bool /*inference*/)
 {
-    propagate(cell, dynamic_cast<CudaTensor<T>&>(data), inference);
+    CudaTensor<T>& data = dynamic_cast<CudaTensor<T>&>(baseData);
+
+    mScaling.propagate(cell, data);
+
+    if (mLeakSlope == 0.0 && mClipping == 0.0) {
+        const float alpha = 1.0f;
+        const float beta = 0.0f;
+
+        CHECK_CUDNN_STATUS(
+            cudnnActivationForward(CudaContext::cudnnHandle(),
+                                   mActivationDesc,
+                                   &alpha,
+                                   data.getCudnnTensorDesc(),
+                                   data.getDevicePtr(),
+                                   &beta,
+                                   data.getCudnnTensorDesc(),
+                                   data.getDevicePtr()));
+    }
+    else {
+        cudaRectifier_propagate(
+            data.getDevicePtr(),
+            data.getDevicePtr(),
+            data.size(),
+            T(mLeakSlope),
+            cell.isQuantized()?T(0.0):T(mClipping));
+    }
 }
 
 template <class T>
 void N2D2::RectifierActivation_Frame_CUDA<T>::backPropagate(const Cell& cell, 
-                                                            BaseTensor& data, BaseTensor& diffData) 
+                                                            BaseTensor& baseData, BaseTensor& baseDiffData) 
 {
-    backPropagate(cell, dynamic_cast<CudaTensor<T>&>(data), dynamic_cast<CudaTensor<T>&>(diffData));
-}
+    CudaTensor<T>& data = dynamic_cast<CudaTensor<T>&>(baseData);
+    CudaTensor<T>& diffData = dynamic_cast<CudaTensor<T>&>(baseDiffData);
 
-namespace N2D2 {
+    if (mLeakSlope == 0.0 && mClipping == 0.0) {
+        const float alpha = 1.0f;
+        const float beta = 0.0f;
 
-template <>
-void RectifierActivation_Frame_CUDA<half_float::half>::propagate(const Cell& cell, 
-                                                                 CudaTensor<half_float::half>& data, 
-                                                                 bool inference);
-template <>
-void RectifierActivation_Frame_CUDA<half_float::half>::backPropagate(const Cell& cell, 
-                                                                     CudaTensor<half_float::half>& data, 
-                                                                     CudaTensor<half_float::half>& diffData);
-
-template <>
-void RectifierActivation_Frame_CUDA<float>::propagate(const Cell& cell, 
-                                                      CudaTensor<float>& data, bool inference);
-template <>
-void RectifierActivation_Frame_CUDA<float>::backPropagate(const Cell& cell, 
-                                                          CudaTensor<float>& data, 
-                                                          CudaTensor<float>& diffData);
-
-template <>
-void RectifierActivation_Frame_CUDA<double>::propagate(const Cell& cell, 
-                                                       CudaTensor<double>& data, bool inference);
-template <>
-void RectifierActivation_Frame_CUDA<double>::backPropagate(const Cell& cell, 
-                                                           CudaTensor<double>& data, 
-                                                           CudaTensor<double>& diffData);
-
+        CHECK_CUDNN_STATUS(
+            cudnnActivationBackward(CudaContext::cudnnHandle(),
+                                    mActivationDesc,
+                                    &alpha,
+                                    data.getCudnnTensorDesc(),
+                                    data.getDevicePtr(),
+                                    diffData.getCudnnTensorDesc(),
+                                    diffData.getDevicePtr(),
+                                    data.getCudnnTensorDesc(),
+                                    data.getDevicePtr(),
+                                    &beta,
+                                    diffData.getCudnnTensorDesc(),
+                                    diffData.getDevicePtr()));
+    }
+    else {
+        cudaRectifier_backPropagate(data.getDevicePtr(),
+                                     diffData.getDevicePtr(),
+                                     data.size(),
+                                     T(mLeakSlope),
+                                     cell.isQuantized()?T(0.0):
+                                                        T(mClipping));
+    }
+    
+    mScaling.backPropagate(cell, data, diffData);
 }
 
 template <class T>

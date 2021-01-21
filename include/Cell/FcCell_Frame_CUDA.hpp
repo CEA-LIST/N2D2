@@ -158,14 +158,4 @@ void N2D2::FcCell_Frame_CUDA<T>::getBias(unsigned int output,
     value = Tensor<T>({1}, mBias(output));
 }
 
-namespace N2D2 {
-template <> void FcCell_Frame_CUDA<half_float::half>::propagate(bool inference);
-template <> void FcCell_Frame_CUDA<float>::propagate(bool inference);
-template <> void FcCell_Frame_CUDA<double>::propagate(bool inference);
-
-template <> void FcCell_Frame_CUDA<half_float::half>::backPropagate();
-template <> void FcCell_Frame_CUDA<float>::backPropagate();
-template <> void FcCell_Frame_CUDA<double>::backPropagate();
-}
-
 #endif // N2D2_FCCELL_FRAME_CUDA_H
