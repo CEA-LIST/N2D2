@@ -39,11 +39,13 @@ void init_Tensor(py::module&);
 void init_CudaTensor(py::module&);
 void init_Network(py::module&);
 void init_StimuliProvider(py::module&);
+
+//target 
 void init_Target(py::module&);
 void init_TargetScore(py::module&);
+
 void init_DeepNet(py::module&);
 void init_DeepNetGenerator(py::module&);
-void init_CaltechPedestrian_Database(py::module&);
 //Database
 void init_Database(py::module&);
 void init_DIR_Database(py::module&);
@@ -70,6 +72,7 @@ void init_DOTA_Database(py::module&);
 void init_Fashion_MNIST_IDX_Database(py::module&);
 void init_FDDB_Database(py::module&);
 void init_Daimler_Database(py::module&);
+void init_CaltechPedestrian_Database(py::module&);
 
 void init_Scaling(py::module&);
 void init_ScalingMode(py::module&);
@@ -136,11 +139,15 @@ void init_Solver(py::module&);
 void init_SGDSolver(py::module&);
 void init_SGDSolver_Frame(py::module&);
 void init_SGDSolver_Frame_CUDA(py::module&);
+void init_AdamSolver(py::module&);
+void init_AdamSolver_Frame(py::module&);
+void init_AdamSolver_Frame_CUDA(py::module&);
 
 // Filler
 void init_Filler(py::module&);
 void init_HeFiller(py::module&);
 void init_NormalFiller(py::module&);
+void init_UniformFiller(py::module&);
 
 // Cell
 void init_Cell(py::module&);
@@ -256,6 +263,9 @@ PYBIND11_MODULE(N2D2, m) {
     
     init_StimuliProvider(m);
 
+    init_Target(m);
+    init_TargetScore(m);
+
     // Database
     init_Database(m);
     init_DIR_Database(m);
@@ -286,8 +296,7 @@ PYBIND11_MODULE(N2D2, m) {
     init_FDDB_Database(m);
     init_Daimler_Database(m);
 
-    init_Target(m);
-    init_TargetScore(m);
+
     init_DeepNet(m);
     init_DeepNetGenerator(m);
 
@@ -350,16 +359,20 @@ PYBIND11_MODULE(N2D2, m) {
     init_CustomTransformation(m);
     init_CompositeTransformation(m);
 
-    // Sovler
+    // Solver
     init_Solver(m);
     init_SGDSolver(m);
     init_SGDSolver_Frame(m);
     init_SGDSolver_Frame_CUDA(m);
+    init_AdamSolver(m);
+    init_AdamSolver_Frame(m);
+    init_AdamSolver_Frame_CUDA(m);
 
     //Filler
     init_Filler(m);
     init_HeFiller(m);
     init_NormalFiller(m);
+    init_UniformFiller(m);
 
     //Cell
     init_Cell(m);
