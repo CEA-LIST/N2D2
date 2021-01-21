@@ -19,8 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Activation/TanhActivation_Frame.hpp"
 
@@ -44,6 +42,4 @@ void init_TanhActivation_Frame(py::module &m) {
 }
 
 }
-#endif
-
 #endif

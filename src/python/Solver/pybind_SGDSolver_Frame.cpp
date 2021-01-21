@@ -20,8 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Solver/SGDSolver_Frame.hpp"
 
@@ -47,7 +45,5 @@ void init_SGDSolver_Frame(py::module &m) {
     declare_SGDSolver_Frame<double>(m, "double");
 }
 }
-
-#endif
 
 #endif

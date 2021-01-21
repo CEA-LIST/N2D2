@@ -19,8 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Activation/SwishActivation_Frame.hpp"
 
@@ -44,6 +42,4 @@ void init_SwishActivation_Frame(py::module &m) {
 }
 
 }
-#endif
-
 #endif

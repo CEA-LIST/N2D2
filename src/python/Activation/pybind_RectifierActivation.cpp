@@ -20,8 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Activation/RectifierActivation.hpp"
 
@@ -36,6 +34,4 @@ void init_RectifierActivation(py::module &m) {
 
 }
 }
-#endif
-
 #endif

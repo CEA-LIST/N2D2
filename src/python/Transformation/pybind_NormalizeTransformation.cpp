@@ -19,8 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Transformation/NormalizeTransformation.hpp"
 
@@ -36,6 +34,4 @@ void init_NormalizeTransformation(py::module &m) {
     .def(py::init<const NormalizeTransformation&>(), py::arg("trans"));
 }
 }
-#endif
-
 #endif

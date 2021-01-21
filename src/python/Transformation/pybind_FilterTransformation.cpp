@@ -19,8 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Transformation/FilterTransformation.hpp"
 
@@ -35,6 +33,4 @@ void init_FilterTransformation(py::module &m) {
     .def(py::init<const Kernel<double>&, double>(), py::arg("kernel"), py::arg("orientation") = 0.0);
 }
 }
-#endif
-
 #endif

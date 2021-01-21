@@ -19,8 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Transformation/MorphologyTransformation.hpp"
 
@@ -50,4 +48,3 @@ void init_MorphologyTransformation(py::module &m) {
 }
 #endif
 
-#endif

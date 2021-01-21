@@ -19,8 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Transformation/ExpandLabelTransformation.hpp"
 
@@ -35,6 +33,4 @@ void init_ExpandLabelTransformation(py::module &m) {
     .def(py::init<>());
 }
 }
-#endif
-
 #endif

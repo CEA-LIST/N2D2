@@ -20,9 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Activation/LinearActivation.hpp"
 
@@ -37,6 +34,4 @@ void init_LinearActivation(py::module &m) {
 
 }
 }
-#endif
-
 #endif

@@ -19,8 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Scaling.hpp"
 #include "ScalingMode.hpp"
@@ -50,6 +48,4 @@ void init_Scaling(py::module &m) {
     .def(py::init<>());
 }
 }
-#endif
-
 #endif

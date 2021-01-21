@@ -21,8 +21,6 @@
 */
 
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Solver/Solver.hpp"
 
@@ -38,7 +36,4 @@ void init_Solver(py::module &m) {
 }
 }
 #endif
-
-#endif
-
 

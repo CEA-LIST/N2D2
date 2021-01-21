@@ -19,8 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Transformation/EqualizeTransformation.hpp"
 
@@ -36,6 +34,4 @@ void init_EqualizeTransformation(py::module &m) {
     .def(py::init<const EqualizeTransformation&>(), py::arg("trans"));
 }
 }
-#endif
-
 #endif

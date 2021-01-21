@@ -19,8 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Scaling.hpp"
 
@@ -39,6 +37,4 @@ void init_ScalingMode(py::module &m) {
     .value("DOUBLE_SHIFT", ScalingMode::DOUBLE_SHIFT);
 }
 }
-#endif
-
 #endif

@@ -19,8 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Transformation/ColorSpaceTransformation.hpp"
 
@@ -64,6 +62,4 @@ void init_ColorSpaceTransformation(py::module &m) {
 
 }
 }
-#endif
-
 #endif

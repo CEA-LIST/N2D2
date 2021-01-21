@@ -21,8 +21,6 @@
 */
 
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Solver/SGDSolver.hpp"
 
@@ -37,6 +35,4 @@ void init_SGDSolver(py::module &m) {
 
 }
 }
-#endif
-
 #endif

@@ -18,9 +18,6 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Transformation/ReshapeTransformation.hpp"
 
@@ -35,6 +32,4 @@ void init_ReshapeTransformation(py::module &m) {
     .def(py::init<unsigned int, unsigned int, unsigned int>(), py::arg("nbRows"), py::arg("nbCols") = 0, py::arg("nbChannels") = 0);
 }
 }
-#endif
-
 #endif

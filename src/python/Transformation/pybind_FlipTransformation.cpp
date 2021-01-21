@@ -19,8 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Transformation/FlipTransformation.hpp"
 
@@ -36,6 +34,4 @@ void init_FlipTransformation(py::module &m) {
     .def(py::init<FlipTransformation&>(), py::arg("trans"));
 }
 }
-#endif
-
 #endif

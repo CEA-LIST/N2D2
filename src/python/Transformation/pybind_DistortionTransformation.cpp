@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
 
 #ifdef PYBIND
 #include "Transformation/DistortionTransformation.hpp"
@@ -38,6 +37,4 @@ void init_DistortionTransformation(py::module &m) {
 
 }
 }
-#endif
-
 #endif
