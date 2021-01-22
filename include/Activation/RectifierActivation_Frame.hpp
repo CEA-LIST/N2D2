@@ -36,13 +36,13 @@ public:
     }
 
     virtual void propagate(const Cell& cell,
-                           BaseTensor& input,
+                           const BaseTensor& input,
                            BaseTensor& output,
                            bool inference = false);
     virtual void backPropagate(const Cell& cell,
-                               BaseTensor& input,
-                               BaseTensor& output,
-                               BaseTensor& diffInput,
+                               const BaseTensor& input,
+                               const BaseTensor& output,
+                               const BaseTensor& diffInput,
                                BaseTensor& diffOutput);
     virtual ~RectifierActivation_Frame() {};
 
@@ -54,11 +54,11 @@ private:
 template <class T>
 void N2D2::RectifierActivation_Frame<T>::propagate(
     const Cell& cell, 
-    BaseTensor& baseInput,
+    const BaseTensor& baseInput,
     BaseTensor& baseOutput,
     bool /*inference*/)
 {
-    Tensor<T>& input = dynamic_cast<Tensor<T>&>(baseInput);
+    const Tensor<T>& input = dynamic_cast<const Tensor<T>&>(baseInput);
     Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
 
     mScaling.propagate(cell, input, output);
@@ -83,13 +83,13 @@ void N2D2::RectifierActivation_Frame<T>::propagate(
 template <class T>
 void N2D2::RectifierActivation_Frame<T>::backPropagate(
     const Cell& cell, 
-    BaseTensor& /*baseInput*/,
-    BaseTensor& baseOutput,
-    BaseTensor& baseDiffInput,
+    const BaseTensor& /*baseInput*/,
+    const BaseTensor& baseOutput,
+    const BaseTensor& baseDiffInput,
     BaseTensor& baseDiffOutput)
 {
-    Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
-    Tensor<T>& diffInput = dynamic_cast<Tensor<T>&>(baseDiffInput);
+    const Tensor<T>& output = dynamic_cast<const Tensor<T>&>(baseOutput);
+    const Tensor<T>& diffInput = dynamic_cast<const Tensor<T>&>(baseDiffInput);
     Tensor<T>& diffOutput = dynamic_cast<Tensor<T>&>(baseDiffOutput);
 
     if (mClipping > 0.0 && !cell.isQuantized()) {

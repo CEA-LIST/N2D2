@@ -75,7 +75,7 @@ void N2D2::ActivationCell_Frame_CUDA<T>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
-    CudaTensor<T> input = cuda_tensor_cast<T>(mInputs[0]);
+    const CudaTensor<T>& input = cuda_tensor_cast<T>(mInputs[0]);
     mActivation->propagate(*this, input, mOutputs, inference);
 
     mDiffInputs.clearValid();
@@ -88,7 +88,7 @@ void N2D2::ActivationCell_Frame_CUDA<T>::backPropagate()
         return;
 
     if (!mDiffOutputs.empty()) {
-        CudaTensor<T> input = cuda_tensor_cast<T>(mInputs[0]);
+        const CudaTensor<T>& input = cuda_tensor_cast<T>(mInputs[0]);
         CudaTensor<T> diffOutput = (mDiffOutputs[0].isValid())
             ? cuda_tensor_cast<T>(mDiffOutputs[0])
             : cuda_tensor_cast_nocopy<T>(mDiffOutputs[0]);

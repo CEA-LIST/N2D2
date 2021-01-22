@@ -39,13 +39,13 @@ public:
 
     LogisticActivation_Frame_CUDA(bool withLoss = false);
     virtual void propagate(const Cell& cell,
-                           BaseTensor& input,
+                           const BaseTensor& input,
                            BaseTensor& output,
                            bool inference = false);
     virtual void backPropagate(const Cell& cell,
-                               BaseTensor& input,
-                               BaseTensor& output,
-                               BaseTensor& diffInput,
+                               const BaseTensor& input,
+                               const BaseTensor& output,
+                               const BaseTensor& diffInput,
                                BaseTensor& diffOutput);
     virtual ~LogisticActivation_Frame_CUDA();
 
@@ -79,11 +79,11 @@ N2D2::LogisticActivation_Frame_CUDA<T>::LogisticActivation_Frame_CUDA(bool withL
 template <class T>
 void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(
     const Cell& cell, 
-    BaseTensor& baseInput,
+    const BaseTensor& baseInput,
     BaseTensor& baseOutput,
     bool /*inference*/)
 {
-    CudaTensor<T>& input = dynamic_cast<CudaTensor<T>&>(baseInput);
+    const CudaTensor<T>& input = dynamic_cast<const CudaTensor<T>&>(baseInput);
     CudaTensor<T>& output = dynamic_cast<CudaTensor<T>&>(baseOutput);
 
     if (!LogisticActivationDisabled) {
@@ -106,16 +106,16 @@ void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(
 template <class T>
 void N2D2::LogisticActivation_Frame_CUDA<T>::backPropagate(
     const Cell& cell, 
-    BaseTensor& /*baseInput*/,
-    BaseTensor& baseOutput,
-    BaseTensor& baseDiffInput,
+    const BaseTensor& /*baseInput*/,
+    const BaseTensor& baseOutput,
+    const BaseTensor& baseDiffInput,
     BaseTensor& baseDiffOutput)
 {
     if (LogisticActivationDisabled)
         return;
 
-    CudaTensor<T>& output = dynamic_cast<CudaTensor<T>&>(baseOutput);
-    CudaTensor<T>& diffInput = dynamic_cast<CudaTensor<T>&>(baseDiffInput);
+    const CudaTensor<T>& output = dynamic_cast<const CudaTensor<T>&>(baseOutput);
+    const CudaTensor<T>& diffInput = dynamic_cast<const CudaTensor<T>&>(baseDiffInput);
     CudaTensor<T>& diffOutput = dynamic_cast<CudaTensor<T>&>(baseDiffOutput);
 
     if (!this->mWithLoss) {

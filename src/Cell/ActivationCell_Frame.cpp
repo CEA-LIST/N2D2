@@ -72,7 +72,7 @@ void N2D2::ActivationCell_Frame<T>::propagate(bool inference)
 {
     mInputs.synchronizeDBasedToH();
 
-    Tensor<T> input = tensor_cast<T>(mInputs[0]);
+    const Tensor<T>& input = tensor_cast<T>(mInputs[0]);
     mActivation->propagate(*this, input, mOutputs, inference);
 
     mDiffInputs.clearValid();
@@ -85,7 +85,7 @@ void N2D2::ActivationCell_Frame<T>::backPropagate()
         return;
 
     if (!mDiffOutputs.empty()) {
-        Tensor<T> input = tensor_cast<T>(mInputs[0]);
+        const Tensor<T>& input = tensor_cast<T>(mInputs[0]);
         Tensor<T> diffOutputs = tensor_cast<T>(mDiffOutputs[0]);
 
         mActivation->backPropagate(*this, input, mOutputs, mDiffInputs,

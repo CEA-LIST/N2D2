@@ -35,7 +35,7 @@ void N2D2::Activation::propagate(const Cell& cell,
 }
 
 void N2D2::Activation::backPropagate(const Cell& cell,
-                                     BaseTensor& output,
+                                     const BaseTensor& output,
                                      BaseTensor& diffInOut)
 {
     backPropagate(cell, output, output, diffInOut, diffInOut);

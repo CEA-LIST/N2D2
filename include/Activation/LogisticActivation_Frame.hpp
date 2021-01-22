@@ -41,13 +41,13 @@ public:
 
     LogisticActivation_Frame(bool withLoss = false);
     virtual void propagate(const Cell& cell,
-                           BaseTensor& input,
+                           const BaseTensor& input,
                            BaseTensor& output,
                            bool inference = false);
     virtual void backPropagate(const Cell& cell,
-                               BaseTensor& input,
-                               BaseTensor& output,
-                               BaseTensor& diffInput,
+                               const BaseTensor& input,
+                               const BaseTensor& output,
+                               const BaseTensor& diffInput,
                                BaseTensor& diffOutput);
     virtual ~LogisticActivation_Frame() {};
 
@@ -66,14 +66,14 @@ N2D2::LogisticActivation_Frame<T>::LogisticActivation_Frame(bool withLoss)
 template <class T>
 void N2D2::LogisticActivation_Frame<T>::propagate(
     const Cell& cell, 
-    BaseTensor& baseInput,
+    const BaseTensor& baseInput,
     BaseTensor& baseOutput,
     bool /*inference*/)
 {
     if (LogisticActivationDisabled)
         return;
 
-    Tensor<T>& input = dynamic_cast<Tensor<T>&>(baseInput);
+    const Tensor<T>& input = dynamic_cast<const Tensor<T>&>(baseInput);
     Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
 
     mScaling.propagate(cell, input, output);
@@ -96,16 +96,16 @@ void N2D2::LogisticActivation_Frame<T>::propagate(
 template <class T>
 void N2D2::LogisticActivation_Frame<T>::backPropagate(
     const Cell& cell, 
-    BaseTensor& /*baseInput*/,
-    BaseTensor& baseOutput,
-    BaseTensor& baseDiffInput,
+    const BaseTensor& /*baseInput*/,
+    const BaseTensor& baseOutput,
+    const BaseTensor& baseDiffInput,
     BaseTensor& baseDiffOutput)
 {
     if (LogisticActivationDisabled)
         return;
 
-    Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
-    Tensor<T>& diffInput = dynamic_cast<Tensor<T>&>(baseDiffInput);
+    const Tensor<T>& output = dynamic_cast<const Tensor<T>&>(baseOutput);
+    const Tensor<T>& diffInput = dynamic_cast<const Tensor<T>&>(baseDiffInput);
     Tensor<T>& diffOutput = dynamic_cast<Tensor<T>&>(baseDiffOutput);
 
     if (!this->mWithLoss) {

@@ -40,7 +40,7 @@ public:
     virtual const char* getType() const = 0;
 
     virtual void propagate(const Cell& cell,
-                           BaseTensor& input,
+                           const BaseTensor& input,
                            BaseTensor& output,
                            bool inference = false) = 0;
     // In-place version:
@@ -49,13 +49,13 @@ public:
                            bool inference = false);
 
     virtual void backPropagate(const Cell& cell,
-                               BaseTensor& input,
-                               BaseTensor& output,
-                               BaseTensor& diffInput,
+                               const BaseTensor& input,
+                               const BaseTensor& output,
+                               const BaseTensor& diffInput,
                                BaseTensor& diffOutput) = 0;
     // In-place version:
     virtual void backPropagate(const Cell& cell,
-                               BaseTensor& output,
+                               const BaseTensor& output,
                                BaseTensor& diffInOut);
 
     /**
