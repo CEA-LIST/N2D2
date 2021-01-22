@@ -51,17 +51,30 @@ class DeepNet(N2D2_Interface):
         return self._DataType
 
 
-def load_from_ONNX(model_path, database, stimuliProvider):
-    # TODO : need to change the enrty to use n2d2 objects
+def load_from_ONNX(model_path, provider):
+    """
+    :param model_path: Path to the model.
+    :type model_path: str
+    :param provider: 
+    :type provider: :py:class:`n2d2.provider.DataProvider`
+
+    Load a deepnet from an ONNX file and a database.
+    """
     network = N2D2.Network(1)
     deepNet = N2D2.DeepNet(network)
     iniParser = N2D2.IniParser()
-    deepNet.setDatabase(database)
-    deepNet.setStimuliProvider(stimuliProvider)
+    deepNet.setDatabase(provider.get_database().N2D2())
+    deepNet.setStimuliProvider(provider.N2D2())
     deepNet = N2D2.DeepNetGenerator.generateFromONNX(network, model_path, iniParser, deepNet)
     return n2d2.converter.deepNet_converter(deepNet)
 
 def load_from_INI(path):
+     """
+    :param model_path: Path to the ini file.
+    :type model_path: str
+
+    Load a deepnet from an INI file.
+    """
     network = N2D2.Network(1)
     deepNet = N2D2.DeepNetGenerator.generateFromINI(network, path)
     return n2d2.converter.deepNet_converter(deepNet)

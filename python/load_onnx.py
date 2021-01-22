@@ -21,75 +21,74 @@
 
 import N2D2
 import n2d2
+from math import ceil
 
-# def load_ILSVRC2012_model():
-#     network = N2D2.Network(1)
-#     deepNet = N2D2.DeepNet(network)
-#     iniParser = N2D2.IniParser()
-#     batchSize = 1
 
-#     path = "/local/is154584/cm264821/MODELS/ONNX/googlenet/bvlc_googlenet/model.onnx"
-#     database = N2D2.ILSVRC2012_Database(0.2)
-#     database.load("/nvme0/DATABASE/ILSVRC2012", labelPath="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
-#     stimuli = N2D2.StimuliProvider(database, [224, 224, 3], batchSize, False)
-#     deepNet.setDatabase(database)
-#     deepNet.setStimuliProvider(stimuli)
-#     deepNet = N2D2.DeepNetGenerator.generateFromONNX(network, path, iniParser, deepNet)
-#     return deepNet
+batchSize = 1
 
-# def load_MNIST_model():
-#     # TODO : solve :
-#     # RuntimeError: Tensor<T>::reshape(): new size ( = 0) does not match current size (10 4 4 16  = 2560)
+def load_MNIST_model():
+    network = N2D2.Network(1)
+    deepNet = N2D2.DeepNet(network)
+    iniParser = N2D2.IniParser()
+    batchSize = 1
+    path = "../ONNX/model.onnx"
+    database = N2D2.MNIST_IDX_Database()
+    database.load("/nvme0/DATABASE/MNIST/raw/", "/nvme0/DATABASE/MNIST/raw/")
 
-#     network = N2D2.Network(1)
-#     deepNet = N2D2.DeepNet(network)
-#     iniParser = N2D2.IniParser()
-#     batchSize = 1
-#     path = "../ONNX/model.onnx"
-#     database = N2D2.MNIST_IDX_Database()
-#     database.load("/nvme0/DATABASE/MNIST/raw/", "/nvme0/DATABASE/MNIST/raw/")
-
-#     stimuli = N2D2.StimuliProvider(database, [28, 28, 1], batchSize, False)
-#     deepNet.setStimuliProvider(stimuli)
-#     deepNet.setDatabase(database)
-#     deepNet = N2D2.DeepNetGenerator.generateFromONNX(network, path, iniParser, deepNet)
-#     return deepNet
+    stimuli = N2D2.StimuliProvider(database, [28, 28, 1], batchSize, False)
+    deepNet.setStimuliProvider(stimuli)
+    deepNet.setDatabase(database)
+    deepNet = N2D2.DeepNetGenerator.generateFromONNX(network, path, iniParser, deepNet)
+    return deepNet, stimuli
 
 def onnx_googlenet():
     N2D2.mtSeed(0) # Need to create random seed not elegant ...
-    batchSize = 1
     path = "/local/is154584/cm264821/MODELS/ONNX/googlenet/bvlc_googlenet/model.onnx"
     database = n2d2.database.ILSVRC2012(0.2)
     database.load("/nvme0/DATABASE/ILSVRC2012", labelPath="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
-    stimuli = N2D2.StimuliProvider(database.N2D2(), [224, 224, 3], batchSize, False)    
-    n2d2.deepnet.load_from_ONNX(path, database.N2D2(), stimuli)
+    stimuli = n2d2.provider.DataProvider(database, [224, 224, 3], BatchSize=batchSize)    
+    return n2d2.deepnet.load_from_ONNX(path, stimuli), stimuli
 
 def onnx_mobilenet():
     N2D2.mtSeed(0) # Need to create random seed not elegant ...
-    batchSize = 1
     path = "/local/is154584/cm264821/MODELS/ONNX/mobilenetv2/mobilenetv2-1.0.onnx"
     database = n2d2.database.ILSVRC2012(0.2)
     database.load("/nvme0/DATABASE/ILSVRC2012", labelPath="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
-    stimuli = N2D2.StimuliProvider(database.N2D2(), [224, 224, 3], batchSize, False)    
-    n2d2.deepnet.load_from_ONNX(path, database.N2D2(), stimuli)
+    stimuli = n2d2.provider.DataProvider(database, [224, 224, 3], BatchSize=batchSize)    
+    return n2d2.deepnet.load_from_ONNX(path, stimuli), stimuli
 
 def onnx_resnet():
     N2D2.mtSeed(0) # Need to create random seed not elegant ...
-    batchSize = 1
     path = "/local/is154584/cm264821/MODELS/ONNX/resnet-101-v1/resnet101v1.onnx"
     database = n2d2.database.ILSVRC2012(0.2)
     database.load("/nvme0/DATABASE/ILSVRC2012", labelPath="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
-    stimuli = N2D2.StimuliProvider(database.N2D2(), [224, 224, 3], batchSize, False)    
-    n2d2.deepnet.load_from_ONNX(path, database.N2D2(), stimuli)
+    stimuli = n2d2.provider.DataProvider(database, [224, 224, 3], BatchSize=batchSize)    
+    return n2d2.deepnet.load_from_ONNX(path, stimuli), stimuli
 
 def ini_mobilenet():
     path = '../models/MobileNet_v1.ini'    
     n2d2.deepnet.load_from_INI(path)
 
-
-# load_ILSVRC2012_model()
+print("\n### Loading Model ###")
 # load_MNIST_model()
-# onnx_googlenet()
+model, stimuli = onnx_googlenet()
 # onnx_mobilenet()
 # onnx_resnet()
-ini_mobilenet()
+# ini_mobilenet()
+
+# print("\n### Test ###")
+# classifier = n2d2.application.Classifier(stimuli, model)
+
+# classifier.set_mode('Test')
+
+# for i in range(ceil(stimuli.get_database().get_nb_stimuli('Test')/batchSize)):
+
+#     batch_idx = i*batchSize
+
+#     # Load example
+#     classifier.read_batch(idx=batch_idx)
+
+#     classifier.process()
+
+#     print("Example: " + str(i*batchSize) + ", test success: "
+#           + "{0:.2f}".format(100 * classifier.get_average_success()) + "%", end='\r')

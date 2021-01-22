@@ -33,6 +33,9 @@ since there is no GPU model involved.
 
 # TODO: Abstract classes?
 class Database(N2D2_Interface):
+    """
+    Database loader object.
+    """
 
     StimuliSets = {
         'Learn': N2D2.Database.Learn,
@@ -60,6 +63,9 @@ class Database(N2D2_Interface):
         return output
 
 class DIR(Database):
+    """
+    Allow you to load your own database.
+    """
     _INI_type = 'DIR_Database'
     _type = "DIR"
     def __init__(self, **config_parameters):
@@ -69,6 +75,16 @@ class DIR(Database):
         self._set_N2D2_parameters(self._config_parameters)
 
     def load(self, dataPath, depth=0, labelPath="", labelDepth=0):
+        """
+        :param dataPath: Path to the dataset file.
+        :type dataPath: str
+        :param depth: Number of sub-directory levels to include.
+        :type depth: int
+        :param labelPath: Path to the label file.
+        :type labelPath: str, optional
+        :param labelDepth: Number of sub-directory name levels used to form the data labels.
+        :type labelDepth: int
+        """
         self._N2D2_object.loadDir(dataPath, depth, labelPath, labelDepth)
 
 class MNIST(Database):

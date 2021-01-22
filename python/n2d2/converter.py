@@ -29,7 +29,7 @@ type_converter = {
     "double": float,
     "bool": bool,
     "string": str,
-    "other": str,  # Maybe put an error message ?
+    "other": str,  # TODO : Maybe put an error message ?
 }
 cell_dict = {
     "Fc" : n2d2.cell.Fc,
@@ -43,7 +43,13 @@ cell_dict = {
     "BatchNorm": n2d2.cell.BatchNorm,
 }
 
-def cell_converter(cell):
+def cell_converter(N2D2_cell):
+    """
+    :param N2D2_cell: N2D2 cell to convert.
+    :type N2D2_cell: :py:class:`N2D2.Cell`
+    Convert a N2D2 cell into a n2d2 cell.
+    The _N2D2_object attribute of the generated n2d2 cell is replaced by the N2D2_cell given in entry.
+    """
     l_type = ["float", 
             "int"]
 
@@ -53,16 +59,16 @@ def cell_converter(cell):
 
 
     # Retrieving global parameters from the N2D2 object. 
-    name = cell.getName()
-    NbOutputs = cell.getNbOutputs()
-    CellType = cell.getType()
-    parsed = str(cell).split(" ")[0].split("_")
+    name = N2D2_cell.getName()
+    NbOutputs = N2D2_cell.getNbOutputs()
+    CellType = N2D2_cell.getType()
+    parsed = str(N2D2_cell).split(" ")[0].split("_")
     Model = None
     for m in l_model:
         if m in parsed and not Model:
             Model = m
     if not Model:
-        raise ValueError("No Model found in ", str(cell))
+        raise ValueError("No Model found in ", str(N2D2_cell))
     DataType = None
     for t in l_type:
         if t in parsed and not DataType:
@@ -70,22 +76,23 @@ def cell_converter(cell):
 
     # Creating n2d2 object.
     print("CellType: ", CellType)
-    str_params = cell.getParameters()
+    str_params = N2D2_cell.getParameters()
     parameters = {}
     for param in str_params:
-        parameters[param] = type_converter[cell.getParameterAndType(param)[0]](cell.getParameterAndType(param)[1])
-        print(param, ":", type_converter[cell.getParameterAndType(param)[0]](cell.getParameterAndType(param)[1]))
+        parameters[param] = type_converter[N2D2_cell.getParameterAndType(param)[0]](N2D2_cell.getParameterAndType(param)[1])
+        print(param, ":", type_converter[N2D2_cell.getParameterAndType(param)[0]](N2D2_cell.getParameterAndType(param)[1]))
+    
     if CellType == "Conv":
-        kernelDims = [cell.getKernelWidth(), cell.getKernelHeight()]
+        kernelDims = [N2D2_cell.getKernelWidth(), N2D2_cell.getKernelHeight()]
         n2d2_cell = cell_dict[CellType](NbOutputs, 
                                         kernelDims,
                                         Name=name,
                                         **parameters)
     elif CellType == "Padding":
-        topPad = cell.getTopPad()
-        botPad = cell.getBotPad()
-        leftPad = cell.getLeftPad()
-        rightPad = cell.getRightPad()
+        topPad = N2D2_cell.getTopPad()
+        botPad = N2D2_cell.getBotPad()
+        leftPad = N2D2_cell.getLeftPad()
+        rightPad = N2D2_cell.getRightPad()
         n2d2_cell = cell_dict[CellType](NbOutputs, 
                                         topPad, 
                                         botPad, 
@@ -94,28 +101,38 @@ def cell_converter(cell):
                                         Name=name,
                                         **parameters)
     elif CellType == "Pool":
-        poolDims = [cell.getPoolHeight(), cell.getPoolWidth()]
+        poolDims = [N2D2_cell.getPoolHeight(), N2D2_cell.getPoolWidth()]
+        strideDims = [N2D2_cell.getStrideX(), N2D2_cell.getStrideY()]
+        paddingDims = [N2D2_cell.getPaddingX(), N2D2_cell.getPaddingY()]
+        pooling = str(N2D2_cell.getPooling()).split('.')[-1]
         n2d2_cell = cell_dict[CellType](NbOutputs, 
                                         poolDims,
+                                        StrideDims = strideDims,
+                                        PaddingDims = paddingDims,
+                                        Pooling = pooling,
                                         Name=name,
                                         **parameters)      
     else:
         n2d2_cell = cell_dict[CellType](NbOutputs, Name=name, **parameters)
 
-    # WARNING : By putting here a reference of the imported cell we have to make sure
-    # the N2D2.DeepNet it's linked to is the same as in the n2d2.DeepNet
-    # TODO : link the good deepNet once the deepNet converter is done
-    n2d2_cell._N2D2_object = cell
+    # We replace the N2D2 object created by n2d2 with the initial N2D2 object.
+    # This way we make sure that the cell is associated with the same deepnet objet.
+    n2d2_cell._N2D2_object = N2D2_cell
 
     return n2d2_cell
 
-def deepNet_converter(deepNet):
-    cells = deepNet.getCells()
-    print(cells)
-    for cell in cells.values():
-        # TODO : Need to work on cell converter
-        cell_converter(cell)
-    n2d2_deepNet = None
-    # TODO : After creating the n2d2 object 
-    # n2d2_deepNet._N2D2_object = deepNet
-    return n2d2_deepNet
+def deepNet_converter(N2D2_deepNet):
+    """
+    :param N2D2_deepNet: N2D2 cell to convert.
+    :type N2D2_deepNet: :py:class:`N2D2.DeepNet`
+    Convert a N2D2 DeepNet into a n2d2 DeepNet.
+    """
+    cells = N2D2_deepNet.getCells()
+    layers = N2D2_deepNet.getLayers()
+    layer_sequence = []
+    for layer in layers[1:]:
+        cell_layer = []
+        for cell in layer:
+            cell_layer.append(cell_converter(cells[cell]))
+        layer_sequence.append(n2d2.deepnet.Layer(cell_layer))
+    return n2d2.deepnet.Sequence(layer_sequence)

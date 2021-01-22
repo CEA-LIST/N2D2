@@ -68,7 +68,7 @@ void init_DeepNet(py::module &m) {
     .def("getCells", &DeepNet::getCells)
     // .def("getMonitor", &DeepNet::getMonitor, py::arg("name"))
     // .def("getCMonitor", &DeepNet::getCMonitor, py::arg("name"))
-    // .def("getLayers", &DeepNet::getLayers)
+    .def("getLayers", &DeepNet::getLayers)
     // .def("getLayer", &DeepNet::getLayer, py::arg("layer"))
     .def("getChildCells", &DeepNet::getChildCells, py::arg("name"))
     // .def("getParentCells", &DeepNet::getParentCells, py::arg("name"))

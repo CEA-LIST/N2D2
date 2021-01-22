@@ -30,9 +30,8 @@ class N2D2_Interface:
 
     def __init__(self, **config_parameters):
 
-        """
-        Arguments that have to be known at N2D2 object creation time. Configurable in python API constructor
-        """
+        # Arguments that have to be known at N2D2 object creation time. Configurable in python API constructor
+        
         self._constructor_arguments = {}
         self._optional_constructor_arguments = {}
 
@@ -43,6 +42,9 @@ class N2D2_Interface:
         self._N2D2_object = None
 
     def N2D2(self):
+        """
+        Return the N2D2 object.
+        """
         if self._N2D2_object is None:
             raise n2d2.UndefinedModelError("N2D2 object member has not been created")
         return self._N2D2_object

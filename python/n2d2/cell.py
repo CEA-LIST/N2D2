@@ -259,7 +259,6 @@ class Softmax(Cell):
                                                                      **self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 
-# TODO: Debug and revise
 class Dropout(Cell):
     _cell_constructors = {
         'Frame<float>': N2D2.DropoutCell_Frame_float,
@@ -277,7 +276,6 @@ class Dropout(Cell):
                                                         **self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 
-# TODO: Debug and revise
 class Padding(Cell):
 
     _cell_constructors = {
@@ -286,29 +284,30 @@ class Padding(Cell):
     }
 
     def __init__(self,
-                 NbOutputs,
+                 nbOutputs,
                  topPad,
                  botPad,
                  leftPad,
                  rightPad,
                  **config_parameters):
-        Cell.__init__(self, NbOutputs, **config_parameters)
+        Cell.__init__(self, nbOutputs, **config_parameters)
 
         self._constructor_arguments.update({
-                 "topPad": topPad,
-                 "botPad": botPad,
-                 "leftPad": leftPad,
-                 "rightPad": rightPad
+                 "TopPad": topPad,
+                 "BotPad": botPad,
+                 "LeftPad": leftPad,
+                 "RightPad": rightPad
         })
 
         self._parse_optional_arguments([])
 
         self._N2D2_object = self._cell_constructors[self._Model](self._deepnet.N2D2(),
                                                                      self._constructor_arguments['Name'],
-                                                                     self._constructor_arguments['topPad'],
-                                                                     self._constructor_arguments['botPad'],
-                                                                     self._constructor_arguments['leftPad'],
-                                                                     self._constructor_arguments['rightPad'],
+                                                                     self._constructor_arguments['NbOutputs'],
+                                                                     self._constructor_arguments['TopPad'],
+                                                                     self._constructor_arguments['BotPad'],
+                                                                     self._constructor_arguments['LeftPad'],
+                                                                     self._constructor_arguments['RightPad'],
                                                                      **self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 
@@ -319,7 +318,7 @@ class Pool(Cell):
         'Frame<float>': N2D2.PoolCell_Frame_float,
         'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
     }
-
+    
     def __init__(self,
                  NbOutputs,
                  PoolDims,
@@ -333,9 +332,10 @@ class Pool(Cell):
 
         # Note: Removed Pooling
         self._parse_optional_arguments(['StrideDims', 'PaddingDims', 'Pooling'])
-
         # TODO: Make Pooling object?
-        if self._optional_constructor_arguments['pooling'] == 'Average':
+        # @Joahnnes : I think it will add complexity to the creation of pool cells.
+        #             using string to call N2D2 constructor seems cleaner from a user point of view. 
+        if 'pooling' in self._optional_constructor_arguments and self._optional_constructor_arguments['pooling'] == 'Average':
             self._optional_constructor_arguments['pooling'] = N2D2.PoolCell.Pooling.Average
         else:
             self._optional_constructor_arguments['pooling'] = N2D2.PoolCell.Pooling.Max
