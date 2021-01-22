@@ -85,7 +85,6 @@ public:
 // check 2 conv layers with 8 bits quantization, float
 // insert bn1 between conv1 and conv2 and fuse conv1 and bn1
 
-
 TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
              check_BNFusion_with_SAT,
              (unsigned int kernelWidth,
@@ -365,7 +364,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
             
             for (unsigned int sx = 0; sx < kernelWidth; ++sx) {
                 for (unsigned int sy = 0; sy < kernelHeight; ++sy){
-                    kernel_rescaled(sx, sy) = rintf(0.5*(quant_weights_conv1[output][channel](sx, sy)*range1+1));
+                    //weights in range [-128,127]
+                    kernel_rescaled(sx, sy) = rintf(0.5*(quant_weights_conv1[output][channel](sx, sy)*range1-1));
                     //kernel_rescaled(sx, sy) = quant_weights_conv1[output][channel](sx, sy);
                     std::cout << "conv1_fused :: sx = " << sx << " , sy = " << sy << " , weight = " << quant_weights_conv1[output][channel](sx, sy) << 
                     " ==> " << kernel_rescaled(sx, sy) << std::endl;
@@ -591,13 +591,13 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
             for (unsigned int oy = 0; oy < conv1_fused.getOutputsHeight(); ++oy) {
                 for (unsigned int ox = 0; ox < conv1_fused.getOutputsWidth(); ++ox) {
                     double error = conv1_rounded(ox, oy, output, batch) - quant_conv2_unscaled(ox, oy, output, batch);
-                    double error_r = conv1_rounded(ox, oy, output, batch) - quant_conv2_unscaled(ox, oy, output, batch);
+                    double error_r = conv1_rounded_r(ox, oy, output, batch) - quant_conv2_unscaled(ox, oy, output, batch);
 
                     mse += std::pow(error, 2);
                     mse_r += std::pow(error_r, 2);
 
-                    if(error_r > max_error)
-                        max_error = error_r;
+                    if(std::abs(error_r) > max_error)
+                        max_error = std::abs(error_r);
                 }
             }
         }
@@ -657,8 +657,9 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Approx_LeNet_TestDatabase_Frame_CUDA
     const unsigned int nbTest = getDatabase().getNbStimuli(Database::Test);
     std::cout << "Database test size = " << nbTest << std::endl;
     const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
+    //const unsigned int nbBatch = 10;
 
-    std::vector<double> v_mse, v_mse_r, v_mse_max;
+    std::vector<double> v_mse, v_mse_r, v_mse_max, v_faulty_pixel, v_faulty_pixel_percent;
 
     for (unsigned int b = 0; b < nbBatch; ++b) {
         
@@ -862,7 +863,12 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Approx_LeNet_TestDatabase_Frame_CUDA
                 
                 for (unsigned int sx = 0; sx < kernelWidth; ++sx) {
                     for (unsigned int sy = 0; sy < kernelHeight; ++sy){
-                        kernel_rescaled(sx, sy) = rintf(0.5*(quant_weights_conv1[output][channel](sx, sy)*range1+1));
+                        //[-127, 128]
+                        //kernel_rescaled(sx, sy) = rintf(0.5*(quant_weights_conv1[output][channel](sx, sy)*range1+1));
+                        //[-128,127]
+                        kernel_rescaled(sx, sy) = rintf(0.5f*(quant_weights_conv1[output][channel](sx, sy)*range1-1));
+                        //[-127, 127]
+                        //kernel_rescaled(sx, sy) = rintf(0.5f*(quant_weights_conv1[output][channel](sx, sy)*(range1-1)));
                     }
                 }
                 conv1_fused.setWeight(output, channel, kernel_rescaled);
@@ -939,13 +945,27 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Approx_LeNet_TestDatabase_Frame_CUDA
                                 ? bnVariances(output) : meanVariance));
             gamma(output) = factor;
             beta(output) = bnBiases(output) + (bias(0) - bnMeans(output)) * factor;
-            bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f);
-            clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f);
 
+            //for weights range [-128,127]
+            //bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * rintf(((float)range1/2.0));
+            bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f);
+            //clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * rintf(((float)range1/2.0));
+            clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f);
             bias_fusion_rounded(output) = rintf((beta(output)/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f));
+            //bias_fusion_rounded(output) = rintf((beta(output)/gamma(output)) * ((float)range1/alpha1) * rintf(((float)range1/2.0)));
             clipPerOutputRound(output) = rintf((alpha2/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f));
-            scalePerOutput(output) = (alpha1/(float)range1) * ((float)range2/alpha2) * gamma(output) *(2.0/(float)range1);
-            
+            //clipPerOutputRound(output) = rintf((alpha2/gamma(output)) * ((float)range1/alpha1) * rintf(((float)range1/2.0)));
+            scalePerOutput(output) = (alpha1/(float)range1) * ((float)range2/alpha2) * gamma(output) * (2.0/(float)range1);
+                   
+
+            //for weights range [-127, 127]
+            /*
+            bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * ((float)(range1-1)/2.0);
+            clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * ((float)(range1-1)/2.0);
+            bias_fusion_rounded(output) = rintf((beta(output)/gamma(output)) * ((float)range1/alpha1) * ((float)(range1-1)/2.0));
+            clipPerOutputRound(output) = rintf((alpha2/gamma(output)) * ((float)range1/alpha1) * ((float)(range1-1)/2.0));
+            scalePerOutput(output) = (alpha1/(float)range1) * ((float)range2/alpha2) * gamma(output) *(2.0/(float)(range1-1));  
+            */       
         }  
 
         //not cliped, with bias 
@@ -1036,41 +1056,79 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Approx_LeNet_TestDatabase_Frame_CUDA
 
         double mse = 0.0, mse_r = 0.0;
         double max_error = 0.0;
+        int faulty_pixel = 0;
+        double faulty_pixel_percent = 0.0;
+
+        //std::cout << " >>> number of 'pixels' after conv1 = " << (double) (batchSize*nbOutputs_conv1 * conv1_fused.getOutputsHeight() * conv1_fused.getOutputsWidth()) << std::endl;
+        //4704
         for (unsigned int batch = 0; batch < batchSize; ++batch) {
             for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
                 for (unsigned int oy = 0; oy < conv1_fused.getOutputsHeight(); ++oy) {
                     for (unsigned int ox = 0; ox < conv1_fused.getOutputsWidth(); ++ox) {
                         double error = conv1_rounded(ox, oy, output, batch) - quant_conv2_unscaled(ox, oy, output, batch);
-                        double error_r = conv1_rounded(ox, oy, output, batch) - quant_conv2_unscaled(ox, oy, output, batch);
+                        double error_r = conv1_rounded_r(ox, oy, output, batch) - quant_conv2_unscaled(ox, oy, output, batch);
 
                         mse += std::pow(error, 2);
                         mse_r += std::pow(error_r, 2);
 
-                        if(error_r > max_error)
-                            max_error = error_r;
+                        if(std::abs(error_r) > max_error)
+                            max_error = std::abs(error_r);
+
+                        if(std::abs(error_r) >= 1){
+                            faulty_pixel++;
+                        }
                     }
                 }
             }
         }
+
         mse /= (double) batchSize* nbOutputs_conv1 * conv1_fused.getOutputsHeight() * conv1_fused.getOutputsWidth();
         mse_r /= (double) batchSize* nbOutputs_conv1 * conv1_fused.getOutputsHeight() * conv1_fused.getOutputsWidth();
-        
+        faulty_pixel_percent = ((double)faulty_pixel*100)/((double)(batchSize*nbOutputs_conv1 * conv1_fused.getOutputsHeight() * conv1_fused.getOutputsWidth()));
+
         v_mse.push_back(mse);
         v_mse_r.push_back(mse_r);
         v_mse_max.push_back(max_error);
+        v_faulty_pixel.push_back(faulty_pixel);
+        v_faulty_pixel_percent.push_back(faulty_pixel_percent);
         
     }
 
-    std::ofstream outFile_mse("bnFusion_Approx_Test_MNIST_MSE.dat");
-    std::ofstream outFile_mse_r("bnFusion_Approx_Test_MNIST_MSE_R.dat");
-    std::ofstream outFile_mse_max("bnFusion_Approx_Test_MNIST_MSE_MAX.dat");
+    std::ostringstream fileName_mse;
+    fileName_mse << "bnFusion_approx_mse_" << range1 << "_" << range2 << ".dat";
+    std::ostringstream fileName_mse_r;
+    fileName_mse_r << "bnFusion_approx_mse_round_" << range1 << "_" << range2 << ".dat";
+    std::ostringstream fileName_max_err;
+    fileName_max_err << "bnFusion_approx_max_err_" << range1 << "_" << range2 << ".dat";
+    std::ostringstream fileName_faulty_pixel;
+    fileName_faulty_pixel << "bnFusion_approx_faulty_pixel_" << range1 << "_" << range2 << ".dat";
+    std::ostringstream fileName_faulty_pixel_percent;
+    fileName_faulty_pixel_percent << "bnFusion_approx_faulty_pixel_percent_" << range1 << "_" << range2 << ".dat";
+
+    std::ofstream outFile_mse(fileName_mse.str());
+    std::ofstream outFile_mse_r(fileName_mse_r.str());
+    std::ofstream outFile_mse_max(fileName_max_err.str());
+    std::ofstream outFile_faulty_pixel(fileName_faulty_pixel.str());
+    std::ofstream outFile_faulty_pixel_percent(fileName_faulty_pixel_percent.str());
 
     for (std::size_t i = 0; i < v_mse.size(); ++i) {
-
         outFile_mse << v_mse[i] << "\n";
         outFile_mse_r << v_mse_r[i] << "\n";
         outFile_mse_max << v_mse_max[i] << "\n";
+        outFile_faulty_pixel << v_faulty_pixel[i] << "\n";
+        outFile_faulty_pixel_percent << v_faulty_pixel_percent[i] << "\n";
     }
+
+    std::string fileName_img_mse = fileName_mse.str();
+    fileName_img_mse.replace(fileName_img_mse.begin()+(fileName_img_mse.size()-4),fileName_img_mse.end(),".png");
+    std::string fileName_img_mse_r = fileName_mse_r.str();
+    fileName_img_mse_r.replace(fileName_img_mse_r.begin()+(fileName_img_mse_r.size()-4),fileName_img_mse_r.end(),".png");
+    std::string fileName_img_max_err = fileName_max_err.str();
+    fileName_img_max_err.replace(fileName_img_max_err.begin()+(fileName_img_max_err.size()-4),fileName_img_max_err.end(),".png");
+    std::string fileName_img_faulty_pixel = fileName_faulty_pixel.str();
+    fileName_img_faulty_pixel.replace(fileName_img_faulty_pixel.begin()+(fileName_img_faulty_pixel.size()-4),fileName_img_faulty_pixel.end(),".png");
+    std::string fileName_img_faulty_pixel_percent = fileName_faulty_pixel_percent.str();
+    fileName_img_faulty_pixel_percent.replace(fileName_img_faulty_pixel_percent.begin()+(fileName_img_faulty_pixel_percent.size()-4),fileName_img_faulty_pixel_percent.end(),".png");
 
     // plot results
     Gnuplot gnuplot_mse;
@@ -1078,28 +1136,51 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Approx_LeNet_TestDatabase_Frame_CUDA
     gnuplot_mse << "binwidth=0.01";
     gnuplot_mse << "bin(x,width)=width*floor(x/width)+width/2.0";
     gnuplot_mse.setXlabel("MSE");
-    gnuplot_mse.saveToFile("bnFusion_Approx_Test_MNIST_MSE.png");
-    gnuplot_mse.plot("bnFusion_Approx_Test_MNIST_MSE.dat", std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
+    gnuplot_mse.setYlabel("Number of images");
+    gnuplot_mse.saveToFile(fileName_img_mse);
+    gnuplot_mse.plot(fileName_mse.str(), std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
 
     Gnuplot gnuplot_mse_r;
     gnuplot_mse_r.set("grid");   
     gnuplot_mse_r << "binwidth=0.01";
     gnuplot_mse_r << "bin(x,width)=width*floor(x/width)+width/2.0";
-    gnuplot_mse_r.setXlabel("MSE");
-    gnuplot_mse_r.saveToFile("bnFusion_Approx_Test_MNIST_MSE_R.png");
-    gnuplot_mse_r.plot("bnFusion_Approx_Test_MNIST_MSE_R.dat", std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
+    gnuplot_mse_r.setXlabel("MSE with rounding");
+    gnuplot_mse_r.setYlabel("Number of images");
+    gnuplot_mse_r.saveToFile(fileName_img_mse_r);
+    gnuplot_mse_r.plot(fileName_mse_r.str(), std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
 
     Gnuplot gnuplot_max_err;
     gnuplot_max_err.set("grid");   
-    gnuplot_max_err << "binwidth=1.0";
+    gnuplot_max_err << "binwidth=0.01";
     gnuplot_max_err << "bin(x,width)=width*floor(x/width)+width/2.0";
     gnuplot_max_err.setXlabel("Max error");
-    gnuplot_max_err.saveToFile("bnFusion_Approx_Test_MNIST_MAX_ERR.png");
-    gnuplot_max_err.plot("bnFusion_Approx_Test_MNIST_MSE_MAX.dat", std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
+    gnuplot_max_err.setYlabel("Number of images");
+    gnuplot_max_err.saveToFile(fileName_img_max_err);
+    gnuplot_max_err.plot(fileName_max_err.str(), std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
+
+    Gnuplot gnuplot_faulty_pixel;
+    gnuplot_faulty_pixel.set("grid");   
+    gnuplot_faulty_pixel << "binwidth=0.01";
+    gnuplot_faulty_pixel << "bin(x,width)=width*floor(x/width)+width/2.0";
+    gnuplot_faulty_pixel.setXlabel("Number of faulty pixels");
+    gnuplot_faulty_pixel.setYlabel("Number of images");
+    gnuplot_faulty_pixel.saveToFile(fileName_img_faulty_pixel);
+    gnuplot_faulty_pixel.plot(fileName_faulty_pixel.str(), std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
+
+    Gnuplot gnuplot_faulty_pixel_percent;
+    gnuplot_faulty_pixel_percent.set("grid");   
+    gnuplot_faulty_pixel_percent << "binwidth=0.01";
+    gnuplot_faulty_pixel_percent << "bin(x,width)=width*floor(x/width)+width/2.0";
+    gnuplot_faulty_pixel_percent.setXlabel("Percentage of faulty pixels");
+    gnuplot_faulty_pixel_percent.setYlabel("Number of images");
+    gnuplot_faulty_pixel_percent.saveToFile(fileName_img_faulty_pixel_percent);
+    gnuplot_faulty_pixel_percent.plot(fileName_faulty_pixel_percent.str(), std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
  
 }
 
+
 //read the entire test database, and compute MSE
+
 TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Exact_LeNet_TestDatabase_Frame_CUDA_float,
              check_BNFusion_with_SAT,
              (unsigned int kernelWidth,
@@ -1143,7 +1224,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Exact_LeNet_TestDatabase_Frame_CUDA_
     std::cout << "Database test size = " << nbTest << std::endl;
     const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
 
-    std::vector<double> v_mse, v_mse_r, v_mse_max;
+    std::vector<double> v_mse, v_mse_r, v_mse_max, v_faulty_pixel, v_faulty_pixel_percent;
 
     for (unsigned int b = 0; b < nbBatch; ++b) {
         
@@ -1363,7 +1444,10 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Exact_LeNet_TestDatabase_Frame_CUDA_
                 
                 for (unsigned int sx = 0; sx < kernelWidth; ++sx) {
                     for (unsigned int sy = 0; sy < kernelHeight; ++sy){
-                        kernel_rescaled(sx, sy) = rintf(0.5*(quant_weights_conv1[output][channel](sx, sy)*range1+1));
+                        //range [-127,128]
+                        //kernel_rescaled(sx, sy) = rintf(0.5*(quant_weights_conv1[output][channel](sx, sy)*range1+1));
+                        //range [-128,127]
+                        kernel_rescaled(sx, sy) = rintf(0.5*(quant_weights_conv1[output][channel](sx, sy)*range1-1));
                     }
                 }
                 conv1_fused.setWeight(output, channel, kernel_rescaled);
@@ -1489,7 +1573,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Exact_LeNet_TestDatabase_Frame_CUDA_
                     for (unsigned int ox = 0; ox < conv1_fused.getOutputsWidth(); ++ox) {
                         //Add bias term and an additional contribution from weighs transformation
                         float value = out_conv1_fused_prop(ox, oy, output, batch)  
-                                        - rintf(out_conv1_fused_const_prop(ox, oy, output, batch))
+                                        //- rintf(out_conv1_fused_const_prop(ox, oy, output, batch))
+                                        + rintf(out_conv1_fused_const_prop(ox, oy, output, batch))
                                         + bias_fusion(output);
                         conv1_add_bias(ox, oy, output, batch) = value;
 
@@ -1529,7 +1614,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Exact_LeNet_TestDatabase_Frame_CUDA_
                     for (unsigned int ox = 0; ox < conv1_fused.getOutputsWidth(); ++ox) {
                         //Add bias term and an additional contribution from weighs transformation
                         float value = out_conv1_fused_prop(ox, oy, output, batch) 
-                                        - rintf(out_conv1_fused_const_prop(ox, oy, output, batch))
+                                        //- rintf(out_conv1_fused_const_prop(ox, oy, output, batch))
+                                        + rintf(out_conv1_fused_const_prop(ox, oy, output, batch))
                                         + bias_fusion_rounded(output);
                         conv1_add_bias_r(ox, oy, output, batch) = value;
 
@@ -1557,34 +1643,45 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Exact_LeNet_TestDatabase_Frame_CUDA_
 
         double mse = 0.0, mse_r = 0.0;
         double max_error = 0.0;
+        int faulty_pixel = 0;
+        double faulty_pixel_percent = 0.0;
+
         for (unsigned int batch = 0; batch < batchSize; ++batch) {
             for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
                 for (unsigned int oy = 0; oy < conv1_fused.getOutputsHeight(); ++oy) {
                     for (unsigned int ox = 0; ox < conv1_fused.getOutputsWidth(); ++ox) {
                         double error = conv1_rounded(ox, oy, output, batch) - quant_conv2_unscaled(ox, oy, output, batch);
-                        double error_r = conv1_rounded(ox, oy, output, batch) - quant_conv2_unscaled(ox, oy, output, batch);
+                        double error_r = conv1_rounded_r(ox, oy, output, batch) - quant_conv2_unscaled(ox, oy, output, batch);
 
                         mse += std::pow(error, 2);
                         mse_r += std::pow(error_r, 2);
 
-                        if(error_r > max_error)
-                            max_error = error_r;
+                        if(std::abs(error_r) > max_error)
+                            max_error = std::abs(error_r);
+
+                        if(std::abs(error_r) >= 1){
+                            faulty_pixel++;
+                        }
                     }
                 }
             }
         }
         mse /= (double) batchSize* nbOutputs_conv1 * conv1_fused.getOutputsHeight() * conv1_fused.getOutputsWidth();
         mse_r /= (double) batchSize* nbOutputs_conv1 * conv1_fused.getOutputsHeight() * conv1_fused.getOutputsWidth();
-        
+        faulty_pixel_percent = ((double)faulty_pixel*100)/((double)(batchSize*nbOutputs_conv1 * conv1_fused.getOutputsHeight() * conv1_fused.getOutputsWidth()));
+
         v_mse.push_back(mse);
         v_mse_r.push_back(mse_r);
         v_mse_max.push_back(max_error);
+        v_faulty_pixel.push_back(faulty_pixel);
+        v_faulty_pixel_percent.push_back(faulty_pixel_percent);
         
     }
 
-    std::ofstream outFile_mse("bnFusion_Exact_Test_MNIST_MSE.dat");
-    std::ofstream outFile_mse_r("bnFusion_Exact_Test_MNIST_MSE_R.dat");
-    std::ofstream outFile_mse_max("bnFusion_Exact_Test_MNIST_MSE_MAX.dat");
+/*
+    std::ofstream outFile_mse("bnFusion_Exact_wRange_Test_MNIST_MSE.dat");
+    std::ofstream outFile_mse_r("bnFusion_Exact_wRange_Test_MNIST_MSE_R.dat");
+    std::ofstream outFile_mse_max("bnFusion_Exact_wRange_Test_MNIST_MSE_MAX.dat");
 
     for (std::size_t i = 0; i < v_mse.size(); ++i) {
 
@@ -1599,26 +1696,110 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Exact_LeNet_TestDatabase_Frame_CUDA_
     gnuplot_mse << "binwidth=0.01";
     gnuplot_mse << "bin(x,width)=width*floor(x/width)+width/2.0";
     gnuplot_mse.setXlabel("MSE");
-    gnuplot_mse.saveToFile("bnFusion_Exact_Test_MNIST_MSE.png");
-    gnuplot_mse.plot("bnFusion_Exact_Test_MNIST_MSE.dat", std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
+    gnuplot_mse.saveToFile("bnFusion_Exact_wRange_Test_MNIST_MSE.png");
+    gnuplot_mse.plot("bnFusion_Exact_wRange_Test_MNIST_MSE.dat", std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
 
     Gnuplot gnuplot_mse_r;
     gnuplot_mse_r.set("grid");   
     gnuplot_mse_r << "binwidth=0.01";
     gnuplot_mse_r << "bin(x,width)=width*floor(x/width)+width/2.0";
     gnuplot_mse_r.setXlabel("MSE");
-    gnuplot_mse_r.saveToFile("bnFusion_Exact_Test_MNIST_MSE_R.png");
-    gnuplot_mse_r.plot("bnFusion_Exact_Test_MNIST_MSE_R.dat", std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
+    gnuplot_mse_r.saveToFile("bnFusion_Exact_wRange_Test_MNIST_MSE_R.png");
+    gnuplot_mse_r.plot("bnFusion_Exact_wRange_Test_MNIST_MSE_R.dat", std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
 
     Gnuplot gnuplot_max_err;
     gnuplot_max_err.set("grid");   
     gnuplot_max_err << "binwidth=1.0";
     gnuplot_max_err << "bin(x,width)=width*floor(x/width)+width/2.0";
     gnuplot_max_err.setXlabel("Max error");
-    gnuplot_max_err.saveToFile("bnFusion_Exact_Test_MNIST_MAX_ERR.png");
-    gnuplot_max_err.plot("bnFusion_Exact_Test_MNIST_MSE_MAX.dat", std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
+    gnuplot_max_err.saveToFile("bnFusion_Exact_wRange_Test_MNIST_MAX_ERR.png");
+    gnuplot_max_err.plot("bnFusion_Exact_wRange_Test_MNIST_MSE_MAX.dat", std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
+    */
+
+    std::ostringstream fileName_mse;
+    fileName_mse << "bnFusion_exact_mse_" << range1 << "_" << range2 << ".dat";
+    std::ostringstream fileName_mse_r;
+    fileName_mse_r << "bnFusion_exact_mse_round_" << range1 << "_" << range2 << ".dat";
+    std::ostringstream fileName_max_err;
+    fileName_max_err << "bnFusion_exact_max_err_" << range1 << "_" << range2 << ".dat";
+    std::ostringstream fileName_faulty_pixel;
+    fileName_faulty_pixel << "bnFusion_exact_faulty_pixel_" << range1 << "_" << range2 << ".dat";
+    std::ostringstream fileName_faulty_pixel_percent;
+    fileName_faulty_pixel_percent << "bnFusion_exact_faulty_pixel_percent_" << range1 << "_" << range2 << ".dat";
+
+    std::ofstream outFile_mse(fileName_mse.str());
+    std::ofstream outFile_mse_r(fileName_mse_r.str());
+    std::ofstream outFile_mse_max(fileName_max_err.str());
+    std::ofstream outFile_faulty_pixel(fileName_faulty_pixel.str());
+    std::ofstream outFile_faulty_pixel_percent(fileName_faulty_pixel_percent.str());
+
+    for (std::size_t i = 0; i < v_mse.size(); ++i) {
+        outFile_mse << v_mse[i] << "\n";
+        outFile_mse_r << v_mse_r[i] << "\n";
+        outFile_mse_max << v_mse_max[i] << "\n";
+        outFile_faulty_pixel << v_faulty_pixel[i] << "\n";
+        outFile_faulty_pixel_percent << v_faulty_pixel_percent[i] << "\n";
+    }
+
+    std::string fileName_img_mse = fileName_mse.str();
+    fileName_img_mse.replace(fileName_img_mse.begin()+(fileName_img_mse.size()-4),fileName_img_mse.end(),".png");
+    std::string fileName_img_mse_r = fileName_mse_r.str();
+    fileName_img_mse_r.replace(fileName_img_mse_r.begin()+(fileName_img_mse_r.size()-4),fileName_img_mse_r.end(),".png");
+    std::string fileName_img_max_err = fileName_max_err.str();
+    fileName_img_max_err.replace(fileName_img_max_err.begin()+(fileName_img_max_err.size()-4),fileName_img_max_err.end(),".png");
+    std::string fileName_img_faulty_pixel = fileName_faulty_pixel.str();
+    fileName_img_faulty_pixel.replace(fileName_img_faulty_pixel.begin()+(fileName_img_faulty_pixel.size()-4),fileName_img_faulty_pixel.end(),".png");
+    std::string fileName_img_faulty_pixel_percent = fileName_faulty_pixel_percent.str();
+    fileName_img_faulty_pixel_percent.replace(fileName_img_faulty_pixel_percent.begin()+(fileName_img_faulty_pixel_percent.size()-4),fileName_img_faulty_pixel_percent.end(),".png");
+
+    // plot results
+    Gnuplot gnuplot_mse;
+    gnuplot_mse.set("grid");   
+    gnuplot_mse << "binwidth=0.01";
+    gnuplot_mse << "bin(x,width)=width*floor(x/width)+width/2.0";
+    gnuplot_mse.setXlabel("MSE");
+    gnuplot_mse.setYlabel("Number of images");
+    gnuplot_mse.saveToFile(fileName_img_mse);
+    gnuplot_mse.plot(fileName_mse.str(), std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
+
+    Gnuplot gnuplot_mse_r;
+    gnuplot_mse_r.set("grid");   
+    gnuplot_mse_r << "binwidth=0.01";
+    gnuplot_mse_r << "bin(x,width)=width*floor(x/width)+width/2.0";
+    gnuplot_mse_r.setXlabel("MSE with rounding");
+    gnuplot_mse_r.setYlabel("Number of images");
+    gnuplot_mse_r.saveToFile(fileName_img_mse_r);
+    gnuplot_mse_r.plot(fileName_mse_r.str(), std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
+
+    Gnuplot gnuplot_max_err;
+    gnuplot_max_err.set("grid");   
+    gnuplot_max_err << "binwidth=0.01";
+    gnuplot_max_err << "bin(x,width)=width*floor(x/width)+width/2.0";
+    gnuplot_max_err.setXlabel("Max error");
+    gnuplot_max_err.setYlabel("Number of images");
+    gnuplot_max_err.saveToFile(fileName_img_max_err);
+    gnuplot_max_err.plot(fileName_max_err.str(), std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
+
+    Gnuplot gnuplot_faulty_pixel;
+    gnuplot_faulty_pixel.set("grid");   
+    gnuplot_faulty_pixel << "binwidth=0.01";
+    gnuplot_faulty_pixel << "bin(x,width)=width*floor(x/width)+width/2.0";
+    gnuplot_faulty_pixel.setXlabel("Number of faulty pixels");
+    gnuplot_faulty_pixel.setYlabel("Number of images");
+    gnuplot_faulty_pixel.saveToFile(fileName_img_faulty_pixel);
+    gnuplot_faulty_pixel.plot(fileName_faulty_pixel.str(), std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
+
+    Gnuplot gnuplot_faulty_pixel_percent;
+    gnuplot_faulty_pixel_percent.set("grid");   
+    gnuplot_faulty_pixel_percent << "binwidth=0.01";
+    gnuplot_faulty_pixel_percent << "bin(x,width)=width*floor(x/width)+width/2.0";
+    gnuplot_faulty_pixel_percent.setXlabel("Percentage of faulty pixels");
+    gnuplot_faulty_pixel_percent.setYlabel("Number of images");
+    gnuplot_faulty_pixel_percent.saveToFile(fileName_img_faulty_pixel_percent);
+    gnuplot_faulty_pixel_percent.plot(fileName_faulty_pixel_percent.str(), std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
  
 }
+
 
 
 
