@@ -30,13 +30,20 @@ N2D2
    :caption: Python API:
 
    python_api/intro
+   python_api/databases
+   python_api/cells
+   python_api/activations
+   python_api/deepnet
+   python_api/transformations
+   python_api/data_provider
+
 
 .. toctree::
    :maxdepth: 1
    :caption: C++/Python core:
    
    core/intro
-   core/activation
+   core/activations
    core/containers
    core/cells
    core/databases
