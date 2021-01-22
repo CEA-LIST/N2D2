@@ -71,7 +71,6 @@ void init_Cell(py::module &m) {
     .def("importFreeParameters", &Cell::importFreeParameters, py::arg("fileName"), py::arg("ignoreNotExists") = false)
     .def("logFreeParameters", &Cell::logFreeParameters, py::arg("fileName"))
     .def("logFreeParametersDistrib", &Cell::logFreeParametersDistrib, py::arg("fileName"), py::arg("type"))
-    .def("discretizeFreeParameters", &Cell::discretizeFreeParameters, py::arg("nbLevels"))
     .def("getFreeParametersRange", &Cell::getFreeParametersRange, py::arg("withAdditiveParameters"))
     .def("getFreeParametersRangePerOutput", &Cell::getFreeParametersRangePerOutput, py::arg("output"), py::arg("withAdditiveParameters"))
     .def("processFreeParameters", &Cell::processFreeParameters, py::arg("func"), py::arg("type"))

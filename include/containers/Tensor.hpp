@@ -84,11 +84,22 @@ public:
 template <class T>
 class DataTensor : public BaseDataTensor {
 public:
-    DataTensor(const std::vector<T>& data) : mData(data) {}
-    std::vector<T>& operator()() { return mData; }
+    DataTensor(const std::vector<T>& data) : mUnallocatedSize(0), mData(data) {}
+    DataTensor(size_t size) : mUnallocatedSize(size), mData() {}
+    std::vector<T>& operator()() {
+        if (mUnallocatedSize > 0) {
+            // Lazy memory allocation, useful to avoid host memory allocation
+            // when casting CudaTensor types on GPU only.
+            mData.resize(mUnallocatedSize);
+            mUnallocatedSize = 0;
+        }
+
+        return mData;
+    }
     virtual ~DataTensor() {};
 
 protected:
+    size_t mUnallocatedSize;
     std::vector<T> mData;
 };
 
@@ -480,7 +491,7 @@ tensor_cast(const BaseTensor& base)
         dataTensor = std::static_pointer_cast<DataTensor<T> >((*it).second);
     else {
         dataTensor
-            = std::make_shared<DataTensor<T> >(std::vector<T>(base.mSize));
+            = std::make_shared<DataTensor<T> >(base.mSize);
         base.mDataTensors[&typeid(T)] = dataTensor;
     }
 
@@ -543,7 +554,7 @@ Tensor<T> tensor_cast_nocopy(const BaseTensor& base)
         dataTensor = std::static_pointer_cast<DataTensor<T> >((*it).second);
     else {
         dataTensor
-            = std::make_shared<DataTensor<T> >(std::vector<T>(base.mSize));
+            = std::make_shared<DataTensor<T> >(base.mSize);
         base.mDataTensors[&typeid(T)] = dataTensor;
     }
 

@@ -23,7 +23,6 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "Activation/Activation_Kernels.hpp"
 #include "Activation/Activation_CUDA_Kernels.hpp"
 #include "Activation/RectifierActivation.hpp"
 #include "Cell/Cell.hpp"
@@ -39,13 +38,15 @@ public:
     }
 
     RectifierActivation_Frame_CUDA();
-
-    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
-    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
-
-    void propagate(const Cell& cell, CudaTensor<T>& data, bool inference = false);
-    void backPropagate(const Cell& cell, CudaTensor<T>& data, CudaTensor<T>& diffData);
-
+    virtual void propagate(const Cell& cell,
+                           const BaseTensor& input,
+                           BaseTensor& output,
+                           bool inference = false);
+    virtual void backPropagate(const Cell& cell,
+                               const BaseTensor& input,
+                               const BaseTensor& output,
+                               const BaseTensor& diffInput,
+                               BaseTensor& diffOutput);
     virtual ~RectifierActivation_Frame_CUDA();
 
 protected:
@@ -74,46 +75,82 @@ N2D2::RectifierActivation_Frame_CUDA<T>::RectifierActivation_Frame_CUDA():
 }
 
 template <class T>
-void N2D2::RectifierActivation_Frame_CUDA<T>::propagate(const Cell& cell, 
-                                                        BaseTensor& data, bool inference)
+void N2D2::RectifierActivation_Frame_CUDA<T>::propagate(
+    const Cell& cell, 
+    const BaseTensor& baseInput,
+    BaseTensor& baseOutput,
+    bool /*inference*/)
 {
-    propagate(cell, dynamic_cast<CudaTensor<T>&>(data), inference);
+    const CudaTensor<T>& input = dynamic_cast<const CudaTensor<T>&>(baseInput);
+    CudaTensor<T>& output = dynamic_cast<CudaTensor<T>&>(baseOutput);
+
+    mScaling.propagate(cell, input, output);
+
+    if (mLeakSlope == 0.0 && mClipping == 0.0) {
+        const float alpha = 1.0f;
+        const float beta = 0.0f;
+
+        CHECK_CUDNN_STATUS(
+            cudnnActivationForward(CudaContext::cudnnHandle(),
+                                   mActivationDesc,
+                                   &alpha,
+                                   output.getCudnnTensorDesc(),
+                                   output.getDevicePtr(),
+                                   &beta,
+                                   output.getCudnnTensorDesc(),
+                                   output.getDevicePtr()));
+    }
+    else {
+        cudaRectifier_propagate(
+            output.getDevicePtr(),
+            output.getDevicePtr(),
+            output.size(),
+            T(mLeakSlope),
+            cell.isQuantized()?T(0.0):T(mClipping));
+    }
 }
 
 template <class T>
-void N2D2::RectifierActivation_Frame_CUDA<T>::backPropagate(const Cell& cell, 
-                                                            BaseTensor& data, BaseTensor& diffData) 
+void N2D2::RectifierActivation_Frame_CUDA<T>::backPropagate(
+    const Cell& cell, 
+    const BaseTensor& /*baseInput*/,
+    const BaseTensor& baseOutput,
+    const BaseTensor& baseDiffInput,
+    BaseTensor& baseDiffOutput)
 {
-    backPropagate(cell, dynamic_cast<CudaTensor<T>&>(data), dynamic_cast<CudaTensor<T>&>(diffData));
-}
+    const CudaTensor<T>& output = dynamic_cast<const CudaTensor<T>&>(baseOutput);
+    const CudaTensor<T>& diffInput = dynamic_cast<const CudaTensor<T>&>(baseDiffInput);
+    CudaTensor<T>& diffOutput = dynamic_cast<CudaTensor<T>&>(baseDiffOutput);
 
-namespace N2D2 {
+    if (mLeakSlope == 0.0 && mClipping == 0.0) {
+        const float alpha = 1.0f;
+        const float beta = 0.0f;
 
-template <>
-void RectifierActivation_Frame_CUDA<half_float::half>::propagate(const Cell& cell, 
-                                                                 CudaTensor<half_float::half>& data, 
-                                                                 bool inference);
-template <>
-void RectifierActivation_Frame_CUDA<half_float::half>::backPropagate(const Cell& cell, 
-                                                                     CudaTensor<half_float::half>& data, 
-                                                                     CudaTensor<half_float::half>& diffData);
+        CHECK_CUDNN_STATUS(
+            cudnnActivationBackward(CudaContext::cudnnHandle(),
+                                    mActivationDesc,
+                                    &alpha,
+                                    output.getCudnnTensorDesc(),
+                                    output.getDevicePtr(),
+                                    diffInput.getCudnnTensorDesc(),
+                                    diffInput.getDevicePtr(),
+                                    output.getCudnnTensorDesc(),
+                                    output.getDevicePtr(),
+                                    &beta,
+                                    diffOutput.getCudnnTensorDesc(),
+                                    diffOutput.getDevicePtr()));
+    }
+    else {
+        cudaRectifier_backPropagate(output.getDevicePtr(),
+                                     diffInput.getDevicePtr(),
+                                     diffOutput.getDevicePtr(),
+                                     output.size(),
+                                     T(mLeakSlope),
+                                     cell.isQuantized()?T(0.0):
+                                                        T(mClipping));
+    }
 
-template <>
-void RectifierActivation_Frame_CUDA<float>::propagate(const Cell& cell, 
-                                                      CudaTensor<float>& data, bool inference);
-template <>
-void RectifierActivation_Frame_CUDA<float>::backPropagate(const Cell& cell, 
-                                                          CudaTensor<float>& data, 
-                                                          CudaTensor<float>& diffData);
-
-template <>
-void RectifierActivation_Frame_CUDA<double>::propagate(const Cell& cell, 
-                                                       CudaTensor<double>& data, bool inference);
-template <>
-void RectifierActivation_Frame_CUDA<double>::backPropagate(const Cell& cell, 
-                                                           CudaTensor<double>& data, 
-                                                           CudaTensor<double>& diffData);
-
+    mScaling.backPropagate(cell, diffOutput, diffOutput);
 }
 
 template <class T>

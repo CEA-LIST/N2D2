@@ -20,12 +20,13 @@
 
 #include "Cell/FMPCell_Frame_CUDA_Kernels.hpp"
 
-__global__ void cudaSFMPPropagate_kernel(const float alpha,
-                                         float* inputs,
+template <class T>
+__global__ void cudaFMPPropagate_kernel(const T alpha,
+                                         T* inputs,
                                          unsigned int* gridX,
                                          unsigned int* gridY,
-                                         const float beta,
-                                         float* outputs,
+                                         const T beta,
+                                         T* outputs,
                                          unsigned int nbChannels,
                                          unsigned int channelsHeight,
                                          unsigned int channelsWidth,
@@ -47,7 +48,7 @@ __global__ void cudaSFMPPropagate_kernel(const float alpha,
             for (unsigned int ox = threadIdx.x; ox < outputsWidth;
                  ox += blockDim.x) {
                 // For each output, compute the pool value
-                float poolValue = -FLT_MAX;
+                T poolValue = -FLT_MAX;
                 /*
                                 unsigned int channelMax = 0;
                                 unsigned int ixMax = 0;
@@ -102,13 +103,16 @@ __global__ void cudaSFMPPropagate_kernel(const float alpha,
     }
 }
 
-void N2D2::cudaSFMPPropagate(const cudaDeviceProp& deviceProp,
-                             const float alpha,
-                             float* inputs,
+namespace N2D2 {
+
+template <class T>
+void cudaFMPPropagate(const cudaDeviceProp& deviceProp,
+                             const T alpha,
+                             T* inputs,
                              unsigned int* gridX,
                              unsigned int* gridY,
-                             const float beta,
-                             float* outputs,
+                             const T beta,
+                             T* outputs,
                              unsigned int nbChannels,
                              unsigned int channelsHeight,
                              unsigned int channelsWidth,
@@ -132,13 +136,13 @@ void N2D2::cudaSFMPPropagate(const cudaDeviceProp& deviceProp,
     const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
-    cudaSFMPPropagate_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (alpha,
-           inputs,
+    cudaFMPPropagate_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(alpha),
+           reinterpret_cast<typename Cuda::cuda_type<T>::type*>(inputs),
            gridX,
            gridY,
-           beta,
-           outputs,
+           reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(beta),
+           reinterpret_cast<typename Cuda::cuda_type<T>::type*>(outputs),
            nbChannels,
            channelsHeight,
            channelsWidth,
@@ -148,4 +152,23 @@ void N2D2::cudaSFMPPropagate(const cudaDeviceProp& deviceProp,
            batchSize,
            overlapping);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+template void cudaFMPPropagate(const cudaDeviceProp& deviceProp,
+                             const float alpha,
+                             float* inputs,
+                             unsigned int* gridX,
+                             unsigned int* gridY,
+                             const float beta,
+                             float* outputs,
+                             unsigned int nbChannels,
+                             unsigned int channelsHeight,
+                             unsigned int channelsWidth,
+                             unsigned int nbOutputs,
+                             unsigned int outputsHeight,
+                             unsigned int outputsWidth,
+                             unsigned int batchSize,
+                             bool overlapping);
+
 }

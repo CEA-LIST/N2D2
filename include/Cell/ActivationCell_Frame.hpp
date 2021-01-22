@@ -34,6 +34,7 @@ public:
     using Cell_Frame<T>::mOutputs;
     using Cell_Frame<T>::mDiffInputs;
     using Cell_Frame<T>::mDiffOutputs;
+    using Cell_Frame<T>::mActivation;
 
     ActivationCell_Frame(const DeepNet& deepNet, const std::string& name,
                    unsigned int nbOutputs,

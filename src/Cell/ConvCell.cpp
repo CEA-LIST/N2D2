@@ -759,35 +759,6 @@ void N2D2::ConvCell::writeMap(const std::string& fileName) const
     Gnuplot::setDefaultOutput();
 }
 
-void N2D2::ConvCell::discretizeFreeParameters(unsigned int nbLevels)
-{
-#pragma omp parallel for if (getNbOutputs() > 16)
-    for (int output = 0; output < (int)getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-            if (!isConnection(channel, output))
-                continue;
-
-            Tensor<Float_T> kernel;
-            getWeight(output, channel, kernel);
-
-            for (unsigned int index = 0; index < kernel.size(); ++index) {
-                kernel(index) = Utils::round((nbLevels - 1) * kernel(index))
-                         / (nbLevels - 1);
-            }
-
-            setWeight(output, channel, kernel);
-        }
-
-        if (!mNoBias) {
-            Tensor<Float_T> bias;
-            getBias(output, bias);
-            bias(0) = Utils::round((nbLevels - 1) * bias(0)) / (nbLevels - 1);
-
-            setBias(output, bias);
-        }
-    }
-}
-
 std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRange(bool withAdditiveParameters)
     const
 {

@@ -522,39 +522,6 @@ unsigned int N2D2::Cell_Frame<T>::getMaxOutput(unsigned int batchPos) const
                          std::max_element(output.begin(), output.end()));
 }
 
-template <class T>
-void N2D2::Cell_Frame<T>::discretizeSignals(unsigned int nbLevels,
-                                         const Signals& signals)
-{
-    if (signals & In) {
-        mInputs.synchronizeDBasedToH();
-
-        for (Interface<>::iterator itTensor = mInputs.begin(),
-                                   itTensorEnd = mInputs.end();
-             itTensor != itTensorEnd;
-             ++itTensor)
-        {
-            Tensor<T> input = tensor_cast<T>(*(*itTensor));
-
-            //#pragma omp parallel for
-            for (int index = 0; index < (int)input.size(); ++index)
-                input(index) = Utils::round((nbLevels - 1) * input(index))
-                                  / (nbLevels - 1);
-
-            *(*itTensor) = input;
-        }
-
-        mInputs.synchronizeHToDBased();
-    }
-
-    if (signals & Out) {
-        //#pragma omp parallel for
-        for (int index = 0; index < (int)mOutputs.size(); ++index)
-            mOutputs(index) = Utils::round((nbLevels - 1) * mOutputs(index))
-                              / (nbLevels - 1);
-    }
-}
-
 namespace N2D2 {
     template class Cell_Frame<half_float::half>;
     template class Cell_Frame<float>;

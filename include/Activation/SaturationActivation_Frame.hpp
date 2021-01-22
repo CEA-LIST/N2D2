@@ -21,7 +21,6 @@
 #ifndef N2D2_SATURATIONACTIVATION_FRAME_H
 #define N2D2_SATURATIONACTIVATION_FRAME_H
 
-#include "Activation/Activation_Kernels.hpp"
 #include "Activation/SaturationActivation.hpp"
 #include "Cell/Cell.hpp"
 #include "containers/Tensor.hpp"
@@ -36,9 +35,15 @@ public:
         return std::make_shared<SaturationActivation_Frame<T> >();
     }
 
-    SaturationActivation_Frame();
-    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
-    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
+    virtual void propagate(const Cell& cell,
+                           const BaseTensor& input,
+                           BaseTensor& output,
+                           bool inference = false);
+    virtual void backPropagate(const Cell& cell,
+                               const BaseTensor& input,
+                               const BaseTensor& output,
+                               const BaseTensor& diffInput,
+                               BaseTensor& diffOutput);
     virtual ~SaturationActivation_Frame() {};
 
 private:
@@ -47,78 +52,48 @@ private:
 }
 
 template <class T>
-N2D2::SaturationActivation_Frame<T>::SaturationActivation_Frame()
-    : SaturationActivation()
+void N2D2::SaturationActivation_Frame<T>::propagate(
+    const Cell& cell, 
+    const BaseTensor& baseInput,
+    BaseTensor& baseOutput,
+    bool /*inference*/)
 {
-    // ctor
-}
+    const Tensor<T>& input = dynamic_cast<const Tensor<T>&>(baseInput);
+    Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
 
-template <class T>
-void N2D2::SaturationActivation_Frame<T>::propagate(const Cell& cell, BaseTensor& baseData,
-                                                    bool inference)
-{
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
-
-    mScaling.propagate(cell, data);
+    mScaling.propagate(cell, input, output);
 
     const T threshold(mThreshold);
 
-#pragma omp parallel for if (data.size() > 1024)
-    for (int index = 0; index < (int)data.size(); ++index)
-        data(index) = Utils::clamp<T>(data(index),
+#pragma omp parallel for if (output.size() > 1024)
+    for (int index = 0; index < (int)output.size(); ++index)
+        output(index) = Utils::clamp<T>(output(index),
                                          -threshold, threshold);
 
-    if (mQuantizationLevels > 0) {
-        if (!inference) {
-            T minVal, maxVal;
-            std::tie(minVal, maxVal) = minMax(data);
-
-            rangeAveraging(minVal, maxVal, mMinValMA, mMaxValMA,
-                           mNbSteps, mMovingAverage, mMA_Window, mEMA_Alpha);
-            rangeZeroAlign(mMinValMA, mMaxValMA, mMinValAligned, mMaxValAligned,
-                           mQuantizationLevels);
-
-            if (mLog2RoundingRate > 0.0) {
-                mMinValQuant = log2Round(mMinValAligned / mPreQuantizeScaling,
-                                         mLog2RoundingRate, mLog2RoundingPower)
-                                            * mPreQuantizeScaling;
-                mMaxValQuant = (mMinValQuant / mMinValAligned) * mMaxValAligned;
-            }
-        }
-
-        if (mNbSteps > mQuantizationDelay || inference) {
-            quantize(data, data, T(mMinValQuant), T(mMaxValQuant),
-                     (unsigned int)mQuantizationLevels);
-        }
-    }
 }
 
 template <class T>
-void N2D2::SaturationActivation_Frame<T>::backPropagate(const Cell& cell, 
-                                                        BaseTensor& baseData, BaseTensor& baseDiffData)
+void N2D2::SaturationActivation_Frame<T>::backPropagate(
+    const Cell& cell, 
+    const BaseTensor& /*baseInput*/,
+    const BaseTensor& baseOutput,
+    const BaseTensor& baseDiffInput,
+    BaseTensor& baseDiffOutput)
 {
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
-    Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
-    
-
-    if (mQuantizationLevels > 0) {
-#pragma omp parallel for if (diffData.size() > 1024)
-        for (int index = 0; index < (int)diffData.size(); ++index) {
-            diffData(index) = Utils::clamp<T>(diffData(index),
-                                              T(-1.0f), T(1.0f));
-        }
-    }
-
+    const Tensor<T>& output = dynamic_cast<const Tensor<T>&>(baseOutput);
+    const Tensor<T>& diffInput = dynamic_cast<const Tensor<T>&>(baseDiffInput);
+    Tensor<T>& diffOutput = dynamic_cast<Tensor<T>&>(baseDiffOutput);
 
     const T threshold(mThreshold);
 
-#pragma omp parallel for if (data.size() > 1024)
-    for (int index = 0; index < (int)diffData.size(); ++index)
-        diffData(index)
-            *= (data(index) > -threshold && data(index) < threshold)
-                    ? 1.0f : 0.0f;
+#pragma omp parallel for if (output.size() > 1024)
+    for (int index = 0; index < (int)diffOutput.size(); ++index) {
+        diffOutput(index) = diffInput(index)
+            * ((output(index) > -threshold && output(index) < threshold)
+                    ? 1.0f : 0.0f);
+    }
     
-    mScaling.backPropagate(cell, data, diffData);
+    mScaling.backPropagate(cell, diffOutput, diffOutput);
 }
 
 #endif // N2D2_SATURATIONACTIVATION_FRAME_H

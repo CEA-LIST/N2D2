@@ -343,12 +343,6 @@ public:
         const std::string& /*fileName*/,
         FreeParametersType /*type*/ = All) const {};
 
-    /**
-     * Discretize cell free parameters
-     *
-     * @param nbLevels      Number of discrete levels
-    */
-    virtual void discretizeFreeParameters(unsigned int /*nbLevels*/) {};
     virtual std::pair<Float_T, Float_T> getFreeParametersRange(bool /*withAdditiveParameters*/ = true) const {
         return std::pair<Float_T, Float_T>();
     };

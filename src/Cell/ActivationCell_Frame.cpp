@@ -56,14 +56,26 @@ N2D2::ActivationCell_Frame<T>::ActivationCell_Frame(const DeepNet& deepNet, cons
 template <class T>
 void N2D2::ActivationCell_Frame<T>::initialize()
 {
-    
+    if (mInputs.size() > 1)
+        throw std::domain_error("ActivationCell_Frame<T>::initialize(): "
+                                "inputs concatenation is not supported.");
+
+    if (mInputs.dimZ() != mOutputs.dimZ()) {
+        throw std::domain_error("ActivationCell_Frame<T>::initialize():"
+                                " the number of output channels must be equal "
+                                "to the sum of inputs channels.");
+    }
 }
 
 template <class T>
 void N2D2::ActivationCell_Frame<T>::propagate(bool inference)
 {
     mInputs.synchronizeDBasedToH();
-    Cell_Frame<T>::propagate(inference);
+
+    const Tensor<T>& input = tensor_cast<T>(mInputs[0]);
+    mActivation->propagate(*this, input, mOutputs, inference);
+
+    mDiffInputs.clearValid();
 }
 
 template <class T>
@@ -72,7 +84,18 @@ void N2D2::ActivationCell_Frame<T>::backPropagate()
     if (!mDiffInputs.isValid())
         return;
 
-    Cell_Frame<T>::backPropagate();
+    if (!mDiffOutputs.empty()) {
+        const Tensor<T>& input = tensor_cast<T>(mInputs[0]);
+        Tensor<T> diffOutputs = tensor_cast<T>(mDiffOutputs[0]);
+
+        mActivation->backPropagate(*this, input, mOutputs, mDiffInputs,
+                                                        diffOutputs);
+
+        mDiffOutputs[0] = diffOutputs;
+
+        mDiffOutputs[0].setValid();
+        mDiffOutputs[0].synchronizeHToD();
+    }
 }
 
 template <class T>

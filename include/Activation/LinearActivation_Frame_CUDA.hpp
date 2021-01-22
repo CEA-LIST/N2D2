@@ -23,7 +23,6 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
-#include "Activation/Activation_Kernels.hpp"
 #include "Activation/Activation_CUDA_Kernels.hpp"
 #include "Activation/LinearActivation.hpp"
 #include "Cell/Cell.hpp"
@@ -38,14 +37,15 @@ public:
         return std::make_shared<LinearActivation_Frame_CUDA<T> >();
     }
 
-    LinearActivation_Frame_CUDA();
-
-    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
-    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
-
-    void propagate(const Cell& cell, CudaTensor<T>& data, bool inference = false);
-    void backPropagate(const Cell& cell, CudaTensor<T>& data, CudaTensor<T>& diffData);
-
+    virtual void propagate(const Cell& cell,
+                           const BaseTensor& input,
+                           BaseTensor& output,
+                           bool inference = false);
+    virtual void backPropagate(const Cell& cell,
+                               const BaseTensor& input,
+                               const BaseTensor& output,
+                               const BaseTensor& diffInput,
+                               BaseTensor& diffOutput);
     virtual ~LinearActivation_Frame_CUDA() {};
 
 private:
@@ -54,53 +54,48 @@ private:
 }
 
 template <class T>
-N2D2::LinearActivation_Frame_CUDA<T>::LinearActivation_Frame_CUDA()
-    : LinearActivation()
+void N2D2::LinearActivation_Frame_CUDA<T>::propagate(
+    const Cell& cell, 
+    const BaseTensor& baseInput,
+    BaseTensor& baseOutput,
+    bool /*inference*/)
 {
-    // ctor
+    const CudaTensor<T>& input = dynamic_cast<const CudaTensor<T>&>(baseInput);
+    CudaTensor<T>& output = dynamic_cast<CudaTensor<T>&>(baseOutput);
+
+    mScaling.propagate(cell, input, output);
+
+    if (mClipping != 0 && !cell.isQuantized()) {
+        cudaSaturation_propagate<T>(output.getDevicePtr(),
+                                  output.getDevicePtr(),
+                                  output.size(),
+                                  (T)mClipping);
+    }
 }
 
 template <class T>
-void N2D2::LinearActivation_Frame_CUDA<T>::propagate(const Cell& cell, 
-                                                     BaseTensor& data, bool inference) 
+void N2D2::LinearActivation_Frame_CUDA<T>::backPropagate(
+    const Cell& cell, 
+    const BaseTensor& /*baseInput*/,
+    const BaseTensor& baseOutput,
+    const BaseTensor& baseDiffInput,
+    BaseTensor& baseDiffOutput)
 {
-    propagate(cell, dynamic_cast<CudaTensor<T>&>(data), inference);
-}
+    const CudaTensor<T>& output = dynamic_cast<const CudaTensor<T>&>(baseOutput);
+    const CudaTensor<T>& diffInput = dynamic_cast<const CudaTensor<T>&>(baseDiffInput);
+    CudaTensor<T>& diffOutput = dynamic_cast<CudaTensor<T>&>(baseDiffOutput);
 
-template <class T>
-void N2D2::LinearActivation_Frame_CUDA<T>::backPropagate(const Cell& cell, 
-                                                         BaseTensor& data, BaseTensor& diffData) 
-{
-    backPropagate(cell, dynamic_cast<CudaTensor<T>&>(data), dynamic_cast<CudaTensor<T>&>(diffData));
-}
+    if (mClipping != 0 && !cell.isQuantized()) {
+        cudaSaturation_backPropagate(output.getDevicePtr(),
+                                      diffInput.getDevicePtr(),
+                                      diffOutput.getDevicePtr(),
+                                      output.size(),
+                                      (T)mClipping);
 
-namespace N2D2 {
-
-template<>
-void LinearActivation_Frame_CUDA<half_float::half>::propagate(const Cell& cell, 
-                                                              CudaTensor<half_float::half>& data, 
-                                                              bool inference);
-template<>
-void LinearActivation_Frame_CUDA<half_float::half>::backPropagate(const Cell& cell, 
-                                                                  CudaTensor<half_float::half>& data, 
-                                                                  CudaTensor<half_float::half>& diffData);
-
-template<>
-void LinearActivation_Frame_CUDA<float>::propagate(const Cell& cell, 
-                                                   CudaTensor<float>& data, bool inference);
-template<>
-void LinearActivation_Frame_CUDA<float>::backPropagate(const Cell& cell, 
-                                                       CudaTensor<float>& data, 
-                                                       CudaTensor<float>& diffData);
-
-template<>
-void LinearActivation_Frame_CUDA<double>::propagate(const Cell& cell, 
-                                                    CudaTensor<double>& data, bool inference);
-template<>
-void LinearActivation_Frame_CUDA<double>::backPropagate(const Cell& cell, 
-                                                        CudaTensor<double>& data, 
-                                                        CudaTensor<double>& diffData);
-
+        mScaling.backPropagate(cell, diffOutput, diffOutput);
+    }
+    else
+        mScaling.backPropagate(cell, diffInput, diffOutput);
 }
 
 #endif // N2D2_LINEARACTIVATION_FRAME_CUDA_H

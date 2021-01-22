@@ -65,17 +65,16 @@ void N2D2::TargetBiasCell_Frame_CUDA<T>::initialize() {
     }
 }
 
-namespace N2D2 {
-template<>
-void N2D2::TargetBiasCell_Frame_CUDA<half_float::half>::propagate(bool inference) {
+template<class T>
+void N2D2::TargetBiasCell_Frame_CUDA<T>::propagate(bool inference) {
     mInputs.synchronizeHBasedToD();
 
-    std::shared_ptr<CudaDeviceTensor<half_float::half> > input0
-        = cuda_device_tensor_cast<half_float::half>(mInputs[0]);
+    std::shared_ptr<CudaDeviceTensor<T> > input0
+        = cuda_device_tensor_cast<T>(mInputs[0]);
 
     if (!inference) {
-        cudaHTargetBiasPropagate(CudaContext::getDeviceProp(),
-                        (half_float::half)mBias,
+        cudaTargetBiasPropagate(CudaContext::getDeviceProp(),
+                        (T)mBias,
                         input0->getDevicePtr(),
                         mDiffInputs.getDevicePtr(),
                         mOutputs.getDevicePtr(),
@@ -88,123 +87,31 @@ void N2D2::TargetBiasCell_Frame_CUDA<half_float::half>::propagate(bool inference
         CHECK_CUDA_STATUS(
             cudaMemcpy(mOutputs.getDevicePtr(),
                        input0->getDevicePtr(),
-                       mOutputs.size() * sizeof(half_float::half),
+                       mOutputs.size() * sizeof(T),
                        cudaMemcpyDeviceToDevice));
     }
 
-    Cell_Frame_CUDA<half_float::half>::propagate(inference);
+    Cell_Frame_CUDA<T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 
-template<>
-void N2D2::TargetBiasCell_Frame_CUDA<float>::propagate(bool inference) {
-    mInputs.synchronizeHBasedToD();
-
-    std::shared_ptr<CudaDeviceTensor<float> > input0
-        = cuda_device_tensor_cast<float>(mInputs[0]);
-
-    if (!inference) {
-        cudaSTargetBiasPropagate(CudaContext::getDeviceProp(),
-                        (float)mBias,
-                        input0->getDevicePtr(),
-                        mDiffInputs.getDevicePtr(),
-                        mOutputs.getDevicePtr(),
-                        mInputs[0].dimX(),
-                        mInputs[0].dimY(),
-                        getNbChannels(),
-                        mInputs.dimB());
-    }
-    else {
-        CHECK_CUDA_STATUS(
-            cudaMemcpy(mOutputs.getDevicePtr(),
-                       input0->getDevicePtr(),
-                       mOutputs.size() * sizeof(float),
-                       cudaMemcpyDeviceToDevice));
-    }
-
-    Cell_Frame_CUDA<float>::propagate(inference);
-    mDiffInputs.clearValid();
-}
-
-template<>
-void N2D2::TargetBiasCell_Frame_CUDA<double>::propagate(bool inference) {
-    mInputs.synchronizeHBasedToD();
-
-    std::shared_ptr<CudaDeviceTensor<double> > input0
-        = cuda_device_tensor_cast<double>(mInputs[0]);
-
-    if (!inference) {
-        cudaDTargetBiasPropagate(CudaContext::getDeviceProp(),
-                        (double)mBias,
-                        input0->getDevicePtr(),
-                        mDiffInputs.getDevicePtr(),
-                        mOutputs.getDevicePtr(),
-                        mInputs[0].dimX(),
-                        mInputs[0].dimY(),
-                        getNbChannels(),
-                        mInputs.dimB());
-    }
-    else {
-        CHECK_CUDA_STATUS(
-            cudaMemcpy(mOutputs.getDevicePtr(),
-                       input0->getDevicePtr(),
-                       mOutputs.size() * sizeof(double),
-                       cudaMemcpyDeviceToDevice));
-    }
-
-    Cell_Frame_CUDA<double>::propagate(inference);
-    mDiffInputs.clearValid();
-}
-
-template <>
-void N2D2::TargetBiasCell_Frame_CUDA<half_float::half>::backPropagate() {
+template <class T>
+void N2D2::TargetBiasCell_Frame_CUDA<T>::backPropagate() {
     if (!mDiffInputs.isValid())
         return;
 
-    Cell_Frame_CUDA<half_float::half>::backPropagate();
+    Cell_Frame_CUDA<T>::backPropagate();
 
-    const half_float::half alpha(1.0f);
+    const T alpha(1.0f);
 
-    std::shared_ptr<CudaDeviceTensor<half_float::half> > diffOutput0
+    std::shared_ptr<CudaDeviceTensor<T> > diffOutput0
         = (mDiffOutputs[0].isValid())
-            ? cuda_device_tensor_cast<half_float::half>(mDiffOutputs[0])
-            : cuda_device_tensor_cast_nocopy<half_float::half>(mDiffOutputs[0]);
-
-    if (mDiffOutputs[0].isValid()) {
-        cudaHaxpy(mDiffOutputs[0].size(), // size of data
-                  alpha,
-                  mDiffInputs.getDevicePtr(),
-                  diffOutput0->getDevicePtr());
-    } else {
-        CHECK_CUDA_STATUS(
-            cudaMemcpy(diffOutput0->getDevicePtr(),
-                       mDiffInputs.getDevicePtr(),
-                       mDiffOutputs[0].size() * sizeof(half_float::half),
-                       cudaMemcpyDeviceToDevice));
-
-        mDiffOutputs[0].setValid();
-    }
-
-    mDiffOutputs[0].deviceTensor() = *diffOutput0;
-}
-
-template <>
-void N2D2::TargetBiasCell_Frame_CUDA<float>::backPropagate() {
-    if (!mDiffInputs.isValid())
-        return;
-
-    Cell_Frame_CUDA<float>::backPropagate();
-
-    const float alpha = 1.0f;
-
-    std::shared_ptr<CudaDeviceTensor<float> > diffOutput0
-        = (mDiffOutputs[0].isValid())
-            ? cuda_device_tensor_cast<float>(mDiffOutputs[0])
-            : cuda_device_tensor_cast_nocopy<float>(mDiffOutputs[0]);
+            ? cuda_device_tensor_cast<T>(mDiffOutputs[0])
+            : cuda_device_tensor_cast_nocopy<T>(mDiffOutputs[0]);
 
     if (mDiffOutputs[0].isValid()) {
         CHECK_CUBLAS_STATUS(
-            cublasSaxpy(CudaContext::cublasHandle(),
+            cublasAxpy(CudaContext::cublasHandle(),
                         mDiffOutputs[0].size(), // size of data
                         &alpha,
                         mDiffInputs.getDevicePtr(),
@@ -215,50 +122,13 @@ void N2D2::TargetBiasCell_Frame_CUDA<float>::backPropagate() {
         CHECK_CUDA_STATUS(
             cudaMemcpy(diffOutput0->getDevicePtr(),
                        mDiffInputs.getDevicePtr(),
-                       mDiffOutputs[0].size() * sizeof(float),
+                       mDiffOutputs[0].size() * sizeof(T),
                        cudaMemcpyDeviceToDevice));
 
         mDiffOutputs[0].setValid();
     }
 
     mDiffOutputs[0].deviceTensor() = *diffOutput0;
-}
-
-template <>
-void N2D2::TargetBiasCell_Frame_CUDA<double>::backPropagate() {
-    if (!mDiffInputs.isValid())
-        return;
-
-    Cell_Frame_CUDA<double>::backPropagate();
-
-    const double alpha = 1.0;
-
-    std::shared_ptr<CudaDeviceTensor<double> > diffOutput0
-        = (mDiffOutputs[0].isValid())
-            ? cuda_device_tensor_cast<double>(mDiffOutputs[0])
-            : cuda_device_tensor_cast_nocopy<double>(mDiffOutputs[0]);
-
-    if (mDiffOutputs[0].isValid()) {
-        CHECK_CUBLAS_STATUS(
-            cublasDaxpy(CudaContext::cublasHandle(),
-                        mDiffOutputs[0].size(), // size of data
-                        &alpha,
-                        mDiffInputs.getDevicePtr(),
-                        1,
-                        diffOutput0->getDevicePtr(),
-                        1));
-    } else {
-        CHECK_CUDA_STATUS(
-            cudaMemcpy(diffOutput0->getDevicePtr(),
-                       mDiffInputs.getDevicePtr(),
-                       mDiffOutputs[0].size() * sizeof(double),
-                       cudaMemcpyDeviceToDevice));
-
-        mDiffOutputs[0].setValid();
-    }
-
-    mDiffOutputs[0].deviceTensor() = *diffOutput0;
-}
 }
 
 template<class T>

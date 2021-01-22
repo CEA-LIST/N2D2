@@ -955,13 +955,6 @@ void N2D2::ConvCell_Frame_CUDA<T>::update()
         }
     }
 
-    if (mActivation) {
-        double minVal, maxVal;
-        //TODO: implement common scaling for all the solvers in the cell
-        std::tie(minVal, maxVal) = mWeightsSolvers.back()->getQuantizedRange();
-        mActivation->setPreQuantizeScaling(maxVal);
-    }
-
     if (!mNoBias && mDiffBias.isValid()) {
         if(!mQuantizer) {
             mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
@@ -1193,24 +1186,6 @@ void N2D2::ConvCell_Frame_CUDA<T>::logFreeParametersDistrib(const std::string
     mSynchronized = true;
     ConvCell::logFreeParametersDistrib(fileName);
     mSynchronized = false;
-}
-
-template <class T>
-void N2D2::ConvCell_Frame_CUDA<T>::discretizeFreeParameters(unsigned int nbLevels)
-{
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeDToH();
-
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
-    ConvCell::discretizeFreeParameters(nbLevels);
-    mSynchronized = false;
-
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeHToD();
-
-    mBias->synchronizeHToD();
 }
 
 template <class T>

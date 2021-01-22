@@ -77,7 +77,6 @@ public:
     void importFreeParameters(const std::string& fileName,
                               bool ignoreNotExists = false);
     void logFreeParametersDistrib(const std::string& fileName) const;
-    void discretizeFreeParameters(unsigned int nbLevels);
     
     std::pair<Float_T, Float_T> getFreeParametersRange(bool withAdditiveParameters = true) const;
     std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 
@@ -157,16 +156,6 @@ void N2D2::FcCell_Frame_CUDA<T>::getBias(unsigned int output,
 
     value.resize({1});
     value = Tensor<T>({1}, mBias(output));
-}
-
-namespace N2D2 {
-template <> void FcCell_Frame_CUDA<half_float::half>::propagate(bool inference);
-template <> void FcCell_Frame_CUDA<float>::propagate(bool inference);
-template <> void FcCell_Frame_CUDA<double>::propagate(bool inference);
-
-template <> void FcCell_Frame_CUDA<half_float::half>::backPropagate();
-template <> void FcCell_Frame_CUDA<float>::backPropagate();
-template <> void FcCell_Frame_CUDA<double>::backPropagate();
 }
 
 #endif // N2D2_FCCELL_FRAME_CUDA_H

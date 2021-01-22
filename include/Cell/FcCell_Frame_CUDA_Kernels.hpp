@@ -31,41 +31,26 @@
 #include "third_party/half.hpp"
 
 namespace N2D2 {
-//Float
-void cudaSFcWeightsSumSq(const cudaDeviceProp& deviceProp,
-                         float* weights,
-                         float* weightsNorm,
+template <class T>
+void cudaFcWeightsSumSq(const cudaDeviceProp& deviceProp,
+                         T* weights,
+                         T* weightsNorm,
                          unsigned int nbChannels,
                          unsigned int nbOutputs);
 
-void cudaSFcWeightsSqrt(const cudaDeviceProp& deviceProp,
-                        float* weightsNorm,
+template <class T>
+void cudaFcWeightsSqrt(const cudaDeviceProp& deviceProp,
+                        T* weightsNorm,
                         unsigned int nbOutputs,
-                        float epsilon);
+                        T epsilon);
 
-void cudaSFcWeightsNormalize(const cudaDeviceProp& deviceProp,
-                             float* weights,
-                             float* weightsNorm,
+template <class T>
+void cudaFcWeightsNormalize(const cudaDeviceProp& deviceProp,
+                             T* weights,
+                             T* weightsNorm,
                              unsigned int nbChannels,
                              unsigned int nbOutputs);
 
-//Double
-void cudaDFcWeightsSumSq(const cudaDeviceProp& deviceProp,
-                         double* weights,
-                         double* weightsNorm,
-                         unsigned int nbChannels,
-                         unsigned int nbOutputs);
-
-void cudaDFcWeightsSqrt(const cudaDeviceProp& deviceProp,
-                        double* weightsNorm,
-                        unsigned int nbOutputs,
-                        double epsilon);
-
-void cudaDFcWeightsNormalize(const cudaDeviceProp& deviceProp,
-                             double* weights,
-                             double* weightsNorm,
-                             unsigned int nbChannels,
-                             unsigned int nbOutputs);
 }
 
 #endif // N2D2_FCCELL_FRAME_CUDA_KERNELS_H

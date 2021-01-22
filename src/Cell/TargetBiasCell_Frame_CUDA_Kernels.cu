@@ -20,7 +20,27 @@
 
 #include "Cell/TargetBiasCell_Frame_CUDA_Kernels.hpp"
 
-__global__ void cudaHTargetBiasPropagate_kernel(
+template <class T>
+__global__ void cudaTargetBiasPropagate_kernel(
+                                         unsigned int size,
+                                         const T bias,
+                                         const T* inputs,
+                                         const T* diffInputs,
+                                         T* outputs)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        outputs[i] = inputs[i];
+
+        if (diffInputs[i] > 0.0f && inputs[i] > -bias)
+            outputs[i] += bias;
+    }
+}
+
+template <>
+__global__ void cudaTargetBiasPropagate_kernel<__half>(
                                          unsigned int size,
                                          const __half bias,
                                          const __half* inputs,
@@ -50,43 +70,34 @@ __global__ void cudaHTargetBiasPropagate_kernel(
     }
 }
 
-__global__ void cudaSTargetBiasPropagate_kernel(
-                                         unsigned int size,
-                                         const float bias,
-                                         const float* inputs,
-                                         const float* diffInputs,
-                                         float* outputs)
+
+namespace N2D2 {
+
+template <class T>
+void cudaTargetBiasPropagate(const cudaDeviceProp& deviceProp,
+                             const T bias,
+                             const T* inputs,
+                             const T* diffInputs,
+                             T* outputs,
+                             unsigned int channelsHeight,
+                             unsigned int channelsWidth,
+                             unsigned int nbChannels,
+                             unsigned int batchSize)
 {
-    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
-    const unsigned int stride = blockDim.x * gridDim.x;
+    const unsigned int size = channelsHeight * channelsWidth
+                                * nbChannels * batchSize;
 
-    for (unsigned int i = index; i < size; i += stride) {
-        outputs[i] = inputs[i];
-
-        if (diffInputs[i] > 0.0f && inputs[i] > -bias)
-            outputs[i] += bias;
-    }
+    cudaTargetBiasPropagate_kernel<<<(size + 255) / 256, 256>>>
+        (size,
+           reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(bias),
+           reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(inputs),
+           reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(diffInputs),
+           reinterpret_cast<typename Cuda::cuda_type<T>::type*>(outputs));
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-__global__ void cudaDTargetBiasPropagate_kernel(
-                                         unsigned int size,
-                                         const double bias,
-                                         const double* inputs,
-                                         const double* diffInputs,
-                                         double* outputs)
-{
-    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
-    const unsigned int stride = blockDim.x * gridDim.x;
 
-    for (unsigned int i = index; i < size; i += stride) {
-        outputs[i] = inputs[i];
-
-        if (diffInputs[i] > 0.0 && inputs[i] > -bias)
-            outputs[i] += bias;
-    }
-}
-
-void N2D2::cudaHTargetBiasPropagate(const cudaDeviceProp& deviceProp,
+template void cudaTargetBiasPropagate(const cudaDeviceProp& deviceProp,
                              const half_float::half bias,
                              const half_float::half* inputs,
                              const half_float::half* diffInputs,
@@ -94,21 +105,8 @@ void N2D2::cudaHTargetBiasPropagate(const cudaDeviceProp& deviceProp,
                              unsigned int channelsHeight,
                              unsigned int channelsWidth,
                              unsigned int nbChannels,
-                             unsigned int batchSize)
-{
-    const unsigned int size = channelsHeight * channelsWidth
-                                * nbChannels * batchSize;
-
-    cudaHTargetBiasPropagate_kernel<<<(size + 255) / 256, 256>>>
-        (size,
-           reinterpret_cast<const __half&>(bias),
-           reinterpret_cast<const __half*>(inputs),
-           reinterpret_cast<const __half*>(diffInputs),
-           reinterpret_cast<__half*>(outputs));
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-}
-
-void N2D2::cudaSTargetBiasPropagate(const cudaDeviceProp& deviceProp,
+                             unsigned int batchSize);
+template void cudaTargetBiasPropagate(const cudaDeviceProp& deviceProp,
                              const float bias,
                              const float* inputs,
                              const float* diffInputs,
@@ -116,21 +114,8 @@ void N2D2::cudaSTargetBiasPropagate(const cudaDeviceProp& deviceProp,
                              unsigned int channelsHeight,
                              unsigned int channelsWidth,
                              unsigned int nbChannels,
-                             unsigned int batchSize)
-{
-    const unsigned int size = channelsHeight * channelsWidth
-                                * nbChannels * batchSize;
-
-    cudaSTargetBiasPropagate_kernel<<<(size + 255) / 256, 256>>>
-        (size,
-           bias,
-           inputs,
-           diffInputs,
-           outputs);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-}
-
-void N2D2::cudaDTargetBiasPropagate(const cudaDeviceProp& deviceProp,
+                             unsigned int batchSize);
+template void cudaTargetBiasPropagate(const cudaDeviceProp& deviceProp,
                              const double bias,
                              const double* inputs,
                              const double* diffInputs,
@@ -138,16 +123,6 @@ void N2D2::cudaDTargetBiasPropagate(const cudaDeviceProp& deviceProp,
                              unsigned int channelsHeight,
                              unsigned int channelsWidth,
                              unsigned int nbChannels,
-                             unsigned int batchSize)
-{
-    const unsigned int size = channelsHeight * channelsWidth
-                                * nbChannels * batchSize;
+                             unsigned int batchSize);
 
-    cudaDTargetBiasPropagate_kernel<<<(size + 255) / 256, 256>>>
-        (size,
-           bias,
-           inputs,
-           diffInputs,
-           outputs);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }

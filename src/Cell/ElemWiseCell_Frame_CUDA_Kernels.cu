@@ -20,28 +20,20 @@
 
 #include "Cell/ElemWiseCell_Frame_CUDA_Kernels.hpp"
 
-__global__ void cudaUZeroInit_kernel(unsigned int size,
-                                     unsigned int* data)
+template <class T>
+__global__ void cudaZeroInit_kernel(unsigned int size,
+                                     T* data)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride)
-        data[i] = 0U;
+        data[i] = T(0);
 }
 
-__global__ void cudaSZeroInit_kernel(unsigned int size,
-                                     float* data)
-{
-    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
-    const unsigned int stride = blockDim.x * gridDim.x;
-
-    for (unsigned int i = index; i < size; i += stride)
-        data[i] = 0.0f;
-}
-
-__global__ void cudaSSqrt_kernel(unsigned int size,
-                                 float* data)
+template <class T>
+__global__ void cudaSqrt_kernel(unsigned int size,
+                                 T* data)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
@@ -50,11 +42,12 @@ __global__ void cudaSSqrt_kernel(unsigned int size,
         data[i] = sqrt(data[i]);
 }
 
-__global__ void cudaSMult_kernel(unsigned int size,
-                                 float* a,
-                                 float* b,
-                                 const float beta,
-                                 float* result)
+template <class T>
+__global__ void cudaMult_kernel(unsigned int size,
+                                 T* a,
+                                 T* b,
+                                 const T beta,
+                                 T* result)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
@@ -69,12 +62,13 @@ __global__ void cudaSMult_kernel(unsigned int size,
     }
 }
 
-__global__ void cudaSScale_kernel(unsigned int size,
-                                  float* input,
-                                  const float scale,
-                                  const float shift,
-                                  const float beta,
-                                  float* result)
+template <class T>
+__global__ void cudaScale_kernel(unsigned int size,
+                                  T* input,
+                                  const T scale,
+                                  const T shift,
+                                  const T beta,
+                                  T* result)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
@@ -89,11 +83,12 @@ __global__ void cudaSScale_kernel(unsigned int size,
     }
 }
 
-__global__ void cudaSScaleAbs_kernel(unsigned int size,
-                                     float* input,
-                                     const float scale,
-                                     const float beta,
-                                     float* result)
+template <class T>
+__global__ void cudaScaleAbs_kernel(unsigned int size,
+                                     T* input,
+                                     const T scale,
+                                     const T beta,
+                                     T* result)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
@@ -108,12 +103,13 @@ __global__ void cudaSScaleAbs_kernel(unsigned int size,
     }
 }
 
-__global__ void cudaSScaleSign_kernel(unsigned int size,
-                                      float* input,
-                                      float* sign,
-                                      const float scale,
-                                      const float beta,
-                                      float* result)
+template <class T>
+__global__ void cudaScaleSign_kernel(unsigned int size,
+                                      T* input,
+                                      T* sign,
+                                      const T scale,
+                                      const T beta,
+                                      T* result)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
@@ -132,12 +128,13 @@ __global__ void cudaSScaleSign_kernel(unsigned int size,
     }
 }
 
-__global__ void cudaSScaleSquare_kernel(unsigned int size,
-                                        float* input,
-                                        const float scale,
-                                        const float shift,
-                                        const float beta,
-                                        float* result)
+template <class T>
+__global__ void cudaScaleSquare_kernel(unsigned int size,
+                                        T* input,
+                                        const T scale,
+                                        const T shift,
+                                        const T beta,
+                                        T* result)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
@@ -154,9 +151,10 @@ __global__ void cudaSScaleSquare_kernel(unsigned int size,
     }
 }
 
-__global__ void cudaSMaxForward_kernel(unsigned int size,
-                                       float* input,
-                                       float* maxVal,
+template <class T>
+__global__ void cudaMaxForward_kernel(unsigned int size,
+                                       T* input,
+                                       T* maxVal,
                                        const unsigned int idx,
                                        unsigned int* argMax)
 {
@@ -171,12 +169,13 @@ __global__ void cudaSMaxForward_kernel(unsigned int size,
     }
 }
 
-__global__ void cudaSMaxBackward_kernel(unsigned int size,
-                                        float* diffInput,
+template <class T>
+__global__ void cudaMaxBackward_kernel(unsigned int size,
+                                        T* diffInput,
                                         const unsigned int idx,
                                         unsigned int* argMax,
-                                        const float beta,
-                                        float* result)
+                                        const T beta,
+                                        T* result)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
@@ -195,13 +194,14 @@ __global__ void cudaSMaxBackward_kernel(unsigned int size,
     }
 }
 
-__global__ void cudaSEuclideanSumBackward_kernel(unsigned int size,
-                                                 float* diffInput,
-                                                 float* input,
-                                                 float* output,
-                                                 const float scale,
-                                                 const float beta,
-                                                 float* result)
+template <class T>
+__global__ void cudaEuclideanSumBackward_kernel(unsigned int size,
+                                                 T* diffInput,
+                                                 T* input,
+                                                 T* output,
+                                                 const T scale,
+                                                 const T beta,
+                                                 T* result)
 {
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
@@ -222,143 +222,216 @@ __global__ void cudaSEuclideanSumBackward_kernel(unsigned int size,
     }
 }
 
-void N2D2::cudaUZeroInit(unsigned int size,
-                         unsigned int* data)
+namespace N2D2 {
+
+template <class T>
+void cudaZeroInit(unsigned int size,
+                         T* data)
 {
-    cudaUZeroInit_kernel<<<(size + 255) / 256, 256>>>(size, data);
+    cudaZeroInit_kernel<<<(size + 255) / 256, 256>>>(size,
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(data));
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaSZeroInit(unsigned int size,
-                         float* data)
+template <class T>
+void cudaSqrt(unsigned int size,
+                     T* data)
 {
-    cudaSZeroInit_kernel<<<(size + 255) / 256, 256>>>(size, data);
+    cudaSqrt_kernel<<<(size + 255) / 256, 256>>>(size,
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(data));
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaSSqrt(unsigned int size,
-                     float* data)
+template <class T>
+void cudaMult(unsigned int size,
+                     T* a,
+                     T* b,
+                     const T beta,
+                     T* result)
 {
-    cudaSSqrt_kernel<<<(size + 255) / 256, 256>>>(size, data);
+    cudaMult_kernel<<<(size + 255) / 256, 256>>>(size,
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(a),
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(b),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(beta),
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(result));
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaSMult(unsigned int size,
-                     float* a,
-                     float* b,
-                     const float beta,
-                     float* result)
+template <class T>
+void cudaScale(unsigned int size,
+                      T* input,
+                      const T scale,
+                      const T shift,
+                      const T beta,
+                      T* result)
 {
-    cudaSMult_kernel<<<(size + 255) / 256, 256>>>(size, a, b, beta, result);
+    cudaScale_kernel<<<(size + 255) / 256, 256>>>(size,
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(input),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(scale),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(shift),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(beta),
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(result));
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaSScale(unsigned int size,
-                      float* input,
-                      const float scale,
-                      const float shift,
-                      const float beta,
-                      float* result)
+template <class T>
+void cudaScaleAbs(unsigned int size,
+                         T* input,
+                         const T scale,
+                         const T beta,
+                         T* result)
 {
-    cudaSScale_kernel<<<(size + 255) / 256, 256>>>(size,
-                                                   input,
-                                                   scale,
-                                                   shift,
-                                                   beta,
-                                                   result);
+    cudaScaleAbs_kernel<<<(size + 255) / 256, 256>>>(size,
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(input),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(scale),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(beta),
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(result));
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaSScaleAbs(unsigned int size,
-                         float* input,
-                         const float scale,
-                         const float beta,
-                         float* result)
+template <class T>
+void cudaScaleSign(unsigned int size,
+                          T* input,
+                          T* sign,
+                          const T scale,
+                          const T beta,
+                          T* result)
 {
-    cudaSScaleAbs_kernel<<<(size + 255) / 256, 256>>>(size,
-                                                      input,
-                                                      scale,
-                                                      beta,
-                                                      result);
+    cudaScaleSign_kernel<<<(size + 255) / 256, 256>>>(size,
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(input),
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(sign),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(scale),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(beta),
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(result));
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaSScaleSign(unsigned int size,
+template <class T>
+void cudaScaleSquare(unsigned int size,
+                            T* input,
+                            const T scale,
+                            const T shift,
+                            const T beta,
+                            T* result)
+{
+    cudaScaleSquare_kernel<<<(size + 255) / 256, 256>>>(size,
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(input),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(scale),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(shift),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(beta),
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(result));
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+template <class T>
+void cudaMaxForward(unsigned int size,
+                           T* input,
+                           T* maxVal,
+                           const unsigned int idx,
+                           unsigned int* argMax)
+{
+    cudaMaxForward_kernel<<<(size + 255) / 256, 256>>>(size,
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(input),
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(maxVal),
+        idx,
+        argMax);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+template <class T>
+void cudaMaxBackward(unsigned int size,
+                            T* diffInput,
+                            const unsigned int idx,
+                            unsigned int* argMax,
+                            const T beta,
+                            T* result)
+{
+    cudaMaxBackward_kernel<<<(size + 255) / 256, 256>>>(size,
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(diffInput),
+        idx,
+        argMax,
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(beta),
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(result));
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+template <class T>
+void cudaEuclideanSumBackward(unsigned int size,
+                                     T* diffInput,
+                                     T* input,
+                                     T* output,
+                                     const T scale,
+                                     const T beta,
+                                     T* result)
+{
+    cudaEuclideanSumBackward_kernel<<<(size + 255) / 256, 256>>>(size,
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(diffInput),
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(input),
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(output),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(scale),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(beta),
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(result));
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+template void cudaZeroInit(unsigned int size, unsigned int* data);
+template void cudaZeroInit(unsigned int size, float* data);
+
+template void cudaSqrt(unsigned int size, float* data);
+
+template void cudaMult(unsigned int size,
+    float* a,
+    float* b,
+    const float beta,
+    float* result);
+
+template void cudaScale(unsigned int size,
+    float* input,
+    const float scale,
+    const float shift,
+    const float beta,
+    float* result);
+
+template void cudaScaleAbs(unsigned int size,
+    float* input,
+    const float scale,
+    const float beta,
+    float* result);
+
+template void cudaScaleSign(unsigned int size,
                           float* input,
                           float* sign,
                           const float scale,
                           const float beta,
-                          float* result)
-{
-    cudaSScaleSign_kernel<<<(size + 255) / 256, 256>>>(size,
-                                                       input,
-                                                       sign,
-                                                       scale,
-                                                       beta,
-                                                       result);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-}
+                          float* result);
 
-void N2D2::cudaSScaleSquare(unsigned int size,
+template void cudaScaleSquare(unsigned int size,
                             float* input,
                             const float scale,
                             const float shift,
                             const float beta,
-                            float* result)
-{
-    cudaSScaleSquare_kernel<<<(size + 255) / 256, 256>>>(size,
-                                                         input,
-                                                         scale,
-                                                         shift,
-                                                         beta,
-                                                         result);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-}
+                            float* result);
 
-void N2D2::cudaSMaxForward(unsigned int size,
+template void cudaMaxForward(unsigned int size,
                            float* input,
                            float* maxVal,
                            const unsigned int idx,
-                           unsigned int* argMax)
-{
-    cudaSMaxForward_kernel<<<(size + 255) / 256, 256>>>(size,
-                                                        input,
-                                                        maxVal,
-                                                        idx,
-                                                        argMax);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-}
+                           unsigned int* argMax);
 
-void N2D2::cudaSMaxBackward(unsigned int size,
+template void cudaMaxBackward(unsigned int size,
                             float* diffInput,
                             const unsigned int idx,
                             unsigned int* argMax,
                             const float beta,
-                            float* result)
-{
-    cudaSMaxBackward_kernel<<<(size + 255) / 256, 256>>>(size,
-                                                         diffInput,
-                                                         idx,
-                                                         argMax,
-                                                         beta,
-                                                         result);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-}
+                            float* result);
 
-void N2D2::cudaSEuclideanSumBackward(unsigned int size,
+template void cudaEuclideanSumBackward(unsigned int size,
                                      float* diffInput,
                                      float* input,
                                      float* output,
                                      const float scale,
                                      const float beta,
-                                     float* result)
-{
-    cudaSEuclideanSumBackward_kernel<<<(size + 255) / 256, 256>>>(size,
-                                                                  diffInput,
-                                                                  input,
-                                                                  output,
-                                                                  scale,
-                                                                  beta,
-                                                                  result);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+                                     float* result);
+
 }

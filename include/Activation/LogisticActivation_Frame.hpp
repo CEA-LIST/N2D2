@@ -40,8 +40,15 @@ public:
     }
 
     LogisticActivation_Frame(bool withLoss = false);
-    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
-    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
+    virtual void propagate(const Cell& cell,
+                           const BaseTensor& input,
+                           BaseTensor& output,
+                           bool inference = false);
+    virtual void backPropagate(const Cell& cell,
+                               const BaseTensor& input,
+                               const BaseTensor& output,
+                               const BaseTensor& diffInput,
+                               BaseTensor& diffOutput);
     virtual ~LogisticActivation_Frame() {};
 
 private:
@@ -57,66 +64,60 @@ N2D2::LogisticActivation_Frame<T>::LogisticActivation_Frame(bool withLoss)
 }
 
 template <class T>
-void N2D2::LogisticActivation_Frame<T>::propagate(const Cell& cell, 
-                                                  BaseTensor& baseData, bool inference)
+void N2D2::LogisticActivation_Frame<T>::propagate(
+    const Cell& cell, 
+    const BaseTensor& baseInput,
+    BaseTensor& baseOutput,
+    bool /*inference*/)
 {
     if (LogisticActivationDisabled)
         return;
 
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+    const Tensor<T>& input = dynamic_cast<const Tensor<T>&>(baseInput);
+    Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
 
-    mScaling.propagate(cell, data);
+    mScaling.propagate(cell, input, output);
 
-#pragma omp parallel for if (data.size() > 1024)
-    for (int index = 0; index < (int)data.size(); ++index){
+#pragma omp parallel for if (output.size() > 1024)
+    for (int index = 0; index < (int)output.size(); ++index){
 #if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
         const int excepts = fegetexcept();
         fedisableexcept(FE_OVERFLOW);
 #endif
 
-        data(index) = 1.0f / (1.0f + std::exp(-data(index)));
+        output(index) = 1.0f / (1.0f + std::exp(-output(index)));
 
 #if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
         feenableexcept(excepts);
 #endif
     }
-
-    if (mQuantizationLevels > 0) {
-        ++mNbSteps;
-
-        if (mNbSteps > mQuantizationDelay || inference) {
-            quantize(data, data, T(0.0f), T(1.0f),
-                     (unsigned int)mQuantizationLevels);
-        }
-    }
 }
 
 template <class T>
-void N2D2::LogisticActivation_Frame<T>::backPropagate(const Cell& cell, 
-                                                      BaseTensor& baseData, BaseTensor& baseDiffData)
+void N2D2::LogisticActivation_Frame<T>::backPropagate(
+    const Cell& cell, 
+    const BaseTensor& /*baseInput*/,
+    const BaseTensor& baseOutput,
+    const BaseTensor& baseDiffInput,
+    BaseTensor& baseDiffOutput)
 {
     if (LogisticActivationDisabled)
         return;
 
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
-    Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
-    
-
-    if (mQuantizationLevels > 0) {
-#pragma omp parallel for if (diffData.size() > 1024)
-        for (int index = 0; index < (int)diffData.size(); ++index) {
-            diffData(index) = Utils::clamp<T>(diffData(index),
-                                              T(-1.0f), T(1.0f));
-        }
-    }
+    const Tensor<T>& output = dynamic_cast<const Tensor<T>&>(baseOutput);
+    const Tensor<T>& diffInput = dynamic_cast<const Tensor<T>&>(baseDiffInput);
+    Tensor<T>& diffOutput = dynamic_cast<Tensor<T>&>(baseDiffOutput);
 
     if (!this->mWithLoss) {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)diffData.size(); ++index)
-            diffData(index) *= data(index) * (1.0f - data(index));
+#pragma omp parallel for if (output.size() > 1024)
+        for (int index = 0; index < (int)diffOutput.size(); ++index)
+            diffOutput(index) = diffInput(index)
+                * (output(index) * (1.0f - output(index)));
+
+        mScaling.backPropagate(cell, diffOutput, diffOutput);
     }
-    
-    mScaling.backPropagate(cell, data, diffData);
+    else
+        mScaling.backPropagate(cell, diffInput, diffOutput);
 }
 
 #endif // N2D2_LOGISTICACTIVATION_FRAME_H

@@ -39,69 +39,27 @@ void cudaPopulateNbTargetOutputs(const cudaDeviceProp& deviceProp,
                                  unsigned int outputsWidth,
                                  unsigned int batchSize);
 
-//Half
-void cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
+template <class T>
+void cudaSetOutputTargets(const cudaDeviceProp& deviceProp,
                              int* targets,
                              unsigned int* nbTargetOutputs,
-                             half_float::half* diffInputs,
+                             T* diffInputs,
                              unsigned int nbOutputs,
                              unsigned int outputsHeight,
                              unsigned int outputsWidth,
                              unsigned int batchSize);
 
-//Float
-void cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
-                             int* targets,
-                             unsigned int* nbTargetOutputs,
-                             float* diffInputs,
-                             unsigned int nbOutputs,
-                             unsigned int outputsHeight,
-                             unsigned int outputsWidth,
-                             unsigned int batchSize);
-//Double
-void cudaDSetOutputTargets(const cudaDeviceProp& deviceProp,
-                             int* targets,
-                             unsigned int* nbTargetOutputs,
-                             double* diffInputs,
-                             unsigned int nbOutputs,
-                             unsigned int outputsHeight,
-                             unsigned int outputsWidth,
-                             unsigned int batchSize);
-
-//Half
-double cudaHApplyLoss(const cudaDeviceProp& deviceProp,
-                             half_float::half* lossMem,
-                             half_float::half* outputs,
-                             half_float::half* diffInputs,
+template <class T>
+double cudaApplyLoss(const cudaDeviceProp& deviceProp,
+                             T* lossMem,
+                             T* outputs,
+                             T* diffInputs,
                              unsigned int nbOutputs,
                              unsigned int outputsHeight,
                              unsigned int outputsWidth,
                              unsigned int batchSize,
-                             half_float::half targetVal,
-                             half_float::half defaultVal);
-
-//Float
-double cudaSApplyLoss(const cudaDeviceProp& deviceProp,
-                             float* lossMem,
-                             float* outputs,
-                             float* diffInputs,
-                             unsigned int nbOutputs,
-                             unsigned int outputsHeight,
-                             unsigned int outputsWidth,
-                             unsigned int batchSize,
-                             float targetVal,
-                             float defaultVal);
-//Double
-double cudaDApplyLoss(const cudaDeviceProp& deviceProp,
-                             double* lossMem,
-                             double* outputs,
-                             double* diffInputs,
-                             unsigned int nbOutputs,
-                             unsigned int outputsHeight,
-                             unsigned int outputsWidth,
-                             unsigned int batchSize,
-                             double targetVal,
-                             double defaultVal);
+                             T targetVal,
+                             T defaultVal);
 }
 
 #endif // N2D2_CELL_FRAME_CUDA_KERNELS_H

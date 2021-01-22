@@ -33,16 +33,10 @@ N2D2::SGDSolver::SGDSolver()
       mLearningRatePolicy(this, "LearningRatePolicy", None),
       mLearningRateStepSize(this, "LearningRateStepSize", 1U),
       mLearningRateDecay(this, "LearningRateDecay", 0.1),
-      mUniqueStep(this, "UniqueStep", 0U),
-      mQuantizationLevels(this, "QuantizationLevels", 0U),
       mClamping(this, "Clamping", ""),
       mPolyakMomentum(this, "PolyakMomentum", true),
       mIterationPass(0),
-      mNbIterations(0),
-      mMinVal(0.0),
-      mMaxVal(0.0),
-      mMinValQuant(0.0),
-      mMaxValQuant(0.0)
+      mNbIterations(0)
 {
     // ctor
 }
@@ -60,17 +54,10 @@ N2D2::SGDSolver::SGDSolver(const SGDSolver& solver)
       mLearningRateStepSize(this, "LearningRateStepSize",
                             solver.mLearningRateStepSize),
       mLearningRateDecay(this, "LearningRateDecay", solver.mLearningRateDecay),
-      mUniqueStep(this, "UniqueStep", solver.mUniqueStep),
-      mQuantizationLevels(this, "QuantizationLevels",
-                          solver.mQuantizationLevels),
       mClamping(this, "Clamping", solver.mClamping),
       mPolyakMomentum(this, "PolyakMomentum", solver.mPolyakMomentum),
       mIterationPass(solver.mIterationPass),
-      mNbIterations(solver.mNbIterations),
-      mMinVal(solver.mMinVal),
-      mMaxVal(solver.mMaxVal),
-      mMinValQuant(solver.mMinValQuant),
-      mMaxValQuant(solver.mMaxValQuant)
+      mNbIterations(solver.mNbIterations)
 {
     // copy-ctor
 }
@@ -260,27 +247,4 @@ void N2D2::SGDSolver::logSchedule(const std::string& fileName,
 
     gnuplot.saveToFile(fileName);
     gnuplot.plot(fileName, plotStr.str());
-}
-
-void N2D2::SGDSolver::saveInternal(std::ostream& state,
-                                   std::ostream& log) const
-{
-    state.write(reinterpret_cast<const char*>(&mMinVal), sizeof(mMinVal));
-    state.write(reinterpret_cast<const char*>(&mMaxVal), sizeof(mMaxVal));
-    state.write(reinterpret_cast<const char*>(&mMinValQuant),
-                sizeof(mMinValQuant));
-    state.write(reinterpret_cast<const char*>(&mMaxValQuant),
-                sizeof(mMaxValQuant));
-
-    log << "Range: [" << mMinVal << ", " << mMaxVal << "]\n"
-        << "Quantization range (*Quant): [" << mMinValQuant << ", "
-            << mMaxValQuant << "]" << std::endl;
-}
-
-void N2D2::SGDSolver::loadInternal(std::istream& state)
-{
-    state.read(reinterpret_cast<char*>(&mMinVal), sizeof(mMinVal));
-    state.read(reinterpret_cast<char*>(&mMaxVal), sizeof(mMaxVal));
-    state.read(reinterpret_cast<char*>(&mMinValQuant), sizeof(mMinValQuant));
-    state.read(reinterpret_cast<char*>(&mMaxValQuant), sizeof(mMaxValQuant));
 }

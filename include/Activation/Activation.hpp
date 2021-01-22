@@ -34,18 +34,29 @@ class Cell;
 
 class Activation : public Parameterizable {
 public:
-    enum MovingAverageType {
-        WMA,
-        EMA
-    };
-
     Activation();
     virtual ~Activation() {};
 
     virtual const char* getType() const = 0;
 
-    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false) = 0;
-    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData) = 0;
+    virtual void propagate(const Cell& cell,
+                           const BaseTensor& input,
+                           BaseTensor& output,
+                           bool inference = false) = 0;
+    // In-place version:
+    virtual void propagate(const Cell& cell,
+                           BaseTensor& inOut,
+                           bool inference = false);
+
+    virtual void backPropagate(const Cell& cell,
+                               const BaseTensor& input,
+                               const BaseTensor& output,
+                               const BaseTensor& diffInput,
+                               BaseTensor& diffOutput) = 0;
+    // In-place version:
+    virtual void backPropagate(const Cell& cell,
+                               const BaseTensor& output,
+                               BaseTensor& diffInOut);
 
     /**
      * Return the possible range of the activation's output as a pair of min-max. 
@@ -55,8 +66,6 @@ public:
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);
 
-    void setPreQuantizeScaling(double scaling);
-
     const Scaling& getActivationScaling() const;
     void setActivationScaling(Scaling scaling);
 
@@ -65,36 +74,8 @@ protected:
                               std::ostream& /*log*/) const {};
     virtual void loadInternal(std::istream& /*state*/) {};
 
-    /// Quantization levels (0 = no quantization)
-    Parameter<unsigned int> mQuantizationLevels;
-    /// Number of steps before quantization starts
-    Parameter<unsigned int> mQuantizationDelay;
-    /// Moving average type, used for quantization
-    Parameter<MovingAverageType> mMovingAverage;
-    /// Moving average window for WMA
-    /// and EMA with alpha = 2/(N + 1) if mEMA_Alpha = 0.0
-    Parameter<unsigned int> mMA_Window;
-    /// EMA coefficient: should be close to 0 to smooth across many samples
-    /// If mEMA_Alpha = 0.0, the value 2/(mMA_Window + 1) is used
-    Parameter<double> mEMA_Alpha;
-    /// Rounding to the nearest INT in log2:
-    /// Rounding rate, between 0.0 (no rounding) to 1.0
-    Parameter<double> mLog2RoundingRate;
-    /// Rounding power, or progressivity,
-    /// from 0.0 (no progressivity) to 1.0 or more (progressive)
-    Parameter<double> mLog2RoundingPower;
-    
-    unsigned long long int mNbSteps;
-    double mPreQuantizeScaling;
-
     Scaling mScaling;
 };
-}
-
-namespace {
-template <>
-const char* const EnumStrings<N2D2::Activation::MovingAverageType>::data[]
-    = {"WMA", "EMA"};
 }
 
 #endif // N2D2_ACTIVATION_H

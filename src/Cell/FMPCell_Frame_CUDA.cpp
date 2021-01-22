@@ -68,7 +68,7 @@ void N2D2::FMPCell_Frame_CUDA::propagate(bool inference)
     std::shared_ptr<CudaDeviceTensor<Float_T> > input0
         = cuda_device_tensor_cast<Float_T>(mInputs[0]);
 
-    cudaSFMPPropagate(CudaContext::getDeviceProp(),
+    cudaFMPPropagate(CudaContext::getDeviceProp(),
                       alpha,
                       input0->getDevicePtr(),
                       mGridX.getDevicePtr(),

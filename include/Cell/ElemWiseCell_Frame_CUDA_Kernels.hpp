@@ -28,58 +28,66 @@
 #include "CudaUtils.hpp"
 
 namespace N2D2 {
-void cudaUZeroInit(unsigned int size,
-                   unsigned int* data);
-void cudaSZeroInit(unsigned int size,
-                   float* data);
-void cudaSSqrt(unsigned int size,
-               float* data);
-void cudaSMult(unsigned int size,
-               float* a,
-               float* b,
-               const float beta,
-               float* result);
-void cudaSScale(unsigned int size,
-                float* input,
-                const float scale,
-                const float shift,
-                const float beta,
-                float* result);
-void cudaSScaleAbs(unsigned int size,
-                   float* input,
-                   const float scale,
-                   const float beta,
-                   float* result);
-void cudaSScaleSign(unsigned int size,
-                    float* input,
-                    float* sign,
-                    const float scale,
-                    const float beta,
-                    float* result);
-void cudaSScaleSquare(unsigned int size,
-                      float* input,
-                      const float scale,
-                      const float shift,
-                      const float beta,
-                      float* result);
-void cudaSMaxForward(unsigned int size,
-               float* input,
-               float* maxVal,
+template <class T>
+void cudaZeroInit(unsigned int size,
+                   T* data);
+template <class T>
+void cudaSqrt(unsigned int size,
+               T* data);
+template <class T>
+void cudaMult(unsigned int size,
+               T* a,
+               T* b,
+               const T beta,
+               T* result);
+template <class T>
+void cudaScale(unsigned int size,
+                T* input,
+                const T scale,
+                const T shift,
+                const T beta,
+                T* result);
+template <class T>
+void cudaScaleAbs(unsigned int size,
+                   T* input,
+                   const T scale,
+                   const T beta,
+                   T* result);
+template <class T>
+void cudaScaleSign(unsigned int size,
+                    T* input,
+                    T* sign,
+                    const T scale,
+                    const T beta,
+                    T* result);
+template <class T>
+void cudaScaleSquare(unsigned int size,
+                      T* input,
+                      const T scale,
+                      const T shift,
+                      const T beta,
+                      T* result);
+template <class T>
+void cudaMaxForward(unsigned int size,
+               T* input,
+               T* maxVal,
                const unsigned int idx,
                unsigned int* argMax);
-void cudaSMaxBackward(unsigned int size,
-                      float* diffInput,
+template <class T>
+void cudaMaxBackward(unsigned int size,
+                      T* diffInput,
                       const unsigned int idx,
                       unsigned int* argMax,
-                      const float beta,
-                      float* result);
-void cudaSEuclideanSumBackward(unsigned int size,
-                               float* diffInput,
-                               float* input,
-                               float* output,
-                               const float scale,
-                               const float beta,
-                               float* result);
+                      const T beta,
+                      T* result);
+template <class T>
+void cudaEuclideanSumBackward(unsigned int size,
+                               T* diffInput,
+                               T* input,
+                               T* output,
+                               const T scale,
+                               const T beta,
+                               T* result);
 }
 
 #endif // N2D2_ELEMWISECELL_FRAME_CUDA_KERNELS_H

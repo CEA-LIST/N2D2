@@ -89,16 +89,8 @@ void N2D2::AdamSolver_Frame<T>::update(BaseTensor& baseData,
     if (mMomentum2Data.empty())
         mMomentum2Data.resize(data.dims(), T(0.0));
 
-    if (mQuantizationLevels > 0 && mContinuousData.empty()) {
-        mContinuousData.resize(data.dims());
-        std::copy(data.begin(), data.end(), mContinuousData.begin());
-    }
-
     T clampMin, clampMax;
     std::tie(clampMin, clampMax) = getClamping<T>();
-
-    Tensor<T>& continuousData
-        = (mQuantizationLevels > 0) ? mContinuousData : data;
 
     const double learningRate = (mGlobalLearningRate > 0.0)
         ? mGlobalLearningRate : mLearningRate;
@@ -118,29 +110,16 @@ void N2D2::AdamSolver_Frame<T>::update(BaseTensor& baseData,
         mMomentum2Data(index) = mBeta2 * mMomentum2Data(index)
                         + (1.0 - mBeta2) * (diffData(index) * diffData(index));
 
-        continuousData(index) += alpha * mMomentum1Data(index)
+        data(index) += alpha * mMomentum1Data(index)
             / (std::sqrt(mMomentum2Data(index)) + epsilon);
 
         // Clamping
         if (clampMin != std::numeric_limits<T>::lowest()
             || clampMax != std::numeric_limits<T>::max())
         {
-            continuousData(index) = Utils::clamp<T>(continuousData(index),
+            data(index) = Utils::clamp<T>(data(index),
                 clampMin, clampMax);
         }
-    }
-
-    if (mQuantizationLevels > 0) {
-        std::tie(mMinVal, mMaxVal) = minMax(continuousData);
-
-        rangeZeroAlign(mMinVal, mMaxVal,
-                       mMinValQuant, mMaxValQuant, mQuantizationLevels);
-
-        quantize(data,
-                 continuousData,
-                 T(mMinValQuant),
-                 T(mMaxValQuant),
-                 mQuantizationLevels);
     }
 }
 

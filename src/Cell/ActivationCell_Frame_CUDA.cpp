@@ -59,14 +59,26 @@ N2D2::ActivationCell_Frame_CUDA<T>::ActivationCell_Frame_CUDA(
 template <class T>
 void N2D2::ActivationCell_Frame_CUDA<T>::initialize()
 {
+    if (mInputs.size() > 1)
+        throw std::domain_error("ActivationCell_Frame_CUDA<T>::initialize(): "
+                                "inputs concatenation is not supported.");
 
+    if (mInputs.dimZ() != mOutputs.dimZ()) {
+        throw std::domain_error("ActivationCell_Frame_CUDA<T>::initialize():"
+                                " the number of output channels must be equal "
+                                "to the sum of inputs channels.");
+    }
 }
 
 template <class T>
 void N2D2::ActivationCell_Frame_CUDA<T>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
-    Cell_Frame_CUDA<T>::propagate(inference);
+
+    const CudaTensor<T>& input = cuda_tensor_cast<T>(mInputs[0]);
+    mActivation->propagate(*this, input, mOutputs, inference);
+
+    mDiffInputs.clearValid();
 }
 
 template <class T>
@@ -75,7 +87,20 @@ void N2D2::ActivationCell_Frame_CUDA<T>::backPropagate()
     if (!mDiffInputs.isValid())
         return;
 
-    Cell_Frame_CUDA<T>::backPropagate();
+    if (!mDiffOutputs.empty()) {
+        const CudaTensor<T>& input = cuda_tensor_cast<T>(mInputs[0]);
+        CudaTensor<T> diffOutput = (mDiffOutputs[0].isValid())
+            ? cuda_tensor_cast<T>(mDiffOutputs[0])
+            : cuda_tensor_cast_nocopy<T>(mDiffOutputs[0]);
+
+        mActivation->backPropagate(*this, input, mOutputs, mDiffInputs,
+                                                        diffOutput);
+
+        mDiffOutputs[0].deviceTensor() = diffOutput.deviceTensor();
+
+        mDiffOutputs[0].setValid();
+        mDiffOutputs[0].synchronizeDToHBased();
+    }
 }
 
 template <class T>

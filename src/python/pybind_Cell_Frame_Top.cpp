@@ -46,7 +46,6 @@ void init_Cell_Frame_Top(py::module &m) {
     .def("backPropagate", &Cell_Frame_Top::backPropagate)
     .def("update", &Cell_Frame_Top::update)
     .def("checkGradient", &Cell_Frame_Top::checkGradient, py::arg("epsilon"), py::arg("maxError"))
-    .def("discretizeSignals", &Cell_Frame_Top::discretizeSignals, py::arg("nbLevels"), py::arg("signals") = Cell_Frame_Top::In)
     .def("setOutputTarget", &Cell_Frame_Top::setOutputTarget, py::arg("targets"))
     .def("setOutputTargets", &Cell_Frame_Top::setOutputTargets, py::arg("targets"))
     .def("setOutputErrors", &Cell_Frame_Top::setOutputErrors, py::arg("errors"))
