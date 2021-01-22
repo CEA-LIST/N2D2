@@ -97,6 +97,8 @@ public:
     };
     inline CudaBaseDeviceTensor& operator=(
                                         const CudaBaseDeviceTensor& baseDevice);
+    inline CudaDeviceTensor<T>& operator=(
+                                        const CudaDeviceTensor<T>& device);
     virtual ~CudaDeviceTensor();
 
 protected:
@@ -142,6 +144,7 @@ public:
     virtual void synchronizeHToDBased() const = 0;
 
     virtual CudaBaseDeviceTensor& deviceTensor() = 0;
+    virtual const CudaBaseDeviceTensor& deviceTensor() const = 0;
     inline bool& hostBased() { return mHostBased; }
     virtual const cudnnTensorDescriptor_t& getCudnnTensorDesc() const = 0;
     virtual ~CudaBaseTensor() {};
@@ -231,6 +234,10 @@ public:
     void synchronizeHToDBased() const;
 
     CudaDeviceTensor<T>& deviceTensor()
+    {
+        return (*mDeviceTensor);
+    }
+    const CudaDeviceTensor<T>& deviceTensor() const
     {
         return (*mDeviceTensor);
     }
@@ -539,6 +546,27 @@ N2D2::CudaBaseDeviceTensor& N2D2::CudaDeviceTensor<T>::operator=(
     else {
         throw std::runtime_error("CudaDeviceTensor<T>::operator=(): "
                                  "tensor type not supported!");
+    }
+
+    return *this;
+}
+
+template <typename T>
+N2D2::CudaDeviceTensor<T>& N2D2::CudaDeviceTensor<T>::operator=(
+    const N2D2::CudaDeviceTensor<T>& device)
+{
+    assert(mCudaBaseTensor.nbDims() == device.getCudaTensor().nbDims());
+
+    for (unsigned int dim = 0; dim < mCudaBaseTensor.nbDims(); ++dim) {
+        assert(mCudaBaseTensor.dims()[dim]
+            == device.getCudaTensor().dims()[dim]);
+    }
+
+    if (getDevicePtr() != device.getDevicePtr()) {
+        // Actual copy only if data is different
+        thrust_copy(device.getDevicePtr(),
+                    getDevicePtr(),
+                    mCudaBaseTensor.size());
     }
 
     return *this;
