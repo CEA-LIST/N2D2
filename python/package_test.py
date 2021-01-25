@@ -114,8 +114,8 @@ for epoch in range(nb_epochs):
     classifier.logConfusionMatrix(str(epoch))
     # save a graph of the loss and the validation score as a function of the number of steps
     classifier.logSuccess(str(epoch))
-    # TODO : fix cell.getOutputs
-    classifier.show_outputs()
+    # TODO : show_outputs
+    # classifier.show_outputs()
     print("\n### Validate Epoch: " + str(epoch) + " ###")
 
     classifier.set_mode('Validation')

@@ -68,14 +68,15 @@ class Application:
         self._target.N2D2().logSuccess(path, set)
 
     # TODO : doesn't work for frame_CUDA and Spike
-    def show_outputs(self):
-        string = "Cells outputs :\n###############\n"
-        for cell in self._model.get_cells():
-            string += cell.getName() + ": "
-            for output in cell.getOutputs():
-                string += str(output) + " "
-            string += "\n"
-        print(string)
+    # TODO : also doesn't work with the current structure of layers and sequences !
+    # def show_outputs(self):
+    #     string = "Cells outputs :\n###############\n"
+    #     for cell in self._model.get_cells():
+    #         string += cell.getName() + ": "
+    #         for output in cell.getOutputs():
+    #             string += str(output) + " "
+    #         string += "\n"
+    #     print(string)
 
 class Classifier(Application):
     def __init__(self, provider, model):
