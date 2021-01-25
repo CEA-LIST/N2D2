@@ -1154,7 +1154,13 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
             }
         }
 
-        meanVariance /= count;
+        if (count > 0)
+            meanVariance /= count;
+        else {
+            std::cout << Utils::cwarning << "    variance < 1e-12 for all"
+                " outputs! Is the network correctly trained?"
+                << Utils::cdef << std::endl;
+        }
 
         convCellTop->synchronizeToH(false);
 
@@ -1164,7 +1170,7 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
             // https://arxiv.org/pdf/1803.08607.pdf
             // to help post-training quantization
             const double factor = bnScales(output)
-                / std::sqrt(eps + ((bnVariances(output) > 1.0e-12)
+                / std::sqrt(eps + ((bnVariances(output) > 1.0e-12 || count == 0)
                             ? bnVariances(output) : meanVariance));
 
             // Weights adjustments
