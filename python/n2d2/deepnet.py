@@ -57,7 +57,6 @@ def load_from_ONNX(model_path, provider):
     :type model_path: str
     :param provider: 
     :type provider: :py:class:`n2d2.provider.DataProvider`
-
     Load a deepnet from an ONNX file and a database.
     """
     network = N2D2.Network(1)
@@ -69,10 +68,9 @@ def load_from_ONNX(model_path, provider):
     return n2d2.converter.deepNet_converter(deepNet)
 
 def load_from_INI(path):
-     """
+    """
     :param model_path: Path to the ini file.
     :type model_path: str
-
     Load a deepnet from an INI file.
     """
     network = N2D2.Network(1)

@@ -111,7 +111,17 @@ def cell_converter(N2D2_cell):
                                         PaddingDims = paddingDims,
                                         Pooling = pooling,
                                         Name=name,
-                                        **parameters)      
+                                        **parameters)
+    elif CellType == "ElemWise":
+        op = str(N2D2_cell.getOperation()).split('.')[-1]
+        shifts = N2D2_cell.getShifts()
+        weights = N2D2_cell.getWeights()
+
+        n2d2_cell = cell_dict[CellType](NbOutputs, 
+                                        Operation = op,
+                                        Shifts = shifts,
+                                        Weights = weights,
+                                        **parameters)   
     else:
         n2d2_cell = cell_dict[CellType](NbOutputs, Name=name, **parameters)
 

@@ -148,6 +148,23 @@ class Fc(Cell):
     }
 
     def __init__(self, NbOutputs, **config_parameters):
+        # TODO : Add description for filler and solver.
+        """
+        :param NbOutputs: Number of outputs of the cell.
+        :type NbOutputs: int
+        :param Name: Name fo the cell.
+        :type Name: str
+        :param ActivationFunction: Activation function used by the cell.
+        :type ActivationFunction: :py:class:`n2d2.activation.Activation`, optional
+        :param WeightsSolver: TODO
+        :type WeightsSolver: :py:class:`n2d2.solver.Solver`, optional
+        :param BiasSolver: TODO
+        :type BiasSolver: :py:class:`n2d2.solver.Solver`, optional
+        :param WeightsFiller: TODO
+        :type WeightsFiller: :py:class:`n2d2.filler.Filler`, optional
+        :param BiasFiller: TODO
+        :type BiasFiller: :py:class:`n2d2.filler.Filler`, optional     
+        """
         Cell.__init__(self, NbOutputs, **config_parameters)
 
         self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
@@ -184,6 +201,22 @@ class Conv(Cell):
                  NbOutputs,
                  KernelDims,
                  **config_parameters):
+        """
+        :param NbOutputs: Number of outputs of the cell.
+        :type NbOutputs: int
+        :param Name: Name fo the cell.
+        :type Name: str
+        :param KernelDims: Kernel dimension.
+        :type KernelDims: list
+        :param subSampleDims: TODO
+        :type subSampleDims: list, optional
+        :param strideDims: TODO
+        :type strideDims: list, optional
+        :param paddingDims: TODO
+        :type paddingDims: list, optional
+        :param dilationDims: TODO
+        :type dilationDims: list, optional     
+        """
         Cell.__init__(self, NbOutputs, **config_parameters)
 
         self._constructor_arguments.update({
@@ -226,6 +259,21 @@ class ElemWise(Cell):
         Cell.__init__(self, NbOutputs=NbOutputs, **config_parameters)
 
         self._parse_optional_arguments(['Operation', 'Weights', 'Shifts'])
+            
+        operation = {
+            "Sum": N2D2.ElemWiseCell.Operation.Sum,
+            "AbsSum": N2D2.ElemWiseCell.Operation.AbsSum,
+            "EuclideanSum": N2D2.ElemWiseCell.Operation.EuclideanSum,
+            "Prod": N2D2.ElemWiseCell.Operation.Prod,
+            "Max": N2D2.ElemWiseCell.Operation.Max
+        }
+        
+        # I think the best would be to ask for a string and then convert it to the good N2D2 object
+        if self._optional_constructor_arguments['operation'] in operation:
+            self._optional_constructor_arguments['operation'] = operation[self._optional_constructor_arguments['operation']]
+        else:
+            raise n2d2.ParameterNotInListError(self._optional_constructor_arguments['operation'], [key for key in operation])
+
         self._N2D2_object = self._cell_constructors[self._Model](self._deepnet.N2D2(),
                                                 self._constructor_arguments['Name'],
                                                 self._constructor_arguments['NbOutputs'],
@@ -329,16 +377,20 @@ class Pool(Cell):
         self._constructor_arguments.update({
             'PoolDims': PoolDims,
         })
+        pooling = {
+            "Average": N2D2.PoolCell.Pooling.Average,
+            "Max": N2D2.PoolCell.Pooling.Max
+        }
 
         # Note: Removed Pooling
         self._parse_optional_arguments(['StrideDims', 'PaddingDims', 'Pooling'])
-        # TODO: Make Pooling object?
-        # @Joahnnes : I think it will add complexity to the creation of pool cells.
-        #             using string to call N2D2 constructor seems cleaner from a user point of view. 
-        if 'pooling' in self._optional_constructor_arguments and self._optional_constructor_arguments['pooling'] == 'Average':
-            self._optional_constructor_arguments['pooling'] = N2D2.PoolCell.Pooling.Average
+
+        # I think the best would be to ask for a string and then convert it to the good N2D2 object rather than creatin 
+        if self._optional_constructor_arguments['pooling'] in pooling:
+            self._optional_constructor_arguments['pooling'] = pooling[self._optional_constructor_arguments['pooling']]
         else:
-            self._optional_constructor_arguments['pooling'] = N2D2.PoolCell.Pooling.Max
+            raise n2d2.ParameterNotInListError(self._optional_constructor_arguments['pooling'], [key for key in pooling])
+
 
         self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
                                                                      self._constructor_arguments['Name'],

@@ -26,3 +26,12 @@ class UndefinedModelError(RuntimeError):
 class UndefinedParameterError(RuntimeError):
    def __init__(self, value, obj):
       super().__init__("Parameter \'" + str(value) + "\' does not exist in object of type " + str(type(obj)))
+
+# TODO : Is the error message clear enough ?
+class ParameterNotInListError(ValueError):
+   def __init__(self, value, list):
+      error = value + " is not in list : ["
+      for key in list[:-1]:
+            error += key + ', '
+      error += list[-1] + "]"
+      super().__init__(error)

@@ -23,7 +23,7 @@
 #include "Cell/ElemWiseCell.hpp"
 
 #include <pybind11/pybind11.h>
-
+#include <pybind11/stl.h>
 namespace py = pybind11;
 
 namespace N2D2 {
@@ -38,7 +38,10 @@ void init_ElemWiseCell(py::module &m) {
     .value("Prod", ElemWiseCell::Operation::Prod)
     .value("Max", ElemWiseCell::Operation::Max)
     .export_values();
-
+    ewc
+    .def("getOperation", &ElemWiseCell::getOperation)
+    .def("getWeights", &ElemWiseCell::getWeights)
+    .def("getShifts", &ElemWiseCell::getShifts);
 }
 }
 #endif

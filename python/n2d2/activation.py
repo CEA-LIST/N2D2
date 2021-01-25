@@ -49,7 +49,9 @@ class Activation(N2D2_Interface):
 
 
 class Linear(Activation):
-
+    """
+    Linear activation function for n2d2.
+    """
     _linear_activation_generators = {
         'Frame<float>': N2D2.LinearActivation_Frame_float,
         'Frame_CUDA<float>': N2D2.LinearActivation_Frame_CUDA_float
@@ -63,7 +65,9 @@ class Linear(Activation):
 
 
 class Rectifier(Activation):
-
+    """
+    Rectifier activation function for n2d2.
+    """
     _rectifier_activation_generators = {
         'Frame<float>': N2D2.RectifierActivation_Frame_float,
         'Frame_CUDA<float>': N2D2.RectifierActivation_Frame_CUDA_float,
@@ -77,7 +81,9 @@ class Rectifier(Activation):
 
 
 class Tanh(Activation):
-
+    """
+    Tanh activation function for n2d2.
+    """
     _tanh_activation_generators = {
         'Frame<float>': N2D2.TanhActivation_Frame_float,
         'Frame_CUDA<float>': N2D2.TanhActivation_Frame_CUDA_float,
