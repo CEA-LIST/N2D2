@@ -121,7 +121,7 @@ __global__ void cudaRectifier_backPropagate_kernel<__half>(__half* y,
                     ? dx[i]
                     : __hmul(leakSlope, dx[i]);
 #else
-            dy[i] = (__half2float(y[i]) > __half2float(clipping))
+            dy[i] = (__half2float(y[i]) == __half2float(clipping))
                 ? __float2half(0.0f)
                 : (__half2float(y[i]) > 0.0f)
                     ? dx[i]
