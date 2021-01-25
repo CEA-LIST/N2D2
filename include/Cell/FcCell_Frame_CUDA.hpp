@@ -34,12 +34,14 @@ namespace N2D2 {
 template <class T>
 class FcCell_Frame_CUDA : public virtual FcCell, public Cell_Frame_CUDA<T> {
 public:
+    using Cell_Frame_CUDA<T>::keepInSync;
     using Cell_Frame_CUDA<T>::mInputs;
     using Cell_Frame_CUDA<T>::mOutputs;
     using Cell_Frame_CUDA<T>::mDiffInputs;
     using Cell_Frame_CUDA<T>::mDiffOutputs;
     using Cell_Frame_CUDA<T>::mActivation;
     using Cell_Frame_CUDA<T>::mActivationDesc;
+    using Cell_Frame_CUDA<T>::mKeepInSync;
 
     FcCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                       unsigned int nbOutputs,
@@ -90,6 +92,8 @@ public:
     void processFreeParametersPerChannel(std::function<Float_T(Float_T)> /*func*/,
                                         std::size_t /*channel*/);
     
+    void synchronizeToH(bool keepInSync_) const;
+    void synchronizeToD(bool keepInSync_);
     virtual ~FcCell_Frame_CUDA();
 
 protected:
@@ -106,7 +110,6 @@ protected:
     CudaTensor<T> mDiffBias;
 
     T* mOnesVector; // Bias inputs
-    mutable bool mSynchronized;
 
 private:
     static Registrar<FcCell> mRegistrar;
@@ -120,7 +123,7 @@ void N2D2::FcCell_Frame_CUDA<T>::setWeight(unsigned int output,
 {
     mSynapses(0, 0, channel, output) = tensor_cast<T>(value)(0);
 
-    if (!mSynchronized)
+    if (mKeepInSync)
         mSynapses.synchronizeHToD(0, 0, channel, output, 1);
 }
 
@@ -129,7 +132,7 @@ void N2D2::FcCell_Frame_CUDA<T>::getWeight(unsigned int output,
                                            unsigned int channel,
                                            BaseTensor& value) const
 {
-    if (!mSynchronized)
+    if (mKeepInSync)
         mSynapses.synchronizeDToH(0, 0, channel, output, 1);
 
     value.resize({1});
@@ -142,7 +145,7 @@ void N2D2::FcCell_Frame_CUDA<T>::setBias(unsigned int output,
 {
     mBias(output) = tensor_cast<T>(value)(0);
 
-    if (!mSynchronized)
+    if (mKeepInSync)
         mBias.synchronizeHToD(output, 1);
 }
 
@@ -150,7 +153,7 @@ template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::getBias(unsigned int output,
                                          BaseTensor& value) const
 {
-    if (!mSynchronized)
+    if (mKeepInSync)
         mBias.synchronizeDToH(output, 1);
 
     value.resize({1});

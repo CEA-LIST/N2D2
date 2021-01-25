@@ -1156,6 +1156,8 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
 
         meanVariance /= count;
 
+        convCellTop->synchronizeToH(false);
+
         for (std::size_t output = 0; output < convCell->getNbOutputs(); ++output) {
             // Corrected for zero-variance issue:
             // "A Quantization-Friendly Separable Convolution for MobileNets"
@@ -1188,6 +1190,8 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
             bias(0) = bnBiases(output) + (bias(0) - bnMeans(output)) * factor;
             convCell->setBias(output, bias);
         }
+
+        convCellTop->synchronizeToD(true);
 
         // Replace BatchNorm by Conv for BatchNorm childs
         // and BatchNorm cell removal from DeepNet

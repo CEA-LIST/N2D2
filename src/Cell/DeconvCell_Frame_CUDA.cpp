@@ -68,8 +68,7 @@ N2D2::DeconvCell_Frame_CUDA<T>::DeconvCell_Frame_CUDA(
       mBias(std::make_shared<CudaTensor<T> >()),
       mDiffBias({1, 1, getNbOutputs(), 1}),
       mWorkspaceSize(0),
-      mWorkspace(NULL),
-      mSynchronized(false)
+      mWorkspace(NULL)
 {
     if (strideDims.size() != kernelDims.size()) {
         throw std::domain_error("DeconvCell_Frame_CUDA: the number of dimensions"
@@ -630,36 +629,27 @@ void N2D2::DeconvCell_Frame_CUDA<T>::logFreeParameters(const std::string& fileNa
                                                     unsigned int output,
                                                     unsigned int channel) const
 {
-    mSharedSynapses.synchronizeDToH();
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     DeconvCell::logFreeParameters(fileName, output, channel);
-    mSynchronized = false;
+    keepInSync(true);
 }
 
 template <class T>
 void N2D2::DeconvCell_Frame_CUDA<T>::logFreeParameters(const std::string& fileName,
                                                     unsigned int output) const
 {
-    mSharedSynapses.synchronizeDToH();
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     DeconvCell::logFreeParameters(fileName, output);
-    mSynchronized = false;
+    keepInSync(true);
 }
 
 template <class T>
 void N2D2::DeconvCell_Frame_CUDA<T>::logFreeParameters(const std::string
                                                     & dirName) const
 {
-    mSharedSynapses.synchronizeDToH();
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     DeconvCell::logFreeParameters(dirName);
-    mSynchronized = false;
+    keepInSync(true);
 }
 
 template <class T>
@@ -730,12 +720,9 @@ template <class T>
 void N2D2::DeconvCell_Frame_CUDA<T>::exportFreeParameters(const std::string
                                                        & fileName) const
 {
-    mSharedSynapses.synchronizeDToH();
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     DeconvCell::exportFreeParameters(fileName);
-    mSynchronized = false;
+    keepInSync(true);
 }
 
 template <class T>
@@ -743,24 +730,34 @@ void N2D2::DeconvCell_Frame_CUDA<T>::importFreeParameters(const std::string
                                                        & fileName,
                                                        bool ignoreNotExists)
 {
-    mSynchronized = true;
+    keepInSync(false);
     DeconvCell::importFreeParameters(fileName, ignoreNotExists);
-    mSynchronized = false;
-
-    mSharedSynapses.synchronizeHToD();
-    mBias->synchronizeHToD();
+    synchronizeToD(true);
 }
 
 template <class T>
 void N2D2::DeconvCell_Frame_CUDA<T>::logFreeParametersDistrib(const std::string
                                                            & fileName) const
 {
+    synchronizeToH(false);
+    DeconvCell::logFreeParametersDistrib(fileName);
+    keepInSync(true);
+}
+
+template <class T>
+void N2D2::DeconvCell_Frame_CUDA<T>::synchronizeToH(bool keepInSync_) const
+{
     mSharedSynapses.synchronizeDToH();
     mBias->synchronizeDToH();
+    keepInSync(keepInSync_);
+}
 
-    mSynchronized = true;
-    DeconvCell::logFreeParametersDistrib(fileName);
-    mSynchronized = false;
+template <class T>
+void N2D2::DeconvCell_Frame_CUDA<T>::synchronizeToD(bool keepInSync_)
+{
+    mSharedSynapses.synchronizeHToD();
+    mBias->synchronizeHToD();
+    keepInSync(keepInSync_);
 }
 
 template <class T>

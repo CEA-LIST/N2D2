@@ -1501,6 +1501,12 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 
             //convCell->writeMap("map/" + node.output(0) + "_map.dat");
 
+            std::shared_ptr<Cell_Frame_Top> cellFrame
+                = std::dynamic_pointer_cast<Cell_Frame_Top>(convCell);
+
+            if (cellFrame)
+                cellFrame->keepInSync(false);
+
             // Free parameters
             if (node.input_size() > 1
                 && (itInit = initializer.find(node.input(1)))
@@ -1549,6 +1555,9 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 std::cout << "  No initializer for \"" << node.input(2)
                     << "\"" << std::endl;
             }
+
+            if (cellFrame)
+                cellFrame->synchronizeToD(true);
         }
         //ConvInteger
         //else if (node.op_type() == "ConvTranspose") {
@@ -1799,6 +1808,12 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                                     fcCell->getInputsSize()});
                 }
 
+                std::shared_ptr<Cell_Frame_Top> cellFrame
+                    = std::dynamic_pointer_cast<Cell_Frame_Top>(fcCell);
+
+                if (cellFrame)
+                    cellFrame->keepInSync(false);
+
                 for (unsigned int output = 0;
                     output < fcCell->getNbOutputs(); ++output)
                 {
@@ -1842,6 +1857,9 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                             << "\"" << std::endl;
                     }
                 }
+
+                if (cellFrame)
+                    cellFrame->synchronizeToD(true);
             }
             else {
                 throw std::runtime_error("Unsupported operation: "

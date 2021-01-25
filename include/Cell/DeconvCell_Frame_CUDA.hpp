@@ -35,11 +35,13 @@ template <class T>
 class DeconvCell_Frame_CUDA : public virtual DeconvCell,
                               public Cell_Frame_CUDA<T> {
 public:
+    using Cell_Frame_CUDA<T>::keepInSync;
     using Cell_Frame_CUDA<T>::mInputs;
     using Cell_Frame_CUDA<T>::mOutputs;
     using Cell_Frame_CUDA<T>::mDiffInputs;
     using Cell_Frame_CUDA<T>::mDiffOutputs;
     using Cell_Frame_CUDA<T>::mActivationDesc;
+    using Cell_Frame_CUDA<T>::mKeepInSync;
 
     DeconvCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                           const std::vector<unsigned int>& kernelDims,
@@ -111,6 +113,9 @@ public:
                               bool ignoreNotExists = false);
     void logFreeParametersDistrib(const std::string& fileName) const;
     void exportSolverParameters(const std::string& fileName) const;
+
+    void synchronizeToH(bool keepInSync_) const;
+    void synchronizeToD(bool keepInSync_);
     virtual ~DeconvCell_Frame_CUDA();
 
 protected:
@@ -139,7 +144,6 @@ protected:
     std::vector<cudnnConvolutionBwdDataAlgo_t> mBwdDataAlgo;
 #endif
     cudnnConvolutionDescriptor_t mConvDesc;
-    mutable bool mSynchronized;
 
 private:
     static Registrar<DeconvCell> mRegistrar;
@@ -171,7 +175,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::setWeight(unsigned int output,
     CudaTensor<T>& sharedSynapses = mSharedSynapses[k];
     sharedSynapses[channel][output] = tensor_cast<T>(value);
 
-    if (!mSynchronized)
+    if (mKeepInSync)
         sharedSynapses[channel][output].synchronizeHToD();
 }
 
@@ -205,7 +209,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::getWeight(unsigned int output,
 
     const CudaTensor<T>& sharedSynapses = mSharedSynapses[k];
 
-    if (!mSynchronized)
+    if (mKeepInSync)
         sharedSynapses[channel][output].synchronizeDToH();
 
     value.resize(sharedSynapses[channel][output].dims());
@@ -218,7 +222,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::setBias(unsigned int output,
 {
     (*mBias)(output) = tensor_cast<T>(value)(0);
 
-    if (!mSynchronized)
+    if (mKeepInSync)
         mBias->synchronizeHToD(output, 1);
 }
 
@@ -226,7 +230,7 @@ template <class T>
 void N2D2::DeconvCell_Frame_CUDA<T>::getBias(unsigned int output,
                                              BaseTensor& value) const
 {
-    if (!mSynchronized)
+    if (mKeepInSync)
         mBias->synchronizeDToH(output, 1);
 
     value.resize({1});

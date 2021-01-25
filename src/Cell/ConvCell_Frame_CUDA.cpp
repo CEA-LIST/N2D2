@@ -70,8 +70,7 @@ N2D2::ConvCell_Frame_CUDA<T>::ConvCell_Frame_CUDA(
       mBias(std::make_shared<CudaTensor<T> >()),
       mDiffBias({1, 1, getNbOutputs(), 1}),
       mWorkspaceSize(0),
-      mWorkspace(NULL),
-      mSynchronized(false)
+      mWorkspace(NULL)
 {
     if (subSampleDims.size() != kernelDims.size()) {
         throw std::domain_error("ConvCell_Frame_CUDA: the number of dimensions"
@@ -919,42 +918,27 @@ void N2D2::ConvCell_Frame_CUDA<T>::logFreeParameters(const std::string& fileName
                                                   unsigned int output,
                                                   unsigned int channel) const
 {
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeDToH();
-
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     ConvCell::logFreeParameters(fileName, output, channel);
-    mSynchronized = false;
+    keepInSync(true);
 }
 
 template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::logFreeParameters(const std::string& fileName,
                                                   unsigned int output) const
 {
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeDToH();
-
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     ConvCell::logFreeParameters(fileName, output);
-    mSynchronized = false;
+    keepInSync(true);
 }
 
 template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::logFreeParameters(const std::string
                                                   & dirName) const
 {
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeDToH();
-
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     ConvCell::logFreeParameters(dirName);
-    mSynchronized = false;
+    keepInSync(true);
 }
 
 template <class T>
@@ -1024,14 +1008,9 @@ template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::exportFreeParameters(const std::string
                                                      & fileName) const
 {
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeDToH();
-
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     ConvCell::exportFreeParameters(fileName);
-    mSynchronized = false;
+    keepInSync(true);
 }
 
 template <class T>
@@ -1039,42 +1018,28 @@ void N2D2::ConvCell_Frame_CUDA<T>::importFreeParameters(const std::string
                                                      & fileName,
                                                      bool ignoreNotExists)
 {
-    mSynchronized = true;
+    keepInSync(false);
     ConvCell::importFreeParameters(fileName, ignoreNotExists);
-    mSynchronized = false;
-
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeHToD();
-
-    mBias->synchronizeHToD();
+    synchronizeToD(true);
 }
 
 template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::logFreeParametersDistrib(const std::string
                                                          & fileName) const
 {
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeDToH();
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     ConvCell::logFreeParametersDistrib(fileName);
-    mSynchronized = false;
+    keepInSync(true);
 }
 
 template <class T>
 std::pair<N2D2::Float_T, N2D2::Float_T>
 N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRange(bool withAdditiveParameters) const
 {
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeDToH();
-
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     const std::pair<Float_T, Float_T> range
         = ConvCell::getFreeParametersRange(withAdditiveParameters);
-    mSynchronized = false;
+    keepInSync(true);
 
     return range;
 }
@@ -1084,15 +1049,10 @@ std::pair<N2D2::Float_T, N2D2::Float_T>
 N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRangePerOutput(std::size_t output,
                                                               bool withAdditiveParameters) const
 {
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeDToH();
-
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     const std::pair<Float_T, Float_T> range
         = ConvCell::getFreeParametersRangePerOutput(output, withAdditiveParameters);
-    mSynchronized = false;
+    keepInSync(true);
 
     return range;
 }
@@ -1101,15 +1061,10 @@ template <class T>
 std::pair<N2D2::Float_T, N2D2::Float_T>
 N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRangePerChannel(std::size_t channel) const
 {
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeDToH();
-
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     const std::pair<Float_T, Float_T> range
         = ConvCell::getFreeParametersRangePerChannel(channel);
-    mSynchronized = false;
+    keepInSync(true);
 
     return range;
 }
@@ -1118,19 +1073,9 @@ template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::processFreeParameters(std::function<Float_T(Float_T)> func,
                                                          FreeParametersType type)
 {
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeDToH();
-
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     ConvCell::processFreeParameters(func, type);
-    mSynchronized = false;
-
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeHToD();
-
-    mBias->synchronizeHToD();
+    synchronizeToD(true);
 }
 
 template <class T>
@@ -1138,38 +1083,34 @@ void N2D2::ConvCell_Frame_CUDA<T>::processFreeParametersPerOutput(std::function<
                                                                   std::size_t output,
                                                                   FreeParametersType type)
 {
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeDToH();
-
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     ConvCell::processFreeParametersPerOutput(func, output, type);
-    mSynchronized = false;
-
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeHToD();
-
-    mBias->synchronizeHToD();
+    synchronizeToD(true);
 }
 
 template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::processFreeParametersPerChannel(std::function<Float_T(Float_T)> func,
                                                                   std::size_t channel)
 {
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeDToH();
-
-    mBias->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     ConvCell::processFreeParametersPerChannel(func, channel);
-    mSynchronized = false;
+    synchronizeToD(true);
+}
 
-    for (unsigned int i = 0; i < mInputs.size(); ++i)
-        mSharedSynapses[i].synchronizeHToD();
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::synchronizeToH(bool keepInSync_) const
+{
+    mSharedSynapses.synchronizeDToH();
+    mBias->synchronizeDToH();
+    keepInSync(keepInSync_);
+}
 
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::synchronizeToD(bool keepInSync_)
+{
+    mSharedSynapses.synchronizeHToD();
     mBias->synchronizeHToD();
+    keepInSync(keepInSync_);
 }
 
 template <class T>
