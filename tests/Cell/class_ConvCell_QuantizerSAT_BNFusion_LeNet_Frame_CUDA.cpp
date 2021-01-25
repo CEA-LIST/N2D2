@@ -84,7 +84,6 @@ public:
 
 // check 2 conv layers with 8 bits quantization, float
 // insert bn1 between conv1 and conv2 and fuse conv1 and bn1
-
 TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
              check_BNFusion_with_SAT,
              (unsigned int kernelWidth,
@@ -120,15 +119,23 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
     DeepNet dn(net);
     unsigned int batchSize = 1;
 
-    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, batchSize, false);
-    env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
-    env.setCachePath();
-    env.readRandomBatch(Database::Test);
-    Tensor<Float_T>& in = env.getData();
+    //Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, batchSize, false);
+    //env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
+    //env.setCachePath();
+    //env.readRandomBatch(Database::Test);
+    //Tensor<Float_T>& in = env.getData();
+
+    StimuliProvider sp(getDatabase(), {channelsWidth, channelsHeight, 1}, batchSize);
+    sp.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
+    sp.setCachePath();
+    sp.readStimulusBatch(0, Database::Test);
+    Tensor<Float_T>& in = sp.getData();
 
     size_t dimsInput = in.dimX()*in.dimY()*in.dimZ()*batchSize;
     Tensor<Float_T> in_fused;
-    in_fused.resize({in.dimX(),in.dimY(),in.dimZ(),batchSize},0.0);
+    in_fused.resize({in.dimX(),in.dimY(),in.dimZ(),in.dimB()});
+    in_fused.fill(0.0);
+
     for(unsigned int i = 0; i < dimsInput; ++i)
     {
         in_fused(i) = in(i) * 255;
@@ -365,7 +372,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
             for (unsigned int sx = 0; sx < kernelWidth; ++sx) {
                 for (unsigned int sy = 0; sy < kernelHeight; ++sy){
                     //weights in range [-128,127]
-                    kernel_rescaled(sx, sy) = rintf(0.5*(quant_weights_conv1[output][channel](sx, sy)*range1-1));
+                    //kernel_rescaled(sx, sy) = rintf(0.5*(quant_weights_conv1[output][channel](sx, sy)*range1-1));
+                    kernel_rescaled(sx, sy) = rintf(std::min(0.5*(quant_weights_conv1[output][channel](sx, sy)*(range1+1)),127.0));
                     //kernel_rescaled(sx, sy) = quant_weights_conv1[output][channel](sx, sy);
                     std::cout << "conv1_fused :: sx = " << sx << " , sy = " << sy << " , weight = " << quant_weights_conv1[output][channel](sx, sy) << 
                     " ==> " << kernel_rescaled(sx, sy) << std::endl;
@@ -462,12 +470,20 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
                             ? bnVariances(output) : meanVariance));
         gamma(output) = factor;
         beta(output) = bnBiases(output) + (bias(0) - bnMeans(output)) * factor;
+
+        /*
         bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f);
         clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f);
-
         bias_fusion_rounded(output) = rintf((beta(output)/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f));
         clipPerOutputRound(output) = rintf((alpha2/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f));
         scalePerOutput(output) = (alpha1/(float)range1) * ((float)range2/alpha2) * gamma(output) *(2.0/(float)range1);
+        */
+
+        bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * ((float)(range1+1)/2.0);
+        clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * ((float)(range1+1)/2.0);
+        bias_fusion_rounded(output) = rintf((beta(output)/gamma(output)) * ((float)range1/alpha1) * ((float)(range1+1)/2.0));
+        clipPerOutputRound(output) = rintf((alpha2/gamma(output)) * ((float)range1/alpha1) * ((float)(range1+1)/2.0));
+        scalePerOutput(output) = (alpha1/(float)range1) * ((float)range2/alpha2) * gamma(output) *(2.0/(float)(range1+1));
         
     }  
 
@@ -615,6 +631,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
 
 
 //read the entire test database, and compute MSE
+
 TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Approx_LeNet_TestDatabase_Frame_CUDA_float,
              check_BNFusion_with_SAT,
              (unsigned int kernelWidth,
@@ -672,7 +689,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Approx_LeNet_TestDatabase_Frame_CUDA
 
         size_t dimsInput = in.dimX()*in.dimY()*in.dimZ()*batchSize;
         Tensor<Float_T> in_fused;
-        in_fused.resize({in.dimX(),in.dimY(),in.dimZ(),batchSize},0.0);
+        in_fused.resize({in.dimX(),in.dimY(),in.dimZ(),in.dimB()});
+        in_fused.fill(0.0);
         for(unsigned int i = 0; i < dimsInput; ++i)
         {
             in_fused(i) = in(i) * 255;
@@ -866,7 +884,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Approx_LeNet_TestDatabase_Frame_CUDA
                         //[-127, 128]
                         //kernel_rescaled(sx, sy) = rintf(0.5*(quant_weights_conv1[output][channel](sx, sy)*range1+1));
                         //[-128,127]
-                        kernel_rescaled(sx, sy) = rintf(0.5f*(quant_weights_conv1[output][channel](sx, sy)*range1-1));
+                        //kernel_rescaled(sx, sy) = rintf(0.5f*(quant_weights_conv1[output][channel](sx, sy)*range1-1));
+                        kernel_rescaled(sx, sy) = rintf(std::min(0.5*(quant_weights_conv1[output][channel](sx, sy)*(range1+1)),127.0));
                         //[-127, 127]
                         //kernel_rescaled(sx, sy) = rintf(0.5f*(quant_weights_conv1[output][channel](sx, sy)*(range1-1)));
                     }
@@ -947,6 +966,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Approx_LeNet_TestDatabase_Frame_CUDA
             beta(output) = bnBiases(output) + (bias(0) - bnMeans(output)) * factor;
 
             //for weights range [-128,127]
+            /*
             //bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * rintf(((float)range1/2.0));
             bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f);
             //clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * rintf(((float)range1/2.0));
@@ -956,16 +976,21 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Approx_LeNet_TestDatabase_Frame_CUDA
             clipPerOutputRound(output) = rintf((alpha2/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f));
             //clipPerOutputRound(output) = rintf((alpha2/gamma(output)) * ((float)range1/alpha1) * rintf(((float)range1/2.0)));
             scalePerOutput(output) = (alpha1/(float)range1) * ((float)range2/alpha2) * gamma(output) * (2.0/(float)range1);
-                   
+            */
 
+            bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * ((float)(range1+1)/2.0);
+            clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * ((float)(range1+1)/2.0);
+            bias_fusion_rounded(output) = rintf((beta(output)/gamma(output)) * ((float)range1/alpha1) * ((float)(range1+1)/2.0));
+            clipPerOutputRound(output) = rintf((alpha2/gamma(output)) * ((float)range1/alpha1) * ((float)(range1+1)/2.0));
+            scalePerOutput(output) = (alpha1/(float)range1) * ((float)range2/alpha2) * gamma(output) *(2.0/(float)(range1+1));
+                   
             //for weights range [-127, 127]
-            /*
-            bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * ((float)(range1-1)/2.0);
-            clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * ((float)(range1-1)/2.0);
-            bias_fusion_rounded(output) = rintf((beta(output)/gamma(output)) * ((float)range1/alpha1) * ((float)(range1-1)/2.0));
-            clipPerOutputRound(output) = rintf((alpha2/gamma(output)) * ((float)range1/alpha1) * ((float)(range1-1)/2.0));
-            scalePerOutput(output) = (alpha1/(float)range1) * ((float)range2/alpha2) * gamma(output) *(2.0/(float)(range1-1));  
-            */       
+            //bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * ((float)(range1-1)/2.0);
+            //clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * ((float)(range1-1)/2.0);
+            //bias_fusion_rounded(output) = rintf((beta(output)/gamma(output)) * ((float)range1/alpha1) * ((float)(range1-1)/2.0));
+            //clipPerOutputRound(output) = rintf((alpha2/gamma(output)) * ((float)range1/alpha1) * ((float)(range1-1)/2.0));
+            //scalePerOutput(output) = (alpha1/(float)range1) * ((float)range2/alpha2) * gamma(output) *(2.0/(float)(range1-1));  
+                   
         }  
 
         //not cliped, with bias 
@@ -1178,7 +1203,6 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Approx_LeNet_TestDatabase_Frame_CUDA
  
 }
 
-
 //read the entire test database, and compute MSE
 
 TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Exact_LeNet_TestDatabase_Frame_CUDA_float,
@@ -1239,7 +1263,8 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Exact_LeNet_TestDatabase_Frame_CUDA_
 
         size_t dimsInput = in.dimX()*in.dimY()*in.dimZ()*batchSize;
         Tensor<Float_T> in_fused;
-        in_fused.resize({in.dimX(),in.dimY(),in.dimZ(),batchSize},0.0);
+        in_fused.resize({in.dimX(),in.dimY(),in.dimZ(),in.dimB()});
+        in_fused.fill(0.0);
         for(unsigned int i = 0; i < dimsInput; ++i)
         {
             in_fused(i) = in(i) * 255;
@@ -1678,44 +1703,6 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Exact_LeNet_TestDatabase_Frame_CUDA_
         
     }
 
-/*
-    std::ofstream outFile_mse("bnFusion_Exact_wRange_Test_MNIST_MSE.dat");
-    std::ofstream outFile_mse_r("bnFusion_Exact_wRange_Test_MNIST_MSE_R.dat");
-    std::ofstream outFile_mse_max("bnFusion_Exact_wRange_Test_MNIST_MSE_MAX.dat");
-
-    for (std::size_t i = 0; i < v_mse.size(); ++i) {
-
-        outFile_mse << v_mse[i] << "\n";
-        outFile_mse_r << v_mse_r[i] << "\n";
-        outFile_mse_max << v_mse_max[i] << "\n";
-    }
-
-    // plot results
-    Gnuplot gnuplot_mse;
-    gnuplot_mse.set("grid");   
-    gnuplot_mse << "binwidth=0.01";
-    gnuplot_mse << "bin(x,width)=width*floor(x/width)+width/2.0";
-    gnuplot_mse.setXlabel("MSE");
-    gnuplot_mse.saveToFile("bnFusion_Exact_wRange_Test_MNIST_MSE.png");
-    gnuplot_mse.plot("bnFusion_Exact_wRange_Test_MNIST_MSE.dat", std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
-
-    Gnuplot gnuplot_mse_r;
-    gnuplot_mse_r.set("grid");   
-    gnuplot_mse_r << "binwidth=0.01";
-    gnuplot_mse_r << "bin(x,width)=width*floor(x/width)+width/2.0";
-    gnuplot_mse_r.setXlabel("MSE");
-    gnuplot_mse_r.saveToFile("bnFusion_Exact_wRange_Test_MNIST_MSE_R.png");
-    gnuplot_mse_r.plot("bnFusion_Exact_wRange_Test_MNIST_MSE_R.dat", std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
-
-    Gnuplot gnuplot_max_err;
-    gnuplot_max_err.set("grid");   
-    gnuplot_max_err << "binwidth=1.0";
-    gnuplot_max_err << "bin(x,width)=width*floor(x/width)+width/2.0";
-    gnuplot_max_err.setXlabel("Max error");
-    gnuplot_max_err.saveToFile("bnFusion_Exact_wRange_Test_MNIST_MAX_ERR.png");
-    gnuplot_max_err.plot("bnFusion_Exact_wRange_Test_MNIST_MSE_MAX.dat", std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
-    */
-
     std::ostringstream fileName_mse;
     fileName_mse << "bnFusion_exact_mse_" << range1 << "_" << range2 << ".dat";
     std::ostringstream fileName_mse_r;
@@ -1799,7 +1786,6 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Exact_LeNet_TestDatabase_Frame_CUDA_
     gnuplot_faulty_pixel_percent.plot(fileName_faulty_pixel_percent.str(), std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
  
 }
-
 
 
 
