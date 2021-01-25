@@ -56,7 +56,7 @@ void N2D2::RectifierActivation_Frame<T>::propagate(
     const Cell& cell, 
     const BaseTensor& baseInput,
     BaseTensor& baseOutput,
-    bool /*inference*/)
+    bool inference)
 {
     const Tensor<T>& input = dynamic_cast<const Tensor<T>&>(baseInput);
     Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
@@ -77,6 +77,9 @@ void N2D2::RectifierActivation_Frame<T>::propagate(
                 ? output(index)
                 : (T)mLeakSlope * output(index);
         }
+    }
+    if(mQuantizer) {
+        mQuantizer->propagate(baseOutput, inference);
     }
 }
 

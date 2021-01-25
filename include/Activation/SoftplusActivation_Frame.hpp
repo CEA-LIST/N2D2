@@ -59,7 +59,7 @@ void N2D2::SoftplusActivation_Frame<T>::propagate(
     const Cell& cell, 
     const BaseTensor& baseInput,
     BaseTensor& baseOutput,
-    bool /*inference*/)
+    bool inference)
 {
     const Tensor<T>& input = dynamic_cast<const Tensor<T>&>(baseInput);
     Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
@@ -80,6 +80,9 @@ void N2D2::SoftplusActivation_Frame<T>::propagate(
 #if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
         feenableexcept(excepts);
 #endif
+    }
+    if(mQuantizer) {
+        mQuantizer->propagate(baseOutput, inference);
     }
 }
 

@@ -68,7 +68,7 @@ void N2D2::LogisticActivation_Frame<T>::propagate(
     const Cell& cell, 
     const BaseTensor& baseInput,
     BaseTensor& baseOutput,
-    bool /*inference*/)
+    bool inference)
 {
     if (LogisticActivationDisabled)
         return;
@@ -90,6 +90,9 @@ void N2D2::LogisticActivation_Frame<T>::propagate(
 #if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
         feenableexcept(excepts);
 #endif
+    }
+    if(mQuantizer) {
+        mQuantizer->propagate(baseOutput, inference);
     }
 }
 

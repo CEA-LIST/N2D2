@@ -56,7 +56,7 @@ void N2D2::LinearActivation_Frame<T>::propagate(
     const Cell& cell, 
     const BaseTensor& baseInput,
     BaseTensor& baseOutput,
-    bool /*inference*/)
+    bool inference)
 {
     const Tensor<T>& input = dynamic_cast<const Tensor<T>&>(baseInput);
     Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
@@ -70,6 +70,9 @@ void N2D2::LinearActivation_Frame<T>::propagate(
         for (int index = 0; index < (int)output.size(); ++index)
             output(index) = Utils::clamp<T>(output(index),
                                              -clipping, clipping);
+    }
+    if(mQuantizer) {
+        mQuantizer->propagate(baseOutput, inference);
     }
 }
 

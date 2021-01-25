@@ -56,7 +56,7 @@ void N2D2::SaturationActivation_Frame<T>::propagate(
     const Cell& cell, 
     const BaseTensor& baseInput,
     BaseTensor& baseOutput,
-    bool /*inference*/)
+    bool inference)
 {
     const Tensor<T>& input = dynamic_cast<const Tensor<T>&>(baseInput);
     Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
@@ -66,10 +66,13 @@ void N2D2::SaturationActivation_Frame<T>::propagate(
     const T threshold(mThreshold);
 
 #pragma omp parallel for if (output.size() > 1024)
-    for (int index = 0; index < (int)output.size(); ++index)
+    for (int index = 0; index < (int)output.size(); ++index) {
         output(index) = Utils::clamp<T>(output(index),
                                          -threshold, threshold);
-
+    }
+    if(mQuantizer) {
+        mQuantizer->propagate(baseOutput, inference);
+    }
 }
 
 template <class T>

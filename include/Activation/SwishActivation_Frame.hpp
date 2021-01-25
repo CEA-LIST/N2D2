@@ -59,7 +59,7 @@ void N2D2::SwishActivation_Frame<T>::propagate(
     const Cell& cell, 
     const BaseTensor& baseInput,
     BaseTensor& baseOutput,
-    bool /*inference*/)
+    bool inference)
 {
     const Tensor<T>& input = dynamic_cast<const Tensor<T>&>(baseInput);
     Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
@@ -73,6 +73,9 @@ void N2D2::SwishActivation_Frame<T>::propagate(
         const T sig(1.0f / (1.0f + std::exp(-output(index))));
         mSigmoid(index) = sig;
         output(index) = output(index) * sig;
+    }
+    if(mQuantizer) {
+        mQuantizer->propagate(baseOutput, inference);
     }
 }
 

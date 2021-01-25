@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "Scaling.hpp"
+#include "Quantizer/Activation/QuantizerActivation.hpp"
 #include "utils/Parameterizable.hpp"
 
 namespace N2D2 {
@@ -68,13 +69,22 @@ public:
 
     const Scaling& getActivationScaling() const;
     void setActivationScaling(Scaling scaling);
+    std::shared_ptr<QuantizerActivation> getQuantizer()
+    {
+        return mQuantizer;
+    };
 
+    void setQuantizer(std::shared_ptr<QuantizerActivation> quant)
+    {
+        mQuantizer = quant;
+    }
 protected:
     virtual void saveInternal(std::ostream& /*state*/,
                               std::ostream& /*log*/) const {};
     virtual void loadInternal(std::istream& /*state*/) {};
 
     Scaling mScaling;
+    std::shared_ptr<QuantizerActivation> mQuantizer;
 };
 }
 

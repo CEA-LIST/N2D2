@@ -23,7 +23,7 @@ class QuantizerCell:  public Parameterizable {
 public:
 
     QuantizerCell()
-      : mIntegerRange(this, "IntegerRange", 255)
+      : mRange(this, "Range", 255)
     {};
 
     virtual void addWeights(BaseTensor& weights, BaseTensor& diffWeights) = 0;
@@ -52,7 +52,7 @@ public:
     
     void setRange(size_t integerRange)
     {
-        mIntegerRange = integerRange;
+        mRange = integerRange;
     };
 
     virtual const char* getType() const = 0;
@@ -81,7 +81,7 @@ protected:
     // trainable parameters in quantizer
     std::shared_ptr<Solver> mSolver;
     
-    Parameter<size_t> mIntegerRange;
+    Parameter<size_t> mRange;
     
 private:
 

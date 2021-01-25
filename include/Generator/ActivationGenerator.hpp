@@ -22,6 +22,7 @@
 #define N2D2_ACTIVATIONGENERATOR_H
 
 #include "Activation/Activation.hpp"
+#include "Generator/QuantizerActivationGenerator.hpp"
 #include "utils/IniParser.hpp"
 #include "utils/Registrar.hpp"
 #include "Generator/Generator.hpp"

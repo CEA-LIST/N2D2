@@ -13,7 +13,6 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-#include "controler/Interface.hpp"
 #include "Quantizer/Activation/QuantizerActivation.hpp"
 
 namespace N2D2 {
@@ -22,23 +21,16 @@ template <class T>
 class QuantizerActivation_Frame: virtual public QuantizerActivation {
 public:
     virtual void initialize(){};
-    virtual void update(){};
-    virtual void propagate() = 0;
-    virtual void back_propagate() = 0;
-
-    virtual BaseTensor& getQuantizedActivations(unsigned int k)
+    virtual void update(unsigned int /*batchSize = 1*/){};
+    virtual void propagate(BaseTensor& baseInOut,
+                            bool inference= false) = 0;
+    virtual void back_propagate(const BaseTensor& input,
+                                const BaseTensor& output,
+                                const BaseTensor& diffInput,
+                                BaseTensor& diffOutput) = 0;
+    virtual BaseTensor& getFullPrecisionActivations()
     {
-        return mQuantizedActivations[k];
-    }
-
-    virtual BaseTensor& getDiffFullPrecisionActivations(unsigned int k)
-    {
-        return mDiffFullPrecisionActivations[k];
-    }
-
-    virtual BaseTensor& getDiffQuantizedActivations(unsigned int k)
-    {
-        return mDiffQuantizedActivations[k];
+        return mFullPrecisionActivations;
     }
 
     virtual bool isCuda() const
@@ -51,25 +43,9 @@ public:
     //virtual ~Quantizer() {};
 
 protected:
-
-    /*
-        Structures shared by all kind of quantizers :
-
-        *mFullPrecisionActivations --->|    |---> *mQuantizedActivations
-                                       |    |
-                                       |    |
-    *mDiffFullPrecisionActivations <---|    |<--- *mDiffQuantizedActivations
-
-    */
-    Interface<> mFullPrecisionActivations;
-    Interface<T> mQuantizedActivations;
-
-    Interface<T> mDiffFullPrecisionActivations;
-    Interface<> mDiffQuantizedActivations;
-
+    Tensor<T> mFullPrecisionActivations;
 private:
 
-  
 };
 }
 

@@ -41,6 +41,27 @@ N2D2::ActivationGenerator::generate(IniParser& iniConfig,
 
         activation->setPrefixedParameters(iniConfig.getSection(section),
                                           name + ".");
+        std::shared_ptr<QuantizerActivation> quantizer 
+            = QuantizerActivationGenerator::generate(iniConfig,
+                                                     section,
+                                                     model,
+                                                     dataType, 
+                                                     "Activation.Quantizer");
+
+        if (quantizer) {
+            activation->setQuantizer(quantizer);
+
+            std::shared_ptr<Solver> quantizerSolver
+                = SolverGenerator::generate(iniConfig, 
+                                            section, 
+                                            model, 
+                                            dataType, 
+                                            "Activation.QuantizerSolver");
+
+            if (quantizerSolver) {
+                activation->getQuantizer()->setSolver(quantizerSolver);
+            }
+        }
         return activation;
     }
     else
