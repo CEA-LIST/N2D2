@@ -95,7 +95,7 @@ void N2D2::RectifierActivation_Frame<T>::backPropagate(
     if (mClipping > 0.0 && !cell.isQuantized()) {
 #pragma omp parallel for if (output.size() > 1024)
         for (int index = 0; index < (int)diffOutput.size(); ++index) {
-            diffOutput(index) = diffInput(index) * ((output(index) > (T)mClipping)
+            diffOutput(index) = diffInput(index) * ((output(index) == (T)mClipping)
                                       ? 0.0f
                                       : (output(index) > 0) ? 1.0f
                                                              : (T)mLeakSlope);
