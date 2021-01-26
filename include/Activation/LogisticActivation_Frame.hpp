@@ -106,9 +106,15 @@ void N2D2::LogisticActivation_Frame<T>::backPropagate(
 {
     if (LogisticActivationDisabled)
         return;
-
+    if(mQuantizer) {
+        mQuantizer->back_propagate( mQuantizer->getFullPrecisionActivations(), 
+                                    baseOutput,/*Not use for the moment*/
+                                    baseDiffInput,
+                                    baseDiffOutput);
+    }
     const Tensor<T>& output = dynamic_cast<const Tensor<T>&>(baseOutput);
-    const Tensor<T>& diffInput = dynamic_cast<const Tensor<T>&>(baseDiffInput);
+    const Tensor<T>& diffInput = (!mQuantizer)  ? dynamic_cast<const Tensor<T>&>(baseDiffInput) 
+                                : dynamic_cast<const Tensor<T>&>(baseDiffOutput);
     Tensor<T>& diffOutput = dynamic_cast<Tensor<T>&>(baseDiffOutput);
 
     if (!this->mWithLoss) {
