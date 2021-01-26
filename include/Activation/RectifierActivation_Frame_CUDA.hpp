@@ -165,9 +165,8 @@ N2D2::RectifierActivation_Frame_CUDA<T>::~RectifierActivation_Frame_CUDA()
 template <class T>
 void N2D2::RectifierActivation_Frame_CUDA<T>::update(unsigned int batchSize)
 {
-    /*
     if(mQuantizer) {
         mQuantizer->update(batchSize);
     }
-    */}
+}
 #endif // N2D2_RECTIFIERACTIVATION_FRAME_CUDA_H

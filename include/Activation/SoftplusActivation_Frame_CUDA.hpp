@@ -94,9 +94,8 @@ void N2D2::SoftplusActivation_Frame_CUDA<T>::backPropagate(
 template <class T>
 void N2D2::SoftplusActivation_Frame_CUDA<T>::update(unsigned int batchSize)
 {
-    /*
     if(mQuantizer) {
         mQuantizer->update(batchSize);
     }
-    */}
+}
 #endif // N2D2_SOFTPLUSACTIVATION_FRAME_CUDA_H

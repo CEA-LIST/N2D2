@@ -8,17 +8,16 @@
     the CeCILL-C license. This code is the property of the CEA. It can not be
     copied or disseminated without its authorization.
 */
-#ifndef N2D2_QUANTIZERACTIVATION_FRAME_H
-#define N2D2_QUANTIZERACTIVATION_FRAME_H
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+#ifndef N2D2_QUANTIZERACTIVATION_FRAME_CUDA_H
+#define N2D2_QUANTIZERACTIVATION_FRAME_CUDA_H
+#include "containers/CudaTensor.hpp"
+#include "controler/CudaInterface.hpp"
 #include "Quantizer/Activation/QuantizerActivation.hpp"
 
 namespace N2D2 {
 
 template <class T> 
-class QuantizerActivation_Frame: virtual public QuantizerActivation {
+class QuantizerActivation_Frame_CUDA: virtual public QuantizerActivation {
 public:
     virtual void initialize(){};
     virtual void update(unsigned int /*batchSize = 1*/){};
@@ -35,19 +34,19 @@ public:
 
     virtual bool isCuda() const
     {
-        return false;
+        return true;
     }
     virtual void exportFreeParameters(const std::string& /*fileName*/) const {};
     virtual void importFreeParameters(const std::string& /*fileName*/, bool /*ignoreNoExists*/) {};
 
-    virtual ~QuantizerActivation_Frame() {};
+    virtual ~QuantizerActivation_Frame_CUDA() {};
 
 protected:
-    Tensor<T> mFullPrecisionActivations;
+    CudaTensor<T> mFullPrecisionActivations;
 private:
 
 };
 }
 
-#endif // N2D2_QUANTIZERACTIVATION_FRAME_H
+#endif // N2D2_QUANTIZERACTIVATION_FRAME_CUDA_H
 
