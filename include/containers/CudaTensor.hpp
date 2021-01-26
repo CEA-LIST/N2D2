@@ -52,6 +52,13 @@ template <> void thrust_copy(half_float::half* srcData, float* dstData,
                              size_t size);
 template <> void thrust_copy(half_float::half* srcData, double* dstData,
                              size_t size);
+// Copy to same type
+template <> void thrust_copy(half_float::half* srcData, half_float::half* dstData,
+                             size_t size);
+template <> void thrust_copy(float* srcData, float* dstData,
+                             size_t size);
+template <> void thrust_copy(double* srcData, double* dstData,
+                             size_t size);
 
 class CudaBaseTensor;
 template <typename T> class CudaTensor;
