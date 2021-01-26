@@ -245,6 +245,7 @@ void init_TransformationCell_Frame_CUDA(py::module&);
 void init_UnpoolCell(py::module&);
 void init_UnpoolCell_Frame(py::module&);
 void init_UnpoolCell_Frame_CUDA(py::module&);
+void init_MappingGenerator(py::module&);
 
 
 PYBIND11_MODULE(N2D2, m) {
@@ -280,6 +281,8 @@ PYBIND11_MODULE(N2D2, m) {
     init_CelebA_Database(m);
     init_CIFAR_Database(m);
     init_CKP_Database(m);
+    // Cityscapes is not binded because of a dependance to JSONCPP.
+    // Need to compile with the library JSONCPP or else it crash the binding.
     // init_Cityscapes_Database(m);
     init_GTSDB_DIR_Database(m);
     init_GTSRB_DIR_Database(m);
@@ -465,6 +468,8 @@ PYBIND11_MODULE(N2D2, m) {
     init_UnpoolCell_Frame(m);
     init_UnpoolCell_Frame_CUDA(m);
 
+    // Mapping object
+    init_MappingGenerator(m);
 
 }
 }
