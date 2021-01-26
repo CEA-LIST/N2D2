@@ -1815,6 +1815,11 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 if (cellFrame)
                     cellFrame->keepInSync(false);
 
+#if defined(_OPENMP) && _OPENMP >= 200805
+#pragma omp parallel for collapse(2) if (weights.size() > 1024)
+#else
+#pragma omp parallel for if (weights.size() > 1024)
+#endif
                 for (unsigned int output = 0;
                     output < fcCell->getNbOutputs(); ++output)
                 {

@@ -284,6 +284,21 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
                                                 ScalingMode actScalingMode,
                                                 bool rescalePerOutputChannel)
 {
+    const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
+
+    // Synchronize to H and no keep in sync
+    for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
+        for (auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
+            std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
+            std::shared_ptr<Cell_Frame_Top> cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+            if(!cell || !cellFrame) {
+                throw std::runtime_error("Invalid cell.");
+            }
+
+            cellFrame->synchronizeToH(false);
+        }
+    }
+
     std::unordered_map<std::string, long double> biasScalings;
     if(rescalePerOutputChannel) {
         biasScalings = quantizeFreeParemetersPerOutputCh(nbBits);
@@ -300,7 +315,6 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
         << std::endl;
 #endif
 
-    const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
     for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
         for (auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
             std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
@@ -347,6 +361,19 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
         Database::All
     );
 
+    // Synchronize to D and keep in sync
+    for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
+        for (auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
+            std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
+            std::shared_ptr<Cell_Frame_Top> cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+            if(!cell || !cellFrame) {
+                throw std::runtime_error("Invalid cell.");
+            }
+
+            cellFrame->synchronizeToD(true);
+        }
+    }
+
 #ifdef VERBOSE_QUANT
     std::cout << "  Done!" << std::endl;
 #endif
@@ -363,6 +390,8 @@ void N2D2::DeepNetQuantization::crossLayerEqualization(
 
     const std::vector<std::vector<std::string>> layers = mDeepNet.getLayers();
     double maxRangeDelta;
+
+    std::set<std::shared_ptr<Cell_Frame_Top> > keepInSync;
 
     do {
         maxRangeDelta = 0.0;
@@ -384,6 +413,8 @@ void N2D2::DeepNetQuantization::crossLayerEqualization(
                     && (parentsCells[0]->getType() == ConvCell::Type
                     || parentsCells[0]->getType() == FcCell::Type))
                 {
+                    std::shared_ptr<Cell_Frame_Top> cellFrame
+                        = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
                     std::shared_ptr<Cell_Frame_Top> parentCellFrame
                         = std::dynamic_pointer_cast<Cell_Frame_Top>(parentsCells[0]);
                     const std::shared_ptr<Activation>& parentActivation
@@ -420,6 +451,19 @@ void N2D2::DeepNetQuantization::crossLayerEqualization(
                     std::cout << "    - eq. " << cell->getName()
                         << " and " << parentsCells[0]->getName() << std::endl;
 #endif
+
+                    bool newInsert;
+                    std::tie(std::ignore, newInsert)
+                        = keepInSync.insert(cellFrame);
+
+                    if (newInsert)
+                        cellFrame->synchronizeToH(false);
+
+                    std::tie(std::ignore, newInsert)
+                        = keepInSync.insert(parentCellFrame);
+
+                    if (newInsert)
+                        parentCellFrame->synchronizeToH(false);
 
                     for(std::size_t output = 0;
                         output < parentsCells[0]->getNbOutputs(); output++)
@@ -458,6 +502,12 @@ void N2D2::DeepNetQuantization::crossLayerEqualization(
 #endif
     }
     while (maxRangeDelta > maxQuantRangeDelta);
+
+    for (std::set<std::shared_ptr<Cell_Frame_Top> >::const_iterator it
+        = keepInSync.begin(), itEnd = keepInSync.end(); it != itEnd; ++it)
+    {
+        (*it)->synchronizeToD(true);
+    }
 }
 
 std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantizeFreeParemeters(std::size_t nbBits) {

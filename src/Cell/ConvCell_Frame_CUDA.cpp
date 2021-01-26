@@ -1036,10 +1036,16 @@ template <class T>
 std::pair<N2D2::Float_T, N2D2::Float_T>
 N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRange(bool withAdditiveParameters) const
 {
-    synchronizeToH(false);
+    const bool keepInSyncTop(mKeepInSync);
+
+    if (keepInSyncTop)
+        synchronizeToH(false);
+
     const std::pair<Float_T, Float_T> range
         = ConvCell::getFreeParametersRange(withAdditiveParameters);
-    keepInSync(true);
+
+    if (keepInSyncTop)
+        keepInSync(true);
 
     return range;
 }
@@ -1049,10 +1055,16 @@ std::pair<N2D2::Float_T, N2D2::Float_T>
 N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRangePerOutput(std::size_t output,
                                                               bool withAdditiveParameters) const
 {
-    synchronizeToH(false);
+    const bool keepInSyncTop(mKeepInSync);
+
+    if (keepInSyncTop)
+        synchronizeToH(false);
+
     const std::pair<Float_T, Float_T> range
         = ConvCell::getFreeParametersRangePerOutput(output, withAdditiveParameters);
-    keepInSync(true);
+
+    if (keepInSyncTop)
+        keepInSync(true);
 
     return range;
 }
@@ -1061,10 +1073,16 @@ template <class T>
 std::pair<N2D2::Float_T, N2D2::Float_T>
 N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRangePerChannel(std::size_t channel) const
 {
-    synchronizeToH(false);
+    const bool keepInSyncTop(mKeepInSync);
+
+    if (keepInSyncTop)
+        synchronizeToH(false);
+
     const std::pair<Float_T, Float_T> range
         = ConvCell::getFreeParametersRangePerChannel(channel);
-    keepInSync(true);
+
+    if (keepInSyncTop)
+        keepInSync(true);
 
     return range;
 }
@@ -1073,9 +1091,15 @@ template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::processFreeParameters(std::function<Float_T(Float_T)> func,
                                                          FreeParametersType type)
 {
-    synchronizeToH(false);
+    const bool keepInSyncTop(mKeepInSync);
+
+    if (keepInSyncTop)
+        synchronizeToH(false);
+
     ConvCell::processFreeParameters(func, type);
-    synchronizeToD(true);
+
+    if (keepInSyncTop)
+        synchronizeToD(true);
 }
 
 template <class T>
@@ -1083,18 +1107,30 @@ void N2D2::ConvCell_Frame_CUDA<T>::processFreeParametersPerOutput(std::function<
                                                                   std::size_t output,
                                                                   FreeParametersType type)
 {
-    synchronizeToH(false);
+    const bool keepInSyncTop(mKeepInSync);
+
+    if (keepInSyncTop)
+        synchronizeToH(false);
+
     ConvCell::processFreeParametersPerOutput(func, output, type);
-    synchronizeToD(true);
+
+    if (keepInSyncTop)
+        synchronizeToD(true);
 }
 
 template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::processFreeParametersPerChannel(std::function<Float_T(Float_T)> func,
                                                                   std::size_t channel)
 {
-    synchronizeToH(false);
+    const bool keepInSyncTop(mKeepInSync);
+
+    if (keepInSyncTop)
+        synchronizeToH(false);
+
     ConvCell::processFreeParametersPerChannel(func, channel);
-    synchronizeToD(true);
+
+    if (keepInSyncTop)
+        synchronizeToD(true);
 }
 
 template <class T>
