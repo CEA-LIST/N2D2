@@ -122,6 +122,7 @@ void N2D2::PaddingCell_Frame::backPropagate()
 
 void N2D2::PaddingCell_Frame::update()
 {
+    Cell_Frame<float>::update();
 }
 
 

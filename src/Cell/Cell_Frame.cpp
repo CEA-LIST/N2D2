@@ -264,6 +264,13 @@ void N2D2::Cell_Frame<T>::backPropagate()
 }
 
 template <class T>
+void N2D2::Cell_Frame<T>::update()
+{
+    if (mActivation)
+        mActivation->update(mInputs.dimB());
+}
+
+template <class T>
 void N2D2::Cell_Frame<T>::setOutputTarget(const Tensor<int>& targets)
 {
     if (targets.dimB() != mOutputs.dimB())

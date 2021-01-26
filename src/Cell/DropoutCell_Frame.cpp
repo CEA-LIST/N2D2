@@ -190,6 +190,7 @@ void N2D2::DropoutCell_Frame<T>::backPropagate()
 template <class T>
 void N2D2::DropoutCell_Frame<T>::update()
 {
+    Cell_Frame<T>::update();
 }
 
 template <class T>

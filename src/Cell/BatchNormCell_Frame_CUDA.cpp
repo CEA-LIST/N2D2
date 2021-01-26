@@ -302,6 +302,7 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::update()
 
     if (mDiffBias.isValid())
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
+    Cell_Frame_CUDA<T>::update();
 }
 
 template <class T>

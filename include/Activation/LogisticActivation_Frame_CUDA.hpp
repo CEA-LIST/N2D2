@@ -47,6 +47,7 @@ public:
                                const BaseTensor& output,
                                const BaseTensor& diffInput,
                                BaseTensor& diffOutput);
+    virtual void update(unsigned int batchSize);
     virtual ~LogisticActivation_Frame_CUDA();
 
 protected:
@@ -150,5 +151,13 @@ N2D2::LogisticActivation_Frame_CUDA<T>::~LogisticActivation_Frame_CUDA()
     cudnnDestroyActivationDescriptor(mActivationDesc);
 #endif
 }
-
+template <class T>
+void N2D2::LogisticActivation_Frame_CUDA<T>::update(unsigned int batchSize)
+{
+    /*
+    if(mQuantizer) {
+        mQuantizer->update(batchSize);
+    }
+    */
+}
 #endif // N2D2_LOGISTICACTIVATION_FRAME_CUDA_H

@@ -297,6 +297,7 @@ void N2D2::PoolCell_Frame_CUDA<T>::backPropagate()
 template <class T>
 void N2D2::PoolCell_Frame_CUDA<T>::update()
 {
+    Cell_Frame_CUDA<T>::update();
 }
 
 template <class T>

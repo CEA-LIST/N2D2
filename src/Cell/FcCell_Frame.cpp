@@ -413,6 +413,8 @@ void N2D2::FcCell_Frame<T>::update()
     if(mQuantizer){
         mQuantizer->update();
     }
+
+    Cell_Frame<T>::update();
 }
 
 template <class T>

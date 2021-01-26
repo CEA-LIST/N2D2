@@ -152,7 +152,7 @@ void N2D2::NormalizeCell_Frame_CUDA<T>::backPropagate()
 
 template<class T>
 void N2D2::NormalizeCell_Frame_CUDA<T>::update() {
-    // Nothing to update
+    Cell_Frame_CUDA<T>::update();
 }
 
 template<class T>

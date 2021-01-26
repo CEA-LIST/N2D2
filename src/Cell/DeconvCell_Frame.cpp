@@ -288,6 +288,8 @@ void N2D2::DeconvCell_Frame<T>::update()
 
     if (!mNoBias && mDiffBias.isValid())
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
+        
+    Cell_Frame<T>::update();
 }
 
 template <class T>

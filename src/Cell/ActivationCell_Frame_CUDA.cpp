@@ -106,7 +106,7 @@ void N2D2::ActivationCell_Frame_CUDA<T>::backPropagate()
 template <class T>
 void N2D2::ActivationCell_Frame_CUDA<T>::update()
 {
-
+    mActivation->update(mInputs.dimB());
 }
 
 template <class T>

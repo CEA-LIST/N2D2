@@ -966,6 +966,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::update()
         //if (strcmp(mQuantizer->getType(),"LSQ") == 0) std::cout << getName() << ": ";
         mQuantizer->update();
     }
+    Cell_Frame_CUDA<T>::update();
 }
 
 template <class T>

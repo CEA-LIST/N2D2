@@ -101,7 +101,7 @@ void N2D2::ActivationCell_Frame<T>::backPropagate()
 template <class T>
 void N2D2::ActivationCell_Frame<T>::update()
 {
-    
+    mActivation->update(mInputs.dimB());
 }
 
 template <class T>

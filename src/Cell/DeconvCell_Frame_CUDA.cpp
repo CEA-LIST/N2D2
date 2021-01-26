@@ -558,6 +558,8 @@ void N2D2::DeconvCell_Frame_CUDA<T>::update()
 
     if (!mNoBias && mDiffBias.isValid())
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
+        
+    Cell_Frame_CUDA<T>::update();
 }
 
 template <class T>

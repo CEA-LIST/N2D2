@@ -383,7 +383,7 @@ void N2D2::ObjectDetCell_Frame::backPropagate()
 
 void N2D2::ObjectDetCell_Frame::update()
 {
-    // Nothing to update
+    Cell_Frame<float>::update();
 }
 
 void N2D2::ObjectDetCell_Frame::setOutputsDims()

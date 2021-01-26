@@ -58,6 +58,7 @@ public:
     virtual void backPropagate(const Cell& cell,
                                const BaseTensor& output,
                                BaseTensor& diffInOut);
+    virtual void update(unsigned int batchSize) = 0;
 
     /**
      * Return the possible range of the activation's output as a pair of min-max. 

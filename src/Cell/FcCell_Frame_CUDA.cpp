@@ -462,6 +462,7 @@ void N2D2::FcCell_Frame_CUDA<T>::update()
     if(mQuantizer){
         mQuantizer->update();
     }
+    Cell_Frame_CUDA<T>::update();
 }
 
 template <class T>

@@ -47,6 +47,7 @@ public:
                                const BaseTensor& output,
                                const BaseTensor& diffInput,
                                BaseTensor& diffOutput);
+    virtual void update(unsigned int batchSize);
     virtual ~RectifierActivation_Frame_CUDA();
 
 protected:
@@ -161,5 +162,12 @@ N2D2::RectifierActivation_Frame_CUDA<T>::~RectifierActivation_Frame_CUDA()
     cudnnDestroyActivationDescriptor(mActivationDesc);
 #endif
 }
-
+template <class T>
+void N2D2::RectifierActivation_Frame_CUDA<T>::update(unsigned int batchSize)
+{
+    /*
+    if(mQuantizer) {
+        mQuantizer->update(batchSize);
+    }
+    */}
 #endif // N2D2_RECTIFIERACTIVATION_FRAME_CUDA_H

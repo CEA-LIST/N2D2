@@ -47,6 +47,7 @@ public:
                                const BaseTensor& output,
                                const BaseTensor& diffInput,
                                BaseTensor& diffOutput);
+    virtual void update(unsigned int batchSize);
     virtual ~SoftplusActivation_Frame() {};
 
 private:
@@ -112,4 +113,11 @@ void N2D2::SoftplusActivation_Frame<T>::backPropagate(
     mScaling.backPropagate(cell, diffOutput, diffOutput);
 }
 
+template <class T>
+void N2D2::SoftplusActivation_Frame<T>::update(unsigned int batchSize)
+{
+    if(mQuantizer) {
+        mQuantizer->update(batchSize);
+    }
+}
 #endif // N2D2_SOFTPLUSACTIVATION_FRAME_H

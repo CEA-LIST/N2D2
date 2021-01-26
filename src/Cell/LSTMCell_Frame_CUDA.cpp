@@ -749,6 +749,7 @@ void N2D2::LSTMCell_Frame_CUDA<T>::update(){
 		mhx->synchronizeHToD();
 		mcx->synchronizeHToD();
 	}
+    Cell_Frame_CUDA<T>::update();
 }
 
 template <class T>

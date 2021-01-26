@@ -91,6 +91,7 @@ public:
                               BaseTensor& newDiffOutputs);
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
+    virtual void update();
     virtual void setOutputTarget(const Tensor<int>& targets);
     virtual double applyLoss(double targetVal,
                              double defaultVal);

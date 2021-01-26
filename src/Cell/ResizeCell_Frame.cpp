@@ -249,7 +249,7 @@ void N2D2::ResizeCell_Frame::backPropagateNearestNeighbor() {
 
 void N2D2::ResizeCell_Frame::update()
 {
-    // Nothing to update
+    Cell_Frame<float>::update();
 }
 
 void N2D2::ResizeCell_Frame::checkGradient(double epsilon, double maxError)
