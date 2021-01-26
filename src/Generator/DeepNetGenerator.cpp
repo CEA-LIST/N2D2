@@ -59,6 +59,7 @@
 #include "Cell/LRNCell.hpp"
 #include "Cell/PaddingCell.hpp"
 #include "Cell/PoolCell.hpp"
+#include "Cell/ScalingCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
 #include "Cell/TransformationCell.hpp"
 #include "Generator/BatchNormCellGenerator.hpp"
@@ -2429,23 +2430,38 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                             " Div with first operand constant");
                     }
 
+                    const unsigned int nbOutputs = (cell)
+                        ? cell->getNbOutputs()
+                        : sp->getNbChannels();
+
                     Tensor<Float_T> constant
                         = ONNX_unpackTensor<Float_T>((*itInit).second);
+                    std::shared_ptr<Cell> opCell;
                     std::shared_ptr<Transformation> trans;
 
                     if (constant.size() == 1) {
-                        const RangeAffineTransformation::Operator op
-                            = (node.op_type() == "Sub")
-                                ? RangeAffineTransformation::Minus
-                            : (node.op_type() == "Mul")
-                                ? RangeAffineTransformation::Multiplies
-                            : (node.op_type() == "Div")
-                                ? RangeAffineTransformation::Divides
-                                : RangeAffineTransformation::Plus;
+                        if (node.op_type() == "Mul") {
+                            // Use ScalingCell for Mul
+                            opCell = Registrar<ScalingCell>::create<Float_T>(model)(
+                                *deepNet, 
+                                node.output(0),
+                                nbOutputs,
+                                Scaling::floatingPointScaling(
+                                    std::vector<Float_T>(nbOutputs, 
+                                                         constant(0))));
+                        }
+                        else {
+                            const RangeAffineTransformation::Operator op
+                                = (node.op_type() == "Sub")
+                                    ? RangeAffineTransformation::Minus
+                                : (node.op_type() == "Div")
+                                    ? RangeAffineTransformation::Divides
+                                    : RangeAffineTransformation::Plus;
 
-                        trans = std::make_shared<RangeAffineTransformation>(
-                            op,
-                            std::vector<double>(1, constant(0)));
+                            trans = std::make_shared<RangeAffineTransformation>(
+                                op,
+                                std::vector<double>(1, constant(0)));
+                        }
                     }
                     else {
                         const AffineTransformation::Operator op
@@ -2462,19 +2478,16 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                             (cv::Mat)constant);
                     }
 
-                    const unsigned int nbOuputs = (cell)
-                        ? cell->getNbOutputs()
-                        : sp->getNbChannels();
-
                     std::map<std::string, std::vector<std::string> >
                         ::const_iterator itConcat;
                     std::vector<std::shared_ptr<Cell> > parentCells;
 
-                    std::shared_ptr<TransformationCell> transformationCell
-                        = Registrar<TransformationCell>::create(model)(*deepNet, 
-                                                                        node.output(0),
-                                                                        nbOuputs,
-                                                                        trans);
+                    if (!opCell) {
+                        opCell = Registrar<TransformationCell>::create(model)(*deepNet, 
+                                                                            node.output(0),
+                                                                            nbOutputs,
+                                                                            trans);
+                    }
 
                     if ((itConcat = concat.find(inputData)) != concat.end()) {
                         throw std::runtime_error("Unsupported operation: Concat before "
@@ -2484,16 +2497,16 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         parentCells.push_back(cell);
 
                         if (cell)
-                            transformationCell->addInput(cell.get());
+                            opCell->addInput(cell.get());
                         else {
-                            transformationCell->addInput(*sp, 0, 0,
+                            opCell->addInput(*sp, 0, 0,
                                                 sp->getSizeX(), sp->getSizeY());
                         }
                     }
 
-                    deepNet->addCell(transformationCell, parentCells);
-                    transformationCell->initialize();
-                    cell = transformationCell;
+                    deepNet->addCell(opCell, parentCells);
+                    opCell->initialize();
+                    cell = opCell;
                     continue;
                 }
             }
