@@ -139,6 +139,9 @@ N2D2::Tensor<T> N2D2::DeepNetGenerator::ONNX_unpackTensor(
         }
     }
     else if (onnxTensor->raw_data().size() > 0) {
+        if (tensor.empty())
+            tensor.resize({onnxTensor->raw_data().size() / sizeof(T)});
+
         assert(onnxTensor->raw_data().size() == (int)tensor.size() * sizeof(T));
 
         memcpy(&(tensor.data())[0],
