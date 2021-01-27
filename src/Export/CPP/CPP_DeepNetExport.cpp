@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "DeepNet.hpp"
+#include "DrawNet.hpp"
 #include "StimuliProvider.hpp"
 #include "Cell/ConvCell.hpp"
 #include "Cell/FcCell.hpp"
@@ -83,6 +84,8 @@ void N2D2::CPP_DeepNetExport::generate(DeepNet& deepNet,
 
     MemoryManager memManager = generateMemory(deepNet, wrapAroundBuffer,
                     noBranchConcatOpt, includeInputInBuffer, memoryAlignment);
+
+    DrawNet::drawGraph(deepNet, dirName + "/graph");
 
     memManager.optimize(exportParams.getProperty<MemoryManager::OptimizeStrategy>
         (CPP_Config::MEMORY_MANAGER_STRATEGY,
