@@ -549,13 +549,7 @@ unsigned int N2D2::MemoryManager::getNbPlanes(const std::shared_ptr<Cell>& cell)
 {
     const std::map<std::shared_ptr<Cell>, std::vector<MemoryPlane> >
         ::const_iterator it = mMemPlanes.find(cell);
-
-    if (it == mMemPlanes.end()) {
-        throw std::runtime_error("getSize(): no memory allocated for cell "
-                                 "name " + ((cell) ? cell->getName() : "env"));
-    }
-
-    return (*it).second.size();
+    return (it == mMemPlanes.end()) ? 0 : (*it).second.size();
 }
 
 unsigned int N2D2::MemoryManager::getPeakUsage() const {

@@ -252,20 +252,29 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                         const std::map<std::shared_ptr<Cell>,
                             MemoryManager::MemoryPlane>::iterator itConcat
                                 = noBranchConcats.find((*itParent));
-                        const MemoryManager::MemoryPlane& memPlane
-                            = (itConcat != noBranchConcats.end())
-                                ? (*itConcat).second
-                                : memManager.getPlanes((*itParent)).back();
 
-                        if (isWrappable || !memManager.isWrapAround(
-                                    memPlane.memSpace,
-                                    memPlane.getFinalOffset()
-                                        - memPlane.memSpace->offset,
-                                    fullSize))
+                        // Nb planes may be 0 if the parent cell was not yet 
+                        // processed
+                        // TODO: depending on the processing order of the graph,
+                        // this may lead to sub-optimal memory mapping!
+                        if (itConcat != noBranchConcats.end()
+                            || memManager.getNbPlanes((*itParent)) > 0)
                         {
-                            if (memPlane.getSize() > wrapAroundSize) {
-                                wrapAroundSize = memPlane.getSize();
-                                wrapAroundMemPlane = &memPlane;
+                            const MemoryManager::MemoryPlane& memPlane
+                                = (itConcat != noBranchConcats.end())
+                                    ? (*itConcat).second
+                                    : memManager.getPlanes((*itParent)).back();
+
+                            if (isWrappable || !memManager.isWrapAround(
+                                        memPlane.memSpace,
+                                        memPlane.getFinalOffset()
+                                            - memPlane.memSpace->offset,
+                                        fullSize))
+                            {
+                                if (memPlane.getSize() > wrapAroundSize) {
+                                    wrapAroundSize = memPlane.getSize();
+                                    wrapAroundMemPlane = &memPlane;
+                                }
                             }
                         }
                     }
