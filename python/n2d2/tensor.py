@@ -24,20 +24,21 @@ import N2D2
 class Tensor():
     
     _tensor_generators = {
-        'float': N2D2.Tensor_float,
+        float: N2D2.Tensor_float,
         #'half': N2D2.Tensor_half,
         #'double': N2D2.Tensor_double,
-        'int': N2D2.Tensor_int,
+        int: N2D2.Tensor_int,
+        bool: N2D2.Tensor_bool,
         #'float': N2D2.Cuda_Tensor_float,
         #'half': N2D2.Cuda_Tensor_half,
         #'double': N2D2.Cuda_Tensor_double
     }
     
-    def __init__(self, dims, DefaultModel='', DefaultDataType='float'):
-        self._model_key = DefaultModel + '<' + DefaultDataType + '>'
-        self._tensor = self._tensor_generators[self._model_key](dims)
-        #else:
-        #    raise ValueError("Unrecognized Tensor datatype " + str(dtype))
+    def __init__(self, dims, DefaultDataType=float):
+        if DefaultDataType in self._tensor_generators:
+            self._tensor = self._tensor_generators[DefaultDataType](dims)
+        else:
+           raise TypeError("Unrecognized Tensor datatype " + str(DefaultDataType))
             
     """
     Add basic methods like size based on N2D2::Tensor class
@@ -48,7 +49,56 @@ class Tensor():
         
     def dims(self):
         return self._tensor.dims()
+    
+    def getindex(self, coord):
+        """
+        From the coordinate returns the 1D index of an element in the tensor.
+        :param coord: Tuple of the coordinate
+        :type coord: tuple
+        """
+        dims = self.dims()
+        if len(dims) != len(coord):
+            raise ValueError(str(len(coord)) + "D array does not match " + str(len(dims)) + "D tensor.") 
+        idx = 0
+        for i in reversed(range(len(dims))):
+            if i != 0:
+                idx = dims[i] * (coord[i] + idx)
+            else:
+                idx += coord[i]
+        return idx
         
-    #def __str__(self):
-    #    return self.tensor # For pytorch tensor
+
+    def __setitem__(self, index, value):
+        """
+        Set an element of the tensor.
+        To select the element to modify you can use :
+            - the coordinate of the element;
+            - the index of the flatten tensor;
+            - a slice index of the flatten tensor. 
+        """
+        if isinstance(index, tuple) or isinstance(index, list):
+            self._tensor[self.getindex(index)] = value
+        elif isinstance(index, int) or isinstance(index, float) or isinstance(index, slice):
+            self._tensor[index] = value
+        else:
+            raise TypeError("Unsupported index type :" + str(type(index)))
+
+    def __getitem__(self, index):
+        """
+        Get an element of the tensor.
+        To select the element to get you can use :
+            - the coordinate of the element;
+            - the index of the flatten tensor.
+        """
+        value = None
+        if isinstance(index, tuple) or isinstance(index, list):
+            value = self._tensor[self.getindex(index)]
+        elif isinstance(index, int) or isinstance(index, float):
+            value =self._tensor[index] = value
+        else:
+            raise TypeError("Unsupported index type :" + str(type(index)))
+        return value
+
+    def __str__(self):
+        return str(self._tensor)
     
