@@ -32,7 +32,17 @@ class Cell(N2D2_Interface):
         if 'Name' in config_parameters:
             Name = config_parameters.pop('Name')
         else:
-            Name = ''
+            Name = "cell_" + str(n2d2.global_variables.cell_counter)
+            n2d2.global_variables.cell_counter += 1
+
+        self._inputs = []
+        if 'Inputs' in config_parameters:
+            inputs = config_parameters.pop('Inputs')
+            if isinstance(inputs, list):
+                for cell in inputs:
+                    self._inputs.append(cell)
+            else:
+                self._inputs.append(inputs)
 
         if 'DeepNet' in config_parameters:
             self._deepnet = config_parameters.pop('DeepNet')
@@ -46,16 +56,13 @@ class Cell(N2D2_Interface):
 
         N2D2_Interface.__init__(self, **config_parameters)
 
-        self._blocks = self
-
-        self._inputs = []
-
         self._constructor_arguments.update({
             'Name': Name,
             'NbOutputs': NbOutputs,
         })
 
-        self._initialized = False
+        self._connection_parameters = {}
+
 
     def getName(self):
         return self._Name
@@ -79,26 +86,35 @@ class Cell(N2D2_Interface):
         elif isinstance(inputs, n2d2.deepnet.Sequence):
             self.add_input(inputs.get_last())
         elif isinstance(inputs, n2d2.deepnet.Layer):
-            for cell in inputs.get_last():
+            for cell in inputs.get_elements():
                 self.add_input(cell)
         elif isinstance(inputs, Cell) or isinstance(inputs, n2d2.provider.DataProvider):
             self._inputs.append(inputs)
         else:
             raise TypeError("Cannot add object of type " + str(type(inputs)))
 
+    """
+    Links N2D2 cells tacking into account cell connection parameters
+    """
+    def _link_N2D2_cell(self, cell):
+        self._N2D2_object.addInput(cell.N2D2(), **self._connection_parameters)
+
     def get_inputs(self):
         return self._inputs
 
     def clear_input(self):
         self._inputs = []
+        if self._N2D2_object is not None:
+            self._N2D2_object.clearInputs()
 
     def initialize(self):
+        print(self.get_name())
         self._N2D2_object.clearInputs()
         for cell in self._inputs:
-            self._N2D2_object.addInput(cell.N2D2())
-        #if not self._initialized:
+            self._link_N2D2_cell(cell)
         self._N2D2_object.initialize()
-        self._initialized = True
+        print(self._N2D2_object.getOutputs().dims())
+
 
     def propagate(self, inference=False):
         self._N2D2_object.propagate(inference)
@@ -122,6 +138,8 @@ class Cell(N2D2_Interface):
                     output += ","
                 output += cell.get_name()
             output += "]"
+        else:
+            output += "[Inputs=[]]"
         return output
 
 
@@ -138,7 +156,9 @@ class Cell(N2D2_Interface):
         output += "Type=" + self.get_type() + "\n"
         output += "NbOutputs=" + str(self._constructor_arguments['NbOutputs']) + "\n"
         return output
-   
+
+
+
 
 class Fc(Cell):
 
@@ -171,6 +191,19 @@ class Fc(Cell):
                                                             self._constructor_arguments['Name'],
                                                             self._constructor_arguments['NbOutputs'])
 
+        """Set connection and mapping parameters"""
+        for key in self._config_parameters:
+            if key is 'InputOffsetX':
+                self._connection_parameters['x0'] = self._config_parameters.pop('InputOffsetX')
+            elif key is 'InputOffsetY':
+                self._connection_parameters['y0'] = self._config_parameters.pop('InputOffsetY')
+            elif key is 'InputWidth':
+                self._connection_parameters['width'] = self._config_parameters.pop('InputWidth')
+            elif key is 'InputHeight':
+                self._connection_parameters['height'] = self._config_parameters.pop('InputHeight')
+
+
+
         """Set and initialize here all complex cell members"""
         for key, value in self._config_parameters.items():
             if key is 'ActivationFunction':
@@ -185,6 +218,11 @@ class Fc(Cell):
                 self._N2D2_object.setBiasFiller(value.N2D2())
             else:
                 self._set_N2D2_parameter(key, value)
+
+
+    #def _link_N2D2_cell(self, cell):
+    #    Cell._link_N2D2_cell(self, cell)
+
 
 
 # TODO: This is less powerful as the generator, in the sense that it does not accept several formats for the stride, conv, etc.
@@ -231,6 +269,15 @@ class Conv(Cell):
                                                                      self._constructor_arguments['NbOutputs'],
                                                                      **self._optional_constructor_arguments)
 
+
+        """Set connection and mapping parameters"""
+        for key in self._config_parameters:
+            if key is 'Mapping':
+                self._connection_parameters['mapping'] = self._config_parameters.pop('Mapping')
+
+        # TODO: Add Kernel section of generator
+
+
         """Set and initialize here all complex cell members"""
         for key, value in self._config_parameters.items():
             if key is 'ActivationFunction':
@@ -255,24 +302,24 @@ class ElemWise(Cell):
         'Frame_CUDA': N2D2.ElemWiseCell_Frame_CUDA,
     }
 
+    _operations = {
+        'Sum': N2D2.ElemWiseCell.Operation.Sum,
+        'AbsSum': N2D2.ElemWiseCell.Operation.AbsSum,
+        'EuclideanSum': N2D2.ElemWiseCell.Operation.EuclideanSum,
+        'Prod': N2D2.ElemWiseCell.Operation.Prod,
+        'Max': N2D2.ElemWiseCell.Operation.Max
+    }
+
     def __init__(self, NbOutputs, **config_parameters):
         Cell.__init__(self, NbOutputs=NbOutputs, **config_parameters)
 
         self._parse_optional_arguments(['Operation', 'Weights', 'Shifts'])
-            
-        operation = {
-            "Sum": N2D2.ElemWiseCell.Operation.Sum,
-            "AbsSum": N2D2.ElemWiseCell.Operation.AbsSum,
-            "EuclideanSum": N2D2.ElemWiseCell.Operation.EuclideanSum,
-            "Prod": N2D2.ElemWiseCell.Operation.Prod,
-            "Max": N2D2.ElemWiseCell.Operation.Max
-        }
-        
+
         # I think the best would be to ask for a string and then convert it to the good N2D2 object
-        if self._optional_constructor_arguments['operation'] in operation:
-            self._optional_constructor_arguments['operation'] = operation[self._optional_constructor_arguments['operation']]
+        if self._optional_constructor_arguments['operation'] in self._operations:
+            self._optional_constructor_arguments['operation'] = self._operations[self._optional_constructor_arguments['operation']]
         else:
-            raise n2d2.ParameterNotInListError(self._optional_constructor_arguments['operation'], [key for key in operation])
+            raise n2d2.ParameterNotInListError(self._optional_constructor_arguments['operation'], [key for key in self._operations])
 
         self._N2D2_object = self._cell_constructors[self._Model](self._deepnet.N2D2(),
                                                 self._constructor_arguments['Name'],
@@ -392,13 +439,21 @@ class Pool(Cell):
             raise n2d2.ParameterNotInListError(self._optional_constructor_arguments['pooling'], [key for key in pooling])
 
 
+        """Set connection and mapping parameters"""
+        if 'Mapping' in self._config_parameters:
+            self._connection_parameters['mapping'] = self._config_parameters.pop('Mapping')
+
+
         self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
                                                                      self._constructor_arguments['Name'],
                                                                      self._constructor_arguments['PoolDims'],
                                                                      self._constructor_arguments['NbOutputs'],
                                                                      **self._optional_constructor_arguments)
 
+
         self._set_N2D2_parameters(self._config_parameters)
+
+
 
 
 

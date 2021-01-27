@@ -37,13 +37,13 @@ N2D2.CudaContext.setDevice(3)
 n2d2.global_variables.default_DeepNet = n2d2.deepnet.DeepNet(N2D2.Network(n2d2.global_variables.default_seed), 'Frame_CUDA', n2d2.global_variables.default_DataType)
 
 #model = n2d2.model.fc_layer()
-model = n2d2.model.fc_base_named()
+#model = n2d2.model.fc_base_named()
 
+#print(model)
+
+model = n2d2.model.resnet18()
 print(model)
 
-#resnet = n2d2.model.resnet18()
-#print(resnet)
-#exit()
 
 #print("Create model")
 #model = n2d2.deepnet.Sequential(deepnet, model)
@@ -70,15 +70,13 @@ provider = n2d2.provider.DataProvider(Database=database, Size=[28, 28, 1], Batch
 # v = voidTransform()
 # c = n2d2.transform.CustomTransformation(v)
 
-print(n2d2.transform.PadCrop(Width=28, Height=28))
-print(n2d2.transform.Distortion(ElasticGaussianSize=21, ElasticSigma=6, ElasticScaling=36, Scaling=10))
+#print("Create transformation")
+#trans = n2d2.model.nested_transform()
+#print(trans)
 
-print("Create transformation")
-trans = n2d2.model.nested_transform()
-print(trans)
-
-print("Add transformation")
-provider.add_on_the_fly_transformation(trans)
+#print("Add transformation")
+#provider.add_on_the_fly_transformation(trans)
+provider.add_transformation(n2d2.transform.PadCrop(Width=224, Height=224))
 # provider.add_transformation(trans)
 
 print("Create classifier")
