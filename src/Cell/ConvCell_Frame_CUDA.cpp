@@ -553,17 +553,6 @@ the API cudnnGetConvolutionForwardMaxCount().
         if (!mNoBias) {
             mQuantizer->addBiases(*mBias, mDiffBias);
         }
-        
-        if (!mDiffOutputs.empty()){
-            for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-                mQuantizer->addActivations(mInputs[k], mDiffOutputs[k]);
-            }
-        }
-        else {
-            for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-                mQuantizer->addActivations(mInputs[k]);
-            }
-        }
         mQuantizer->initialize();
     }
 }
@@ -656,11 +645,10 @@ void N2D2::ConvCell_Frame_CUDA<T>::propagate(bool inference)
         std::shared_ptr<CudaDeviceTensor<T> > input;
         std::shared_ptr<CudaDeviceTensor<T> > sharedSynapses;
 
-        // TODO: At the moment the Quantizer works only for float
         if (mQuantizer) {
             mQuantizer->propagate();
-            input = cuda_device_tensor_cast<T>
-                (cuda_tensor_cast<T>(mQuantizer->getQuantizedActivations(k)));
+
+            input = cuda_device_tensor_cast<T>(mInputs[k]);
             sharedSynapses = cuda_device_tensor_cast<T>
                 (cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(k)));
         }
@@ -754,18 +742,15 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
         const typename Cuda::cudnn_scaling_type<T>::type beta
             = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
 
-
-        std::shared_ptr<CudaDeviceTensor<T> > input;
+        std::shared_ptr<CudaDeviceTensor<T> > input
+            = cuda_device_tensor_cast_nocopy<T>(mInputs[k]);
         std::shared_ptr<CudaDeviceTensor<T> > diffSharedSynapses;
 
         if (mQuantizer) {
-            input = cuda_device_tensor_cast_nocopy<T>
-                (cuda_tensor_cast<T>(mQuantizer->getQuantizedActivations(k)));
             diffSharedSynapses = cuda_device_tensor_cast<T>
                 (cuda_tensor_cast<T>(mQuantizer->getDiffQuantizedWeights(k)));
         }
         else {
-            input = cuda_device_tensor_cast_nocopy<T>(mInputs[k]);
             diffSharedSynapses = cuda_device_tensor_cast<T>(mDiffSharedSynapses[k]); 
         }
 
@@ -860,24 +845,19 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
             const typename Cuda::cudnn_scaling_type<T>::type beta
                 = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
 
-            std::shared_ptr<CudaDeviceTensor<T> > diffOutputs;
+
             std::shared_ptr<CudaDeviceTensor<T> > sharedSynapses;
+            std::shared_ptr<CudaDeviceTensor<T> > diffOutputs
+                = (mDiffOutputs[k].isValid())
+                    ? cuda_device_tensor_cast<T>(mDiffOutputs[k])
+                    : cuda_device_tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
             if (mQuantizer) {
                 sharedSynapses = cuda_device_tensor_cast<T>
                     (cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(k)));
-
-                 diffOutputs = (mDiffOutputs[k].isValid())
-                    ? cuda_device_tensor_cast<T>
-                        (cuda_tensor_cast<T>(mQuantizer->getDiffQuantizedActivations(k)))
-                    : cuda_device_tensor_cast_nocopy<T>
-                        (cuda_tensor_cast<T>(mQuantizer->getDiffQuantizedActivations(k)));
             }
             else {
                 sharedSynapses = cuda_device_tensor_cast<T>(mSharedSynapses[k]);
-                diffOutputs = (mDiffOutputs[k].isValid())
-                    ? cuda_device_tensor_cast<T>(mDiffOutputs[k])
-                    : cuda_device_tensor_cast_nocopy<T>(mDiffOutputs[k]);
             }
 
 #if CUDNN_VERSION >= 5000
@@ -909,35 +889,13 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
                 diffOutputs->getDevicePtr()));
 #endif
             mDiffOutputs[k].deviceTensor() = *diffOutputs;
-            //mDiffOutputs[k].setValid();
-        }
-    }
-    // Calculate full precision weights and activation gradients
-    if (mQuantizer && mBackPropagate) {
-        mQuantizer->back_propagate();
-    }
-
-    if (!mDiffOutputs.empty() && mBackPropagate)
-    {
-        std::shared_ptr<CudaDeviceTensor<T> > diffOutputs;
-        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            if (mQuantizer) {
-                 diffOutputs = (mDiffOutputs[k].isValid())
-                    ? cuda_device_tensor_cast<T>
-                        (cuda_tensor_cast<T>(mQuantizer->getDiffQuantizedActivations(k)))
-                    : cuda_device_tensor_cast_nocopy<T>
-                        (cuda_tensor_cast<T>(mQuantizer->getDiffQuantizedActivations(k)));
-            }
-            else {
-                diffOutputs = (mDiffOutputs[k].isValid())
-                    ? cuda_device_tensor_cast<T>(mDiffOutputs[k])
-                    : cuda_device_tensor_cast_nocopy<T>(mDiffOutputs[k]);
-            }
-
-            mDiffOutputs[k].deviceTensor() = *diffOutputs;
             mDiffOutputs[k].setValid();
         }
         mDiffOutputs.synchronizeDToHBased();
+    }
+    // Calculate full precision weights
+    if (mQuantizer && mBackPropagate) {
+        mQuantizer->back_propagate();
     }
 }
 
@@ -963,8 +921,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::update()
         }
     }
     if(mQuantizer){
-        //if (strcmp(mQuantizer->getType(),"LSQ") == 0) std::cout << getName() << ": ";
-        mQuantizer->update();
+        mQuantizer->update((unsigned int)mInputs.dimB());
     }
     Cell_Frame_CUDA<T>::update();
 }

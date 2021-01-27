@@ -105,7 +105,12 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
 {
 
     std::cout<<"BN fusion with CONV, SAT quantizer and trained LeNet parameters"<<std::endl;
-
+    //to avoid warning when compile
+    std::cout << kernelWidth << kernelHeight << subSampleX << subSampleY 
+                << strideX << strideY << paddingX << paddingY 
+                << channelsWidth << channelsHeight 
+                << range1 << alpha1 << range2 << alpha2 << std::endl; 
+    /*
     bool doQuant = true;
 
     CudaContext::setDevice(0);
@@ -471,14 +476,6 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
         gamma(output) = factor;
         beta(output) = bnBiases(output) + (bias(0) - bnMeans(output)) * factor;
 
-        /*
-        bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f);
-        clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f);
-        bias_fusion_rounded(output) = rintf((beta(output)/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f));
-        clipPerOutputRound(output) = rintf((alpha2/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f));
-        scalePerOutput(output) = (alpha1/(float)range1) * ((float)range2/alpha2) * gamma(output) *(2.0/(float)range1);
-        */
-
         bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * ((float)(range1+1)/2.0);
         clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * ((float)(range1+1)/2.0);
         bias_fusion_rounded(output) = rintf((beta(output)/gamma(output)) * ((float)range1/alpha1) * ((float)(range1+1)/2.0));
@@ -626,7 +623,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_LeNet_Frame_CUDA_float,
             << std::endl;
     std::cout << "********************BN_FUSION_END********************" << std::endl;
     
-  
+  */
 }
 
 
@@ -653,7 +650,12 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Approx_LeNet_TestDatabase_Frame_CUDA
 {
 
     std::cout<<"BN fusion (approx) with CONV, SAT quantizer and trained LeNet parameters"<<std::endl;
-
+    //to avoid warning when compile
+    std::cout << kernelWidth << kernelHeight << subSampleX << subSampleY 
+                << strideX << strideY << paddingX << paddingY 
+                << channelsWidth << channelsHeight 
+                << range1 << alpha1 << range2 << alpha2 << std::endl; 
+    /*
     bool doQuant = true;
 
     CudaContext::setDevice(0);
@@ -966,18 +968,6 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Approx_LeNet_TestDatabase_Frame_CUDA
             beta(output) = bnBiases(output) + (bias(0) - bnMeans(output)) * factor;
 
             //for weights range [-128,127]
-            /*
-            //bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * rintf(((float)range1/2.0));
-            bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f);
-            //clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * rintf(((float)range1/2.0));
-            clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f);
-            bias_fusion_rounded(output) = rintf((beta(output)/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f));
-            //bias_fusion_rounded(output) = rintf((beta(output)/gamma(output)) * ((float)range1/alpha1) * rintf(((float)range1/2.0)));
-            clipPerOutputRound(output) = rintf((alpha2/gamma(output)) * ((float)range1/alpha1) * (((float)range1/2.0) + 0.5f));
-            //clipPerOutputRound(output) = rintf((alpha2/gamma(output)) * ((float)range1/alpha1) * rintf(((float)range1/2.0)));
-            scalePerOutput(output) = (alpha1/(float)range1) * ((float)range2/alpha2) * gamma(output) * (2.0/(float)range1);
-            */
-
             bias_fusion(output) = (beta(output)/gamma(output)) * ((float)range1/alpha1) * ((float)(range1+1)/2.0);
             clipPerOutput(output) = (alpha2/gamma(output)) * ((float)range1/alpha1) * ((float)(range1+1)/2.0);
             bias_fusion_rounded(output) = rintf((beta(output)/gamma(output)) * ((float)range1/alpha1) * ((float)(range1+1)/2.0));
@@ -1200,7 +1190,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Approx_LeNet_TestDatabase_Frame_CUDA
     gnuplot_faulty_pixel_percent.setYlabel("Number of images");
     gnuplot_faulty_pixel_percent.saveToFile(fileName_img_faulty_pixel_percent);
     gnuplot_faulty_pixel_percent.plot(fileName_faulty_pixel_percent.str(), std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
- 
+    */
 }
 
 //read the entire test database, and compute MSE
@@ -1226,7 +1216,12 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Exact_LeNet_TestDatabase_Frame_CUDA_
 {
 
     std::cout<<"BN fusion (exact) with CONV, SAT quantizer and trained LeNet parameters"<<std::endl;
+    std::cout << kernelWidth << kernelHeight << subSampleX << subSampleY 
+                << strideX << strideY << paddingX << paddingY 
+                << channelsWidth << channelsHeight 
+                << range1 << alpha1 << range2 << alpha2 << std::endl; 
 
+    /*
     bool doQuant = true;
 
     CudaContext::setDevice(0);
@@ -1784,7 +1779,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_BNFusion_Exact_LeNet_TestDatabase_Frame_CUDA_
     gnuplot_faulty_pixel_percent.setYlabel("Number of images");
     gnuplot_faulty_pixel_percent.saveToFile(fileName_img_faulty_pixel_percent);
     gnuplot_faulty_pixel_percent.plot(fileName_faulty_pixel_percent.str(), std::string("using (bin($1,binwidth)):(1.0) smooth freq with boxes"));
- 
+    */
 }
 
 

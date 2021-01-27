@@ -312,7 +312,7 @@ void N2D2::ConvCellGenerator::generateParams(const std::shared_ptr<ConvCell>& ce
         cell->setWeightsSolver(weightsSolver);
     }
 
-    std::shared_ptr<Quantizer> quantizer = QuantizerGenerator::generate(iniConfig,
+    std::shared_ptr<QuantizerCell> quantizer = QuantizerCellGenerator::generate(iniConfig,
                                                                         section,
                                                                         model,
                                                                         dataType, 

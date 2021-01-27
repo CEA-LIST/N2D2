@@ -190,17 +190,6 @@ void N2D2::ConvCell_Frame<T>::initialize()
         if (!mNoBias) {
             mQuantizer->addBiases(*mBias, mDiffBias);
         }
-        
-        if (!mDiffOutputs.empty()){
-            for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-                mQuantizer->addActivations(mInputs[k], mDiffOutputs[k]);
-            }
-        }
-        else {
-            for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-                mQuantizer->addActivations(mInputs[k]);
-            }
-        }
         mQuantizer->initialize();
     }
 }
@@ -255,9 +244,8 @@ void N2D2::ConvCell_Frame<T>::propagate(bool inference)
         if (k > 0)
             beta = 1.0;
 
-        const Tensor<T>& input 
-            = mQuantizer ? (tensor_cast<T>(mQuantizer->getQuantizedActivations(k)))
-                        : tensor_cast<T>(mInputs[k]);
+        const Tensor<T>& input = tensor_cast<T>(mInputs[k]);
+
         const Tensor<T>& sharedSynapses 
             = mQuantizer ? (tensor_cast<T>(mQuantizer->getQuantizedWeights(k))) 
                         : tensor_cast<T>(mSharedSynapses[k]);
@@ -280,6 +268,7 @@ void N2D2::ConvCell_Frame<T>::propagate(bool inference)
                         : tensor_cast<T>(*mBias);
         ConvCell_Frame_Kernels::forwardBias<T>(&alpha, biases, &alpha, mOutputs);
     }
+
     Cell_Frame<T>::propagate(inference);
     mDiffInputs.clearValid();
     mDiffSharedSynapses.clearValid();
@@ -302,11 +291,8 @@ void N2D2::ConvCell_Frame<T>::backPropagate()
         const T beta = (mWeightsSolvers[k]->isNewIteration())
             ? T(0.0) : T(1.0);
 
-        //const Tensor<T>& input = tensor_cast_nocopy<T>(mInputs[k]);
+        const Tensor<T>& input = tensor_cast_nocopy<T>(mInputs[k]);
 
-        const Tensor<T>& input 
-            = mQuantizer ? tensor_cast_nocopy<T>(mQuantizer->getQuantizedActivations(k))
-                        : tensor_cast_nocopy<T>(mInputs[k]);
         Tensor<T> diffSharedSynapses 
             = mQuantizer ? tensor_cast<T>(mQuantizer->getDiffQuantizedWeights(k))
                         : tensor_cast<T>(mDiffSharedSynapses[k]);
@@ -342,16 +328,13 @@ void N2D2::ConvCell_Frame<T>::backPropagate()
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
             const T beta = (mDiffOutputs[k].isValid()) ? T(1.0) : T(0.0);
 
-        const Tensor<T>& sharedSynapses 
+            const Tensor<T>& sharedSynapses 
             = mQuantizer ? tensor_cast<T>(mQuantizer->getQuantizedWeights(k))
                         : tensor_cast<T>(mSharedSynapses[k]);
 
-        Tensor<T> diffOutput 
-            = mQuantizer ? (mDiffOutputs[k].isValid() ? 
-                tensor_cast<T>(mQuantizer->getDiffQuantizedActivations(k))
-                : tensor_cast_nocopy<T>(mQuantizer->getDiffQuantizedActivations(k))) :
-                (mDiffOutputs[k].isValid() ? 
-                    tensor_cast<T>(mDiffOutputs[k]) : tensor_cast_nocopy<T>(mDiffOutputs[k]));
+            Tensor<T> diffOutput = (mDiffOutputs[k].isValid())
+                    ? tensor_cast<T>(mDiffOutputs[k])
+                    : tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
             ConvCell_Frame_Kernels::backwardData<T>(&alpha,
                                                  sharedSynapses,
@@ -364,29 +347,14 @@ void N2D2::ConvCell_Frame<T>::backPropagate()
 
             offset += mInputs[k].dimZ();
             mDiffOutputs[k] = diffOutput;
+            mDiffOutputs[k].setValid();
         }
+        mDiffOutputs.synchronizeHToD();
     }
 
     // Calculate full precision weights and activation gradients
     if (mQuantizer && mBackPropagate) {
         mQuantizer->back_propagate();
-    }
-
-    if (!mDiffOutputs.empty() && mBackPropagate)
-    {
-        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            const Tensor<T>& diffOutput 
-                = mQuantizer ? (mDiffOutputs[k].isValid() ? 
-                    tensor_cast<T>(mQuantizer->getDiffQuantizedActivations(k))
-                    : tensor_cast_nocopy<T>(mQuantizer->getDiffQuantizedActivations(k))) :
-                    (mDiffOutputs[k].isValid() ? 
-                        tensor_cast<T>(mDiffOutputs[k]) : tensor_cast_nocopy<T>(mDiffOutputs[k]));
-
-            mDiffOutputs[k] = diffOutput;
-            mDiffOutputs[k].setValid();
-        }
-
-        mDiffOutputs.synchronizeHToD();
     }
 }
 
@@ -413,7 +381,7 @@ void N2D2::ConvCell_Frame<T>::update()
     }
 
     if(mQuantizer){
-        mQuantizer->update();
+        mQuantizer->update((unsigned int)mInputs.dimB());
     }
     Cell_Frame<T>::update();
 }

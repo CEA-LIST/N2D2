@@ -21,7 +21,7 @@ template <class T>
 class QuantizerCell_Frame_CUDA: virtual public QuantizerCell {
 public:
     virtual void initialize(){};
-    virtual void update(){};
+    virtual void update(unsigned int /*batchSize = 1*/){};
     virtual void propagate() = 0;
     virtual void back_propagate() = 0;
 

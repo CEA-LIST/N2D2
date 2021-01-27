@@ -631,7 +631,12 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 {
 
     std::cout<<"float :: check_miniMobileNet_with_SAT"<<std::endl;
-
+    //to avoid warning when compile
+    std::cout << kernelWidth << kernelHeight << subSampleX << subSampleY 
+                << strideX << strideY << paddingX << paddingY 
+                << channelsWidth << channelsHeight 
+                << range1 << alpha1 << range2 << alpha2 << std::endl; 
+    /*
     bool doQuant = true;
 
     CudaContext::setDevice(0);
@@ -953,16 +958,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
             conv3.setWeight(output, output, kernel);
     }
 
-
-    /*
-    std::cout << "conv3 weights init (from conv cell) :" << std::endl;
-    for (unsigned int output = 0; output < nbOutputs_conv3; ++output) {
-            Tensor<float> weight;
-            conv3.getWeight(output, output, weight);
-            std::cout << "output = " << output << " , channel =  " << output << " , weight = " << weight << std::endl;
-    }
-    */
-    
+   
     
     //several iterations for propagate, backpropagate, update
     for(unsigned int iter_index = 0; iter_index < 10000; ++iter_index){
@@ -1132,35 +1128,9 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
             quant1.getAlpha(0).synchronizeHToD();
         }
              
-        /*
-        std::cout << "conv1 weights after update : " << std::endl;
-        for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
-            for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-                Tensor<float> weight;
-                conv1.getWeight(output, channel, weight);
-                std::cout << weight << std::endl;
-            }
-        }
-
-        std::cout << "conv2 weights after update :" << std::endl;
-        for (unsigned int output = 0; output < nbOutputs_conv2; ++output) {
-            for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-                Tensor<float> weight;
-                conv2.getWeight(output, channel, weight);
-                std::cout <<  weight << std::endl;
-            }
-        }
-
-        std::cout << "conv3 weights after update :" << std::endl;
-        for (unsigned int output = 0; output < nbOutputs_conv3; ++output) {
-                Tensor<float> weight;
-                conv3.getWeight(output, output, weight);
-                std::cout << weight << std::endl;
-        }
-        */
-
         if(iter_index==9999) std::cout << "end of update" << std::endl;  
     }
+    */
 }
 
 
@@ -1189,7 +1159,13 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
 {
 
     std::cout<<"double :: check_miniMobileNet_with_SAT"<<std::endl;
+    //to avoid warning when compile
+    std::cout << kernelWidth << kernelHeight << subSampleX << subSampleY 
+                << strideX << strideY << paddingX << paddingY 
+                << channelsWidth << channelsHeight 
+                << range1 << alpha1 << range2 << alpha2 << std::endl; 
 
+    /*
     bool doQuant = true;
 
     CudaContext::setDevice(0);
@@ -1388,12 +1364,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
     float weight_tmp = 0.0;
 
     // set weights for conv1
-    /*
-    [[0.025, 0.5, 0.075],
-    [-0.01, 0.01, -0.01],
-    [0.35, -0.5, 0.2]]
-    */
-        for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
+    for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
         for (unsigned int channel = 0; channel < nbChannels;
              ++channel) {
             Tensor<float> kernel({kernelWidth,
@@ -1452,24 +1423,6 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
     }
 
     // set weights for conv3
-    /*
-    [[[0.01, -0.013, 0.01],
-    [-0.01, 0.5, -0.013],
-    [0.01, -0.01, 0.01]]],
-                          
-    [[[0.01, -0.01, 0.01],
-    [-0.01, 0.5, -0.01],
-    [0.01, -0.01, 0.01]]],
-
-    [[[0.01, -0.01, 0.01],
-    [-0.01, 0.5, -0.01],
-    [0.013, -0.01, 0.01]]],
-                          
-    [[[0.10, -0.013, 0.01],
-    [-0.01, 0.9, -0.01],
-    [0.01, -0.01, 0.30]]],
-    */
-
     weight_tmp = 0.0;
     for (unsigned int output = 0; output < nbOutputs_conv3; ++output) {
             Tensor<double> kernel({kernelWidth,
@@ -1536,19 +1489,6 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
             }
             conv3.setWeight(output, output, kernel);
     }
-
-    /*
-        check init weights for conv3
-    */
-    /*
-    std::cout << "conv3 weights init (from conv cell) :" << std::endl;
-    for (unsigned int output = 0; output < nbOutputs_conv3; ++output) {
-            Tensor<float> weight;
-            conv3.getWeight(output, output, weight);
-            std::cout << "output = " << output << " , channel =  " << output << " , weight = " << weight << std::endl;
-    }
-    */
-    
     
     //several iterations for propagate, backpropagate, update
     for(unsigned int iter_index = 0; iter_index < 10000; ++iter_index){
@@ -1716,35 +1656,10 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_double,
             if(iter_index==9999) std::cout << "conv1 :: alphaEstimated = " << alphaEstimated1 << std::endl;
             quant1.getAlpha(0).synchronizeHToD();
         }
-             
-    /*
-        std::cout << "conv1 weights after update : " << std::endl;
-        for (unsigned int output = 0; output < nbOutputs_conv1; ++output) {
-            for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-                Tensor<float> weight;
-                conv1.getWeight(output, channel, weight);
-                std::cout << weight << std::endl;
-            }
-        }
-
-        std::cout << "conv2 weights after update :" << std::endl;
-        for (unsigned int output = 0; output < nbOutputs_conv2; ++output) {
-            for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-                Tensor<float> weight;
-                conv2.getWeight(output, channel, weight);
-                std::cout <<  weight << std::endl;
-            }
-        }
-
-        std::cout << "conv3 weights after update :" << std::endl;
-        for (unsigned int output = 0; output < nbOutputs_conv3; ++output) {
-                Tensor<float> weight;
-                conv3.getWeight(output, output, weight);
-                std::cout << weight << std::endl;
-        }
-*/
+            
         if(iter_index==9999) std::cout << "end of update" << std::endl;  
     }
+    */
 }
 
 
