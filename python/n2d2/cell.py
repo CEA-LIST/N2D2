@@ -108,13 +108,10 @@ class Cell(N2D2_Interface):
             self._N2D2_object.clearInputs()
 
     def initialize(self):
-        print(self.get_name())
         self._N2D2_object.clearInputs()
         for cell in self._inputs:
             self._link_N2D2_cell(cell)
         self._N2D2_object.initialize()
-        print(self._N2D2_object.getOutputs().dims())
-
 
     def propagate(self, inference=False):
         self._N2D2_object.propagate(inference)
@@ -129,7 +126,7 @@ class Cell(N2D2_Interface):
         return self._N2D2_object.getName()
 
     def __str__(self):
-        output = self.get_type()+"Cell(" + self._model_key + ")"
+        output = self.get_type()+"(" + self._model_key + ")"
         output += N2D2_Interface.__str__(self)
         if len(self.get_inputs()) > 0:
             output += "[Inputs="
@@ -220,8 +217,17 @@ class Fc(Cell):
                 self._set_N2D2_parameter(key, value)
 
 
-    #def _link_N2D2_cell(self, cell):
-    #    Cell._link_N2D2_cell(self, cell)
+    def set_weights_solver(self, solver):
+        if 'WeightsSolver' in self._config_parameters:
+            print("Note: Replacing existing solver in cell: " + self.get_name())
+        self._config_parameters['WeightsSolver'] = solver
+        self._N2D2_object.setWeightsSolver(self._config_parameters['WeightsSolver'].N2D2())
+
+    def set_bias_solver(self, solver):
+        if 'BiasSolver' in self._config_parameters:
+            print("Note: Replacing existing solver in cell: " + self.get_name())
+        self._config_parameters['BiasSolver'] = solver
+        self._N2D2_object.setWeightsSolver(self._config_parameters['BiasSolver'].N2D2())
 
 
 
@@ -294,6 +300,36 @@ class Conv(Cell):
                 self._set_N2D2_parameter(key, value)
 
 
+    def set_weights_solver(self, solver):
+        if 'WeightsSolver' in self._config_parameters:
+            print("Note: Replacing existing solver in cell: " + self.get_name())
+        self._config_parameters['WeightsSolver'] = solver
+        self._N2D2_object.setWeightsSolver(self._config_parameters['WeightsSolver'].N2D2())
+
+    def set_bias_solver(self, solver):
+        if 'BiasSolver' in self._config_parameters:
+            print("Note: Replacing existing solver in cell: " + self.get_name())
+        self._config_parameters['BiasSolver'] = solver
+        self._N2D2_object.setWeightsSolver(self._config_parameters['BiasSolver'].N2D2())
+
+
+class Conv2D(Conv):
+    def __init__(self,
+                 NbOutputs,
+                 KernelDims,
+                 **config_parameters):
+
+        # TODO: Mapping object?
+        mapping = N2D2.Tensor_bool(dims=[NbOutputs, NbOutputs])
+        for i in range(NbOutputs):
+            mapping[i + i * NbOutputs] = True
+        if 'Mapping' in config_parameters:
+            raise RuntimeError('Conv2D does not support custom mappings')
+        else:
+            config_parameters['Mapping'] = mapping
+
+        Conv.__init__(self, NbOutputs, KernelDims, **config_parameters)
+
 
 class ElemWise(Cell):
 
@@ -302,24 +338,13 @@ class ElemWise(Cell):
         'Frame_CUDA': N2D2.ElemWiseCell_Frame_CUDA,
     }
 
-    _operations = {
-        'Sum': N2D2.ElemWiseCell.Operation.Sum,
-        'AbsSum': N2D2.ElemWiseCell.Operation.AbsSum,
-        'EuclideanSum': N2D2.ElemWiseCell.Operation.EuclideanSum,
-        'Prod': N2D2.ElemWiseCell.Operation.Prod,
-        'Max': N2D2.ElemWiseCell.Operation.Max
-    }
-
     def __init__(self, NbOutputs, **config_parameters):
         Cell.__init__(self, NbOutputs=NbOutputs, **config_parameters)
 
         self._parse_optional_arguments(['Operation', 'Weights', 'Shifts'])
 
-        # I think the best would be to ask for a string and then convert it to the good N2D2 object
-        if self._optional_constructor_arguments['operation'] in self._operations:
-            self._optional_constructor_arguments['operation'] = self._operations[self._optional_constructor_arguments['operation']]
-        else:
-            raise n2d2.ParameterNotInListError(self._optional_constructor_arguments['operation'], [key for key in self._operations])
+        self._optional_constructor_arguments['operation'] = \
+            N2D2.ElemWiseCell.Operation.__members__[self._optional_constructor_arguments['operation']]
 
         self._N2D2_object = self._cell_constructors[self._Model](self._deepnet.N2D2(),
                                                 self._constructor_arguments['Name'],
@@ -354,6 +379,7 @@ class Softmax(Cell):
                                                                      **self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 
+
 class Dropout(Cell):
     _cell_constructors = {
         'Frame<float>': N2D2.DropoutCell_Frame_float,
@@ -371,6 +397,7 @@ class Dropout(Cell):
                                                         **self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 
+
 class Padding(Cell):
 
     _cell_constructors = {
@@ -379,19 +406,19 @@ class Padding(Cell):
     }
 
     def __init__(self,
-                 nbOutputs,
-                 topPad,
-                 botPad,
-                 leftPad,
-                 rightPad,
+                 NbOutputs,
+                 TopPad,
+                 BotPad,
+                 LeftPad,
+                 RightPad,
                  **config_parameters):
-        Cell.__init__(self, nbOutputs, **config_parameters)
+        Cell.__init__(self, NbOutputs, **config_parameters)
 
         self._constructor_arguments.update({
-                 "TopPad": topPad,
-                 "BotPad": botPad,
-                 "LeftPad": leftPad,
-                 "RightPad": rightPad
+                 "TopPad": TopPad,
+                 "BotPad": BotPad,
+                 "LeftPad": LeftPad,
+                 "RightPad": RightPad
         })
 
         self._parse_optional_arguments([])
@@ -424,19 +451,13 @@ class Pool(Cell):
         self._constructor_arguments.update({
             'PoolDims': PoolDims,
         })
-        pooling = {
-            "Average": N2D2.PoolCell.Pooling.Average,
-            "Max": N2D2.PoolCell.Pooling.Max
-        }
+
 
         # Note: Removed Pooling
         self._parse_optional_arguments(['StrideDims', 'PaddingDims', 'Pooling'])
 
-        # I think the best would be to ask for a string and then convert it to the good N2D2 object rather than creatin 
-        if self._optional_constructor_arguments['pooling'] in pooling:
-            self._optional_constructor_arguments['pooling'] = pooling[self._optional_constructor_arguments['pooling']]
-        else:
-            raise n2d2.ParameterNotInListError(self._optional_constructor_arguments['pooling'], [key for key in pooling])
+        self._optional_constructor_arguments['pooling'] = \
+            N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
 
 
         """Set connection and mapping parameters"""
@@ -453,6 +474,23 @@ class Pool(Cell):
 
         self._set_N2D2_parameters(self._config_parameters)
 
+
+class Pool2D(Pool):
+    def __init__(self,
+                 NbOutputs,
+                 PoolDims,
+                 **config_parameters):
+
+        # TODO: Mapping object?
+        mapping = N2D2.Tensor_bool(dims=[NbOutputs, NbOutputs])
+        for i in range(NbOutputs):
+            mapping[i + i * NbOutputs] = True
+        if 'Mapping' in config_parameters:
+            raise RuntimeError('Pool2D does not support custom mappings')
+        else:
+            config_parameters['Mapping'] = mapping
+
+        Pool.__init__(self, NbOutputs, PoolDims, **config_parameters)
 
 
 

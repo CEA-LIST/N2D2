@@ -285,8 +285,9 @@ public:
         //mPyType = getPyType();
     }
 
+    // Default is string (notably most complex arguments, like class specific enums)
     virtual std::string getPyType() {
-        return std::string("other");
+        return std::string("string");
     }
 
 

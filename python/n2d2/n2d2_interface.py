@@ -23,10 +23,12 @@ import N2D2
 import n2d2
 
 
+
 class N2D2_Interface:
 
     _default_Model = 'Frame'
     _default_DataType = 'float'
+
 
     def __init__(self, **config_parameters):
 
@@ -40,6 +42,7 @@ class N2D2_Interface:
         """
         self._config_parameters = config_parameters
         self._N2D2_object = None
+
 
     def N2D2(self):
         """
@@ -104,13 +107,14 @@ class N2D2_Interface:
             output += "("
         for idx, (key, value) in enumerate(self._constructor_arguments.items()):
             output += key + "=" + str(value) + add_delimiter(not idx == constructor_arg_len-1, ",")
-        output += add_delimiter(opt_constructor_arg_len>0, ",")
+        output += add_delimiter(opt_constructor_arg_len > 0 and constructor_arg_len > 0, ",")
         for idx, (key, value) in enumerate(self._optional_constructor_arguments.items()):
             output += self._constructor_to_parameter_convention(key) + "=" + str(value) + \
                       add_delimiter(not idx == opt_constructor_arg_len-1, ",")
-        output += add_delimiter(config_param_len > 0, " |")
-        for idx, (key, value) in enumerate(self._config_parameters.items()):
-            output += key + "=" + str(value) + add_delimiter(not idx == config_param_len-1, ",")
+        if n2d2.global_variables.verbosity == n2d2.global_variables.Verbosity.detailed:
+            output += add_delimiter(config_param_len > 0 and (constructor_arg_len > 0 or opt_constructor_arg_len > 0), " |")
+            for idx, (key, value) in enumerate(self._config_parameters.items()):
+                output += key + "=" + str(value) + add_delimiter(not idx == config_param_len-1, ",")
         if constructor_arg_len + opt_constructor_arg_len + config_param_len > 0:
             output += ")"
         return output
