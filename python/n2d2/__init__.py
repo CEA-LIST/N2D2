@@ -34,6 +34,7 @@ import n2d2.model
 import n2d2.application
 import n2d2.global_variables
 import n2d2.converter
+import n2d2.mapping
 """
 Packages that exist, but should not be used directly in API
 """
