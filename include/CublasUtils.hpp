@@ -53,6 +53,15 @@ cublasStatus_t cublasGemm(cublasHandle_t handle,
                            const T *beta,
                            T *C, int ldc);
 
+template <class T>
+cublasStatus_t cublasGemv(cublasHandle_t handle, cublasOperation_t trans,
+                                 int m, int n,
+                                 const T          *alpha,
+                                 const T          *A, int lda,
+                                 const T          *x, int incx,
+                                 const T          *beta,
+                                 T          *y, int incy);
+
 }
 
 #endif // N2D2_CUBLAS_UTILS_H

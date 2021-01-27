@@ -143,6 +143,8 @@ void N2D2::FcCell_Frame_CUDA<T>::load(const std::string& dirName)
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::propagate(bool inference)
 {
+    mInputs.synchronizeHBasedToD();
+
     if (mNormalize) {
         mSynapsesNorm.deviceTensor().fill(T(0.0f));
 
@@ -167,8 +169,6 @@ void N2D2::FcCell_Frame_CUDA<T>::propagate(bool inference)
                                 mOutputs.dimZ());
         }
     }
-
-    mInputs.synchronizeHBasedToD();
 
     const T alpha(1.0f);
     T beta(0.0f);
@@ -221,6 +221,8 @@ void N2D2::FcCell_Frame_CUDA<T>::propagate(bool inference)
 
     Cell_Frame_CUDA<T>::propagate(inference);
     mDiffInputs.clearValid();
+    mDiffSynapses.clearValid();
+    mDiffBias.clearValid();
 }
 
 template <class T>
@@ -238,8 +240,7 @@ void N2D2::FcCell_Frame_CUDA<T>::backPropagate()
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         const unsigned int inputSize = mInputs[k].dimX() * mInputs[k].dimY()
                                        * mInputs[k].dimZ();
-        const T beta((mWeightsSolvers[k]->isNewIteration())
-                                    ? 0.0f : 1.0f);
+        const T beta((mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f);
 
         std::shared_ptr<CudaDeviceTensor<T> > input
             = cuda_device_tensor_cast_nocopy<T>(mInputs[k]);
@@ -266,17 +267,13 @@ void N2D2::FcCell_Frame_CUDA<T>::backPropagate()
     }
 
     if (!mNoBias) {
-        const T beta((mBiasSolver->isNewIteration())
-                                    ? 0.0f : 1.0f);
+        const T beta((mBiasSolver->isNewIteration()) ? 0.0f : 1.0f);
 
         // mDiffBias.getDevicePtr() = mDiffInputs.getDevicePtr * mOnesVector
-        // Using cublasGemm() because there is no cublasHgemv() yet
-        CHECK_CUBLAS_STATUS(cublasGemm(
+        CHECK_CUBLAS_STATUS(cublasGemv(
             CudaContext::cublasHandle(),
             CUBLAS_OP_N,
-            CUBLAS_OP_N,
             mOutputs.dimZ(),
-            1,
             mInputs.dimB(),
             reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(&alpha),
             reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(mDiffInputs.getDevicePtr()),
@@ -292,8 +289,7 @@ void N2D2::FcCell_Frame_CUDA<T>::backPropagate()
 
     if (!mDiffOutputs.empty() && mBackPropagate) {
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            const T betaData((mDiffOutputs[k].isValid())
-                                            ? 1.0f : 0.0f);
+            const T betaData((mDiffOutputs[k].isValid()) ? 1.0f : 0.0f);
             const unsigned int diffOutputSize = mDiffOutputs[k].dimX()
                                                 * mDiffOutputs[k].dimY()
                                                 * mDiffOutputs[k].dimZ();
