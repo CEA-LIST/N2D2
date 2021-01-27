@@ -31,6 +31,7 @@
 #include "Cell/ElemWiseCell.hpp"
 #include "Cell/ScalingCell.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
+#include "Target/TargetScore.hpp"
 #include "Export/CellExport.hpp"
 #include "Export/DeepNetExport.hpp"
 #include "Export/CPP/CPP_DeepNetExport.hpp"
@@ -806,41 +807,60 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
     }
 
     // Handle network output in functionCalls
-    const auto lastCell = deepNet.getCell(layers.back().back());
-    const std::string lastCellIdentifier = N2D2::Utils::CIdentifier(lastCell->getName());
-    const std::string lastCellPrefix = N2D2::Utils::upperCase(lastCellIdentifier);
+    const std::vector<std::shared_ptr<Target> > outputTargets
+                                                    =  deepNet.getTargets();
+    const unsigned int nbTarget = outputTargets.size();
 
-    functionCalls << "    maxPropagate<"
-                << lastCellPrefix << "_NB_OUTPUTS, "
-                << lastCellPrefix << "_OUTPUTS_HEIGHT, " 
-                << lastCellPrefix << "_OUTPUTS_WIDTH, "
-                << lastCellPrefix << "_MEM_CONT_OFFSET, "
-                << lastCellPrefix << "_MEM_CONT_SIZE, "
-                << lastCellPrefix << "_MEM_WRAP_OFFSET, "
-                << lastCellPrefix << "_MEM_WRAP_SIZE, "
-                << lastCellPrefix << "_MEM_STRIDE"
-            << ">("
-                << lastCellIdentifier << "_output, "
-                << "outputs"
-            << ");\n\n";
+    for (unsigned int targetIdx = 0; targetIdx < nbTarget; ++targetIdx) {
+        const std::shared_ptr<Cell> targetCell = deepNet.getTargetCell(targetIdx);
+        const std::string targetCellIdentifier = N2D2::Utils::CIdentifier(targetCell->getName());
+        const std::string targetCellPrefix = N2D2::Utils::upperCase(targetCellIdentifier);
 
-    functionCalls << "#ifdef SAVE_OUTPUTS\n"
-                << "    FILE* max_stream = fopen(\"max_output.txt\", \"w\");\n"
-                << "    saveOutputs("
-                << lastCellPrefix << "_NB_OUTPUTS, "
-                << lastCellPrefix << "_OUTPUTS_HEIGHT, " 
-                << lastCellPrefix << "_OUTPUTS_WIDTH, "
-                << lastCellPrefix << "_MEM_CONT_OFFSET, "
-                << lastCellPrefix << "_MEM_CONT_SIZE, "
-                << lastCellPrefix << "_MEM_WRAP_OFFSET, "
-                << lastCellPrefix << "_MEM_WRAP_SIZE, "
-                << lastCellPrefix << "_MEM_STRIDE, "
-                << "outputs, "
-                << "max_stream, "
-                << "Network::Format::CHW"
-                << ");\n"
-                << "    fclose(max_stream);\n"
-                << "#endif\n";
+        if (!outputTargets[targetIdx]->getParameter<bool>("DataAsTarget")) {
+            functionCalls << "    maxPropagate<"
+                        << targetCellPrefix << "_NB_OUTPUTS, "
+                        << targetCellPrefix << "_OUTPUTS_HEIGHT, " 
+                        << targetCellPrefix << "_OUTPUTS_WIDTH, "
+                        << targetCellPrefix << "_MEM_CONT_OFFSET, "
+                        << targetCellPrefix << "_MEM_CONT_SIZE, "
+                        << targetCellPrefix << "_MEM_WRAP_OFFSET, "
+                        << targetCellPrefix << "_MEM_WRAP_SIZE, "
+                        << targetCellPrefix << "_MEM_STRIDE"
+                    << ">("
+                        << targetCellIdentifier << "_output, "
+                        << "outputs"
+                    << ");\n\n";
+
+            functionCalls << "#ifdef SAVE_OUTPUTS\n"
+                        << "    FILE* max_stream = fopen(\"max_output.txt\", \"w\");\n"
+                        << "    saveOutputs("
+                        << targetCellPrefix << "_NB_OUTPUTS, "
+                        << targetCellPrefix << "_OUTPUTS_HEIGHT, " 
+                        << targetCellPrefix << "_OUTPUTS_WIDTH, "
+                        << targetCellPrefix << "_MEM_CONT_OFFSET, "
+                        << targetCellPrefix << "_MEM_CONT_SIZE, "
+                        << targetCellPrefix << "_MEM_WRAP_OFFSET, "
+                        << targetCellPrefix << "_MEM_WRAP_SIZE, "
+                        << targetCellPrefix << "_MEM_STRIDE, "
+                        << "outputs, "
+                        << "max_stream, "
+                        << "Network::Format::CHW"
+                        << ");\n"
+                        << "    fclose(max_stream);\n"
+                        << "#endif\n";
+        }
+        else {
+            std::string dataType = DeepNetExport::isCellOutputUnsigned(*targetCell)
+                ? "UDATA_T" : "DATA_T";
+
+            functionCalls << "    memcpy(&outputs, "
+                        << "&" << targetCellIdentifier << "_output, "
+                        << targetCellPrefix << "_NB_OUTPUTS * "
+                        << targetCellPrefix << "_OUTPUTS_HEIGHT * " 
+                        << targetCellPrefix << "_OUTPUTS_WIDTH * "
+                        "sizeof(" << dataType << "));\n";
+        }
+    }
 
     // Write source file with includes, buffers and functionCalls
     std::ofstream networkPropagateFile(filePath);

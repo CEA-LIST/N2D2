@@ -144,7 +144,7 @@ void envRead(const std::string& fileName,
 #endif
     if (nbRead != size) {
         fprintf(stderr, "fread() number of read objects (%d) different than"
-                        " expected (%d)\n", nbRead, size);
+                        " expected (%d) [data]\n", nbRead, size);
     }
 
     nbRead = fread(
@@ -152,7 +152,7 @@ void envRead(const std::string& fileName,
 
     if (nbRead != outputsSize) {
         fprintf(stderr, "fread() number of read objects (%d) different than"
-                        " expected (%d)\n", nbRead, outputsSize);
+                        " expected (%d) [outputTargets]\n", nbRead, outputsSize);
     }
 
     if (feof(stimuli)) {
