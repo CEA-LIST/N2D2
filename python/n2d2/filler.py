@@ -74,3 +74,56 @@ class Normal(Filler):
         self._parse_optional_arguments(['Mean', 'StdDev'])
         self._N2D2_object = self._filler_generators[self._model_key](**self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
+
+
+class Xavier(Filler):
+
+    _INI_type = 'XavierFiller'
+    _type = "XavierFiller"
+
+    """Static members"""
+    _filler_generators = {
+        '<float>': N2D2.XavierFiller_float
+    }
+
+    _varianceNorm = {
+        'FanIn': N2D2.XavierFiller_float.VarianceNorm.FanIn,
+        'Average': N2D2.XavierFiller_float.VarianceNorm.Average,
+        'FanOut': N2D2.XavierFiller_float.VarianceNorm.FanOut
+    }
+
+    _distribution = {
+        'Uniform': N2D2.XavierFiller_float.Distribution.Uniform,
+        'Normal': N2D2.XavierFiller_float.Distribution.Normal
+    }
+
+    def __init__(self, **config_parameters):
+        Filler.__init__(self, **config_parameters)
+
+        self._parse_optional_arguments(['VarianceNorm', 'Distribution', 'Scaling'])
+        if 'varianceNorm' in self._optional_constructor_arguments:
+            self._optional_constructor_arguments['varianceNorm'] = \
+                self._varianceNorm[self._optional_constructor_arguments['varianceNorm']]
+        if 'distribution' in self._optional_constructor_arguments:
+            self._optional_constructor_arguments['distribution'] = \
+                self._distribution[self._optional_constructor_arguments['distribution']]
+        self._N2D2_object = self._filler_generators[self._model_key](**self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)
+
+
+class Constant(Filler):
+
+    _INI_type = 'ConstantFiller'
+    _type = "ConstantFiller"
+
+    """Static members"""
+    _filler_generators = {
+        '<float>': N2D2.ConstantFiller_float
+    }
+
+    def __init__(self, **config_parameters):
+        Filler.__init__(self, **config_parameters)
+
+        self._parse_optional_arguments(['Value'])
+        self._N2D2_object = self._filler_generators[self._model_key](**self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)

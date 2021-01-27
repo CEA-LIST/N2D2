@@ -80,7 +80,7 @@ class Application:
 
 class Classifier(Application):
     def __init__(self, provider, model):
-        super().__init__(model)
+        Application.__init__(self, model)
 
         self._provider = provider
 
@@ -90,6 +90,7 @@ class Classifier(Application):
         print("Create target")
         self._target = n2d2.target.Score('softmax.Target', self._model.get_last(), self._provider)
 
+        print("Initialize")
         self._model.initialize()
 
         self._mode = 'Test'

@@ -86,54 +86,41 @@ We should be able to extract cell and sequences and run these subnetworks easily
 Structure that is organised sequentially. 
 """
 class Sequence:
-    def __init__(self, sequences, Name=None):
+    def __init__(self, sequences, Inputs=None, Name=None):
         if Name is not None:
             assert isinstance(Name, str)
         self._Name = Name
         assert isinstance(sequences, list)
         if not sequences:
             raise ValueError("Got empty list as input. List must contain at least one element")
-        #self._sequence_dict = collections.OrderedDict()
         self._sequences = sequences
-        # TODO: This is currently not really used
-        #self._cells_sequence = []
 
-        #self._generate_graph(self, '')
 
-        #print(self._sequence_dict)
-
-        """
-        previous = None
-        for key, value in self._sequence_dict.items():
-            if isinstance(value, n2d2.cell.Cell) or isinstance(value, n2d2.deepnet.Layer):
-                if previous is not None:
-                    value.clear_input()
-                    value.add_input(previous)
-                previous = value
-        """
         previous = None
         for elem in self._sequences:
             if previous is not None:
-                elem.clear_input()
+                #elem.clear_input()
                 elem.add_input(previous)
             previous = elem
 
+        if Inputs is not None:
+            if isinstance(Inputs, list):
+                for cell in Inputs:
+                    self.add_input(cell)
+            else:
+                self.add_input(Inputs)
 
-    """Goes recursively through sequences"""
+    def get_cells(self):
+        cells = {}
+        self._get_cells(cells)
+        return cells
 
-    def _generate_graph(self, sequence, sequence_idx):
-
-        if not sequence_idx == '':
-            self._sequence_dict[sequence_idx] = sequence
-        #sequence.set_sequence_idx(sequence_idx)
-
-        if isinstance(sequence, Sequence):
-            if not sequence_idx == '':
-                sequence_idx += '.'
-            for idx, sub_sequence in enumerate(sequence.get_sequences()):
-                self._generate_graph(sub_sequence, sequence_idx + str(idx))
-        else:
-            self._cells_sequence.append(sequence)
+    def _get_cells(self, cells):
+        for elem in self._sequences:
+            if isinstance(elem, Sequence) or isinstance(elem, Layer):
+                elem._get_cells(cells)
+            else:
+                cells[elem.get_name()] = elem
 
     # TODO: Method that converts sequential representation into corresponding N2D2 deepnet
 
@@ -141,7 +128,7 @@ class Sequence:
         self.get_first().add_input(inputs)
 
     def get_inputs(self):
-        return self.get_first().get_intputs()
+        return self.get_first().get_inputs()
 
     def clear_input(self):
         self.get_first().clear_input()
@@ -213,18 +200,33 @@ class Sequence:
 
 
 class Layer:
-    def __init__(self, layer, Name=None):
+    def __init__(self, layer, Inputs=None, Name=None):
         if Name is not None:
             assert isinstance(Name, str)
         self._Name = Name
         assert isinstance(layer, list)
         if not layer:
             raise ValueError("Got empty list as input. List must contain at least one element")
-        self._layer_dict = collections.OrderedDict()
         self._layer = layer
 
-        for idx, elem in enumerate(self._layer):
-            self._layer_dict[str(idx)] = elem
+        if Inputs is not None:
+            if isinstance(Inputs, list):
+                for cell in Inputs:
+                    self.add_input(cell)
+            else:
+                self.add_input(Inputs)
+
+    def get_cells(self):
+        cells = {}
+        self._get_cells(cells)
+        return cells
+
+    def _get_cells(self, cells):
+        for elem in self._layer:
+            if isinstance(elem, Sequence):
+                elem._get_cells(cells)
+            else:
+                cells[elem.get_name()] = elem
 
     # TODO: Method that converts layer representation into corresponding N2D2 deepnet
 
@@ -237,10 +239,13 @@ class Layer:
             cell.clear_input()
 
     def get_last(self):
-        output = []
-        for cell in self._layer:
-            output.append(cell)
-        return output
+        return self
+
+    def get_first(self):
+        return self
+
+    def get_elements(self):
+        return self._layer
 
     def initialize(self):
         for cell in self._layer:
@@ -273,7 +278,11 @@ class Layer:
 
     def _generate_str(self, indent_level):
         output = "Layer(\n"
-        for key, value in self._layer_dict.items():
-            output += (indent_level * "\t") + "[" + key + "]: " + value.__str__() + "\n"
+        for idx, elem in enumerate(self._layer):
+            if isinstance(elem, n2d2.cell.Cell):
+                output += (indent_level * "\t") + "[" + str(idx) + "]: " + elem.__str__() + "\n"
+            else:
+                output += (indent_level * "\t") + "[" + str(idx) + "]: " + elem._generate_str(indent_level+1) + "\n"
+        output += ((indent_level-1) * "\t") + ")"
         return output
         

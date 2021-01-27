@@ -26,3 +26,5 @@ default_seed = 1
 default_Model = 'Frame'
 default_DataType = 'float'
 default_DeepNet = n2d2.deepnet.DeepNet(N2D2.Network(default_seed), default_Model, default_DataType)
+
+cell_counter = 0

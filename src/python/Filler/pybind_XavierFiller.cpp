@@ -21,7 +21,7 @@
 */
 
 #ifdef PYBIND
-#include "Filler/NormalFiller.hpp"
+#include "Filler/XavierFiller.hpp"
 
 
 #include <pybind11/pybind11.h>
@@ -31,19 +31,35 @@ namespace py = pybind11;
 
 namespace N2D2 {
 template<typename T>
-void declare_NormalFiller(py::module &m, const std::string& typeStr) {
-    const std::string pyClassName("NormalFiller_" + typeStr);
+void declare_XavierFiller(py::module &m, const std::string& typeStr) {
+    const std::string pyClassName("XavierFiller_" + typeStr);
 
-    py::class_<NormalFiller<T>, std::shared_ptr<NormalFiller<T>>, Filler> (
+    py::class_<XavierFiller<T>, std::shared_ptr<XavierFiller<T>>, Filler> filler(
             m, pyClassName.c_str(), py::multiple_inheritance()
-    )
+    );
 
-    .def(py::init<double, double>(), py::arg("mean")=0.0, py::arg("stdDev")=1.0);
+    py::enum_<class XavierFiller<T>::VarianceNorm>(filler, "VarianceNorm")
+    .value("FanIn", XavierFiller<T>::VarianceNorm::FanIn)
+    .value("Average", XavierFiller<T>::VarianceNorm::Average)
+    .value("FanOut", XavierFiller<T>::VarianceNorm::FanOut)
+    .export_values();
+
+    py::enum_<class XavierFiller<T>::Distribution>(filler, "Distribution")
+    .value("Uniform", XavierFiller<T>::Distribution::Uniform)
+    .value("Normal", XavierFiller<T>::Distribution::Normal)
+    .export_values();
+
+    
+    filler
+    .def(py::init<typename XavierFiller<T>::VarianceNorm, typename XavierFiller<T>::Distribution, T>(), 
+        py::arg("varianceNorm") = XavierFiller<T>::VarianceNorm::FanIn, 
+        py::arg("distribution") = XavierFiller<T>::Distribution::Uniform, 
+        py::arg("scaling") = 1.0);
 }
 
-void init_NormalFiller(py::module &m) {
-    declare_NormalFiller<float>(m, "float");
-    declare_NormalFiller<double>(m, "double");
+void init_XavierFiller(py::module &m) {
+    declare_XavierFiller<float>(m, "float");
+    declare_XavierFiller<double>(m, "double");
 }
 }
 

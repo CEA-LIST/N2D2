@@ -21,7 +21,7 @@
 */
 
 #ifdef PYBIND
-#include "Filler/NormalFiller.hpp"
+#include "Filler/ConstantFiller.hpp"
 
 
 #include <pybind11/pybind11.h>
@@ -31,19 +31,19 @@ namespace py = pybind11;
 
 namespace N2D2 {
 template<typename T>
-void declare_NormalFiller(py::module &m, const std::string& typeStr) {
-    const std::string pyClassName("NormalFiller_" + typeStr);
+void declare_ConstantFiller(py::module &m, const std::string& typeStr) {
+    const std::string pyClassName("ConstantFiller_" + typeStr);
 
-    py::class_<NormalFiller<T>, std::shared_ptr<NormalFiller<T>>, Filler> (
+    py::class_<ConstantFiller<T>, std::shared_ptr<ConstantFiller<T>>, Filler> (
             m, pyClassName.c_str(), py::multiple_inheritance()
     )
 
-    .def(py::init<double, double>(), py::arg("mean")=0.0, py::arg("stdDev")=1.0);
+    .def(py::init<T>(), py::arg("value")=0.0);
 }
 
-void init_NormalFiller(py::module &m) {
-    declare_NormalFiller<float>(m, "float");
-    declare_NormalFiller<double>(m, "double");
+void init_ConstantFiller(py::module &m) {
+    declare_ConstantFiller<float>(m, "float");
+    declare_ConstantFiller<double>(m, "double");
 }
 }
 

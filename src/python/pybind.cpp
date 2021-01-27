@@ -148,6 +148,8 @@ void init_Filler(py::module&);
 void init_HeFiller(py::module&);
 void init_NormalFiller(py::module&);
 void init_UniformFiller(py::module&);
+void init_XavierFiller(py::module&);
+void init_ConstantFiller(py::module&);
 
 // Cell
 void init_Cell(py::module&);
@@ -376,6 +378,8 @@ PYBIND11_MODULE(N2D2, m) {
     init_HeFiller(m);
     init_NormalFiller(m);
     init_UniformFiller(m);
+    init_XavierFiller(m);
+    init_ConstantFiller(m);
 
     //Cell
     init_Cell(m);

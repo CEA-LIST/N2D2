@@ -21,7 +21,6 @@
 */
 
 
-#ifdef CUDA
 
 #ifdef PYBIND
 #include "Filler/Filler.hpp"
@@ -39,6 +38,5 @@ void init_Filler(py::module &m) {
 }
 #endif
 
-#endif
 
 
