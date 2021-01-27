@@ -23,10 +23,9 @@ import N2D2
 
 class Tensor():
     
+    # TODO : deal with CUDA tensor
     _tensor_generators = {
         float: N2D2.Tensor_float,
-        #'half': N2D2.Tensor_half,
-        #'double': N2D2.Tensor_double,
         int: N2D2.Tensor_int,
         bool: N2D2.Tensor_bool,
         #'float': N2D2.Cuda_Tensor_float,
@@ -39,7 +38,7 @@ class Tensor():
             self._tensor = self._tensor_generators[DefaultDataType](dims)
         else:
            raise TypeError("Unrecognized Tensor datatype " + str(DefaultDataType))
-            
+        self._dataType = DefaultDataType
     """
     Add basic methods like size based on N2D2::Tensor class
     """
@@ -50,6 +49,9 @@ class Tensor():
     def dims(self):
         return self._tensor.dims()
     
+    def dataType(self):
+        return self._dataType
+
     def getindex(self, coord):
         """
         From the coordinate returns the 1D index of an element in the tensor.
@@ -67,6 +69,8 @@ class Tensor():
                 idx += coord[i]
         return idx
         
+    def resize(self, new_dims):
+        self._tensor.resize(new_dims)
 
     def __setitem__(self, index, value):
         """
@@ -98,6 +102,46 @@ class Tensor():
         else:
             raise TypeError("Unsupported index type :" + str(type(index)))
         return value
+
+    def fromNumpy(self, np_array):
+        """
+        Convert a numpy array into a tensor.
+        Auto convert data type
+        :param np_array: A numpy array to convert to a tensor.
+        :type np_array: :py:class:`numpy.array`
+        """
+        try:
+            from numpy import ndarray, dtype 
+        except ImportError:
+            raise ImportError("Numpy is not installed")
+        if isinstance(np_array, ndarray):
+            if np_array.dtype is dtype("bool"):
+                # N2D2.Tensor doesn't support transformation from numpy.array with a boolean data type
+                # So we create a temporary tensor with a int datatype and we manually copy it into a tensor with a boolean data type.  
+                tmp_tensor = self._tensor_generators[int](np_array)
+                self._tensor = self._tensor_generators[bool](tmp_tensor.dims())
+                for cpt in range(len(tmp_tensor)):
+                    self._tensor[cpt] = tmp_tensor[cpt]
+                self._dataType = bool
+            elif np_array.dtype is dtype("int"):
+                self._dataType = int
+                self._tensor = self._tensor_generators[int](np_array)
+            elif np_array.dtype is dtype("float"):
+                self._dataType = float
+                self._tensor = self._tensor_generators[float](np_array)
+            else:
+                raise TypeError("The numpy array data type is unsupported : " + str(np_array.dtype))
+        else:
+            raise TypeError("arg 1 must be a numpy array.")
+        
+    def __len__(self):
+        return len(self._tensor)
+
+    def __iter__(self):
+        return self._tensor.__iter__()
+
+    def __contains__(self, value):
+        return self._tensor.__contains__(value)
 
     def __str__(self):
         return str(self._tensor)
