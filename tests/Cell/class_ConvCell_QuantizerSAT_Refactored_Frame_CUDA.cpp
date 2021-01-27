@@ -22,28 +22,28 @@
 
 #include "N2D2.hpp"
 
-#include "Cell/ConvCell_Frame.hpp"
+#include "Cell/ConvCell_Frame_CUDA.hpp"
 #include "Database/MNIST_IDX_Database.hpp"
 #include "DeepNet.hpp"
 #include "Xnet/Environment.hpp"
 #include "Xnet/Network.hpp"
-#include "Cell/DropoutCell_Frame.hpp"
-#include "Cell/SoftmaxCell_Frame.hpp"
+#include "Cell/DropoutCell_Frame_CUDA.hpp"
+#include "Cell/SoftmaxCell_Frame_CUDA.hpp"
 #endif
 #include "Transformation/RescaleTransformation.hpp"
 #include "third_party/half.hpp"
 #include "utils/UnitTest.hpp"
-#include "Quantizer/Activation/SATQuantizerActivation_Frame.hpp"
-#include "Quantizer/Cell/SATQuantizerCell_Frame.hpp"
+#include "Quantizer/Activation/SATQuantizerActivation_Frame_CUDA.hpp"
+#include "Quantizer/Cell/SATQuantizerCell_Frame_CUDA.hpp"
 #include "Activation/LinearActivation.hpp"
 #include "Activation/Activation.hpp"
 
 using namespace N2D2;
 
 template <class T>
-class ConvCell_QuantizerSAT_Refactored_Frame_Test : public ConvCell_Frame<T> {
+class ConvCell_QuantizerSAT_Refactored_Frame_CUDA_Test : public ConvCell_Frame_CUDA<T> {
 public:
-    ConvCell_QuantizerSAT_Refactored_Frame_Test(const DeepNet& deepNet, 
+    ConvCell_QuantizerSAT_Refactored_Frame_CUDA_Test(const DeepNet& deepNet, 
                              const std::string& name,
                              const std::vector<unsigned int>& kernelDims,
                              unsigned int nbOutputs,
@@ -61,7 +61,7 @@ public:
                    strideDims,
                    paddingDims,
                    dilationDims),
-          ConvCell_Frame<T>(deepNet, name,
+          ConvCell_Frame_CUDA<T>(deepNet, name,
                               kernelDims,
                               nbOutputs,
                               subSampleDims,
@@ -71,10 +71,10 @@ public:
                               activation 
                               ) {};
 
-    friend class UnitTest_ConvCell_QuantizerSAT_Refactored_Frame_float_ConvOneLayer_WeightsQuant_Propagate;    
+    friend class UnitTest_ConvCell_QuantizerSAT_Refactored_Frame_CUDA_float_ConvOneLayer_WeightsQuant_Propagate;    
 };
 
-TEST_DATASET(ConvCell_QuantizerSAT_Refactored_Frame_float,
+TEST_DATASET(ConvCell_QuantizerSAT_Refactored_Frame_CUDA_float,
              ConvOneLayer_WeightsQuant_Propagate,
              (unsigned int kernelWidth,
               unsigned int kernelHeight,
@@ -91,6 +91,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Refactored_Frame_float,
              )
 {
 
+    CudaContext::setDevice(0);
     std::cout<<"ConvOneLayer_WeightsQuant_Propagate"<<std::endl;
 
     const unsigned int nbOutputs = 3;
@@ -123,11 +124,11 @@ TEST_DATASET(ConvCell_QuantizerSAT_Refactored_Frame_float,
     std::cout << "[Input]\n" << in << std::endl;
     std::cout << "********************SET_INPUT_END********************\n\n" << std::endl; 
 
-
-    DropoutCell_Frame<Float_T> drop1(dn, "drop1", 1);
+#if CUDNN_VERSION >= 5000
+    DropoutCell_Frame_CUDA<Float_T> drop1(dn, "drop1", 1);
     drop1.setParameter<double>("Dropout", 0.0);
-
-    ConvCell_QuantizerSAT_Refactored_Frame_Test<float> conv1(dn, "conv1",
+#endif
+    ConvCell_QuantizerSAT_Refactored_Frame_CUDA_Test<float> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
         nbOutputs,
         std::vector<unsigned int>({subSampleX, subSampleY}),
@@ -137,18 +138,23 @@ TEST_DATASET(ConvCell_QuantizerSAT_Refactored_Frame_float,
         std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
-    SATQuantizerCell_Frame<float> quantCell;
+    SATQuantizerCell_Frame_CUDA<float> quantCell;
     quantCell.setRange(range);
     quantCell.setQuantization(true);
     quantCell.setScaling(false);
     std::shared_ptr<QuantizerCell> quantizerCell = std::shared_ptr<QuantizerCell>(&quantCell, [](QuantizerCell *) {});
 
-    SoftmaxCell_Frame<float> softmax1(dn, "softmax1", nbOutputs, true, 0);
+    SoftmaxCell_Frame_CUDA<float> softmax1(dn, "softmax1", nbOutputs, true, 0);
 
+#if CUDNN_VERSION >= 5000
     drop1.addInput(in,in);
     conv1.addInput(&drop1);
     softmax1.addInput(&conv1);
     drop1.initialize();
+#else
+    conv1.addInput(in,in);
+    softmax1.addInput(&conv1);
+#endif
     conv1.setQuantizer(quantizerCell);
     conv1.initialize();
     softmax1.initialize();
@@ -199,21 +205,29 @@ TEST_DATASET(ConvCell_QuantizerSAT_Refactored_Frame_float,
 
     std::cout << "********************PROPAGATE********************" << std::endl;
 
+#if CUDNN_VERSION >= 5000
     drop1.propagate(false);
+#endif
     conv1.propagate(false);
     softmax1.propagate(false);
 
-    Tensor<float> qWeights = tensor_cast<float>(quantCell.getQuantizedWeights(0));
+    quantCell.getQuantizedWeights(0).synchronizeDToH();
+    CudaTensor<float> qWeights = cuda_tensor_cast<float>(quantCell.getQuantizedWeights(0));
+    quantCell.getQuantizedWeights(0).synchronizeHToD();
     std::cout << "[Conv][QuantizedWeights]\n" << qWeights << std::endl;
 
-    const Tensor<float>& outputConv = tensor_cast<float>(conv1.getOutputs());
+    conv1.getOutputs().synchronizeDToH();
+    const CudaTensor<float>& outputConv = cuda_tensor_cast<float>(conv1.getOutputs());
+    conv1.getOutputs().synchronizeHToD();
     std::cout << "[Conv][Output]\n" << outputConv << std::endl;
 
     std::cout << "********************PROPAGATE_END********************" << std::endl;
 
     //for future backpropagate test, not tested yet
     /*
-    const Tensor<float>& out_softmax1 = tensor_cast<float>(softmax1.getOutputs());
+    softmax1.mDiffInputs.synchronizeDToH();
+    softmax1.getOutputs().synchronizeDToH();
+    const CudaTensor<float>& out_softmax1 = cuda_tensor_cast<float>(softmax1.getOutputs());
     double loss = 0.0f;
 
     for(unsigned int nout = 0; nout < nbOutputs; ++nout){
@@ -234,12 +248,16 @@ TEST_DATASET(ConvCell_QuantizerSAT_Refactored_Frame_float,
 
     loss = softmax1.applyLoss();
     std::cout << "test loss = " << loss << std::endl;
+    softmax1.mDiffInputs.synchronizeHToD();
+    softmax1.getOutputs().synchronizeHToD();
 
     softmax1.backPropagate();   
     conv1.backPropagate();
     drop1.backPropagate();
 
-    Tensor<float> diffFullPrecisionWeights = tensor_cast<float>(quantCell.getDiffFullPrecisionWeights(0));
+    quantCell.getDiffFullPrecisionWeights(0).synchronizeDToH();
+    CudaTensor<float> diffFullPrecisionWeights = cuda_tensor_cast<float>(quantCell.getDiffFullPrecisionWeights(0));
+    quantCell.getDiffFullPrecisionWeights(0).synchronizeHToD();
 
     std::cout << "********************DIFF_FULL_PR_WEIGHTS********************" << std::endl;
     std::cout << "[Conv][DiffFullPrWeights]" << diffFullPrecisionWeights << std::endl;
