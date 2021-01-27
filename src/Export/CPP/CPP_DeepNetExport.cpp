@@ -29,6 +29,7 @@
 #include "Cell/FcCell.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/ElemWiseCell.hpp"
+#include "Cell/ScalingCell.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Export/CellExport.hpp"
 #include "Export/DeepNetExport.hpp"
@@ -180,7 +181,8 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
 
                     if (!((*itCell)->getType() == ConvCell::Type
                         || (*itCell)->getType() == PoolCell::Type
-                        || (*itCell)->getType() == ElemWiseCell::Type))
+                        || (*itCell)->getType() == ElemWiseCell::Type
+                        || (*itCell)->getType() == ScalingCell::Type))
                     {
                         isWrappable = false;
                     }
@@ -209,7 +211,8 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
             else {
                 isWrappable = (cell->getType() == ConvCell::Type
                     || cell->getType() == PoolCell::Type
-                    || cell->getType() == ElemWiseCell::Type);
+                    || cell->getType() == ElemWiseCell::Type
+                    || cell->getType() == ScalingCell::Type);
                 allocableCells.push_back(cell);
             }
 
@@ -289,6 +292,7 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                             / (double)poolCell->getStrideY();
                     }
                     // No margin necessary for ElemWiseCell
+                    // No margin necessary for ScalingCell
 
                     // Take into account memory alignment of the input
                     const size_t nbChannels
