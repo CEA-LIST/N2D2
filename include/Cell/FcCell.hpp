@@ -105,9 +105,9 @@ public:
                                           FreeParametersType type = All) const;
     void writeMap(const std::string& fileName) const;
     void randomizeFreeParameters(double stdDev);
-    virtual std::pair<Float_T, Float_T> getFreeParametersRange(bool withAdditiveParameters = true) const;
+    virtual std::pair<Float_T, Float_T> getFreeParametersRange(FreeParametersType type = All) const;
     virtual std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 
-                                                                   bool withAdditiveParameters) const;
+                                                                   FreeParametersType type = All) const;
     virtual std::pair<Float_T, Float_T> getFreeParametersRangePerChannel(std::size_t channel) const;
     
     virtual void processFreeParameters(std::function<Float_T(Float_T)> func,

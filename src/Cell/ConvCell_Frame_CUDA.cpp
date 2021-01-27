@@ -1034,7 +1034,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::logFreeParametersDistrib(const std::string
 
 template <class T>
 std::pair<N2D2::Float_T, N2D2::Float_T>
-N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRange(bool withAdditiveParameters) const
+N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRange(FreeParametersType type) const
 {
     const bool keepInSyncTop(mKeepInSync);
 
@@ -1042,7 +1042,7 @@ N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRange(bool withAdditiveParameters
         synchronizeToH(false);
 
     const std::pair<Float_T, Float_T> range
-        = ConvCell::getFreeParametersRange(withAdditiveParameters);
+        = ConvCell::getFreeParametersRange(type);
 
     if (keepInSyncTop)
         keepInSync(true);
@@ -1053,7 +1053,7 @@ N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRange(bool withAdditiveParameters
 template <class T>
 std::pair<N2D2::Float_T, N2D2::Float_T>
 N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRangePerOutput(std::size_t output,
-                                                              bool withAdditiveParameters) const
+                                                              FreeParametersType type) const
 {
     const bool keepInSyncTop(mKeepInSync);
 
@@ -1061,7 +1061,7 @@ N2D2::ConvCell_Frame_CUDA<T>::getFreeParametersRangePerOutput(std::size_t output
         synchronizeToH(false);
 
     const std::pair<Float_T, Float_T> range
-        = ConvCell::getFreeParametersRangePerOutput(output, withAdditiveParameters);
+        = ConvCell::getFreeParametersRangePerOutput(output, type);
 
     if (keepInSyncTop)
         keepInSync(true);

@@ -483,14 +483,15 @@ void N2D2::FcCell_Frame_CUDA<T>::logFreeParametersDistrib(const std::string
 
 template <class T>
 std::pair<N2D2::Float_T, N2D2::Float_T>
-N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRange(bool withAdditiveParameters) const
+N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRange(FreeParametersType type) const
 {
     const bool keepInSyncTop(mKeepInSync);
 
     if (keepInSyncTop)
         synchronizeToH(false);
 
-    const std::pair<Float_T, Float_T> range = FcCell::getFreeParametersRange(withAdditiveParameters);
+    const std::pair<Float_T, Float_T> range
+        = FcCell::getFreeParametersRange(type);
 
     if (keepInSyncTop)
         keepInSync(true);
@@ -501,14 +502,15 @@ N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRange(bool withAdditiveParameters) 
 template <class T>
 std::pair<N2D2::Float_T, N2D2::Float_T>
 N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRangePerOutput(std::size_t output, 
-                                                            bool withAdditiveParameters) const
+                                                            FreeParametersType type) const
 {
     const bool keepInSyncTop(mKeepInSync);
 
     if (keepInSyncTop)
         synchronizeToH(false);
 
-    const std::pair<Float_T, Float_T> range = FcCell::getFreeParametersRangePerOutput(output, withAdditiveParameters);
+    const std::pair<Float_T, Float_T> range
+        = FcCell::getFreeParametersRangePerOutput(output, type);
 
     if (keepInSyncTop)
         keepInSync(true);

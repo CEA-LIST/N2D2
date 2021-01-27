@@ -79,9 +79,9 @@ public:
                               bool ignoreNotExists = false);
     void logFreeParametersDistrib(const std::string& fileName) const;
     
-    std::pair<Float_T, Float_T> getFreeParametersRange(bool withAdditiveParameters = true) const;
+    std::pair<Float_T, Float_T> getFreeParametersRange(FreeParametersType type = All) const;
     std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 
-                                                                bool withAdditiveParameters) const;
+                                                                FreeParametersType type = All) const;
     std::pair<Float_T, Float_T> getFreeParametersRangePerChannel(std::size_t channel) const;
     
     void processFreeParameters(std::function<Float_T(Float_T)> func,

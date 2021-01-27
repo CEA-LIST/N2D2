@@ -69,7 +69,8 @@ void N2D2::DeepNetQuantization::clipWeights(std::size_t nbBits, ClippingMode wtC
         for (auto itCell = it->begin(); itCell != it->end(); ++itCell) {
             const auto& cell = mDeepNet.getCell(*itCell);
 
-            const auto range = cell->getFreeParametersRange(false);
+            const auto range
+                = cell->getFreeParametersRange(Cell::Multiplicative);
             const Float_T maxWeight = Utils::max_abs(range.first, range.second);
 
             if(maxWeight == 0) {
@@ -468,24 +469,42 @@ void N2D2::DeepNetQuantization::crossLayerEqualization(
                     for(std::size_t output = 0;
                         output < parentsCells[0]->getNbOutputs(); output++)
                     {
+                        const auto bias1MinMax = parentsCells[0]
+                            ->getFreeParametersRangePerOutput(output,
+                                                        Cell::Additive);
                         const auto r1MinMax = parentsCells[0]
-                            ->getFreeParametersRangePerOutput(output, false);
+                            ->getFreeParametersRangePerOutput(output,
+                                                        Cell::Multiplicative);
                         const auto r2MinMax = cell
                             ->getFreeParametersRangePerChannel(output);
 
+                        const Float_T bias1 = Utils::max_abs(bias1MinMax.first,
+                                                          bias1MinMax.second);
                         const Float_T r1 = Utils::max_abs(r1MinMax.first,
                                                           r1MinMax.second);
                         const Float_T r2 = Utils::max_abs(r2MinMax.first,
                                                           r2MinMax.second);
 
-                        const double scalingPerOutput = (1.0 / r2) * std::sqrt(r1 * r2);
+                        // If r1 is 0.0, meaning the parent cell's output 
+                        // weights range is 0, the bias can still contribute
+                        // to the cell channel, in which case no rescaling is
+                        // done. If the bias is 0, then the cell's channel 
+                        // weights can be set to 0.
+                        if (r1 > 0.0 || bias1 == 0.0) {
+                            const double scalingPerOutput1 = (r1 > 0.0)
+                                ? (1.0 / r1) * std::sqrt(r1 * r2) : 0.0;
+                            const double scalingPerOutput2 = (r2 > 0.0)
+                                ? (1.0 / r2) * std::sqrt(r1 * r2) : 0.0;
 
-                        parentsCells[0]->processFreeParametersPerOutput([&](Float_T w) { 
-                                                                return w/scalingPerOutput; 
-                                                            }, output, Cell::All);
-                        cell->processFreeParametersPerChannel([&](Float_T w) { 
-                                                                return w*scalingPerOutput; 
-                                                            }, output);
+                            parentsCells[0]->processFreeParametersPerOutput(
+                                [&](Float_T w) { 
+                                    return w*scalingPerOutput1; 
+                                }, output, Cell::All);
+                            cell->processFreeParametersPerChannel(
+                                [&](Float_T w) { 
+                                    return w*scalingPerOutput2; 
+                                }, output);
+                        }
 
                         const double rangeDelta = std::abs(r1 - r2);
 
@@ -535,7 +554,8 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantize
                                                   wQuantScaling*(std::pow(2, nbBits - 1) - 1);
 
 
-            const std::pair<Float_T, Float_T> wMinMax = cell->getFreeParametersRange(false);
+            const std::pair<Float_T, Float_T> wMinMax
+                = cell->getFreeParametersRange(Cell::Multiplicative);
             const Float_T wScalingCell = Utils::max_abs(wMinMax.first, wMinMax.second);
             if(wScalingCell != 0.0) {
                 cell->processFreeParameters([&](Float_T w) { return w*(wQuantScaling/wScalingCell); }, 
@@ -587,12 +607,15 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantize
                                                   wQuantScaling*(std::pow(2, nbBits - 1) - 1);
 
 
-            const std::pair<Float_T, Float_T> wMinMax = cell->getFreeParametersRange(false);
+            const std::pair<Float_T, Float_T> wMinMax
+                = cell->getFreeParametersRange(Cell::Multiplicative);
             const Float_T wScalingCell = Utils::max_abs(wMinMax.first, wMinMax.second);
             if(wScalingCell != 0.0) {
                 std::vector<Float_T> scalingPerOutput(cell->getNbOutputs());
                 for(std::size_t output = 0; output < cell->getNbOutputs(); output++) {
-                    const auto woMinMax = cell->getFreeParametersRangePerOutput(output, false);
+                    const auto woMinMax
+                        = cell->getFreeParametersRangePerOutput(output,
+                                                          Cell::Multiplicative);
                     const Float_T wScalingCellOutput = std::max(
                                                          std::min(wScalingCell, 0.1f), 
                                                          Utils::max_abs(woMinMax.first, woMinMax.second)

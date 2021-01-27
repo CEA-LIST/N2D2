@@ -343,13 +343,13 @@ public:
         const std::string& /*fileName*/,
         FreeParametersType /*type*/ = All) const {};
 
-    virtual std::pair<Float_T, Float_T> getFreeParametersRange(bool /*withAdditiveParameters*/ = true) const {
+    virtual std::pair<Float_T, Float_T> getFreeParametersRange(FreeParametersType /*type*/ = All) const {
         return std::pair<Float_T, Float_T>();
     };
 
     virtual std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(
             std::size_t /*output*/, 
-            bool /* withAdditiveParameters*/ = true) const 
+            FreeParametersType /*type*/ = All) const 
     {
         return std::pair<Float_T, Float_T>();
     };
