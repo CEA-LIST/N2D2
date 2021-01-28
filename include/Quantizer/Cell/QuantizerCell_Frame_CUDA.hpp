@@ -63,7 +63,7 @@ public:
     virtual void exportFreeParameters(const std::string& /*fileName*/) const {};
     virtual void importFreeParameters(const std::string& /*fileName*/, bool /*ignoreNoExists*/) {};
 
-    //virtual ~Quantizer() {};
+    virtual ~QuantizerCell_Frame_CUDA() {};
 
 protected:
 

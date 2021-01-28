@@ -75,7 +75,7 @@ public:
         return false;
     }
 
-    //virtual ~Quantizer() {};
+    virtual ~QuantizerCell() {};
 
 protected:
     // NOTE: At the moment only one solver for all
