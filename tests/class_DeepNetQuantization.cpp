@@ -96,7 +96,7 @@ bool isNormalized(DeepNet& deepNet, std::size_t nbTestStimuli) {
         for(auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
             const auto& cell = deepNet.getCell(*itCell);
 
-            auto range = cell->getFreeParametersRange(false);
+            auto range = cell->getFreeParametersRange(Cell::Multiplicative);
             if(Utils::max_abs(range.first, range.second) > 1.0 + delta) {
                 return false;
             }
