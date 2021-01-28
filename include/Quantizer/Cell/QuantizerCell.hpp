@@ -39,15 +39,15 @@ public:
 
     virtual void setSolver(const std::shared_ptr<Solver>& solver)
     {
-       throw std::runtime_error("Error: Tried to set solver in QuantizerCell" 
-        " without learnable parameters!");
+       //throw std::runtime_error("Error: Tried to set solver in QuantizerCell" 
+        //" without learnable parameters!");
         mSolver = solver;
     };
     
     virtual std::shared_ptr<Solver> getSolver()
     {
-        throw std::runtime_error("Error: Tried to get solver in QuantizerCell" 
-        " without learnable parameters!");
+        //throw std::runtime_error("Error: Tried to get solver in QuantizerCell" 
+        //" without learnable parameters!");
         return mSolver;   
     };
     

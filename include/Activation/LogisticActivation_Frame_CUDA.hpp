@@ -82,7 +82,7 @@ void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(
     const Cell& cell, 
     const BaseTensor& baseInput,
     BaseTensor& baseOutput,
-    bool /*inference*/)
+    bool inference)
 {
     const CudaTensor<T>& input = dynamic_cast<const CudaTensor<T>&>(baseInput);
     CudaTensor<T>& output = dynamic_cast<CudaTensor<T>&>(baseOutput);
@@ -102,6 +102,9 @@ void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(
                                                   output.getCudnnTensorDesc(),
                                                   output.getDevicePtr()));
     }
+    if(mQuantizer) {
+        mQuantizer->propagate(baseOutput, inference);
+    }
 }
 
 template <class T>
@@ -112,11 +115,18 @@ void N2D2::LogisticActivation_Frame_CUDA<T>::backPropagate(
     const BaseTensor& baseDiffInput,
     BaseTensor& baseDiffOutput)
 {
+    if(mQuantizer) {
+        mQuantizer->back_propagate( mQuantizer->getFullPrecisionActivations(), 
+                                    baseOutput,/*Not use for the moment*/
+                                    baseDiffInput,
+                                    baseDiffOutput);
+    }
     if (LogisticActivationDisabled)
         return;
 
     const CudaTensor<T>& output = dynamic_cast<const CudaTensor<T>&>(baseOutput);
-    const CudaTensor<T>& diffInput = dynamic_cast<const CudaTensor<T>&>(baseDiffInput);
+    const CudaTensor<T>& diffInput = (!mQuantizer)  ? dynamic_cast<const CudaTensor<T>&>(baseDiffInput) 
+                                : dynamic_cast<const CudaTensor<T>&>(baseDiffOutput);
     CudaTensor<T>& diffOutput = dynamic_cast<CudaTensor<T>&>(baseDiffOutput);
 
     if (!this->mWithLoss) {

@@ -146,13 +146,13 @@ void N2D2::FcCellGenerator::generateParams(const std::shared_ptr<FcCell>& cell,
     
 
     std::shared_ptr<QuantizerCell> quantizer
-        = QuantizerCellGenerator::generate(iniConfig, section, model, dataType, "Quantizer");
+        = QuantizerCellGenerator::generate(iniConfig, section, model, dataType, "QWeight");
 
     if (quantizer) {
         cell->setQuantizer(quantizer);
 
         std::shared_ptr<Solver> quantizerSolver
-            = SolverGenerator::generate(iniConfig, section, model, dataType, "QuantizerSolver");
+            = SolverGenerator::generate(iniConfig, section, model, dataType, "QWeightSolver");
 
         if (quantizerSolver) {
             cell->getQuantizer()->setSolver(quantizerSolver);
@@ -174,15 +174,11 @@ void N2D2::FcCellGenerator::generateParams(const std::shared_ptr<FcCell>& cell,
     if (cell->getQuantizer()) {
         std::cout << "Added " <<  cell->getQuantizer()->getType() << 
             " quantizer to " << cell->getName() << std::endl;         
-        cell->getQuantizer()->setPrefixedParameters(params, "Quantizers.");
-        cell->getQuantizer()->setPrefixedParameters(params,
-                                                        "Quantizer.");
+        cell->getQuantizer()->setPrefixedParameters(params, "QWeight.");
         if (cell->getQuantizer()->getSolver()) {
             std::cout << "Added " << cell->getQuantizer()->getSolver()->getType() << 
              " quantizer solver to " << cell->getName() << std::endl;              
-            cell->getQuantizer()->setPrefixedParameters(params, "QuantizerSolvers.");
-            cell->getQuantizer()->setPrefixedParameters(params,
-                                                        "QuantizerSolver.");
+            cell->getQuantizer()->setPrefixedParameters(params, "QWeightSolver.");
         }
     }
 

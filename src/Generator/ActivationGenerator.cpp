@@ -46,7 +46,7 @@ N2D2::ActivationGenerator::generate(IniParser& iniConfig,
                                                      section,
                                                      model,
                                                      dataType, 
-                                                     "Activation.Quantizer");
+                                                     "QAct");
 
         if (quantizer) {
             activation->setQuantizer(quantizer);
@@ -56,7 +56,9 @@ N2D2::ActivationGenerator::generate(IniParser& iniConfig,
                                             section, 
                                             model, 
                                             dataType, 
-                                            "Activation.QuantizerSolver");
+                                            "QActSolver");
+            std::cout << "Added " <<  activation->getQuantizer()->getType() << 
+                " quantizer to " << type << " Activation " << std::endl; 
 
             if (quantizerSolver) {
                 activation->getQuantizer()->setSolver(quantizerSolver);
