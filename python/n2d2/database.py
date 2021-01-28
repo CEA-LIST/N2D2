@@ -37,18 +37,11 @@ class Database(N2D2_Interface):
     Database loader object.
     """
 
-    StimuliSets = {
-        'Learn': N2D2.Database.Learn,
-        'Test': N2D2.Database.Test,
-        'Validation': N2D2.Database.Validation,
-        'Unpartitioned': N2D2.Database.Unpartitioned
-    }
-
     def __init__(self, **config_parameters):
         N2D2_Interface.__init__(self, **config_parameters)
 
     def get_nb_stimuli(self, partition):
-        return self._N2D2_object.getNbStimuli(self.StimuliSets[partition])
+        return self._N2D2_object.getNbStimuli(N2D2.Database.StimuliSet.__members__[partition])
 
     def load(self, dataPath, **kwargs):
         self._N2D2_object.load(dataPath=dataPath, **kwargs)

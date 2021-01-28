@@ -51,12 +51,12 @@ class Application:
         """
         return the recognition rate
         """
-        set = self._provider.get_database().StimuliSets[self._mode]
+        set = self._provider.get_database().StimuliSet[self._mode]
         return self._target.N2D2().getAverageSuccess(set)
 
     def logConfusionMatrix(self, path):
         assert self._provider and self._mode and self._target
-        set = self._provider.get_database().StimuliSets[self._mode]
+        set = self._provider.get_database().StimuliSet[self._mode]
         self._target.N2D2().logConfusionMatrix(path, set)
 
     def logSuccess(self, path):
@@ -64,7 +64,7 @@ class Application:
         Save a graph of the loss and the validation score as a function of the step number.
         """
         assert self._provider and self._mode and self._target
-        set = self._provider.get_database().StimuliSets[self._mode]
+        set = self._provider.get_database().StimuliSet[self._mode]
         self._target.N2D2().logSuccess(path, set)
 
     # TODO : doesn't work for frame_CUDA and Spike
@@ -79,7 +79,7 @@ class Application:
     #     print(string)
 
 class Classifier(Application):
-    def __init__(self, provider, model):
+    def __init__(self, provider, model, **target_config_parameters):
         Application.__init__(self, model)
 
         self._provider = provider
@@ -88,7 +88,7 @@ class Classifier(Application):
         self._model.add_input(self._provider)
 
         print("Create target")
-        self._target = n2d2.target.Score('softmax.Target', self._model.get_last(), self._provider)
+        self._target = n2d2.target.Score(self._model.get_last(), self._provider, **target_config_parameters)
 
         print("Initialize")
         self._model.initialize()
@@ -96,8 +96,8 @@ class Classifier(Application):
         self._mode = 'Test'
 
     def set_mode(self, mode):
-        if mode not in self._provider.get_database().StimuliSets:
-            raise RuntimeError("Mode " + mode + " not compatible with database stimuli sets")
+        if mode not in N2D2.Database.StimuliSet.__members__:
+            raise ValueError("Mode " + mode + " not compatible with database stimuli sets")
         self._mode = mode
 
     def process(self):

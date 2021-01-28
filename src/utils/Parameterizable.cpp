@@ -394,8 +394,28 @@ std::string N2D2::Parameter<int>::getPyType() {
 }
 
 template<>
+std::string N2D2::Parameter<long int>::getPyType() {
+    return std::string("int");
+}
+
+template<>
+std::string N2D2::Parameter<long long int>::getPyType() {
+    return std::string("int");
+}
+
+template<>
 std::string N2D2::Parameter<unsigned int>::getPyType() {
-    return std::string("unsigned int");
+    return std::string("int");
+}
+
+template<>
+std::string N2D2::Parameter<unsigned long int>::getPyType() {
+    return std::string("int");
+}
+
+template<>
+std::string N2D2::Parameter<unsigned long long int>::getPyType() {
+    return std::string("int");
 }
 
 template<>
@@ -413,8 +433,4 @@ std::string N2D2::Parameter<bool>::getPyType() {
     return std::string("bool");
 }
 
-template<>
-std::string N2D2::Parameter<std::string>::getPyType() {
-    return std::string("string");
-}
 

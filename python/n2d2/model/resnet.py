@@ -20,12 +20,31 @@
 """
 
 from n2d2.utils import ConfigSection
-from n2d2.cell import Fc, Conv, Softmax, Pool, ElemWise
+from n2d2.cell import Fc, Conv, Softmax, Pool2D, ElemWise
 from n2d2.deepnet import Layer, Sequence
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
 from n2d2.filler import He, Xavier, Constant
+from n2d2.transform import Rescale, PadCrop, ColorSpace, RangeAffine, SliceExtraction, Flip, Composite
 
+def ILSVRC_preprocessing():
+    margin = 32
+    size = 224
+
+    trans = Composite([
+        Rescale(Width=size+margin, Height=size+margin, KeepAspectRatio=True, ResizeToFit=False),
+        PadCrop(Width=size+margin, Height=size+margin),
+        ColorSpace(ColorSpace='BGR'),
+        RangeAffine(FirstOperator='Minus', FirstValue=[103.94, 116.78, 123.68], SecondOperator='Multiplies', SecondValue=[0.017]),
+        SliceExtraction(Width=size, Height=size, OffsetX=margin//2, OffsetY=margin//2, ApplyTo='NoLearn')
+    ])
+
+    otf_trans = Composite([
+        SliceExtraction(Width=size, Height=size, RandomOffsetX=1, RandomOffsetY=1, ApplyTo='LearnOnly'),
+        Flip(RandomHorizontalFlip=True, ApplyTo='LearnOnly')
+    ])
+
+    return trans, otf_trans
 
 def conv_def(nb_outputs, **config_parameters):
 
@@ -49,7 +68,6 @@ def residual_block(nb_outputs, stride, L, projection_shortcut=True, residual_inp
         conv_def(nb_outputs,  KernelDims=[3, 3], ActivationFunction=Linear(),
                  WeightsFiller=He(Scaling=(0.0 if L > 0 else 1.0)), StrideDims=[1, 1], PaddingDims=[1, 1]),
     ])
-    # Second padding in INI files is [0,0]?
 
     if projection_shortcut:
         projection = conv_def(nb_outputs, KernelDims=[1, 1], StrideDims=[stride, stride], PaddingDims=[0, 0])
@@ -73,23 +91,10 @@ def resnet18(output_size=1000):
     alpha = 1.0
     learning_rate = 0.1
     max_iterations = 100
-    # TODO: Attack solvers to cells using Sequence.get_cells()
-    solver_config = ConfigSection(Momentum=0.9, LearningRatePolicy='PolyDecay', Power=1.0, MaxIterations=max_iterations)
-    weights_solver = SGD
-    weights_solver_config = ConfigSection(LearningRate=learning_rate, Decay=0.0001, **solver_config)
-    bias_solver = SGD
-    bias_solver_config = ConfigSection(LearningRate=2*learning_rate, Decay=0.0, **solver_config)
-
-    # TODO: Mapping?
-    import N2D2
-    mapping = N2D2.Tensor_bool(dims=[int(64*alpha),int(64*alpha)])
-    for i in range(int(64*alpha)):
-        mapping[i+i*int(64*alpha)] = True
-
 
     stem = Sequence([
         conv_def(int(64*alpha), KernelDims=[7, 7], StrideDims=[2, 2], PaddingDims=[3, 3]),
-        Pool(NbOutputs=int(64*alpha), PoolDims=[3, 3], StrideDims=[2, 2], Pooling='Max', Mapping=mapping)
+        Pool2D(NbOutputs=int(64*alpha), PoolDims=[3, 3], StrideDims=[2, 2], Pooling='Max')
     ])
     print(stem)
 
@@ -106,13 +111,9 @@ def resnet18(output_size=1000):
 
     body = Sequence(blocks)
 
-    mapping = N2D2.Tensor_bool(dims=[int(512 * alpha), int(512 * alpha)])
-    for i in range(int(512 * alpha)):
-        mapping[i + i * int(512 * alpha)] = True
-
     # TODO: Automatic PoolDims setting dependent on input size
     head = Sequence([
-        Pool(NbOutputs=int(512 * alpha), PoolDims=[7, 7], StrideDims=[1, 1], Pooling='Average', Mapping=mapping),
+        Pool2D(NbOutputs=int(512 * alpha), PoolDims=[7, 7], StrideDims=[1, 1], Pooling='Average'),
         Fc(NbOutputs=output_size, ActivationFunction=Linear(), WeightsFiller=Xavier(Scaling=(0.0 if L > 0 else 1.0)), BiasFiller=Constant(Value=0.0))
     ])
     print("Head")
@@ -123,8 +124,19 @@ def resnet18(output_size=1000):
         head,
         Softmax(NbOutputs=output_size)
     ])
-    print('net')
 
-    print(net.get_cells())
+    print("Add solvers")
+
+    solver_config = ConfigSection(Momentum=0.9, LearningRatePolicy='PolyDecay', Power=1.0, MaxIterations=max_iterations)
+    weights_solver = SGD
+    weights_solver_config = ConfigSection(LearningRate=learning_rate, Decay=0.0001, **solver_config.get())
+    bias_solver = SGD
+    bias_solver_config = ConfigSection(LearningRate=2 * learning_rate, Decay=0.0, **solver_config.get())
+
+    for name, cell in net.get_cells().items():
+        print(name)
+        if isinstance(cell, Conv) or isinstance(cell, Fc):
+            cell.set_weights_solver(weights_solver(**weights_solver_config.get()))
+            cell.set_bias_solver(bias_solver(**bias_solver_config.get()))
 
     return net

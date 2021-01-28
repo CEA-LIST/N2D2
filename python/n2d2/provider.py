@@ -53,19 +53,18 @@ class DataProvider(N2D2_Interface):
         return self._constructor_arguments['Database']
 
     def read_random_batch(self, partition):
-        return self._N2D2_object.readRandomBatch(set=self._constructor_arguments['Database'].StimuliSets[partition])
+        return self._N2D2_object.readRandomBatch(set=N2D2.Database.StimuliSet.__members__[partition])
 
     def read_batch(self, partition, idx):
-        return self._N2D2_object.readBatch(set=self._constructor_arguments['Database'].StimuliSets[partition],
+        return self._N2D2_object.readBatch(set=N2D2.Database.StimuliSet.__members__[partition],
                                            startIndex=idx)
 
-    # TODO: Remove second arguments which should use binding default
     def add_transformation(self, transformation):
-        self._N2D2_object.addTransformation(transformation.N2D2(), self.get_database().N2D2().StimuliSetMask(0))
+        self._N2D2_object.addTransformation(transformation.N2D2(), transformation.get_apply_set())
         self._transformations.append(transformation)
 
     def add_on_the_fly_transformation(self, transformation):
-        self._N2D2_object.addOnTheFlyTransformation(transformation.N2D2(), self.get_database().N2D2().StimuliSetMask(0))
+        self._N2D2_object.addOnTheFlyTransformation(transformation.N2D2(), transformation.get_apply_set())
         self._otf_transformations.append(transformation)
 
     def __str__(self):

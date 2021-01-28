@@ -28,3 +28,10 @@ default_DataType = 'float'
 default_DeepNet = n2d2.deepnet.DeepNet(N2D2.Network(default_seed), default_Model, default_DataType)
 
 cell_counter = 0
+target_counter = 0
+
+class Verbosity:
+    short = 0  # Constructor arguments only
+    detailed = 1 # Config parameters and their parameters
+
+verbosity = Verbosity.detailed
