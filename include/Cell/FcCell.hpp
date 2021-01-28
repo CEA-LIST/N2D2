@@ -26,7 +26,7 @@
 
 #include "Cell.hpp"
 #include "utils/Registrar.hpp"
-#include "Quantizer/Quantizer.hpp"
+#include "Quantizer/Cell/QuantizerCell.hpp"
 
 
 namespace N2D2 {
@@ -84,7 +84,7 @@ public:
     {
         mBiasSolver = solver;
     };
-    void setQuantizer(const std::shared_ptr<Quantizer>& quantizer)
+    void setQuantizer(const std::shared_ptr<QuantizerCell>& quantizer)
     {
         mQuantizer = quantizer;
     };
@@ -100,7 +100,7 @@ public:
     {
         return mBiasSolver;
     };
-    std::shared_ptr<Quantizer> getQuantizer()
+    std::shared_ptr<QuantizerCell> getQuantizer()
     {
         return mQuantizer;
     };
@@ -150,7 +150,7 @@ protected:
     std::shared_ptr<Filler> mBiasFiller;
     std::shared_ptr<Solver> mWeightsSolver;
     std::shared_ptr<Solver> mBiasSolver;
-    std::shared_ptr<Quantizer> mQuantizer;
+    std::shared_ptr<QuantizerCell> mQuantizer;
 };
 }
 namespace {

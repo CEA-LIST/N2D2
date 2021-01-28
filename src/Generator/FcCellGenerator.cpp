@@ -145,8 +145,8 @@ void N2D2::FcCellGenerator::generateParams(const std::shared_ptr<FcCell>& cell,
     }
     
 
-    std::shared_ptr<Quantizer> quantizer
-        = QuantizerGenerator::generate(iniConfig, section, model, dataType, "Quantizer");
+    std::shared_ptr<QuantizerCell> quantizer
+        = QuantizerCellGenerator::generate(iniConfig, section, model, dataType, "Quantizer");
 
     if (quantizer) {
         cell->setQuantizer(quantizer);

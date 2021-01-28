@@ -96,16 +96,6 @@ void N2D2::FcCell_Frame<T>::initialize()
         if (!mNoBias) {
             mQuantizer->addBiases(mBias, mDiffBias);
         }
-        if (!mDiffOutputs.empty()){
-            for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-                mQuantizer->addActivations(mInputs[k], mDiffOutputs[k]);
-            }
-        }
-        else {
-            for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-                mQuantizer->addActivations(mInputs[k]);
-            }
-        }
         mQuantizer->initialize();
     }
 
@@ -198,9 +188,7 @@ void N2D2::FcCell_Frame<T>::propagate(bool inference)
                     = Random::randBernoulli(mDropConnect);
         }
 
-        const Tensor<T>& input 
-            = mQuantizer ? (tensor_cast<T>(mQuantizer->getQuantizedActivations(k)))
-                        : tensor_cast<T>(mInputs[k]);
+        const Tensor<T>& input = tensor_cast<T>(mInputs[k]);
         const Tensor<T>& synapses 
             = mQuantizer ? (tensor_cast<T>(mQuantizer->getQuantizedWeights(k))) 
                         : tensor_cast<T>(mSynapses[k]);
@@ -263,20 +251,14 @@ void N2D2::FcCell_Frame<T>::backPropagate()
                                     * mOutputs.dimZ();
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const Tensor<T>& input 
-            = mQuantizer ? tensor_cast_nocopy<T>(mQuantizer->getQuantizedActivations(k))
-                        : tensor_cast_nocopy<T>(mInputs[k]);
-
+        const Tensor<T>& input = tensor_cast_nocopy<T>(mInputs[k]);
         const unsigned int nbChannels = input.size() / input.dimB();
 
         if (!mDiffOutputs.empty() && mBackPropagate) {
             const T beta((mDiffOutputs[k].isValid()) ? 1.0 : 0.0);
-            Tensor<T> diffOutput 
-                = mQuantizer ? (mDiffOutputs[k].isValid() ? 
-                    tensor_cast<T>(mQuantizer->getDiffQuantizedActivations(k))
-                    : tensor_cast_nocopy<T>(mQuantizer->getDiffQuantizedActivations(k))) :
-                    (mDiffOutputs[k].isValid() ? 
-                        tensor_cast<T>(mDiffOutputs[k]) : tensor_cast_nocopy<T>(mDiffOutputs[k]));
+            Tensor<T> diffOutput = (mDiffOutputs[k].isValid())
+                ? tensor_cast<T>(mDiffOutputs[k])
+                : tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
             const Tensor<T>& synapses 
                 = mQuantizer ? tensor_cast<T>(mQuantizer->getQuantizedWeights(k))
@@ -317,12 +299,10 @@ void N2D2::FcCell_Frame<T>::backPropagate()
             }
 
             mDiffOutputs[k] = diffOutput;
-            //mDiffOutputs[k].setValid();
+            mDiffOutputs[k].setValid();
         }
 
-        Tensor<T> diffSynapses 
-            = mQuantizer ? tensor_cast<T>(mQuantizer->getDiffQuantizedWeights(k))
-                : tensor_cast<T>(mDiffSynapses[k]);
+        Tensor<T>& diffSynapses = mDiffSynapses[k];
         const unsigned int count2 = nbChannels * getNbOutputs();
 
         const float beta = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
@@ -372,25 +352,12 @@ void N2D2::FcCell_Frame<T>::backPropagate()
 
         mDiffBias.setValid();
     }
-    // Calculate full precision weights and activation gradients
+
+    mDiffOutputs.synchronizeHToD();
+
     if (mQuantizer && mBackPropagate) {
         mQuantizer->back_propagate();
     }
-    if (!mDiffOutputs.empty() && mBackPropagate)
-    {
-        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            const Tensor<T>& diffOutput 
-                = mQuantizer ? (mDiffOutputs[k].isValid() ? 
-                    tensor_cast<T>(mQuantizer->getDiffQuantizedActivations(k))
-                    : tensor_cast_nocopy<T>(mQuantizer->getDiffQuantizedActivations(k))) :
-                    (mDiffOutputs[k].isValid() ? 
-                        tensor_cast<T>(mDiffOutputs[k]) : tensor_cast_nocopy<T>(mDiffOutputs[k]));
-
-            mDiffOutputs[k] = diffOutput;
-            mDiffOutputs[k].setValid();
-        }
-    }
-    mDiffOutputs.synchronizeHToD();
 }
 
 template <class T>
@@ -411,7 +378,7 @@ void N2D2::FcCell_Frame<T>::update()
         mBiasSolver->update(mBias, mDiffBias, mInputs.dimB());
 
     if(mQuantizer){
-        mQuantizer->update();
+        mQuantizer->update((unsigned int)mInputs.dimB());
     }
 
     Cell_Frame<T>::update();

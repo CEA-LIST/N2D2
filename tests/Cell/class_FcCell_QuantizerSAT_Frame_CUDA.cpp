@@ -57,6 +57,7 @@ static MNIST_IDX_Database& getDatabase() {
     return database;
 }
 
+/*
 TEST_DATASET(FcCell_QuantizerSAT_Frame_CUDA_float,
              check_quantizer_SAT,
              (unsigned int nbOutputs,
@@ -380,7 +381,7 @@ TEST_DATASET(FcCell_QuantizerSAT_Frame_CUDA_double,
 
 }
 
-
+*/
 
 
 RUN_TESTS()
