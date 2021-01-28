@@ -4,11 +4,21 @@ import numpy as np
 print("Test create a tensor")
 b = n2d2.tensor.Tensor([2,2,2], DefaultDataType=bool)
 print(b)
+
+print("Test create CUDA tensor")
+c = n2d2.tensor.CUDA_Tensor([2,2,2], DefaultDataType=int)
+print(c)
+
 print("Test setting values")
 b[1,1,1] = 1 # Using coordinates
 b[0] = 1 # using index
 b[1:2] = 1 # setting a slice 
 print(b) # printing tensor
+
+c[1,1,1] = 1 # Using coordinates
+c[0] = 1 # using index
+c[1:2] = 1 # setting a slice 
+print(c) # printing tensor
 
 print("Test fill")
 b[0:] = False
@@ -32,17 +42,25 @@ print("Test convert to numpy")
 numpy_tensor = np.array(b)
 print(numpy_tensor)
 
+numpy_tensor = np.array(c)
+print(numpy_tensor)
+
 print("Test import np array")
+print("int")
 tensor_numpy = n2d2.tensor.Tensor([2, 2], DefaultDataType=int)
 narray =np.array([[2, 1], [4, 7]])
-print(narray.dtype)
 tensor_numpy.fromNumpy(narray)
 print(tensor_numpy)
 
+print("CUDA int")
+tensor_numpy = n2d2.tensor.CUDA_Tensor([2, 2], DefaultDataType=int)
+tensor_numpy.fromNumpy(narray)
+print(tensor_numpy)
+print("boolean")
 tensor_numpy = n2d2.tensor.Tensor([2, 2], DefaultDataType=bool)
 tensor_numpy.fromNumpy(np.array([[True, False], [False, False]]))
 print(tensor_numpy)
-print(tensor_numpy.dataType)
+print(tensor_numpy.dataType())
 
 print("Test contain method")
 

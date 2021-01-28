@@ -23,14 +23,10 @@ import N2D2
 
 class Tensor():
     
-    # TODO : deal with CUDA tensor
     _tensor_generators = {
         float: N2D2.Tensor_float,
         int: N2D2.Tensor_int,
         bool: N2D2.Tensor_bool,
-        #'float': N2D2.Cuda_Tensor_float,
-        #'half': N2D2.Cuda_Tensor_half,
-        #'double': N2D2.Cuda_Tensor_double
     }
     
     def __init__(self, dims, DefaultDataType=float):
@@ -146,3 +142,12 @@ class Tensor():
     def __str__(self):
         return str(self._tensor)
     
+
+class CUDA_Tensor(Tensor):
+    _tensor_generators = {
+        float: N2D2.CudaTensor_float,
+        int: N2D2.CudaTensor_int,
+    }
+    
+    def __init__(self, dims, DefaultDataType=float):
+        super().__init__(dims, DefaultDataType)
