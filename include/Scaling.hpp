@@ -371,6 +371,11 @@ inline void Scaling::propagate(const Cell& cell, const Tensor<T>& input, Tensor<
     
     switch(mMode) {
         case ScalingMode::NONE:
+            if(input.begin() != output.begin()) {
+                std::copy(  input.begin(), 
+                            input.end(), 
+                            output.begin());
+            }
             break;
         case ScalingMode::FLOAT_MULT:
             static_cast<const FloatingPointScaling&>(*mScaling).propagate(cell, input, output);
@@ -409,8 +414,13 @@ inline void Scaling::propagate(const Cell& cell, CudaTensor<T>& data) const {
 
 template<class T>
 inline void Scaling::propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output) const {
+    assert(input.size() == output.size());
     switch(mMode) {
         case ScalingMode::NONE:
+            if(input.getDevicePtr() != output.getDevicePtr()) {
+                CHECK_CUDA_STATUS(cudaMemcpy(output.getDevicePtr(), input.getDevicePtr(),
+                                            input.size() * sizeof(T), cudaMemcpyDeviceToDevice));
+            }
             break;
         case ScalingMode::FLOAT_MULT:
             static_cast<const FloatingPointScaling&>(*mScaling).propagate(cell, input, output);
