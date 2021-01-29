@@ -23,6 +23,7 @@
 #include "N2D2.hpp"
 
 #include "Cell/ConvCell_Frame_CUDA.hpp"
+#include "Cell/ActivationCell_Frame_CUDA.hpp"
 #include "Database/MNIST_IDX_Database.hpp"
 #include "DeepNet.hpp"
 #include "Xnet/Environment.hpp"
@@ -34,7 +35,10 @@
 #include "Transformation/RescaleTransformation.hpp"
 #include "third_party/half.hpp"
 #include "utils/UnitTest.hpp"
-#include "Quantizer/SATQuantizer_Frame_CUDA.hpp"
+#include "Quantizer/Cell/SATQuantizerCell_Frame_CUDA.hpp"
+#include "Quantizer/Activation/SATQuantizerActivation_Frame_CUDA.hpp"
+#include "Activation/LinearActivation_Frame_CUDA.hpp"
+#include "Activation/LinearActivation_Frame.hpp"
 
 using namespace N2D2;
 
@@ -636,7 +640,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
                 << strideX << strideY << paddingX << paddingY 
                 << channelsWidth << channelsHeight 
                 << range1 << alpha1 << range2 << alpha2 << std::endl; 
-    /*
+
     bool doQuant = true;
 
     CudaContext::setDevice(0);
@@ -736,6 +740,43 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
     }
 
     std::cout << "[Input]\n" << in << std::endl;
+    const std::shared_ptr<Activation>& activation1 
+            = std::make_shared<LinearActivation_Frame_CUDA<float> >();
+    const std::shared_ptr<Activation>& activation2 
+            = std::make_shared<LinearActivation_Frame_CUDA<float> >();
+    const std::shared_ptr<Activation>& activation3 
+            = std::make_shared<LinearActivation_Frame_CUDA<float> >();
+
+    const std::shared_ptr<QuantizerActivation>& qAct1 
+        = std::make_shared<SATQuantizerActivation_Frame_CUDA<float> >();
+    const std::shared_ptr<QuantizerActivation>& qAct2 
+        = std::make_shared<SATQuantizerActivation_Frame_CUDA<float> >();
+    const std::shared_ptr<QuantizerActivation>& qAct3 
+        = std::make_shared<SATQuantizerActivation_Frame_CUDA<float> >();
+    const auto qAct1_ptr
+        = std::dynamic_pointer_cast<SATQuantizerActivation_Frame_CUDA<float>>(qAct1);
+    const auto qAct2_ptr
+        = std::dynamic_pointer_cast<SATQuantizerActivation_Frame_CUDA<float>>(qAct2);
+    const auto qAct3_ptr
+        = std::dynamic_pointer_cast<SATQuantizerActivation_Frame_CUDA<float>>(qAct3);
+
+    qAct1_ptr->setRange(range1);
+    qAct2_ptr->setRange(range2);
+    qAct3_ptr->setRange(range2);
+
+    qAct1_ptr->setAlpha(alpha1);
+    qAct2_ptr->setAlpha(alpha2);
+    qAct3_ptr->setAlpha(alpha2);
+
+    if(doQuant) {
+        activation1->setQuantizer(qAct1);
+        activation2->setQuantizer(qAct2);
+        activation3->setQuantizer(qAct3);
+    }
+    ActivationCell_Frame_CUDA<float> activation1_cell(  dn, 
+                                                        "activation1", 
+                                                        1, 
+                                                        activation1);
 
     ConvCell_QuantizerSAT_Frame_CUDA_Test<float> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
@@ -744,7 +785,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
         std::vector<unsigned int>({1U, 1U}),
-        std::shared_ptr<Activation>());
+        activation2);
     conv1.setParameter("NoBias", true);
 
     ConvCell_QuantizerSAT_Frame_CUDA_Test<float> conv2(dn, "conv2",
@@ -754,8 +795,9 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
         std::vector<unsigned int>({1U, 1U}),
-        std::shared_ptr<Activation>());
+        activation3);
     conv2.setParameter("NoBias", true);
+
 
     ////create a map to make a conv depthwise layer
     Tensor<bool> mapping;
@@ -776,43 +818,43 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         std::shared_ptr<Activation>());
     conv3.setParameter("NoBias", true);
 
-    SATQuantizer_Frame_CUDA<float> quant1;
-    quant1.setWeightsRange(range1);
-    quant1.setActivationsRange(range1);
-    quant1.setAlpha(alpha1);
+    SATQuantizerCell_Frame_CUDA<float> quant1;
+    quant1.setRange(range1);
     quant1.setQuantization(true);
     quant1.setScaling(false);
-    std::shared_ptr<Quantizer> quantizer1 = std::shared_ptr<Quantizer>(&quant1, [](Quantizer *) {});
+    std::shared_ptr<QuantizerCell> quantizer1 = std::shared_ptr<QuantizerCell>(&quant1, [](QuantizerCell *) {});
 
-    SATQuantizer_Frame_CUDA<float> quant2;
-    quant2.setWeightsRange(range2);
-    quant2.setActivationsRange(range2);
-    quant2.setAlpha(alpha2);
+    SATQuantizerCell_Frame_CUDA<float> quant2;
+    quant2.setRange(range2);
     quant2.setQuantization(true);
     quant2.setScaling(false);
-    std::shared_ptr<Quantizer> quantizer2 = std::shared_ptr<Quantizer>(&quant2, [](Quantizer *) {});
+    std::shared_ptr<QuantizerCell> quantizer2 = std::shared_ptr<QuantizerCell>(&quant2, [](QuantizerCell *) {});
 
-    SATQuantizer_Frame_CUDA<float> quant3;
-    quant3.setWeightsRange(range2);
-    quant3.setActivationsRange(range2);
-    quant3.setAlpha(alpha2);
+    SATQuantizerCell_Frame_CUDA<float> quant3;
+    quant3.setRange(range2);
     quant3.setQuantization(true);
     quant3.setScaling(false);
-    std::shared_ptr<Quantizer> quantizer3 = std::shared_ptr<Quantizer>(&quant3, [](Quantizer *) {});
+    std::shared_ptr<QuantizerCell> quantizer3 = std::shared_ptr<QuantizerCell>(&quant3, [](QuantizerCell *) {});
 
     SoftmaxCell_Frame_CUDA<float> softmax1(dn, "softmax1", nbOutputs_conv3, true, 0);
 
     Tensor<float> out_diff({channelsWidth, channelsHeight, 1, batchSize});
+
+    //activation1_cell.addInput(in, out_diff);
     conv1.addInput(in, out_diff);
+    //conv1.addInput(&activation1_cell);
     conv2.addInput(&conv1);
     conv3.addInput(&conv2, mapping);
     softmax1.addInput(&conv3);
 
-    if(doQuant) conv1.setQuantizer(quantizer1);
+    if(doQuant) {
+        conv1.setQuantizer(quantizer1);
+        conv2.setQuantizer(quantizer2);
+        conv3.setQuantizer(quantizer3);
+    } 
+    //activation1_cell.initialize();
     conv1.initialize();
-    if(doQuant) conv2.setQuantizer(quantizer2);
     conv2.initialize();
-    if(doQuant) conv3.setQuantizer(quantizer3);
     conv3.initialize();
     softmax1.initialize();
 
@@ -967,11 +1009,19 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         if(iter_index==9999) std::cout << "===============================================================" << std::endl;
 
         if(iter_index==9999) std::cout << "******************PROPAGATE*******************\n\n\n" << std::endl;
-
+        //activation1_cell.propagate(false);
         conv1.propagate(false);
         conv2.propagate(false);
         conv3.propagate(false);
         softmax1.propagate(false);
+
+        //activation1_cell.getOutputs().synchronizeDToH();
+        //const Tensor<float>& out_act1 = tensor_cast<float>(activation1_cell.getOutputs());
+        //if(iter_index==9999){
+        //    std::cout << "[Act1][Outputs]" << std::endl;
+        //    std::cout << out_act1 << std::endl;
+        //}
+        //activation1_cell.getOutputs().synchronizeHToD();
 
         conv1.getOutputs().synchronizeDToH();
         const Tensor<float>& out_conv1 = tensor_cast<float>(conv1.getOutputs());
@@ -1039,10 +1089,11 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         conv3.backPropagate(); 
         conv2.backPropagate();
         conv1.backPropagate();
-
+        //activation1_cell.backPropagate();
         if(iter_index==9999) std::cout << "****************BACKPROPAGATE******************" << std::endl;
 
     if(doQuant){
+        /*
         
         //quant1.getDiffFullPrecisionWeights(0).synchronizeDToH();
         //quant2.getDiffFullPrecisionWeights(0).synchronizeDToH();
@@ -1091,7 +1142,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         //quant3.getDiffFullPrecisionWeights(0).synchronizeHToD();
         //quant2.getDiffFullPrecisionActivations(0).synchronizeHToD();
         //quant3.getDiffFullPrecisionActivations(0).synchronizeHToD();
-        
+        */
     }
 
         if(iter_index==9999)  std::cout << "end of backpropagate" << std::endl;
@@ -1099,40 +1150,49 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         if(iter_index==9999)  std::cout << "*****************UPDATE***************" << std::endl;
 
         conv3.update();
+        /*
         if(doQuant){
             quant3.getAlpha(0).synchronizeDToH();
             CudaTensor<float> alphaEstimated3 = quant3.getAlpha(0);
             alphaEstimated3.synchronizeDToH();
             if(iter_index==9999) std::cout << "conv3 :: alphaEstimated = " << alphaEstimated3 << std::endl;
             quant3.getAlpha(0).synchronizeHToD();
-        }
+        }*/
         
         
 
         conv2.update();
         if(doQuant){
-            quant2.getAlpha(0).synchronizeDToH();
-            CudaTensor<float> alphaEstimated2 = quant2.getAlpha(0);
+            qAct3_ptr->getAlpha().synchronizeDToH();
+            CudaTensor<float> alphaEstimated2 = qAct3_ptr->getAlpha();
             alphaEstimated2.synchronizeDToH();
             if(iter_index==9999) std::cout << "conv2 :: alphaEstimated = " << alphaEstimated2 << std::endl;
-            quant2.getAlpha(0).synchronizeHToD();
+            qAct3_ptr->getAlpha().synchronizeHToD();
         }
         
         
         conv1.update(); 
         if(doQuant){  
-            quant1.getAlpha(0).synchronizeDToH();
-            CudaTensor<float> alphaEstimated1 = quant1.getAlpha(0);
+            qAct2_ptr->getAlpha().synchronizeDToH();
+            CudaTensor<float> alphaEstimated1 = qAct2_ptr->getAlpha();
             alphaEstimated1.synchronizeDToH();
             if(iter_index==9999) std::cout << "conv1 :: alphaEstimated = " << alphaEstimated1 << std::endl;
-            quant1.getAlpha(0).synchronizeHToD();
+            qAct2_ptr->getAlpha().synchronizeHToD();
         }
-             
+
+/*
+        activation1_cell.update(); 
+        if(doQuant){  
+            qAct1_ptr->getAlpha().synchronizeDToH();
+            CudaTensor<float> alphaEstimated1_1 = qAct1_ptr->getAlpha();
+            alphaEstimated1_1.synchronizeDToH();
+            if(iter_index==9999) std::cout << "activation1_cell :: alphaEstimated = " << alphaEstimated1_1 << std::endl;
+            qAct1_ptr->getAlpha().synchronizeHToD();
+        }
+*/
         if(iter_index==9999) std::cout << "end of update" << std::endl;  
     }
-    */
 }
-
 
 
 // double
