@@ -377,9 +377,6 @@ public:
     }
     size_t groupMap() const;
     bool isUnitMap() const {
-        std::cout << mMapping.dimX() << std::endl; 
-        std::cout << mMapping.dimY() << std::endl; 
-        std::cout << groupMap() << std::endl; 
         return (mMapping.dimX() == mMapping.dimY()
                 && groupMap() == mMapping.dimX());
     };

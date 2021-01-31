@@ -150,4 +150,4 @@ class CUDA_Tensor(Tensor):
     }
     
     def __init__(self, dims, DefaultDataType=float):
-        super().__init__(dims, DefaultDataType)
+        Tensor.__init__(self, dims, DefaultDataType)

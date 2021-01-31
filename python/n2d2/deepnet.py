@@ -86,10 +86,9 @@ We should be able to extract cell and sequences and run these subnetworks easily
 Structure that is organised sequentially. 
 """
 class Sequence:
-    def __init__(self, sequences, Inputs=None, Name=None):
-        if Name is not None:
-            assert isinstance(Name, str)
-        self._Name = Name
+    def __init__(self, sequences, inputs=None, name=""):
+        assert isinstance(name, str)
+        self._name = name
         assert isinstance(sequences, list)
         if not sequences:
             raise ValueError("Got empty list as input. List must contain at least one element")
@@ -103,12 +102,12 @@ class Sequence:
                 elem.add_input(previous)
             previous = elem
 
-        if Inputs is not None:
-            if isinstance(Inputs, list):
-                for cell in Inputs:
+        if inputs is not None:
+            if isinstance(inputs, list):
+                for cell in inputs:
                     self.add_input(cell)
             else:
-                self.add_input(Inputs)
+                self.add_input(inputs)
 
     def get_cells(self):
         cells = {}
@@ -149,14 +148,26 @@ class Sequence:
         for cell in self._sequences:
             cell.update()
 
-    def get_subsequence(self, idx):
-        return self._sequences[idx]
+    def import_free_parameters(self, dirName, ignoreNotExists=False):
+        for name, cell in self.get_cells().items():
+            path = dirName + "/" + name + ".syntxt"
+            print("Importing weights from directory '" + dirName + "'")
+            cell.import_free_parameters(path, ignoreNotExists=ignoreNotExists)
+
+    def get_subsequence(self, id):
+        if isinstance(id, int):
+            return self._sequences[id]
+        else:
+            for elem in self._sequences:
+                if elem.get_name() == id:
+                    return elem
+            raise RuntimeError("No subsequence with name: \'" + id + "\'")
 
     def get_name(self):
-        return self._Name
+        return self._name
 
-    def set_name(self, Name):
-        self._Name = Name
+    def set_name(self, name):
+        self._name = name
 
     def get_sequences(self):
         return self._sequences
@@ -184,7 +195,11 @@ class Sequence:
         return self._generate_str(1)
 
     def _generate_str(self, indent_level):
-        output = "Sequence("
+        if not self.get_name() == "":
+            output = "\'" + self.get_name() + "\' " + "Sequence("
+        else:
+            output = "Sequence("
+
         for idx, value in enumerate(self._sequences):
             output += "\n" + (indent_level * "\t") + "(" + str(idx) + ")"
             if isinstance(value, n2d2.deepnet.Sequence):
@@ -200,10 +215,9 @@ class Sequence:
 
 
 class Layer:
-    def __init__(self, layer, Inputs=None, Name=None):
-        if Name is not None:
-            assert isinstance(Name, str)
-        self._Name = Name
+    def __init__(self, layer, Inputs=None, name=""):
+        assert isinstance(name, str)
+        self._name = name
         assert isinstance(layer, list)
         if not layer:
             raise ValueError("Got empty list as input. List must contain at least one element")
@@ -277,7 +291,10 @@ class Layer:
     """
 
     def _generate_str(self, indent_level):
-        output = "Layer(\n"
+        if not self.get_name() == "":
+            output = "\'" + self.get_name() + "\' " + "Layer(\n"
+        else:
+            output = "Layer(\n"
         for idx, elem in enumerate(self._layer):
             if isinstance(elem, n2d2.cell.Cell):
                 output += (indent_level * "\t") + "[" + str(idx) + "]: " + elem.__str__() + "\n"

@@ -19,7 +19,23 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-from n2d2.model.example import *
-from n2d2.model.resnet import *
-from n2d2.model.mobilenet_v1 import *
-from n2d2.model.ILSVRC_outils import *
+
+from n2d2.transform import Rescale, PadCrop, ColorSpace, RangeAffine, SliceExtraction, Flip, Composite
+
+def ILSVRC_preprocessing(size=224):
+    margin = 32
+
+    trans = Composite([
+        Rescale(width=size+margin, height=size+margin, keepAspectRatio=True, resizeToFit=False),
+        PadCrop(width=size+margin, height=size+margin),
+        ColorSpace(colorSpace='BGR'),
+        RangeAffine(firstOperator='Minus', firstValue=[103.94, 116.78, 123.68], secondOperator='Multiplies', secondValue=[0.017]),
+        SliceExtraction(width=size, height=size, offsetX=margin//2, offsetY=margin//2, applyTo='NoLearn')
+    ])
+
+    otf_trans = Composite([
+        SliceExtraction(width=size, height=size, randomOffsetX=True, randomOffsetY=True, applyTo='LearnOnly'),
+        Flip(randomHorizontalFlip=True, applyTo='LearnOnly')
+    ])
+
+    return trans, otf_trans

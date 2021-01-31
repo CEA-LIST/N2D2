@@ -26,12 +26,12 @@ class Filler(N2D2_Interface):
 
     def __init__(self, **config_parameters):
 
-        if 'DataType' in config_parameters:
-            self._DataType = config_parameters.pop('DataType')
+        if 'dataType' in config_parameters:
+            self._datatype = config_parameters.pop('dataType')
         else:
-            self._DataType = n2d2.global_variables.default_DeepNet.get_datatype()
+            self._datatype = n2d2.global_variables.default_deepNet.get_datatype()
 
-        self._model_key = '<' + self._DataType + '>'
+        self._model_key = '<' + self._datatype + '>'
 
         N2D2_Interface.__init__(self, **config_parameters)
 
@@ -53,7 +53,7 @@ class He(Filler):
     def __init__(self, **config_parameters):
         Filler.__init__(self, **config_parameters)
 
-        self._parse_optional_arguments(['VarianceNorm', 'MeanNorm', 'Scaling'])
+        self._parse_optional_arguments(['varianceNorm', 'meanNorm', 'scaling'])
         self._N2D2_object = self._filler_generators[self._model_key](**self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 
@@ -71,7 +71,7 @@ class Normal(Filler):
     def __init__(self, **config_parameters):
         Filler.__init__(self, **config_parameters)
 
-        self._parse_optional_arguments(['Mean', 'StdDev'])
+        self._parse_optional_arguments(['mean', 'stdDev'])
         self._N2D2_object = self._filler_generators[self._model_key](**self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 
@@ -89,7 +89,7 @@ class Xavier(Filler):
     def __init__(self, **config_parameters):
         Filler.__init__(self, **config_parameters)
 
-        self._parse_optional_arguments(['VarianceNorm', 'Distribution', 'Scaling'])
+        self._parse_optional_arguments(['varianceNorm', 'distribution', 'scaling'])
         if 'varianceNorm' in self._optional_constructor_arguments:
             self._optional_constructor_arguments['varianceNorm'] = \
                 N2D2.XavierFiller_float.VarianceNorm.__members__[self._optional_constructor_arguments['varianceNorm']]
@@ -113,6 +113,6 @@ class Constant(Filler):
     def __init__(self, **config_parameters):
         Filler.__init__(self, **config_parameters)
 
-        self._parse_optional_arguments(['Value'])
+        self._parse_optional_arguments(['value'])
         self._N2D2_object = self._filler_generators[self._model_key](**self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)

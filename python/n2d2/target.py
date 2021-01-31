@@ -29,39 +29,39 @@ class Target(N2D2_Interface):
 
     """Provider is not a parameter in the INI file in the case of Target class,
     but usually inferred from the deepnet in N2D2. Name and Cell are parts of the section name"""
-    def __init__(self, Cell, Provider, **config_parameters):
+    def __init__(self, cell, provider, **config_parameters):
 
-        if 'Name' in config_parameters:
-            Name = config_parameters.pop('Name')
+        if 'name' in config_parameters:
+            name = config_parameters.pop('name')
         else:
-            Name = "target_" + str(n2d2.global_variables.target_counter)
+            name = "target_" + str(n2d2.global_variables.target_counter)
             n2d2.global_variables.target_counter += 1
 
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._constructor_parameters = {
-            'Name': Name,
-            'Cell': Cell,
-            'Provider': Provider
+            'name': name,
+            'cell': cell,
+            'provider': provider
         }
 
 
     def get_name(self):
-        return self._constructor_parameters['Name']
+        return self._constructor_parameters['name']
 
 
 class Score(Target):
 
     INI_type = 'TargetScore'
 
-    def __init__(self, Cell, Provider, **config_parameters):
+    def __init__(self, cell, provider, **config_parameters):
 
-        Target.__init__(self, Cell, Provider, **config_parameters)
+        Target.__init__(self, cell, provider, **config_parameters)
 
-        self._parse_optional_arguments(['TargetValue', 'DefaultValue', 'TopN', 'LabelsMapping', 'CreateMissingLabels'])
-        self._N2D2_object = N2D2.TargetScore(self._constructor_parameters['Name'],
-                                             self._constructor_parameters['Cell'].N2D2(),
-                                             self._constructor_parameters['Provider'].N2D2(),
+        self._parse_optional_arguments(['targetValue', 'defaultValue', 'topN', 'labelsMapping', 'createMissingLabels'])
+        self._N2D2_object = N2D2.TargetScore(self._constructor_parameters['name'],
+                                             self._constructor_parameters['cell'].N2D2(),
+                                             self._constructor_parameters['provider'].N2D2(),
                                              **self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 
@@ -81,5 +81,5 @@ class Score(Target):
             N2D2.ConfusionTableMetric.__members__[metric])
 
     def convert_to_INI_section(self):
-        output = "[" + self._constructor_parameters['Name'] + "]\n"
+        output = "[" + self._constructor_parameters['name'] + "]\n"
         return output
