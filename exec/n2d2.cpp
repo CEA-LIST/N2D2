@@ -48,7 +48,7 @@
 
 #include "N2D2.hpp"
 #include "DeepNet.hpp"
-#include "Quantizer/DeepNetQuantizer.hpp"
+#include "DeepNetQuantization.hpp"
 #include "DrawNet.hpp"
 #include "CEnvironment.hpp"
 #include "Xnet/Environment.hpp"
@@ -615,7 +615,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         if(!opt.exportNoCrossLayerEqualization) {
             deepNet->fusePadding();
         }
-        DeepNetQuantizer dnQuantization(*deepNet);
+        DeepNetQuantization dnQuantization(*deepNet);
 
         if(!opt.exportNoCrossLayerEqualization) {
             dnQuantization.crossLayerEqualization();
