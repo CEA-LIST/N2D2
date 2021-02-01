@@ -2498,42 +2498,42 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             }
 
             if (!inputData.empty() && node.input_size() == 2) {
-                std::shared_ptr<Cell> cell = (deepNet->getCells().empty())
+                std::shared_ptr<Cell> dataCell = (deepNet->getCells().empty())
                                                 ? std::shared_ptr<Cell>()
                                                 : deepNet->getCell(inputData);
 
                 // Special case for bias (CNTK)
                 // In CNTK models, bias is added as constant after the operator
                 // In this case, we try to merge everything in the operator bias
-                if (cell
+                if (dataCell
                     &&(node.op_type() == "Add" || node.op_type() == "Sum")
-                    && (cell->getType() == ConvCell::Type
-                        || cell->getType() == FcCell::Type)
-                    && cell->getParameter<bool>("NoBias"))
+                    && (dataCell->getType() == ConvCell::Type
+                        || dataCell->getType() == FcCell::Type)
+                    && dataCell->getParameter<bool>("NoBias"))
                 {
-                    std::shared_ptr<Cell_Frame_Top> cellFrame
-                        = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+                    std::shared_ptr<Cell_Frame_Top> dataCellFrame
+                        = std::dynamic_pointer_cast<Cell_Frame_Top>(dataCell);
 
-                    if (!cellFrame->getActivation()
-                        || cellFrame->getActivation()->getType()
+                    if (!dataCellFrame->getActivation()
+                        || dataCellFrame->getActivation()->getType()
                             == LinearActivation::Type)
                     {
-                        cell->setParameter<bool>("NoBias", false);
-                        cell->initialize(); // Re-init with bias!
+                        dataCell->setParameter<bool>("NoBias", false);
+                        dataCell->initialize(); // Re-init with bias!
 
                         Tensor<Float_T> biases = ONNX_unpackTensor<Float_T>(
                             (*itInit).second);
-                        biases.reshape({1, cell->getNbOutputs()});
+                        biases.reshape({1, dataCell->getNbOutputs()});
 
                         for (unsigned int output = 0;
-                            output < cell->getNbOutputs(); ++output)
+                            output < dataCell->getNbOutputs(); ++output)
                         {
-                            if (cell->getType() == ConvCell::Type) {
-                                std::dynamic_pointer_cast<ConvCell>(cell)
+                            if (dataCell->getType() == ConvCell::Type) {
+                                std::dynamic_pointer_cast<ConvCell>(dataCell)
                                     ->setBias(output, biases[output]);
                             }
-                            else if (cell->getType() == FcCell::Type) {
-                                std::dynamic_pointer_cast<FcCell>(cell)
+                            else if (dataCell->getType() == FcCell::Type) {
+                                std::dynamic_pointer_cast<FcCell>(dataCell)
                                     ->setBias(output, biases[output]);
                             }
                         }
