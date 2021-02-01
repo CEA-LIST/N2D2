@@ -512,6 +512,54 @@ tensor_cast(const BaseTensor& base)
 
         std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
     }
+    else if (base.getType() == &typeid(int8_t)) {
+        const Tensor<int8_t>& tensor
+            = dynamic_cast<const Tensor<int8_t>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(uint8_t)) {
+        const Tensor<uint8_t>& tensor
+            = dynamic_cast<const Tensor<uint8_t>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(int16_t)) {
+        const Tensor<int16_t>& tensor
+            = dynamic_cast<const Tensor<int16_t>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(uint16_t)) {
+        const Tensor<uint16_t>& tensor
+            = dynamic_cast<const Tensor<uint16_t>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(int32_t)) {
+        const Tensor<int32_t>& tensor
+            = dynamic_cast<const Tensor<int32_t>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(uint32_t)) {
+        const Tensor<uint32_t>& tensor
+            = dynamic_cast<const Tensor<uint32_t>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(int64_t)) {
+        const Tensor<int64_t>& tensor
+            = dynamic_cast<const Tensor<int64_t>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(uint64_t)) {
+        const Tensor<uint64_t>& tensor
+            = dynamic_cast<const Tensor<uint64_t>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
     else {
         throw std::runtime_error("tensor_cast(): "
                                  "tensor type not supported!");
