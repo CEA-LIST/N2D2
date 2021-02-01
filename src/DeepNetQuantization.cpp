@@ -27,7 +27,7 @@
 #include <vector>
 
 #include "DeepNet.hpp"
-#include "Quantizer/DeepNetQuantizer.hpp"
+#include "DeepNetQuantization.hpp"
 #include "Histogram.hpp"
 #include "RangeStats.hpp"
 #include "ScalingMode.hpp"
@@ -54,10 +54,10 @@
 
 #define VERBOSE_QUANT
 
-N2D2::DeepNetQuantizer::DeepNetQuantizer(DeepNet& deepNet): mDeepNet(deepNet) {
+N2D2::DeepNetQuantization::DeepNetQuantization(DeepNet& deepNet): mDeepNet(deepNet) {
 }
 
-void N2D2::DeepNetQuantizer::clipWeights(std::size_t nbBits, ClippingMode wtClippingMode) {
+void N2D2::DeepNetQuantization::clipWeights(std::size_t nbBits, ClippingMode wtClippingMode) {
     if(wtClippingMode == ClippingMode::NONE) {
         return;
     }
@@ -69,7 +69,8 @@ void N2D2::DeepNetQuantizer::clipWeights(std::size_t nbBits, ClippingMode wtClip
         for (auto itCell = it->begin(); itCell != it->end(); ++itCell) {
             const auto& cell = mDeepNet.getCell(*itCell);
 
-            const auto range = cell->getFreeParametersRange(false);
+            const auto range
+                = cell->getFreeParametersRange(Cell::Multiplicative);
             const Float_T maxWeight = Utils::max_abs(range.first, range.second);
 
             if(maxWeight == 0) {
@@ -101,7 +102,7 @@ void N2D2::DeepNetQuantizer::clipWeights(std::size_t nbBits, ClippingMode wtClip
     }
 }
 
-long double N2D2::DeepNetQuantizer::getMaxParentsScaling(const std::shared_ptr<Cell>& cell, 
+long double N2D2::DeepNetQuantization::getMaxParentsScaling(const std::shared_ptr<Cell>& cell, 
                                 const std::unordered_map<std::string, long double>& scalingForCells) const 
 {
     long double maxParentsScaling = 0.0;
@@ -115,7 +116,7 @@ long double N2D2::DeepNetQuantizer::getMaxParentsScaling(const std::shared_ptr<C
     return maxParentsScaling;
 }
 
-void N2D2::DeepNetQuantizer::rescaleParentsToScaling(const std::shared_ptr<Cell>& cell, 
+void N2D2::DeepNetQuantization::rescaleParentsToScaling(const std::shared_ptr<Cell>& cell, 
                                         const std::unordered_map<std::string, long double>& scalingForCells,
                                         long double scaling)
 {
@@ -142,7 +143,7 @@ void N2D2::DeepNetQuantizer::rescaleParentsToScaling(const std::shared_ptr<Cell>
     }
 }
 
-void N2D2::DeepNetQuantizer::reportOutputsRange(std::unordered_map<std::string, RangeStats>& outputsRange) const {
+void N2D2::DeepNetQuantization::reportOutputsRange(std::unordered_map<std::string, RangeStats>& outputsRange) const {
     const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
     std::map<std::string, std::shared_ptr<Cell>>& cells = mDeepNet.getCells();
 
@@ -155,7 +156,7 @@ void N2D2::DeepNetQuantizer::reportOutputsRange(std::unordered_map<std::string, 
         }
     }
 
-#pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < (int)layers.size(); ++i) {
 #ifdef CUDA
         CudaContext::setDevice();
@@ -189,7 +190,7 @@ void N2D2::DeepNetQuantizer::reportOutputsRange(std::unordered_map<std::string, 
     }
 }
 
-void N2D2::DeepNetQuantizer::reportOutputsHistogram(
+void N2D2::DeepNetQuantization::reportOutputsHistogram(
                         std::unordered_map<std::string, Histogram>& outputsHistogram,
                         const std::unordered_map<std::string, RangeStats>& outputsRange,
                         std::size_t nbBits, ClippingMode actClippingMode) const
@@ -261,7 +262,7 @@ void N2D2::DeepNetQuantizer::reportOutputsHistogram(
     }
 }
 
-void N2D2::DeepNetQuantizer::rescaleAdditiveParameters(double rescaleFactor) {
+void N2D2::DeepNetQuantization::rescaleAdditiveParameters(double rescaleFactor) {
     const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
 
     for (auto it = layers.begin() + 1; it != layers.end(); ++it) {
@@ -277,13 +278,28 @@ void N2D2::DeepNetQuantizer::rescaleAdditiveParameters(double rescaleFactor) {
     }
 }
 
-void N2D2::DeepNetQuantizer::quantizeNetwork(const std::unordered_map<std::string, Histogram>& outputsHistogram,
+void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::string, Histogram>& outputsHistogram,
                                                 const std::unordered_map<std::string, RangeStats>& outputsRange,
                                                 std::size_t nbBits,
                                                 ClippingMode actClippingMode,
                                                 ScalingMode actScalingMode,
                                                 bool rescalePerOutputChannel)
 {
+    const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
+
+    // Synchronize to H and no keep in sync
+    for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
+        for (auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
+            std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
+            std::shared_ptr<Cell_Frame_Top> cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+            if(!cell || !cellFrame) {
+                throw std::runtime_error("Invalid cell.");
+            }
+
+            cellFrame->synchronizeToH(false);
+        }
+    }
+
     std::unordered_map<std::string, long double> biasScalings;
     if(rescalePerOutputChannel) {
         biasScalings = quantizeFreeParemetersPerOutputCh(nbBits);
@@ -300,7 +316,6 @@ void N2D2::DeepNetQuantizer::quantizeNetwork(const std::unordered_map<std::strin
         << std::endl;
 #endif
 
-    const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
     for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
         for (auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
             std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
@@ -347,13 +362,26 @@ void N2D2::DeepNetQuantizer::quantizeNetwork(const std::unordered_map<std::strin
         Database::All
     );
 
+    // Synchronize to D and keep in sync
+    for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
+        for (auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
+            std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
+            std::shared_ptr<Cell_Frame_Top> cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+            if(!cell || !cellFrame) {
+                throw std::runtime_error("Invalid cell.");
+            }
+
+            cellFrame->synchronizeToD(true);
+        }
+    }
+
 #ifdef VERBOSE_QUANT
     std::cout << "  Done!" << std::endl;
 #endif
 }
 
 // See https://arxiv.org/pdf/1906.04721.pdf
-void N2D2::DeepNetQuantizer::crossLayerEqualization(
+void N2D2::DeepNetQuantization::crossLayerEqualization(
     double maxQuantRangeDelta,
     bool removeReLUClipping)
 {
@@ -363,6 +391,8 @@ void N2D2::DeepNetQuantizer::crossLayerEqualization(
 
     const std::vector<std::vector<std::string>> layers = mDeepNet.getLayers();
     double maxRangeDelta;
+
+    std::set<std::shared_ptr<Cell_Frame_Top> > keepInSync;
 
     do {
         maxRangeDelta = 0.0;
@@ -384,6 +414,8 @@ void N2D2::DeepNetQuantizer::crossLayerEqualization(
                     && (parentsCells[0]->getType() == ConvCell::Type
                     || parentsCells[0]->getType() == FcCell::Type))
                 {
+                    std::shared_ptr<Cell_Frame_Top> cellFrame
+                        = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
                     std::shared_ptr<Cell_Frame_Top> parentCellFrame
                         = std::dynamic_pointer_cast<Cell_Frame_Top>(parentsCells[0]);
                     const std::shared_ptr<Activation>& parentActivation
@@ -421,27 +453,58 @@ void N2D2::DeepNetQuantizer::crossLayerEqualization(
                         << " and " << parentsCells[0]->getName() << std::endl;
 #endif
 
+                    bool newInsert;
+                    std::tie(std::ignore, newInsert)
+                        = keepInSync.insert(cellFrame);
+
+                    if (newInsert)
+                        cellFrame->synchronizeToH(false);
+
+                    std::tie(std::ignore, newInsert)
+                        = keepInSync.insert(parentCellFrame);
+
+                    if (newInsert)
+                        parentCellFrame->synchronizeToH(false);
+
                     for(std::size_t output = 0;
                         output < parentsCells[0]->getNbOutputs(); output++)
                     {
+                        const auto bias1MinMax = parentsCells[0]
+                            ->getFreeParametersRangePerOutput(output,
+                                                        Cell::Additive);
                         const auto r1MinMax = parentsCells[0]
-                            ->getFreeParametersRangePerOutput(output, false);
+                            ->getFreeParametersRangePerOutput(output,
+                                                        Cell::Multiplicative);
                         const auto r2MinMax = cell
                             ->getFreeParametersRangePerChannel(output);
 
+                        const Float_T bias1 = Utils::max_abs(bias1MinMax.first,
+                                                          bias1MinMax.second);
                         const Float_T r1 = Utils::max_abs(r1MinMax.first,
                                                           r1MinMax.second);
                         const Float_T r2 = Utils::max_abs(r2MinMax.first,
                                                           r2MinMax.second);
 
-                        const double scalingPerOutput = (1.0 / r2) * std::sqrt(r1 * r2);
+                        // If r1 is 0.0, meaning the parent cell's output 
+                        // weights range is 0, the bias can still contribute
+                        // to the cell channel, in which case no rescaling is
+                        // done. If the bias is 0, then the cell's channel 
+                        // weights can be set to 0.
+                        if (r1 > 0.0 || bias1 == 0.0) {
+                            const double scalingPerOutput1 = (r1 > 0.0)
+                                ? (1.0 / r1) * std::sqrt(r1 * r2) : 0.0;
+                            const double scalingPerOutput2 = (r2 > 0.0)
+                                ? (1.0 / r2) * std::sqrt(r1 * r2) : 0.0;
 
-                        parentsCells[0]->processFreeParametersPerOutput([&](Float_T w) { 
-                                                                return w/scalingPerOutput; 
-                                                            }, output, Cell::All);
-                        cell->processFreeParametersPerChannel([&](Float_T w) { 
-                                                                return w*scalingPerOutput; 
-                                                            }, output);
+                            parentsCells[0]->processFreeParametersPerOutput(
+                                [&](Float_T w) { 
+                                    return w*scalingPerOutput1; 
+                                }, output, Cell::All);
+                            cell->processFreeParametersPerChannel(
+                                [&](Float_T w) { 
+                                    return w*scalingPerOutput2; 
+                                }, output);
+                        }
 
                         const double rangeDelta = std::abs(r1 - r2);
 
@@ -458,9 +521,15 @@ void N2D2::DeepNetQuantizer::crossLayerEqualization(
 #endif
     }
     while (maxRangeDelta > maxQuantRangeDelta);
+
+    for (std::set<std::shared_ptr<Cell_Frame_Top> >::const_iterator it
+        = keepInSync.begin(), itEnd = keepInSync.end(); it != itEnd; ++it)
+    {
+        (*it)->synchronizeToD(true);
+    }
 }
 
-std::unordered_map<std::string, long double> N2D2::DeepNetQuantizer::quantizeFreeParemeters(std::size_t nbBits) {
+std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantizeFreeParemeters(std::size_t nbBits) {
 #ifdef VERBOSE_QUANT
     std::cout << "  Quantizing free parameters:" << std::endl;
 #endif
@@ -485,7 +554,8 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantizer::quantizeFre
                                                   wQuantScaling*(std::pow(2, nbBits - 1) - 1);
 
 
-            const std::pair<Float_T, Float_T> wMinMax = cell->getFreeParametersRange(false);
+            const std::pair<Float_T, Float_T> wMinMax
+                = cell->getFreeParametersRange(Cell::Multiplicative);
             const Float_T wScalingCell = Utils::max_abs(wMinMax.first, wMinMax.second);
             if(wScalingCell != 0.0) {
                 cell->processFreeParameters([&](Float_T w) { return w*(wQuantScaling/wScalingCell); }, 
@@ -510,7 +580,7 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantizer::quantizeFre
     return biasScalings;
 }
 
-std::unordered_map<std::string, long double> N2D2::DeepNetQuantizer::quantizeFreeParemetersPerOutputCh(
+std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantizeFreeParemetersPerOutputCh(
                                                                             std::size_t nbBits) 
 {
 #ifdef VERBOSE_QUANT
@@ -537,12 +607,15 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantizer::quantizeFre
                                                   wQuantScaling*(std::pow(2, nbBits - 1) - 1);
 
 
-            const std::pair<Float_T, Float_T> wMinMax = cell->getFreeParametersRange(false);
+            const std::pair<Float_T, Float_T> wMinMax
+                = cell->getFreeParametersRange(Cell::Multiplicative);
             const Float_T wScalingCell = Utils::max_abs(wMinMax.first, wMinMax.second);
             if(wScalingCell != 0.0) {
                 std::vector<Float_T> scalingPerOutput(cell->getNbOutputs());
                 for(std::size_t output = 0; output < cell->getNbOutputs(); output++) {
-                    const auto woMinMax = cell->getFreeParametersRangePerOutput(output, false);
+                    const auto woMinMax
+                        = cell->getFreeParametersRangePerOutput(output,
+                                                          Cell::Multiplicative);
                     const Float_T wScalingCellOutput = std::max(
                                                          std::min(wScalingCell, 0.1f), 
                                                          Utils::max_abs(woMinMax.first, woMinMax.second)
@@ -589,7 +662,7 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantizer::quantizeFre
     return biasScalings;
 }
 
-void N2D2::DeepNetQuantizer::quantizeActivations(
+void N2D2::DeepNetQuantization::quantizeActivations(
                 const std::unordered_map<std::string, Histogram>& outputsHistogram,
                 const std::unordered_map<std::string, RangeStats>& outputsRange,
                 std::unordered_map<std::string, long double>& biasScalings,
@@ -708,7 +781,7 @@ void N2D2::DeepNetQuantizer::quantizeActivations(
     fuseScalingCells();
 }
 
-double N2D2::DeepNetQuantizer::getActivationQuantizationScaling(const Cell& cell, std::size_t nbBits) const {
+double N2D2::DeepNetQuantization::getActivationQuantizationScaling(const Cell& cell, std::size_t nbBits) const {
     const double unsignedMax = std::pow(2, nbBits) - 1;
     const double signedMax = std::pow(2, nbBits - 1) - 1;
 
@@ -740,7 +813,7 @@ double N2D2::DeepNetQuantizer::getActivationQuantizationScaling(const Cell& cell
     }
 }
 
-void N2D2::DeepNetQuantizer::fuseScalingCells() {
+void N2D2::DeepNetQuantization::fuseScalingCells() {
 #ifdef VERBOSE_QUANT
     std::cout << "  Fuse scaling cells:" << std::endl;
 #endif
@@ -800,7 +873,7 @@ void N2D2::DeepNetQuantizer::fuseScalingCells() {
     }
 }
 
-void N2D2::DeepNetQuantizer::fuseScalingCellWithParentActivation(
+void N2D2::DeepNetQuantization::fuseScalingCellWithParentActivation(
                                                     const std::shared_ptr<ScalingCell>& scalingCell, 
                                                     Activation& parentCellActivation)
 {
@@ -847,7 +920,7 @@ void N2D2::DeepNetQuantizer::fuseScalingCellWithParentActivation(
     }
 }
 
-void N2D2::DeepNetQuantizer::fuseScalingCellWithParentScalingCell(
+void N2D2::DeepNetQuantization::fuseScalingCellWithParentScalingCell(
                                         const std::shared_ptr<ScalingCell>& scalingCell, 
                                         const std::shared_ptr<ScalingCell>& parentScalingCell)
 {
@@ -876,7 +949,7 @@ void N2D2::DeepNetQuantizer::fuseScalingCellWithParentScalingCell(
     mDeepNet.removeCell(scalingCell);
 }
 
-void N2D2::DeepNetQuantizer::moveScalingCellAboveParentElemWiseCell(
+void N2D2::DeepNetQuantization::moveScalingCellAboveParentElemWiseCell(
                                         const std::shared_ptr<ScalingCell>& scalingCell, 
                                         const std::shared_ptr<ElemWiseCell>& parentElemWiseCell)
 {
@@ -911,7 +984,7 @@ void N2D2::DeepNetQuantizer::moveScalingCellAboveParentElemWiseCell(
     }
 }
 
-void N2D2::DeepNetQuantizer::approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
+void N2D2::DeepNetQuantization::approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
                                                        std::size_t nbBits) 
 {
     assert(cell.getScaling().getMode() == ScalingMode::FLOAT_MULT);
@@ -947,7 +1020,7 @@ void N2D2::DeepNetQuantizer::approximateScalingCell(ScalingCell& cell, ScalingMo
 #endif
 }
 
-std::pair<std::vector<unsigned char>, double> N2D2::DeepNetQuantizer::approximateScalingWithPowerOf2Divs(
+std::pair<std::vector<unsigned char>, double> N2D2::DeepNetQuantization::approximateScalingWithPowerOf2Divs(
                                                         Float_T scaling, std::size_t nbDivisions) 
 {
     static const double ROUNDING_THRESHOLD = 0.98;
@@ -989,7 +1062,7 @@ std::pair<std::vector<unsigned char>, double> N2D2::DeepNetQuantizer::approximat
     return std::make_pair(powerOf2Divs, precision);
 }
 
-std::vector<std::vector<unsigned char>> N2D2::DeepNetQuantizer::approximateActivationScalingWithPowerOf2Divs(Cell& cell, 
+std::vector<std::vector<unsigned char>> N2D2::DeepNetQuantization::approximateActivationScalingWithPowerOf2Divs(Cell& cell, 
                                                         const std::vector<Float_T>& scalingPerOutput, 
                                                         std::size_t nbDivisions)
 {
@@ -1022,7 +1095,7 @@ std::vector<std::vector<unsigned char>> N2D2::DeepNetQuantizer::approximateActiv
     return exponentsPerOutput;
 }
 
-double N2D2::DeepNetQuantizer::getCellThreshold(const std::string& cellName,
+double N2D2::DeepNetQuantization::getCellThreshold(const std::string& cellName,
                                        const std::unordered_map<std::string, Histogram>& outputsHistogram,
                                        const std::unordered_map<std::string, RangeStats>& outputsRange,
                                        std::size_t nbBits, ClippingMode actClippingMode) 
@@ -1039,7 +1112,7 @@ double N2D2::DeepNetQuantizer::getCellThreshold(const std::string& cellName,
     }
 }
 
-void N2D2::DeepNetQuantizer::approximateActivationScaling(Cell& cell, Activation& activation,
+void N2D2::DeepNetQuantization::approximateActivationScaling(Cell& cell, Activation& activation,
                                                              ScalingMode actScalingMode) 
 {
     assert(activation.getActivationScaling().getMode() == ScalingMode::FLOAT_MULT);
@@ -1125,7 +1198,7 @@ void N2D2::DeepNetQuantizer::approximateActivationScaling(Cell& cell, Activation
     }
 }
 
-std::string N2D2::DeepNetQuantizer::getCellModelType(const Cell& cell) {
+std::string N2D2::DeepNetQuantization::getCellModelType(const Cell& cell) {
     const Cell_Frame_Top& cellFrameTop = dynamic_cast<const Cell_Frame_Top&>(cell);
     if(cellFrameTop.isCuda()) {
         return Cell_Frame_Top::FRAME_CUDA_TYPE;

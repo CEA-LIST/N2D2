@@ -78,7 +78,6 @@ N2D2::LSTMCell_Frame_CUDA<T>::LSTMCell_Frame_CUDA(const DeepNet& deepNet,
 	  mDiffhy(std::make_shared<CudaTensor<T> >()),
 	  mcx(std::make_shared<CudaTensor<T> >()),
 	  mDiffcy(std::make_shared<CudaTensor<T> >()),
-	  mSynchronized(false),
 	  mContinousBatch(false)
 
 { //ctr
@@ -1106,20 +1105,16 @@ template <class T>
 void N2D2::LSTMCell_Frame_CUDA<T>::exportFreeParameters(const std::string
                                                           & fileName) const
 {
-    mWeights->synchronizeDToH();
-
 	std::cout << "---------------------------------------------> Export Weights  in " << fileName << "<------------------------------------" << std::endl;
-    mSynchronized = true;
+	synchronizeToH(false);
     LSTMCell::exportFreeParameters(fileName);
-    mSynchronized = false;
+	keepInSync(true);
 
 }
 /*void N2D2::LSTMCell_Frame_CUDA::exportFreeParameters(const std::string
                                                           & fileName) const
 {
-    mWeights->synchronizeDToH();
-
-    mSynchronized = true;
+	synchronizeToH(false);
 	std::cout << "---------------------------------------------> Export Weights  in " << fileName << "<------------------------------------" << std::endl;
 	long long int nbWeights;
     nbWeights = 4*(mBidirectional? 2 : 1)* (  mInputDim*mHiddenSize+mHiddenSize*mHiddenSize+2*mHiddenSize +
@@ -1147,7 +1142,7 @@ void N2D2::LSTMCell_Frame_CUDA<T>::exportFreeParameters(const std::string
                 weights << getWeight(output) << "\n";
     }
 
-    mSynchronized = false;
+	keepInSync(true);
 }*/
 
 template <class T>
@@ -1155,18 +1150,16 @@ void N2D2::LSTMCell_Frame_CUDA<T>::importFreeParameters(const std::string
                                                           & fileName,
                                                           bool ignoreNotExists)
 {
-    mSynchronized = true;
+	keepInSync(false);
     LSTMCell::importFreeParameters(fileName, ignoreNotExists);
-    mSynchronized = false;
-
-	mWeights->synchronizeHToD();
+	synchronizeToD(true);
 }
 
 /*void N2D2::LSTMCell_Frame_CUDA::importFreeParameters(const std::string
                                                           & fileName,
                                                           bool ignoreNotExists)
 {
-    mSynchronized = true;
+	keepInSync(false);
     std::cout <<"-----------------------------> import Weights from -->" << fileName << std::endl;
 	const std::string fileBase = Utils::fileBaseName(fileName);
     std::string fileExt = Utils::fileExtension(fileName);
@@ -1210,31 +1203,24 @@ void N2D2::LSTMCell_Frame_CUDA<T>::importFreeParameters(const std::string
         }
     }
 	std::cout <<"-----------------------------> Weights imported !!!!" << std::endl;
-    mSynchronized = false;
 
-    mWeights->synchronizeHToD();
+	synchronizeToD(true);
 }*/
 
 template <class T>
 void N2D2::LSTMCell_Frame_CUDA<T>::logFreeParametersDistrib(const std::string
                                                          & fileName) const
 {
-    mWeights->synchronizeDToH();
-
-    mSynchronized = true;
+	synchronizeToH(false);
     LSTMCell::logFreeParametersDistrib(fileName);
-    mSynchronized = false;
+	keepInSync(true);
 }
 
 /*void N2D2::LSTMCell_Frame_CUDA::logFreeParametersDistrib(const std::string
                                                          & fileName) const
 {
 
-	mWeights->synchronizeDToH();
-
-    mSynchronized = true;
-
-
+	synchronizeToH(false);
 
     // Append all weights
     std::vector<double> weights;
@@ -1293,7 +1279,7 @@ void N2D2::LSTMCell_Frame_CUDA<T>::logFreeParametersDistrib(const std::string
     gnuplot.plot(fileName,
                  "using (bin($1,binwidth)):(1.0) smooth freq with boxes");
 
-	mSynchronized = false;
+	keepInSync(true);
 }*/
 
 template <class T>
@@ -1325,6 +1311,20 @@ void N2D2::LSTMCell_Frame_CUDA<T>::setdcytest(const std::shared_ptr<Filler>& fil
 	mDiffcyFillerTest->apply((*mDiffcy));
 	mDiffcy->synchronizeHToD();
 
+}
+
+template <class T>
+void N2D2::LSTMCell_Frame_CUDA<T>::synchronizeToH(bool keepInSync_) const
+{
+    mWeights->synchronizeDToH();
+    keepInSync(keepInSync_);
+}
+
+template <class T>
+void N2D2::LSTMCell_Frame_CUDA<T>::synchronizeToD(bool keepInSync_)
+{
+    mWeights->synchronizeHToD();
+    keepInSync(keepInSync_);
 }
 
 template <class T>

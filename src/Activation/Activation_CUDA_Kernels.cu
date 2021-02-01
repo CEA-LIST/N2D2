@@ -92,7 +92,7 @@ __global__ void cudaRectifier_backPropagate_kernel(T* y,
 
     for (unsigned int i = index; i < size; i += stride) {
         if (clipping > 0.0) {
-            dy[i] = dx[i] * ((y[i] > clipping) ? 0.0f : (y[i] > 0.0f)
+            dy[i] = dx[i] * ((y[i] == clipping) ? 0.0f : (y[i] > 0.0f)
                                        ? 1.0f
                                        : leakSlope);
         }
@@ -115,13 +115,13 @@ __global__ void cudaRectifier_backPropagate_kernel<__half>(__half* y,
     for (unsigned int i = index; i < size; i += stride) {
         if (__half2float(clipping) > 0.0f) {
 #if __CUDA_ARCH__ >= 530
-            dy[i] = (__hgt(y[i], clipping))
+            dy[i] = (__heq(y[i], clipping))
                 ? __float2half(0.0f)
                 : (__half2float(y[i]) > 0.0f)
                     ? dx[i]
                     : __hmul(leakSlope, dx[i]);
 #else
-            dy[i] = (__half2float(y[i]) > __half2float(clipping))
+            dy[i] = (__half2float(y[i]) == __half2float(clipping))
                 ? __float2half(0.0f)
                 : (__half2float(y[i]) > 0.0f)
                     ? dx[i]

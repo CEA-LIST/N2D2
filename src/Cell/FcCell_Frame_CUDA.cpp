@@ -57,8 +57,7 @@ N2D2::FcCell_Frame_CUDA<T>::FcCell_Frame_CUDA(const DeepNet& deepNet, const std:
       Cell_Frame_CUDA<T>(deepNet, name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
-      mOnesVector(NULL),
-      mSynchronized(false)
+      mOnesVector(NULL)
 {
     // ctor
     mWeightsFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
@@ -277,8 +276,7 @@ void N2D2::FcCell_Frame_CUDA<T>::backPropagate()
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         const unsigned int inputSize = mInputs[k].dimX() * mInputs[k].dimY()
                                        * mInputs[k].dimZ();
-        const T beta((mWeightsSolvers[k]->isNewIteration())
-                                    ? 0.0f : 1.0f);
+        const T beta((mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f);
 
         std::shared_ptr<CudaDeviceTensor<T> > input
             = cuda_device_tensor_cast_nocopy<T>(mInputs[k]);
@@ -314,8 +312,7 @@ void N2D2::FcCell_Frame_CUDA<T>::backPropagate()
     }
 
     if (!mNoBias) {
-        const T beta((mBiasSolver->isNewIteration())
-                                    ? 0.0f : 1.0f);
+        const T beta((mBiasSolver->isNewIteration()) ? 0.0f : 1.0f);
         std::shared_ptr<CudaDeviceTensor<T> > diffBias;
 
         if (mQuantizer) {
@@ -327,13 +324,10 @@ void N2D2::FcCell_Frame_CUDA<T>::backPropagate()
         }
 
         // mDiffBias.getDevicePtr() = mDiffInputs.getDevicePtr * mOnesVector
-        // Using cublasGemm() because there is no cublasHgemv() yet
-        CHECK_CUBLAS_STATUS(cublasGemm(
+        CHECK_CUBLAS_STATUS(cublasGemv(
             CudaContext::cublasHandle(),
             CUBLAS_OP_N,
-            CUBLAS_OP_N,
             mOutputs.dimZ(),
-            1,
             mInputs.dimB(),
             reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(&alpha),
             reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(mDiffInputs.getDevicePtr()),
@@ -349,8 +343,7 @@ void N2D2::FcCell_Frame_CUDA<T>::backPropagate()
 
     if (!mDiffOutputs.empty() && mBackPropagate) {
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            const T betaData((mDiffOutputs[k].isValid())
-                                            ? 1.0f : 0.0f);
+            const T betaData((mDiffOutputs[k].isValid()) ? 1.0f : 0.0f);
             const unsigned int diffOutputSize = mDiffOutputs[k].dimX()
                                                 * mDiffOutputs[k].dimY()
                                                 * mDiffOutputs[k].dimZ();
@@ -464,24 +457,18 @@ template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::logFreeParameters(const std::string& fileName,
                                                 unsigned int output) const
 {
-    mSynapses.synchronizeDToH();
-    mBias.synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     FcCell::logFreeParameters(fileName, output);
-    mSynchronized = false;
+    keepInSync(true);
 }
 
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::logFreeParameters(const std::string
                                                 & dirName) const
 {
-    mSynapses.synchronizeDToH();
-    mBias.synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     FcCell::logFreeParameters(dirName);
-    mSynchronized = false;
+    keepInSync(true);
 }
 
 template <class T>
@@ -551,55 +538,53 @@ template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::exportFreeParameters(const std::string
                                                    & fileName) const
 {
-    mSynapses.synchronizeDToH();
-    mBias.synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     FcCell::exportFreeParameters(fileName);
-    mSynchronized = false;
+    //mSynchronized = false;
     if(mQuantizer) {
         mQuantizer->exportFreeParameters(fileName);
     }
-
+    keepInSync(true);
 }
 
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::importFreeParameters(const std::string& fileName,
                                                    bool ignoreNotExists)
 {
-    mSynchronized = true;
+    keepInSync(false);
     FcCell::importFreeParameters(fileName, ignoreNotExists);
-    mSynchronized = false;
-
-    mSynapses.synchronizeHToD();
-    mBias.synchronizeHToD();
+    //mSynchronized = false;
+    //mSynapses.synchronizeHToD();
+    //mBias.synchronizeHToD();
     if(mQuantizer) {
         mQuantizer->importFreeParameters(fileName, ignoreNotExists);
     }
+    synchronizeToD(true);
 }
 
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::logFreeParametersDistrib(const std::string
                                                        & fileName) const
 {
-    mSynapses.synchronizeDToH();
-    mBias.synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     FcCell::logFreeParametersDistrib(fileName);
-    mSynchronized = false;
+    keepInSync(true);
 }
 
 template <class T>
 std::pair<N2D2::Float_T, N2D2::Float_T>
-N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRange(bool withAdditiveParameters) const
+N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRange(FreeParametersType type) const
 {
-    mSynapses.synchronizeDToH();
-    mBias.synchronizeDToH();
+    const bool keepInSyncTop(mKeepInSync);
 
-    mSynchronized = true;
-    const std::pair<Float_T, Float_T> range = FcCell::getFreeParametersRange(withAdditiveParameters);
-    mSynchronized = false;
+    if (keepInSyncTop)
+        synchronizeToH(false);
+
+    const std::pair<Float_T, Float_T> range
+        = FcCell::getFreeParametersRange(type);
+
+    if (keepInSyncTop)
+        keepInSync(true);
 
     return range;
 }
@@ -607,14 +592,18 @@ N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRange(bool withAdditiveParameters) 
 template <class T>
 std::pair<N2D2::Float_T, N2D2::Float_T>
 N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRangePerOutput(std::size_t output, 
-                                                            bool withAdditiveParameters) const
+                                                            FreeParametersType type) const
 {
-    mSynapses.synchronizeDToH();
-    mBias.synchronizeDToH();
+    const bool keepInSyncTop(mKeepInSync);
 
-    mSynchronized = true;
-    const std::pair<Float_T, Float_T> range = FcCell::getFreeParametersRangePerOutput(output, withAdditiveParameters);
-    mSynchronized = false;
+    if (keepInSyncTop)
+        synchronizeToH(false);
+
+    const std::pair<Float_T, Float_T> range
+        = FcCell::getFreeParametersRangePerOutput(output, type);
+
+    if (keepInSyncTop)
+        keepInSync(true);
 
     return range;
 }
@@ -623,12 +612,15 @@ template <class T>
 std::pair<N2D2::Float_T, N2D2::Float_T>
 N2D2::FcCell_Frame_CUDA<T>::getFreeParametersRangePerChannel(std::size_t channel) const
 {
-    mSynapses.synchronizeDToH();
-    mBias.synchronizeDToH();
+    const bool keepInSyncTop(mKeepInSync);
 
-    mSynchronized = true;
+    if (keepInSyncTop)
+        synchronizeToH(false);
+
     const std::pair<Float_T, Float_T> range = FcCell::getFreeParametersRangePerChannel(channel);
-    mSynchronized = false;
+
+    if (keepInSyncTop)
+        keepInSync(true);
 
     return range;
 }
@@ -637,15 +629,15 @@ template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::processFreeParameters(std::function<Float_T(Float_T)> func,
                                                        FreeParametersType type)
 {
-    mSynapses.synchronizeDToH();
-    mBias.synchronizeDToH();
+    const bool keepInSyncTop(mKeepInSync);
 
-    mSynchronized = true;
+    if (keepInSyncTop)
+        synchronizeToH(false);
+
     FcCell::processFreeParameters(func, type);
-    mSynchronized = false;
 
-    mSynapses.synchronizeHToD();
-    mBias.synchronizeHToD();
+    if (keepInSyncTop)
+        synchronizeToD(true);
 }
 
 template <class T>
@@ -653,30 +645,46 @@ void N2D2::FcCell_Frame_CUDA<T>::processFreeParametersPerOutput(std::function<Fl
                                                                 std::size_t output,
                                                                 FreeParametersType type)
 {
-    mSynapses.synchronizeDToH();
-    mBias.synchronizeDToH();
+    const bool keepInSyncTop(mKeepInSync);
 
-    mSynchronized = true;
+    if (keepInSyncTop)
+        synchronizeToH(false);
+
     FcCell::processFreeParametersPerOutput(func, output, type);
-    mSynchronized = false;
 
-    mSynapses.synchronizeHToD();
-    mBias.synchronizeHToD();
+    if (keepInSyncTop)
+        synchronizeToD(true);
 }
 
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::processFreeParametersPerChannel(std::function<Float_T(Float_T)> func,
                                                                 std::size_t channel)
 {
+    const bool keepInSyncTop(mKeepInSync);
+
+    if (keepInSyncTop)
+        synchronizeToH(false);
+
+    FcCell::processFreeParametersPerChannel(func, channel);
+
+    if (keepInSyncTop)
+        synchronizeToD(true);
+}
+
+template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::synchronizeToH(bool keepInSync_) const
+{
     mSynapses.synchronizeDToH();
     mBias.synchronizeDToH();
+    keepInSync(keepInSync_);
+}
 
-    mSynchronized = true;
-    FcCell::processFreeParametersPerChannel(func, channel);
-    mSynchronized = false;
-
+template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::synchronizeToD(bool keepInSync_)
+{
     mSynapses.synchronizeHToD();
     mBias.synchronizeHToD();
+    keepInSync(keepInSync_);
 }
 
 template <class T>

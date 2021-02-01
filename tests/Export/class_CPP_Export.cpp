@@ -10,7 +10,7 @@
 #include <cstdlib>
 
 #include "DeepNet.hpp"
-#include "Quantizer/DeepNetQuantizer.hpp"
+#include "DeepNetQuantization.hpp"
 #include "Histogram.hpp"
 #include "N2D2.hpp"
 #include "Xnet/Network.hpp"
@@ -462,7 +462,7 @@ TEST(CPP_Export_8i, generate) {
     RangeStats::loadOutputsRange(testDataDir + "outputs_range.bin", outputsRange);
 
 
-    DeepNetQuantizer dnQuantization(*deepNet);
+    DeepNetQuantization dnQuantization(*deepNet);
     dnQuantization.quantizeNetwork(emptyOutputsHistogram, outputsRange,
                                    CellExport::mPrecision, ClippingMode::NONE, 
                                    ScalingMode::SINGLE_SHIFT, false);

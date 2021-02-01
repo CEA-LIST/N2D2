@@ -159,7 +159,7 @@ void init_CudaTensor(py::module &m) {
     declare_CudaDeviceTensor<double>(m, "double");
 
     py::class_<CudaBaseTensor>(m, "CudaBaseTensor")
-    .def("deviceTensor", &CudaBaseTensor::deviceTensor)
+    .def("deviceTensor", (CudaBaseDeviceTensor& (CudaBaseTensor::*)()) &CudaBaseTensor::deviceTensor)
     .def("hostBased", &CudaBaseTensor::hostBased);
 
     declare_CudaTensor<float>(m, "float");

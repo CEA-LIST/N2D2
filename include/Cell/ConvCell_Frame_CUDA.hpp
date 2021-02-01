@@ -35,12 +35,14 @@ namespace N2D2 {
 template <class T>
 class ConvCell_Frame_CUDA : public virtual ConvCell, public Cell_Frame_CUDA<T> {
 public:
+    using Cell_Frame_CUDA<T>::keepInSync;
     using Cell_Frame_CUDA<T>::mInputs;
     using Cell_Frame_CUDA<T>::mOutputs;
     using Cell_Frame_CUDA<T>::mDiffInputs;
     using Cell_Frame_CUDA<T>::mDiffOutputs;
     using Cell_Frame_CUDA<T>::mActivation;
     using Cell_Frame_CUDA<T>::mActivationDesc;
+    using Cell_Frame_CUDA<T>::mKeepInSync;
 
     ConvCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                         const std::vector<unsigned int>& kernelDims,
@@ -121,9 +123,9 @@ public:
                               bool ignoreNotExists = false);
     void logFreeParametersDistrib(const std::string& fileName) const;
     
-    std::pair<Float_T, Float_T> getFreeParametersRange(bool withAdditiveParameters = true) const;
+    std::pair<Float_T, Float_T> getFreeParametersRange(FreeParametersType type = All) const;
     std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 
-                                                                bool withAdditiveParameters) const;
+                                                                FreeParametersType type = All) const;
     std::pair<Float_T, Float_T> getFreeParametersRangePerChannel(std::size_t channel) const;
     
     void processFreeParameters(std::function<Float_T(Float_T)> func,
@@ -134,6 +136,8 @@ public:
     void processFreeParametersPerChannel(std::function<Float_T(Float_T)> /*func*/,
                                         std::size_t /*channel*/);
 
+    void synchronizeToH(bool keepInSync_) const;
+    void synchronizeToD(bool keepInSync_);
     virtual ~ConvCell_Frame_CUDA();
 
 protected:
@@ -167,7 +171,6 @@ protected:
 #endif
 
     cudnnConvolutionDescriptor_t mConvDesc;
-    mutable bool mSynchronized;
 
 private:
     static Registrar<ConvCell> mRegistrar;
@@ -211,7 +214,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::setWeight(unsigned int output,
     else
         sharedSynapses[output][channel] = tensor_cast<T>(value);
 
-    if (!mSynchronized)
+    if (mKeepInSync)
         sharedSynapses[output][channel].synchronizeHToD();
 }
 
@@ -246,7 +249,7 @@ N2D2::ConvCell_Frame_CUDA<T>::getWeight(unsigned int output,
 /*
     const CudaTensor<T>& sharedSynapses = mSharedSynapses[k];
 
-    if (!mSynchronized)
+    if (mKeepInSync)
         sharedSynapses[output][channel].synchronizeDToH();
 */
     //std::shared_ptr<CudaDeviceTensor<T> > sharedSynapses;
@@ -261,7 +264,7 @@ N2D2::ConvCell_Frame_CUDA<T>::getWeight(unsigned int output,
     }*/
     //else {
         const CudaTensor<T>& sharedSynapses = mSharedSynapses[k];
-        if (!mSynchronized)
+        if (mKeepInSync)
             sharedSynapses[output][channel].synchronizeDToH();
         value.resize(sharedSynapses[output][channel].dims());
         value = sharedSynapses[output][channel];
@@ -279,7 +282,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::setBias(unsigned int output,
 
     (*mBias)(output) = tensor_cast<T>(value)(0);
 
-    if (!mSynchronized)
+    if (mKeepInSync)
         mBias->synchronizeHToD(output, 1);
 }
 
@@ -287,7 +290,7 @@ template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::getBias(unsigned int output,
                                            BaseTensor& value) const
 {
-    if (!mSynchronized)
+    if (mKeepInSync)
         mBias->synchronizeDToH(output, 1);
 
     value.resize({1});

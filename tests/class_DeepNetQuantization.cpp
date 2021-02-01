@@ -22,7 +22,7 @@
 #include <unordered_map>
 
 #include "DeepNet.hpp"
-#include "Quantizer/DeepNetQuantizer.hpp"
+#include "DeepNetQuantization.hpp"
 #include "N2D2.hpp"
 #include "Histogram.hpp"
 #include "Xnet/Network.hpp"
@@ -46,7 +46,7 @@ void fillRangeAndHistorgramNetwork(DeepNet& deepNet, std::size_t nbTestStimuli,
                                    ClippingMode actClippingMode) 
 {
     const std::shared_ptr<StimuliProvider>& sp = deepNet.getStimuliProvider();
-    DeepNetQuantizer dnQuantization(deepNet);
+    DeepNetQuantization dnQuantization(deepNet);
 
     const std::size_t nbBatches = std::ceil(1.0*nbTestStimuli/sp->getBatchSize());
     for(std::size_t batch = 0; batch < nbBatches; batch++) {
@@ -96,7 +96,7 @@ bool isNormalized(DeepNet& deepNet, std::size_t nbTestStimuli) {
         for(auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
             const auto& cell = deepNet.getCell(*itCell);
 
-            auto range = cell->getFreeParametersRange(false);
+            auto range = cell->getFreeParametersRange(Cell::Multiplicative);
             if(Utils::max_abs(range.first, range.second) > 1.0 + delta) {
                 return false;
             }
@@ -138,7 +138,7 @@ bool isNormalized(DeepNet& deepNet, std::size_t nbTestStimuli) {
 }
 
 
-TEST_DATASET(DeepNetQuantizer, quantization,
+TEST_DATASET(DeepNetQuantization, quantization,
         (const std::string& model, const std::string& weightsDir,  
          bool unsignedEnv, bool rescalePerOutput, std::size_t nbTestStimuli, std::size_t nbBits, 
          ClippingMode actClippingMode, ScalingMode actScalingMode,
@@ -215,7 +215,7 @@ TEST_DATASET(DeepNetQuantizer, quantization,
                                   outputsRange, outputsHistogram, nbBits, actClippingMode);
 
 
-    DeepNetQuantizer dnQuantization(*deepNet);
+    DeepNetQuantization dnQuantization(*deepNet);
     dnQuantization.quantizeNetwork(outputsHistogram, outputsRange, nbBits, 
                                    actClippingMode, actScalingMode,
                                    rescalePerOutput);
@@ -230,7 +230,7 @@ TEST_DATASET(DeepNetQuantizer, quantization,
 
 
 #ifdef CUDA
-TEST_DATASET(DeepNetQuantizer, quantization_CUDA,
+TEST_DATASET(DeepNetQuantization, quantization_CUDA,
         (const std::string& model, const std::string& weightsDir,  
          bool unsignedEnv, bool rescalePerOutput, std::size_t nbTestStimuli, std::size_t nbBits, 
          ClippingMode actClippingMode, ScalingMode actScalingMode,
@@ -307,7 +307,7 @@ TEST_DATASET(DeepNetQuantizer, quantization_CUDA,
                                   outputsRange, outputsHistogram, nbBits, actClippingMode);
 
 
-    DeepNetQuantizer dnQuantization(*deepNet);
+    DeepNetQuantization dnQuantization(*deepNet);
     dnQuantization.quantizeNetwork(outputsHistogram, outputsRange, nbBits, 
                                    actClippingMode, actScalingMode,
                                    rescalePerOutput);

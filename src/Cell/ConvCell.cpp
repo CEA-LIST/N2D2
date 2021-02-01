@@ -759,29 +759,32 @@ void N2D2::ConvCell::writeMap(const std::string& fileName) const
     Gnuplot::setDefaultOutput();
 }
 
-std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRange(bool withAdditiveParameters)
+std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRange(FreeParametersType type)
     const
 {
     Float_T wMin = 0.0;
     Float_T wMax = 0.0;
 
     for (int output = 0; output < (int)getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-            if (!isConnection(channel, output))
-                continue;
+        if (type == All || type == Multiplicative) {
+            for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
+            {
+                if (!isConnection(channel, output))
+                    continue;
 
-            Tensor<Float_T> kernel;
-            getWeight(output, channel, kernel);
+                Tensor<Float_T> kernel;
+                getWeight(output, channel, kernel);
 
-            for (unsigned int index = 0; index < kernel.size(); ++index) {
-                const Float_T weight = kernel(index);
+                for (unsigned int index = 0; index < kernel.size(); ++index) {
+                    const Float_T weight = kernel(index);
 
-                if (weight < wMin)  wMin = weight;
-                if (weight > wMax)  wMax = weight;
+                    if (weight < wMin)  wMin = weight;
+                    if (weight > wMax)  wMax = weight;
+                }
             }
         }
 
-        if (withAdditiveParameters && !mNoBias) {
+        if ((type == All || type == Additive) && !mNoBias) {
             Tensor<Float_T> bias;
             getBias(output, bias);
 
@@ -795,7 +798,7 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRange(b
 
 
 std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRangePerOutput(
-            std::size_t output, bool withAdditiveParameters) const 
+            std::size_t output, FreeParametersType type) const 
 {
     Float_T wMin = 0.0;
     Float_T wMax = 0.0;
@@ -803,21 +806,23 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRangePe
     Tensor<Float_T> kernel;
     Tensor<Float_T> bias;
 
-    for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
-        if (!isConnection(channel, output))
-            continue;
+    if (type == All || type == Multiplicative) {
+        for (unsigned int channel = 0; channel < getNbChannels(); ++channel) {
+            if (!isConnection(channel, output))
+                continue;
 
-        getWeight(output, channel, kernel);
+            getWeight(output, channel, kernel);
 
-        for (unsigned int index = 0; index < kernel.size(); ++index) {
-            const Float_T weight = kernel(index);
+            for (unsigned int index = 0; index < kernel.size(); ++index) {
+                const Float_T weight = kernel(index);
 
-            if (weight < wMin)  wMin = weight;
-            if (weight > wMax)  wMax = weight;
+                if (weight < wMin)  wMin = weight;
+                if (weight > wMax)  wMax = weight;
+            }
         }
     }
 
-    if (withAdditiveParameters && !mNoBias) {
+    if ((type == All || type == Additive) && !mNoBias) {
         getBias(output, bias);
 
         if (bias(0) < wMin)  wMin = bias(0);

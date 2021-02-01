@@ -31,7 +31,9 @@ N2D2::Cell_Frame_CUDA<T>::Cell_Frame_CUDA(const DeepNet& deepNet, const std::str
                                        unsigned int nbOutputs,
                                        const std::shared_ptr
                                        <Activation>& activation)
-    : Cell(deepNet, name, nbOutputs), Cell_Frame_Top(activation)
+    : Cell(deepNet, name, nbOutputs),
+      Cell_Frame_Top(activation),
+      mKeepInSync(true)
 {
     // ctor
 }
@@ -667,6 +669,12 @@ unsigned int N2D2::Cell_Frame_CUDA<T>::getMaxOutput(unsigned int batchPos) const
     const Tensor<T> output = mOutputs[batchPos];
     return std::distance(output.begin(),
                          std::max_element(output.begin(), output.end()));
+}
+
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::keepInSync(bool keepInSync_) const
+{
+    mKeepInSync = keepInSync_;
 }
 
 template <class T>

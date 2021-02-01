@@ -179,11 +179,23 @@ namespace N2D2 {
 template <class T>
 void cudaClamp(T* x, unsigned int size, T minVal, T maxVal)
 {
-    cudaClamp_kernel<<<(size + 255) / 256, 256>>>(reinterpret_cast<typename Cuda::cuda_type<half_float::half>::type*>(x),
+    cudaClamp_kernel<<<(size + 255) / 256, 256>>>(reinterpret_cast<typename Cuda::cuda_type<T>::type*>(x),
                                             size,
-                                            reinterpret_cast<typename Cuda::cuda_type<half_float::half>::type&>(minVal),
-                                            reinterpret_cast<typename Cuda::cuda_type<half_float::half>::type&>(maxVal));
+                                            reinterpret_cast<typename Cuda::cuda_type<T>::type&>(minVal),
+                                            reinterpret_cast<typename Cuda::cuda_type<T>::type&>(maxVal));
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+template <class T>
+std::pair<T, T> cudaMinMax(T* x, unsigned int size)
+{
+    // Compute global min & max value on the full tensor
+    thrust::device_ptr<T> thrustPtr(x);
+    thrust::pair<typename thrust::device_vector<T>::iterator,
+                 typename thrust::device_vector<T>::iterator> minMaxPair
+        = thrust::minmax_element(thrustPtr, thrustPtr + size);
+
+    return std::make_pair(*(minMaxPair.first), *(minMaxPair.second));
 }
 
 struct HalfLess : public std::binary_function<__half, __half, bool> {
@@ -197,20 +209,21 @@ struct HalfLess : public std::binary_function<__half, __half, bool> {
     }
 };
 
-template <class T>
-std::pair<T, T> cudaMinMax(T* x, unsigned int size)
+template <>
+std::pair<half_float::half, half_float::half>
+cudaMinMax(half_float::half* x, unsigned int size)
 {
     // Compute global min & max value on the full tensor
-    thrust::device_ptr<typename Cuda::cuda_type<half_float::half>::type> thrustPtr(reinterpret_cast<typename Cuda::cuda_type<half_float::half>::type*>(x));
-    thrust::pair<thrust::device_vector<typename Cuda::cuda_type<half_float::half>::type>::iterator,
-                 thrust::device_vector<typename Cuda::cuda_type<half_float::half>::type>::iterator> minMaxPair
+    thrust::device_ptr<__half> thrustPtr(reinterpret_cast<__half*>(x));
+    thrust::pair<thrust::device_vector<__half>::iterator,
+                 thrust::device_vector<__half>::iterator> minMaxPair
         = thrust::minmax_element(thrustPtr, thrustPtr + size, HalfLess());
 
-    const typename Cuda::cuda_type<half_float::half>::type minVal = *(minMaxPair.first);
-    const typename Cuda::cuda_type<half_float::half>::type maxVal = *(minMaxPair.second);
+    const __half minVal = *(minMaxPair.first);
+    const __half maxVal = *(minMaxPair.second);
 
-    return std::make_pair(reinterpret_cast<const T&>(minVal),
-                          reinterpret_cast<const T&>(maxVal));
+    return std::make_pair(reinterpret_cast<const half_float::half&>(minVal),
+                          reinterpret_cast<const half_float::half&>(maxVal));
 }
 
 template <class T>

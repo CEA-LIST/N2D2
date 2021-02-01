@@ -44,14 +44,12 @@ public:
     static std::shared_ptr<DeepNet> generateFromONNX(Network& network,
         const std::string& fileName,
         IniParser& iniConfig,
-        std::shared_ptr<DeepNet> deepNet = std::shared_ptr<DeepNet>(),
-        const bool ONNXInitializer = true);
+        std::shared_ptr<DeepNet> deepNet = std::shared_ptr<DeepNet>());
 
 private:
     static void ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,
         const onnx::GraphProto& graph,
-        IniParser& iniConfig,
-        const bool ONNXInitializer = true);
+        IniParser& iniConfig);
     template <class T>
     static Tensor<T> ONNX_unpackTensor(const onnx::TensorProto* tensor,
                                        const std::vector<unsigned int>& expectedDims
@@ -141,6 +139,9 @@ N2D2::Tensor<T> N2D2::DeepNetGenerator::ONNX_unpackTensor(
         }
     }
     else if (onnxTensor->raw_data().size() > 0) {
+        if (tensor.empty())
+            tensor.resize({onnxTensor->raw_data().size() / sizeof(T)});
+
         assert(onnxTensor->raw_data().size() == (int)tensor.size() * sizeof(T));
 
         memcpy(&(tensor.data())[0],

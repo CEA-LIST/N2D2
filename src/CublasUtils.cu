@@ -192,6 +192,62 @@ cublasStatus_t cublasGemm<double>(cublasHandle_t handle,
         C, ldc);
 }
 
+template <>
+cublasStatus_t cublasGemv<__half>(cublasHandle_t handle, cublasOperation_t trans,
+                                 int m, int n,
+                                 const __half          *alpha,
+                                 const __half          *A, int lda,
+                                 const __half          *x, int incx,
+                                 const __half          *beta,
+                                 __half          *y, int incy)
+{
+    // Using cublasHgemm() because there is no cublasHgemv() yet
+    return cublasHgemm(handle,
+        trans, CUBLAS_OP_N,
+        m, 1, n,
+        alpha,
+        A, lda,
+        x, incx,
+        beta,
+        y, incy);
+}
+
+template <>
+cublasStatus_t cublasGemv<float>(cublasHandle_t handle, cublasOperation_t trans,
+                                 int m, int n,
+                                 const float          *alpha,
+                                 const float          *A, int lda,
+                                 const float          *x, int incx,
+                                 const float          *beta,
+                                 float          *y, int incy)
+{
+    return cublasSgemv(handle, trans,
+        m, n,
+        alpha,
+        A, lda,
+        x, incx,
+        beta,
+        y, incy);
+}
+
+template <>
+cublasStatus_t cublasGemv<double>(cublasHandle_t handle, cublasOperation_t trans,
+                                 int m, int n,
+                                 const double          *alpha,
+                                 const double          *A, int lda,
+                                 const double          *x, int incx,
+                                 const double          *beta,
+                                 double          *y, int incy)
+{
+    return cublasDgemv(handle, trans,
+        m, n,
+        alpha,
+        A, lda,
+        x, incx,
+        beta,
+        y, incy);
+}
+
 template cublasStatus_t  cublasScal(cublasHandle_t handle, int n,
                                   const half_float::half           *alpha,
                                   half_float::half           *x, int incx);

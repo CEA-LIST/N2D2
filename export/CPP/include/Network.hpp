@@ -821,8 +821,8 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
     const WDATA_T* __restrict weights,
     const Rescaling_T& __restrict rescaling) const
 {
-    static_assert(NB_CHANNELS == NB_OUTPUTS,
-        "NB_CHANNELS should be equal to NB_OUTPUTS.");
+    static_assert(NB_OUTPUTS % NB_CHANNELS == 0,
+        "NB_OUTPUTS should be a multiple of NB_CHANNELS.");
 
     constexpr int OUTPUTS_HEIGHT_NOPAD
         = (CHANNELS_HEIGHT - KERNEL_HEIGHT + STRIDE_Y) / STRIDE_Y;
@@ -859,6 +859,8 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                                 - OUTPUT_MEM_CONT_SIZE;
                 }
                 // <--
+
+                const int channel = (output * NB_CHANNELS) / NB_OUTPUTS;
 
                 SUM_T weightedSum = biasses[output];
 
@@ -900,7 +902,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                         || sxMax - sxMin == KERNEL_WIDTH))
                     {
                         macsOnRange<KERNEL_WIDTH, INPUT_MEM_STRIDE>(
-                            inputs + iOffset + output, 
+                            inputs + iOffset + channel, 
                             weights + wOffset, 
                             weightedSum);
                     }
@@ -924,7 +926,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                                             - INPUT_MEM_CONT_SIZE;
                             }
 
-                            weightedSum += inputs[iOffsetInRange + output]
+                            weightedSum += inputs[iOffsetInRange + channel]
                                 * weights[wOffset + sx];
                         }
                     }

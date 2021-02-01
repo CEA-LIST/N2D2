@@ -285,9 +285,9 @@ void cudaApplyLoss_kernel(T* lossMem,
                         + batchOutputOffset;
 
                 if (diffInputs[outputsIdx] != 0.0f) {
-                    const float val = (diffInputs[outputsIdx] > 0.0f)
+                    const T val = (diffInputs[outputsIdx] > 0.0f)
                                             ? targetVal : defaultVal;
-                    const float error = (val - outputs[outputsIdx])
+                    const T error = (val - outputs[outputsIdx])
                                             * abs(diffInputs[outputsIdx]);
                     diffInputs[outputsIdx] = error;
                     lossMem[outputsIdx] = error * error;
