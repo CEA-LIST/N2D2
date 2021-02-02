@@ -59,11 +59,8 @@ N2D2::ActivationCell_Frame_CUDA<T>::ActivationCell_Frame_CUDA(
 template <class T>
 void N2D2::ActivationCell_Frame_CUDA<T>::initialize()
 {
-    if (mInputs.size() > 1)
-        throw std::domain_error("ActivationCell_Frame_CUDA<T>::initialize(): "
-                                "inputs concatenation is not supported.");
-
     if (mInputs.dimZ() != mOutputs.dimZ()) {
+        std::cout << "mInputs.dimZ(): " << mInputs.dimZ() << " mOutputs.dimZ(): " << mOutputs.dimZ() << std::endl;
         throw std::domain_error("ActivationCell_Frame_CUDA<T>::initialize():"
                                 " the number of output channels must be equal "
                                 "to the sum of inputs channels.");
@@ -74,10 +71,24 @@ template <class T>
 void N2D2::ActivationCell_Frame_CUDA<T>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
+    
+    // Copy data following inputs size and batch size to allow 
+    // in-place operation in activation step
+    size_t outStrideOffset = 0;
+    for(size_t b = 0; b < mOutputs.dimB(); ++b) {
+        for(size_t k = 0; k < mInputs.size(); ++k) {
+            const CudaTensor<T>& input = cuda_tensor_cast<T>(mInputs[k]);
+            const size_t chrunkSize 
+                = (input.dimX()*input.dimY()*input.dimZ()) ;
+            thrust_copy(input.getDevicePtr() + b*chrunkSize,
+                        mOutputs.getDevicePtr() + outStrideOffset,
+                        chrunkSize);
+            
+            outStrideOffset += chrunkSize;
+        }
+    }
 
-    const CudaTensor<T>& input = cuda_tensor_cast<T>(mInputs[0]);
-    mActivation->propagate(*this, input, mOutputs, inference);
-
+    mActivation->propagate(*this, mOutputs, inference);
     mDiffInputs.clearValid();
 }
 

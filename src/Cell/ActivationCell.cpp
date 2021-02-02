@@ -48,5 +48,6 @@ void N2D2::ActivationCell::getStats(Stats& stats) const
 
 void N2D2::ActivationCell::setOutputsDims()
 {
-    mOutputsDims = mInputsDims;
+    mOutputsDims[0] = mInputsDims[0];
+    mOutputsDims[1] = mInputsDims[1];
 }
