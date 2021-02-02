@@ -132,6 +132,7 @@ class Cell(N2D2_Interface):
         self._N2D2_object.update()
 
     def import_free_parameters(self, fileName, **kwargs):
+        print("import " + fileName)
         self._N2D2_object.importFreeParameters(fileName, **kwargs)
 
     def get_name(self):
@@ -145,7 +146,7 @@ class Cell(N2D2_Interface):
             for idx, cell in enumerate(self.get_inputs()):
                 if idx > 0:
                     output += ","
-                output += cell.get_name()
+                output += "'" + cell.get_name() + "'"
             output += "]"
         else:
             output += "[inputs=[]]"
@@ -391,6 +392,7 @@ class Softmax(Cell):
         self._set_N2D2_parameters(self._config_parameters)
 
 
+# TODO: Check if complete
 class Dropout(Cell):
     _cell_constructors = {
         'Frame<float>': N2D2.DropoutCell_Frame_float,
@@ -409,6 +411,7 @@ class Dropout(Cell):
         self._set_N2D2_parameters(self._config_parameters)
 
 
+# TODO: Check if complete
 class Padding(Cell):
 
     _cell_constructors = {
@@ -500,7 +503,7 @@ class Pool2D(Pool):
 
 
 
-
+# TODO: Check if complete
 class LRN(Cell):
     _cell_constructors = {
         'Frame<float>': N2D2.LRNCell_Frame_float,
@@ -531,3 +534,26 @@ class BatchNorm(Cell):
                                                 self.get_name(),
                                                 self._constructor_arguments['nbOutputs'],
                                                 **self._optional_constructor_arguments)
+
+        """Set and initialize here all complex cell members"""
+        for key, value in self._config_parameters.items():
+            if key is 'activationFunction':
+                self._N2D2_object.setActivation(value.N2D2())
+            elif key is 'scaleSolver':
+                self._N2D2_object.setScaleSolver(value.N2D2())
+            elif key is 'biasSolver':
+                self._N2D2_object.setBiasSolver(value.N2D2())
+            else:
+                self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
+
+    def set_scale_solver(self, solver):
+        if 'scaleSolver' in self._config_parameters:
+            print("Note: Replacing existing solver in cell: " + self.get_name())
+        self._config_parameters['scaleSolver'] = solver
+        self._N2D2_object.setScaleSolver(self._config_parameters['scaleSolver'].N2D2())
+
+    def set_bias_solver(self, solver):
+        if 'biasSolver' in self._config_parameters:
+            print("Note: Replacing existing solver in cell: " + self.get_name())
+        self._config_parameters['biasSolver'] = solver
+        self._N2D2_object.setBiasSolver(self._config_parameters['biasSolver'].N2D2())

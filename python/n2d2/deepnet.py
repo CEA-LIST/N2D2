@@ -149,9 +149,9 @@ class Sequence:
             cell.update()
 
     def import_free_parameters(self, dirName, ignoreNotExists=False):
+        print("Importing weights from directory '" + dirName + "'")
         for name, cell in self.get_cells().items():
-            path = dirName + "/" + name + ".syntxt"
-            print("Importing weights from directory '" + dirName + "'")
+            path = dirName + name + ".syntxt"
             cell.import_free_parameters(path, ignoreNotExists=ignoreNotExists)
 
     def get_subsequence(self, id):
@@ -277,6 +277,8 @@ class Layer:
         for cell in self._layer:
             cell.update()
 
+    def get_name(self):
+        return self._name
 
     def __str__(self):
         return self._generate_str(0)

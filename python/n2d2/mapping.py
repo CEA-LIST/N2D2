@@ -51,6 +51,8 @@ class Mapping():
         map = n2d2.tensor.Tensor([nbOutputs, nbChannels], DefaultDataType=bool)
         for group in range(int(nbGroups)):
             outputGroupSize = (nbOutputs - outputGroupOffset) / (nbGroups - group)
+            if outputGroupSize < 1:
+                raise RuntimeError("outputGroupSize < 1")
             for output in range(int(outputGroupOffset), int(outputGroupOffset + outputGroupSize)):
                 for channel in range(int(channelGroupOffset), int(channelGroupOffset + nbChannelsPerGroup)):
                     map[output, channel] = True

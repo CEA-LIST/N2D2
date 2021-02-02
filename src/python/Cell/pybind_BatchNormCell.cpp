@@ -24,6 +24,7 @@
 #ifdef PYBIND
 #include "Cell/BatchNormCell.hpp"
 
+#include "Solver/Solver.hpp"
 
 #include <pybind11/pybind11.h>
 
@@ -31,8 +32,11 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_BatchNormCell(py::module &m) {
-    py::class_<BatchNormCell, std::shared_ptr<BatchNormCell>, Cell> (m, "BatchNormCell", py::multiple_inheritance());
-
+    py::class_<BatchNormCell, std::shared_ptr<BatchNormCell>, Cell> (m, "BatchNormCell", py::multiple_inheritance())
+    .def("setScaleSolver", &BatchNormCell::setScaleSolver, py::arg("solver"))
+    .def("getScaleSolver", &BatchNormCell::getScaleSolver)
+    .def("setBiasSolver", &BatchNormCell::setBiasSolver, py::arg("solver"))
+    .def("getBiasSolver", &BatchNormCell::getBiasSolver);
 }
 }
 #endif

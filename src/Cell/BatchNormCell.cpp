@@ -22,6 +22,9 @@
 #include "DeepNet.hpp"
 #include "utils/Utils.hpp"
 
+#include "Solver/Solver.hpp"
+
+
 const char* N2D2::BatchNormCell::Type = "BatchNorm";
 
 N2D2::BatchNormCell::BatchNormCell(const DeepNet& deepNet, const std::string& name,
