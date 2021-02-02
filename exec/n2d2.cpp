@@ -552,23 +552,18 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
     
 }
 
-void importFreeParemeters(const Options& opt, DeepNet& deepNet) {   
-    try {
-        if (!opt.weights.empty()) {
-            if (opt.weights != "/dev/null")
-                deepNet.importNetworkFreeParameters(opt.weights, opt.ignoreNoExist);
-        }
-        else if (opt.load.empty()) {
-            if (deepNet.getDatabase()->getNbStimuli(Database::Validation) > 0) {
-                deepNet.importNetworkFreeParameters("weights_validation", opt.ignoreNoExist);
-            }
-            else {
-                deepNet.importNetworkFreeParameters("weights", opt.ignoreNoExist);
-            }
-        }
+void importFreeParemeters(const Options& opt, DeepNet& deepNet) {
+    if (!opt.weights.empty()) {
+        if (opt.weights != "/dev/null")
+            deepNet.importNetworkFreeParameters(opt.weights, opt.ignoreNoExist);
     }
-    catch (const std::exception& e) {
-        std::cout << Utils::cwarning << e.what() << Utils::cdef << std::endl;
+    else if (opt.load.empty()) {
+        if (deepNet.getDatabase()->getNbStimuli(Database::Validation) > 0) {
+            deepNet.importNetworkFreeParameters("weights_validation", opt.ignoreNoExist);
+        }
+        else {
+            deepNet.importNetworkFreeParameters("weights", opt.ignoreNoExist);
+        }
     }
 }
 

@@ -716,25 +716,23 @@ void N2D2::MemoryManager::log(const std::string& fileName) const
 
             memData << "  " << (itPlanes - itPlanesBegin) << " "
                 << contiguousOffset
-                << " (0x" << std::hex << std::setw(8) << contiguousOffset << "U)"
-                << std::dec << " -> "
+                << " (0x" << std::hex << std::setw(8) << contiguousOffset
+                << std::dec << "U) -> "
                 << (contiguousOffset + contiguousSize)
                 << " (0x" << std::hex << std::setw(8)
-                << (contiguousOffset + contiguousSize) << "U)";
+                << (contiguousOffset + contiguousSize) << std::dec << "U)";
 
             if (wrappedSize > 0) {
                 memData << " + "
                     << wrappedOffset
                     << " (0x" << std::hex << std::setw(8)
-                    << wrappedOffset << "U)"
-                    << std::dec << " -> "
+                    << wrappedOffset << std::dec << "U) -> "
                     << (wrappedOffset + wrappedSize)
                     << " (0x" << std::hex << std::setw(8)
-                    << (wrappedOffset + wrappedSize) << "U)";
+                    << (wrappedOffset + wrappedSize) << std::dec << "U)";
             }
 
-            memData << std::dec << " [" << (*itPlanes).getSize() << "] @ "
-                << allocated;
+            memData << " [" << (*itPlanes).getSize() << "] @ " << allocated;
 
             if (isReleased)
                 memData << " to " << released;

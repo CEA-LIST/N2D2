@@ -129,7 +129,6 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initialize()
                                         CUDNN_CROSS_CORRELATION,
                                         CudaContext::data_type<T>::value));
 
-    size_t workspaceSize = 0;
     unsigned int nbChannels = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
@@ -138,8 +137,10 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initialize()
                                      + mName);
         }
 
-        if (k < mNbGroups.size())
+        if (k < mNbGroups.size()) {
+            nbChannels += mInputs[k].dimZ();
             continue;  // already initialized, skip!
+        }
 
         mNbGroups.push_back(getNbGroups(mMapping.rows(nbChannels,
                                                    mInputs[k].dimZ())));
@@ -275,6 +276,8 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initialize()
             0,
             &mBwdDataAlgo.back()));
 #endif
+
+        size_t workspaceSize = 0;
 
         CHECK_CUDNN_STATUS(cudnnGetConvolutionForwardWorkspaceSize(
             CudaContext::cudnnHandle(),
