@@ -73,7 +73,15 @@ class Score(Target):
         self._N2D2_object.process(N2D2.Database. StimuliSet.__members__[partition])
 
     def get_average_success(self, partition, window=0):
+        if not self._N2D2_object.getTargetTopN() == 1:
+            raise RuntimeWarning("TopN != 1. You may want to use get_average_top_n_success()?")
         return self._N2D2_object.getAverageSuccess(N2D2.Database. StimuliSet.__members__[partition], window)
+
+    """This only works if TopN > 1, otherwise it returns 0!"""
+    def get_average_top_n_success(self, partition, window=0):
+        if self._N2D2_object.getTargetTopN() == 1:
+            raise RuntimeWarning("TopN == 1, returns 0. You may want to use get_average_success()?")
+        return self._N2D2_object.getAverageTopNSuccess(N2D2.Database. StimuliSet.__members__[partition], window)
 
     def get_average_score(self, partition, metric):
         return self._N2D2_object.getAverageScore(

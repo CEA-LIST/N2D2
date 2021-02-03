@@ -190,8 +190,9 @@ class RangeAffine(Transformation):
 
         self._parse_optional_arguments(['secondOperator', 'secondValue'])
 
-        self._optional_constructor_arguments['secondOperator'] = \
-            N2D2.RangeAffineTransformation.Operator.__members__[self._optional_constructor_arguments['secondOperator']]
+        if 'secondOperator' in self._optional_constructor_arguments:
+            self._optional_constructor_arguments['secondOperator'] = \
+                N2D2.RangeAffineTransformation.Operator.__members__[self._optional_constructor_arguments['secondOperator']]
 
         self._N2D2_object = N2D2.RangeAffineTransformation(self._constructor_arguments['firstOperator'],
                                                            self._constructor_arguments['firstValue'],

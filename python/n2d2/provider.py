@@ -37,6 +37,12 @@ class DataProvider(N2D2_Interface):
             'size': size
         })
 
+        if 'name' in config_parameters:
+            self._name = config_parameters.pop['name']
+        else:
+            self._name = "provider_" + str(n2d2.global_variables.provider_counter)
+        n2d2.global_variables.provider_counter += 1
+
         self._parse_optional_arguments(['batchSize', 'compositeStimuli'])
 
         self._N2D2_object = N2D2.StimuliProvider(database=self._constructor_arguments['database'].N2D2(),
@@ -48,6 +54,9 @@ class DataProvider(N2D2_Interface):
         self._transformations = []
         self._otf_transformations = []
 
+    def get_name(self):
+        return self._name
+
     def get_database(self):
         return self._constructor_arguments['database']
 
@@ -55,8 +64,7 @@ class DataProvider(N2D2_Interface):
         return self._N2D2_object.readRandomBatch(set=N2D2.Database.StimuliSet.__members__[partition])
 
     def read_batch(self, partition, idx):
-        return self._N2D2_object.readBatch(set=N2D2.Database.StimuliSet.__members__[partition],
-                                           startIndex=idx)
+        return self._N2D2_object.readBatch(set=N2D2.Database.StimuliSet.__members__[partition], startIndex=idx)
 
     def add_transformation(self, transformation):
         if isinstance(transformation, n2d2.transform.Composite):
@@ -77,7 +85,14 @@ class DataProvider(N2D2_Interface):
             self._transformations.append(transformation)
 
     def __str__(self):
-        return self._type + N2D2_Interface.__str__(self)
+        output = "'" + self.get_name() + "' " + self._type + N2D2_Interface.__str__(self)
+        if len(self._transformations) > 0:
+            output += "[Transformations="
+            for trans in self._transformations:
+                output += trans.__str__() + ", "
+            output = output[:-2]
+            output += "]"
+        return output
 
     def convert_to_INI_section(self):
         output = "[" + self._INI_type + "]\n"

@@ -152,6 +152,7 @@ void init_XavierFiller(py::module&);
 void init_ConstantFiller(py::module&);
 
 // Cell
+void init_CellGenerator(py::module&);
 void init_Cell(py::module&);
 void init_Cell_Frame_Top(py::module&);
 void init_Cell_Frame(py::module&);
@@ -382,6 +383,7 @@ PYBIND11_MODULE(N2D2, m) {
     init_ConstantFiller(m);
 
     //Cell
+    init_CellGenerator(m);
     init_Cell(m);
     init_Cell_Frame_Top(m);
     init_Cell_Frame(m);

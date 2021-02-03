@@ -51,21 +51,26 @@ class DeepNet(N2D2_Interface):
         return self._DataType
 
 
-def load_from_ONNX(model_path, provider):
+def load_from_ONNX(model_path, dims, batch_size=1):
     """
     :param model_path: Path to the model.
     :type model_path: str
-    :param provider: 
-    :type provider: :py:class:`n2d2.provider.DataProvider`
-    Load a deepnet from an ONNX file and a database.
+    :param dims:
+    :type dims: list
+    :param batch_size:
+    :type batch_size: unsigned int
+    Load a deepnet from an ONNX file given its input dimensions.
     """
-    network = N2D2.Network(1)
+    network = N2D2.Network(n2d2.global_variables.default_seed)
     deepNet = N2D2.DeepNet(network)
-    iniParser = N2D2.IniParser()
+    provider = n2d2.provider.DataProvider(n2d2.database.Database(), dims, batchSize=batch_size)
     deepNet.setDatabase(provider.get_database().N2D2())
     deepNet.setStimuliProvider(provider.N2D2())
-    deepNet = N2D2.DeepNetGenerator.generateFromONNX(network, model_path, iniParser, deepNet)
-    return n2d2.converter.deepNet_converter(deepNet)
+    N2D2.CellGenerator.defaultModel = n2d2.global_variables.default_deepNet.get_model()
+    deepNet = N2D2.DeepNetGenerator.generateFromONNX(network, model_path, N2D2.IniParser(), deepNet)
+    model = n2d2.converter.deepNet_converter(deepNet)
+    model.clear_input(unlink_N2D2_input=True)     # Remove dummy stimuli provider
+    return model
 
 def load_from_INI(path):
     """
@@ -123,14 +128,14 @@ class Sequence:
 
     # TODO: Method that converts sequential representation into corresponding N2D2 deepnet
 
-    def add_input(self, inputs):
-        self.get_first().add_input(inputs)
+    def add_input(self, inputs, link_N2D2_input=False):
+        self.get_first().add_input(inputs, link_N2D2_input)
 
     def get_inputs(self):
         return self.get_first().get_inputs()
 
-    def clear_input(self):
-        self.get_first().clear_input()
+    def clear_input(self, unlink_N2D2_input=False):
+        self.get_first().clear_input(unlink_N2D2_input)
 
     def initialize(self):
         for cell in self._sequences:
@@ -244,13 +249,13 @@ class Layer:
 
     # TODO: Method that converts layer representation into corresponding N2D2 deepnet
 
-    def add_input(self, input):
+    def add_input(self, input, link_N2D2_input=False):
         for cell in self._layer:
-            cell.add_input(input)
+            cell.add_input(input, link_N2D2_input)
 
-    def clear_input(self):
+    def clear_input(self, unlink_N2D2_input=False):
         for cell in self._layer:
-            cell.clear_input()
+            cell.clear_input(unlink_N2D2_input)
 
     def get_last(self):
         return self

@@ -80,46 +80,54 @@ class Cell(N2D2_Interface):
         else:
             return self._type
 
-    def add_input(self, inputs):
+    def add_input(self, inputs, link_N2D2_input=False):
         if isinstance(inputs, list):
             for cell in inputs:
                 self.add_input(cell)
+                if link_N2D2_input:
+                    self._link_N2D2_input(cell)
         elif isinstance(inputs, n2d2.deepnet.Sequence):
             self.add_input(inputs.get_last())
+            if link_N2D2_input:
+                self._link_N2D2_input(inputs.get_last())
         elif isinstance(inputs, n2d2.deepnet.Layer):
             for cell in inputs.get_elements():
                 self.add_input(cell)
+                if link_N2D2_input:
+                    self._link_N2D2_input(cell)
         elif isinstance(inputs, Cell) or isinstance(inputs, n2d2.provider.DataProvider) or isinstance(inputs, n2d2.tensor.Tensor):
             self._inputs.append(inputs)
+            if link_N2D2_input:
+                self._link_N2D2_input(inputs)
         else:
             raise TypeError("Cannot add object of type " + str(type(inputs)))
 
     """
     Links N2D2 cells tacking into account cell connection parameters
     """
-    def _link_N2D2_cell(self, cell):
-        if isinstance(cell, n2d2.tensor.Tensor):
-            self._N2D2_object.addInput(cell.N2D2(), n2d2.tensor.Tensor(dims=[]).N2D2())
+    def _link_N2D2_input(self, inputs):
+        if isinstance(inputs, n2d2.tensor.Tensor):
+            self._N2D2_object.addInput(inputs.N2D2(), n2d2.tensor.Tensor(dims=[]).N2D2())
         else:
             if 'mapping' in self._connection_parameters:
                 self._connection_parameters['mapping'] = self._connection_parameters['mapping'].create_N2D2_mapping(
-                                               cell.N2D2().getNbOutputs(),
+                                               inputs.N2D2().getNbOutputs(),
                                                self._N2D2_object.getNbOutputs()
                                            ).N2D2()
-            self._N2D2_object.addInput(cell.N2D2(), **self._connection_parameters)
+            self._N2D2_object.addInput(inputs.N2D2(), **self._connection_parameters)
 
     def get_inputs(self):
         return self._inputs
 
-    def clear_input(self):
+    def clear_input(self, unlink_N2D2_input=False):
         self._inputs = []
-        if self._N2D2_object is not None:
+        if self._N2D2_object is not None and unlink_N2D2_input:
             self._N2D2_object.clearInputs()
 
     def initialize(self):
         self._N2D2_object.clearInputs()
         for cell in self._inputs:
-            self._link_N2D2_cell(cell)
+            self._link_N2D2_input(cell)
         self._N2D2_object.initialize()
 
     def propagate(self, inference=False):

@@ -1,6 +1,7 @@
-"""
+/*
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
+    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -17,10 +18,21 @@
 
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
-"""
+*/
 
-from n2d2.model.example import *
-from n2d2.model.resnet import ResNet50BN, load_from_ONNX
-from n2d2.model.mobilenet_v1 import Mobilenet_v1
-from n2d2.model.mobilenet_v2 import Mobilenet_v2, load_from_ONNX
-from n2d2.model.ILSVRC_outils import *
+#ifdef PYBIND
+
+
+#include "Generator/CellGenerator.hpp"
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
+
+namespace N2D2 {
+void init_CellGenerator(py::module &m) {
+    py::class_<CellGenerator>(m, "CellGenerator")
+    .def_readwrite_static("defaultModel", &CellGenerator::mDefaultModel);
+}
+}
+
+#endif

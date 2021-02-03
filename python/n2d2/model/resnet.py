@@ -25,7 +25,8 @@ from n2d2.deepnet import Layer, Sequence
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
 from n2d2.filler import He, Xavier, Constant
-
+import n2d2.deepnet
+import n2d2.global_variables
 
 def conv_def(nb_outputs, **config_parameters):
 
@@ -288,3 +289,35 @@ class ResNet50(ResNet):
 
 
 
+def load_from_ONNX(resnet_type, version='pre_act', dims=None, batch_size=1, path=None, download=False):
+    if dims is None:
+        dims = [224, 224, 3]
+    if not dims == [224, 224, 3]:
+        raise ValueError("This method does not support other dims than [224, 224, 3] yet")
+    allowed_types = ['18', '34', '50', '101', '152']
+    if not resnet_type in allowed_types:
+        raise ValueError("ResNet type must be one of these: '18', '34', '50', '101', '152'!")
+    if version == 'pre_act':
+        v = "v1"
+    elif version == 'post_act':
+        v = "v2"
+    else:
+        raise ValueError("ResNet version must be either 'pre_act' or 'post_act'!")
+    resnet_name = "resnet"+resnet_type+v
+
+    print("Loading " + version + " ResNet"+str(resnet_type)+
+          " from ONNX with dims " + str(dims) + " and batch size " + str(batch_size))
+    if path is None and not download:
+        raise RuntimeError("No path specified")
+    elif not path is None and download:
+        raise RuntimeError("Specified at same time path and download=True")
+    elif path and not download:
+        path = n2d2.global_variables.model_cache + "/ONNX/mobilenetv2/mobilenetv2-1.0.onnx"
+    else:
+        n2d2.utils.download_model(
+            "https://s3.amazonaws.com/onnx-model-zoo/resnet/"+resnet_name+"/"+resnet_name+".onnx",
+            n2d2.global_variables.model_cache + "/ONNX/",
+            resnet_name)
+        path = n2d2.global_variables.model_cache + "/ONNX/"+resnet_name+"/"+resnet_name+".onnx"
+    model = n2d2.deepnet.load_from_ONNX(path, dims, batch_size=batch_size)
+    return model

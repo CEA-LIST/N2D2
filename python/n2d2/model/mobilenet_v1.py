@@ -187,3 +187,6 @@ class Mobilenet_v1(Sequence):
 
 
 
+
+def load_from_ONNX(dims=None, batch_size=1, path=None, download=False):
+    raise RuntimeError("Not implemented")

@@ -22,6 +22,9 @@
 import N2D2
 import n2d2.deepnet
 
+# TODO: In final version this should be in the use home or the API launch folder
+model_cache = "/local/is154584/jt251134/MODELS"
+
 default_seed = 1
 default_model = 'Frame'
 default_dataType = 'float'
@@ -30,6 +33,7 @@ default_deepNet = n2d2.deepnet.DeepNet(default_net, default_model, default_dataT
 
 cell_counter = 0
 target_counter = 0
+provider_counter = 0
 
 class Verbosity:
     short = 0  # Constructor arguments only
@@ -39,3 +43,4 @@ verbosity = Verbosity.detailed
 
 def set_cuda_device(id):
     N2D2.CudaContext.setDevice(id)
+

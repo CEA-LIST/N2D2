@@ -31,14 +31,21 @@ Alternatively, this could simply be done by the corresponding Pytorch functions
 since there is no GPU model involved.
 """
 
-# TODO: Abstract classes?
 class Database(N2D2_Interface):
     """
     Database loader object.
     """
 
+    _INI_type = 'Database'
+    _type = ""
+
     def __init__(self, **config_parameters):
         N2D2_Interface.__init__(self, **config_parameters)
+
+        # What is done here is simply overwritten by children
+        self._parse_optional_arguments(['loadDataInMemory'])
+        self._N2D2_object = N2D2.Database(**self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)
 
     def get_nb_stimuli(self, partition):
         return self._N2D2_object.getNbStimuli(N2D2.Database.StimuliSet.__members__[partition])
@@ -54,6 +61,8 @@ class Database(N2D2_Interface):
         output += "Type=" + self._INI_type + "\n"
         #N2D2_Interface.create_INI_section()
         return output
+
+
 
 class DIR(Database):
     """
@@ -95,6 +104,20 @@ class MNIST(Database):
         self._N2D2_object = N2D2.MNIST_IDX_Database(self._constructor_arguments['dataPath'],
                                                     **self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
+
+
+class CIFAR100(Database):
+
+    _INI_type = 'CIFAR100_Database'
+    _type = "CIFAR100"
+
+    def __init__(self, **config_parameters):
+        Database.__init__(self, **config_parameters)
+
+        self._parse_optional_arguments(['validation', 'useCoarse'])
+        self._N2D2_object = N2D2.CIFAR100_Database(**self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)
+
 
 class ILSVRC2012(Database):
 

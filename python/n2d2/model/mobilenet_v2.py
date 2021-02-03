@@ -25,7 +25,9 @@ from n2d2.deepnet import Sequence
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
 from n2d2.filler import He, Xavier, Constant
-
+import n2d2.deepnet
+import n2d2.global_variables
+import os
 
 class ReLU6(Rectifier):
     def __init__(self):
@@ -136,5 +138,25 @@ class Mobilenet_v2(Sequence):
                 cell.set_bias_solver(bias_solver(**bias_solver_config.get()))
 
 
+
+def load_from_ONNX(dims=None, batch_size=1, path=None, download=False):
+    if dims is None:
+        dims = [224, 224, 3]
+    if not dims == [224, 224, 3]:
+        raise ValueError("This method does not support other dims than [224, 224, 3] yet")
+    print("Loading MobileNet_v2 from ONNX with dims " + str(dims) + " and batch size " + str(batch_size))
+    if path is None and not download:
+        raise RuntimeError("No path specified")
+    elif not path is None and download:
+        raise RuntimeError("Specified at same time path and download=True")
+    elif path and not download:
+        path = n2d2.global_variables.model_cache + "/ONNX/mobilenetv2/mobilenetv2-1.0.onnx"
+    else:
+        n2d2.utils.download_model("https://s3.amazonaws.com/onnx-model-zoo/mobilenet/mobilenetv2-1.0/mobilenetv2-1.0.onnx",
+            n2d2.global_variables.model_cache+"/ONNX/",
+            "mobilenetv2")
+        path = n2d2.global_variables.model_cache+"/ONNX/mobilenetv2/mobilenetv2-1.0.onnx"
+    model = n2d2.deepnet.load_from_ONNX(path, dims, batch_size=batch_size)
+    return model
 
 
