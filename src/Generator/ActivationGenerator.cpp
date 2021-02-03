@@ -27,7 +27,8 @@ N2D2::ActivationGenerator::generate(IniParser& iniConfig,
                                     const DataType& dataType,
                                     const std::string& name,
                                     const std::shared_ptr
-                                    <Activation>& defaultActivation)
+                                    <Activation>& defaultActivation,
+                                    bool nullIfDefault)
 {
     if (!iniConfig.currentSection(section, false))
         throw std::runtime_error("Missing [" + section + "] section.");
@@ -66,6 +67,11 @@ N2D2::ActivationGenerator::generate(IniParser& iniConfig,
         }
         return activation;
     }
-    else
-        return defaultActivation;
+    else {
+        if(!nullIfDefault) {
+            return defaultActivation;
+        } else {
+            return nullptr;
+        }
+    }
 }

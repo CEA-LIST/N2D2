@@ -51,6 +51,7 @@
 #include "Transformation/AffineTransformation.hpp"
 #include "Transformation/RangeAffineTransformation.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
+#include "Cell/ActivationCell.hpp"
 #include "Cell/BatchNormCell.hpp"
 #include "Cell/ConvCell.hpp"
 #include "Cell/DropoutCell.hpp"
@@ -62,6 +63,7 @@
 #include "Cell/ScalingCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
 #include "Cell/TransformationCell.hpp"
+#include "Generator/ActivationCellGenerator.hpp"
 #include "Generator/BatchNormCellGenerator.hpp"
 #include "Generator/ConvCellGenerator.hpp"
 #include "Generator/DropoutCellGenerator.hpp"
@@ -2134,82 +2136,88 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 
             std::vector<int> paddingDimsBegin;
             std::vector<int> paddingDimsEnd;
-
-            if ((itInit = initializer.find(node.input(1))) != initializer.end())
-            {
-                Tensor<int64_t> pad
-                    = ONNX_unpackTensor<int64_t>((*itInit).second);
-
-                if (std::all_of(pad.begin(), pad.end(),
-                    [](int64_t i) { return i == 0; }))
+            if (node.input_size() > 1) {
+                if ((itInit = initializer.find(node.input(1))) != initializer.end())
                 {
-                    // Padding in all axis is 0 => skip
-                    redirect[node.output(0)] = redirectName(node.input(0));
+                    Tensor<int64_t> pad
+                        = ONNX_unpackTensor<int64_t>((*itInit).second);
+
+                    if (std::all_of(pad.begin(), pad.end(),
+                        [](int64_t i) { return i == 0; }))
+                    {
+                        // Padding in all axis is 0 => skip
+                        redirect[node.output(0)] = redirectName(node.input(0));
+                        continue;
+                    }
+
+                    assert(pad.size() % 2 == 0);
+                    const int offset = pad.size() / 2;
+
+                    for (int dim = 0; dim < offset; ++dim) {
+                        paddingDimsBegin.push_back(pad(dim));
+                        paddingDimsEnd.push_back(pad(offset + dim));
+                    }
+                    std::reverse(paddingDimsBegin.begin(), paddingDimsBegin.end());
+                    std::reverse(paddingDimsEnd.begin(), paddingDimsEnd.end());
+
+                    const std::string inputX = redirectName(node.input(0));
+                    std::shared_ptr<Cell> inputXCell
+                        = (deepNet->getCells().empty())
+                            ? std::shared_ptr<Cell>()
+                            : deepNet->getCell(inputX);
+
+                    std::map<std::string, std::vector<std::string> >
+                        ::const_iterator itConcat;
+                    std::vector<std::shared_ptr<Cell> > parentCells;
+
+                    std::shared_ptr<PaddingCell> paddingCell = Registrar
+                        <PaddingCell>::create(model)(*deepNet,
+                                                    node.output(0),
+                                                    inputXCell->getNbOutputs(),
+                                                    paddingDimsBegin[1],
+                                                    paddingDimsEnd[1],
+                                                    paddingDimsBegin[0],
+                                                    paddingDimsEnd[0]);
+
+                    if ((itConcat = concat.find(inputX)) != concat.end()) {
+                        for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
+                            const std::string input = (*itConcat).second[i];
+                            std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
+                            parentCells.push_back(inputCell);
+
+                            paddingCell->addInput(inputCell.get());
+                        }
+                    }
+                    else {
+                        std::shared_ptr<Cell> inputXCell
+                            = (deepNet->getCells().empty())
+                                ? std::shared_ptr<Cell>()
+                                : deepNet->getCell(inputX);
+                        parentCells.push_back(inputXCell);
+
+                        if (inputXCell)
+                            paddingCell->addInput(inputXCell.get());
+                        else {
+                            paddingCell->addInput(*sp, 0, 0,
+                                                sp->getSizeX(), sp->getSizeY());
+                        }
+                    }
+
+                    deepNet->addCell(paddingCell, parentCells);
+                    paddingCell->initialize();
+                    cell = paddingCell;
                     continue;
                 }
-
-                assert(pad.size() % 2 == 0);
-                const int offset = pad.size() / 2;
-
-                for (int dim = 0; dim < offset; ++dim) {
-                    paddingDimsBegin.push_back(pad(dim));
-                    paddingDimsEnd.push_back(pad(offset + dim));
-                }
             }
-            else {
-                std::cout << "  No initializer for \"" << node.input(1)
-                    << "\"" << std::endl;
-            }
+            std::cout << "  No initializer for Padding operation, it will be ignored" << std::endl;
 
-            std::reverse(paddingDimsBegin.begin(), paddingDimsBegin.end());
-            std::reverse(paddingDimsEnd.begin(), paddingDimsEnd.end());
+            std::cout << Utils::cnotice << "  Ignore Padding operation"
+                << Utils::cdef << std::endl;
 
-            const std::string inputX = redirectName(node.input(0));
-            std::shared_ptr<Cell> inputXCell
-                = (deepNet->getCells().empty())
-                    ? std::shared_ptr<Cell>()
-                    : deepNet->getCell(inputX);
-
-            std::map<std::string, std::vector<std::string> >
-                ::const_iterator itConcat;
-            std::vector<std::shared_ptr<Cell> > parentCells;
-
-            std::shared_ptr<PaddingCell> paddingCell = Registrar
-                <PaddingCell>::create(model)(*deepNet,
-                                            node.output(0),
-                                            inputXCell->getNbOutputs(),
-                                            paddingDimsBegin[1],
-                                            paddingDimsEnd[1],
-                                            paddingDimsBegin[0],
-                                            paddingDimsEnd[0]);
-
-            if ((itConcat = concat.find(inputX)) != concat.end()) {
-                for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
-                    const std::string input = (*itConcat).second[i];
-                    std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
-                    parentCells.push_back(inputCell);
-
-                    paddingCell->addInput(inputCell.get());
-                }
-            }
-            else {
-                std::shared_ptr<Cell> inputXCell
-                    = (deepNet->getCells().empty())
-                        ? std::shared_ptr<Cell>()
-                        : deepNet->getCell(inputX);
-                parentCells.push_back(inputXCell);
-
-                if (inputXCell)
-                    paddingCell->addInput(inputXCell.get());
-                else {
-                    paddingCell->addInput(*sp, 0, 0,
-                                        sp->getSizeX(), sp->getSizeY());
-                }
-            }
-
-            deepNet->addCell(paddingCell, parentCells);
-            paddingCell->initialize();
-            cell = paddingCell;
+            std::cout << "  " << node.output(0) << " -> "
+                << redirectName(node.input(0)) << std::endl;
+            redirect[node.output(0)] = redirectName(node.input(0));
+            continue;
         }
         //Pow
         //QLinearConv
@@ -2232,6 +2240,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //ReduceSum
         //ReduceSumSquare
         else if (node.op_type() == "Relu") {
+/*
             std::shared_ptr<Cell_Frame_Top> cellFrame
                 = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
@@ -2262,6 +2271,69 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 << redirectName(node.input(0)) << std::endl;
             redirect[node.output(0)] = redirectName(node.input(0));
             continue;
+*/
+
+
+            const std::string inputX = redirectName(node.input(0));
+            std::shared_ptr<Cell> inputXCell
+                = (deepNet->getCells().empty())
+                    ? std::shared_ptr<Cell>()
+                    : deepNet->getCell(inputX);
+
+            std::map<std::string, std::vector<std::string> >
+                ::const_iterator itConcat;
+            std::vector<std::shared_ptr<Cell> > parentCells;
+
+
+            std::shared_ptr<Activation> activation
+                = Registrar<RectifierActivation>::create<Float_T>(model)();
+
+            std::shared_ptr<ActivationCell> activationCell
+                = Registrar<ActivationCell>::create<Float_T>(model)(*deepNet,
+                                                                    node.output(0),
+                                                                    (unsigned int) inputXCell->getNbOutputs(),
+                                                                    activation);
+            
+            if (iniConfig.currentSection(node.output(0), false)) {
+                ActivationCellGenerator::generateParams(activationCell, iniConfig,
+                    node.output(0), model, Float32);
+            }
+            else
+            if (iniConfig.currentSection(onnxName + ":Rectifier_def", false)) {
+                ActivationCellGenerator::generateParams(activationCell, iniConfig,
+                    onnxName + ":Rectifier_def", model, Float32);
+            }
+
+
+            if ((itConcat = concat.find(inputX)) != concat.end()) {
+                for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
+                    const std::string input = (*itConcat).second[i];
+                    std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
+                    parentCells.push_back(inputCell);
+
+                    activationCell->addInput(inputCell.get());
+                }
+            }
+            else {
+                    
+                std::shared_ptr<Cell> inputXCell
+                    = (deepNet->getCells().empty())
+                        ? std::shared_ptr<Cell>()
+                        : deepNet->getCell(inputX);
+                parentCells.push_back(inputXCell);
+
+                if (inputXCell)
+                    activationCell->addInput(inputXCell.get());
+                else {
+                    activationCell->addInput(*sp, 0, 0,
+                                        sp->getSizeX(), sp->getSizeY());
+                }
+            }
+            deepNet->addCell(activationCell, parentCells);
+            activationCell->initialize();
+            cell = activationCell;
+            continue;
+
         }
         else if (node.op_type() == "Reshape") {
             const std::string inputData = redirectName(node.input(0));

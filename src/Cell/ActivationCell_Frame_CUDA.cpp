@@ -167,22 +167,6 @@ void N2D2::ActivationCell_Frame_CUDA<T>::backPropagate()
 
         }
     }
-    /*
-    if (!mDiffOutputs.empty()) {
-        const CudaTensor<T>& input = cuda_tensor_cast<T>(mInputs[0]);
-        CudaTensor<T> diffOutput = (mDiffOutputs[0].isValid())
-            ? cuda_tensor_cast<T>(mDiffOutputs[0])
-            : cuda_tensor_cast_nocopy<T>(mDiffOutputs[0]);
-
-        mActivation->backPropagate(*this, input, mOutputs, mDiffInputs,
-                                                        diffOutput);
-
-        mDiffOutputs[0].deviceTensor() = diffOutput.deviceTensor();
-
-        mDiffOutputs[0].setValid();
-        mDiffOutputs[0].synchronizeDToHBased();
-    }
-    */
 }
 
 template <class T>

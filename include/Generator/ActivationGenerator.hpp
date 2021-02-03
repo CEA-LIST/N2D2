@@ -51,7 +51,8 @@ public:
              const DataType& dataType,
              const std::string& name,
              const std::shared_ptr<Activation>& defaultActivation
-             = std::shared_ptr<Activation>());
+             = std::shared_ptr<Activation>(),
+             bool nullIfDefault = false);
 };
 }
 
