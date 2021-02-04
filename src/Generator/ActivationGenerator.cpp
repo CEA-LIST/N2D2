@@ -75,3 +75,28 @@ N2D2::ActivationGenerator::generate(IniParser& iniConfig,
         }
     }
 }
+
+void N2D2::ActivationGenerator::generateParams( const std::shared_ptr<Cell_Frame_Top>& cell,
+                                                    IniParser& iniConfig,
+                                                    const std::string& section,
+                                                    const std::string& model,
+                                                    const DataType& dataType)
+{
+    std::shared_ptr<Cell_Frame_Top> cellFrame
+        = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+
+    std::shared_ptr<Activation> activation
+        = generate( iniConfig,
+                    section,
+                    model,
+                    dataType,
+                    "ActivationFunction",
+                    nullptr,
+                    true );
+
+    if (activation) {
+        std::cout << "Modify Activation in Cell_Frame_Top" << std::endl;
+        cell->setActivation(activation);
+    }   
+
+}

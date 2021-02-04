@@ -26,6 +26,7 @@
 #include "utils/IniParser.hpp"
 #include "utils/Registrar.hpp"
 #include "Generator/Generator.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
 
 namespace N2D2 {
 class ActivationGenerator {
@@ -53,6 +54,12 @@ public:
              const std::shared_ptr<Activation>& defaultActivation
              = std::shared_ptr<Activation>(),
              bool nullIfDefault = false);
+    static void generateParams( const std::shared_ptr<Cell_Frame_Top>& cell,
+                                IniParser& iniConfig,
+                                const std::string& section,
+                                const std::string& model,
+                                const DataType& dataType);
+
 };
 }
 

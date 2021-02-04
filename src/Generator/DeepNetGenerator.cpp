@@ -2240,7 +2240,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //ReduceSum
         //ReduceSumSquare
         else if (node.op_type() == "Relu") {
-/*
+
             std::shared_ptr<Cell_Frame_Top> cellFrame
                 = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
@@ -2263,17 +2263,28 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 }
             }
             else {
-                cellFrame->setActivation(Registrar<RectifierActivation>
-                    ::create<Float_T>(model)());
+
+                /*if (iniConfig.currentSection(node.output(0), false)) {
+                    ActivationGenerator::generateParams(activationCell, iniConfig,
+                        node.output(0), model, Float32);
+                }
+                else*/
+                if (iniConfig.currentSection(onnxName + ":Rectifier_def", false)) {
+                    ActivationGenerator::generateParams(cellFrame, iniConfig,
+                        onnxName + ":Rectifier_def", model, Float32);
+                }
+
+                //cellFrame->setActivation(Registrar<RectifierActivation>
+                //    ::create<Float_T>(model)());
             }
 
             std::cout << "  " << node.output(0) << " -> "
                 << redirectName(node.input(0)) << std::endl;
             redirect[node.output(0)] = redirectName(node.input(0));
             continue;
-*/
 
 
+/*
             const std::string inputX = redirectName(node.input(0));
             std::shared_ptr<Cell> inputXCell
                 = (deepNet->getCells().empty())
@@ -2333,6 +2344,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             activationCell->initialize();
             cell = activationCell;
             continue;
+*/
 
         }
         else if (node.op_type() == "Reshape") {
