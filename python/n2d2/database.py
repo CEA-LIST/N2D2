@@ -39,10 +39,10 @@ class Database(N2D2_Interface):
     _INI_type = 'Database'
     _type = ""
 
+    # This constructor is not called by children, because not abstract class
     def __init__(self, **config_parameters):
         N2D2_Interface.__init__(self, **config_parameters)
 
-        # What is done here is simply overwritten by children
         self._parse_optional_arguments(['loadDataInMemory'])
         self._N2D2_object = N2D2.Database(**self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
@@ -71,7 +71,7 @@ class DIR(Database):
     _INI_type = 'DIR_Database'
     _type = "DIR"
     def __init__(self, **config_parameters):
-        Database.__init__(self, **config_parameters)
+        N2D2_Interface.__init__(self, **config_parameters)
         self._parse_optional_arguments(['loadDataInMemory'])
         self._N2D2_object = N2D2.DIR_Database(**self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
@@ -95,7 +95,7 @@ class MNIST(Database):
     _type = "MNIST"
 
     def __init__(self, dataPath, **config_parameters):
-        Database.__init__(self, **config_parameters)
+        N2D2_Interface.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
             'dataPath': dataPath,
@@ -112,7 +112,7 @@ class CIFAR100(Database):
     _type = "CIFAR100"
 
     def __init__(self, **config_parameters):
-        Database.__init__(self, **config_parameters)
+        N2D2_Interface.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['validation', 'useCoarse'])
         self._N2D2_object = N2D2.CIFAR100_Database(**self._optional_constructor_arguments)
@@ -125,7 +125,7 @@ class ILSVRC2012(Database):
     _type = "ILSVRC2012"
 
     def __init__(self, learn, **config_parameters):
-        Database.__init__(self, **config_parameters)
+        N2D2_Interface.__init__(self, **config_parameters)
         self._constructor_arguments.update({
             'learn': learn,
         })

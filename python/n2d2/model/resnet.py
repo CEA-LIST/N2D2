@@ -129,121 +129,124 @@ def resnet18(output_size=1000):
 
 
 class ResNetStem(Sequence):
-    def __init__(self, alpha):
-        Sequence.__init__(self, [
-            Conv(int(64*alpha), kernelDims=[7, 7], strideDims=[2, 2], paddingDims=[3, 3], noBias=True,
-                 activationFunction=Rectifier(), weightsFiller=He(), name="conv1"),
-            Pool2D(nbOutputs=int(64*alpha), poolDims=[3, 3], strideDims=[2, 2], pooling='Max', name="pool1")
-        ], name="stem")
+    def __init__(self, inputs,  alpha):
+            conv = Conv(inputs, int(64*alpha), kernelDims=[7, 7], strideDims=[2, 2], paddingDims=[3, 3], noBias=True,
+                 activationFunction=Rectifier(), weightsFiller=He(), name="conv1")
+            pool = Pool2D(conv, nbOutputs=int(64*alpha), poolDims=[3, 3], strideDims=[2, 2], pooling='Max', name="pool1")
+            Sequence.__init__(self, [conv, pool], name="stem")
 
 
 class ResNetBottleneckBlock(Sequence):
-    def __init__(self, bottleneck_size, stride, l, projection_shortcut, no_relu, block_name=""):
+    def __init__(self, inputs, bottleneck_size, stride, l, projection_shortcut, no_relu, block_name=""):
 
         self._projection_shortcut = projection_shortcut
 
-        seq = Sequence([
-            Conv(nbOutputs=bottleneck_size, kernelDims=[1, 1], strideDims=[1, 1], noBias=True,
+        seq = Sequence([ ], name="main_branch")
+        seq.add(Conv(inputs, bottleneck_size, kernelDims=[1, 1], strideDims=[1, 1], noBias=True,
                  activationFunction=Rectifier(), weightsFiller=He(scaling=l**(-1.0/(2*3-2)) if l > 0 else 1.0),
-                 name=block_name+"_1x1"),
-            Conv(nbOutputs=bottleneck_size, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[stride, stride], noBias=True,
+                 name=block_name+"_1x1"))
+        seq.add(Conv(seq.get_last(), nbOutputs=bottleneck_size, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[stride, stride], noBias=True,
                  activationFunction=Rectifier(), weightsFiller=He(scaling=l**(-1.0/(2*3-2)) if l > 0 else 1.0),
-                 name=block_name+"_3x3"),
-            Conv(nbOutputs=4 * bottleneck_size, kernelDims=[1, 1], strideDims=[1, 1], noBias=True,
+                 name=block_name+"_3x3"))
+        seq.add(Conv(seq.get_last(), nbOutputs=4 * bottleneck_size, kernelDims=[1, 1], strideDims=[1, 1], noBias=True,
                  activationFunction=Linear(), weightsFiller=He(scaling=0.0 if l > 0 else 1.0),
-                 name=block_name+"_1x1_x4")
-        ], name="main_branch")
-
-        if no_relu:
-            elem_wise = ElemWise(4 * bottleneck_size, operation='Sum', name=block_name+"_sum")
-        else:
-            elem_wise = ElemWise(4 * bottleneck_size, operation='Sum', activationFunction=Rectifier(), name=block_name+"_sum")
+                 name=block_name+"_1x1_x4"))
 
         if projection_shortcut:
-            projection = Conv(nbOutputs=4 * bottleneck_size, kernelDims=[1, 1], strideDims=[stride, stride], noBias=True,
+            shortcut = Conv(inputs, nbOutputs=4 * bottleneck_size, kernelDims=[1, 1], strideDims=[stride, stride], noBias=True,
                               activationFunction=Linear(),
                               name=block_name+"_1x1_proj")
-            block = [Layer([seq, projection]), elem_wise]
         else:
-            block = [seq, elem_wise]
+            shortcut = inputs
 
-        Sequence.__init__(self, block, name=block_name)
+        if no_relu:
+            elem_wise = ElemWise([seq.get_last(), shortcut], 4 * bottleneck_size, operation='Sum',
+                                 name=block_name + "_sum")
+        else:
+            elem_wise = ElemWise([seq.get_last(), shortcut], 4 * bottleneck_size, operation='Sum',
+                                 activationFunction=Rectifier(), name=block_name + "_sum")
 
-    # Override Sequence method
-    def add_input(self, inputs):
-        Sequence.add_input(self, inputs)
-        if not self._projection_shortcut:
-            # Connect input directly to ElemWise cell
-            self.get_last().add_input(inputs)
+        block = Layer([seq, shortcut])
+
+        Sequence.__init__(self, [block, elem_wise], name=block_name)
 
 
 class ResNet50BNBody(Sequence):
-    def __init__(self, alpha, size, l):
+    def __init__(self, inputs, alpha, l):
 
-        self.scales = {
-            str(size // 4) + "x" + str(size // 4): Sequence([
-                ResNetBottleneckBlock(int(64 * alpha), 1, l, True, False, "conv2.1"),
-                ResNetBottleneckBlock(int(64 * alpha), 1, l, False, False, "conv2.2"),
-                ResNetBottleneckBlock(int(64 * alpha), 1, l, False, True, "conv2.3"),
-                BatchNorm(4 * int(64 * alpha), activationFunction=Rectifier(), name="bn2")
-            ], name=str(size // 4) + "x" + str(size // 4)),
-            str(size // 8) + "x" + str(size // 8): Sequence([
-                ResNetBottleneckBlock(int(128 * alpha), 2, l, True, False, "conv3.1"),
-                ResNetBottleneckBlock(int(128 * alpha), 1, l, False, False, "conv3.2"),
-                ResNetBottleneckBlock(int(128 * alpha), 1, l, False, False, "conv3.3"),
-                ResNetBottleneckBlock(int(128 * alpha), 1, l, False, True, "conv3.4"),
-                BatchNorm(4 * int(128 * alpha), activationFunction=Rectifier(), name="bn3")
-            ], name=str(size // 8) + "x" + str(size // 8)),
-            str(size // 16) + "x" + str(size // 16): Sequence([
-                ResNetBottleneckBlock(int(256 * alpha), 2, l, True, False, "conv4.1"),
-                ResNetBottleneckBlock(int(256 * alpha), 1, l, False, False, "conv4.2"),
-                ResNetBottleneckBlock(int(256 * alpha), 1, l, False, False, "conv4.3"),
-                ResNetBottleneckBlock(int(256 * alpha), 1, l, False, False, "conv4.4"),
-                ResNetBottleneckBlock(int(256 * alpha), 1, l, False, False, "conv4.5"),
-                ResNetBottleneckBlock(int(256 * alpha), 1, l, False, True, "conv4.6"),
-                BatchNorm(4 * int(256 * alpha), activationFunction=Rectifier(), name="bn4")
-            ], name=str(size // 16) + "x" + str(size // 16)),
-            str(size // 32) + "x" + str(size // 32): Sequence([
-                ResNetBottleneckBlock(int(512 * alpha), 2, l, True, False, "conv5.1"),
-                ResNetBottleneckBlock(int(512 * alpha), 1, l, False, False, "conv5.2"),
-                ResNetBottleneckBlock(int(512 * alpha), 1, l, False, True, "conv5.3"),
-                BatchNorm(4 * int(512 * alpha), activationFunction=Rectifier(), name="bn5")
-            ], name=str(size // 32) + "x" + str(size // 32))
-        }
+        seq = Sequence([])
+        seq.add(ResNetBottleneckBlock(inputs, int(64 * alpha), 1, l, True, False, "conv2.1"))
+        seq.add(ResNetBottleneckBlock(seq.get_last(), int(64 * alpha), 1, l, False, False, "conv2.2"))
+        seq.add(ResNetBottleneckBlock(seq.get_last(), int(64 * alpha), 1, l, False, True, "conv2.3"))
+        seq.add(BatchNorm(seq.get_last(), 4 * int(64 * alpha), activationFunction=Rectifier(), name="bn2"))
 
-        Sequence.__init__(self, [scale[1] for scale in self.scales.items()], name="body")
+        seq1 = Sequence([])
+        seq1.add(ResNetBottleneckBlock(seq.get_last(), int(128 * alpha), 2, l, True, False, "conv3.1"))
+        seq1.add(ResNetBottleneckBlock(seq1.get_last(), int(128 * alpha), 1, l, False, False, "conv3.2"))
+        seq1.add(ResNetBottleneckBlock(seq1.get_last(), int(128 * alpha), 1, l, False, False, "conv3.3"))
+        seq1.add(ResNetBottleneckBlock(seq1.get_last(), int(128 * alpha), 1, l, False, True, "conv3.4"))
+        seq1.add(BatchNorm(seq1.get_last(), 4 * int(128 * alpha), activationFunction=Rectifier(), name="bn3"))
+
+        seq2 = Sequence([])
+        seq2.add(ResNetBottleneckBlock(seq1.get_last(), int(256 * alpha), 2, l, True, False, "conv4.1"))
+        seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, False, "conv4.2"))
+        seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, False, "conv4.3"))
+        seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, False, "conv4.4"))
+        seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, False, "conv4.5"))
+        seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, True, "conv4.6"))
+        seq2.add(BatchNorm(seq2.get_last(), 4 * int(256 * alpha), activationFunction=Rectifier(), name="bn4"))
+
+        seq3 = Sequence([])
+        seq3.add(ResNetBottleneckBlock(seq2.get_last(), int(512 * alpha), 2, l, True, False, "conv5.1"))
+        seq3.add(ResNetBottleneckBlock(seq3.get_last(), int(512 * alpha), 1, l, False, False, "conv5.2"))
+        seq3.add(ResNetBottleneckBlock(seq3.get_last(), int(512 * alpha), 1, l, False, True, "conv5.3"))
+        seq3.add(BatchNorm(seq3.get_last(), 4 * int(512 * alpha), activationFunction=Rectifier(), name="bn5"))
+
+        self.scales = {}
+        name = str(inputs.get_outputs().dimX()) + "x" + str(inputs.get_outputs().dimX())
+        self.scales[name] = Sequence([seq], name=name)
+        name = str(seq.get_last().get_outputs().dimX()) + "x" + str(seq.get_last().get_outputs().dimY())
+        self.scales[name] = Sequence([seq], name=name)
+        name = str(seq1.get_last().get_outputs().dimX()) + "x" + str(seq1.get_last().get_outputs().dimY())
+        self.scales[name] = Sequence([seq, seq1], name=name)
+        name = str(seq2.get_last().get_outputs().dimX()) + "x" + str(seq2.get_last().get_outputs().dimY())
+        self.scales[name] = Sequence([seq, seq1, seq2], name=name)
+        name = str(seq3.get_last().get_outputs().dimX()) + "x" + str(seq3.get_last().get_outputs().dimY())
+        self.scales[name] = Sequence([seq, seq1, seq2, seq3], name=name)
+
+        Sequence.__init__(self, [seq, seq1, seq2, seq3], name="body")
 
 
 class ResNetHead(Sequence):
-    def __init__(self, alpha, size):
+    def __init__(self, inputs, alpha):
         Sequence.__init__(self, [
-            Pool2D(nbOutputs=4 * int(512 * alpha), poolDims=[size // 32, size // 32], strideDims=[1, 1], pooling='Average', name="pool"),
+            Pool2D(inputs, 4 * int(512 * alpha),
+                   poolDims=[inputs.get_last().get_outputs().dimX(), inputs.get_last().get_outputs().dimY()],
+                   strideDims=[1, 1], pooling='Average', name="pool"),
         ], name="head")
 
 
 class ResNetClassifier(Sequence):
-    def __init__(self, output_size, l):
-        Sequence.__init__(self, [
-            Fc(nbOutputs=output_size, activationFunction=Linear(), weightsFiller=Xavier(scaling=(0.0 if l > 0 else 1.0)), biasFiller=Constant(value=0.0), name="fc"),
-            Softmax(nbOutputs=output_size, name="softmax")
-        ], name="classifier")
+    def __init__(self, inputs, output_size, l):
+        fc = Fc(inputs, output_size, activationFunction=Linear(), weightsFiller=Xavier(scaling=(0.0 if l > 0 else 1.0)), biasFiller=Constant(value=0.0), name="fc")
+        softmax = Softmax(fc, output_size, name="softmax")
+        Sequence.__init__(self, [fc, softmax], name="classifier")
+
 
 """
-Abstract ResNet class
+Abstract ResNet class. TODO: Make true abstract class?
 """
 class ResNet(Sequence):
 
-    body = None
     _with_batchnorm = False
+    stem = None
+    body = None
+    head = None
+    classifier = None
 
-    def __init__(self, output_size=1000, alpha=1.0, size=224, l=0):
-        self.stem = ResNetStem(alpha)
-        self.head = ResNetHead(alpha, size)
-        self.classifier = ResNetClassifier(output_size, l)
-
-        if self.body is None:
-            raise RuntimeError("No body defined. Did you try to create and abstract ResNet?")
-
+    def __init__(self):
+        if self.stem is None or self.body is None or self.head is None or self.classifier is None:
+            raise RuntimeError("Missing elements. Did you try to create and abstract ResNet?")
         Sequence.__init__(self, [self.stem, self.body, self.head, self.classifier])
 
     def set_ILSVRC_solvers(self, max_iterations):
@@ -274,10 +277,15 @@ class ResNet(Sequence):
 
 class ResNet50BN(ResNet):
 
-    def __init__(self, output_size=1000, alpha=1.0, size=224, l=0):
+    def __init__(self, inputs, output_size=1000, alpha=1.0, l=0):
         self._with_batchnorm = True
-        self.body = ResNet50BNBody(alpha, size, l)
-        ResNet.__init__(self, output_size, alpha, size, l)
+
+        self.stem = ResNetStem(inputs, alpha)
+        self.body = ResNet50BNBody(self.stem.get_last(), alpha, l)
+        self.head = ResNetHead(self.body.get_last(), alpha)
+        self.classifier = ResNetClassifier(self.head.get_last(), output_size, l)
+
+        ResNet.__init__(self)
 
 """
 class ResNet50(ResNet):

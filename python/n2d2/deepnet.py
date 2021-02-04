@@ -91,28 +91,34 @@ We should be able to extract cell and sequences and run these subnetworks easily
 Structure that is organised sequentially. 
 """
 class Sequence:
-    def __init__(self, sequences, inputs=None, name=""):
+    def __init__(self, sequences, name=""):
         assert isinstance(name, str)
         self._name = name
         assert isinstance(sequences, list)
-        if not sequences:
-            raise ValueError("Got empty list as input. List must contain at least one element")
+        #if not sequences:
+        #    raise ValueError("Got empty list as input. List must contain at least one element")
         self._sequences = sequences
 
-
+        """
         previous = None
         for elem in self._sequences:
             if previous is not None:
                 #elem.clear_input()
                 elem.add_input(previous)
             previous = elem
+        """
 
+        """
         if inputs is not None:
             if isinstance(inputs, list):
                 for cell in inputs:
                     self.add_input(cell)
             else:
                 self.add_input(inputs)
+        """
+
+    def add(self, cell):
+        self._sequences.append(cell)
 
     def get_cells(self):
         cells = {}
@@ -128,14 +134,14 @@ class Sequence:
 
     # TODO: Method that converts sequential representation into corresponding N2D2 deepnet
 
-    def add_input(self, inputs, link_N2D2_input=False):
-        self.get_first().add_input(inputs, link_N2D2_input)
+    def add_input(self, inputs):
+        self.get_first().add_input(inputs)
 
     def get_inputs(self):
         return self.get_first().get_inputs()
 
-    def clear_input(self, unlink_N2D2_input=False):
-        self.get_first().clear_input(unlink_N2D2_input)
+    def clear_input(self):
+        self.get_first().clear_input()
 
     def initialize(self):
         for cell in self._sequences:
@@ -249,13 +255,13 @@ class Layer:
 
     # TODO: Method that converts layer representation into corresponding N2D2 deepnet
 
-    def add_input(self, input, link_N2D2_input=False):
+    def add_input(self, input):
         for cell in self._layer:
-            cell.add_input(input, link_N2D2_input)
+            cell.add_input(input)
 
-    def clear_input(self, unlink_N2D2_input=False):
+    def clear_input(self):
         for cell in self._layer:
-            cell.clear_input(unlink_N2D2_input)
+            cell.clear_input()
 
     def get_last(self):
         return self
