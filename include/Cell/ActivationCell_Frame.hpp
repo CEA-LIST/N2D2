@@ -60,6 +60,7 @@ public:
     virtual ~ActivationCell_Frame();
 
 private:
+    Tensor<T> mWorkspaceCPU;
     static Registrar<ActivationCell> mRegistrar;
 };
 }
