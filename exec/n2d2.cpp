@@ -2242,10 +2242,6 @@ int main(int argc, char* argv[]) try
     CudaContext::setDevice(cudaDevice);
 #endif
 
-    // Network topology construction
-    SGDSolver::mMaxSteps = opt.learn;
-    SGDSolver::mLogSteps = opt.log;
-
     Network net(opt.seed);
     std::shared_ptr<DeepNet> deepNet
         = DeepNetGenerator::generate(net, opt.iniConfig);
@@ -2266,6 +2262,13 @@ int main(int argc, char* argv[]) try
     std::cout << "Testing database size: "
               << database.getNbStimuli(Database::Test) << " images"
               << std::endl;
+
+    // Network topology construction
+    SGDSolver::mMaxSteps = opt.learn > 0 ? opt.learn 
+                                : opt.learnEpoch*database.getNbStimuli(Database::Learn);
+    SGDSolver::mLogSteps = (opt.learnEpoch > 0) ? database.getNbStimuli(Database::Learn) 
+                            : opt.log;
+
 
     if (opt.logDbStats) {
         // Log stats
