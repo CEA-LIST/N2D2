@@ -67,6 +67,8 @@ public:
     virtual void update();
     inline void getWeight(unsigned int output, unsigned int channel,
                           BaseTensor& value) const;
+    inline void getQuantWeight(unsigned int output, unsigned int channel,
+                          BaseTensor& value) const;
     inline void getBias(unsigned int output, BaseTensor& value) const;
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void logFreeParameters(const std::string& fileName,
@@ -76,9 +78,11 @@ public:
     void loadFreeParameters(const std::string& fileName,
                             bool ignoreNotExists = false);
     void exportFreeParameters(const std::string& fileName) const;
+    void exportQuantFreeParameters(const std::string& fileName) const;
     void importFreeParameters(const std::string& fileName,
                               bool ignoreNotExists = false);
     void logFreeParametersDistrib(const std::string& fileName) const;
+    void logQuantFreeParametersDistrib(const std::string& fileName) const;
     
     std::pair<Float_T, Float_T> getFreeParametersRange(FreeParametersType type = All) const;
     std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 
@@ -138,6 +142,19 @@ void N2D2::FcCell_Frame_CUDA<T>::getWeight(unsigned int output,
 
     value.resize({1});
     value = Tensor<T>({1}, mSynapses(0, 0, channel, output));
+}
+
+template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::getQuantWeight(unsigned int output,
+                                           unsigned int channel,
+                                           BaseTensor& value) const
+{
+    const CudaTensor<T>& synapses = cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(0));
+    if (mKeepInSync)
+        synapses.synchronizeDToH(0, 0, channel, output, 1);
+
+    value.resize({1});
+    value = Tensor<T>({1}, synapses(0, 0, channel, output));
 }
 
 template <class T>
