@@ -108,6 +108,8 @@ public:
     virtual BaseTensor& getDiffInputs();
     virtual const BaseTensor& getDiffInputs() const;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
+    void exportActivationParameters(const std::string& dirName) const;
+    void importActivationParameters(const std::string& dirName, bool ignoreNotExists);
     bool isCuda() const
     {
         return true;

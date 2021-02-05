@@ -59,7 +59,6 @@ public:
                                const BaseTensor& output,
                                BaseTensor& diffInOut);
     virtual void update(unsigned int batchSize) = 0;
-
     /**
      * Return the possible range of the activation's output as a pair of min-max. 
      */
@@ -70,6 +69,13 @@ public:
 
     const Scaling& getActivationScaling() const;
     void setActivationScaling(Scaling scaling);
+    void exportParameters(const std::string& dirName,
+                            const std::string& cellName) const;
+    void importParameters(const std::string& dirName,
+                            const std::string& cellName,
+                            const bool ignoreNotExists);
+
+
     std::shared_ptr<QuantizerActivation> getQuantizer()
     {
         return mQuantizer;

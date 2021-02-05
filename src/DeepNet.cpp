@@ -657,6 +657,8 @@ void N2D2::DeepNet::exportNetworkFreeParameters(const std::string
             + "_weights.distrib.dat", Cell::Multiplicative);
         (*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first
             + "_biases.distrib.dat", Cell::Additive);
+
+        (*it).second->exportActivationParameters(dirName);
     }
 }
 
@@ -688,6 +690,8 @@ void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName,
          ++it){
         (*it).second->importFreeParameters(dirName + "/" + (*it).first
                                            + ".syntxt", ignoreNotExists);
+        (*it).second->importActivationParameters(dirName, ignoreNotExists);
+
     }
 }
 

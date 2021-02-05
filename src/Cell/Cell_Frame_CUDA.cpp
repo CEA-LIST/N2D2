@@ -255,6 +255,18 @@ void N2D2::Cell_Frame_CUDA<T>::replaceInput(BaseTensor& oldInputs,
             " match the other inputs!");
     }
 }
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::exportActivationParameters(const std::string& dirName) const
+{    
+    if (mActivation)
+        mActivation->exportParameters(dirName, mName);
+}
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::importActivationParameters(const std::string& dirName, bool ignoreNotExists)
+{    
+    if (mActivation)
+        mActivation->importParameters(dirName, mName, ignoreNotExists);
+}
 
 template <class T>
 void N2D2::Cell_Frame_CUDA<T>::propagate(bool inference)

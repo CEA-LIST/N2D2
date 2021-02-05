@@ -37,8 +37,8 @@ public:
     {
         return false;
     }
-    virtual void exportFreeParameters(const std::string& /*fileName*/) const {};
-    virtual void importFreeParameters(const std::string& /*fileName*/, bool /*ignoreNoExists*/) {};
+    virtual void exportParameters(const std::string& /*fileName*/, const std::string& /*cellName*/) const {};
+    virtual void importParameters(const std::string& /*dirName*/, const std::string& /*cellName*/, bool /*ignoreNotExists*/) {};
 
     virtual ~QuantizerActivation_Frame() {};
 

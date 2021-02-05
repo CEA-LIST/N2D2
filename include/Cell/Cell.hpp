@@ -321,6 +321,13 @@ public:
      * @param fileName      Destination file
     */
     virtual void exportFreeParameters(const std::string& /*fileName*/) const {};
+    /**
+     * Export Activation parameters to a file, in ASCII format compatible between
+     *the different cell models
+     *
+     * @param fileName      Destination file
+    */
+    virtual void exportActivationParameters(const std::string& /*fileName*/) const {};
 
     /**
      * Load cell free parameters from a file, in ASCII format compatible between
@@ -332,6 +339,9 @@ public:
     */
     virtual void importFreeParameters(const std::string& /*fileName*/,
                                       bool /*ignoreNotExists*/ = false) {};
+    virtual void importActivationParameters(const std::string& /*fileName*/,
+                                            bool /*ignoreNotExists*/ = false) {};
+
     virtual void logFreeParameters(const std::string & /*fileName*/) const {};
 
     /**

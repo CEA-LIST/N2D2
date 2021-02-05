@@ -33,8 +33,8 @@ public:
                                 const BaseTensor& output,
                                 const BaseTensor& diffInput,
                                 BaseTensor& diffOutput) = 0;
-    virtual void exportFreeParameters(const std::string& /*fileName*/) const {};
-    virtual void importFreeParameters(const std::string& /*fileName*/, bool /*ignoreNoExists*/) {};
+    virtual void exportParameters(const std::string& /*fileName*/, const std::string& /*cellName*/) const {};
+    virtual void importParameters(const std::string& /*dirName*/, const std::string& /*cellName*/, bool /*ignoreNotExists*/) {};
 
     virtual void setSolver(const std::shared_ptr<Solver>& solver)
     {
