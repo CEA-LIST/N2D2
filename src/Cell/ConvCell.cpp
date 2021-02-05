@@ -403,6 +403,98 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
     }
 }
 
+void N2D2::ConvCell::exportQuantFreeParameters(const std::string& fileName) const
+{
+    if(!mQuantizer) {
+        return;
+    }
+
+    const std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
+    const std::string fileBase = Utils::fileBaseName(fileName);
+    std::string fileExt = Utils::fileExtension(fileName);
+
+    if (!fileExt.empty())
+        fileExt = "." + fileExt;
+
+    const std::string weightsFile = fileBase + "_weights" + fileExt;
+    const std::string biasesFile = fileBase + "_biases" + fileExt;
+
+    std::ofstream weights(weightsFile.c_str());
+
+    if (!weights.good())
+        throw std::runtime_error("Could not create synaptic file: "
+                                 + weightsFile);
+
+    const std::map<unsigned int, unsigned int> outputsMap = outputsRemap();
+
+    if (mWeightsExportFormat == OCHW) {
+        for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+            const unsigned int outputRemap = (!outputsMap.empty())
+                ? outputsMap.find(output)->second : output;
+
+            for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
+            {
+                if (!isConnection(channel, outputRemap))
+                    continue;
+
+                Tensor<Float_T> kernel;
+                getQuantWeight(outputRemap, channel, kernel);
+
+                for (unsigned int index = 0, size = kernel.size(); index < size;
+                    ++index)
+                {
+                    const Float_T weight = (mWeightsExportFlip)
+                        ? kernel(size - 1 - index)
+                        : kernel(index);
+
+                    weights << weight << " ";
+                }
+            }
+
+            weights << "\n";
+        }
+    }
+    else if (mWeightsExportFormat == HWCO) {
+        const unsigned int kernelSize = (!mKernelDims.empty())
+            ? std::accumulate(mKernelDims.begin(), mKernelDims.end(),
+                              1U, std::multiplies<unsigned int>())
+            : 0U;
+
+        for (unsigned int index = 0; index < kernelSize; ++index) {
+            for (unsigned int channel = 0; channel < getNbChannels();
+                ++channel)
+            {
+                for (unsigned int output = 0; output < getNbOutputs(); ++output)
+                {
+                    const unsigned int outputRemap = (!outputsMap.empty())
+                        ? outputsMap.find(output)->second : output;
+
+                    if (!isConnection(channel, outputRemap))
+                        continue;
+
+                    Tensor<Float_T> kernel;
+                    getQuantWeight(outputRemap, channel, kernel);
+
+                    const Float_T weight = (mWeightsExportFlip)
+                        ? kernel(kernelSize - 1 - index)
+                        : kernel(index);
+
+                    weights << weight << " ";
+                }
+            }
+
+            weights << "\n";
+        }
+    }
+    else
+        throw std::runtime_error("Unsupported weights export format");
+
+}
+
 void N2D2::ConvCell::importFreeParameters(const std::string& fileName,
                                           bool ignoreNotExists)
 {
@@ -604,6 +696,94 @@ void N2D2::ConvCell::logFreeParametersDistrib(
                 Tensor<double> bias;
                 getBias(output, bias);
                 weights.push_back(bias(0));
+            }
+        }
+    }
+
+    if (weights.empty())
+        return;
+
+    std::sort(weights.begin(), weights.end());
+
+    // Write data file
+    const std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
+    std::ofstream data(fileName.c_str());
+
+    if (!data.good())
+        throw std::runtime_error("Could not save weights distrib file.");
+
+    std::copy(weights.begin(),
+              weights.end(),
+              std::ostream_iterator<double>(data, "\n"));
+    data.close();
+
+    // Plot results
+    Gnuplot gnuplot;
+    gnuplot.set("grid front").set("key off");
+    gnuplot << "binwidth=0.0078";   // < 1/128
+    gnuplot << "bin(x,width)=width*floor(x/width+0.5)";
+    gnuplot.set("boxwidth", "binwidth");
+    gnuplot.set("style data boxes").set("style fill solid noborder");
+    //gnuplot.set("xtics", "0.2");
+    //gnuplot.set("mxtics", "2");
+    //gnuplot.set("grid", "mxtics");
+    gnuplot.set("yrange", "[0:]");
+
+    if (weights.size() > 1) {
+        const std::pair<double, double> meanStdDev = Utils::meanStdDev(weights);
+
+        std::ostringstream label;
+        label << "\"Average: " << meanStdDev.first << "\\n";
+        label << "Std. dev.: " << meanStdDev.second << "\"";
+        label << " at graph 0.7, graph 0.8 front";
+
+        gnuplot.set("label", label.str());
+    }
+
+    gnuplot.set("style rect fc lt -1 fs solid 0.15 noborder behind");
+    gnuplot.set("obj rect from graph 0, graph 0 to -1, graph 1");
+    gnuplot.set("obj rect from 1, graph 0 to graph 1, graph 1");
+
+    const double minVal = (weights.front() < -1.0) ? weights.front() : -1.0;
+    const double maxVal = (weights.back() > 1.0) ? weights.back() : 1.0;
+    gnuplot.setXrange(minVal - 0.05, maxVal + 0.05);
+
+    gnuplot.saveToFile(fileName);
+    gnuplot.plot(fileName,
+                 "using (bin($1,binwidth)):(1.0) smooth freq with boxes");
+}
+
+void N2D2::ConvCell::logQuantFreeParametersDistrib(
+    const std::string& fileName,
+    FreeParametersType type) const
+{
+    if(!mQuantizer){
+        return;
+    }
+    
+    // Append all weights
+    const unsigned int kernelSize = (!mKernelDims.empty())
+        ? std::accumulate(mKernelDims.begin(), mKernelDims.end(),
+                          1U, std::multiplies<unsigned int>())
+        : 0U;
+
+    std::vector<double> weights;
+    weights.reserve(getNbOutputs() * getNbChannels() * kernelSize);
+
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+        if (type == All || type == Multiplicative) {
+            for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
+            {
+                if (!isConnection(channel, output))
+                    continue;
+
+                Tensor<double> kernel;
+                getQuantWeight(output, channel, kernel);
+                weights.insert(weights.end(), kernel.begin(), kernel.end());
             }
         }
     }

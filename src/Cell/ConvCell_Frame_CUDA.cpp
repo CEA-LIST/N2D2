@@ -1098,6 +1098,15 @@ void N2D2::ConvCell_Frame_CUDA<T>::exportFreeParameters(const std::string
 }
 
 template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::exportQuantFreeParameters(const std::string
+                                                     & fileName) const
+{
+    synchronizeToH(false);
+    ConvCell::exportQuantFreeParameters(fileName);
+    keepInSync(true);
+}
+
+template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::importFreeParameters(const std::string
                                                      & fileName,
                                                      bool ignoreNotExists)
@@ -1116,6 +1125,15 @@ void N2D2::ConvCell_Frame_CUDA<T>::logFreeParametersDistrib(const std::string
 {
     synchronizeToH(false);
     ConvCell::logFreeParametersDistrib(fileName);
+    keepInSync(true);
+}
+
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::logQuantFreeParametersDistrib(const std::string
+                                                         & fileName) const
+{
+    synchronizeToH(false);
+    ConvCell::logQuantFreeParametersDistrib(fileName);
     keepInSync(true);
 }
 

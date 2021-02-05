@@ -328,6 +328,7 @@ public:
      * @param fileName      Destination file
     */
     virtual void exportActivationParameters(const std::string& /*fileName*/) const {};
+    virtual void exportQuantFreeParameters(const std::string& /*fileName*/) const {};
 
     /**
      * Load cell free parameters from a file, in ASCII format compatible between
@@ -350,6 +351,15 @@ public:
      * @param fileName      Destination file
     */
     virtual void logFreeParametersDistrib(
+        const std::string& /*fileName*/,
+        FreeParametersType /*type*/ = All) const {};
+
+    /**
+     * Log cell free parameters quantized distribution
+     *
+     * @param fileName      Destination file
+    */
+    virtual void logQuantFreeParametersDistrib(
         const std::string& /*fileName*/,
         FreeParametersType /*type*/ = All) const {};
 

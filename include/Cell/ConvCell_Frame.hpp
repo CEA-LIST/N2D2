@@ -93,6 +93,12 @@ public:
         value.resize(sharedSynapses[output][channel].dims());
         value = sharedSynapses[output][channel];
     };
+    inline void getQuantWeight(unsigned int output,
+                          unsigned int channel,
+                          BaseTensor& value) const
+    {
+        //nothing here for now
+    };
     inline void getBias(unsigned int output, BaseTensor& value) const
     {
         // Need to specify std::initializer_list<size_t> for GCC 4.4

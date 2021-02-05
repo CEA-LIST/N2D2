@@ -94,6 +94,9 @@ public:
     inline void getWeight(unsigned int output,
                           unsigned int channel,
                           BaseTensor& value) const;
+    inline void getQuantWeight(unsigned int output,
+                          unsigned int channel,
+                          BaseTensor& value) const;
     inline void getBias(unsigned int output, BaseTensor& value) const;
     inline BaseInterface* getWeights()
     {
@@ -119,9 +122,11 @@ public:
     void loadFreeParameters(const std::string& fileName,
                             bool ignoreNotExists = false);
     void exportFreeParameters(const std::string& fileName) const;
+    void exportQuantFreeParameters(const std::string& fileName) const;
     void importFreeParameters(const std::string& fileName,
                               bool ignoreNotExists = false);
     void logFreeParametersDistrib(const std::string& fileName) const;
+    void logQuantFreeParametersDistrib(const std::string& fileName) const;
     
     std::pair<Float_T, Float_T> getFreeParametersRange(FreeParametersType type = All) const;
     std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 
@@ -270,6 +275,46 @@ N2D2::ConvCell_Frame_CUDA<T>::getWeight(unsigned int output,
         value = sharedSynapses[output][channel];
 
     //}
+    
+}
+
+template <class T>
+void
+N2D2::ConvCell_Frame_CUDA<T>::getQuantWeight(unsigned int output,
+                                        unsigned int channel,
+                                        BaseTensor& value) const
+{
+
+    if (!mQuantizer)
+        return;
+    
+    const unsigned int k = mInputs.getTensorIndex(channel);
+    channel -= mInputs.getTensorDataOffset(channel);
+
+#if CUDNN_VERSION >= 7000
+    if (mNbGroups[k] > 1) {
+        const size_t outputGroupSize = getNbOutputs() / mNbGroups[k];
+        const size_t channelGroupSize = mInputs[k].dimZ() / mNbGroups[k];
+        const size_t outputGroup = output / outputGroupSize;
+        const size_t channelGroup = channel / channelGroupSize;
+
+        if (outputGroup != channelGroup) {
+            const std::vector<size_t> kernelDims(mKernelDims.begin(),
+                                                 mKernelDims.end());
+
+            value.resize(kernelDims);
+            value = Tensor<T>(kernelDims, T(0.0));
+            return;
+        }
+
+        channel = channel % channelGroupSize;
+    }
+#endif
+
+    const CudaTensor<T>& sharedSynapses = cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(k));
+    sharedSynapses[output][channel].synchronizeDToH();
+    value.resize(sharedSynapses[output][channel].dims());
+    value = sharedSynapses[output][channel];
     
 }
 

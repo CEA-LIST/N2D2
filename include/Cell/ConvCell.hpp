@@ -177,6 +177,9 @@ public:
     virtual void getWeight(unsigned int output,
                            unsigned int channel,
                            BaseTensor& value) const = 0;
+    virtual void getQuantWeight(unsigned int output,
+                           unsigned int channel,
+                           BaseTensor& value) const = 0;
     virtual void getBias(unsigned int output, BaseTensor& value) const = 0;
     virtual void setWeight(unsigned int output,
                            unsigned int channel,
@@ -197,9 +200,12 @@ public:
     virtual void setBiases(const std::shared_ptr<BaseTensor>&
                            /*biases*/) {};
     virtual void exportFreeParameters(const std::string& fileName) const;
+    virtual void exportQuantFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,
                                       bool ignoreNotExists = false);
     virtual void logFreeParametersDistrib(const std::string& fileName,
+                                          FreeParametersType type = All) const;
+    virtual void logQuantFreeParametersDistrib(const std::string& fileName,
                                           FreeParametersType type = All) const;
     void writeMap(const std::string& fileName) const;
     void randomizeFreeParameters(double stdDev);
