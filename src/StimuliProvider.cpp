@@ -396,13 +396,14 @@ bool N2D2::StimuliProvider::normalizeIntegersStimuli(int envCvDepth) {
     return normalizationOccured;
 }
 
-void N2D2::StimuliProvider::logTransformations(const std::string& fileName)
-    const
+void N2D2::StimuliProvider::logTransformations(
+    const std::string& fileName,
+    Database::StimuliSetMask setMask) const
 {
     GraphViz graph("Transformations", "", true);
 
     const std::vector<Database::StimuliSet> stimuliSets
-        = mDatabase.getStimuliSets(Database::All);
+        = mDatabase.getStimuliSets(setMask);
 
     for (std::vector<Database::StimuliSet>::const_iterator it
          = stimuliSets.begin(), itEnd = stimuliSets.end(); it != itEnd; ++it)
@@ -463,6 +464,16 @@ void N2D2::StimuliProvider::logTransformations(const std::string& fileName)
                 labelStr << width << "x" << height;
             else
                 labelStr << "?x?";
+
+            if (trans->getType() == std::string("RangeAffine")) {
+                std::shared_ptr<RangeAffineTransformation> rangeAffineTrans
+                    = std::dynamic_pointer_cast<RangeAffineTransformation>(trans);
+
+                labelStr << "\n" << rangeAffineTrans->getFirstOperator() << ": "
+                    << rangeAffineTrans->getFirstValue();
+                labelStr << "\n" << rangeAffineTrans->getSecondOperator() << ": "
+                    << rangeAffineTrans->getSecondValue();
+            }
 
             GraphViz nodeGraph("cluster" + nodeName);
             nodeGraph.attr("cluster" + nodeName, "style", "invis");

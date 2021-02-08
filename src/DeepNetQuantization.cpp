@@ -1026,8 +1026,16 @@ std::pair<std::vector<unsigned char>, double> N2D2::DeepNetQuantization::approxi
     static const double ROUNDING_THRESHOLD = 0.98;
 
     assert(nbDivisions > 0);
-    assert(scaling <= 1.0);
 
+    if (scaling > 1.0) {
+        std::ostringstream msgStr;
+        msgStr << "Scaling (" << scaling << ") > 1 is "
+            "not supported with Single/Double-shift scaling. "
+            "Use Floating-point or Fixed-point scaling instead for this "
+            "network.";
+
+        throw std::runtime_error(msgStr.str());
+    }
 
     double precision = 0.0;
 
