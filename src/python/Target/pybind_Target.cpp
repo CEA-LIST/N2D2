@@ -1,6 +1,8 @@
 /*
     (C) Copyright 2016 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    Cyril MOINEAU (cyril.moineau@cea.fr)
+                    Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -31,7 +33,7 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_Target(py::module &m) {
-    py::class_<Target, std::shared_ptr<Target>>(m, "Target", py::multiple_inheritance())
+    py::class_<Target, std::shared_ptr<Target>, Parameterizable>(m, "Target", py::multiple_inheritance())
     .def(py::init<
         const std::string&, 
         const std::shared_ptr<Cell>&, 
@@ -46,7 +48,7 @@ void init_Target(py::module &m) {
         py::arg("sp"), 
         py::arg("targetValue") = 1.0,
         py::arg("defaultValue") = 0.0, 
-        py::arg("targetTopN") = 1,
+        py::arg("topN") = 1,  /* NOTE: this name is incoherent with the normal convention in the C++ class constructor ('targetTopN' vs. 'topN'). We choose the INI convention*/
         py::arg("labelsMapping") = "", 
         py::arg("createMissingLabels") = false)
     .def("getName", &Target::getName)

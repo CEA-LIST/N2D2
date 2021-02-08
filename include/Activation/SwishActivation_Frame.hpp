@@ -21,7 +21,6 @@
 #ifndef N2D2_SWISHACTIVATION_FRAME_H
 #define N2D2_SWISHACTIVATION_FRAME_H
 
-#include "Activation/Activation_Kernels.hpp"
 #include "Activation/SwishActivation.hpp"
 #include "Cell/Cell.hpp"
 #include "containers/Tensor.hpp"
@@ -36,9 +35,16 @@ public:
         return std::make_shared<SwishActivation_Frame<T> >();
     }
 
-    SwishActivation_Frame();
-    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
-    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
+    virtual void propagate(const Cell& cell,
+                           const BaseTensor& input,
+                           BaseTensor& output,
+                           bool inference = false);
+    virtual void backPropagate(const Cell& cell,
+                               const BaseTensor& input,
+                               const BaseTensor& output,
+                               const BaseTensor& diffInput,
+                               BaseTensor& diffOutput);
+    virtual void update(unsigned int batchSize);
     virtual ~SwishActivation_Frame() {};
 
 protected:
@@ -50,75 +56,63 @@ private:
 }
 
 template <class T>
-N2D2::SwishActivation_Frame<T>::SwishActivation_Frame():
-    SwishActivation()
+void N2D2::SwishActivation_Frame<T>::propagate(
+    const Cell& cell, 
+    const BaseTensor& baseInput,
+    BaseTensor& baseOutput,
+    bool inference)
 {
-    //ctor
-}
+    const Tensor<T>& input = dynamic_cast<const Tensor<T>&>(baseInput);
+    Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
 
-template <class T>
-void N2D2::SwishActivation_Frame<T>::propagate(const Cell& cell, BaseTensor& baseData,
-                                                   bool inference)
-{
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
+    mScaling.propagate(cell, input, output);
 
-    mScaling.propagate(cell, data);
+    mSigmoid.resize(output.dims());
 
-    mSigmoid.resize(data.dims());
-
-#pragma omp parallel for if (data.size() > 1024)
-    for (int index = 0; index < (int)data.size(); ++index) {
-        const T sig(1.0f / (1.0f + std::exp(-data(index))));
+#pragma omp parallel for if (output.size() > 1024)
+    for (int index = 0; index < (int)output.size(); ++index) {
+        const T sig(1.0f / (1.0f + std::exp(-output(index))));
         mSigmoid(index) = sig;
-        data(index) = data(index) * sig;
+        output(index) = output(index) * sig;
     }
-
-    if (mQuantizationLevels > 0) {
-        if (!inference) {
-            T minVal, maxVal;
-            std::tie(minVal, maxVal) = minMax(data);
-
-            double minValMA_unused;
-            rangeAveraging(T(0.0f), maxVal, minValMA_unused, mMaxValMA,
-                           mNbSteps, mMovingAverage, mMA_Window, mEMA_Alpha);
-
-            if (mLog2RoundingRate > 0.0) {
-                mMaxValQuant = log2Round(mMaxValMA / mPreQuantizeScaling,
-                                         mLog2RoundingRate, mLog2RoundingPower)
-                                            * mPreQuantizeScaling;
-            }
-        }
-
-        if (mNbSteps > mQuantizationDelay || inference) {
-            quantize(data, data, T(0.0f), T(mMaxValQuant),
-                     (unsigned int)mQuantizationLevels);
-        }
+    if(mQuantizer) {
+        mQuantizer->propagate(baseOutput, inference);
     }
 }
 
 template <class T>
-void N2D2::SwishActivation_Frame<T>::backPropagate(const Cell& cell, 
-                                                       BaseTensor& baseData, BaseTensor& baseDiffData)
+void N2D2::SwishActivation_Frame<T>::backPropagate(
+    const Cell& cell, 
+    const BaseTensor& /*baseInput*/,
+    const BaseTensor& baseOutput,
+    const BaseTensor& baseDiffInput,
+    BaseTensor& baseDiffOutput)
 {
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
-    Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
-
-
-    if (mQuantizationLevels > 0) {
-#pragma omp parallel for if (diffData.size() > 1024)
-        for (int index = 0; index < (int)diffData.size(); ++index) {
-            diffData(index) = Utils::clamp<T>(diffData(index),
-                                              T(-1.0f), T(1.0f));
-        }
+    if(mQuantizer) {
+        mQuantizer->back_propagate( mQuantizer->getFullPrecisionActivations(), 
+                                    baseOutput,/*Not use for the moment*/
+                                    baseDiffInput,
+                                    baseDiffOutput);
     }
+    const Tensor<T>& output = dynamic_cast<const Tensor<T>&>(baseOutput);
+    const Tensor<T>& diffInput = (!mQuantizer)  ? dynamic_cast<const Tensor<T>&>(baseDiffInput) 
+                                : dynamic_cast<const Tensor<T>&>(baseDiffOutput);
+    Tensor<T>& diffOutput = dynamic_cast<Tensor<T>&>(baseDiffOutput);
 
-#pragma omp parallel for if (data.size() > 1024)
-    for (int index = 0; index < (int)diffData.size(); ++index) {
-        diffData(index) *= mSigmoid(index)
-            + data(index) * (1.0f - mSigmoid(index));
+#pragma omp parallel for if (output.size() > 1024)
+    for (int index = 0; index < (int)diffOutput.size(); ++index) {
+        diffOutput(index) = diffInput(index) * (mSigmoid(index)
+            + output(index) * (1.0f - mSigmoid(index)));
     }
     
-    mScaling.backPropagate(cell, data, diffData);
+    mScaling.backPropagate(cell, diffOutput, diffOutput);
 }
 
+template <class T>
+void N2D2::SwishActivation_Frame<T>::update(unsigned int batchSize)
+{
+    if(mQuantizer) {
+        mQuantizer->update(batchSize);
+    }
+}
 #endif // N2D2_SWISHACTIVATION_FRAME_H

@@ -248,6 +248,19 @@ void N2D2::Cell_Frame<T>::replaceInput(BaseTensor& oldInputs,
             " match the other inputs!");
     }
 }
+template <class T>
+void N2D2::Cell_Frame<T>::exportActivationParameters(const std::string& dirName) const
+{
+    if (mActivation)
+        mActivation->exportParameters(dirName, mName);
+}
+
+template <class T>
+void N2D2::Cell_Frame<T>::importActivationParameters(const std::string& dirName, bool ignoreNotExists)
+{
+    if (mActivation)
+        mActivation->importParameters(dirName, mName, ignoreNotExists);
+}
 
 template <class T>
 void N2D2::Cell_Frame<T>::propagate(bool inference)
@@ -261,6 +274,13 @@ void N2D2::Cell_Frame<T>::backPropagate()
 {
     if (mActivation)
         mActivation->backPropagate(*this, mOutputs, mDiffInputs);
+}
+
+template <class T>
+void N2D2::Cell_Frame<T>::update()
+{
+    if (mActivation)
+        mActivation->update(mInputs.dimB());
 }
 
 template <class T>
@@ -520,39 +540,6 @@ unsigned int N2D2::Cell_Frame<T>::getMaxOutput(unsigned int batchPos) const
     const Tensor<T> output = mOutputs[batchPos];
     return std::distance(output.begin(),
                          std::max_element(output.begin(), output.end()));
-}
-
-template <class T>
-void N2D2::Cell_Frame<T>::discretizeSignals(unsigned int nbLevels,
-                                         const Signals& signals)
-{
-    if (signals & In) {
-        mInputs.synchronizeDBasedToH();
-
-        for (Interface<>::iterator itTensor = mInputs.begin(),
-                                   itTensorEnd = mInputs.end();
-             itTensor != itTensorEnd;
-             ++itTensor)
-        {
-            Tensor<T> input = tensor_cast<T>(*(*itTensor));
-
-            //#pragma omp parallel for
-            for (int index = 0; index < (int)input.size(); ++index)
-                input(index) = Utils::round((nbLevels - 1) * input(index))
-                                  / (nbLevels - 1);
-
-            *(*itTensor) = input;
-        }
-
-        mInputs.synchronizeHToDBased();
-    }
-
-    if (signals & Out) {
-        //#pragma omp parallel for
-        for (int index = 0; index < (int)mOutputs.size(); ++index)
-            mOutputs(index) = Utils::round((nbLevels - 1) * mOutputs(index))
-                              / (nbLevels - 1);
-    }
 }
 
 namespace N2D2 {

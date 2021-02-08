@@ -31,87 +31,29 @@
 #include "third_party/half.hpp"
 
 namespace N2D2 {
-void cudaHclamp(half_float::half* x, unsigned int size,
-                half_float::half minVal, half_float::half maxVal);
-void cudaSclamp(float* x, unsigned int size, float minVal, float maxVal);
-void cudaDclamp(double* x, unsigned int size, double minVal, double maxVal);
-std::pair<half_float::half, half_float::half>
-cudaHminMax(half_float::half* x, unsigned int size);
-std::pair<float, float> cudaSminMax(float* x, unsigned int size);
-std::pair<double, double> cudaDminMax(double* x, unsigned int size);
-void cudaHquantize(half_float::half* x,
-                   half_float::half* y,
-                   unsigned int size,
-                   half_float::half minVal,
-                   half_float::half maxVal,
-                   unsigned int quantizationLevels,
-                   bool truncate = false);
-void cudaSquantize(float* x,
-                   float* y,
-                   unsigned int size,
-                   float minVal,
-                   float maxVal,
-                   unsigned int quantizationLevels,
-                   bool truncate = false);
-void cudaDquantize(double* x,
-                   double* y,
-                   unsigned int size,
-                   double minVal,
-                   double maxVal,
-                   unsigned int quantizationLevels,
-                   bool truncate = false);
-void cudaHscal(unsigned int size,
-               half_float::half alpha,
-               half_float::half *x);
-void cudaHaxpy(unsigned int size,
-               half_float::half alpha,
-               const half_float::half *x,
-               half_float::half *y);
-void cudaHpow(unsigned int size,
-               half_float::half power,
-               const half_float::half *x,
-               half_float::half *y);
-void cudaSpow(unsigned int size,
-               float power,
-               const float *x,
-               float *y);
-void cudaDpow(unsigned int size,
-               double power,
-               const double *x,
-               double *y);
-void cudaHadd(unsigned int size,
-               half_float::half value,
-               const half_float::half *x,
-               half_float::half *y);
-void cudaSadd(unsigned int size,
-               float value,
-               const float *x,
-               float *y);
-void cudaDadd(unsigned int size,
-               double value,
-               const double *x,
-               double *y);
-void cudaHmult(unsigned int size,
-               const half_float::half *x1,
-               const half_float::half *x2,
-               half_float::half *y);
-void cudaSmult(unsigned int size,
-               const float *x1,
-               const float *x2,
-               float *y);
-void cudaDmult(unsigned int size,
-               const double *x1,
-               const double *x2,
-               double *y);
-void cudaHinv(unsigned int size,
-               const half_float::half *x,
-               half_float::half *y);
-void cudaSinv(unsigned int size,
-               const float *x,
-               float *y);
-void cudaDinv(unsigned int size,
-               const double *x,
-               double *y);
+template <class T>
+void cudaClamp(T* x, unsigned int size, T minVal, T maxVal);
+template <class T>
+std::pair<T, T> cudaMinMax(T* x, unsigned int size);
+template <class T>
+void cudaPow(unsigned int size,
+               T power,
+               const T *x,
+               T *y);
+template <class T>
+void cudaAdd(unsigned int size,
+               T value,
+               const T *x,
+               T *y);
+template <class T>
+void cudaMult(unsigned int size,
+               const T *x1,
+               const T *x2,
+               T *y);
+template <class T>
+void cudaInv(unsigned int size,
+               const T *x,
+               T *y);
 }
 
 #endif // N2D2_SGDSOLVER_CUDA_KERNELS_H

@@ -73,11 +73,10 @@ struct LayerActivation {
     nvinfer1::ActivationType type;
     double alpha;
     double beta;
-
     LayerActivation(bool status_,
                nvinfer1::ActivationType type_,
-               double alpha_,
-               double beta_)
+               double alpha_ = 0.0,
+               double beta_ = 0.0)
     : status(status_),
       type(type_),
       alpha(alpha_),

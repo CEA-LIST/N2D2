@@ -55,8 +55,8 @@ class N2D2_Interface:
     def _set_N2D2_parameter(self, key, value):
         parsed_parameter = self._parse_py_to_INI_(value)
         self._N2D2_object.setParameter(key, parsed_parameter)
-        returned_parameter = self._N2D2_object.getParameterAndType(key)
-        print(key + str(returned_parameter))
+        #returned_parameter = self._N2D2_object.getParameterAndType(key)
+        #print(key + str(returned_parameter))
         #if not parsed_parameter == returned_parameter:
         #    raise RuntimeError("Parameter incoherence detected. Injected value is \'" + parsed_parameter +
         #                       "\', while returned value is \'" + returned_parameter + "\'.")
@@ -64,24 +64,23 @@ class N2D2_Interface:
 
     def _set_N2D2_parameters(self, parameters):
         for key, value in parameters.items():
-            self._set_N2D2_parameter(key, value)
+            self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
 
     def set_parameter(self, key, value):
         self._config_parameters[key] = value
-        self._set_N2D2_parameter(key, value)
+        self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
 
     def _parse_optional_arguments(self, optional_argument_keys):
         for key in optional_argument_keys:
             if key in self._config_parameters:
-                self._optional_constructor_arguments[self._parameter_to_constructor_convention(key)] = self._config_parameters[key]
-                del self._config_parameters[key]
+                self._optional_constructor_arguments[key] = self._config_parameters.pop(key)
 
     # Cast first character to lowercase to be compatible with N2D2 constructor name convention
-    def _parameter_to_constructor_convention(self, key):
+    def _INI_to_param_convention(self, key):
         return key[0].lower() + key[1:]
 
     # Cast first character to uppercase to be compatible with N2D2 parameter name convention
-    def _constructor_to_parameter_convention(self, key):
+    def _param_to_INI_convention(self, key):
         return key[0].upper() + key[1:]
 
     def _parse_py_to_INI_(self, value):
@@ -109,7 +108,7 @@ class N2D2_Interface:
             output += key + "=" + str(value) + add_delimiter(not idx == constructor_arg_len-1, ",")
         output += add_delimiter(opt_constructor_arg_len > 0 and constructor_arg_len > 0, ",")
         for idx, (key, value) in enumerate(self._optional_constructor_arguments.items()):
-            output += self._constructor_to_parameter_convention(key) + "=" + str(value) + \
+            output += key + "=" + str(value) + \
                       add_delimiter(not idx == opt_constructor_arg_len-1, ",")
         if n2d2.global_variables.verbosity == n2d2.global_variables.Verbosity.detailed:
             output += add_delimiter(config_param_len > 0 and (constructor_arg_len > 0 or opt_constructor_arg_len > 0), " |")

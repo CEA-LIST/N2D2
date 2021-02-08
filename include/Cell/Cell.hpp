@@ -321,6 +321,14 @@ public:
      * @param fileName      Destination file
     */
     virtual void exportFreeParameters(const std::string& /*fileName*/) const {};
+    /**
+     * Export Activation parameters to a file, in ASCII format compatible between
+     *the different cell models
+     *
+     * @param fileName      Destination file
+    */
+    virtual void exportActivationParameters(const std::string& /*fileName*/) const {};
+    virtual void exportQuantFreeParameters(const std::string& /*fileName*/) const {};
 
     /**
      * Load cell free parameters from a file, in ASCII format compatible between
@@ -332,6 +340,9 @@ public:
     */
     virtual void importFreeParameters(const std::string& /*fileName*/,
                                       bool /*ignoreNotExists*/ = false) {};
+    virtual void importActivationParameters(const std::string& /*fileName*/,
+                                            bool /*ignoreNotExists*/ = false) {};
+
     virtual void logFreeParameters(const std::string & /*fileName*/) const {};
 
     /**
@@ -344,18 +355,21 @@ public:
         FreeParametersType /*type*/ = All) const {};
 
     /**
-     * Discretize cell free parameters
+     * Log cell free parameters quantized distribution
      *
-     * @param nbLevels      Number of discrete levels
+     * @param fileName      Destination file
     */
-    virtual void discretizeFreeParameters(unsigned int /*nbLevels*/) {};
-    virtual std::pair<Float_T, Float_T> getFreeParametersRange(bool /*withAdditiveParameters*/ = true) const {
+    virtual void logQuantFreeParametersDistrib(
+        const std::string& /*fileName*/,
+        FreeParametersType /*type*/ = All) const {};
+
+    virtual std::pair<Float_T, Float_T> getFreeParametersRange(FreeParametersType /*type*/ = All) const {
         return std::pair<Float_T, Float_T>();
     };
 
     virtual std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(
             std::size_t /*output*/, 
-            bool /* withAdditiveParameters*/ = true) const 
+            FreeParametersType /*type*/ = All) const 
     {
         return std::pair<Float_T, Float_T>();
     };
@@ -377,9 +391,6 @@ public:
     }
     size_t groupMap() const;
     bool isUnitMap() const {
-        std::cout << mMapping.dimX() << std::endl; 
-        std::cout << mMapping.dimY() << std::endl; 
-        std::cout << groupMap() << std::endl; 
         return (mMapping.dimX() == mMapping.dimY()
                 && groupMap() == mMapping.dimX());
     };

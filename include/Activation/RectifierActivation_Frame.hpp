@@ -21,7 +21,6 @@
 #ifndef N2D2_RECTIFIERACTIVATION_FRAME_H
 #define N2D2_RECTIFIERACTIVATION_FRAME_H
 
-#include "Activation/Activation_Kernels.hpp"
 #include "Activation/RectifierActivation.hpp"
 #include "Cell/Cell.hpp"
 #include "containers/Tensor.hpp"
@@ -36,9 +35,16 @@ public:
         return std::make_shared<RectifierActivation_Frame<T> >();
     }
 
-    RectifierActivation_Frame();
-    virtual void propagate(const Cell& cell, BaseTensor& data, bool inference = false);
-    virtual void backPropagate(const Cell& cell, BaseTensor& data, BaseTensor& diffData);
+    virtual void propagate(const Cell& cell,
+                           const BaseTensor& input,
+                           BaseTensor& output,
+                           bool inference = false);
+    virtual void backPropagate(const Cell& cell,
+                               const BaseTensor& input,
+                               const BaseTensor& output,
+                               const BaseTensor& diffInput,
+                               BaseTensor& diffOutput);
+    virtual void update(unsigned int batchSize);
     virtual ~RectifierActivation_Frame() {};
 
 private:
@@ -47,91 +53,77 @@ private:
 }
 
 template <class T>
-N2D2::RectifierActivation_Frame<T>::RectifierActivation_Frame():
-    RectifierActivation()
+void N2D2::RectifierActivation_Frame<T>::propagate(
+    const Cell& cell, 
+    const BaseTensor& baseInput,
+    BaseTensor& baseOutput,
+    bool inference)
 {
-    //ctor
-}
+    const Tensor<T>& input = dynamic_cast<const Tensor<T>&>(baseInput);
+    Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
 
-template <class T>
-void N2D2::RectifierActivation_Frame<T>::propagate(const Cell& cell, BaseTensor& baseData,
-                                                   bool inference)
-{
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
-
-    mScaling.propagate(cell, data);
+    mScaling.propagate(cell, input, output);
 
     if (mClipping > 0.0 && !cell.isQuantized()) {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index) {
-            data(index) = (data(index) > 0)
-                ? std::min<T>(data(index), (T)mClipping)
-                : (T)mLeakSlope * data(index);
+#pragma omp parallel for if (output.size() > 1024)
+        for (int index = 0; index < (int)output.size(); ++index) {
+            output(index) = (output(index) > 0)
+                ? std::min<T>(output(index), (T)mClipping)
+                : (T)mLeakSlope * output(index);
         }
     } else {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)data.size(); ++index) {
-            data(index) = (data(index) > 0)
-                ? data(index)
-                : (T)mLeakSlope * data(index);
+#pragma omp parallel for if (output.size() > 1024)
+        for (int index = 0; index < (int)output.size(); ++index) {
+            output(index) = (output(index) > 0)
+                ? output(index)
+                : (T)mLeakSlope * output(index);
         }
     }
-
-    if (mQuantizationLevels > 0) {
-        if (!inference) {
-            T minVal, maxVal;
-            std::tie(minVal, maxVal) = minMax(data);
-
-            double minValMA_unused;
-            rangeAveraging(T(0.0f), maxVal, minValMA_unused, mMaxValMA,
-                           mNbSteps, mMovingAverage, mMA_Window, mEMA_Alpha);
-
-            if (mLog2RoundingRate > 0.0) {
-                mMaxValQuant = log2Round(mMaxValMA / mPreQuantizeScaling,
-                                         mLog2RoundingRate, mLog2RoundingPower)
-                                            * mPreQuantizeScaling;
-            }
-        }
-
-        if (mNbSteps > mQuantizationDelay || inference) {
-            quantize(data, data, T(0.0f), T(mMaxValQuant),
-                     (unsigned int)mQuantizationLevels);
-        }
+    if(mQuantizer) {
+        mQuantizer->propagate(baseOutput, inference);
     }
 }
 
 template <class T>
-void N2D2::RectifierActivation_Frame<T>::backPropagate(const Cell& cell, 
-                                                       BaseTensor& baseData, BaseTensor& baseDiffData)
+void N2D2::RectifierActivation_Frame<T>::backPropagate(
+    const Cell& cell, 
+    const BaseTensor& /*baseInput*/,
+    const BaseTensor& baseOutput,
+    const BaseTensor& baseDiffInput,
+    BaseTensor& baseDiffOutput)
 {
-    Tensor<T>& data = dynamic_cast<Tensor<T>&>(baseData);
-    Tensor<T>& diffData = dynamic_cast<Tensor<T>&>(baseDiffData);
-
-
-    if (mQuantizationLevels > 0) {
-#pragma omp parallel for if (diffData.size() > 1024)
-        for (int index = 0; index < (int)diffData.size(); ++index) {
-            diffData(index) = Utils::clamp<T>(diffData(index),
-                                              T(-1.0f), T(1.0f));
-        }
+    if(mQuantizer) {
+        mQuantizer->back_propagate( mQuantizer->getFullPrecisionActivations(), 
+                                    baseOutput,/*Not use for the moment*/
+                                    baseDiffInput,
+                                    baseDiffOutput);
     }
-
+    const Tensor<T>& output = dynamic_cast<const Tensor<T>&>(baseOutput);
+    const Tensor<T>& diffInput = (!mQuantizer)  ? dynamic_cast<const Tensor<T>&>(baseDiffInput) 
+                                : dynamic_cast<const Tensor<T>&>(baseDiffOutput);
+    Tensor<T>& diffOutput = dynamic_cast<Tensor<T>&>(baseDiffOutput);
 
     if (mClipping > 0.0 && !cell.isQuantized()) {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)diffData.size(); ++index) {
-            diffData(index) *= (data(index) > (T)mClipping)
+#pragma omp parallel for if (output.size() > 1024)
+        for (int index = 0; index < (int)diffOutput.size(); ++index) {
+            diffOutput(index) = diffInput(index) * ((output(index) == (T)mClipping)
                                       ? 0.0f
-                                      : (data(index) > 0) ? 1.0f
-                                                             : (T)mLeakSlope;
+                                      : (output(index) > 0) ? 1.0f
+                                                             : (T)mLeakSlope);
         }
     } else {
-#pragma omp parallel for if (data.size() > 1024)
-        for (int index = 0; index < (int)diffData.size(); ++index)
-            diffData(index) *= (data(index) > 0) ? 1.0f : (T)mLeakSlope;
+#pragma omp parallel for if (output.size() > 1024)
+        for (int index = 0; index < (int)diffOutput.size(); ++index)
+            diffOutput(index) = diffInput(index) * ((output(index) > 0) ? 1.0f : (T)mLeakSlope);
     }
     
-    mScaling.backPropagate(cell, data, diffData);
+    mScaling.backPropagate(cell, diffOutput, diffOutput);
 }
-
+template <class T>
+void N2D2::RectifierActivation_Frame<T>::update(unsigned int batchSize)
+{
+    if(mQuantizer) {
+        mQuantizer->update(batchSize);
+    }
+}
 #endif // N2D2_RECTIFIERACTIVATION_FRAME_H

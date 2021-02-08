@@ -69,7 +69,8 @@ void N2D2::DeepNetQuantization::clipWeights(std::size_t nbBits, ClippingMode wtC
         for (auto itCell = it->begin(); itCell != it->end(); ++itCell) {
             const auto& cell = mDeepNet.getCell(*itCell);
 
-            const auto range = cell->getFreeParametersRange(false);
+            const auto range
+                = cell->getFreeParametersRange(Cell::Multiplicative);
             const Float_T maxWeight = Utils::max_abs(range.first, range.second);
 
             if(maxWeight == 0) {
@@ -155,8 +156,12 @@ void N2D2::DeepNetQuantization::reportOutputsRange(std::unordered_map<std::strin
         }
     }
 
-#pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < (int)layers.size(); ++i) {
+#ifdef CUDA
+        CudaContext::setDevice();
+#endif
+
         for(auto itCell = layers[i].begin(); itCell != layers[i].end(); ++itCell) {
             std::shared_ptr<Cell_Frame_Top> cellFrame;
 
@@ -220,6 +225,10 @@ void N2D2::DeepNetQuantization::reportOutputsHistogram(
 
     #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < (int)layers.size(); ++i) {
+#ifdef CUDA
+        CudaContext::setDevice();
+#endif
+
         for(auto itCell = layers[i].begin(); itCell != layers[i].end(); ++itCell) {
             std::shared_ptr<Cell_Frame_Top> cellFrame;
 
@@ -276,6 +285,21 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
                                                 ScalingMode actScalingMode,
                                                 bool rescalePerOutputChannel)
 {
+    const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
+
+    // Synchronize to H and no keep in sync
+    for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
+        for (auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
+            std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
+            std::shared_ptr<Cell_Frame_Top> cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+            if(!cell || !cellFrame) {
+                throw std::runtime_error("Invalid cell.");
+            }
+
+            cellFrame->synchronizeToH(false);
+        }
+    }
+
     std::unordered_map<std::string, long double> biasScalings;
     if(rescalePerOutputChannel) {
         biasScalings = quantizeFreeParemetersPerOutputCh(nbBits);
@@ -292,7 +316,6 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
         << std::endl;
 #endif
 
-    const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
     for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
         for (auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
             std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
@@ -339,6 +362,19 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
         Database::All
     );
 
+    // Synchronize to D and keep in sync
+    for (auto itLayer = layers.begin() + 1; itLayer != layers.end(); ++itLayer) {
+        for (auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
+            std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
+            std::shared_ptr<Cell_Frame_Top> cellFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+            if(!cell || !cellFrame) {
+                throw std::runtime_error("Invalid cell.");
+            }
+
+            cellFrame->synchronizeToD(true);
+        }
+    }
+
 #ifdef VERBOSE_QUANT
     std::cout << "  Done!" << std::endl;
 #endif
@@ -355,6 +391,8 @@ void N2D2::DeepNetQuantization::crossLayerEqualization(
 
     const std::vector<std::vector<std::string>> layers = mDeepNet.getLayers();
     double maxRangeDelta;
+
+    std::set<std::shared_ptr<Cell_Frame_Top> > keepInSync;
 
     do {
         maxRangeDelta = 0.0;
@@ -376,6 +414,8 @@ void N2D2::DeepNetQuantization::crossLayerEqualization(
                     && (parentsCells[0]->getType() == ConvCell::Type
                     || parentsCells[0]->getType() == FcCell::Type))
                 {
+                    std::shared_ptr<Cell_Frame_Top> cellFrame
+                        = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
                     std::shared_ptr<Cell_Frame_Top> parentCellFrame
                         = std::dynamic_pointer_cast<Cell_Frame_Top>(parentsCells[0]);
                     const std::shared_ptr<Activation>& parentActivation
@@ -413,27 +453,58 @@ void N2D2::DeepNetQuantization::crossLayerEqualization(
                         << " and " << parentsCells[0]->getName() << std::endl;
 #endif
 
+                    bool newInsert;
+                    std::tie(std::ignore, newInsert)
+                        = keepInSync.insert(cellFrame);
+
+                    if (newInsert)
+                        cellFrame->synchronizeToH(false);
+
+                    std::tie(std::ignore, newInsert)
+                        = keepInSync.insert(parentCellFrame);
+
+                    if (newInsert)
+                        parentCellFrame->synchronizeToH(false);
+
                     for(std::size_t output = 0;
                         output < parentsCells[0]->getNbOutputs(); output++)
                     {
+                        const auto bias1MinMax = parentsCells[0]
+                            ->getFreeParametersRangePerOutput(output,
+                                                        Cell::Additive);
                         const auto r1MinMax = parentsCells[0]
-                            ->getFreeParametersRangePerOutput(output, false);
+                            ->getFreeParametersRangePerOutput(output,
+                                                        Cell::Multiplicative);
                         const auto r2MinMax = cell
                             ->getFreeParametersRangePerChannel(output);
 
+                        const Float_T bias1 = Utils::max_abs(bias1MinMax.first,
+                                                          bias1MinMax.second);
                         const Float_T r1 = Utils::max_abs(r1MinMax.first,
                                                           r1MinMax.second);
                         const Float_T r2 = Utils::max_abs(r2MinMax.first,
                                                           r2MinMax.second);
 
-                        const double scalingPerOutput = (1.0 / r2) * std::sqrt(r1 * r2);
+                        // If r1 is 0.0, meaning the parent cell's output 
+                        // weights range is 0, the bias can still contribute
+                        // to the cell channel, in which case no rescaling is
+                        // done. If the bias is 0, then the cell's channel 
+                        // weights can be set to 0.
+                        if (r1 > 0.0 || bias1 == 0.0) {
+                            const double scalingPerOutput1 = (r1 > 0.0)
+                                ? (1.0 / r1) * std::sqrt(r1 * r2) : 0.0;
+                            const double scalingPerOutput2 = (r2 > 0.0)
+                                ? (1.0 / r2) * std::sqrt(r1 * r2) : 0.0;
 
-                        parentsCells[0]->processFreeParametersPerOutput([&](Float_T w) { 
-                                                                return w/scalingPerOutput; 
-                                                            }, output, Cell::All);
-                        cell->processFreeParametersPerChannel([&](Float_T w) { 
-                                                                return w*scalingPerOutput; 
-                                                            }, output);
+                            parentsCells[0]->processFreeParametersPerOutput(
+                                [&](Float_T w) { 
+                                    return w*scalingPerOutput1; 
+                                }, output, Cell::All);
+                            cell->processFreeParametersPerChannel(
+                                [&](Float_T w) { 
+                                    return w*scalingPerOutput2; 
+                                }, output);
+                        }
 
                         const double rangeDelta = std::abs(r1 - r2);
 
@@ -450,6 +521,12 @@ void N2D2::DeepNetQuantization::crossLayerEqualization(
 #endif
     }
     while (maxRangeDelta > maxQuantRangeDelta);
+
+    for (std::set<std::shared_ptr<Cell_Frame_Top> >::const_iterator it
+        = keepInSync.begin(), itEnd = keepInSync.end(); it != itEnd; ++it)
+    {
+        (*it)->synchronizeToD(true);
+    }
 }
 
 std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantizeFreeParemeters(std::size_t nbBits) {
@@ -477,7 +554,8 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantize
                                                   wQuantScaling*(std::pow(2, nbBits - 1) - 1);
 
 
-            const std::pair<Float_T, Float_T> wMinMax = cell->getFreeParametersRange(false);
+            const std::pair<Float_T, Float_T> wMinMax
+                = cell->getFreeParametersRange(Cell::Multiplicative);
             const Float_T wScalingCell = Utils::max_abs(wMinMax.first, wMinMax.second);
             if(wScalingCell != 0.0) {
                 cell->processFreeParameters([&](Float_T w) { return w*(wQuantScaling/wScalingCell); }, 
@@ -529,12 +607,15 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantize
                                                   wQuantScaling*(std::pow(2, nbBits - 1) - 1);
 
 
-            const std::pair<Float_T, Float_T> wMinMax = cell->getFreeParametersRange(false);
+            const std::pair<Float_T, Float_T> wMinMax
+                = cell->getFreeParametersRange(Cell::Multiplicative);
             const Float_T wScalingCell = Utils::max_abs(wMinMax.first, wMinMax.second);
             if(wScalingCell != 0.0) {
                 std::vector<Float_T> scalingPerOutput(cell->getNbOutputs());
                 for(std::size_t output = 0; output < cell->getNbOutputs(); output++) {
-                    const auto woMinMax = cell->getFreeParametersRangePerOutput(output, false);
+                    const auto woMinMax
+                        = cell->getFreeParametersRangePerOutput(output,
+                                                          Cell::Multiplicative);
                     const Float_T wScalingCellOutput = std::max(
                                                          std::min(wScalingCell, 0.1f), 
                                                          Utils::max_abs(woMinMax.first, woMinMax.second)

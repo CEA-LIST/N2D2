@@ -27,13 +27,8 @@ N2D2::AdamSolver::AdamSolver()
       mBeta1(this, "Beta1", 0.9),
       mBeta2(this, "Beta2", 0.999),
       mEpsilon(this, "Epsilon", 1.0e-8),
-      mQuantizationLevels(this, "QuantizationLevels", 0U),
       mClamping(this, "Clamping", ""),
-      mNbSteps(0),
-      mMinVal(0.0),
-      mMaxVal(0.0),
-      mMinValQuant(0.0),
-      mMaxValQuant(0.0)
+      mNbSteps(0)
 {
     // ctor
 }
@@ -43,37 +38,8 @@ N2D2::AdamSolver::AdamSolver(const AdamSolver& solver)
       mBeta1(this, "Beta1", solver.mBeta1),
       mBeta2(this, "Beta2", solver.mBeta2),
       mEpsilon(this, "Epsilon", solver.mEpsilon),
-      mQuantizationLevels(this, "QuantizationLevels",
-                          solver.mQuantizationLevels),
       mClamping(this, "Clamping", solver.mClamping),
-      mNbSteps(solver.mNbSteps),
-      mMinVal(solver.mMinVal),
-      mMaxVal(solver.mMaxVal),
-      mMinValQuant(solver.mMinValQuant),
-      mMaxValQuant(solver.mMaxValQuant)
+      mNbSteps(solver.mNbSteps)
 {
     // copy-ctor
-}
-
-void N2D2::AdamSolver::saveInternal(std::ostream& state,
-                                   std::ostream& log) const
-{
-    state.write(reinterpret_cast<const char*>(&mMinVal), sizeof(mMinVal));
-    state.write(reinterpret_cast<const char*>(&mMaxVal), sizeof(mMaxVal));
-    state.write(reinterpret_cast<const char*>(&mMinValQuant),
-                sizeof(mMinValQuant));
-    state.write(reinterpret_cast<const char*>(&mMaxValQuant),
-                sizeof(mMaxValQuant));
-
-    log << "Range: [" << mMinVal << ", " << mMaxVal << "]\n"
-        << "Quantization range (*Quant): [" << mMinValQuant << ", "
-            << mMaxValQuant << "]" << std::endl;
-}
-
-void N2D2::AdamSolver::loadInternal(std::istream& state)
-{
-    state.read(reinterpret_cast<char*>(&mMinVal), sizeof(mMinVal));
-    state.read(reinterpret_cast<char*>(&mMaxVal), sizeof(mMaxVal));
-    state.read(reinterpret_cast<char*>(&mMinValQuant), sizeof(mMinValQuant));
-    state.read(reinterpret_cast<char*>(&mMaxValQuant), sizeof(mMaxValQuant));
 }

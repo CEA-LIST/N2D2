@@ -1,5 +1,5 @@
 """
-    (C) Copyright 2020 CEA LIST. All Rights Reserved.
+    (C) Copyright 2021 CEA LIST. All Rights Reserved.
     Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
@@ -20,65 +20,47 @@
 """
 
 from n2d2.utils import ConfigSection
-from n2d2.cell import Fc, Conv, Softmax, Pool2D, ElemWise
+from n2d2.cell import Fc, Conv, Softmax, Pool2D, ElemWise, BatchNorm
 from n2d2.deepnet import Layer, Sequence
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
 from n2d2.filler import He, Xavier, Constant
-from n2d2.transform import Rescale, PadCrop, ColorSpace, RangeAffine, SliceExtraction, Flip, Composite
-
-def ILSVRC_preprocessing():
-    margin = 32
-    size = 224
-
-    trans = Composite([
-        Rescale(Width=size+margin, Height=size+margin, KeepAspectRatio=True, ResizeToFit=False),
-        PadCrop(Width=size+margin, Height=size+margin),
-        ColorSpace(ColorSpace='BGR'),
-        RangeAffine(FirstOperator='Minus', FirstValue=[103.94, 116.78, 123.68], SecondOperator='Multiplies', SecondValue=[0.017]),
-        SliceExtraction(Width=size, Height=size, OffsetX=margin//2, OffsetY=margin//2, ApplyTo='NoLearn')
-    ])
-
-    otf_trans = Composite([
-        SliceExtraction(Width=size, Height=size, RandomOffsetX=1, RandomOffsetY=1, ApplyTo='LearnOnly'),
-        Flip(RandomHorizontalFlip=True, ApplyTo='LearnOnly')
-    ])
-
-    return trans, otf_trans
+import n2d2.deepnet
+import n2d2.global_variables
 
 def conv_def(nb_outputs, **config_parameters):
 
-    if 'ActivationFunction' in config_parameters:
-        act = config_parameters.pop('ActivationFunction')
+    if 'activationFunction' in config_parameters:
+        act = config_parameters.pop('activationFunction')
     else:
         act = Rectifier()
-    if 'WeightsFiller' in config_parameters:
-        filler = config_parameters.pop('WeightsFiller')
+    if 'weightsFiller' in config_parameters:
+        filler = config_parameters.pop('weightsFiller')
     else:
         filler = He()
-    net = Conv(NbOutputs=nb_outputs, ActivationFunction=act, WeightsFiller=filler, NoBias=True, **config_parameters)
+    net = Conv(nbOutputs=nb_outputs, activationFunction=act, weightsFiller=filler, noBias=True, **config_parameters)
     return net
 
 # Residual block generator
 def residual_block(nb_outputs, stride, L, projection_shortcut=True, residual_input=None):
     print("Build ResNet block")
     seq = Sequence([
-        conv_def(nb_outputs, KernelDims=[3, 3], StrideDims=[stride, stride],
-                 WeightsFiller=He(Scaling=(L**(-1.0/(2*2-2)) if L > 0 else 1.0)), PaddingDims=[1, 1]),
-        conv_def(nb_outputs,  KernelDims=[3, 3], ActivationFunction=Linear(),
-                 WeightsFiller=He(Scaling=(0.0 if L > 0 else 1.0)), StrideDims=[1, 1], PaddingDims=[1, 1]),
+        conv_def(nb_outputs, kernelDims=[3, 3], strideDims=[stride, stride],
+                 weightsFiller=He(scaling=(L**(-1.0/(2*2-2)) if L > 0 else 1.0)), paddingDims=[1, 1]),
+        conv_def(nb_outputs,  kernelDims=[3, 3], activationFunction=Linear(),
+                 weightsFiller=He(scaling=(0.0 if L > 0 else 1.0)), strideDims=[1, 1], paddingDims=[1, 1]),
     ])
 
     if projection_shortcut:
-        projection = conv_def(nb_outputs, KernelDims=[1, 1], StrideDims=[stride, stride], PaddingDims=[0, 0])
+        projection = conv_def(nb_outputs, kernelDims=[1, 1], strideDims=[stride, stride], paddingDims=[0, 0])
         net = Sequence([
             Layer([seq, projection]),
-            ElemWise(nb_outputs, Operation='Sum', ActivationFunction=Rectifier()),
+            ElemWise(nb_outputs, operation='Sum', activationFunction=Rectifier()),
         ])
     elif residual_input is not None:
         net = Sequence([
             seq,
-            ElemWise(nb_outputs, Operation='Sum', ActivationFunction=Rectifier(), Inputs=residual_input),
+            ElemWise(nb_outputs, operation='Sum', activationFunction=Rectifier(), inputs=residual_input),
         ])
     else:
         raise RuntimeError("No residual input")
@@ -93,8 +75,8 @@ def resnet18(output_size=1000):
     max_iterations = 100
 
     stem = Sequence([
-        conv_def(int(64*alpha), KernelDims=[7, 7], StrideDims=[2, 2], PaddingDims=[3, 3]),
-        Pool2D(NbOutputs=int(64*alpha), PoolDims=[3, 3], StrideDims=[2, 2], Pooling='Max')
+        conv_def(int(64*alpha), kernelDims=[7, 7], strideDims=[2, 2], paddingDims=[3, 3]),
+        Pool2D(nbOutputs=int(64*alpha), poolDims=[3, 3], strideDims=[2, 2], pooling='Max')
     ])
     print(stem)
 
@@ -113,8 +95,8 @@ def resnet18(output_size=1000):
 
     # TODO: Automatic PoolDims setting dependent on input size
     head = Sequence([
-        Pool2D(NbOutputs=int(512 * alpha), PoolDims=[7, 7], StrideDims=[1, 1], Pooling='Average'),
-        Fc(NbOutputs=output_size, ActivationFunction=Linear(), WeightsFiller=Xavier(Scaling=(0.0 if L > 0 else 1.0)), BiasFiller=Constant(Value=0.0))
+        Pool2D(nbOutputs=int(512 * alpha), poolDims=[7, 7], strideDims=[1, 1], pooling='Average'),
+        Fc(nbOutputs=output_size, activationFunction=Linear(), weightsFiller=Xavier(scaling=(0.0 if L > 0 else 1.0)), biasFiller=Constant(value=0.0))
     ])
     print("Head")
 
@@ -122,16 +104,16 @@ def resnet18(output_size=1000):
         stem,
         body,
         head,
-        Softmax(NbOutputs=output_size)
+        Softmax(nbOutputs=output_size)
     ])
 
     print("Add solvers")
 
-    solver_config = ConfigSection(Momentum=0.9, LearningRatePolicy='PolyDecay', Power=1.0, MaxIterations=max_iterations)
+    solver_config = ConfigSection(momentum=0.9, learningRatePolicy='PolyDecay', power=1.0, maxIterations=max_iterations)
     weights_solver = SGD
-    weights_solver_config = ConfigSection(LearningRate=learning_rate, Decay=0.0001, **solver_config.get())
+    weights_solver_config = ConfigSection(learningRate=learning_rate, decay=0.0001, **solver_config.get())
     bias_solver = SGD
-    bias_solver_config = ConfigSection(LearningRate=2 * learning_rate, Decay=0.0, **solver_config.get())
+    bias_solver_config = ConfigSection(learningRate=2 * learning_rate, decay=0.0, **solver_config.get())
 
     for name, cell in net.get_cells().items():
         print(name)
@@ -140,3 +122,210 @@ def resnet18(output_size=1000):
             cell.set_bias_solver(bias_solver(**bias_solver_config.get()))
 
     return net
+
+
+
+
+
+
+class ResNetStem(Sequence):
+    def __init__(self, inputs,  alpha):
+            conv = Conv(inputs, int(64*alpha), kernelDims=[7, 7], strideDims=[2, 2], paddingDims=[3, 3], noBias=True,
+                 activationFunction=Rectifier(), weightsFiller=He(), name="conv1")
+            pool = Pool2D(conv, nbOutputs=int(64*alpha), poolDims=[3, 3], strideDims=[2, 2], pooling='Max', name="pool1")
+            Sequence.__init__(self, [conv, pool], name="stem")
+
+
+class ResNetBottleneckBlock(Sequence):
+    def __init__(self, inputs, bottleneck_size, stride, l, projection_shortcut, no_relu, block_name=""):
+
+        self._projection_shortcut = projection_shortcut
+
+        seq = Sequence([ ], name="main_branch")
+        seq.add(Conv(inputs, bottleneck_size, kernelDims=[1, 1], strideDims=[1, 1], noBias=True,
+                 activationFunction=Rectifier(), weightsFiller=He(scaling=l**(-1.0/(2*3-2)) if l > 0 else 1.0),
+                 name=block_name+"_1x1"))
+        seq.add(Conv(seq.get_last(), nbOutputs=bottleneck_size, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[stride, stride], noBias=True,
+                 activationFunction=Rectifier(), weightsFiller=He(scaling=l**(-1.0/(2*3-2)) if l > 0 else 1.0),
+                 name=block_name+"_3x3"))
+        seq.add(Conv(seq.get_last(), nbOutputs=4 * bottleneck_size, kernelDims=[1, 1], strideDims=[1, 1], noBias=True,
+                 activationFunction=Linear(), weightsFiller=He(scaling=0.0 if l > 0 else 1.0),
+                 name=block_name+"_1x1_x4"))
+
+        if projection_shortcut:
+            shortcut = Conv(inputs, nbOutputs=4 * bottleneck_size, kernelDims=[1, 1], strideDims=[stride, stride], noBias=True,
+                              activationFunction=Linear(),
+                              name=block_name+"_1x1_proj")
+        else:
+            shortcut = inputs
+
+        if no_relu:
+            elem_wise = ElemWise([seq.get_last(), shortcut], 4 * bottleneck_size, operation='Sum',
+                                 name=block_name + "_sum")
+        else:
+            elem_wise = ElemWise([seq.get_last(), shortcut], 4 * bottleneck_size, operation='Sum',
+                                 activationFunction=Rectifier(), name=block_name + "_sum")
+
+        block = Layer([seq, shortcut])
+
+        Sequence.__init__(self, [block, elem_wise], name=block_name)
+
+
+class ResNet50BNBody(Sequence):
+    def __init__(self, inputs, alpha, l):
+
+        seq = Sequence([])
+        seq.add(ResNetBottleneckBlock(inputs, int(64 * alpha), 1, l, True, False, "conv2.1"))
+        seq.add(ResNetBottleneckBlock(seq.get_last(), int(64 * alpha), 1, l, False, False, "conv2.2"))
+        seq.add(ResNetBottleneckBlock(seq.get_last(), int(64 * alpha), 1, l, False, True, "conv2.3"))
+        seq.add(BatchNorm(seq.get_last(), 4 * int(64 * alpha), activationFunction=Rectifier(), name="bn2"))
+
+        seq1 = Sequence([])
+        seq1.add(ResNetBottleneckBlock(seq.get_last(), int(128 * alpha), 2, l, True, False, "conv3.1"))
+        seq1.add(ResNetBottleneckBlock(seq1.get_last(), int(128 * alpha), 1, l, False, False, "conv3.2"))
+        seq1.add(ResNetBottleneckBlock(seq1.get_last(), int(128 * alpha), 1, l, False, False, "conv3.3"))
+        seq1.add(ResNetBottleneckBlock(seq1.get_last(), int(128 * alpha), 1, l, False, True, "conv3.4"))
+        seq1.add(BatchNorm(seq1.get_last(), 4 * int(128 * alpha), activationFunction=Rectifier(), name="bn3"))
+
+        seq2 = Sequence([])
+        seq2.add(ResNetBottleneckBlock(seq1.get_last(), int(256 * alpha), 2, l, True, False, "conv4.1"))
+        seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, False, "conv4.2"))
+        seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, False, "conv4.3"))
+        seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, False, "conv4.4"))
+        seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, False, "conv4.5"))
+        seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, True, "conv4.6"))
+        seq2.add(BatchNorm(seq2.get_last(), 4 * int(256 * alpha), activationFunction=Rectifier(), name="bn4"))
+
+        seq3 = Sequence([])
+        seq3.add(ResNetBottleneckBlock(seq2.get_last(), int(512 * alpha), 2, l, True, False, "conv5.1"))
+        seq3.add(ResNetBottleneckBlock(seq3.get_last(), int(512 * alpha), 1, l, False, False, "conv5.2"))
+        seq3.add(ResNetBottleneckBlock(seq3.get_last(), int(512 * alpha), 1, l, False, True, "conv5.3"))
+        seq3.add(BatchNorm(seq3.get_last(), 4 * int(512 * alpha), activationFunction=Rectifier(), name="bn5"))
+
+        self.scales = {}
+        name = str(inputs.get_outputs().dimX()) + "x" + str(inputs.get_outputs().dimX())
+        self.scales[name] = Sequence([seq], name=name)
+        name = str(seq.get_last().get_outputs().dimX()) + "x" + str(seq.get_last().get_outputs().dimY())
+        self.scales[name] = Sequence([seq], name=name)
+        name = str(seq1.get_last().get_outputs().dimX()) + "x" + str(seq1.get_last().get_outputs().dimY())
+        self.scales[name] = Sequence([seq, seq1], name=name)
+        name = str(seq2.get_last().get_outputs().dimX()) + "x" + str(seq2.get_last().get_outputs().dimY())
+        self.scales[name] = Sequence([seq, seq1, seq2], name=name)
+        name = str(seq3.get_last().get_outputs().dimX()) + "x" + str(seq3.get_last().get_outputs().dimY())
+        self.scales[name] = Sequence([seq, seq1, seq2, seq3], name=name)
+
+        Sequence.__init__(self, [seq, seq1, seq2, seq3], name="body")
+
+
+class ResNetHead(Sequence):
+    def __init__(self, inputs, alpha):
+        Sequence.__init__(self, [
+            Pool2D(inputs, 4 * int(512 * alpha),
+                   poolDims=[inputs.get_last().get_outputs().dimX(), inputs.get_last().get_outputs().dimY()],
+                   strideDims=[1, 1], pooling='Average', name="pool"),
+        ], name="head")
+
+
+class ResNetClassifier(Sequence):
+    def __init__(self, inputs, output_size, l):
+        fc = Fc(inputs, output_size, activationFunction=Linear(), weightsFiller=Xavier(scaling=(0.0 if l > 0 else 1.0)), biasFiller=Constant(value=0.0), name="fc")
+        softmax = Softmax(fc, output_size, name="softmax")
+        Sequence.__init__(self, [fc, softmax], name="classifier")
+
+
+"""
+Abstract ResNet class. TODO: Make true abstract class?
+"""
+class ResNet(Sequence):
+
+    _with_batchnorm = False
+    stem = None
+    body = None
+    head = None
+    classifier = None
+
+    def __init__(self):
+        if self.stem is None or self.body is None or self.head is None or self.classifier is None:
+            raise RuntimeError("Missing elements. Did you try to create and abstract ResNet?")
+        Sequence.__init__(self, [self.stem, self.body, self.head, self.classifier])
+
+    def set_ILSVRC_solvers(self, max_iterations):
+        print("Add solvers")
+        learning_rate = 0.1
+
+        solver_config = ConfigSection(momentum=0.9, learningRatePolicy='PolyDecay', power=1.0,
+                                      maxIterations=max_iterations)
+        weights_solver = SGD
+        weights_solver_config = ConfigSection(learningRate=learning_rate, decay=0.0001, **solver_config.get())
+        bias_solver = SGD
+        bias_solver_config = ConfigSection(learningRate=2 * learning_rate, decay=0.0, **solver_config.get())
+
+        if self._with_batchnorm:
+            bn_solver = SGD
+            bn_solver_config = ConfigSection(learningRate=learning_rate, decay=0.0001, **solver_config.get())
+
+        for name, cell in self.get_cells().items():
+            print(name)
+            if isinstance(cell, Conv) or isinstance(cell, Fc):
+                cell.set_weights_solver(weights_solver(**weights_solver_config.get()))
+                cell.set_bias_solver(bias_solver(**bias_solver_config.get()))
+
+            if self._with_batchnorm and isinstance(cell, BatchNorm):
+                cell.set_scale_solver(bn_solver(**bn_solver_config.get()))
+                cell.set_bias_solver(bn_solver(**bn_solver_config.get()))
+
+
+class ResNet50BN(ResNet):
+
+    def __init__(self, inputs, output_size=1000, alpha=1.0, l=0):
+        self._with_batchnorm = True
+
+        self.stem = ResNetStem(inputs, alpha)
+        self.body = ResNet50BNBody(self.stem.get_last(), alpha, l)
+        self.head = ResNetHead(self.body.get_last(), alpha)
+        self.classifier = ResNetClassifier(self.head.get_last(), output_size, l)
+
+        ResNet.__init__(self)
+
+"""
+class ResNet50(ResNet):
+
+    def __init__(self, output_size=1000, alpha=1.0, size=224, l=0):
+        self.body = ResNet50Body(alpha, l)
+        ResNet.__init__(self, output_size, alpha, size, l)
+"""
+
+
+
+def load_from_ONNX(resnet_type, version='pre_act', dims=None, batch_size=1, path=None, download=False):
+    if dims is None:
+        dims = [224, 224, 3]
+    if not dims == [224, 224, 3]:
+        raise ValueError("This method does not support other dims than [224, 224, 3] yet")
+    allowed_types = ['18', '34', '50', '101', '152']
+    if not resnet_type in allowed_types:
+        raise ValueError("ResNet type must be one of these: '18', '34', '50', '101', '152'!")
+    if version == 'pre_act':
+        v = "v1"
+    elif version == 'post_act':
+        v = "v2"
+    else:
+        raise ValueError("ResNet version must be either 'pre_act' or 'post_act'!")
+    resnet_name = "resnet"+resnet_type+v
+
+    print("Loading " + version + " ResNet"+str(resnet_type)+
+          " from ONNX with dims " + str(dims) + " and batch size " + str(batch_size))
+    if path is None and not download:
+        raise RuntimeError("No path specified")
+    elif not path is None and download:
+        raise RuntimeError("Specified at same time path and download=True")
+    elif path and not download:
+        path = n2d2.global_variables.model_cache + "/ONNX/mobilenetv2/mobilenetv2-1.0.onnx"
+    else:
+        n2d2.utils.download_model(
+            "https://s3.amazonaws.com/onnx-model-zoo/resnet/"+resnet_name+"/"+resnet_name+".onnx",
+            n2d2.global_variables.model_cache + "/ONNX/",
+            resnet_name)
+        path = n2d2.global_variables.model_cache + "/ONNX/"+resnet_name+"/"+resnet_name+".onnx"
+    model = n2d2.deepnet.load_from_ONNX(path, dims, batch_size=batch_size)
+    return model

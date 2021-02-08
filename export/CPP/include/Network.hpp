@@ -26,6 +26,16 @@
 #define N2D2_THROW_OR_ABORT(ex, msg) throw ex(msg)
 #define N2D2_ALWAYS_INLINE __attribute__((always_inline))
 
+#ifndef N2D2_SECTION_NN_MEMORY
+#define N2D2_SECTION_NN_MEMORY ".nn_memory"
+#endif
+#ifndef N2D2_SECTION_NN_WEIGHTS
+#define N2D2_SECTION_NN_WEIGHTS ".nn_weights"
+#endif
+#ifndef N2D2_SECTION_NN_BIASSES
+#define N2D2_SECTION_NN_BIASSES ".nn_biasses"
+#endif
+#define N2D2_SECTION_ATTRIBUTE(sec) __attribute__((section(sec)))
 
 namespace N2D2 {
 
@@ -715,20 +725,31 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
                                         + CHANNELS_WIDTH * (iy + syMin + sy));
                     int iOffset = INPUT_MEM_STRIDE * iPos;
 
+                    // Wrapping cannot occur in the middle of a line, except if
+                    // there is only one line (1D)!
+                    bool wrapInRange = false;
+
                     if (INPUT_MEM_WRAP_SIZE > 0
                         && iOffset >= INPUT_MEM_CONT_SIZE)
                     {
                         iOffset += INPUT_MEM_WRAP_OFFSET - INPUT_MEM_CONT_OFFSET
                                     - INPUT_MEM_CONT_SIZE;
                     }
+                    else if (INPUT_MEM_WRAP_SIZE > 0 && KERNEL_WIDTH > 1
+                        && CHANNELS_HEIGHT == 1 // single line (1D)!
+                        && iOffset + KERNEL_WIDTH * NB_CHANNELS
+                            > INPUT_MEM_CONT_SIZE)
+                    {
+                        wrapInRange = true;
+                    }
 
                     const int wOffset = NB_CHANNELS * (sxMin
                         + KERNEL_WIDTH * (syMin + sy + KERNEL_HEIGHT * output));
 
-                    if (NB_CHANNELS == INPUT_MEM_STRIDE
+                    if (!wrapInRange && (NB_CHANNELS == INPUT_MEM_STRIDE
                         && ((PADDING_X == 0
                             && OUTPUTS_WIDTH == OUTPUTS_WIDTH_NOPAD)
-                                || sxMax - sxMin == KERNEL_WIDTH))
+                                || sxMax - sxMin == KERNEL_WIDTH)))
                     {
                         macsOnRange<KERNEL_WIDTH * NB_CHANNELS>(
                             inputs + iOffset, 
@@ -744,9 +765,20 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
                                 break;
                             }
 
+                            int iOffsetInRange = iOffset
+                                + sx * INPUT_MEM_STRIDE;
+
+                            if (wrapInRange
+                                && iOffsetInRange >= INPUT_MEM_CONT_SIZE)
+                            {
+                                iOffsetInRange += INPUT_MEM_WRAP_OFFSET
+                                            - INPUT_MEM_CONT_OFFSET
+                                            - INPUT_MEM_CONT_SIZE;
+                            }
+
                             macsOnRange<NB_CHANNELS>(
                                 // same input line so no wrapping can occur
-                                inputs + iOffset + sx * INPUT_MEM_STRIDE, 
+                                inputs + iOffsetInRange, 
                                 weights + wOffset + sx * NB_CHANNELS, 
                                 weightedSum);
                         }
@@ -789,8 +821,8 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
     const WDATA_T* __restrict weights,
     const Rescaling_T& __restrict rescaling) const
 {
-    static_assert(NB_CHANNELS == NB_OUTPUTS,
-        "NB_CHANNELS should be equal to NB_OUTPUTS.");
+    static_assert(NB_OUTPUTS % NB_CHANNELS == 0,
+        "NB_OUTPUTS should be a multiple of NB_CHANNELS.");
 
     constexpr int OUTPUTS_HEIGHT_NOPAD
         = (CHANNELS_HEIGHT - KERNEL_HEIGHT + STRIDE_Y) / STRIDE_Y;
@@ -828,6 +860,8 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                 }
                 // <--
 
+                const int channel = (output * NB_CHANNELS) / NB_OUTPUTS;
+
                 SUM_T weightedSum = biasses[output];
 
                 for (int sy = 0; sy < KERNEL_HEIGHT; ++sy) {
@@ -842,22 +876,33 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                                         + CHANNELS_WIDTH * (iy + syMin + sy));
                     int iOffset = INPUT_MEM_STRIDE * iPos;
 
+                    // Wrapping cannot occur in the middle of a line, except if
+                    // there is only one line (1D)!
+                    bool wrapInRange = false;
+
                     if (INPUT_MEM_WRAP_SIZE > 0
                         && iOffset >= INPUT_MEM_CONT_SIZE)
                     {
                         iOffset += INPUT_MEM_WRAP_OFFSET - INPUT_MEM_CONT_OFFSET
                                     - INPUT_MEM_CONT_SIZE;
                     }
+                    else if (INPUT_MEM_WRAP_SIZE > 0 && KERNEL_WIDTH > 1
+                        && CHANNELS_HEIGHT == 1 // single line (1D)!
+                        && iOffset + KERNEL_WIDTH * INPUT_MEM_STRIDE
+                            > INPUT_MEM_CONT_SIZE)
+                    {
+                        wrapInRange = true;
+                    }
 
                     const int wOffset = (sxMin
                         + KERNEL_WIDTH * (syMin + sy + KERNEL_HEIGHT * output));
 
-                    if ((PADDING_X == 0
+                    if (!wrapInRange && ((PADDING_X == 0
                             && OUTPUTS_WIDTH == OUTPUTS_WIDTH_NOPAD)
-                        || sxMax - sxMin == KERNEL_WIDTH)
+                        || sxMax - sxMin == KERNEL_WIDTH))
                     {
                         macsOnRange<KERNEL_WIDTH, INPUT_MEM_STRIDE>(
-                            inputs + iOffset + output, 
+                            inputs + iOffset + channel, 
                             weights + wOffset, 
                             weightedSum);
                     }
@@ -870,8 +915,18 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                                 break;
                             }
 
-                            weightedSum += inputs[iOffset + output
-                                                    + sx * INPUT_MEM_STRIDE]
+                            int iOffsetInRange = iOffset
+                                + sx * INPUT_MEM_STRIDE;
+
+                            if (wrapInRange &&
+                                iOffsetInRange >= INPUT_MEM_CONT_SIZE)
+                            {
+                                iOffsetInRange += INPUT_MEM_WRAP_OFFSET
+                                            - INPUT_MEM_CONT_OFFSET
+                                            - INPUT_MEM_CONT_SIZE;
+                            }
+
+                            weightedSum += inputs[iOffsetInRange + channel]
                                 * weights[wOffset + sx];
                         }
                     }
@@ -1081,15 +1136,26 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
             const int iPos = (CHANNELS_WIDTH * iy);
             int iOffset = INPUT_MEM_STRIDE * iPos;
 
+            // Wrapping cannot occur in the middle of a line, except if
+            // there is only one line (1D)!
+            bool wrapInRange = false;
+
             if (INPUT_MEM_WRAP_SIZE > 0 && iOffset >= INPUT_MEM_CONT_SIZE) {
                 iOffset += INPUT_MEM_WRAP_OFFSET - INPUT_MEM_CONT_OFFSET
                             - INPUT_MEM_CONT_SIZE;
+            }
+            else if (INPUT_MEM_WRAP_SIZE > 0 && CHANNELS_WIDTH > 1
+                && CHANNELS_HEIGHT == 1 // single line (1D)!
+                && iOffset + CHANNELS_WIDTH * NB_CHANNELS
+                    > INPUT_MEM_CONT_SIZE)
+            {
+                wrapInRange = true;
             }
 
             const int wOffset = NB_CHANNELS * CHANNELS_WIDTH
                                     * (iy + CHANNELS_HEIGHT * och);
 
-            if (INPUT_MEM_STRIDE == NB_CHANNELS) {
+            if (!wrapInRange && INPUT_MEM_STRIDE == NB_CHANNELS) {
                 macsOnRange<NB_CHANNELS * CHANNELS_WIDTH>(
                     inputs + iOffset, 
                     weights + wOffset, 
@@ -1097,8 +1163,18 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
             }
             else {
                 for (int ix = 0; ix < CHANNELS_WIDTH; ++ix) {
+                    int iOffsetInRange = iOffset + ix * INPUT_MEM_STRIDE;
+
+                    if (wrapInRange
+                        && iOffsetInRange >= INPUT_MEM_CONT_SIZE)
+                    {
+                        iOffsetInRange += INPUT_MEM_WRAP_OFFSET
+                                    - INPUT_MEM_CONT_OFFSET
+                                    - INPUT_MEM_CONT_SIZE;
+                    }
+
                     macsOnRange<NB_CHANNELS>(
-                        inputs + iOffset + ix * INPUT_MEM_STRIDE, 
+                        inputs + iOffsetInRange, 
                         weights + wOffset + ix * NB_CHANNELS, 
                         weightedSum);
                 }

@@ -69,14 +69,14 @@ void init_Cell_Frame_Top(py::module &m) {
      )mydelimiter")
      
     .def("update", &Cell_Frame_Top::update)
-
+    .def("checkGradient", &Cell_Frame_Top::checkGradient, py::arg("epsilon"), py::arg("maxError"))
     .def("setOutputTarget", &Cell_Frame_Top::setOutputTarget, py::arg("targets"))
     .def("setOutputTargets", &Cell_Frame_Top::setOutputTargets, py::arg("targets"))
     .def("getMaxOutput", &Cell_Frame_Top::getMaxOutput, py::arg("batchPos") = 0)
     .def("getActivation", &Cell_Frame_Top::getActivation)
     .def("setActivation", &Cell_Frame_Top::setActivation, py::arg("activation"))
     // .def("isCuda", &Cell_Frame_Top::isCuda)
-    // .def("addInput", &Cell_Frame_Top::addInput, py::arg("inputs"), py::arg("diffOutputs"))
+    .def("addInput", &Cell_Frame_Top::addInput, py::arg("inputs"), py::arg("diffOutputs"))
     // .def("replaceInput", &Cell_Frame_Top::replaceInput, py::arg("oldInputs"), py::arg("newInputs"), py::arg("newDiffOutputs"))
     // .def("setOutputErrors", &Cell_Frame_Top::setOutputErrors, py::arg("errors"))
     .def("getOutputs", (BaseTensor& (Cell_Frame_Top::*)()) &Cell_Frame_Top::getOutputs, py::return_value_policy::reference)

@@ -174,6 +174,14 @@ public:
     /// mData and mLabelsData
     virtual void readRandomBatch(Database::StimuliSet set);
 
+    /// Read a whole batch from the StimuliSet @p set and 
+    /// the specific data indexes, apply all the
+    /// transformations and put the results in
+    /// mData and mLabelsData
+    virtual void readEpochBatch( Database::StimuliSet set,
+                                 unsigned int startIndex,
+                                 unsigned int epochIndex);
+
 //TODO: Required for spiking neural network batch parallelization
 /*
     /// Read a whole random batch from the StimuliSet @p set, apply all the
@@ -227,6 +235,7 @@ public:
     void streamStimulus(const cv::Mat& mat,
                         Database::StimuliSet set,
                         unsigned int batchPos = 0);
+    void setStreamedTensor(TensorData_T& streamedTensor);
     void reverseLabels(const cv::Mat& mat,
                        Database::StimuliSet set,
                        Tensor<int>& labels,
@@ -288,13 +297,33 @@ public:
                                      Database::StimuliSet set);
     void iterTransformations(Database::StimuliSet set,
                         std::function<void(const Transformation&)> func) const;
+    std::vector<unsigned int>& getDatabaseLearnIndex(const unsigned int epoch)
+    {
+        if(epoch > mDatabaseLearnIndexes.size()) {
+            std::stringstream msg;
+            msg << "StimuliProvider::getDatabaseIndexOnEpoch(): epochId (" << epoch
+                << ") is higher than the number of epoch initialized ";
+
+            throw std::runtime_error(msg.str());
+        }
+
+        return mDatabaseLearnIndexes[epoch];
+    };
     const std::vector<int>& getBatch()
     {
         return mBatch;
     };
     TensorData_T& getData()
     {
-        return mData;
+        if (mStreamTensor) {
+            if (!mStreamedTensor) {
+                throw std::runtime_error("Error: StreamTensor==true but StreamedTensor is not initialized");
+            }
+            return *mStreamedTensor;
+        }
+        else {
+            return mData;
+        }
     };
     TensorData_T& getTargetData()
     {
@@ -350,8 +379,9 @@ public:
                         const double maxValue);
     //static void logRgbData(const std::string& fileName,
     //                    const Tensor4d<Float_T>& data);
-
-
+    unsigned int setStimuliIndexes( Database::StimuliSet set,   
+                                        const unsigned int nbEpochs = 1,
+                                        const bool randPermutation = false); 
 protected:
     std::vector<cv::Mat> loadDataCache(const std::string& fileName) const;
     void saveDataCache(const std::string& fileName,
@@ -367,6 +397,8 @@ protected:
     Parameter<Float_T> mQuantizationMin;
     /// Max. value for quantization
     Parameter<Float_T> mQuantizationMax;
+    /// Set to deepnet interface mode
+    Parameter<bool> mStreamTensor;
 
     // Internal variables
     Database& mDatabase;
@@ -396,6 +428,12 @@ protected:
     std::vector<std::vector<std::shared_ptr<ROI> > > mLabelsROI;
     std::vector<std::vector<std::shared_ptr<ROI> > > mFutureLabelsROI;
     bool mFuture;
+
+    TensorData_T* mStreamedTensor;
+    std::vector<std::vector<unsigned int > > mDatabaseLearnIndexes;
+    std::vector<std::vector<unsigned int > > mDatabaseValIndexes;
+    std::vector<std::vector<unsigned int > > mDatabaseTestIndexes;
+
 };
 }
 

@@ -22,50 +22,69 @@
 
 
 import N2D2
+import n2d2.global_variables
 import n2d2.cell
 import n2d2.converter
 from n2d2.n2d2_interface import N2D2_Interface
-import collections
 
 
 class DeepNet(N2D2_Interface):
 
-    def __init__(self, network, Model, DataType, **config_parameters):
+    def __init__(self, **config_parameters):
+
+        if 'model' in config_parameters:
+            self._model = config_parameters.pop('model')
+        else:
+            self._model = n2d2.global_variables.default_model
+        if 'dataType' in config_parameters:
+            self._datatype = config_parameters.pop('dataType')
+        else:
+            self._datatype = n2d2.global_variables.default_dataType
 
         N2D2_Interface.__init__(self, **config_parameters)
 
-        self._Model = Model
-        self._DataType = DataType
+        self._N2D2_object = N2D2.DeepNet(N2D2.Network(n2d2.global_variables.default_seed))
 
-        self._N2D2_object = N2D2.DeepNet(network)
+        # Even though a deepnet object does not require a provider, some methods using the deepnet
+        # expect it to have one. For these cases we have to add a dummy provider
+        self._provider = None
 
+    def add_provider(self, provider):
+        self._provider = provider
+        self._N2D2_object.setStimuliProvider(provider.N2D2())
 
     def __str__(self):
-        output = "Deepnet" + "(" + self._Model + "<" + self._DataType + ">" + ")"
+        output = "Deepnet" + "(" + self._model + "<" + self._datatype + ">" + ")"
         output += N2D2_Interface.__str__(self)
 
     def get_model(self):
-        return self._Model
+        return self._model
 
     def get_datatype(self):
-        return self._DataType
+        return self._datatype
 
 
-def load_from_ONNX(model_path, provider):
+
+def load_from_ONNX(model_path, dims, batch_size=1):
     """
     :param model_path: Path to the model.
     :type model_path: str
-    :param provider: 
-    :type provider: :py:class:`n2d2.provider.DataProvider`
-    Load a deepnet from an ONNX file and a database.
+    :param dims:
+    :type dims: list
+    :param batch_size:
+    :type batch_size: unsigned int
+    Load a deepnet from an ONNX file given its input dimensions.
     """
-    network = N2D2.Network(1)
+    network = N2D2.Network(n2d2.global_variables.default_seed)
     deepNet = N2D2.DeepNet(network)
-    iniParser = N2D2.IniParser()
+    provider = n2d2.provider.DataProvider(n2d2.database.Database(), dims, batchSize=batch_size)
     deepNet.setDatabase(provider.get_database().N2D2())
     deepNet.setStimuliProvider(provider.N2D2())
-    deepNet = N2D2.DeepNetGenerator.generateFromONNX(network, model_path, iniParser, deepNet)
-    return n2d2.converter.deepNet_converter(deepNet)
+    N2D2.CellGenerator.defaultModel = n2d2.global_variables.default_deepNet.get_model()
+    deepNet = N2D2.DeepNetGenerator.generateFromONNX(network, model_path, N2D2.IniParser(), deepNet)
+    model = n2d2.converter.deepNet_converter(deepNet)
+    model.clear_input(unlink_N2D2_input=True)     # Remove dummy stimuli provider
+    return model
 
 def load_from_INI(path):
     """
@@ -86,29 +105,49 @@ We should be able to extract cell and sequences and run these subnetworks easily
 Structure that is organised sequentially. 
 """
 class Sequence:
-    def __init__(self, sequences, Inputs=None, Name=None):
-        if Name is not None:
-            assert isinstance(Name, str)
-        self._Name = Name
+    def __init__(self, sequences, name=""):
+        assert isinstance(name, str)
+        self._name = name
         assert isinstance(sequences, list)
-        if not sequences:
-            raise ValueError("Got empty list as input. List must contain at least one element")
+        #if not sequences:
+        #    raise ValueError("Got empty list as input. List must contain at least one element")
         self._sequences = sequences
 
-
+        """
         previous = None
         for elem in self._sequences:
             if previous is not None:
                 #elem.clear_input()
                 elem.add_input(previous)
             previous = elem
+        """
 
-        if Inputs is not None:
-            if isinstance(Inputs, list):
-                for cell in Inputs:
+        """
+        if inputs is not None:
+            if isinstance(inputs, list):
+                for cell in inputs:
                     self.add_input(cell)
             else:
-                self.add_input(Inputs)
+                self.add_input(inputs)
+        """
+
+    def add(self, cell):
+        self._sequences.append(cell)
+
+    def get_deepnet(self):
+        first = self.get_first()
+        last = self.get_last()
+
+        deepnet = n2d2.global_variables.default_deepNet
+
+        """
+        deepNet = N2D2.DeepNet(n2d2.global_variables.default_net)
+        for idx, (name, cell) in enumerate(self.get_cells().items()):
+            parents = []
+            for ipt in cell.get_inputs():
+                if not isinstance(ipt, n2d2.provider.DataProvider):
+                    parents.append(ipt.get_last().N2D2())
+            deepNet.addCell(cell.N2D2(), parents)"""
 
     def get_cells(self):
         cells = {}
@@ -149,14 +188,26 @@ class Sequence:
         for cell in self._sequences:
             cell.update()
 
-    def get_subsequence(self, idx):
-        return self._sequences[idx]
+    def import_free_parameters(self, dirName, ignoreNotExists=False):
+        print("Importing weights from directory '" + dirName + "'")
+        for name, cell in self.get_cells().items():
+            path = dirName + name + ".syntxt"
+            cell.import_free_parameters(path, ignoreNotExists=ignoreNotExists)
+
+    def get_subsequence(self, id):
+        if isinstance(id, int):
+            return self._sequences[id]
+        else:
+            for elem in self._sequences:
+                if elem.get_name() == id:
+                    return elem
+            raise RuntimeError("No subsequence with name: \'" + id + "\'")
 
     def get_name(self):
-        return self._Name
+        return self._name
 
-    def set_name(self, Name):
-        self._Name = Name
+    def set_name(self, name):
+        self._name = name
 
     def get_sequences(self):
         return self._sequences
@@ -184,7 +235,11 @@ class Sequence:
         return self._generate_str(1)
 
     def _generate_str(self, indent_level):
-        output = "Sequence("
+        if not self.get_name() == "":
+            output = "\'" + self.get_name() + "\' " + "Sequence("
+        else:
+            output = "Sequence("
+
         for idx, value in enumerate(self._sequences):
             output += "\n" + (indent_level * "\t") + "(" + str(idx) + ")"
             if isinstance(value, n2d2.deepnet.Sequence):
@@ -200,10 +255,9 @@ class Sequence:
 
 
 class Layer:
-    def __init__(self, layer, Inputs=None, Name=None):
-        if Name is not None:
-            assert isinstance(Name, str)
-        self._Name = Name
+    def __init__(self, layer, Inputs=None, name=""):
+        assert isinstance(name, str)
+        self._name = name
         assert isinstance(layer, list)
         if not layer:
             raise ValueError("Got empty list as input. List must contain at least one element")
@@ -227,6 +281,7 @@ class Layer:
                 elem._get_cells(cells)
             else:
                 cells[elem.get_name()] = elem
+
 
     # TODO: Method that converts layer representation into corresponding N2D2 deepnet
 
@@ -263,6 +318,8 @@ class Layer:
         for cell in self._layer:
             cell.update()
 
+    def get_name(self):
+        return self._name
 
     def __str__(self):
         return self._generate_str(0)
@@ -277,7 +334,10 @@ class Layer:
     """
 
     def _generate_str(self, indent_level):
-        output = "Layer(\n"
+        if not self.get_name() == "":
+            output = "\'" + self.get_name() + "\' " + "Layer(\n"
+        else:
+            output = "Layer(\n"
         for idx, elem in enumerate(self._layer):
             if isinstance(elem, n2d2.cell.Cell):
                 output += (indent_level * "\t") + "[" + str(idx) + "]: " + elem.__str__() + "\n"

@@ -339,7 +339,7 @@ public:
     void propagate(const Cell& cell, const Tensor<T>& input, Tensor<T>& output) const;
 
     template<class T>
-    void backPropagate(const Cell& cell, Tensor<T>& data, Tensor<T>& diffData) const;
+    void backPropagate(const Cell& cell, const Tensor<T>& diffInput, Tensor<T>& diffOutput) const;
 
 #ifdef CUDA
     template<class T>
@@ -349,7 +349,7 @@ public:
     void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output) const;
 
     template<class T>
-    void backPropagate(const Cell& cell, CudaTensor<T>& data, CudaTensor<T>& diffData) const;
+    void backPropagate(const Cell& cell, const CudaTensor<T>& diffInput, CudaTensor<T>& diffOutput) const;
 #endif
 
 private:
@@ -371,6 +371,8 @@ inline void Scaling::propagate(const Cell& cell, const Tensor<T>& input, Tensor<
     
     switch(mMode) {
         case ScalingMode::NONE:
+            // in-place is OK with no overhead: operator=() check that
+            output = input;
             break;
         case ScalingMode::FLOAT_MULT:
             static_cast<const FloatingPointScaling&>(*mScaling).propagate(cell, input, output);
@@ -391,9 +393,11 @@ inline void Scaling::propagate(const Cell& cell, const Tensor<T>& input, Tensor<
 
 template<class T>
 inline void Scaling::backPropagate(const Cell& /*cell*/, 
-                                   Tensor<T>& /*data*/, Tensor<T>& /*diffData*/) const 
+                                   const Tensor<T>& diffInput, Tensor<T>& diffOutput) const 
 {
     if(mMode == ScalingMode::NONE) {
+        // in-place is OK with no overhead: operator=() check that
+        diffOutput = diffInput;
         return;
     }
 
@@ -409,8 +413,11 @@ inline void Scaling::propagate(const Cell& cell, CudaTensor<T>& data) const {
 
 template<class T>
 inline void Scaling::propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output) const {
+    assert(input.size() == output.size());
     switch(mMode) {
         case ScalingMode::NONE:
+            // in-place is OK with no overhead: operator=() check that
+            output.deviceTensor() = input.deviceTensor();
             break;
         case ScalingMode::FLOAT_MULT:
             static_cast<const FloatingPointScaling&>(*mScaling).propagate(cell, input, output);
@@ -431,9 +438,11 @@ inline void Scaling::propagate(const Cell& cell, const CudaTensor<T>& input, Cud
 
 template<class T>
 inline void Scaling::backPropagate(const Cell& /*cell*/, 
-                                   CudaTensor<T>& /*data*/, CudaTensor<T>& /*diffData*/) const 
+                                   const CudaTensor<T>& diffInput, CudaTensor<T>& diffOutput) const 
 {
     if(mMode == ScalingMode::NONE) {
+        // in-place is OK with no overhead: operator=() check that
+        diffOutput.deviceTensor() = diffInput.deviceTensor();
         return;
     }
 

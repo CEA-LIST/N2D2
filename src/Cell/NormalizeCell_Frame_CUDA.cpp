@@ -67,24 +67,23 @@ void N2D2::NormalizeCell_Frame_CUDA<T>::initialize() {
     mNormData.resize(mOutputs.dims());
 }
 
-//Half type propagate for NormalizeCell_Frame_CUDA
-template <>
-void N2D2::NormalizeCell_Frame_CUDA<half_float::half>::propagate(bool inference)
+template<class T>
+void N2D2::NormalizeCell_Frame_CUDA<T>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
-    const half_float::half alpha(1.0f);
-    half_float::half beta(0.0f);
+    const T alpha(1.0f);
+    T beta(0.0f);
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (k > 0)
-            beta = half_float::half(1.0f);
+            beta = T(1.0f);
 
-        std::shared_ptr<CudaDeviceTensor<half_float::half> > input
-            = cuda_device_tensor_cast<half_float::half>(mInputs[k]);
+        std::shared_ptr<CudaDeviceTensor<T> > input
+            = cuda_device_tensor_cast<T>(mInputs[k]);
 
         if (mNorm == L2) {
-            cudaHNormalizeL2Forward(CudaContext::getDeviceProp(),
+            cudaNormalizeL2Forward(CudaContext::getDeviceProp(),
                                 alpha,
                                 input->getDevicePtr(),
                                 mInputs[k].dimZ(),
@@ -103,201 +102,31 @@ void N2D2::NormalizeCell_Frame_CUDA<half_float::half>::propagate(bool inference)
         }
     }
 
-    Cell_Frame_CUDA<half_float::half>::propagate(inference);
-    mDiffInputs.clearValid();
-}
-//Float type propagate for NormalizeCell_Frame_CUDA
-template <>
-void N2D2::NormalizeCell_Frame_CUDA<float>::propagate(bool inference)
-{
-    mInputs.synchronizeHBasedToD();
-
-    const float alpha = 1.0f;
-    float beta = 0.0f;
-
-    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        if (k > 0)
-            beta = 1.0f;
-
-        std::shared_ptr<CudaDeviceTensor<float> > input
-            = cuda_device_tensor_cast<float>(mInputs[k]);
-
-        if (mNorm == L2) {
-            cudaSNormalizeL2Forward(CudaContext::getDeviceProp(),
-                                alpha,
-                                input->getDevicePtr(),
-                                mInputs[k].dimZ(),
-                                mInputs[k].dimY(),
-                                mInputs[k].dimX(),
-                                mInputs[k].dimB(),
-                                beta,
-                                mOutputs.getDevicePtr(),
-                                mNormData.getDevicePtr(),
-                                mOutputs.dimZ(),
-                                mOutputs.dimY(),
-                                mOutputs.dimX());
-        }
-        else {
-            throw std::runtime_error("Unsupported norm.");
-        }
-    }
-
-    Cell_Frame_CUDA<float>::propagate(inference);
-    mDiffInputs.clearValid();
-}
-//Double type propagate for NormalizeCell_Frame_CUDA
-template <>
-void N2D2::NormalizeCell_Frame_CUDA<double>::propagate(bool inference)
-{
-    mInputs.synchronizeHBasedToD();
-
-    const double alpha = 1.0;
-    double beta = 0.0;
-
-    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        if (k > 0)
-            beta = 1.0;
-
-        std::shared_ptr<CudaDeviceTensor<double> > input
-            = cuda_device_tensor_cast<double>(mInputs[k]);
-
-        if (mNorm == L2) {
-            cudaDNormalizeL2Forward(CudaContext::getDeviceProp(),
-                                alpha,
-                                input->getDevicePtr(),
-                                mInputs[k].dimZ(),
-                                mInputs[k].dimY(),
-                                mInputs[k].dimX(),
-                                mInputs[k].dimB(),
-                                beta,
-                                mOutputs.getDevicePtr(),
-                                mNormData.getDevicePtr(),
-                                mOutputs.dimZ(),
-                                mOutputs.dimY(),
-                                mOutputs.dimX());
-        }
-        else {
-            throw std::runtime_error("Unsupported norm.");
-        }
-    }
-
-    Cell_Frame_CUDA<double>::propagate(inference);
+    Cell_Frame_CUDA<T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 
-
-//Half type backpropagation for NormalizeCell_Frame_CUDA
-template <>
-void N2D2::NormalizeCell_Frame_CUDA<half_float::half>::backPropagate()
+template <class T>
+void N2D2::NormalizeCell_Frame_CUDA<T>::backPropagate()
 {
     if (mDiffOutputs.empty() || !mDiffInputs.isValid())
         return;
 
     mDiffInputs.synchronizeHBasedToD();
-    Cell_Frame_CUDA<half_float::half>::backPropagate();
+    Cell_Frame_CUDA<T>::backPropagate();
 
-    const half_float::half alpha(1.0f);
-
-    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const half_float::half beta((mDiffOutputs[k].isValid()) ? 1.0f : 0.0f);
-
-        std::shared_ptr<CudaDeviceTensor<half_float::half> > diffOutput
-            = (mDiffOutputs[k].isValid())
-                ? cuda_device_tensor_cast<half_float::half>(mDiffOutputs[k])
-                : cuda_device_tensor_cast_nocopy<half_float::half>(mDiffOutputs[k]);
-
-        if (mNorm == L2) {
-            cudaHNormalizeL2Backward(CudaContext::getDeviceProp(),
-                                     alpha,
-                                     mOutputs.getDevicePtr(),
-                                     mNormData.getDevicePtr(),
-                                     mDiffInputs.getDevicePtr(),
-                                     mDiffInputs.dimZ(),
-                                     mDiffInputs.dimY(),
-                                     mDiffInputs.dimX(),
-                                     mDiffInputs.dimB(),
-                                     beta,
-                                     diffOutput->getDevicePtr(),
-                                     mDiffOutputs[k].dimZ(),
-                                     mDiffOutputs[k].dimY(),
-                                     mDiffOutputs[k].dimX());
-        }
-        else {
-            throw std::runtime_error("Unsupported norm.");
-        }
-
-        mDiffOutputs[k].deviceTensor() = *diffOutput;
-        mDiffOutputs[k].setValid();
-    }
-}
-//Float type backpropagation for NormalizeCell_Frame_CUDA
-template <>
-void N2D2::NormalizeCell_Frame_CUDA<float>::backPropagate()
-{
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
-        return;
-
-    mDiffInputs.synchronizeHBasedToD();
-    Cell_Frame_CUDA<float>::backPropagate();
-
-    const float alpha = 1.0f;
+    const T alpha(1.0f);
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const float beta = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
+        const T beta((mDiffOutputs[k].isValid()) ? 1.0f : 0.0f);
 
-        std::shared_ptr<CudaDeviceTensor<float> > diffOutput
+        std::shared_ptr<CudaDeviceTensor<T> > diffOutput
             = (mDiffOutputs[k].isValid())
-                ? cuda_device_tensor_cast<float>(mDiffOutputs[k])
-                : cuda_device_tensor_cast_nocopy<float>(mDiffOutputs[k]);
+                ? cuda_device_tensor_cast<T>(mDiffOutputs[k])
+                : cuda_device_tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
         if (mNorm == L2) {
-            cudaSNormalizeL2Backward(CudaContext::getDeviceProp(),
-                                     alpha,
-                                     mOutputs.getDevicePtr(),
-                                     mNormData.getDevicePtr(),
-                                     mDiffInputs.getDevicePtr(),
-                                     mDiffInputs.dimZ(),
-                                     mDiffInputs.dimY(),
-                                     mDiffInputs.dimX(),
-                                     mDiffInputs.dimB(),
-                                     beta,
-                                     diffOutput->getDevicePtr(),
-                                     mDiffOutputs[k].dimZ(),
-                                     mDiffOutputs[k].dimY(),
-                                     mDiffOutputs[k].dimX());
-        }
-        else {
-            throw std::runtime_error("Unsupported norm.");
-        }
-
-        mDiffOutputs[k].deviceTensor() = *diffOutput;
-        mDiffOutputs[k].setValid();
-    }
-}
-//Double type backpropagation for NormalizeCell_Frame_CUDA
-template <>
-void N2D2::NormalizeCell_Frame_CUDA<double>::backPropagate()
-{
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
-        return;
-
-    mDiffInputs.synchronizeHBasedToD();
-    Cell_Frame_CUDA<double>::backPropagate();
-
-    const double alpha = 1.0;
-
-    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        const double beta = (mDiffOutputs[k].isValid())
-                                            ? 1.0
-                                            : 0.0;
-
-        std::shared_ptr<CudaDeviceTensor<double> > diffOutput
-            = (mDiffOutputs[k].isValid())
-                ? cuda_device_tensor_cast<double>(mDiffOutputs[k])
-                : cuda_device_tensor_cast_nocopy<double>(mDiffOutputs[k]);
-
-        if (mNorm == L2) {
-            cudaDNormalizeL2Backward(CudaContext::getDeviceProp(),
+            cudaNormalizeL2Backward(CudaContext::getDeviceProp(),
                                      alpha,
                                      mOutputs.getDevicePtr(),
                                      mNormData.getDevicePtr(),
@@ -323,7 +152,7 @@ void N2D2::NormalizeCell_Frame_CUDA<double>::backPropagate()
 
 template<class T>
 void N2D2::NormalizeCell_Frame_CUDA<T>::update() {
-    // Nothing to update
+    Cell_Frame_CUDA<T>::update();
 }
 
 template<class T>

@@ -53,11 +53,11 @@ print(model)
 
 
 print("Create database")
-database = n2d2.database.MNIST(DataPath="/nvme0/DATABASE/MNIST/raw/", Validation=0.2)
+database = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/", validation=0.2)
 print(database)
 
 print("Create provider")
-provider = n2d2.provider.DataProvider(Database=database, Size=[28, 28, 1], BatchSize=batch_size)
+provider = n2d2.provider.DataProvider(database=database, qize=[28, 28, 1], batchSize=batch_size)
 
 # class voidTransform(N2D2.CustomTransformation):
 #     def __init__(self):
@@ -76,7 +76,7 @@ provider = n2d2.provider.DataProvider(Database=database, Size=[28, 28, 1], Batch
 
 #print("Add transformation")
 #provider.add_on_the_fly_transformation(trans)
-provider.add_transformation(n2d2.transform.PadCrop(Width=224, Height=224))
+provider.add_transformation(n2d2.transform.PadCrop(width=224, height=224))
 # provider.add_transformation(trans)
 
 print("Create classifier")
@@ -158,7 +158,7 @@ for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
 print("")
 
 sub = model.get_subsequence('0')
-new_model = n2d2.deepnet.Sequence([sub, n2d2.cell.Softmax(NbOutputs=10, Name='softmax', WithLoss=True)])
+new_model = n2d2.deepnet.Sequence([sub, n2d2.cell.Softmax(nbOutputs=10, name='softmax', withLoss=True)])
 print(new_model)
 
 # Clear provider, otherwise second provider will be added in Classifier constructor

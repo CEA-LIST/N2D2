@@ -31,98 +31,38 @@
 #include "third_party/half.hpp"
 
 namespace N2D2 {
-/******************** Forward ***************************/
-//Half
-void cudaHNormalizeL2Forward(const cudaDeviceProp& deviceProp,
-                             half_float::half alpha,
-                             half_float::half* inputs,
-                             unsigned int nbChannels,
-                             unsigned int channelsHeight,
-                             unsigned int channelsWidth,
-                             unsigned int batchSize,
-                             half_float::half beta,
-                             half_float::half* outputs,
-                             half_float::half* normData,
-                             unsigned int nbOutputs,
-                             unsigned int outputsHeight,
-                             unsigned int outputsWidth);
-//Float
-void cudaSNormalizeL2Forward(const cudaDeviceProp& deviceProp,
-                             const float alpha,
-                             float* inputs,
-                             unsigned int nbChannels,
-                             unsigned int channelsHeight,
-                             unsigned int channelsWidth,
-                             unsigned int batchSize,
-                             const float beta,
-                             float* outputs,
-                             float* normData,
-                             unsigned int nbOutputs,
-                             unsigned int outputsHeight,
-                             unsigned int outputsWidth);
-//Double
-void cudaDNormalizeL2Forward(const cudaDeviceProp& deviceProp,
-                             const double alpha,
-                             double* inputs,
-                             unsigned int nbChannels,
-                             unsigned int channelsHeight,
-                             unsigned int channelsWidth,
-                             unsigned int batchSize,
-                             const double beta,
-                             double* outputs,
-                             double* normData,
-                             unsigned int nbOutputs,
-                             unsigned int outputsHeight,
-                             unsigned int outputsWidth);
-/*********************************************************/
 
-/******************** Backward ***************************/
-//Half
-void cudaHNormalizeL2Backward(const cudaDeviceProp& deviceProp,
-                              half_float::half alpha,
-                              half_float::half* outputs,
-                              half_float::half* normData,
-                              half_float::half* diffInputs,
+template <class T>
+void cudaNormalizeL2Forward(const cudaDeviceProp& deviceProp,
+                             T alpha,
+                             T* inputs,
+                             unsigned int nbChannels,
+                             unsigned int channelsHeight,
+                             unsigned int channelsWidth,
+                             unsigned int batchSize,
+                             T beta,
+                             T* outputs,
+                             T* normData,
+                             unsigned int nbOutputs,
+                             unsigned int outputsHeight,
+                             unsigned int outputsWidth);
+
+template <class T>
+void cudaNormalizeL2Backward(const cudaDeviceProp& deviceProp,
+                              T alpha,
+                              T* outputs,
+                              T* normData,
+                              T* diffInputs,
                               unsigned int nbOutputs,
                               unsigned int outputsHeight,
                               unsigned int outputsWidth,
                               unsigned int batchSize,
-                              half_float::half beta,
-                              half_float::half* diffOutputs,
+                              T beta,
+                              T* diffOutputs,
                               unsigned int nbChannels,
                               unsigned int channelsHeight,
                               unsigned int channelsWidth);
-//Float
-void cudaSNormalizeL2Backward(const cudaDeviceProp& deviceProp,
-                              const float alpha,
-                              float* outputs,
-                              float* normData,
-                              float* diffInputs,
-                              unsigned int nbOutputs,
-                              unsigned int outputsHeight,
-                              unsigned int outputsWidth,
-                              unsigned int batchSize,
-                              const float beta,
-                              float* diffOutputs,
-                              unsigned int nbChannels,
-                              unsigned int channelsHeight,
-                              unsigned int channelsWidth);
-//Double
-void cudaDNormalizeL2Backward(const cudaDeviceProp& deviceProp,
-                              const double alpha,
-                              double* outputs,
-                              double* normData,
-                              double* diffInputs,
-                              unsigned int nbOutputs,
-                              unsigned int outputsHeight,
-                              unsigned int outputsWidth,
-                              unsigned int batchSize,
-                              const double beta,
-                              double* diffOutputs,
-                              unsigned int nbChannels,
-                              unsigned int channelsHeight,
-                              unsigned int channelsWidth);
-/*********************************************************/
+
 }
 
 #endif // N2D2_NORMALIZECELL_FRAME_CUDA_KERNELS_H

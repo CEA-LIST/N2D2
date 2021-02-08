@@ -57,8 +57,7 @@ N2D2::BatchNormCell_Frame_CUDA<T>::BatchNormCell_Frame_CUDA(
       mScale(std::make_shared<CudaTensor<ParamT> >()),
       mBias(std::make_shared<CudaTensor<ParamT> >()),
       mMean(std::make_shared<CudaTensor<ParamT> >()),
-      mVariance(std::make_shared<CudaTensor<ParamT> >()),
-      mSynchronized(false)
+      mVariance(std::make_shared<CudaTensor<ParamT> >())
 {
     // ctor
     mScaleSolver = std::make_shared<SGDSolver_Frame_CUDA<ParamT> >();
@@ -302,6 +301,7 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::update()
 
     if (mDiffBias.isValid())
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
+    Cell_Frame_CUDA<T>::update();
 }
 
 template <class T>
@@ -457,14 +457,9 @@ template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::exportFreeParameters(const std::string
                                                           & fileName) const
 {
-    mScale->synchronizeDToH();
-    mBias->synchronizeDToH();
-    mMean->synchronizeDToH();
-    mVariance->synchronizeDToH();
-
-    mSynchronized = true;
+    synchronizeToH(false);
     BatchNormCell::exportFreeParameters(fileName);
-    mSynchronized = false;
+    keepInSync(true);
 }
 
 template <class T>
@@ -472,14 +467,29 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::importFreeParameters(const std::string
                                                           & fileName,
                                                           bool ignoreNotExists)
 {
-    mSynchronized = true;
+    keepInSync(false);
     BatchNormCell::importFreeParameters(fileName, ignoreNotExists);
-    mSynchronized = false;
+    synchronizeToD(true);
+}
 
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::synchronizeToH(bool keepInSync_) const
+{
+    mScale->synchronizeDToH();
+    mBias->synchronizeDToH();
+    mMean->synchronizeDToH();
+    mVariance->synchronizeDToH();
+    keepInSync(keepInSync_);
+}
+
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::synchronizeToD(bool keepInSync_)
+{
     mScale->synchronizeHToD();
     mBias->synchronizeHToD();
     mMean->synchronizeHToD();
     mVariance->synchronizeHToD();
+    keepInSync(keepInSync_);
 }
 
 template <class T>

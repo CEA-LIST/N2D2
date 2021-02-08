@@ -34,6 +34,7 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
       mQuantizationLevels(this, "QuantizationLevels", 0U),
       mQuantizationMin(this, "QuantizationMin", 0.0),
       mQuantizationMax(this, "QuantizationMax", 1.0),
+      mStreamTensor(this, "StreamTensor", false),
       mDatabase(database),
       mSize(size),
       mBatchSize(batchSize),
@@ -81,6 +82,7 @@ N2D2::StimuliProvider::StimuliProvider(StimuliProvider&& other)
       mQuantizationLevels(this, "QuantizationLevels", other.mQuantizationLevels),
       mQuantizationMin(this, "QuantizationMin", other.mQuantizationMin),
       mQuantizationMax(this, "QuantizationMax", other.mQuantizationMax),
+      mStreamTensor(this, "StreamTensor", false),
       mDatabase(other.mDatabase),
       mSize(std::move(other.mSize)),
       mBatchSize(other.mBatchSize),
@@ -609,7 +611,62 @@ void N2D2::StimuliProvider::synchronize()
         mFuture = false;
     }
 }
+unsigned int
+    N2D2::StimuliProvider::setStimuliIndexes(   Database::StimuliSet set,   
+                                                const unsigned int nbEpochs,
+                                                bool randPermutation)
+{
+    if(nbEpochs == 0) {
+        std::stringstream msg;
+        msg << "StimuliProvider::DatabasePermutation(): nbEpochs (" << nbEpochs
+            << ") must be higher than 0 ! for set (" << set << ")";
 
+        throw std::runtime_error(msg.str());
+    }
+    const unsigned int nMax = mDatabase.getNbStimuli(set);
+    std::vector<std::vector<unsigned int > >& indexes =
+            (set == Database::StimuliSet::Learn) ? mDatabaseLearnIndexes :
+            (set == Database::StimuliSet::Validation) ? mDatabaseValIndexes :
+                mDatabaseTestIndexes;
+
+    if(nMax == 0)
+    {
+        std::cout << Utils::cwarning << "setStimuliIndexes for set " << set <<
+            " is empty" << Utils::cdef
+            << std::endl;
+        return 0U;
+    }
+    if(indexes.empty())
+    {
+        indexes.resize(nbEpochs, 
+                                std::vector<unsigned int>(nMax));
+        for(unsigned int epoch = 0; epoch < nbEpochs; ++ epoch)
+        {
+            std::iota(  std::begin(indexes[epoch]),
+                        std::end(indexes[epoch]),
+                        0U);
+
+            //Sort index of data stimuli under a pseudo random range
+            if(randPermutation) {
+                for(unsigned int n = 0; n < (nMax - 1); ++n)
+                {
+                    const unsigned int randIdx = 
+                            Random::mtRand() % (nMax - n);
+                    const unsigned int tmp = indexes[epoch][n];
+                    indexes[epoch][n] = indexes[epoch][(randIdx+n)];
+                    indexes[epoch][(randIdx+n)] = tmp;
+                }
+
+            }
+        }
+    }
+    else {
+        std::cout << Utils::cwarning << "indexes for set " << set <<
+            " are already initialized" << Utils::cdef
+            << std::endl;
+    }
+    return nMax;
+} 
 unsigned int N2D2::StimuliProvider::getRandomIndex(Database::StimuliSet set)
 {
     return Random::randUniform(0, mDatabase.getNbStimuli(set) - 1);
@@ -701,6 +758,48 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set,
         batchRef[batchPos]
             = mDatabase.getStimulusID(set, startIndex + batchPos);
 
+#pragma omp parallel for schedule(dynamic) if (batchSize > 1)
+    for (int batchPos = 0; batchPos < (int)batchSize; ++batchPos)
+        readStimulus(batchRef[batchPos], set, batchPos);
+
+    std::fill(batchRef.begin() + batchSize, batchRef.end(), -1);
+}
+
+void N2D2::StimuliProvider::readEpochBatch( Database::StimuliSet set,
+                                            unsigned int startIndex,
+                                            unsigned int epochIndex)
+{
+    const std::vector<std::vector<unsigned int > >& indexes =
+                (set == Database::StimuliSet::Learn) ? mDatabaseLearnIndexes :
+                (set == Database::StimuliSet::Validation) ? mDatabaseValIndexes :
+                mDatabaseTestIndexes;
+
+    if (startIndex >= mDatabase.getNbStimuli(set)) {
+        std::stringstream msg;
+        msg << "StimuliProvider::readEpochBatch(): startIndex (" << startIndex
+            << ") is higher than the number of stimuli in the " << set
+            << " set (" << mDatabase.getNbStimuli(set) << ")";
+
+        throw std::runtime_error(msg.str());
+    }
+    if (epochIndex >= indexes.size()) {
+        std::stringstream msg;
+        msg << "StimuliProvider::readEpochBatch(): epochIndex (" << epochIndex
+            << ") is higher than the number of intialized epoch in the " << set
+            << " set (" << mDatabase.getNbStimuli(set) << ")";
+
+        throw std::runtime_error(msg.str());
+    }
+
+    const unsigned int batchSize
+        = std::min(mBatchSize, mDatabase.getNbStimuli(set) - startIndex);
+    std::vector<int>& batchRef = (mFuture) ? mFutureBatch : mBatch;
+
+    for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
+    {
+        batchRef[batchPos]
+            = mDatabase.getStimulusID(set, indexes[epochIndex][startIndex + batchPos]);
+    }
 #pragma omp parallel for schedule(dynamic) if (batchSize > 1)
     for (int batchPos = 0; batchPos < (int)batchSize; ++batchPos)
         readStimulus(batchRef[batchPos], set, batchPos);
@@ -1005,6 +1104,12 @@ void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
     }
 
     dataRef[batchPos] = data;
+}
+
+
+void N2D2::StimuliProvider::setStreamedTensor(TensorData_T& streamedTensor)
+{
+    mStreamedTensor = &streamedTensor;
 }
 
 void N2D2::StimuliProvider::reverseLabels(const cv::Mat& mat,

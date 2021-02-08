@@ -30,16 +30,19 @@
 #include "Solver/SGDSolver_Frame_CUDA.hpp"
 #include "containers/CudaTensor.hpp"
 
+
 namespace N2D2 {
 template <class T>
 class FcCell_Frame_CUDA : public virtual FcCell, public Cell_Frame_CUDA<T> {
 public:
+    using Cell_Frame_CUDA<T>::keepInSync;
     using Cell_Frame_CUDA<T>::mInputs;
     using Cell_Frame_CUDA<T>::mOutputs;
     using Cell_Frame_CUDA<T>::mDiffInputs;
     using Cell_Frame_CUDA<T>::mDiffOutputs;
     using Cell_Frame_CUDA<T>::mActivation;
     using Cell_Frame_CUDA<T>::mActivationDesc;
+    using Cell_Frame_CUDA<T>::mKeepInSync;
 
     FcCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                       unsigned int nbOutputs,
@@ -64,6 +67,8 @@ public:
     virtual void update();
     inline void getWeight(unsigned int output, unsigned int channel,
                           BaseTensor& value) const;
+    inline void getQuantWeight(unsigned int output, unsigned int channel,
+                          BaseTensor& value) const;
     inline void getBias(unsigned int output, BaseTensor& value) const;
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void logFreeParameters(const std::string& fileName,
@@ -73,14 +78,15 @@ public:
     void loadFreeParameters(const std::string& fileName,
                             bool ignoreNotExists = false);
     void exportFreeParameters(const std::string& fileName) const;
+    void exportQuantFreeParameters(const std::string& fileName) const;
     void importFreeParameters(const std::string& fileName,
                               bool ignoreNotExists = false);
     void logFreeParametersDistrib(const std::string& fileName) const;
-    void discretizeFreeParameters(unsigned int nbLevels);
+    void logQuantFreeParametersDistrib(const std::string& fileName) const;
     
-    std::pair<Float_T, Float_T> getFreeParametersRange(bool withAdditiveParameters = true) const;
+    std::pair<Float_T, Float_T> getFreeParametersRange(FreeParametersType type = All) const;
     std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 
-                                                                bool withAdditiveParameters) const;
+                                                                FreeParametersType type = All) const;
     std::pair<Float_T, Float_T> getFreeParametersRangePerChannel(std::size_t channel) const;
     
     void processFreeParameters(std::function<Float_T(Float_T)> func,
@@ -91,6 +97,8 @@ public:
     void processFreeParametersPerChannel(std::function<Float_T(Float_T)> /*func*/,
                                         std::size_t /*channel*/);
     
+    void synchronizeToH(bool keepInSync_) const;
+    void synchronizeToD(bool keepInSync_);
     virtual ~FcCell_Frame_CUDA();
 
 protected:
@@ -107,7 +115,6 @@ protected:
     CudaTensor<T> mDiffBias;
 
     T* mOnesVector; // Bias inputs
-    mutable bool mSynchronized;
 
 private:
     static Registrar<FcCell> mRegistrar;
@@ -121,7 +128,7 @@ void N2D2::FcCell_Frame_CUDA<T>::setWeight(unsigned int output,
 {
     mSynapses(0, 0, channel, output) = tensor_cast<T>(value)(0);
 
-    if (!mSynchronized)
+    if (mKeepInSync)
         mSynapses.synchronizeHToD(0, 0, channel, output, 1);
 }
 
@@ -130,11 +137,24 @@ void N2D2::FcCell_Frame_CUDA<T>::getWeight(unsigned int output,
                                            unsigned int channel,
                                            BaseTensor& value) const
 {
-    if (!mSynchronized)
+    if (mKeepInSync)
         mSynapses.synchronizeDToH(0, 0, channel, output, 1);
 
     value.resize({1});
     value = Tensor<T>({1}, mSynapses(0, 0, channel, output));
+}
+
+template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::getQuantWeight(unsigned int output,
+                                           unsigned int channel,
+                                           BaseTensor& value) const
+{
+    const CudaTensor<T>& synapses = cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(0));
+    if (mKeepInSync)
+        synapses.synchronizeDToH(0, 0, channel, output, 1);
+
+    value.resize({1});
+    value = Tensor<T>({1}, synapses(0, 0, channel, output));
 }
 
 template <class T>
@@ -143,7 +163,7 @@ void N2D2::FcCell_Frame_CUDA<T>::setBias(unsigned int output,
 {
     mBias(output) = tensor_cast<T>(value)(0);
 
-    if (!mSynchronized)
+    if (mKeepInSync)
         mBias.synchronizeHToD(output, 1);
 }
 
@@ -151,21 +171,11 @@ template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::getBias(unsigned int output,
                                          BaseTensor& value) const
 {
-    if (!mSynchronized)
+    if (mKeepInSync)
         mBias.synchronizeDToH(output, 1);
 
     value.resize({1});
     value = Tensor<T>({1}, mBias(output));
-}
-
-namespace N2D2 {
-template <> void FcCell_Frame_CUDA<half_float::half>::propagate(bool inference);
-template <> void FcCell_Frame_CUDA<float>::propagate(bool inference);
-template <> void FcCell_Frame_CUDA<double>::propagate(bool inference);
-
-template <> void FcCell_Frame_CUDA<half_float::half>::backPropagate();
-template <> void FcCell_Frame_CUDA<float>::backPropagate();
-template <> void FcCell_Frame_CUDA<double>::backPropagate();
 }
 
 #endif // N2D2_FCCELL_FRAME_CUDA_H

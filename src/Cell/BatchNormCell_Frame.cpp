@@ -386,6 +386,8 @@ void N2D2::BatchNormCell_Frame<T>::update()
 
     if (mDiffBias.isValid())
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
+        
+    Cell_Frame<T>::update();
 }
 
 template <class T>

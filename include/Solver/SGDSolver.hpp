@@ -63,14 +63,6 @@ public:
     {
         return (mIterationPass == 0);
     }
-    std::pair<double, double> getRange() const
-    {
-        return std::make_pair(mMinVal, mMaxVal);
-    }
-    std::pair<double, double> getQuantizedRange() const
-    {
-        return std::make_pair(mMinValQuant, mMaxValQuant);
-    }
     void logSchedule(const std::string& fileName,
                      unsigned int batchSize,
                      unsigned int epochSize = 0,
@@ -81,8 +73,6 @@ public:
 protected:
     double getLearningRate(unsigned int batchSize, bool silent = false);
     template <class T> std::pair<T, T> getClamping() const;
-    virtual void saveInternal(std::ostream& state, std::ostream& log) const;
-    virtual void loadInternal(std::istream& state);
 
     /// Initial learning rate
     Parameter<double> mLearningRate;
@@ -104,17 +94,12 @@ protected:
     Parameter<unsigned int> mLearningRateStepSize;
     /// Learning rate decay
     Parameter<double> mLearningRateDecay;
-    /// Quantization levels (0 = no quantization)
-    Parameter<unsigned int> mQuantizationLevels;
     /// Weights clamping, format: "min:max", or ":max", or "min:", or empty
     Parameter<std::string> mClamping;
-
+    // Polyak Momentum method use for param update: true by default 
+    Parameter<bool> mPolyakMomentum;
     unsigned int mIterationPass;
     unsigned int mNbIterations;
-    double mMinVal;
-    double mMaxVal;
-    double mMinValQuant;
-    double mMaxValQuant;
 
 private:
     virtual SGDSolver* doClone() const = 0;

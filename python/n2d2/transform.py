@@ -61,21 +61,21 @@ class Transformation(N2D2_Interface):
     # TODO: Is there any way to check that no abstract Transformation object is generated?
     def __init__(self, **config_parameters):
 
-        self._ApplyTo = N2D2.Database.StimuliSetMask.All
-        if 'ApplyTo' in config_parameters:
-            self._ApplyTo = N2D2.Database.StimuliSetMask.__members__[config_parameters.pop('ApplyTo')]
+        self._apply_to = N2D2.Database.StimuliSetMask.All
+        if 'applyTo' in config_parameters:
+            self._apply_to = N2D2.Database.StimuliSetMask.__members__[config_parameters.pop('applyTo')]
 
         N2D2_Interface.__init__(self, **config_parameters)
 
     def __str__(self):
         output = self._Type #+ "Transformation"
         output += N2D2_Interface.__str__(self)
-        if self._ApplyTo is not N2D2.Database.StimuliSetMask.All:
-            output += "[ApplyTo=" + str(self._ApplyTo) + "]"
+        if self._apply_to is not N2D2.Database.StimuliSetMask.All:
+            output += "[applyTo=" + str(self._apply_to) + "]"
         return output
 
     def get_apply_set(self):
-        return self._ApplyTo
+        return self._apply_to
 
 
 class Composite(Transformation):
@@ -92,10 +92,12 @@ class Composite(Transformation):
 
         self._transformations = transformations
 
+        #self._N2D2_object = N2D2.CompositeTransformation(self._transformations[0].N2D2())
+        #for transformation in self._transformations[1:]:
+        #    self._N2D2_object.push_back(transformation.N2D2())
 
-        self._N2D2_object = N2D2.CompositeTransformation(self._transformations[0].N2D2())
-        for transformation in self._transformations[1:]:
-            self._N2D2_object.push_back(transformation.N2D2())
+    def get_transformations(self):
+        return self._transformations
 
     def __str__(self):
         output = Transformation.__str__(self)
@@ -112,16 +114,16 @@ class PadCrop(Transformation):
     _Type = "PadCrop"
 
     # INI file parameters have same upper case name convention
-    def __init__(self, Width, Height, **config_parameters):
+    def __init__(self, width, height, **config_parameters):
         Transformation.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
-            'Width': Width,
-            'Height': Height,
+            'width': width,
+            'height': height,
         })
 
-        self._N2D2_object = N2D2.PadCropTransformation(self._constructor_arguments['Width'],
-                                                       self._constructor_arguments['Height'])
+        self._N2D2_object = N2D2.PadCropTransformation(self._constructor_arguments['width'],
+                                                       self._constructor_arguments['height'])
         self._set_N2D2_parameters(self._config_parameters)
 
 
@@ -141,15 +143,16 @@ class Rescale(Transformation):
 
     _Type = "Rescale"
 
-    def __init__(self,  Width, Height, **config_parameters):
+    def __init__(self,  width, height, **config_parameters):
         Transformation.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
-            'Width': Width,
-            'Height': Height,
+            'width': width,
+            'height': height,
         })
 
-        self._N2D2_object = N2D2.RescaleTransformation(self._constructor_arguments['Width'], self._constructor_arguments['Height'])
+        self._N2D2_object = N2D2.RescaleTransformation(self._constructor_arguments['width'],
+                                                       self._constructor_arguments['height'])
         self._set_N2D2_parameters(self._config_parameters)
 
 
@@ -159,14 +162,14 @@ class ColorSpace(Transformation):
 
     _Type = "ColorSpace"
 
-    def __init__(self, ColorSpace, **config_parameters):
+    def __init__(self, colorSpace, **config_parameters):
         Transformation.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
-            'ColorSpace': N2D2.ColorSpaceTransformation.ColorSpace.__members__[ColorSpace],
+            'colorSpace': N2D2.ColorSpaceTransformation.ColorSpace.__members__[colorSpace],
         })
 
-        self._N2D2_object = N2D2.ColorSpaceTransformation(self._constructor_arguments['ColorSpace'])
+        self._N2D2_object = N2D2.ColorSpaceTransformation(self._constructor_arguments['colorSpace'])
         self._set_N2D2_parameters(self._config_parameters)
 
 
@@ -177,21 +180,22 @@ class RangeAffine(Transformation):
 
     _Type = "RangeAffine"
 
-    def __init__(self, FirstOperator, FirstValue, **config_parameters):
+    def __init__(self, firstOperator, firstValue, **config_parameters):
         Transformation.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
-            'FirstOperator': N2D2.RangeAffineTransformation.Operator.__members__[FirstOperator],
-            'FirstValue': FirstValue,
+            'firstOperator': N2D2.RangeAffineTransformation.Operator.__members__[firstOperator],
+            'firstValue': firstValue,
         })
 
-        self._parse_optional_arguments(['SecondOperator', 'SecondValue'])
+        self._parse_optional_arguments(['secondOperator', 'secondValue'])
 
-        self._optional_constructor_arguments['secondOperator'] = \
-            N2D2.RangeAffineTransformation.Operator.__members__[self._optional_constructor_arguments['secondOperator']]
+        if 'secondOperator' in self._optional_constructor_arguments:
+            self._optional_constructor_arguments['secondOperator'] = \
+                N2D2.RangeAffineTransformation.Operator.__members__[self._optional_constructor_arguments['secondOperator']]
 
-        self._N2D2_object = N2D2.RangeAffineTransformation(self._constructor_arguments['FirstOperator'],
-                                                           self._constructor_arguments['FirstValue'],
+        self._N2D2_object = N2D2.RangeAffineTransformation(self._constructor_arguments['firstOperator'],
+                                                           self._constructor_arguments['firstValue'],
                                                            **self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 
@@ -201,18 +205,18 @@ class SliceExtraction(Transformation):
 
     _Type = "SliceExtraction"
 
-    def __init__(self, Width, Height, **config_parameters):
+    def __init__(self, width, height, **config_parameters):
         Transformation.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
-            'Width': Width,
-            'Height': Height,
+            'width': width,
+            'height': height,
         })
 
-        self._parse_optional_arguments(['OffsetX', 'OffsetY'])
+        self._parse_optional_arguments(['offsetX', 'offsetY'])
 
-        self._N2D2_object = N2D2.SliceExtractionTransformation(self._constructor_arguments['Width'],
-                                                           self._constructor_arguments['Height'],
+        self._N2D2_object = N2D2.SliceExtractionTransformation(self._constructor_arguments['width'],
+                                                           self._constructor_arguments['height'],
                                                            **self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 
@@ -225,7 +229,7 @@ class Flip(Transformation):
     def __init__(self, **config_parameters):
         Transformation.__init__(self, **config_parameters)
 
-        self._parse_optional_arguments(['HorizontalFlip', 'VerticalFlip'])
+        self._parse_optional_arguments(['horizontalFlip', 'verticalFlip'])
 
         self._N2D2_object = N2D2.FlipTransformation(**self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)

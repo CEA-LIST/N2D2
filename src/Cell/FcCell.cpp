@@ -125,6 +125,47 @@ void N2D2::FcCell::exportFreeParameters(const std::string& fileName) const
             biases << bias(0) << "\n";
         }
     }
+    if(mQuantizer) {
+        mQuantizer->exportFreeParameters(fileName);
+    }
+}
+
+void N2D2::FcCell::exportQuantFreeParameters(const std::string& fileName) const
+{
+    if(!mQuantizer) {
+        return;
+    }
+
+    const std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
+    const std::string fileBase = Utils::fileBaseName(fileName);
+    std::string fileExt = Utils::fileExtension(fileName);
+
+    if (!fileExt.empty())
+        fileExt = "." + fileExt;
+
+    const std::string weightsFile = fileBase + "_weights_quant" + fileExt;
+
+    std::ofstream weights(weightsFile.c_str());
+
+    if (!weights.good())
+        throw std::runtime_error("Could not create synaptic file: "
+                                 + weightsFile);
+
+    const unsigned int channelsSize = getInputsSize();
+
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+            Tensor<Float_T> weight;
+            getQuantWeight(output, channel, weight);
+            weights << weight(0) << " ";
+        }
+
+        weights << "\n";
+    }
 }
 
 void N2D2::FcCell::importFreeParameters(const std::string& fileName,
@@ -243,6 +284,9 @@ void N2D2::FcCell::importFreeParameters(const std::string& fileName,
             throw std::runtime_error("Synaptic file size larger than expected: "
                                      + biasesFile);
     }
+    if(mQuantizer) {
+        mQuantizer->importFreeParameters(fileName, ignoreNotExists);
+    }
 }
 
 void N2D2::FcCell::logFreeParametersDistrib(
@@ -269,6 +313,87 @@ void N2D2::FcCell::logFreeParametersDistrib(
                 Tensor<double> bias;
                 getBias(output, bias);
                 weights.push_back(bias(0));
+            }
+        }
+    }
+
+    if (weights.empty())
+        return;
+
+    std::sort(weights.begin(), weights.end());
+
+    // Write data file
+    const std::string dirName = Utils::dirName(fileName);
+
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
+    std::ofstream data(fileName.c_str());
+
+    if (!data.good())
+        throw std::runtime_error("Could not save weights distrib file.");
+
+    std::copy(weights.begin(),
+              weights.end(),
+              std::ostream_iterator<double>(data, "\n"));
+    data.close();
+
+    // Plot results
+    Gnuplot gnuplot;
+    gnuplot.set("grid front").set("key off");
+    gnuplot << "binwidth=0.0078";   // < 1/128
+    gnuplot << "bin(x,width)=width*floor(x/width+0.5)";
+    gnuplot.set("boxwidth", "binwidth");
+    gnuplot.set("style data boxes").set("style fill solid noborder");
+    //gnuplot.set("xtics", "0.2");
+    //gnuplot.set("mxtics", "2");
+    //gnuplot.set("grid", "mxtics");
+    gnuplot.set("yrange", "[0:]");
+
+    if (weights.size() > 1) {
+        const std::pair<double, double> meanStdDev = Utils::meanStdDev(weights);
+
+        std::ostringstream label;
+        label << "\"Average: " << meanStdDev.first << "\\n";
+        label << "Std. dev.: " << meanStdDev.second << "\"";
+        label << " at graph 0.7, graph 0.8 front";
+
+        gnuplot.set("label", label.str());
+    }
+
+    gnuplot.set("style rect fc lt -1 fs solid 0.15 noborder behind");
+    gnuplot.set("obj rect from graph 0, graph 0 to -1, graph 1");
+    gnuplot.set("obj rect from 1, graph 0 to graph 1, graph 1");
+
+    const double minVal = (weights.front() < -1.0) ? weights.front() : -1.0;
+    const double maxVal = (weights.back() > 1.0) ? weights.back() : 1.0;
+    gnuplot.setXrange(minVal - 0.05, maxVal + 0.05);
+
+    gnuplot.saveToFile(fileName);
+    gnuplot.plot(fileName,
+                 "using (bin($1,binwidth)):(1.0) smooth freq with boxes");
+}
+
+void N2D2::FcCell::logQuantFreeParametersDistrib(
+    const std::string& fileName,
+    FreeParametersType type) const
+{
+    if(!mQuantizer) {
+        return;
+    }
+
+    const unsigned int channelsSize = getInputsSize();
+
+    // Append all weights
+    std::vector<double> weights;
+    weights.reserve(getNbOutputs() * channelsSize);
+
+    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+        if (type == All || type == Multiplicative) {
+            for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+                Tensor<double> weight;
+                getQuantWeight(output, channel, weight);
+                weights.push_back(weight(0));
             }
         }
     }
@@ -374,33 +499,7 @@ void N2D2::FcCell::writeMap(const std::string& fileName) const
     */
 }
 
-void N2D2::FcCell::discretizeFreeParameters(unsigned int nbLevels)
-{
-    const unsigned int channelsSize = getInputsSize();
-
-#pragma omp parallel for if (getNbOutputs() > 32)
-    for (int output = 0; output < (int)getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
-            Tensor<double> weight;
-            getWeight(output, channel, weight);
-
-            weight(0) = Utils::round((nbLevels - 1) * weight(0))
-                            / (nbLevels - 1);
-
-            setWeight(output, channel, weight);
-        }
-
-        if (!mNoBias) {
-            Tensor<double> bias;
-            getBias(output, bias);
-            bias(0) = Utils::round((nbLevels - 1) * bias(0)) / (nbLevels - 1);
-
-            setBias(output, bias);
-        }
-    }
-}
-
-std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRange(bool withAdditiveParameters) const
+std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRange(FreeParametersType type) const
 {
     const unsigned int channelsSize = getInputsSize();
 
@@ -408,15 +507,17 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRange(boo
     Float_T wMax = 0.0;
 
     for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
-            Tensor<Float_T> weight;
-            getWeight(output, channel, weight);
+        if (type == All || type == Multiplicative) {
+            for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+                Tensor<Float_T> weight;
+                getWeight(output, channel, weight);
 
-            if (weight(0) < wMin)  wMin = weight(0);
-            if (weight(0) > wMax)  wMax = weight(0);
+                if (weight(0) < wMin)  wMin = weight(0);
+                if (weight(0) > wMax)  wMax = weight(0);
+            }
         }
 
-        if (withAdditiveParameters && !mNoBias) {
+        if ((type == All || type == Additive) && !mNoBias) {
             Tensor<Float_T> bias;
             getBias(output, bias);
 
@@ -430,22 +531,24 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRange(boo
 
 
 std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::FcCell::getFreeParametersRangePerOutput(
-            std::size_t output, bool withAdditiveParameters) const 
+            std::size_t output, FreeParametersType type) const 
 {
     const unsigned int channelsSize = getInputsSize();
 
     Float_T wMin = 0.0;
     Float_T wMax = 0.0;
 
-    for (unsigned int channel = 0; channel < channelsSize; ++channel) {
-        Tensor<Float_T> weight;
-        getWeight(output, channel, weight);
+    if (type == All || type == Multiplicative) {
+        for (unsigned int channel = 0; channel < channelsSize; ++channel) {
+            Tensor<Float_T> weight;
+            getWeight(output, channel, weight);
 
-        if (weight(0) < wMin)  wMin = weight(0);
-        if (weight(0) > wMax)  wMax = weight(0);
+            if (weight(0) < wMin)  wMin = weight(0);
+            if (weight(0) > wMax)  wMax = weight(0);
+        }
     }
 
-    if (withAdditiveParameters && !mNoBias) {
+    if ((type == All || type == Additive) && !mNoBias) {
         Tensor<Float_T> bias;
         getBias(output, bias);
 

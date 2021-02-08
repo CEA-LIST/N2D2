@@ -48,10 +48,12 @@ public:
     static void generateHeaderUtils(std::ofstream& header);
     static void generateProgramUtils(std::ofstream& prog);
 
+    static void generateMemoryInfoHeader(const DeepNet& deepNet, 
+                                         const std::string& filePath, 
+                                         const MemoryManager& memManager,
+                                         int memoryAlignment);
     static void generateNetworkPropagateFile(const DeepNet& deepNet, 
-                                             const std::string& filePath, 
-                                             const MemoryManager& memManager,
-                                             int memoryAlignment);
+                                             const std::string& filePath);
     static void printStats(const DeepNet& deepNet, 
                            const MemoryManager& memManager);
 

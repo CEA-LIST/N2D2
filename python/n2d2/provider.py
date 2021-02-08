@@ -29,18 +29,24 @@ class DataProvider(N2D2_Interface):
     _type = "DataProvider"
 
     # Be careful to match default parameters in python and N2D2 constructor
-    def __init__(self, Database, Size, **config_parameters):
+    def __init__(self, database, size, **config_parameters):
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
-            'Database': Database,
-            'Size': Size
+            'database': database,
+            'size': size
         })
 
-        self._parse_optional_arguments(['BatchSize', 'CompositeStimuli'])
+        if 'name' in config_parameters:
+            self._name = config_parameters.pop['name']
+        else:
+            self._name = "provider_" + str(n2d2.global_variables.provider_counter)
+        n2d2.global_variables.provider_counter += 1
 
-        self._N2D2_object = N2D2.StimuliProvider(database=self._constructor_arguments['Database'].N2D2(),
-                                                 size=self._constructor_arguments['Size'],
+        self._parse_optional_arguments(['batchSize', 'compositeStimuli'])
+
+        self._N2D2_object = N2D2.StimuliProvider(database=self._constructor_arguments['database'].N2D2(),
+                                                 size=self._constructor_arguments['size'],
                                                  **self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 
@@ -48,27 +54,45 @@ class DataProvider(N2D2_Interface):
         self._transformations = []
         self._otf_transformations = []
 
+    def get_name(self):
+        return self._name
 
     def get_database(self):
-        return self._constructor_arguments['Database']
+        return self._constructor_arguments['database']
 
     def read_random_batch(self, partition):
         return self._N2D2_object.readRandomBatch(set=N2D2.Database.StimuliSet.__members__[partition])
 
     def read_batch(self, partition, idx):
-        return self._N2D2_object.readBatch(set=N2D2.Database.StimuliSet.__members__[partition],
-                                           startIndex=idx)
+        return self._N2D2_object.readBatch(set=N2D2.Database.StimuliSet.__members__[partition], startIndex=idx)
 
     def add_transformation(self, transformation):
-        self._N2D2_object.addTransformation(transformation.N2D2(), transformation.get_apply_set())
-        self._transformations.append(transformation)
+        if isinstance(transformation, n2d2.transform.Composite):
+            for trans in transformation.get_transformations():
+                self._N2D2_object.addTransformation(trans.N2D2(), trans.get_apply_set())
+                self._transformations.append(trans)
+        else:
+            self._N2D2_object.addTransformation(transformation.N2D2(), transformation.get_apply_set())
+            self._transformations.append(transformation)
 
     def add_on_the_fly_transformation(self, transformation):
-        self._N2D2_object.addOnTheFlyTransformation(transformation.N2D2(), transformation.get_apply_set())
-        self._otf_transformations.append(transformation)
+        if isinstance(transformation, n2d2.transform.Composite):
+            for trans in transformation.get_transformations():
+                self._N2D2_object.addOnTheFlyTransformation(trans.N2D2(), trans.get_apply_set())
+                self._transformations.append(transformation)
+        else:
+            self._N2D2_object.addOnTheFlyTransformation(transformation.N2D2(), transformation.get_apply_set())
+            self._transformations.append(transformation)
 
     def __str__(self):
-        return self._type + N2D2_Interface.__str__(self)
+        output = "'" + self.get_name() + "' " + self._type + N2D2_Interface.__str__(self)
+        if len(self._transformations) > 0:
+            output += "[Transformations="
+            for trans in self._transformations:
+                output += trans.__str__() + ", "
+            output = output[:-2]
+            output += "]"
+        return output
 
     def convert_to_INI_section(self):
         output = "[" + self._INI_type + "]\n"

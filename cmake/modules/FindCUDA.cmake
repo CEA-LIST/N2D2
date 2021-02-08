@@ -542,7 +542,7 @@ set(CUDA_GENERATED_OUTPUT_DIR "" CACHE PATH "Directory to put all the output fil
 option(CUDA_HOST_COMPILATION_CPP "Generated file extension" ON)
 
 # Extra user settable flags
-cmake_initialize_per_config_variable(CUDA_NVCC_FLAGS "Semi-colon delimit multiple arguments.")
+set(CUDA_NVCC_FLAGS "" CACHE STRING "Semi-colon delimit multiple arguments.")
 
 if(DEFINED ENV{CUDAHOSTCXX})
   set(CUDA_HOST_COMPILER "$ENV{CUDAHOSTCXX}" CACHE FILEPATH "Host side compiler used by NVCC")
@@ -1116,7 +1116,7 @@ set(CUDA_TOOLKIT_TARGET_DIR_INTERNAL "${CUDA_TOOLKIT_TARGET_DIR}" CACHE INTERNAL
 set(CUDA_SDK_ROOT_DIR_INTERNAL "${CUDA_SDK_ROOT_DIR}" CACHE INTERNAL
   "This is the value of the last time CUDA_SDK_ROOT_DIR was set successfully." FORCE)
 
-include(${CMAKE_CURRENT_LIST_DIR}/FindPackageHandleStandardArgs.cmake)
+include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(CUDA
   REQUIRED_VARS
@@ -2020,7 +2020,7 @@ macro(CUDA_BUILD_CLEAN_TARGET)
     string(TOUPPER ${cuda_clean_target_name} cuda_clean_target_name)
   endif()
   add_custom_target(${cuda_clean_target_name}
-    COMMAND ${CMAKE_COMMAND} -E rm -f ${CUDA_ADDITIONAL_CLEAN_FILES})
+    COMMAND ${CMAKE_COMMAND} -E remove ${CUDA_ADDITIONAL_CLEAN_FILES})
 
   # Clear out the variable, so the next time we configure it will be empty.
   # This is useful so that the files won't persist in the list after targets

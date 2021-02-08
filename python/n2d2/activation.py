@@ -25,16 +25,16 @@ from n2d2.n2d2_interface import N2D2_Interface
 class Activation(N2D2_Interface):
 
     def __init__(self, **config_parameters):
-        if 'Model' in config_parameters:
-            self._Model = config_parameters.pop('Model')
+        if 'model' in config_parameters:
+            self._model = config_parameters.pop('model')
         else:
-            self._Model = n2d2.global_variables.default_DeepNet.get_model()
-        if 'DataType' in config_parameters:
-            self._DataType = config_parameters.pop('DataType')
+            self._model = n2d2.global_variables.default_deepNet.get_model()
+        if 'dataType' in config_parameters:
+            self._datatype = config_parameters.pop('dataType')
         else:
-            self._DataType = n2d2.global_variables.default_DeepNet.get_datatype()
+            self._datatype = n2d2.global_variables.default_deepNet.get_datatype()
 
-        self._model_key = self._Model + '<' + self._DataType + '>'
+        self._model_key = self._model + '<' + self._datatype + '>'
 
         N2D2_Interface.__init__(self, **config_parameters)
 

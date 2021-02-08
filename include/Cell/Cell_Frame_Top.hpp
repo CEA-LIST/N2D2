@@ -69,8 +69,6 @@ public:
     virtual void backPropagate() = 0;
     virtual void update() = 0;
     virtual void checkGradient(double /*epsilon*/, double /*maxError*/) = 0;
-    virtual void discretizeSignals(unsigned int /*nbLevels*/,
-                                   const Signals& /*signals*/ = In) = 0;
     virtual void setOutputTarget(const Tensor<int>& targets) = 0;
     virtual double applyLoss(double targetVal,
                              double defaultVal) = 0;
@@ -108,6 +106,9 @@ public:
     }
 
     virtual bool isCuda() const = 0;
+    virtual void keepInSync(bool /*keepInSync_*/) const {};
+    virtual void synchronizeToH(bool /*keepInSync_*/) const {};
+    virtual void synchronizeToD(bool /*keepInSync_*/) {};
     virtual ~Cell_Frame_Top() {};
 
     template <class T>

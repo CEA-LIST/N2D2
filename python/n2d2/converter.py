@@ -34,8 +34,8 @@ type_converter = {
 cell_dict = {
     "Fc" : n2d2.cell.Fc,
     "Conv": n2d2.cell.Conv,
-    "ElemWise" : n2d2.cell.ElemWise,
-    "Softmax" : n2d2.cell.Softmax,
+    "ElemWise": n2d2.cell.ElemWise,
+    "Softmax": n2d2.cell.Softmax,
     "Dropout": n2d2.cell.Dropout,
     "Padding": n2d2.cell.Padding,
     "Pool": n2d2.cell.Pool,
@@ -86,7 +86,7 @@ def cell_converter(N2D2_cell):
         kernelDims = [N2D2_cell.getKernelWidth(), N2D2_cell.getKernelHeight()]
         n2d2_cell = cell_dict[CellType](NbOutputs, 
                                         kernelDims,
-                                        Name=name,
+                                        name=name,
                                         **parameters)
     elif CellType == "Padding":
         topPad = N2D2_cell.getTopPad()
@@ -98,7 +98,7 @@ def cell_converter(N2D2_cell):
                                         botPad, 
                                         leftPad, 
                                         rightPad,
-                                        Name=name,
+                                        name=name,
                                         **parameters)
     elif CellType == "Pool":
         poolDims = [N2D2_cell.getPoolHeight(), N2D2_cell.getPoolWidth()]
@@ -107,10 +107,10 @@ def cell_converter(N2D2_cell):
         pooling = str(N2D2_cell.getPooling()).split('.')[-1]
         n2d2_cell = cell_dict[CellType](NbOutputs, 
                                         poolDims,
-                                        StrideDims = strideDims,
-                                        PaddingDims = paddingDims,
-                                        Pooling = pooling,
-                                        Name=name,
+                                        strideDims=strideDims,
+                                        paddingDims=paddingDims,
+                                        pooling=pooling,
+                                        name=name,
                                         **parameters)
     elif CellType == "ElemWise":
         op = str(N2D2_cell.getOperation()).split('.')[-1]
@@ -118,12 +118,12 @@ def cell_converter(N2D2_cell):
         weights = N2D2_cell.getWeights()
 
         n2d2_cell = cell_dict[CellType](NbOutputs, 
-                                        Operation = op,
-                                        Shifts = shifts,
-                                        Weights = weights,
+                                        operation=op,
+                                        shifts=shifts,
+                                        weights=weights,
                                         **parameters)   
     else:
-        n2d2_cell = cell_dict[CellType](NbOutputs, Name=name, **parameters)
+        n2d2_cell = cell_dict[CellType](NbOutputs, name=name, **parameters)
 
     # We replace the N2D2 object created by n2d2 with the initial N2D2 object.
     # This way we make sure that the cell is associated with the same deepnet objet.
@@ -141,8 +141,11 @@ def deepNet_converter(N2D2_deepNet):
     layers = N2D2_deepNet.getLayers()
     layer_sequence = []
     for layer in layers[1:]:
-        cell_layer = []
-        for cell in layer:
-            cell_layer.append(cell_converter(cells[cell]))
-        layer_sequence.append(n2d2.deepnet.Layer(cell_layer))
+        if len(layer) > 1:
+            cell_layer = []
+            for cell in layer:
+                cell_layer.append(cell_converter(cells[cell]))
+            layer_sequence.append(n2d2.deepnet.Layer(cell_layer))
+        else:
+            layer_sequence.append(cell_converter(cells[layer[0]]))
     return n2d2.deepnet.Sequence(layer_sequence)

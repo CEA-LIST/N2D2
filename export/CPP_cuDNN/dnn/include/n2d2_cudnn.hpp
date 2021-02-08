@@ -22,6 +22,8 @@
 #ifndef DEEPNET_CUDNN_H
 #define DEEPNET_CUDNN_H
 
+#define N2D2_SECTION_ATTRIBUTE(sec)
+
 #include <chrono>
 #include <fstream>
 #include <iostream>

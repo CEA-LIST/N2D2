@@ -691,7 +691,7 @@ void N2D2::AnchorCell_Frame_CUDA::backPropagate()
 
 void N2D2::AnchorCell_Frame_CUDA::update()
 {
-    // Nothing to update
+    Cell_Frame_CUDA<float>::update();
 }
 
 N2D2::AnchorCell_Frame_CUDA::~AnchorCell_Frame_CUDA()

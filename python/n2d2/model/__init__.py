@@ -20,4 +20,7 @@
 """
 
 from n2d2.model.example import *
-from n2d2.model.resnet import *
+from n2d2.model.resnet import ResNet50BN, load_from_ONNX
+from n2d2.model.mobilenet_v1 import Mobilenet_v1
+from n2d2.model.mobilenet_v2 import Mobilenet_v2, load_from_ONNX
+from n2d2.model.ILSVRC_outils import *

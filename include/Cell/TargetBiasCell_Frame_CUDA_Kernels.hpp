@@ -26,34 +26,16 @@
 #include <cuda_runtime_api.h>
 
 #include "CudaUtils.hpp"
+#include "CublasUtils.hpp"
 #include "third_party/half.hpp"
 
 namespace N2D2 {
-void cudaHTargetBiasPropagate(const cudaDeviceProp& deviceProp,
-                       const half_float::half bias,
-                       const half_float::half* inputs,
-                       const half_float::half* diffInputs,
-                       half_float::half* outputs,
-                       unsigned int channelsHeight,
-                       unsigned int channelsWidth,
-                       unsigned int nbChannels,
-                       unsigned int batchSize);
-
-void cudaSTargetBiasPropagate(const cudaDeviceProp& deviceProp,
-                       const float bias,
-                       const float* inputs,
-                       const float* diffInputs,
-                       float* outputs,
-                       unsigned int channelsHeight,
-                       unsigned int channelsWidth,
-                       unsigned int nbChannels,
-                       unsigned int batchSize);
-
-void cudaDTargetBiasPropagate(const cudaDeviceProp& deviceProp,
-                       const double bias,
-                       const double* inputs,
-                       const double* diffInputs,
-                       double* outputs,
+template <class T>
+void cudaTargetBiasPropagate(const cudaDeviceProp& deviceProp,
+                       const T bias,
+                       const T* inputs,
+                       const T* diffInputs,
+                       T* outputs,
                        unsigned int channelsHeight,
                        unsigned int channelsWidth,
                        unsigned int nbChannels,

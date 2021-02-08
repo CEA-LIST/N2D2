@@ -156,8 +156,8 @@ void N2D2::PoolCell_Frame_CUDA<T>::initialize()
     CHECK_CUDNN_STATUS(cudnnSetPoolingNdDescriptor(
         mPoolingDesc,
         poolingMode,
-        CUDNN_PROPAGATE_NAN,
-        //CUDNN_NOT_PROPAGATE_NAN,
+        //CUDNN_PROPAGATE_NAN,
+        CUDNN_NOT_PROPAGATE_NAN,
         mPoolDims.size(),
         &pools[0],
         &paddings[0],
@@ -297,6 +297,7 @@ void N2D2::PoolCell_Frame_CUDA<T>::backPropagate()
 template <class T>
 void N2D2::PoolCell_Frame_CUDA<T>::update()
 {
+    Cell_Frame_CUDA<T>::update();
 }
 
 template <class T>

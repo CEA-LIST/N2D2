@@ -46,6 +46,7 @@ void init_TargetScore(py::module&);
 
 void init_DeepNet(py::module&);
 void init_DeepNetGenerator(py::module&);
+void init_DrawNet(py::module&);
 //Database
 void init_Database(py::module&);
 void init_DIR_Database(py::module&);
@@ -152,6 +153,7 @@ void init_XavierFiller(py::module&);
 void init_ConstantFiller(py::module&);
 
 // Cell
+void init_CellGenerator(py::module&);
 void init_Cell(py::module&);
 void init_Cell_Frame_Top(py::module&);
 void init_Cell_Frame(py::module&);
@@ -304,6 +306,7 @@ PYBIND11_MODULE(N2D2, m) {
 
     init_DeepNet(m);
     init_DeepNetGenerator(m);
+    init_DrawNet(m);
 
     //Activation
     init_Activation(m);
@@ -382,6 +385,7 @@ PYBIND11_MODULE(N2D2, m) {
     init_ConstantFiller(m);
 
     //Cell
+    init_CellGenerator(m);
     init_Cell(m);
     init_Cell_Frame_Top(m);
     init_Cell_Frame(m);

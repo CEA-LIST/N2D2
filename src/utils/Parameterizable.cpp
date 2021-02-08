@@ -390,32 +390,32 @@ void N2D2::Parameterizable::copyParameters(const Parameterizable& from)
 
 template<>
 std::string N2D2::Parameter<int>::getPyType() {
-    return std::string("int");
+    return std::string("integer");
 }
 
 template<>
 std::string N2D2::Parameter<long int>::getPyType() {
-    return std::string("int");
+    return std::string("integer");
 }
 
 template<>
 std::string N2D2::Parameter<long long int>::getPyType() {
-    return std::string("int");
+    return std::string("integer");
 }
 
 template<>
 std::string N2D2::Parameter<unsigned int>::getPyType() {
-    return std::string("int");
+    return std::string("integer");
 }
 
 template<>
 std::string N2D2::Parameter<unsigned long int>::getPyType() {
-    return std::string("int");
+    return std::string("integer");
 }
 
 template<>
 std::string N2D2::Parameter<unsigned long long int>::getPyType() {
-    return std::string("int");
+    return std::string("integer");
 }
 
 template<>
@@ -425,7 +425,7 @@ std::string N2D2::Parameter<float>::getPyType() {
 
 template<>
 std::string N2D2::Parameter<double>::getPyType() {
-    return std::string("double");
+    return std::string("float");
 }
 
 template<>

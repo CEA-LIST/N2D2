@@ -1181,5 +1181,5 @@ void N2D2::AnchorCell_Frame::backPropagate()
 
 void N2D2::AnchorCell_Frame::update()
 {
-    // Nothing to update
+    Cell_Frame<float>::update();
 }

@@ -95,7 +95,7 @@ TEST(CPP_Export, generateMemory) {
     ASSERT_TRUE(memManager.getPlanes(conv11).back().memSpace->dependencies.empty());
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().size, 8);
-    ASSERT_EQUALS(memManager.getPlanes(conv11).back().limit, 32*32*8);
+    ASSERT_EQUALS(memManager.getPlanes(conv11).back().getLimit(), 32*32*8);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().length, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().count, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().stride, 8);
@@ -109,7 +109,7 @@ TEST(CPP_Export, generateMemory) {
     ASSERT_TRUE(memManager.getPlanes(conv12).back().memSpace->dependencies.empty());
     ASSERT_EQUALS(memManager.getPlanes(conv12).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(conv12).back().size, 8);
-    ASSERT_EQUALS(memManager.getPlanes(conv12).back().limit, 32*32*8);
+    ASSERT_EQUALS(memManager.getPlanes(conv12).back().getLimit(), 32*32*8);
     ASSERT_EQUALS(memManager.getPlanes(conv12).back().length, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv12).back().count, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv12).back().stride, 8);
@@ -125,7 +125,7 @@ TEST(CPP_Export, generateMemory) {
     ASSERT_TRUE(memManager.getPlanes(conv2_concat).back().memSpace->dependencies.empty());
     ASSERT_EQUALS(memManager.getPlanes(conv2_concat).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(conv2_concat).back().size, 16);
-    ASSERT_EQUALS(memManager.getPlanes(conv2_concat).back().limit, 32*32*16);
+    ASSERT_EQUALS(memManager.getPlanes(conv2_concat).back().getLimit(), 32*32*16);
     ASSERT_EQUALS(memManager.getPlanes(conv2_concat).back().length, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv2_concat).back().count, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv2_concat).back().stride, 16);
@@ -139,7 +139,7 @@ TEST(CPP_Export, generateMemory) {
     ASSERT_TRUE(memManager.getPlanes(conv2).back().memSpace->dependencies.empty());
     ASSERT_EQUALS(memManager.getPlanes(conv2).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(conv2).back().size, 16);
-    ASSERT_EQUALS(memManager.getPlanes(conv2).back().limit, 32*32*16);
+    ASSERT_EQUALS(memManager.getPlanes(conv2).back().getLimit(), 32*32*16);
     ASSERT_EQUALS(memManager.getPlanes(conv2).back().length, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv2).back().count, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv2).back().stride, 16);
@@ -215,7 +215,7 @@ TEST_DATASET(CPP_Export,
     ASSERT_TRUE(memManager.getPlanes(conv11).back().memSpace->dependencies.empty());
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().size, 8);
-    ASSERT_EQUALS(memManager.getPlanes(conv11).back().limit, 32*32*aligned);
+    ASSERT_EQUALS(memManager.getPlanes(conv11).back().getLimit(), 32*32*aligned);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().length, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().count, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().stride, aligned);
@@ -230,7 +230,7 @@ TEST_DATASET(CPP_Export,
     ASSERT_TRUE(memManager.getPlanes(conv12).back().memSpace->dependencies.empty());
     ASSERT_EQUALS(memManager.getPlanes(conv12).back().offset, 8);
     ASSERT_EQUALS(memManager.getPlanes(conv12).back().size, nbOutputs);
-    ASSERT_EQUALS(memManager.getPlanes(conv12).back().limit, 32*32*aligned);
+    ASSERT_EQUALS(memManager.getPlanes(conv12).back().getLimit(), 32*32*aligned);
     ASSERT_EQUALS(memManager.getPlanes(conv12).back().length, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv12).back().count, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv12).back().stride, aligned);
@@ -247,7 +247,7 @@ TEST_DATASET(CPP_Export,
     ASSERT_TRUE(memManager.getPlanes(conv2).back().memSpace->dependencies.empty());
     ASSERT_EQUALS(memManager.getPlanes(conv2).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(conv2).back().size, 16);
-    ASSERT_EQUALS(memManager.getPlanes(conv2).back().limit, 32*32*16);
+    ASSERT_EQUALS(memManager.getPlanes(conv2).back().getLimit(), 32*32*16);
     ASSERT_EQUALS(memManager.getPlanes(conv2).back().length, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv2).back().count, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv2).back().stride, 16);
@@ -325,7 +325,7 @@ TEST_DATASET(CPP_Export,
     ASSERT_TRUE(memManager.getPlanes(conv11).back().memSpace->dependencies.empty());
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().size, 8);
-    ASSERT_EQUALS(memManager.getPlanes(conv11).back().limit, 32*32*aligned);
+    ASSERT_EQUALS(memManager.getPlanes(conv11).back().getLimit(), 32*32*aligned + 32*16 + marginCorrection);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().length, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().count, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv11).back().stride, aligned);
@@ -340,7 +340,7 @@ TEST_DATASET(CPP_Export,
     ASSERT_TRUE(memManager.getPlanes(conv12).back().memSpace->dependencies.empty());
     ASSERT_EQUALS(memManager.getPlanes(conv12).back().offset, 8);
     ASSERT_EQUALS(memManager.getPlanes(conv12).back().size, nbOutputs);
-    ASSERT_EQUALS(memManager.getPlanes(conv12).back().limit, 32*32*aligned);
+    ASSERT_EQUALS(memManager.getPlanes(conv12).back().getLimit(), 32*32*aligned);
     ASSERT_EQUALS(memManager.getPlanes(conv12).back().length, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv12).back().count, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv12).back().stride, aligned);
@@ -357,7 +357,7 @@ TEST_DATASET(CPP_Export,
     ASSERT_TRUE(memManager.getPlanes(conv2).back().memSpace->dependencies.empty());
     ASSERT_EQUALS(memManager.getPlanes(conv2).back().offset, 32*32*aligned);
     ASSERT_EQUALS(memManager.getPlanes(conv2).back().size, 16);
-    ASSERT_EQUALS(memManager.getPlanes(conv2).back().limit, 32*16);
+    ASSERT_EQUALS(memManager.getPlanes(conv2).back().getLimit(), 32*16);
     ASSERT_EQUALS(memManager.getPlanes(conv2).back().length, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv2).back().count, 32);
     ASSERT_EQUALS(memManager.getPlanes(conv2).back().stride, 16);

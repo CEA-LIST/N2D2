@@ -31,14 +31,21 @@ Alternatively, this could simply be done by the corresponding Pytorch functions
 since there is no GPU model involved.
 """
 
-# TODO: Abstract classes?
 class Database(N2D2_Interface):
     """
     Database loader object.
     """
 
+    _INI_type = 'Database'
+    _type = ""
+
+    # This constructor is not called by children, because not abstract class
     def __init__(self, **config_parameters):
         N2D2_Interface.__init__(self, **config_parameters)
+
+        self._parse_optional_arguments(['loadDataInMemory'])
+        self._N2D2_object = N2D2.Database(**self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)
 
     def get_nb_stimuli(self, partition):
         return self._N2D2_object.getNbStimuli(N2D2.Database.StimuliSet.__members__[partition])
@@ -55,6 +62,8 @@ class Database(N2D2_Interface):
         #N2D2_Interface.create_INI_section()
         return output
 
+
+
 class DIR(Database):
     """
     Allow you to load your own database.
@@ -62,8 +71,8 @@ class DIR(Database):
     _INI_type = 'DIR_Database'
     _type = "DIR"
     def __init__(self, **config_parameters):
-        Database.__init__(self, **config_parameters)
-        self._parse_optional_arguments(['LoadDataInMemory'])
+        N2D2_Interface.__init__(self, **config_parameters)
+        self._parse_optional_arguments(['loadDataInMemory'])
         self._N2D2_object = N2D2.DIR_Database(**self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 
@@ -85,29 +94,43 @@ class MNIST(Database):
     _INI_type = 'MNIST_IDX_Database'
     _type = "MNIST"
 
-    def __init__(self, DataPath, **config_parameters):
-        Database.__init__(self, **config_parameters)
+    def __init__(self, dataPath, **config_parameters):
+        N2D2_Interface.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
-            'DataPath': DataPath,
+            'dataPath': dataPath,
         })
-        self._parse_optional_arguments(['LabelPath', 'ExtractROIs', 'Validation'])
-        self._N2D2_object = N2D2.MNIST_IDX_Database(self._constructor_arguments['DataPath'],
+        self._parse_optional_arguments(['labelPath', 'extractROIs', 'validation'])
+        self._N2D2_object = N2D2.MNIST_IDX_Database(self._constructor_arguments['dataPath'],
                                                     **self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
+
+
+class CIFAR100(Database):
+
+    _INI_type = 'CIFAR100_Database'
+    _type = "CIFAR100"
+
+    def __init__(self, **config_parameters):
+        N2D2_Interface.__init__(self, **config_parameters)
+
+        self._parse_optional_arguments(['validation', 'useCoarse'])
+        self._N2D2_object = N2D2.CIFAR100_Database(**self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)
+
 
 class ILSVRC2012(Database):
 
     _INI_type = 'ILSVRC2012_Database'
     _type = "ILSVRC2012"
 
-    def __init__(self, Learn, **config_parameters):
-        Database.__init__(self, **config_parameters)
+    def __init__(self, learn, **config_parameters):
+        N2D2_Interface.__init__(self, **config_parameters)
         self._constructor_arguments.update({
-            'Learn': Learn,
+            'learn': learn,
         })
         self._parse_optional_arguments(['useValidationForTest', 'backgroundClass'])
-        self._N2D2_object = N2D2.ILSVRC2012_Database(self._constructor_arguments['Learn'],
+        self._N2D2_object = N2D2.ILSVRC2012_Database(self._constructor_arguments['learn'],
                                                     **self._optional_constructor_arguments)
         self._set_N2D2_parameters(self._config_parameters)
 

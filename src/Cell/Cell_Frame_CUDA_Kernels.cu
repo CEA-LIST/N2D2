@@ -62,8 +62,60 @@ void cudaPopulateNbTargetOutputs_kernel(int* targets,
     }
 }
 
-//Half
-__global__ void cudaHReduce_kernel(__half* idata, __half* odata,
+#if __CUDA_ARCH__ < 600
+// Prototype declaration
+__device__ __forceinline__ double atomicAdd(double* address, double val);
+#endif
+
+#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
+#else
+__device__ __forceinline__ double atomicAdd(double* address, double val)
+{
+    unsigned long long int* address_as_ull =
+                             (unsigned long long int*)address;
+    unsigned long long int old = *address_as_ull, assumed;
+    do {
+        assumed = old;
+        old = atomicCAS(address_as_ull, assumed,
+                        __double_as_longlong(val +
+                               __longlong_as_double(assumed)));
+    } while (assumed != old);
+    return __longlong_as_double(old);
+}
+#endif
+
+template <class T>
+__global__ void cudaReduce_kernel(T* idata, T* odata,
+                                   unsigned int size)
+{
+    __shared__ T sdata[256];
+
+    // each thread loads one element from global to shared mem
+    const unsigned int tid = threadIdx.x;
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (index < size)
+        sdata[tid] = idata[index];
+    else
+        sdata[tid] = 0.0f;
+
+    __syncthreads();
+
+    // do reduction in shared mem
+    for (unsigned int stride = blockDim.x / 2; stride > 0; stride>>= 1) {
+        if (tid < stride) {
+            sdata[tid] += sdata[tid + stride];
+        }
+        __syncthreads();
+    }
+
+    // write result for this block to global mem
+    if (tid == 0)
+        ((T (*)(T*, T))atomicAdd)(odata, sdata[0]);
+}
+
+template <>
+__global__ void cudaReduce_kernel<__half>(__half* idata, __half* odata,
                                    unsigned int size)
 {
     __shared__ __half sdata[256];
@@ -110,8 +162,56 @@ __global__ void cudaHReduce_kernel(__half* idata, __half* odata,
     }
 }
 
+template <class T>
 __global__
-void cudaHSetOutputTargets_kernel(int* targets,
+void cudaSetOutputTargets_kernel(int* targets,
+    unsigned int* nbTargetOutputs,
+    T* diffInputs,
+    unsigned int nbOutputs,
+    unsigned int outputsHeight,
+    unsigned int outputsWidth,
+    unsigned int batchSize)
+{
+    const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
+                                           * outputsHeight * outputsWidth;
+    const unsigned int batchTargetOffset = blockIdx.z
+                                           * outputsHeight * outputsWidth;
+    const unsigned int batchNbTargetOutputsOffset = blockIdx.z
+                                           * ((nbOutputs > 1) ? nbOutputs : 2);
+
+    for (unsigned int output = blockIdx.x; output < nbOutputs;
+        output += gridDim.x) {                                
+        for (unsigned int oy = threadIdx.y; oy < outputsHeight;
+                oy += blockDim.y) {
+            for (unsigned int ox = threadIdx.x; ox < outputsWidth;
+                    ox += blockDim.x)
+            {
+                const unsigned int outputsIdx
+                    = ox + (oy + output * outputsHeight) * outputsWidth
+                        + batchOutputOffset;
+                const unsigned int targetsIdx = ox + oy * outputsWidth
+                    + batchTargetOffset;
+
+                if (targets[targetsIdx] >= 0) {
+                    const unsigned int nbTargetOutputsIdx = targets[targetsIdx]
+                        + batchNbTargetOutputsOffset;
+
+                    diffInputs[outputsIdx] = ((nbOutputs > 1
+                                && targets[targetsIdx] == (int)output)
+                            || (nbOutputs == 1 && targets[targetsIdx] == 1))
+                        ? 1.0f / nbTargetOutputs[nbTargetOutputsIdx]
+                        : -1.0f / nbTargetOutputs[nbTargetOutputsIdx];
+                }
+                else
+                    diffInputs[outputsIdx] = 0.0f;
+            }
+        }
+    }
+}
+
+template <>
+__global__
+void cudaSetOutputTargets_kernel<__half>(int* targets,
     unsigned int* nbTargetOutputs,
     __half* diffInputs,
     unsigned int nbOutputs,
@@ -158,51 +258,20 @@ void cudaHSetOutputTargets_kernel(int* targets,
     }
 }
 
-//Float
-__global__ void cudaSReduce_kernel(float* idata, float* odata,
-                                   unsigned int size)
-{
-    __shared__ float sdata[256];
-
-    // each thread loads one element from global to shared mem
-    const unsigned int tid = threadIdx.x;
-    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
-
-    if (index < size)
-        sdata[tid] = idata[index];
-    else
-        sdata[tid] = 0.0f;
-
-    __syncthreads();
-
-    // do reduction in shared mem
-    for (unsigned int stride = blockDim.x / 2; stride > 0; stride>>= 1) {
-        if (tid < stride) {
-            sdata[tid] += sdata[tid + stride];
-        }
-        __syncthreads();
-    }
-
-    // write result for this block to global mem
-    if (tid == 0)
-        atomicAdd(odata, sdata[0]);
-}
-
+template <class T>
 __global__
-void cudaSSetOutputTargets_kernel(int* targets,
-    unsigned int* nbTargetOutputs,
-    float* diffInputs,
+void cudaApplyLoss_kernel(T* lossMem,
+    T* outputs,
+    T* diffInputs,
     unsigned int nbOutputs,
     unsigned int outputsHeight,
     unsigned int outputsWidth,
-    unsigned int batchSize)
+    unsigned int batchSize,
+    T targetVal,
+    T defaultVal)
 {
     const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
                                            * outputsHeight * outputsWidth;
-    const unsigned int batchTargetOffset = blockIdx.z
-                                           * outputsHeight * outputsWidth;
-    const unsigned int batchNbTargetOutputsOffset = blockIdx.z
-                                           * ((nbOutputs > 1) ? nbOutputs : 2);
 
     for (unsigned int output = blockIdx.x; output < nbOutputs;
         output += gridDim.x) {                                
@@ -214,125 +283,22 @@ void cudaSSetOutputTargets_kernel(int* targets,
                 const unsigned int outputsIdx
                     = ox + (oy + output * outputsHeight) * outputsWidth
                         + batchOutputOffset;
-                const unsigned int targetsIdx = ox + oy * outputsWidth
-                    + batchTargetOffset;
 
-                if (targets[targetsIdx] >= 0) {
-                    const unsigned int nbTargetOutputsIdx = targets[targetsIdx]
-                        + batchNbTargetOutputsOffset;
-
-                    diffInputs[outputsIdx] = ((nbOutputs > 1
-                                && targets[targetsIdx] == (int)output)
-                            || (nbOutputs == 1 && targets[targetsIdx] == 1))
-                        ? 1.0f / nbTargetOutputs[nbTargetOutputsIdx]
-                        : -1.0f / nbTargetOutputs[nbTargetOutputsIdx];
+                if (diffInputs[outputsIdx] != 0.0f) {
+                    const T val = (diffInputs[outputsIdx] > 0.0f)
+                                            ? targetVal : defaultVal;
+                    const T error = (val - outputs[outputsIdx])
+                                            * abs(diffInputs[outputsIdx]);
+                    diffInputs[outputsIdx] = error;
+                    lossMem[outputsIdx] = error * error;
                 }
                 else
-                    diffInputs[outputsIdx] = 0.0f;
+                    lossMem[outputsIdx] = 0.0f;
             }
         }
     }
 }
 
-//Double
-#if __CUDA_ARCH__ < 600
-// Prototype declaration
-__device__ __forceinline__ double atomicAdd(double* address, double val);
-#endif
-
-#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
-#else
-__device__ __forceinline__ double atomicAdd(double* address, double val)
-{
-    unsigned long long int* address_as_ull =
-                             (unsigned long long int*)address;
-    unsigned long long int old = *address_as_ull, assumed;
-    do {
-        assumed = old;
-        old = atomicCAS(address_as_ull, assumed,
-                        __double_as_longlong(val +
-                               __longlong_as_double(assumed)));
-    } while (assumed != old);
-    return __longlong_as_double(old);
-}
-#endif
-
-__global__ void cudaDReduce_kernel(double* idata, double* odata,
-                                   unsigned int size)
-{
-    __shared__ double sdata[256];
-
-    // each thread loads one element from global to shared mem
-    const unsigned int tid = threadIdx.x;
-    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
-
-    if (index < size)
-        sdata[tid] = idata[index];
-    else
-        sdata[tid] = 0.0;
-
-    __syncthreads();
-
-    // do reduction in shared mem
-    for (unsigned int stride = blockDim.x / 2; stride > 0; stride>>= 1) {
-        if (tid < stride) {
-            sdata[tid] += sdata[tid + stride];
-        }
-        __syncthreads();
-    }
-
-    // write result for this block to global mem
-    if (tid == 0)
-        atomicAdd(odata, sdata[0]);
-}
-
-__global__
-void cudaDSetOutputTargets_kernel(int* targets,
-    unsigned int* nbTargetOutputs,
-    double* diffInputs,
-    unsigned int nbOutputs,
-    unsigned int outputsHeight,
-    unsigned int outputsWidth,
-    unsigned int batchSize)
-{
-    const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
-                                           * outputsHeight * outputsWidth;
-    const unsigned int batchTargetOffset = blockIdx.z
-                                           * outputsHeight * outputsWidth;
-    const unsigned int batchNbTargetOutputsOffset = blockIdx.z
-                                           * ((nbOutputs > 1) ? nbOutputs : 2);
-
-    for (unsigned int output = blockIdx.x; output < nbOutputs;
-        output += gridDim.x) {                                
-        for (unsigned int oy = threadIdx.y; oy < outputsHeight;
-                oy += blockDim.y) {
-            for (unsigned int ox = threadIdx.x; ox < outputsWidth;
-                    ox += blockDim.x)
-            {
-                const unsigned int outputsIdx
-                    = ox + (oy + output * outputsHeight) * outputsWidth
-                        + batchOutputOffset;
-                const unsigned int targetsIdx = ox + oy * outputsWidth
-                    + batchTargetOffset;
-
-                if (targets[targetsIdx] >= 0) {
-                    const unsigned int nbTargetOutputsIdx = targets[targetsIdx]
-                        + batchNbTargetOutputsOffset;
-
-                    diffInputs[outputsIdx] = ((nbOutputs > 1
-                                && targets[targetsIdx] == (int)output)
-                            || (nbOutputs == 1 && targets[targetsIdx] == 1))
-                        ? 1.0 / nbTargetOutputs[nbTargetOutputsIdx]
-                        : -1.0 / nbTargetOutputs[nbTargetOutputsIdx];
-                }
-                else
-                    diffInputs[outputsIdx] = 0.0;
-            }
-        }
-    }
-}
-
-//Half
 #if __CUDA_ARCH__ >= 530 && (!defined(CUDART_VERSION) || CUDART_VERSION < 10020)
 // __habs was introduced with CUDA 10.2
 __device__ __half __habs(__half x) {
@@ -340,8 +306,9 @@ __device__ __half __habs(__half x) {
 }
 #endif
 
+template <>
 __global__
-void cudaHApplyLoss_kernel(__half* lossMem,
+void cudaApplyLoss_kernel<__half>(__half* lossMem,
     __half* outputs,
     __half* diffInputs,
     unsigned int nbOutputs,
@@ -355,8 +322,6 @@ void cudaHApplyLoss_kernel(__half* lossMem,
                                            * outputsHeight * outputsWidth;
     const unsigned int batchTargetOffset = blockIdx.z
                                            * outputsHeight * outputsWidth;
-    const unsigned int batchNbTargetOutputsOffset = blockIdx.z
-                                           * ((nbOutputs > 1) ? nbOutputs : 2);
 
     for (unsigned int output = blockIdx.x; output < nbOutputs;
         output += gridDim.x) {                                
@@ -368,8 +333,6 @@ void cudaHApplyLoss_kernel(__half* lossMem,
                 const unsigned int outputsIdx
                     = ox + (oy + output * outputsHeight) * outputsWidth
                         + batchOutputOffset;
-                const unsigned int targetsIdx = ox + oy * outputsWidth
-                    + batchTargetOffset;
 
 #if __CUDA_ARCH__ >= 530
                 if (__heq(diffInputs[outputsIdx], __float2half(0.0f))) {
@@ -400,100 +363,6 @@ void cudaHApplyLoss_kernel(__half* lossMem,
                 else
                     lossMem[outputsIdx] = __float2half(0.0f);
 #endif
-            }
-        }
-    }
-}
-
-//Float
-__global__
-void cudaSApplyLoss_kernel(float* lossMem,
-    float* outputs,
-    float* diffInputs,
-    unsigned int nbOutputs,
-    unsigned int outputsHeight,
-    unsigned int outputsWidth,
-    unsigned int batchSize,
-    float targetVal,
-    float defaultVal)
-{
-    const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
-                                           * outputsHeight * outputsWidth;
-    const unsigned int batchTargetOffset = blockIdx.z
-                                           * outputsHeight * outputsWidth;
-    const unsigned int batchNbTargetOutputsOffset = blockIdx.z
-                                           * ((nbOutputs > 1) ? nbOutputs : 2);
-
-    for (unsigned int output = blockIdx.x; output < nbOutputs;
-        output += gridDim.x) {                                
-        for (unsigned int oy = threadIdx.y; oy < outputsHeight;
-                oy += blockDim.y) {
-            for (unsigned int ox = threadIdx.x; ox < outputsWidth;
-                    ox += blockDim.x)
-            {
-                const unsigned int outputsIdx
-                    = ox + (oy + output * outputsHeight) * outputsWidth
-                        + batchOutputOffset;
-                const unsigned int targetsIdx = ox + oy * outputsWidth
-                    + batchTargetOffset;
-
-                if (diffInputs[outputsIdx] != 0.0f) {
-                    const float val = (diffInputs[outputsIdx] > 0.0f)
-                                            ? targetVal : defaultVal;
-                    const float error = (val - outputs[outputsIdx])
-                                            * abs(diffInputs[outputsIdx]);
-                    diffInputs[outputsIdx] = error;
-                    lossMem[outputsIdx] = error * error;
-                }
-                else
-                    lossMem[outputsIdx] = 0.0f;
-            }
-        }
-    }
-}
-
-//Double
-__global__
-void cudaDApplyLoss_kernel(double* lossMem,
-    double* outputs,
-    double* diffInputs,
-    unsigned int nbOutputs,
-    unsigned int outputsHeight,
-    unsigned int outputsWidth,
-    unsigned int batchSize,
-    double targetVal,
-    double defaultVal)
-{
-    const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
-                                           * outputsHeight * outputsWidth;
-    const unsigned int batchTargetOffset = blockIdx.z
-                                           * outputsHeight * outputsWidth;
-    const unsigned int batchNbTargetOutputsOffset = blockIdx.z
-                                           * ((nbOutputs > 1) ? nbOutputs : 2);
-
-    for (unsigned int output = blockIdx.x; output < nbOutputs;
-        output += gridDim.x) {                                
-        for (unsigned int oy = threadIdx.y; oy < outputsHeight;
-                oy += blockDim.y) {
-            for (unsigned int ox = threadIdx.x; ox < outputsWidth;
-                    ox += blockDim.x)
-            {
-                const unsigned int outputsIdx
-                    = ox + (oy + output * outputsHeight) * outputsWidth
-                        + batchOutputOffset;
-                const unsigned int targetsIdx = ox + oy * outputsWidth
-                    + batchTargetOffset;
-
-                if (diffInputs[outputsIdx] != 0.0) {
-                    const double val = (diffInputs[outputsIdx] > 0.0)
-                                            ? targetVal : defaultVal;
-                    const double error = (val - outputs[outputsIdx])
-                                            * abs(diffInputs[outputsIdx]);
-                    diffInputs[outputsIdx] = error;
-                    lossMem[outputsIdx] = error * error;
-                }
-                else
-                    lossMem[outputsIdx] = 0.0;
             }
         }
     }
@@ -567,113 +436,124 @@ void N2D2::cudaPopulateNbTargetOutputs(const cudaDeviceProp& deviceProp,
     delete[] hostErr;
 }
 
-//Half
-void N2D2::cudaHSetOutputTargets(const cudaDeviceProp& deviceProp,
+namespace N2D2 {
+
+template <class T>
+void cudaSetOutputTargets(const cudaDeviceProp& deviceProp,
+    int* targets,
+    unsigned int* nbTargetOutputs,
+    T* diffInputs,
+    unsigned int nbOutputs,
+    unsigned int outputsHeight,
+    unsigned int outputsWidth,
+    unsigned int batchSize)
+{
+    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
+
+    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
+                                       ? outputsWidth * outputsHeight
+                                       : maxSize;
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
+
+    const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
+    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
+
+    cudaSetOutputTargets_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (targets,
+           nbTargetOutputs,
+           reinterpret_cast<typename Cuda::cuda_type<T>::type*>(diffInputs),
+           nbOutputs,
+           outputsHeight,
+           outputsWidth,
+           batchSize);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+template <class T>
+double cudaApplyLoss(const cudaDeviceProp& deviceProp,
+    T* lossMem,
+    T* outputs,
+    T* diffInputs,
+    unsigned int nbOutputs,
+    unsigned int outputsHeight,
+    unsigned int outputsWidth,
+    unsigned int batchSize,
+    T targetVal,
+    T defaultVal)
+{
+    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
+
+    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
+                                       ? outputsWidth * outputsHeight
+                                       : maxSize;
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
+
+    const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
+    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
+
+    cudaApplyLoss_kernel<<<blocksPerGrid, threadsPerBlocks>>>
+        (reinterpret_cast<typename Cuda::cuda_type<T>::type*>(lossMem),
+           reinterpret_cast<typename Cuda::cuda_type<T>::type*>(outputs),
+           reinterpret_cast<typename Cuda::cuda_type<T>::type*>(diffInputs),
+           nbOutputs,
+           outputsHeight,
+           outputsWidth,
+           batchSize,
+           reinterpret_cast<typename Cuda::cuda_type<T>::type&>(targetVal),
+           reinterpret_cast<typename Cuda::cuda_type<T>::type&>(defaultVal));
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+
+    const unsigned int size = outputsWidth * outputsHeight * nbOutputs
+                                * batchSize;
+    cudaReduce_kernel<<<(size + 255) / 256, 256>>>(
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(lossMem),
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(lossMem),
+        size);
+
+    T hostLoss;
+    CHECK_CUDA_STATUS(cudaMemcpy(&hostLoss,
+                                 lossMem,
+                                 sizeof(T),
+                                 cudaMemcpyDeviceToHost));
+
+    return (float)hostLoss;
+}
+
+
+template void cudaSetOutputTargets(const cudaDeviceProp& deviceProp,
     int* targets,
     unsigned int* nbTargetOutputs,
     half_float::half* diffInputs,
     unsigned int nbOutputs,
     unsigned int outputsHeight,
     unsigned int outputsWidth,
-    unsigned int batchSize)
-{
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
-    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
-
-    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
-                                       ? outputsWidth * outputsHeight
-                                       : maxSize;
-    const unsigned int reqWidth
-        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
-
-    const unsigned int groupWidth = min(prefMultiple, reqWidth);
-
-    const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
-    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
-
-    cudaHSetOutputTargets_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (targets,
-           nbTargetOutputs,
-           reinterpret_cast<__half*>(diffInputs),
-           nbOutputs,
-           outputsHeight,
-           outputsWidth,
-           batchSize);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-}
-
-//Float
-void N2D2::cudaSSetOutputTargets(const cudaDeviceProp& deviceProp,
+    unsigned int batchSize);
+template void cudaSetOutputTargets(const cudaDeviceProp& deviceProp,
     int* targets,
     unsigned int* nbTargetOutputs,
     float* diffInputs,
     unsigned int nbOutputs,
     unsigned int outputsHeight,
     unsigned int outputsWidth,
-    unsigned int batchSize)
-{
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
-    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
-
-    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
-                                       ? outputsWidth * outputsHeight
-                                       : maxSize;
-    const unsigned int reqWidth
-        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
-
-    const unsigned int groupWidth = min(prefMultiple, reqWidth);
-
-    const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
-    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
-
-    cudaSSetOutputTargets_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (targets,
-           nbTargetOutputs,
-           diffInputs,
-           nbOutputs,
-           outputsHeight,
-           outputsWidth,
-           batchSize);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-}
-
-//Double
-void N2D2::cudaDSetOutputTargets(const cudaDeviceProp& deviceProp,
+    unsigned int batchSize);
+template void cudaSetOutputTargets(const cudaDeviceProp& deviceProp,
     int* targets,
     unsigned int* nbTargetOutputs,
     double* diffInputs,
     unsigned int nbOutputs,
     unsigned int outputsHeight,
     unsigned int outputsWidth,
-    unsigned int batchSize)
-{
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
-    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
+    unsigned int batchSize);
 
-    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
-                                       ? outputsWidth * outputsHeight
-                                       : maxSize;
-    const unsigned int reqWidth
-        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
-
-    const unsigned int groupWidth = min(prefMultiple, reqWidth);
-
-    const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
-    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
-
-    cudaDSetOutputTargets_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (targets,
-           nbTargetOutputs,
-           diffInputs,
-           nbOutputs,
-           outputsHeight,
-           outputsWidth,
-           batchSize);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-}
-
-//Half
-double N2D2::cudaHApplyLoss(const cudaDeviceProp& deviceProp,
+template double cudaApplyLoss(const cudaDeviceProp& deviceProp,
     half_float::half* lossMem,
     half_float::half* outputs,
     half_float::half* diffInputs,
@@ -682,52 +562,8 @@ double N2D2::cudaHApplyLoss(const cudaDeviceProp& deviceProp,
     unsigned int outputsWidth,
     unsigned int batchSize,
     half_float::half targetVal,
-    half_float::half defaultVal)
-{
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
-    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
-
-    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
-                                       ? outputsWidth * outputsHeight
-                                       : maxSize;
-    const unsigned int reqWidth
-        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
-
-    const unsigned int groupWidth = min(prefMultiple, reqWidth);
-
-    const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
-    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
-
-    cudaHApplyLoss_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (reinterpret_cast<__half*>(lossMem),
-           reinterpret_cast<__half*>(outputs),
-           reinterpret_cast<__half*>(diffInputs),
-           nbOutputs,
-           outputsHeight,
-           outputsWidth,
-           batchSize,
-           reinterpret_cast<__half&>(targetVal),
-           reinterpret_cast<__half&>(defaultVal));
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-
-    const unsigned int size = outputsWidth * outputsHeight * nbOutputs
-                                * batchSize;
-    cudaHReduce_kernel<<<(size + 255) / 256, 256>>>(
-        reinterpret_cast<__half*>(lossMem),
-        reinterpret_cast<__half*>(lossMem),
-        size);
-
-    half_float::half hostLoss;
-    CHECK_CUDA_STATUS(cudaMemcpy(&hostLoss,
-                                 lossMem,
-                                 sizeof(half_float::half),
-                                 cudaMemcpyDeviceToHost));
-
-    return (float)hostLoss;
-}
-
-//Float
-double N2D2::cudaSApplyLoss(const cudaDeviceProp& deviceProp,
+    half_float::half defaultVal);
+template double cudaApplyLoss(const cudaDeviceProp& deviceProp,
     float* lossMem,
     float* outputs,
     float* diffInputs,
@@ -736,49 +572,8 @@ double N2D2::cudaSApplyLoss(const cudaDeviceProp& deviceProp,
     unsigned int outputsWidth,
     unsigned int batchSize,
     float targetVal,
-    float defaultVal)
-{
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
-    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
-
-    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
-                                       ? outputsWidth * outputsHeight
-                                       : maxSize;
-    const unsigned int reqWidth
-        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
-
-    const unsigned int groupWidth = min(prefMultiple, reqWidth);
-
-    const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
-    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
-
-    cudaSApplyLoss_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (lossMem,
-           outputs,
-           diffInputs,
-           nbOutputs,
-           outputsHeight,
-           outputsWidth,
-           batchSize,
-           targetVal,
-           defaultVal);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-
-    const unsigned int size = outputsWidth * outputsHeight * nbOutputs
-                                * batchSize;
-    cudaSReduce_kernel<<<(size + 255) / 256, 256>>>(lossMem, lossMem, size);
-
-    float hostLoss;
-    CHECK_CUDA_STATUS(cudaMemcpy(&hostLoss,
-                                 lossMem,
-                                 sizeof(float),
-                                 cudaMemcpyDeviceToHost));
-
-    return hostLoss;
-}
-
-//Double
-double N2D2::cudaDApplyLoss(const cudaDeviceProp& deviceProp,
+    float defaultVal);
+template double cudaApplyLoss(const cudaDeviceProp& deviceProp,
     double* lossMem,
     double* outputs,
     double* diffInputs,
@@ -787,43 +582,6 @@ double N2D2::cudaDApplyLoss(const cudaDeviceProp& deviceProp,
     unsigned int outputsWidth,
     unsigned int batchSize,
     double targetVal,
-    double defaultVal)
-{
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
-    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
+    double defaultVal);
 
-    const unsigned int groupSize = (outputsWidth * outputsHeight < maxSize)
-                                       ? outputsWidth * outputsHeight
-                                       : maxSize;
-    const unsigned int reqWidth
-        = (unsigned int)ceilf((float)groupSize / (float)outputsWidth);
-
-    const unsigned int groupWidth = min(prefMultiple, reqWidth);
-
-    const dim3 blocksPerGrid = {nbOutputs, 1, batchSize};
-    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
-
-    cudaDApplyLoss_kernel<<<blocksPerGrid, threadsPerBlocks>>>
-        (lossMem,
-           outputs,
-           diffInputs,
-           nbOutputs,
-           outputsHeight,
-           outputsWidth,
-           batchSize,
-           targetVal,
-           defaultVal);
-    CHECK_CUDA_STATUS(cudaPeekAtLastError());
-
-    const unsigned int size = outputsWidth * outputsHeight * nbOutputs
-                                * batchSize;
-    cudaDReduce_kernel<<<(size + 255) / 256, 256>>>(lossMem, lossMem, size);
-
-    double hostLoss;
-    CHECK_CUDA_STATUS(cudaMemcpy(&hostLoss,
-                                 lossMem,
-                                 sizeof(double),
-                                 cudaMemcpyDeviceToHost));
-
-    return hostLoss;
 }

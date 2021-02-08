@@ -22,9 +22,11 @@
 #define N2D2_ACTIVATIONGENERATOR_H
 
 #include "Activation/Activation.hpp"
+#include "Generator/QuantizerActivationGenerator.hpp"
 #include "utils/IniParser.hpp"
 #include "utils/Registrar.hpp"
 #include "Generator/Generator.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
 
 namespace N2D2 {
 class ActivationGenerator {
@@ -50,7 +52,14 @@ public:
              const DataType& dataType,
              const std::string& name,
              const std::shared_ptr<Activation>& defaultActivation
-             = std::shared_ptr<Activation>());
+             = std::shared_ptr<Activation>(),
+             bool nullIfDefault = false);
+    static void generateParams( const std::shared_ptr<Cell_Frame_Top>& cell,
+                                IniParser& iniConfig,
+                                const std::string& section,
+                                const std::string& model,
+                                const DataType& dataType);
+
 };
 }
 
