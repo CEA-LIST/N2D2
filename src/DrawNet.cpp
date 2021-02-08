@@ -21,6 +21,7 @@
 #include "DrawNet.hpp"
 #include "DeepNet.hpp"
 #include "StimuliProvider.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/ConvCell.hpp"
 #include "Cell/DeconvCell.hpp"
 #include "Cell/PoolCell.hpp"
