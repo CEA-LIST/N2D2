@@ -41,6 +41,7 @@ void declare_Tensor_buffer_protocol(py::class_<Tensor<T>, BaseTensor>& tensor) {
         std::vector<ssize_t> strides;
         ssize_t stride = sizeof(T);
 
+        // Loop reversed beause N2D2 dims are reversed from mathematical and python convention.
         for (unsigned int dim = 0; dim < b.nbDims(); ++dim) {
             dims.push_back(b.dims()[dim]);
             strides.push_back(stride);
@@ -52,11 +53,11 @@ void declare_Tensor_buffer_protocol(py::class_<Tensor<T>, BaseTensor>& tensor) {
 
         return py::buffer_info(
             &b.data()[0],                               /* Pointer to buffer */
-            sizeof(T),                          /* Size of one scalar */
-            py::format_descriptor<T>::format(), /* Python struct-style format descriptor */
-            b.nbDims(),                                      /* Number of dimensions */
-            dims,                 /* Buffer dimensions */
-            strides             /* Strides (in bytes) for each index */
+            sizeof(T),                                  /* Size of one scalar */
+            py::format_descriptor<T>::format(),         /* Python struct-style format descriptor */
+            b.nbDims(),                                 /* Number of dimensions */
+            dims,                                       /* Buffer dimensions */
+            strides                                     /* Strides (in bytes) for each index */
         );
     })
     .def("__init__", [](Tensor<T>& m, py::array_t<T, py::array::c_style | py::array::forcecast> b) {
@@ -91,6 +92,12 @@ void declare_Tensor(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("Tensor_" + typeStr);
     py::class_<Tensor<T>, BaseTensor> tensor(m, pyClassName.c_str(), py::multiple_inheritance(), py::buffer_protocol());
     tensor.def(py::init<>())
+    // Init with lambda to switch dimensions not working ===================================
+    // .def(py::init([] (const std::vector<size_t>& dims, const T& value){
+    //     std::reverse(dims.begin(), dims.end());
+    //     return new Tensor<T>(dims, value);
+    // }))
+    //======================================================================================
     .def(py::init<const std::vector<size_t>&, const T&>(), py::arg("dims"), py::arg("value") = T())
     /// Bare bones interface
     .def("__getitem__", [](const Tensor<T>& b, size_t i) {
