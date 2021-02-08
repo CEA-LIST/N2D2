@@ -93,9 +93,9 @@ public:
         value.resize(sharedSynapses[output][channel].dims());
         value = sharedSynapses[output][channel];
     };
-    inline void getQuantWeight(unsigned int output,
-                          unsigned int channel,
-                          BaseTensor& value) const
+    inline void getQuantWeight(unsigned int /*output*/,
+                          unsigned int /*channel*/,
+                          BaseTensor& /*value*/) const
     {
         //nothing here for now
     };

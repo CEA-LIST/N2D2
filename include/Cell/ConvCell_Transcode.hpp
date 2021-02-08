@@ -153,9 +153,9 @@ void N2D2::ConvCell_Transcode
 
 template <class FRAME, class SPIKE>
 void N2D2::ConvCell_Transcode
-    <FRAME, SPIKE>::getQuantWeight(unsigned int output,
-                              unsigned int channel,
-                              BaseTensor& value) const
+    <FRAME, SPIKE>::getQuantWeight(unsigned int /*output*/,
+                              unsigned int /*channel*/,
+                              BaseTensor& /*value*/) const
 {
     // nothing here
 }

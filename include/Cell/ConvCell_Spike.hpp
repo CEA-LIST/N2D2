@@ -182,9 +182,9 @@ void N2D2::ConvCell_Spike::getWeight(unsigned int output,
     value = values;
 }
 
-void N2D2::ConvCell_Spike::getQuantWeight(unsigned int output,
-                                     unsigned int channel,
-                                     BaseTensor& value) const
+void N2D2::ConvCell_Spike::getQuantWeight(unsigned int /*output*/,
+                                     unsigned int /*channel*/,
+                                     BaseTensor& /*value*/) const
 {
     // nothing here for now
 }
