@@ -48,18 +48,8 @@ public:
     virtual ~LinearActivation() {};
 
 protected:
-    void saveInternal(std::ostream& state, std::ostream& log) const;
-    void loadInternal(std::istream& state);
-
     /// Clipping
     Parameter<double> mClipping;
-
-    double mMinValMA;
-    double mMaxValMA;
-    double mMinValAligned;
-    double mMaxValAligned;
-    double mMinValQuant;
-    double mMaxValQuant;
 };
 }
 

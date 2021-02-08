@@ -149,6 +149,7 @@ void N2D2::PaddingCell_Frame_CUDA::backPropagate()
 
 void N2D2::PaddingCell_Frame_CUDA::update()
 {
+    Cell_Frame_CUDA<float>::update();
 }
 
 void N2D2::PaddingCell_Frame_CUDA::checkGradient(double epsilon, double maxError)

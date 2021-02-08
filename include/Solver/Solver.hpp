@@ -50,8 +50,6 @@ public:
     virtual bool isNewIteration() const = 0;
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);
-    virtual std::pair<double, double> getRange() const = 0;
-    virtual std::pair<double, double> getQuantizedRange() const = 0;
     virtual void logSchedule(const std::string& /*fileName*/,
                              unsigned int /*batchSize*/,
                              unsigned int /*epochSize*/ = 0,

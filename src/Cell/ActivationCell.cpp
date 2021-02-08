@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2016 CEA LIST. All Rights Reserved.
+    (C) Copyright 2013 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -18,22 +18,36 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_ACTIVATION_KERNELS_H
-#define N2D2_ACTIVATION_KERNELS_H
-
 #include "Activation/Activation.hpp"
+#include "Cell/ActivationCell.hpp"
+#include "DeepNet.hpp"
+#include "containers/Matrix.hpp"
+#include "controler/Interface.hpp"
+#include "StimuliProvider.hpp"
 
-namespace N2D2 {
-void rangeAveraging(double minVal,
-                    double maxVal,
-                    double& minAveragedVal,
-                    double& maxAveragedVal,
-                    unsigned long long int& nbSteps,
-                    Activation::MovingAverageType movingAverage,
-                    unsigned int MA_Window,
-                    double EMA_Alpha);
+const char* N2D2::ActivationCell::Type = "Activation";
 
-double log2Round(double value, double rate = 1.0, double power = 0.0);
+N2D2::ActivationCell::ActivationCell(const DeepNet& deepNet, 
+                         const std::string& name,
+                         unsigned int nbOutputs)
+    : Cell(deepNet, name, nbOutputs)
+{
+    // ctor
 }
 
-#endif // N2D2_ACTIVATION_KERNELS_H
+std::vector<unsigned int> N2D2::ActivationCell::getReceptiveField(
+    const std::vector<unsigned int>& outputField) const
+{
+    return outputField;
+}
+
+void N2D2::ActivationCell::getStats(Stats& stats) const
+{
+    stats.nbNodes += getOutputsSize();
+}
+
+void N2D2::ActivationCell::setOutputsDims()
+{
+    mOutputsDims[0] = mInputsDims[0];
+    mOutputsDims[1] = mInputsDims[1];
+}

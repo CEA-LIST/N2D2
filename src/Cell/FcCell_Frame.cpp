@@ -88,6 +88,17 @@ void N2D2::FcCell_Frame<T>::initialize()
             {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}, true), 0);
         mWeightsFiller->apply(mSynapses.back());
     }
+
+    if (mQuantizer) {
+        for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
+            mQuantizer->addWeights(mSynapses[k], mDiffSynapses[k]);
+        }
+        if (!mNoBias) {
+            mQuantizer->addBiases(mBias, mDiffBias);
+        }
+        mQuantizer->initialize();
+    }
+
 }
 
 template <class T>
@@ -155,6 +166,10 @@ void N2D2::FcCell_Frame<T>::propagate(bool inference)
 
     mInputs.synchronizeDBasedToH();
 
+    if (mQuantizer) {
+        mQuantizer->propagate();
+    }
+
     const unsigned int outputSize = mOutputs.dimX() * mOutputs.dimY()
                                     * mOutputs.dimZ();
     const unsigned int count = mInputs.dimB() * outputSize;
@@ -173,10 +188,15 @@ void N2D2::FcCell_Frame<T>::propagate(bool inference)
                     = Random::randBernoulli(mDropConnect);
         }
 
-        const Tensor<T>& synapses = mSynapses[k];
         const Tensor<T>& input = tensor_cast<T>(mInputs[k]);
+        const Tensor<T>& synapses 
+            = mQuantizer ? (tensor_cast<T>(mQuantizer->getQuantizedWeights(k))) 
+                        : tensor_cast<T>(mSynapses[k]);
         const unsigned int inputSize = input.dimX() * input.dimY()
                                         * input.dimZ();
+        //const Tensor<T>& biases 
+        //    = (!mNoBias) ? (mQuantizer ? tensor_cast<T>(mQuantizer->getQuantizedBiases())
+        //                : mBias) : T(0.0) ;
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (count > 16)
@@ -236,12 +256,13 @@ void N2D2::FcCell_Frame<T>::backPropagate()
 
         if (!mDiffOutputs.empty() && mBackPropagate) {
             const T beta((mDiffOutputs[k].isValid()) ? 1.0 : 0.0);
-
             Tensor<T> diffOutput = (mDiffOutputs[k].isValid())
                 ? tensor_cast<T>(mDiffOutputs[k])
                 : tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
-            const Tensor<T>& synapses = mSynapses[k];
+            const Tensor<T>& synapses 
+                = mQuantizer ? tensor_cast<T>(mQuantizer->getQuantizedWeights(k))
+                            : tensor_cast<T>(mSynapses[k]);
             const unsigned int count = mInputs.dimB() * nbChannels;
 
 #if defined(_OPENMP) && _OPENMP >= 200805
@@ -333,20 +354,34 @@ void N2D2::FcCell_Frame<T>::backPropagate()
     }
 
     mDiffOutputs.synchronizeHToD();
+
+    if (mQuantizer && mBackPropagate) {
+        mQuantizer->back_propagate();
+    }
 }
 
 template <class T>
 void N2D2::FcCell_Frame<T>::update()
 {
     for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
-        if (mDiffSynapses[k].isValid()) {
+        if (mDiffSynapses[k].isValid() && !mQuantizer) {
             mWeightsSolvers[k]
                 ->update(mSynapses[k], mDiffSynapses[k], mInputs.dimB());
+        }
+        else if (mDiffSynapses[k].isValid() && mQuantizer) {
+            mWeightsSolvers[k]
+                ->update(mSynapses[k], mQuantizer->getDiffFullPrecisionWeights(k), mInputs.dimB());
         }
     }
 
     if (!mNoBias && mDiffBias.isValid())
         mBiasSolver->update(mBias, mDiffBias, mInputs.dimB());
+
+    if(mQuantizer){
+        mQuantizer->update((unsigned int)mInputs.dimB());
+    }
+
+    Cell_Frame<T>::update();
 }
 
 template <class T>

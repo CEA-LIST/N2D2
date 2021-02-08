@@ -35,12 +35,14 @@ namespace N2D2 {
 template <class T>
 class ConvCell_Frame_CUDA : public virtual ConvCell, public Cell_Frame_CUDA<T> {
 public:
+    using Cell_Frame_CUDA<T>::keepInSync;
     using Cell_Frame_CUDA<T>::mInputs;
     using Cell_Frame_CUDA<T>::mOutputs;
     using Cell_Frame_CUDA<T>::mDiffInputs;
     using Cell_Frame_CUDA<T>::mDiffOutputs;
     using Cell_Frame_CUDA<T>::mActivation;
     using Cell_Frame_CUDA<T>::mActivationDesc;
+    using Cell_Frame_CUDA<T>::mKeepInSync;
 
     ConvCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                         const std::vector<unsigned int>& kernelDims,
@@ -92,6 +94,9 @@ public:
     inline void getWeight(unsigned int output,
                           unsigned int channel,
                           BaseTensor& value) const;
+    inline void getQuantWeight(unsigned int output,
+                          unsigned int channel,
+                          BaseTensor& value) const;
     inline void getBias(unsigned int output, BaseTensor& value) const;
     inline BaseInterface* getWeights()
     {
@@ -117,14 +122,15 @@ public:
     void loadFreeParameters(const std::string& fileName,
                             bool ignoreNotExists = false);
     void exportFreeParameters(const std::string& fileName) const;
+    void exportQuantFreeParameters(const std::string& fileName) const;
     void importFreeParameters(const std::string& fileName,
                               bool ignoreNotExists = false);
     void logFreeParametersDistrib(const std::string& fileName) const;
-    void discretizeFreeParameters(unsigned int nbLevels);
+    void logQuantFreeParametersDistrib(const std::string& fileName) const;
     
-    std::pair<Float_T, Float_T> getFreeParametersRange(bool withAdditiveParameters = true) const;
+    std::pair<Float_T, Float_T> getFreeParametersRange(FreeParametersType type = All) const;
     std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 
-                                                                bool withAdditiveParameters) const;
+                                                                FreeParametersType type = All) const;
     std::pair<Float_T, Float_T> getFreeParametersRangePerChannel(std::size_t channel) const;
     
     void processFreeParameters(std::function<Float_T(Float_T)> func,
@@ -135,6 +141,8 @@ public:
     void processFreeParametersPerChannel(std::function<Float_T(Float_T)> /*func*/,
                                         std::size_t /*channel*/);
 
+    void synchronizeToH(bool keepInSync_) const;
+    void synchronizeToD(bool keepInSync_);
     virtual ~ConvCell_Frame_CUDA();
 
 protected:
@@ -168,7 +176,6 @@ protected:
 #endif
 
     cudnnConvolutionDescriptor_t mConvDesc;
-    mutable bool mSynchronized;
 
 private:
     static Registrar<ConvCell> mRegistrar;
@@ -212,7 +219,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::setWeight(unsigned int output,
     else
         sharedSynapses[output][channel] = tensor_cast<T>(value);
 
-    if (!mSynchronized)
+    if (mKeepInSync)
         sharedSynapses[output][channel].synchronizeHToD();
 }
 
@@ -244,14 +251,71 @@ N2D2::ConvCell_Frame_CUDA<T>::getWeight(unsigned int output,
         channel = channel % channelGroupSize;
     }
 #endif
-
+/*
     const CudaTensor<T>& sharedSynapses = mSharedSynapses[k];
 
-    if (!mSynchronized)
+    if (mKeepInSync)
         sharedSynapses[output][channel].synchronizeDToH();
+*/
+    //std::shared_ptr<CudaDeviceTensor<T> > sharedSynapses;
+    /*if (mQuantizer) {
+        const CudaTensor<T>& sharedSynapses = cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(k));
+        sharedSynapses[output][channel].synchronizeDToH();
+        value.resize(sharedSynapses[output][channel].dims());
+        value = sharedSynapses[output][channel];
 
+        //sharedSynapses = cuda_device_tensor_cast<T>
+        //        (cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(k)));
+    }*/
+    //else {
+        const CudaTensor<T>& sharedSynapses = mSharedSynapses[k];
+        if (mKeepInSync)
+            sharedSynapses[output][channel].synchronizeDToH();
+        value.resize(sharedSynapses[output][channel].dims());
+        value = sharedSynapses[output][channel];
+
+    //}
+    
+}
+
+template <class T>
+void
+N2D2::ConvCell_Frame_CUDA<T>::getQuantWeight(unsigned int output,
+                                        unsigned int channel,
+                                        BaseTensor& value) const
+{
+
+    if (!mQuantizer)
+        return;
+    
+    const unsigned int k = mInputs.getTensorIndex(channel);
+    channel -= mInputs.getTensorDataOffset(channel);
+
+#if CUDNN_VERSION >= 7000
+    if (mNbGroups[k] > 1) {
+        const size_t outputGroupSize = getNbOutputs() / mNbGroups[k];
+        const size_t channelGroupSize = mInputs[k].dimZ() / mNbGroups[k];
+        const size_t outputGroup = output / outputGroupSize;
+        const size_t channelGroup = channel / channelGroupSize;
+
+        if (outputGroup != channelGroup) {
+            const std::vector<size_t> kernelDims(mKernelDims.begin(),
+                                                 mKernelDims.end());
+
+            value.resize(kernelDims);
+            value = Tensor<T>(kernelDims, T(0.0));
+            return;
+        }
+
+        channel = channel % channelGroupSize;
+    }
+#endif
+
+    const CudaTensor<T>& sharedSynapses = cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(k));
+    sharedSynapses[output][channel].synchronizeDToH();
     value.resize(sharedSynapses[output][channel].dims());
     value = sharedSynapses[output][channel];
+    
 }
 
 template <class T>
@@ -263,7 +327,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::setBias(unsigned int output,
 
     (*mBias)(output) = tensor_cast<T>(value)(0);
 
-    if (!mSynchronized)
+    if (mKeepInSync)
         mBias->synchronizeHToD(output, 1);
 }
 
@@ -271,7 +335,7 @@ template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::getBias(unsigned int output,
                                            BaseTensor& value) const
 {
-    if (!mSynchronized)
+    if (mKeepInSync)
         mBias->synchronizeDToH(output, 1);
 
     value.resize({1});

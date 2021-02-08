@@ -18,8 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_DEEP_NET_QUANTIZATION_H
-#define N2D2_DEEP_NET_QUANTIZATION_H
+#ifndef N2D2_DEEP_NET_QUANTIZER_H
+#define N2D2_DEEP_NET_QUANTIZER_H
 
 #include <string>
 #include <unordered_map>
@@ -27,6 +27,7 @@
 
 #include "Histogram.hpp"
 #include "ScalingMode.hpp"
+#include "utils/Registrar.hpp"
 
 namespace N2D2 {
 
@@ -59,6 +60,7 @@ public:
                          ClippingMode actClippingMode,
                          ScalingMode actScalingMode,
                          bool rescalePerOutputChannel);
+    virtual ~DeepNetQuantization() {};
 
 private:
     /**

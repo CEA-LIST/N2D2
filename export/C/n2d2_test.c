@@ -31,6 +31,10 @@
 #include <omp.h>
 #endif
 
+#ifdef __STXP70__
+#include <measure.h>
+#endif
+
 #include "network.h"
 
 static const size_t CONFUSION_MATRIX_PRINT_MAX_TARGETS = 101;
@@ -117,7 +121,13 @@ int main(int argc, char* argv[])
             free(fileList[n]);
 
             gettimeofday(&start, NULL);
+#ifdef __STXP70__
+            clrcc1();
+#endif
             network(env_data, outputEstimated);
+#ifdef __STXP70__
+            const int cycleCount = stopcc1();
+#endif
             gettimeofday(&end, NULL);
 
 #ifdef SAVE_OUTPUTS
@@ -154,8 +164,12 @@ int main(int argc, char* argv[])
             }
 #endif
 
+#ifdef __STXP70__
+            const double duration = cycleCount / 100.0; // 100 MHz, unit = us
+#else
             const double duration = 1.0e6 * (double)(end.tv_sec - start.tv_sec)
                                     + (double)(end.tv_usec - start.tv_usec);
+#endif
             elapsed += duration;
 
             unsigned int nbValidPredictions = 0;

@@ -132,16 +132,49 @@ void N2D2::StimuliProviderExport::generate(const DeepNet& deepNet, StimuliProvid
 
         for(std::size_t t = 0; t < nbTargets; ++t) {
             const std::shared_ptr<Target>& target = outputTargets[t];
-            target->provideTargets(set);
 
-            const Tensor<int>& targetData = target->getTargets();
+            if (!target->getParameter<bool>("DataAsTarget")) {
+                target->provideTargets(set);
+                const Tensor<int>& targetData = target->getTargets();
 
-            for (std::size_t y = 0; y < targetData.dimY(); ++y) {
-                for (std::size_t x = 0; x < targetData.dimX(); ++x) {
-                    const int32_t outputTarget = targetData(x, y, 0, 0);
+                for (std::size_t y = 0; y < targetData.dimY(); ++y) {
+                    for (std::size_t x = 0; x < targetData.dimX(); ++x) {
+                        const int32_t outputTarget = targetData(x, y, 0, 0);
 
-                    envStimuli.write(reinterpret_cast<const char*>(&outputTarget),
-                                     sizeof(outputTarget));
+                        envStimuli.write(reinterpret_cast<const char*>(&outputTarget),
+                                        sizeof(outputTarget));
+                    }
+                }
+            }
+            else {
+                const Tensor<Float_T>& targetData = sp.getTargetData();
+
+                for (std::size_t ch = 0; ch < targetData.dimZ(); ++ch) {
+                    for (std::size_t y = 0; y < targetData.dimY(); ++y) {
+                        for (std::size_t x = 0; x < targetData.dimX(); ++x) {
+                            if (precision > 0) {
+                                // For integer export, it is assumed that 
+                                // targetData is normalized in [-1,1].
+                                const Float_T affineTrans
+                                    = (DeepNetExport::mEnvDataUnsigned)
+                                        ? (std::pow(2, (int)precision) - 1)
+                                        : (std::pow(2, (int)precision - 1) - 1);
+                                const int32_t data = (int32_t) std::floor(
+                                        targetData(x, y, ch, 0) * affineTrans);
+
+                                writeStimulusValue(data, 
+                                    unsignedData, precision, envStimuli);
+                            }
+                            else {
+                                const float outputTarget
+                                    = targetData(x, y, ch, 0);
+
+                                envStimuli.write(reinterpret_cast<const char*>(
+                                    &outputTarget), sizeof(outputTarget));
+
+                            }
+                        }
+                    }
                 }
             }
         }

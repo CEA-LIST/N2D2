@@ -28,7 +28,7 @@
 
 #include "Cell_Frame_CUDA.hpp"
 #include "SoftmaxCell.hpp"
-#include "Solver/SGDSolver_CUDA_Kernels.hpp" // provides cudaHaxpy()
+#include "Solver/SGDSolver_CUDA_Kernels.hpp"
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
@@ -74,12 +74,6 @@ private:
 
     static Registrar<SoftmaxCell> mRegistrar;
 };
-}
-
-namespace N2D2 {
-template <> void SoftmaxCell_Frame_CUDA<half_float::half>::backPropagateWithLoss();
-template <> void SoftmaxCell_Frame_CUDA<float>::backPropagateWithLoss();
-template <> void SoftmaxCell_Frame_CUDA<double>::backPropagateWithLoss();
 }
 
 #endif // N2D2_SOFTMAXCELL_FRAME_CUDA_H

@@ -26,6 +26,8 @@
 
 #include "Cell.hpp"
 #include "utils/Registrar.hpp"
+#include "Quantizer/Cell/QuantizerCell.hpp"
+
 
 namespace N2D2 {
 
@@ -103,6 +105,10 @@ public:
     {
         mBiasSolver = solver;
     };
+    virtual void setQuantizer(std::shared_ptr<QuantizerCell> quant)
+    {
+        mQuantizer = quant;
+    }
     virtual void logFreeParameters(const std::string& fileName,
                                    unsigned int output,
                                    unsigned int channel) const;
@@ -164,7 +170,14 @@ public:
     {
         return mBiasSolver;
     };
+    std::shared_ptr<QuantizerCell> getQuantizer()
+    {
+        return mQuantizer;
+    };
     virtual void getWeight(unsigned int output,
+                           unsigned int channel,
+                           BaseTensor& value) const = 0;
+    virtual void getQuantWeight(unsigned int output,
                            unsigned int channel,
                            BaseTensor& value) const = 0;
     virtual void getBias(unsigned int output, BaseTensor& value) const = 0;
@@ -187,16 +200,18 @@ public:
     virtual void setBiases(const std::shared_ptr<BaseTensor>&
                            /*biases*/) {};
     virtual void exportFreeParameters(const std::string& fileName) const;
+    virtual void exportQuantFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,
                                       bool ignoreNotExists = false);
     virtual void logFreeParametersDistrib(const std::string& fileName,
                                           FreeParametersType type = All) const;
+    virtual void logQuantFreeParametersDistrib(const std::string& fileName,
+                                          FreeParametersType type = All) const;
     void writeMap(const std::string& fileName) const;
     void randomizeFreeParameters(double stdDev);
-    virtual void discretizeFreeParameters(unsigned int nbLevels);
-    virtual std::pair<Float_T, Float_T> getFreeParametersRange(bool withAdditiveParameters = true) const;
+    virtual std::pair<Float_T, Float_T> getFreeParametersRange(FreeParametersType type = All) const;
     virtual std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 
-                                                                   bool withAdditiveParameters) const;
+                                                                   FreeParametersType type = All) const;
     virtual std::pair<Float_T, Float_T> getFreeParametersRangePerChannel(std::size_t channel) const;
     
     virtual void processFreeParameters(std::function<Float_T(Float_T)> func,
@@ -241,6 +256,7 @@ protected:
     std::shared_ptr<Filler> mBiasFiller;
     std::shared_ptr<Solver> mWeightsSolver;
     std::shared_ptr<Solver> mBiasSolver;
+    std::shared_ptr<QuantizerCell> mQuantizer;
 };
 }
 

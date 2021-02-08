@@ -51,20 +51,10 @@ public:
     {
         return true;
     }
-    std::pair<double, double> getRange() const
-    {
-        return std::make_pair(mMinVal, mMaxVal);
-    }
-    std::pair<double, double> getQuantizedRange() const
-    {
-        return std::make_pair(mMinValQuant, mMaxValQuant);
-    }
     virtual ~AdamSolver() {};
 
 protected:
     template <class T> std::pair<T, T> getClamping() const;
-    virtual void saveInternal(std::ostream& state, std::ostream& log) const;
-    virtual void loadInternal(std::istream& state);
 
     /// Stepsize
     Parameter<double> mLearningRate;
@@ -74,16 +64,10 @@ protected:
     Parameter<double> mBeta2;
     /// Epsilon
     Parameter<double> mEpsilon;
-    /// Quantization levels (0 = no quantization)
-    Parameter<unsigned int> mQuantizationLevels;
     /// Weights clamping, format: "min:max", or ":max", or "min:", or empty
     Parameter<std::string> mClamping;
 
     unsigned long long int mNbSteps;
-    double mMinVal;
-    double mMaxVal;
-    double mMinValQuant;
-    double mMaxValQuant;
 
 private:
     virtual AdamSolver* doClone() const = 0;

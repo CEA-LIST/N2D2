@@ -1380,7 +1380,9 @@ extern "C" void cuda_gather_int2int_indices( const int* keys,
                                                                  nbElements);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
-__constant__ static float colors[4][3] = {{255.0, 0.0, 0.0},{0.0, 255.0, 0.0},{0.0, 0.0, 255.0},{0.0, 0.0, 0.0}};
+__constant__ static float colors[10][3] = {{255.0, 0.0, 0.0},{0.0, 255.0, 0.0},{0.0, 0.0, 255.0},{0.0, 0.0, 0.0},
+                                          {0.0, 255.0, 255.0},{255.0, 128.0, 255.0},{255.0, 255.0, 0.0},{128.0, 0.0, 128.0},
+                                          {0.0, 128.0, 128.0},{255.0, 50.0, 50.0}};
 
 __global__ void add_weighted_kernel(unsigned int batchSize,
                                       unsigned int nbOutputs,
@@ -1419,11 +1421,11 @@ __global__ void add_weighted_kernel(unsigned int batchSize,
                     }
                 }
                 const unsigned char ch0 
-                    = (unsigned char) max(colors[outputMax%4][0]*alpha, min(255.0, colors[outputMax%4][0]*alpha + input_image[i + batchImageOffset]));
+                    = (unsigned char) max(colors[outputMax%10][0]*alpha, min(255.0, colors[outputMax%10][0]*alpha + input_image[i + batchImageOffset]));
                 const unsigned char ch1 
-                    = (unsigned char) max(colors[outputMax%4][1]*alpha, min(255.0, colors[outputMax%4][1]*alpha + input_image[i + image_height*image_width + batchImageOffset]));
+                    = (unsigned char) max(colors[outputMax%10][1]*alpha, min(255.0, colors[outputMax%10][1]*alpha + input_image[i + image_height*image_width + batchImageOffset]));
                 const unsigned char ch2 
-                    = (unsigned char) max(colors[outputMax%4][2]*alpha, min(255.0, colors[outputMax%4][2]*alpha + input_image[i + 2*image_height*image_width + batchImageOffset]));
+                    = (unsigned char) max(colors[outputMax%10][2]*alpha, min(255.0, colors[outputMax%10][2]*alpha + input_image[i + 2*image_height*image_width + batchImageOffset]));
 
                 workspace[i*3 + batchImageOffset] = ch0;
                 workspace[i*3 + 1 + batchImageOffset] = ch1;

@@ -42,7 +42,7 @@ TEST(MemoryManager, allocate1) {
         std::vector<std::shared_ptr<Cell> >({cell2}));
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().size, 1024);
-    ASSERT_EQUALS(memManager.getPlanes(cell1).back().limit, 1024);
+    ASSERT_EQUALS(memManager.getPlanes(cell1).back().getLimit(), 1024);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().stride, 1024);
@@ -70,7 +70,7 @@ TEST(MemoryManager, allocate1) {
         std::vector<std::shared_ptr<Cell> >({cell3}));
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().size, 2048);
-    ASSERT_EQUALS(memManager.getPlanes(cell2).back().limit, 2048);
+    ASSERT_EQUALS(memManager.getPlanes(cell2).back().getLimit(), 2048);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().stride, 2048);
@@ -103,7 +103,7 @@ TEST(MemoryManager, allocate1) {
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().memSpace->size, 2048 + 512);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().offset, 512);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().size, 2048);
-    ASSERT_EQUALS(memManager.getPlanes(cell3).back().limit, 2048);
+    ASSERT_EQUALS(memManager.getPlanes(cell3).back().getLimit(), 2048);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().stride, 2048);
@@ -124,7 +124,7 @@ TEST(MemoryManager, allocate1) {
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().memSpace->size, 1024);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().size, 1024);
-    ASSERT_EQUALS(memManager.getPlanes(cell4).back().limit, 1024);
+    ASSERT_EQUALS(memManager.getPlanes(cell4).back().getLimit(), 1024);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().stride, 1024);
@@ -164,7 +164,7 @@ TEST(MemoryManager, allocate2) {
         std::vector<std::shared_ptr<Cell> >({cell2}));
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().size, 1024);
-    ASSERT_EQUALS(memManager.getPlanes(cell1).back().limit, 1024);
+    ASSERT_EQUALS(memManager.getPlanes(cell1).back().getLimit(), 1024);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().stride, 1024);
@@ -192,7 +192,7 @@ TEST(MemoryManager, allocate2) {
         std::vector<std::shared_ptr<Cell> >({cell3}));
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().size, 2048);
-    ASSERT_EQUALS(memManager.getPlanes(cell2).back().limit, 2048);
+    ASSERT_EQUALS(memManager.getPlanes(cell2).back().getLimit(), 2048);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().stride, 2048);
@@ -227,7 +227,7 @@ TEST(MemoryManager, allocate2) {
         std::vector<std::shared_ptr<Cell> >({cell4}));
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().offset, 512);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().size, 2048);
-    ASSERT_EQUALS(memManager.getPlanes(cell3).back().limit, 2048);
+    ASSERT_EQUALS(memManager.getPlanes(cell3).back().getLimit(), 2048);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().stride, 2048);
@@ -241,7 +241,7 @@ TEST(MemoryManager, allocate2) {
         std::vector<std::shared_ptr<Cell> >({cell3}));
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().size, 2048);
-    ASSERT_EQUALS(memManager.getPlanes(cell2).back().limit, 2048);
+    ASSERT_EQUALS(memManager.getPlanes(cell2).back().getLimit(), 2048);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().stride, 2048);
@@ -268,7 +268,7 @@ TEST(MemoryManager, allocate2) {
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().memSpace->size, 1024);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().size, 1024);
-    ASSERT_EQUALS(memManager.getPlanes(cell4).back().limit, 1024);
+    ASSERT_EQUALS(memManager.getPlanes(cell4).back().getLimit(), 1024);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().stride, 1024);
@@ -308,7 +308,7 @@ TEST(MemoryManager, allocate3) {
         std::vector<std::shared_ptr<Cell> >({cell2}));
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().size, 1024);
-    ASSERT_EQUALS(memManager.getPlanes(cell1).back().limit, 1024);
+    ASSERT_EQUALS(memManager.getPlanes(cell1).back().getLimit(), 1024);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().stride, 1024);
@@ -336,7 +336,7 @@ TEST(MemoryManager, allocate3) {
         std::vector<std::shared_ptr<Cell> >({cell3}));
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().size, 2048);
-    ASSERT_EQUALS(memManager.getPlanes(cell2).back().limit, 2048);
+    ASSERT_EQUALS(memManager.getPlanes(cell2).back().getLimit(), 2048);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().stride, 2048);
@@ -370,7 +370,7 @@ TEST(MemoryManager, allocate3) {
     ASSERT_TRUE(memManager.getPlanes(cell3).back().memSpace->dependencies.empty());
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().offset, 512);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().size, 2048);
-    ASSERT_EQUALS(memManager.getPlanes(cell3).back().limit, 2048);
+    ASSERT_EQUALS(memManager.getPlanes(cell3).back().getLimit(), 2048);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().stride, 2048);
@@ -384,7 +384,7 @@ TEST(MemoryManager, allocate3) {
         std::vector<std::shared_ptr<Cell> >({cell3}));
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().size, 2048);
-    ASSERT_EQUALS(memManager.getPlanes(cell2).back().limit, 2048);
+    ASSERT_EQUALS(memManager.getPlanes(cell2).back().getLimit(), 2048);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().stride, 2048);
@@ -412,7 +412,7 @@ TEST(MemoryManager, allocate3) {
     ASSERT_TRUE(memManager.getPlanes(cell4).back().memSpace->dependencies.empty());
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().offset, 256);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().size, 1024);
-    ASSERT_EQUALS(memManager.getPlanes(cell4).back().limit, 2048 + 256);
+    ASSERT_EQUALS(memManager.getPlanes(cell4).back().getLimit(), 2048 + 256);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().stride, 1024);
@@ -424,7 +424,7 @@ TEST(MemoryManager, allocate3) {
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().memSpace->size, 2048);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().size, 2048);
-    ASSERT_EQUALS(memManager.getPlanes(cell2).back().limit, 2048);
+    ASSERT_EQUALS(memManager.getPlanes(cell2).back().getLimit(), 2048);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().stride, 2048);
@@ -464,7 +464,7 @@ TEST(MemoryManager, allocate3_wrapAround) {
         std::vector<std::shared_ptr<Cell> >({cell2}));
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().size, 1024);
-    ASSERT_EQUALS(memManager.getPlanes(cell1).back().limit, 1024);
+    ASSERT_EQUALS(memManager.getPlanes(cell1).back().getLimit(), 1024);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell1).back().stride, 1024);
@@ -492,7 +492,7 @@ TEST(MemoryManager, allocate3_wrapAround) {
         std::vector<std::shared_ptr<Cell> >({cell3}));
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().size, 2048);
-    ASSERT_EQUALS(memManager.getPlanes(cell2).back().limit, 2048);
+    ASSERT_EQUALS(memManager.getPlanes(cell2).back().getLimit(), 2048);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().stride, 2048);
@@ -526,7 +526,7 @@ TEST(MemoryManager, allocate3_wrapAround) {
     ASSERT_TRUE(memManager.getPlanes(cell3).back().memSpace->dependencies.empty());
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().offset, 512);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().size, 2048);
-    ASSERT_EQUALS(memManager.getPlanes(cell3).back().limit, 2048 - 512);
+    ASSERT_EQUALS(memManager.getPlanes(cell3).back().getLimit(), 2048 - 512);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell3).back().stride, 2048);
@@ -540,7 +540,7 @@ TEST(MemoryManager, allocate3_wrapAround) {
         std::vector<std::shared_ptr<Cell> >({cell3}));
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().size, 2048);
-    ASSERT_EQUALS(memManager.getPlanes(cell2).back().limit, 2048);
+    ASSERT_EQUALS(memManager.getPlanes(cell2).back().getLimit(), 2048);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().stride, 2048);
@@ -568,7 +568,7 @@ TEST(MemoryManager, allocate3_wrapAround) {
     ASSERT_TRUE(memManager.getPlanes(cell4).back().memSpace->dependencies.empty());
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().offset, 1024);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().size, 1792);
-    ASSERT_EQUALS(memManager.getPlanes(cell4).back().limit, 2048 - 1024);
+    ASSERT_EQUALS(memManager.getPlanes(cell4).back().getLimit(), 2048 - 1024);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell4).back().stride, 1792);
@@ -580,7 +580,7 @@ TEST(MemoryManager, allocate3_wrapAround) {
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().memSpace->size, 2048);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().offset, 0);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().size, 2048);
-    ASSERT_EQUALS(memManager.getPlanes(cell2).back().limit, 2048);
+    ASSERT_EQUALS(memManager.getPlanes(cell2).back().getLimit(), 2048);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().count, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().length, 1);
     ASSERT_EQUALS(memManager.getPlanes(cell2).back().stride, 2048);

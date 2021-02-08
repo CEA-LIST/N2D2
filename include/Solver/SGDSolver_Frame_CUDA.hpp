@@ -27,6 +27,7 @@
 
 #include "CudaContext.hpp"
 #include "CudaUtils.hpp"
+#include "CublasUtils.hpp"
 #include "containers/CudaTensor.hpp"
 
 namespace N2D2 {
@@ -40,8 +41,6 @@ public:
     SGDSolver_Frame_CUDA();
     SGDSolver_Frame_CUDA(const SGDSolver_Frame_CUDA<T>& solver);
     void update(BaseTensor& data, BaseTensor& diffData, unsigned int batchSize);
-    void update(CudaTensor<T>& data, CudaTensor<T>& diffData,
-                unsigned int batchSize);
     std::shared_ptr<SGDSolver_Frame_CUDA<T> > clone() const
     {
         return std::shared_ptr<SGDSolver_Frame_CUDA<T> >(doClone());
@@ -55,7 +54,6 @@ protected:
     // inline void setMomentum(unsigned int output, unsigned int channel,
     // unsigned int sx, unsigned int sy, float value);
     CudaTensor<T> mMomentumData;
-    CudaTensor<T> mContinuousData;
 
 private:
     virtual SGDSolver_Frame_CUDA<T>* doClone() const
@@ -83,13 +81,85 @@ N2D2::SGDSolver_Frame_CUDA<T>::SGDSolver_Frame_CUDA(
 }
 
 template <class T>
-void N2D2::SGDSolver_Frame_CUDA<T>::update(BaseTensor& data,
-                                           BaseTensor& diffData,
+void N2D2::SGDSolver_Frame_CUDA<T>::update(BaseTensor& baseData,
+                                           BaseTensor& baseDiffData,
                                            unsigned int batchSize)
 {
-    update(dynamic_cast<CudaTensor<T>&>(data),
-           dynamic_cast<CudaTensor<T>&>(diffData),
-           batchSize);
+    CudaTensor<T>& data = dynamic_cast<CudaTensor<T>&>(baseData);
+    CudaTensor<T>& diffData = dynamic_cast<CudaTensor<T>&>(baseDiffData);
+
+    const float rate = SGDSolver::getLearningRate(batchSize, true);
+
+    if (rate == 0.0)
+        return;
+
+    T clampMin, clampMax;
+    std::tie(clampMin, clampMax) = getClamping<T>();
+
+    // Normalize in function of the iteration size
+    const T rateDiff(rate / (batchSize * (float)mIterationSize));
+
+    if (mMomentum == 0.0 && mDecay == 0.0) {
+        // data = data + diffData*rate
+        CHECK_CUBLAS_STATUS(cublasAxpy(CudaContext::cublasHandle(),
+                                        diffData.size(), // size of data
+                                        &rateDiff,
+                                        diffData.getDevicePtr(),
+                                        1,
+                                        data.getDevicePtr(),
+                                        1));
+    } else {
+        const T momentum(mMomentum);
+        const T decay(mDecay);
+        const T unit(1.0f);
+
+        if (mMomentumData.empty())
+            mMomentumData.resize(data.dims(), T(0.0));
+
+        // mMomentumData = mMomentumData*momentum
+        CHECK_CUBLAS_STATUS(cublasScal(CudaContext::cublasHandle(),
+                                        mMomentumData.size(),
+                                        &momentum,
+                                        mMomentumData.getDevicePtr(),
+                                        1));
+
+        // mMomentumData = mMomentumData + diffData*rate
+        CHECK_CUBLAS_STATUS(cublasAxpy(CudaContext::cublasHandle(),
+                                        diffData.size(),
+                                        &rateDiff,
+                                        diffData.getDevicePtr(),
+                                        1,
+                                        mMomentumData.getDevicePtr(),
+                                        1));
+
+        if (decay != 0.0f) {
+            const T alpha(-decay * rate);
+            // mMomentumData = mMomentumData - decay*rate*data
+            CHECK_CUBLAS_STATUS(cublasAxpy(CudaContext::cublasHandle(),
+                                            data.size(),
+                                            &alpha,
+                                            data.getDevicePtr(),
+                                            1,
+                                            mMomentumData.getDevicePtr(),
+                                            1));
+        }
+
+        // data = data + mMomentumData
+        CHECK_CUBLAS_STATUS(cublasAxpy(CudaContext::cublasHandle(),
+                                        mMomentumData.size(),
+                                        &unit,
+                                        mMomentumData.getDevicePtr(),
+                                        1,
+                                        data.getDevicePtr(),
+                                        1));
+    }
+
+    if (clampMin != std::numeric_limits<T>::lowest()
+        || clampMax != std::numeric_limits<T>::max())
+    {
+        cudaClamp(data.getDevicePtr(), data.size(),
+                   clampMin, clampMax);
+    }
 }
 
 template <class T>
@@ -100,8 +170,6 @@ void N2D2::SGDSolver_Frame_CUDA<T>::saveInternal(std::ostream& state,
 
     mMomentumData.synchronizeDToH();
     mMomentumData.save(state);
-    mContinuousData.synchronizeDToH();
-    mContinuousData.save(state);
 }
 
 template <class T>
@@ -111,25 +179,6 @@ void N2D2::SGDSolver_Frame_CUDA<T>::loadInternal(std::istream& state)
 
     mMomentumData.load(state);
     mMomentumData.synchronizeHToD();
-    mContinuousData.load(state);
-    mContinuousData.synchronizeHToD();
-}
-
-namespace N2D2 {
-template <>
-void SGDSolver_Frame_CUDA<half_float::half>::update(CudaTensor<half_float::half>& data,
-                                         CudaTensor<half_float::half>& diffData,
-                                         unsigned int batchSize);
-
-template <>
-void SGDSolver_Frame_CUDA<float>::update(CudaTensor<float>& data,
-                                         CudaTensor<float>& diffData,
-                                         unsigned int batchSize);
-
-template <>
-void SGDSolver_Frame_CUDA<double>::update(CudaTensor<double>& data,
-                                          CudaTensor<double>& diffData,
-                                          unsigned int batchSize);
 }
 
 #endif // N2D2_SGDSOLVER_FRAME_CUDA_H

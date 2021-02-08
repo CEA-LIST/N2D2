@@ -22,20 +22,24 @@
 #include "Activation/Activation.hpp"
 
 N2D2::Activation::Activation()
-    : mQuantizationLevels(this, "QuantizationLevels", 0U),
-      mQuantizationDelay(this, "QuantizationDelay", 1000000U),
-      mMovingAverage(this, "MovingAverage", EMA),
-      mMA_Window(this, "MA_Window", 10000U),
-      mEMA_Alpha(this, "EMA_Alpha", 0.0),
-      mLog2RoundingRate(this, "Log2RoundingRate", 0.0),
-      mLog2RoundingPower(this, "Log2RoundingPower", 1.0),
-      mNbSteps(0),
-      mPreQuantizeScaling(1.0),
-      mScaling()
+    : mScaling()
 {
     // ctor
 }
 
+void N2D2::Activation::propagate(const Cell& cell,
+                                 BaseTensor& inOut,
+                                 bool inference)
+{
+    propagate(cell, inOut, inOut, inference);
+}
+
+void N2D2::Activation::backPropagate(const Cell& cell,
+                                     const BaseTensor& output,
+                                     BaseTensor& diffInOut)
+{
+    backPropagate(cell, output, output, diffInOut, diffInOut);
+}
 
 const N2D2::Scaling& N2D2::Activation::getActivationScaling() const {
     return mScaling;
@@ -44,9 +48,19 @@ const N2D2::Scaling& N2D2::Activation::getActivationScaling() const {
 void N2D2::Activation::setActivationScaling(Scaling scaling) {
     mScaling = scaling;
 }
+void N2D2::Activation::exportParameters(const std::string& dirName,
+                                        const std::string& cellName) const
+{
+    if (mQuantizer)
+        mQuantizer->exportParameters(dirName, cellName);
+}
 
-void N2D2::Activation::setPreQuantizeScaling(double scaling) {
-    mPreQuantizeScaling = (scaling > 0.0) ? scaling : 1.0;
+void N2D2::Activation::importParameters(const std::string& dirName,
+                            const std::string& cellName,
+                            const bool ignoreNotExists)
+{
+    if (mQuantizer)
+        mQuantizer->importParameters(dirName, cellName, ignoreNotExists);
 }
 
 void N2D2::Activation::save(const std::string& dirName) const
@@ -65,10 +79,6 @@ void N2D2::Activation::save(const std::string& dirName) const
         throw std::runtime_error("Could not create state file (.STATE): "
                                  + fileName);
 
-    state.write(reinterpret_cast<const char*>(&mNbSteps), sizeof(mNbSteps));
-    state.write(reinterpret_cast<const char*>(&mPreQuantizeScaling),
-                                              sizeof(mPreQuantizeScaling));
-
     const std::string logFileName = dirName + "/" + getType() + ".log";
 
     std::ofstream log(logFileName.c_str());
@@ -76,9 +86,6 @@ void N2D2::Activation::save(const std::string& dirName) const
     if (!log.good())
         throw std::runtime_error("Could not create log file (.LOG): "
                                  + logFileName);
-
-    log << "nbSteps: " << mNbSteps << "\n"
-        << "preQuantizeScaling: " << mPreQuantizeScaling << std::endl;
 
     saveInternal(state, log);
 
@@ -102,10 +109,6 @@ void N2D2::Activation::load(const std::string& dirName)
     if (!state.good())
         throw std::runtime_error("Could not open state file (.STATE): "
                                  + fileName);
-
-    state.read(reinterpret_cast<char*>(&mNbSteps), sizeof(mNbSteps));
-    state.read(reinterpret_cast<char*>(&mPreQuantizeScaling),
-                                       sizeof(mPreQuantizeScaling));
 
     loadInternal(state);
 

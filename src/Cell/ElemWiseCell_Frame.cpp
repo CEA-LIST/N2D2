@@ -228,6 +228,7 @@ void N2D2::ElemWiseCell_Frame::backPropagate()
 
 void N2D2::ElemWiseCell_Frame::update()
 {
+    Cell_Frame<float>::update();
 }
 
 void N2D2::ElemWiseCell_Frame::checkGradient(double epsilon, double maxError)

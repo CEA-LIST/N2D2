@@ -383,7 +383,11 @@ void N2D2::Histogram::logOutputsHistogram(const std::string& dirName,
 {
     Utils::createDirectories(dirName);
 
-    for (auto it = outputsHistogram.begin(); it != outputsHistogram.end(); ++it) {
+#pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < (int)outputsHistogram.size(); i++) {
+        auto it = outputsHistogram.begin();
+        std::advance(it, i);
+
         std::unordered_map<std::string, double> thresholds;
 
         Histogram hist = (*it).second;

@@ -27,7 +27,8 @@ N2D2::ActivationGenerator::generate(IniParser& iniConfig,
                                     const DataType& dataType,
                                     const std::string& name,
                                     const std::shared_ptr
-                                    <Activation>& defaultActivation)
+                                    <Activation>& defaultActivation,
+                                    bool nullIfDefault)
 {
     if (!iniConfig.currentSection(section, false))
         throw std::runtime_error("Missing [" + section + "] section.");
@@ -41,8 +42,61 @@ N2D2::ActivationGenerator::generate(IniParser& iniConfig,
 
         activation->setPrefixedParameters(iniConfig.getSection(section),
                                           name + ".");
+        std::shared_ptr<QuantizerActivation> quantizer 
+            = QuantizerActivationGenerator::generate(iniConfig,
+                                                     section,
+                                                     model,
+                                                     dataType, 
+                                                     "QAct");
+
+        if (quantizer) {
+            activation->setQuantizer(quantizer);
+
+            std::shared_ptr<Solver> quantizerSolver
+                = SolverGenerator::generate(iniConfig, 
+                                            section, 
+                                            model, 
+                                            dataType, 
+                                            "QActSolver");
+            std::cout << "Added " <<  activation->getQuantizer()->getType() << 
+                " quantizer to " << type << " Activation " << std::endl; 
+
+            if (quantizerSolver) {
+                activation->getQuantizer()->setSolver(quantizerSolver);
+            }
+        }
         return activation;
     }
-    else
-        return defaultActivation;
+    else {
+        if(!nullIfDefault) {
+            return defaultActivation;
+        } else {
+            return nullptr;
+        }
+    }
+}
+
+void N2D2::ActivationGenerator::generateParams( const std::shared_ptr<Cell_Frame_Top>& cell,
+                                                    IniParser& iniConfig,
+                                                    const std::string& section,
+                                                    const std::string& model,
+                                                    const DataType& dataType)
+{
+    std::shared_ptr<Cell_Frame_Top> cellFrame
+        = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+
+    std::shared_ptr<Activation> activation
+        = generate( iniConfig,
+                    section,
+                    model,
+                    dataType,
+                    "ActivationFunction",
+                    nullptr,
+                    true );
+
+    if (activation) {
+        std::cout << "Modify Activation in Cell_Frame_Top" << std::endl;
+        cell->setActivation(activation);
+    }   
+
 }

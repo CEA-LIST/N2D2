@@ -722,7 +722,7 @@ typename N2D2::Tensor<T>::const_reference N2D2::Tensor<T>::operator()(const Inde
 
 //TODO: Generalize this to different data types and subtensors?
 template <class T>
-double N2D2::Tensor<T>::sum() const
+double N2D2::Tensor<T>::sum(bool valAbs) const
 {
     assert(mDims.size() > 1);
 
@@ -731,16 +731,34 @@ double N2D2::Tensor<T>::sum() const
     for (typename std::vector<T>::iterator it = (*mData)().begin();
         it != (*mData)().end(); ++it)
     {
-        sum += convertValue<double>(*it);
+        if (valAbs) sum += abs(convertValue<double>(*it));
+        else sum += convertValue<double>(*it);
     }
     return sum;
 }
 
 //TODO: Generalize this to different data types and subtensors?
 template <class T>
-double N2D2::Tensor<T>::mean() const
+double N2D2::Tensor<T>::mean(bool valAbs) const
 {
-    return sum()/(*mData)().size();
+    return sum(valAbs)/(*mData)().size();
+}
+
+template <class T>
+double N2D2::Tensor<T>::std() const
+{
+    double m = mean();
+    
+    double var = 0.0;
+
+    for (typename std::vector<T>::iterator it = (*mData)().begin();
+        it != (*mData)().end(); ++it)
+    {
+        var += pow(convertValue<double>(*it) - m, 2);
+    }
+    var = var/(*mData)().size();
+
+    return sqrt(var);
 }
 
 template <class T>

@@ -46,13 +46,6 @@ public:
     std::pair<double, double> getOutputRange() const;
 
     virtual ~SwishActivation() {};
-
-protected:
-    void saveInternal(std::ostream& state, std::ostream& log) const;
-    void loadInternal(std::istream& state);
-
-    double mMaxValMA;
-    double mMaxValQuant;
 };
 }
 

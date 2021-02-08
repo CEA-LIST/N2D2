@@ -84,11 +84,22 @@ public:
 template <class T>
 class DataTensor : public BaseDataTensor {
 public:
-    DataTensor(const std::vector<T>& data) : mData(data) {}
-    std::vector<T>& operator()() { return mData; }
+    DataTensor(const std::vector<T>& data) : mUnallocatedSize(0), mData(data) {}
+    DataTensor(size_t size) : mUnallocatedSize(size), mData() {}
+    std::vector<T>& operator()() {
+        if (mUnallocatedSize > 0) {
+            // Lazy memory allocation, useful to avoid host memory allocation
+            // when casting CudaTensor types on GPU only.
+            mData.resize(mUnallocatedSize);
+            mUnallocatedSize = 0;
+        }
+
+        return mData;
+    }
     virtual ~DataTensor() {};
 
 protected:
+    size_t mUnallocatedSize;
     std::vector<T> mData;
 };
 
@@ -383,8 +394,9 @@ public:
     const Tensor<T> operator[](size_t i) const;
     Tensor<T> rows(size_t j0, size_t nb);
     const Tensor<T> rows(size_t j0, size_t nb) const;
-    double sum() const;
-    double mean() const;
+    double sum(bool valAbs=false) const;
+    double mean(bool valAbs=false) const;
+    double std() const;
     BaseTensor& operator=(const BaseTensor& base);
     Tensor<T>& operator=(const Tensor<T>& tensor);
     template <class U> Tensor<T>& operator=(const Tensor<U>& tensor);
@@ -479,7 +491,7 @@ tensor_cast(const BaseTensor& base)
         dataTensor = std::static_pointer_cast<DataTensor<T> >((*it).second);
     else {
         dataTensor
-            = std::make_shared<DataTensor<T> >(std::vector<T>(base.mSize));
+            = std::make_shared<DataTensor<T> >(base.mSize);
         base.mDataTensors[&typeid(T)] = dataTensor;
     }
 
@@ -498,6 +510,54 @@ tensor_cast(const BaseTensor& base)
     else if (base.getType() == &typeid(double)) {
         const Tensor<double>& tensor
             = dynamic_cast<const Tensor<double>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(int8_t)) {
+        const Tensor<int8_t>& tensor
+            = dynamic_cast<const Tensor<int8_t>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(uint8_t)) {
+        const Tensor<uint8_t>& tensor
+            = dynamic_cast<const Tensor<uint8_t>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(int16_t)) {
+        const Tensor<int16_t>& tensor
+            = dynamic_cast<const Tensor<int16_t>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(uint16_t)) {
+        const Tensor<uint16_t>& tensor
+            = dynamic_cast<const Tensor<uint16_t>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(int32_t)) {
+        const Tensor<int32_t>& tensor
+            = dynamic_cast<const Tensor<int32_t>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(uint32_t)) {
+        const Tensor<uint32_t>& tensor
+            = dynamic_cast<const Tensor<uint32_t>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(int64_t)) {
+        const Tensor<int64_t>& tensor
+            = dynamic_cast<const Tensor<int64_t>&>(base);
+
+        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+    }
+    else if (base.getType() == &typeid(uint64_t)) {
+        const Tensor<uint64_t>& tensor
+            = dynamic_cast<const Tensor<uint64_t>&>(base);
 
         std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
     }
@@ -542,7 +602,7 @@ Tensor<T> tensor_cast_nocopy(const BaseTensor& base)
         dataTensor = std::static_pointer_cast<DataTensor<T> >((*it).second);
     else {
         dataTensor
-            = std::make_shared<DataTensor<T> >(std::vector<T>(base.mSize));
+            = std::make_shared<DataTensor<T> >(base.mSize);
         base.mDataTensors[&typeid(T)] = dataTensor;
     }
 

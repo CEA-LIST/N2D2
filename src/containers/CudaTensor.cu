@@ -56,6 +56,14 @@ template void N2D2::thrust_fill<unsigned long long int>(
     unsigned long long int* devData, size_t size, unsigned long long int value);
 
 template <>
+void N2D2::thrust_copy(double* srcData, double* dstData, size_t size)
+{
+    thrust::device_ptr<double> thrustSrcPtr(srcData);
+    thrust::device_ptr<double> thrustDstPtr(dstData);
+    thrust::copy(thrustSrcPtr, thrustSrcPtr + size, thrustDstPtr);
+}
+
+template <>
 void N2D2::thrust_copy(double* srcData, float* dstData, size_t size)
 {
     thrust::device_ptr<double> thrustSrcPtr(srcData);
@@ -89,6 +97,14 @@ void N2D2::thrust_copy(float* srcData, double* dstData, size_t size)
 {
     thrust::device_ptr<float> thrustSrcPtr(srcData);
     thrust::device_ptr<double> thrustDstPtr(dstData);
+    thrust::copy(thrustSrcPtr, thrustSrcPtr + size, thrustDstPtr);
+}
+
+template <>
+void N2D2::thrust_copy(float* srcData, float* dstData, size_t size)
+{
+    thrust::device_ptr<float> thrustSrcPtr(srcData);
+    thrust::device_ptr<float> thrustDstPtr(dstData);
     thrust::copy(thrustSrcPtr, thrustSrcPtr + size, thrustDstPtr);
 }
 
@@ -152,5 +168,27 @@ void N2D2::thrust_copy(half_float::half* srcData, float* dstData, size_t size)
 {
     cudaCopyHToF_kernel<<<(size + 255) / 256, 256>>>
         (reinterpret_cast<__half*>(srcData), dstData, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+__global__ void
+cudaCopyH_kernel(__half* srcData,
+                    __half* dstData,
+                    size_t size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        dstData[i] = srcData[i];
+    }
+}
+
+template <>
+void N2D2::thrust_copy(half_float::half* srcData, half_float::half* dstData, size_t size)
+{
+    cudaCopyH_kernel<<<(size + 255) / 256, 256>>>
+        (reinterpret_cast<__half*>(srcData),
+         reinterpret_cast<__half*>(dstData), size);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }

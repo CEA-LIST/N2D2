@@ -84,6 +84,7 @@ public:
                               BaseTensor& newDiffOutputs);
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
+    virtual void update();
     virtual void setOutputTarget(const Tensor<int>& targets);
     virtual double applyLoss(double targetVal,
                              double defaultVal);
@@ -112,7 +113,8 @@ public:
         return mDiffInputs;
     }
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
-    void discretizeSignals(unsigned int nbLevels, const Signals& signals = In);
+    void exportActivationParameters(const std::string& dirName) const;
+    void importActivationParameters(const std::string& dirName, bool ignoreNotExists);
     bool isCuda() const
     {
         return false;

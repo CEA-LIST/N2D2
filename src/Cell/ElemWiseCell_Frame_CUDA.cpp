@@ -86,7 +86,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
 
     if (mOperation == Sum) {
         // mOutputs <- mWeights[0] * mInputs[0] + mShifts[0]
-        cudaSScale(nbElems,
+        cudaScale(nbElems,
                    input0->getDevicePtr(),
                    mWeights[0],
                    mShifts[0],
@@ -108,7 +108,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
 
             // mOutputs <- mOutputs + mShifts[k]
             if(mShifts[k] != 0.0)
-                cudaSScale(nbElems,
+                cudaScale(nbElems,
                             mOutputs.getDevicePtr(),
                             1.0f,
                             mShifts[k],
@@ -119,7 +119,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
     }
     else if (mOperation == AbsSum) {
         // mOutputs <- mWeights[0] * |mInputs[0]|
-        cudaSScaleAbs(nbElems,
+        cudaScaleAbs(nbElems,
                    input0->getDevicePtr(),
                    mWeights[0],
                    0.0f,
@@ -130,7 +130,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
             std::shared_ptr<CudaDeviceTensor<Float_T> > input
                 = cuda_device_tensor_cast<Float_T>(mInputs[k]);
 
-            cudaSScaleAbs(nbElems,
+            cudaScaleAbs(nbElems,
                           input->getDevicePtr(),
                           mWeights[k],
                           1.0f,
@@ -139,7 +139,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
     }
     else if (mOperation == EuclideanSum) {
         // mInterTerm <- (mWeights[0] * mInputs[0])^2
-        cudaSScaleSquare(nbElems,
+        cudaScaleSquare(nbElems,
                          input0->getDevicePtr(),
                          mWeights[0] * mWeights[0],
                          mShifts[0] * mShifts[0],
@@ -151,7 +151,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
             std::shared_ptr<CudaDeviceTensor<Float_T> > input
                 = cuda_device_tensor_cast<Float_T>(mInputs[k]);
 
-            cudaSScaleSquare(nbElems,
+            cudaScaleSquare(nbElems,
                              input->getDevicePtr(),
                              mWeights[k] * mWeights[k],
                              mShifts[k] * mShifts[k],
@@ -160,7 +160,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
         }
 
         // mInterTerm <- sqrt(mInterTerm)
-        cudaSSqrt(nbElems, mInterTerm.getDevicePtr());
+        cudaSqrt(nbElems, mInterTerm.getDevicePtr());
 
         // mOutputs <- mInterTerm
         CHECK_CUBLAS_STATUS(cublasScopy(CudaContext::cublasHandle(),
@@ -176,7 +176,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
             std::shared_ptr<CudaDeviceTensor<Float_T> > input1
                 = cuda_device_tensor_cast<Float_T>(mInputs[1]);
 
-            cudaSMult(nbElems,
+            cudaMult(nbElems,
                       input0->getDevicePtr(),
                       input1->getDevicePtr(),
                       0.0f,
@@ -187,7 +187,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
                 std::shared_ptr<CudaDeviceTensor<Float_T> > input
                     = cuda_device_tensor_cast<Float_T>(mInputs[k]);
 
-                cudaSMult(nbElems,
+                cudaMult(nbElems,
                           mOutputs.getDevicePtr(),
                           input->getDevicePtr(),
                           0.0f,
@@ -213,13 +213,13 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
                                         mOutputs.getDevicePtr(),
                                         1));
         // mArgMax <- 0
-        cudaUZeroInit(nbElems, mArgMax.getDevicePtr());
+        cudaZeroInit(nbElems, mArgMax.getDevicePtr());
 
         for (unsigned int k = 1; k < nbInputs; ++k) {
             std::shared_ptr<CudaDeviceTensor<Float_T> > input
                 = cuda_device_tensor_cast<Float_T>(mInputs[k]);
 
-            cudaSMaxForward(nbElems,
+            cudaMaxForward(nbElems,
                             input->getDevicePtr(),
                             mOutputs.getDevicePtr(),
                             k,
@@ -277,7 +277,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
             }
             else {
                 // mDiffOutputs[k] <- mWeights[k] * mDiffInputs
-                cudaSScale(nbElems,
+                cudaScale(nbElems,
                            mDiffInputs.getDevicePtr(),
                            mWeights[k],
                            0.0f,
@@ -288,7 +288,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
         else if (mOperation == AbsSum) {
             // mDiffOutputs[k] <- mWeights[k] * sign(mInputs[k]) * mDiffInputs
             //                      + beta * mDiffOutputs[k]
-            cudaSScaleSign(nbElems,
+            cudaScaleSign(nbElems,
                            mDiffInputs.getDevicePtr(),
                            input->getDevicePtr(),
                            mWeights[k],
@@ -299,7 +299,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
             // mDiffOutputs[k] <- (mWeights[k] * mWeights[k])
             //                      * (mInputs[k] / mInterTerm) * mDiffInputs
             //                      + beta * mDiffOutputs[k]
-            cudaSEuclideanSumBackward(nbElems,
+            cudaEuclideanSumBackward(nbElems,
                                       mDiffInputs.getDevicePtr(),
                                       input->getDevicePtr(),
                                       mInterTerm.getDevicePtr(),
@@ -329,7 +329,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
                 }
                 else {
                     // mInterTerm <- mInputs[i] * mInterTerm
-                    cudaSMult(nbElems,
+                    cudaMult(nbElems,
                               mInterTerm.getDevicePtr(),
                               input_i->getDevicePtr(),
                               0.0f,
@@ -340,14 +340,14 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
 
             // mDiffOutputs[k] <- mDiffInputs * mInterTerm
             //                      + beta * mDiffOutputs[k]
-            cudaSMult(nbElems,
+            cudaMult(nbElems,
                       mInterTerm.getDevicePtr(),
                       mDiffInputs.getDevicePtr(),
                       beta,
                       diffOutput->getDevicePtr());
         }
         else if (mOperation == Max) {
-            cudaSMaxBackward(nbElems,
+            cudaMaxBackward(nbElems,
                              mDiffInputs.getDevicePtr(),
                              k,
                              mArgMax.getDevicePtr(),
@@ -368,6 +368,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
 
 void N2D2::ElemWiseCell_Frame_CUDA::update()
 {
+    Cell_Frame_CUDA<float>::update();
 }
 
 void N2D2::ElemWiseCell_Frame_CUDA::checkGradient(double epsilon, double maxError)

@@ -252,7 +252,7 @@ void N2D2::RPCell_Frame_CUDA::backPropagate()
 
 void N2D2::RPCell_Frame_CUDA::update()
 {
-    // Nothing to update
+    Cell_Frame_CUDA<float>::update();
 }
 
 void N2D2::RPCell_Frame_CUDA::setOutputsDims()

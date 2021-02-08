@@ -214,6 +214,7 @@ public:
         log =         opts.parse("-log", 1000U, "number of steps between logs");
         report =      opts.parse("-report", 100U, "number of steps between reportings");
         learn =       opts.parse("-learn", 0U, "number of backprop learning steps");
+        learnEpoch =       opts.parse("-learn-epoch", 0U, "number of epoch steps");
         preSamples =  opts.parse("-pre-samples", -1, "if >= 0, log pre-processing samples "
                                                      "of the corresponding stimulus ID");
         findLr =      opts.parse("-find-lr", 0U, "find an appropriate learning rate over a"
@@ -308,6 +309,7 @@ public:
     unsigned int log;
     unsigned int report;
     unsigned int learn;
+    unsigned int learnEpoch;
     int preSamples;
     unsigned int findLr;
     ConfusionTableMetric validMetric;
@@ -550,23 +552,18 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
     
 }
 
-void importFreeParemeters(const Options& opt, DeepNet& deepNet) {   
-    try {
-        if (!opt.weights.empty()) {
-            if (opt.weights != "/dev/null")
-                deepNet.importNetworkFreeParameters(opt.weights, opt.ignoreNoExist);
-        }
-        else if (opt.load.empty()) {
-            if (deepNet.getDatabase()->getNbStimuli(Database::Validation) > 0) {
-                deepNet.importNetworkFreeParameters("weights_validation", opt.ignoreNoExist);
-            }
-            else {
-                deepNet.importNetworkFreeParameters("weights", opt.ignoreNoExist);
-            }
-        }
+void importFreeParemeters(const Options& opt, DeepNet& deepNet) {
+    if (!opt.weights.empty()) {
+        if (opt.weights != "/dev/null")
+            deepNet.importNetworkFreeParameters(opt.weights, opt.ignoreNoExist);
     }
-    catch (const std::exception& e) {
-        std::cout << Utils::cwarning << e.what() << Utils::cdef << std::endl;
+    else if (opt.load.empty()) {
+        if (deepNet.getDatabase()->getNbStimuli(Database::Validation) > 0) {
+            deepNet.importNetworkFreeParameters("weights_validation", opt.ignoreNoExist);
+        }
+        else {
+            deepNet.importNetworkFreeParameters("weights", opt.ignoreNoExist);
+        }
     }
 }
 
@@ -584,23 +581,29 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                   ((opt.nbBits > 0) ? "int" : "float") +
                                   std::to_string(std::abs(opt.nbBits));
 
+    Database::StimuliSet dbSet
+        = (database->getNbStimuli(Database::Validation) > 0)
+            ? Database::Validation : Database::Test;
 
     // TODO Avoid these global variables.
     DeepNetExport::mUnsignedData = (!opt.exportNoUnsigned);
     DeepNetExport::mEnvDataUnsigned = StimuliProviderExport::unsignedStimuli(*sp, 
-                                          exportDir + "/stimuli", Database::Validation);
+                                          exportDir + "/stimuli", dbSet);
     CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
 
     const std::size_t nbStimuli = (opt.calibration > 0)? 
                                         std::min(static_cast<unsigned int>(opt.calibration),
-                                                database->getNbStimuli(Database::Validation)):
-                                        database->getNbStimuli(Database::Validation);
+                                                database->getNbStimuli(dbSet)):
+                                        database->getNbStimuli(dbSet);
 
     bool afterCalibration = false;
     if(opt.calibration != 0 && opt.nbBits > 0) {
         if (nbStimuli == 0) {
-            throw std::runtime_error("The Validation dataset to run the "
-                "calibration is empty!");
+            std::stringstream msgStr;
+            msgStr << "The " << dbSet
+                << " dataset to run the calibration is empty!";
+
+            throw std::runtime_error(msgStr.str());
         }
 
         // fusePadding() necessary for crossLayerEqualization()
@@ -616,7 +619,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
         const double stimuliRange = StimuliProviderExport::stimuliRange(
                                         *sp, exportDir + "/stimuli",
-                                        Database::Validation);
+                                        dbSet);
         if (stimuliRange != 1.0) {
             sp->addTopTransformation(
                 RangeAffineTransformation(RangeAffineTransformation::Divides, stimuliRange),
@@ -654,7 +657,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             // correct range and shifting required for layers with logistic
             LogisticActivationDisabled = true;
 
-            sp->readBatch(Database::Validation, 0);
+            sp->readBatch(dbSet, 0);
             for(std::size_t b = 1; b <= nbBatches; ++b) {
                 const std::size_t istimulus = b * batchSize;
 
@@ -665,7 +668,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 #ifdef CUDA
                     CudaContext::setDevice(cudaDevice);
 #endif
-                    deepNet->test(Database::Validation);
+                    deepNet->test(dbSet);
                     dnQuantization.reportOutputsRange(outputsRange);
                     dnQuantization.reportOutputsHistogram(outputsHistogram, outputsRange, 
                                                           opt.nbBits, opt.actClippingMode);
@@ -673,7 +676,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
                 if(b < nbBatches) {
                     sp->future();
-                    sp->readBatch(Database::Validation, istimulus);
+                    sp->readBatch(dbSet, istimulus);
                 }
 
                 reportTask.wait();
@@ -881,9 +884,452 @@ void findLearningRate(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     std::cout << "Done!" << std::endl;
 }
 
+void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
+    std::shared_ptr<Database> database = deepNet->getDatabase();
+    std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
+    const int epochSize = database->getNbStimuli(Database::Learn);
+
+    deepNet->exportNetworkFreeParameters("weights_init");
+
+    std::chrono::high_resolution_clock::time_point startTime
+        = std::chrono::high_resolution_clock::now();
+    std::chrono::high_resolution_clock::time_point startTimeSp, endTimeSp;
+    double minTimeElapsed = 0.0;
+    const unsigned int nbEpoch = opt.learnEpoch;
+    unsigned int nbNoValid = 0;
+    //sp->readRandomBatch(Database::Learn);
+    //Random Shuffling for learn phase
+    const unsigned int nbLearnedStimuli 
+        = sp->setStimuliIndexes(Database::Learn, nbEpoch, true);
+    //read the first stimuli index 
+
+    const unsigned int batchSize = sp->getBatchSize();
+    const unsigned int nbBatchPerEpoch = std::ceil(epochSize / (double)batchSize);
+    const unsigned int avgBatchWindow = opt.avgWindow / (double)batchSize;
+
+    char progressBar[50];
+    std::vector<std::pair<std::string, double> > timings, cumTimings;
+    for(unsigned int epoch = 0; epoch < nbEpoch; ++epoch)
+    {
+        double epochTime = 0.0;
+        unsigned int nextReport = opt.report;
+        std::fill (progressBar, progressBar + 50, ' ');
+        sp->readEpochBatch(Database::Learn, 0, epoch);
+
+        for (unsigned int b = 1; b < nbBatchPerEpoch; ++b) {
+            const unsigned int index = b * batchSize;
+            sp->synchronize();
+            std::thread learnThread(learnThreadWrapper,
+                                    deepNet,
+                                    (opt.bench) ? &timings : NULL);
+
+            sp->future();
+            startTimeSp = std::chrono::high_resolution_clock::now();
+            sp->readEpochBatch(Database::Learn, index, epoch);
+            endTimeSp = std::chrono::high_resolution_clock::now();
+
+            learnThread.join();
+
+            if (opt.bench) {
+                timings.push_back(std::make_pair(
+                    "sp", std::chrono::duration_cast
+                    <std::chrono::duration<double> >(endTimeSp - startTimeSp)
+                                                    .count()));
+
+                if (!cumTimings.empty()) {
+                    std::transform(timings.begin(),
+                                    timings.end(),
+                                    cumTimings.begin(),
+                                    cumTimings.begin(),
+                                    Utils::PairOp<std::string,
+                                                    double,
+                                                    Utils::Left<std::string>,
+                                                    std::plus<double> >());
+                } else
+                    cumTimings = timings;
+            }
+            if (index >= nextReport || b == nbBatchPerEpoch - 1) {
+                nextReport += opt.report;
+
+                std::ios::fmtflags f(std::cout.flags());
+
+                const int progress = std::floor( (( (float)index / nbLearnedStimuli) * 50.0) );
+                int p = 0;
+                for(; p < progress%50; ++p) {
+                    progressBar[p] = '=';
+                }
+                progressBar[p] = '>';
+                for(p = p+1 ;p < 50; ++p) {
+                    progressBar[p] = ' ';
+                }   
+                std::cout << "\rLearning [" << std::string(progressBar,50) << "] #epoch " 
+                    << epoch << " ";
+                std::cout << std::setw(2) << std::fixed << std::setprecision(2) 
+                    << std::right;
+
+                for (std::vector<std::shared_ptr<Target> >::const_iterator
+                            itTargets = deepNet->getTargets().begin(),
+                            itTargetsEnd = deepNet->getTargets().end();
+                        itTargets != itTargetsEnd;
+                        ++itTargets)
+                {
+                    std::shared_ptr<TargetScore> targetScore
+                        = std::dynamic_pointer_cast<TargetScore>(*itTargets);
+
+                    if (targetScore) {
+                        std::cout << (100.0 * targetScore->getAverageSuccess(
+                                                    Database::Learn,
+                                                    avgBatchWindow)) << "% ";
+                    }
+
+                    std::shared_ptr<TargetBBox> targetBBox
+                        = std::dynamic_pointer_cast<TargetBBox>(*itTargets);
+
+                    if (targetBBox) {
+                        std::cout << (100.0 * targetBBox->getAverageSuccess(
+                                                    Database::Learn)) << "% ";
+                    }
+                }
+                std::chrono::high_resolution_clock::time_point curTime
+                    = std::chrono::high_resolution_clock::now();
+
+                const double timeElapsed = std::chrono::duration_cast
+                                            <std::chrono::duration<double> >(
+                                                curTime - startTime).count();
+                epochTime += timeElapsed;
+
+                if (minTimeElapsed == 0.0 || minTimeElapsed < timeElapsed)
+                    minTimeElapsed = timeElapsed;
+
+                std::cout  <<"duration " << std::setw(2) << std::setfill('0') 
+                            << std::setprecision(0) << std::floor(epochTime / 60.0) 
+                            << ":" << std::setw(2) << std::setfill('0') 
+                            << ((epochTime/60.0) - std::floor(epochTime/60.0))*60.0
+                            << " min "
+                            << "at " << std::setw(7) << std::fixed
+                            << std::setprecision(2) << (opt.report / timeElapsed)
+                            << " p./s"
+                                " (" << std::setw(7) << std::fixed
+                            << std::setprecision(0)
+                            << 60.0 * (opt.report / timeElapsed)
+                            << " p./min)    " << std::setprecision(4)
+                            << std::flush;
+
+                std::cout.flags(f);
+
+                startTime = std::chrono::high_resolution_clock::now();
+            }
+        }
+        
+        std::cout << std::endl;
+
+        for (std::vector<std::shared_ptr<Target> >::const_iterator
+                    itTargets = deepNet->getTargets().begin(),
+                    itTargetsEnd = deepNet->getTargets().end();
+                itTargets != itTargetsEnd;
+                ++itTargets)
+        {
+            std::shared_ptr<TargetScore> targetScore
+                = std::dynamic_pointer_cast<TargetScore>(*itTargets);
+
+            if (targetScore) {
+                targetScore->logSuccess(
+                    "learning", Database::Learn, avgBatchWindow);
+                // targetScore->logTopNSuccess("learning", Database::Learn,
+                // avgBatchWindow);
+            }
+            
+            std::shared_ptr<TargetBBox> targetBBox
+                = std::dynamic_pointer_cast<TargetBBox>(*itTargets);
+
+            if (targetBBox) {
+                targetBBox->logSuccess(
+                    "learning", Database::Learn, avgBatchWindow);
+                // targetBBox->logTopNSuccess("learning", Database::Learn,
+                // avgBatchWindow);
+            }
+        }
+
+        if (opt.bench) {
+            for (std::vector<std::pair<std::string, double> >::iterator
+                    it = cumTimings.begin(),
+                    itEnd = cumTimings.end();
+                    it != itEnd;
+                    ++it) {
+                (*it).second /= (nbBatchPerEpoch*batchSize);
+            }
+            Utils::createDirectories("timings");
+
+            deepNet->logTimings("timings/learning_timings.dat", cumTimings);
+        }
+
+        deepNet->logEstimatedLabels("learning");
+        deepNet->log("learning", Database::Learn);
+        deepNet->clear(Database::Learn);
+
+        if (database->getNbStimuli(Database::Validation) > 0) {
+            const unsigned int nbValid
+                = database->getNbStimuli(Database::Validation);
+            const unsigned int nbBatchValid
+                = std::ceil(nbValid / (double)batchSize);
+
+            std::cout << "Validation" << std::flush;
+            unsigned int progress = 0, progressPrev = 0;
+
+            // We are alread in sp->future(), read the first validation
+            // batch
+            sp->readBatch(Database::Validation, 0);
+
+            for (unsigned int bv = 1; bv <= nbBatchValid; ++bv) {
+                const unsigned int k = bv * batchSize;
+
+                sp->synchronize();
+                std::thread validationThread(validationThreadWrapper,
+                                                deepNet);
+
+                sp->future();
+
+                if (bv < nbBatchValid)
+                    sp->readBatch(Database::Validation, k);
+
+                validationThread.join();
+
+                // Progress bar
+                progress
+                    = (unsigned int)(20.0 * bv / (double)nbBatchValid);
+
+                if (progress > progressPrev) {
+                    std::cout << std::string(progress - progressPrev,
+                                                '.') << std::flush;
+                    progressPrev = progress;
+                }
+            }
+
+            std::cout << std::endl;
+
+            // We are in sp->future(), must read the next batch for the 
+            // learning
+            sp->readRandomBatch(Database::Learn);
+
+            for (std::vector<std::shared_ptr<Target> >::const_iterator
+                        itTargets = deepNet->getTargets().begin(),
+                        itTargetsEnd = deepNet->getTargets().end();
+                    itTargets != itTargetsEnd;
+                    ++itTargets)
+            {
+                std::shared_ptr<TargetScore> targetScore
+                    = std::dynamic_pointer_cast
+                    <TargetScore>(*itTargets);
+
+                if (targetScore) {
+                    const bool bestValidation = targetScore->newValidationScore(
+                            targetScore->getAverageScore(Database::Validation,
+                                                    opt.validMetric));
+
+                    if (bestValidation) {
+                        std::cout << "\n+++ BEST validation score: "
+                                    << (100.0
+                                        * targetScore->getMaxValidationScore())
+                                    << "% [" << opt.validMetric << "]\n";
+
+                        deepNet->log("validation", Database::Validation);
+
+                        if (itTargets == deepNet->getTargets().begin()) {
+                            deepNet->exportNetworkFreeParameters(
+                                "weights_validation");
+                            deepNet->save("net_state_validation");
+
+                            std::cout << "    'weights_validation' saved!"
+                                << std::endl;
+                        }
+                    }
+                    else {
+                        std::cout << "\n--- LOWER validation score: "
+                                    << (100.0
+                                        * targetScore->getLastValidationScore())
+                                    << "% [" << opt.validMetric << "] (best was "
+                                    << (100.0
+                                        * targetScore->getMaxValidationScore())
+                                    << "%)\n" << std::endl;
+
+                    }
+
+                    std::cout << "    Sensitivity: " << (100.0
+                        * targetScore->getAverageScore(Database::Validation,
+                                    ConfusionTableMetric::Sensitivity))
+                                << "% / Specificity: " << (100.0
+                        * targetScore->getAverageScore(Database::Validation,
+                                    ConfusionTableMetric::Specificity))
+                                << "% / Precision: " << (100.0
+                        * targetScore->getAverageScore(Database::Validation,
+                                    ConfusionTableMetric::Precision))
+                                << "%\n"
+                                "    Accuracy: " << (100.0
+                        * targetScore->getAverageScore(Database::Validation,
+                                    ConfusionTableMetric::Accuracy))
+                                << "% / F1-score: " << (100.0
+                        * targetScore->getAverageScore(Database::Validation,
+                                    ConfusionTableMetric::F1Score))
+                                << "% / Informedness: " << (100.0
+                        * targetScore->getAverageScore(Database::Validation,
+                                    ConfusionTableMetric::Informedness))
+                                << "%\n" << std::endl;
+
+                    if (!bestValidation) {
+                        ++nbNoValid;
+
+                        if (opt.stopValid > 0 && nbNoValid >= opt.stopValid) {
+                            std::cout
+                                << "\n--- Validation did not improve after "
+                                << opt.stopValid << " steps\n" << std::endl;
+                            std::cout << "\n--- STOPPING THE LEARNING\n"
+                                        << std::endl;
+                            break;
+                        }
+                    }
+                    else
+                        nbNoValid = 0;
+
+                    targetScore->newValidationTopNScore(
+                        targetScore->getAverageTopNScore(
+                            Database::Validation, opt.validMetric));
+                    targetScore->logSuccess(
+                        "validation", Database::Validation, avgBatchWindow);
+                    targetScore->logTopNSuccess(
+                        "validation",
+                        Database::Validation,
+                        avgBatchWindow); // Top-N accuracy
+                    targetScore->clearSuccess(Database::Validation);
+                }
+                
+                std::shared_ptr<TargetBBox> targetBBox
+                    = std::dynamic_pointer_cast
+                    <TargetBBox>(*itTargets);
+
+                if (targetBBox) {
+                    const bool bestValidation = targetBBox->newValidationScore(
+                            targetBBox->getAverageSuccess(Database::Validation));
+
+                    if (bestValidation) {
+                        std::cout << "\n+++ BEST validation score: "
+                                    << (100.0
+                                        * targetBBox->getMaxValidationScore())
+                                    << "% [" << opt.validMetric << "]\n";
+
+                        deepNet->log("validation", Database::Validation);
+
+                        if (itTargets == deepNet->getTargets().begin()) {
+                            deepNet->exportNetworkFreeParameters(
+                                "weights_validation");
+                            deepNet->save("net_state_validation");
+
+                            std::cout << "    'weights_validation' saved!"
+                                << std::endl;
+                        }
+                    }
+                    else {
+                        std::cout << "\n--- LOWER validation score: "
+                                    << (100.0
+                                        * targetBBox->getLastValidationScore())
+                                    << "% [" << opt.validMetric << "] (best was "
+                                    << (100.0
+                                        * targetBBox->getMaxValidationScore())
+                                    << "%)\n" << std::endl;
+
+                    }
+
+                    if (!bestValidation) {
+                        ++nbNoValid;
+
+                        if (opt.stopValid > 0 && nbNoValid >= opt.stopValid) {
+                            std::cout
+                                << "\n--- Validation did not improve after "
+                                << opt.stopValid << " steps\n" << std::endl;
+                            std::cout << "\n--- STOPPING THE LEARNING\n"
+                                        << std::endl;
+                            break;
+                        }
+                    }
+                    else
+                        nbNoValid = 0;
+
+                    targetBBox->logSuccess("validation", Database::Validation, avgBatchWindow);
+                    targetBBox->clearSuccess(Database::Validation);
+                }
+
+                std::shared_ptr<TargetMatching> targetMatching
+                    = std::dynamic_pointer_cast
+                    <TargetMatching>(*itTargets);
+
+                if (targetMatching) {
+                    const bool bestValidation
+                        = targetMatching->newValidationEER(
+                            targetMatching->getEER(),
+                            targetMatching->getFRR());
+                    deepNet->log("validation", Database::Validation);
+
+                    if (bestValidation) {
+                        std::cout << "\n+++ BEST validation EER: "
+                                    << (100.0
+                                        * targetMatching->getMinValidationEER())
+                                    << "%\n";
+
+                        if (itTargets == deepNet->getTargets().begin()) {
+                            deepNet->exportNetworkFreeParameters(
+                                "weights_validation_EER");
+                            deepNet->save("net_state_validation_EER");
+
+                            std::cout << "    'weights_validation_EER'"
+                                " saved!" << std::endl;
+                        }
+                    }
+                    else {
+                        std::cout << "\n--- HIGHER validation EER: "
+                                    << (100.0
+                                        * targetMatching->getLastValidationEER())
+                                    << "% (best was "
+                                    << (100.0
+                                        * targetMatching->getMinValidationEER())
+                                    << "%)\n" << std::endl;
+
+                    }
+
+                    if (!bestValidation) {
+                        ++nbNoValid;
+
+                        if (opt.stopValid > 0 && nbNoValid >= opt.stopValid) {
+                            std::cout
+                                << "\n--- Validation did not improve after "
+                                << opt.stopValid << " steps\n" << std::endl;
+                            std::cout << "\n--- STOPPING THE LEARNING\n"
+                                        << std::endl;
+                            break;
+                        }
+                    }
+                    else
+                        nbNoValid = 0;
+                }
+            }
+
+            deepNet->clear(Database::Validation);
+        }
+        else {
+            deepNet->exportNetworkFreeParameters("weights");
+            deepNet->save("net_state");
+        }
+    }
+
+    if (opt.logKernels)
+        deepNet->logFreeParameters("kernels");
+
+    // We are still in future batch, need to synchronize for the following
+    sp->synchronize();
+}
+
 void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     std::shared_ptr<Database> database = deepNet->getDatabase();
     std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
+    const int nbEpochSize = database->getNbStimuli(Database::Learn);
 
     deepNet->exportNetworkFreeParameters("weights_init");
 
@@ -964,7 +1410,7 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             std::ios::fmtflags f(std::cout.flags());
 
             std::cout << "\rLearning #" << std::setw(8) << std::left << i
-                        << "   ";
+                        << "(" << ((float) i / (float)nbEpochSize) * 100.0 << "%)   ";
             std::cout << std::setw(6) << std::fixed << std::setprecision(2)
                         << std::right;
 
@@ -1796,10 +2242,6 @@ int main(int argc, char* argv[]) try
     CudaContext::setDevice(cudaDevice);
 #endif
 
-    // Network topology construction
-    SGDSolver::mMaxSteps = opt.learn;
-    SGDSolver::mLogSteps = opt.log;
-
     Network net(opt.seed);
     std::shared_ptr<DeepNet> deepNet
         = DeepNetGenerator::generate(net, opt.iniConfig);
@@ -1820,6 +2262,13 @@ int main(int argc, char* argv[]) try
     std::cout << "Testing database size: "
               << database.getNbStimuli(Database::Test) << " images"
               << std::endl;
+
+    // Network topology construction
+    SGDSolver::mMaxSteps = opt.learn > 0 ? opt.learn 
+                                : opt.learnEpoch*database.getNbStimuli(Database::Learn);
+    SGDSolver::mLogSteps = (opt.learnEpoch > 0) ? database.getNbStimuli(Database::Learn) 
+                            : opt.log;
+
 
     if (opt.logDbStats) {
         // Log stats
@@ -1895,7 +2344,9 @@ int main(int argc, char* argv[]) try
         findLearningRate(opt, deepNet);
         std::exit(0);
     }
-
+    if(opt.learnEpoch > 0) {
+        learn_epoch(opt, deepNet);
+    }
     if (opt.learn > 0) {
         learn(opt, deepNet);
     }
@@ -1964,7 +2415,7 @@ int main(int argc, char* argv[]) try
     try
     {
         std::shared_ptr<Cell_Frame_Top> cellFrame = deepNet->getTargetCell<Cell_Frame_Top>();
-        if (cellFrame && (opt.learn > 0 || opt.test)) {
+        if (cellFrame && (opt.learn > 0 || opt.test || opt.learnEpoch > 0)) {
            test(opt, deepNet, afterCalibration);
         }
     }
@@ -1984,7 +2435,7 @@ int main(int argc, char* argv[]) try
     std::shared_ptr<Environment> env = std::dynamic_pointer_cast
         <Environment>(deepNet->getStimuliProvider());
 
-    if (!env)
+    if (!env) 
         return 0;
 
     // Spike-based testing
@@ -1996,6 +2447,7 @@ int main(int argc, char* argv[]) try
     if (opt.learnStdp > 0) {
         learnStdp(opt, deepNet, env, net, monitorEnv, monitorOut);
     }
+
 
     testStdp(opt, deepNet, env, net, monitorEnv, monitorOut);
 

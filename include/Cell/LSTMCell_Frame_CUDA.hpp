@@ -38,11 +38,13 @@ namespace N2D2 {
 template <class T>
 class LSTMCell_Frame_CUDA : public virtual LSTMCell, public Cell_Frame_CUDA<T> {
 public:
-using Cell_Frame_CUDA<T>::mInputs;
+    using Cell_Frame_CUDA<T>::keepInSync;
+    using Cell_Frame_CUDA<T>::mInputs;
     using Cell_Frame_CUDA<T>::mOutputs;
     using Cell_Frame_CUDA<T>::mDiffInputs;
     using Cell_Frame_CUDA<T>::mDiffOutputs;
     using Cell_Frame_CUDA<T>::addInput;
+    using Cell_Frame_CUDA<T>::mKeepInSync;
 
 	LSTMCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
 						unsigned int seqLength,
@@ -140,13 +142,13 @@ using Cell_Frame_CUDA<T>::mInputs;
 	{
 		(*mWeights)(0,0,0,posWeight) = value;
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, posWeight, 1);
 	};
 
 	T getWeight(unsigned int posWeight) const
 	{
-		if (!mSynchronized){
+		if (mKeepInSync){
 			mWeights->synchronizeDToH(0, 0, 0, posWeight, 1);
 		}
 		return (*mWeights)(0, 0, 0, posWeight);
@@ -184,7 +186,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getWeightPLIG_1stLayer(): hiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -206,7 +208,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getWeightPLFG_1stLayer(): hiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -228,7 +230,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getWeightPLCG_1stLayer(): hiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -250,7 +252,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getWeightPLOG_1stLayer(): hiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -276,7 +278,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getWeightPLIG(): outputhiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -298,7 +300,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getWeightPLFG(): outputhiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -320,7 +322,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getWeightPLCG(): outputhiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -342,7 +344,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::setWeightPLOG(): outputhiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -370,7 +372,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getWeightRIG(): outputhiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -392,7 +394,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getWeightRFG(): outputhiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -414,7 +416,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getWeightRCG(): outputhiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -436,7 +438,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getWeightROG(): outputhiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -458,7 +460,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getBiasPLIG(): hiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -476,7 +478,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getBiasPLFG(): hiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -492,7 +494,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getBiasPLCG(): hiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -508,7 +510,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getBiasPLOG(): hiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -529,7 +531,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getBiasRIG(): hiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -545,7 +547,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getBiasRFG(): hiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -561,7 +563,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getBiasRCG(): hiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -577,7 +579,7 @@ using Cell_Frame_CUDA<T>::mInputs;
 			throw std::runtime_error("LSTMCell_FrameCuda::getBiasROG(): hiddenidx invalid");
 		}
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeDToH(0, 0, 0, pos, 1);
 
 		value.resize({1});
@@ -590,6 +592,9 @@ using Cell_Frame_CUDA<T>::mInputs;
 	virtual void setdytest(const std::shared_ptr<Filler>& filler);
 	virtual void setdhytest(const std::shared_ptr<Filler>& filler);
 	virtual void setdcytest(const std::shared_ptr<Filler>& filler);
+
+    void synchronizeToH(bool keepInSync_) const;
+    void synchronizeToD(bool keepInSync_);
 
 protected :
 
@@ -672,7 +677,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 	inline void setWeightPLFG_1stLayer(unsigned int  inputidx,unsigned int  hiddenidx,unsigned int  bidir, BaseTensor& value){
@@ -693,7 +698,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 
@@ -715,7 +720,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 
@@ -737,7 +742,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 
@@ -761,7 +766,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 	inline void setWeightPLFG(unsigned int  channelhiddenidx,unsigned int  outputhiddenidx,unsigned int  nlbidir, BaseTensor& value){
@@ -782,7 +787,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 	inline void setWeightPLCG(unsigned int  channelhiddenidx,unsigned int  outputhiddenidx,unsigned int  nlbidir, BaseTensor& value){
@@ -803,7 +808,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 	inline void setWeightPLOG(unsigned int  channelhiddenidx,unsigned int  outputhiddenidx,unsigned int  nlbidir, BaseTensor& value){
@@ -824,7 +829,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 
@@ -849,7 +854,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 	inline void setWeightRFG(unsigned int  channelhiddenidx,unsigned int  outputhiddenidx,unsigned int  nlbidir, BaseTensor& value){
@@ -870,7 +875,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 	inline void setWeightRCG(unsigned int  channelhiddenidx,unsigned int  outputhiddenidx,unsigned int  nlbidir, BaseTensor& value){
@@ -891,7 +896,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 	inline void setWeightROG(unsigned int  channelhiddenidx,unsigned int  outputhiddenidx,unsigned int  nlbidir, BaseTensor& value){
@@ -912,7 +917,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 
@@ -928,7 +933,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 	inline void setBiasPLFG(unsigned int  hiddenidx, unsigned int  nlbidir, BaseTensor& value){
@@ -943,7 +948,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 	inline void setBiasPLCG(unsigned int  hiddenidx, unsigned int  nlbidir, BaseTensor& value){
@@ -958,7 +963,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 	inline void setBiasPLOG(unsigned int  hiddenidx, unsigned int  nlbidir, BaseTensor& value){
@@ -973,7 +978,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 
@@ -989,7 +994,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 	inline void setBiasRFG(unsigned int  hiddenidx ,unsigned int  nlbidir, BaseTensor& value){
@@ -1004,7 +1009,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 	inline void setBiasRCG(unsigned int  hiddenidx ,unsigned int  nlbidir, BaseTensor& value){
@@ -1019,7 +1024,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 	inline void setBiasROG(unsigned int  hiddenidx ,unsigned int  nlbidir, BaseTensor& value){
@@ -1034,7 +1039,7 @@ protected :
 
 		(*mWeights)(0,0,0,pos) = tensor_cast<T>(value)(0);
 
-		if (!mSynchronized)
+		if (mKeepInSync)
 			mWeights->synchronizeHToD(0, 0, 0, pos, 1);
 	};
 
@@ -1070,7 +1075,6 @@ protected :
 		numlayers*bidirectionel)
 	*/
 
-	mutable bool mSynchronized;
 	mutable bool mContinousBatch;
 
 private :

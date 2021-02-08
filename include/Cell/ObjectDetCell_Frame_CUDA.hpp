@@ -90,9 +90,6 @@ public:
     virtual void update();
     void checkGradient(double /*epsilon */ = 1.0e-4,
                        double /*maxError */ = 1.0e-6) {};
-    void discretizeFreeParameters(unsigned int /*nbLevels*/) {}; // no free
-    // parameter to
-    // discretize
     virtual ~ObjectDetCell_Frame_CUDA() {};
 
 protected:

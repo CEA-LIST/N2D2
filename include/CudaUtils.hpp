@@ -31,6 +31,8 @@
 #include <cuda.h>
 #include <cudnn.h>
 
+#include "third_party/half.hpp"
+
 #define CHECK_CUDNN_STATUS(status)                                             \
     do {                                                                       \
         const cudnnStatus_t e = (status);                                      \
@@ -110,6 +112,16 @@ namespace Cuda {
     template <>
     struct cudnn_scaling_type<double> {
         typedef double type;
+    };
+
+    template <class T>
+    struct cuda_type {
+        typedef T type;
+    };
+
+    template <>
+    struct cuda_type<half_float::half> {
+        typedef __half type;
     };
 
     template <class T>

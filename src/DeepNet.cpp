@@ -41,11 +41,8 @@
 
 N2D2::DeepNet::DeepNet(Network& net)
     : mName(this, "Name", ""),
-      mSignalsDiscretization(this, "SignalsDiscretization", 0U),
-      mFreeParametersDiscretization(this, "FreeParametersDiscretization", 0U),
       mNet(net),
       mLayers(1, std::vector<std::string>(1, "env")),
-      mFreeParametersDiscretized(false),
       mStreamIdx(0),
       mStreamTestIdx(0)
 {
@@ -661,8 +658,16 @@ void N2D2::DeepNet::exportNetworkFreeParameters(const std::string
                                            + ".syntxt");
         (*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first
             + "_weights.distrib.dat", Cell::Multiplicative);
+
+        (*it).second->exportQuantFreeParameters(dirName + "/" + (*it).first
+                                           + "_quant.syntxt");
+        (*it).second->logQuantFreeParametersDistrib(dirName + "/" + (*it).first
+            + "_weights_quant.distrib.dat", Cell::Multiplicative);
+
         (*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first
             + "_biases.distrib.dat", Cell::Additive);
+
+        (*it).second->exportActivationParameters(dirName);
     }
 }
 
@@ -694,6 +699,8 @@ void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName,
          ++it){
         (*it).second->importFreeParameters(dirName + "/" + (*it).first
                                            + ".syntxt", ignoreNotExists);
+        (*it).second->importActivationParameters(dirName, ignoreNotExists);
+
     }
 }
 
@@ -1162,7 +1169,15 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
             }
         }
 
-        meanVariance /= count;
+        if (count > 0)
+            meanVariance /= count;
+        else {
+            std::cout << Utils::cwarning << "    variance < 1e-12 for all"
+                " outputs! Is the network correctly trained?"
+                << Utils::cdef << std::endl;
+        }
+
+        convCellTop->synchronizeToH(false);
 
         for (std::size_t output = 0; output < convCell->getNbOutputs(); ++output) {
             // Corrected for zero-variance issue:
@@ -1170,7 +1185,7 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
             // https://arxiv.org/pdf/1803.08607.pdf
             // to help post-training quantization
             const double factor = bnScales(output)
-                / std::sqrt(eps + ((bnVariances(output) > 1.0e-12)
+                / std::sqrt(eps + ((bnVariances(output) > 1.0e-12 || count == 0)
                             ? bnVariances(output) : meanVariance));
 
             // Weights adjustments
@@ -1196,6 +1211,8 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
             bias(0) = bnBiases(output) + (bias(0) - bnMeans(output)) * factor;
             convCell->setBias(output, bias);
         }
+
+        convCellTop->synchronizeToD(true);
 
         // Replace BatchNorm by Conv for BatchNorm childs
         // and BatchNorm cell removal from DeepNet
@@ -1864,11 +1881,6 @@ void N2D2::DeepNet::logSpikeStats(const std::string& dirName,
                   "Virtual synapses: " << stats.nbVirtualSynapses
                << "\n"
                   "Connections: " << stats.nbConnections << "\n";
-
-    if (mFreeParametersDiscretization > 0 && mFreeParametersDiscretized)
-        globalData << "Free parameters discretization: "
-                   << mFreeParametersDiscretization << " levels (+ sign bit)\n";
-
     globalData << "\n"
                   "[Neuron stats]\n";
 
@@ -1993,9 +2005,6 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
                 throw std::runtime_error(
                     "DeepNet::learn(): learning requires Cell_Frame_Top cells");
 
-            if (mSignalsDiscretization > 0)
-                cellFrame->discretizeSignals(mSignalsDiscretization);
-
             //std::cout << "propagate " << mCells[(*itCell)]->getName()
             //    << std::endl;
             time1 = std::chrono::high_resolution_clock::now();
@@ -2021,15 +2030,6 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
          itTargets != itTargetsEnd;
          ++itTargets)
     {
-        if (mSignalsDiscretization > 0) {
-            std::shared_ptr<Cell_Frame_Top> cellFrame
-                = std::dynamic_pointer_cast<Cell_Frame_Top>((*itTargets)->
-                                                            getCell());
-
-            cellFrame->discretizeSignals(mSignalsDiscretization,
-                                         Cell_Frame_Top::Out);
-        }
-
         //std::cout << "process " << (*itTargets)->getName() << std::endl;
         time1 = std::chrono::high_resolution_clock::now();
         (*itTargets)->process(Database::Learn);
@@ -2107,26 +2107,6 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
 {
     const unsigned int nbLayers = mLayers.size();
 
-    if (mFreeParametersDiscretization > 0 && !mFreeParametersDiscretized) {
-        const std::string dirName = "weights_discretized";
-        Utils::createDirectories(dirName);
-
-        for (std::map<std::string, std::shared_ptr<Cell> >::const_iterator it
-             = mCells.begin(),
-             itEnd = mCells.end();
-             it != itEnd;
-             ++it) {
-            (*it).second->discretizeFreeParameters(
-                mFreeParametersDiscretization);
-            (*it).second->exportFreeParameters(dirName + "/" + (*it).first
-                                               + ".syntxt");
-            (*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first
-                                                   + ".distrib.dat");
-        }
-
-        mFreeParametersDiscretized = true;
-    }
-
     std::chrono::high_resolution_clock::time_point time1, time2;
 
     if (timings != NULL)
@@ -2170,9 +2150,6 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
                 throw std::runtime_error(
                     "DeepNet::test(): testing requires Cell_Frame_Top cells");
 
-            if (mSignalsDiscretization > 0)
-                cellFrame->discretizeSignals(mSignalsDiscretization);
-
             time1 = std::chrono::high_resolution_clock::now();
             cellFrame->propagate(true);
 
@@ -2200,11 +2177,6 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
         std::shared_ptr<Cell_Frame_Top> cellFrame
             = std::dynamic_pointer_cast<Cell_Frame_Top>((*itTargets)->
                                                         getCell());
-
-        if (mSignalsDiscretization > 0) {
-            cellFrame->discretizeSignals(mSignalsDiscretization,
-                                         Cell_Frame_Top::Out);
-        }
 
         time1 = std::chrono::high_resolution_clock::now();
         (*itTargets)->process(set);

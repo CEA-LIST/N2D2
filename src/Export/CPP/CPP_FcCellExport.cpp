@@ -94,7 +94,7 @@ void N2D2::CPP_FcCellExport::generateHeaderBias(const FcCell & cell, std::ofstre
 
     header << "static const BDATA_T " << identifier << "_biases[" 
                << Utils::upperCase(identifier) << "_OUTPUTS_SIZE"
-           <<"] __attribute__((section(\".nn_biasses\"))) = {";
+           <<"] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_BIASSES) = {";
 
     const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
 
@@ -129,7 +129,7 @@ void N2D2::CPP_FcCellExport::generateHeaderWeights(const FcCell & cell, std::ofs
     
     header << "static const WDATA_T " << identifier << "_weights["
                << prefix << "_WEIGHTS_SIZE"
-           << "] __attribute__((section(\".nn_weights\"))) = ";
+           << "] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_WEIGHTS) = ";
 
     header << "{\n";
 

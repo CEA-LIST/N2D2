@@ -18,8 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_RCAR_MEMORY_MANAGER_H
-#define N2D2_RCAR_MEMORY_MANAGER_H
+#ifndef N2D2_MEMORY_MANAGER_H
+#define N2D2_MEMORY_MANAGER_H
 
 #include <memory>
 #include <vector>
@@ -78,17 +78,19 @@ public:
             memSpace(memSpace_),
             allocated(clock_),
             offset(offset_),
-            // limit must be a multiple of (stride * length)
-            // uses floor() to stay below memSpace_->size
-            limit((count_ > 1)
-                ? std::floor((memSpace_->size - offset)
-                        / (double)(std::max(size_, stride_) * length_))
-                    * (std::max(size_, stride_) * length_)
-                : memSpace_->size - offset_),
             size(size_),
             stride(std::max(size_, stride_)),
             length(length_),
-            count(count_) {}
+            count(count_)
+        {
+            assert(offset < memSpace->size);
+            assert(getContiguousOffset() >= memSpace->offset);
+            assert(getWrappedOffset() >= memSpace->offset);
+            assert(getContiguousOffset() + getContiguousSize()
+                <= memSpace->offset + memSpace->size);
+            assert(getWrappedOffset() + getWrappedSize()
+                <= memSpace->offset + memSpace->size);
+        }
 
         inline unsigned int getSize() const {
             return stride * length * count;
@@ -124,22 +126,31 @@ public:
             return (getContiguousOffset() + getContiguousSize());
         }
 
+        // Limit is computed dynamically, as memSpace->size may increase after
+        // the creation of this memory space. This is actually necessary to
+        // ensure that the memory wrapping works correctly, because when 
+        // computing the margin required for the wrapping, it is assumed that
+        // the previous layer wrapping extends to the full memory space size.
+        inline unsigned int getLimit() const {
+            // limit must be a multiple of (stride * length) if count > 1
+            // or stride if length > 1
+            // uses floor() to stay below memSpace->size
+            return (count > 1)
+                ? std::floor((memSpace->size - offset)
+                        / (double)(stride * length)) * (stride * length)
+                : (length > 1)
+                    ? std::floor((memSpace->size - offset)
+                            / (double)stride) * stride
+                    : memSpace->size - offset;
+        }
+
         std::shared_ptr<MemorySpace> memSpace;
         Clock_T allocated;
         unsigned int offset;
-        unsigned int limit;
         unsigned int size;
         unsigned int stride;
         unsigned int length;
         unsigned int count;
-
-    private:
-        inline unsigned int getLimit() const {
-            return (count > 1)
-                ? std::floor((memSpace->size - offset)
-                        / (double)(stride * length)) * (stride * length)
-                : memSpace->size - offset;
-        }
     };
 
     struct MaxLifetimeMinSizeFirst {
@@ -170,6 +181,18 @@ public:
         bool operator()(const std::shared_ptr<MemorySpace>& p0,
                         const std::shared_ptr<MemorySpace>& p1);
     };
+
+    struct CompByCellName {
+        bool operator()(const std::shared_ptr<Cell>& lhs,
+                        const std::shared_ptr<Cell>& rhs) const
+        {
+            return ((lhs) ? lhs->getName() : "env")
+                        < ((rhs) ? rhs->getName() : "env");
+        }
+    };
+
+    typedef std::map<std::shared_ptr<Cell>, std::vector<MemoryPlane>,
+        CompByCellName> MemMap_T;
 
     MemoryManager(): mClock(0) {}
     /// Generates a new MemorySpace
@@ -265,10 +288,8 @@ public:
     Clock_T getMaxLifetime() const;
     const std::vector<MemoryPlane>& getPlanes(const std::shared_ptr<Cell>& cell)
         const;
-    const std::map<std::shared_ptr<Cell>, std::vector<MemoryPlane> >&
-        getPlanes() const { return mMemPlanes; }
-    std::map<std::shared_ptr<Cell>, std::vector<MemoryPlane> >
-        getPlanes(std::shared_ptr<MemorySpace> memSpace) const;
+    const MemMap_T& getPlanes() const { return mMemPlanes; }
+    MemMap_T getPlanes(std::shared_ptr<MemorySpace> memSpace) const;
     unsigned int getNbPlanes(std::shared_ptr<MemorySpace> memSpace) const;
     void tick(bool autoRelease = true);
     void log(const std::string& fileName) const;
@@ -286,7 +307,7 @@ private:
 
     std::map<unsigned int, unsigned int> mMemStack;
     std::vector<std::shared_ptr<MemorySpace> > mMemSpaces;
-    std::map<std::shared_ptr<Cell>, std::vector<MemoryPlane> > mMemPlanes;
+    MemMap_T mMemPlanes;
     Clock_T mClock;
 };
 }
@@ -300,4 +321,4 @@ const char* const EnumStrings<N2D2::MemoryManager::OptimizeStrategy>::data[]
        "OptimizeMaxHoleMaxLifetimeFirst"};
 }
 
-#endif // N2D2_RCAR_MEMORY_MANAGER_H
+#endif // N2D2_MEMORY_MANAGER_H
