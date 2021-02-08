@@ -227,6 +227,7 @@ public:
     void streamStimulus(const cv::Mat& mat,
                         Database::StimuliSet set,
                         unsigned int batchPos = 0);
+    void setStreamedTensor(TensorData_T& streamedTensor);
     void reverseLabels(const cv::Mat& mat,
                        Database::StimuliSet set,
                        Tensor<int>& labels,
@@ -294,7 +295,15 @@ public:
     };
     TensorData_T& getData()
     {
-        return mData;
+        if (mStreamTensor) {
+            if (!mStreamedTensor) {
+                throw std::runtime_error("Error: StreamTensor==true but StreamedTensor is not initialized");
+            }
+            return *mStreamedTensor;
+        }
+        else {
+            return mData;
+        }
     };
     TensorData_T& getTargetData()
     {
@@ -367,6 +376,8 @@ protected:
     Parameter<Float_T> mQuantizationMin;
     /// Max. value for quantization
     Parameter<Float_T> mQuantizationMax;
+    /// Set to deepnet interface mode
+    Parameter<bool> mStreamTensor;
 
     // Internal variables
     Database& mDatabase;
@@ -396,6 +407,8 @@ protected:
     std::vector<std::vector<std::shared_ptr<ROI> > > mLabelsROI;
     std::vector<std::vector<std::shared_ptr<ROI> > > mFutureLabelsROI;
     bool mFuture;
+
+    TensorData_T* mStreamedTensor;
 };
 }
 

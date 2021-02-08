@@ -55,6 +55,7 @@ N2D2::DeepNet::DeepNet(Network& net)
 void N2D2::DeepNet::addCell(const std::shared_ptr<Cell>& cell,
                             const std::vector<std::shared_ptr<Cell>>& parents)
 {
+    // Check which parent has the largest order in mLayers 
     unsigned int cellOrder = 0;
     for (auto it = mLayers.begin(); it != mLayers.end(); ++it) {
         for (auto itParent = parents.begin(); itParent != parents.end(); ++itParent) {
@@ -68,12 +69,14 @@ void N2D2::DeepNet::addCell(const std::shared_ptr<Cell>& cell,
         }
     }
 
+    // Add additional layer for new cell if highest order parent is in final layer
     if (cellOrder + 1 >= mLayers.size()) {
         mLayers.resize(cellOrder + 2);
     }
 
     mLayers[cellOrder + 1].push_back(cell->getName());
 
+    // Add link information to mParentLayers s
     for (auto itParent = parents.begin(); itParent != parents.end(); ++itParent) {
         if (*itParent) {
             mParentLayers.insert(std::make_pair(cell->getName(), (*itParent)->getName()));
@@ -760,10 +763,12 @@ std::vector<std::shared_ptr<N2D2::Cell>> N2D2::DeepNet::getChildCells(const std:
 
 std::vector<std::shared_ptr<N2D2::Cell>> N2D2::DeepNet::getParentCells(const std::string& name) const
 {
+    std::cout << "getParentCells" << std::endl;
     std::vector<std::shared_ptr<Cell>> parentCells;
 
     auto parents = mParentLayers.equal_range(name);
     for(auto itParent = parents.first; itParent != parents.second; ++itParent) {
+        std::cout << itParent->second << std::endl;
         if (itParent->second == "env") {
             parentCells.push_back(std::shared_ptr<Cell>());
         }

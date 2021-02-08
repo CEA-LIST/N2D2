@@ -1,5 +1,5 @@
-"""
-    (C) Copyright 2020 CEA LIST. All Rights Reserved.
+/*
+    (C) Copyright 2021 CEA LIST. All Rights Reserved.
     Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
@@ -17,31 +17,24 @@
 
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
-"""
+*/
 
-import N2D2
-import n2d2.deepnet
+#ifdef PYBIND
 
-# TODO: In final version this should be in the use home or the API launch folder
-model_cache = "/local/is154584/jt251134/MODELS"
+#include "DeepNet.hpp"
+#include "DrawNet.hpp"
 
-default_seed = 1
-default_model = 'Frame'
-default_dataType = 'float'
-default_net = N2D2.Network(default_seed)
-#default_deepNet = n2d2.deepnet.DeepNet(default_net, default_model, default_dataType)
-default_deepNet = None
+#include <pybind11/pybind11.h>
 
-cell_counter = 0
-target_counter = 0
-provider_counter = 0
+namespace py = pybind11;
 
-class Verbosity:
-    short = 0  # Constructor arguments only
-    detailed = 1  # Config parameters and their parameters
+namespace N2D2 {
+void init_DrawNet(py::module &m) {
+    py::class_<DrawNet>(m, "DrawNet")
+    .def_static("draw", &DrawNet::draw, py::arg("deepNet"), py::arg("fileName"))
+    .def_static("drawGraph", &DrawNet::drawGraph, py::arg("deepNet"), py::arg("fileName"));
+}
+}
 
-verbosity = Verbosity.detailed
-
-def set_cuda_device(id):
-    N2D2.CudaContext.setDevice(id)
+#endif
 

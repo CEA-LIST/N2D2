@@ -22,33 +22,47 @@
 
 
 import N2D2
+import n2d2.global_variables
 import n2d2.cell
 import n2d2.converter
 from n2d2.n2d2_interface import N2D2_Interface
-import collections
 
 
 class DeepNet(N2D2_Interface):
 
-    def __init__(self, network, Model, DataType, **config_parameters):
+    def __init__(self, **config_parameters):
+
+        if 'model' in config_parameters:
+            self._model = config_parameters.pop('model')
+        else:
+            self._model = n2d2.global_variables.default_model
+        if 'dataType' in config_parameters:
+            self._datatype = config_parameters.pop('dataType')
+        else:
+            self._datatype = n2d2.global_variables.default_dataType
 
         N2D2_Interface.__init__(self, **config_parameters)
 
-        self._Model = Model
-        self._DataType = DataType
+        self._N2D2_object = N2D2.DeepNet(N2D2.Network(n2d2.global_variables.default_seed))
 
-        self._N2D2_object = N2D2.DeepNet(network)
+        # Even though a deepnet object does not require a provider, some methods using the deepnet
+        # expect it to have one. For these cases we have to add a dummy provider
+        self._provider = None
 
+    def add_provider(self, provider):
+        self._provider = provider
+        self._N2D2_object.setStimuliProvider(provider.N2D2())
 
     def __str__(self):
-        output = "Deepnet" + "(" + self._Model + "<" + self._DataType + ">" + ")"
+        output = "Deepnet" + "(" + self._model + "<" + self._datatype + ">" + ")"
         output += N2D2_Interface.__str__(self)
 
     def get_model(self):
-        return self._Model
+        return self._model
 
     def get_datatype(self):
-        return self._DataType
+        return self._datatype
+
 
 
 def load_from_ONNX(model_path, dims, batch_size=1):
@@ -119,6 +133,21 @@ class Sequence:
 
     def add(self, cell):
         self._sequences.append(cell)
+
+    def get_deepnet(self):
+        first = self.get_first()
+        last = self.get_last()
+
+        deepnet = n2d2.global_variables.default_deepNet
+
+        """
+        deepNet = N2D2.DeepNet(n2d2.global_variables.default_net)
+        for idx, (name, cell) in enumerate(self.get_cells().items()):
+            parents = []
+            for ipt in cell.get_inputs():
+                if not isinstance(ipt, n2d2.provider.DataProvider):
+                    parents.append(ipt.get_last().N2D2())
+            deepNet.addCell(cell.N2D2(), parents)"""
 
     def get_cells(self):
         cells = {}
@@ -252,6 +281,7 @@ class Layer:
                 elem._get_cells(cells)
             else:
                 cells[elem.get_name()] = elem
+
 
     # TODO: Method that converts layer representation into corresponding N2D2 deepnet
 

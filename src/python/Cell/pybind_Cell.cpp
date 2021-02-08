@@ -226,8 +226,11 @@ void init_Cell(py::module &m) {
     // .def("getStats", &Cell::getStats)
     // .def("getReceptiveField", &Cell::getReceptiveField, py::arg("outputField") = std::vector<unsigned int>())
     .def("getAssociatedDeepNet", &Cell::getAssociatedDeepNet)
+    .def("getChildrenCells", &Cell::getChildrenCells)
+    .def("getParentsCells", &Cell::getParentsCells)
     // .def("isConnection", &Cell::isConnection, py::arg("channel"), py::arg("output"))
     ;
 }
 }
 #endif
+

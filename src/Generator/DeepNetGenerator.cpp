@@ -188,6 +188,8 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
 
     // Construct network tree
     // std::cout << "Construct network tree..." << std::endl;
+
+    // A map between a INI section and its inputs, e.g. "conv2"->["conv1.1", "conv1.2"]
     std::map<std::string, std::vector<std::string> > parentLayers;
 
     const std::vector<std::string> sections = iniConfig.getSections();
@@ -247,6 +249,7 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
             unsigned int order = 0;
             bool knownOrder = true;
 
+            // Iterate over all input names of a layer
             for (std::vector<std::string>::const_iterator itParent
                  = (*itParents).second.begin();
                  itParent != (*itParents).second.end();
@@ -305,6 +308,7 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
          itLayerEnd = layers.end();
          itLayer != itLayerEnd;
          ++itLayer) {
+        // Iterate over the cell sections of a layer
         for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
                                                       itEnd = (*itLayer).end();
              it != itEnd;
@@ -346,7 +350,7 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
                 }
 
                 ignoreParents.insert((*it));
-            }
+            } // Else set up from INI section
             else {
 #endif
                 std::vector<std::shared_ptr<Cell> > parentCells;
@@ -365,6 +369,7 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
                     }
                 }
 
+                // Create Cell given its parents and its config section "it"
                 std::shared_ptr<Cell> cell
                     = CellGenerator::generate(network, *deepNet,
                                             *deepNet->getStimuliProvider(),
