@@ -62,6 +62,9 @@ public:
                          bool rescalePerOutputChannel);
     virtual ~DeepNetQuantization() {};
 
+protected :
+    DeepNet& mDeepNet;
+
 private:
     /**
      * Return the scalings that have been applied to the biasses of each layer. 
@@ -138,7 +141,7 @@ private:
                                        std::size_t nbBits);
 
 private:
-    DeepNet& mDeepNet;
+
 };
 
 }
