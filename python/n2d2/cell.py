@@ -201,7 +201,7 @@ class Fc(Cell):
 
     def __init__(self, inputs, nbOutputs, **config_parameters):
         # TODO : Add description for filler and solver.
-        """s
+        """
         :param nbOutputs: Number of outputs of the cell.
         :type nbOutputs: int
         :param name: Name fo the cell.
