@@ -2169,6 +2169,11 @@ void N2D2::DeepNet::update(
     const unsigned int nbLayers = mLayers.size();
     std::chrono::high_resolution_clock::time_point time1, time2;
 
+#ifdef CUDA
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
     // Weights update
     for (unsigned int l = 1; l < nbLayers; ++l) {
         for (std::vector<std::string>::const_iterator itCell
@@ -2182,6 +2187,13 @@ void N2D2::DeepNet::update(
             time1 = std::chrono::high_resolution_clock::now();
             std::dynamic_pointer_cast
                 <Cell_Frame_Top>(mCells[(*itCell)])->update();
+
+#ifdef CUDA
+            // MultiGPU issue
+            // After BatchNorm layer update, the master changes
+            // Thus, this line is to fix this issue
+            CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
 
             if (timings != NULL) {
 #ifdef CUDA
