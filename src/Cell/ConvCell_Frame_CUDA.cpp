@@ -861,10 +861,10 @@ void N2D2::ConvCell_Frame_CUDA<T>::update()
 
     for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
         if (mDiffSharedSynapses[k].isValid()) {
-            mDiffSharedSynapses[k].aggregateAllTo(dev);
+            mDiffSharedSynapses[k].aggregateAllTo(dev, mDevices);
             mWeightsSolvers[k]->update(
                 mSharedSynapses[k], mDiffSharedSynapses[k], mInputs.dimB());
-            mSharedSynapses[k].broadcastAllFrom(dev);
+            mSharedSynapses[k].broadcastAllFrom(dev, mDevices);
         }
     }
 
@@ -876,9 +876,9 @@ void N2D2::ConvCell_Frame_CUDA<T>::update()
     }
 
     if (!mNoBias && mDiffBias.isValid()) {
-        mDiffBias.aggregateAllTo(dev);
+        mDiffBias.aggregateAllTo(dev, mDevices);
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
-        mBias->broadcastAllFrom(dev);
+        mBias->broadcastAllFrom(dev, mDevices);
     }
 }
 
