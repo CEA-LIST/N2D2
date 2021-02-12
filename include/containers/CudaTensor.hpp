@@ -37,6 +37,9 @@
 #include "containers/Tensor.hpp"
 
 namespace N2D2 {
+
+enum class DeviceState { Excluded, Banned, Ready, Connected };
+
 template <typename T> void thrust_fill(T* devData, size_t size, T value);
 
 template <typename T, typename U>
@@ -127,10 +130,12 @@ public:
 
     void broadcast(int srcDev, int dstDev) const;
     void broadcastAllFrom(int srcDev) const;
+    void broadcastAllFrom(int srcDev, std::vector<DeviceState> devices) const;
     void broadcastAnyTo(int dstDev) const;
 
     void aggregate(int srcDev, int dstDev) const;
     void aggregateAllTo(int dstDev) const;
+    void aggregateAllTo(int dstDev, std::vector<DeviceState> devices) const;
 
     virtual ~CudaDeviceTensor();
 
@@ -181,10 +186,14 @@ public:
 
     virtual void broadcast(int srcDev, int dstDev) const = 0;
     virtual void broadcastAllFrom(int srcDev) const = 0;
+    virtual void broadcastAllFrom(int srcDev,
+                    std::vector<DeviceState> devices) const = 0;
     virtual void broadcastAnyTo(int dstDev) const = 0;
 
     virtual void aggregate(int srcDev, int dstDev) const = 0;
     virtual void aggregateAllTo(int dstDev) const = 0;
+    virtual void aggregateAllTo(int dstDev,
+                    std::vector<DeviceState> devices) const = 0;
 
     virtual CudaBaseDeviceTensor& deviceTensor() = 0;
     inline bool& hostBased() { return mHostBased; }
@@ -282,10 +291,14 @@ public:
 
     void broadcast(int srcDev, int dstDev) const;
     void broadcastAllFrom(int srcDev) const;
+    void broadcastAllFrom(int srcDev,
+                std::vector<DeviceState> devices) const;
     void broadcastAnyTo(int dstDev) const;
 
     void aggregate(int srcDev, int dstDev) const;
     void aggregateAllTo(int dstDev) const;
+    void aggregateAllTo(int dstDev,
+                std::vector<DeviceState> devices) const;
 
     CudaDeviceTensor<T>& deviceTensor()
     {
@@ -670,11 +683,25 @@ template <typename T> void N2D2::CudaDeviceTensor<T>::broadcastAllFrom(
 {
     assert(isDevicePtr(srcDev));
     
-// Parallelisation here ?
-//#pragma omp parallel for if (mDataDevice.size() > 1)
     for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
         if (dev != srcDev && isDevicePtr(dev))
             broadcast(srcDev, dev);
+    }
+}
+
+template <typename T> void N2D2::CudaDeviceTensor<T>::broadcastAllFrom(
+    int srcDev, std::vector<DeviceState> devices) const
+{
+    assert(isDevicePtr(srcDev));
+    assert(devices.size() == mDataDevice.size());
+    
+    for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
+        if (dev != srcDev && isDevicePtr(dev)) {
+            if (devices[dev] == N2D2::DeviceState::Connected
+                || devices[dev] == N2D2::DeviceState::Ready) {
+                    broadcast(srcDev, dev);
+            }
+        }
     }
 }
 
@@ -723,6 +750,31 @@ void N2D2::CudaDeviceTensor<T>::aggregateAllTo(int dstDev) const
     for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
         if (dev != dstDev && isDevicePtr(dev)) {
             aggregate(dev, dstDev); 
+        }
+    }
+
+    if (currentDev != dstDev)
+        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+}
+
+template <typename T> 
+void N2D2::CudaDeviceTensor<T>::aggregateAllTo(int dstDev, 
+                                std::vector<DeviceState> devices) const
+{
+    assert(isDevicePtr(dstDev));
+    assert(devices.size() == mDataDevice.size());
+
+    int currentDev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+
+    if (currentDev != dstDev)
+        CHECK_CUDA_STATUS(cudaSetDevice(dstDev));
+
+    for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
+        if (dev != dstDev && isDevicePtr(dev)) {
+            if (devices[dev] == N2D2::DeviceState::Connected) {
+                aggregate(dev, dstDev);
+            }
         }
     }
 
@@ -1226,6 +1278,12 @@ template <typename T> void N2D2::CudaTensor<T>::broadcastAllFrom(int srcDev)
     mDeviceTensor->broadcastAllFrom(srcDev);
 }
 
+template <typename T> void N2D2::CudaTensor<T>::broadcastAllFrom(int srcDev,
+    std::vector<DeviceState> devices) const
+{
+    mDeviceTensor->broadcastAllFrom(srcDev, devices);
+}
+
 template <typename T> void N2D2::CudaTensor<T>::broadcastAnyTo(int dstDev)
     const
 {
@@ -1242,6 +1300,12 @@ template <typename T> void N2D2::CudaTensor<T>::aggregateAllTo(int dstDev)
     const
 {
     mDeviceTensor->aggregateAllTo(dstDev);    
+}
+
+template <typename T> void N2D2::CudaTensor<T>::aggregateAllTo(int dstDev,
+    std::vector<DeviceState> devices) const
+{
+    mDeviceTensor->aggregateAllTo(dstDev, devices);    
 }
 
 #endif // N2D2_CUDATENSOR_H

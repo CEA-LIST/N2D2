@@ -67,10 +67,14 @@ public:
 
     virtual void broadcast(int srcDev, int dstDev) const;
     virtual void broadcastAllFrom(int srcDev) const;
+    virtual void broadcastAllFrom(int srcDev,
+                    std::vector<N2D2::DeviceState> devices) const;
     virtual void broadcastAnyTo(int dstDev) const;
 
     virtual void aggregate(int srcDev, int dstDev) const;
     virtual void aggregateAllTo(int dstDev) const;
+    virtual void aggregateAllTo(int dstDev,
+                    std::vector<N2D2::DeviceState> devices) const;
 
     virtual cuda_tensor_type& back();
     virtual const cuda_tensor_type& back() const;
@@ -165,6 +169,16 @@ void N2D2::CudaInterface<T, STACKING_DIM>::broadcastAllFrom(int srcDev) const
 }
 
 template <class T, int STACKING_DIM>
+void N2D2::CudaInterface<T, STACKING_DIM>::broadcastAllFrom(int srcDev,
+    std::vector<N2D2::DeviceState> devices) const
+{
+    for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
+    {
+        dynamic_cast<cuda_tensor_type*>(*it)->broadcastAllFrom(srcDev, devices);
+    }
+}
+
+template <class T, int STACKING_DIM>
 void N2D2::CudaInterface<T, STACKING_DIM>::broadcastAnyTo(int dstDev) const
 {
     for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
@@ -188,6 +202,16 @@ void N2D2::CudaInterface<T, STACKING_DIM>::aggregateAllTo(int dstDev) const
     for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
     {
         dynamic_cast<cuda_tensor_type*>(*it)->aggregateAllTo(dstDev);
+    }
+}
+
+template <class T, int STACKING_DIM>
+void N2D2::CudaInterface<T, STACKING_DIM>::aggregateAllTo(int dstDev,
+    std::vector<N2D2::DeviceState> devices) const
+{
+    for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
+    {
+        dynamic_cast<cuda_tensor_type*>(*it)->aggregateAllTo(dstDev, devices);
     }
 }
 
