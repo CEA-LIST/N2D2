@@ -49,6 +49,11 @@ public:
                    = std::shared_ptr<Activation>())
         : mActivation(activation)
     {
+#ifdef CUDA
+        int count;
+        CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+        mDevices.resize(count, N2D2::DeviceState::Excluded);
+#endif
     }
     virtual void save(const std::string& dirName) const {
         if (mActivation)
@@ -107,6 +112,14 @@ public:
         return mActivation?mActivation->getOutputRange():std::make_pair(-inf, inf);
     }
 
+#ifdef CUDA
+    void updateDeviceStates(std::vector<N2D2::DeviceState> devices)
+    {
+        assert(mDevices.size() == devices.size());
+        mDevices.assign(devices.begin(), devices.end());
+    }
+#endif
+
     virtual bool isCuda() const = 0;
     virtual ~Cell_Frame_Top() {};
 
@@ -121,6 +134,10 @@ public:
 
 protected:
     std::shared_ptr<Activation> mActivation;
+
+#ifdef CUDA
+    std::vector<N2D2::DeviceState> mDevices;
+#endif
 };
 }
 
