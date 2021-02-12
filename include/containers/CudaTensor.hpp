@@ -129,6 +129,7 @@ public:
     void broadcastAllFrom(int srcDev) const;
     void broadcastAnyTo(int dstDev) const;
 
+    void aggregate(int srcDev, int dstDev) const;
     void aggregateAllTo(int dstDev) const;
 
     virtual ~CudaDeviceTensor();
@@ -182,6 +183,7 @@ public:
     virtual void broadcastAllFrom(int srcDev) const = 0;
     virtual void broadcastAnyTo(int dstDev) const = 0;
 
+    virtual void aggregate(int srcDev, int dstDev) const = 0;
     virtual void aggregateAllTo(int dstDev) const = 0;
 
     virtual CudaBaseDeviceTensor& deviceTensor() = 0;
@@ -282,6 +284,7 @@ public:
     void broadcastAllFrom(int srcDev) const;
     void broadcastAnyTo(int dstDev) const;
 
+    void aggregate(int srcDev, int dstDev) const;
     void aggregateAllTo(int dstDev) const;
 
     CudaDeviceTensor<T>& deviceTensor()
@@ -688,8 +691,26 @@ template <typename T> void N2D2::CudaDeviceTensor<T>::broadcastAnyTo(
     }
 }
 
-template <typename T> void N2D2::CudaDeviceTensor<T>::aggregateAllTo(
-    int dstDev) const
+template <typename T> 
+void N2D2::CudaDeviceTensor<T>::aggregate(int srcDev, int dstDev) const
+{
+    if (mForeignDataDevice == NULL) {
+		// Lazy allocation
+		CHECK_CUDA_STATUS(cudaMalloc(
+		&mForeignDataDevice, mCudaBaseTensor.size() * sizeof(T)));
+    }
+
+    CHECK_CUDA_STATUS(cudaMemcpyPeer(
+        mForeignDataDevice, dstDev,
+        getDevicePtr(srcDev), srcDev,
+        mCudaBaseTensor.size() * sizeof(T)));
+
+    thrust_aggregate(mForeignDataDevice, getDevicePtr(dstDev),
+                     mCudaBaseTensor.size());
+}
+
+template <typename T> 
+void N2D2::CudaDeviceTensor<T>::aggregateAllTo(int dstDev) const
 {
     assert(isDevicePtr(dstDev));
 
@@ -701,19 +722,7 @@ template <typename T> void N2D2::CudaDeviceTensor<T>::aggregateAllTo(
 
     for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
         if (dev != dstDev && isDevicePtr(dev)) {
-            if (mForeignDataDevice == NULL) {
-                // Lazy allocation
-                CHECK_CUDA_STATUS(cudaMalloc(
-                    &mForeignDataDevice, mCudaBaseTensor.size() * sizeof(T)));
-            }
-
-            CHECK_CUDA_STATUS(cudaMemcpyPeer(
-                mForeignDataDevice, dstDev,
-                getDevicePtr(dev), dev,
-                mCudaBaseTensor.size() * sizeof(T)));
-
-            thrust_aggregate(mForeignDataDevice, getDevicePtr(dstDev),
-                             mCudaBaseTensor.size());
+            aggregate(dev, dstDev); 
         }
     }
 
@@ -1221,6 +1230,12 @@ template <typename T> void N2D2::CudaTensor<T>::broadcastAnyTo(int dstDev)
     const
 {
     mDeviceTensor->broadcastAnyTo(dstDev);
+}
+
+template <typename T> void N2D2::CudaTensor<T>::aggregate(int srcDev,
+                                                          int dstDev) const
+{
+    mDeviceTensor->aggregate(srcDev, dstDev);
 }
 
 template <typename T> void N2D2::CudaTensor<T>::aggregateAllTo(int dstDev)

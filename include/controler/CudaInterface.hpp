@@ -69,6 +69,7 @@ public:
     virtual void broadcastAllFrom(int srcDev) const;
     virtual void broadcastAnyTo(int dstDev) const;
 
+    virtual void aggregate(int srcDev, int dstDev) const;
     virtual void aggregateAllTo(int dstDev) const;
 
     virtual cuda_tensor_type& back();
@@ -169,6 +170,15 @@ void N2D2::CudaInterface<T, STACKING_DIM>::broadcastAnyTo(int dstDev) const
     for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
     {
         dynamic_cast<cuda_tensor_type*>(*it)->broadcastAnyTo(dstDev);
+    }
+}
+
+template <class T, int STACKING_DIM>
+void N2D2::CudaInterface<T, STACKING_DIM>::aggregate(int srcDev, int dstDev) const
+{
+    for (auto it = mData.begin(), itEnd = mData.end(); it != itEnd; ++it)
+    {
+        dynamic_cast<cuda_tensor_type*>(*it)->aggregate(srcDev, dstDev);
     }
 }
 
