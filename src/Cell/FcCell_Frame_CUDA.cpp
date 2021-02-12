@@ -716,10 +716,10 @@ void N2D2::FcCell_Frame_CUDA<T>::update()
 
     for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
         if (mDiffSynapses[k].isValid()) {
-            mDiffSynapses[k].aggregateAllTo(dev);
+            mDiffSynapses[k].aggregateAllTo(dev, mDevices);
             mWeightsSolvers[k]
                 ->update(mSynapses[k], mDiffSynapses[k], mInputs.dimB());
-            mSynapses[k].broadcastAllFrom(dev);
+            mSynapses[k].broadcastAllFrom(dev, mDevices);
         }
     }
 
@@ -731,9 +731,9 @@ void N2D2::FcCell_Frame_CUDA<T>::update()
     }
 
     if (!mNoBias && mDiffBias.isValid()){
-        mDiffBias.aggregateAllTo(dev);
+        mDiffBias.aggregateAllTo(dev, mDevices);
         mBiasSolver->update(mBias, mDiffBias, mInputs.dimB());
-        mBias.broadcastAllFrom(dev);
+        mBias.broadcastAllFrom(dev, mDevices);
     }
 }
 
