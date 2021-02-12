@@ -80,6 +80,20 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
                   std::istream_iterator<int>(),
                   std::inserter(devices, devices.end()));
         setDevices(devices);
+
+        int dev;
+        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+        if (devices.find(dev) == devices.end()){
+            std::cout << "Cuda device selected with the dev option is not in the N2D2_GPU_DEVICES list";
+            std::cout << " [ ";
+            std::copy(devices.begin(),
+                      devices.end(),
+                      std::ostream_iterator<int>(std::cout, " "));
+            std::cout << "]" << std::endl;
+            std::cout << "Please choose another cuda device" << std::endl;
+            std::exit(0);
+        }
     }
     else {
 #endif
