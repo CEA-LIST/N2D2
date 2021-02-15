@@ -103,28 +103,30 @@ __global__ void cudaFixedPointScaling_kernel(const T* input, T* output,
                                           ch*heigth*width +
                                           i;
                 
-                
+                //
+                /*
                 const long long half = (nbFractionalBits > 0)
                     ? (1ll << (nbFractionalBits - 1))
                     : 0ll;
                 const long long res = (
                     static_cast<long long>(round(input[index])) * scalingFactorPerChannel[ch] + half
                 )  >> nbFractionalBits;
+                */
                 
-                //TODO::add clipping here properly, the code below doesn't work
-                /*
+                //adding the clipping
+                
                 const long long half = (nbFractionalBits > 0)
                     ? (1ll << (nbFractionalBits - 1))
                     : 0ll;
 
-                const long long res = round(input[index]);
+                long long rInput = round(input[index]);
                 if(isClipped){
-                    res = (res > clippingFactorPerChannel[ch]) ? clippingFactorPerChannel[ch] : res;
+                    rInput = (rInput > clippingFactorPerChannel[ch]) ? clippingFactorPerChannel[ch] : rInput;
                 }
-                res = (
-                    static_cast<long long>(res) * scalingFactorPerChannel[ch] + half
+                const long long res = (
+                    static_cast<long long>(rInput) * scalingFactorPerChannel[ch] + half
                 )  >> nbFractionalBits;
-                */
+                
 
                 output[index] = saturate(res, quantizedNbBits, isOutputUnsigned);
             }
@@ -155,11 +157,26 @@ __global__ void cudaSingleShiftScaling_kernel(const T* input, T* output,
                                           i;
                 
                 //TODO::add clipping here properly, nothing for now
+                /*
                 const long long half = (scalingFactorPerChannel[ch] > 0)
                     ? (1ll << (scalingFactorPerChannel[ch] - 1))
                     : 0ll;
                 const long long res = (
                     static_cast<long long>(round(input[index])) + half
+                ) >> scalingFactorPerChannel[ch];
+                */
+
+                const long long half = (scalingFactorPerChannel[ch] > 0)
+                ? (1ll << (scalingFactorPerChannel[ch] - 1))
+                : 0ll;
+
+                long long rInput = round(input[index]);
+                if(isClipped){
+                    rInput = (rInput > clippingFactorPerChannel[ch]) ? clippingFactorPerChannel[ch] : rInput;
+                }
+
+                const long long res = (
+                    static_cast<long long>(rInput) + half
                 ) >> scalingFactorPerChannel[ch];
 
                 output[index] = saturate(res, quantizedNbBits, isOutputUnsigned);
@@ -190,7 +207,7 @@ __global__ void cudaDoubleShiftScaling_kernel(const T* input, T* output,
                                           ch*heigth*width +
                                           i;
 
-                //TODO::add clipping here properly, nothing for now
+                //TODO::add clipping here properly, nothing for now  
                 const long long half = (scalingFactorPerChannel[ch].second > 0)
                     ? (1ll << (scalingFactorPerChannel[ch].second - 1))
                     : 0ll;
@@ -198,7 +215,21 @@ __global__ void cudaDoubleShiftScaling_kernel(const T* input, T* output,
                 const long long res = (
                     val + (val << scalingFactorPerChannel[ch].first) +  half
                 ) >> scalingFactorPerChannel[ch].second;
+                
+                /*
+                const long long half = (scalingFactorPerChannel[ch].second > 0)
+                ? (1ll << (scalingFactorPerChannel[ch].second - 1))
+                : 0ll;
 
+                long long val = round(input[index]);
+                if(isClipped){
+                    val = (val > clippingFactorPerChannel[ch]) ? clippingFactorPerChannel[ch] : val;
+                }
+
+                const long long res = (
+                    val + (val << scalingFactorPerChannel[ch].first) +  half
+                ) >> scalingFactorPerChannel[ch].second;
+                */
 
                 output[index] = saturate(res, quantizedNbBits, isOutputUnsigned);
             }
