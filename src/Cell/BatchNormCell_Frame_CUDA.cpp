@@ -310,91 +310,64 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::update()
     CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
 
     if (mDiffScale.isValid()){
-        mDiffScale.aggregateAllTo(currentDev);
+        mDiffScale.aggregateAllTo(currentDev, mDevices);
         mScaleSolver->update(*mScale, mDiffScale, mInputs.dimB());
-        mScale->broadcastAllFrom(currentDev);
+        mScale->broadcastAllFrom(currentDev, mDevices);
     }
 
     if (mDiffBias.isValid()){
-        mDiffBias.aggregateAllTo(currentDev);
+        mDiffBias.aggregateAllTo(currentDev, mDevices);
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
-        mBias->broadcastAllFrom(currentDev);
+        mBias->broadcastAllFrom(currentDev, mDevices);
     }
 
-    int count;
-    CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
-
-    std::shared_ptr<CudaTensor<ParamT> > cudaCopyMean = std::make_shared<CudaTensor<ParamT> >();
+    std::shared_ptr<CudaTensor<ParamT> > cudaCopyMean 
+        = std::make_shared<CudaTensor<ParamT> >();
 
     int nbActivateDev = 0;
-    for (int dev=0; dev < count; ++dev) {
+
+    // Copying mMean before aggregating 
+    // (required to calculate mVariance)
+    for (int dev = 0; dev < (int)mDevices.size(); ++dev) {
         if ((mMean->deviceTensor()).isDevicePtr(dev)) {
-            ++nbActivateDev;
-            CHECK_CUDA_STATUS(cudaSetDevice(dev));
-            cudaCopyMean->resize(mMean->dims(), ParamT(0.0));
-            mMean->synchronizeDToH();
-            thrust_copy(mMean->getDevicePtr(), cudaCopyMean->getDevicePtr(), mMean->size());
+            if (mDevices[dev] == N2D2::DeviceState::Connected) {
+                ++nbActivateDev;
+                CHECK_CUDA_STATUS(cudaSetDevice(dev));
+                cudaCopyMean->resize(mMean->dims(), ParamT(0.0));
+                thrust_copy(mMean->getDevicePtr(), 
+                            cudaCopyMean->getDevicePtr(), 
+                            mMean->size());
+            }
         }   
     } 
     CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
 
-    // std::cout << "Before update mean&var" << std::endl;
-    // for (int dev=0; dev < count; ++dev) {
-    //     CHECK_CUDA_STATUS(cudaSetDevice(dev));
-    //     if ((mMean->deviceTensor()).isDevicePtr(dev)) {
-    //         mMean->synchronizeDToH();
-    //         mVariance->synchronizeDToH();
-    //         cudaCopyMean->synchronizeDToH();
-    //         std::cout << "Mean" << dev << ": "; 
-    //         for (unsigned int i=0; i<mMean->size(); ++i) {
-    //             std::cout << (*mMean)(i) << " ";
-    //         }
-    //         std::cout << std::endl;
-    //         std::cout << "Cuda" << dev << ": " << (*cudaCopyMean)(0) << " " << (*cudaCopyMean)(1) << " " << (*cudaCopyMean)(2) << std::endl;
-    //         std::cout << "Var" << dev << ": " << (*mVariance)(0) << " " << (*mVariance)(1) << " " << (*mVariance)(2) << std::endl;
-    //     }
-    // }
-    // CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
-
-    mMean->aggregateAllTo(currentDev);
+    mMean->aggregateAllTo(currentDev, mDevices);
     thrust_div(mMean->getDevicePtr(), mMean->size(), nbActivateDev);
-    mMean->broadcastAllFrom(currentDev);
+    mMean->broadcastAllFrom(currentDev, mDevices);
 
+    // Calculating combined variances
+    // For more details, see 
+    // https://www.emathzone.com/tutorials/basic-statistics/combined-variance.html
 #pragma omp parallel for if (nbActivateDev > 1)
-    for (int dev=0; dev < count; ++dev) {
+    for (int dev = 0; dev < (int)mDevices.size(); ++dev) {
         if ((mMean->deviceTensor()).isDevicePtr(dev)) {
-            CHECK_CUDA_STATUS(cudaSetDevice(dev));
-            thrust_combinedVar(
-                mVariance->getDevicePtr(),
-                mMean->getDevicePtr(),
-                cudaCopyMean->getDevicePtr(),
-                mVariance->size()
-            );
+            if (mDevices[dev] == N2D2::DeviceState::Connected) {
+                CHECK_CUDA_STATUS(cudaSetDevice(dev));
+                thrust_combinedVar(
+                    mVariance->getDevicePtr(),
+                    mMean->getDevicePtr(),
+                    cudaCopyMean->getDevicePtr(),
+                    mVariance->size()
+                );
+            }
         }
     }
     CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
 
-    mVariance->aggregateAllTo(currentDev);
+    mVariance->aggregateAllTo(currentDev, mDevices);
     thrust_div(mVariance->getDevicePtr(), mVariance->size(), nbActivateDev);
-    mVariance->broadcastAllFrom(currentDev);
-
-    // std::cout << "After update mean&var" << std::endl;
-    // for (int dev=0; dev < count; ++dev) {
-    //     CHECK_CUDA_STATUS(cudaSetDevice(dev));
-    //     if ((mMean->deviceTensor()).isDevicePtr(dev)) {
-    //         mMean->synchronizeDToH();
-    //         mVariance->synchronizeDToH();
-    //         cudaCopyMean->synchronizeDToH();
-    //         std::cout << "Mean" << dev << ": "; 
-    //         for (unsigned int i=0; i<mMean->size(); ++i) {
-    //             std::cout << (*mMean)(i) << " ";
-    //         }
-    //         std::cout << std::endl;
-    //         std::cout << "Cuda" << dev << ": " << (*cudaCopyMean)(0) << " " << (*cudaCopyMean)(1) << " " << (*cudaCopyMean)(2) << std::endl;
-    //         std::cout << "Var" << dev << ": " << (*mVariance)(0) << " " << (*mVariance)(1) << " " << (*mVariance)(2) << std::endl;
-    //     }
-    // }
-    // CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+    mVariance->broadcastAllFrom(currentDev, mDevices);
 }
 
 template <class T>
