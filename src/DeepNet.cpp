@@ -50,6 +50,12 @@ N2D2::DeepNet::DeepNet(Network& net)
       mStreamTestIdx(0)
 {
     // ctor
+
+    // Used to catch the power of every device during learning
+    // See N2D2::DeepNet::learn for details
+    nvmlReturn_t result = nvmlInit();
+    if (NVML_SUCCESS != result)
+        std::cout << "Failed to initialize NVML: " << nvmlErrorString(result) << std::endl;
 }
 
 void N2D2::DeepNet::addCell(const std::shared_ptr<Cell>& cell,
@@ -1952,6 +1958,21 @@ void N2D2::DeepNet::logSpikeStats(const std::string& dirName,
                  / (double)nbPatterns << std::endl;
 }
 
+/** Give the power usage of the target device
+ * 
+ * @param dev   The identifier of the target device
+ * @return      Power usage for the GPU dev in milliwatts
+ */
+unsigned int devicePowerUsage(int dev)
+{
+    nvmlDevice_t device;
+    unsigned int power = 0;
+    nvmlDeviceGetHandleByIndex_v2(dev, &device);
+    nvmlDeviceGetPowerUsage(device, &power);
+
+    return power;
+}
+
 void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
 {
     if (timings != NULL)
@@ -2627,6 +2648,15 @@ void N2D2::DeepNet::clear(Database::StimuliSet set)
          ++itTargets) {
         (*itTargets)->clear(set);
     }
+}
+
+N2D2::DeepNet::~DeepNet()
+{
+    // Used to catch the power of every device during learning
+    // See N2D2::DeepNet::learn for details
+    nvmlReturn_t result = nvmlShutdown();
+    if (NVML_SUCCESS != result)
+        std::cout << "Failed to shutdown NVML: " << nvmlErrorString(result) << std::endl;
 }
 
 

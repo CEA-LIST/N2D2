@@ -24,6 +24,8 @@
 
 #include <string>
 #include <vector>
+#include <atomic>
+#include <nvml.h>
 
 #include "Cell/Cell.hpp"
 #include "Database/Database.hpp"
@@ -218,7 +220,7 @@ public:
                     <std::pair<std::string, double> >& timings) const;
     void logReceptiveFields(const std::string& fileName) const;
 
-    virtual ~DeepNet() {};
+    virtual ~DeepNet();
 
     static void drawHistogram(std::string title, const std::string& dataFileName,
                    unsigned int fileRow, unsigned int maxLabelSize, bool isLog,
