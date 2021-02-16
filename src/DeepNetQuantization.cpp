@@ -130,13 +130,14 @@ void N2D2::DeepNetQuantization::rescaleParentsToScaling(const std::shared_ptr<Ce
         }
         
         assert(parentScaling < scaling);
+        bool isClipped = false;
         auto scalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*parentCell))
                                 (mDeepNet, 
                                  mDeepNet.generateNewCellName(parentCell->getName() + "_rescale_branch"), 
                                  parentCell->getNbOutputs(), 
                                  Scaling::floatingPointScaling(
                                      std::vector<Float_T>(parentCell->getNbOutputs(), 
-                                                          parentScaling/scaling))
+                                                          parentScaling/scaling), isClipped, std::vector<Float_T>(0.0f))
                                 );
 
         mDeepNet.addCellBetween(scalingCell, parentCell, cell);
@@ -632,13 +633,15 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantize
                     scalingPerOutput[output] = wScalingCellOutput/wScalingCell;
                 }
 
-
+                bool isClipped=false;
                 auto scalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*cell))
                                         (mDeepNet, 
                                          mDeepNet.generateNewCellName(cell->getName() + "_rescale_params"), 
                                          cell->getNbOutputs(), 
                                          Scaling::floatingPointScaling(
-                                             std::move(scalingPerOutput))
+                                             std::move(scalingPerOutput),
+                                             isClipped,
+                                             std::vector<Float_T>(0.0f))
                                         );
                 mDeepNet.addCellAfter(scalingCell, cell);
 
@@ -751,6 +754,7 @@ void N2D2::DeepNetQuantization::quantizeActivations(
                                         
 
             const long double actQuantScaling = getActivationQuantizationScaling(*cell, nbBits);
+            bool isClipped = false;
             auto scalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*cell))
                                     (mDeepNet, 
                                      mDeepNet.generateNewCellName(cell->getName() + "_rescale_act"), 
@@ -758,7 +762,9 @@ void N2D2::DeepNetQuantization::quantizeActivations(
                                      Scaling::floatingPointScaling(
                                          std::vector<Float_T>(cell->getNbOutputs(), 
                                             (prevActivationScaling/activationScaling)/actQuantScaling
-                                         )
+                                         ),
+                                         isClipped,
+                                         std::vector<Float_T>(0.0f)
                                      )
                                     );
 
@@ -912,8 +918,9 @@ void N2D2::DeepNetQuantization::fuseScalingCellWithParentActivation(
             parentScalingPerOutput[o] *= scalingPerOutput[o];
         }
 
+        bool isClipped = false;
         parentCellActivation.setActivationScaling(
-            Scaling::floatingPointScaling(std::move(parentScalingPerOutput))
+            Scaling::floatingPointScaling(std::move(parentScalingPerOutput), isClipped, std::vector<Float_T>(0.0f))
         );
 
         mDeepNet.removeCell(scalingCell);
@@ -944,7 +951,8 @@ void N2D2::DeepNetQuantization::fuseScalingCellWithParentScalingCell(
         parentScalingPerOutput[o] *= scalingPerOutput[o];
     }
 
-    parentScalingCell->setScaling(Scaling::floatingPointScaling(std::move(parentScalingPerOutput)));
+    bool isClipped = false;
+    parentScalingCell->setScaling(Scaling::floatingPointScaling(std::move(parentScalingPerOutput), isClipped, std::vector<Float_T>(0.0f)));
 
     mDeepNet.removeCell(scalingCell);
 }
@@ -970,12 +978,13 @@ void N2D2::DeepNetQuantization::moveScalingCellAboveParentElemWiseCell(
 #endif
 
         auto grandParentsCells = parentElemWiseCell->getParentsCells();
+        bool isClipped = false;
         for(auto grandParentCell: grandParentsCells) {
             auto grandParentScalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*grandParentCell))
                                             (mDeepNet, 
                                              mDeepNet.generateNewCellName(grandParentCell->getName() + "_rescale_elemwise"), 
                                              grandParentCell->getNbOutputs(), 
-                                             Scaling::floatingPointScaling(scalingPerOutput));
+                                             Scaling::floatingPointScaling(scalingPerOutput,isClipped,std::vector<Float_T>(0.0f)));
 
             mDeepNet.addCellBetween(grandParentScalingCell, grandParentCell, parentElemWiseCell);
         }
@@ -1012,7 +1021,9 @@ void N2D2::DeepNetQuantization::approximateScalingCell(ScalingCell& cell, Scalin
         fixedScalingPerOutput[o] = std::round(floatScalingPerOutput[o]*std::pow(2, nbFractionalBits));
     }
     
-    cell.setScaling(Scaling::fixedPointScaling(nbFractionalBits, fixedScalingPerOutput));
+    bool isClipped = false;
+
+    cell.setScaling(Scaling::fixedPointScaling(nbFractionalBits, fixedScalingPerOutput, isClipped, std::vector<std::int32_t>(0)));
 
 #ifdef VERBOSE_QUANT
     std::cout << "    FIXED_MULT: " << fixedScalingPerOutput[0]
@@ -1158,7 +1169,8 @@ void N2D2::DeepNetQuantization::approximateActivationScaling(Cell& cell, Activat
             scalingFixedPoint.push_back(std::round(sc * (1ull << nbFractionalBits)));
         }
 
-        activation.setActivationScaling(Scaling::fixedPointScaling(nbFractionalBits, scalingFixedPoint));
+        bool isClipped = false;
+        activation.setActivationScaling(Scaling::fixedPointScaling(nbFractionalBits, scalingFixedPoint, isClipped, std::vector<std::int32_t>(0)));
 
 #ifdef VERBOSE_QUANT
         std::cout << "    FIXED_MULT: " << scalingFixedPoint[0]
@@ -1172,7 +1184,8 @@ void N2D2::DeepNetQuantization::approximateActivationScaling(Cell& cell, Activat
             shifts.push_back(powOf2Exponents[0]);
         }
 
-        activation.setActivationScaling(Scaling::singleShiftScaling(shifts));
+        bool isClipped = false;
+        activation.setActivationScaling(Scaling::singleShiftScaling(shifts, isClipped, std::vector<unsigned char>(0)));
 
 #ifdef VERBOSE_QUANT
         std::cout << "    SINGLE_SHIFT: 2 ^ [- " << (int)shifts[0] << "]" << std::endl;
@@ -1186,7 +1199,11 @@ void N2D2::DeepNetQuantization::approximateActivationScaling(Cell& cell, Activat
             shifts.push_back({powOf2Exponents[1] - powOf2Exponents[0], powOf2Exponents[1]});
         }
 
-        activation.setActivationScaling(Scaling::doubleShiftScaling(shifts));
+        bool isClipped = false;
+        std::vector<std::pair<unsigned char, unsigned char>> vClipping;
+        vClipping.push_back(std::make_pair(0,0));
+        
+        activation.setActivationScaling(Scaling::doubleShiftScaling(shifts, isClipped, vClipping));
 
 #ifdef VERBOSE_QUANT
         std::cout << "    DOUBLE_SHIFT: 2 ^ [- " << (int)shifts[0].first << "] "
