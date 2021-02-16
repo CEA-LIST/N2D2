@@ -1,8 +1,9 @@
 /*
-    (C) Copyright 2020 CEA LIST. All Rights Reserved.
+    (C) Copyright 2021 CEA LIST. All Rights Reserved.
     Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
-                    Johannes THIELE (johannes.thiele@cea.fr)
+                    Johannes THIELE (johannes.thiele@cea.fr) 
                     Olivier BICHLER (olivier.bichler@cea.fr)
+                   
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -21,20 +22,17 @@
 */
 
 #ifdef PYBIND
-#include "Cell/SoftmaxCell.hpp"
-
+#include "Cell/ActivationCell.hpp"
 
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
-void init_SoftmaxCell(py::module &m) {
-
-    py::class_<SoftmaxCell, std::shared_ptr<SoftmaxCell>, Cell> (m, "SoftmaxCell", py::multiple_inheritance())
-    .def("getWithLoss", &SoftmaxCell::getWithLoss)
-    .def("getGroupSize", &SoftmaxCell::getGroupSize);
-
+void init_ActivationCell(py::module &m) {
+    py::class_<ActivationCell, std::shared_ptr<ActivationCell>, Cell> (m, "ActivationCell", py::multiple_inheritance())
+    .def("getType", &ActivationCell::getType);
 }
 }
 #endif
+

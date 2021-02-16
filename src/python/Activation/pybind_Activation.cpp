@@ -32,6 +32,8 @@ void init_Activation(py::module &m) {
     py::class_<Activation, std::shared_ptr<Activation>, Parameterizable> a (m, "Activation", py::multiple_inheritance());
     a.doc() = "Virtual class that is inherited by other Activation classes.";
     a.def("getType", &Activation::getType);
+    a.def("setQuantizer", &Activation::setQuantizer, py::arg("quantizer"));
+    a.def("getQuantizer", &Activation::getQuantizer);
 }
 }
 #endif

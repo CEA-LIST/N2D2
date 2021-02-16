@@ -30,7 +30,8 @@ from n2d2.n2d2_interface import N2D2_Interface
 
 class DeepNet(N2D2_Interface):
 
-    def __init__(self, **config_parameters):
+    def __init__(self, N2D2_object=None, **config_parameters):
+
 
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')
@@ -41,13 +42,30 @@ class DeepNet(N2D2_Interface):
         else:
             self._datatype = n2d2.global_variables.default_dataType
 
-        N2D2_Interface.__init__(self, **config_parameters)
-
-        self._N2D2_object = N2D2.DeepNet(N2D2.Network(n2d2.global_variables.default_seed))
+        if N2D2_object is None:
+            self._create_from_parameters(**config_parameters)
+        else:
+            if len(config_parameters) > 0:
+                raise RuntimeError("N2D2_object given but len(config_parameters) > 0")
+            self._create_from_N2D2_object(N2D2_object)
 
         # Even though a deepnet object does not require a provider, some methods using the deepnet
         # expect it to have one. For these cases we have to add a dummy provider
         self._provider = None
+
+    def _create_from_parameters(self, **config_parameters):
+        N2D2_Interface.__init__(self, **config_parameters)
+        self._network = n2d2.global_variables.default_net #N2D2.Network(n2d2.global_variables.default_seed)
+        self._N2D2_object = N2D2.DeepNet(self._network)
+        self._set_N2D2_parameters(self._config_parameters)
+
+
+    def _create_from_N2D2_object(self, N2D2_object):
+        N2D2_Interface.__init__(self,  **self._load_N2D2_parameters(N2D2_object))
+        self._N2D2_object = N2D2_object
+        self._network = self._N2D2_object.getNetwork()
+
+
 
     def add_provider(self, provider):
         self._provider = provider
@@ -56,6 +74,7 @@ class DeepNet(N2D2_Interface):
     def __str__(self):
         output = "Deepnet" + "(" + self._model + "<" + self._datatype + ">" + ")"
         output += N2D2_Interface.__str__(self)
+        return output
 
     def get_model(self):
         return self._model
@@ -75,15 +94,18 @@ def load_from_ONNX(model_path, dims, batch_size=1):
     :type batch_size: unsigned int
     Load a deepnet from an ONNX file given its input dimensions.
     """
-    network = N2D2.Network(n2d2.global_variables.default_seed)
-    deepNet = N2D2.DeepNet(network)
+    deepNet = DeepNet()
     provider = n2d2.provider.DataProvider(n2d2.database.Database(), dims, batchSize=batch_size)
-    deepNet.setDatabase(provider.get_database().N2D2())
-    deepNet.setStimuliProvider(provider.N2D2())
-    N2D2.CellGenerator.defaultModel = n2d2.global_variables.default_deepNet.get_model()
-    deepNet = N2D2.DeepNetGenerator.generateFromONNX(network, model_path, N2D2.IniParser(), deepNet)
+    deepNet.N2D2().setDatabase(provider.get_database().N2D2())
+    print(provider.get_database().N2D2())
+    deepNet.N2D2().setStimuliProvider(provider.N2D2())
+    N2D2.CellGenerator.defaultModel = "Frame_CUDA" #deepNet.get_model()
+    print(N2D2.CellGenerator.defaultModel)
+    print("Launch generator")
+    deepNet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, N2D2.IniParser(), deepNet.N2D2())
+    print("Launch converter")
     model = n2d2.converter.deepNet_converter(deepNet)
-    model.clear_input(unlink_N2D2_input=True)     # Remove dummy stimuli provider
+    model.clear_input() #Remove dummy stimuli provider
     return model
 
 def load_from_INI(path):

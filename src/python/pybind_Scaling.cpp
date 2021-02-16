@@ -33,19 +33,24 @@ void init_Scaling(py::module &m) {
     py::class_<AbstractScaling> (m, "AbstractScaling");
 
     py::class_<FloatingPointScaling, AbstractScaling> (m, "FloatingPointScaling", py::multiple_inheritance())
-    .def(py::init<std::vector<Float_T>>(), py::arg("scalignPerOutput"));
+    .def(py::init<std::vector<Float_T>, bool, std::vector<Float_T>>(), 
+        py::arg("scalingPerOutput"), py::arg("isclipped"), py::arg("clipping"));
     
     py::class_<FixedPointScaling, AbstractScaling> (m, "FixedPointScaling", py::multiple_inheritance())
-    .def(py::init<std::size_t, std::vector<std::int32_t>>(), py::arg("nbFractionalBits"), py::arg("scaling"));
+    .def(py::init<std::size_t, std::vector<std::int32_t>, bool, std::vector<std::int32_t>>(), 
+        py::arg("nbFractionalBits"), py::arg("scaling"), py::arg("isclipped"), py::arg("clipping"));
     
     py::class_<SingleShiftScaling, AbstractScaling> (m, "SingleShiftScaling", py::multiple_inheritance())
-    .def(py::init<std::vector<unsigned char>>(), py::arg("scaling"));
+    .def(py::init<std::vector<unsigned char>, bool, std::vector<unsigned char>>(), 
+        py::arg("scaling"), py::arg("isclipped"), py::arg("clipping"));
 
     py::class_<DoubleShiftScaling, AbstractScaling> (m, "DoubleShiftScaling", py::multiple_inheritance())
-    .def(py::init<std::vector<std::pair<unsigned char, unsigned char>>>(), py::arg("scaling"));
+    .def(py::init<std::vector<std::pair<unsigned char, unsigned char>>, bool, std::vector<std::pair<unsigned char, unsigned char>>>(), 
+        py::arg("scaling"), py::arg("isclipped"), py::arg("clipping"));
 
     py::class_<Scaling, std::shared_ptr<Scaling>> (m, "Scaling", py::multiple_inheritance())
     .def(py::init<>());
 }
 }
 #endif
+

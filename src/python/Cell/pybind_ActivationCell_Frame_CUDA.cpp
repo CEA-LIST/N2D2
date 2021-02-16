@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2020 CEA LIST. All Rights Reserved.
+    (C) Copyright 2021 CEA LIST. All Rights Reserved.
     Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
                     Olivier BICHLER (olivier.bichler@cea.fr)
@@ -20,21 +20,31 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
-#include "Cell/SoftmaxCell.hpp"
+#ifdef CUDA
 
+#ifdef PYBIND
+#include "Cell/ActivationCell_Frame_CUDA.hpp"
 
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
-void init_SoftmaxCell(py::module &m) {
-
-    py::class_<SoftmaxCell, std::shared_ptr<SoftmaxCell>, Cell> (m, "SoftmaxCell", py::multiple_inheritance())
-    .def("getWithLoss", &SoftmaxCell::getWithLoss)
-    .def("getGroupSize", &SoftmaxCell::getGroupSize);
+template<typename T>
+void declare_ActivationCell_Frame_CUDA(py::module &m, const std::string& typeStr) {
+    const std::string pyClassName("ActivationCell_Frame_CUDA_" + typeStr);
+    py::class_<ActivationCell_Frame_CUDA<T>, std::shared_ptr<ActivationCell_Frame_CUDA<T>>, ActivationCell, Cell_Frame_CUDA<T>> (m, pyClassName.c_str(), py::multiple_inheritance())
+    .def(py::init<const DeepNet&, const std::string&, unsigned int, const std::shared_ptr<Activation>&>(),
+         py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation") = std::make_shared<TanhActivation_Frame_CUDA<T> >());
+    ;
 
 }
+
+void init_ActivationCell_Frame_CUDA(py::module &m) {
+    declare_ActivationCell_Frame_CUDA<float>(m, "float");
+    declare_ActivationCell_Frame_CUDA<double>(m, "double");
 }
+}
+#endif
+
 #endif

@@ -22,7 +22,8 @@ import N2D2
 import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
 
-class Activation(N2D2_Interface):
+# TODO: Make obligatory to pass model and datatype of cell in cell constrcutor
+class ActivationFunction(N2D2_Interface):
 
     def __init__(self, **config_parameters):
         if 'model' in config_parameters:
@@ -48,7 +49,7 @@ class Activation(N2D2_Interface):
         return output
 
 
-class Linear(Activation):
+class Linear(ActivationFunction):
     """
     Linear activation function for n2d2.
     """
@@ -58,13 +59,17 @@ class Linear(Activation):
     }
 
     def __init__(self, **config_parameters):
-        Activation.__init__(self, **config_parameters)
+        ActivationFunction.__init__(self, **config_parameters)
         # No optional constructor arguments
         self._N2D2_object = self._linear_activation_generators[self._model_key]()
-        self._set_N2D2_parameters(self._config_parameters)
+        for key, value in self._config_parameters.items():
+            if key is 'quantizer':
+                self._N2D2_object.setQuantizer(value.N2D2())
+            else:
+                self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
 
 
-class Rectifier(Activation):
+class Rectifier(ActivationFunction):
     """
     Rectifier activation function for n2d2.
     """
@@ -74,13 +79,17 @@ class Rectifier(Activation):
     }
 
     def __init__(self, **config_parameters):
-        Activation.__init__(self, **config_parameters)
+        ActivationFunction.__init__(self, **config_parameters)
         # No optional constructor arguments
         self._N2D2_object = self._rectifier_activation_generators[self._model_key]()
-        self._set_N2D2_parameters(self._config_parameters)
+        for key, value in self._config_parameters.items():
+            if key is 'quantizer':
+                self._N2D2_object.setQuantizer(value.N2D2())
+            else:
+                self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
 
 
-class Tanh(Activation):
+class Tanh(ActivationFunction):
     """
     Tanh activation function for n2d2.
     """
@@ -90,8 +99,12 @@ class Tanh(Activation):
     }
 
     def __init__(self, **config_parameters):
-        Activation.__init__(self, **config_parameters)
+        ActivationFunction.__init__(self, **config_parameters)
         # No optional constructor arguments
         self._N2D2_object = self._tanh_activation_generators[self._model_key]()
-        self._set_N2D2_parameters(self._config_parameters)
+        for key, value in self._config_parameters.items():
+            if key is 'quantizer':
+                self._N2D2_object.setQuantizer(value.N2D2())
+            else:
+                self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
 

@@ -46,7 +46,23 @@ def MobileNet_v2_ONNX_preprocessing(size=224):
     margin = 32
 
     trans = Composite([
-        Rescale(width=size+margin, height=size+margin, keepAspectRatio=True, resizeToFit=False),
+        Rescale(width=size+margin, height=size+margin),
+        PadCrop(width=size, height=size),
+        RangeAffine(firstOperator='Divides', firstValue=[255.0]),
+        ColorSpace(colorSpace='RGB'),
+        RangeAffine(firstOperator='Minus', firstValue=[0.485, 0.456, 0.406], secondOperator='Divides', secondValue=[0.229, 0.224, 0.225]),
+    ])
+
+    return trans
+
+
+
+
+def ResNet_ONNX_preprocessing(size=224):
+    margin = 32
+
+    trans = Composite([
+        Rescale(width=size+margin, height=size+margin, keepAspectRatio=False, ResizeToFit=False),
         PadCrop(width=size, height=size),
         RangeAffine(firstOperator='Divides', firstValue=[255.0]),
         ColorSpace(colorSpace='RGB'),
