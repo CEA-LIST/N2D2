@@ -85,7 +85,39 @@ using namespace N2D2;
 
 #ifdef CUDA
 unsigned int cudaDevice = 0;
+std::vector<unsigned int> cudaDevices;
 #endif
+
+
+#ifdef CUDA
+std::vector<unsigned int> setMultiDevices(std::string cudaDev)
+{
+    std::vector<unsigned int> devices;
+
+    if (cudaDev != "") {
+        std::stringstream devText(cudaDev);
+        std::stringstream devString;
+        char delimiter = ',';
+        std::string token;
+        while(std::getline(devText,token,delimiter)){
+            if (!token.empty())
+                devices.push_back(std::stoul(token));
+            else {
+                std::cerr << "Unknown CUDA device" << std::endl;
+                std::exit(0);
+            }
+        }
+        std::copy(devices.begin(),
+                devices.end(),
+                std::ostream_iterator<unsigned int>(devString, " "));
+        
+        setenv("N2D2_GPU_DEVICES", devString.str().c_str(), 1);
+    }
+    
+    return devices;
+}
+#endif
+
 
 void learnThreadWrapper(const std::shared_ptr<DeepNet>& deepNet,
                         std::vector<std::pair<std::string, double> >* timings
@@ -288,6 +320,9 @@ public:
 
 #ifdef CUDA
         cudaDevice =  opts.parse("-dev", 0, "CUDA device ID");
+        cudaDevices = setMultiDevices(opts.parse("-multidev", std::string(), "CUDA devices ID"));
+        if (!cudaDevices.empty())
+            cudaDevice = cudaDevices[0];
 #endif
 
         version =     opts.parse("-v", "display version information");
