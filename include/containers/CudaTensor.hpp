@@ -141,7 +141,7 @@ public:
 
 protected:
     mutable std::vector<T*> mDataDevice;
-    mutable T* mForeignDataDevice;
+    mutable std::vector<T*> mForeignDataDevice;
     const std::shared_ptr<CudaDeviceTensor<T> > mDataDeviceOwner;
     const size_t mDataDeviceOffset;
     mutable cudnnTensorDescriptor_t mTensor;
@@ -496,7 +496,6 @@ N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
     const std::shared_ptr<CudaDeviceTensor<T> >& dataDeviceOwner,
     size_t dataDeviceOffset)
     : CudaBaseDeviceTensor(base),
-      mForeignDataDevice(NULL),
       mDataDeviceOwner(dataDeviceOwner),
       mDataDeviceOffset(dataDeviceOffset),
       mTensor(NULL)
@@ -506,6 +505,7 @@ N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
     CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
 
     mDataDevice.resize(count, NULL);
+    mForeignDataDevice.resize(count, NULL);
 }
 
 template <typename T>
@@ -721,18 +721,18 @@ template <typename T> void N2D2::CudaDeviceTensor<T>::broadcastAnyTo(
 template <typename T> 
 void N2D2::CudaDeviceTensor<T>::aggregate(int srcDev, int dstDev) const
 {
-    if (mForeignDataDevice == NULL) {
+    if (mForeignDataDevice[dstDev] == NULL) {
 		// Lazy allocation
 		CHECK_CUDA_STATUS(cudaMalloc(
-		&mForeignDataDevice, mCudaBaseTensor.size() * sizeof(T)));
+		&mForeignDataDevice[dstDev], mCudaBaseTensor.size() * sizeof(T)));
     }
 
     CHECK_CUDA_STATUS(cudaMemcpyPeer(
-        mForeignDataDevice, dstDev,
+        mForeignDataDevice[dstDev], dstDev,
         getDevicePtr(srcDev), srcDev,
         mCudaBaseTensor.size() * sizeof(T)));
 
-    thrust_aggregate(mForeignDataDevice, getDevicePtr(dstDev),
+    thrust_aggregate(mForeignDataDevice[dstDev], getDevicePtr(dstDev),
                      mCudaBaseTensor.size());
 }
 
@@ -790,13 +790,14 @@ template <typename T> N2D2::CudaDeviceTensor<T>::~CudaDeviceTensor()
             cudaFree(mDataDevice[dev]);
             mDataDevice[dev] = NULL;
         }
+
+        if (mForeignDataDevice[dev] != NULL) {
+            // BUG: current device may not be the one on which memory was allocated!
+            cudaFree(mForeignDataDevice[dev]);
+            mForeignDataDevice[dev] = NULL;
+        }
     }
 
-    if (mForeignDataDevice != NULL) {
-        // BUG: current device may not be the one on which memory was allocated!
-        cudaFree(mForeignDataDevice);
-        mForeignDataDevice = NULL;
-    }
 
     if (mTensor != NULL)
         cudnnDestroyTensorDescriptor(mTensor);
