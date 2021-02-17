@@ -308,6 +308,8 @@ public:
                                                       "saved state)");
         ignoreNoExist =     opts.parse("-w-ignore", "intialize with default values weights that are " 
                                                     "not provided");
+        banMultiDevice =    opts.parse("-dynamic-allocation", "authorize the banishment of slow devices"
+                                                                " during learning on several devices");
         exportNoUnsigned =   opts.parse("-no-unsigned", "disable the use of unsigned data type in "
                                                         "integer exports");
         exportNoCrossLayerEqualization =   opts.parse("-no-cle", "disable the use of cross layer"
@@ -379,6 +381,7 @@ public:
     std::string load;
     std::string weights;
     bool ignoreNoExist;
+    bool banMultiDevice;
     int exportNbStimuliMax;
     bool version;
     std::string iniConfig;
@@ -1828,6 +1831,9 @@ int main(int argc, char* argv[]) try
         deepNet->saveNetworkParameters();
         std::exit(0);
     }
+
+    if (opt.banMultiDevice)
+        deepNet->setBanAllowed(opt.banMultiDevice);
 
     Database& database = *deepNet->getDatabase();
     std::cout << "Learning database size: "
