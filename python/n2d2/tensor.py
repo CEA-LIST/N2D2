@@ -115,72 +115,29 @@ class Tensor():
             copy[i] = self._tensor[i]
         return copy
 
-    def from_Tf(tf_tensor):
-        """
-        We can't call this method when using a custom layer ...
-        """
-        # really messy function ...
-        try:
-            import numpy as np
-            from tensorflow.compat.v1 import enable_eager_execution
-            import tensorflow.keras.backend as K
-        except ImportError:
-            raise ImportError("Numpy is not installed")
-        dims = tf_tensor.shape.as_list()
-        data_type = tf_tensor.dtype.name
-        # Ugly ?
-        if data_type == "int32" or data_type == "int64":
-            data_type = int
-        elif data_type == "float32" or data_type == "float64":
-            data_type = float
-        else:
-            raise TypeError("Unknown type :", data_type)
-        print("Dims :", dims)
-        print("dtype :", data_type)
+    # def to_list(self):
+    #     """
+    #     Convert the tensor to a list object
+    #     """
+    #     def create_empty_list(dim, other_dims):
+    #         result = []
+    #         if other_dims:
+    #             for _ in range(dim):
+    #                 result.append(create_empty_list(other_dims[-1], other_dims[:-1]))
+    #         else:
+    #             result = [0] * dim
+    #         return result
 
-        def recursive_browse(x): 
-            # Would be better if we got a flatten list out of this mess ...
-            # Super ugly try except condition to check if object is iterable, hasattr(class, '__getitem__') may be a better option 
-            try:
-                t_browse = []
-                for i in range(len(x)):
-                    t_browse.append(recursive_browse(x[i]))
-                return t_browse
-            except:
-                t_browse = []
-                for i in range(len(x)):
-                    # print(K.get_value(x[i]))
-                    t_browse.append(K.get_value(x[i]))
-                # Need to use the keras method "get_value" to get the value ... doesn't looks like there is a better option.
-                return t_browse
-        n2d2_tensor = Tensor(dims, DefaultDataType=data_type)
-        n2d2_tensor.from_numpy(np.array(recursive_browse(tf_tensor)))
-        return(n2d2_tensor)
-    
-    def to_list(self):
-        """
-        Convert the tensor to a list object
-        """
-        def create_empty_list(dim, other_dims):
-            result = []
-            if other_dims:
-                for _ in range(dim):
-                    result.append(create_empty_list(other_dims[-1], other_dims[:-1]))
-            else:
-                result = [0] * dim
-            return result
+    #     dim = self.dims()
+    #     empty_list = create_empty_list(dim[-1], dim[:-1])
 
-        dim = self.dims()
-        empty_list = create_empty_list(dim[-1], dim[:-1])
-
-
-        for i in range(len(self._tensor)):
-            coord = self._get_coord(i)
-            id = empty_list
-            for c in coord[:-1]:
-                id = id[c]
-            id[coord[-1]] = self._tensor[i]
-        return empty_list
+    #     for i in range(len(self._tensor)):
+    #         coord = self._get_coord(i)
+    #         id = empty_list
+    #         for c in coord[:-1]:
+    #             id = id[c]
+    #         id[coord[-1]] = self._tensor[i]
+    #     return empty_list
 
     def to_numpy(self):
         """
@@ -190,7 +147,7 @@ class Tensor():
             from numpy import array 
         except ImportError:
             raise ImportError("Numpy is not installed")
-        return array(self.to_list())
+        return array(self.N2D2()) 
 
     def from_numpy(self, np_array):
         """

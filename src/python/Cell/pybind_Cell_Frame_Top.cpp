@@ -76,7 +76,6 @@ void init_Cell_Frame_Top(py::module &m) {
     .def("getActivation", &Cell_Frame_Top::getActivation)
     .def("setActivation", &Cell_Frame_Top::setActivation, py::arg("activation"))
     // .def("isCuda", &Cell_Frame_Top::isCuda)
-
     // Note : We need to rename this method so that it's not override.
     .def("addInputBis", &Cell_Frame_Top::addInput, py::arg("inputs"), py::arg("diffOutputs"))
     // .def("replaceInput", &Cell_Frame_Top::replaceInput, py::arg("oldInputs"), py::arg("newInputs"), py::arg("newDiffOutputs"))

@@ -187,10 +187,10 @@ void init_Tensor(py::module &m) {
     // .def("synchronizeHToDBased", &BaseTensor::synchronizeHToDBased)
     .def("nbDims", &BaseTensor::nbDims)
     .def("dims", &BaseTensor::dims)
-    // .def("isValid", &BaseTensor::isValid)
-    // .def("setValid", &BaseTensor::setValid)
+    .def("isValid", &BaseTensor::isValid)
+    .def("setValid", &BaseTensor::setValid)
     // .def("clearValid", &BaseTensor::clearValid)
-    // .def("getType", &BaseTensor::getType)
+    .def("getType", &BaseTensor::getType)
     ;
 
     declare_Tensor<float>(m, "float");

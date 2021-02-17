@@ -112,6 +112,18 @@ public:
     {
         return mDiffInputs;
     }
+
+    const void setDiffInputsValid()
+    {
+        mDiffInputs.setValid();        
+    }
+
+    
+    void setDiffInputs(Tensor<float>& diffInputs)
+    {
+        mDiffInputs = diffInputs;
+    }
+
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
     void exportActivationParameters(const std::string& dirName) const;
     void importActivationParameters(const std::string& dirName, bool ignoreNotExists);

@@ -59,11 +59,11 @@ def test_classic_operation_tensor():
     c[0] = 5
     assert 5 in c
 
-    print("Test to list")
-    c = n2d2.tensor.Tensor([2, 3, 4])
-    l = c.to_list()
-    equivalent_list = [[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]]
-    assert equivalent_list == l
+    # print("Test to list")
+    # c = n2d2.tensor.Tensor([2, 3, 4])
+    # l = c.to_list()
+    # equivalent_list = [[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]]
+    # assert equivalent_list == l
     
     print("Test convert to numpy")
     b = n2d2.tensor.Tensor([3, 2])
@@ -139,11 +139,11 @@ def test_classic_operation_cudatensor():
     c[0] = 5
     assert 5 in c
 
-    print("Test to list")
-    c = n2d2.tensor.CUDA_Tensor([2, 3, 4])
-    l = c.to_list()
-    equivalent_list = [[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]]
-    assert equivalent_list == l
+    # print("Test to list")
+    # c = n2d2.tensor.CUDA_Tensor([2, 3, 4])
+    # l = c.to_list()
+    # equivalent_list = [[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]]
+    # assert equivalent_list == l
     
     print("Test convert to numpy")
     b = n2d2.tensor.CUDA_Tensor([3, 2])

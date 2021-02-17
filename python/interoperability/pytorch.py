@@ -1,3 +1,24 @@
+"""
+    (C) Copyright 2021 CEA LIST. All Rights Reserved.
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
+                    Johannes THIELE (johannes.thiele@cea.fr)
+
+    This software is governed by the CeCILL-C license under French law and
+    abiding by the rules of distribution of free software.  You can  use,
+    modify and/ or redistribute the software under the terms of the CeCILL-C
+    license as circulated by CEA, CNRS and INRIA at the following URL
+    "http://www.cecill.info".
+
+    As a counterpart to the access to the source code and  rights to copy,
+    modify and redistribute granted by the license, users are provided only
+    with a limited warranty  and the software's author,  the holder of the
+    economic rights,  and the successive licensors  have only  limited
+    liability.
+
+    The fact that you are presently reading this means that you have had
+    knowledge of the CeCILL-C license and that you accept its terms.
+"""
+
 import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
@@ -8,24 +29,53 @@ from torchvision import datasets, transforms
 import n2d2
 import N2D2
 import numpy as np
+import time
 
-class TestLayer(torch.nn.Module):
-    """ 
-    Custom layer that print the input tensor and apply identity function.
-    Also convert the tensor to n2d2 tensor.
-    
-    """
+class test_func(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, input):
+        # We need to redefine this method but all the forward computation is done in the Module class
+        return input.clone()
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        # print("The chain is not broken \o/")
+        return grad_output.clone()
+
+class N2D2_computation(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, input):
+        ctx.save_for_backward(input)
+        # We need to redefine this method but all the forward computation is done in the Module class
+        return input.clone()
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        output, = ctx.saved_tensors
+        # We cheat by declaring the N2D2 cell global so that we can pass it in this static method !
+        # May be avoidable with an hook on the Module class
+        global cell
+        numpy_tensor = grad_output.cpu().detach().numpy()
+        t_grad_output = n2d2.tensor.Tensor([3, 3], DefaultDataType=float)
+        t_grad_output.from_numpy(numpy_tensor)
+        
+        cell.setDiffInputs(t_grad_output.N2D2())
+        cell.setDiffInputsValid()
+        cell.backPropagate()
+        cell.update() # update the weights !
+        np_output = diffOutputs.to_numpy() 
+        # Create a tensor from numpy
+        outputs = torch.from_numpy(np_output)
+        # copy the values of the tensor to our inputs tensor to not lose the grad ! 
+        grad_output = grad_output.copy_(outputs)
+        return grad_output.clone()
+
+class testLayer(torch.nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, x):
-        # detach remove the history of operations which will disallow us to compute gradiant may cause problems
-        numpy_tensor = x.cpu().detach().numpy() 
-        print("numpy")
-        print(numpy_tensor)
-        n2d2_tensor = n2d2.tensor.Tensor([3, 3], DefaultDataType=int)
-        n2d2_tensor.fromNumpy(numpy_tensor)
-        return x
+    def forward(self, inputs):
+        return test_func.apply(inputs)
 
 class CustomConv2d(torch.nn.Module):
     """ Custom Conv layer """
@@ -34,7 +84,11 @@ class CustomConv2d(torch.nn.Module):
         super().__init__()
         net = N2D2.Network()
         deepNet = N2D2.DeepNet(net)
-        self._n2d2 = N2D2.ConvCell_Frame_CUDA_float(deepNet, "name", kernelDims, size_out, strideDims=strideDims, paddingDims=paddingDims)
+        global cell
+        cell = N2D2.ConvCell_Frame_float(deepNet, "name", kernelDims, size_out, strideDims=strideDims, paddingDims=paddingDims, mapping=mapping.N2D2())
+        self._n2d2 = cell
+        self.input = None
+        self.diffOutput = None
 
     def to_tensor(self, inputs):
         numpy_tensor = inputs.cpu().detach().numpy()
@@ -43,36 +97,39 @@ class CustomConv2d(torch.nn.Module):
         return n2d2_tensor
 
     def initialize_input(self, n2d2_tensor):
-        # TODO : OutputDims need ot be init (currently it's not ...)
-        OutputDims = n2d2_tensor.copy()
+        # OutputDims init with an empty tensor of the same size as the input
+        global diffOutputs
+        diffOutputs = n2d2_tensor.copy()
+        diffOutputs[0:] = 0 # Fill with 0
+        self.diffOutput = diffOutputs # save this variable to get it back 
         self._n2d2.clearInputs()
-        self._n2d2.addInputBis(n2d2_tensor.N2D2(), OutputDims.N2D2())
+        self._n2d2.addInputBis(n2d2_tensor.N2D2(), diffOutputs.N2D2())
         if not self._initialized:
             self._n2d2.initialize()
             self._initialized = True
-    @staticmethod
+
     def forward(self, inputs):
         n2d2_tensor = self.to_tensor(inputs)
-        data_type = n2d2_tensor.data_type()
+        self.input = n2d2_tensor
         self.initialize_input(n2d2_tensor)
         self._n2d2.propagate()
         outputs = self._n2d2.getOutputs()
-        # TODO : convert outputs to n2d2 tensor to apply transform method
-        t_outputs = n2d2.tensor.Tensor([3, 3], DefaultDataType=data_type)
+        t_outputs = n2d2.tensor.Tensor([3, 3], DefaultDataType=float)
         t_outputs.from_N2D2(outputs)
-        np_output = t_outputs.to_numpy()
-        # /!\ warning "from_numpy" doesn't create memory copy thus we can't resize the tensor !
-        outputs = torch.from_numpy(np_output) 
-        outputs = outputs.float()
-        outputs = outputs.cuda() # create a copy on GPU allow to resize
-        return outputs
-    @staticmethod
-    def backward(self, inputs):
-        input()
+        # Convert back to numpy
+        np_output = t_outputs.to_numpy() 
+        # Create a tensor from numpy
+        outputs = torch.from_numpy(np_output)
+        # copy the values of the tensor to our inputs tensor to not lose the grad ! 
+        inputs = inputs.copy_(outputs)
+        # return inputs
+        return N2D2_computation.apply(inputs)
+        
+    # TODO : method for backward prop : register_backward_hook
+    # def register_backward_hook(self, module, grad_input, grad_output):
+    #     pass
 
-    # TODO : backward function which take gradient output and return a gradient input ?
-    # Not in documentaitons of nn.Mdoule
-
+# MODEL + LEARNING =====================================================================================
 if __name__ == "__main__":
     batch_size = 30
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -100,8 +157,8 @@ if __name__ == "__main__":
             self.cnn_layers = torch.nn.Sequential(
                 # Defining a 2D convolution layer
                 torch.nn.Conv2d(1, 4, kernel_size=3, stride=1, padding=1),
-                # TestLayer(),
                 torch.nn.BatchNorm2d(4),
+                testLayer(),
                 torch.nn.ReLU(inplace=True),
                 torch.nn.MaxPool2d(kernel_size=2, stride=2),
                 CustomConv2d(4, kernelDims=[3, 3]),
@@ -133,7 +190,6 @@ if __name__ == "__main__":
     for i in range(10):
         running_loss = 0
         for images, labels in trainloader:
-
             if torch.cuda.is_available():
                 images = images.cuda()
                 labels = labels.cuda()

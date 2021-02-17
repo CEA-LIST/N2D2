@@ -30,7 +30,12 @@ namespace N2D2 {
 template<typename T>
 void declare_Cell_Frame(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("Cell_Frame_" + typeStr);
-    py::class_<Cell_Frame<T>, std::shared_ptr<Cell_Frame<T>>, Cell, Cell_Frame_Top> (m, pyClassName.c_str(), py::multiple_inheritance());
+    py::class_<Cell_Frame<T>, std::shared_ptr<Cell_Frame<T>>, Cell, Cell_Frame_Top> (m, pyClassName.c_str(), py::multiple_inheritance())
+    // .def("getDiffOutputs", &Cell_Frame<T>::getDiffOutputs)
+    .def("setDiffInputs", &Cell_Frame<T>::setDiffInputs, py::arg("diffInput"))
+    .def("setDiffInputsValid", &Cell_Frame<T>::setDiffInputsValid)
+    ;
+
 }
 
 void init_Cell_Frame(py::module &m) {
