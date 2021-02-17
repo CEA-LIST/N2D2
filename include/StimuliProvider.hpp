@@ -89,6 +89,15 @@ public:
         std::vector<std::vector<std::shared_ptr<ROI> > > labelsROI;
     };
 
+    struct DevicesInfo {
+        /// State of the devices
+        std::vector<N2D2::DeviceState> states;
+        /// Current batch's number provided to the devices
+        std::vector<int> numBatchs;
+        /// Future batch's number provided to the devices
+        std::vector<int> numFutureBatchs;
+    };
+
     StimuliProvider(Database& database,
                     const std::vector<size_t>& size,
                     unsigned int batchSize = 1,
@@ -256,6 +265,9 @@ public:
                                       unsigned int index,
                                       unsigned int batchPos = 0,
                                       int dev = -1);
+
+    // void readBatch(Database::StimuliSet set); 
+    
     void streamStimulus(const cv::Mat& mat,
                         Database::StimuliSet set,
                         unsigned int batchPos = 0,
@@ -274,6 +286,9 @@ public:
     virtual void setBatchSize(unsigned int batchSize);
     void setTargetSize(const std::vector<size_t>& size);
     void setCachePath(const std::string& path = "");
+
+    // void setBatchs(Database::StimuliSet set,
+    //                 bool randShuffle);
 
     // Getters
     Database& getDatabase()
@@ -331,6 +346,10 @@ public:
                                      Database::StimuliSet set);
     void iterTransformations(Database::StimuliSet set,
                         std::function<void(const Transformation&)> func) const;
+    std::vector<N2D2::DeviceState>& getStates()
+    {
+        return mDevicesInfo.states;
+    };
     const std::vector<int>& getBatch(int dev = -1)
     {
         return mProvidedData[getDevice(dev)].batch;
@@ -441,9 +460,18 @@ protected:
     std::vector<ProvidedData> mProvidedData;
     /// Future provided data
     std::vector<ProvidedData> mFutureProvidedData;
+    /// Devices information
+    DevicesInfo mDevicesInfo;
     bool mFuture;
 
     std::set<int> mDevices;
+
+    // std::vector<Database::StimulusID> mBatchsLearnIndexes;
+    // std::vector<Database::StimulusID> mBatchsValIndexes;
+    // std::vector<Database::StimulusID> mBatchsTestIndexes;
+    // std::deque<unsigned int> mIndexesLearn;
+    // std::deque<unsigned int> mIndexesVal;
+    // std::deque<unsigned int> mIndexesTest;
 };
 }
 

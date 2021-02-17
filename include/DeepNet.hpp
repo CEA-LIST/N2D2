@@ -49,6 +49,13 @@ class DeepNet : public Parameterizable, public std::enable_shared_from_this<Deep
 public:
     DeepNet(Network& net);
 
+    typedef struct {
+        std::vector<char> finished;
+        std::atomic<bool> firstFinished;
+        std::atomic<unsigned int> nbFinished;
+        std::atomic<unsigned int> power;
+    } SharedValues;
+
     /**
      * TODO Simplify the management of the network graph.
      * TODO Add a way to adapt the target when a cell is added after a cell with a target.
@@ -138,6 +145,10 @@ public:
                            T mean,
                            double stdDev,
                            bool ignoreUnknown = false);
+    void setBanAllowed(bool option)
+    {
+        mBanAllowed = option;
+    };
 
     // Getters
     Network& getNetwork()
@@ -193,6 +204,11 @@ public:
                                 const std::vector<unsigned int>& outputField
                                         = std::vector<unsigned int>()) const;
 
+    SharedValues& getMultiDevicesInfo()
+    {
+        return mMultiDevicesInfo;
+    };
+
     // Clear
     void clearAll();
     void clearActivity();
@@ -225,6 +241,11 @@ public:
     static void drawHistogram(std::string title, const std::string& dataFileName,
                    unsigned int fileRow, unsigned int maxLabelSize, bool isLog,
                    Gnuplot& p);
+    
+    char isDeviceDropped(int dev) const
+    {
+        return mDropDevices[dev];
+    };
 
 protected:
     Parameter<std::string> mName;
@@ -240,6 +261,19 @@ private:
     std::map<std::string, std::shared_ptr<Monitor> > mMonitors;
     std::map<std::string, std::shared_ptr<CMonitor> > mCMonitors;
     std::vector<std::vector<std::string> > mLayers;
+    /// Parameter to allow banishment
+    bool mBanAllowed;
+    /// Number of passages allowed before banning
+    unsigned int mNbPassBeforeBan;
+    /// Average power usage from all connected devices
+    unsigned int mAveragePowerUsage;
+    /// Vector of all devices which have been dropped
+    std::vector<char> mDropDevices;
+    /// Information shared among all connected devices
+    SharedValues mMultiDevicesInfo;
+    /// Identifier of the device where data is 
+    /// gathered during update
+    int mMasterDevice;
 
     // cellName -> parentsNames
     std::multimap<std::string, std::string> mParentLayers;

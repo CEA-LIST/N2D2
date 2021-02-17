@@ -67,6 +67,9 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
     // mProvidedData is a vector, with one element per device
     mProvidedData.resize(count);
     mFutureProvidedData.resize(count);
+    mDevicesInfo.states.resize(count, N2D2::DeviceState::Excluded);
+    mDevicesInfo.numBatchs.resize(count, -1);
+    mDevicesInfo.numFutureBatchs.resize(count, -1);
 
 #ifdef CUDA
     const char* gpuDevices = std::getenv("N2D2_GPU_DEVICES");
@@ -151,8 +154,8 @@ void N2D2::StimuliProvider::setDevices(const std::set<int>& devices)
 
     labelSize.push_back(mBatchSize);
 
-#ifdef CUDA
     int currentDev = 0;
+#ifdef CUDA
     CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
 #endif
 
@@ -174,6 +177,8 @@ void N2D2::StimuliProvider::setDevices(const std::set<int>& devices)
             mFutureProvidedData[dev].data.resize(dataSize);
             mFutureProvidedData[dev].labelsData.resize(labelSize);
             mFutureProvidedData[dev].labelsROI.resize(std::max(mBatchSize, 1u));
+
+            mDevicesInfo.states[dev] = N2D2::DeviceState::Connected;
         }
         else {
             mProvidedData[dev].batch.clear();

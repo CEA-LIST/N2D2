@@ -45,6 +45,9 @@ N2D2::DeepNet::DeepNet(Network& net)
       mFreeParametersDiscretization(this, "FreeParametersDiscretization", 0U),
       mNet(net),
       mLayers(1, std::vector<std::string>(1, "env")),
+      mBanAllowed(false),
+      mNbPassBeforeBan(10),
+      mAveragePowerUsage(0),
       mFreeParametersDiscretized(false),
       mStreamIdx(0),
       mStreamTestIdx(0)
@@ -917,10 +920,20 @@ void N2D2::DeepNet::initialize()
     const std::vector<int> devices(mStimuliProvider->getDevices().begin(),
                                    mStimuliProvider->getDevices().end());
 
+    int count = 1;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+#endif
+
+    mDropDevices.resize(count, false);
+    (mMultiDevicesInfo.finished).resize(count, false);
+
     int currentDev = 0;
 #ifdef CUDA
     CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
 #endif
+
+    mMasterDevice = currentDev;
 
     // NOT parallelizable
     for (int dev = 0; dev < (int)devices.size(); ++dev) {
@@ -1961,7 +1974,7 @@ void N2D2::DeepNet::logSpikeStats(const std::string& dirName,
 /** Give the power usage of the target device
  * 
  * @param dev   The identifier of the target device
- * @return      Power usage for the GPU dev in milliwatts
+ * @return      Power usage for the target device in milliwatts
  */
 unsigned int devicePowerUsage(int dev)
 {
@@ -1973,32 +1986,160 @@ unsigned int devicePowerUsage(int dev)
     return power;
 }
 
+/** Launch the phases of propagate and backpropagate. 
+ * 
+ * The function is used with a thread in DeepNet::learn() to launch 
+ * propagation and backpropagation on a target device. 
+ * After the backpropagation, there is a check to know if the results 
+ * can be saved for the update phase. The check depends on the state of the  
+ * target device (more details in DeepNet::learn()) 
+ * 
+ * @param deepNet   A pointer to the deepNet
+ * @param dev       The identifier of the device 
+ *                  where the learning is executed
+ * @param timings   Vector of time values
+ */
+void learnThread(const std::shared_ptr<N2D2::DeepNet>& deepNet, 
+                 int dev,
+                 std::vector<std::pair<std::string, double> >* timings)
+{
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+    deepNet->propagate(N2D2::Database::Learn, false, (dev == 0) ? timings : NULL);
+    deepNet->backPropagate((dev == 0) ? timings : NULL);
+
+    if (!deepNet->isDeviceDropped(dev)) {
+        N2D2::DeepNet::SharedValues& sharedVal = deepNet->getMultiDevicesInfo();
+        sharedVal.finished[dev] = true;
+        sharedVal.power += devicePowerUsage(dev);
+        sharedVal.nbFinished += 1;
+        sharedVal.firstFinished = true;
+    }
+}
+
 void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
 {
+    mMultiDevicesInfo.nbFinished = 0;
+    mMultiDevicesInfo.power = 0;
+    mMultiDevicesInfo.firstFinished = false;
+
+    std::fill((mMultiDevicesInfo.finished).begin(),
+              (mMultiDevicesInfo.finished).end(),
+              false);
+
+    std::vector<N2D2::DeviceState>& states = mStimuliProvider->getStates();
+    
+    unsigned int nbThreads = std::count(states.begin(), 
+                                        states.end(), 
+                                        N2D2::DeviceState::Connected);
+
+    // Those values have to be adapted
+    const double coeffTime = 2.0;
+    const double coeffPower = 0.5;
+
     if (timings != NULL)
         (*timings).clear();
 
     const std::vector<int> devices(mStimuliProvider->getDevices().begin(),
                                    mStimuliProvider->getDevices().end());
 
-    int currentDev = 0;
 #ifdef CUDA
-    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+    CHECK_CUDA_STATUS(cudaSetDevice(mMasterDevice));
 #endif
 
-#pragma omp parallel for if (devices.size() > 1)
+    std::chrono::high_resolution_clock::time_point startTime 
+        = std::chrono::high_resolution_clock::now();
+
+    // Launching threads and testing of banned devices
     for (int dev = 0; dev < (int)devices.size(); ++dev) {
-#ifdef CUDA
-        CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
-#endif
-        propagate(Database::Learn, false, (dev == 0) ? timings : NULL);
-        backPropagate((dev == 0) ? timings : NULL);
+        if (states[devices[dev]] == N2D2::DeviceState::Connected) {
+            std::thread t(&learnThread, 
+                          shared_from_this(),
+                          devices[dev],
+                          timings);
+            t.detach();
+            mDropDevices[devices[dev]] = false;
+        }
+        else if (states[devices[dev]] == N2D2::DeviceState::Banned) {
+            if((double)devicePowerUsage(devices[dev]) < mAveragePowerUsage * coeffPower) 
+            {
+                std::cout << "\nDevice " << devices[dev] << " will be reconnected" << std::endl;
+                states[devices[dev]] = N2D2::DeviceState::Ready;
+            }  
+        }
     }
 
 #ifdef CUDA
-    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+    CHECK_CUDA_STATUS(cudaSetDevice(mMasterDevice));
+#endif
+
+    // Waiting for the first device to establish the reference time
+    while (!mMultiDevicesInfo.firstFinished)
+        std::this_thread::yield();
+    
+    double refTime = std::chrono::duration_cast <std::chrono::duration<double> > 
+                    (std::chrono::high_resolution_clock::now() - startTime).count();
+    double newTime = refTime;
+
+    if (mNbPassBeforeBan > 0 || !mBanAllowed) {
+
+        if (mNbPassBeforeBan > 0)
+            --mNbPassBeforeBan;
+
+        // Waiting for the end of the threads
+        while (mMultiDevicesInfo.nbFinished < nbThreads)
+            std::this_thread::yield();
+
+        // Updating the average power usage
+        mAveragePowerUsage = mMultiDevicesInfo.power / nbThreads;
+
+    } else {
+
+        // Waiting for the end of the threads or the time limit
+        while (mMultiDevicesInfo.nbFinished < nbThreads && newTime < refTime * coeffTime) {
+            newTime = std::chrono::duration_cast <std::chrono::duration<double> > 
+                    (std::chrono::high_resolution_clock::now() - startTime).count();
+            std::this_thread::yield();
+        }
+
+        // Time limit reached
+        if (newTime >= refTime * coeffTime) {
+            for (int dev = 0; dev < (int)devices.size(); ++dev) {
+                if (!mMultiDevicesInfo.finished[devices[dev]] 
+                    && states[devices[dev]] == N2D2::DeviceState::Connected) 
+                {
+                    mDropDevices[devices[dev]] = true;
+                    states[devices[dev]] = N2D2::DeviceState::Banned;
+                    std::cout << "\nDevice " << devices[dev] << " has been banned" << std::endl;
+                }
+            }
+            // Changing the master device if this one is banned
+            if (states[mMasterDevice] == N2D2::DeviceState::Banned) {
+                for (int dev = 0; dev < (int)devices.size(); ++dev) {
+                    if (states[devices[dev]] == N2D2::DeviceState::Connected) {
+                        mMasterDevice = devices[dev];
+                        break;
+                    }
+                }
+            }
+        } else {
+            // Updating the average power usage
+            mAveragePowerUsage = mMultiDevicesInfo.power / nbThreads;
+        }
+    }
+
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaSetDevice(mMasterDevice));
 #endif
     update(timings);
+
+    // If a device is ready at this point, it must be reconnected
+    std::replace(states.begin(),
+                states.end(),
+                N2D2::DeviceState::Ready,
+                N2D2::DeviceState::Connected);
+
 }
 
 void N2D2::DeepNet::test(
@@ -2028,6 +2169,8 @@ void N2D2::DeepNet::test(
     if (timings != NULL)
         (*timings).clear();
 
+    std::vector<N2D2::DeviceState>& states = mStimuliProvider->getStates();
+
     const std::vector<int> devices(mStimuliProvider->getDevices().begin(),
                                    mStimuliProvider->getDevices().end());
 
@@ -2038,10 +2181,12 @@ void N2D2::DeepNet::test(
 
 #pragma omp parallel for if (devices.size() > 1)
     for (int dev = 0; dev < (int)devices.size(); ++dev) {
+        if (states[devices[dev]] == N2D2::DeviceState::Connected) {
 #ifdef CUDA
-        CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
+            CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
 #endif
-        propagate(set, true, (dev == 0) ? timings : NULL);
+            propagate(set, true, (dev == 0) ? timings : NULL);
+        }
     }
 
 #ifdef CUDA
@@ -2187,6 +2332,8 @@ void N2D2::DeepNet::backPropagate(
 void N2D2::DeepNet::update(
     std::vector<std::pair<std::string, double> >* timings)
 {
+    std::vector<N2D2::DeviceState>& states = mStimuliProvider->getStates();
+
     const unsigned int nbLayers = mLayers.size();
     std::chrono::high_resolution_clock::time_point time1, time2;
 
@@ -2206,6 +2353,11 @@ void N2D2::DeepNet::update(
             //std::cout << "update " << mCells[(*itCell)]->getName()
             //    << std::endl;
             time1 = std::chrono::high_resolution_clock::now();
+#ifdef CUDA
+            //update states
+            std::dynamic_pointer_cast
+                <Cell_Frame_Top>(mCells[(*itCell)])->updateDeviceStates(states);
+#endif
             std::dynamic_pointer_cast
                 <Cell_Frame_Top>(mCells[(*itCell)])->update();
 
