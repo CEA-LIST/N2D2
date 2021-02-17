@@ -29,19 +29,22 @@ class CellQuantizer(N2D2_Interface):
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')
         else:
-            self._model = n2d2.global_variables.default_deepNet.get_model()
+            self._model = n2d2.global_variables.default_model
         if 'dataType' in config_parameters:
             self._datatype = config_parameters.pop('dataType')
         else:
-            self._datatype = n2d2.global_variables.default_deepNet.get_datatype()
+            self._datatype = n2d2.global_variables.default_dataType
 
         self._model_key = self._model + '<' + self._datatype + '>'
 
         N2D2_Interface.__init__(self, **config_parameters)
 
+    def set_range(self, integer_range):
+        self._N2D2_object.setRange(integer_range)
 
     def get_type(self):
         return self._N2D2_object.getType()
+
 
     def __str__(self):
         output = self.get_type()
@@ -56,16 +59,18 @@ class ActivationQuantizer(N2D2_Interface):
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')
         else:
-            self._model = n2d2.global_variables.default_deepNet.get_model()
+            self._model = n2d2.global_variables.default_model
         if 'dataType' in config_parameters:
             self._datatype = config_parameters.pop('dataType')
         else:
-            self._datatype = n2d2.global_variables.default_deepNet.get_datatype()
+            self._datatype = n2d2.global_variables.default_dataType
 
         self._model_key = self._model + '<' + self._datatype + '>'
 
         N2D2_Interface.__init__(self, **config_parameters)
 
+    def set_range(self, integer_range):
+        self._N2D2_object.setRange(integer_range)
 
     def get_type(self):
         return self._N2D2_object.getType()
@@ -106,6 +111,18 @@ class SATAct(ActivationQuantizer):
         ActivationQuantizer.__init__(self, **config_parameters)
         # No optional constructor arguments
         self._N2D2_object = self._quantizer_generators[self._model_key]()
-        self._set_N2D2_parameters(self._config_parameters)
 
+        """Set and initialize here all complex cell members"""
+        for key, value in self._config_parameters.items():
+            if key is 'solver':
+                self._N2D2_object.setSolver(value.N2D2())
+            else:
+                self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
 
+    """
+    def set_solver(self, solver):
+        if 'solver' in self._config_parameters:
+            print("Note: Replacing existing solver in SATAct quantizer")
+        self._config_parameters['solver'] = solver
+        self._N2D2_object.setSolver(self._config_parameters['solver'].N2D2())
+    """

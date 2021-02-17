@@ -156,11 +156,11 @@ class Sequence:
     def add(self, cell):
         self._sequences.append(cell)
 
-    def get_deepnet(self):
-        first = self.get_first()
-        last = self.get_last()
+    #def get_deepnet(self):
+    #    first = self.get_first()
+    #    last = self.get_last()
 
-        deepnet = n2d2.global_variables.default_deepNet
+    #    deepnet = n2d2.global_variables.default_deepNet
 
         """
         deepNet = N2D2.DeepNet(n2d2.global_variables.default_net)

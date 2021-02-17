@@ -29,15 +29,18 @@ class ActivationFunction(N2D2_Interface):
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')
         else:
-            self._model = n2d2.global_variables.default_deepNet.get_model()
+            self._model = n2d2.global_variables.default_model
         if 'dataType' in config_parameters:
             self._datatype = config_parameters.pop('dataType')
         else:
-            self._datatype = n2d2.global_variables.default_deepNet.get_datatype()
+            self._datatype = n2d2.global_variables.default_dataType
 
         self._model_key = self._model + '<' + self._datatype + '>'
 
         N2D2_Interface.__init__(self, **config_parameters)
+
+    def get_quantizer(self):
+        return self._config_parameters['quantizer']
 
 
     def get_type(self):

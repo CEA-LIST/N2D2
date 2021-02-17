@@ -24,7 +24,7 @@ void init_QuantizerActivation(py::module &m) {
     q.def("setSolver", &QuantizerActivation::setSolver, py::arg("solver"));
     q.def("getType", &QuantizerActivation::getType);
     //.def("getQuantizedActivations", &QuantizerActivation::getQuantizedActivations) // Not in cpp object at the moment
-
+    q.def("setRange", &QuantizerActivation::setRange, py::arg("integerRange"));
 }
 }
 

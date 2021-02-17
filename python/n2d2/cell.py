@@ -58,9 +58,14 @@ class Cell(N2D2_Interface):
             else:
                 raise TypeError("Object of type " + str(type(inputs)) + " cannot provide a deepnet to cell.")
 
-
-        self._model = self._deepnet.get_model()
-        self._datatype = self._deepnet.get_datatype()
+        if 'model' in config_parameters:
+            self._model = config_parameters.pop('model')
+        else:
+            self._model = n2d2.global_variables.default_model
+        if 'dataType' in config_parameters:
+            self._datatype = config_parameters.pop('dataType')
+        else:
+            self._datatype = n2d2.global_variables.default_dataType
 
         self._model_key = self._model + '<' + self._datatype + '>'
 
@@ -84,6 +89,7 @@ class Cell(N2D2_Interface):
 
     def get_deepnet(self):
         return self._deepnet
+
 
     def get_type(self):
         if self._type is None:
@@ -113,7 +119,7 @@ class Cell(N2D2_Interface):
     # TODO: Add to add_input
     def _link_N2D2_input(self, inputs):
         if isinstance(inputs, n2d2.tensor.Tensor):
-            self._N2D2_object.addInput(inputs.N2D2(), n2d2.tensor.Tensor(dims=[]).N2D2())
+            self._N2D2_object.addInput(inputs.N2D2(), n2d2.tensor.Tensor(dims=[]).N2D2()) # TODO: Tested
         else:
             if 'mapping' in self._connection_parameters:
                 self._connection_parameters['mapping'] = self._connection_parameters['mapping'].create_N2D2_mapping(
@@ -146,6 +152,7 @@ class Cell(N2D2_Interface):
         #    self._link_N2D2_input(cell)
         self._N2D2_object.initialize()
     """
+
 
     def get_deepnet(self):
         return self._deepnet
@@ -314,16 +321,17 @@ class Fc(Cell):
 
 
     def set_weights_solver(self, solver):
-        if 'weightsSolver' in self._config_parameters:
-            print("Note: Replacing existing solver in cell: " + self.get_name())
+        print("Note: Replacing existing solver in cell: " + self.get_name())
         self._config_parameters['weightsSolver'] = solver
         self._N2D2_object.setWeightsSolver(self._config_parameters['weightsSolver'].N2D2())
 
     def set_bias_solver(self, solver):
-        if 'biasSolver' in self._config_parameters:
-            print("Note: Replacing existing solver in cell: " + self.get_name())
+        print("Note: Replacing existing solver in cell: " + self.get_name())
         self._config_parameters['biasSolver'] = solver
         self._N2D2_object.setBiasSolver(self._config_parameters['biasSolver'].N2D2())
+
+
+    # TODO: General set_solver that copies solver and does both
 
 
 
@@ -441,16 +449,15 @@ class Conv(Cell):
 
 
     def set_weights_solver(self, solver):
-        if 'weightsSolver' in self._config_parameters:
-            print("Note: Replacing existing solver in cell: " + self.get_name())
+        print("Note: Replacing existing solver in cell: " + self.get_name())
         self._config_parameters['weightsSolver'] = solver
         self._N2D2_object.setWeightsSolver(self._config_parameters['weightsSolver'].N2D2())
 
     def set_bias_solver(self, solver):
-        if 'biasSolver' in self._config_parameters:
-            print("Note: Replacing existing solver in cell: " + self.get_name())
+        print("Note: Replacing existing solver in cell: " + self.get_name())
         self._config_parameters['biasSolver'] = solver
         self._N2D2_object.setBiasSolver(self._config_parameters['biasSolver'].N2D2())
+
 
 
 
@@ -906,7 +913,7 @@ class BatchNorm(Cell):
 
         self._N2D2_object = N2D2_object
 
-        # TODO: Add similar methods to Activation/Solver/Quantizer for nice prints
+        # TODO: Add similar methods to Activation/Solver/Quantizer for nice prints and access
         self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
         self._config_parameters['scaleSolver'] = self._N2D2_object.getScaleSolver()
         self._config_parameters['biasSolver'] = self._N2D2_object.getBiasSolver()
@@ -914,14 +921,12 @@ class BatchNorm(Cell):
         self._sync_inputs_and_parents(inputs)
 
     def set_scale_solver(self, solver):
-        if 'scaleSolver' in self._config_parameters:
-            print("Note: Replacing existing solver in cell: " + self.get_name())
+        print("Note: Replacing existing solver in cell: " + self.get_name())
         self._config_parameters['scaleSolver'] = solver
         self._N2D2_object.setScaleSolver(self._config_parameters['scaleSolver'].N2D2())
 
     def set_bias_solver(self, solver):
-        if 'biasSolver' in self._config_parameters:
-            print("Note: Replacing existing solver in cell: " + self.get_name())
+        print("Note: Replacing existing solver in cell: " + self.get_name())
         self._config_parameters['biasSolver'] = solver
         self._N2D2_object.setBiasSolver(self._config_parameters['biasSolver'].N2D2())
 

@@ -19,21 +19,11 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-import N2D2
 import n2d2
-from math import ceil
-
-
-def ini_mobilenet():
-    path = '../models/MobileNet_v1.ini'    
-    n2d2.deepnet.load_from_INI(path)
+import math
 
 
 n2d2.global_variables.set_cuda_device(4)
-
-#n2d2.global_variables.default_deepNet = n2d2.deepnet.DeepNet(n2d2.global_variables.default_net,
-#                                                             'Frame_CUDA',
-#                                                             n2d2.global_variables.default_dataType)
 
 n2d2.global_variables.default_model = "Frame_CUDA"
 
@@ -45,24 +35,17 @@ model = n2d2.model.resnet.load_from_ONNX('18', 'post_act', download=True, batch_
 
 print(model)
 
-# onnx_mobilenet()
-# onnx_resnet()
-# ini_mobilenet()
-
 print("Load database")
 database = n2d2.database.ILSVRC2012(1.0)
 database.load("/nvme0/DATABASE/ILSVRC2012", labelPath="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
-#database = n2d2.database.CIFAR100()
-#database.load("/nvme0/DATABASE/cifar-100-binary")
+print(database)
 
 print("Create Provider")
 provider = n2d2.provider.DataProvider(database, [224, 224, 3], batchSize=batchSize)
-#provider.add_transformation(n2d2.model.MobileNet_v2_ONNX_preprocessing(224)
 provider.add_transformation(n2d2.model.ResNet_ONNX_preprocessing(224))
 print(provider)
 
 model.add_input(provider)
-#model.add(n2d2.cell.Softmax(model.get_last(), nbOutputs=1000, name='softmax', withLoss=True))
 print(model)
 
 print("\n### Test ###")
@@ -70,15 +53,7 @@ classifier = n2d2.application.Classifier(provider, model, topN=1)
 
 classifier.set_mode('Test')
 
-#target = n2d2.target.Score(model.get_last(), provider)
-
-#print("getTargetTopN: " + str(target.N2D2().getTargetTopN()))
-
-#model.initialize()
-
-#print(model.get_last().get_outputs().dims())
-
-for i in range(ceil(provider.get_database().get_nb_stimuli('Test')/batchSize)):
+for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test')/batchSize)):
     batch_idx = i*batchSize
 
     # Load example

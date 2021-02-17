@@ -27,6 +27,7 @@ void init_QuantizerCell(py::module &m) {
     q.def("getType", &QuantizerCell::getType);
     q.def("getQuantizedWeights", &QuantizerCell::getQuantizedWeights);
     q.def("getQuantizedBiases", &QuantizerCell::getQuantizedBiases);
+    q.def("setRange", &QuantizerCell::setRange, py::arg("integerRange"));
 }
 }
 

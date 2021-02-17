@@ -29,7 +29,7 @@ class Filler(N2D2_Interface):
         if 'dataType' in config_parameters:
             self._datatype = config_parameters.pop('dataType')
         else:
-            self._datatype = n2d2.global_variables.default_deepNet.get_datatype()
+            self._datatype = n2d2.global_variables.default_dataType
 
         self._model_key = '<' + self._datatype + '>'
 
