@@ -226,7 +226,16 @@ void N2D2::FcCell_Frame_CUDA<T>::propagate(bool inference)
     }
 
     if (!mNoBias) {
-
+        if (mOnesVector == NULL) {
+            //  1   <-->    batch   <-->    mInputs.b()
+            CHECK_CUDA_STATUS(
+                cudaMalloc(&mOnesVector, mInputs.dimB() * sizeof(T)));
+            std::vector<T> onesVec(mInputs.dimB(), T(1.0));
+            CHECK_CUDA_STATUS(cudaMemcpy(mOnesVector,
+                                        &onesVec[0],
+                                        mInputs.dimB() * sizeof(T),
+                                        cudaMemcpyHostToDevice));
+        }
         std::shared_ptr<CudaDeviceTensor<T> > biases;
 
         if (mQuantizer) {
