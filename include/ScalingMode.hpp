@@ -52,4 +52,9 @@ inline ScalingMode parseScalingMode(const std::string& str) {
     throw std::runtime_error("Unknown scaling mode '" + str + "'.");
 }
 
+enum class WeightsApprox {
+    NONE,
+    RINTF
+};
+
 #endif
