@@ -251,6 +251,10 @@ public:
                                               "test dataset)");
         calibrationReload = opts.parse("-calib-reload", "reload and reuse the data of a "
                                                         " previous calibration.");
+        wtRoundMode = weightsScalingMode(
+                           opts.parse("-wt-round-mode", std::string("NONE"), 
+                                          "weights clipping mode on export, "
+                                          "can be 'NONE', 'RINTF'"));
         wtClippingMode = parseClippingMode(
                            opts.parse("-wt-clipping-mode", std::string("None"), 
                                           "weights clipping mode on export, "
@@ -335,6 +339,7 @@ public:
     int nbBits;
     int calibration;
     bool calibrationReload;
+    WeightsApprox wtRoundMode;
     ClippingMode wtClippingMode;
     ClippingMode actClippingMode;
     ScalingMode actScalingMode;
@@ -576,9 +581,11 @@ void testQAT(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCa
     sp->readStimulusBatch(0, Database::Test);
     deepNet->test(Database::Test, &timings);
 
-    DrawNet::drawGraph(*deepNet, Utils::baseName("QAT_" + opt.iniConfig));
+    DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
     DeepNetQAT dnQAT(*deepNet);
-    dnQAT.fuseQATGraph();
+    dnQAT.fuseQATGraph(opt.wtRoundMode);
+    if (opt.logKernels)
+        deepNet->logFreeParameters("kernels_quantized");
 
     deepNet->exportNetworkFreeParameters("weights_quantized");
 
