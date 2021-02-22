@@ -599,7 +599,7 @@ void testQAT(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCa
     if (opt.logKernels)
         deepNet->logFreeParameters("kernels_quantized");
 
-    //deepNet->exportNetworkFreeParameters("weights_quantized");
+    deepNet->exportNetworkFreeParameters("weights_quantized");
 
     for (unsigned int b = 0; b < nbBatch; ++b) {
         const unsigned int i = b * batchSize;
