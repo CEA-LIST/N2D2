@@ -251,6 +251,14 @@ public:
                                               "test dataset)");
         calibrationReload = opts.parse("-calib-reload", "reload and reuse the data of a "
                                                         " previous calibration.");
+        cRoundMode = weightsScalingMode(
+                           opts.parse("-c-round-mode", std::string("NONE"), 
+                                          "clip clipping mode on export, "
+                                          "can be 'NONE', 'RINTF'"));
+        bRoundMode = weightsScalingMode(
+                           opts.parse("-b-round-mode", std::string("NONE"), 
+                                          "biases clipping mode on export, "
+                                          "can be 'NONE', 'RINTF'"));
         wtRoundMode = weightsScalingMode(
                            opts.parse("-wt-round-mode", std::string("NONE"), 
                                           "weights clipping mode on export, "
@@ -339,6 +347,8 @@ public:
     int nbBits;
     int calibration;
     bool calibrationReload;
+    WeightsApprox cRoundMode;
+    WeightsApprox bRoundMode;
     WeightsApprox wtRoundMode;
     ClippingMode wtClippingMode;
     ClippingMode actClippingMode;
@@ -580,14 +590,16 @@ void testQAT(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCa
     const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
     sp->readStimulusBatch(0, Database::Test);
     deepNet->test(Database::Test, &timings);
+    if (opt.logKernels)
+        deepNet->logFreeParameters("kernels_fake_quantized");
 
     DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
     DeepNetQAT dnQAT(*deepNet);
-    dnQAT.fuseQATGraph(opt.wtRoundMode);
+    dnQAT.fuseQATGraph(opt.wtRoundMode, opt.bRoundMode, opt.cRoundMode);
     if (opt.logKernels)
         deepNet->logFreeParameters("kernels_quantized");
 
-    deepNet->exportNetworkFreeParameters("weights_quantized");
+    //deepNet->exportNetworkFreeParameters("weights_quantized");
 
     for (unsigned int b = 0; b < nbBatch; ++b) {
         const unsigned int i = b * batchSize;
