@@ -31,6 +31,7 @@ import N2D2
 import numpy as np
 import time
 
+# TEST ----------------------------------------------------------------------------------------------
 class test_func(torch.autograd.Function):
     @staticmethod
     def forward(ctx, input):
@@ -41,54 +42,66 @@ class test_func(torch.autograd.Function):
     def backward(ctx, grad_output):
         # print("The chain is not broken \o/")
         return grad_output.clone()
-
-class N2D2_computation(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, input):
-        ctx.save_for_backward(input)
-        # We need to redefine this method but all the forward computation is done in the Module class
-        return input.clone()
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        output, = ctx.saved_tensors
-        # We cheat by declaring the N2D2 cell global so that we can pass it in this static method !
-        # May be avoidable with an hook on the Module class
-        global cell
-        numpy_tensor = grad_output.cpu().detach().numpy()
-        t_grad_output = n2d2.tensor.Tensor([3, 3], DefaultDataType=float)
-        t_grad_output.from_numpy(numpy_tensor)
-        
-        cell.setDiffInputs(t_grad_output.N2D2())
-        cell.setDiffInputsValid()
-        cell.backPropagate()
-        cell.update() # update the weights !
-        np_output = diffOutputs.to_numpy() 
-        # Create a tensor from numpy
-        outputs = torch.from_numpy(np_output)
-        # copy the values of the tensor to our inputs tensor to not lose the grad ! 
-        grad_output = grad_output.copy_(outputs)
-        return grad_output.clone()
-
 class testLayer(torch.nn.Module):
     def __init__(self):
         super().__init__()
 
     def forward(self, inputs):
         return test_func.apply(inputs)
+# TEST ----------------------------------------------------------------------------------------------
+
+class N2D2_computation(torch.autograd.Function):
+        @staticmethod
+        def forward(ctx, input):
+            # We need to redefine this method but all the forward computation is done in the Module class
+            # so we do nothing here.
+            print('forward called !')
+            return input.clone()
+
+        @staticmethod
+        def backward(ctx, grad_output):
+            print('backward called !')
+            # We cheat by declaring the N2D2 cell global so that we can pass it in this static method !
+            # May be avoidable with an hook on the Module class
+            global cell
+            numpy_tensor = grad_output.cpu().detach().numpy()
+            t_grad_output = n2d2.tensor.Tensor([3, 3], DefaultDataType=float)
+            t_grad_output.from_numpy(numpy_tensor)
+            cell.setDiffInputs(t_grad_output.N2D2())
+            cell.setDiffInputsValid()
+            cell.backPropagate()
+            cell.update() # update the weights, should be done during step ...
+            np_output = diffOutputs.to_numpy() 
+            # Create a tensor from numpy
+            outputs = torch.from_numpy(np_output)
+            # copy the values of the tensor to our inputs tensor to not lose the grad ! 
+            # grad_output.resize_(outputs.shape)
+            grad_output = grad_output.copy_(outputs)
+            return grad_output
 
 class CustomConv2d(torch.nn.Module):
     """ Custom Conv layer """
     _initialized = False
+    
     def __init__(self, size_out, kernelDims=[1, 1], strideDims=[1,1], paddingDims=[1,1]):
         super().__init__()
         net = N2D2.Network()
         deepNet = N2D2.DeepNet(net)
         global cell
-        cell = N2D2.ConvCell_Frame_float(deepNet, "name", kernelDims, size_out, strideDims=strideDims, paddingDims=paddingDims, mapping=mapping.N2D2())
+        cell = N2D2.ConvCell_Frame_float(deepNet, "name", kernelDims, size_out, strideDims=strideDims, paddingDims=paddingDims)
         self._n2d2 = cell
+
+        # this method create register the parameter bias it automatically create the attribut self.bias
+        # It also allow to ittereate throught
+        self.register_parameter(name='bias', param=torch.nn.Parameter(torch.randn(3)))
+
+        # Need to declare input and diffOutput as attributs to avoid a segmentation fault.
+        # This may be caused by python being oblivious to the cpp objects that refer these tensors.
         self.input = None
         self.diffOutput = None
+
+    def setWeights(self, setWeights):
+        self._n2d2.setWeights(int(0), setWeights, int(0))
 
     def to_tensor(self, inputs):
         numpy_tensor = inputs.cpu().detach().numpy()
@@ -99,7 +112,10 @@ class CustomConv2d(torch.nn.Module):
     def initialize_input(self, n2d2_tensor):
         # OutputDims init with an empty tensor of the same size as the input
         global diffOutputs
+        # TODO : Work for now because we have the same shape for input and output !
+        # Need to reshape diffOutputs tensor to the good shape ! 
         diffOutputs = n2d2_tensor.copy()
+        
         diffOutputs[0:] = 0 # Fill with 0
         self.diffOutput = diffOutputs # save this variable to get it back 
         self._n2d2.clearInputs()
@@ -121,12 +137,13 @@ class CustomConv2d(torch.nn.Module):
         # Create a tensor from numpy
         outputs = torch.from_numpy(np_output)
         # copy the values of the tensor to our inputs tensor to not lose the grad ! 
+        # inputs.resize_(outputs.shape)
         inputs = inputs.copy_(outputs)
         # return inputs
         return N2D2_computation.apply(inputs)
         
     # TODO : method for backward prop : register_backward_hook
-    # def register_backward_hook(self, module, grad_input, grad_output):
+    # def register_module_full_backward_hook(self, module, grad_input, grad_output):
     #     pass
 
 # MODEL + LEARNING =====================================================================================
@@ -163,7 +180,7 @@ if __name__ == "__main__":
                 torch.nn.MaxPool2d(kernel_size=2, stride=2),
                 CustomConv2d(4, kernelDims=[3, 3]),
                 # torch.nn.Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
-                torch.nn.ReLU(inplace=True),
+                # torch.nn.Tanh(),
                 torch.nn.MaxPool2d(kernel_size=2, stride=2),
             )
             self.linear_layers = torch.nn.Sequential(
@@ -185,8 +202,7 @@ if __name__ == "__main__":
         model = model.cuda()
         criterion = criterion.cuda()
         
-    print(model)
-    
+    print(model)    
     for i in range(10):
         running_loss = 0
         for images, labels in trainloader:
@@ -196,7 +212,7 @@ if __name__ == "__main__":
 
             # Training pass
             optimizer.zero_grad()
-            
+
             output = model(images)
             loss = criterion(output, labels)
             
