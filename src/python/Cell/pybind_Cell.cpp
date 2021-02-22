@@ -199,7 +199,7 @@ void init_Cell(py::module &m) {
      Get basic cell type
 
      )mydelimiter")
-    // .def("getNbChannels", &Cell::getNbChannels)
+    .def("getNbChannels", &Cell::getNbChannels)
     // .def("getChannelsWidth", &Cell::getChannelsWidth)
     // .def("getChannelsHeight", &Cell::getChannelsHeight)
     // .def("getInputsDim", &Cell::getInputsDim, py::arg("dim"))

@@ -113,7 +113,7 @@ public:
         return mDiffInputs;
     }
 
-    const void setDiffInputsValid()
+    void setDiffInputsValid()
     {
         mDiffInputs.setValid();        
     }
