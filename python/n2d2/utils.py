@@ -47,7 +47,7 @@ def convert_to_INI(path, database, provider, deepnet, target):
     file.close()
 
 
-def download_model(url, install_dir, target_dir):
+def download_model(url, install_dir, dir_name):
 
     def progress(chunks_so_far, chunk_size, total_size):
         size_so_far = min(total_size, chunks_so_far * chunk_size)
@@ -56,25 +56,26 @@ def download_model(url, install_dir, target_dir):
             sys.stdout.write("\n")
         sys.stdout.flush()
 
-    (baseUrl, fileName) = url.rsplit('/', 1)
-    target = os.path.join(install_dir, target_dir)
+    (base_url, file_name) = url.rsplit('/', 1)
+    target = os.path.join(install_dir, dir_name)
     print(target)
     if not os.path.exists(target):
         os.makedirs(target)
-    target = os.path.join(target, fileName)
+    target = os.path.join(target, file_name)
+    print(target)
     if not os.path.exists(target):
         print(url + " -> " + target)
-        urllib.request.urlretrieve(baseUrl + "/"
-                           + urllib.parse.quote(fileName), target, progress)
-        if fileName.endswith(".tar.gz") or fileName.endswith(".tar.bz2") \
-                or fileName.endswith(".tar"):
+        urllib.request.urlretrieve(base_url + "/"
+                           + urllib.parse.quote(file_name), target, progress)
+        if file_name.endswith(".tar.gz") or file_name.endswith(".tar.bz2") \
+                or file_name.endswith(".tar"):
             raw = tarfile.open(target)
             for m in raw.getmembers():
                 raw.extract(m, os.path.dirname(target))
-        elif fileName.endswith(".gz"):
+        elif file_name.endswith(".gz"):
             raw = gzip.open(target, 'rb').read()
             open(os.path.splitext(target)[0], 'wb').write(raw)
-        elif fileName.endswith(".zip"):
+        elif file_name.endswith(".zip"):
             raw = zipfile.ZipFile(target, 'r')
             raw.extractall(os.path.dirname(target))
 

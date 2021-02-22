@@ -56,6 +56,10 @@ public:
     {
         return Type;
     };
+    bool getWithLoss() const
+    {
+        return mWithLoss;
+    };
     unsigned int getGroupSize() const
     {
         return mGroupSize;

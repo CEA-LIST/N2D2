@@ -22,15 +22,7 @@
 import N2D2
 import n2d2.cell
 
-type_converter = {
-    "int" : int,
-    "unsigned int": int,
-    "float": float,
-    "double": float,
-    "bool": bool,
-    "string": str,
-    "other": str,  # TODO : Maybe put an error message ?
-}
+
 cell_dict = {
     "Fc" : n2d2.cell.Fc,
     "Conv": n2d2.cell.Conv,
@@ -43,7 +35,10 @@ cell_dict = {
     "BatchNorm": n2d2.cell.BatchNorm,
 }
 
-def cell_converter(N2D2_cell):
+
+
+
+def cell_converter(n2d2_parent_cells, N2D2_cell):
     """
     :param N2D2_cell: N2D2 cell to convert.
     :type N2D2_cell: :py:class:`N2D2.Cell`
@@ -59,75 +54,51 @@ def cell_converter(N2D2_cell):
 
 
     # Retrieving global parameters from the N2D2 object. 
-    name = N2D2_cell.getName()
-    NbOutputs = N2D2_cell.getNbOutputs()
-    CellType = N2D2_cell.getType()
+    #inputs = N2D2_cell.getParentsCells()
+    #nb_outputs = N2D2_cell.getNbOutputs()
+    cell_type = N2D2_cell.getType()
     parsed = str(N2D2_cell).split(" ")[0].split("_")
-    Model = None
-    for m in l_model:
-        if m in parsed and not Model:
-            Model = m
-    if not Model:
-        raise ValueError("No Model found in ", str(N2D2_cell))
-    DataType = None
+    #model = None
+    #for m in l_model:
+    #    if m in parsed and not model:
+    #        model = m
+    #if not model:
+    #    raise ValueError("No model found in ", str(N2D2_cell))
+    data_type = None
     for t in l_type:
-        if t in parsed and not DataType:
-            DataType = t
+        if t in parsed and not data_type:
+            data_type = t
+
 
     # Creating n2d2 object.
-    print("CellType: ", CellType)
-    str_params = N2D2_cell.getParameters()
-    parameters = {}
-    for param in str_params:
-        parameters[param] = type_converter[N2D2_cell.getParameterAndType(param)[0]](N2D2_cell.getParameterAndType(param)[1])
-        print(param, ":", type_converter[N2D2_cell.getParameterAndType(param)[0]](N2D2_cell.getParameterAndType(param)[1]))
-    
-    if CellType == "Conv":
-        kernelDims = [N2D2_cell.getKernelWidth(), N2D2_cell.getKernelHeight()]
-        n2d2_cell = cell_dict[CellType](NbOutputs, 
-                                        kernelDims,
-                                        name=name,
-                                        **parameters)
-    elif CellType == "Padding":
-        topPad = N2D2_cell.getTopPad()
-        botPad = N2D2_cell.getBotPad()
-        leftPad = N2D2_cell.getLeftPad()
-        rightPad = N2D2_cell.getRightPad()
-        n2d2_cell = cell_dict[CellType](NbOutputs, 
-                                        topPad, 
-                                        botPad, 
-                                        leftPad, 
-                                        rightPad,
-                                        name=name,
-                                        **parameters)
-    elif CellType == "Pool":
-        poolDims = [N2D2_cell.getPoolHeight(), N2D2_cell.getPoolWidth()]
-        strideDims = [N2D2_cell.getStrideX(), N2D2_cell.getStrideY()]
-        paddingDims = [N2D2_cell.getPaddingX(), N2D2_cell.getPaddingY()]
-        pooling = str(N2D2_cell.getPooling()).split('.')[-1]
-        n2d2_cell = cell_dict[CellType](NbOutputs, 
-                                        poolDims,
-                                        strideDims=strideDims,
-                                        paddingDims=paddingDims,
-                                        pooling=pooling,
-                                        name=name,
-                                        **parameters)
-    elif CellType == "ElemWise":
-        op = str(N2D2_cell.getOperation()).split('.')[-1]
-        shifts = N2D2_cell.getShifts()
-        weights = N2D2_cell.getWeights()
+    print("cell_type: ", cell_type)
 
-        n2d2_cell = cell_dict[CellType](NbOutputs, 
-                                        operation=op,
-                                        shifts=shifts,
-                                        weights=weights,
-                                        **parameters)   
+
+    if cell_type == "Conv":
+        n2d2_cell = cell_dict[cell_type](n2d2_parent_cells,
+                                        None,
+                                        None,
+                                        N2D2_object=N2D2_cell)
+    elif cell_type == "Padding":
+        n2d2_cell = cell_dict[cell_type](n2d2_parent_cells,
+                                        None,
+                                        None,
+                                        None,
+                                        None,
+                                        None,
+                                        N2D2_object=N2D2_cell)
+    elif cell_type == "Pool":
+        n2d2_cell = cell_dict[cell_type](n2d2_parent_cells,
+                                        None,
+                                        None,
+                                        N2D2_object=N2D2_cell)
     else:
-        n2d2_cell = cell_dict[CellType](NbOutputs, name=name, **parameters)
+        # All cases without special obligatory constructor arguments
+        n2d2_cell = cell_dict[cell_type](n2d2_parent_cells, None, N2D2_object=N2D2_cell)
 
     # We replace the N2D2 object created by n2d2 with the initial N2D2 object.
     # This way we make sure that the cell is associated with the same deepnet objet.
-    n2d2_cell._N2D2_object = N2D2_cell
+    #n2d2_cell._N2D2_object = N2D2_cell
 
     return n2d2_cell
 
@@ -139,13 +110,28 @@ def deepNet_converter(N2D2_deepNet):
     """
     cells = N2D2_deepNet.getCells()
     layers = N2D2_deepNet.getLayers()
-    layer_sequence = []
+    layer_sequence = n2d2.deepnet.Sequence([])
+    if not layers[0][0] == "env":
+        print("Is env:" + layers[0][0])
+        raise RuntimeError("First layer of N2D2 deepnet is not a StimuliProvider. You may be skipping cells")
     for layer in layers[1:]:
         if len(layer) > 1:
             cell_layer = []
             for cell in layer:
-                cell_layer.append(cell_converter(cells[cell]))
-            layer_sequence.append(n2d2.deepnet.Layer(cell_layer))
+                N2D2_cell = cells[cell]
+                n2d2_parents = []
+                for parent in N2D2_cell.getParentsCells():
+                    n2d2_parents.append(layer_sequence.get_cells()[parent.getName()])
+                cell_layer.append(cell_converter(n2d2_parents, N2D2_cell))
+            layer_sequence.add(n2d2.deepnet.Layer(cell_layer))
         else:
-            layer_sequence.append(cell_converter(cells[layer[0]]))
-    return n2d2.deepnet.Sequence(layer_sequence)
+            N2D2_cell = cells[layer[0]]
+            n2d2_parents = []
+            for parent in N2D2_cell.getParentsCells():
+                # Necessary because N2D2 returns [None] if no parent cells
+                if parent is not None:
+                    n2d2_parents.append(layer_sequence.get_cells()[parent.getName()])
+            print("N2D2_cell")
+            print(N2D2_cell)
+            layer_sequence.add(cell_converter(n2d2_parents, N2D2_cell))
+    return layer_sequence

@@ -26,8 +26,15 @@ import n2d2
 
 class N2D2_Interface:
 
-    _default_Model = 'Frame'
-    _default_DataType = 'float'
+    _N2D2_type_map = {
+        "int": int,
+        "unsigned int": int,
+        "float": float,
+        "double": float,
+        "bool": lambda x: False if x == '0' else True,
+        "string": str,
+        "other": str,  # TODO : Maybe put an error message ?
+    }
 
 
     def __init__(self, **config_parameters):
@@ -94,6 +101,16 @@ class N2D2_Interface:
         else:
             return str(value)
 
+    def _load_N2D2_parameters(self, N2D2_object):
+        str_params = N2D2_object.getParameters()
+        parameters = {}
+        for param in str_params:
+            parameters[param] = self._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](
+                N2D2_object.getParameterAndType(param)[0])
+            print(param, ":",
+                  self._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](N2D2_object.getParameterAndType(param)[0]))
+        return parameters
+
     def __str__(self):
         def add_delimiter(condition, delimiter):
             return delimiter+" " if condition else ""
@@ -117,4 +134,5 @@ class N2D2_Interface:
         if constructor_arg_len + opt_constructor_arg_len + config_param_len > 0:
             output += ")"
         return output
+
 

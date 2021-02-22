@@ -55,6 +55,11 @@ public:
         mRange = integerRange;
     };
 
+    size_t getRange()
+    {
+        return ((size_t) mRange);
+    };
+
     virtual const char* getType() const = 0;
 
     virtual BaseTensor& getFullPrecisionActivations() = 0;

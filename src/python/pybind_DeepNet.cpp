@@ -33,7 +33,7 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_DeepNet(py::module &m) {
-    py::class_<DeepNet, std::shared_ptr<DeepNet>>(m, "DeepNet", py::multiple_inheritance())
+    py::class_<DeepNet, std::shared_ptr<DeepNet>, Parameterizable>(m, "DeepNet", py::multiple_inheritance())
     .def(py::init<Network&>(), py::arg("net"))
     .def("addCell", &DeepNet::addCell, py::arg("cell"), py::arg("parents"))
     .def("removeCell", &DeepNet::removeCell, py::arg("cell"), py::arg("reconnect") = true)
@@ -61,6 +61,7 @@ void init_DeepNet(py::module &m) {
     // .def("spikeCodingCompare", &DeepNet::spikeCodingCompare, py::arg("dirName"), py::arg("idx"))
     // .def("fuseBatchNormWithConv", &DeepNet::fuseBatchNormWithConv)
     // .def("removeDropout", &DeepNet::removeDropout)
+    .def("getNetwork", &DeepNet::getNetwork)
     .def("setDatabase", &DeepNet::setDatabase, py::arg("database"))
     .def("setStimuliProvider", &DeepNet::setStimuliProvider, py::arg("sp"))
     // .def("getDatabase", &DeepNet::getDatabase)

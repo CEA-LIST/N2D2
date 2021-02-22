@@ -64,6 +64,7 @@ public:
 
 protected :
     DeepNet& mDeepNet;
+    std::string getCellModelType(const Cell& cell);
 
 private:
     /**
@@ -95,7 +96,6 @@ private:
     void moveScalingCellAboveParentElemWiseCell(const std::shared_ptr<ScalingCell>& scalingCell, 
                                                 const std::shared_ptr<ElemWiseCell>& parentElemWiseCell);
 
-    std::string getCellModelType(const Cell& cell);
 
     long double getMaxParentsScaling(const std::shared_ptr<Cell>& cell, 
                                  const std::unordered_map<std::string, long double>& scalingForCells) const;

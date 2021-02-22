@@ -684,7 +684,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 << " , but StimuliProvider provides " << sp->getSize()
                 << std::endl;
 
-            throw std::runtime_error(errorStr.str());
+            //throw std::runtime_error(errorStr.str());
         }
     }
 
@@ -731,7 +731,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             ::const_iterator itAttr;
         std::map<std::string, const onnx::TensorProto*>::const_iterator itInit;
         std::map<std::string, std::vector<size_t> >::const_iterator itShape;
-
+        std::cout << "  ToIgnore ? " << node.output(0) << std::endl;
         if (std::find(ignore.begin(), ignore.end(), node.output(0))
             != ignore.end())
         {
@@ -2273,14 +2273,14 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     ActivationGenerator::generateParams(activationCell, iniConfig,
                         node.output(0), model, Float32);
                 }
-                else*/
+                else
                 if (iniConfig.currentSection(onnxName + ":Rectifier_def", false)) {
                     ActivationGenerator::generateParams(cellFrame, iniConfig,
                         onnxName + ":Rectifier_def", model, Float32);
-                }
+                }*/
 
-                //cellFrame->setActivation(Registrar<RectifierActivation>
-                //    ::create<Float_T>(model)());
+                cellFrame->setActivation(Registrar<RectifierActivation>
+                    ::create<Float_T>(model)());
             }
 
             std::cout << "  " << node.output(0) << " -> "
@@ -2660,7 +2660,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                                 nbOutputs,
                                 Scaling::floatingPointScaling(
                                     std::vector<Float_T>(nbOutputs, 
-                                                         constant(0))));
+                                                         constant(0)), false,std::vector<Float_T>(0.0f)));
                             
                             std::cout << "  scaling factor = " << constant(0)
                                 << std::endl;

@@ -53,11 +53,13 @@ std::shared_ptr<N2D2::ScalingCell> N2D2::ScalingCellGenerator::generate(Network&
 
     std::cout << "Layer: " << section << " [Scaling(" << model << ")]" << std::endl;   
     
-
+    bool isClipped = false;
     std::shared_ptr<ScalingCell> cell = Registrar<ScalingCell>::create(model)(
                                             deepNet, section, nbOutputs, 
                                             Scaling::floatingPointScaling(
-                                                std::vector<Float_T>(nbOutputs, rescaleFactor)
+                                                std::vector<Float_T>(nbOutputs, rescaleFactor),
+                                                isClipped,
+                                                std::vector<Float_T>(0.0f)
                                             )
                                         );
     if (!cell) {

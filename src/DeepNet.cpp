@@ -770,12 +770,10 @@ std::vector<std::shared_ptr<N2D2::Cell>> N2D2::DeepNet::getChildCells(const std:
 
 std::vector<std::shared_ptr<N2D2::Cell>> N2D2::DeepNet::getParentCells(const std::string& name) const
 {
-    std::cout << "getParentCells" << std::endl;
     std::vector<std::shared_ptr<Cell>> parentCells;
 
     auto parents = mParentLayers.equal_range(name);
     for(auto itParent = parents.first; itParent != parents.second; ++itParent) {
-        std::cout << itParent->second << std::endl;
         if (itParent->second == "env") {
             parentCells.push_back(std::shared_ptr<Cell>());
         }
@@ -1974,7 +1972,6 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
          itTargets != itTargetsEnd;
          ++itTargets)
     {
-        //std::cout << "process " << (*itTargets)->getName() << std::endl;
         time1 = std::chrono::high_resolution_clock::now();
         (*itTargets)->provideTargets(Database::Learn);
 
@@ -2005,8 +2002,6 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
                 throw std::runtime_error(
                     "DeepNet::learn(): learning requires Cell_Frame_Top cells");
 
-            //std::cout << "propagate " << mCells[(*itCell)]->getName()
-            //    << std::endl;
             time1 = std::chrono::high_resolution_clock::now();
             cellFrame->propagate();
 
@@ -2030,7 +2025,6 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
          itTargets != itTargetsEnd;
          ++itTargets)
     {
-        //std::cout << "process " << (*itTargets)->getName() << std::endl;
         time1 = std::chrono::high_resolution_clock::now();
         (*itTargets)->process(Database::Learn);
 
@@ -2055,8 +2049,7 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
              itCell != itCellEnd;
              ++itCell)
         {
-            //std::cout << "back-propagate " << mCells[(*itCell)]->getName()
-            //    << std::endl;
+
             time1 = std::chrono::high_resolution_clock::now();
             std::dynamic_pointer_cast
                 <Cell_Frame_Top>(mCells[(*itCell)])->backPropagate();
@@ -2082,8 +2075,7 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
              itCell != itCellEnd;
              ++itCell)
         {
-            //std::cout << "update " << mCells[(*itCell)]->getName()
-            //    << std::endl;
+      
             time1 = std::chrono::high_resolution_clock::now();
             std::dynamic_pointer_cast
                 <Cell_Frame_Top>(mCells[(*itCell)])->update();
@@ -2119,7 +2111,6 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
          itTargets != itTargetsEnd;
          ++itTargets)
     {
-        //std::cout << "process " << (*itTargets)->getName() << std::endl;
         time1 = std::chrono::high_resolution_clock::now();
         (*itTargets)->provideTargets(set);
 
@@ -2257,7 +2248,6 @@ void N2D2::DeepNet::cTicks(Time_T start,
                 if (!cellCSpike)
                     throw std::runtime_error(
                         "DeepNet::cTicks(): requires Cell_CSpike cells");
-                //std::cout << mCells[(*itCell)]->getName() << std::endl;
                 if (cellCSpike->tick(t))
                     return;
             }

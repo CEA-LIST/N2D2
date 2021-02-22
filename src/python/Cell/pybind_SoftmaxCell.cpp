@@ -31,7 +31,9 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_SoftmaxCell(py::module &m) {
 
-    py::class_<SoftmaxCell, std::shared_ptr<SoftmaxCell>, Cell> (m, "SoftmaxCell", py::multiple_inheritance());
+    py::class_<SoftmaxCell, std::shared_ptr<SoftmaxCell>, Cell> (m, "SoftmaxCell", py::multiple_inheritance())
+    .def("getWithLoss", &SoftmaxCell::getWithLoss)
+    .def("getGroupSize", &SoftmaxCell::getGroupSize);
 
 }
 }

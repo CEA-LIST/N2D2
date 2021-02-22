@@ -31,6 +31,8 @@ template<typename T>
 void cudaFloatingPointScaling_propagate(const T* input, T* output,
                                         std::size_t batchSize, std::size_t nbChannels,
                                         std::size_t heigth, std::size_t width,
+                                        bool isClipped,
+                                        Float_T* clippingFactorPerChannel,
                                         Float_T* scalingFactorPerChannel,
                                         std::size_t quantizedNbBits, bool isOutputUnsigned,
                                         dim3 blocksPerGrid, dim3 threadsPerBlock);
@@ -39,6 +41,8 @@ template<typename T>
 void cudaFixedPointScaling_propagate(const T* input, T* output,
                                      std::size_t batchSize, std::size_t nbChannels,
                                      std::size_t heigth, std::size_t width,
+                                     bool isClipped,
+                                     std::int32_t* clippingFactorPerChannel,
                                      std::int32_t* scalingPerOutput, std::size_t nbFractionalBits,
                                      std::size_t quantizedNbBits, bool isOutputUnsigned,
                                      dim3 blocksPerGrid, dim3 threadsPerBlock);
@@ -47,6 +51,8 @@ template<typename T>
 void cudaSingleShiftScaling_propagate(const T* input, T* output,
                                       std::size_t batchSize, std::size_t nbChannels,
                                       std::size_t heigth, std::size_t width,
+                                      bool isClipped,
+                                      unsigned char* clippingFactorPerChannel,
                                       unsigned char* scalingPerOutput,
                                       std::size_t quantizedNbBits, bool isOutputUnsigned,
                                       dim3 blocksPerGrid, dim3 threadsPerBlock);
@@ -55,6 +61,8 @@ template<typename T>
 void cudaDoubleShiftScaling_propagate(const T* input, T* output,
                                       std::size_t batchSize, std::size_t nbChannels,
                                       std::size_t heigth, std::size_t width,
+                                      bool isClipped,
+                                      std::pair<unsigned char, unsigned char>* clippingFactorPerChannel,
                                       std::pair<unsigned char, unsigned char>* scalingPerOutput,
                                       std::size_t quantizedNbBits, bool isOutputUnsigned,
                                       dim3 blocksPerGrid, dim3 threadsPerBlock);

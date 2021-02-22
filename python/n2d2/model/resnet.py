@@ -229,7 +229,7 @@ class ResNetHead(Sequence):
 class ResNetClassifier(Sequence):
     def __init__(self, inputs, output_size, l):
         fc = Fc(inputs, output_size, activationFunction=Linear(), weightsFiller=Xavier(scaling=(0.0 if l > 0 else 1.0)), biasFiller=Constant(value=0.0), name="fc")
-        softmax = Softmax(fc, output_size, name="softmax")
+        softmax = Softmax(fc, output_size, withLoss=True,  name="softmax")
         Sequence.__init__(self, [fc, softmax], name="classifier")
 
 
@@ -311,7 +311,7 @@ def load_from_ONNX(resnet_type, version='pre_act', dims=None, batch_size=1, path
         v = "v2"
     else:
         raise ValueError("ResNet version must be either 'pre_act' or 'post_act'!")
-    resnet_name = "resnet"+resnet_type+v
+    resnet_name = "resnet-" + resnet_type + "-" + v
 
     print("Loading " + version + " ResNet"+str(resnet_type)+
           " from ONNX with dims " + str(dims) + " and batch size " + str(batch_size))
@@ -323,9 +323,9 @@ def load_from_ONNX(resnet_type, version='pre_act', dims=None, batch_size=1, path
         path = n2d2.global_variables.model_cache + "/ONNX/mobilenetv2/mobilenetv2-1.0.onnx"
     else:
         n2d2.utils.download_model(
-            "https://s3.amazonaws.com/onnx-model-zoo/resnet/"+resnet_name+"/"+resnet_name+".onnx",
+            "https://s3.amazonaws.com/onnx-model-zoo/resnet/"+"resnet"+resnet_type+v+"/"+"resnet"+resnet_type+v+".onnx",
             n2d2.global_variables.model_cache + "/ONNX/",
             resnet_name)
-        path = n2d2.global_variables.model_cache + "/ONNX/"+resnet_name+"/"+resnet_name+".onnx"
+        path = n2d2.global_variables.model_cache + "/ONNX/"+resnet_name+"/"+"resnet"+resnet_type+v+".onnx"
     model = n2d2.deepnet.load_from_ONNX(path, dims, batch_size=batch_size)
     return model

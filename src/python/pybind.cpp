@@ -250,10 +250,21 @@ void init_UnpoolCell(py::module&);
 void init_UnpoolCell_Frame(py::module&);
 void init_UnpoolCell_Frame_CUDA(py::module&);
 void init_MappingGenerator(py::module&);
+void init_ActivationCell(py::module&);
+void init_ActivationCell_Frame(py::module&);
+void init_ActivationCell_Frame_CUDA(py::module&);
+
+//Quantizer
+void init_QuantizerCell(py::module&);
+void init_QuantizerCell_Frame(py::module&);
+void init_QuantizerCell_Frame_CUDA(py::module&);
+void init_QuantizerActivation(py::module&m);
+void init_QuantizerActivation_Frame(py::module&);
+void init_QuantizerActivation_Frame_CUDA(py::module&);
 
 
-PYBIND11_MODULE(N2D2, m) {
-    //utils
+void init_N2D2(py::module& m) {
+      //utils
     init_ConfusionMatrix(m);
     init_WindowFunction(m);
     init_Random(m);
@@ -475,11 +486,30 @@ PYBIND11_MODULE(N2D2, m) {
     init_UnpoolCell(m);
     init_UnpoolCell_Frame(m);
     init_UnpoolCell_Frame_CUDA(m);
+    init_ActivationCell(m);
+    init_ActivationCell_Frame(m);
+    init_ActivationCell_Frame_CUDA(m);
+
 
     // Mapping object
     init_MappingGenerator(m);
 
+    //Quantizer
+    init_QuantizerCell(m);
+    init_QuantizerCell_Frame(m);
+    init_QuantizerCell_Frame_CUDA(m);
+    init_QuantizerActivation(m);
+    init_QuantizerActivation_Frame(m);
+    init_QuantizerActivation_Frame_CUDA(m);
 }
+
+/*
+PYBIND11_MODULE(N2D2, m) {
+    init_N2D2(m);
 }
+*/
+}
+
+
 
 #endif

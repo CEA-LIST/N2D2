@@ -223,7 +223,7 @@ std::pair<std::string, std::string> N2D2::Parameterizable::getParameterAndType(c
     if (it != mParameters.end()) {
         std::ostringstream value;
         value << std::showpoint << (*((*it).second));
-        return std::pair<std::string, std::string>(((*it).second)->getPyType(), value.str());
+        return std::pair<std::string, std::string>(value.str(), ((*it).second)->getPyType());
     } else
         throw std::runtime_error("Parameter does not exist: " + name);
 }

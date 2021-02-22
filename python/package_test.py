@@ -34,22 +34,10 @@ avg_window = int(10000/batch_size)
 
 N2D2.CudaContext.setDevice(3)
 
-n2d2.global_variables.default_DeepNet = n2d2.deepnet.DeepNet(N2D2.Network(n2d2.global_variables.default_seed), 'Frame_CUDA', n2d2.global_variables.default_DataType)
-
-#model = n2d2.model.fc_layer()
-#model = n2d2.model.fc_base_named()
-
-#print(model)
-
-model = n2d2.model.resnet18()
-print(model)
+n2d2.global_variables.default_model = "Frame_CUDA"
 
 
-#print("Create model")
-#model = n2d2.deepnet.Sequential(deepnet, model)
-#model = n2d2.deepnet.Sequential(deepnet, model, Model='Frame_CUDA')
-#model = n2d2.deepnet.Sequential(deepnet, n2d2.model.fc_one_layer(), Model='Frame_CUDA')
-#model = n2d2.deepnet.Sequential(deepnet, n2d2.model.fc_base(), Model='Frame_CUDA')
+
 
 
 print("Create database")
@@ -57,18 +45,9 @@ database = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/", validation
 print(database)
 
 print("Create provider")
-provider = n2d2.provider.DataProvider(database=database, qize=[28, 28, 1], batchSize=batch_size)
+provider = n2d2.provider.DataProvider(database=database, size=[28, 28, 1], batchSize=batch_size)
 
-# class voidTransform(N2D2.CustomTransformation):
-#     def __init__(self):
-#         super().__init__()
 
-#     def apply():
-#         pass
-#         # TODO
-
-# v = voidTransform()
-# c = n2d2.transform.CustomTransformation(v)
 
 #print("Create transformation")
 #trans = n2d2.model.nested_transform()
@@ -76,8 +55,52 @@ provider = n2d2.provider.DataProvider(database=database, qize=[28, 28, 1], batch
 
 #print("Add transformation")
 #provider.add_on_the_fly_transformation(trans)
-provider.add_transformation(n2d2.transform.PadCrop(width=224, height=224))
+#provider.add_transformation(n2d2.transform.PadCrop(width=224, height=224))
 # provider.add_transformation(trans)
+
+"""
+print("Create model")
+n2d2.global_variables.default_deepNet = n2d2.deepnet.DeepNet()
+model = n2d2.deepnet.Sequence([])
+model.add(n2d2.cell.Fc(provider, 100))
+model.add(n2d2.cell.Fc(model.get_last(), 10, activationFunction=n2d2.activation.Rectifier()))
+model.add(n2d2.cell.Softmax(model.get_last(), 10, withLoss=True))
+print(model)
+"""
+
+deepnet = N2D2.DeepNet(N2D2.Network(0))
+fc_in = N2D2.FcCell_Frame_CUDA_float(deepnet, 'fc_in', 100)
+fc = N2D2.FcCell_Frame_CUDA_float(deepnet, 'fc', 10)
+print("Created cell")
+fc_in.addInput(provider.N2D2())
+fc_in.initialize()
+fc.addInput(fc_in)
+fc.initialize()
+print("added cell to cell")
+deepnet.setStimuliProvider(provider.N2D2())
+deepnet.addCell(fc_in, [])
+deepnet.addCell(fc, [fc_in])
+print("added cells to deepnet")
+#new_fc_in = n2d2.converter.cell_converter([], fc_in)
+#new_fc = n2d2.converter.cell_converter([new_fc_in], fc)
+#print(new_fc_in)
+#print(new_fc)
+new_deepnet = n2d2.converter.deepNet_converter(deepnet)
+print(new_deepnet)
+
+
+exit()
+
+print("Create model")
+n2d2.global_variables.default_deepNet = n2d2.deepnet.DeepNet()
+
+model = n2d2.deepnet.Sequence([])
+model.add(n2d2.cell.Fc(provider, 100))
+model.add(n2d2.cell.Fc(model.get_last(), 100, activationFunction=n2d2.activation.Linear(), quantizer=n2d2.quantizer.SATCell()))
+model.add(n2d2.cell.Activation(model.get_last(), 100, activationFunction=n2d2.activation.Rectifier(quantizer=n2d2.quantizer.SATAct())))
+model.add(n2d2.cell.Fc(model.get_last(), 10, activationFunction=n2d2.activation.Rectifier()))
+model.add(n2d2.cell.Softmax(model.get_last(), 10, withLoss=True))
+print(model)
 
 print("Create classifier")
 classifier = n2d2.application.Classifier(provider, model)
@@ -153,7 +176,7 @@ for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
     print("Example: " + str(i*batch_size) + ", test success: "
           + "{0:.2f}".format(100 * classifier.get_average_success()) + "%", end='\r')
 
-
+exit()
 # Transfer Learning
 print("")
 

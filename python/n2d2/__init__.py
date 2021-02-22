@@ -40,4 +40,7 @@ Packages that exist, but should not be used directly in API
 """
 #import n2d2.parameterizable
 
+# IP functions
+import n2d2.quantizer
+
 
