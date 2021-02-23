@@ -30,6 +30,7 @@ import n2d2
 import N2D2
 import numpy as np
 import time
+from torch.autograd._functions import Resize
 
 # TEST ----------------------------------------------------------------------------------------------
 class test_func(torch.autograd.Function):
@@ -55,12 +56,12 @@ class N2D2_computation(torch.autograd.Function):
         def forward(ctx, input):
             # We need to redefine this method but all the forward computation is done in the Module class
             # so we do nothing here.
-            print('forward called !')
+            # print('forward called !')
             return input.clone()
 
         @staticmethod
         def backward(ctx, grad_output):
-            print('backward called !')
+            # print('backward called !')
             # We cheat by declaring the N2D2 cell global so that we can pass it in this static method !
             # May be avoidable with an hook on the Module class
             global cell
@@ -76,7 +77,10 @@ class N2D2_computation(torch.autograd.Function):
             outputs = torch.from_numpy(np_output)
             # copy the values of the tensor to our inputs tensor to not lose the grad ! 
             # grad_output.resize_(outputs.shape)
-            grad_output = grad_output.copy_(outputs)
+
+            outputs = outputs.cuda()
+            outputs.requires_grad = True
+            grad_output.data = outputs.clone()
             return grad_output
 
 class CustomConv2d(torch.nn.Module):
@@ -136,10 +140,20 @@ class CustomConv2d(torch.nn.Module):
         np_output = t_outputs.to_numpy() 
         # Create a tensor from numpy
         outputs = torch.from_numpy(np_output)
+
+        outputs = outputs.cuda()
+        outputs.requires_grad = True
+
+        inputs.data = outputs.clone()
+        # outputs.retain_grad()
         # copy the values of the tensor to our inputs tensor to not lose the grad ! 
         # inputs.resize_(outputs.shape)
-        inputs = inputs.copy_(outputs)
+        # inputs = inputs.copy_(outputs)
         # return inputs
+        # outputs.grad_fn.data.copy_(inputs.grad_fn.data)
+        # input(outputs.grad_fn)
+        # outputs.grad_fn = inputs.grad_fn
+        # return N2D2_computation.apply(outputs)
         return N2D2_computation.apply(inputs)
         
     # TODO : method for backward prop : register_backward_hook
@@ -178,17 +192,19 @@ if __name__ == "__main__":
                 testLayer(),
                 torch.nn.ReLU(inplace=True),
                 torch.nn.MaxPool2d(kernel_size=2, stride=2),
-                CustomConv2d(4, kernelDims=[3, 3]),
-                # torch.nn.Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
-                # torch.nn.Tanh(),
+                # CustomConv2d(4, kernelDims=[3, 3], strideDims=[2,2]),
+                torch.nn.Conv2d(4, 4, kernel_size=3, stride=2, padding=1),
+                torch.nn.Tanh(),
                 torch.nn.MaxPool2d(kernel_size=2, stride=2),
             )
             self.linear_layers = torch.nn.Sequential(
-                torch.nn.Linear(4 * 7 * 7, 10) # for pytorch conv
+                torch.nn.Linear(4 * 3 * 3, 10) # for pytorch conv
             )
         # Defining the forward pass    
         def forward(self, x):
             x = self.cnn_layers(x)
+            # input(x.shape)
+
             x = x.view(x.size(0), -1)
             x = self.linear_layers(x)
             return x
