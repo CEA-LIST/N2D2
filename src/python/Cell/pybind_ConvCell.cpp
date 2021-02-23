@@ -39,6 +39,7 @@ void init_ConvCell(py::module &m) {
     .export_values();
 
      convCell
+    .def("getWeight", &ConvCell::getWeight, py::arg("output"), py::arg("channel"), py::arg("value"))
     .def("setWeight", &ConvCell::setWeight, py::arg("output"), py::arg("channel"), py::arg("value"))
     .def("setBias", &ConvCell::setBias, py::arg("output"), py::arg("value"))
     .def("setWeightsSolver", &ConvCell::setWeightsSolver, py::arg("solver"))
