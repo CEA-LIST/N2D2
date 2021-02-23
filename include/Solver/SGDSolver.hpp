@@ -88,6 +88,8 @@ protected:
     Parameter<unsigned long long int> mMaxIterations;
     /// WarmUp Duration for Cosine Rules
     Parameter<unsigned int> mWarmUpDuration;
+    //LR starting value for warmup = fraction of initial LR
+    Parameter<double>  mWarmUpLRFrac;
     /// Learning rate decay policy
     Parameter<LearningRatePolicy> mLearningRatePolicy;
     /// Learning rate step size

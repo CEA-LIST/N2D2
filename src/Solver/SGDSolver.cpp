@@ -30,6 +30,7 @@ N2D2::SGDSolver::SGDSolver()
       mIterationSize(this, "IterationSize", 1U),
       mMaxIterations(this, "MaxIterations", 0U),
       mWarmUpDuration(this, "WarmUpDuration", 0U),
+      mWarmUpLRFrac(this, "WarmUpLRFrac", 0.25),
       mLearningRatePolicy(this, "LearningRatePolicy", None),
       mLearningRateStepSize(this, "LearningRateStepSize", 1U),
       mLearningRateDecay(this, "LearningRateDecay", 0.1),
@@ -49,6 +50,7 @@ N2D2::SGDSolver::SGDSolver(const SGDSolver& solver)
       mIterationSize(this, "IterationSize", solver.mIterationSize),
       mMaxIterations(this, "MaxIterations", solver.mMaxIterations),
       mWarmUpDuration(this, "WarmUpDuration", solver.mWarmUpDuration),
+      mWarmUpLRFrac(this, "WarmUpLRFrac", solver.mWarmUpLRFrac),
       mLearningRatePolicy(this, "LearningRatePolicy",
                           solver.mLearningRatePolicy),
       mLearningRateStepSize(this, "LearningRateStepSize",
@@ -105,7 +107,7 @@ double N2D2::SGDSolver::getLearningRate(unsigned int batchSize, bool silent)
         {
             if(mWarmUpDuration > currentStep)
             {
-                rate *= currentStep / (double) mWarmUpDuration;
+                rate *= (1.0-mWarmUpLRFrac)*(currentStep / (double) mWarmUpDuration) + mWarmUpLRFrac;
             }
             else
             {
