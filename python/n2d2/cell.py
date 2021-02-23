@@ -153,6 +153,15 @@ class Cell(N2D2_Interface):
         self._N2D2_object.initialize()
     """
 
+    def set_activation(self, activation):
+        print("Note: Replacing potentially existing activation in cell: " + self.get_name())
+        self._config_parameters['activation'] = activation
+        self._N2D2_object.setActivation(self._config_parameters['activation'].N2D2())
+
+    def set_activation_quantizer(self, quantizer):
+        self._N2D2_object.getActivation().setQuantizer(quantizer.N2D2())
+        # TODO: Create n2d2 objects to obtain visibility of objects in API
+
 
     def get_deepnet(self):
         return self._deepnet
@@ -204,7 +213,7 @@ class Cell(N2D2_Interface):
             output += "[inputs="
             for idx, cell in enumerate(self.get_inputs()):
                 if idx > 0:
-                    output += ","
+                    output += ", "
                 output += "'" + cell.get_name() + "'"
             output += "]"
         else:
@@ -329,6 +338,10 @@ class Fc(Cell):
         print("Note: Replacing existing solver in cell: " + self.get_name())
         self._config_parameters['biasSolver'] = solver
         self._N2D2_object.setBiasSolver(self._config_parameters['biasSolver'].N2D2())
+
+    def set_quantizer(self, quantizer):
+        self._config_parameters['quantizer'] = quantizer
+        self._N2D2_object.setQuantizer(self._config_parameters['quantizer'].N2D2())
 
 
     # TODO: General set_solver that copies solver and does both
@@ -458,6 +471,9 @@ class Conv(Cell):
         self._config_parameters['biasSolver'] = solver
         self._N2D2_object.setBiasSolver(self._config_parameters['biasSolver'].N2D2())
 
+    def set_quantizer(self, quantizer):
+        self._config_parameters['quantizer'] = quantizer
+        self._N2D2_object.setQuantizer(self._config_parameters['quantizer'].N2D2())
 
 
 

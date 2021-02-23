@@ -127,17 +127,17 @@ We should be able to extract cell and sequences and run these subnetworks easily
 Structure that is organised sequentially. 
 """
 class Sequence:
-    def __init__(self, sequences, name=""):
+    def __init__(self, sequence, name=""):
         assert isinstance(name, str)
         self._name = name
-        assert isinstance(sequences, list)
-        #if not sequences:
+        assert isinstance(sequence, list)
+        #if not sequence:
         #    raise ValueError("Got empty list as input. List must contain at least one element")
-        self._sequences = sequences
+        self._sequence = sequence
 
         """
         previous = None
-        for elem in self._sequences:
+        for elem in self._sequence:
             if previous is not None:
                 #elem.clear_input()
                 elem.add_input(previous)
@@ -154,7 +154,7 @@ class Sequence:
         """
 
     def add(self, cell):
-        self._sequences.append(cell)
+        self._sequence.append(cell)
 
     #def get_deepnet(self):
     #    first = self.get_first()
@@ -171,19 +171,50 @@ class Sequence:
                     parents.append(ipt.get_last().N2D2())
             deepNet.addCell(cell.N2D2(), parents)"""
 
+    # TODO: Implement in layer
+    # TODO: At the moment this does not release memory of deleted cells
+    def remove_subsequence(self, idx, reconnect=True):
+        cell = self._sequence[idx]
+        print("Removing cell: " + cell.get_name())
+        if isinstance(cell, Sequence) or isinstance(cell, Layer):
+            for idx in range(len(cell.get_elements())):
+                cell.remove_subsequence(0, reconnect)
+            del self._sequence[idx]
+        elif isinstance(cell, n2d2.cell.Cell):
+            cells = self.get_cells()
+            children = cell.N2D2().getChildrenCells()
+            parents = cell.N2D2().getParentsCells()
+            for child in children:
+                n2d2_child = cells[child.getName()]
+                print("Child: " + n2d2_child.get_name())
+                for idx, ipt in enumerate(n2d2_child.get_inputs()):
+                    if ipt.get_name() == cell.get_name():
+                        del n2d2_child.get_inputs()[idx]
+                if reconnect:
+                    for parent in parents:
+                        if parent.getName() in cells:
+                            n2d2_child.add_input(cells[parent.getName()])
+                        else:
+                            print("Warning: parent '" + parent.getName() + "' of removed cell '" + cell.get_name() +
+                            "' not found in same sequence as removed cell. If the parent is part of another sequence, "
+                            "please reconnect it manually.")
+            cell.get_deepnet().N2D2().removeCell(cell.N2D2(), reconnect)
+            del self._sequence[idx]
+        else:
+            raise RuntimeError("Unknown object at index: " + str(idx))
+
+
     def get_cells(self):
         cells = {}
         self._get_cells(cells)
         return cells
 
     def _get_cells(self, cells):
-        for elem in self._sequences:
+        for elem in self._sequence:
             if isinstance(elem, Sequence) or isinstance(elem, Layer):
                 elem._get_cells(cells)
             else:
                 cells[elem.get_name()] = elem
-
-    # TODO: Method that converts sequential representation into corresponding N2D2 deepnet
 
     def add_input(self, inputs):
         self.get_first().add_input(inputs)
@@ -195,19 +226,19 @@ class Sequence:
         self.get_first().clear_input()
 
     def initialize(self):
-        for cell in self._sequences:
+        for cell in self._sequence:
             cell.initialize()
 
     def propagate(self, inference=False):
-        for cell in self._sequences:
+        for cell in self._sequence:
             cell.propagate(inference)
 
     def back_propagate(self):
-        for cell in reversed(self._sequences):
+        for cell in reversed(self._sequence):
             cell.back_propagate()
 
     def update(self):
-        for cell in self._sequences:
+        for cell in self._sequence:
             cell.update()
 
     def import_free_parameters(self, dirName, ignoreNotExists=False):
@@ -218,9 +249,9 @@ class Sequence:
 
     def get_subsequence(self, id):
         if isinstance(id, int):
-            return self._sequences[id]
+            return self._sequence[id]
         else:
-            for elem in self._sequences:
+            for elem in self._sequence:
                 if elem.get_name() == id:
                     return elem
             raise RuntimeError("No subsequence with name: \'" + id + "\'")
@@ -231,14 +262,14 @@ class Sequence:
     def set_name(self, name):
         self._name = name
 
-    def get_sequences(self):
-        return self._sequences
+    def get_elements(self):
+        return self._sequence
 
     def get_last(self):
-        return self._sequences[-1].get_last()
+        return self._sequence[-1].get_last()
 
     def get_first(self):
-        return self._sequences[0].get_first()
+        return self._sequence[0].get_first()
     """
     def get_cells_sequence(self):
         return self._cells_sequence
@@ -262,7 +293,7 @@ class Sequence:
         else:
             output = "Sequence("
 
-        for idx, value in enumerate(self._sequences):
+        for idx, value in enumerate(self._sequence):
             output += "\n" + (indent_level * "\t") + "(" + str(idx) + ")"
             if isinstance(value, n2d2.deepnet.Sequence):
                 output += ": " + value._generate_str(indent_level + 1)
@@ -273,6 +304,15 @@ class Sequence:
         output += "\n" + ((indent_level-1) * "\t") + ")"
         return output
 
+
+
+
+
+
+class SequentialDeepNet(Sequence, DeepNet):
+    def __init__(self, sequence=None, N2D2_object=None, name="", **config_parameters):
+        Sequence.__init__(self, sequence, name=name)
+        DeepNet.__init__(self, N2D2_object=N2D2_object, **config_parameters)
 
 
 
@@ -304,8 +344,6 @@ class Layer:
             else:
                 cells[elem.get_name()] = elem
 
-
-    # TODO: Method that converts layer representation into corresponding N2D2 deepnet
 
     def add_input(self, input):
         for cell in self._layer:

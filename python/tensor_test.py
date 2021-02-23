@@ -87,7 +87,7 @@ def test_classic_operation_cudatensor():
     print("Test classic operations on CUDA Tensor\n---------------------------------------")
     x,y,z=(2,3,4)
     print("Test create a CUDA tensor")
-    b = n2d2.tensor.CUDA_Tensor([x, y, z], DefaultDataType=int)
+    b = n2d2.tensor.CudaTensor([x, y, z], DefaultDataType=int)
 
     print("Test setting and getting values")
     print('Using coordinates')
@@ -112,7 +112,7 @@ def test_classic_operation_cudatensor():
 
     print("Test dims & shape")
     x,y,z=(1,2,3)
-    b = n2d2.tensor.CUDA_Tensor([x, y, z], DefaultDataType=int)
+    b = n2d2.tensor.CudaTensor([x, y, z], DefaultDataType=int)
     assert b.dims() == [z,y,x]
     assert b.shape() == [x,y,z]
     print("Test copy method")
@@ -124,10 +124,10 @@ def test_classic_operation_cudatensor():
     assert b.shape() == [x, y]    
 
     print("Test equal")
-    same_tensor = n2d2.tensor.CUDA_Tensor([x, y], DefaultDataType=int)
-    type_different = n2d2.tensor.CUDA_Tensor([x,y], DefaultDataType=float)
-    different_tensor = n2d2.tensor.CUDA_Tensor([x,y], DefaultDataType=int)
-    dim_different = n2d2.tensor.CUDA_Tensor([x,y, z], DefaultDataType=int)
+    same_tensor = n2d2.tensor.CudaTensor([x, y], DefaultDataType=int)
+    type_different = n2d2.tensor.CudaTensor([x, y], DefaultDataType=float)
+    different_tensor = n2d2.tensor.CudaTensor([x, y], DefaultDataType=int)
+    dim_different = n2d2.tensor.CudaTensor([x, y, z], DefaultDataType=int)
     different_tensor[0:] = 1
     assert b == same_tensor
     assert b == type_different
@@ -135,18 +135,18 @@ def test_classic_operation_cudatensor():
     assert b != dim_different
 
     print("Test contain method")
-    c = n2d2.tensor.CUDA_Tensor([1], DefaultDataType=int)
+    c = n2d2.tensor.CudaTensor([1], DefaultDataType=int)
     c[0] = 5
     assert 5 in c
 
     # print("Test to list")
-    # c = n2d2.tensor.CUDA_Tensor([2, 3, 4])
+    # c = n2d2.tensor.CudaTensor([2, 3, 4])
     # l = c.to_list()
     # equivalent_list = [[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]]
     # assert equivalent_list == l
     
     print("Test convert to numpy")
-    b = n2d2.tensor.CUDA_Tensor([3, 2])
+    b = n2d2.tensor.CudaTensor([3, 2])
     b[0] = 1
     b[1] = 2
     b[2] = 3
@@ -157,7 +157,7 @@ def test_classic_operation_cudatensor():
     np_b = b.to_numpy()
     equivalent_numpy = np.array([[1, 2], [3, 4], [5, 6]])
     assert np.array_equal(np_b, equivalent_numpy)
-    tensor_numpy = n2d2.tensor.CUDA_Tensor([3, 2])
+    tensor_numpy = n2d2.tensor.CudaTensor([3, 2])
     tensor_numpy.from_numpy(np_b)
     assert b == tensor_numpy
 
