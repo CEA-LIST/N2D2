@@ -3,7 +3,6 @@ import torch
 from torchvision import datasets, transforms 
 import numpy as np
 import N2D2
-
 if __name__ == "__main__":
     weight_value = 0.1
     batch_size = 2
@@ -20,7 +19,7 @@ if __name__ == "__main__":
 
         def forward(self, x):
             if not self.init:
-                self.conv.initialize_input(self.conv.to_tensor(x))
+                self.conv._initialize_input(self.conv._to_tensor(x))
                 self.t_w = N2D2.Tensor_float([3, 3], weight_value)
                 for o in range(self.conv._n2d2.getNbOutputs()):
                     self.conv._n2d2.setBias(o, N2D2.Tensor_int([1], 0))
@@ -84,7 +83,7 @@ if __name__ == "__main__":
         # Defining the forward pass    
         def forward(self, x):
             if not self.init:
-                self.n_conv.initialize_input(self.n_conv.to_tensor(x))
+                self.n_conv._initialize_input(self.n_conv._to_tensor(x))
                 self.t_w = N2D2.Tensor_float([3, 3], weight_value)
                 for o in range(self.n_conv._n2d2.getNbOutputs()):
                     self.n_conv._n2d2.setBias(o, N2D2.Tensor_int([1], 0))
@@ -108,7 +107,7 @@ if __name__ == "__main__":
         # Defining the forward pass    
         def forward(self, x):
             if not self.init:
-                self.n_conv.initialize_input(self.n_conv.to_tensor(x))
+                self.n_conv._initialize_input(self.n_conv._to_tensor(x))
                 self.t_w = N2D2.Tensor_float([3, 3], weight_value)
                 for o in range(self.n_conv._n2d2.getNbOutputs()):
                     self.n_conv._n2d2.setBias(o, N2D2.Tensor_int([1], 0))
@@ -133,6 +132,7 @@ if __name__ == "__main__":
     print('Input :\n', input_tensor)
     
     output = model(input_tensor)
+
     c_output = c_model(input_tensor) # Warning this forward pass modify the values in the input_tensor !
 
     print("Pytorch Conv output\n", output)
@@ -159,14 +159,12 @@ if __name__ == "__main__":
     # TODO : Need to check the backward pass and see if both cells learns
     print("===========================================================")
     print("Calculating and applying loss :")
-
     loss = criterion(output, label)
-    c_loss = criterion(c_output, label)
-
     loss.backward()
-    c_loss.backward()
-
     optimizer.step()
+
+    c_loss = criterion(c_output, label)
+    c_loss.backward()
     c_optimizer.step()
 
     print("Custom model weight :")
@@ -195,7 +193,6 @@ if __name__ == "__main__":
     input_tensor = torch.ones(batch_size, 1, 3, 3)
     output0 = m0(input_tensor)
 
-    # TODO : error non leaf tensor can't set grad !
     input_tensor = torch.ones(batch_size, 1, 3, 3)
     output1 = m1(input_tensor)
 

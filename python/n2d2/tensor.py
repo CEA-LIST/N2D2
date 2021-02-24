@@ -41,6 +41,7 @@ class Tensor():
         else:
            raise TypeError("Unrecognized Tensor datatype " + str(DefaultDataType))
         self._dataType = DefaultDataType
+        self.is_cuda = False 
 
     def from_N2D2(self, N2D2_Tensor):
         self._tensor = N2D2_Tensor
@@ -253,6 +254,8 @@ class CUDA_Tensor(Tensor):
     
     def __init__(self, dims, value=None, DefaultDataType=float):
         super().__init__(dims, value, DefaultDataType)
+        self.is_cuda = True 
+
 
     def copy(self):
         """
