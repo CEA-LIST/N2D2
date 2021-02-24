@@ -65,10 +65,12 @@ __global__ void cudaFloatingPointScaling_kernel(const T* input, T* output,
                 //clipping before scaling
                 T res = input[index];
                 if(isClipped){
-                    res = (res > clippingFactorPerChannel[ch]) ? clippingFactorPerChannel[ch] : res;
+                    res = (res < T(0.0)) ? T(0.0) 
+                        : (res > clippingFactorPerChannel[ch]) ? clippingFactorPerChannel[ch] 
+                        : res;
                 }
                 res *= scalingFactorPerChannel[ch];
-                
+
                 if(quantizedNbBits > 0) {
                     res = saturate(round(res), quantizedNbBits, isOutputUnsigned);
                 }

@@ -55,6 +55,11 @@ public:
     {
         mRange = integerRange;
     };
+    size_t getRange() const
+    {
+        return mRange;
+    };
+
 
     virtual const char* getType() const = 0;
 

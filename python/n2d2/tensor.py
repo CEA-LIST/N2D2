@@ -246,7 +246,7 @@ class Tensor():
         return str(self._tensor)
     
 
-class CUDA_Tensor(Tensor):
+class CudaTensor(Tensor):
     _tensor_generators = {
         float: N2D2.CudaTensor_float,
         int: N2D2.CudaTensor_int,
@@ -259,9 +259,9 @@ class CUDA_Tensor(Tensor):
 
     def copy(self):
         """
-        Copy in memory the CUDA_Tensor object.
+        Copy in memory the CudaTensor object.
         """
-        copy = CUDA_Tensor(self.shape(), DefaultDataType=self.data_type())
+        copy = CudaTensor(self.shape(), DefaultDataType=self.data_type())
         for i in range(len(copy)):
             copy[i] = self._tensor[i]
         return copy

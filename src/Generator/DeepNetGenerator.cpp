@@ -2269,18 +2269,18 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             }
             else {
 
-                /*if (iniConfig.currentSection(node.output(0), false)) {
-                    ActivationGenerator::generateParams(activationCell, iniConfig,
+                if (iniConfig.currentSection(node.output(0), false)) {
+                    ActivationGenerator::generateParams(cellFrame, iniConfig,
                         node.output(0), model, Float32);
                 }
                 else
                 if (iniConfig.currentSection(onnxName + ":Rectifier_def", false)) {
                     ActivationGenerator::generateParams(cellFrame, iniConfig,
                         onnxName + ":Rectifier_def", model, Float32);
-                }*/
+                }
 
-                cellFrame->setActivation(Registrar<RectifierActivation>
-                    ::create<Float_T>(model)());
+                //cellFrame->setActivation(Registrar<RectifierActivation>
+                //    ::create<Float_T>(model)());
             }
 
             std::cout << "  " << node.output(0) << " -> "

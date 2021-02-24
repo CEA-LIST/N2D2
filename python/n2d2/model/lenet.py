@@ -67,7 +67,7 @@ class QuantLeNet(Sequence):
         first_layer_config = QuantConvDef()
         first_layer_config.get()['quantizer'].set_range(255)
         self.extractor.add(Conv(inputs, nbOutputs=6, kernelDims=[5, 5],
-                      **first_layer_config.get(), deepNet= self.deepnet, name="conv1"))
+                      **first_layer_config.get(), deepNet=self.deepnet, name="conv1"))
         self.extractor.add(BatchNorm(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(),
                            **QuantBnDef().get(), name="bn1"))
         self.extractor.add(Pool2D(self.extractor.get_last(), nbOutputs=6, poolDims=[2, 2],

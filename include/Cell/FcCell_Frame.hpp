@@ -87,6 +87,9 @@ protected:
     };
     inline void setBias(unsigned int output, const BaseTensor& value)
     {
+        if (!mNoBias && mBias.empty())
+            mBias.resize({getNbOutputs(), 1, 1, 1});
+
         mBias(output) = tensor_cast<T>(value)(0);
     };
 

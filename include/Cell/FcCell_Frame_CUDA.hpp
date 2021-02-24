@@ -149,9 +149,11 @@ void N2D2::FcCell_Frame_CUDA<T>::getQuantWeight(unsigned int output,
                                            unsigned int channel,
                                            BaseTensor& value) const
 {
+    if (!mQuantizer)
+        return;
+
     const CudaTensor<T>& synapses = cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(0));
-    if (mKeepInSync)
-        synapses.synchronizeDToH(0, 0, channel, output, 1);
+    synapses.synchronizeDToH(0, 0, channel, output, 1);
 
     value.resize({1});
     value = Tensor<T>({1}, synapses(0, 0, channel, output));
@@ -161,6 +163,9 @@ template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::setBias(unsigned int output,
                                          const BaseTensor& value)
 {
+    if (!mNoBias && mBias.empty())
+        mBias.resize({getNbOutputs()});
+
     mBias(output) = tensor_cast<T>(value)(0);
 
     if (mKeepInSync)
