@@ -861,6 +861,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             );
 
             dnQuantization.rescaleAdditiveParameters(stimuliRange);
+            std::cout << "Stimuli range is: " << stimuliRange << std::endl;
         }
 
 
@@ -940,6 +941,8 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         
         afterCalibration = true;
     }
+
+    sp->logTransformations(exportDir + "/transformations.dot", Database::TestOnly);
 
     StimuliProviderExport::generate(*deepNet, *sp, exportDir + "/stimuli", opt.genExport, Database::Test, 
                                     DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision,

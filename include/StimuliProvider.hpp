@@ -156,7 +156,8 @@ public:
     /// 'envCvDepth' is the OpenCV depth of the inputs coming from the environment.
     bool normalizeIntegersStimuli(int envCvDepth);
 
-    void logTransformations(const std::string& fileName) const;
+    void logTransformations(const std::string& fileName,
+        Database::StimuliSetMask setMask = Database::All) const;
 
 
     void future();

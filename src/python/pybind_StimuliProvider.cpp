@@ -31,7 +31,7 @@ void init_StimuliProvider(py::module &m) {
     py::class_<StimuliProvider, std::shared_ptr<StimuliProvider>>(m, "StimuliProvider", py::multiple_inheritance())
     .def(py::init<Database&, const std::vector<size_t>&, unsigned int, bool>(), py::arg("database"), py::arg("size"), py::arg("batchSize") = 1, py::arg("compositeStimuli") = false)
     .def("cloneParameters", &StimuliProvider::cloneParameters)
-    .def("logTransformations", &StimuliProvider::logTransformations, py::arg("fileName"))
+    .def("logTransformations", &StimuliProvider::logTransformations, py::arg("fileName"), py::arg("setMask"))
     .def("future", &StimuliProvider::future)
     .def("synchronize", &StimuliProvider::synchronize)
     .def("getRandomIndex", &StimuliProvider::getRandomIndex, py::arg("set"))

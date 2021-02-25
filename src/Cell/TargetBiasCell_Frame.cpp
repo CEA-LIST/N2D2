@@ -81,7 +81,7 @@ void N2D2::TargetBiasCell_Frame<T>::propagate(bool inference) {
     else
         mOutputs = input;
 
-    Cell_Frame<T>::propagate();
+    Cell_Frame<T>::propagate(inference);
     mDiffInputs.clearValid();
 }
 

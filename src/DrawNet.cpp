@@ -21,6 +21,7 @@
 #include "DrawNet.hpp"
 #include "DeepNet.hpp"
 #include "StimuliProvider.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/ConvCell.hpp"
 #include "Cell/DeconvCell.hpp"
 #include "Cell/PoolCell.hpp"
@@ -427,6 +428,7 @@ void N2D2::DrawNet::drawGraph(DeepNet& deepNet, const std::string& fileName)
                         << cell->getNbOutputs() << "x"
                         << cell->getOutputsHeight() << "x"
                         << cell->getOutputsWidth();
+
             const std::shared_ptr<ConvCell> cellConv
                 = std::dynamic_pointer_cast<ConvCell>(cell);
             const std::shared_ptr<DeconvCell> cellDeconv
@@ -524,6 +526,13 @@ void N2D2::DrawNet::drawGraph(DeepNet& deepNet, const std::string& fileName)
             if(cellElemWise)
                 nodeLabel << "\n" << cellElemWise->getOperation() << "\n";
 
+            const std::shared_ptr<Cell_Frame_Top> cellFrame
+                = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+
+            if (cellFrame && cellFrame->getActivation()) {
+                nodeLabel << "\nACT: " << cellFrame->getActivation()->getType()
+                    << "\n";
+            }
             
             graph.node(cellName, nodeLabel.str());
             graph.attr(cellName, "style", "filled");

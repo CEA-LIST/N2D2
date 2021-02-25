@@ -64,6 +64,7 @@
 #include "Cell/SoftmaxCell.hpp"
 #include "Cell/TransformationCell.hpp"
 #include "Generator/ActivationCellGenerator.hpp"
+#include "Cell/TransposeCell.hpp"
 #include "Generator/BatchNormCellGenerator.hpp"
 #include "Generator/ConvCellGenerator.hpp"
 #include "Generator/DropoutCellGenerator.hpp"
@@ -512,14 +513,14 @@ N2D2::DeepNetGenerator::generateFromONNX(Network& network,
     }
 
     if (!deepNet->getDatabase()) {
-        //std::cout << Utils::cwarning << "Warning: no database specified."
-        //            << Utils::cdef << std::endl;
-        //deepNet->setDatabase(std::make_shared<Database>());
-        std::shared_ptr<ILSVRC2012_Database> database = std::make_shared
-            <ILSVRC2012_Database>(1.0, true, true);
-        database->load(N2D2_DATA("ILSVRC2012"),
-                    N2D2_DATA("ILSVRC2012/synsets.txt"));
-        deepNet->setDatabase(database);
+        std::cout << Utils::cwarning << "Warning: no database specified."
+                    << Utils::cdef << std::endl;
+        deepNet->setDatabase(std::make_shared<Database>());
+        //std::shared_ptr<ILSVRC2012_Database> database = std::make_shared
+        //    <ILSVRC2012_Database>(1.0, true, true);
+        //database->load(N2D2_DATA("ILSVRC2012"),
+        //            N2D2_DATA("ILSVRC2012/synsets.txt"));
+        //deepNet->setDatabase(database);
     }
 
     // Verify that the version of the library that we linked against is
@@ -657,13 +658,13 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             << std::endl;
 
         // Pre-processing for ImageNet used by the MobileNet families
-        sp->addTransformation(RescaleTransformation(256, 256));
-        sp->addTransformation(PadCropTransformation(size[0], size[1]));
-        sp->addTransformation(ColorSpaceTransformation(
-            ColorSpaceTransformation::RGB));
-        sp->addTransformation(RangeAffineTransformation(
-            RangeAffineTransformation::Minus, {127.5},
-            RangeAffineTransformation::Divides, {127.5}));
+        //sp->addTransformation(RescaleTransformation(256, 256));
+        //sp->addTransformation(PadCropTransformation(size[0], size[1]));
+        //sp->addTransformation(ColorSpaceTransformation(
+        //    ColorSpaceTransformation::RGB));
+        //sp->addTransformation(RangeAffineTransformation(
+        //    RangeAffineTransformation::Minus, {127.5},
+        //    RangeAffineTransformation::Divides, {127.5}));
     }
     else {
         sp = deepNet->getStimuliProvider();
@@ -1986,7 +1987,15 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //Greater
         //HardSigmoid
         //Hardmax
-        //Identity
+        else if (node.op_type() == "Identity") {
+            std::cout << Utils::cnotice << "  Ignore Identity operation"
+                << Utils::cdef << std::endl;
+
+            std::cout << "  " << node.output(0) << " -> "
+                << redirectName(node.input(0)) << std::endl;
+            redirect[node.output(0)] = redirectName(node.input(0));
+            continue;
+        }
         //If
         //InstanceNormalization
         //IsInf
@@ -2812,7 +2821,68 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //ThresholdedRelu
         //Tile
         //TopK
-        //Transpose
+        else if (node.op_type() == "Transpose") {
+            const std::string inputX = redirectName(node.input(0));
+            std::shared_ptr<Cell> inputXCell
+                = (deepNet->getCells().empty())
+                    ? std::shared_ptr<Cell>()
+                    : deepNet->getCell(inputX);
+
+            // perm
+            std::vector<int> perm;
+
+            if ((itAttr = attribute.find("perm")) != attribute.end()) {
+                const int lastDim = (*itAttr).second->ints_size() - 1;
+
+                for (int dim = lastDim; dim >= 0; --dim)
+                    perm.push_back(lastDim - (*itAttr).second->ints(dim));
+            }
+            else {
+                // By default, reverse the dimensions.
+                perm.resize(4);
+                perm[0] = 3;
+                perm[1] = 2;
+                perm[2] = 1;
+                perm[3] = 0;
+            }
+
+            const unsigned int nbOutputs = (inputXCell)
+                ? inputXCell->getOutputsDim(perm[2])
+                : sp->getSize()[perm[2]];
+
+            std::map<std::string, std::vector<std::string> >
+                ::const_iterator itConcat;
+            std::vector<std::shared_ptr<Cell> > parentCells;
+
+            std::shared_ptr<TransposeCell> transposeCell
+                = Registrar<TransposeCell>::create<Float_T>(model)(*deepNet, 
+                                                                node.output(0),
+                                                                nbOutputs,
+                                                                perm);
+
+            if ((itConcat = concat.find(inputX)) != concat.end()) {
+                throw std::runtime_error("Unsupported operation: Concat before "
+                    "Transpose");
+            }
+            else {
+                std::shared_ptr<Cell> inputXCell
+                    = (deepNet->getCells().empty())
+                        ? std::shared_ptr<Cell>()
+                        : deepNet->getCell(inputX);
+                parentCells.push_back(inputXCell);
+
+                if (inputXCell)
+                    transposeCell->addInput(inputXCell.get());
+                else {
+                    transposeCell->addInput(*sp, 0, 0,
+                                        sp->getSizeX(), sp->getSizeY());
+                }
+            }
+
+            deepNet->addCell(transposeCell, parentCells);
+            transposeCell->initialize();
+            cell = transposeCell;
+        }
         //Unique
         //Unsqueeze
         else if (node.op_type() == "Unsqueeze") {

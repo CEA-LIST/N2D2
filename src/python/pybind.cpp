@@ -38,6 +38,7 @@ void init_Target(py::module&);
 void init_TargetScore(py::module&);
 void init_DeepNet(py::module&);
 void init_DeepNetGenerator(py::module&);
+void init_DrawNet(py::module&);
 
 PYBIND11_MODULE(N2D2, m) {
     init_CudaContext(m);
@@ -54,6 +55,7 @@ PYBIND11_MODULE(N2D2, m) {
     init_TargetScore(m);
     init_DeepNet(m);
     init_DeepNetGenerator(m);
+    init_DrawNet(m);
 }
 }
 
