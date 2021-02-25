@@ -272,7 +272,7 @@ public:
                                           "activation clipping mode on export, "
                                           "can be 'None', 'MSE' or 'KL-Divergence'"));
         actScalingMode = parseScalingMode(
-                           opts.parse("-act-rescaling-mode", std::string("Single-shift"), 
+                           opts.parse("-act-rescaling-mode", std::string("Floating-point"), 
                                           "activation scaling mode on export, "
                                           "can be 'Floating-point', 'Fixed-point', 'Single-shift' "
                                           "or 'Double-shift'"));
@@ -588,14 +588,15 @@ void testQAT(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCa
         ? 1 : database->getNbStimuli(Database::Test);
     const unsigned int batchSize = sp->getBatchSize();
     const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
-    sp->readStimulusBatch(0, Database::Test);
-    deepNet->test(Database::Test, &timings);
+    //sp->readStimulusBatch(0, Database::Test);
+    //deepNet->test(Database::Test, &timings);
     if (opt.logKernels)
         deepNet->logFreeParameters("kernels_fake_quantized");
 
-    DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
     DeepNetQAT dnQAT(*deepNet);
-    dnQAT.fuseQATGraph(opt.wtRoundMode, opt.bRoundMode, opt.cRoundMode);
+    dnQAT.fuseQATGraph(opt.actScalingMode, opt.wtRoundMode, opt.bRoundMode, opt.cRoundMode);
+    DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
+
     if (opt.logKernels)
         deepNet->logFreeParameters("kernels_quantized");
 
