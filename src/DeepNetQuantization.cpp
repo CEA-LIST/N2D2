@@ -1023,7 +1023,7 @@ void N2D2::DeepNetQuantization::approximateScalingCell(ScalingCell& cell, Scalin
     
     bool isClipped = false;
 
-    cell.setScaling(Scaling::fixedPointScaling(nbFractionalBits, fixedScalingPerOutput, isClipped, std::vector<std::int32_t>(0)));
+    cell.setScaling(Scaling::fixedPointScaling(nbFractionalBits, fixedScalingPerOutput, isClipped, std::vector<Float_T>(0)));
 
 #ifdef VERBOSE_QUANT
     std::cout << "    FIXED_MULT: " << fixedScalingPerOutput[0]
@@ -1170,7 +1170,7 @@ void N2D2::DeepNetQuantization::approximateActivationScaling(Cell& cell, Activat
         }
 
         bool isClipped = false;
-        activation.setActivationScaling(Scaling::fixedPointScaling(nbFractionalBits, scalingFixedPoint, isClipped, std::vector<std::int32_t>(0)));
+        activation.setActivationScaling(Scaling::fixedPointScaling(nbFractionalBits, scalingFixedPoint, isClipped, std::vector<Float_T>(0)));
 
 #ifdef VERBOSE_QUANT
         std::cout << "    FIXED_MULT: " << scalingFixedPoint[0]
@@ -1185,7 +1185,7 @@ void N2D2::DeepNetQuantization::approximateActivationScaling(Cell& cell, Activat
         }
 
         bool isClipped = false;
-        activation.setActivationScaling(Scaling::singleShiftScaling(shifts, isClipped, std::vector<unsigned char>(0)));
+        activation.setActivationScaling(Scaling::singleShiftScaling(shifts, isClipped, std::vector<Float_T>(0)));
 
 #ifdef VERBOSE_QUANT
         std::cout << "    SINGLE_SHIFT: 2 ^ [- " << (int)shifts[0] << "]" << std::endl;

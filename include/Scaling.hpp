@@ -143,7 +143,7 @@ private:
  */
 class FixedPointScaling: public AbstractScaling {
 public:
-    FixedPointScaling(std::size_t nbFractionalBits, std::vector<std::int32_t> scaling, bool isclipped, std::vector<std::int32_t> clipping)
+    FixedPointScaling(std::size_t nbFractionalBits, std::vector<std::int32_t> scaling, bool isclipped, std::vector<Float_T> clipping)
            : mNbFractionalBits(nbFractionalBits), mScalingPerOutput(std::move(scaling)), 
            isClipped(isclipped), mClippingPerOutput(std::move(clipping))
     {
@@ -157,7 +157,7 @@ public:
         return mScalingPerOutput;
     }
 
-    const std::vector<std::int32_t>& getClippingPerOutput() const {
+    const std::vector<Float_T>& getClippingPerOutput() const {
         return mClippingPerOutput;
     }
 
@@ -199,11 +199,11 @@ private:
     std::size_t mNbFractionalBits;
     std::vector<std::int32_t> mScalingPerOutput;
     bool isClipped;
-    std::vector<std::int32_t> mClippingPerOutput;
+    std::vector<Float_T> mClippingPerOutput;
 
 #ifdef CUDA
     CudaTensor<std::int32_t> mCudaScalingPerOutput;
-    CudaTensor<std::int32_t> mCudaClippingPerOutput;
+    CudaTensor<Float_T> mCudaClippingPerOutput;
 #endif
 };
 
@@ -217,7 +217,7 @@ private:
  */
 class SingleShiftScaling: public AbstractScaling {
 public:
-    SingleShiftScaling(std::vector<unsigned char> scaling, bool isclipped, std::vector<unsigned char> clipping): 
+    SingleShiftScaling(std::vector<unsigned char> scaling, bool isclipped, std::vector<Float_T> clipping): 
     mScalingPerOutput(std::move(scaling)), isClipped(isclipped), mClippingPerOutput(std::move(clipping)) 
     {
 #ifdef CUDA
@@ -230,7 +230,7 @@ public:
         return mScalingPerOutput;
     }
 
-    const std::vector<unsigned char>& getClippingPerOutput() const {
+    const std::vector<Float_T>& getClippingPerOutput() const {
         return mClippingPerOutput;
     }
 
@@ -268,11 +268,11 @@ public:
 private:
     std::vector<unsigned char> mScalingPerOutput;
     bool isClipped;
-    std::vector<unsigned char> mClippingPerOutput;
+    std::vector<Float_T> mClippingPerOutput;
 
 #ifdef CUDA
     CudaTensor<unsigned char> mCudaScalingPerOutput;
-    CudaTensor<unsigned char> mCudaClippingPerOutput;
+    CudaTensor<Float_T> mCudaClippingPerOutput;
 #endif
 };
 
@@ -360,7 +360,7 @@ public:
 
     static Scaling fixedPointScaling(std::size_t nbFractionalBits, 
                                      std::vector<std::int32_t> scalingPerOutput,
-                                     bool isclipped, std::vector<std::int32_t> clippingPerOutput) 
+                                     bool isclipped, std::vector<Float_T> clippingPerOutput) 
     {
         return Scaling(ScalingMode::FIXED_MULT, 
                        Utils::make_unique<FixedPointScaling>(nbFractionalBits, 
@@ -368,7 +368,7 @@ public:
     }
 
     static Scaling singleShiftScaling(std::vector<unsigned char> scalingPerOutput,
-                                      bool isclipped, std::vector<unsigned char> clippingPerOutput) 
+                                      bool isclipped, std::vector<Float_T> clippingPerOutput) 
     {
         return Scaling(ScalingMode::SINGLE_SHIFT, 
                        Utils::make_unique<SingleShiftScaling>(std::move(scalingPerOutput), isclipped, std::move(clippingPerOutput)));
