@@ -69,6 +69,10 @@ public:
     {
         return opencv_data_type<Float_T>::value;
     };
+    const Operator& getFirstOperator() const { return mFirstOperator; }
+    const std::vector<double>& getFirstValue() const { return mFirstValue; }
+    const Operator& getSecondOperator() const { return mSecondOperator; }
+    const std::vector<double>& getSecondValue() const { return mSecondValue; }
     virtual ~RangeAffineTransformation() {};
 
 private:
