@@ -121,6 +121,9 @@ public:
     void fuseBatchNormWithConv();
     void fusePadding();
     void removeDropout();
+    void lastBatch() {
+        mLastPass = true;
+    };
 
     // Setters
     void setDatabase(const std::shared_ptr<Database>& database)
@@ -208,6 +211,10 @@ public:
     {
         return mMultiDevicesInfo;
     };
+    std::vector<N2D2::DeviceState> getStates() 
+    {
+        return mStates;
+    };
 
     // Clear
     void clearAll();
@@ -261,6 +268,11 @@ private:
     std::map<std::string, std::shared_ptr<Monitor> > mMonitors;
     std::map<std::string, std::shared_ptr<CMonitor> > mCMonitors;
     std::vector<std::vector<std::string> > mLayers;
+    /// Device states
+    std::vector<N2D2::DeviceState> mStates;
+    /// Parameter to know if the batchs used during 
+    /// learning are the last
+    bool mLastPass;
     /// Parameter to allow banishment
     bool mBanAllowed;
     /// Number of passages allowed before banning

@@ -38,7 +38,7 @@
 
 namespace N2D2 {
 
-enum class DeviceState { Excluded, Banned, Ready, Connected };
+enum class DeviceState { Excluded, Banned, Debanned, Ready, Connected };
 
 template <typename T> void thrust_fill(T* devData, size_t size, T value);
 
