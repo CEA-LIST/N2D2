@@ -320,54 +320,68 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::update()
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
         mBias->broadcastAllFrom(currentDev, mDevices);
     }
-
-    std::shared_ptr<CudaTensor<ParamT> > cudaCopyMean 
-        = std::make_shared<CudaTensor<ParamT> >();
-
-    int nbActivateDev = 0;
-
-    // Copying mMean before aggregating 
-    // (required to calculate mVariance)
+    
+    // Required to know if it is necessary 
+    // to calculate mMean and mVariance
+    // (necessary if connected devices number > 1)
+    int nbDev = 0;
     for (int dev = 0; dev < (int)mDevices.size(); ++dev) {
-        if ((mMean->deviceTensor()).isDevicePtr(dev)) {
-            if (mDevices[dev] == N2D2::DeviceState::Connected) {
-                ++nbActivateDev;
-                CHECK_CUDA_STATUS(cudaSetDevice(dev));
-                cudaCopyMean->resize(mMean->dims(), ParamT(0.0));
-                thrust_copy(mMean->getDevicePtr(), 
-                            cudaCopyMean->getDevicePtr(), 
-                            mMean->size());
-            }
-        }   
-    } 
-    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+        if (mDevices[dev] == N2D2::DeviceState::Connected
+            || mDevices[dev] == N2D2::DeviceState::Ready) {
+                ++nbDev;
+            }         
+    }
+    
+    if (nbDev > 1) {
+        int nbActivateDev = 0;
 
-    mMean->aggregateAllTo(currentDev, mDevices);
-    thrust_div(mMean->getDevicePtr(), mMean->size(), nbActivateDev);
-    mMean->broadcastAllFrom(currentDev, mDevices);
+        std::shared_ptr<CudaTensor<ParamT> > cudaCopyMean 
+            = std::make_shared<CudaTensor<ParamT> >();
+        
+        // Copying mMean before aggregating 
+        // (required to calculate mVariance)
+        for (int dev = 0; dev < (int)mDevices.size(); ++dev) {
+            if ((mMean->deviceTensor()).isDevicePtr(dev)) {
+                if (mDevices[dev] == N2D2::DeviceState::Connected) {
+                    ++nbActivateDev;
+                    CHECK_CUDA_STATUS(cudaSetDevice(dev));
+                    cudaCopyMean->resize(mMean->dims(), ParamT(0.0));
+                    thrust_copy(mMean->getDevicePtr(), 
+                                cudaCopyMean->getDevicePtr(), 
+                                mMean->size());
+                }
+            }   
+        } 
+        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
 
-    // Calculating combined variances
-    // For more details, see 
-    // https://www.emathzone.com/tutorials/basic-statistics/combined-variance.html
-#pragma omp parallel for if (nbActivateDev > 1)
-    for (int dev = 0; dev < (int)mDevices.size(); ++dev) {
-        if ((mMean->deviceTensor()).isDevicePtr(dev)) {
-            if (mDevices[dev] == N2D2::DeviceState::Connected) {
-                CHECK_CUDA_STATUS(cudaSetDevice(dev));
-                thrust_combinedVar(
-                    mVariance->getDevicePtr(),
-                    mMean->getDevicePtr(),
-                    cudaCopyMean->getDevicePtr(),
-                    mVariance->size()
-                );
+        mMean->aggregateAllTo(currentDev, mDevices);
+        thrust_div(mMean->getDevicePtr(), mMean->size(), nbActivateDev);
+        mMean->broadcastAllFrom(currentDev, mDevices);
+
+        // Calculating combined variances
+        // For more details, see 
+        // https://www.emathzone.com/tutorials/basic-statistics/combined-variance.html
+#pragma omp parallel for
+        for (int dev = 0; dev < (int)mDevices.size(); ++dev) {
+            if ((mMean->deviceTensor()).isDevicePtr(dev)) {
+                if (mDevices[dev] == N2D2::DeviceState::Connected) {
+                    CHECK_CUDA_STATUS(cudaSetDevice(dev));
+                    thrust_combinedVar(
+                        mVariance->getDevicePtr(),
+                        mMean->getDevicePtr(),
+                        cudaCopyMean->getDevicePtr(),
+                        mVariance->size()
+                    );
+                }
             }
         }
-    }
-    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
 
-    mVariance->aggregateAllTo(currentDev, mDevices);
-    thrust_div(mVariance->getDevicePtr(), mVariance->size(), nbActivateDev);
-    mVariance->broadcastAllFrom(currentDev, mDevices);
+        mVariance->aggregateAllTo(currentDev, mDevices);
+        thrust_div(mVariance->getDevicePtr(), mVariance->size(), nbActivateDev);
+        mVariance->broadcastAllFrom(currentDev, mDevices);
+    }
+    
 }
 
 template <class T>
