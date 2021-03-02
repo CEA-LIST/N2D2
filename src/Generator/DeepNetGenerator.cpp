@@ -1648,23 +1648,30 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     << "\"" << std::endl;
             }
 
-            if (node.input_size() > 2
-                && (itInit = initializer.find(node.input(2)))
-                    != initializer.end())
-            {
-                Tensor<Float_T> biases = ONNX_unpackTensor<Float_T>(
-                    (*itInit).second, {(unsigned int)convCell->getNbOutputs()});
-                biases.reshape({1, convCell->getNbOutputs()});
-
-                for (unsigned int output = 0;
-                    output < convCell->getNbOutputs(); ++output)
+            if (!convCell->getParameter<bool>("NoBias")) {
+                if (node.input_size() > 2
+                    && (itInit = initializer.find(node.input(2)))
+                        != initializer.end())
                 {
-                    convCell->setBias(output, biases[output]);
+                    Tensor<Float_T> biases = ONNX_unpackTensor<Float_T>(
+                        (*itInit).second,
+                        {(unsigned int)convCell->getNbOutputs()});
+                    biases.reshape({1, convCell->getNbOutputs()});
+
+                    for (unsigned int output = 0;
+                        output < convCell->getNbOutputs(); ++output)
+                    {
+                        convCell->setBias(output, biases[output]);
+                    }
+                }
+                else if (node.input_size() > 2) {
+                    std::cout << "  No initializer for \"" << node.input(2)
+                        << "\"" << std::endl;
                 }
             }
             else if (node.input_size() > 2) {
-                std::cout << "  No initializer for \"" << node.input(2)
-                    << "\"" << std::endl;
+                std::cout << Utils::cwarning << "  Biases in ONNX ignored!"
+                    << Utils::cdef << std::endl;
             }
 
             if (cellFrame)
@@ -1951,26 +1958,33 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 
                 // Init bias (Gemm only)
                 if (node.op_type() == "Gemm" && node.input_size() > 2) {
-                    if ((itInit = initializer.find(node.input(2)))
-                        != initializer.end())
-                    {
-                        Tensor<Float_T> bias
-                            = ONNX_unpackTensor<Float_T>((*itInit).second,
-                                {(unsigned int)fcCell->getNbOutputs()});
-                        bias.reshape({1, fcCell->getNbOutputs()});
-
-                        for (unsigned int output = 0;
-                            output < fcCell->getNbOutputs(); ++output)
+                    if (!fcCell->getParameter<bool>("NoBias")) {
+                        if ((itInit = initializer.find(node.input(2)))
+                            != initializer.end())
                         {
-                            if (beta != 1.0)
-                                bias[output](0) *= beta;
+                            Tensor<Float_T> bias
+                                = ONNX_unpackTensor<Float_T>((*itInit).second,
+                                    {(unsigned int)fcCell->getNbOutputs()});
+                            bias.reshape({1, fcCell->getNbOutputs()});
 
-                            fcCell->setBias(output, bias[output]);
+                            for (unsigned int output = 0;
+                                output < fcCell->getNbOutputs(); ++output)
+                            {
+                                if (beta != 1.0)
+                                    bias[output](0) *= beta;
+
+                                fcCell->setBias(output, bias[output]);
+                            }
+                        }
+                        else {
+                            std::cout << "  No initializer for \""
+                                << node.input(2) << "\"" << std::endl;
                         }
                     }
                     else {
-                        std::cout << "  No initializer for \"" << node.input(2)
-                            << "\"" << std::endl;
+                        std::cout << Utils::cwarning
+                            << "  Biases in ONNX ignored!"
+                            << Utils::cdef << std::endl;
                     }
                 }
 
