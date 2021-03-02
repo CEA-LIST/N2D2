@@ -664,10 +664,13 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //    RangeAffineTransformation::Minus, {127.5},
         //    RangeAffineTransformation::Divides, {127.5}));
     }
-    else {
+    else if (deepNet->getCells().empty()) {
         sp = deepNet->getStimuliProvider();
 
-        if (sp->getSize() != size
+        const bool ignoreInputSize
+            = iniConfig.getProperty<bool>("IgnoreInputSize", false);
+
+        if (!ignoreInputSize && sp->getSize() != size
             && !(std::equal(size.begin(), size.end(), sp->getSize().begin())
                 && std::all_of(sp->getSize().begin() + size.size(),
                                sp->getSize().end(), [](size_t i){return i == 1;})))
