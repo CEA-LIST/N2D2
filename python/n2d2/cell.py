@@ -77,6 +77,8 @@ class Cell(N2D2_Interface):
 
         self._connection_parameters = {}
 
+    def initialize(self):
+        self._N2D2_object.initialize()
 
     def get_outputs(self):
         return self._N2D2_object.getOutputs()
@@ -119,7 +121,14 @@ class Cell(N2D2_Interface):
     # TODO: Add to add_input
     def _link_N2D2_input(self, inputs):
         if isinstance(inputs, n2d2.tensor.Tensor):
-            self._N2D2_object.addInput(inputs.N2D2(), n2d2.tensor.Tensor(dims=[]).N2D2()) # TODO: Tested
+            # @Johannes : The method to call is addInputBis (to rename ?).
+            # I have renamed this method in the binding because it's not defined in the same file as the other addInput method. 
+            # Thus Pybind overwrite it.
+            # I also changed the the diffOutput Tensor so that it has the good dimensions !
+            # Reminder : shape get the pythonic dimensions and dims give the N2D2 dimensions.
+            # Here you called the n2d2 constructor so you want to have the pythonic dimensions.
+            # If you called the N2D2 constructor you want to use the dims() method. 
+            self._N2D2_object.addInputBis(inputs.N2D2(), n2d2.tensor.Tensor(inputs.shape()).N2D2(), value=0) # TODO: Tested
         else:
             if 'mapping' in self._connection_parameters:
                 self._connection_parameters['mapping'] = self._connection_parameters['mapping'].create_N2D2_mapping(

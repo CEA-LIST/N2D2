@@ -45,6 +45,8 @@ class testLayer(torch.nn.Module):
         super().__init__()
 
     def forward(self, inputs):
+        if not inputs.requires_grad:
+            inputs.requires_grad = True
         return test_func.apply(inputs)
 # TEST ----------------------------------------------------------------------------------------------
 
@@ -174,11 +176,13 @@ if __name__ == "__main__":
                 # Defining a 2D convolution layer
                 torch.nn.Conv2d(1, 4, kernel_size=3, stride=1, padding=1),
 
-                # torch.nn.BatchNorm2d(4),
-                n2d2.pytorch_interface.LayerN2D2(N2D2BatchNorm, trainable=False),
+                torch.nn.BatchNorm2d(4),
+                # n2d2.pytorch_interface.LayerN2D2(N2D2BatchNorm, trainable=False),
                 
                 torch.nn.ReLU(inplace=True),
                 torch.nn.MaxPool2d(kernel_size=2, stride=2),
+
+                # testLayer(),
 
                 # Flexible Custom ----------------------------------------------
                 n2d2.pytorch_interface.LayerN2D2(N2D2Cell),
@@ -223,7 +227,7 @@ if __name__ == "__main__":
 
             output = model(images)
             loss = criterion(output, labels)
-            # print("Loss :", loss.item())
+            print("Loss :", loss.item())
 
             #This is where the model learns by backpropagating
             loss.backward()
