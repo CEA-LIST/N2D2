@@ -272,7 +272,7 @@ public:
                                           "activation clipping mode on export, "
                                           "can be 'None', 'MSE' or 'KL-Divergence'"));
         actScalingMode = parseScalingMode(
-                           opts.parse("-act-rescaling-mode", std::string("Single-shift"), 
+                           opts.parse("-act-rescaling-mode", std::string("Floating-point"), 
                                           "activation scaling mode on export, "
                                           "can be 'Floating-point', 'Fixed-point', 'Single-shift' "
                                           "or 'Double-shift'"));
@@ -294,7 +294,7 @@ public:
                                                             " equalization in integer exports");
         exportNbStimuliMax = opts.parse("-db-export", -1, "max. number of stimuli to export "
                                                           "(0 = no dataset export, -1 = unlimited)");
-        
+        qatSAT = opts.parse("-qat-sat","fuse a QAT trained with SAT method ");
         N2D2::DeepNetExport::setExportParameters(opts.parse("-export-parameters", std::string(), 
                                                                         "parameters for export"));
 
@@ -362,6 +362,7 @@ public:
     std::string weights;
     bool ignoreNoExist;
     int exportNbStimuliMax;
+    bool qatSAT;
     bool version;
     std::string iniConfig;
 };
@@ -384,6 +385,19 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
         ? 1 : database->getNbStimuli(Database::Test);
     const unsigned int batchSize = sp->getBatchSize();
     const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
+    if(opt.qatSAT) {
+        if (opt.logKernels)
+            deepNet->logFreeParameters("kernels_fake_quantized");
+
+        DeepNetQAT dnQAT(*deepNet);
+        dnQAT.fuseQATGraph(opt.actScalingMode, opt.wtRoundMode, opt.bRoundMode, opt.cRoundMode);
+        DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
+
+        if (opt.logKernels)
+            deepNet->logFreeParameters("kernels_quantized");
+
+        deepNet->exportNetworkFreeParameters("weights_quantized");
+    }
 
     for (unsigned int b = 0; b < nbBatch; ++b) {
         const unsigned int i = b * batchSize;
@@ -570,221 +584,6 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
     
 }
 
-void testQAT(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalibration) {
-    const std::string testName = (afterCalibration) ? "export" : "test";
-
-    std::shared_ptr<Database> database = deepNet->getDatabase();
-    std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
-    
-    std::vector<std::pair<std::string, double> > timings, cumTimings;
-    deepNet->removeDropout();
-    // Static testing
-    unsigned int nextLog = opt.log;
-    unsigned int nextReport = opt.report;
-    std::chrono::high_resolution_clock::time_point startTimeSp,
-                                                    endTimeSp;
-
-    const unsigned int nbTest = (opt.testIndex >= 0 || opt.testId >= 0)
-        ? 1 : database->getNbStimuli(Database::Test);
-    const unsigned int batchSize = sp->getBatchSize();
-    const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
-    sp->readStimulusBatch(0, Database::Test);
-    deepNet->test(Database::Test, &timings);
-    if (opt.logKernels)
-        deepNet->logFreeParameters("kernels_fake_quantized");
-
-    DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
-    DeepNetQAT dnQAT(*deepNet);
-    dnQAT.fuseQATGraph(opt.wtRoundMode, opt.bRoundMode, opt.cRoundMode);
-    if (opt.logKernels)
-        deepNet->logFreeParameters("kernels_quantized");
-
-    deepNet->exportNetworkFreeParameters("weights_quantized");
-
-    for (unsigned int b = 0; b < nbBatch; ++b) {
-        const unsigned int i = b * batchSize;
-        const unsigned int idx = (opt.testIndex >= 0) ? opt.testIndex : i;
-
-        startTimeSp = std::chrono::high_resolution_clock::now();
-        if (opt.testId >= 0)
-            sp->readStimulusBatch(opt.testId, Database::Test);
-        else
-            sp->readBatch(Database::Test, idx);
-        endTimeSp = std::chrono::high_resolution_clock::now();
-
-        deepNet->test(Database::Test, &timings);
-
-        if (opt.logJSON)
-            deepNet->logEstimatedLabelsJSON(testName);
-        else
-            deepNet->logEstimatedLabels(testName);
-
-        if (opt.logOutputs > 0 && b == (opt.logOutputs - 1) / batchSize) {
-            const unsigned int batchPos = (opt.logOutputs - 1) % batchSize;
-
-            std::cout << "Outputs log for stimulus #" << opt.logOutputs
-                << " (" << (batchPos + 1) << "/" << batchSize
-                << " in batch #" << b << "):" << std::endl;
-            std::cout << "  Stimulus ID: " << sp->getBatch()[batchPos]
-                        << std::endl;
-            std::cout << "  Stimulus label: "
-                        << sp->getLabelsData()[batchPos](0) << std::endl;
-
-            std::stringstream numStr;
-            numStr << opt.logOutputs;
-
-            deepNet->logOutputs("outputs_" + testName + "_" + numStr.str(),
-                                batchPos);
-        }
-
-        timings.push_back(std::make_pair(
-            "sp", std::chrono::duration_cast
-            <std::chrono::duration<double> >(endTimeSp - startTimeSp)
-                                            .count()));
-
-        if (!cumTimings.empty()) {
-            std::transform(timings.begin(),
-                            timings.end(),
-                            cumTimings.begin(),
-                            cumTimings.begin(),
-                            Utils::PairOp<std::string,
-                                            double,
-                                            Utils::Left<std::string>,
-                                            std::plus<double> >());
-        } else
-            cumTimings = timings;
-
-        if (i >= nextReport || b == nbBatch - 1) {
-            nextReport += opt.report;
-            std::cout << "Testing #" << idx << "   ";
-
-            for (std::vector<std::shared_ptr<Target> >::const_iterator
-                        itTargets = deepNet->getTargets().begin(),
-                        itTargetsEnd = deepNet->getTargets().end();
-                    itTargets != itTargetsEnd;
-                    ++itTargets)
-            {
-                std::shared_ptr<TargetScore> targetScore
-                    = std::dynamic_pointer_cast
-                    <TargetScore>(*itTargets);
-
-                if (targetScore) {
-                    std::cout << (100.0 * targetScore->getAverageSuccess(
-                                                Database::Test)) << "% ";
-                }
-
-                std::shared_ptr<TargetBBox> targetBBox
-                    = std::dynamic_pointer_cast
-                    <TargetBBox>(*itTargets);
-
-                if (targetBBox) {
-                    std::cout << (100.0 * targetBBox->getAverageSuccess(
-                                                Database::Test)) << "% ";
-                }
-            }
-            std::cout << std::endl;
-        }
-
-        if (i >= nextLog || b == nbBatch - 1) {
-            nextLog += opt.report;
-
-            for (std::vector<std::shared_ptr<Target> >::const_iterator
-                        itTargets = deepNet->getTargets().begin(),
-                        itTargetsEnd = deepNet->getTargets().end();
-                    itTargets != itTargetsEnd;
-                    ++itTargets)
-            {
-                std::shared_ptr<TargetScore> targetScore
-                    = std::dynamic_pointer_cast
-                    <TargetScore>(*itTargets);
-
-                if (targetScore) {
-                    targetScore->logSuccess(testName, Database::Test);
-                    targetScore->logTopNSuccess(testName, Database::Test);
-                }
-
-                std::shared_ptr<TargetBBox> targetBBox
-                    = std::dynamic_pointer_cast
-                    <TargetBBox>(*itTargets);
-
-                if (targetBBox) 
-                    targetBBox->logSuccess(testName, Database::Test);
-            }
-        }
-    }
-
-    if (nbTest > 0) {
-        deepNet->log(testName, Database::Test);
-        for (std::vector<std::pair<std::string, double> >::iterator it
-                = cumTimings.begin(),
-                itEnd = cumTimings.end();
-                it != itEnd;
-                ++it) {
-            (*it).second /= nbTest;
-        }
-
-        Utils::createDirectories("timings");
-
-        deepNet->logTimings("timings/inference_timings.dat", cumTimings);
-
-        for (std::vector<std::shared_ptr<Target> >::const_iterator
-                    itTargets = deepNet->getTargets().begin(),
-                    itTargetsEnd = deepNet->getTargets().end();
-                itTargets != itTargetsEnd;
-                ++itTargets)
-        {
-            std::shared_ptr<TargetScore> targetScore
-                = std::dynamic_pointer_cast<TargetScore>(*itTargets);
-
-            if (targetScore) {
-                std::cout << "Final recognition rate: "
-                            << (100.0 * targetScore->getAverageSuccess(
-                                            Database::Test))
-                            << "%"
-                                "    (error rate: "
-                            << 100.0 * (1.0 - targetScore->getAverageSuccess(
-                                                Database::Test)) << "%)"
-                            << std::endl;
-
-                std::cout << "    Sensitivity: " << (100.0
-                    * targetScore->getAverageScore(Database::Test,
-                                ConfusionTableMetric::Sensitivity))
-                            << "% / Specificity: " << (100.0
-                    * targetScore->getAverageScore(Database::Test,
-                                ConfusionTableMetric::Specificity))
-                            << "% / Precision: " << (100.0
-                    * targetScore->getAverageScore(Database::Test,
-                                ConfusionTableMetric::Precision))
-                            << "%\n"
-                            "    Accuracy: " << (100.0
-                    * targetScore->getAverageScore(Database::Test,
-                                ConfusionTableMetric::Accuracy))
-                            << "% / F1-score: " << (100.0
-                    * targetScore->getAverageScore(Database::Test,
-                                ConfusionTableMetric::F1Score))
-                            << "% / Informedness: " << (100.0
-                    * targetScore->getAverageScore(Database::Test,
-                                ConfusionTableMetric::Informedness))
-                            << "%\n" << std::endl;
-            }
-            
-            std::shared_ptr<TargetBBox> targetBBox
-                = std::dynamic_pointer_cast<TargetBBox>(*itTargets);
-
-            if (targetBBox) {
-                std::cout << "Final recognition rate: "
-                            << (100.0 * targetBBox->getAverageSuccess(
-                                            Database::Test))
-                            << "%"
-                                "    (error rate: "
-                            << 100.0 * (1.0 - targetBBox->getAverageSuccess(
-                                                Database::Test)) << "%)"
-                            << std::endl;
-            }
-        }
-    }
-    
-}
 void importFreeParemeters(const Options& opt, DeepNet& deepNet) {
     if (!opt.weights.empty()) {
         if (opt.weights != "/dev/null")
@@ -808,8 +607,9 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     importFreeParemeters(opt, *deepNet);
 
     deepNet->removeDropout();
-    deepNet->fuseBatchNormWithConv();
-
+    if(!opt.qatSAT) {
+        deepNet->fuseBatchNormWithConv();
+    }
     const std::string exportDir = "export_" + opt.genExport + "_" + 
                                   ((opt.nbBits > 0) ? "int" : "float") +
                                   std::to_string(std::abs(opt.nbBits));
@@ -860,6 +660,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             );
 
             dnQuantization.rescaleAdditiveParameters(stimuliRange);
+            std::cout << "Stimuli range is: " << stimuliRange << std::endl;
         }
 
 
@@ -940,9 +741,19 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         afterCalibration = true;
     }
 
+    sp->logTransformations(exportDir + "/transformations.dot", Database::TestOnly);
+
     StimuliProviderExport::generate(*deepNet, *sp, exportDir + "/stimuli", opt.genExport, Database::Test, 
                                     DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision,
                                     opt.exportNbStimuliMax);
+    if(opt.qatSAT) {
+        if (opt.logKernels)
+            deepNet->logFreeParameters("kernels_fake_quantized");
+
+        DeepNetQAT dnQAT(*deepNet);
+        dnQAT.fuseQATGraph(opt.actScalingMode, opt.wtRoundMode, opt.bRoundMode, opt.cRoundMode);
+        DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
+    }
 
     DeepNetExport::generate(*deepNet, exportDir, opt.genExport);
 
@@ -2645,18 +2456,6 @@ int main(int argc, char* argv[]) try
         }
     }
 
-    try
-    {
-        std::shared_ptr<Cell_Frame_Top> cellFrame = deepNet->getTargetCell<Cell_Frame_Top>();
-        if (cellFrame && (opt.learn > 0 || opt.testQAT || opt.learnEpoch > 0)) {
-           testQAT(opt, deepNet, afterCalibration);
-        }
-    }
-    catch (const std::exception& e)
-    {
-        std::cout << "Error for testing: " << e.what() << std::endl;
-        std::cout << "Continue..." << std::endl;
-    }
     try
     {
         std::shared_ptr<Cell_Frame_Top> cellFrame = deepNet->getTargetCell<Cell_Frame_Top>();

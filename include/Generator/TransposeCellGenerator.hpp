@@ -1,7 +1,6 @@
 /*
-    (C) Copyright 2021 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
-                    Johannes THIELE (johannes.thiele@cea.fr)
+    (C) Copyright 2019 CEA LIST. All Rights Reserved.
+    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -19,22 +18,29 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
+#ifndef N2D2_TRANSPOSECELLGENERATOR_H
+#define N2D2_TRANSPOSECELLGENERATOR_H
 
-#include "DeepNet.hpp"
-#include "DrawNet.hpp"
-
-#include <pybind11/pybind11.h>
-
-namespace py = pybind11;
+#include "Generator/CellGenerator.hpp"
+#include "Cell/TransposeCell.hpp"
+#include "utils/IniParser.hpp"
 
 namespace N2D2 {
-void init_DrawNet(py::module &m) {
-    py::class_<DrawNet>(m, "DrawNet")
-    .def_static("draw", &DrawNet::draw, py::arg("deepNet"), py::arg("fileName"))
-    .def_static("drawGraph", &DrawNet::drawGraph, py::arg("deepNet"), py::arg("fileName"));
-}
+
+class DeepNet;
+
+class TransposeCellGenerator : public CellGenerator {
+public:
+    static std::shared_ptr<TransposeCell>
+    generate(Network& network, const DeepNet& deepNet,
+             StimuliProvider& sp,
+             const std::vector<std::shared_ptr<Cell> >& parents,
+             IniParser& iniConfig,
+             const std::string& section);
+
+private:
+    static Registrar<CellGenerator> mRegistrar;
+};
 }
 
-#endif
-
+#endif // N2D2_TRANSPOSECELLGENERATOR_H

@@ -45,7 +45,7 @@ void fixedPointScaling_propagate(const Tensor<T>& input, Tensor<T>& output,
                                  std::size_t batchSize, std::size_t nbChannels,
                                  std::size_t heigth, std::size_t width,
                                  bool isClipped,
-                                 const std::vector<std::int32_t>& clippingFactorPerChannel,
+                                 const std::vector<Float_T>& clippingFactorPerChannel,
                                  const std::vector<std::int32_t>& scalingPerOutput, 
                                  std::size_t nbFractionalBits,
                                  std::size_t quantizedNbBits, bool isOutputUnsigned);
@@ -55,7 +55,7 @@ void singleShiftScaling_propagate(const Tensor<T>& input, Tensor<T>& output,
                                   std::size_t batchSize, std::size_t nbChannels,
                                   std::size_t heigth, std::size_t width,
                                   bool isClipped,
-                                  const std::vector<unsigned char>& clippingFactorPerChannel,
+                                  const std::vector<Float_T>& clippingFactorPerChannel,
                                   const std::vector<unsigned char>& scalingPerOutput,
                                   std::size_t quantizedNbBits, bool isOutputUnsigned);
 
