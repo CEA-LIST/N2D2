@@ -59,6 +59,7 @@
 #include "Cell/LRNCell.hpp"
 #include "Cell/PaddingCell.hpp"
 #include "Cell/PoolCell.hpp"
+#include "Cell/ReshapeCell.hpp"
 #include "Cell/ScalingCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
 #include "Cell/TransformationCell.hpp"
@@ -555,7 +556,18 @@ N2D2::DeepNetGenerator::generateFromONNX(Network& network,
         "  model_version = " << onnxModel.model_version() << "\n"
         "  doc_string = " << onnxModel.doc_string() << std::endl;
 
-    ONNX_processGraph(deepNet, onnxModel.graph(), iniConfig);
+    int opsetVersion = -1;
+
+    for (int i = 0; i < onnxModel.opset_import_size(); ++i) {
+        onnx::OperatorSetIdProto opset = onnxModel.opset_import(i);
+
+        if (opset.domain() == "")
+            opsetVersion = opset.version();
+    }
+
+    std::cout << "Opset version is: " << opsetVersion << std::endl;
+
+    ONNX_processGraph(deepNet, onnxModel.graph(), opsetVersion, iniConfig);
 
     return deepNet;
 }
@@ -598,6 +610,7 @@ std::shared_ptr<N2D2::BaseTensor> N2D2::DeepNetGenerator::ONNX_unpackTensor(
 void N2D2::DeepNetGenerator::ONNX_processGraph(
     std::shared_ptr<DeepNet> deepNet,
     const onnx::GraphProto& graph,
+    int opsetVersion,
     IniParser& iniConfig)
 {
     const std::string onnxName = iniConfig.getCurrentSection();
@@ -2183,8 +2196,11 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 }
             }
             else {
-                std::cout << "  No initializer for \"" << node.input(1)
+                std::stringstream msgStr;
+                msgStr << "  No initializer for \"" << node.input(1)
                     << "\"" << std::endl;
+
+                throw std::runtime_error(msgStr.str());
             }
 
             std::reverse(paddingDimsBegin.begin(), paddingDimsBegin.end());
@@ -2290,38 +2306,89 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             continue;
         }
         else if (node.op_type() == "Reshape") {
-            const std::string inputData = redirectName(node.input(0));
+            const std::string inputX = redirectName(node.input(0));
 
-            if ((itInit = initializer.find(inputData)) != initializer.end()) {
-                std::vector<size_t> newShape;
+            std::vector<size_t> newShape;
 
-                if ((itAttr = attribute.find("shape")) != attribute.end()) {
-                    for (int dim = 0; dim < (*itAttr).second->ints_size(); ++dim)
-                        newShape.push_back((*itAttr).second->ints(dim));
+            if (node.input_size() > 1) {
+                // see https://github.com/onnx/onnx/pull/608
+                if ((itInit = initializer.find(node.input(1)))
+                    != initializer.end())
+                {
+                    const Tensor<int64_t> shapeTensor
+                        = ONNX_unpackTensor<int64_t>((*itInit).second);
 
-                    //Tensor<int64_t> shapeTensor
-                    //    = ONNX_unpackTensor<int64_t>(&((*itAttr).second->t()));
-                    //newShape = shapeTensor.data();
+                    for (int dim = 0; dim < (int)shapeTensor.size(); ++dim)
+                        newShape.push_back(shapeTensor(dim));
                 }
                 else {
-                    // see https://github.com/onnx/onnx/pull/608
-                    std::cout << Utils::cnotice << "  Ignore Reshape operation"
-                        << " with no shape attribute" << Utils::cdef
-                        << std::endl;
-                }
+                    std::stringstream msgStr;
+                    msgStr << "  No initializer for \"" << node.input(1)
+                        << "\"" << std::endl;
 
-                std::reverse(newShape.begin(), newShape.end());
-                shape[inputData] = newShape;
+                    throw std::runtime_error(msgStr.str());
+                }
+            }
+            else if ((itAttr = attribute.find("shape")) != attribute.end()) {
+                for (int dim = 0; dim < (*itAttr).second->ints_size(); ++dim)
+                    newShape.push_back((*itAttr).second->ints(dim));
+
+                //Tensor<int64_t> shapeTensor
+                //    = ONNX_unpackTensor<int64_t>(&((*itAttr).second->t()));
+                //newShape = shapeTensor.data();
+            }
+
+            std::reverse(newShape.begin(), newShape.end());
+
+            if ((itInit = initializer.find(inputX)) != initializer.end()) {
+                shape[inputX] = newShape;
+
+                std::cout << "  " << node.output(0) << " -> "
+                    << redirectName(node.input(0)) << std::endl;
+                redirect[node.output(0)] = redirectName(node.input(0));
+                continue;
             }
             else {
-                std::cout << Utils::cnotice << "  Ignore Reshape operation"
-                    << Utils::cdef << std::endl;
-            }
+                std::shared_ptr<Cell> inputXCell
+                    = (deepNet->getCells().empty())
+                        ? std::shared_ptr<Cell>()
+                        : deepNet->getCell(inputX);
 
-            std::cout << "  " << node.output(0) << " -> "
-                << redirectName(node.input(0)) << std::endl;
-            redirect[node.output(0)] = redirectName(node.input(0));
-            continue;
+                const unsigned int nbOutputs = newShape[2];
+
+                std::map<std::string, std::vector<std::string> >
+                    ::const_iterator itConcat;
+                std::vector<std::shared_ptr<Cell> > parentCells;
+
+                std::shared_ptr<ReshapeCell> reshapeCell
+                    = Registrar<ReshapeCell>::create<Float_T>(model)(*deepNet, 
+                        node.output(0),
+                        nbOutputs,
+                        std::vector<int>(newShape.begin(), newShape.end()));
+
+                if ((itConcat = concat.find(inputX)) != concat.end()) {
+                    throw std::runtime_error("Unsupported operation: Concat before "
+                        "Reshape");
+                }
+                else {
+                    std::shared_ptr<Cell> inputXCell
+                        = (deepNet->getCells().empty())
+                            ? std::shared_ptr<Cell>()
+                            : deepNet->getCell(inputX);
+                    parentCells.push_back(inputXCell);
+
+                    if (inputXCell)
+                        reshapeCell->addInput(inputXCell.get());
+                    else {
+                        reshapeCell->addInput(*sp, 0, 0,
+                                            sp->getSizeX(), sp->getSizeY());
+                    }
+                }
+
+                deepNet->addCell(reshapeCell, parentCells);
+                reshapeCell->initialize();
+                cell = reshapeCell;
+            }
         }
         //else if (node.op_type() == "Resize") {
 
@@ -2376,11 +2443,24 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //Size
         //Slice
         else if (node.op_type() == "Softmax") {
-            if ((itAttr = attribute.find("axis")) != attribute.end()) {
-                if ((*itAttr).second->i() != 1) {
-                    throw std::runtime_error("Unsupported operation: "
-                        "Softmax with axis != 1");
-                }
+            int axis = (opsetVersion >= 13) ? -1 : 1;
+
+            if ((itAttr = attribute.find("axis")) != attribute.end())
+                axis = (*itAttr).second->i();
+
+            std::vector<int> perm;
+            std::vector<int> invPerm;
+
+            if (axis != 1) {
+                // Check if a permutation is need before and after the softmax
+                if (axis < 0)
+                    axis = (axis + 4);
+                axis = 3 - axis;
+
+                perm = {(axis + 1) % 3,
+                        (axis + 2) % 3,
+                        axis,
+                        3};
             }
 
             const std::string inputX = redirectName(node.input(0));
@@ -2389,6 +2469,11 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     ? std::shared_ptr<Cell>()
                     : deepNet->getCell(inputX);
 
+            const int outputsDim = (!perm.empty()) ? perm[2] : 2;
+            const unsigned int nbOutputs = (inputXCell)
+                ? inputXCell->getOutputsDim(outputsDim)
+                : sp->getSize()[outputsDim];
+
             std::map<std::string, std::vector<std::string> >
                 ::const_iterator itConcat;
             std::vector<std::shared_ptr<Cell> > parentCells;
@@ -2396,7 +2481,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             std::shared_ptr<SoftmaxCell> softmaxCell
                 = Registrar<SoftmaxCell>::create<Float_T>(model)(*deepNet, 
                                                                 node.output(0),
-                                                                inputXCell->getNbOutputs(),
+                                                                nbOutputs,
                                                                 true,
                                                                 0U);
 
@@ -2411,6 +2496,34 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         : deepNet->getCell(inputX);
                 parentCells.push_back(inputXCell);
 
+                if (!perm.empty()) {
+                    // Transpose before
+                    std::cout << "  Added transpose before: "
+                        << perm << std::endl;
+
+                    std::shared_ptr<TransposeCell> transposeBeforeCell
+                        = Registrar<TransposeCell>::create<Float_T>(model)(*deepNet, 
+                                                                        node.output(0) + "_before",
+                                                                        nbOutputs,
+                                                                        perm);
+
+                    invPerm = transposeBeforeCell->getInversePermutation();
+
+                    if (inputXCell)
+                        transposeBeforeCell->addInput(inputXCell.get());
+                    else {
+                        transposeBeforeCell->addInput(*sp, 0, 0,
+                                            sp->getSizeX(), sp->getSizeY());
+                    }
+
+                    deepNet->addCell(transposeBeforeCell, parentCells);
+                    transposeBeforeCell->initialize();
+
+                    inputXCell = transposeBeforeCell;
+                    parentCells.clear();
+                    parentCells.push_back(inputXCell);
+                }
+
                 if (inputXCell)
                     softmaxCell->addInput(inputXCell.get());
                 else {
@@ -2422,6 +2535,27 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             deepNet->addCell(softmaxCell, parentCells);
             softmaxCell->initialize();
             cell = softmaxCell;
+
+            if (!invPerm.empty()) {
+                // Transpose after
+                std::cout << "  Added transpose after: "
+                    << invPerm << std::endl;
+
+                const unsigned int nbOutputsAfter
+                    = softmaxCell->getOutputsDims()[invPerm[2]];
+
+                std::shared_ptr<TransposeCell> transposeAfterCell
+                    = Registrar<TransposeCell>::create<Float_T>(model)(*deepNet, 
+                                                                    node.output(0) + "_after",
+                                                                    nbOutputsAfter,
+                                                                    invPerm);
+
+                transposeAfterCell->addInput(softmaxCell.get());
+
+                deepNet->addCell(transposeAfterCell, parentCells);
+                transposeAfterCell->initialize();
+                cell = transposeAfterCell;
+            }
 
             std::shared_ptr<Target> target = Registrar
                 <Target>::create("TargetScore")(node.output(0) + ".Target",
