@@ -1,5 +1,6 @@
 import torch
 from n2d2 import tensor
+import N2D2
 
 class LayerN2D2(torch.nn.Module):
     """
@@ -9,7 +10,7 @@ class LayerN2D2(torch.nn.Module):
     
     def __init__(self, n2d2_cell, trainable=True):
         super().__init__()
-        # TODO : take a n2d2 cell as an input and not a N2D2
+        # TODO : Check if we have a N2D2 cell or a n2d2 cell !
         self._N2D2 = n2d2_cell
         # We need to add a random parameter to the module else pytorch refuse to compute gradient
         self.register_parameter(name='random_parameter', param=torch.nn.Parameter(torch.randn(1)))
@@ -83,7 +84,7 @@ class LayerN2D2(torch.nn.Module):
                     self._N2D2.setDiffInputs(t_grad_output.N2D2())
                     self._N2D2.setDiffInputsValid()
                     self._N2D2.backPropagate()
-                    self._N2D2.update() # TODO : update the weights, should be done during step ...
+                    self._N2D2.update()
                     
                     np_output = self.diffOutput.to_numpy() 
                     outputs = torch.from_numpy(np_output)
@@ -100,13 +101,12 @@ class LayerN2D2(torch.nn.Module):
 
 class DeepNetN2D2(torch.nn.Module):
     """
-    PyTorch layer used to interface N2D2 cell in a PyTorch deepnet.
+    PyTorch layer used to interface n2d2 sequence object in a PyTorch deepnet.
     """
     _initialized = False
     
     def __init__(self, n2d2_DeepNet):
         super().__init__()
-        # TODO : take a n2d2 cell as an input and not a N2D2
         self._N2D2 = n2d2_DeepNet
         self.first_cell = self._N2D2.get_first().N2D2()
         self.last_cell = self._N2D2.get_last().N2D2()
@@ -204,7 +204,7 @@ class DeepNetN2D2(torch.nn.Module):
                     cell.N2D2().backPropagate()
                     gradient = self.diffouts[idx].N2D2()
                 # END OF THE BLOCK OF CODE ===================================
-                self._N2D2.update() # TODO : update the weights, should be done during step ...
+                self._N2D2.update() 
                 np_output = self.diffOutput.to_numpy() 
                 outputs = torch.from_numpy(np_output)
                 outputs = torch.mul(outputs, -1/self.batch_size)

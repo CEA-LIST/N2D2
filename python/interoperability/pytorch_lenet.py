@@ -28,15 +28,59 @@ import numpy as np
 from interoperability.pytorch import testLayer
 
 
-if __name__ == "__main__":
-    batch_size = 1
-    epoch = 1
+def pure_n2d2_network():
+    n2d2.global_variables.set_cuda_device(4)
+    n2d2.global_variables.default_model = "Frame"
+
+    nb_epochs = 10
+    batch_size = 256
+    avg_window = 1
+
+    print("Load database")
+    database = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/", randomPartitioning=True)
+    print(database)
+
+    print("Create Provider")
+    provider = n2d2.provider.DataProvider(database, [32, 32, 1], batchSize=batch_size)
+    provider.add_transformation(n2d2.transform.Rescale(width=32, height=32))
+    print(provider)
+
+    print("\n### Loading Model ###")
+    model = n2d2.model.LeNet(provider, 10)
+    print(model)
+
+    classifier = n2d2.application.Classifier(provider, model)
+
+
+    print("\n### Train ###")
+
+    for epoch in range(nb_epochs):
+
+        print("\n### Train Epoch: " + str(epoch) + " ###")
+
+        classifier.set_mode('Learn')
+
+        for i in range(math.ceil(database.get_nb_stimuli('Learn')/batch_size)):
+
+            # Load example
+            classifier.read_random_batch()
+
+            classifier.process()
+            print('Loss :', classifier.getLoss()[-1])
+            classifier.optimize()
+
+
+def mixed_n2d2_pytorch(mixed = True):
+    """
+    If mixed = False the network will be define only with n2d2 DeepNet. 
+    """
+    batch_size = 32
+    epoch = 10
     device = torch.device('cpu')
     # LOAD DATA AND PREPROCESS
     tranformations = transforms.Compose([
                                         transforms.Resize((32, 32)),
                                         transforms.ToTensor(),
-                                        transforms.Normalize((0.5,), (0.5,)),
                                         ])
     trainset = datasets.MNIST('./MNIST_data/', train=True, download=True, transform=tranformations)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True)
@@ -47,21 +91,34 @@ if __name__ == "__main__":
             super(Net, self).__init__()
             empty_db = n2d2.database.Database()
             provider = n2d2.provider.DataProvider(empty_db, [32, 32, 1], batchSize=batch_size)
-            self.extractor = n2d2.model.LeNet(provider).extractor
-
+            lenet = n2d2.model.LeNet(provider)
+            lenet.set_MNIST_solvers()
+            self.extractor = lenet.extractor
+            self.classifier = lenet.classifier
+            
             self.e = torch.nn.Sequential(
                 n2d2.pytorch_interface.DeepNetN2D2(self.extractor)
             )
-            self.classifier = torch.nn.Sequential(
-                torch.nn.Linear(84, 10), # TODO : update the size of the input tensor
-                torch.nn.Softmax()
-            )
+            if mixed:
+                self.c = torch.nn.Sequential(
+                    torch.nn.Linear(84, 10),
+                    torch.nn.Softmax()
+                )
+            else:
+                self.c = torch.nn.Sequential(
+                    n2d2.pytorch_interface.DeepNetN2D2(self.classifier)
+
+                )
         # Defining the forward pass    
         def forward(self, x):
-            x = self.e(x)
-            x = x.view(x.size(0), -1)
-            x = self.classifier(x)
-            
+            if mixed:
+                x = self.e(x)
+                x = x.view(x.size(0), -1)
+                x = self.c(x)
+            else:
+                x = self.e(x)
+                x = self.c(x)
+                x = x.view(x.size(0), -1)
             return x
 
     model = Net()
@@ -78,8 +135,7 @@ if __name__ == "__main__":
 
             output = model(images)
             loss = criterion(output, labels)
-            # loss = criterion(output.float(), labels.float())
-            print("Loss :", loss.item())
+            print("Loss : ", loss.item())
 
             #This is where the model learns by backpropagating
             loss.backward()
@@ -90,3 +146,10 @@ if __name__ == "__main__":
             running_loss += loss.item()
         else:
             print("Epoch {} - Training loss: {}".format(i+1, running_loss/len(trainloader)))
+
+
+
+
+if __name__ == "__main__":
+    # pure_n2d2_network()
+    mixed_n2d2_pytorch()
