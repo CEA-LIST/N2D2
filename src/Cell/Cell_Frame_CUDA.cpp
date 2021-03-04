@@ -650,6 +650,19 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputErrors(const BaseTensor& baseErrors)
 }
 
 template <class T>
+N2D2::BaseTensor& N2D2::Cell_Frame_CUDA<T>::getInputs(unsigned int index)
+{
+    return mInputs[index];
+}
+
+template <class T>
+const N2D2::BaseTensor&
+N2D2::Cell_Frame_CUDA<T>::getInputs(unsigned int index) const
+{
+    return mInputs[index];
+}
+
+template <class T>
 N2D2::BaseTensor& N2D2::Cell_Frame_CUDA<T>::getOutputs()
 {
     return mOutputs;
@@ -672,6 +685,19 @@ const N2D2::BaseTensor&
 N2D2::Cell_Frame_CUDA<T>::getDiffInputs() const
 {
     return mDiffInputs;
+}
+
+template <class T>
+N2D2::BaseTensor& N2D2::Cell_Frame_CUDA<T>::getDiffOutputs(unsigned int index)
+{
+    return mDiffOutputs[index];
+}
+
+template <class T>
+const N2D2::BaseTensor&
+N2D2::Cell_Frame_CUDA<T>::getDiffOutputs(unsigned int index) const
+{
+    return mDiffOutputs[index];
 }
 
 template <class T>

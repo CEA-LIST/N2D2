@@ -103,10 +103,14 @@ public:
     virtual double applyLossThroughKernel(const BaseTensor& kernel,
         std::function<double()> lossFunc);
     virtual void setOutputErrors(const BaseTensor& errors);
+    virtual BaseTensor& getInputs(unsigned int index = 0);
+    virtual const BaseTensor& getInputs(unsigned int index = 0) const;
     virtual BaseTensor& getOutputs();
     virtual const BaseTensor& getOutputs() const;
     virtual BaseTensor& getDiffInputs();
     virtual const BaseTensor& getDiffInputs() const;
+    virtual BaseTensor& getDiffOutputs(unsigned int index = 0);
+    virtual const BaseTensor& getDiffOutputs(unsigned int index = 0) const;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
     void exportActivationParameters(const std::string& dirName) const;
     void importActivationParameters(const std::string& dirName, bool ignoreNotExists);

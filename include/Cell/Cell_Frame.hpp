@@ -96,6 +96,12 @@ public:
     virtual double applyLossThroughKernel(const BaseTensor& kernel,
         std::function<double()> lossFunc);
     virtual void setOutputErrors(const BaseTensor& errors);
+    virtual BaseTensor& getInputs(unsigned int index = 0) {
+        return mInputs[index];
+    }
+    virtual const BaseTensor& getInputs(unsigned int index = 0) const {
+        return mInputs[index];
+    }
     virtual BaseTensor& getOutputs()
     {
         return mOutputs;
@@ -111,6 +117,12 @@ public:
     virtual const BaseTensor& getDiffInputs() const
     {
         return mDiffInputs;
+    }
+    virtual BaseTensor& getDiffOutputs(unsigned int index = 0) {
+        return mDiffOutputs[index];
+    }
+    virtual const BaseTensor& getDiffOutputs(unsigned int index = 0) const {
+        return mDiffOutputs[index];
     }
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
     void exportActivationParameters(const std::string& dirName) const;
