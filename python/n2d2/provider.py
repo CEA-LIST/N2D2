@@ -24,13 +24,18 @@ import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
 
 
-class DataProvider(N2D2_Interface):
+class Provider(N2D2_Interface):
+    def __init__(self, **config_parameters):
+        N2D2_Interface.__init__(self, **config_parameters)
+
+
+class DataProvider(Provider):
     _INI_type = 'sp'
     _type = "DataProvider"
 
     # Be careful to match default parameters in python and N2D2 constructor
     def __init__(self, database, size, **config_parameters):
-        N2D2_Interface.__init__(self, **config_parameters)
+        Provider.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
             'database': database,
@@ -109,3 +114,37 @@ class DataProvider(N2D2_Interface):
                 else:
                     output += key + "=" + str(value) + "\n"
         return output
+
+
+class TensorPlaceholder(Provider):
+    def __init__(self, inputs, name=None):
+        #Provider.__init__(self)
+
+        if not 'name' is None:
+            self._name = name
+        else:
+            self._name = "provider_" + str(n2d2.global_variables.provider_counter)
+        n2d2.global_variables.provider_counter += 1
+
+        if isinstance(inputs, list):
+            self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
+                                                     size=inputs[0:2],
+                                                     batchSize=inputs[3])
+        else:
+            dims = [inputs.dimX(), inputs.dimY(), inputs.dimZ()]
+            self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
+                                                     size=dims,
+                                                     batchSize=inputs.dimB())
+            self._N2D2_object.setStreamedTensor(inputs)
+
+        self._set_N2D2_parameter('StreamTensor', True)
+
+    def set_streamed_tensor(self, tensor):
+        self._N2D2_object.setStreamedTensor(tensor)
+
+    def get_name(self):
+        return self._name
+
+    def __str__(self):
+        return "'" + self.get_name() + "' TensorPlaceholder"
+

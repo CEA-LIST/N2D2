@@ -37,11 +37,11 @@ void init_Scaling(py::module &m) {
         py::arg("scalingPerOutput"), py::arg("isclipped"), py::arg("clipping"));
     
     py::class_<FixedPointScaling, AbstractScaling> (m, "FixedPointScaling", py::multiple_inheritance())
-    .def(py::init<std::size_t, std::vector<std::int32_t>, bool, std::vector<std::int32_t>>(), 
+    .def(py::init<std::size_t, std::vector<std::int32_t>, bool, std::vector<Float_T>>(), 
         py::arg("nbFractionalBits"), py::arg("scaling"), py::arg("isclipped"), py::arg("clipping"));
     
     py::class_<SingleShiftScaling, AbstractScaling> (m, "SingleShiftScaling", py::multiple_inheritance())
-    .def(py::init<std::vector<unsigned char>, bool, std::vector<unsigned char>>(), 
+    .def(py::init<std::vector<unsigned char>, bool, std::vector<Float_T>>(), 
         py::arg("scaling"), py::arg("isclipped"), py::arg("clipping"));
 
     py::class_<DoubleShiftScaling, AbstractScaling> (m, "DoubleShiftScaling", py::multiple_inheritance())

@@ -45,10 +45,14 @@ class Target(N2D2_Interface):
             'provider': provider
         }
 
-
     def get_name(self):
         return self._constructor_parameters['name']
 
+    def log_estimated_labels(self, path):
+        self._N2D2_object.logEstimatedLabels(path)
+
+    def log_estimated_labels_json(self, dir_name, **kwargs):
+        self._N2D2_object.logEstimatedLabelsJSON(dir_name, **kwargs)
 
 class Score(Target):
 

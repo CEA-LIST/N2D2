@@ -68,6 +68,8 @@ if args.arch == 'MobileNet_v1':
     """Equivalent to N2D2/models/MobileNet_v2.ini"""
     model_extractor = n2d2.model.MobileNet_v1(provider, alpha=0.5)
     model_extractor.remove_subsequence(1, False)
+    if not args.weights == "":
+        model_extractor.import_free_parameters(args.weights)
 elif args.arch == 'MobileNet_v2':
     """Equivalent to N2D2/models/MobileNet_v2.ini"""
     #model = n2d2.model.Mobilenet_v2(alpha=0.5, size=size, l=10, expansion=6)
@@ -100,11 +102,6 @@ print(model_head)
 
 print("Create classifier")
 classifier = n2d2.application.Classifier(provider, model_head, topN=1)
-
-
-#if not args.weights == "":
-#    model.get_subsequence(0).import_free_parameters(args.weights)
-
 
 model_head.get_cells()['fc'].set_weights_solver(n2d2.solver.SGD(learningRate=0.01))
 model_head.get_cells()['fc'].set_bias_solver(n2d2.solver.SGD(learningRate=0.01))

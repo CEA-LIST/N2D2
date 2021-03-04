@@ -26,8 +26,40 @@ class Application:
     _target = None
     _provider = None
     _mode = None
-    def __init__(self, model):
+
+    def __init__(self, provider, model):
         self._model = model
+        self._provider = provider
+        self._mode = 'Test'
+
+
+    def set_mode(self, mode):
+        if mode not in N2D2.Database.StimuliSet.__members__:
+            raise ValueError("Mode " + mode + " not compatible with database stimuli sets")
+        self._mode = mode
+
+    def process(self):
+        # Set target of cell
+        self._target.provide_targets(partition=self._mode)
+
+        # Propagate
+        self._model.propagate(inference=(self._mode == 'Test' or self._mode == 'Validation'))
+
+        # Calculate loss and error
+        self._target.process(partition=self._mode)
+
+    def optimize(self):
+        # Backpropagate
+        self._model.back_propagate()
+
+        # Update parameters
+        self._model.update()
+
+    def read_random_batch(self):
+        self._provider.read_random_batch(partition=self._mode)
+
+    def read_batch(self, idx):
+        self._provider.read_batch(partition=self._mode, idx=idx)
 
     def convert_to_INI(self, filename):
         n2d2.utils.convert_to_INI(filename, self._provider.get_database(), self._provider, self._model, self._target)
@@ -67,6 +99,12 @@ class Application:
         set = N2D2.Database.StimuliSet.__members__[self._mode]
         self._target.N2D2().logSuccess(path, set)
 
+    def log_estimated_labels(self, path):
+        self._target.log_estimated_labels(path)
+
+    def log_estimated_labels_json(self, dir_name, **kwargs):
+        self._target.log_estimated_labels_json(dir_name, **kwargs)
+
     # TODO : doesn't work for frame_CUDA and Spike
     # TODO : also doesn't work with the current structure of layers and sequences !
     # def show_outputs(self):
@@ -80,48 +118,31 @@ class Application:
 
 class Classifier(Application):
     def __init__(self, provider, model, **target_config_parameters):
-        Application.__init__(self, model)
+        Application.__init__(self, provider, model)
 
-        self._provider = provider
-
-        #print("Add provider")
-        #self._model.add_input(self._provider)
-
-        print("Create target")
+        print("Create classifier target")
         self._target = n2d2.target.Score(self._model.get_last(), self._provider, **target_config_parameters)
 
-        #print("Initialize")
-        #self._model.initialize()
 
-        self._mode = 'Test'
+    def get_average_success(self, window=0):
+        return self._target.get_average_success(partition=self._mode, window=window)
 
-    def set_mode(self, mode):
-        if mode not in N2D2.Database.StimuliSet.__members__:
-            raise ValueError("Mode " + mode + " not compatible with database stimuli sets")
-        self._mode = mode
+    def get_average_score(self, metric):
+        return self._target.get_average_score(partition=self._mode, metric=metric)
 
-    def process(self):
-        # Set target of cell
-        self._target.provide_targets(partition=self._mode)
 
-        # Propagate
-        self._model.propagate(inference=(self._mode == 'Test' or self._mode == 'Validation'))
 
-        # Calculate loss and error
-        self._target.process(partition=self._mode)
 
-    def optimize(self):
-        # Backpropagate
-        self._model.back_propagate()
 
-        # Update parameters
-        self._model.update()
+class Segmentation(Application):
+    def __init__(self, provider, model, **target_config_parameters):
+        Application.__init__(self, provider, model)
 
-    def read_random_batch(self):
-        self._provider.read_random_batch(partition=self._mode)
+        print("Create classifier target")
+        self._target = n2d2.target.Score(self._model.get_last(),
+                                         self._provider,
+                                         **target_config_parameters)
 
-    def read_batch(self, idx):
-        self._provider.read_batch(partition=self._mode, idx=idx)
 
     def get_average_success(self, window=0):
         return self._target.get_average_success(partition=self._mode, window=window)

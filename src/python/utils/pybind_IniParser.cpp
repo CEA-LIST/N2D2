@@ -31,7 +31,10 @@ namespace N2D2 {
 
 void init_IniParser(py::module &m) {
     py::class_<IniParser, std::shared_ptr<IniParser>> (m, "IniParser")
-    .def(py::init<>());
+    .def(py::init<>())
+    .def("load", (void (IniParser::*)(const std::string&)) (&IniParser::load), py::arg("fileName"))
+    .def("currentSection", &IniParser::currentSection)
+    ;
 }
 }
 #endif

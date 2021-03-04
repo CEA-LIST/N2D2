@@ -108,7 +108,7 @@ class Cell(N2D2_Interface):
         elif isinstance(inputs, n2d2.deepnet.Layer):
             for cell in inputs.get_elements():
                 self.add_input(cell)
-        elif isinstance(inputs, Cell) or isinstance(inputs, n2d2.provider.DataProvider) or isinstance(inputs, n2d2.tensor.Tensor):
+        elif isinstance(inputs, Cell) or isinstance(inputs, n2d2.provider.Provider) or isinstance(inputs, n2d2.tensor.Tensor):
             self._link_N2D2_input(inputs)
             self._inputs.append(inputs)
         else:
@@ -137,14 +137,14 @@ class Cell(N2D2_Interface):
                                            ).N2D2()
             self._N2D2_object.addInput(inputs.N2D2(), **self._connection_parameters)
 
-            if isinstance(inputs, n2d2.provider.DataProvider):
+            if isinstance(inputs, n2d2.provider.Provider):
                 self._deepnet.add_provider(inputs)
 
 
     def _link_to_N2D2_deepnet(self):
         parents = []
         for ipt in self.get_inputs():
-            if not isinstance(ipt, n2d2.provider.DataProvider):
+            if not isinstance(ipt, n2d2.provider.Provider):
                 parents.append(ipt.get_last().N2D2())
         self._deepnet.N2D2().addCell(self._N2D2_object, parents)
 
@@ -184,6 +184,13 @@ class Cell(N2D2_Interface):
 
     def propagate(self, inference=False):
         self._N2D2_object.propagate(inference)
+        #if self.get_name() == "165":
+        #    self._N2D2_object.getQuantizer.
+        #    self.get_outputs().fill(1)
+        #    self.get_outputs().synchronizeHToD()
+        self.get_outputs().synchronizeDToH()
+        summed = self.get_outputs().mean()
+        print(self.get_name() + ": " + str(summed))
 
     def back_propagate(self):
         self._N2D2_object.backPropagate()
@@ -339,12 +346,10 @@ class Fc(Cell):
 
 
     def set_weights_solver(self, solver):
-        print("Note: Replacing existing solver in cell: " + self.get_name())
         self._config_parameters['weightsSolver'] = solver
         self._N2D2_object.setWeightsSolver(self._config_parameters['weightsSolver'].N2D2())
 
     def set_bias_solver(self, solver):
-        print("Note: Replacing existing solver in cell: " + self.get_name())
         self._config_parameters['biasSolver'] = solver
         self._N2D2_object.setBiasSolver(self._config_parameters['biasSolver'].N2D2())
 
@@ -471,12 +476,10 @@ class Conv(Cell):
 
 
     def set_weights_solver(self, solver):
-        print("Note: Replacing existing solver in cell: " + self.get_name())
         self._config_parameters['weightsSolver'] = solver
         self._N2D2_object.setWeightsSolver(self._config_parameters['weightsSolver'].N2D2())
 
     def set_bias_solver(self, solver):
-        print("Note: Replacing existing solver in cell: " + self.get_name())
         self._config_parameters['biasSolver'] = solver
         self._N2D2_object.setBiasSolver(self._config_parameters['biasSolver'].N2D2())
 
@@ -500,6 +503,127 @@ class Conv2D(Conv):
         else:
             config_parameters['mapping'] = n2d2.mapping.Mapping(nbChannelsPerGroup=1)
         Conv.__init__(self, inputs, nbOutputs, kernelDims, **config_parameters)
+
+
+
+
+
+# TODO: This is less powerful than the generator, in the sense that it does not accept several formats for the stride, conv, etc.
+class Deconv(Cell):
+
+    _cell_constructors = {
+        'Frame<float>': N2D2.DeconvCell_Frame_float,
+        'Frame_CUDA<float>': N2D2.DeconvCell_Frame_CUDA_float,
+        'Frame<double>': N2D2.DeconvCell_Frame_double,
+        'Frame_CUDA<double>': N2D2.DeconvCell_Frame_CUDA_double,
+    }
+
+    def __init__(self,
+                 inputs,
+                 nbOutputs,
+                 kernelDims,
+                 N2D2_object=None,
+                 **config_parameters):
+        """
+        :param nbOutputs: Number of outputs of the cell.
+        :type nbOutputs: int
+        :param name: Name fo the cell.
+        :type name: str
+        :param kernelDims: Kernel dimension.
+        :type kernelDims: list
+        :param subSampleDims: TODO
+        :type subSampleDims: list, optional
+        :param strideDims: TODO
+        :type strideDims: list, optional
+        :param paddingDims: TODO
+        :type paddingDims: list, optional
+        :param dilationDims: TODO
+        :type dilationDims: list, optional
+        """
+
+        if N2D2_object is not None and (nbOutputs is not None or kernelDims is not None or len(config_parameters) > 0):
+            raise RuntimeError("N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
+        if N2D2_object is None:
+            self._create_from_arguments(inputs, nbOutputs, kernelDims, **config_parameters)
+        else:
+            self._create_from_N2D2_object(inputs, N2D2_object)
+
+    def _create_from_arguments(self, inputs, nbOutputs, kernelDims, **config_parameters):
+
+        Cell.__init__(self, inputs, nbOutputs, **config_parameters)
+
+        self._constructor_arguments.update({
+            'kernelDims': kernelDims,
+        })
+
+        self._parse_optional_arguments(['strideDims', 'paddingDims', 'dilationDims'])
+
+        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+                                                                     self.get_name(),
+                                                                     self._constructor_arguments['kernelDims'],
+                                                                     self._constructor_arguments['nbOutputs'],
+                                                                     **self._optional_constructor_arguments)
+
+
+        """Set connection and mapping parameters"""
+        if 'mapping' in self._config_parameters:
+            self._connection_parameters['mapping'] = self._config_parameters.pop('mapping')
+
+        # TODO: Add Kernel section of generator
+
+        """Set and initialize here all complex cell members"""
+        for key, value in self._config_parameters.items():
+            if key is 'activationFunction':
+                self._N2D2_object.setActivation(value.N2D2())
+            elif key is 'weightsSolver':
+                self._N2D2_object.setWeightsSolver(value.N2D2())
+            elif key is 'biasSolver':
+                self._N2D2_object.setBiasSolver(value.N2D2())
+            elif key is 'weightsFiller':
+                self._N2D2_object.setWeightsFiller(value.N2D2())
+            elif key is 'biasFiller':
+                self._N2D2_object.setBiasFiller(value.N2D2())
+            else:
+                self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
+
+        self._add_to_graph(inputs)
+
+
+    def _create_from_N2D2_object(self, inputs, N2D2_object):
+
+        Cell.__init__(self, inputs,
+                      N2D2_object.getNbOutputs(),
+                      deepNet=n2d2.deepnet.DeepNet(N2D2_object=N2D2_object.getAssociatedDeepNet()),
+                      name=N2D2_object.getName(),
+                      **self._load_N2D2_parameters(N2D2_object))
+
+        self._N2D2_object = N2D2_object
+
+        self._constructor_arguments['kernelDims'] = [self._N2D2_object.getKernelWidth(), self._N2D2_object.getKernelHeight()]
+        self._optional_constructor_arguments['strideDims'] = [self._N2D2_object.getStrideX(), self._N2D2_object.getStrideY()]
+        self._optional_constructor_arguments['paddingDims'] = [self._N2D2_object.getPaddingX(), self._N2D2_object.getPaddingY()]
+        self._optional_constructor_arguments['dilationDims'] = [self._N2D2_object.getDilationX(), self._N2D2_object.getDilationY()]
+
+
+        # NOTE: No Fillers because existing cell
+        # TODO: Add similar methods to Activation/Solver/Quantizer for nice prints
+        self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
+        self._config_parameters['weightsSolver'] = self._N2D2_object.getWeightsSolver()
+        self._config_parameters['biasSolver'] = self._N2D2_object.getBiasSolver()
+        self._config_parameters['weightsSolver'] = self._N2D2_object.getWeightsSolver()
+
+        self._sync_inputs_and_parents(inputs)
+
+
+    def set_weights_solver(self, solver):
+        self._config_parameters['weightsSolver'] = solver
+        self._N2D2_object.setWeightsSolver(self._config_parameters['weightsSolver'].N2D2())
+
+    def set_bias_solver(self, solver):
+        self._config_parameters['biasSolver'] = solver
+        self._N2D2_object.setBiasSolver(self._config_parameters['biasSolver'].N2D2())
+
+
 
 
 class ElemWise(Cell):
@@ -683,7 +807,7 @@ class Padding(Cell):
                  botPad,
                  leftPad,
                  rightPad,
-                 N2D2_object,
+                 N2D2_object=None,
                  **config_parameters):
 
         if N2D2_object is not None and (nbOutputs is not None
@@ -946,12 +1070,10 @@ class BatchNorm(Cell):
         self._sync_inputs_and_parents(inputs)
 
     def set_scale_solver(self, solver):
-        print("Note: Replacing existing solver in cell: " + self.get_name())
         self._config_parameters['scaleSolver'] = solver
         self._N2D2_object.setScaleSolver(self._config_parameters['scaleSolver'].N2D2())
 
     def set_bias_solver(self, solver):
-        print("Note: Replacing existing solver in cell: " + self.get_name())
         self._config_parameters['biasSolver'] = solver
         self._N2D2_object.setBiasSolver(self._config_parameters['biasSolver'].N2D2())
 
