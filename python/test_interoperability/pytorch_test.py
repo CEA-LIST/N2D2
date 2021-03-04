@@ -10,6 +10,8 @@ import n2d2
 from n2d2.cell import Conv
 from n2d2 import tensor
 
+import n2d2.pytorch.pytorch_interface as pytorch_interface
+
 from n2d2.deepnet import Sequence, DeepNet
 from interoperability.pytorch import testLayer
 
@@ -25,7 +27,7 @@ if __name__ == "__main__":
             net = N2D2.Network()
             deepNet = N2D2.DeepNet(net)
             N2D2Cell = N2D2.ConvCell_Frame_float(deepNet, "conv", [3, 3], 1, strideDims=[1, 1], paddingDims=[1, 1])
-            self.conv = n2d2.pytorch_interface.LayerN2D2(N2D2Cell)
+            self.conv = pytorch_interface.LayerN2D2(N2D2Cell)
             self.cnn_layers = torch.nn.Sequential(
                 self.conv)
             self.init = False
@@ -95,7 +97,7 @@ if __name__ == "__main__":
             net = N2D2.Network()
             deepNet = N2D2.DeepNet(net)
             N2D2Cell = N2D2.ConvCell_Frame_float(deepNet, "conv", [3, 3], 1, strideDims=[1, 1], paddingDims=[1, 1])
-            self.n_conv = n2d2.pytorch_interface.LayerN2D2(N2D2Cell)
+            self.n_conv = pytorch_interface.LayerN2D2(N2D2Cell)
             self.cnn_layers = torch.nn.Sequential(
                 self.n_conv,
                 conv, 
@@ -122,7 +124,7 @@ if __name__ == "__main__":
             net = N2D2.Network()
             deepNet = N2D2.DeepNet(net)
             N2D2Cell = N2D2.ConvCell_Frame_float(deepNet, "conv", [3, 3], 1, strideDims=[1, 1], paddingDims=[1, 1])
-            self.n_conv = n2d2.pytorch_interface.LayerN2D2(N2D2Cell)
+            self.n_conv = pytorch_interface.LayerN2D2(N2D2Cell)
             self.cnn_layers = torch.nn.Sequential(
                 conv, 
                 torch.nn.Tanh(),
@@ -223,7 +225,7 @@ if __name__ == "__main__":
             self.test.add(Conv(self.test.get_last(), nbOutputs=1, 
             kernelDims=[3, 3], name="conv2", NoBias=True, strideDims=[1, 1], paddingDims=[1, 1]))
 
-            self.interface_deepnet = n2d2.pytorch_interface.DeepNetN2D2(self.test)
+            self.interface_deepnet = pytorch_interface.DeepNetN2D2(self.test)
             self.e = torch.nn.Sequential(
                 self.interface_deepnet,
             )

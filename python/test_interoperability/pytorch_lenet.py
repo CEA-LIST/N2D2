@@ -25,7 +25,7 @@ from n2d2.deepnet import Sequence, DeepNet
 from n2d2.cell import Fc, Conv, Softmax, Pool2D, BatchNorm, Dropout
 import n2d2
 import numpy as np
-from interoperability.pytorch import testLayer
+import n2d2.pytorch.pytorch_interface as pytorch_interface
 
 
 def pure_n2d2_network():
@@ -97,7 +97,7 @@ def mixed_n2d2_pytorch(mixed = True):
             self.classifier = lenet.classifier
             
             self.e = torch.nn.Sequential(
-                n2d2.pytorch_interface.DeepNetN2D2(self.extractor)
+                pytorch_interface.DeepNetN2D2(self.extractor)
             )
             if mixed:
                 self.c = torch.nn.Sequential(
@@ -106,7 +106,7 @@ def mixed_n2d2_pytorch(mixed = True):
                 )
             else:
                 self.c = torch.nn.Sequential(
-                    n2d2.pytorch_interface.DeepNetN2D2(self.classifier)
+                    pytorch_interface.DeepNetN2D2(self.classifier)
 
                 )
         # Defining the forward pass    
