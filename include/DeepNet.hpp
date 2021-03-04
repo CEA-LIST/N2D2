@@ -110,6 +110,7 @@ public:
     void spikeCodingCompare(const std::string& dirName, unsigned int idx) const;
 
     void fuseBatchNormWithConv();
+    void insertBatchNormAfterConv(bool moveActivation = true);
     void fusePadding();
     void removeDropout();
 
@@ -228,6 +229,8 @@ protected:
     Parameter<std::string> mName;
 
 private:
+    std::string getCellModelType(const Cell& cell);
+
     Network& mNet;
     std::shared_ptr<Database> mDatabase;
     std::shared_ptr<StimuliProvider> mStimuliProvider;

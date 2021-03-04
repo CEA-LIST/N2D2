@@ -122,6 +122,9 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
     CellGenerator::mDefaultDataType = iniConfig.getProperty
         <DataType>("DefaultDataType", Float32);
 
+    const bool insertBatchNorm
+        = iniConfig.getProperty<bool>("InsertBatchNormAfterConv", false);
+
 #ifndef CUDA
     const std::string suffix = "_CUDA";
     const int compareSize = std::max<size_t>(CellGenerator::mDefaultModel.size()
@@ -484,6 +487,10 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
 
     // Check that the properties of the latest section are valid
     iniConfig.currentSection();
+
+    if (insertBatchNorm)
+        deepNet->insertBatchNormAfterConv();
+
 
     Cell::Stats stats;
     deepNet->getStats(stats);

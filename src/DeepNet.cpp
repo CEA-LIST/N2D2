@@ -1205,6 +1205,58 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
     }
 }
 
+void N2D2::DeepNet::insertBatchNormAfterConv(bool moveActivation) {
+    std::cout << "Insert BatchNorm after Conv..." << std::endl;
+
+    const std::map<std::string, std::shared_ptr<Cell> > cells(mCells);
+
+    for (auto it = cells.begin(); it != cells.end(); ++it) {
+        const std::shared_ptr<Cell>& cell = (*it).second;
+
+        if (cell->getType() != ConvCell::Type) {
+            continue;
+        }
+
+        // check if there is not already a BatchNorm following
+        const std::vector<std::shared_ptr<Cell> > convChilds
+            = getChildCells(cell->getName());
+
+        bool isBatchNorm = false;
+
+        for (std::vector<std::shared_ptr<Cell> >::const_iterator
+            itChild = convChilds.begin(), itChildEnd = convChilds.end();
+            itChild != itChildEnd; ++itChild)
+        {
+            if ((*itChild)->getType() == BatchNormCell::Type) {
+                isBatchNorm = true;
+                break;
+            }
+        }
+
+        if (!isBatchNorm) {
+            std::cout << "  insert BatchNorm after Conv \"" << cell->getName()
+                << "\"" << std::endl;
+
+            const std::shared_ptr<Cell_Frame_Top> cellFrame
+                = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+            std::shared_ptr<Activation> activation
+                = (moveActivation) ? cellFrame->getActivation()
+                                   : std::shared_ptr<Activation>();
+
+            auto reg = Registrar<BatchNormCell>::create<Float_T>(getCellModelType(*cell));
+            auto batchNormCell = reg(*this, 
+                                    generateNewCellName(cell->getName() + "_batchnorm"), 
+                                    cell->getNbOutputs(),
+                                    activation);
+
+            if (moveActivation)
+                cellFrame->setActivation(std::shared_ptr<Activation>());
+
+            addCellAfter(batchNormCell, cell);
+        }
+    }
+}
+
 void N2D2::DeepNet::fusePadding() {
     std::cout << "Fuse Padding..." << std::endl;
 
@@ -2537,5 +2589,15 @@ void N2D2::DeepNet::clear(Database::StimuliSet set)
          itTargets != itTargetsEnd;
          ++itTargets) {
         (*itTargets)->clear(set);
+    }
+}
+
+std::string N2D2::DeepNet::getCellModelType(const Cell& cell) {
+    const Cell_Frame_Top& cellFrameTop = dynamic_cast<const Cell_Frame_Top&>(cell);
+    if(cellFrameTop.isCuda()) {
+        return Cell_Frame_Top::FRAME_CUDA_TYPE;
+    }
+    else {
+        return Cell_Frame_Top::FRAME_TYPE;
     }
 }
