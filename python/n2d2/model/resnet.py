@@ -174,6 +174,7 @@ class ResNetBottleneckBlock(Sequence):
 class ResNet50BNBody(Sequence):
     def __init__(self, inputs, alpha, l):
 
+        # TODO: Fix scales taking into account stem
         seq = Sequence([])
         seq.add(ResNetBottleneckBlock(inputs, int(64 * alpha), 1, l, True, False, "conv2.1"))
         seq.add(ResNetBottleneckBlock(seq.get_last(), int(64 * alpha), 1, l, False, False, "conv2.2"))

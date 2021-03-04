@@ -136,5 +136,15 @@ class ILSVRC2012(Database):
 
 
 
+class Cityscapes(Database):
 
+    _INI_type = 'Cityscapes_Database'
+    _type = "Cityscapes"
+
+    def __init__(self, **config_parameters):
+        N2D2_Interface.__init__(self, **config_parameters)
+
+        self._parse_optional_arguments(['incTrainExtra', 'useCoarse', 'singleInstanceLabels'])
+        self._N2D2_object = N2D2.Cityscapes_Database(**self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)
 

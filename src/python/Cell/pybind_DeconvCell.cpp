@@ -21,6 +21,8 @@
 #ifdef PYBIND
 #include "Cell/DeconvCell.hpp"
 
+#include "Solver/Solver.hpp"
+#include "Filler/Filler.hpp"
 
 #include <pybind11/pybind11.h>
 
@@ -29,8 +31,25 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_DeconvCell(py::module &m) {
 
-    py::class_<DeconvCell, std::shared_ptr<DeconvCell>, Cell> (m, "DeconvCell", py::multiple_inheritance());
-
+    py::class_<DeconvCell, std::shared_ptr<DeconvCell>, Cell> (m, "DeconvCell", py::multiple_inheritance())
+    .def("setWeightsSolver", &DeconvCell::setWeightsSolver, py::arg("solver"))
+    .def("getWeightsSolver", &DeconvCell::getWeightsSolver)
+    .def("setWeightsFiller", &DeconvCell::setWeightsFiller, py::arg("filler"))
+    .def("setBiasSolver", &DeconvCell::setBiasSolver, py::arg("solver"))
+    .def("getBiasSolver", &DeconvCell::getBiasSolver)
+    .def("setBiasFiller", &DeconvCell::setBiasFiller, py::arg("filler"))
+    //.def("setQuantizer", &DeconvCell::setQuantizer, py::arg("quantizer"))
+    //.def("getQuantizer", &DeconvCell::getQuantizer)
+    .def("getKernelWidth", &DeconvCell::getKernelWidth)
+    .def("getKernelHeight", &DeconvCell::getKernelHeight)
+    //.def("getSubSampleX", &DeconvCell::getSubSampleX)
+    //.def("getSubSampleY", &DeconvCell::getSubSampleY)
+    .def("getStrideX", &DeconvCell::getStrideX)
+    .def("getStrideY", &DeconvCell::getStrideY)
+    .def("getPaddingX", &DeconvCell::getPaddingX)
+    .def("getPaddingY", &DeconvCell::getPaddingY)
+    .def("getDilationX", &DeconvCell::getDilationX)
+    .def("getDilationY", &DeconvCell::getDilationY);
 }
 }
 #endif

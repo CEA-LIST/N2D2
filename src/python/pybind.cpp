@@ -296,9 +296,7 @@ void init_N2D2(py::module& m) {
     init_CelebA_Database(m);
     init_CIFAR_Database(m);
     init_CKP_Database(m);
-    // Cityscapes is not binded because of a dependance to JSONCPP.
-    // Need to compile with the library JSONCPP or else it crash the binding.
-    // init_Cityscapes_Database(m);
+    init_Cityscapes_Database(m);
     init_GTSDB_DIR_Database(m);
     init_GTSRB_DIR_Database(m);
     init_ILSVRC2012_Database(m);

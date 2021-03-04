@@ -84,7 +84,7 @@ class DeepNet(N2D2_Interface):
 
 
 
-def load_from_ONNX(model_path, dims, batch_size=1):
+def load_from_ONNX(model_path, dims, batch_size=1, ini_file=None):
     """
     :param model_path: Path to the model.
     :type model_path: str
@@ -102,10 +102,14 @@ def load_from_ONNX(model_path, dims, batch_size=1):
     N2D2.CellGenerator.defaultModel = "Frame_CUDA" #deepNet.get_model()
     print(N2D2.CellGenerator.defaultModel)
     print("Launch generator")
-    deepNet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, N2D2.IniParser(), deepNet.N2D2())
+    ini_parser = N2D2.IniParser()
+    if ini_file is not None:
+        ini_parser.load(ini_file)
+    ini_parser.currentSection("onnx", True)
+    deepNet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, ini_parser, deepNet.N2D2())
     print("Launch converter")
     model = n2d2.converter.deepNet_converter(deepNet)
-    model.clear_input() #Remove dummy stimuli provider
+    model.get_first().clear_input() #Remove dummy stimuli provider
     return model
 
 def load_from_INI(path):
@@ -177,27 +181,33 @@ class Sequence:
         cell = self._sequence[idx]
         print("Removing cell: " + cell.get_name())
         if isinstance(cell, Sequence) or isinstance(cell, Layer):
-            for idx in range(len(cell.get_elements())):
+            for _ in cell.get_elements():
                 cell.remove_subsequence(0, reconnect)
+            print("delete: " + self._sequence[idx].get_name())
             del self._sequence[idx]
         elif isinstance(cell, n2d2.cell.Cell):
             cells = self.get_cells()
             children = cell.N2D2().getChildrenCells()
             parents = cell.N2D2().getParentsCells()
             for child in children:
-                n2d2_child = cells[child.getName()]
-                print("Child: " + n2d2_child.get_name())
-                for idx, ipt in enumerate(n2d2_child.get_inputs()):
-                    if ipt.get_name() == cell.get_name():
-                        del n2d2_child.get_inputs()[idx]
-                if reconnect:
-                    for parent in parents:
-                        if parent.getName() in cells:
-                            n2d2_child.add_input(cells[parent.getName()])
-                        else:
-                            print("Warning: parent '" + parent.getName() + "' of removed cell '" + cell.get_name() +
-                            "' not found in same sequence as removed cell. If the parent is part of another sequence, "
-                            "please reconnect it manually.")
+                if child.getName() in cells:
+                    n2d2_child = cells[child.getName()]
+                    print("Child: " + n2d2_child.get_name())
+                    for idx, ipt in enumerate(n2d2_child.get_inputs()):
+                        if ipt.get_name() == cell.get_name():
+                            del n2d2_child.get_inputs()[idx]
+                    if reconnect:
+                        for parent in parents:
+                            if parent.getName() in cells:
+                                n2d2_child.add_input(cells[parent.getName()])
+                            else:
+                                print("Warning: parent '" + parent.getName() + "' of removed cell '" + cell.get_name() +
+                                "' not found in same sequence as removed cell. If the parent is part of another sequence, "
+                                "please reconnect it manually.")
+                else:
+                    print("Warning: child '" + child.getName() + "' of removed cell '" + cell.get_name() +
+                          "' not found in same sequence as removed cell. If the child is part of another sequence, "
+                          "please remove the corresponding parent cell manually.")
             cell.get_deepnet().N2D2().removeCell(cell.N2D2(), reconnect)
             del self._sequence[idx]
         else:
@@ -215,10 +225,10 @@ class Sequence:
                 elem._get_cells(cells)
             else:
                 cells[elem.get_name()] = elem
-
+    """
     def add_input(self, inputs):
         self.get_first().add_input(inputs)
-
+    
     def get_inputs(self):
         return self.get_first().get_inputs()
 
@@ -228,10 +238,22 @@ class Sequence:
     def initialize(self):
         for cell in self._sequence:
             cell.initialize()
+    """
 
     def propagate(self, inference=False):
         for cell in self._sequence:
             cell.propagate(inference)
+            """
+            if isinstance(cell, Layer):
+                for cll in cell.get_elements():
+                    cll.get_last().get_outputs().synchronizeDToH()
+                    summed = cll.get_last().get_outputs().sum()
+                    print(summed)
+            else:
+                cell.get_last().get_outputs().synchronizeDToH()
+                summed = cell.get_last().get_outputs().sum()
+                print(summed)
+            """
 
     def back_propagate(self):
         for cell in reversed(self._sequence):
@@ -306,16 +328,6 @@ class Sequence:
 
 
 
-
-
-
-class SequentialDeepNet(Sequence, DeepNet):
-    def __init__(self, sequence=None, N2D2_object=None, name="", **config_parameters):
-        Sequence.__init__(self, sequence, name=name)
-        DeepNet.__init__(self, N2D2_object=N2D2_object, **config_parameters)
-
-
-
 class Layer:
     def __init__(self, layer, Inputs=None, name=""):
         assert isinstance(name, str)
@@ -344,7 +356,7 @@ class Layer:
             else:
                 cells[elem.get_name()] = elem
 
-
+    """
     def add_input(self, input):
         for cell in self._layer:
             cell.add_input(input)
@@ -352,6 +364,7 @@ class Layer:
     def clear_input(self):
         for cell in self._layer:
             cell.clear_input()
+    """
 
     def get_last(self):
         return self
@@ -362,9 +375,11 @@ class Layer:
     def get_elements(self):
         return self._layer
 
+    """
     def initialize(self):
         for cell in self._layer:
             cell.initialize()
+    """
 
     def propagate(self, inference=False):
         for cell in self._layer:
