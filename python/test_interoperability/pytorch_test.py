@@ -13,7 +13,6 @@ from n2d2 import tensor
 import n2d2.pytorch.pytorch_interface as pytorch_interface
 
 from n2d2.deepnet import Sequence, DeepNet
-from interoperability.pytorch import testLayer
 
 if __name__ == "__main__":
     weight_value = 0.1
@@ -34,7 +33,7 @@ if __name__ == "__main__":
 
         def forward(self, x):
             if not self.init:
-                self.conv._initialize_input(self.conv._to_tensor(x))
+                self.conv._add_input(n2d2.pytorch.pytorch_interface._to_n2d2(x))
                 self.t_w = N2D2.Tensor_float([3, 3], weight_value)
                 for o in range(self.conv._N2D2.getNbOutputs()):
                     self.conv._N2D2.setBias(o, N2D2.Tensor_int([1], 0))
@@ -106,7 +105,7 @@ if __name__ == "__main__":
         # Defining the forward pass    
         def forward(self, x):
             if not self.init:
-                self.n_conv._initialize_input(self.n_conv._to_tensor(x))
+                self.n_conv._add_input(n2d2.pytorch.pytorch_interface._to_n2d2(x))
                 self.t_w = N2D2.Tensor_float([3, 3], weight_value)
                 for o in range(self.n_conv._N2D2.getNbOutputs()):
                     self.n_conv._N2D2.setBias(o, N2D2.Tensor_int([1], 0))
@@ -133,7 +132,7 @@ if __name__ == "__main__":
         # Defining the forward pass    
         def forward(self, x):
             if not self.init:
-                self.n_conv._initialize_input(self.n_conv._to_tensor(x))
+                self.n_conv._add_input(n2d2.pytorch.pytorch_interface._to_n2d2(x))
                 self.t_w = N2D2.Tensor_float([3, 3], weight_value)
                 for o in range(self.n_conv._N2D2.getNbOutputs()):
                     self.n_conv._N2D2.setBias(o, N2D2.Tensor_int([1], 0))
@@ -312,3 +311,4 @@ if __name__ == "__main__":
     output_ref = model_ref(input_tensor)
     print("Output after the backward (Pytorch with 2 conv) :")
     print(output_ref)
+    pytorch_interface.LayerN2D2(1)

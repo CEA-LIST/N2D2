@@ -35,6 +35,7 @@ import n2d2.application
 import n2d2.global_variables
 import n2d2.converter
 import n2d2.mapping
+import n2d2.error_handler
 
 """
 Packages that exist, but should not be used directly in API

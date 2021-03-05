@@ -234,11 +234,11 @@ class Sequence:
 
     def clear_input(self):
         self.get_first().clear_input()
-
+    """
     def initialize(self):
         for cell in self._sequence:
             cell.initialize()
-    """
+    
 
     def propagate(self, inference=False):
         for cell in self._sequence:
