@@ -143,8 +143,9 @@ void N2D2::CIFAR10_Database::load(const std::string& dataPath,
               labelPathDef + "/batches.meta.txt");
     loadCIFAR(dataPath + "/data_batch_5.bin",
               labelPathDef + "/batches.meta.txt");
-    partitionStimuli(1.0 - mValidation, mValidation, 0.0);
+
     if(mUseTestForValidation) {
+        partitionStimuli(1.0, 0.0, 0.0);
         loadCIFAR(dataPath + "/test_batch.bin", labelPathDef + "/batches.meta.txt");
         partitionStimuli(0.0, 1.0, 0.0);
     }
@@ -177,6 +178,7 @@ void N2D2::CIFAR100_Database::load(const std::string& dataPath,
               mUseCoarse);
 
     if(mUseTestForValidation) {
+        partitionStimuli(1.0, 0.0, 0.0);
         loadCIFAR(dataPath + "/test.bin",
                 labelPathDef + ((mUseCoarse) ? "/coarse_label_names.txt"
                                             : "/fine_label_names.txt"),
