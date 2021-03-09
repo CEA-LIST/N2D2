@@ -120,8 +120,8 @@ void N2D2::CIFAR_Database::loadCIFAR(const std::string& dataFile,
                                  + dataFile);
 }
 
-N2D2::CIFAR10_Database::CIFAR10_Database(double validation)
-    : CIFAR_Database(validation)
+N2D2::CIFAR10_Database::CIFAR10_Database(double validation, bool useTestForVal)
+    : CIFAR_Database(validation), mUseTestForValidation(useTestForVal)
 {
     // ctor
 }
@@ -144,14 +144,21 @@ void N2D2::CIFAR10_Database::load(const std::string& dataPath,
     loadCIFAR(dataPath + "/data_batch_5.bin",
               labelPathDef + "/batches.meta.txt");
     partitionStimuli(1.0 - mValidation, mValidation, 0.0);
+    if(mUseTestForValidation) {
+        loadCIFAR(dataPath + "/test_batch.bin", labelPathDef + "/batches.meta.txt");
+        partitionStimuli(0.0, 1.0, 0.0);
+    }
+    else {
+        partitionStimuli(1.0 - mValidation, mValidation, 0.0);
+    }
 
     // Test stimuli
     loadCIFAR(dataPath + "/test_batch.bin", labelPathDef + "/batches.meta.txt");
     partitionStimuli(0.0, 0.0, 1.0);
 }
 
-N2D2::CIFAR100_Database::CIFAR100_Database(double validation, bool useCoarse)
-    : CIFAR_Database(validation), mUseCoarse(useCoarse)
+N2D2::CIFAR100_Database::CIFAR100_Database(double validation, bool useCoarse, bool useTestForVal)
+    : CIFAR_Database(validation), mUseCoarse(useCoarse), mUseTestForValidation(useTestForVal)
 {
     // ctor
 }
@@ -168,7 +175,18 @@ void N2D2::CIFAR100_Database::load(const std::string& dataPath,
                                            : "/fine_label_names.txt"),
               true,
               mUseCoarse);
-    partitionStimuli(1.0 - mValidation, mValidation, 0.0);
+
+    if(mUseTestForValidation) {
+        loadCIFAR(dataPath + "/test.bin",
+                labelPathDef + ((mUseCoarse) ? "/coarse_label_names.txt"
+                                            : "/fine_label_names.txt"),
+                true,
+                mUseCoarse);
+        partitionStimuli(0.0, 1.0, 0.0);
+    }
+    else {
+        partitionStimuli(1.0 - mValidation, mValidation, 0.0);
+    }
 
     // Test stimuli
     loadCIFAR(dataPath + "/test.bin",
