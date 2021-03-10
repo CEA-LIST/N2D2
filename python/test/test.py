@@ -1,6 +1,6 @@
 """
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -19,31 +19,23 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-from n2d2.misc import *
-import n2d2.utils
-import n2d2.database 
-import n2d2.cell
-import n2d2.provider
-from n2d2.tensor import *
-import n2d2.transform
-import n2d2.deepnet
-import n2d2.solver
-import n2d2.filler
-import n2d2.target
-import n2d2.model
-import n2d2.application
-import n2d2.global_variables
-import n2d2.converter
-import n2d2.mapping
-import n2d2.error_handler
+import n2d2
+import N2D2
 
-#import n2d2.pytorch_interface
-"""
-Packages that exist, but should not be used directly in API
-"""
-#import n2d2.parameterizable
+# TODO: Currently not used
+test_functions = []
 
-# IP functions
-import n2d2.quantizer
+def main():
+    for test in test_functions:
+        if not test():
+            print("Test \'" + test.__name__ + "\' failed!")
+            print("### Re-run in verbose mode ###")
+            test(verbose=True)
+            print("### End re-run ###\n")
+
+        else:
+            print("Test \'" + test.__name__ + "\' succeeded!")
 
 
+if __name__ == "__main__":
+    main()

@@ -61,10 +61,7 @@ class Application:
     def read_batch(self, idx):
         self._provider.read_batch(partition=self._mode, idx=idx)
 
-    def convert_to_INI(self, filename):
-        n2d2.utils.convert_to_INI(filename, self._provider.get_database(), self._provider, self._model, self._target)
-
-    def getLoss(self, saveFile=""):
+    def get_loss(self, saveFile=""):
         """
         Return the list of loss.
         """
@@ -78,6 +75,9 @@ class Application:
             return loss
         else:
             raise RuntimeError("Target not initialized !")
+
+    def get_current_loss(self):
+        return self._target.N2D2().getLoss()[-1]
 
     def recognitionRate(self):
         """
@@ -120,32 +120,17 @@ class Classifier(Application):
     def __init__(self, provider, model, **target_config_parameters):
         Application.__init__(self, provider, model)
 
-        print("Create classifier target")
-        self._target = n2d2.target.Score(self._model.get_last(), self._provider, **target_config_parameters)
-
-
-    def get_average_success(self, window=0):
-        return self._target.get_average_success(partition=self._mode, window=window)
-
-    def get_average_score(self, metric):
-        return self._target.get_average_score(partition=self._mode, metric=metric)
-
-
-
-
-
-class Segmentation(Application):
-    def __init__(self, provider, model, **target_config_parameters):
-        Application.__init__(self, provider, model)
-
-        print("Create classifier target")
         self._target = n2d2.target.Score(self._model.get_last(),
                                          self._provider,
+                                         name=self._model.get_last().get_name() + ".target",
                                          **target_config_parameters)
 
 
     def get_average_success(self, window=0):
         return self._target.get_average_success(partition=self._mode, window=window)
+
+    def clear_success(self):
+        self._target.clear_success(partition=self._mode)
 
     def get_average_score(self, metric):
         return self._target.get_average_score(partition=self._mode, metric=metric)

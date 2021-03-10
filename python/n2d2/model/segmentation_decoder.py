@@ -30,17 +30,23 @@ from n2d2.filler import Constant, Normal
 from n2d2.provider import TensorPlaceholder
 import n2d2.global_variables
 
+decoder_solver_config = ConfigSection(learningRatePolicy='CosineDecay', learningRate=0.01, momentum=0.9,
+                              decay=0.00004, warmUpDuration=0, maxIterations=59500, polyakMomentum=False)
 
 class DecoderConv(Conv):
     def __init__(self, inputs, nbOutputs, **config_parameters):
         Conv.__init__(self, inputs, nbOutputs, kernelDims=[1, 1], strideDims=[1, 1], activationFunction=Tanh(), backPropagate=False,
-                    weightsFiller=Normal(stdDev=0.1), biasFiller=Constant(value=0.2), **config_parameters)
+                    weightsFiller=Normal(stdDev=0.1), biasFiller=Constant(value=0.2),
+                    weightsSolver=SGD(**decoder_solver_config.get()), biasSolver=SGD(**decoder_solver_config.get()),
+                    **config_parameters)
 
 
 class DecoderDeconv(Deconv):
     def __init__(self, inputs, nbOutputs, **config_parameters):
         Deconv.__init__(self, inputs, nbOutputs, activationFunction=Linear(), kernelDims=[4, 4], strideDims=[2, 2],
-                    weightsFiller=Normal(stdDev=0.1), biasFiller=Constant(value=0.2), **config_parameters)
+                    weightsFiller=Normal(stdDev=0.1), biasFiller=Constant(value=0.2),
+                    weightsSolver=SGD(**decoder_solver_config.get()), biasSolver=SGD(**decoder_solver_config.get()),
+                    **config_parameters)
 
 
 class DecoderPadding(Padding):
@@ -111,7 +117,9 @@ class SegmentationDecoder(Sequence):
         deconv_sequence3 = Sequence([deconv_fuse2, deconv_fuse2_pad, fuse3], name="deconv_sequence3")
 
         deconv_fuse3 = Deconv(fuse3, fuse3.get_outputs().dimZ(), kernelDims=[8, 8], strideDims=[4, 4], activationFunction=Linear(),
-                    weightsFiller=Normal(stdDev=0.1), biasFiller=Constant(value=0.2), name="deconv_fuse3", deepNet=self._deepNet)
+                    weightsFiller=Normal(stdDev=0.1), biasFiller=Constant(value=0.2),
+                    weightsSolver=SGD(**decoder_solver_config.get()), biasSolver=SGD(**decoder_solver_config.get()),
+                    name="deconv_fuse3", deepNet=self._deepNet)
         out_adapt = Padding(deconv_fuse3, deconv_fuse3.get_outputs().dimZ(),
                     topPad=-2, botPad=-2, leftPad=-2, rightPad=-2, name="out_adapt", deepNet=self._deepNet)
 
@@ -119,19 +127,20 @@ class SegmentationDecoder(Sequence):
 
         decoder_blocks = Sequence([deconv_sequence1, deconv_sequence2, deconv_sequence3, deconv_sequence4], name="decoder_blocks")
 
-        softmax = Softmax(out_adapt, out_adapt.get_outputs().dimZ(), withLoss=True, name="softmax", deepNet=self._deepNet)
+        softmax = Softmax(out_adapt, out_adapt.get_outputs().dimZ(), withLoss=True, name="segmentation_decoder_softmax", deepNet=self._deepNet)
 
         Sequence.__init__(self, [post_backbone_convs, decoder_blocks, softmax], name="decoder")
 
-
+    """
+    # Note: Not functional
     def set_Cityscapes_solvers(self, max_iterations):
         print("Add solvers")
 
 
-        solver_config = ConfigSection(learningRatePolicy='CosineDecay', learningRate=0.01, momentum=0.9,
-                                      decay=0.00004, warmUpDuration=0, maxIterations=max_iterations, polyakMomentum=False)
+        #solver_config = ConfigSection(learningRatePolicy='CosineDecay', learningRate=0.01, momentum=0.9,
+        #                decay=0.00004, warmUpDuration=0, maxIterations=max_iterations, polyakMomentum=False)
 
-        #solver_config = ConfigSection(learningRate=0.01)
+        solver_config = ConfigSection(learningRate=0.03)
 
         weights_solver = SGD
         weights_solver_config = solver_config
@@ -139,11 +148,11 @@ class SegmentationDecoder(Sequence):
         bias_solver_config = solver_config
 
         for name, cell in self.get_cells().items():
-            print(name)
             if isinstance(cell, Conv) or isinstance(cell, Deconv):
-                cell.set_weights_solver(weights_solver(**weights_solver_config.get()))
-                cell.set_bias_solver(bias_solver(**bias_solver_config.get()))
-
+                print("Add solver: " + name)
+                cell.set_weights_solver(SGD(**weights_solver_config.get()))
+                cell.set_bias_solver(SGD(**bias_solver_config.get()))
+    """
 
 
 

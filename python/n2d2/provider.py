@@ -30,7 +30,6 @@ class Provider(N2D2_Interface):
 
 
 class DataProvider(Provider):
-    _INI_type = 'sp'
     _type = "DataProvider"
 
     # Be careful to match default parameters in python and N2D2 constructor
@@ -97,22 +96,6 @@ class DataProvider(Provider):
                 output += trans.__str__() + ", "
             output = output[:-2]
             output += "]"
-        return output
-
-    def convert_to_INI_section(self):
-        output = "[" + self._INI_type + "]\n"
-        output += "Size="
-        for idx, dim in enumerate(self._constructor_arguments['Size']):
-            if idx > 0:
-                output += " "
-            output += str(dim)
-        output += "\n"
-        for key, value in self._optional_constructor_arguments.items():
-            if key in self._modified_keys:
-                if isinstance(value, bool):
-                    output += key + "=" + str(int(value)) + "\n"
-                else:
-                    output += key + "=" + str(value) + "\n"
         return output
 
 

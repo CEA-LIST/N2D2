@@ -37,26 +37,17 @@ class Cell(N2D2_Interface):
             self._name = "cell_" + str(n2d2.global_variables.cell_counter)
         n2d2.global_variables.cell_counter += 1
 
-        #if isinstance(inputs, list):
-        #    self._inputs = inputs
-        #else:
-        #    self._inputs = [inputs]
         self._inputs = []
 
         if 'deepNet' in config_parameters:
             self._deepnet = config_parameters.pop('deepNet')
         else:
-            # TODO: This could be more elegant
-            if isinstance(inputs, list):
-                self._deepnet = inputs[0].get_deepnet()
-            elif isinstance(inputs, n2d2.deepnet.Sequence):
+            if isinstance(inputs, n2d2.deepnet.Sequence):
                 self._deepnet = inputs.get_last().get_deepnet()
-            elif isinstance(inputs, n2d2.deepnet.Layer):
-                self._deepnet = inputs.get_elements()[0].get_deepnet()
             elif isinstance(inputs, Cell):
                 self._deepnet = inputs.get_deepnet()
             else:
-                raise TypeError("Object of type " + str(type(inputs)) + " cannot provide a deepnet to cell.")
+                raise TypeError("Object of type " + str(type(inputs)) + " cannot implicitly provide a deepNet to cell.")
 
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')
@@ -184,13 +175,6 @@ class Cell(N2D2_Interface):
 
     def propagate(self, inference=False):
         self._N2D2_object.propagate(inference)
-        #if self.get_name() == "165":
-        #    self._N2D2_object.getQuantizer.
-        #    self.get_outputs().fill(1)
-        #    self.get_outputs().synchronizeHToD()
-        self.get_outputs().synchronizeDToH()
-        summed = self.get_outputs().mean()
-        print(self.get_name() + ": " + str(summed))
 
     def back_propagate(self):
         self._N2D2_object.backPropagate()
@@ -235,22 +219,6 @@ class Cell(N2D2_Interface):
         else:
             output += "[inputs=[]]"
         return output
-
-
-    def convert_to_INI_section(self):
-        """Possible to create section without name"""
-        #if self._constructor_arguments['Name'] is not None:
-        output = "[" + self.get_name() + "]\n"
-        output += "Input="
-        for idx, cell in enumerate(self._inputs):
-            if idx > 0:
-                output += ","
-            output += cell.get_name()
-        output += "\n"
-        output += "Type=" + self.get_type() + "\n"
-        output += "nbOutputs=" + str(self._constructor_arguments['nbOutputs']) + "\n"
-        return output
-
 
 
 
@@ -344,10 +312,13 @@ class Fc(Cell):
 
         self._sync_inputs_and_parents(inputs)
 
-
+    # TODO: This is not working as expected because solvers are copied in a vector at cell initialization.
+    #  setWeightsSolver sets only the solver to be copied but does not modify after cell initialization
+    """
     def set_weights_solver(self, solver):
         self._config_parameters['weightsSolver'] = solver
         self._N2D2_object.setWeightsSolver(self._config_parameters['weightsSolver'].N2D2())
+    """
 
     def set_bias_solver(self, solver):
         self._config_parameters['biasSolver'] = solver
@@ -474,10 +445,13 @@ class Conv(Cell):
 
         self._sync_inputs_and_parents(inputs)
 
-
+    # TODO: This is not working as expected because solvers are copied in a vector at cell initialization.
+    #  setWeightsSolver sets only the solver to be copied but does not modify after cell initialization
+    """
     def set_weights_solver(self, solver):
         self._config_parameters['weightsSolver'] = solver
         self._N2D2_object.setWeightsSolver(self._config_parameters['weightsSolver'].N2D2())
+    """
 
     def set_bias_solver(self, solver):
         self._config_parameters['biasSolver'] = solver
@@ -614,15 +588,17 @@ class Deconv(Cell):
 
         self._sync_inputs_and_parents(inputs)
 
-
+    # TODO: This is not working as expected because solvers are copied in a vector at cell initialization.
+    #  setWeightsSolver sets only the solver to be copied but does not modify after cell initialization
+    """
     def set_weights_solver(self, solver):
         self._config_parameters['weightsSolver'] = solver
         self._N2D2_object.setWeightsSolver(self._config_parameters['weightsSolver'].N2D2())
+    """
 
     def set_bias_solver(self, solver):
         self._config_parameters['biasSolver'] = solver
         self._N2D2_object.setBiasSolver(self._config_parameters['biasSolver'].N2D2())
-
 
 
 

@@ -22,7 +22,7 @@
 import n2d2
 
 
-class Mapping():
+class Mapping:
     def __init__(self, nbGroups = None, nbChannelsPerGroup = None):
         if not nbGroups and not nbChannelsPerGroup:
             raise ValueError("Parameter NbGroups and ChannelsPerGroup have no value, one of them need to be set")
@@ -48,7 +48,7 @@ class Mapping():
         outputGroupOffset = 0
         channelGroupOffset = 0
 
-        map = n2d2.tensor.Tensor([nbOutputs, nbChannels], DefaultDataType=bool)
+        map = n2d2.tensor.Tensor([nbOutputs, nbChannels], defaultDataType=bool)
         for group in range(int(nbGroups)):
             outputGroupSize = (nbOutputs - outputGroupOffset) / (nbGroups - group)
             if outputGroupSize < 1:
@@ -59,32 +59,4 @@ class Mapping():
             outputGroupOffset += outputGroupSize
             channelGroupOffset += nbChannelsPerGroup
         return map
-
-
-"""
-Using N2D2 mapping directly is not recommanded for two main reasons:
-    - mappingGenerator recquire the use of IniConfig file.
-    - It's not possible to get a mapping for an input cell as we can't pass a NULL pointer for parent.
-"""
-# def default_mapping(sizeX=1, sizeY=1, strideX=1, strideY=1, offsetX=0, offsetY=0, nbIterations=0):
-#     return N2D2.MappingGenerator.Mapping(sizeX, sizeY, strideX, strideY, offsetX, offsetY, nbIterations)
-
-# def generate_mapping(input_object, nbOutputs, default_mapping = default_mapping()):
-#     if isinstance(input_object, n2d2.cell.Cell):
-#         parent = input_object.N2D2()
-#         # We need to create a fake StimuliProvider, we can't pass None
-#         stimuli = N2D2.StimuliProvider(N2D2.Database(), [])
-#     elif isinstance(input_object, n2d2.provider.DataProvider):
-#         stimuli = input_object.N2D2()
-#         # We need to create a fake Cell, we can't pass None
-#         parent = N2D2.Cell()
-#     else:
-#         raise TypeError('input_object should be of type n2d2.cell.Cell or n2d2.provider.DataProvider got ' + str(type(input_object)) +' instead.')
-    
-#     # TODO : Le fichier INI est-il vraiment facultatif ...
-#     iniParser = N2D2.IniParser()
-#     return N2D2.MappingGenerator.generate(stimuli, parent, nbOutputs, iniParser, "", "", default_mapping)
-
-# TODO : L'utilisation d'une fonction pour le mapping est il utile ?
-
 

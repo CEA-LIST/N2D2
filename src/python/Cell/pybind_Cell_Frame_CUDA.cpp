@@ -34,8 +34,12 @@ namespace N2D2 {
 template<typename T>
 void declare_Cell_Frame_CUDA(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("Cell_Frame_CUDA_" + typeStr);
-    py::class_<Cell_Frame_CUDA<T>, std::shared_ptr<Cell_Frame_CUDA<T>>, Cell, Cell_Frame_Top> (m, pyClassName.c_str(), py::multiple_inheritance());
+    py::class_<Cell_Frame_CUDA<T>, std::shared_ptr<Cell_Frame_CUDA<T>>, Cell, Cell_Frame_Top> (m, pyClassName.c_str(), py::multiple_inheritance())
     //.def("addInput", (void (Cell_Frame_CUDA<T>::*)(BaseTensor&, BaseTensor&)) &Cell_Frame_CUDA<T>::addInput, py::arg("inputs"), py::arg("diffOutputs"));
+    .def("applyLoss", (double (Cell_Frame_CUDA<T>::*)(double, double)) &Cell_Frame_CUDA<T>::applyLoss, py::arg("targetVal"), py::arg("defaultVal"))
+    .def("setOutputTarget",  &Cell_Frame_CUDA<T>::setOutputTarget, py::arg("targets"))
+    ;
+
 
 }
 

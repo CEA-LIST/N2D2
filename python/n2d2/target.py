@@ -25,8 +25,6 @@ from n2d2.n2d2_interface import N2D2_Interface
 
 class Target(N2D2_Interface):
 
-    INI_type = 'Target'
-
     """Provider is not a parameter in the INI file in the case of Target class,
     but usually inferred from the deepnet in N2D2. Name and Cell are parts of the section name"""
     def __init__(self, cell, provider, **config_parameters):
@@ -56,8 +54,6 @@ class Target(N2D2_Interface):
 
 class Score(Target):
 
-    INI_type = 'TargetScore'
-
     def __init__(self, cell, provider, **config_parameters):
 
         Target.__init__(self, cell, provider, **config_parameters)
@@ -71,27 +67,29 @@ class Score(Target):
 
 
     def provide_targets(self, partition):
-        self._N2D2_object.provideTargets(N2D2.Database. StimuliSet.__members__[partition])
+        self._N2D2_object.provideTargets(N2D2.Database.StimuliSet.__members__[partition])
 
     def process(self, partition):
-        self._N2D2_object.process(N2D2.Database. StimuliSet.__members__[partition])
+        self._N2D2_object.process(N2D2.Database.StimuliSet.__members__[partition])
 
     def get_average_success(self, partition, window=0):
         if not self._N2D2_object.getTargetTopN() == 1:
             raise RuntimeWarning("TopN != 1. You may want to use get_average_top_n_success()?")
-        return self._N2D2_object.getAverageSuccess(N2D2.Database. StimuliSet.__members__[partition], window)
+        return self._N2D2_object.getAverageSuccess(N2D2.Database.StimuliSet.__members__[partition], window)
+
+    def clear_success(self, partition):
+        self._N2D2_object.clearSuccess(N2D2.Database.StimuliSet.__members__[partition])
+
 
     """This only works if TopN > 1, otherwise it returns 0!"""
     def get_average_top_n_success(self, partition, window=0):
         if self._N2D2_object.getTargetTopN() == 1:
             raise RuntimeWarning("TopN == 1, returns 0. You may want to use get_average_success()?")
-        return self._N2D2_object.getAverageTopNSuccess(N2D2.Database. StimuliSet.__members__[partition], window)
+        return self._N2D2_object.getAverageTopNSuccess(N2D2.Database.StimuliSet.__members__[partition], window)
 
     def get_average_score(self, partition, metric):
         return self._N2D2_object.getAverageScore(
-            N2D2.Database. StimuliSet.__members__[partition],
+            N2D2.Database.StimuliSet.__members__[partition],
             N2D2.ConfusionTableMetric.__members__[metric])
 
-    def convert_to_INI_section(self):
-        output = "[" + self._constructor_parameters['name'] + "]\n"
-        return output
+
