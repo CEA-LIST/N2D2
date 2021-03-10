@@ -35,9 +35,9 @@ N2D2::CIFAR10_DatabaseGenerator::generate(IniParser& iniConfig,
     const std::string dataPath
         = Utils::expandEnvVars(iniConfig.getProperty<std::string>(
             "DataPath", N2D2_DATA("cifar-10-batches-bin")));
-
+    const bool useTestForVal = iniConfig.getProperty<bool>("UseTestForValidation", false);
     std::shared_ptr<CIFAR10_Database> database = std::make_shared
-        <CIFAR10_Database>(validation);
+        <CIFAR10_Database>(validation, useTestForVal);
     database->setParameters(iniConfig.getSection(section, true));
     database->load(dataPath);
     return database;

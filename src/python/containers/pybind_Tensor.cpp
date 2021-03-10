@@ -186,10 +186,11 @@ void init_Tensor(py::module &m) {
     // .def("load", &BaseTensor::load, py::arg("data"))
     .def("synchronizeDToH", (void (BaseTensor::*)() const) &BaseTensor::synchronizeDToH)
     .def("synchronizeHToD", (void (BaseTensor::*)() const) &BaseTensor::synchronizeHToD)
-    // .def("synchronizeDToHBased", &BaseTensor::synchronizeDToHBased)
-    // .def("synchronizeHBasedToD", &BaseTensor::synchronizeHBasedToD)
-    // .def("synchronizeDBasedToH", &BaseTensor::synchronizeDBasedToH)
-    // .def("synchronizeHToDBased", &BaseTensor::synchronizeHToDBased)
+    .def("synchronizeDToHBased", &BaseTensor::synchronizeDToHBased)
+    .def("synchronizeHBasedToD", &BaseTensor::synchronizeHBasedToD)
+    .def("synchronizeDBasedToH", &BaseTensor::synchronizeDBasedToH)
+    .def("synchronizeHToDBased", &BaseTensor::synchronizeHToDBased)
+    .def("op_assign", &BaseTensor::operator=)
     .def("nbDims", &BaseTensor::nbDims)
     .def("dims", &BaseTensor::dims)
     .def("isValid", &BaseTensor::isValid)
@@ -201,14 +202,14 @@ void init_Tensor(py::module &m) {
     declare_Tensor<float>(m, "float");
     declare_Tensor<double>(m, "double");
     declare_Tensor<char>(m, "char");
-    declare_Tensor<unsigned char>(m, "unsigned char");
+    declare_Tensor<unsigned char>(m, "unsigned_char");
     declare_Tensor<short>(m, "short");
     declare_Tensor<int>(m, "int");
-    declare_Tensor<unsigned int>(m, "unsigned int");
+    declare_Tensor<unsigned int>(m, "unsigned_int");
     declare_Tensor<long>(m, "long");
-    declare_Tensor<unsigned long>(m, "unsigned long");
+    declare_Tensor<unsigned long>(m, "unsigned_long");
     declare_Tensor<long long>(m, "long long");
-    declare_Tensor<unsigned long long>(m, "unsigned long long");
+    declare_Tensor<unsigned long long>(m, "unsigned_long_long");
     declare_Tensor<bool>(m, "bool");
 }
 }

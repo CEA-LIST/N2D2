@@ -49,6 +49,7 @@ public:
 private:
     static void ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,
         const onnx::GraphProto& graph,
+        int opsetVersion,
         IniParser& iniConfig);
     static std::shared_ptr<BaseTensor> ONNX_unpackTensor(const onnx::TensorProto* tensor,
                                        const std::vector<unsigned int>& expectedDims

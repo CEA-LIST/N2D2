@@ -98,6 +98,11 @@ public:
     void learn(std::vector<std::pair<std::string, double> >* timings = NULL);
     void test(Database::StimuliSet set = Database::Test,
               std::vector<std::pair<std::string, double> >* timings = NULL);
+    void propagate(Database::StimuliSet set,
+                   bool inference,
+                std::vector<std::pair<std::string, double> >* timings = NULL);
+    void backPropagate(std::vector<std::pair<std::string, double> >* timings = NULL);
+    void update(std::vector<std::pair<std::string, double> >* timings = NULL);
     void cTicks(Time_T start, Time_T stop, Time_T timestep, bool record=false);
     void cTargetsProcess(Database::StimuliSet set = Database::Test);
     void cReset(Time_T timestamp = 0);
@@ -105,6 +110,7 @@ public:
     void spikeCodingCompare(const std::string& dirName, unsigned int idx) const;
 
     void fuseBatchNormWithConv();
+    void insertBatchNormAfterConv(bool moveActivation = true);
     void fusePadding();
     void removeDropout();
 
@@ -223,6 +229,8 @@ protected:
     Parameter<std::string> mName;
 
 private:
+    std::string getCellModelType(const Cell& cell);
+
     Network& mNet;
     std::shared_ptr<Database> mDatabase;
     std::shared_ptr<StimuliProvider> mStimuliProvider;

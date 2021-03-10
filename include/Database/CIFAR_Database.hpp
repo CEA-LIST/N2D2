@@ -42,16 +42,18 @@ protected:
 
 class CIFAR10_Database : public CIFAR_Database {
 public:
-    CIFAR10_Database(double validation = 0.0);
+    CIFAR10_Database(double validation = 0.0, bool useTestForVal = false);
     virtual void load(const std::string& dataPath,
                       const std::string& labelPath = "",
                       bool /*extractROIs*/ = false);
     virtual ~CIFAR10_Database() {};
+protected:
+    bool mUseTestForValidation;
 };
 
 class CIFAR100_Database : public CIFAR_Database {
 public:
-    CIFAR100_Database(double validation = 0.0, bool useCoarse = false);
+    CIFAR100_Database(double validation = 0.0, bool useCoarse = false, bool useTestForVal = false);
     virtual void load(const std::string& dataPath,
                       const std::string& labelPath = "",
                       bool /*extractROIs*/ = false);
@@ -59,6 +61,7 @@ public:
 
 protected:
     double mUseCoarse;
+    bool mUseTestForValidation;
 };
 }
 

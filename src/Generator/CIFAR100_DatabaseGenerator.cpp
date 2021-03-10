@@ -33,12 +33,13 @@ N2D2::CIFAR100_DatabaseGenerator::generate(IniParser& iniConfig,
 
     const double validation = iniConfig.getProperty<double>("Validation", 0.0);
     const bool useCoarse = iniConfig.getProperty<bool>("UseCoarse", false);
+    const bool useTestForVal = iniConfig.getProperty<bool>("UseTestForValidation", false);
     const std::string dataPath
         = Utils::expandEnvVars(iniConfig.getProperty<std::string>(
             "DataPath", N2D2_DATA("cifar-100-binary")));
 
     std::shared_ptr<CIFAR100_Database> database = std::make_shared
-        <CIFAR100_Database>(validation, useCoarse);
+        <CIFAR100_Database>(validation, useCoarse, useTestForVal);
     database->setParameters(iniConfig.getSection(section, true));
     database->load(dataPath);
     return database;
