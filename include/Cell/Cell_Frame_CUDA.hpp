@@ -105,6 +105,8 @@ public:
     virtual void setOutputErrors(const BaseTensor& errors);
     virtual BaseTensor& getOutputs();
     virtual const BaseTensor& getOutputs() const;
+    virtual void setDiffInputs(BaseTensor&);
+    virtual void setDiffInputsValid();
     virtual BaseTensor& getDiffInputs();
     virtual const BaseTensor& getDiffInputs() const;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;

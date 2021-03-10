@@ -662,6 +662,20 @@ const N2D2::BaseTensor& N2D2::Cell_Frame_CUDA<T>::getOutputs() const
 }
 
 template <class T>
+void N2D2::Cell_Frame_CUDA<T>::setDiffInputs(N2D2::BaseTensor& diffInputs)
+{
+    mDiffInputs = diffInputs;
+}
+
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::setDiffInputsValid()
+{
+    mDiffInputs.setValid();        
+}
+
+
+
+template <class T>
 N2D2::BaseTensor& N2D2::Cell_Frame_CUDA<T>::getDiffInputs()
 {
     return mDiffInputs;

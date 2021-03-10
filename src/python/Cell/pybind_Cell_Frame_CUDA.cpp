@@ -34,7 +34,9 @@ namespace N2D2 {
 template<typename T>
 void declare_Cell_Frame_CUDA(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("Cell_Frame_CUDA_" + typeStr);
-    py::class_<Cell_Frame_CUDA<T>, std::shared_ptr<Cell_Frame_CUDA<T>>, Cell, Cell_Frame_Top> (m, pyClassName.c_str(), py::multiple_inheritance());
+    py::class_<Cell_Frame_CUDA<T>, std::shared_ptr<Cell_Frame_CUDA<T>>, Cell, Cell_Frame_Top> (m, pyClassName.c_str(), py::multiple_inheritance())
+    .def("setDiffInputs", &Cell_Frame_CUDA<T>::setDiffInputs, py::arg("diffInput"))
+    .def("setDiffInputsValid", &Cell_Frame_CUDA<T>::setDiffInputsValid);
     //.def("addInput", (void (Cell_Frame_CUDA<T>::*)(BaseTensor&, BaseTensor&)) &Cell_Frame_CUDA<T>::addInput, py::arg("inputs"), py::arg("diffOutputs"));
 
 }
