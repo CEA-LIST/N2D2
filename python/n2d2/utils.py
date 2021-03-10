@@ -25,26 +25,12 @@ import urllib.request
 import urllib.parse
 import tarfile
 import gzip, zipfile
+from collections import UserDict
 
-class ConfigSection(dict):
-    def __init__(self, **kwargs):
-        self._config_params = kwargs
 
-    def get(self):
-        return self._config_params
-
-    def __str__(self):
-        print(self._config_params)
-
-def convert_to_INI(path, database, provider, deepnet, target):
-    file = open(path+".ini", 'w')
-    output = "DefaultModel=" + deepnet.get_model() + "\n\n"
-    output += database.convert_to_INI_section() + "\n"
-    output += provider.convert_to_INI_section() + "\n"
-    output += deepnet.convert_to_INI_section() + "\n"
-    output += target.convert_to_INI_section() + "\n"
-    file.write(output)
-    file.close()
+# At the moment ConfigSection is simply a dictionary
+class ConfigSection(UserDict):
+    pass
 
 
 def download_model(url, install_dir, dir_name):

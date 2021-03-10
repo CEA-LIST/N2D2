@@ -30,7 +30,6 @@ class Provider(N2D2_Interface):
 
 
 class DataProvider(Provider):
-    _INI_type = 'sp'
     _type = "DataProvider"
 
     # Be careful to match default parameters in python and N2D2 constructor
@@ -99,22 +98,6 @@ class DataProvider(Provider):
             output += "]"
         return output
 
-    def convert_to_INI_section(self):
-        output = "[" + self._INI_type + "]\n"
-        output += "Size="
-        for idx, dim in enumerate(self._constructor_arguments['Size']):
-            if idx > 0:
-                output += " "
-            output += str(dim)
-        output += "\n"
-        for key, value in self._optional_constructor_arguments.items():
-            if key in self._modified_keys:
-                if isinstance(value, bool):
-                    output += key + "=" + str(int(value)) + "\n"
-                else:
-                    output += key + "=" + str(value) + "\n"
-        return output
-
 
 class TensorPlaceholder(Provider):
     def __init__(self, inputs, name=None):
@@ -130,13 +113,14 @@ class TensorPlaceholder(Provider):
             self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
                                                      size=inputs[0:2],
                                                      batchSize=inputs[3])
-        else:
+        elif isinstance(inputs, n2d2.tensor.Tensor) or isinstance(inputs, N2D2.Tensor):
             dims = [inputs.dimX(), inputs.dimY(), inputs.dimZ()]
             self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
                                                      size=dims,
                                                      batchSize=inputs.dimB())
             self._N2D2_object.setStreamedTensor(inputs)
-
+        else:
+            n2d2.error_handler.wrong_input_type("inputs", type(inputs), [type(list), 'n2d2.tensor.Tensor', 'N2D2.Tensor'])
         self._set_N2D2_parameter('StreamTensor', True)
 
     def set_streamed_tensor(self, tensor):

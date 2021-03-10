@@ -28,32 +28,36 @@ from n2d2.filler import Normal, Xavier, Constant
 from n2d2.quantizer import SATCell, SATAct
 import n2d2.global_variables
 
-class QuantConvDef(ConfigSection):
-    def __init__(self):
-        data_type = "float"
-        weights_quantizer = SATCell(applyScaling=False, applyQuantization=True, range=15)
-        weights_filler = Xavier(varianceNorm='FanOut', scaling=1.0)
-        ConfigSection.__init__(self, dataType=data_type, activationFunction=Linear(),
-                               noBias=True, weightsFiller=weights_filler, quantizer=weights_quantizer)
+solver_config = ConfigSection(learningRate=0.05, momentum=0.0, decay=0.0)
 
-class QuantFcDef(ConfigSection):
-    def __init__(self):
-        data_type = "float"
-        weights_quantizer = SATCell(applyScaling=True, applyQuantization=True, range=15)
-        sat_solver = SGD(learningRate=0.05, momentum=0.0, decay=0.0)
-        act_quantizer = SATAct(alpha=6.0, range=15, solver=sat_solver)
-        weights_filler = Normal(mean=0.0, stdDev=0.01)
-        bias_filler = Constant(value=0.0) # Usually not used because of disactivated bias
-        ConfigSection.__init__(self, dataType=data_type, activationFunction=Linear(quantizer=act_quantizer),
-                               noBias=True, weightsFiller=weights_filler, biasFiller=bias_filler,
-                               quantizer=weights_quantizer)
+def quant_conv_def():
+    weights_quantizer = SATCell(applyScaling=False, applyQuantization=True, range=15)
+    weights_filler = Xavier(varianceNorm='FanOut', scaling=1.0)
+    weights_solver = SGD(**solver_config)
+    bias_solver = SGD(**solver_config)
+    return ConfigSection(activationFunction=Linear(),
+                noBias=True, weightsSolver=weights_solver, biasSolver=bias_solver,
+                weightsFiller=weights_filler, quantizer=weights_quantizer)
 
-class QuantBnDef(ConfigSection):
-    def __init__(self):
-        data_type = "float"
-        sat_solver = SGD(learningRate=0.05, momentum=0.0, decay=0.0)
-        act_quantizer = SATAct(alpha=6.0, range=15, solver=sat_solver)
-        ConfigSection.__init__(self, dataType=data_type, activationFunction=Linear(quantizer=act_quantizer))
+def quant_fc_def():
+    weights_quantizer = SATCell(applyScaling=True, applyQuantization=True, range=15)
+    sat_solver = SGD(**solver_config)
+    act_quantizer = SATAct(alpha=6.0, range=15, solver=sat_solver)
+    weights_filler = Normal(mean=0.0, stdDev=0.01)
+    bias_filler = Constant(value=0.0) # Usually not used because of disactivated bias
+    weights_solver = SGD(**solver_config)
+    bias_solver = SGD(**solver_config)
+    return ConfigSection(activationFunction=Linear(quantizer=act_quantizer),
+                        noBias=True, weightsSolver=weights_solver, biasSolver=bias_solver,
+                        weightsFiller=weights_filler, biasFiller=bias_filler,
+                        quantizer=weights_quantizer)
+
+def quant_bn_def():
+    sat_solver = SGD(learningRate=0.05, momentum=0.0, decay=0.0)
+    act_quantizer = SATAct(alpha=6.0, range=15, solver=sat_solver)
+    scale_solver = SGD(**solver_config)
+    bias_solver = SGD(**solver_config)
+    return ConfigSection(activationFunction=Linear(quantizer=act_quantizer), scaleSolver=scale_solver, biasSolver=bias_solver)
 
 
 
@@ -64,74 +68,59 @@ class QuantLeNet(Sequence):
 
         self.extractor = Sequence([], name='extractor')
 
-        first_layer_config = QuantConvDef()
-        first_layer_config.get()['quantizer'].set_range(255)
+        first_layer_config = quant_conv_def()
+        first_layer_config['quantizer'].set_range(255)
         self.extractor.add(Conv(inputs, nbOutputs=6, kernelDims=[5, 5],
-                      **first_layer_config.get(), deepNet=self.deepnet, name="conv1"))
+                      **first_layer_config, deepNet=self.deepnet, name="conv1"))
         self.extractor.add(BatchNorm(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(),
-                           **QuantBnDef().get(), name="bn1"))
+                           **quant_bn_def(), name="bn1"))
         self.extractor.add(Pool2D(self.extractor.get_last(), nbOutputs=6, poolDims=[2, 2],
                         strideDims=[2, 2], pooling='Max', name="pool1"))
         self.extractor.add(Conv(self.extractor.get_last(), nbOutputs=16, kernelDims=[5, 5],
-                      **QuantConvDef().get(), name="conv2"))
+                      **quant_conv_def(), name="conv2"))
         self.extractor.add(BatchNorm(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(),
-                      **QuantBnDef().get(), name="bn2"))
+                      **quant_bn_def(), name="bn2"))
         self.extractor.add(Pool2D(self.extractor.get_last(), nbOutputs=16, poolDims=[2, 2],
                         strideDims=[2, 2], pooling='Max', name="pool2"))
         self.extractor.add(Conv(self.extractor.get_last(), nbOutputs=120, kernelDims=[5, 5],
-                      **QuantConvDef().get(), name="conv3"))
+                      **quant_conv_def(), name="conv3"))
         self.extractor.add(BatchNorm(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(),
-                           **QuantBnDef().get(), name="bn3"))
-        self.extractor.add(Fc(self.extractor.get_last(), nbOutputs=84, **QuantFcDef().get(), name="fc1"))
+                           **quant_bn_def(), name="bn3"))
+        self.extractor.add(Fc(self.extractor.get_last(), nbOutputs=84, **quant_fc_def(), name="fc1"))
         self.extractor.add(Dropout(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(),  name="fc1.drop"))
-
 
         self.classifier = Sequence([], name="classifier")
 
-        last_layer_config = QuantFcDef()
-        last_layer_config.get()['quantizer'].set_range(255)
-        last_layer_config.get()['activationFunction'].get_quantizer().set_range(255)
-        self.classifier.add(Fc(self.extractor.get_last(), nbOutputs=nb_outputs, **last_layer_config.get(),  name="fc2"))
+        last_layer_config = quant_fc_def()
+        last_layer_config['quantizer'].set_range(255)
+        last_layer_config['activationFunction'].get_quantizer().set_range(255)
+        self.classifier.add(Fc(self.extractor.get_last(), nbOutputs=nb_outputs, **last_layer_config,  name="fc2"))
         self.classifier.add(Softmax(self.classifier.get_last(), nbOutputs=nb_outputs, withLoss=True, name="softmax"))
 
         Sequence.__init__(self, [self.extractor, self.classifier])
 
 
-    def set_MNIST_solvers(self):
-        print("Add solvers")
-        solver = SGD
-        solver_config = ConfigSection(learningRate=0.05, momentum=0.0, decay=0.0)
-
-        for name, cell in self.get_cells().items():
-            if isinstance(cell, Fc) or isinstance(cell, Conv):
-                cell.set_weights_solver(solver(**solver_config.get()))
-                cell.set_bias_solver(solver(**solver_config.get()))
-
-            if isinstance(cell, BatchNorm):
-                cell.set_scale_solver(solver(**solver_config.get()))
-                cell.set_bias_solver(solver(**solver_config.get()))
 
 
+def conv_def():
+    weights_filler = Xavier(varianceNorm='FanOut', scaling=1.0)
+    weights_solver = SGD(**solver_config)
+    bias_solver = SGD(**solver_config)
+    return ConfigSection(activationFunction=Linear(), weightsSolver=weights_solver, biasSolver=bias_solver,
+                           noBias=True, weightsFiller=weights_filler)
 
-class ConvDef(ConfigSection):
-    def __init__(self):
-        data_type = "float"
-        weights_filler = Xavier(varianceNorm='FanOut', scaling=1.0)
-        ConfigSection.__init__(self, dataType=data_type, activationFunction=Linear(),
-                               noBias=True, weightsFiller=weights_filler)
+def fc_def():
+    weights_filler = Normal(mean=0.0, stdDev=0.01)
+    bias_filler = Constant(value=0.0) # Usually not used because of disactivated bias
+    weights_solver = SGD(**solver_config)
+    bias_solver = SGD(**solver_config)
+    return ConfigSection(activationFunction=Rectifier(), weightsSolver=weights_solver, biasSolver=bias_solver,
+                           noBias=True, weightsFiller=weights_filler, biasFiller=bias_filler)
 
-class FcDef(ConfigSection):
-    def __init__(self):
-        data_type = "float"
-        weights_filler = Normal(mean=0.0, stdDev=0.01)
-        bias_filler = Constant(value=0.0) # Usually not used because of disactivated bias
-        ConfigSection.__init__(self, dataType=data_type, activationFunction=Rectifier(),
-                               noBias=True, weightsFiller=weights_filler, biasFiller=bias_filler)
-
-class BnDef(ConfigSection):
-    def __init__(self):
-        data_type = "float"
-        ConfigSection.__init__(self, dataType=data_type, activationFunction=Rectifier())
+def bn_def():
+    scale_solver = SGD(**solver_config)
+    bias_solver = SGD(**solver_config)
+    return ConfigSection(activationFunction=Rectifier(), scaleSolver=scale_solver, biasSolver=bias_solver)
 
 
 class LeNet(Sequence):
@@ -142,46 +131,32 @@ class LeNet(Sequence):
         self.extractor = Sequence([], name='extractor')
 
         self.extractor.add(Conv(inputs, nbOutputs=6, kernelDims=[5, 5],
-                      **ConvDef().get(), deepNet= self.deepnet, name="conv1"))
+                      **conv_def(), deepNet= self.deepnet, name="conv1"))
         self.extractor.add(BatchNorm(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(),
-                           **BnDef().get(), name="bn1"))
+                           **bn_def(), name="bn1"))
         self.extractor.add(Pool2D(self.extractor.get_last(), nbOutputs=6, poolDims=[2, 2],
                         strideDims=[2, 2], pooling='Max', name="pool1"))
         self.extractor.add(Conv(self.extractor.get_last(), nbOutputs=16, kernelDims=[5, 5],
-                      **ConvDef().get(), name="conv2"))
+                      **conv_def(), name="conv2"))
         self.extractor.add(BatchNorm(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(),
-                      **BnDef().get(), name="bn2"))
+                      **bn_def(), name="bn2"))
         self.extractor.add(Pool2D(self.extractor.get_last(), nbOutputs=16, poolDims=[2, 2],
                         strideDims=[2, 2], pooling='Max', name="pool2"))
         self.extractor.add(Conv(self.extractor.get_last(), nbOutputs=120, kernelDims=[5, 5],
-                      **ConvDef().get(), name="conv3"))
+                      **conv_def(), name="conv3"))
         self.extractor.add(BatchNorm(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(),
-                           **BnDef().get(), name="bn3"))
-        self.extractor.add(Fc(self.extractor.get_last(), nbOutputs=84, **FcDef().get(), name="fc1"))
+                           **bn_def(), name="bn3"))
+        self.extractor.add(Fc(self.extractor.get_last(), nbOutputs=84, **fc_def(), name="fc1"))
         self.extractor.add(Dropout(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(), name="fc1.drop"))
 
 
         self.classifier = Sequence([], name="classifier")
 
-        self.classifier.add(Fc(self.extractor.get_last(), nbOutputs=nb_outputs, **FcDef().get(),  name="fc2"))
-        self.classifier.add(Softmax(self.classifier.get_last(), nbOutputs=nb_outputs, withLoss=True, name="softmax"))
+        self.classifier.add(Fc(self.extractor.get_last(), nbOutputs=nb_outputs, **fc_def(),  name="fc2"))
+        self.classifier.add(Softmax(self.classifier.get_last(), nbOutputs=nb_outputs, withLoss=True, name="lenet_softmax"))
 
         Sequence.__init__(self, [self.extractor, self.classifier])
 
-
-    def set_MNIST_solvers(self):
-        print("Add solvers")
-        solver = SGD
-        solver_config = ConfigSection(learningRate=0.05, momentum=0.0, decay=0.0)
-
-        for name, cell in self.get_cells().items():
-            if isinstance(cell, Fc) or isinstance(cell, Conv):
-                cell.set_weights_solver(solver(**solver_config.get()))
-                cell.set_bias_solver(solver(**solver_config.get()))
-
-            if isinstance(cell, BatchNorm):
-                cell.set_scale_solver(solver(**solver_config.get()))
-                cell.set_bias_solver(solver(**solver_config.get()))
 
 
 

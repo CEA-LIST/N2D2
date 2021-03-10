@@ -2003,6 +2003,7 @@ void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
                     "DeepNet::learn(): learning requires Cell_Frame_Top cells");
 
             time1 = std::chrono::high_resolution_clock::now();
+
             cellFrame->propagate();
 
             if (timings != NULL) {

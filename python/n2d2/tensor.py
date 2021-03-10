@@ -30,17 +30,17 @@ class Tensor():
         bool: N2D2.Tensor_bool,
     }
     
-    def __init__(self, dims, value=None, DefaultDataType=float):
+    def __init__(self, dims, value=None, defaultDataType=float):
         # Dimensions convention on N2D2 are reversed from python. 
         dims = [d for d in reversed(dims)]
-        if DefaultDataType in self._tensor_generators:
+        if defaultDataType in self._tensor_generators:
             if not value:
-                self._tensor = self._tensor_generators[DefaultDataType](dims)
+                self._tensor = self._tensor_generators[defaultDataType](dims)
             else:
-                self._tensor = self._tensor_generators[DefaultDataType](dims, value)
+                self._tensor = self._tensor_generators[defaultDataType](dims, value)
         else:
-           raise TypeError("Unrecognized Tensor datatype " + str(DefaultDataType))
-        self._dataType = DefaultDataType
+           raise TypeError("Unrecognized Tensor datatype " + str(defaultDataType))
+        self._dataType = defaultDataType
         self.is_cuda = False 
 
     def from_N2D2(self, N2D2_Tensor):
@@ -111,10 +111,22 @@ class Tensor():
         """
         Copy in memory the Tensor object.
         """
-        copy = Tensor(self.shape(), DefaultDataType=self.data_type())
+        copy = Tensor(self.shape(), defaultDataType=self.data_type())
         for i in range(len(copy)):
             copy[i] = self._tensor[i]
         return copy
+
+    def dimX(self):
+        return self._tensor.dimX()
+
+    def dimY(self):
+        return self._tensor.dimY()
+
+    def dimZ(self):
+        return self._tensor.dimZ()
+
+    def dimB(self):
+        return self._tensor.dimB()
 
     # def to_list(self):
     #     """
@@ -253,8 +265,8 @@ class CudaTensor(Tensor):
         int: N2D2.CudaTensor_int,
     }
     
-    def __init__(self, dims, value=None, DefaultDataType=float):
-        super().__init__(dims, value, DefaultDataType)
+    def __init__(self, dims, value=None, defaultDataType=float):
+        super().__init__(dims, value, defaultDataType)
         self.is_cuda = True 
 
 
@@ -262,7 +274,7 @@ class CudaTensor(Tensor):
         """
         Copy in memory the CudaTensor object.
         """
-        copy = CudaTensor(self.shape(), DefaultDataType=self.data_type())
+        copy = CudaTensor(self.shape(), defaultDataType=self.data_type())
         for i in range(len(copy)):
             copy[i] = self._tensor[i]
         return copy

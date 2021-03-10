@@ -371,6 +371,7 @@ double N2D2::Cell_Frame_CUDA<T>::applyLoss(double targetVal,
                                            double defaultVal)
 {
     mLossMem.resize(mOutputs.dims());
+  
     const double loss = cudaApplyLoss<T>(CudaContext::getDeviceProp(),
                                  mLossMem.getDevicePtr(),
                                  mOutputs.getDevicePtr(),
@@ -383,6 +384,7 @@ double N2D2::Cell_Frame_CUDA<T>::applyLoss(double targetVal,
                                  T(defaultVal));
 
     mDiffInputs.setValid();
+  
     return (loss / mOutputs.dimB());
 }
 

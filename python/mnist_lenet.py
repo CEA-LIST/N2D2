@@ -23,68 +23,82 @@ import n2d2
 import math
 
 
-n2d2.global_variables.set_cuda_device(4)
+
+# Change default model
 n2d2.global_variables.default_model = "Frame_CUDA"
+# Change cuda device (default 0)
+n2d2.global_variables.set_cuda_device(1)
+# Change seed (default 1)
+#n2d2.global_variables.default_seed = 2
 
 nb_epochs = 10
 batch_size = 256
-avg_window = 1
 
-print("Load database")
-database = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/", randomPartitioning=True)
+print("\n### Create database ###")
+database = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/", validation=0.1)
 print(database)
 
-print("Create Provider")
+print("\n### Create Provider ###")
 provider = n2d2.provider.DataProvider(database, [32, 32, 1], batchSize=batch_size)
 provider.add_transformation(n2d2.transform.Rescale(width=32, height=32))
 print(provider)
 
 print("\n### Loading Model ###")
-model = n2d2.model.QuantLeNet(provider, 10)
-#model = n2d2.model.LeNet(provider, 10)
+model = n2d2.model.LeNet(provider, 10)
 print(model)
 
 classifier = n2d2.application.Classifier(provider, model)
 
-
-print("\n### Train ###")
-
+print("\n### Training ###")
 for epoch in range(nb_epochs):
 
-    print("\n### Train Epoch: " + str(epoch) + " ###")
+    print("\n# Train Epoch: " + str(epoch) + " #")
 
     classifier.set_mode('Learn')
 
     for i in range(math.ceil(database.get_nb_stimuli('Learn')/batch_size)):
 
-        # Load example
         classifier.read_random_batch()
 
         classifier.process()
 
         classifier.optimize()
 
-        print("Example: " + str(i*batch_size) + ", train success: "
-              + "{0:.2f}".format(100*classifier.get_average_success(window=avg_window)) + "%", end='\r')
+        print("Example: " + str(i * batch_size) + ", loss: "
+              + "{0:.3f}".format(classifier.get_current_loss()), end='\r')
+
+    print("\n### Validation ###")
+
+    classifier.set_mode('Validation')
+    classifier.clear_success()
+
+    for i in range(math.ceil(database.get_nb_stimuli('Validation') / batch_size)):
+        batch_idx = i * batch_size
+
+        classifier.read_batch(idx=batch_idx)
+
+        classifier.process()
+
+        print("Validate example: " + str(i * batch_size) + ", val success: "
+              + "{0:.2f}".format(100 * classifier.get_average_success()) + "%", end='\r')
 
 
-#model.deepnet.N2D2().exportNetworkFreeParameters("posttrain_free_parameters")
+print("\n\n### Testing ###")
 
-
-#model.deepnet.N2D2().importNetworkFreeParameters("/home/jt251134/N2D2-IP/build/bin/weights")
-#model.deepnet.N2D2().importNetworkFreeParameters("/home/jt251134/N2D2-IP/N2D2/tests/tests_data/mnist_model/weights_test_SAT")
 classifier.set_mode('Test')
 
 for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test')/batch_size)):
     batch_idx = i*batch_size
 
-    # Load example
     classifier.read_batch(idx=batch_idx)
 
     classifier.process()
 
     print("Example: " + str(i * batch_size) + ", test success: "
-          + "{0:.2f}".format(100 * classifier.get_average_success()) + "%", end='\n')
+          + "{0:.2f}".format(100 * classifier.get_average_success()) + "%", end='\r')
 
-
-
+print("\n")
+# save a confusion matrix
+classifier.logConfusionMatrix("lenet_confusion_matrix")
+# save a graph of the loss and the validation score as a function of the number of steps
+classifier.logSuccess("lenet_success")

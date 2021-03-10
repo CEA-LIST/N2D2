@@ -44,9 +44,11 @@ args = parser.parse_args()
 n2d2.global_variables.set_cuda_device(args.dev)
 n2d2.global_variables.default_model = "Frame_CUDA"
 
-batch_size = 2
+batch_size = 16
 avg_window = 10000//batch_size
-size = [1024, 512, 3]
+#size = [1024, 512, 3]
+size = [512, 256, 3]
+
 
 print("Create database")
 database = n2d2.database.Cityscapes(randomPartitioning=False)
@@ -62,17 +64,17 @@ trans = n2d2.transform.Composite([
     n2d2.transform.ColorSpace(colorSpace='RGB'),
     n2d2.transform.RangeAffine(firstOperator='Divides', firstValue=[255.0]),
 ])
-"""
+
 otf_trans = n2d2.transform.Composite([
     n2d2.transform.Flip(applyTo='LearnOnly', randomHorizontalFlip=True),
     n2d2.transform.Distortion(applyTo='LearnOnly', elasticGaussianSize=21, elasticSigma=6.0,
                               elasticScaling=36.0, scaling=10.0, rotation=10.0),
 ])
-"""
+
 print(trans)
-#print(otf_trans)
+print(otf_trans)
 provider.add_transformation(trans)
-#provider.add_on_the_fly_transformation(otf_trans)
+provider.add_on_the_fly_transformation(otf_trans)
 
 scales = []
 if args.arch == 'MobileNet_v1':
@@ -118,91 +120,84 @@ N2D2.DrawNet.draw(decoder._deepNet.N2D2(), "draw_head")
 """
 
 print("Create classifier")
-classifier = n2d2.application.Segmentation(provider, decoder, noDisplayLabel=0,
+segmantation_decoder = n2d2.application.Classifier(provider, decoder, noDisplayLabel=0, defaultValue=0.0, targetValue=1.0,
                         labelsMapping="/home/jt251134/N2D2-IP/models/Segmentation_GoogleNet/cityscapes_5cls.target")
 
 #decoder.set_Cityscapes_solvers(database.get_nb_stimuli('Learn')*args.epochs)
-decoder.set_Cityscapes_solvers(59500)
+#decoder.set_Cityscapes_solvers(59500)
 
 print("\n### Train ###")
 
-#classifier.log_estimated_labels_json("train")
+#segmantation_decoder.log_estimated_labels_json("train")
 
 for epoch in range(args.epochs):
 
     print("\n### Train Epoch: " + str(epoch) + " ###")
 
-    classifier.set_mode('Learn')
+    segmantation_decoder.set_mode('Learn')
 
     for i in range(math.ceil(database.get_nb_stimuli('Learn') / batch_size)):
-    #for i in range(3):
-
-        #batch_idx = i * batch_size
-        #classifier.read_batch(idx=batch_idx)
 
         # Load example
-        classifier.read_random_batch()
+        segmantation_decoder.read_random_batch()
 
         extractor.propagate(inference=True)
 
-        classifier.process()
+        segmantation_decoder.process()
 
-        classifier.optimize()
-
-        #decoder.get_last().get_outputs().synchronizeDToH()
-
-        #print(decoder.get_last().get_outputs())
+        segmantation_decoder.optimize()
 
         print("Example: " + str(i*batch_size) + " of " + str(database.get_nb_stimuli('Learn')) + ", train success: "
-              + "{0:.2f}".format(100*classifier.get_average_success(window=avg_window)) + "%", end='\r')
+              + "{0:.2f}".format(100*segmantation_decoder.get_average_success(window=avg_window)) + "%", end='\n')
 
-        if i >= math.ceil(database.get_nb_stimuli('Learn') / batch_size) - 1:
-            classifier.log_estimated_labels("train")
+        #if i >= math.ceil(database.get_nb_stimuli('Learn') / batch_size) - 1:
+        #    segmantation_decoder.log_estimated_labels("train")
 
-    """
-    print("\n### Test ###")
 
-    classifier.set_mode('Test')
+    if epoch % 5 == 0:
+        print("\n### Test ###")
 
-    for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
-    #for i in range(3):
+        segmantation_decoder.set_mode('Test')
 
-        batch_idx = i*batch_size
+        for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
+        #for i in range(3):
 
-        # Load example
-        classifier.read_batch(idx=batch_idx)
+            batch_idx = i*batch_size
 
-        extractor.propagate(inference=True)
+            # Load example
+            segmantation_decoder.read_batch(idx=batch_idx)
 
-        classifier.process()
+            extractor.propagate(inference=True)
 
-        print("Example: " + str(i*batch_size)+ " of " + str(database.get_nb_stimuli('Test')) + ", test success: "
-              + "{0:.2f}".format(100 * classifier.get_average_success()) + "%", end='\r')
+            segmantation_decoder.process()
 
-        classifier.log_estimated_labels("test")
+            print("Example: " + str(i*batch_size) + " of " + str(database.get_nb_stimuli('Test')) + ", test success: "
+                  + "{0:.2f}".format(100 * segmantation_decoder.get_average_success()) + "%", end='\n')
 
-    print("")
-    """
+            if i >= math.ceil(database.get_nb_stimuli('Test') / batch_size) - 1:
+                segmantation_decoder.log_estimated_labels("test")
+
+        print("")
+
 
 
 
 print("\n### Final Test ###")
 
-classifier.set_mode('Test')
+segmantation_decoder.set_mode('Test')
 
-#for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
-for i in range(2):
+for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
 
     batch_idx = i*batch_size
 
     # Load example
-    classifier.read_batch(idx=batch_idx)
+    segmantation_decoder.read_batch(idx=batch_idx)
 
     extractor.propagate(inference=True)
 
-    classifier.process()
+    segmantation_decoder.process()
 
     print("Example: " + str(i*batch_size)+ " of " + str(database.get_nb_stimuli('Test')) + ", test success: "
-          + "{0:.2f}".format(100 * classifier.get_average_success()) + "%", end='\r')
+          + "{0:.2f}".format(100 * segmantation_decoder.get_average_success()) + "%", end='\n')
 
-    classifier.log_estimated_labels("test")
+    segmantation_decoder.log_estimated_labels("test")

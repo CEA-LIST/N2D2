@@ -19,29 +19,23 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
+import n2d2
 import N2D2
-# import n2d2.deepnet
 
-# TODO: In final version this should be in the use home or the API launch folder
-model_cache = "/local/is154584/jt251134/MODELS"
+# TODO: Currently not used
+test_functions = []
 
-default_seed = 1
-default_model = 'Frame'
-default_dataType = 'float'
-default_net = N2D2.Network(default_seed)
-#default_deepNet = n2d2.deepnet.DeepNet(default_net, default_model, default_dataType)
-default_deepNet = None
+def main():
+    for test in test_functions:
+        if not test():
+            print("Test \'" + test.__name__ + "\' failed!")
+            print("### Re-run in verbose mode ###")
+            test(verbose=True)
+            print("### End re-run ###\n")
 
-cell_counter = 0
-target_counter = 0
-provider_counter = 0
+        else:
+            print("Test \'" + test.__name__ + "\' succeeded!")
 
-class Verbosity:
-    short = 0  # Constructor arguments only
-    detailed = 1  # Config parameters and their parameters
 
-verbosity = Verbosity.detailed
-
-def set_cuda_device(id):
-    N2D2.CudaContext.setDevice(id)
-
+if __name__ == "__main__":
+    main()

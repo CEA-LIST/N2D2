@@ -711,8 +711,9 @@ void N2D2::StimuliProvider::readRandomBatch(Database::StimuliSet set)
 {
     std::vector<int>& batchRef = (mFuture) ? mFutureBatch : mBatch;
 
-    for (unsigned int batchPos = 0; batchPos < mBatchSize; ++batchPos)
+    for (unsigned int batchPos = 0; batchPos < mBatchSize; ++batchPos) {
         batchRef[batchPos] = getRandomID(set);
+    }
 
     unsigned int exceptCatch = 0;
 

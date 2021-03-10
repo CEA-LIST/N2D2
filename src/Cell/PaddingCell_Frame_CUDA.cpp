@@ -141,6 +141,7 @@ void N2D2::PaddingCell_Frame_CUDA::backPropagate()
 
         mDiffOutputs[k].deviceTensor() = *diffOutput;
         mDiffOutputs[k].setValid();
+
     }
 
     mDiffOutputs.synchronizeDToHBased();

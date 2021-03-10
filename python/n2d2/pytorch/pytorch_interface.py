@@ -9,9 +9,9 @@ def _to_n2d2(torch_tensor):
     """
     numpy_tensor = torch_tensor.cpu().detach().numpy()
     if torch_tensor.is_cuda:
-        n2d2_tensor = tensor.CUDA_Tensor([3, 3], DefaultDataType=float)
+        n2d2_tensor = tensor.CUDA_Tensor([3, 3], defaultDataType=float)
     else:
-        n2d2_tensor = tensor.Tensor([3, 3], DefaultDataType=float)        
+        n2d2_tensor = tensor.Tensor([3, 3], defaultDataType=float)        
     n2d2_tensor.from_numpy(numpy_tensor)
     return n2d2_tensor
 
@@ -19,7 +19,7 @@ def _to_torch(N2D2_tensor):
     """
     Convert N2D2.Tensor -> torch.Tensor
     """
-    n2d2_tensor = tensor.Tensor([3, 3], DefaultDataType=float)
+    n2d2_tensor = tensor.Tensor([3, 3], defaultDataType=float)
     n2d2_tensor.from_N2D2(N2D2_tensor)
     numpy_tensor = n2d2_tensor.to_numpy() 
     torch_tensor = torch.from_numpy(numpy_tensor)

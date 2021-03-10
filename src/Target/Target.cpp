@@ -596,7 +596,7 @@ void N2D2::Target::process(Database::StimuliSet set)
         }
         std::shared_ptr<CudaDeviceTensor<Float_T> > value
             = cuda_device_tensor_cast<Float_T>(*outputsCudaBaseTensor);
-            
+        
         process_Frame_CUDA(value->getDevicePtr(), batchSize);
     }
     else {
@@ -619,7 +619,7 @@ void N2D2::Target::process(Database::StimuliSet set)
             mEstimatedLabels.synchronizeDBasedToH();
             mEstimatedLabelsValue.synchronizeDBasedToH();
 
-            std::cout << "[";
+            /*std::cout << "[";
 
             for (int i = 0; i < (int)mEstimatedLabelsValue.dimZ(); ++i) {
                 std::cout << mEstimatedLabels(0, 0, i, 0) << ":"
@@ -628,7 +628,7 @@ void N2D2::Target::process(Database::StimuliSet set)
                     << mEstimatedLabelsValue(0, 0, i, 0) << " ";
             }
 
-            std::cout << "]" << std::endl;
+            std::cout << "]" << std::endl;*/
             display = false;
         }
     }
@@ -1198,6 +1198,7 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
 
         for (unsigned int oy = 0; oy < mTargets.dimY(); ++oy) {
             for (unsigned int ox = 0; ox < mTargets.dimX(); ++ox) {
+
                 if (estimatedLabels(ox, oy) != mNoDisplayLabel
                     && (mask.empty() || mask(ox, oy) == mMaskedLabel)
                     && (!(mValueThreshold > 0.0)
@@ -1247,6 +1248,7 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
                         : std::string("jpg");
 
                 jsonName = dirPath + "/" + imgFile.str() + "." + fileExtension;
+
             }
         }
 /*

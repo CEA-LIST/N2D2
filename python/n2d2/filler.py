@@ -43,7 +43,6 @@ class Filler(N2D2_Interface):
 
 class He(Filler):
 
-    _INI_type = 'HeFiller'
     _type = "HeFiller"
 
     _filler_generators = {
@@ -60,7 +59,6 @@ class He(Filler):
 
 class Normal(Filler):
 
-    _INI_type = 'NormalFiller'
     _type = "NormalFiller"
 
     """Static members"""
@@ -78,7 +76,6 @@ class Normal(Filler):
 
 class Xavier(Filler):
 
-    _INI_type = 'XavierFiller'
     _type = "XavierFiller"
 
     """Static members"""
@@ -102,7 +99,6 @@ class Xavier(Filler):
 
 class Constant(Filler):
 
-    _INI_type = 'ConstantFiller'
     _type = "ConstantFiller"
 
     """Static members"""

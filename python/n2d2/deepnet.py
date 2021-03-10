@@ -82,6 +82,11 @@ class DeepNet(N2D2_Interface):
     def get_datatype(self):
         return self._datatype
 
+    def draw(self, filename):
+        N2D2.DrawNet.draw(self._N2D2_object, filename)
+
+    def draw_graph(self, filename):
+        N2D2.DrawNet.drawGraph(self._N2D2_object, filename)
 
 
 def load_from_ONNX(model_path, dims, batch_size=1, ini_file=None):
@@ -121,10 +126,7 @@ def load_from_INI(path):
     network = N2D2.Network(1)
     deepNet = N2D2.DeepNetGenerator.generateFromINI(network, path)
     return n2d2.converter.deepNet_converter(deepNet)
-"""
-We should be able to create cells and sequences of cell incrementally
-We should be able to extract cell and sequences and run these subnetworks easily
-"""
+
 
 
 """
@@ -135,45 +137,10 @@ class Sequence:
         assert isinstance(name, str)
         self._name = name
         assert isinstance(sequence, list)
-        #if not sequence:
-        #    raise ValueError("Got empty list as input. List must contain at least one element")
         self._sequence = sequence
-
-        """
-        previous = None
-        for elem in self._sequence:
-            if previous is not None:
-                #elem.clear_input()
-                elem.add_input(previous)
-            previous = elem
-        """
-
-        """
-        if inputs is not None:
-            if isinstance(inputs, list):
-                for cell in inputs:
-                    self.add_input(cell)
-            else:
-                self.add_input(inputs)
-        """
 
     def add(self, cell):
         self._sequence.append(cell)
-
-    #def get_deepnet(self):
-    #    first = self.get_first()
-    #    last = self.get_last()
-
-    #    deepnet = n2d2.global_variables.default_deepNet
-
-        """
-        deepNet = N2D2.DeepNet(n2d2.global_variables.default_net)
-        for idx, (name, cell) in enumerate(self.get_cells().items()):
-            parents = []
-            for ipt in cell.get_inputs():
-                if not isinstance(ipt, n2d2.provider.DataProvider):
-                    parents.append(ipt.get_last().N2D2())
-            deepNet.addCell(cell.N2D2(), parents)"""
 
     # TODO: Implement in layer
     # TODO: At the moment this does not release memory of deleted cells
@@ -235,25 +202,15 @@ class Sequence:
     def clear_input(self):
         self.get_first().clear_input()
     """
+
+    # TODO: Is this really used?
     def initialize(self):
         for cell in self._sequence:
             cell.initialize()
-    
 
     def propagate(self, inference=False):
         for cell in self._sequence:
             cell.propagate(inference)
-            """
-            if isinstance(cell, Layer):
-                for cll in cell.get_elements():
-                    cll.get_last().get_outputs().synchronizeDToH()
-                    summed = cll.get_last().get_outputs().sum()
-                    print(summed)
-            else:
-                cell.get_last().get_outputs().synchronizeDToH()
-                summed = cell.get_last().get_outputs().sum()
-                print(summed)
-            """
 
     def back_propagate(self):
         for cell in reversed(self._sequence):
@@ -292,19 +249,6 @@ class Sequence:
 
     def get_first(self):
         return self._sequence[0].get_first()
-    """
-    def get_cells_sequence(self):
-        return self._cells_sequence
-    """
-
-    """
-    def convert_to_INI_section(self):
-        output = ""
-        for cell in self._cells_sequence:
-            output += cell.convert_to_INI_section()
-            output += "\n"
-        return output
-    """
 
     def __str__(self):
         return self._generate_str(1)
@@ -375,12 +319,6 @@ class Layer:
     def get_elements(self):
         return self._layer
 
-    """
-    def initialize(self):
-        for cell in self._layer:
-            cell.initialize()
-    """
-
     def propagate(self, inference=False):
         for cell in self._layer:
             cell.propagate(inference)
@@ -399,15 +337,6 @@ class Layer:
     def __str__(self):
         return self._generate_str(0)
 
-    """
-    def convert_to_INI_section(self):
-        output = ""
-        for cell in self._layer:
-            output += cell.convert_to_INI_section()
-            output += "\n"
-        return output
-    """
-
     def _generate_str(self, indent_level):
         if not self.get_name() == "":
             output = "\'" + self.get_name() + "\' " + "Layer(\n"
@@ -420,4 +349,4 @@ class Layer:
                 output += (indent_level * "\t") + "[" + str(idx) + "]: " + elem._generate_str(indent_level+1) + "\n"
         output += ((indent_level-1) * "\t") + ")"
         return output
-        
+
