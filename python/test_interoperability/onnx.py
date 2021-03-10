@@ -135,7 +135,7 @@ if __name__ == "__main__":
     batch_size = 10
     epoch = 1 # No training 
     device = torch.device('cpu')
-    model_path = "/local/is154584/cm264821/N2D2-IP/N2D2/python/test_interoperability/conv_test.onnx"
+    model_path = "./conv_test.onnx"
 
     # LOAD DATA AND PREPROCESS
     tranformations = transforms.Compose([
@@ -185,7 +185,7 @@ if __name__ == "__main__":
 
     n2d2_layer = DeepNetN2D2(deepNet)
 
-    model.cnn_layers = n2d2_layer
+    # model.cnn_layers = n2d2_layer
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
     criterion = torch.nn.CrossEntropyLoss()

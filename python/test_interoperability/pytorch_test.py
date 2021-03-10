@@ -237,9 +237,9 @@ if __name__ == "__main__":
 
                     numpy_tensor = x.cpu().detach().numpy()
                     if x.is_cuda:
-                        n2d2_tensor = tensor.CUDA_Tensor([3, 3], DefaultDataType=float)
+                        n2d2_tensor = tensor.CUDA_Tensor([3, 3], defaultDataType=float)
                     else:
-                        n2d2_tensor = tensor.Tensor([3, 3], DefaultDataType=float)        
+                        n2d2_tensor = tensor.Tensor([3, 3], defaultDataType=float)        
                     n2d2_tensor.from_numpy(numpy_tensor)
 
                     if x.is_cuda:
@@ -311,4 +311,4 @@ if __name__ == "__main__":
     output_ref = model_ref(input_tensor)
     print("Output after the backward (Pytorch with 2 conv) :")
     print(output_ref)
-    pytorch_interface.LayerN2D2(1)
+    # pytorch_interface.LayerN2D2(1)
