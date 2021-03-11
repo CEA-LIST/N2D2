@@ -253,7 +253,7 @@ public:
     inline void push_back(const std::vector<T>& vec);
     inline void push_back(const Tensor<T>& frame);
     inline void append(const std::vector<T>& vec);
-    inline void append(const Tensor<T>& frame);
+    inline void append(const Tensor<T>& frame, int towardsDim = -1);
     inline void clear();
     inline void swap(CudaTensor<T>& tensor);
     inline CudaTensor<T> clone() const;
@@ -1055,9 +1055,9 @@ void N2D2::CudaTensor<T>::append(const std::vector<T>& vec)
 }
 
 template <typename T>
-void N2D2::CudaTensor<T>::append(const Tensor<T>& frame)
+void N2D2::CudaTensor<T>::append(const Tensor<T>& frame, int towardsDim)
 {
-    Tensor<T>::append(frame);
+    Tensor<T>::append(frame, towardsDim);
 
     mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
     synchronizeHToD(); // Copy data into device memory

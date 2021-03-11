@@ -31,6 +31,7 @@
 #include "Cell/DropoutCell_Frame_CUDA.hpp"
 #endif
 #include "Transformation/RescaleTransformation.hpp"
+#include "Transformation/ColorSpaceTransformation.hpp"
 #include "third_party/half.hpp"
 #include "utils/UnitTest.hpp"
 
@@ -70,6 +71,7 @@ public:
     friend class UnitTest_ConvCell_Frame_CUDA_float_addInput;
     friend class UnitTest_ConvCell_Frame_CUDA_float_propagate_input_check;
     friend class UnitTest_ConvCell_Frame_CUDA_float_propagate_2_input_check;
+    friend class UnitTest_ConvCell_Frame_CUDA_float_squeezeSharedSynapses;
     friend class UnitTest_ConvCell_Frame_CUDA_float_setWeight;
     friend class UnitTest_ConvCell_Frame_CUDA_double_addInput__env;
     friend class UnitTest_ConvCell_Frame_CUDA_double_addInput;
@@ -656,6 +658,193 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
                                                         - (int)paddingY;
 
                                 sum += in(ix, iy, 0, batch)
+                                       * (1.0 + channel + conv1.getNbChannels()
+                                                          * output);
+                            }
+                        }
+                    }
+
+                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-4);
+                }
+            }
+        }
+    }
+}
+
+TEST_DATASET(ConvCell_Frame_CUDA_float,
+             squeezeSharedSynapses,
+             (unsigned int kernelWidth,
+              unsigned int kernelHeight,
+              unsigned int subSampleX,
+              unsigned int subSampleY,
+              unsigned int strideX,
+              unsigned int strideY,
+              unsigned int paddingX,
+              unsigned int paddingY,
+              unsigned int channelsWidth,
+              unsigned int channelsHeight),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 24U),
+             // 1
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 2U, 2U, 0U, 0U, 32U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 2U, 2U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 1U, 3U, 24U, 24U),
+             // 2
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 1U, 0U, 0U, 32U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 2U, 2U, 0U, 0U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 32U),
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 1U, 2U, 2U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 1U, 1U, 3U, 32U, 24U),
+             // 3
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 0U, 0U, 32U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 2U, 2U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 2U, 2U, 24U, 32U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 1U, 3U, 32U, 24U),
+             // 4
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 2U, 2U, 24U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 1U, 3U, 24U, 24U))
+{
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+    REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
+
+    const unsigned int nbOutputs = 5;
+
+    Network net;
+    DeepNet dn(net);
+
+    ConvCell_Frame_CUDA_Test<float> conv1(dn, "conv1",
+        std::vector<unsigned int>({kernelWidth, kernelHeight}),
+        nbOutputs,
+        std::vector<unsigned int>({subSampleX, subSampleY}),
+        std::vector<unsigned int>({strideX, strideY}),
+        std::vector<int>({(int)paddingX, (int)paddingY}),
+        std::vector<unsigned int>({1U, 1U}),
+        std::shared_ptr<Activation>());
+    conv1.setParameter("NoBias", true);
+
+    Environment env(net, getDatabase(), {channelsWidth, channelsHeight, 1}, 2, false);
+    env.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
+    env.setCachePath();
+
+    env.readRandomBatch(Database::Test);
+
+    conv1.addInput(env);
+    conv1.addInput(env);
+    conv1.addInput(env);
+    conv1.initialize();
+
+    ASSERT_EQUALS(conv1.getNbOutputs(), nbOutputs);
+    ASSERT_EQUALS(conv1.getNbChannels(), 3U);
+    // ASSERT_NOTHROW_ANY(conv1.checkGradient(1.0e-3, 1.0e-3));
+
+    for (unsigned int output = 0; output < conv1.getNbOutputs(); ++output) {
+        for (unsigned int channel = 0; channel < conv1.getNbChannels();
+             ++channel) {
+            Tensor<float> kernel({conv1.getKernelWidth(),
+                                   conv1.getKernelHeight()});
+
+            for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
+                for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
+                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
+                                                    * output;
+            }
+
+            conv1.setWeight(output, channel, kernel);
+        }
+    }
+
+    Environment env2(net, getDatabase(), {channelsWidth, channelsHeight, 3}, 2, false);
+    env2.addTransformation(ColorSpaceTransformation(ColorSpaceTransformation::BGR));
+    env2.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
+    env2.setCachePath();
+
+    env2.readRandomBatch(Database::Test);
+
+    Tensor<Float_T>& in = env2.getData();
+
+    ASSERT_EQUALS(in.dimZ(), 3U);
+    ASSERT_EQUALS(in.dimX(), channelsWidth);
+    ASSERT_EQUALS(in.dimY(), channelsHeight);
+
+    conv1.clearInputs();
+    conv1.addInput(env2);
+
+    ASSERT_EQUALS(conv1.getNbChannels(), 3U);
+    ASSERT_EQUALS(conv1.mSharedSynapses.size(), 3U);
+    const CudaTensor<float>* sAddr = &conv1.mSharedSynapses[0];
+    ASSERT_EQUALS(conv1.mSharedSynapses[0].dims()[2], 1U);
+    ASSERT_EQUALS(conv1.mSharedSynapses[1].dims()[2], 1U);
+    ASSERT_EQUALS(conv1.mSharedSynapses[2].dims()[2], 1U);
+
+    conv1.squeezeSharedSynapses();
+
+    ASSERT_EQUALS(conv1.getNbChannels(), 3U);
+    ASSERT_EQUALS(conv1.mSharedSynapses.size(), 1U);
+    ASSERT_EQUALS(&conv1.mSharedSynapses[0], sAddr);
+    ASSERT_EQUALS(conv1.mSharedSynapses[0].dims()[2], 3U);
+
+    for (unsigned int output = 0; output < conv1.getNbOutputs(); ++output) {
+        for (unsigned int channel = 0; channel < conv1.getNbChannels();
+             ++channel) {
+            Tensor<float> kernel;
+            conv1.getWeight(output, channel, kernel);
+
+            for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
+                for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy) {
+                    const float value = 1.0 + channel + conv1.getNbChannels()
+                                                    * output;
+                    
+                    ASSERT_EQUALS(kernel(sx, sy), value);
+                }
+            }
+        }
+    }
+
+    conv1.propagate();
+
+    conv1.getOutputs().synchronizeDToH();
+    const Tensor<float>& out = tensor_cast<float>(conv1.getOutputs());
+
+    for (unsigned int batch = 0; batch < 2; ++batch) {
+        for (unsigned int output = 0; output < nbOutputs; ++output) {
+            for (unsigned int oy = 0; oy < conv1.getOutputsHeight(); ++oy) {
+                for (unsigned int ox = 0; ox < conv1.getOutputsWidth(); ++ox) {
+                    const unsigned int sxMin = (unsigned int)std::max(
+                        (int)paddingX - (int)(ox * strideX), 0);
+                    const unsigned int syMin = (unsigned int)std::max(
+                        (int)paddingY - (int)(oy * strideY), 0);
+                    const unsigned int sxMax = Utils::clamp<int>(
+                        conv1.getChannelsWidth() + paddingX - ox * strideX,
+                        0,
+                        kernelWidth);
+                    const unsigned int syMax = Utils::clamp<int>(
+                        conv1.getChannelsHeight() + paddingY - oy * strideY,
+                        0,
+                        kernelHeight);
+
+                    float sum = 0.0;
+
+                    for (unsigned int channel = 0;
+                         channel < conv1.getNbChannels();
+                         ++channel) {
+                        for (unsigned int sy = syMin; sy < syMax; ++sy) {
+                            for (unsigned int sx = sxMin; sx < sxMax; ++sx) {
+                                const unsigned int ix = (int)(ox * strideX + sx)
+                                                        - (int)paddingX;
+                                const unsigned int iy = (int)(oy * strideY + sy)
+                                                        - (int)paddingY;
+
+                                sum += in(ix, iy, channel, batch)
                                        * (1.0 + channel + conv1.getNbChannels()
                                                           * output);
                             }

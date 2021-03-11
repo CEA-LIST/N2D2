@@ -407,7 +407,7 @@ public:
     virtual void push_back(const std::vector<T>& vec);
     virtual void push_back(const Tensor<T>& frame);
     virtual void append(const std::vector<T>& vec);
-    virtual void append(const Tensor<T>& frame);
+    virtual void append(const Tensor<T>& frame, int towardsDim = -1);
     virtual void clear();
     virtual void save(std::ostream& stream) const;
     virtual void load(std::istream& stream);

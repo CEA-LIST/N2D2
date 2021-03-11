@@ -149,6 +149,7 @@ protected:
     std::shared_ptr<CudaDeviceTensor<T> > extPad(
         unsigned int k,
         std::shared_ptr<CudaDeviceTensor<T> > input);
+    void squeezeSharedSynapses();
 
     // Internal
     std::vector<size_t> mNbGroups;

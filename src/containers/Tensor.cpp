@@ -425,15 +425,16 @@ void N2D2::Tensor<T>::append(const std::vector<T>& vec)
 }
 
 template <class T>
-void N2D2::Tensor<T>::append(const Tensor<T>& frame)
+void N2D2::Tensor<T>::append(const Tensor<T>& frame, int towardsDim)
 {
     assert(mData.unique());
+    const bool isEmpty = (mDims.empty()
+        || std::all_of(mDims.begin(), mDims.end(), Utils::IsZero<size_t>()));
+    const size_t absTowardsDim = (towardsDim >= 0)
+        ? towardsDim : ((isEmpty) ? frame.nbDims() : mDims.size()) + towardsDim;
 
-    if (mDims.empty() || std::all_of(mDims.begin(), mDims.end(),
-                                     Utils::IsZero<size_t>()))
-    {
+    if (isEmpty)
         mDims = frame.dims();
-    }
     else if (mDims.size() != frame.nbDims()) {
         std::stringstream errorStr;
         errorStr << "Tensor<T>::append(): tensor must be "
@@ -443,8 +444,8 @@ void N2D2::Tensor<T>::append(const Tensor<T>& frame)
         throw std::runtime_error(errorStr.str());
     }
     else {
-        for (unsigned int dim = 0; dim < frame.nbDims() - 1; ++dim) {
-            if (mDims[dim] != frame.dims()[dim]) {
+        for (unsigned int dim = 0; dim < frame.nbDims(); ++dim) {
+            if (dim != absTowardsDim && mDims[dim] != frame.dims()[dim]) {
                 std::stringstream errorStr;
                 errorStr << "Tensor<T>::append(): tensors dimension #"
                     << dim << " must match, but tensor dimension is "
@@ -455,11 +456,45 @@ void N2D2::Tensor<T>::append(const Tensor<T>& frame)
             }
         }
 
-        mDims.back() += frame.dims().back();
+        mDims[absTowardsDim] += frame.dims()[absTowardsDim];
     }
 
     computeSize();
-    (*mData)().insert((*mData)().end(), frame.begin(), frame.end());
+
+    if (absTowardsDim == mDims.size() - 1)
+        (*mData)().insert((*mData)().end(), frame.begin(), frame.end());
+    else {
+        size_t stride = 1;
+        for (unsigned int dim = 0; dim < absTowardsDim; ++dim)
+            stride *= mDims[dim];
+
+        const size_t aStride = stride
+            * (mDims[absTowardsDim] - frame.dims()[absTowardsDim]);
+        const size_t bStride = stride * frame.dims()[absTowardsDim];
+
+        size_t aOffset = 0;
+        size_t bOffset = 0;
+        std::vector<T> newData;
+        newData.reserve(mSize);
+
+        while (bOffset < frame.size()) {
+            assert(aOffset < (*mData)().size());
+            newData.insert(newData.end(),
+                          (*mData)().begin() + aOffset,
+                          (*mData)().begin() + aOffset + aStride);
+            newData.insert(newData.end(),
+                          frame.begin() + bOffset,
+                          frame.begin() + bOffset + bStride);
+
+            aOffset += aStride;
+            bOffset += bStride;
+        }
+
+        assert(aOffset == (*mData)().size());
+        assert(bOffset == frame.size());
+        assert(newData.size() == mSize);
+        (*mData)().swap(newData);
+    }
 }
 
 template <class T>

@@ -176,6 +176,7 @@ public:
         return mData.end();
     }
     inline virtual void push_back(tensor_type* tensor, size_t refs = 1);
+    void swap(Interface<T, STACKING_DIM>& interface);
     inline void clear();
 
     virtual tensor_type& back();
@@ -185,6 +186,14 @@ public:
     virtual void replace(unsigned int t, tensor_type* tensor, size_t refs = 1);
     inline unsigned int getTensorIndex(unsigned int k) const;
     inline unsigned int getTensorDataOffset(unsigned int k) const;
+    inline size_t getDataRefs(unsigned int t) const
+    {
+        return mDataRefs.at(t);
+    }
+    inline void setDataRefs(unsigned int t, size_t refs)
+    {
+        mDataRefs.at(t) = refs;
+    }
 
     /** Synchronize Device To Host */
     virtual void synchronizeDToH() const;
@@ -349,6 +358,16 @@ void N2D2::Interface<T, STACKING_DIM>::push_back(tensor_type* tensor,
 
     mData.push_back(tensor);
     mDataRefs.push_back(refs);
+}
+
+template <class T, int STACKING_DIM>
+void N2D2::Interface<T, STACKING_DIM>::swap(
+    Interface<T, STACKING_DIM>& interface)
+{
+    mMatchingDim.swap(interface.mMatchingDim);
+    mData.swap(interface.mData);
+    mDataRefs.swap(interface.mDataRefs);
+    mDataOffset.swap(interface.mDataOffset);
 }
 
 template <class T, int STACKING_DIM>
