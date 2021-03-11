@@ -8,7 +8,7 @@ find_package_handle_standard_args(CuDNN DEFAULT_MSG CUDNN_INCLUDE_DIRS CUDNN_LIB
     
 if (CUDNN_INCLUDE_DIRS AND CUDNN_LIBRARY)
     file(READ ${CUDNN_INCLUDE_DIRS}/cudnn.h CUDNN_FILE_CONTENTS)
-
+    
     string(REGEX MATCH "define CUDNN_MAJOR * +([0-9]+)"
             CUDNN_VERSION_MAJOR "${CUDNN_FILE_CONTENTS}")
     string(REGEX REPLACE "define CUDNN_MAJOR * +([0-9]+)" "\\1"
@@ -21,6 +21,14 @@ if (CUDNN_INCLUDE_DIRS AND CUDNN_LIBRARY)
             CUDNN_VERSION_PATCH "${CUDNN_FILE_CONTENTS}")
     string(REGEX REPLACE "define CUDNN_PATCHLEVEL * +([0-9]+)" "\\1"
             CUDNN_VERSION_PATCH "${CUDNN_VERSION_PATCH}")
+
+    if(NOT CUDNN_VERSION_MAJOR)
+        file(READ ${CUDNN_INCLUDE_DIRS}/cudnn_version.h CUDNN_FILE_CONTENTS)
+        string(REGEX MATCH "define CUDNN_MAJOR * +([0-9]+)"
+                CUDNN_VERSION_MAJOR "${CUDNN_FILE_CONTENTS}")
+        string(REGEX REPLACE "define CUDNN_MAJOR * +([0-9]+)" "\\1"
+                CUDNN_VERSION_MAJOR "${CUDNN_VERSION_MAJOR}")
+    endif() 
 
     if(NOT CUDNN_VERSION_MAJOR)
         set(CUDNN_VERSION "?")

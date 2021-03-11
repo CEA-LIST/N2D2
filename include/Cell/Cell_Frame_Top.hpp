@@ -62,6 +62,7 @@ public:
 
     virtual void addInput(BaseTensor& inputs,
                           BaseTensor& diffOutputs) = 0;
+    virtual void clearInputs() = 0;
     virtual void replaceInput(BaseTensor& oldInputs,
                               BaseTensor& newInputs,
                               BaseTensor& newDiffOutputs) = 0;
@@ -80,10 +81,14 @@ public:
     virtual double applyLossThroughKernel(const BaseTensor& kernel,
         std::function<double()> lossFunc) = 0;
     virtual void setOutputErrors(const BaseTensor& errors) = 0;
+    virtual BaseTensor& getInputs(unsigned int index = 0) = 0;
+    virtual const BaseTensor& getInputs(unsigned int index = 0) const = 0;
     virtual BaseTensor& getOutputs() = 0;
     virtual const BaseTensor& getOutputs() const = 0;
     virtual BaseTensor& getDiffInputs() = 0;
     virtual const BaseTensor& getDiffInputs() const = 0;
+    virtual BaseTensor& getDiffOutputs(unsigned int index = 0) = 0;
+    virtual const BaseTensor& getDiffOutputs(unsigned int index = 0) const = 0;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const = 0;
     const std::shared_ptr<Activation>& getActivation() const
     {

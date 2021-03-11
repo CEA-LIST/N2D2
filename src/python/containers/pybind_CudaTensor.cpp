@@ -165,11 +165,11 @@ void init_CudaTensor(py::module &m) {
     declare_CudaTensor<float>(m, "float");
     declare_CudaTensor<double>(m, "double");
     declare_CudaTensor<char>(m, "char");
-    declare_CudaTensor<unsigned char>(m, "unsigned char");
+    declare_CudaTensor<unsigned char>(m, "unsigned_char");
     declare_CudaTensor<short>(m, "short");
     declare_CudaTensor<int>(m, "int");
-    declare_CudaTensor<unsigned int>(m, "unsigned int");
-    declare_CudaTensor<unsigned long long>(m, "unsigned long long");
+    declare_CudaTensor<unsigned int>(m, "unsigned_int");
+    declare_CudaTensor<unsigned long long>(m, "unsigned_long_long");
 }
 }
 #endif

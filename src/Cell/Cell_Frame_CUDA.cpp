@@ -485,17 +485,95 @@ double N2D2::Cell_Frame_CUDA<T>::applyLossThroughKernel(
                                                     4,
                                                     &kernels[0]));
 #endif
+    std::vector<cudnnConvolutionFwdAlgo_t> fwdAlgo_cudnn;
 
-    cudnnConvolutionFwdAlgo_t fwdAlgo = cudnnConvolutionFwdAlgo_t();
-    CHECK_CUDNN_STATUS(cudnnGetConvolutionForwardAlgorithm(
-        CudaContext::cudnnHandle(),
-        mOutputs.getCudnnTensorDesc(),
-        filterDesc,
-        convDesc,
-        mOutputs.getCudnnTensorDesc(),
-        CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
-        0,
-        &fwdAlgo));
+#if CUDNN_VERSION >= 7000
+        int maxAlgoIterations = 0;
+        cudnnGetConvolutionForwardAlgorithmMaxCount(CudaContext::cudnnHandle(),
+                                                    &maxAlgoIterations);
+        if (maxAlgoIterations == 0)
+            throw std::runtime_error("No available CUDNN ConvolutionForwardAlgorithm for cell  " + mName);
+
+        int returnAlgoCounts = 0;
+
+        std::vector<cudnnConvolutionFwdAlgoPerf_t> returnFwdAlgo(maxAlgoIterations);
+/**************************************************************************************************************
+https://docs.nvidia.com/deeplearning/sdk/cudnn-developer-guide/index.html#cudnnFindConvolutionForwardAlgorithm
+This function attempts all cuDNN algorithms (including CUDNN_TENSOR_OP_MATH and CUDNN_DEFAULT_MATH
+versions of algorithms where CUDNN_TENSOR_OP_MATH may be available) for cudnnConvolutionForward(),
+using memory allocated via cudaMalloc(), and outputs performance metrics to a user-allocated array
+of cudnnConvolutionFwdAlgoPerf_t. These metrics are written in sorted fashion where the first element
+has the lowest compute time. The total number of resulting algorithms can be queried through
+the API cudnnGetConvolutionForwardMaxCount().
+***************************************************************************************************************/
+
+        CHECK_CUDNN_STATUS(cudnnFindConvolutionForwardAlgorithm(
+                            CudaContext::cudnnHandle(),
+                            mOutputs.getCudnnTensorDesc(),
+                            filterDesc,
+                            convDesc,
+                            mOutputs.getCudnnTensorDesc(),
+                            maxAlgoIterations,
+                            &returnAlgoCounts,
+                            &returnFwdAlgo[0]));
+        // std::cout << "Layer " << mName << "(" << k  << ")"
+        //     << " cuDNN forward algorithm heuristic results: " << std::endl;
+
+        for(unsigned int fwdAlgo = 0; fwdAlgo < (unsigned int) maxAlgoIterations; ++fwdAlgo)
+        {
+
+
+            std::string algoName
+                                = (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_GEMM)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_GEMM"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_DIRECT)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_DIRECT"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_FFT)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_FFT"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_COUNT)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_COUNT"
+                                : "Undetermined Algorithm";
+
+
+            // std::cout << "----> Forward convolution algorithm: " << algoName
+            //     << " [" << returnFwdAlgo[fwdAlgo].time << " ms][" << returnFwdAlgo[fwdAlgo].memory / 1.0e6 << " MB]"
+            //     << std::endl;
+        }
+        fwdAlgo_cudnn.push_back(returnFwdAlgo[0].algo);
+#else
+
+    fwdAlgo_cudnn.push_back(cudnnConvolutionFwdAlgo_t());
+
+
+        CHECK_CUDNN_STATUS(cudnnGetConvolutionForwardAlgorithm(
+            CudaContext::cudnnHandle(),
+            mOutputs.getCudnnTensorDesc(),
+            filterDesc,
+            convDesc,
+            mOutputs.getCudnnTensorDesc(),
+            CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
+            0,
+            &fwdAlgo_cudnn.back()));
+#endif
 
     size_t workspaceSize = 0;
     void* workspace;
@@ -506,7 +584,7 @@ double N2D2::Cell_Frame_CUDA<T>::applyLossThroughKernel(
         filterDesc,
         convDesc,
         mOutputs.getCudnnTensorDesc(),
-        fwdAlgo,
+        fwdAlgo_cudnn.back(),
         &workspaceSize));
 
 #if CUDNN_VERSION >= 5000
@@ -550,7 +628,7 @@ double N2D2::Cell_Frame_CUDA<T>::applyLossThroughKernel(
                                 filterDesc,
                                 cudaKernel.getDevicePtr(),
                                 convDesc,
-                                fwdAlgo,
+                                fwdAlgo_cudnn.back(),
                                 workspace,
                                 workspaceSize,
                                 &beta,
@@ -565,7 +643,7 @@ double N2D2::Cell_Frame_CUDA<T>::applyLossThroughKernel(
                                 filterDesc,
                                 cudaKernel.getDevicePtr(),
                                 convDesc,
-                                fwdAlgo,
+                                fwdAlgo_cudnn.back(),
                                 workspace,
                                 workspaceSize,
                                 &beta,
@@ -652,6 +730,19 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputErrors(const BaseTensor& baseErrors)
 }
 
 template <class T>
+N2D2::BaseTensor& N2D2::Cell_Frame_CUDA<T>::getInputs(unsigned int index)
+{
+    return mInputs[index];
+}
+
+template <class T>
+const N2D2::BaseTensor&
+N2D2::Cell_Frame_CUDA<T>::getInputs(unsigned int index) const
+{
+    return mInputs[index];
+}
+
+template <class T>
 N2D2::BaseTensor& N2D2::Cell_Frame_CUDA<T>::getOutputs()
 {
     return mOutputs;
@@ -688,6 +779,19 @@ const N2D2::BaseTensor&
 N2D2::Cell_Frame_CUDA<T>::getDiffInputs() const
 {
     return mDiffInputs;
+}
+
+template <class T>
+N2D2::BaseTensor& N2D2::Cell_Frame_CUDA<T>::getDiffOutputs(unsigned int index)
+{
+    return mDiffOutputs[index];
+}
+
+template <class T>
+const N2D2::BaseTensor&
+N2D2::Cell_Frame_CUDA<T>::getDiffOutputs(unsigned int index) const
+{
+    return mDiffOutputs[index];
 }
 
 template <class T>

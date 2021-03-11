@@ -1218,6 +1218,58 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
     }
 }
 
+void N2D2::DeepNet::insertBatchNormAfterConv(bool moveActivation) {
+    std::cout << "Insert BatchNorm after Conv..." << std::endl;
+
+    const std::map<std::string, std::shared_ptr<Cell> > cells(mCells);
+
+    for (auto it = cells.begin(); it != cells.end(); ++it) {
+        const std::shared_ptr<Cell>& cell = (*it).second;
+
+        if (cell->getType() != ConvCell::Type) {
+            continue;
+        }
+
+        // check if there is not already a BatchNorm following
+        const std::vector<std::shared_ptr<Cell> > convChilds
+            = getChildCells(cell->getName());
+
+        bool isBatchNorm = false;
+
+        for (std::vector<std::shared_ptr<Cell> >::const_iterator
+            itChild = convChilds.begin(), itChildEnd = convChilds.end();
+            itChild != itChildEnd; ++itChild)
+        {
+            if ((*itChild)->getType() == BatchNormCell::Type) {
+                isBatchNorm = true;
+                break;
+            }
+        }
+
+        if (!isBatchNorm) {
+            std::cout << "  insert BatchNorm after Conv \"" << cell->getName()
+                << "\"" << std::endl;
+
+            const std::shared_ptr<Cell_Frame_Top> cellFrame
+                = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+            std::shared_ptr<Activation> activation
+                = (moveActivation) ? cellFrame->getActivation()
+                                   : std::shared_ptr<Activation>();
+
+            auto reg = Registrar<BatchNormCell>::create<Float_T>(getCellModelType(*cell));
+            auto batchNormCell = reg(*this, 
+                                    generateNewCellName(cell->getName() + "_batchnorm"), 
+                                    cell->getNbOutputs(),
+                                    activation);
+
+            if (moveActivation)
+                cellFrame->setActivation(std::shared_ptr<Activation>());
+
+            addCellAfter(batchNormCell, cell);
+        }
+    }
+}
+
 void N2D2::DeepNet::fusePadding() {
     std::cout << "Fuse Padding..." << std::endl;
 
@@ -1958,152 +2010,31 @@ void N2D2::DeepNet::logSpikeStats(const std::string& dirName,
 
 void N2D2::DeepNet::learn(std::vector<std::pair<std::string, double> >* timings)
 {
-    const unsigned int nbLayers = mLayers.size();
-
-    std::chrono::high_resolution_clock::time_point time1, time2;
-
     if (timings != NULL)
         (*timings).clear();
 
-    // Provide targets
-    for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-         = mTargets.begin(),
-         itTargetsEnd = mTargets.end();
-         itTargets != itTargetsEnd;
-         ++itTargets)
-    {
-        time1 = std::chrono::high_resolution_clock::now();
-        (*itTargets)->provideTargets(Database::Learn);
-
-        if (timings != NULL) {
-#ifdef CUDA
-            CHECK_CUDA_STATUS(cudaDeviceSynchronize());
-#endif
-            time2 = std::chrono::high_resolution_clock::now();
-            (*timings).push_back(std::make_pair(
-                (*itTargets)->getCell()->getName() + "."
-                + (*itTargets)->getType() + "[provide]",
-                std::chrono::duration_cast
-                <std::chrono::duration<double> >(time2 - time1).count()));
-        }
-    }
-
-    // Signal propagation
-    for (unsigned int l = 1; l < nbLayers; ++l) {
-        for (std::vector<std::string>::const_iterator itCell
-             = mLayers[l].begin(),
-             itCellEnd = mLayers[l].end();
-             itCell != itCellEnd;
-             ++itCell) {
-            std::shared_ptr<Cell_Frame_Top> cellFrame
-                = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells[(*itCell)]);
-
-            if (!cellFrame)
-                throw std::runtime_error(
-                    "DeepNet::learn(): learning requires Cell_Frame_Top cells");
-
-            time1 = std::chrono::high_resolution_clock::now();
-
-            cellFrame->propagate();
-
-            if (timings != NULL) {
-#ifdef CUDA
-                CHECK_CUDA_STATUS(cudaDeviceSynchronize());
-#endif
-                time2 = std::chrono::high_resolution_clock::now();
-                (*timings).push_back(std::make_pair(
-                    (*itCell) + "[prop]",
-                    std::chrono::duration_cast
-                    <std::chrono::duration<double> >(time2 - time1).count()));
-            }
-        }
-    }
-
-    // Targets processing
-    for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-         = mTargets.begin(),
-         itTargetsEnd = mTargets.end();
-         itTargets != itTargetsEnd;
-         ++itTargets)
-    {
-        time1 = std::chrono::high_resolution_clock::now();
-        (*itTargets)->process(Database::Learn);
-
-        if (timings != NULL) {
-#ifdef CUDA
-            CHECK_CUDA_STATUS(cudaDeviceSynchronize());
-#endif
-            time2 = std::chrono::high_resolution_clock::now();
-            (*timings).push_back(std::make_pair(
-                (*itTargets)->getCell()->getName() + "."
-                + (*itTargets)->getType() + "[process]",
-                std::chrono::duration_cast
-                <std::chrono::duration<double> >(time2 - time1).count()));
-        }
-    }
-
-    // Error back-propagation
-    for (unsigned int l = nbLayers - 1; l > 0; --l) {
-        for (std::vector<std::string>::const_iterator itCell
-             = mLayers[l].begin(),
-             itCellEnd = mLayers[l].end();
-             itCell != itCellEnd;
-             ++itCell)
-        {
-
-            time1 = std::chrono::high_resolution_clock::now();
-            std::dynamic_pointer_cast
-                <Cell_Frame_Top>(mCells[(*itCell)])->backPropagate();
-
-            if (timings != NULL) {
-#ifdef CUDA
-                CHECK_CUDA_STATUS(cudaDeviceSynchronize());
-#endif
-                time2 = std::chrono::high_resolution_clock::now();
-                (*timings).push_back(std::make_pair(
-                    (*itCell) + "[back-prop]",
-                    std::chrono::duration_cast
-                    <std::chrono::duration<double> >(time2 - time1).count()));
-            }
-        }
-    }
-
-    // Weights update
-    for (unsigned int l = 1; l < nbLayers; ++l) {
-        for (std::vector<std::string>::const_iterator itCell
-             = mLayers[l].begin(),
-             itCellEnd = mLayers[l].end();
-             itCell != itCellEnd;
-             ++itCell)
-        {
-      
-            time1 = std::chrono::high_resolution_clock::now();
-            std::dynamic_pointer_cast
-                <Cell_Frame_Top>(mCells[(*itCell)])->update();
-
-            if (timings != NULL) {
-#ifdef CUDA
-                CHECK_CUDA_STATUS(cudaDeviceSynchronize());
-#endif
-                time2 = std::chrono::high_resolution_clock::now();
-                (*timings).push_back(std::make_pair(
-                    (*itCell) + "[update]",
-                    std::chrono::duration_cast
-                    <std::chrono::duration<double> >(time2 - time1).count()));
-            }
-        }
-    }
+    propagate(Database::Learn, false, timings);
+    backPropagate(timings);
+    update(timings);
 }
 
-void N2D2::DeepNet::test(Database::StimuliSet set,
-                         std::vector<std::pair<std::string, double> >* timings)
+void N2D2::DeepNet::test(
+    Database::StimuliSet set,
+    std::vector<std::pair<std::string, double> >* timings)
 {
-    const unsigned int nbLayers = mLayers.size();
-
-    std::chrono::high_resolution_clock::time_point time1, time2;
-
     if (timings != NULL)
         (*timings).clear();
+
+    propagate(set, true, timings);
+}
+
+void N2D2::DeepNet::propagate(
+    Database::StimuliSet set,
+    bool inference,
+    std::vector<std::pair<std::string, double> >* timings)
+{
+    const unsigned int nbLayers = mLayers.size();
+    std::chrono::high_resolution_clock::time_point time1, time2;
 
     // Provide targets
     for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
@@ -2140,50 +2071,110 @@ void N2D2::DeepNet::test(Database::StimuliSet set,
 
             if (!cellFrame)
                 throw std::runtime_error(
-                    "DeepNet::test(): testing requires Cell_Frame_Top cells");
+                    "DeepNet::learn(): learning requires Cell_Frame_Top cells");
 
             time1 = std::chrono::high_resolution_clock::now();
-            cellFrame->propagate(true);
-
+            cellFrame->propagate(inference);
 
             if (timings != NULL) {
 #ifdef CUDA
-                if(cellFrame->isCuda())
-                    CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+                CHECK_CUDA_STATUS(cudaDeviceSynchronize());
 #endif
                 time2 = std::chrono::high_resolution_clock::now();
                 (*timings).push_back(std::make_pair(
-                    *itCell,
+                    (*itCell) + "[prop]",
                     std::chrono::duration_cast
                     <std::chrono::duration<double> >(time2 - time1).count()));
             }
         }
     }
 
+    // Targets processing
     for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
          = mTargets.begin(),
          itTargetsEnd = mTargets.end();
          itTargets != itTargetsEnd;
          ++itTargets)
     {
-        std::shared_ptr<Cell_Frame_Top> cellFrame
-            = std::dynamic_pointer_cast<Cell_Frame_Top>((*itTargets)->
-                                                        getCell());
-
         time1 = std::chrono::high_resolution_clock::now();
         (*itTargets)->process(set);
 
         if (timings != NULL) {
 #ifdef CUDA
-            if (cellFrame->isCuda())
-                CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+            CHECK_CUDA_STATUS(cudaDeviceSynchronize());
 #endif
             time2 = std::chrono::high_resolution_clock::now();
             (*timings).push_back(std::make_pair(
                 (*itTargets)->getCell()->getName() + "."
-                + (*itTargets)->getType(),
+                + (*itTargets)->getType() + "[process]",
                 std::chrono::duration_cast
                 <std::chrono::duration<double> >(time2 - time1).count()));
+        }
+    }
+}
+
+void N2D2::DeepNet::backPropagate(
+    std::vector<std::pair<std::string, double> >* timings)
+{
+    const unsigned int nbLayers = mLayers.size();
+    std::chrono::high_resolution_clock::time_point time1, time2;
+
+    // Error back-propagation
+    for (unsigned int l = nbLayers - 1; l > 0; --l) {
+        for (std::vector<std::string>::const_iterator itCell
+             = mLayers[l].begin(),
+             itCellEnd = mLayers[l].end();
+             itCell != itCellEnd;
+             ++itCell)
+        {
+
+            time1 = std::chrono::high_resolution_clock::now();
+            std::dynamic_pointer_cast
+                <Cell_Frame_Top>(mCells[(*itCell)])->backPropagate();
+
+            if (timings != NULL) {
+#ifdef CUDA
+                CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+#endif
+                time2 = std::chrono::high_resolution_clock::now();
+                (*timings).push_back(std::make_pair(
+                    (*itCell) + "[back-prop]",
+                    std::chrono::duration_cast
+                    <std::chrono::duration<double> >(time2 - time1).count()));
+            }
+        }
+    }
+}
+
+void N2D2::DeepNet::update(
+    std::vector<std::pair<std::string, double> >* timings)
+{
+    const unsigned int nbLayers = mLayers.size();
+    std::chrono::high_resolution_clock::time_point time1, time2;
+
+    // Weights update
+    for (unsigned int l = 1; l < nbLayers; ++l) {
+        for (std::vector<std::string>::const_iterator itCell
+             = mLayers[l].begin(),
+             itCellEnd = mLayers[l].end();
+             itCell != itCellEnd;
+             ++itCell)
+        {
+      
+            time1 = std::chrono::high_resolution_clock::now();
+            std::dynamic_pointer_cast
+                <Cell_Frame_Top>(mCells[(*itCell)])->update();
+
+            if (timings != NULL) {
+#ifdef CUDA
+                CHECK_CUDA_STATUS(cudaDeviceSynchronize());
+#endif
+                time2 = std::chrono::high_resolution_clock::now();
+                (*timings).push_back(std::make_pair(
+                    (*itCell) + "[update]",
+                    std::chrono::duration_cast
+                    <std::chrono::duration<double> >(time2 - time1).count()));
+            }
         }
     }
 }
@@ -2604,5 +2595,15 @@ void N2D2::DeepNet::clear(Database::StimuliSet set)
          itTargets != itTargetsEnd;
          ++itTargets) {
         (*itTargets)->clear(set);
+    }
+}
+
+std::string N2D2::DeepNet::getCellModelType(const Cell& cell) {
+    const Cell_Frame_Top& cellFrameTop = dynamic_cast<const Cell_Frame_Top&>(cell);
+    if(cellFrameTop.isCuda()) {
+        return Cell_Frame_Top::FRAME_CUDA_TYPE;
+    }
+    else {
+        return Cell_Frame_Top::FRAME_TYPE;
     }
 }
