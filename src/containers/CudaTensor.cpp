@@ -22,6 +22,27 @@
 
 #include "containers/CudaTensor.hpp"
 
+std::vector<std::pair<int, int>> N2D2::pairDevices(std::vector<int>& arr){
+
+    std::vector<std::pair<int, int>> pairDev;
+
+    while (!arr.empty()) {
+
+        if (arr.size() > 1) {
+            int second = arr.back();
+            arr.pop_back();
+            int first = arr.back();
+            arr.pop_back();
+            pairDev.push_back(std::make_pair(first,second));
+        } else {
+            int second = arr.back();
+            arr.pop_back();
+            pairDev.push_back(std::make_pair(-1,second));
+        }
+    }
+    return pairDev;
+}
+
 #ifdef PYBIND
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

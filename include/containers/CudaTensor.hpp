@@ -77,6 +77,8 @@ template <> void thrust_aggregate(double* srcData,
                                   double* dstData,
                                   size_t size);
 
+std::vector<std::pair<int, int>> pairDevices(std::vector<int>& /*array*/);
+
 class CudaBaseTensor;
 template <typename T> class CudaTensor;
 
@@ -643,39 +645,11 @@ N2D2::CudaBaseDeviceTensor& N2D2::CudaDeviceTensor<T>::operator=(
 template <typename T> void N2D2::CudaDeviceTensor<T>::broadcast(
     int srcDev,
     int dstDev) const
-{/*
-    int dev;
-    int canAccessPeerSrcToDst = 0;
-    int canAccessPeerDstToSrc = 0;
-    CHECK_CUDA_STATUS(cudaDeviceCanAccessPeer(&canAccessPeerSrcToDst,
-                                              srcDev, dstDev));
-    CHECK_CUDA_STATUS(cudaDeviceCanAccessPeer(&canAccessPeerDstToSrc,
-                                              dstDev, srcDev));
-
-    if (canAccessPeerSrcToDst && canAccessPeerDstToSrc) {
-        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
-
-        CHECK_CUDA_STATUS(cudaSetDevice(srcDev));
-        CHECK_CUDA_STATUS(cudaDeviceEnablePeerAccess(dstDev, 0));
-
-        CHECK_CUDA_STATUS(cudaSetDevice(dstDev));
-        CHECK_CUDA_STATUS(cudaDeviceEnablePeerAccess(srcDev, 0));
-    }
-*/
+{
     CHECK_CUDA_STATUS(cudaMemcpyPeer(
         getDevicePtr(dstDev), dstDev,
         getDevicePtr(srcDev), srcDev,
         mCudaBaseTensor.size() * sizeof(T)));
-/*
-    if (canAccessPeerSrcToDst && canAccessPeerDstToSrc) {
-        //CHECK_CUDA_STATUS(cudaSetDevice(srcDev));
-        //CHECK_CUDA_STATUS(cudaDeviceDisablePeerAccess(dstDev));
-
-        //CHECK_CUDA_STATUS(cudaSetDevice(dstDev));
-        //CHECK_CUDA_STATUS(cudaDeviceDisablePeerAccess(srcDev));
-
-        CHECK_CUDA_STATUS(cudaSetDevice(dev));
-    }*/
 }
 
 template <typename T> void N2D2::CudaDeviceTensor<T>::broadcastAllFrom(
@@ -694,7 +668,7 @@ template <typename T> void N2D2::CudaDeviceTensor<T>::broadcastAllFrom(
 {
     assert(isDevicePtr(srcDev));
     assert(devices.size() == mDataDevice.size());
-    
+
     for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
         if (dev != srcDev && isDevicePtr(dev)) {
             if (devices[dev] == N2D2::DeviceState::Connected
@@ -781,6 +755,57 @@ void N2D2::CudaDeviceTensor<T>::aggregateAllTo(int dstDev,
     if (currentDev != dstDev)
         CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
 }
+
+/* 
+// Prototype to improve the aggregateAllTo function 
+// by performing pairwise aggregations (complexity in O(log(n))
+// However the function decreases the accuracy of the whole network
+// TODO : find the issue and implement this function
+// The function uses pairDevices, defined in CudaTensor.cpp
+template <typename T> 
+void N2D2::CudaDeviceTensor<T>::aggregateAllTo(int dstDev, 
+                                std::vector<DeviceState> devices) const
+{
+    assert(isDevicePtr(dstDev));
+    assert(devices.size() == mDataDevice.size());
+
+    int currentDev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+
+    std::vector<int> availableDevices;
+
+    for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
+        if (devices[dev] == N2D2::DeviceState::Connected) {
+            availableDevices.push_back(dev);
+        }
+    }
+
+    while (availableDevices.size() > 1) {
+        std::vector<std::pair<int, int>> pairDev = pairDevices(availableDevices);
+        
+#pragma omp parallel for schedule(dynamic)
+        for (int i = 0; i < (int)pairDev.size(); ++i) {
+            std::pair<int, int> p = pairDev[i];
+
+            if (p.first == dstDev) {
+                CHECK_CUDA_STATUS(cudaSetDevice(p.first));
+                aggregate(p.second, p.first);
+                availableDevices.push_back(p.first);
+            } else if (p.first == -1) {
+                availableDevices.push_back(p.second);
+            } else {
+                CHECK_CUDA_STATUS(cudaSetDevice(p.second));
+                aggregate(p.first, p.second);
+                availableDevices.push_back(p.second);
+            }
+
+        }
+    }
+
+    // Mandatory to resynchronize the master device
+    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+}
+*/
 
 template <typename T> N2D2::CudaDeviceTensor<T>::~CudaDeviceTensor()
 {
