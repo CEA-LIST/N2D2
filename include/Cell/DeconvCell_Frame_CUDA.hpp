@@ -40,6 +40,7 @@ public:
     using Cell_Frame_CUDA<T>::mDiffInputs;
     using Cell_Frame_CUDA<T>::mDiffOutputs;
     using Cell_Frame_CUDA<T>::mActivationDesc;
+    using Cell_Frame_Top::mDevices;
 
     DeconvCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                           const std::vector<unsigned int>& kernelDims,
