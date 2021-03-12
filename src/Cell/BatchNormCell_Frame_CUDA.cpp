@@ -58,6 +58,7 @@ N2D2::BatchNormCell_Frame_CUDA<T>::BatchNormCell_Frame_CUDA(
       mScale(std::make_shared<CudaTensor<ParamT> >()),
       mBias(std::make_shared<CudaTensor<ParamT> >()),
       mMean(std::make_shared<CudaTensor<ParamT> >()),
+      mCopyMean(std::make_shared<CudaTensor<ParamT> >()),
       mVariance(std::make_shared<CudaTensor<ParamT> >()),
       mSynchronized(false)
 {
@@ -176,6 +177,7 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initialize()
 
     mSavedMean.resize(requiredDims, ParamT(0.0));
     mSavedVariance.resize(requiredDims, ParamT(0.0));
+    mCopyMean->resize(requiredDims, ParamT(0.0));
 
     mDiffScale.resize(requiredDims, ParamT(0.0));
     mDiffBias.resize(requiredDims, ParamT(0.0));
@@ -334,9 +336,6 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::update()
     
     if (nbDev > 1) {
         int nbActivateDev = 0;
-
-        std::shared_ptr<CudaTensor<ParamT> > cudaCopyMean 
-            = std::make_shared<CudaTensor<ParamT> >();
         
         // Copying mMean before aggregating 
         // (required to calculate mVariance)
@@ -345,9 +344,8 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::update()
                 if (mDevices[dev] == N2D2::DeviceState::Connected) {
                     ++nbActivateDev;
                     CHECK_CUDA_STATUS(cudaSetDevice(dev));
-                    cudaCopyMean->resize(mMean->dims(), ParamT(0.0));
                     thrust_copy(mMean->getDevicePtr(), 
-                                cudaCopyMean->getDevicePtr(), 
+                                mCopyMean->getDevicePtr(), 
                                 mMean->size());
                 }
             }   
@@ -361,7 +359,6 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::update()
         // Calculating combined variances
         // For more details, see 
         // https://www.emathzone.com/tutorials/basic-statistics/combined-variance.html
-#pragma omp parallel for
         for (int dev = 0; dev < (int)mDevices.size(); ++dev) {
             if ((mMean->deviceTensor()).isDevicePtr(dev)) {
                 if (mDevices[dev] == N2D2::DeviceState::Connected) {
@@ -369,12 +366,13 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::update()
                     thrust_combinedVar(
                         mVariance->getDevicePtr(),
                         mMean->getDevicePtr(),
-                        cudaCopyMean->getDevicePtr(),
+                        mCopyMean->getDevicePtr(),
                         mVariance->size()
                     );
                 }
             }
         }
+        
         CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
 
         mVariance->aggregateAllTo(currentDev, mDevices);

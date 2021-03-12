@@ -113,6 +113,7 @@ protected:
     CudaTensor<ParamT> mDiffScale;
     CudaTensor<ParamT> mDiffBias;
     std::shared_ptr<CudaTensor<ParamT> > mMean;
+    std::shared_ptr<CudaTensor<ParamT> > mCopyMean;
     std::shared_ptr<CudaTensor<ParamT> > mVariance;
     CudaTensor<ParamT> mSavedMean;
     CudaTensor<ParamT> mSavedVariance;
