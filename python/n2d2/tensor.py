@@ -30,16 +30,26 @@ class Tensor():
         bool: N2D2.Tensor_bool,
     }
     
-    def __init__(self, dims, value=None, defaultDataType=float):
+    def __init__(self, dims, value=None, defaultDataType=float, N2D2_tensor=None):
         # Dimensions convention on N2D2 are reversed from python. 
-        dims = [d for d in reversed(dims)]
-        if defaultDataType in self._tensor_generators:
-            if not value:
-                self._tensor = self._tensor_generators[defaultDataType](dims)
+        if not N2D2_tensor:
+            if isinstance(dims, list):
+                dims = [d for d in reversed(dims)]
             else:
-                self._tensor = self._tensor_generators[defaultDataType](dims, value)
+                raise TypeError("Dims should be of type list got " + type(dims) + " instead")
+            if defaultDataType in self._tensor_generators:
+                if not value:
+                    self._tensor = self._tensor_generators[defaultDataType](dims)
+                else:
+                    self._tensor = self._tensor_generators[defaultDataType](dims, value)
+            else:
+                raise TypeError("Unrecognized Tensor datatype " + str(defaultDataType))
         else:
-           raise TypeError("Unrecognized Tensor datatype " + str(defaultDataType))
+            # TODO : We may want to have a stricter check here, if a tensor is CUDA for example it's not filtered
+            if not isinstance(N2D2_tensor, N2D2.BaseTensor):
+                # TODO : Change this error message !
+                raise TypeError("N2D2_tensor should be of type N2D2.Tensor got " + str(type(N2D2_tensor)) + " instead")
+            self._tensor = N2D2_tensor
         self._dataType = defaultDataType
         self.is_cuda = False 
 

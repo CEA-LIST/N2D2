@@ -54,7 +54,6 @@ void init_DeepNet(py::module &m) {
     .def("initialize", &DeepNet::initialize)
     // .def("learn", &DeepNet::learn, py::arg("timings") = NULL)
     .def("test", &DeepNet::test, py::arg("set"), py::arg("timings") = NULL)
-    .def("getNetwork", &DeepNet::getNetwork)
     .def("propagate", &DeepNet::propagate, py::arg("set"), py::arg("inference"), py::arg("timings") = NULL)
     .def("backPropagate", &DeepNet::backPropagate, py::arg("timings") = NULL)
     .def("update", (void (DeepNet::*)(std::vector<std::pair<std::string, double> >*)) &DeepNet::update, py::arg("timings") = NULL)

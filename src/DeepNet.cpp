@@ -2179,7 +2179,6 @@ void N2D2::DeepNet::update(
     }
 }
 
-
 void N2D2::DeepNet::cTicks(Time_T start,
                            Time_T stop,
                            Time_T timestep,
