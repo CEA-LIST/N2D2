@@ -241,6 +241,8 @@ int N2D2::Target::getDevice(int dev) const {
 
     return dev;
 #else
+    // unused argument
+    (void)(dev);
     return 0;
 #endif
 }
