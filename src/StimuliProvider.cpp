@@ -67,9 +67,11 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
     // mProvidedData is a vector, with one element per device
     mProvidedData.resize(count);
     mFutureProvidedData.resize(count);
-    mDevicesInfo.states.resize(count, N2D2::DeviceState::Excluded);
     mDevicesInfo.numBatchs.resize(count, -1);
     mDevicesInfo.numFutureBatchs.resize(count, -1);
+#ifdef CUDA
+    mDevicesInfo.states.resize(count, N2D2::DeviceState::Excluded);
+#endif
 
 #ifdef CUDA
     const char* gpuDevices = std::getenv("N2D2_GPU_DEVICES");
@@ -82,21 +84,42 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
         std::copy(std::istream_iterator<int>(gpuDevicesStr),
                   std::istream_iterator<int>(),
                   std::inserter(devices, devices.end()));
-        setDevices(devices);
+
+        if (devices.lower_bound(0) != devices.begin()) {
+            std::stringstream msg;
+            msg << "Cannot execute the program with a device number "  
+                << "lower than 0 !\n"
+                << "Please choose another device number" << std::endl;
+
+            throw std::runtime_error(msg.str());
+        }
+        if (devices.upper_bound(count-1) != devices.end()) {
+            std::stringstream msg;
+            msg << "Cannot execute the program with a device number "  
+                << "greater than " << count - 1 << " !\n"
+                << "Please choose another device number" << std::endl;
+
+            throw std::runtime_error(msg.str());
+        }
 
         int dev;
         CHECK_CUDA_STATUS(cudaGetDevice(&dev));
 
         if (devices.find(dev) == devices.end()){
-            std::cout << "Cuda device selected with the dev option is not in the N2D2_GPU_DEVICES list";
-            std::cout << " [ ";
+            std::stringstream msg;
+            msg << "Cuda device selected with the dev option "
+                << "is not in the N2D2_GPU_DEVICES list: "
+                << "[ ";
             std::copy(devices.begin(),
                       devices.end(),
-                      std::ostream_iterator<int>(std::cout, " "));
-            std::cout << "]" << std::endl;
-            std::cout << "Please choose another cuda device" << std::endl;
-            std::exit(0);
+                      std::ostream_iterator<int>(msg, " "));
+            msg << "]\n"
+                << "Please choose another cuda device" << std::endl;
+
+            throw std::runtime_error(msg.str());
         }
+
+        setDevices(devices);
     }
     else {
 #endif
@@ -177,8 +200,9 @@ void N2D2::StimuliProvider::setDevices(const std::set<int>& devices)
             mFutureProvidedData[dev].data.resize(dataSize);
             mFutureProvidedData[dev].labelsData.resize(labelSize);
             mFutureProvidedData[dev].labelsROI.resize(std::max(mBatchSize, 1u));
-
+#ifdef CUDA
             mDevicesInfo.states[dev] = N2D2::DeviceState::Connected;
+#endif
         }
         else {
             mProvidedData[dev].batch.clear();
@@ -225,8 +249,8 @@ void N2D2::StimuliProvider::addChannel(const CompositeTransformation
     std::vector<size_t> dataSize(mSize);
     dataSize.push_back(mBatchSize);
 
-#ifdef CUDA
     int dev = 0;
+#ifdef CUDA
     CHECK_CUDA_STATUS(cudaGetDevice(&dev));
 #endif
 
@@ -675,6 +699,32 @@ void N2D2::StimuliProvider::logTransformations(const std::string& fileName)
     graph.render(fileName);
 }
 
+#ifdef CUDA
+void N2D2::StimuliProvider::adjustBatchs(Database::StimuliSet set)
+{
+    std::deque<unsigned int>& indexes = 
+                (set == Database::StimuliSet::Learn) ? mIndexesLearn :
+                (set == Database::StimuliSet::Validation) ? mIndexesVal :
+                mIndexesTest;
+    
+    for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
+        if (mDevices.find(dev) != mDevices.end()) {
+            if (mDevicesInfo.states[dev] == N2D2::DeviceState::Banned) {
+
+                if (mDevicesInfo.numBatchs[dev] != -1) {
+                    indexes.push_front(mDevicesInfo.numBatchs[dev]);
+                    mDevicesInfo.numBatchs[dev] = -1;
+                }
+                if (mDevicesInfo.numFutureBatchs[dev] != -1) {
+                    indexes.push_front(mDevicesInfo.numFutureBatchs[dev]);
+                    mDevicesInfo.numFutureBatchs[dev] = -1;
+                }
+            }
+        }
+    }
+}
+#endif
+
 void N2D2::StimuliProvider::future()
 {
     mFuture = true;
@@ -685,8 +735,11 @@ void N2D2::StimuliProvider::synchronize()
     if (mFuture) {
         // Don't swap the vectors directly, as it would invalidate the
         // address to the tensors
-        for (int dev = 0; dev < (int)mProvidedData.size(); ++dev)
+        for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
             mProvidedData[dev].swap(mFutureProvidedData[dev]);
+            mDevicesInfo.numBatchs[dev] = mDevicesInfo.numFutureBatchs[dev];
+            mDevicesInfo.numFutureBatchs[dev] = -1;
+        }
 
         mFuture = false;
     }
@@ -1107,6 +1160,147 @@ N2D2::Database::StimulusID N2D2::StimuliProvider::readStimulus(
     return id;
 }
 
+#ifdef CUDA
+/** Determine if a device is able to read a batch. 
+ * 
+ * Determine if a device is able to read a batch 
+ * according to its state and the mode (future or not)
+ * 
+ * @param set       StimuliSet
+ * @param future    Boolean to know if future 
+ * @param state     State of a device
+ */
+bool isReadPossible(N2D2::Database::StimuliSet set,
+                    bool future, 
+                    N2D2::DeviceState state) 
+{
+    bool isAuthorized = false;
+
+    if (state == N2D2::DeviceState::Connected)
+        isAuthorized = true;
+    else {
+        if (set == N2D2::Database::StimuliSet::Learn) {
+            if (future) {
+                if (state == N2D2::DeviceState::Debanned)
+                    isAuthorized = true;
+            }
+        }
+    }
+
+    return isAuthorized;
+}
+#endif
+
+void N2D2::StimuliProvider::readBatch(Database::StimuliSet set)
+{
+    std::vector<unsigned int>& batchs =
+                (set == Database::StimuliSet::Learn) ? mBatchsLearnIndexes :
+                (set == Database::StimuliSet::Validation) ? mBatchsValIndexes :
+                mBatchsTestIndexes;
+    
+    std::deque<unsigned int>& indexes = 
+                (set == Database::StimuliSet::Learn) ? mIndexesLearn :
+                (set == Database::StimuliSet::Validation) ? mIndexesVal :
+                mIndexesTest;
+    
+    if (batchs.size() == 0) {
+        std::stringstream msg;
+        msg << "indexes for set " << set <<
+            " must be initialized first";
+
+        throw std::runtime_error(msg.str());
+    }
+
+    if (indexes.empty()) {
+        return;
+    }
+
+    for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
+        if (mDevices.find(dev) != mDevices.end()) {
+            int index = -1;
+            bool readAllowed = true;
+#ifdef CUDA
+            // Test if the device is banned
+            readAllowed = isReadPossible(set, mFuture, mDevicesInfo.states[dev]);
+#endif
+            if (readAllowed) {
+                if (!indexes.empty()) {
+                    index = indexes.front();
+                    indexes.pop_front();
+                } else {
+                    if (set == Database::StimuliSet::Learn) {
+                        unsigned int nbBatch 
+                            = std::ceil(mDatabase.getNbStimuli(set)/ (double)mBatchSize);
+                        index = Random::randUniform(0, nbBatch - 1) * mBatchSize;
+                    }
+                }
+            }
+            if (mFuture) mDevicesInfo.numFutureBatchs[dev] = index;
+            else mDevicesInfo.numBatchs[dev] = index;
+
+            std::vector<int>& batchRef = (mFuture)
+                    ? mFutureProvidedData[dev].batch
+                    : mProvidedData[dev].batch;
+
+            if (index > 0) {
+                const unsigned int batchSize
+                    = std::min(mBatchSize, mDatabase.getNbStimuli(set) - index);
+                for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
+                    batchRef[batchPos] = mDatabase.getStimulusID(set, batchs[index + batchPos]);
+                }
+                std::fill(batchRef.begin() + batchSize, batchRef.end(), -1);
+            } else
+                std::fill(batchRef.begin(), batchRef.end(), -1);   
+        }
+    }
+
+    unsigned int exceptCatch = 0;
+
+#pragma omp parallel for schedule(dynamic) collapse(2) if (mProvidedData.size() > 1 || mBatchSize > 1)
+    for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
+        for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
+            if (mDevices.find(dev) != mDevices.end()) {
+                std::vector<int>& batchRef = (mFuture)
+                    ? mFutureProvidedData[dev].batch
+                    : mProvidedData[dev].batch;
+
+				if (batchRef[batchPos] > 0) {
+                    try {
+                        readStimulus(batchRef[batchPos], set, batchPos, dev);
+                    }
+                    catch (const std::exception& e)
+                    {
+                        #pragma omp critical(StimuliProvider__readBatch)
+                        {
+                            std::cout << Utils::cwarning << e.what() << Utils::cdef
+                                << std::endl;
+                            ++exceptCatch;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (exceptCatch > 0) {
+        std::cout << "Retry without multi-threading..." << std::endl;
+
+        for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
+            if (mDevices.find(dev) != mDevices.end()) {
+                std::vector<int>& batchRef = (mFuture)
+                    ? mFutureProvidedData[dev].batch
+                    : mProvidedData[dev].batch;   
+
+                for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
+                    if (batchRef[batchPos] > 0) 
+                        readStimulus(batchRef[batchPos], set, batchPos, dev);
+                }
+            }
+        }
+    }
+
+}
+
 void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
                                            Database::StimuliSet set,
                                            unsigned int batchPos,
@@ -1220,8 +1414,8 @@ void N2D2::StimuliProvider::setBatchSize(unsigned int batchSize)
     mBatchSize = batchSize;
 
     if (mBatchSize > 0) {
-#ifdef CUDA
         int dev = 0;
+#ifdef CUDA
         CHECK_CUDA_STATUS(cudaGetDevice(&dev));
 #endif
 
@@ -1250,6 +1444,70 @@ void N2D2::StimuliProvider::setTargetSize(const std::vector<size_t>& size) {
     for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
         mProvidedData[dev].targetData.resize(targetSize);
         mFutureProvidedData[dev].targetData.resize(targetSize);
+    }
+}
+
+void N2D2::StimuliProvider::setBatch(Database::StimuliSet set,
+                                      bool randShuffle, 
+                                      unsigned int nbMax)
+{
+    const unsigned int nbStimuli = nbMax > 0 
+                                   ? std::min(nbMax, mDatabase.getNbStimuli(set))
+                                   : mDatabase.getNbStimuli(set);
+    const unsigned int batchSize = getBatchSize();
+    const unsigned int nbBatchs = std::ceil(nbStimuli / (double)batchSize);
+
+    if(nbStimuli == 0) {
+        std::stringstream msg;
+        msg << "setStimuliIndexes for set " << set 
+            << " is empty" << std::endl;
+
+        throw std::runtime_error(msg.str());
+    }
+	std::vector<unsigned int>& batchs =
+                (set == Database::StimuliSet::Learn) ? mBatchsLearnIndexes :
+                (set == Database::StimuliSet::Validation) ? mBatchsValIndexes :
+                mBatchsTestIndexes;
+    batchs.clear();
+    batchs.resize(nbStimuli);
+    std::iota(batchs.begin(),
+              batchs.end(),
+              0U);
+              
+    if (set == Database::StimuliSet::Learn) {
+        // The last batch might be shorter than the others
+        // The following loop is to complete that batch
+        unsigned int ind = 0;
+        while (batchs.size() < batchSize * nbBatchs) {
+            unsigned int index = randShuffle 
+                                ? getRandomID(set)
+                                : mDatabase.getStimulusID(set, ind++);
+            batchs.push_back(index);
+        }
+    }
+    //Sort index of data stimuli under a pseudo random range
+    if (randShuffle) {
+        std::random_shuffle(batchs.begin(),
+                            batchs.end(),
+                            Random::randShuffle);
+    }
+    
+    std::deque<unsigned int>& indexes = 
+                (set == Database::StimuliSet::Learn) ? mIndexesLearn :
+                (set == Database::StimuliSet::Validation) ? mIndexesVal :
+                mIndexesTest;
+	indexes.clear();
+    indexes.resize(nbBatchs);
+    std::iota(indexes.begin(),
+              indexes.end(),
+              0U);
+	for (auto& x: indexes)
+        x *= batchSize;
+    
+    if (randShuffle) {
+        std::random_shuffle(indexes.begin(),
+                            indexes.end(),
+                            Random::randShuffle);
     }
 }
 

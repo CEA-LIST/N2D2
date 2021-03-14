@@ -90,8 +90,10 @@ public:
     };
 
     struct DevicesInfo {
+#ifdef CUDA
         /// State of the devices
         std::vector<N2D2::DeviceState> states;
+#endif
         /// Current batch's number provided to the devices
         std::vector<int> numBatchs;
         /// Future batch's number provided to the devices
@@ -194,6 +196,56 @@ public:
 
     void logTransformations(const std::string& fileName) const;
 
+    /// Return the number of batches remaining 
+    /// in the indexes queue of the set
+    unsigned int nbBatchsRemaining(Database::StimuliSet set)
+    {
+        std::deque<Database::StimulusID>& indexes = 
+                (set == Database::StimuliSet::Learn) ? mIndexesLearn :
+                (set == Database::StimuliSet::Validation) ? mIndexesVal :
+                mIndexesTest;
+        return indexes.size();
+    };
+
+    /// Return true if all batches from the set have been read, false otherwise
+    /// Must be used with StimuliProvider::readBatch(Database::StimuliSet set)
+    bool allBatchsProvided(Database::StimuliSet set)
+    {
+        bool allProvided = true;
+        if (nbBatchsRemaining(set) == 0) {
+            for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
+                if (mDevices.find(dev) != mDevices.end()) {
+                    if (mDevicesInfo.numFutureBatchs[dev] != -1)
+                        allProvided = false;
+                }
+            }
+        } else
+            allProvided = false;
+        
+        return allProvided;
+    };
+
+    /// Return true if there are enough batches left for a last run
+    /// Must be used with StimuliProvider::readBatch(Database::StimuliSet set) 
+    bool isLastBatch(Database::StimuliSet set)
+    {
+        bool last = false;
+        if (nbBatchsRemaining(set) == 0) {
+            for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
+                if (mDevices.find(dev) != mDevices.end()) {
+                    if (mDevicesInfo.numFutureBatchs[dev] != -1)
+                        last = true;
+                }
+            }
+        }
+        return last;
+    };
+
+#ifdef CUDA
+    /// Put back the batches of banned devices in the index queue.
+    /// Must be used with StimuliProvider::readBatch(Database::StimuliSet set) 
+    void adjustBatchs(Database::StimuliSet set);
+#endif
 
     void future();
     void synchronize();
@@ -266,7 +318,18 @@ public:
                                       unsigned int batchPos = 0,
                                       int dev = -1);
 
-    // void readBatch(Database::StimuliSet set); 
+    /** Read the batchs from a set
+     * 
+     * Select a batch from the set for each device which is 
+     * connected to the deepNet. 
+     * Then each device reads the whole assigned batch with the function 
+     * StimuliProvider::readStimulus(). 
+     * This function cannot be used without having previously called 
+     * StimuliProvider::setBatch()
+     * 
+     * @param set   StimuliSet
+     */
+    void readBatch(Database::StimuliSet set); 
     
     void streamStimulus(const cv::Mat& mat,
                         Database::StimuliSet set,
@@ -287,8 +350,34 @@ public:
     void setTargetSize(const std::vector<size_t>& size);
     void setCachePath(const std::string& path = "");
 
-    // void setBatchs(Database::StimuliSet set,
-    //                 bool randShuffle);
+    /** Set the batchs for reading
+     * 
+     * All stimulus from the set are placed in a vector. 
+     * The vector may be shuffled depending the value of @p randShuffle. 
+     * Then the indexes of each batch start are placed in a
+     * double-ended queue to facilitate batch reading. 
+     * This function has to be used before
+     * StimuliProvider::readBatch(Database::StimuliSet set)
+     * 
+     * @param set           StimuliSet
+     * @param randShuffle   Boolean to shuffle all stimulus among batchs
+     * @param nbMax         Maximum number of stimulus used to set up the batchs
+     *                      (0 = all stimulus from the set are used)
+     */
+    void setBatch(Database::StimuliSet set,
+                    bool randShuffle,
+                    unsigned int nbMax = 0);
+    
+#ifdef CUDA
+    /** Set the state of each device
+     * 
+     * @param states    Vector of device states
+     */
+    void setStates(std::vector<N2D2::DeviceState> states)
+    {
+       mDevicesInfo.states.assign(states.begin(), states.end()); 
+    };
+#endif
 
     // Getters
     Database& getDatabase()
@@ -346,10 +435,12 @@ public:
                                      Database::StimuliSet set);
     void iterTransformations(Database::StimuliSet set,
                         std::function<void(const Transformation&)> func) const;
+#ifdef CUDA
     std::vector<N2D2::DeviceState>& getStates()
     {
         return mDevicesInfo.states;
     };
+#endif
     const std::vector<int>& getBatch(int dev = -1)
     {
         return mProvidedData[getDevice(dev)].batch;
@@ -464,14 +555,18 @@ protected:
     DevicesInfo mDevicesInfo;
     bool mFuture;
 
+    /// Set of Device IDs used by the deepNet
     std::set<int> mDevices;
 
-    // std::vector<Database::StimulusID> mBatchsLearnIndexes;
-    // std::vector<Database::StimulusID> mBatchsValIndexes;
-    // std::vector<Database::StimulusID> mBatchsTestIndexes;
-    // std::deque<unsigned int> mIndexesLearn;
-    // std::deque<unsigned int> mIndexesVal;
-    // std::deque<unsigned int> mIndexesTest;
+    /// Vectors containing StimulusIDs from datasets
+    std::vector<unsigned int> mBatchsLearnIndexes;
+    std::vector<unsigned int> mBatchsValIndexes;
+    std::vector<unsigned int> mBatchsTestIndexes;
+
+    /// Queues containing indexes of the batchs
+    std::deque<unsigned int> mIndexesLearn;
+    std::deque<unsigned int> mIndexesVal;
+    std::deque<unsigned int> mIndexesTest;
 };
 }
 
@@ -539,6 +634,8 @@ int N2D2::StimuliProvider::getDevice(int dev) const {
 
     return dev;
 #else
+    // unused argument
+    (void)(dev);
     return 0;
 #endif
 }
