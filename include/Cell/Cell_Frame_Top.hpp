@@ -52,7 +52,7 @@ public:
 #ifdef CUDA
         int count;
         CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
-        mDevices.resize(count, N2D2::DeviceState::Excluded);
+        mDevices.resize(count, N2D2::DeviceState::Connected);
 #endif
     }
     virtual void save(const std::string& dirName) const {

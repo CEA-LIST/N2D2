@@ -25,7 +25,6 @@
 #include <string>
 #include <vector>
 #include <atomic>
-#include <nvml.h>
 
 #include "Cell/Cell.hpp"
 #include "Database/Database.hpp"
@@ -36,6 +35,7 @@
 #include "CudaUtils.hpp"
 #include "Cell/Cell_Frame_CUDA.hpp"
 #include "CMonitor_CUDA.hpp"
+#include <nvml.h>
 #endif
 
 namespace N2D2 {
@@ -105,6 +105,10 @@ public:
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void initialize();
     void learn(std::vector<std::pair<std::string, double> >* timings = NULL);
+    void learn_singleDevice(std::vector<std::pair<std::string, double> >* timings = NULL);
+#ifdef CUDA
+    void learn_multiDevices(std::vector<std::pair<std::string, double> >* timings = NULL);
+#endif
     void test(Database::StimuliSet set = Database::Test,
               std::vector<std::pair<std::string, double> >* timings = NULL);
     void propagate(Database::StimuliSet set,
@@ -121,9 +125,12 @@ public:
     void fuseBatchNormWithConv();
     void fusePadding();
     void removeDropout();
+
+#ifdef CUDA
     void lastBatch() {
         mLastPass = true;
     };
+#endif
 
     // Setters
     void setDatabase(const std::shared_ptr<Database>& database)
@@ -148,10 +155,16 @@ public:
                            T mean,
                            double stdDev,
                            bool ignoreUnknown = false);
+#ifdef CUDA
     void setBanAllowed(bool option)
     {
         mBanAllowed = option;
     };
+    char isDeviceDropped(int dev) const
+    {
+        return mDropDevices[dev];
+    };
+#endif
 
     // Getters
     Network& getNetwork()
@@ -207,14 +220,16 @@ public:
                                 const std::vector<unsigned int>& outputField
                                         = std::vector<unsigned int>()) const;
 
-    SharedValues& getMultiDevicesInfo()
-    {
-        return mMultiDevicesInfo;
-    };
+#ifdef CUDA
     std::vector<N2D2::DeviceState> getStates() 
     {
         return mStates;
     };
+    SharedValues& getMultiDevicesInfo()
+    {
+        return mMultiDevicesInfo;
+    };
+#endif
 
     // Clear
     void clearAll();
@@ -248,11 +263,6 @@ public:
     static void drawHistogram(std::string title, const std::string& dataFileName,
                    unsigned int fileRow, unsigned int maxLabelSize, bool isLog,
                    Gnuplot& p);
-    
-    char isDeviceDropped(int dev) const
-    {
-        return mDropDevices[dev];
-    };
 
 protected:
     Parameter<std::string> mName;
@@ -268,8 +278,12 @@ private:
     std::map<std::string, std::shared_ptr<Monitor> > mMonitors;
     std::map<std::string, std::shared_ptr<CMonitor> > mCMonitors;
     std::vector<std::vector<std::string> > mLayers;
+
+#ifdef CUDA
     /// Device states
     std::vector<N2D2::DeviceState> mStates;
+    /// Vector of warnings for all devices
+    std::vector<unsigned int> mDevicesWarning;
     /// Parameter to know if the batchs used during 
     /// learning are the last
     bool mLastPass;
@@ -285,7 +299,8 @@ private:
     SharedValues mMultiDevicesInfo;
     /// Identifier of the device where data is 
     /// gathered during update
-    int mMasterDevice;
+    int mMasterDevice;    
+#endif
 
     // cellName -> parentsNames
     std::multimap<std::string, std::string> mParentLayers;
