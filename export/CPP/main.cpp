@@ -24,10 +24,10 @@
 #include "env.hpp"
 #include "Network.hpp"
 
-template<typename Input_T>
+template<typename Input_T, typename Output_T>
 void readStimulus(const N2D2::Network& network, const std::string& stimulusPath, 
                   std::vector<Input_T>& inputBuffer, 
-                  std::vector<int32_t>& expectedOutputBuffer)
+                  std::vector<Output_T>& expectedOutputBuffer)
 {
     envRead(stimulusPath, inputBuffer.size(),
             network.inputHeight(), network.inputWidth(),
@@ -35,10 +35,10 @@ void readStimulus(const N2D2::Network& network, const std::string& stimulusPath,
             expectedOutputBuffer.size(), expectedOutputBuffer.data());
 }
 
-template<typename Input_T>
+template<typename Input_T, typename Output_T>
 double processInput(const N2D2::Network& network, std::vector<Input_T>& inputBuffer, 
-                            std::vector<int32_t>& expectedOutputBuffer,
-                            std::vector<int32_t>& predictedOutputBuffer) 
+                            std::vector<Output_T>& expectedOutputBuffer,
+                            std::vector<Output_T>& predictedOutputBuffer) 
 {
     network.propagate(inputBuffer.data(), predictedOutputBuffer.data());
 
@@ -94,8 +94,8 @@ int main(int argc, char* argv[]) {
     std::vector<DATA_T> inputBuffer(network.inputSize());
 #endif
 
-    std::vector<int32_t> expectedOutputBuffer(network.outputHeight()*network.outputWidth());
-    std::vector<int32_t> predictedOutputBuffer(network.outputHeight()*network.outputWidth());
+    std::vector<Target_T> expectedOutputBuffer(OUTPUTS_SIZE[0]);
+    std::vector<Target_T> predictedOutputBuffer(OUTPUTS_SIZE[0]);
 
     double successRate;
     if(!stimulus.empty()) {

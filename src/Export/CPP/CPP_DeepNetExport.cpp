@@ -551,9 +551,37 @@ void N2D2::CPP_DeepNetExport::generateEnvironmentHeader(DeepNet& deepNet,
             envHeader << ",";
 
         envHeader << "(OUTPUTS_WIDTH[" << targetIdx << "]"
-                  << "*OUTPUTS_HEIGHT["<< targetIdx << "])";
+                  << "*OUTPUTS_HEIGHT["<< targetIdx << "]";
+
+        if (outputTargets[targetIdx]->getParameter<bool>("DataAsTarget"))
+            envHeader << "*NB_OUTPUTS["<< targetIdx << "]";
+
+        envHeader << ")";
     }
     envHeader << "};\n";
+
+    // Target type
+    for(unsigned int targetIdx = 0; targetIdx < nbTarget; ++targetIdx)
+    {
+        const std::shared_ptr<Cell> cell = deepNet.getTargetCell(targetIdx);
+    
+        if (!outputTargets[targetIdx]->getParameter<bool>("DataAsTarget")) {
+            envHeader << "typedef int32_t Target_" << targetIdx << "_T;\n";
+        }
+        else {
+            std::string dataType = DeepNetExport::isCellOutputUnsigned(*cell)
+                ? "UDATA_T" : "DATA_T";
+
+            envHeader << "typedef " << dataType << " Target_"
+                << targetIdx << "_T;\n";
+        }
+    }
+
+    // Default target type
+    if (nbTarget > 0)
+        envHeader << "typedef Target_0_T Target_T;\n";
+    else
+        envHeader << "typedef int32_t Target_T;\n";
 
     envHeader << "#endif // N2D2_EXPORTCPP_ENV_LAYER_H" << std::endl;
 }
@@ -893,7 +921,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                          << "\n"
                          << "template<>\n"
                          << "void Network::propagate(const " << inputType << "* inputs, "
-                                                 << "int32_t* outputs) const \n"
+                                                 << "Target_T* outputs) const \n"
                          << "{\n"
                          << functionCalls.str()
                          << "\n"

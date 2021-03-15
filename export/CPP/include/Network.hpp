@@ -56,8 +56,8 @@ public:
         unsigned long long int count;
     } RunningMean_T;
 
-    template<typename Input_T>
-    void propagate(const Input_T* inputs, int32_t* outputs) const;
+    template<typename Input_T, typename Output_T>
+    void propagate(const Input_T* inputs, Output_T* outputs) const;
 
     std::size_t inputHeight() const;
     std::size_t inputWidth() const;
