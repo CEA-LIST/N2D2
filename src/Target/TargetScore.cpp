@@ -23,6 +23,7 @@
 #include "Cell/Cell.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/Cell_CSpike_Top.hpp"
+#include "Activation/RectifierActivation.hpp"
 
 N2D2::Registrar<N2D2::Target>
 N2D2::TargetScore::mRegistrar("TargetScore", N2D2::TargetScore::create);
@@ -555,7 +556,20 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
             double mse = 0.0;
 
             for (size_t index = 0; index < target.size(); ++index) {
-                const double err = target(index) - estimated(index);
+                Float_T estimatedValue = estimated(index);
+
+                if (mCell->isQuantized()) {
+                    const int precision = mCell->getQuantizedNbBits();
+                    const Float_T affineTrans
+                        = (targetCell->getActivation()
+                            && targetCell->getActivation()->getType()
+                                == RectifierActivation::Type)
+                            ? (std::pow(2, (int)precision) - 1)
+                            : (std::pow(2, (int)precision - 1) - 1);
+                    estimatedValue /= affineTrans;
+                }
+
+                const double err = target(index) - estimatedValue;
                 mse += err * err;
 
                 const unsigned int t = Utils::clamp<unsigned int>(
@@ -565,7 +579,7 @@ void N2D2::TargetScore::computeScore(Database::StimuliSet set)
                     0U, mConfusionQuantSteps - 1);
                 const unsigned int e = Utils::clamp<unsigned int>(
                     Utils::round((mConfusionQuantSteps - 1)
-                        * (estimated(index) - mConfusionRangeMin)
+                        * (estimatedValue - mConfusionRangeMin)
                             / (double)(mConfusionRangeMax - mConfusionRangeMin)),
                     0U, mConfusionQuantSteps - 1);
 
