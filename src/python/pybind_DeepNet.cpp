@@ -24,6 +24,7 @@
 #include "CMonitor.hpp"
 #include "StimuliProvider.hpp"
 #include "DeepNet.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
