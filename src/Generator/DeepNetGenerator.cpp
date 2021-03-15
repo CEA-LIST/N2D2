@@ -2328,13 +2328,8 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     for (int dim = 0; dim < (int)shapeTensor.size(); ++dim)
                         newShape.push_back(shapeTensor(dim));
                 }
-                else {
-                    std::stringstream msgStr;
-                    msgStr << "  No initializer for \"" << node.input(1)
-                        << "\"" << std::endl;
-
-                    throw std::runtime_error(msgStr.str());
-                }
+                // if no initializer is found, the shape is non-constant and
+                // computed by previous layers.
             }
             else if ((itAttr = attribute.find("shape")) != attribute.end()) {
                 for (int dim = 0; dim < (*itAttr).second->ints_size(); ++dim)
@@ -2345,14 +2340,24 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 //newShape = shapeTensor.data();
             }
 
+            if (newShape.empty()) {
+                std::cout << Utils::cnotice << "  Ignore Reshape operation"
+                    << " with non-constant shape" << Utils::cdef << std::endl;
+
+                std::cout << "  " << node.output(0) << " -> "
+                    << inputX << std::endl;
+                redirect[node.output(0)] = inputX;
+                continue;
+            }
+
             std::reverse(newShape.begin(), newShape.end());
 
             if ((itInit = initializer.find(inputX)) != initializer.end()) {
                 shape[inputX] = newShape;
 
                 std::cout << "  " << node.output(0) << " -> "
-                    << redirectName(node.input(0)) << std::endl;
-                redirect[node.output(0)] = redirectName(node.input(0));
+                    << inputX << std::endl;
+                redirect[node.output(0)] = inputX;
                 continue;
             }
             else {
