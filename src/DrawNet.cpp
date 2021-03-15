@@ -532,14 +532,14 @@ void N2D2::DrawNet::drawGraph(DeepNet& deepNet, const std::string& fileName)
             if(cellConv) {
                 if(cellConv->getQuantizer()) {
                     nodeLabel << "QWeights: " << cellConv->getQuantizer()->getType() 
-                    <<  " on range [" << cellConv->getQuantizer()->getRange() << " bits]"
+                    <<  " on range [" << cellConv->getQuantizer()->getRange() << " q-step]"
                     << "\n";
                 }
             }
             if(cellFc) {
                 if(cellFc->getQuantizer()) {
                     nodeLabel << "QWeights: " << cellFc->getQuantizer()->getType() 
-                    <<  " on range [" << cellFc->getQuantizer()->getRange() << " bits]"
+                    <<  " on range [" << cellFc->getQuantizer()->getRange() << " q-step]"
                     << "\n";
                 }
             }
@@ -552,7 +552,7 @@ void N2D2::DrawNet::drawGraph(DeepNet& deepNet, const std::string& fileName)
                     << "\n";
                 if(cellFrame->getActivation()->getQuantizer()) {
                     nodeLabel << "QAct: " << cellFrame->getActivation()->getQuantizer()->getType() 
-                    <<  " on range [" << cellFrame->getActivation()->getQuantizer()->getRange() << " bits]"
+                    <<  " on range [" << cellFrame->getActivation()->getQuantizer()->getRange() << " q-step]"
                     << "\n";
                 }
             }
