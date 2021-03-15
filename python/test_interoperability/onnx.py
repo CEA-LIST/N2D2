@@ -73,8 +73,9 @@ if __name__ == "__main__":
 
     # Exporting to ONNX
     dummy_in = torch.randn(batch_size, 1, 28, 28)
+
     torch.onnx.export(model.cnn_layers, dummy_in, model_path, verbose=True)
-    #torch.onnx.export(model, dummy_in, model_path, verbose=True)
+    # torch.onnx.export(model, dummy_in, model_path, verbose=True)
 
     # Importing the ONNX to N2D2
     net = N2D2.Network(1)
@@ -85,7 +86,7 @@ if __name__ == "__main__":
     n2d2_layer = n2d2.pytorch.DeepNetN2D2(deepNet)
 
     model.cnn_layers = n2d2_layer
-    #model = n2d2_layer
+    # model = n2d2_layer
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
     criterion = torch.nn.CrossEntropyLoss()
 
@@ -102,12 +103,8 @@ if __name__ == "__main__":
 
             pred = output.argmax(dim=1, keepdim=True)
             accuracy = pred.eq(labels.view_as(pred)).sum().item() / batch_size
-            
-            # print(output)
-            # print('OutputSize :', output.shape)
             loss = criterion(output, labels)
             print("Loss :", loss.item(), "- Accuracy :", accuracy)
-
 
             #This is where the model learns by backpropagating
             loss.backward()
@@ -117,4 +114,4 @@ if __name__ == "__main__":
             
             running_loss += loss.item()
         else:
-            print("Epoch {} - Training loss: {} - Accuracy: {}%".format(i+1, running_loss/len(trainloader), 100*correct/len(trainloader)))
+            print("Epoch {} - Training loss: {}".format(i+1, running_loss/len(trainloader)))

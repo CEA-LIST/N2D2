@@ -31,12 +31,24 @@ class Tensor():
     }
     
     def __init__(self, dims, value=None, defaultDataType=float, N2D2_tensor=None):
+        """
+        :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (Numpy convention)
+        :type dims: list
+        :param value: A value to fill the :py:class:`n2d2.Tensor` object.
+        :type value: Must be coherent with **defaultDataType**
+        :param defaultDataType: Type of the data stocked by the tensor
+        :type defaultDataType: type (optional, default=float)
+        :param N2D2_tensor: If not none this is the tensor that will be wrapped by :py:class:`n2d2.Tensor`.
+        :type N2D2_tensor: :py:class:`N2D2.BaseTensor` (optional, default=None)
+        """
         # Dimensions convention on N2D2 are reversed from python. 
         if not N2D2_tensor:
             if isinstance(dims, list):
                 dims = [d for d in reversed(dims)]
             else:
                 raise TypeError("Dims should be of type list got " + type(dims) + " instead")
+            if value and not isinstance(value, defaultDataType):
+                raise TypeError("You want to fill the tensor with " + type(value) + " but " + str(defaultDataType) + " is the defaultDataType.")
             if defaultDataType in self._tensor_generators:
                 if not value:
                     self._tensor = self._tensor_generators[defaultDataType](dims)
@@ -79,9 +91,9 @@ class Tensor():
 
     def _get_index(self, coord):
         """
-        From the coordinate returns the 1D index of an element in the tensor.
         :param coord: Tuple of the coordinate
         :type coord: tuple
+        From the coordinate returns the 1D index of an element in the tensor.
         """
         dims = self.dims()
         if len(dims) != len(coord):
@@ -99,9 +111,9 @@ class Tensor():
         
     def _get_coord(self, index):
         """
-        From the the 1D index, return the coordinate of an element in the tensor.
         :param index: index of an element
         :type index: int
+        From the the 1D index, return the coordinate of an element in the tensor.
         """ 
         coord = []
         for i in self.dims():
@@ -109,13 +121,21 @@ class Tensor():
             index = index/i
         return [i for i in reversed(coord)]
 
-    def resize(self, new_dims):
+    def reshape(self, new_dims):
         """
-        Resize the Tensor to the specified dims. 
         :param new_dims: New dimensions
         :type new_dims: list
+        Reshape the Tensor to the specified dims (defined by the Numpy convention). 
         """
-        self._tensor.resize([d for d in reversed(new_dims)])
+        if reduce((lambda x,y: x*y), new_dims) != len(self):
+            new_dims_str = ""
+            for dim in new_dims:
+                new_dims_str += str(dim) +" "
+            old_dims_str = ""
+            for dim in self.shape():
+                old_dims_str += str(dim) +" "
+            raise ValueError("new size ("+new_dims_str+"= " + str(reduce((lambda x,y: x*y), new_dims))+") does not match current size ("+ old_dims_str+"= " +str(self.__len__())+")")
+        self._tensor.reshape([int(d) for d in reversed(new_dims)])
 
     def copy(self):
         """
@@ -126,41 +146,19 @@ class Tensor():
             copy[i] = self._tensor[i]
         return copy
 
-    def dimX(self):
-        return self._tensor.dimX()
+    # Those method doesn't really work as intended
 
-    def dimY(self):
-        return self._tensor.dimY()
+    # def dimX(self):
+    #     return self._tensor.dimX()
 
-    def dimZ(self):
-        return self._tensor.dimZ()
+    # def dimY(self):
+    #     return self._tensor.dimY()
 
-    def dimB(self):
-        return self._tensor.dimB()
+    # def dimZ(self):
+    #     return self._tensor.dimZ()
 
-    # def to_list(self):
-    #     """
-    #     Convert the tensor to a list object
-    #     """
-    #     def create_empty_list(dim, other_dims):
-    #         result = []
-    #         if other_dims:
-    #             for _ in range(dim):
-    #                 result.append(create_empty_list(other_dims[-1], other_dims[:-1]))
-    #         else:
-    #             result = [0] * dim
-    #         return result
-
-    #     dim = self.dims()
-    #     empty_list = create_empty_list(dim[-1], dim[:-1])
-
-    #     for i in range(len(self._tensor)):
-    #         coord = self._get_coord(i)
-    #         id = empty_list
-    #         for c in coord[:-1]:
-    #             id = id[c]
-    #         id[coord[-1]] = self._tensor[i]
-    #     return empty_list
+    # def dimB(self):
+    #     return self._tensor.dimB()
 
     def to_numpy(self):
         """
@@ -174,10 +172,10 @@ class Tensor():
 
     def from_numpy(self, np_array):
         """
-        Convert a numpy array into a tensor.
-        Auto convert data type
         :param np_array: A numpy array to convert to a tensor.
         :type np_array: :py:class:`numpy.array`
+        Convert a numpy array into a tensor.
+        Auto convert data type
         """
         try:
             from numpy import ndarray, dtype 
