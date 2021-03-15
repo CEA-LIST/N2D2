@@ -865,8 +865,8 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
             std::string dataType = DeepNetExport::isCellOutputUnsigned(*targetCell)
                 ? "UDATA_T" : "DATA_T";
 
-            functionCalls << "    memcpy(&outputs, "
-                        << "&" << targetCellIdentifier << "_output, "
+            functionCalls << "    memcpy(outputs, "
+                        << targetCellIdentifier << "_output, "
                         << targetCellPrefix << "_NB_OUTPUTS * "
                         << targetCellPrefix << "_OUTPUTS_HEIGHT * " 
                         << targetCellPrefix << "_OUTPUTS_WIDTH * "
