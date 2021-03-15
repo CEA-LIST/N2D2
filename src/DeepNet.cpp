@@ -281,7 +281,16 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
     // TODO Refactorize and simplify the method.
     const std::string cellName = cell->getName();
 
-    std::multimap<std::string, std::string>::iterator itChildPos = mParentLayers.end();
+    // itChildsPos is needed to ensure that the order of the inputs is kept
+    // in mParentLayers when first removing and then re-inserting elements.
+    // C++11: the function (multimap::insert) optimizes its insertion time if 
+    // position points to the element that will follow the inserted element 
+    // (or to the end, if it would be the last).
+    // WARNING: there is no strong guarantee that the hint, even pointing at the
+    // intended place, will be respected, as it is only a "hint". This may be
+    // implementation defined.
+    // TODO: a refactoring is needed...
+    std::vector<std::multimap<std::string, std::string>::iterator> itChildsPos;
     std::vector<std::string> parents;
     std::vector<std::string> children;
 
@@ -294,15 +303,19 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
             // In this case, itChildPos will be invalided. If this happens, we
             // provide an invalid hint to multimap::insert(), which causes
             // undefined behavior and corrupt the multimap.
-            if (itChildPos == itParentLayers)
-                itChildPos = mParentLayers.end();
+            std::vector<std::multimap<std::string, std::string>::iterator>
+                ::iterator itChild = std::find(itChildsPos.begin(),
+                    itChildsPos.end(), itParentLayers);
 
             itParentLayers = mParentLayers.erase(itParentLayers);
+
+            if (itChild != itChildsPos.end())
+                (*itChild) = itParentLayers;
         }
         else if(itParentLayers->second == cellName) {
             children.push_back(itParentLayers->first);
             itParentLayers = mParentLayers.erase(itParentLayers);
-            itChildPos = itParentLayers;
+            itChildsPos.push_back(itParentLayers);
         }
         else {
             ++itParentLayers;
@@ -344,7 +357,8 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
         else {
             auto cellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
-            for(const std::string& childName: children) {
+            for(size_t child = 0; child < children.size(); ++child) {
+                const std::string childName = children[child];
                 auto childCellTop = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells.at(childName));
 
                 for(const std::string& parentName: parents) {
@@ -357,6 +371,7 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
                             parentCellTop->getDiffInputs());
                     }
 
+                    auto itChildPos = itChildsPos[child];
                     mParentLayers.insert(itChildPos, std::make_pair(childName, parentName));
                 }
             }
