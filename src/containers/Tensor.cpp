@@ -164,7 +164,7 @@ N2D2::Tensor<T>::Tensor(const std::vector<unsigned int>& dims,
 template <class T>
 N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims,
                         const std::shared_ptr<DataTensor<T> >& data,
-                        const std::shared_ptr<bool>& valid,
+                        const std::shared_ptr<std::vector<char> >& valid,
                         size_t dataOffset,
                         size_t size,
                         size_t sizeM1)
@@ -187,7 +187,7 @@ N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims, T* dataPtr)
 
 template <class T>
 N2D2::Tensor<T>::Tensor(const cv::Mat& mat, bool signedMapping)
-    : BaseTensor(std::vector<size_t>(), std::make_shared<bool>(true)),
+    : BaseTensor(std::vector<size_t>(), std::make_shared<std::vector<char> >()),
       mData(std::make_shared<DataTensor<T> >(std::vector<T>())),
       mDataOffset(0)
 {
@@ -198,6 +198,12 @@ N2D2::Tensor<T>::Tensor(const cv::Mat& mat, bool signedMapping)
 
     if (mat.channels() > 1)
         mDims.push_back(mat.channels());
+
+    int count = 1;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+#endif
+    (*mValid).resize(count, true);
 
     (*mData)().reserve(computeSize());
 
@@ -532,7 +538,7 @@ void N2D2::Tensor<T>::swap(Tensor<T>& tensor)
 
     // BaseTensor
     mDims.swap(tensor.mDims);
-    std::swap((*mValid), (*tensor.mValid));
+    (*mValid).swap(*tensor.mValid);
     std::swap(mSize, tensor.mSize);
     std::swap(mSizeM1, tensor.mSizeM1);
     mDataTensors.swap(tensor.mDataTensors);
@@ -599,6 +605,11 @@ const N2D2::Tensor<T> N2D2::Tensor<T>::rows(size_t j0,
     newDims.back() = nb;
     return Tensor<T>(newDims, mData, mValid, mDataOffset + j0 * mSizeM1,
                      nb * mSizeM1, mSizeM1);
+}
+
+template <class T>
+void N2D2::Tensor<T>::synchronizeToH(BaseTensor& tensor) const {
+    tensor = tensor_cast<T>(*this);
 }
 
 template <class T>

@@ -60,6 +60,10 @@
     #endif
 #endif
 
+#ifdef CUDA
+#include "CudaUtils.hpp"
+#endif
+
 #include "third_party/half.hpp"
 
 namespace N2D2 {
@@ -234,6 +238,8 @@ public:
     /** Synchronize Host data To Device-based */
     virtual void synchronizeHToDBased() const {};
 
+    virtual void synchronizeToH(BaseTensor& tensor) const = 0;
+
     virtual BaseTensor& operator=(const BaseTensor& base) = 0;
 
     size_t nbDims() const
@@ -244,17 +250,35 @@ public:
     {
         return mDims;
     };
-    bool isValid() const
+    bool isValid(int dev = -1) const
     {
-        return (*mValid);
+#ifdef CUDA
+        if (dev == -1)
+            CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#else
+        dev = 0;
+#endif
+        return (*mValid)[dev];
     };
-    void setValid()
+    void setValid(int dev = -1)
     {
-        (*mValid) = true;
+#ifdef CUDA
+        if (dev == -1)
+            CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#else
+        dev = 0;
+#endif
+        (*mValid)[dev] = true;
     };
-    void clearValid()
+    void clearValid(int dev = -1)
     {
-        (*mValid) = false;
+#ifdef CUDA
+        if (dev == -1)
+            CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#else
+        dev = 0;
+#endif
+        (*mValid)[dev] = false;
     };
     virtual const std::type_info* getType() const = 0;
 #ifdef CUDA
@@ -264,14 +288,21 @@ public:
 
 protected:
     BaseTensor(const std::vector<size_t>& dims = std::vector<size_t>(),
-               const std::shared_ptr<bool>& valid
-                    = std::make_shared<bool>(false),
+               const std::shared_ptr<std::vector<char> >& valid
+                    = std::make_shared<std::vector<char> >(),
                size_t size = 0,
                size_t sizeM1 = 0)
         : mDims(dims),
           mValid(valid),
           mSize(size),
-          mSizeM1(sizeM1) {}
+          mSizeM1(sizeM1)
+    {
+        int count = 1;
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+#endif
+        (*mValid).resize(count, false);
+    }
     size_t computeSize()
     {
         mSizeM1 = (!mDims.empty()) ? std::accumulate(mDims.begin(),
@@ -306,7 +337,7 @@ protected:
 
 protected:
     std::vector<size_t> mDims;
-    const std::shared_ptr<bool> mValid;
+    const std::shared_ptr<std::vector<char> > mValid;
 
     // Cached data
     size_t mSize;
@@ -396,6 +427,7 @@ public:
     const Tensor<T> rows(size_t j0, size_t nb) const;
     double sum() const;
     double mean() const;
+    virtual void synchronizeToH(BaseTensor& tensor) const;
     BaseTensor& operator=(const BaseTensor& base);
     Tensor<T>& operator=(const Tensor<T>& tensor);
     template <class U> Tensor<T>& operator=(const Tensor<U>& tensor);
@@ -431,11 +463,10 @@ public:
 protected:
     Tensor(const std::vector<size_t>& dims,
              const std::shared_ptr<DataTensor<T> >& data,
-             const std::shared_ptr<bool>& valid,
+             const std::shared_ptr<std::vector<char> >& valid,
              size_t dataOffset,
              size_t size,
              size_t sizeM1);
-    
 
     template <class CV_T, class U,
               typename std::enable_if<std::is_arithmetic<U>::value && 

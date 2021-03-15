@@ -81,7 +81,7 @@ void N2D2::Cell_Frame<T>::addInput(StimuliProvider& sp,
 
     // Define input-output sizes
     setInputsDims(sp.getSize());
-    mInputs.push_back(&sp.getData());
+    mInputs.push_back(&sp.getDataInput());
 
     setOutputsDims();
 

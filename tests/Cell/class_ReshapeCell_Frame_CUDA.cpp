@@ -87,10 +87,10 @@ TEST(ReshapeCell_Frame_CUDA, propagate)
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(reshape.getOutputs());
     //ASSERT_NOTHROW_ANY(reshape.checkGradient(1.0e-3, 1.0e-3));
 
-    ASSERT_EQUALS(outputs.dimX(), shape[0]);
-    ASSERT_EQUALS(outputs.dimY(), shape[1]);
-    ASSERT_EQUALS(outputs.dimZ(), shape[2]);
-    ASSERT_EQUALS(outputs.dimB(), shape[3]);
+    ASSERT_EQUALS(outputs.dimX(), (unsigned int)shape[0]);
+    ASSERT_EQUALS(outputs.dimY(), (unsigned int)shape[1]);
+    ASSERT_EQUALS(outputs.dimZ(), (unsigned int)shape[2]);
+    ASSERT_EQUALS(outputs.dimB(), (unsigned int)shape[3]);
 
     for (unsigned int index = 0; index < outputs.size(); ++index) {
         ASSERT_EQUALS_DELTA(outputs(index), inputs(index), 1.0e-12);

@@ -43,6 +43,7 @@ public:
     using Cell_Frame_CUDA<T>::mActivation;
     using Cell_Frame_CUDA<T>::mActivationDesc;
     using Cell_Frame_CUDA<T>::mKeepInSync;
+    using Cell_Frame_Top::mDevices;
 
     ConvCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                         const std::vector<unsigned int>& kernelDims,
@@ -161,7 +162,7 @@ protected:
     CudaInterface<T> mPaddedInputs;
 
     size_t mWorkspaceSize;
-    void* mWorkspace;
+    std::vector<void*> mWorkspace;
 
     std::vector<cudnnFilterDescriptor_t> mFilterDesc;
     std::vector<cudnnConvolutionFwdAlgo_t> mFwdAlgo;

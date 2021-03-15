@@ -25,6 +25,7 @@
 #include "GradientCheck.hpp"
 #include "DeepNet.hpp"
 #include "Cell/BatchNormCell_Frame_CUDA.hpp"
+#include "Cell/BatchNormCell_Frame_CUDA_Kernels.hpp"
 #include "third_party/half.hpp"
 
 template <>
@@ -57,6 +58,7 @@ N2D2::BatchNormCell_Frame_CUDA<T>::BatchNormCell_Frame_CUDA(
       mScale(std::make_shared<CudaTensor<ParamT> >()),
       mBias(std::make_shared<CudaTensor<ParamT> >()),
       mMean(std::make_shared<CudaTensor<ParamT> >()),
+      mCopyMean(std::make_shared<CudaTensor<ParamT> >()),
       mVariance(std::make_shared<CudaTensor<ParamT> >())
 {
     // ctor
@@ -174,9 +176,18 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initialize()
 
     mSavedMean.resize(requiredDims, ParamT(0.0));
     mSavedVariance.resize(requiredDims, ParamT(0.0));
+    mCopyMean->resize(requiredDims, ParamT(0.0));
 
     mDiffScale.resize(requiredDims, ParamT(0.0));
     mDiffBias.resize(requiredDims, ParamT(0.0));
+
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+    mScale->broadcastAnyTo(dev);
+    mBias->broadcastAnyTo(dev);
+    mMean->broadcastAnyTo(dev);
+    mVariance->broadcastAnyTo(dev);
 }
 
 template <class T>
@@ -296,11 +307,78 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
 template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::update()
 {
-    if (mDiffScale.isValid())
-        mScaleSolver->update(*mScale, mDiffScale, mInputs.dimB());
+    int currentDev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
 
-    if (mDiffBias.isValid())
+    if (mDiffScale.isValid()){
+        mDiffScale.aggregateAllTo(currentDev, mDevices);
+        mScaleSolver->update(*mScale, mDiffScale, mInputs.dimB());
+        mScale->broadcastAllFrom(currentDev, mDevices);
+    }
+
+    if (mDiffBias.isValid()){
+        mDiffBias.aggregateAllTo(currentDev, mDevices);
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
+        mBias->broadcastAllFrom(currentDev, mDevices);
+    }
+    
+    // Required to know if it is necessary 
+    // to calculate mMean and mVariance
+    // (necessary if connected devices number > 1)
+    int nbDev = 0;
+    for (int dev = 0; dev < (int)mDevices.size(); ++dev) {
+        if (mDevices[dev] == N2D2::DeviceState::Connected
+            || mDevices[dev] == N2D2::DeviceState::Ready) {
+                ++nbDev;
+            }         
+    }
+    
+    if (nbDev > 1) {
+        int nbActivateDev = 0;
+        
+        // Copying mMean before aggregating 
+        // (required to calculate mVariance)
+        for (int dev = 0; dev < (int)mDevices.size(); ++dev) {
+            if ((mMean->deviceTensor()).isDevicePtr(dev)) {
+                if (mDevices[dev] == N2D2::DeviceState::Connected) {
+                    ++nbActivateDev;
+                    CHECK_CUDA_STATUS(cudaSetDevice(dev));
+                    thrust_copy(mMean->getDevicePtr(), 
+                                mCopyMean->getDevicePtr(), 
+                                mMean->size());
+                }
+            }   
+        } 
+        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+
+        mMean->aggregateAllTo(currentDev, mDevices);
+        thrust_div(mMean->getDevicePtr(), mMean->size(), nbActivateDev);
+        mMean->broadcastAllFrom(currentDev, mDevices);
+
+        // Calculating combined variances
+        // For more details, see 
+        // https://www.emathzone.com/tutorials/basic-statistics/combined-variance.html
+        for (int dev = 0; dev < (int)mDevices.size(); ++dev) {
+            if ((mMean->deviceTensor()).isDevicePtr(dev)) {
+                if (mDevices[dev] == N2D2::DeviceState::Connected) {
+                    CHECK_CUDA_STATUS(cudaSetDevice(dev));
+                    thrust_combinedVar(
+                        mVariance->getDevicePtr(),
+                        mMean->getDevicePtr(),
+                        mCopyMean->getDevicePtr(),
+                        mVariance->size()
+                    );
+                }
+            }
+        }
+        
+        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+
+        mVariance->aggregateAllTo(currentDev, mDevices);
+        thrust_div(mVariance->getDevicePtr(), mVariance->size(), nbActivateDev);
+        mVariance->broadcastAllFrom(currentDev, mDevices);
+    }
+    
 }
 
 template <class T>
@@ -440,6 +518,14 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::loadFreeParameters(const std::string
     mVariance->load(syn);
     mVariance->synchronizeHToD();
 
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+    mScale->broadcastAllFrom(dev);
+    mBias->broadcastAllFrom(dev);
+    mMean->broadcastAllFrom(dev);
+    mVariance->broadcastAllFrom(dev);
+
     if (syn.eof())
         throw std::runtime_error(
             "End-of-file reached prematurely in parameter file (.SYN): "
@@ -489,6 +575,14 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::synchronizeToD(bool keepInSync_)
     mMean->synchronizeHToD();
     mVariance->synchronizeHToD();
     keepInSync(keepInSync_);
+
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+    mScale->broadcastAllFrom(dev);
+    mBias->broadcastAllFrom(dev);
+    mMean->broadcastAllFrom(dev);
+    mVariance->broadcastAllFrom(dev);
 }
 
 template <class T>
