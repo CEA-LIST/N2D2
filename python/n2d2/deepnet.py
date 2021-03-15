@@ -273,20 +273,13 @@ class Sequence:
 
 
 class Layer:
-    def __init__(self, layer, Inputs=None, name=""):
+    def __init__(self, layer, name=""):
         assert isinstance(name, str)
         self._name = name
         assert isinstance(layer, list)
         if not layer:
             raise ValueError("Got empty list as input. List must contain at least one element")
         self._layer = layer
-
-        if Inputs is not None:
-            if isinstance(Inputs, list):
-                for cell in Inputs:
-                    self.add_input(cell)
-            else:
-                self.add_input(Inputs)
 
     def get_cells(self):
         cells = {}

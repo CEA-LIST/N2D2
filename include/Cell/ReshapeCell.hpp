@@ -55,6 +55,10 @@ public:
         return Type;
     };
 
+    std::vector<int> getDims() const {
+        return mDims;
+    };
+
     void getStats(Stats& stats) const;
     std::vector<unsigned int> getReceptiveField(
                                 const std::vector<unsigned int>& outputField

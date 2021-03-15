@@ -26,14 +26,14 @@ from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
 from n2d2.filler import He, Xavier, Constant
 import n2d2.global_variables
+from n2d2.model.ILSVRC_outils import ILSVRC_preprocessing
 
-class ConvConfig(ConfigSection):
-    def __init__(self):
-        ConfigSection.__init__(self, activationFunction=Rectifier(), weightsFiller=He(), noBias=True)
 
-class ConvConfigBN(ConfigSection):
-    def __init__(self):
-        ConfigSection.__init__(self, activationFunction=Linear(), weightsFiller=He(), noBias=True)
+def conv_config():
+    return ConfigSection(activationFunction=Rectifier(), weightsFiller=He(), noBias=True)
+
+def conv_config_bn():
+    return ConfigSection(activationFunction=Linear(), weightsFiller=He(), noBias=True)
 
 class ConvDepthWise(Conv2D):
     def __init__(self, inputs, nb_outputs, stride, **config_parameters):
@@ -49,45 +49,43 @@ class MobileNet_v1_FeatureExtractor(Sequence):
 
         self._deepNet = DeepNet()
 
-        config = ConvConfig
-
         seq = Sequence([], name='div2')
         seq.add(Conv(inputs, nbOutputs=int(32 * alpha), kernelDims=[3, 3], strideDims=[2, 2], paddingDims=[1, 1],
-             **config().get(), deepNet=self._deepNet, name="conv1"))
-        seq.add(ConvDepthWise(seq.get_last(), int(32 * alpha), 1, name="conv1_3x3_dw", **config().get(), deepNet=self._deepNet))
-        seq.add(ConvElemWise(seq.get_last(), int(64 * alpha), name="conv1_1x1", **config().get(), deepNet=self._deepNet))
+             **conv_config(), deepNet=self._deepNet, name="conv1"))
+        seq.add(ConvDepthWise(seq.get_last(), int(32 * alpha), 1, name="conv1_3x3_dw", **conv_config(), deepNet=self._deepNet))
+        seq.add(ConvElemWise(seq.get_last(), int(64 * alpha), name="conv1_1x1", **conv_config(), deepNet=self._deepNet))
 
         seq1 = Sequence([], name='div4')
-        seq1.add(ConvDepthWise(seq.get_last(), int(64 * alpha), 2, name="conv2_3x3_dw", **config().get(), deepNet=self._deepNet))
-        seq1.add(ConvElemWise(seq1.get_last(), int(128 * alpha), name="conv2_1x1", **config().get(), deepNet=self._deepNet))
-        seq1.add(ConvDepthWise(seq1.get_last(), int(128 * alpha), 1, name="conv3_3x3_dw", **config().get(), deepNet=self._deepNet))
-        seq1.add(ConvElemWise(seq1.get_last(), int(128 * alpha), name="conv3_1x1", **config().get(), deepNet=self._deepNet))
+        seq1.add(ConvDepthWise(seq.get_last(), int(64 * alpha), 2, name="conv2_3x3_dw", **conv_config(), deepNet=self._deepNet))
+        seq1.add(ConvElemWise(seq1.get_last(), int(128 * alpha), name="conv2_1x1", **conv_config(), deepNet=self._deepNet))
+        seq1.add(ConvDepthWise(seq1.get_last(), int(128 * alpha), 1, name="conv3_3x3_dw", **conv_config(), deepNet=self._deepNet))
+        seq1.add(ConvElemWise(seq1.get_last(), int(128 * alpha), name="conv3_1x1", **conv_config(), deepNet=self._deepNet))
 
         seq2 = Sequence([], name='div8')
-        seq2.add(ConvDepthWise(seq1.get_last(), int(128 * alpha), 2, name="conv4_3x3_dw", **config().get(), deepNet=self._deepNet))
-        seq2.add(ConvElemWise(seq2.get_last(), int(256 * alpha), name="conv4_1x1", **config().get(), deepNet=self._deepNet))
-        seq2.add(ConvDepthWise(seq2.get_last(), int(256 * alpha), 1, name="conv5_3x3_dw", **config().get(), deepNet=self._deepNet))
-        seq2.add(ConvElemWise(seq2.get_last(), int(256 * alpha), name="conv5_1x1", **config().get(), deepNet=self._deepNet))
+        seq2.add(ConvDepthWise(seq1.get_last(), int(128 * alpha), 2, name="conv4_3x3_dw", **conv_config(), deepNet=self._deepNet))
+        seq2.add(ConvElemWise(seq2.get_last(), int(256 * alpha), name="conv4_1x1", **conv_config(), deepNet=self._deepNet))
+        seq2.add(ConvDepthWise(seq2.get_last(), int(256 * alpha), 1, name="conv5_3x3_dw", **conv_config(), deepNet=self._deepNet))
+        seq2.add(ConvElemWise(seq2.get_last(), int(256 * alpha), name="conv5_1x1", **conv_config(), deepNet=self._deepNet))
 
         seq3 = Sequence([], name='div16')
-        seq3.add(ConvDepthWise(seq2.get_last(), int(256 * alpha), 2, name="conv6_3x3_dw", **config().get(), deepNet=self._deepNet))
-        seq3.add(ConvElemWise(seq3.get_last(), int(512 * alpha), name="conv6_1x1", **config().get(), deepNet=self._deepNet))
-        seq3.add(ConvDepthWise(seq3.get_last(), int(512 * alpha), 1, name="conv7_1_3x3_dw", **config().get(), deepNet=self._deepNet))
-        seq3.add(ConvElemWise(seq3.get_last(), int(512 * alpha), name="conv7_1_1x1", **config().get(), deepNet=self._deepNet))
-        seq3.add(ConvDepthWise(seq3.get_last(), int(512 * alpha), 1, name="conv7_2_3x3_dw", **config().get(), deepNet=self._deepNet))
-        seq3.add(ConvElemWise(seq3.get_last(), int(512 * alpha), name="conv7_2_1x1", **config().get(), deepNet=self._deepNet))
-        seq3.add(ConvDepthWise(seq3.get_last(), int(512 * alpha), 1, name="conv7_3_3x3_dw", **config().get(), deepNet=self._deepNet))
-        seq3.add(ConvElemWise(seq3.get_last(), int(512 * alpha), name="conv7_3_1x1", **config().get(), deepNet=self._deepNet))
-        seq3.add(ConvDepthWise(seq3.get_last(), int(512 * alpha), 1, name="conv7_4_3x3_dw", **config().get(), deepNet=self._deepNet))
-        seq3.add(ConvElemWise(seq3.get_last(), int(512 * alpha), name="conv7_4_1x1", **config().get(), deepNet=self._deepNet))
-        seq3.add(ConvDepthWise(seq3.get_last(), int(512 * alpha), 1, name="conv7_5_3x3_dw", **config().get(), deepNet=self._deepNet))
-        seq3.add(ConvElemWise(seq3.get_last(), int(512 * alpha), name="conv7_5_1x1", **config().get(), deepNet=self._deepNet))
+        seq3.add(ConvDepthWise(seq2.get_last(), int(256 * alpha), 2, name="conv6_3x3_dw", **conv_config(), deepNet=self._deepNet))
+        seq3.add(ConvElemWise(seq3.get_last(), int(512 * alpha), name="conv6_1x1", **conv_config(), deepNet=self._deepNet))
+        seq3.add(ConvDepthWise(seq3.get_last(), int(512 * alpha), 1, name="conv7_1_3x3_dw", **conv_config(), deepNet=self._deepNet))
+        seq3.add(ConvElemWise(seq3.get_last(), int(512 * alpha), name="conv7_1_1x1", **conv_config(), deepNet=self._deepNet))
+        seq3.add(ConvDepthWise(seq3.get_last(), int(512 * alpha), 1, name="conv7_2_3x3_dw", **conv_config(), deepNet=self._deepNet))
+        seq3.add(ConvElemWise(seq3.get_last(), int(512 * alpha), name="conv7_2_1x1", **conv_config(), deepNet=self._deepNet))
+        seq3.add(ConvDepthWise(seq3.get_last(), int(512 * alpha), 1, name="conv7_3_3x3_dw", **conv_config(), deepNet=self._deepNet))
+        seq3.add(ConvElemWise(seq3.get_last(), int(512 * alpha), name="conv7_3_1x1", **conv_config(), deepNet=self._deepNet))
+        seq3.add(ConvDepthWise(seq3.get_last(), int(512 * alpha), 1, name="conv7_4_3x3_dw", **conv_config(), deepNet=self._deepNet))
+        seq3.add(ConvElemWise(seq3.get_last(), int(512 * alpha), name="conv7_4_1x1", **conv_config(), deepNet=self._deepNet))
+        seq3.add(ConvDepthWise(seq3.get_last(), int(512 * alpha), 1, name="conv7_5_3x3_dw", **conv_config(), deepNet=self._deepNet))
+        seq3.add(ConvElemWise(seq3.get_last(), int(512 * alpha), name="conv7_5_1x1", **conv_config(), deepNet=self._deepNet))
 
         seq4 = Sequence([], name='div32')
-        seq4.add(ConvDepthWise(seq3.get_last(), int(512 * alpha), 2, name="conv8_3x3_dw", **config().get(), deepNet=self._deepNet))
-        seq4.add(ConvElemWise(seq4.get_last(), int(1024 * alpha), name="conv8_1x1", **config().get(), deepNet=self._deepNet))
-        seq4.add(ConvDepthWise(seq4.get_last(), int(1024 * alpha), 1, name="conv9_3x3_dw", **config().get(), deepNet=self._deepNet))
-        seq4.add(ConvElemWise(seq4.get_last(), int(1024 * alpha), name="conv9_1x1", **config().get(), deepNet=self._deepNet))
+        seq4.add(ConvDepthWise(seq3.get_last(), int(512 * alpha), 2, name="conv8_3x3_dw", **conv_config(), deepNet=self._deepNet))
+        seq4.add(ConvElemWise(seq4.get_last(), int(1024 * alpha), name="conv8_1x1", **conv_config(), deepNet=self._deepNet))
+        seq4.add(ConvDepthWise(seq4.get_last(), int(1024 * alpha), 1, name="conv9_3x3_dw", **conv_config(), deepNet=self._deepNet))
+        seq4.add(ConvElemWise(seq4.get_last(), int(1024 * alpha), name="conv9_1x1", **conv_config(), deepNet=self._deepNet))
 
         pool = Pool2D(seq4.get_last(), nbOutputs=int(1024 * alpha),
                poolDims=[seq4.get_last().get_outputs().dimX(), seq4.get_last().get_outputs().dimY()],
@@ -111,67 +109,65 @@ class MobileNet_v1_FeatureExtractor(Sequence):
 
 class MobileNet_v1_FeatureExtractor_BN(Sequence):
     def __init__(self, inputs, alpha):
-        config = ConvConfigBN
 
-        self.deepnet = DeepNet()
-
+        self._deepNet = DeepNet()
 
         Sequence.__init__(self, [], name="extractor")
 
         self.add(Conv(inputs, int(32 * alpha), kernelDims=[3, 3], strideDims=[2, 2], paddingDims=[1, 1],
-             **config().get(), deepNet=self._deepNet, name="conv1"))
+             **conv_config_bn(), deepNet=self._deepNet, name="conv1"))
         self.add(BatchNorm(self.get_last(), int(32 * alpha), activationFunction=Rectifier(), name="bn1"))
-        self.add(ConvDepthWise(self.get_last(), int(32 * alpha), 1, name="conv1_3x3_dw", **config().get(), deepNet=self._deepNet))
+        self.add(ConvDepthWise(self.get_last(), int(32 * alpha), 1, name="conv1_3x3_dw", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(32 * alpha), activationFunction=Rectifier(), name="bn1_3x3_dw"))
-        self.add(ConvElemWise(self.get_last(), int(64 * alpha), name="conv1_1x1", **config().get(), deepNet=self._deepNet))
+        self.add(ConvElemWise(self.get_last(), int(64 * alpha), name="conv1_1x1", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(64 * alpha), activationFunction=Rectifier(), name="bn1_1x1"))
-        self.add(ConvDepthWise(self.get_last(), int(64 * alpha), 2, name="conv2_3x3_dw", **config().get(), deepNet=self._deepNet))
+        self.add(ConvDepthWise(self.get_last(), int(64 * alpha), 2, name="conv2_3x3_dw", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(64 * alpha), activationFunction=Rectifier(), name="bn2_3x3_dw"))
-        self.add(ConvElemWise(self.get_last(), int(128 * alpha), name="conv2_1x1", **config().get(), deepNet=self._deepNet))
+        self.add(ConvElemWise(self.get_last(), int(128 * alpha), name="conv2_1x1", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(128 * alpha), activationFunction=Rectifier(), name="bn2_1x1"))
-        self.add(ConvDepthWise(self.get_last(), int(128 * alpha), 1, name="conv3_3x3_dw", **config().get(), deepNet=self._deepNet))
+        self.add(ConvDepthWise(self.get_last(), int(128 * alpha), 1, name="conv3_3x3_dw", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(128 * alpha), activationFunction=Rectifier(), name="bn3_3x3_dw"))
-        self.add(ConvElemWise(self.get_last(), int(128 * alpha), name="conv3_1x1", **config().get(), deepNet=self._deepNet))
+        self.add(ConvElemWise(self.get_last(), int(128 * alpha), name="conv3_1x1", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(128 * alpha), activationFunction=Rectifier(), name="bn3_1x1"))
-        self.add(ConvDepthWise(self.get_last(), int(128 * alpha), 2, name="conv4_3x3_dw", **config().get(), deepNet=self._deepNet))
+        self.add(ConvDepthWise(self.get_last(), int(128 * alpha), 2, name="conv4_3x3_dw", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(128 * alpha), activationFunction=Rectifier(), name="bn4_3x3_dw"))
-        self.add(ConvElemWise(self.get_last(), int(256 * alpha), name="conv4_1x1", **config().get(), deepNet=self._deepNet))
+        self.add(ConvElemWise(self.get_last(), int(256 * alpha), name="conv4_1x1", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(256 * alpha), activationFunction=Rectifier(), name="bn4_1x1"))
-        self.add(ConvDepthWise(self.get_last(), int(256 * alpha), 1, name="conv5_3x3_dw", **config().get(), deepNet=self._deepNet))
+        self.add(ConvDepthWise(self.get_last(), int(256 * alpha), 1, name="conv5_3x3_dw", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(256 * alpha), activationFunction=Rectifier(), name="bn5_3x3_dw"))
-        self.add(ConvElemWise(self.get_last(), int(256 * alpha), name="conv5_1x1", **config().get(), deepNet=self._deepNet))
+        self.add(ConvElemWise(self.get_last(), int(256 * alpha), name="conv5_1x1", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(256 * alpha), activationFunction=Rectifier(), name="bn5_1x1"))
-        self.add(ConvDepthWise(self.get_last(), int(256 * alpha), 2, name="conv6_3x3_dw", **config().get(), deepNet=self._deepNet))
+        self.add(ConvDepthWise(self.get_last(), int(256 * alpha), 2, name="conv6_3x3_dw", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(256 * alpha), activationFunction=Rectifier(), name="bn6_3x3_dw"))
-        self.add(ConvElemWise(self.get_last(), int(512 * alpha), name="conv6_1x1", **config().get(), deepNet=self._deepNet))
+        self.add(ConvElemWise(self.get_last(), int(512 * alpha), name="conv6_1x1", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(512 * alpha), activationFunction=Rectifier(), name="bn6_1x1"))
-        self.add(ConvDepthWise(self.get_last(), int(512 * alpha), 1, name="conv7_1_3x3_dw", **config().get(), deepNet=self._deepNet))
+        self.add(ConvDepthWise(self.get_last(), int(512 * alpha), 1, name="conv7_1_3x3_dw", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(512 * alpha), activationFunction=Rectifier(), name="bn7_1_3x3_dw"))
-        self.add(ConvElemWise(self.get_last(), int(512 * alpha), name="conv7_1_1x1", **config().get(), deepNet=self._deepNet))
+        self.add(ConvElemWise(self.get_last(), int(512 * alpha), name="conv7_1_1x1", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(512 * alpha), activationFunction=Rectifier(), name="bn7_1_1x1"))
-        self.add(ConvDepthWise(self.get_last(), int(512 * alpha), 1, name="conv7_2_3x3_dw", **config().get(), deepNet=self._deepNet))
+        self.add(ConvDepthWise(self.get_last(), int(512 * alpha), 1, name="conv7_2_3x3_dw", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(512 * alpha), activationFunction=Rectifier(), name="bn7_2_3x3_dw"))
-        self.add(ConvElemWise(self.get_last(), int(512 * alpha), name="conv7_2_1x1", **config().get(), deepNet=self._deepNet))
+        self.add(ConvElemWise(self.get_last(), int(512 * alpha), name="conv7_2_1x1", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(512 * alpha), activationFunction=Rectifier(), name="bn7_2_1x1"))
-        self.add(ConvDepthWise(self.get_last(), int(512 * alpha), 1, name="conv7_3_3x3_dw", **config().get(), deepNet=self._deepNet))
+        self.add(ConvDepthWise(self.get_last(), int(512 * alpha), 1, name="conv7_3_3x3_dw", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(512 * alpha), activationFunction=Rectifier(), name="bn7_3_3x3_dw"))
-        self.add(ConvElemWise(self.get_last(), int(512 * alpha), name="conv7_3_1x1", **config().get(), deepNet=self._deepNet))
+        self.add(ConvElemWise(self.get_last(), int(512 * alpha), name="conv7_3_1x1", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(512 * alpha), activationFunction=Rectifier(), name="bn7_3_1x1"))
-        self.add(ConvDepthWise(self.get_last(), int(512 * alpha), 1, name="conv7_4_3x3_dw", **config().get(), deepNet=self._deepNet))
+        self.add(ConvDepthWise(self.get_last(), int(512 * alpha), 1, name="conv7_4_3x3_dw", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(512 * alpha), activationFunction=Rectifier(), name="bn7_4_3x3_dw"))
-        self.add(ConvElemWise(self.get_last(), int(512 * alpha), name="conv7_4_1x1", **config().get(), deepNet=self._deepNet))
+        self.add(ConvElemWise(self.get_last(), int(512 * alpha), name="conv7_4_1x1", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(512 * alpha), activationFunction=Rectifier(), name="bn7_4_1x1"))
-        self.add(ConvDepthWise(self.get_last(), int(512 * alpha), 1, name="conv7_5_3x3_dw", **config().get(), deepNet=self._deepNet))
+        self.add(ConvDepthWise(self.get_last(), int(512 * alpha), 1, name="conv7_5_3x3_dw", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(512 * alpha), activationFunction=Rectifier(), name="bn7_5_3x3_dw"))
-        self.add(ConvElemWise(self.get_last(), int(512 * alpha), name="conv7_5_1x1", **config().get(), deepNet=self._deepNet))
+        self.add(ConvElemWise(self.get_last(), int(512 * alpha), name="conv7_5_1x1", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(512 * alpha), activationFunction=Rectifier(), name="bn7_5_1x1"))
-        self.add(ConvDepthWise(self.get_last(), int(512 * alpha), 2, name="conv8_3x3_dw", **config().get(), deepNet=self._deepNet))
+        self.add(ConvDepthWise(self.get_last(), int(512 * alpha), 2, name="conv8_3x3_dw", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(512 * alpha), activationFunction=Rectifier(), name="bn8_3x3_dw"))
-        self.add(ConvElemWise(self.get_last(), int(1024 * alpha), name="conv8_1x1", **config().get(), deepNet=self._deepNet))
+        self.add(ConvElemWise(self.get_last(), int(1024 * alpha), name="conv8_1x1", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(1024 * alpha), activationFunction=Rectifier(), name="bn8_1x1"))
-        self.add(ConvDepthWise(self.get_last(), int(1024 * alpha), 1, name="conv9_3x3_dw", **config().get(), deepNet=self._deepNet))
+        self.add(ConvDepthWise(self.get_last(), int(1024 * alpha), 1, name="conv9_3x3_dw", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(1024 * alpha), activationFunction=Rectifier(), name="bn9_3x3_dw"))
-        self.add(ConvElemWise(self.get_last(), int(1024 * alpha), name="conv9_1x1", **config().get(), deepNet=self._deepNet))
+        self.add(ConvElemWise(self.get_last(), int(1024 * alpha), name="conv9_1x1", **conv_config_bn(), deepNet=self._deepNet))
         self.add(BatchNorm(self.get_last(), int(1024 * alpha), activationFunction=Rectifier(), name="bn9_1x1"))
         self.add(Pool2D(self.get_last(), int(1024 * alpha),
                         poolDims=[self.get_last().get_outputs().dimX(), self.get_last().get_outputs().dimY()],
@@ -208,7 +204,7 @@ class MobileNet_v1(Sequence):
                     batchSize=self.extractor.get_last().get_outputs().dimB(), streamTensor=True)
             head_input.N2D2().setStreamedTensor(self.extractor.get_last().get_outputs())
         else:
-            head_deepNet = self.extractor.get_last().get_deepNet()
+            head_deepNet = self.extractor.get_last().get_deepnet()
             head_input = self.extractor
         #n2d2.global_variables.default_deepNet = head_deepNet
 
@@ -220,7 +216,7 @@ class MobileNet_v1(Sequence):
 
         Sequence.__init__(self, [self.extractor, self.head])
 
-
+    """
     def set_ILSVRC_solvers(self, max_iterations):
         print("Add solvers")
         learning_rate = 0.1
@@ -244,8 +240,13 @@ class MobileNet_v1(Sequence):
             if self._with_batchnorm and isinstance(cell, BatchNorm):
                 cell.set_scale_solver(bn_solver(**bn_solver_config.get()))
                 cell.set_bias_solver(bn_solver(**bn_solver_config.get()))
+    """
 
 
+
+
+def ILSVRC_preprocessing(size=224):
+   return ILSVRC_preprocessing(size)
 
 
 

@@ -103,7 +103,7 @@ class TensorPlaceholder(Provider):
     def __init__(self, inputs, name=None):
         #Provider.__init__(self)
 
-        if not 'name' is None:
+        if name is not None:
             self._name = name
         else:
             self._name = "provider_" + str(n2d2.global_variables.provider_counter)
@@ -113,14 +113,14 @@ class TensorPlaceholder(Provider):
             self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
                                                      size=inputs[0:2],
                                                      batchSize=inputs[3])
-        elif isinstance(inputs, n2d2.tensor.Tensor) or isinstance(inputs, N2D2.Tensor):
+        elif isinstance(inputs, n2d2.tensor.Tensor) or isinstance(inputs, N2D2.BaseTensor):
             dims = [inputs.dimX(), inputs.dimY(), inputs.dimZ()]
             self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
                                                      size=dims,
                                                      batchSize=inputs.dimB())
             self._N2D2_object.setStreamedTensor(inputs)
         else:
-            n2d2.error_handler.wrong_input_type("inputs", type(inputs), [type(list), 'n2d2.tensor.Tensor', 'N2D2.Tensor'])
+            n2d2.error_handler.wrong_input_type("inputs", type(inputs), [type(list), 'n2d2.tensor.Tensor', 'N2D2.BaseTensor'])
         self._set_N2D2_parameter('StreamTensor', True)
 
     def set_streamed_tensor(self, tensor):

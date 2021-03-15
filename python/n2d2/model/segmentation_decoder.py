@@ -37,7 +37,7 @@ class DecoderConv(Conv):
     def __init__(self, inputs, nbOutputs, **config_parameters):
         Conv.__init__(self, inputs, nbOutputs, kernelDims=[1, 1], strideDims=[1, 1], activationFunction=Tanh(), backPropagate=False,
                     weightsFiller=Normal(stdDev=0.1), biasFiller=Constant(value=0.2),
-                    weightsSolver=SGD(**decoder_solver_config.get()), biasSolver=SGD(**decoder_solver_config.get()),
+                    weightsSolver=SGD(**decoder_solver_config), biasSolver=SGD(**decoder_solver_config),
                     **config_parameters)
 
 
@@ -45,7 +45,7 @@ class DecoderDeconv(Deconv):
     def __init__(self, inputs, nbOutputs, **config_parameters):
         Deconv.__init__(self, inputs, nbOutputs, activationFunction=Linear(), kernelDims=[4, 4], strideDims=[2, 2],
                     weightsFiller=Normal(stdDev=0.1), biasFiller=Constant(value=0.2),
-                    weightsSolver=SGD(**decoder_solver_config.get()), biasSolver=SGD(**decoder_solver_config.get()),
+                    weightsSolver=SGD(**decoder_solver_config), biasSolver=SGD(**decoder_solver_config),
                     **config_parameters)
 
 
@@ -83,6 +83,12 @@ class SegmentationDecoder(Sequence):
         else:
             self._deepNet = deepNet
 
+        print("scales")
+        print(inputs[0].dims())
+        print(inputs[1].dims())
+        print(inputs[2].dims())
+        print(inputs[3].dims())
+
         interface_1x1_x4 = TensorPlaceholder(inputs[0], name="interface_1x1_x4")
         interface_1x1_x8 = TensorPlaceholder(inputs[1], name="interface_1x1_x8")
         interface_1x1_x16 = TensorPlaceholder(inputs[2], name="interface_1x1_x16")
@@ -118,7 +124,7 @@ class SegmentationDecoder(Sequence):
 
         deconv_fuse3 = Deconv(fuse3, fuse3.get_outputs().dimZ(), kernelDims=[8, 8], strideDims=[4, 4], activationFunction=Linear(),
                     weightsFiller=Normal(stdDev=0.1), biasFiller=Constant(value=0.2),
-                    weightsSolver=SGD(**decoder_solver_config.get()), biasSolver=SGD(**decoder_solver_config.get()),
+                    weightsSolver=SGD(**decoder_solver_config), biasSolver=SGD(**decoder_solver_config),
                     name="deconv_fuse3", deepNet=self._deepNet)
         out_adapt = Padding(deconv_fuse3, deconv_fuse3.get_outputs().dimZ(),
                     topPad=-2, botPad=-2, leftPad=-2, rightPad=-2, name="out_adapt", deepNet=self._deepNet)
@@ -150,8 +156,8 @@ class SegmentationDecoder(Sequence):
         for name, cell in self.get_cells().items():
             if isinstance(cell, Conv) or isinstance(cell, Deconv):
                 print("Add solver: " + name)
-                cell.set_weights_solver(SGD(**weights_solver_config.get()))
-                cell.set_bias_solver(SGD(**bias_solver_config.get()))
+                cell.set_weights_solver(SGD(**weights_solver_config))
+                cell.set_bias_solver(SGD(**bias_solver_config))
     """
 
 

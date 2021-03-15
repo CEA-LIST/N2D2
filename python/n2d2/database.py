@@ -56,12 +56,6 @@ class Database(N2D2_Interface):
     def __str__(self):
         return self._type + N2D2_Interface.__str__(self)
 
-    def convert_to_INI_section(self):
-        output = "[database]\n"
-        output += "Type=" + self._INI_type + "\n"
-        #N2D2_Interface.create_INI_section()
-        return output
-
 
 
 class DIR(Database):

@@ -122,8 +122,14 @@ class Cell(N2D2_Interface):
             self._N2D2_object.addInputBis(inputs.N2D2(), n2d2.tensor.Tensor(inputs.shape()).N2D2(), value=0) # TODO: Tested
         else:
             if 'mapping' in self._connection_parameters:
+                if isinstance(inputs, n2d2.cell.Cell):
+                    dim_z = inputs.N2D2().getNbOutputs()
+                elif isinstance(inputs, n2d2.provider.Provider):
+                    dim_z = inputs.N2D2().getNbChannels()
+                else:
+                    raise ValueError("Incompatible inputs of type " + str(type(inputs)))
                 self._connection_parameters['mapping'] = self._connection_parameters['mapping'].create_N2D2_mapping(
-                                               inputs.N2D2().getNbOutputs(),
+                                               dim_z,
                                                self._N2D2_object.getNbOutputs()
                                            ).N2D2()
             self._N2D2_object.addInput(inputs.N2D2(), **self._connection_parameters)
@@ -334,7 +340,7 @@ class Fc(Cell):
 
 
 
-
+# TODO: Implement 1x1 Conv and DepthWise Conv
 # TODO: This is less powerful than the generator, in the sense that it does not accept several formats for the stride, conv, etc.
 class Conv(Cell):
 
@@ -369,7 +375,7 @@ class Conv(Cell):
         """
 
         if N2D2_object is not None and (nbOutputs is not None or kernelDims is not None or len(config_parameters) > 0):
-            raise RuntimeError("N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
+            raise RuntimeError("N2D2_object argument give to cell but 'inputs' or 'nbOutputs'  or 'kernelDims' or 'config parameters' not None")
         if N2D2_object is None:
             self._create_from_arguments(inputs, nbOutputs, kernelDims, **config_parameters)
         else:
@@ -932,14 +938,21 @@ class Pool(Cell):
 class Pool2D(Pool):
     def __init__(self,
                  inputs,
-                 nbOutputs,
                  poolDims,
                  **config_parameters):
         if 'mapping' in config_parameters:
             raise RuntimeError('Pool2D does not support custom mappings')
         else:
             config_parameters['mapping'] = n2d2.mapping.Mapping(nbChannelsPerGroup=1)
-        Pool.__init__(self, inputs, nbOutputs, poolDims, **config_parameters)
+        Pool.__init__(self, inputs, inputs.get_nb_outputs(), poolDims, **config_parameters)
+
+
+class GlobalPool2D(Pool2D):
+    def __init__(self,
+                 inputs,
+                 **config_parameters):
+        Pool2D.__init__(self, inputs, poolDims=[inputs.get_outputs().dimX(), inputs.get_outputs().dimY()],
+                        strideDims=[1, 1], **config_parameters)
 
 
 
@@ -1097,6 +1110,62 @@ class Activation(Cell):
                       **self._load_N2D2_parameters(N2D2_object))
 
         self._N2D2_object = N2D2_object
+
+        self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
+
+        self._sync_inputs_and_parents(inputs)
+
+
+
+class Reshape(Cell):
+    _cell_constructors = {
+        'Frame<float>': N2D2.ReshapeCell_Frame_float,
+        'Frame_CUDA<float>': N2D2.ReshapeCell_Frame_CUDA_float,
+    }
+    def __init__(self, inputs, nbOutputs, dims, N2D2_object=None, **config_parameters):
+
+        if N2D2_object is not None and (nbOutputs is not None or dims is not None or len(config_parameters) > 0):
+            raise RuntimeError(
+                "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'dims' or 'config parameters' not None")
+        if N2D2_object is None:
+            self._create_from_arguments(inputs, nbOutputs, dims, **config_parameters)
+        else:
+            self._create_from_N2D2_object(inputs, N2D2_object)
+
+    def _create_from_arguments(self, inputs, nbOutputs, dims, **config_parameters):
+        Cell.__init__(self, inputs, nbOutputs, **config_parameters)
+
+        self._constructor_arguments.update({
+            'dims': dims,
+        })
+
+        # No optional parameter
+        self._parse_optional_arguments([])
+        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+                                                self.get_name(),
+                                                self._constructor_arguments['nbOutputs'],
+                                                self._constructor_arguments['dims'],
+                                                **self._optional_constructor_arguments)
+
+        """Set and initialize here all complex cell members"""
+        for key, value in self._config_parameters.items():
+            if key is 'activationFunction':
+                self._N2D2_object.setActivation(value.N2D2())
+            else:
+                self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
+
+        self._add_to_graph(inputs)
+
+    def _create_from_N2D2_object(self, inputs, N2D2_object):
+        Cell.__init__(self, inputs,
+                      N2D2_object.getNbOutputs(),
+                      deepNet=n2d2.deepnet.DeepNet(N2D2_object=N2D2_object.getAssociatedDeepNet()),
+                      name=N2D2_object.getName(),
+                      **self._load_N2D2_parameters(N2D2_object))
+
+        self._N2D2_object = N2D2_object
+
+        self._constructor_arguments['dims'] = self._N2D2_object.getDims()
 
         self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
 

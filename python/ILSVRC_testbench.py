@@ -53,6 +53,8 @@ elif args.arch == 'MobileNet_v2':
     batch_size = 256
 elif args.arch == 'ResNet-50-BN':
     batch_size = 64
+elif args.arch == 'ResNet-onnx':
+    batch_size = 16
 else:
     raise ValueError("Invalid architecture: " + args.arch)
 
@@ -100,13 +102,15 @@ elif args.arch == 'ResNet-50-BN':
     nb_epochs = 90 if args.epochs == -1 else args.epochs
     size = 224
     model = n2d2.model.ResNet50BN(provider, output_size=1000, alpha=1.0, l=0)
+elif args.arch == 'ResNet-onnx':
+    nb_epochs = 0 if args.epochs == -1 else args.epochs
+    model = n2d2.model.resnet.load_from_ONNX('18', 'post_act', download=True, batch_size=batch_size)
 else:
     raise ValueError("Invalid architecture: " + args.arch)
 
 print(model)
 
-
-model.set_ILSVRC_solvers(int((database.get_nb_stimuli('Learn')*nb_epochs)/batch_size))
+#model.set_ILSVRC_solvers(int((database.get_nb_stimuli('Learn')*nb_epochs)/batch_size))
 
 print("Create classifier")
 classifier = n2d2.application.Classifier(provider, model, topN=1)

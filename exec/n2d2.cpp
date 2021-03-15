@@ -584,7 +584,7 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
     
 }
 
-void importFreeParemeters(const Options& opt, DeepNet& deepNet) {
+void importFreeParameters(const Options& opt, DeepNet& deepNet) {
     if (!opt.weights.empty()) {
         if (opt.weights != "/dev/null")
             deepNet.importNetworkFreeParameters(opt.weights, opt.ignoreNoExist);
@@ -604,7 +604,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     const std::shared_ptr<Database>& database = deepNet->getDatabase();
     const std::shared_ptr<StimuliProvider>& sp = deepNet->getStimuliProvider();
 
-    importFreeParemeters(opt, *deepNet);
+    importFreeParameters(opt, *deepNet);
 
     deepNet->removeDropout();
     if(!opt.qatSAT) {
@@ -1375,9 +1375,7 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
     const int nbEpochSize = database->getNbStimuli(Database::Learn);
 
-    //deepNet->exportNetworkFreeParameters("weights_init");
-
-    std::cout << "After export" << std::endl;
+    deepNet->exportNetworkFreeParameters("weights_init");
 
     std::chrono::high_resolution_clock::time_point startTime
         = std::chrono::high_resolution_clock::now();
@@ -1390,8 +1388,6 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     const unsigned int batchSize = sp->getBatchSize();
     const unsigned int nbBatch = std::ceil(opt.learn / (double)batchSize);
     const unsigned int avgBatchWindow = opt.avgWindow / (double)batchSize;
-
-    std::cout << "Before loop" << std::endl;
 
     sp->readRandomBatch(Database::Learn);
 
@@ -2347,9 +2343,6 @@ int main(int argc, char* argv[]) try
                               Database::TestOnly);
     }
 
-    std::cout << "After DBSTATS" << std::endl;
-
-
     /**
      * Historically N2D2 normalized integers stimuli in the [0.0;1.0] or [-1.0;1.0] range, 
      * depending on the signess, when loading integer stimuli inside a floating-point Tensor.
@@ -2365,10 +2358,6 @@ int main(int argc, char* argv[]) try
         }
     }
 
-        std::cout << "Before savetestset" << std::endl;
-
-
-
     if (!opt.saveTestSet.empty()) {
         StimuliProvider& sp = *deepNet->getStimuliProvider();
 
@@ -2378,9 +2367,6 @@ int main(int argc, char* argv[]) try
 
         database.save(opt.saveTestSet, Database::TestOnly, trans);
     }
-
-        std::cout << "After savetestset" << std::endl;
-
 
     if (!opt.load.empty())
         deepNet->load(opt.load);
@@ -2393,11 +2379,9 @@ int main(int argc, char* argv[]) try
             std::exit(0);
     }
 
-    //if (!afterCalibration) {
-    //    logStats(opt, deepNet);
-    //}
-
-    std::cout << "Before learn" << std::endl;
+    if (!afterCalibration) {
+        logStats(opt, deepNet);
+    }
 
     if (opt.findLr > 0) {
         findLearningRate(opt, deepNet);

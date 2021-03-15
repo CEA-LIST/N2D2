@@ -1,7 +1,7 @@
-"""
+/*
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
-                    Johannes THIELE (johannes.thiele@cea.fr)
+    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    Cyril MOINEAU (cyril.moineau@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -17,31 +17,21 @@
 
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
-"""
+*/
 
-import N2D2
-# import n2d2.deepnet
+#ifdef PYBIND
+#include "Cell/ReshapeCell.hpp"
 
-# TODO: In final version this should be in the use home or the API launch folder
-model_cache = "/local/is154584/jt251134/MODELS"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-default_seed = 1
-default_model = 'Frame'
-default_dataType = 'float'
-default_net = N2D2.Network(default_seed)
-#default_deepNet = n2d2.deepnet.DeepNet(default_net, default_model, default_dataType)
-default_deepNet = None
+namespace py = pybind11;
 
-cell_counter = 0
-#target_counter = 0
-provider_counter = 0
-
-class Verbosity:
-    short = 0  # Constructor arguments only
-    detailed = 1  # Config parameters and their parameters
-
-verbosity = Verbosity.detailed
-
-def set_cuda_device(id):
-    N2D2.CudaContext.setDevice(id)
-
+namespace N2D2 {
+void init_ReshapeCell(py::module &m) {
+    py::class_<ReshapeCell, std::shared_ptr<ReshapeCell>, Cell> (m, "ReshapeCell", py::multiple_inheritance())
+    .def("getDims", &ReshapeCell::getDims)
+    ;
+}
+}
+#endif

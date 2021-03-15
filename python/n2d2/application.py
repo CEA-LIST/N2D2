@@ -122,7 +122,6 @@ class Classifier(Application):
 
         self._target = n2d2.target.Score(self._model.get_last(),
                                          self._provider,
-                                         name=self._model.get_last().get_name() + ".target",
                                          **target_config_parameters)
 
 
