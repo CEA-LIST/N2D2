@@ -74,6 +74,8 @@ public:
             // supplied to mData's device pointer.
             data(true),
             targetData(true) {}
+#else
+        ProvidedData() {}
 #endif
 
         ProvidedData(ProvidedData&& other);

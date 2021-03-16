@@ -202,7 +202,12 @@ cudaAggregateH_kernel(__half* srcData,
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
+#if __CUDA_ARCH__ >= 530
         dstData[i] = __hadd(dstData[i], srcData[i]);
+#else
+        dstData[i] = __float2half(__half2float(dstData[i])
+                                    + __half2float(srcData[i]));
+#endif
     }
 }
 

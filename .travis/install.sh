@@ -53,6 +53,7 @@ if [ -n "$USE_CUDA" ] ; then
         cuda-cudart-dev-$CUDA_PKG_VERSION \
         cuda-cublas-dev-$CUDA_PKG_VERSION \
         cuda-curand-dev-$CUDA_PKG_VERSION \
+        cuda-nvml-dev-$CUDA_PKG_VERSION \
         libcudnn5-dev
 
     # Manually create CUDA symlink

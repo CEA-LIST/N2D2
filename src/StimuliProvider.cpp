@@ -827,7 +827,11 @@ void N2D2::StimuliProvider::readRandomBatch(Database::StimuliSet set)
 
     unsigned int exceptCatch = 0;
 
+#if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for schedule(dynamic) collapse(2) if (mProvidedData.size() > 1 || mBatchSize > 1)
+#else
+#pragma omp parallel for schedule(dynamic) if (mProvidedData.size() > 1 || mBatchSize > 1)
+#endif
     for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
         for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
             if (mDevices.find(dev) != mDevices.end()) {
@@ -908,7 +912,11 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set,
         }
     }
 
+#if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for schedule(dynamic) collapse(2) if (mProvidedData.size() > 1 || mBatchSize > 1)
+#else
+#pragma omp parallel for schedule(dynamic) if (mProvidedData.size() > 1 || mBatchSize > 1)
+#endif
     for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
         for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
             if (mDevices.find(dev) != mDevices.end()) {
@@ -1292,7 +1300,11 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set)
 
     unsigned int exceptCatch = 0;
 
+#if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for schedule(dynamic) collapse(2) if (mProvidedData.size() > 1 || mBatchSize > 1)
+#else
+#pragma omp parallel for schedule(dynamic) if (mProvidedData.size() > 1 || mBatchSize > 1)
+#endif
     for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
         for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
             if (mDevices.find(dev) != mDevices.end()) {
