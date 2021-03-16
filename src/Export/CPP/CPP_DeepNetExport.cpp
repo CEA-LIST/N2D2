@@ -130,6 +130,7 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
     const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
 
     std::map<std::shared_ptr<Cell>, MemoryManager::MemoryPlane> noBranchConcats;
+    std::vector<std::shared_ptr<Cell> > excludedAllocableCells;
 
     for (std::vector<std::vector<std::string> >::const_iterator itLayer
         = layers.begin() + 1,
@@ -234,6 +235,13 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                 itCellEnd = allocableCells.end();
                 itCell != itCellEnd; ++itCell)
             {
+                if (std::find(excludedAllocableCells.begin(),
+                    excludedAllocableCells.end(), *itCell)
+                        != excludedAllocableCells.end())
+                {
+                    continue;
+                }
+
                 // Select the best parent among all allocable cells for 
                 // reallocation, which is the one with most memory (in order
                 // to minimize the reallocation size).
@@ -249,17 +257,33 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                             ? (*itParent)->getName() : "env");
 
                     if (parentChilds.size() == 1) {
+                        // Remainder: there can be multiple allocable cells only
+                        // for concatenation. In this case, we want all the
+                        // allocable cells to be allocated on the same memory
+                        // space with striding to avoid a concat operation.
+
+                        // Nb planes may be 0 if the parent cell was not yet 
+                        // processed.
+                        // In this case, this allocable cell cannot be the
+                        // current cell, and an other allocable cell will be
+                        // allocated in this round. Therefore, for the next
+                        // rounds, the memory of this allocable cell's parent
+                        // cannot be used for wrapping as at least one other
+                        // allocable cell was already allocated on a different
+                        // memory space (using it would prevent concatenation
+                        // with stride).
+                        // TODO: depending on the processing order of the graph,
+                        // this may lead to sub-optimal memory mapping!
+                        if (memManager.getNbPlanes((*itParent)) == 0) {
+                            excludedAllocableCells.push_back(*itCell);
+                            continue;
+                        }
+
                         const std::map<std::shared_ptr<Cell>,
                             MemoryManager::MemoryPlane>::iterator itConcat
                                 = noBranchConcats.find((*itParent));
 
-                        // Nb planes may be 0 if the parent cell was not yet 
-                        // processed
-                        // TODO: depending on the processing order of the graph,
-                        // this may lead to sub-optimal memory mapping!
-                        if (itConcat != noBranchConcats.end()
-                            || memManager.getNbPlanes((*itParent)) > 0)
-                        {
+                        if (itConcat != noBranchConcats.end()) {
                             const MemoryManager::MemoryPlane& memPlane
                                 = (itConcat != noBranchConcats.end())
                                     ? (*itConcat).second
