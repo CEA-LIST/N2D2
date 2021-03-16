@@ -192,6 +192,10 @@ class Cell(N2D2_Interface):
         print("import " + fileName)
         self._N2D2_object.importFreeParameters(fileName, **kwargs)
 
+    def import_activation_parameters(self, fileName, **kwargs):
+        print("import " + fileName)
+        self._N2D2_object.importActivationParameters(fileName, **kwargs)
+
     def get_name(self):
         return self._name
 
@@ -469,23 +473,32 @@ class Conv(Cell):
 
 
 
-class Conv2D(Conv):
-    _type = 'Conv2D'
+class ConvDepthWise(Conv):
+    _type = 'ConvDepthWise'
 
     def __init__(self,
                  inputs,
-                 nbOutputs,
                  kernelDims,
                  **config_parameters):
 
         if 'mapping' in config_parameters:
-            raise RuntimeError('Conv2D does not support custom mappings')
+            raise RuntimeError('ConvDepthWise does not support custom mappings')
         else:
             config_parameters['mapping'] = n2d2.mapping.Mapping(nbChannelsPerGroup=1)
-        Conv.__init__(self, inputs, nbOutputs, kernelDims, **config_parameters)
+        Conv.__init__(self, inputs, inputs.get_outputs().dimZ(), kernelDims, **config_parameters)
 
 
+class ConvPointWise(Conv):
+    _type = 'ConvPointWise'
 
+    def __init__(self,
+                 inputs,
+                 nbOutputs,
+                 **config_parameters):
+
+        if 'mapping' in config_parameters:
+            raise RuntimeError('ConvDepthWise does not support custom mappings')
+        Conv.__init__(self, inputs, nbOutputs, [1, 1], strideDims=[1, 1], **config_parameters)
 
 
 # TODO: This is less powerful than the generator, in the sense that it does not accept several formats for the stride, conv, etc.
@@ -856,7 +869,7 @@ class Padding(Cell):
 
 
 class Pool(Cell):
-    _type = 'Pool2D'
+    _type = 'Pool'
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
@@ -936,6 +949,7 @@ class Pool(Cell):
 
 
 class Pool2D(Pool):
+    _type = 'Pool2D'
     def __init__(self,
                  inputs,
                  poolDims,
@@ -944,14 +958,15 @@ class Pool2D(Pool):
             raise RuntimeError('Pool2D does not support custom mappings')
         else:
             config_parameters['mapping'] = n2d2.mapping.Mapping(nbChannelsPerGroup=1)
-        Pool.__init__(self, inputs, inputs.get_nb_outputs(), poolDims, **config_parameters)
+        Pool.__init__(self, inputs, inputs.get_outputs().dimZ(), poolDims, **config_parameters)
 
 
 class GlobalPool2D(Pool2D):
+    _type = 'GlobalPool2D'
     def __init__(self,
                  inputs,
                  **config_parameters):
-        Pool2D.__init__(self, inputs, poolDims=[inputs.get_outputs().dimX(), inputs.get_outputs().dimY()],
+        Pool2D.__init__(self, inputs, [inputs.get_outputs().dimX(), inputs.get_outputs().dimY()],
                         strideDims=[1, 1], **config_parameters)
 
 
@@ -1005,7 +1020,7 @@ class LRN(Cell):
 
         self._sync_inputs_and_parents(inputs)
 
-
+# TODO: make nbOutputs implicit on input
 class BatchNorm(Cell):
     _cell_constructors = {
         'Frame<float>': N2D2.BatchNormCell_Frame_float,

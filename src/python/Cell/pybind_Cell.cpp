@@ -176,6 +176,15 @@ void init_Cell(py::module &m) {
      :param ignoreNotExists: If true, don't throw an error if the file doesn't exist
      :type ignoreNotExists: bool, optional
      )mydelimiter")
+     .def("importActivationParameters", &Cell::importActivationParameters, py::arg("fileName"), py::arg("ignoreNotExists") = false,
+     R"mydelimiter(
+     Load activation parameters from a file
+
+     :param fileName: Source file
+     :type fileName: str
+     :param ignoreNotExists: If true, don't throw an error if the file doesn't exist
+     :type ignoreNotExists: bool, optional
+     )mydelimiter")
     // .def("logFreeParameters", &Cell::logFreeParameters, py::arg("fileName"))
     // .def("logFreeParametersDistrib", &Cell::logFreeParametersDistrib, py::arg("fileName"), py::arg("type"))
     // .def("discretizeFreeParameters", &Cell::discretizeFreeParameters, py::arg("nbLevels"))

@@ -51,6 +51,7 @@
 #include "Transformation/TrimTransformation.hpp"
 #include "Transformation/FilterTransformation.hpp"
 #include "Transformation/FlipTransformation.hpp"
+#include "Transformation/RandomResizeCropTransformation.hpp"
 #include "Transformation/CustomTransformation.hpp"
 
 
@@ -107,7 +108,7 @@ void init_CompositeTransformation(py::module &m) {
     init<ApodizationTransformation>(ct);
     // init<TrimTransformation>(ct);
     init<FilterTransformation>(ct);
-
+    init<RandomResizeCropTransformation>(ct);
     init<CustomTransformation>(ct);
 
 }

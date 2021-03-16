@@ -235,6 +235,29 @@ class Flip(Transformation):
         self._set_N2D2_parameters(self._config_parameters)
 
 
+
+
+class RandomResizeCrop(Transformation):
+
+    _Type = "RandomResizeCrop"
+
+    # INI file parameters have same upper case name convention
+    def __init__(self, width, height, **config_parameters):
+        Transformation.__init__(self, **config_parameters)
+
+        self._constructor_arguments.update({
+            'width': width,
+            'height': height,
+        })
+
+        self._parse_optional_arguments(['offsetX', 'offsetY'])
+
+        self._N2D2_object = N2D2.RandomResizeCropTransformation(self._constructor_arguments['width'],
+                                                self._constructor_arguments['height'],
+                                                **self._optional_constructor_arguments)
+        self._set_N2D2_parameters(self._config_parameters)
+
+
 # TODO : Change binding to expose apply method 
 # class CustomTransformation(Transformation):
 #     def __init__(self, custom_transformation):

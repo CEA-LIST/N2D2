@@ -223,8 +223,9 @@ class Sequence:
     def import_free_parameters(self, dirName, ignoreNotExists=False):
         print("Importing weights from directory '" + dirName + "'")
         for name, cell in self.get_cells().items():
-            path = dirName + name + ".syntxt"
+            path = dirName + "/" + name + ".syntxt"
             cell.import_free_parameters(path, ignoreNotExists=ignoreNotExists)
+            cell.import_activation_parameters(dirName, ignoreNotExists=ignoreNotExists)
 
     def get_subsequence(self, id):
         if isinstance(id, int):

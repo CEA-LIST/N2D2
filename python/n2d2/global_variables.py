@@ -33,7 +33,7 @@ default_net = N2D2.Network(default_seed)
 default_deepNet = None
 
 cell_counter = 0
-#target_counter = 0
+target_counter = 0
 provider_counter = 0
 
 class Verbosity:

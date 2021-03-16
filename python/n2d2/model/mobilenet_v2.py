@@ -20,7 +20,7 @@
 """
 
 from n2d2.utils import ConfigSection
-from n2d2.cell import Fc, Conv, Conv2D, Softmax, Pool2D, BatchNorm, ElemWise
+from n2d2.cell import Fc, Conv, ConvDepthWise, Softmax, Pool2D, BatchNorm, ElemWise
 from n2d2.deepnet import Sequence
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
@@ -36,9 +36,9 @@ class ReLU6(Rectifier):
     def __init__(self):
         Rectifier.__init__(self, clipping=6.0)
 
-class ConvDepthWise(Conv2D):
+class ConvDepthWise(ConvDepthWise):
     def __init__(self, nb_outputs, stride, **config_parameters):
-        Conv2D.__init__(self, nbOutputs=nb_outputs, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[stride, stride], noBias=True, **config_parameters)
+        ConvDepthWise.__init__(self, nbOutputs=nb_outputs, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[stride, stride], noBias=True, **config_parameters)
 
 class ConvElemWise(Conv):
     def __init__(self, nb_outputs, **config_parameters):

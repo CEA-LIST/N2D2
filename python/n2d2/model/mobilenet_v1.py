@@ -20,7 +20,7 @@
 """
 
 from n2d2.utils import ConfigSection
-from n2d2.cell import Fc, Conv, Conv2D, Softmax, Pool2D, BatchNorm
+from n2d2.cell import Fc, Conv, ConvDepthWise, Softmax, Pool2D, BatchNorm
 from n2d2.deepnet import Sequence, DeepNet
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
@@ -35,9 +35,9 @@ def conv_config():
 def conv_config_bn():
     return ConfigSection(activationFunction=Linear(), weightsFiller=He(), noBias=True)
 
-class ConvDepthWise(Conv2D):
+class ConvDepthWise(ConvDepthWise):
     def __init__(self, inputs, nb_outputs, stride, **config_parameters):
-        Conv2D.__init__(self, inputs, nb_outputs, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[stride, stride], **config_parameters)
+        ConvDepthWise.__init__(self, inputs, nb_outputs, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[stride, stride], **config_parameters)
 
 class ConvElemWise(Conv):
     def __init__(self, inputs, nb_outputs, **config_parameters):

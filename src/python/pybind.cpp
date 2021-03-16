@@ -132,6 +132,7 @@ void init_SliceExtractionTransformation(py::module&);
 void init_ThresholdTransformation(py::module&);
 // void init_TrimTransformation(py::module &m);
 void init_WallisFilterTransformation(py::module&);
+void init_RandomResizeCropTransformation(py::module&);
 void init_CustomTransformation(py::module&);
 void init_CompositeTransformation(py::module &);
 
@@ -376,6 +377,7 @@ void init_N2D2(py::module& m) {
     init_ThresholdTransformation(m);
     init_WallisFilterTransformation(m);
     // init_TrimTransformation(m);
+    init_RandomResizeCropTransformation(m);
     init_CustomTransformation(m);
     init_CompositeTransformation(m);
 
