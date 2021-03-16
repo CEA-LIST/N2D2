@@ -22,6 +22,7 @@
 #ifndef N2D2_CUDA_CONTEXT_H
 #define N2D2_CUDA_CONTEXT_H
 
+#include <vector>
 #include <iostream>
 
 #include "CudaUtils.hpp"

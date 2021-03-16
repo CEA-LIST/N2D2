@@ -27,6 +27,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <set>
+#include <deque>
 
 #include "Database/Database.hpp"
 #include "Transformation/CompositeTransformation.hpp"

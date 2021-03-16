@@ -683,7 +683,7 @@ template <typename T> void N2D2::CudaDeviceTensor<T>::broadcast(
 template <typename T> void N2D2::CudaDeviceTensor<T>::broadcastAllFrom(
     int srcDev) const
 {
-    assert(isDevicePtr(srcDev));
+    assert(mCudaBaseTensor.size() == 0 || isDevicePtr(srcDev));
     
     for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
         if (dev != srcDev && isDevicePtr(dev))
@@ -694,7 +694,7 @@ template <typename T> void N2D2::CudaDeviceTensor<T>::broadcastAllFrom(
 template <typename T> void N2D2::CudaDeviceTensor<T>::broadcastAllFrom(
     int srcDev, std::vector<DeviceState> devices) const
 {
-    assert(isDevicePtr(srcDev));
+    assert(mCudaBaseTensor.size() == 0 || isDevicePtr(srcDev));
     assert(devices.size() == mDataDevice.size());
 
     for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
@@ -741,7 +741,7 @@ void N2D2::CudaDeviceTensor<T>::aggregate(int srcDev, int dstDev) const
 template <typename T> 
 void N2D2::CudaDeviceTensor<T>::aggregateAllTo(int dstDev) const
 {
-    assert(isDevicePtr(dstDev));
+    assert(mCudaBaseTensor.size() == 0 || isDevicePtr(dstDev));
 
     int currentDev;
     CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
@@ -763,7 +763,7 @@ template <typename T>
 void N2D2::CudaDeviceTensor<T>::aggregateAllTo(int dstDev, 
                                 std::vector<DeviceState> devices) const
 {
-    assert(isDevicePtr(dstDev));
+    assert(mCudaBaseTensor.size() == 0 || isDevicePtr(dstDev));
     assert(devices.size() == mDataDevice.size());
 
     int currentDev;
@@ -794,7 +794,7 @@ template <typename T>
 void N2D2::CudaDeviceTensor<T>::aggregateAllTo(int dstDev, 
                                 std::vector<DeviceState> devices) const
 {
-    assert(isDevicePtr(dstDev));
+    assert(mCudaBaseTensor.size() == 0 || isDevicePtr(dstDev));
     assert(devices.size() == mDataDevice.size());
 
     int currentDev;

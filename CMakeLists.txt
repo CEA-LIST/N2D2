@@ -234,7 +234,7 @@ if(CUDA_FOUND)
 
     # CUDA
     target_include_directories(n2d2_lib_cuda PUBLIC ${CUDA_INCLUDE_DIRS})
-    target_link_libraries(n2d2_lib_cuda PUBLIC ${CUDA_LIBRARIES})
+    target_link_libraries(n2d2_lib_cuda PUBLIC ${CUDA_LIBRARIES} -lnvidia-ml)
 
     # CuDNN
     target_include_directories(n2d2_lib_cuda PUBLIC ${CUDNN_INCLUDE_DIRS})
