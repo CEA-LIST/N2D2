@@ -42,10 +42,22 @@ class Cell(N2D2_Interface):
         if 'deepNet' in config_parameters:
             self._deepnet = config_parameters.pop('deepNet')
         else:
-            if isinstance(inputs, n2d2.deepnet.Sequence):
+            if isinstance(inputs, n2d2.deepnet.Layer) or isinstance(inputs, list):
+                if isinstance(inputs, n2d2.deepnet.Layer):
+                    inputs = inputs.get_elements()
+                last_deepnet = None
+                for ipt in inputs.get_elements():
+                    deepnet = ipt.get_last().get_deepnet()
+                    if last_deepnet is not None:
+                        if not id(deepnet) == id(last_deepnet):
+                            raise RuntimeError("Elements of cell input have different deepnets. "
+                                               "Cannot infer implicit deepnet")
+                    last_deepnet = deepnet
+                self._deepnet = last_deepnet
+            elif isinstance(inputs, n2d2.deepnet.Sequence) or isinstance(inputs, Cell):
                 self._deepnet = inputs.get_last().get_deepnet()
-            elif isinstance(inputs, Cell):
-                self._deepnet = inputs.get_deepnet()
+            elif isinstance(inputs, n2d2.provider.Provider):
+                self._deepnet = n2d2.deepnet.DeepNet()
             else:
                 raise TypeError("Object of type " + str(type(inputs)) + " cannot implicitly provide a deepNet to cell.")
 
@@ -199,6 +211,9 @@ class Cell(N2D2_Interface):
     def get_name(self):
         return self._name
 
+    def get_nb_outputs(self):
+        return self._N2D2_object.getNbOutputs()
+
     def _sync_inputs_and_parents(self, inputs):
         parents = self._N2D2_object.getParentsCells()
         # Necessary because N2D2 returns [None] if no parents
@@ -344,7 +359,6 @@ class Fc(Cell):
 
 
 
-# TODO: Implement 1x1 Conv and DepthWise Conv
 # TODO: This is less powerful than the generator, in the sense that it does not accept several formats for the stride, conv, etc.
 class Conv(Cell):
 
@@ -691,24 +705,28 @@ class Softmax(Cell):
         'Frame_CUDA<double>': N2D2.SoftmaxCell_Frame_CUDA_double,
     }
 
-    def __init__(self, inputs, nbOutputs,  N2D2_object=None, **config_parameters):
+    def __init__(self, inputs,  N2D2_object=None, **config_parameters):
 
-        if N2D2_object is not None and (nbOutputs is not None or len(config_parameters) > 0):
+        if N2D2_object is not None and len(config_parameters) > 0:
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
         if N2D2_object is None:
-            self._create_from_arguments(inputs, nbOutputs, **config_parameters)
+            self._create_from_arguments(inputs, **config_parameters)
         else:
             self._create_from_N2D2_object(inputs, N2D2_object)
 
-    def _create_from_arguments(self, inputs, nbOutputs, **config_parameters):
-        Cell.__init__(self, inputs, nbOutputs, **config_parameters)
+    def _create_from_arguments(self, inputs, **config_parameters):
+        Cell.__init__(self, inputs, inputs.get_nb_outputs(), **config_parameters)
 
         self._parse_optional_arguments(['withLoss', 'groupSize'])
         self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
                                                                      self.get_name(),
                                                                      self._constructor_arguments['nbOutputs'],
                                                                      **self._optional_constructor_arguments)
+
+        # Delete to avoid print
+        del self._constructor_arguments['nbOutputs']
+
         """Set and initialize here all complex cell members"""
         for key, value in self._config_parameters.items():
             if key is 'activationFunction':
@@ -745,24 +763,27 @@ class Dropout(Cell):
         'Frame<double>': N2D2.DropoutCell_Frame_double,
         'Frame_CUDA<double>': N2D2.DropoutCell_Frame_CUDA_double,
     }
-    def __init__(self, inputs, nbOutputs, N2D2_object=None, **config_parameters):
+    def __init__(self, inputs, N2D2_object=None, **config_parameters):
 
-        if N2D2_object is not None and (nbOutputs is not None or len(config_parameters) > 0):
+        if N2D2_object is not None and  len(config_parameters) > 0:
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
         if N2D2_object is None:
-            self._create_from_arguments(inputs, nbOutputs, **config_parameters)
+            self._create_from_arguments(inputs, **config_parameters)
         else:
             self._create_from_N2D2_object(inputs, N2D2_object)
 
-    def _create_from_arguments(self, inputs, nbOutputs, **config_parameters):
-        Cell.__init__(self, inputs, nbOutputs, **config_parameters)
+    def _create_from_arguments(self, inputs, **config_parameters):
+        Cell.__init__(self, inputs, inputs.get_nb_outputs(), **config_parameters)
         # No optionnal args
         self._parse_optional_arguments([])
         self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
                                                         self.get_name(),
                                                         self._constructor_arguments['nbOutputs'],
                                                         **self._optional_constructor_arguments)
+
+        # Delete to avoid print
+        del self._constructor_arguments['nbOutputs']
 
         """Set and initialize here all complex cell members"""
         for key, value in self._config_parameters.items():
@@ -1026,23 +1047,26 @@ class BatchNorm(Cell):
         'Frame<float>': N2D2.BatchNormCell_Frame_float,
         'Frame_CUDA<float>': N2D2.BatchNormCell_Frame_CUDA_float,
     }
-    def __init__(self, inputs, nbOutputs, N2D2_object=None, **config_parameters):
-        if N2D2_object is not None and (nbOutputs is not None or len(config_parameters) > 0):
+    def __init__(self, inputs, N2D2_object=None, **config_parameters):
+        if N2D2_object is not None and len(config_parameters) > 0:
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
         if N2D2_object is None:
-            self._create_from_arguments(inputs, nbOutputs, **config_parameters)
+            self._create_from_arguments(inputs, **config_parameters)
         else:
             self._create_from_N2D2_object(inputs, N2D2_object)
 
-    def _create_from_arguments(self, inputs, nbOutputs, **config_parameters):
-        Cell.__init__(self, inputs, nbOutputs, **config_parameters)
+    def _create_from_arguments(self, inputs, **config_parameters):
+        Cell.__init__(self, inputs, inputs.get_nb_outputs(), **config_parameters)
         # No optional parameter
         self._parse_optional_arguments([])
         self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
                                                 self.get_name(),
                                                 self._constructor_arguments['nbOutputs'],
                                                 **self._optional_constructor_arguments)
+
+        # Delete to avoid print
+        del self._constructor_arguments['nbOutputs']
 
         """Set and initialize here all complex cell members"""
         for key, value in self._config_parameters.items():

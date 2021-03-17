@@ -106,7 +106,7 @@ elif args.arch == 'MobileNet_v1_SAT':
     #provider.add_on_the_fly_transformation(otf_trans)
     model_extractor = n2d2.deepnet.load_from_ONNX("/home/jt251134/N2D2-IP/models/Quantization/SAT/model_mobilenet-v1-32b-clamp.onnx",
                                             dims=[size, size, 3], batch_size=batch_size, ini_file="ignore_onnx.ini")
-    model_extractor.get_first().add_input(provider)
+    model_extractor.add_input(provider)
     print(model_extractor)
 
     if not args.weights == "":
@@ -116,7 +116,7 @@ elif args.arch == 'MobileNet_v2':
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
     model_extractor = n2d2.model.mobilenet_v2.load_from_ONNX(download=True, batch_size=batch_size)
-    model_extractor.get_first().add_input(provider)
+    model_extractor.add_input(provider)
     model_extractor.remove_subsequence(118, False)
     model_extractor.remove_subsequence(117, False)
     model_extractor.remove_subsequence(116, False)
@@ -125,7 +125,7 @@ elif args.arch == 'ResNet':
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
     model_extractor = n2d2.model.resnet.load_from_ONNX('18', 'post_act', download=True, batch_size=batch_size)
-    model_extractor.get_first().add_input(provider)
+    model_extractor.add_input(provider)
     model_extractor.remove_subsequence(47, False)
     model_extractor.remove_subsequence(46, False)
 else:
@@ -135,17 +135,14 @@ print(model_extractor)
 
 print("Recreate head as separate deepnet")
 head_deepnet = n2d2.deepnet.DeepNet()
-interface = n2d2.provider.TensorPlaceholder(model_extractor.get_last().get_outputs())
+interface = n2d2.provider.TensorPlaceholder(model_extractor.get_outputs())
 model_head = n2d2.deepnet.Sequence([], name="head")
-model_head.add(n2d2.cell.Pool2D(interface, model_extractor.get_last().get_outputs().dimZ(),
-                                poolDims=[model_extractor.get_last().get_outputs().dimX(),
-                                          model_extractor.get_last().get_outputs().dimY()],
-                                strideDims=[1, 1], pooling='Average', name="pool1",  deepNet=head_deepnet))
-model_head.add(n2d2.model.Fc(model_head.get_last(), nbOutputs=nb_outputs, activationFunction=n2d2.activation.Linear(),
+model_head.add(n2d2.cell.GlobalPool2D(interface, pooling='Average', name="pool1",  deepNet=head_deepnet))
+model_head.add(n2d2.model.Fc(model_head, nbOutputs=nb_outputs, activationFunction=n2d2.activation.Linear(),
                              weightsFiller=n2d2.filler.Xavier(),
                              biasFiller=n2d2.filler.Constant(value=0.0),
                              weightsSolver=n2d2.solver.SGD(learningRate=0.01), name="fc"))
-model_head.add(n2d2.model.Softmax(model_head.get_last(), nb_outputs, withLoss=True, name="softmax"))
+model_head.add(n2d2.model.Softmax(model_head, withLoss=True, name="softmax"))
 print(model_head)
 
 print("Create classifier")

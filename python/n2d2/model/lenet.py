@@ -70,32 +70,25 @@ class QuantLeNet(Sequence):
 
         first_layer_config = quant_conv_def()
         first_layer_config['quantizer'].set_range(255)
-        self.extractor.add(Conv(inputs, nbOutputs=6, kernelDims=[5, 5],
-                      **first_layer_config, deepNet=self.deepnet, name="conv1"))
-        self.extractor.add(BatchNorm(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(),
-                           **quant_bn_def(), name="bn1"))
-        self.extractor.add(Pool2D(self.extractor.get_last(), nbOutputs=6, poolDims=[2, 2],
-                        strideDims=[2, 2], pooling='Max', name="pool1"))
-        self.extractor.add(Conv(self.extractor.get_last(), nbOutputs=16, kernelDims=[5, 5],
-                      **quant_conv_def(), name="conv2"))
-        self.extractor.add(BatchNorm(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(),
-                      **quant_bn_def(), name="bn2"))
-        self.extractor.add(Pool2D(self.extractor.get_last(), nbOutputs=16, poolDims=[2, 2],
-                        strideDims=[2, 2], pooling='Max', name="pool2"))
-        self.extractor.add(Conv(self.extractor.get_last(), nbOutputs=120, kernelDims=[5, 5],
-                      **quant_conv_def(), name="conv3"))
-        self.extractor.add(BatchNorm(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(),
-                           **quant_bn_def(), name="bn3"))
-        self.extractor.add(Fc(self.extractor.get_last(), nbOutputs=84, **quant_fc_def(), name="fc1"))
-        self.extractor.add(Dropout(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(),  name="fc1.drop"))
+        self.extractor.add(Conv(inputs, nbOutputs=6, kernelDims=[5, 5], **first_layer_config, name="conv1",
+                                deepNet=self.deepnet))
+        self.extractor.add(BatchNorm(self.extractor, **quant_bn_def(), name="bn1"))
+        self.extractor.add(Pool2D(self.extractor, poolDims=[2, 2], strideDims=[2, 2], pooling='Max', name="pool1"))
+        self.extractor.add(Conv(self.extractor, nbOutputs=16, kernelDims=[5, 5], **quant_conv_def(), name="conv2"))
+        self.extractor.add(BatchNorm(self.extractor, **quant_bn_def(), name="bn2"))
+        self.extractor.add(Pool2D(self.extractor, poolDims=[2, 2], strideDims=[2, 2], pooling='Max', name="pool2"))
+        self.extractor.add(Conv(self.extractor, nbOutputs=120, kernelDims=[5, 5], **quant_conv_def(), name="conv3"))
+        self.extractor.add(BatchNorm(self.extractor, **quant_bn_def(), name="bn3"))
+        self.extractor.add(Fc(self.extractor, nbOutputs=84, **quant_fc_def(), name="fc1"))
+        self.extractor.add(Dropout(self.extractor, name="fc1.drop"))
 
         self.classifier = Sequence([], name="classifier")
 
         last_layer_config = quant_fc_def()
         last_layer_config['quantizer'].set_range(255)
         last_layer_config['activationFunction'].get_quantizer().set_range(255)
-        self.classifier.add(Fc(self.extractor.get_last(), nbOutputs=nb_outputs, **last_layer_config,  name="fc2"))
-        self.classifier.add(Softmax(self.classifier.get_last(), nbOutputs=nb_outputs, withLoss=True, name="softmax"))
+        self.classifier.add(Fc(self.extractor, nbOutputs=nb_outputs, **last_layer_config,  name="fc2"))
+        self.classifier.add(Softmax(self.classifier, withLoss=True, name="softmax"))
 
         Sequence.__init__(self, [self.extractor, self.classifier])
 
@@ -130,30 +123,23 @@ class LeNet(Sequence):
 
         self.extractor = Sequence([], name='extractor')
 
-        self.extractor.add(Conv(inputs, nbOutputs=6, kernelDims=[5, 5],
-                      **conv_def(), deepNet= self.deepnet, name="conv1"))
-        self.extractor.add(BatchNorm(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(),
-                           **bn_def(), name="bn1"))
-        self.extractor.add(Pool2D(self.extractor.get_last(), nbOutputs=6, poolDims=[2, 2],
-                        strideDims=[2, 2], pooling='Max', name="pool1"))
-        self.extractor.add(Conv(self.extractor.get_last(), nbOutputs=16, kernelDims=[5, 5],
-                      **conv_def(), name="conv2"))
-        self.extractor.add(BatchNorm(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(),
-                      **bn_def(), name="bn2"))
-        self.extractor.add(Pool2D(self.extractor.get_last(), nbOutputs=16, poolDims=[2, 2],
-                        strideDims=[2, 2], pooling='Max', name="pool2"))
-        self.extractor.add(Conv(self.extractor.get_last(), nbOutputs=120, kernelDims=[5, 5],
-                      **conv_def(), name="conv3"))
-        self.extractor.add(BatchNorm(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(),
-                           **bn_def(), name="bn3"))
-        self.extractor.add(Fc(self.extractor.get_last(), nbOutputs=84, **fc_def(), name="fc1"))
-        self.extractor.add(Dropout(self.extractor.get_last(), nbOutputs=self.extractor.get_last().get_outputs().dimZ(), name="fc1.drop"))
+        self.extractor.add(Conv(inputs, nbOutputs=6, kernelDims=[5, 5], **conv_def(), name="conv1",
+                                deepNet=self.deepnet))
+        self.extractor.add(BatchNorm(self.extractor, **bn_def(), name="bn1"))
+        self.extractor.add(Pool2D(self.extractor, poolDims=[2, 2], strideDims=[2, 2], pooling='Max', name="pool1"))
+        self.extractor.add(Conv(self.extractor, nbOutputs=16, kernelDims=[5, 5], **conv_def(), name="conv2"))
+        self.extractor.add(BatchNorm(self.extractor, **bn_def(), name="bn2"))
+        self.extractor.add(Pool2D(self.extractor, poolDims=[2, 2], strideDims=[2, 2], pooling='Max', name="pool2"))
+        self.extractor.add(Conv(self.extractor, nbOutputs=120, kernelDims=[5, 5], **conv_def(), name="conv3"))
+        self.extractor.add(BatchNorm(self.extractor, **bn_def(), name="bn3"))
+        self.extractor.add(Fc(self.extractor, nbOutputs=84, **fc_def(), name="fc1"))
+        self.extractor.add(Dropout(self.extractor, name="fc1.drop"))
 
 
         self.classifier = Sequence([], name="classifier")
 
-        self.classifier.add(Fc(self.extractor.get_last(), nbOutputs=nb_outputs, **fc_def(),  name="fc2"))
-        self.classifier.add(Softmax(self.classifier.get_last(), nbOutputs=nb_outputs, withLoss=True, name="lenet_softmax"))
+        self.classifier.add(Fc(self.extractor, nbOutputs=nb_outputs, **fc_def(),  name="fc2"))
+        self.classifier.add(Softmax(self.classifier, withLoss=True, name="lenet_softmax"))
 
         Sequence.__init__(self, [self.extractor, self.classifier])
 

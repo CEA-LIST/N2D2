@@ -58,6 +58,12 @@ class DataProvider(Provider):
         self._transformations = []
         self._otf_transformations = []
 
+    def get_last(self):
+        return self
+
+    def dims(self):
+        return self._N2D2_object.getSize()
+
     def get_name(self):
         return self._name
 

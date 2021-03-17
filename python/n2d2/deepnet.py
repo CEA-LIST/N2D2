@@ -192,16 +192,24 @@ class Sequence:
                 elem._get_cells(cells)
             else:
                 cells[elem.get_name()] = elem
-    """
+
     def add_input(self, inputs):
         self.get_first().add_input(inputs)
-    
-    def get_inputs(self):
-        return self.get_first().get_inputs()
 
     def clear_input(self):
         self.get_first().clear_input()
-    """
+
+    def get_outputs(self):
+        return self.get_last().get_outputs()
+
+    def dims(self):
+        return self.get_last().get_outputs().dims()
+
+    def get_nb_outputs(self):
+        return self.get_last().get_nb_outputs()
+
+    def __getitem__(self, item):
+        return self.get_cells()[item]
 
     # TODO: Is this really used?
     def initialize(self):

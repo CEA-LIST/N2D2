@@ -29,8 +29,6 @@ batch_size = 256
 database = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/")
 provider = n2d2.provider.DataProvider(database, [28, 28, 1], batchSize=batch_size)
 
-deepNet = n2d2.deepnet.DeepNet()
-
 """
 * First way to define a model
 * Create a sequence object on-the-fly and add to sequence by using 'add'. 
@@ -39,20 +37,21 @@ deepNet = n2d2.deepnet.DeepNet()
 """
 
 
-"""model = n2d2.deepnet.Sequence([])
-model.add(n2d2.cell.Conv(provider, 5, kernelDims=[5, 5], activationFunction=n2d2.activation.Rectifier(), deepNet=deepNet))
-model.add(n2d2.cell.Fc(model.get_last(), 10, activationFunction=n2d2.activation.Linear()))
-model.add(n2d2.cell.Softmax(model.get_last(), 10, withLoss=True))"""
+model = n2d2.deepnet.Sequence([])
+model.add(n2d2.cell.Conv(provider, 5, kernelDims=[5, 5], activationFunction=n2d2.activation.Rectifier()))
+model.add(n2d2.cell.Fc(model, 10, activationFunction=n2d2.activation.Linear()))
+model.add(n2d2.cell.Softmax(model, withLoss=True))
 
 
 """
 * Second way to define a model.
 * Create cell objects and add them to a sequence after creation. The created object can also be added with the 'add' method
 """
-conv1 = n2d2.cell.Conv(provider, 5, kernelDims=[5, 5], activationFunction=n2d2.activation.Rectifier(), deepNet=deepNet)
+"""
+conv1 = n2d2.cell.Conv(provider, 5, kernelDims=[5, 5], activationFunction=n2d2.activation.Rectifier())
 fc = n2d2.cell.Fc(conv1, 10, activationFunction=n2d2.activation.Linear())
-softmax = n2d2.cell.Softmax(fc, 10, withLoss=True)
-model = n2d2.deepnet.Sequence([conv1, fc, softmax])
+softmax = n2d2.cell.Softmax(fc, withLoss=True)
+model = n2d2.deepnet.Sequence([conv1, fc, softmax])"""
 
 print(model)
 

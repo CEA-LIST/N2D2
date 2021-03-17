@@ -84,7 +84,7 @@ if args.arch == 'MobileNet_v1':
     if not args.weights == "":
         extractor.import_free_parameters(args.weights)
     for key in ['div4', 'div8', 'div16', 'div32']:
-        scales.append(extractor.scales[key].get_last())
+        scales.append(extractor.scales[key])
 elif args.arch == 'MobileNet_v1_SAT':
 
     print("Add transformation")
@@ -101,11 +101,11 @@ elif args.arch == 'MobileNet_v1_SAT':
 
     extractor = n2d2.deepnet.load_from_ONNX("/home/jt251134/N2D2-IP/models/Quantization/SAT/model_mobilenet-v1-32b-clamp.onnx",
                                             dims=size, batch_size=batch_size, ini_file="ignore_onnx.ini")
-    extractor.get_first().add_input(provider)
-    scales.append(extractor.get_cells()['184'])
-    scales.append(extractor.get_cells()['196'])
-    scales.append(extractor.get_cells()['232'])
-    scales.append(extractor.get_cells()['244'])
+    extractor.add_input(provider)
+    scales.append(extractor['184'])
+    scales.append(extractor['196'])
+    scales.append(extractor['232'])
+    scales.append(extractor['244'])
 elif args.arch == 'MobileNet_v2':
     trans = n2d2.transform.Composite([
         n2d2.transform.Rescale(width=size[0], height=size[1]),
@@ -118,15 +118,15 @@ elif args.arch == 'MobileNet_v2':
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
     extractor = n2d2.model.mobilenet_v2.load_from_ONNX(download=True, dims=size, batch_size=batch_size)
-    extractor.get_first().add_input(provider)
+    extractor.add_input(provider)
     extractor.remove_subsequence(118, False)
     extractor.remove_subsequence(117, False)
     extractor.remove_subsequence(116, False)
-    #scales.append(extractor.get_cells()['mobilenetv20_features_linearbottleneck1_conv0_fwd'])
-    scales.append(extractor.get_cells()['mobilenetv20_features_linearbottleneck3_batchnorm0_fwd'])
-    scales.append(extractor.get_cells()['mobilenetv20_features_linearbottleneck10_batchnorm0_fwd'])
-    scales.append(extractor.get_cells()['mobilenetv20_features_linearbottleneck13_batchnorm0_fwd'])
-    scales.append(extractor.get_cells()['mobilenetv20_features_batchnorm1_fwd'])
+    #scales.append(extractor['mobilenetv20_features_linearbottleneck1_conv0_fwd'])
+    scales.append(extractor['mobilenetv20_features_linearbottleneck3_batchnorm0_fwd'])
+    scales.append(extractor['mobilenetv20_features_linearbottleneck10_batchnorm0_fwd'])
+    scales.append(extractor['mobilenetv20_features_linearbottleneck13_batchnorm0_fwd'])
+    scales.append(extractor['mobilenetv20_features_batchnorm1_fwd'])
 elif args.arch == 'ResNet18':
     trans = n2d2.transform.Composite([
         n2d2.transform.Rescale(width=size[0], height=size[1]),
@@ -139,15 +139,15 @@ elif args.arch == 'ResNet18':
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
     extractor = n2d2.model.resnet.load_from_ONNX('18', 'post_act', download=True, dims=size, batch_size=batch_size)
-    extractor.get_first().add_input(provider)
+    extractor.add_input(provider)
     extractor.remove_subsequence(47, False)
     extractor.remove_subsequence(46, False)
     extractor.remove_subsequence(45, False)
-    # scales.append(extractor.get_cells()['resnetv22_batchnorm1_fwd'])
-    scales.append(extractor.get_cells()['resnetv22_stage2_batchnorm0_fwd'])
-    scales.append(extractor.get_cells()['resnetv22_stage3_batchnorm0_fwd'])
-    scales.append(extractor.get_cells()['resnetv22_stage4_batchnorm0_fwd'])
-    scales.append(extractor.get_cells()['resnetv22_batchnorm2_fwd'])
+    # scales.append(extractor['resnetv22_batchnorm1_fwd'])
+    scales.append(extractor['resnetv22_stage2_batchnorm0_fwd'])
+    scales.append(extractor['resnetv22_stage3_batchnorm0_fwd'])
+    scales.append(extractor['resnetv22_stage4_batchnorm0_fwd'])
+    scales.append(extractor['resnetv22_batchnorm2_fwd'])
 else:
     raise ValueError("Invalid architecture: " + args.arch)
 
