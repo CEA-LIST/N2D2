@@ -54,7 +54,7 @@ TEST(ReshapeCell_Frame, propagate)
 {
     // NHWC -> NCHW
     const unsigned int nbOutputs = 10;
-    const std::vector<int> shape = {2, 1, nbOutputs, 1};
+    const std::vector<int> shape = {2, 1, (int)nbOutputs, 1};
 
     Network net;
     DeepNet dn(net);
