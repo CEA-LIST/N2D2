@@ -503,6 +503,8 @@ void N2D2::CPP_DeepNetExport::generateEnvironmentHeader(DeepNet& deepNet,
     envHeader << "#ifndef N2D2_EXPORTCPP_ENV_LAYER_H\n"
                  "#define N2D2_EXPORTCPP_ENV_LAYER_H\n\n";
 
+    envHeader << "#include <stdint.h>\n\n";
+
     const std::shared_ptr<StimuliProvider> sp = deepNet.getStimuliProvider();
 
     // Constants
