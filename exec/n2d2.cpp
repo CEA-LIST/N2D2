@@ -110,8 +110,12 @@ std::vector<unsigned int> setMultiDevices(std::string cudaDev)
         std::copy(devices.begin(),
                 devices.end(),
                 std::ostream_iterator<unsigned int>(devString, " "));
-        
+
+#ifdef WIN32
+        _putenv_s("N2D2_GPU_DEVICES", devString.str().c_str());
+#else
         setenv("N2D2_GPU_DEVICES", devString.str().c_str(), 1);
+#endif
     }
     
     return devices;
