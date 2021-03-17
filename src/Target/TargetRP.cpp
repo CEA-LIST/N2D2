@@ -460,8 +460,8 @@ void N2D2::TargetRP::logEstimatedLabels(const std::string& dirName) const
 
     const std::vector<int>& batch = mStimuliProvider->getBatch();
 
-    int dev = 0;
 #ifdef CUDA
+    int dev = 0;
     CHECK_CUDA_STATUS(cudaGetDevice(&dev));
 #endif
 

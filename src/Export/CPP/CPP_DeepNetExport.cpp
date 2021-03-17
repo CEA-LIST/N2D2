@@ -257,7 +257,11 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                             ? (*itParent)->getName() : "env");
 
                     if (parentChilds.size() == 1) {
-                        // Remainder: there can be multiple allocable cells only
+                        const std::map<std::shared_ptr<Cell>,
+                            MemoryManager::MemoryPlane>::iterator itConcat
+                                = noBranchConcats.find((*itParent));
+
+                        // Reminder: there can be multiple allocable cells only
                         // for concatenation. In this case, we want all the
                         // allocable cells to be allocated on the same memory
                         // space with striding to avoid a concat operation.
@@ -274,31 +278,27 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                         // with stride).
                         // TODO: depending on the processing order of the graph,
                         // this may lead to sub-optimal memory mapping!
-                        if (memManager.getNbPlanes((*itParent)) == 0) {
+                        if (itConcat == noBranchConcats.end()
+                            && memManager.getNbPlanes((*itParent)) == 0)
+                        {
                             excludedAllocableCells.push_back(*itCell);
                             continue;
                         }
 
-                        const std::map<std::shared_ptr<Cell>,
-                            MemoryManager::MemoryPlane>::iterator itConcat
-                                = noBranchConcats.find((*itParent));
+                        const MemoryManager::MemoryPlane& memPlane
+                            = (itConcat != noBranchConcats.end())
+                                ? (*itConcat).second
+                                : memManager.getPlanes((*itParent)).back();
 
-                        if (itConcat != noBranchConcats.end()) {
-                            const MemoryManager::MemoryPlane& memPlane
-                                = (itConcat != noBranchConcats.end())
-                                    ? (*itConcat).second
-                                    : memManager.getPlanes((*itParent)).back();
-
-                            if (isWrappable || !memManager.isWrapAround(
-                                        memPlane.memSpace,
-                                        memPlane.getFinalOffset()
-                                            - memPlane.memSpace->offset,
-                                        fullSize))
-                            {
-                                if (memPlane.getSize() > wrapAroundSize) {
-                                    wrapAroundSize = memPlane.getSize();
-                                    wrapAroundMemPlane = &memPlane;
-                                }
+                        if (isWrappable || !memManager.isWrapAround(
+                                    memPlane.memSpace,
+                                    memPlane.getFinalOffset()
+                                        - memPlane.memSpace->offset,
+                                    fullSize))
+                        {
+                            if (memPlane.getSize() > wrapAroundSize) {
+                                wrapAroundSize = memPlane.getSize();
+                                wrapAroundMemPlane = &memPlane;
                             }
                         }
                     }
