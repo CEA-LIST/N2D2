@@ -57,7 +57,7 @@ void init_StimuliProvider(py::module &m) {
     // .def("getSizeD", &StimuliProvider::getSizeD)
     // .def("getBatchSize", &StimuliProvider::getBatchSize)
     // .def("isCompositeStimuli", &StimuliProvider::isCompositeStimuli)
-    // .def("getNbChannels", &StimuliProvider::getNbChannels)
+    .def("getNbChannels", &StimuliProvider::getNbChannels)
     // .def("getNbTransformations", &StimuliProvider::getNbTransformations, py::arg("set"))
     // .def("getTransformation", &StimuliProvider::getTransformation, py::arg("set"))
     // .def("getOnTheFlyTransformation", &StimuliProvider::getOnTheFlyTransformation, py::arg("set"))

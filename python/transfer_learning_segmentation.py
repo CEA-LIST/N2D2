@@ -44,10 +44,10 @@ args = parser.parse_args()
 n2d2.global_variables.set_cuda_device(args.dev)
 n2d2.global_variables.default_model = "Frame_CUDA"
 
-batch_size = 16
+batch_size = 8
 avg_window = 10000//batch_size
-#size = [1024, 512, 3]
-size = [512, 256, 3]
+size = [1024, 512, 3]
+#size = [512, 256, 3]
 
 
 print("Create database")
@@ -58,35 +58,47 @@ print(database)
 print("Create provider")
 provider = n2d2.provider.DataProvider(database=database, size=size, batchSize=batch_size, compositeStimuli=True)
 
-print("Add transformation")
-trans = n2d2.transform.Composite([
-    n2d2.transform.Rescale(width=size[0], height=size[1]),
-    n2d2.transform.ColorSpace(colorSpace='RGB'),
-    n2d2.transform.RangeAffine(firstOperator='Divides', firstValue=[255.0]),
-])
-
 otf_trans = n2d2.transform.Composite([
     n2d2.transform.Flip(applyTo='LearnOnly', randomHorizontalFlip=True),
     n2d2.transform.Distortion(applyTo='LearnOnly', elasticGaussianSize=21, elasticSigma=6.0,
                               elasticScaling=36.0, scaling=10.0, rotation=10.0),
 ])
 
-print(trans)
-print(otf_trans)
-provider.add_transformation(trans)
-provider.add_on_the_fly_transformation(otf_trans)
-
 scales = []
 if args.arch == 'MobileNet_v1':
-    """Equivalent to N2D2/models/MobileNet_v2.ini"""
+    trans = n2d2.transform.Composite([
+        n2d2.transform.Rescale(width=size[0], height=size[1]),
+        n2d2.transform.ColorSpace(colorSpace='BGR'),
+        n2d2.transform.RangeAffine(firstOperator='Minus', firstValue=[103.94, 116.78, 123.68], secondOperator='Multiplies',
+                    secondValue=[0.017]),
+    ])
+
+    print(trans)
+    #print(otf_trans)
+    provider.add_transformation(trans)
+    #provider.add_on_the_fly_transformation(otf_trans)
+
+    #extractor = n2d2.model.MobileNet_v1_FeatureExtractor(provider, alpha=0.5)
     extractor = n2d2.model.MobileNet_v1_FeatureExtractor(provider, alpha=0.5)
     extractor.remove_subsequence(5)
     if not args.weights == "":
         extractor.import_free_parameters(args.weights)
-    #for key in ['div2', 'div4', 'div8', 'div16', 'div32']:
     for key in ['div4', 'div8', 'div16', 'div32']:
         scales.append(extractor.scales[key].get_last())
 elif args.arch == 'MobileNet_v1_SAT':
+
+    print("Add transformation")
+    trans = n2d2.transform.Composite([
+        n2d2.transform.Rescale(width=size[0], height=size[1]),
+        n2d2.transform.ColorSpace(colorSpace='RGB'),
+        n2d2.transform.RangeAffine(firstOperator='Divides', firstValue=[255.0]),
+    ])
+
+    print(trans)
+    print(otf_trans)
+    provider.add_transformation(trans)
+    provider.add_on_the_fly_transformation(otf_trans)
+
     extractor = n2d2.deepnet.load_from_ONNX("/home/jt251134/N2D2-IP/models/Quantization/SAT/model_mobilenet-v1-32b-clamp.onnx",
                                             dims=size, batch_size=batch_size, ini_file="ignore_onnx.ini")
     extractor.get_first().add_input(provider)
@@ -95,109 +107,127 @@ elif args.arch == 'MobileNet_v1_SAT':
     scales.append(extractor.get_cells()['232'])
     scales.append(extractor.get_cells()['244'])
 elif args.arch == 'MobileNet_v2':
-    """Equivalent to N2D2/models/MobileNet_v2.ini"""
-    #model = n2d2.model.Mobilenet_v2(alpha=0.5, size=size, l=10, expansion=6)
-    extractor = n2d2.model.mobilenet_v2.load_from_ONNX(download=True, batch_size=batch_size)
-    extractor.add_input(provider)
+    trans = n2d2.transform.Composite([
+        n2d2.transform.Rescale(width=size[0], height=size[1]),
+        n2d2.transform.RangeAffine(firstOperator='Divides', firstValue=[255.0]),
+        n2d2.transform.ColorSpace(colorSpace='RGB'),
+        n2d2.transform.RangeAffine(firstOperator='Minus', firstValue=[0.485, 0.456, 0.406], secondOperator='Divides',
+                    secondValue=[0.229, 0.224, 0.225])
+    ])
+
+    provider.add_transformation(trans)
+    provider.add_on_the_fly_transformation(otf_trans)
+    extractor = n2d2.model.mobilenet_v2.load_from_ONNX(download=True, dims=size, batch_size=batch_size)
+    extractor.get_first().add_input(provider)
+    extractor.remove_subsequence(118, False)
     extractor.remove_subsequence(117, False)
+    extractor.remove_subsequence(116, False)
+    #scales.append(extractor.get_cells()['mobilenetv20_features_linearbottleneck1_conv0_fwd'])
+    scales.append(extractor.get_cells()['mobilenetv20_features_linearbottleneck3_batchnorm0_fwd'])
+    scales.append(extractor.get_cells()['mobilenetv20_features_linearbottleneck10_batchnorm0_fwd'])
+    scales.append(extractor.get_cells()['mobilenetv20_features_linearbottleneck13_batchnorm0_fwd'])
+    scales.append(extractor.get_cells()['mobilenetv20_features_batchnorm1_fwd'])
+elif args.arch == 'ResNet18':
+    trans = n2d2.transform.Composite([
+        n2d2.transform.Rescale(width=size[0], height=size[1]),
+        n2d2.transform.RangeAffine(firstOperator='Divides', firstValue=[255.0]),
+        n2d2.transform.ColorSpace(colorSpace='RGB'),
+        n2d2.transform.RangeAffine(firstOperator='Minus', firstValue=[0.485, 0.456, 0.406], secondOperator='Divides',
+                    secondValue=[0.229, 0.224, 0.225]),
+    ])
+
+    provider.add_transformation(trans)
+    provider.add_on_the_fly_transformation(otf_trans)
+    extractor = n2d2.model.resnet.load_from_ONNX('18', 'post_act', download=True, dims=size, batch_size=batch_size)
+    extractor.get_first().add_input(provider)
+    extractor.remove_subsequence(47, False)
+    extractor.remove_subsequence(46, False)
+    extractor.remove_subsequence(45, False)
+    # scales.append(extractor.get_cells()['resnetv22_batchnorm1_fwd'])
+    scales.append(extractor.get_cells()['resnetv22_stage2_batchnorm0_fwd'])
+    scales.append(extractor.get_cells()['resnetv22_stage3_batchnorm0_fwd'])
+    scales.append(extractor.get_cells()['resnetv22_stage4_batchnorm0_fwd'])
+    scales.append(extractor.get_cells()['resnetv22_batchnorm2_fwd'])
 else:
     raise ValueError("Invalid architecture: " + args.arch)
 
 print(extractor)
-"""
-print("DrawExtractorGraph")
-import N2D2
-N2D2.DrawNet.drawGraph(extractor._deepNet.N2D2(), "drawGraph_extractor")
-N2D2.DrawNet.draw(extractor._deepNet.N2D2(), "draw_extractor")
-"""
+
 print("Create decoder")
 decoder = n2d2.model.SegmentationDecoder(scales)
 print(decoder)
-"""
-print("DrawDecoderGraph")
-N2D2.DrawNet.drawGraph(decoder._deepNet.N2D2(), "drawGraph_head")
-N2D2.DrawNet.draw(decoder._deepNet.N2D2(), "draw_head")
-"""
 
 print("Create classifier")
-segmantation_decoder = n2d2.application.Classifier(provider, decoder, noDisplayLabel=0, defaultValue=0.0, targetValue=1.0,
+segmentation_decoder = n2d2.application.Classifier(provider, decoder, noDisplayLabel=0, defaultValue=0.0, targetValue=1.0, name=args.arch+".segmentation_softmax",
                         labelsMapping="/home/jt251134/N2D2-IP/models/Segmentation_GoogleNet/cityscapes_5cls.target")
 
-#decoder.set_Cityscapes_solvers(database.get_nb_stimuli('Learn')*args.epochs)
-#decoder.set_Cityscapes_solvers(59500)
-
 print("\n### Train ###")
-
-#segmantation_decoder.log_estimated_labels_json("train")
 
 for epoch in range(args.epochs):
 
     print("\n### Train Epoch: " + str(epoch) + " ###")
 
-    segmantation_decoder.set_mode('Learn')
+    segmentation_decoder.set_mode('Learn')
 
     for i in range(math.ceil(database.get_nb_stimuli('Learn') / batch_size)):
 
-        # Load example
-        segmantation_decoder.read_random_batch()
+        segmentation_decoder.read_random_batch()
 
         extractor.propagate(inference=True)
 
-        segmantation_decoder.process()
+        segmentation_decoder.process()
 
-        segmantation_decoder.optimize()
+        segmentation_decoder.optimize()
 
         print("Example: " + str(i*batch_size) + " of " + str(database.get_nb_stimuli('Learn')) + ", train success: "
-              + "{0:.2f}".format(100*segmantation_decoder.get_average_success(window=avg_window)) + "%", end='\n')
-
-        #if i >= math.ceil(database.get_nb_stimuli('Learn') / batch_size) - 1:
-        #    segmantation_decoder.log_estimated_labels("train")
+              + "{0:.2f}".format(100*segmentation_decoder.get_average_success(window=avg_window)) + "%", end='\n')
 
 
-    if epoch % 5 == 0:
+    """
+    if epoch % 1 == 0:
         print("\n### Test ###")
 
-        segmantation_decoder.set_mode('Test')
+        segmentation_decoder.set_mode('Test')
 
         for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
-        #for i in range(3):
 
             batch_idx = i*batch_size
 
             # Load example
-            segmantation_decoder.read_batch(idx=batch_idx)
+            segmentation_decoder.read_batch(idx=batch_idx)
 
             extractor.propagate(inference=True)
 
-            segmantation_decoder.process()
+            segmentation_decoder.process()
 
             print("Example: " + str(i*batch_size) + " of " + str(database.get_nb_stimuli('Test')) + ", test success: "
-                  + "{0:.2f}".format(100 * segmantation_decoder.get_average_success()) + "%", end='\n')
+                  + "{0:.2f}".format(100 * segmentation_decoder.get_average_success()) + "%", end='\n')
 
-            if i >= math.ceil(database.get_nb_stimuli('Test') / batch_size) - 1:
-                segmantation_decoder.log_estimated_labels("test")
+            if i >= math.ceil(database.get_nb_stimuli('Test') / batch_size) - 5:
+                segmentation_decoder.log_estimated_labels("test")
 
         print("")
-
+    """
 
 
 
 print("\n### Final Test ###")
 
-segmantation_decoder.set_mode('Test')
+segmentation_decoder.set_mode('Test')
 
 for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
 
     batch_idx = i*batch_size
 
     # Load example
-    segmantation_decoder.read_batch(idx=batch_idx)
+    segmentation_decoder.read_batch(idx=batch_idx)
 
     extractor.propagate(inference=True)
 
-    segmantation_decoder.process()
+    segmentation_decoder.process()
 
     print("Example: " + str(i*batch_size)+ " of " + str(database.get_nb_stimuli('Test')) + ", test success: "
-          + "{0:.2f}".format(100 * segmantation_decoder.get_average_success()) + "%", end='\n')
+          + "{0:.2f}".format(100 * segmentation_decoder.get_average_success()) + "%", end='\n')
 
-    segmantation_decoder.log_estimated_labels("test")
+    if i >= math.ceil(database.get_nb_stimuli('Test') / batch_size) - 5:
+        segmentation_decoder.log_estimated_labels("test")

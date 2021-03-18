@@ -132,6 +132,7 @@ void init_SliceExtractionTransformation(py::module&);
 void init_ThresholdTransformation(py::module&);
 // void init_TrimTransformation(py::module &m);
 void init_WallisFilterTransformation(py::module&);
+void init_RandomResizeCropTransformation(py::module&);
 void init_CustomTransformation(py::module&);
 void init_CompositeTransformation(py::module &);
 
@@ -234,6 +235,9 @@ void init_RPCell_Frame_CUDA(py::module&);
 void init_ResizeCell(py::module&);
 void init_ResizeCell_Frame(py::module&);
 void init_ResizeCell_Frame_CUDA(py::module&);
+void init_ReshapeCell(py::module&);
+void init_ReshapeCell_Frame(py::module&);
+void init_ReshapeCell_Frame_CUDA(py::module&);
 void init_ScalingCell(py::module&);
 void init_ScalingCell_Frame(py::module&);
 void init_ScalingCell_Frame_CUDA(py::module&);
@@ -373,6 +377,7 @@ void init_N2D2(py::module& m) {
     init_ThresholdTransformation(m);
     init_WallisFilterTransformation(m);
     // init_TrimTransformation(m);
+    init_RandomResizeCropTransformation(m);
     init_CustomTransformation(m);
     init_CompositeTransformation(m);
 
@@ -469,6 +474,9 @@ void init_N2D2(py::module& m) {
     init_ResizeCell(m);
     init_ResizeCell_Frame(m);
     init_ResizeCell_Frame_CUDA(m);
+    init_ReshapeCell(m);
+    init_ReshapeCell_Frame(m);
+    init_ReshapeCell_Frame_CUDA(m);
     init_ScalingCell(m);
     init_ScalingCell_Frame(m);
     init_ScalingCell_Frame_CUDA(m);

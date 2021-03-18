@@ -188,7 +188,7 @@ if __name__ == "__main__":
                 n2d2.pytorch_interface.LayerN2D2(N2D2Cell),
                 # CustomConv2D -------------------------------------------------
                 # CustomConv2d(4, kernelDims=[3, 3], strideDims=[1, 1]),
-                # Torch Conv2D -------------------------------------------------
+                # Torch ConvDepthWise -------------------------------------------------
                 # torch.nn.Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
                 # torch.nn.Tanh(),
 

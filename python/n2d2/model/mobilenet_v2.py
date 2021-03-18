@@ -20,7 +20,7 @@
 """
 
 from n2d2.utils import ConfigSection
-from n2d2.cell import Fc, Conv, Conv2D, Softmax, Pool2D, BatchNorm, ElemWise
+from n2d2.cell import Fc, Conv, ConvDepthWise, Softmax, Pool2D, BatchNorm, ElemWise
 from n2d2.deepnet import Sequence
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
@@ -28,14 +28,17 @@ from n2d2.filler import He, Xavier, Constant
 import n2d2.deepnet
 import n2d2.global_variables
 import os
+from n2d2.transform import Rescale, PadCrop, ColorSpace, RangeAffine, SliceExtraction, Flip, Composite
+from n2d2.model.ILSVRC_outils import ILSVRC_preprocessing
+
 
 class ReLU6(Rectifier):
     def __init__(self):
         Rectifier.__init__(self, clipping=6.0)
 
-class ConvDepthWise(Conv2D):
+class ConvDepthWise(ConvDepthWise):
     def __init__(self, nb_outputs, stride, **config_parameters):
-        Conv2D.__init__(self, nbOutputs=nb_outputs, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[stride, stride], noBias=True, **config_parameters)
+        ConvDepthWise.__init__(self, nbOutputs=nb_outputs, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[stride, stride], noBias=True, **config_parameters)
 
 class ConvElemWise(Conv):
     def __init__(self, nb_outputs, **config_parameters):
@@ -142,8 +145,8 @@ class Mobilenet_v2(Sequence):
 def load_from_ONNX(dims=None, batch_size=1, path=None, download=False):
     if dims is None:
         dims = [224, 224, 3]
-    if not dims == [224, 224, 3]:
-        raise ValueError("This method does not support other dims than [224, 224, 3] yet")
+    #if not dims == [224, 224, 3]:
+    #    raise ValueError("This method does not support other dims than [224, 224, 3] yet")
     print("Loading MobileNet_v2 from ONNX with dims " + str(dims) + " and batch size " + str(batch_size))
     if path is None and not download:
         raise RuntimeError("No path specified")
@@ -158,5 +161,26 @@ def load_from_ONNX(dims=None, batch_size=1, path=None, download=False):
         path = n2d2.global_variables.model_cache+"/ONNX/mobilenetv2/mobilenetv2-1.0.onnx"
     model = n2d2.deepnet.load_from_ONNX(path, dims, batch_size=batch_size)
     return model
+
+
+
+def ILSVRC_preprocessing(size=224):
+   return ILSVRC_preprocessing(size)
+
+
+
+def ONNX_preprocessing(size=224):
+    margin = 32
+
+    trans = Composite([
+        Rescale(width=size+margin, height=size+margin),
+        PadCrop(width=size, height=size),
+        RangeAffine(firstOperator='Divides', firstValue=[255.0]),
+        ColorSpace(colorSpace='RGB'),
+        RangeAffine(firstOperator='Minus', firstValue=[0.485, 0.456, 0.406], secondOperator='Divides', secondValue=[0.229, 0.224, 0.225]),
+    ])
+
+    return trans
+
 
 

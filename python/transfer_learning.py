@@ -29,7 +29,7 @@ import argparse
 
 
 # ARGUMENTS PARSING
-parser = argparse.ArgumentParser(description="Testbench for several standard architectures on the ILSVRC2012 dataset")
+parser = argparse.ArgumentParser(description="Testbench classification transfer learning on several standards architectures")
 parser.add_argument('--arch', type=str, default='MobileNet_v1', metavar='N',
                     help='MobileNet_v2')
 parser.add_argument('--weights', type=str, default='', metavar='N',
@@ -45,66 +45,111 @@ n2d2.global_variables.set_cuda_device(args.dev)
 n2d2.global_variables.default_model = "Frame_CUDA"
 
 batch_size = 16
-avg_window = 10000
+avg_window = 10000//batch_size
 size = 224
+nb_outputs = 100
 
 print("Create database")
 database = n2d2.database.CIFAR100(validation=0.0)
 database.load("/nvme0/DATABASE/cifar-100-binary")
+#database = n2d2.database.ILSVRC2012(learn=1.0, randomPartitioning=False)
+#database.load("/nvme0/DATABASE/ILSVRC2012", labelPath="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
 print(database)
 
 print("Create provider")
 provider = n2d2.provider.DataProvider(database=database, size=[size, size, 3], batchSize=batch_size)
 
-print("Add transformation")
-trans, otf_trans = n2d2.model.ILSVRC_preprocessing(size=size)
 
-print(trans)
-print(otf_trans)
-provider.add_transformation(trans)
-provider.add_on_the_fly_transformation(otf_trans)
 
 if args.arch == 'MobileNet_v1':
-    """Equivalent to N2D2/models/MobileNet_v2.ini"""
+    trans, otf_trans = n2d2.model.ILSVRC_preprocessing(size=size)
+    provider.add_transformation(trans)
+    provider.add_on_the_fly_transformation(otf_trans)
     model_extractor = n2d2.model.MobileNet_v1(provider, alpha=0.5)
     model_extractor.remove_subsequence(1, False)
+    model_extractor.get_subsequence(0).remove_subsequence(5, False)
+    if not args.weights == "":
+        model_extractor.import_free_parameters(args.weights)
+    print(model_extractor)
+elif args.arch == 'MobileNet_v1_bn':
+    trans, otf_trans = n2d2.model.ILSVRC_preprocessing(size=size)
+    provider.add_transformation(trans)
+    provider.add_on_the_fly_transformation(otf_trans)
+    model_extractor = n2d2.model.MobileNet_v1(provider, alpha=0.5, with_batchnorm=True)
+    model_extractor.remove_subsequence(1, False)
+    model_extractor.get_subsequence(0).remove_subsequence(54, False)
+    if not args.weights == "":
+        model_extractor.import_free_parameters(args.weights)
+    print(model_extractor)
+elif args.arch == 'MobileNet_v1_SAT':
+    margin = 32
+    trans = n2d2.transform.Composite([
+        n2d2.transform.Rescale(width=size, height=size),
+        #n2d2.transform.Rescale(width=size + margin, height=size + margin, keepAspectRatio=True, resizeToFit=False),
+        #n2d2.transform.PadCrop(width=size+margin, height=size+margin),
+        n2d2.transform.ColorSpace(colorSpace='RGB'),
+        n2d2.transform.RangeAffine(firstOperator='Divides', firstValue=[255.0]),
+        #n2d2.transform.SliceExtraction(width=size, height=size, offsetX=margin // 2, offsetY=margin // 2, applyTo='NoLearn')
+    ])
+    #otf_trans = n2d2.transform.Composite([
+    #    n2d2.transform.SliceExtraction(width=size, height=size, randomOffsetX=True, randomOffsetY=True, applyTo='LearnOnly'),
+    #    n2d2.transform.Flip(randomHorizontalFlip=True, applyTo='LearnOnly')
+    #])
+    #otf_trans = n2d2.transform.Composite([
+    #    n2d2.transform.Flip(applyTo='LearnOnly', randomHorizontalFlip=True),
+    #    n2d2.transform.Distortion(applyTo='LearnOnly', elasticGaussianSize=21, elasticSigma=6.0,
+    #                              elasticScaling=36.0, scaling=10.0, rotation=10.0),
+    #])
+    print(trans)
+    #print(otf_trans)
+    provider.add_transformation(trans)
+    #provider.add_on_the_fly_transformation(otf_trans)
+    model_extractor = n2d2.deepnet.load_from_ONNX("/home/jt251134/N2D2-IP/models/Quantization/SAT/model_mobilenet-v1-32b-clamp.onnx",
+                                            dims=[size, size, 3], batch_size=batch_size, ini_file="ignore_onnx.ini")
+    model_extractor.get_first().add_input(provider)
+    print(model_extractor)
+
     if not args.weights == "":
         model_extractor.import_free_parameters(args.weights)
 elif args.arch == 'MobileNet_v2':
-    """Equivalent to N2D2/models/MobileNet_v2.ini"""
-    #model = n2d2.model.Mobilenet_v2(alpha=0.5, size=size, l=10, expansion=6)
+    trans, otf_trans = n2d2.model.ILSVRC_preprocessing(size=size)
+    provider.add_transformation(trans)
+    provider.add_on_the_fly_transformation(otf_trans)
     model_extractor = n2d2.model.mobilenet_v2.load_from_ONNX(download=True, batch_size=batch_size)
-    model_extractor.add_input(provider)
+    model_extractor.get_first().add_input(provider)
+    model_extractor.remove_subsequence(118, False)
     model_extractor.remove_subsequence(117, False)
+    model_extractor.remove_subsequence(116, False)
+elif args.arch == 'ResNet':
+    trans, otf_trans = n2d2.model.ILSVRC_preprocessing(size=size)
+    provider.add_transformation(trans)
+    provider.add_on_the_fly_transformation(otf_trans)
+    model_extractor = n2d2.model.resnet.load_from_ONNX('18', 'post_act', download=True, batch_size=batch_size)
+    model_extractor.get_first().add_input(provider)
+    model_extractor.remove_subsequence(47, False)
+    model_extractor.remove_subsequence(46, False)
 else:
     raise ValueError("Invalid architecture: " + args.arch)
 
 print(model_extractor)
-#print("DrawExtractorGraph")
-#import N2D2
-#N2D2.DrawNet.drawGraph(model_extractor.get_first().get_deepnet().N2D2(), "drawGraph_extractor")
-#N2D2.DrawNet.draw(model_extractor.get_first().get_deepnet().N2D2(), "draw_extractor")
 
-
-print("Recreate head")
+print("Recreate head as separate deepnet")
 head_deepnet = n2d2.deepnet.DeepNet()
-#head_deepnet = model.get_last().get_deepnet()
-dummy_provider = n2d2.provider.DataProvider(n2d2.database.Database(), model_extractor.get_last().get_outputs().dims(), batchSize=batch_size, streamTensor=True)
-dummy_provider.N2D2().setStreamedTensor(model_extractor.get_last().get_outputs())
-#head_deepnet.setDatabase(dummy_provider.get_database().N2D2())
-model_head = n2d2.model.MobileNet_v1_head(dummy_provider, 100, head_deepnet)
-#model.add(model.head)
+interface = n2d2.provider.TensorPlaceholder(model_extractor.get_last().get_outputs())
+model_head = n2d2.deepnet.Sequence([], name="head")
+model_head.add(n2d2.cell.Pool2D(interface, model_extractor.get_last().get_outputs().dimZ(),
+                                poolDims=[model_extractor.get_last().get_outputs().dimX(),
+                                          model_extractor.get_last().get_outputs().dimY()],
+                                strideDims=[1, 1], pooling='Average', name="pool1",  deepNet=head_deepnet))
+model_head.add(n2d2.model.Fc(model_head.get_last(), nbOutputs=nb_outputs, activationFunction=n2d2.activation.Linear(),
+                             weightsFiller=n2d2.filler.Xavier(),
+                             biasFiller=n2d2.filler.Constant(value=0.0),
+                             weightsSolver=n2d2.solver.SGD(learningRate=0.01), name="fc"))
+model_head.add(n2d2.model.Softmax(model_head.get_last(), nb_outputs, withLoss=True, name="softmax"))
 print(model_head)
 
-#print("DrawHeadGraph")
-#N2D2.DrawNet.drawGraph(head_deepnet.N2D2(), "drawGraph_head")
-#N2D2.DrawNet.draw(head_deepnet.N2D2(), "draw_head")
-
 print("Create classifier")
-classifier = n2d2.application.Classifier(provider, model_head, topN=1)
-
-model_head.get_cells()['fc'].set_weights_solver(n2d2.solver.SGD(learningRate=0.01))
-model_head.get_cells()['fc'].set_bias_solver(n2d2.solver.SGD(learningRate=0.01))
+classifier = n2d2.application.Classifier(provider, model_head)
 
 print("\n### Train ###")
 
@@ -123,10 +168,16 @@ for epoch in range(args.epochs):
 
         classifier.process()
 
+        #model_head.get_cells()['fc'].get_outputs().synchronizeDToH()
+        #print(model_head.get_cells()['fc'].get_outputs().mean())
+
         classifier.optimize()
 
-        print("Example: " + str(i*batch_size) + ", train success: "
-              + "{0:.2f}".format(100*classifier.get_average_success(window=avg_window)) + "%", end='\r')
+        #print("Example: " + str(i * batch_size) + ", loss: "
+        #      + "{0:.3f}".format(classifier.get_current_loss()), end='\r')
+
+        print("Example: " + str(i * batch_size) + ", train success: "
+              + "{0:.2f}".format(100 * classifier.get_average_success(avg_window)) + "%", end='\r')
 
 
 print("\n### Test ###")

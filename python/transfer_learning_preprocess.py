@@ -70,17 +70,21 @@ provider.add_on_the_fly_transformation(otf_trans)
 if args.arch == 'MobileNet_v1':
     """Equivalent to N2D2/models/MobileNet_v2.ini"""
     model = n2d2.model.MobileNet_v1(provider, alpha=0.5)
+    model.remove_subsequence(1, False)
+    model_extractor = model
+elif args.arch == 'MobileNet_v1_SAT':
+    model = n2d2.deepnet.load_from_ONNX("/home/jt251134/N2D2-IP/models/Quantization/SAT/model_mobilenet-v1-32b-clamp.onnx",
+                                            dims=[size, size, 3], batch_size=batch_size, ini_file="ignore_onnx.ini")
+    model.get_first().add_input(provider)
 elif args.arch == 'MobileNet_v2':
     """Equivalent to N2D2/models/MobileNet_v2.ini"""
     #model = n2d2.model.Mobilenet_v2(alpha=0.5, size=size, l=10, expansion=6)
     model = n2d2.model.mobilenet_v2.load_from_ONNX(download=True, batch_size=batch_size)
+    model.remove_subsequence(1, False)
+    model_extractor = model
 else:
     raise ValueError("Invalid architecture: " + args.arch)
 
-print(model)
-#model.get_subsequence(1).remove_subsequence(0, False)
-model.remove_subsequence(1, False)
-model_extractor = model
 print(model_extractor)
 
 

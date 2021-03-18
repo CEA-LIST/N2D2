@@ -33,6 +33,8 @@ cell_dict = {
     "Pool": n2d2.cell.Pool,
     "LRN": n2d2.cell.LRN,
     "BatchNorm": n2d2.cell.BatchNorm,
+    "Reshape": n2d2.cell.Reshape,
+
 }
 
 
@@ -92,6 +94,11 @@ def cell_converter(n2d2_parent_cells, N2D2_cell):
                                         None,
                                         None,
                                         N2D2_object=N2D2_cell)
+    elif cell_type == "Reshape":
+        n2d2_cell = cell_dict[cell_type](n2d2_parent_cells,
+                                         None,
+                                         None,
+                                         N2D2_object=N2D2_cell)
     else:
         # All cases without special obligatory constructor arguments
         n2d2_cell = cell_dict[cell_type](n2d2_parent_cells, None, N2D2_object=N2D2_cell)

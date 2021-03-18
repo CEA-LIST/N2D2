@@ -27,6 +27,8 @@ from n2d2.solver import SGD
 from n2d2.filler import He, Xavier, Constant
 import n2d2.deepnet
 import n2d2.global_variables
+from n2d2.transform import Rescale, PadCrop, ColorSpace, RangeAffine, SliceExtraction, Flip, Composite
+from n2d2.model.ILSVRC_outils import ILSVRC_preprocessing
 
 def conv_def(nb_outputs, **config_parameters):
 
@@ -301,8 +303,8 @@ class ResNet50(ResNet):
 def load_from_ONNX(resnet_type, version='pre_act', dims=None, batch_size=1, path=None, download=False):
     if dims is None:
         dims = [224, 224, 3]
-    if not dims == [224, 224, 3]:
-        raise ValueError("This method does not support other dims than [224, 224, 3] yet")
+    #if not dims == [224, 224, 3]:
+    #    raise ValueError("This method does not support other dims than [224, 224, 3] yet")
     allowed_types = ['18', '34', '50', '101', '152']
     if not resnet_type in allowed_types:
         raise ValueError("ResNet type must be one of these: '18', '34', '50', '101', '152'!")
@@ -330,3 +332,23 @@ def load_from_ONNX(resnet_type, version='pre_act', dims=None, batch_size=1, path
         path = n2d2.global_variables.model_cache + "/ONNX/"+resnet_name+"/"+"resnet"+resnet_type+v+".onnx"
     model = n2d2.deepnet.load_from_ONNX(path, dims, batch_size=batch_size)
     return model
+
+
+
+
+def ILSVRC_preprocessing(size=224):
+   return ILSVRC_preprocessing(size)
+
+
+def ONNX_preprocessing(size=224):
+    margin = 32
+
+    trans = Composite([
+        Rescale(width=size+margin, height=size+margin, keepAspectRatio=False, ResizeToFit=False),
+        PadCrop(width=size, height=size),
+        RangeAffine(firstOperator='Divides', firstValue=[255.0]),
+        ColorSpace(colorSpace='RGB'),
+        RangeAffine(firstOperator='Minus', firstValue=[0.485, 0.456, 0.406], secondOperator='Divides', secondValue=[0.229, 0.224, 0.225]),
+    ])
+
+    return trans

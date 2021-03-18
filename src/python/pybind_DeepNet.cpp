@@ -78,6 +78,7 @@ void init_DeepNet(py::module &m) {
     .def("getChildCells", &DeepNet::getChildCells, py::arg("name"))
     .def("getParentCells", &DeepNet::getParentCells, py::arg("name"))
     .def("getTargets", &DeepNet::getTargets)
+    .def("getNetwork", &DeepNet::getNetwork)
     // .def("getStats", &DeepNet::getStats)
     //.def("getReceptiveField", &DeepNet::getReceptiveField, py::arg("name"), py::arg("outputField") = std::vector<unsigned int>())
     // .def("clearAll", &DeepNet::clearAll)
