@@ -218,6 +218,10 @@ class DeepNetN2D2(torch.nn.Module):
     _initialized = False
     
     def __init__(self, N2D2_DeepNet):
+        """
+        :param N2D2_DeepNet: The N2D2 DeepNet you want to use in PyTorch.
+        :type N2D2_DeepNet: :py:class:`N2D2.DeepNet`
+        """
         super().__init__()
         if not isinstance(N2D2_DeepNet, N2D2.DeepNet):
             raise TypeError("N2D2_DeepNet should be of type N2D2.DeepNet got " + str(type(N2D2_DeepNet)) + " instead")
@@ -242,7 +246,7 @@ class DeepNetN2D2(torch.nn.Module):
                 
                 # The first cell of the N2D2 Network is not linked to another cell.
                 # Thus mDiffOutputs is empty. 
-                # So in order to send a gradient in the backward method we have to add it manually with addInputBis.
+                # In order to send a gradient in the backward method we add an Input to force the cell to compute a gradient.
                 shape = [i for i in reversed(n2d2_tensor.dims())]
                 diffOutputs = tensor.Tensor(shape, value=0)
                 self.first_cell.clearInputs()
@@ -281,7 +285,7 @@ class DeepNetN2D2(torch.nn.Module):
                 if grad_output.is_cuda:
                     outputs = outputs.cuda()
                 return outputs.clone()
-                # return None
+
         # If the layer is at the beginning of the network requires grad is False.
         if not inputs.requires_grad:
             inputs.requires_grad = True

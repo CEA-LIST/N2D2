@@ -96,9 +96,10 @@ class Tensor():
         From the coordinate returns the 1D index of an element in the tensor.
         """
         dims = self.dims()
+        coord = [i for i in reversed(coord)]
         if len(dims) != len(coord):
             raise ValueError(str(len(coord)) + "D array does not match " + str(len(dims)) + "D tensor.") 
-        for c, d in zip(coord, self.shape()):
+        for c, d in zip(coord, dims):
             if not c < d:
                 raise ValueError("Coordinate does not fit the dimensions of the tensor, max: "+str(d)+" got " + str(c)) 
         idx = 0
@@ -116,7 +117,7 @@ class Tensor():
         From the the 1D index, return the coordinate of an element in the tensor.
         """ 
         coord = []
-        for i in self.dims():
+        for i in self.shapes():
             coord.append(int(index%i))
             index = index/i
         return [i for i in reversed(coord)]
@@ -273,8 +274,13 @@ class CudaTensor(Tensor):
         int: N2D2.CudaTensor_int,
     }
     
-    def __init__(self, dims, value=None, defaultDataType=float):
-        super().__init__(dims, value, defaultDataType)
+    def __init__(self, dims, value=None, defaultDataType=float, N2D2_tensor=None):
+        super().__init__(dims, value, defaultDataType, N2D2_tensor)
+        if value:
+            # TODO : a buyg cause the value argument to be ignored for CUDA tensor :
+            # example : N2D2.CudaTensor_int([2, 2], value=int(5.0))
+
+            self._tensor[0:] = value
         self.is_cuda = True 
 
 

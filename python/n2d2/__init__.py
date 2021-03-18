@@ -18,8 +18,17 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
+try:    
+    # If you try to import numpy after initialising a deepNet, the import cause a crash.
+    # Importing numpy before the library is a temporary fix. 
+    # I put this import in a try bloc to avoid adding an explicit dependance to numpy. 
+    import numpy
+except:
+    pass
 import n2d2.global_variables
 from n2d2.tensor import *
+import n2d2.model
+
 
 from n2d2.misc import *
 import n2d2.utils
@@ -31,13 +40,11 @@ import n2d2.deepnet
 import n2d2.solver
 import n2d2.filler
 import n2d2.target
-import n2d2.model
 import n2d2.application
 import n2d2.converter
 import n2d2.mapping
 import n2d2.error_handler
 
-#import n2d2.pytorch_interface
 """
 Packages that exist, but should not be used directly in API
 """
