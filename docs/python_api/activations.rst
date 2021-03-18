@@ -1,7 +1,7 @@
 Activations
 ===========
  
-.. autoclass:: n2d2.activation.Activation
+.. autoclass:: n2d2.activation.ActivationFunction
         :members:
         :inherited-members:
 

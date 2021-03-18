@@ -7,7 +7,7 @@ Introduction
 In order to create a neural network in N2D2 using an INI file, you can use the
 DeepNetGenerator:
 
-.. testsetup:: *
+.. testsetup::
 
    import numpy
    import N2D2
