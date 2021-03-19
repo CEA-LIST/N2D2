@@ -4,40 +4,26 @@ Containers
 Introduction
 ------------
 
-N2D2 have it's own Tensor implementation. 
+N2D2 has his own Tensor implementation. 
 
 .. testsetup:: *
 
-   import numpy
    import N2D2
+   import numpy
+   
 
 .. testcode::
 
-   a = N2D2.Tensor_float([1, 2, 3])
-   print(a)
-
-.. testoutput::
-
-   [0]:
-   0
-   0
-   [1]:
-   0
-   0
-   [2]:
-   0
-   0
+   N2D2.Tensor_float([1, 2, 3])
 
 
-Tensor can be created using numpy.array object.
+Tensor can be also be created using numpy.array object.
 
-.. doctest::
+.. testcode::
 
-   >>> print(N2D2.CudaTensor_float(numpy.array([[1.0, 2.0], [3.0, 4.0]])))
-   1 2
-   3 4
+   N2D2.CudaTensor_float(numpy.array([[1.0, 2.0], [3.0, 4.0]]))
+
    
-
 Tensor
 ------
 

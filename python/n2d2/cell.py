@@ -260,13 +260,13 @@ class Fc(Cell):
         :type name: str
         :param activationFunction: Activation function used by the cell.
         :type activationFunction: :py:class:`n2d2.activation.Activation`, optional
-        :param weightsSolver: TODO
+        :param weightsSolver: Solver for weights
         :type weightsSolver: :py:class:`n2d2.solver.Solver`, optional
-        :param biasSolver: TODO
+        :param biasSolver: Solver for biases
         :type biasSolver: :py:class:`n2d2.solver.Solver`, optional
-        :param weightsFiller: TODO
+        :param weightsFiller: Algorithm used to fill the weights.
         :type weightsFiller: :py:class:`n2d2.filler.Filler`, optional
-        :param biasFiller: TODO
+        :param biasFiller: Algorithm used to fill the biases.
         :type biasFiller: :py:class:`n2d2.filler.Filler`, optional
         """
 
@@ -411,12 +411,14 @@ class Conv(Cell):
         :type kernelDims: list
         :param subSampleDims: TODO
         :type subSampleDims: list, optional
-        :param strideDims: TODO
+        :param strideDims: Size of the stride
         :type strideDims: list, optional
         :param paddingDims: TODO
         :type paddingDims: list, optional
         :param dilationDims: TODO
-        :type dilationDims: list, optional     
+        :type dilationDims: list, optional
+        :param noBias: TODO
+        :type dilationDims: list, optional 
         """
 
         if not from_arguments and (nbOutputs is not None or kernelDims is not None or len(config_parameters) > 0):
