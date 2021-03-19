@@ -1470,7 +1470,7 @@ void N2D2::StimuliProvider::setBatchSize(unsigned int batchSize)
         std::vector<size_t> dataSize(mProvidedData[dev].data.dims());
         dataSize.back() = mBatchSize;
 
-        std::vector<size_t> labelSize(mProvidedData[dev].data.dims());
+        std::vector<size_t> labelSize(mProvidedData[dev].labelsData.dims());
         labelSize.back() = mBatchSize;
 
         for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
