@@ -262,7 +262,7 @@ public:
         wtRoundMode = weightsScalingMode(
                            opts.parse("-wt-round-mode", std::string("NONE"), 
                                           "weights clipping mode on export, "
-                                          "can be 'NONE', 'RINTF'"));
+                                          "can be 'NONE','RINTF','RINTC,'RINTA'"));
         wtClippingMode = parseClippingMode(
                            opts.parse("-wt-clipping-mode", std::string("None"), 
                                           "weights clipping mode on export, "
@@ -383,9 +383,13 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
 
     const unsigned int nbTest = (opt.testIndex >= 0 || opt.testId >= 0)
         ? 1 : database->getNbStimuli(Database::Test);
+
     const unsigned int batchSize = sp->getBatchSize();
     const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
+
     if(opt.qatSAT) {
+        //needed when load network from ini, and not onnx
+        //deepNet->initialize();
         if (opt.logKernels)
             deepNet->logFreeParameters("kernels_fake_quantized");
 
