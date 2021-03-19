@@ -207,7 +207,9 @@ features available in N2D2, like post-training quantization or quantization
 aware training.</p>
 <p>Summary of the main features of a C++ export:</p>
 <ul class="simple">
-<li><p>Standalone C++11 compliant project;</p></li>
+<li><p>Standalone C++11 compliant project;
+- No C++ exception (often disabled on embedded code);
+- No &lt;stream&gt; library (which is memory bloated).</p></li>
 <li><p>Fully templated compute kernels;</p></li>
 <li><p>Fully inlined compute kernels;</p></li>
 <li><p>No dynamic memory allocation;</p></li>

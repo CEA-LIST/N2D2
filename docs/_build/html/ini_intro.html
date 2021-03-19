@@ -330,29 +330,29 @@ the name of the including section (before <code class="docutils literal notransl
 </div>
 <div class="section" id="control-statements">
 <h3>Control statements<a class="headerlink" href="#control-statements" title="Permalink to this headline">¶</a></h3>
-<p>Control statements are between <code class="docutils literal notranslate"><span class="pre">{\%</span></code> and <code class="docutils literal notranslate"><span class="pre">\%}</span></code> delimiters.</p>
+<p>Control statements are between <code class="docutils literal notranslate"><span class="pre">{%</span></code> and <code class="docutils literal notranslate"><span class="pre">%}</span></code> delimiters.</p>
 <div class="section" id="block">
 <h4>block<a class="headerlink" href="#block" title="Permalink to this headline">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">{\%</span> <span class="pre">block</span> <span class="pre">ARRAY</span> <span class="pre">\%}</span></code> … <code class="docutils literal notranslate"><span class="pre">{\%</span> <span class="pre">endblock</span> <span class="pre">\%}</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">block</span> <span class="pre">ARRAY</span> <span class="pre">%}</span></code> … <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">endblock</span> <span class="pre">%}</span></code></p>
 <p>The <code class="docutils literal notranslate"><span class="pre">#</span></code> template parameter is automatically generated from the
-<code class="docutils literal notranslate"><span class="pre">{\%</span> <span class="pre">block</span> <span class="pre">...</span> <span class="pre">\%}</span></code> template control statement and corresponds to the
+<code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">block</span> <span class="pre">...</span> <span class="pre">%}</span></code> template control statement and corresponds to the
 current item position, starting from 0.</p>
 </div>
 <div class="section" id="for">
 <h4>for<a class="headerlink" href="#for" title="Permalink to this headline">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">{\%</span> <span class="pre">for</span> <span class="pre">VAR</span> <span class="pre">in</span> <span class="pre">range([START,</span> <span class="pre">]END])</span> <span class="pre">\%}</span></code> … <code class="docutils literal notranslate"><span class="pre">{\%</span> <span class="pre">endfor</span> <span class="pre">\%}</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">for</span> <span class="pre">VAR</span> <span class="pre">in</span> <span class="pre">range([START,</span> <span class="pre">]END])</span> <span class="pre">%}</span></code> … <code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">endfor</span> <span class="pre">%}</span></code></p>
 <p>If <code class="docutils literal notranslate"><span class="pre">START</span></code> is not specified, the loop begins at 0 (first value of
 <code class="docutils literal notranslate"><span class="pre">VAR</span></code>). The last value of <code class="docutils literal notranslate"><span class="pre">VAR</span></code> is <code class="docutils literal notranslate"><span class="pre">END</span></code>-1.</p>
 </div>
 <div class="section" id="if">
 <h4>if<a class="headerlink" href="#if" title="Permalink to this headline">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">{\%</span> <span class="pre">if</span> <span class="pre">VAR</span> <span class="pre">OP</span> <span class="pre">[VALUE]</span> <span class="pre">\%}</span></code> … <code class="docutils literal notranslate"><span class="pre">[{\%</span> <span class="pre">else</span> <span class="pre">\%}]</span></code> …
-<code class="docutils literal notranslate"><span class="pre">{\%</span> <span class="pre">endif</span> <span class="pre">\%}</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">if</span> <span class="pre">VAR</span> <span class="pre">OP</span> <span class="pre">[VALUE]</span> <span class="pre">%}</span></code> … <code class="docutils literal notranslate"><span class="pre">[{%</span> <span class="pre">else</span> <span class="pre">%}]</span></code> …
+<code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">endif</span> <span class="pre">%}</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">OP</span></code> may be <code class="docutils literal notranslate"><span class="pre">==</span></code>, <code class="docutils literal notranslate"><span class="pre">!=</span></code>, <code class="docutils literal notranslate"><span class="pre">exists</span></code> or <code class="docutils literal notranslate"><span class="pre">not_exists</span></code>.</p>
 </div>
 <div class="section" id="include">
 <h4>include<a class="headerlink" href="#include" title="Permalink to this headline">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">{\%</span> <span class="pre">include</span> <span class="pre">FILENAME</span> <span class="pre">\%}</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">{%</span> <span class="pre">include</span> <span class="pre">FILENAME</span> <span class="pre">%}</span></code></p>
 </div>
 </div>
 </div>

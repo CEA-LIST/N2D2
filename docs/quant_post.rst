@@ -122,3 +122,30 @@ model:
 ::
 
     n2d2 MobileNet_ONNX.ini -seed 1 -w /dev/null -export CPP -fuse -calib -1 -act-clipping-mode KL-Divergence
+
+
+Examples and results
+--------------------
+
+Post-training quantization accuracy obtained with some models from the ONNX 
+Model Zoo are reported in the table below, using ``-calib 1000``:
+
++------------------------------------------------------+-----------+-------------------+-------------+
+| *ONNX Model Zoo* model (specificities)               | FP acc.   | Fake 8 bits acc.  | 8 bits acc. |
++======================================================+===========+===================+=============+
+| resnet18v1.onnx                                      | 69.83%    | 68.82%            | 68.78%      |
+| (``-no-unsigned -act-rescaling-mode Fixed-point``)   |           |                   |             |
++------------------------------------------------------+-----------+-------------------+-------------+
+| mobilenetv2-1.0.onnx                                 | 70.95%    | 65.40%            |             |
+| (``mobilenetv20_output_flatten0_reshape0`` ignored)  |           |                   |             |
++------------------------------------------------------+-----------+-------------------+-------------+
+
+
+- *FP acc.* is the floating point accuracy obtained before post-training
+  quantization on the model imported in ONNX;
+- *Fake 8 bits acc.* is the accuracy obtained after post-training quantization
+  in N2D2, in fake-quantized mode (the numbers are quantized but the
+  representation is still floating point);
+- *8 bits acc.* is the accuracy obtained after post-training quantization in the
+  N2D2 reference C++ export, in actual 8 bits representation.
+

@@ -110,6 +110,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#usage-in-n2d2">Usage in N2D2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#examples-and-results">Examples and results</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
@@ -310,6 +311,49 @@ model:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">n2d2</span> <span class="n">MobileNet_ONNX</span><span class="o">.</span><span class="n">ini</span> <span class="o">-</span><span class="n">seed</span> <span class="mi">1</span> <span class="o">-</span><span class="n">w</span> <span class="o">/</span><span class="n">dev</span><span class="o">/</span><span class="n">null</span> <span class="o">-</span><span class="n">export</span> <span class="n">CPP</span> <span class="o">-</span><span class="n">fuse</span> <span class="o">-</span><span class="n">calib</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="n">act</span><span class="o">-</span><span class="n">clipping</span><span class="o">-</span><span class="n">mode</span> <span class="n">KL</span><span class="o">-</span><span class="n">Divergence</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="examples-and-results">
+<h2>Examples and results<a class="headerlink" href="#examples-and-results" title="Permalink to this headline">¶</a></h2>
+<p>Post-training quantization accuracy obtained with some models from the ONNX
+Model Zoo are reported in the table below, using <code class="docutils literal notranslate"><span class="pre">-calib</span> <span class="pre">1000</span></code>:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 56%" />
+<col style="width: 11%" />
+<col style="width: 20%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><em>ONNX Model Zoo</em> model (specificities)</p></th>
+<th class="head"><p>FP acc.</p></th>
+<th class="head"><p>Fake 8 bits acc.</p></th>
+<th class="head"><p>8 bits acc.</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>resnet18v1.onnx
+(<code class="docutils literal notranslate"><span class="pre">-no-unsigned</span> <span class="pre">-act-rescaling-mode</span> <span class="pre">Fixed-point</span></code>)</p></td>
+<td><p>69.83%</p></td>
+<td><p>68.82%</p></td>
+<td><p>68.78%</p></td>
+</tr>
+<tr class="row-odd"><td><p>mobilenetv2-1.0.onnx
+(<code class="docutils literal notranslate"><span class="pre">mobilenetv20_output_flatten0_reshape0</span></code> ignored)</p></td>
+<td><p>70.95%</p></td>
+<td><p>65.40%</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<ul class="simple">
+<li><p><em>FP acc.</em> is the floating point accuracy obtained before post-training
+quantization on the model imported in ONNX;</p></li>
+<li><p><em>Fake 8 bits acc.</em> is the accuracy obtained after post-training quantization
+in N2D2, in fake-quantized mode (the numbers are quantized but the
+representation is still floating point);</p></li>
+<li><p><em>8 bits acc.</em> is the accuracy obtained after post-training quantization in the
+N2D2 reference C++ export, in actual 8 bits representation.</p></li>
+</ul>
 </div>
 </div>
 

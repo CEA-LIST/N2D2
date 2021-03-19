@@ -18,6 +18,8 @@ aware training.
 Summary of the main features of a C++ export:
 
 - Standalone C++11 compliant project;
+  - No C++ exception (often disabled on embedded code);
+  - No <stream> library (which is memory bloated).
 - Fully templated compute kernels;
 - Fully inlined compute kernels;
 - No dynamic memory allocation;
