@@ -67,7 +67,7 @@ if args.arch == 'MobileNet_v1':
     provider.add_on_the_fly_transformation(otf_trans)
     model_extractor = n2d2.model.MobileNet_v1(provider, alpha=0.5)
     model_extractor.remove(1, False)
-    model_extractor.get_subsequence(0).remove(5, False)
+    model_extractor.get_group(0).remove(5, False)
     if not args.weights == "":
         model_extractor.import_free_parameters(args.weights)
     print(model_extractor)
@@ -77,7 +77,7 @@ elif args.arch == 'MobileNet_v1_bn':
     provider.add_on_the_fly_transformation(otf_trans)
     model_extractor = n2d2.model.MobileNet_v1(provider, alpha=0.5, with_batchnorm=True)
     model_extractor.remove(1, False)
-    model_extractor.get_subsequence(0).remove(54, False)
+    model_extractor.get_group(0).remove(54, False)
     if not args.weights == "":
         model_extractor.import_free_parameters(args.weights)
     print(model_extractor)
@@ -124,8 +124,8 @@ elif args.arch == 'ResNet18':
     trans, otf_trans = n2d2.model.ILSVRC_preprocessing(size=size)
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
-    model_extractor = n2d2.model.resnet.load_from_ONNX('18', 'post_act', download=True, batch_size=batch_size)
-    model_extractor.add_input(provider)
+    model_extractor = n2d2.model.resnet.load_from_ONNX(provider, '18', 'post_act', download=True, batch_size=batch_size)
+    print(model_extractor)
     model_extractor.remove(47, False)
     model_extractor.remove(46, False)
 else:
@@ -134,19 +134,16 @@ else:
 print(model_extractor)
 
 print("Recreate head as separate deepnet")
-head_deepnet = n2d2.deepnet.DeepNet()
 interface = n2d2.provider.TensorPlaceholder(model_extractor.get_outputs())
-model_head = n2d2.deepnet.Group([], name="head")
-model_head.add(n2d2.cell.GlobalPool2D(interface, pooling='Average', name="pool1",  deepNet=head_deepnet))
-model_head.add(n2d2.model.Fc(model_head, nbOutputs=nb_outputs, activationFunction=n2d2.activation.Linear(),
+x = n2d2.cell.GlobalPool2D(interface, pooling='Average', name="pool1",)
+x = n2d2.model.Fc(x, nbOutputs=nb_outputs, activationFunction=n2d2.activation.Linear(),
                              weightsFiller=n2d2.filler.Xavier(),
                              biasFiller=n2d2.filler.Constant(value=0.0),
-                             weightsSolver=n2d2.solver.SGD(learningRate=0.01), name="fc"))
-model_head.add(n2d2.model.Softmax(model_head, withLoss=True, name="softmax"))
-print(model_head)
+                             weightsSolver=n2d2.solver.SGD(learningRate=0.01), name="fc")
+x = n2d2.model.Softmax(x, withLoss=True, name="softmax")
 
-print("Create Extractor")
-extractor = n2d2.application.Extractor(provider, model_extractor)
+model_head = x.get_deepnet()
+print(model_head)
 
 print("Create classifier")
 classifier = n2d2.application.Classifier(provider, model_head)
@@ -164,7 +161,7 @@ for epoch in range(args.epochs):
         # Load example
         classifier.read_random_batch()
 
-        extractor.process()
+        model_extractor.propagate(inference=True)
 
         classifier.process()
 
@@ -188,7 +185,7 @@ for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
     # Load example
     classifier.read_batch(idx=batch_idx)
 
-    extractor.process()
+    model_extractor.propagate(inference=True)
 
     classifier.process()
 

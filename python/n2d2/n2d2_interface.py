@@ -110,14 +110,15 @@ class N2D2_Interface:
         else:
             return str(value)
 
-    def _load_N2D2_parameters(self, N2D2_object):
+    @staticmethod
+    def _load_N2D2_parameters(N2D2_object):
         str_params = N2D2_object.getParameters()
         parameters = {}
         for param in str_params:
-            parameters[param] = self._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](
+            parameters[param] = N2D2_Interface._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](
                 N2D2_object.getParameterAndType(param)[0])
             print(param, ":",
-                  self._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](N2D2_object.getParameterAndType(param)[0]))
+                  N2D2_Interface._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](N2D2_object.getParameterAndType(param)[0]))
         return parameters
 
     def __str__(self):

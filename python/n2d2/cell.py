@@ -63,6 +63,8 @@ class Cell(N2D2_Interface):
 
         self._connection_parameters = {}
 
+        self._deepnet.add_to_current_group(self)
+
     def _infer_deepnet(self, inputs):
         if isinstance(inputs, list):
             if len(inputs) == 0:
@@ -85,6 +87,9 @@ class Cell(N2D2_Interface):
             raise TypeError("Object of type " + str(type(inputs)) + " cannot implicitly provide a deepNet to cell.")
         return deepnet
 
+    def dims(self):
+        return self.get_outputs().dims()
+
     def get_outputs(self):
         return self._N2D2_object.getOutputs()
 
@@ -94,6 +99,7 @@ class Cell(N2D2_Interface):
     def get_last(self):
         return self
 
+    # TODO: Add check that final cell
     def get_deepnet(self):
         return self._deepnet
 
@@ -147,7 +153,7 @@ class Cell(N2D2_Interface):
             self._N2D2_object.addInput(inputs.N2D2(), **self._connection_parameters)
 
             if isinstance(inputs, n2d2.provider.Provider):
-                self._deepnet.add_provider(inputs)
+                self._deepnet.set_provider(inputs)
 
 
     def _link_to_N2D2_deepnet(self):
@@ -322,7 +328,7 @@ class Fc(Cell):
                       N2D2_object.getNbOutputs(),
                       deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
+                      **N2D2_Interface._load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -480,7 +486,7 @@ class Conv(Cell):
                       N2D2_object.getNbOutputs(),
                       deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
+                      **N2D2_Interface._load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -639,7 +645,7 @@ class Deconv(Cell):
                       N2D2_object.getNbOutputs(),
                       deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
+                      **N2D2_Interface._load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -723,7 +729,7 @@ class ElemWise(Cell):
                       N2D2_object.getNbOutputs(),
                       deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
+                      **N2D2_Interface._load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -790,7 +796,7 @@ class Softmax(Cell):
                       N2D2_object.getNbOutputs(),
                       deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
+                      **N2D2_Interface._load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -853,7 +859,7 @@ class Dropout(Cell):
                       N2D2_object.getNbOutputs(),
                       deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
+                      **N2D2_Interface._load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -934,7 +940,7 @@ class Padding(Cell):
                       N2D2_object.getNbOutputs(),
                       deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
+                      **N2D2_Interface._load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -1017,7 +1023,7 @@ class Pool(Cell):
                       N2D2_object.getNbOutputs(),
                       deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
+                      **N2D2_Interface._load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -1104,7 +1110,7 @@ class LRN(Cell):
                       N2D2_object.getNbOutputs(),
                       deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
+                      **N2D2_Interface._load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -1162,7 +1168,7 @@ class BatchNorm(Cell):
                       N2D2_object.getNbOutputs(),
                       deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
+                      **N2D2_Interface._load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -1228,7 +1234,7 @@ class Activation(Cell):
                       N2D2_object.getNbOutputs(),
                       deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
+                      **N2D2_Interface._load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -1288,7 +1294,7 @@ class Reshape(Cell):
                       N2D2_object.getNbOutputs(),
                       deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
+                      **N2D2_Interface._load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 

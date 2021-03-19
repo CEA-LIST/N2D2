@@ -32,6 +32,7 @@ default_net = N2D2.Network(default_seed)
 #default_deepNet = n2d2.deepnet.DeepNet(default_net, default_model, default_dataType)
 default_deepNet = None
 
+deepNet_counter = 0
 cell_counter = 0
 target_counter = 0
 provider_counter = 0

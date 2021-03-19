@@ -161,6 +161,9 @@ public:
 
     bool hasCell(const std::string& name) const;
 
+    std::string getName() const {
+        return mName;
+    };
 
     std::shared_ptr<Monitor> getMonitor(const std::string& name) const;
     std::shared_ptr<CMonitor> getCMonitor(const std::string& name) const;

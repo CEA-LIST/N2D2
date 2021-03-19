@@ -44,7 +44,8 @@ provider.add_transformation(n2d2.transform.Rescale(width=32, height=32))
 print(provider)
 
 print("\n### Loading Model ###")
-model = n2d2.model.LeNet(provider, 10)
+model = n2d2.model.lenet.generate(provider, 10)
+print(model)
 
 classifier = n2d2.application.Classifier(provider, model)
 

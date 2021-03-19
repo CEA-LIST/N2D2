@@ -33,11 +33,11 @@ class Application:
    
 
 class Classifier(Application):
-    def __init__(self, provider, cell, **target_config_parameters):
-        deepnet_endpoint = cell.get_last()
-        if not isinstance(deepnet_endpoint, n2d2.cell.Cell):
-            raise RuntimeError("The deepnet endpoint is not a single cell")
-        Application.__init__(self, provider, deepnet_endpoint.get_deepnet())
+    def __init__(self, provider, deepnet, **target_config_parameters):
+        deepnet_endpoint = deepnet.get_last()
+        if not isinstance(deepnet_endpoint, n2d2.cell.Softmax):
+            raise RuntimeError("The deepnet endpoint is not a softmax cell")
+        Application.__init__(self, provider, deepnet)
 
         self._target = n2d2.target.Score(deepnet_endpoint,
                                          self._provider,
@@ -137,7 +137,7 @@ class Classifier(Application):
     #     print(string)
 
 
-
+"""
 class Extractor(Application):
     def __init__(self, provider, cell):
         deepnet_endpoint = cell.get_last()
@@ -154,4 +154,4 @@ class Extractor(Application):
     def process(self):
         # Propagate
         self._deepnet.propagate(inference=True)
-
+"""
