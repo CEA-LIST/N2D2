@@ -37,7 +37,6 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Tutorials" href="tuto.html" />
     <link rel="prev" title="StimuliProvider" href="stimuliprovider.html" /> 
 </head>
 
@@ -87,6 +86,21 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ONNX Import:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="onnx_convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_transfer.html">Train from ONNX models</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Quantization and Export:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quant_post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
 <ul>
@@ -107,10 +121,6 @@
 <li class="toctree-l2"><a class="reference internal" href="#api-reference">API Reference</a></li>
 </ul>
 </li>
-</ul>
-<p class="caption"><span class="caption-text">Tutorials:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
 </ul>
 
             
@@ -239,6 +249,11 @@ first and unique target of the model and get the estimated labels and values:</p
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="N2D2.DeepNet.backPropagate">
+<code class="sig-name descname">backPropagate</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.DeepNet</em>, <em class="sig-param">timings: List[Tuple[str</em>, <em class="sig-param">float]] = 0</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.backPropagate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="N2D2.DeepNet.cReset">
 <code class="sig-name descname">cReset</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.DeepNet</em>, <em class="sig-param">timestamp: int = 0</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.cReset" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -301,6 +316,16 @@ first and unique target of the model and get the estimated labels and values:</p
 <dl class="method">
 <dt id="N2D2.DeepNet.getCMonitor">
 <code class="sig-name descname">getCMonitor</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.DeepNet</em>, <em class="sig-param">name: str</em><span class="sig-paren">)</span> &#x2192; N2D2::CMonitor<a class="headerlink" href="#N2D2.DeepNet.getCMonitor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.DeepNet.getCell">
+<code class="sig-name descname">getCell</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.DeepNet</em>, <em class="sig-param">name: str</em><span class="sig-paren">)</span> &#x2192; N2D2.Cell<a class="headerlink" href="#N2D2.DeepNet.getCell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.DeepNet.getCell_Frame_Top">
+<code class="sig-name descname">getCell_Frame_Top</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.DeepNet</em>, <em class="sig-param">name: str</em><span class="sig-paren">)</span> &#x2192; N2D2.Cell_Frame_Top<a class="headerlink" href="#N2D2.DeepNet.getCell_Frame_Top" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -454,6 +479,11 @@ first and unique target of the model and get the estimated labels and values:</p
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="N2D2.DeepNet.propagate">
+<code class="sig-name descname">propagate</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.DeepNet</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em>, <em class="sig-param">inference: bool</em>, <em class="sig-param">timings: List[Tuple[str</em>, <em class="sig-param">float]] = 0</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.propagate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="N2D2.DeepNet.removeCell">
 <code class="sig-name descname">removeCell</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.DeepNet</em>, <em class="sig-param">cell: N2D2.Cell</em>, <em class="sig-param">reconnect: bool = True</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.removeCell" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -495,8 +525,13 @@ first and unique target of the model and get the estimated labels and values:</p
 
 <dl class="method">
 <dt id="N2D2.DeepNet.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.DeepNet</em>, <em class="sig-param">log: bool</em>, <em class="sig-param">start: int</em>, <em class="sig-param">stop: int = 0</em>, <em class="sig-param">update: bool = True</em><span class="sig-paren">)</span> &#x2192; List[Tuple[str, int]]<a class="headerlink" href="#N2D2.DeepNet.update" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.DeepNet.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>update(self: N2D2.DeepNet, log: bool, start: int, stop: int = 0, update: bool = True) -&gt; List[Tuple[str, int]]</p></li>
+<li><p>update(self: N2D2.DeepNet, timings: List[Tuple[str, float]] = 0) -&gt; None</p></li>
+</ol>
+</dd></dl>
 
 </dd></dl>
 
@@ -510,8 +545,6 @@ first and unique target of the model and get the estimated labels and values:</p
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="tuto.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="stimuliprovider.html" class="btn btn-neutral float-left" title="StimuliProvider" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

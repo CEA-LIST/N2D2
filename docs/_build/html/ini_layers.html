@@ -87,6 +87,21 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ONNX Import:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="onnx_convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_transfer.html">Train from ONNX models</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Quantization and Export:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quant_post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
 <ul class="current">
@@ -205,10 +220,6 @@
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Tutorials:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
 </ul>
 
             
@@ -359,7 +370,7 @@ add a target section named <em>LayerName</em><code class="docutils literal notra
 <div class="section" id="hefiller">
 <h3>HeFiller<a class="headerlink" href="#hefiller" title="Permalink to this headline">¶</a></h3>
 <p>Fill with an normal distribution with normalized variance taking into
-account the rectifier nonlinearity <a class="bibtex reference internal" href="#he2015" id="id1">[HZRS15]</a>. This
+account the rectifier nonlinearity <a class="bibtex reference internal" href="tuto.html#he2015" id="id1">[HZRS15]</a>. This
 filler is sometimes referred as MSRA filler.</p>
 <table class="docutils align-default">
 <colgroup>
@@ -441,7 +452,7 @@ with <code class="docutils literal notranslate"><span class="pre">Average</span>
 <div class="section" id="xavierfiller">
 <h3>XavierFiller<a class="headerlink" href="#xavierfiller" title="Permalink to this headline">¶</a></h3>
 <p>Fill with an uniform distribution with normalized variance
-<a class="bibtex reference internal" href="#glorot2010" id="id2">[GB10]</a>.</p>
+<a class="bibtex reference internal" href="tuto.html#glorot2010" id="id2">[GB10]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 44%" />
@@ -596,7 +607,7 @@ current iteration and <span class="math notranslate nohighlight">\(n\)</span> th
 </div>
 <div class="section" id="adamsolver-frame">
 <h3>AdamSolver_Frame<a class="headerlink" href="#adamsolver-frame" title="Permalink to this headline">¶</a></h3>
-<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame</span></code> models <a class="bibtex reference internal" href="#kingmab14" id="id3">[KB14]</a>.</p>
+<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame</span></code> models <a class="bibtex reference internal" href="tuto.html#kingmab14" id="id3">[KB14]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 38%" />
@@ -625,7 +636,7 @@ current iteration and <span class="math notranslate nohighlight">\(n\)</span> th
 </div>
 <div class="section" id="adamsolver-frame-cuda">
 <h3>AdamSolver_Frame_CUDA<a class="headerlink" href="#adamsolver-frame-cuda" title="Permalink to this headline">¶</a></h3>
-<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame_CUDA</span></code> models <a class="bibtex reference internal" href="#kingmab14" id="id4">[KB14]</a>.</p>
+<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame_CUDA</span></code> models <a class="bibtex reference internal" href="tuto.html#kingmab14" id="id4">[KB14]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 38%" />
@@ -906,7 +917,7 @@ following output feature maps ordering:</p>
 </div>
 <div class="section" id="batchnorm">
 <h2>BatchNorm<a class="headerlink" href="#batchnorm" title="Permalink to this headline">¶</a></h2>
-<p>Batch Normalization layer <a class="bibtex reference internal" href="#ioffe2015" id="id5">[IS15]</a>.</p>
+<p>Batch Normalization layer <a class="bibtex reference internal" href="tuto.html#ioffe2015" id="id5">[IS15]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 19%" />
@@ -1609,7 +1620,7 @@ limit)</p></td>
 </div>
 <div class="section" id="dropout">
 <h2>Dropout<a class="headerlink" href="#dropout" title="Permalink to this headline">¶</a></h2>
-<p>Dropout layer <a class="bibtex reference internal" href="#srivastava2014" id="id9">[SHK+12]</a>.</p>
+<p>Dropout layer <a class="bibtex reference internal" href="tuto.html#srivastava2014" id="id9">[SHK+12]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 48%" />
@@ -1745,7 +1756,7 @@ operation:</p>
 </div>
 <div class="section" id="fmp">
 <h2>FMP<a class="headerlink" href="#fmp" title="Permalink to this headline">¶</a></h2>
-<p>Fractional max pooling layer <a class="bibtex reference internal" href="#graham2014" id="id11">[Gra14]</a>.</p>
+<p>Fractional max pooling layer <a class="bibtex reference internal" href="tuto.html#graham2014" id="id11">[Gra14]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 20%" />
@@ -2050,7 +2061,7 @@ expression:</p>
 </div>
 <div class="section" id="lstm">
 <h2>LSTM<a class="headerlink" href="#lstm" title="Permalink to this headline">¶</a></h2>
-<p>Long Short Term Memory Layer <a class="bibtex reference internal" href="#lstm1997" id="id16">[HS97]</a>.</p>
+<p>Long Short Term Memory Layer <a class="bibtex reference internal" href="tuto.html#lstm1997" id="id16">[HS97]</a>.</p>
 <div class="section" id="global-layer-parameters-frame-cuda-models">
 <h3>Global layer parameters (<em>Frame_CUDA</em> models)<a class="headerlink" href="#global-layer-parameters-frame-cuda-models" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
@@ -2819,9 +2830,6 @@ in respect of the cross-entropy loss:</p>
 <dt class="bibtex label" id="glorot2010"><span class="brackets"><a class="fn-backref" href="#id2">GB10</a></span></dt>
 <dd><p>X. Glorot and Y. Bengio. Understanding the difficulty of training deep feedforward neural networks. In <em>International conference on artificial intelligence and statistics</em>, 249–256. 2010.</p>
 </dd>
-<dt class="bibtex label" id="dblp-journals-corr-goyaldgnwktjh17"><span class="brackets">GDollarG+17</span></dt>
-<dd><p>Priya Goyal, Piotr Dollár, Ross B. Girshick, Pieter Noordhuis, Lukasz Wesolowski, Aapo Kyrola, Andrew Tulloch, Yangqing Jia, and Kaiming He. Accurate, large minibatch SGD: training imagenet in 1 hour. <em>CoRR</em>, 2017. URL: <a class="reference external" href="http://arxiv.org/abs/1706.02677">http://arxiv.org/abs/1706.02677</a>, <a class="reference external" href="https://arxiv.org/abs/1706.02677">arXiv:1706.02677</a>.</p>
-</dd>
 <dt class="bibtex label" id="graham2014"><span class="brackets"><a class="fn-backref" href="#id11">Gra14</a></span></dt>
 <dd><p>Benjamin Graham. Fractional max-pooling. <em>CoRR</em>, 2014.</p>
 </dd>
@@ -2870,17 +2878,11 @@ in respect of the cross-entropy loss:</p>
 <dt class="bibtex label" id="dota"><span class="brackets">XBD+17</span></dt>
 <dd><p>Gui-Song Xia, Xiang Bai, Jian Ding, Zhen Zhu, Serge J. Belongie, Jiebo Luo, Mihai Datcu, Marcello Pelillo, and Liangpei Zhang. DOTA: A large-scale dataset for object detection in aerial images. <em>CoRR</em>, 2017. URL: <a class="reference external" href="http://arxiv.org/abs/1711.10398">http://arxiv.org/abs/1711.10398</a>, <a class="reference external" href="https://arxiv.org/abs/1711.10398">arXiv:1711.10398</a>.</p>
 </dd>
-<dt class="bibtex label" id="zhang2018residual"><span class="brackets">ZDM19</span></dt>
-<dd><p>Hongyi Zhang, Yann N. Dauphin, and Tengyu Ma. Residual learning without normalization via better initialization. In <em>International Conference on Learning Representations</em>. 2019. URL: <a class="reference external" href="https://openreview.net/forum?id=H1gsz30cKX">https://openreview.net/forum?id=H1gsz30cKX</a>.</p>
-</dd>
 <dt class="bibtex label" id="lucey2010"><span class="brackets">LuceyCohnKanade+10</span></dt>
 <dd><p>P. Lucey, J. F. Cohn, T. Kanade, J. Saragih, Z. Ambadar, and I. Matthews. The extended cohn-kanade dataset (ck+): a complete dataset for action unit and emotion-specified expression. In <em>2010 IEEE Computer Society Conference on Computer Vision and Pattern Recognition - Workshops</em>, volume, 94–101. June 2010. <a class="reference external" href="https://doi.org/10.1109/CVPRW.2010.5543262">doi:10.1109/CVPRW.2010.5543262</a>.</p>
 </dd>
 <dt class="bibtex label" id="speechcommandsv2"><span class="brackets">Warden18</span></dt>
 <dd><p>P. Warden. Speech Commands: A Dataset for Limited-Vocabulary Speech Recognition. <em>ArXiv e-prints</em>, April 2018. URL: <a class="reference external" href="https://arxiv.org/abs/1804.03209">https://arxiv.org/abs/1804.03209</a>, <a class="reference external" href="https://arxiv.org/abs/1804.03209">arXiv:1804.03209</a>.</p>
-</dd>
-<dt class="bibtex label" id="arxiv170508292w"><span class="brackets">WilsonRoelofsStern+17</span></dt>
-<dd><p>Ashia C. Wilson, Rebecca Roelofs, Mitchell Stern, Nathan Srebro, and Benjamin Recht. The Marginal Value of Adaptive Gradient Methods in Machine Learning. <em>arXiv e-prints</em>, pages arXiv:1705.08292, May 2017. <a class="reference external" href="https://arxiv.org/abs/1705.08292">arXiv:1705.08292</a>.</p>
 </dd>
 </dl>
 </p>

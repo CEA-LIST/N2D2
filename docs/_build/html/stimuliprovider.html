@@ -87,6 +87,21 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ONNX Import:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="onnx_convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_transfer.html">Train from ONNX models</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Quantization and Export:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quant_post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
 <ul>
@@ -103,10 +118,6 @@
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">StimuliProvider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Tutorials:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
 </ul>
 
             
@@ -188,7 +199,7 @@
 
 <dl class="method">
 <dt id="N2D2.StimuliProvider.getBatch">
-<code class="sig-name descname">getBatch</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em><span class="sig-paren">)</span> &#x2192; List[int]<a class="headerlink" href="#N2D2.StimuliProvider.getBatch" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getBatch</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">arg0: int</em><span class="sig-paren">)</span> &#x2192; List[int]<a class="headerlink" href="#N2D2.StimuliProvider.getBatch" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -213,13 +224,13 @@
 
 <dl class="method">
 <dt id="N2D2.StimuliProvider.getData">
-<code class="sig-name descname">getData</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.getData" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overloaded function.</p>
-<ol class="arabic simple">
-<li><p>getData(self: N2D2.StimuliProvider) -&gt; N2D2.CudaTensor_float</p></li>
-<li><p>getData(self: N2D2.StimuliProvider, channel: int, batchPos: int = 0) -&gt; N2D2.CudaTensor_float</p></li>
-</ol>
-</dd></dl>
+<code class="sig-name descname">getData</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">dev: int = -1</em><span class="sig-paren">)</span> &#x2192; N2D2.CudaTensor_float<a class="headerlink" href="#N2D2.StimuliProvider.getData" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getDataChannel">
+<code class="sig-name descname">getDataChannel</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">channel: int</em>, <em class="sig-param">batchPos: int = 0</em>, <em class="sig-param">dev: int = -1</em><span class="sig-paren">)</span> &#x2192; N2D2.CudaTensor_float<a class="headerlink" href="#N2D2.StimuliProvider.getDataChannel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="N2D2.StimuliProvider.getDatabase">
@@ -228,13 +239,13 @@
 
 <dl class="method">
 <dt id="N2D2.StimuliProvider.getLabelsData">
-<code class="sig-name descname">getLabelsData</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.getLabelsData" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overloaded function.</p>
-<ol class="arabic simple">
-<li><p>getLabelsData(self: N2D2.StimuliProvider) -&gt; N2D2.Tensor_int</p></li>
-<li><p>getLabelsData(self: N2D2.StimuliProvider, channel: int, batchPos: int = 0) -&gt; N2D2.Tensor_int</p></li>
-</ol>
-</dd></dl>
+<code class="sig-name descname">getLabelsData</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">dev: int = -1</em><span class="sig-paren">)</span> &#x2192; N2D2.Tensor_int<a class="headerlink" href="#N2D2.StimuliProvider.getLabelsData" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.StimuliProvider.getLabelsDataChannel">
+<code class="sig-name descname">getLabelsDataChannel</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">channel: int</em>, <em class="sig-param">batchPos: int = 0</em><span class="sig-paren">)</span> &#x2192; N2D2.Tensor_int<a class="headerlink" href="#N2D2.StimuliProvider.getLabelsDataChannel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="N2D2.StimuliProvider.getLabelsROIs">
@@ -303,13 +314,18 @@
 
 <dl class="method">
 <dt id="N2D2.StimuliProvider.logTransformations">
-<code class="sig-name descname">logTransformations</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">fileName: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.logTransformations" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">logTransformations</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">fileName: str</em>, <em class="sig-param">setMask: N2D2.Database.StimuliSetMask</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.logTransformations" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="N2D2.StimuliProvider.readBatch">
-<code class="sig-name descname">readBatch</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em>, <em class="sig-param">startIndex: int = 0</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.readBatch" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">readBatch</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.readBatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>readBatch(self: N2D2.StimuliProvider, set: N2D2.Database.StimuliSet, startIndex: int) -&gt; None</p></li>
+<li><p>readBatch(self: N2D2.StimuliProvider, set: N2D2.Database.StimuliSet) -&gt; None</p></li>
+</ol>
+</dd></dl>
 
 <dl class="method">
 <dt id="N2D2.StimuliProvider.readRandomBatch">
@@ -318,7 +334,7 @@
 
 <dl class="method">
 <dt id="N2D2.StimuliProvider.readRandomStimulus">
-<code class="sig-name descname">readRandomStimulus</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em>, <em class="sig-param">batchPos: int = 0</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.StimuliProvider.readRandomStimulus" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">readRandomStimulus</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em>, <em class="sig-param">batchPos: int = 0</em>, <em class="sig-param">dev: int = -1</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.StimuliProvider.readRandomStimulus" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -336,15 +352,20 @@
 <code class="sig-name descname">readStimulus</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.readStimulus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Overloaded function.</p>
 <ol class="arabic simple">
-<li><p>readStimulus(self: N2D2.StimuliProvider, id: int, set: N2D2.Database.StimuliSet, batchPos: int = 0) -&gt; None</p></li>
-<li><p>readStimulus(self: N2D2.StimuliProvider, set: N2D2.Database.StimuliSet, index: int, batchPos: int = 0) -&gt; int</p></li>
+<li><p>readStimulus(self: N2D2.StimuliProvider, id: int, set: N2D2.Database.StimuliSet, batchPos: int = 0, dev: int = -1) -&gt; None</p></li>
+<li><p>readStimulus(self: N2D2.StimuliProvider, set: N2D2.Database.StimuliSet, index: int, batchPos: int = 0, dev: int = -1) -&gt; int</p></li>
 </ol>
 </dd></dl>
 
 <dl class="method">
 <dt id="N2D2.StimuliProvider.readStimulusBatch">
-<code class="sig-name descname">readStimulusBatch</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2.Database.StimuliSet</em>, <em class="sig-param">id: int</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.readStimulusBatch" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">readStimulusBatch</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.readStimulusBatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>readStimulusBatch(self: N2D2.StimuliProvider, id: int, set: N2D2.Database.StimuliSet, dev: int = -1) -&gt; None</p></li>
+<li><p>readStimulusBatch(self: N2D2.StimuliProvider, set: N2D2.Database.StimuliSet, index: int, dev: int = -1) -&gt; int</p></li>
+</ol>
+</dd></dl>
 
 <dl class="method">
 <dt id="N2D2.StimuliProvider.setBatchSize">
@@ -358,7 +379,7 @@
 
 <dl class="method">
 <dt id="N2D2.StimuliProvider.streamBatch">
-<code class="sig-name descname">streamBatch</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">startIndex: int = -1</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.streamBatch" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">streamBatch</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">startIndex: int = -1</em>, <em class="sig-param">dev: int = -1</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.streamBatch" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">

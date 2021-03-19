@@ -38,7 +38,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Databases" href="ini_databases.html" />
-    <link rel="prev" title="Performing simulations" href="simus.html" /> 
+    <link rel="prev" title="Export: other / legacy" href="export_legacy.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -87,6 +87,21 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ONNX Import:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="onnx_convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_transfer.html">Train from ONNX models</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Quantization and Export:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quant_post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
 <ul class="current">
@@ -127,10 +142,6 @@
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Tutorials:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
 </ul>
 
             
@@ -364,12 +375,6 @@ current item position, starting from 0.</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DefaultDataType</span></code> [<code class="docutils literal notranslate"><span class="pre">Float32</span></code>]</p></td>
 <td><p>Default layers data type. Can be <code class="docutils literal notranslate"><span class="pre">Float16</span></code>, <code class="docutils literal notranslate"><span class="pre">Float32</span></code> or <code class="docutils literal notranslate"><span class="pre">Float64</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SignalsDiscretization</span></code> [0]</p></td>
-<td><p>Number of levels for signal discretization</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FreeParametersDiscretization</span></code> [0]</p></td>
-<td><p>Number of levels for weights discretization</p></td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -386,7 +391,7 @@ current item position, starting from 0.</p>
         <a href="ini_databases.html" class="btn btn-neutral float-right" title="Databases" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="simus.html" class="btn btn-neutral float-left" title="Performing simulations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="export_legacy.html" class="btn btn-neutral float-left" title="Export: other / legacy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

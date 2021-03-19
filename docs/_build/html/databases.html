@@ -87,6 +87,21 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ONNX Import:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="onnx_convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_transfer.html">Train from ONNX models</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Quantization and Export:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quant_post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
 <ul>
@@ -103,10 +118,6 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Tutorials:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
 </ul>
 
             
@@ -187,8 +198,7 @@
 <dl class="method">
 <dt id="N2D2.Database.StimuliSet.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.Database.StimuliSet.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>(self: handle) -&gt; str</p>
-</dd></dl>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -206,8 +216,7 @@
 <dl class="method">
 <dt id="N2D2.Database.StimuliSetMask.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.Database.StimuliSetMask.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>(self: handle) -&gt; str</p>
-</dd></dl>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -218,17 +227,17 @@
 
 <dl class="method">
 <dt id="N2D2.Database.loadROIsDir">
-<code class="sig-name descname">loadROIsDir</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Database</em>, <em class="sig-param">dirName: str</em>, <em class="sig-param">fileExt: str = ''</em>, <em class="sig-param">depth: int = 0</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Database.loadROIsDir" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">loadROIsDir</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Database</em>, <em class="sig-param">dirName: str</em>, <em class="sig-param">fileExt: List[str] = ''</em>, <em class="sig-param">depth: int = 0</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Database.loadROIsDir" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="N2D2.Database.logROIsStats">
-<code class="sig-name descname">logROIsStats</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Database</em>, <em class="sig-param">sizeFileName: str</em>, <em class="sig-param">labelFileName: str</em>, <em class="sig-param">setMask: N2D2.Database.StimuliSetMask = StimuliSetMask.All</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Database.logROIsStats" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">logROIsStats</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Database</em>, <em class="sig-param">sizeFileName: str</em>, <em class="sig-param">labelFileName: str</em>, <em class="sig-param">setMask: N2D2.Database.StimuliSetMask = &lt;StimuliSetMask.All: 6&gt;</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Database.logROIsStats" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="N2D2.Database.logStats">
-<code class="sig-name descname">logStats</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Database</em>, <em class="sig-param">sizeFileName: str</em>, <em class="sig-param">labelFileName: str</em>, <em class="sig-param">setMask: N2D2.Database.StimuliSetMask = StimuliSetMask.All</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Database.logStats" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">logStats</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Database</em>, <em class="sig-param">sizeFileName: str</em>, <em class="sig-param">labelFileName: str</em>, <em class="sig-param">setMask: N2D2.Database.StimuliSetMask = &lt;StimuliSetMask.All: 6&gt;</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Database.logStats" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
