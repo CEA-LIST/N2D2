@@ -1008,6 +1008,7 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             learnThread.join();
 
 #ifdef CUDA
+#ifdef NVML
             if (opt.banMultiDevice) {
                 sp->setStates(deepNet->getStates());
                 sp->adjustBatchs(Database::Learn);
@@ -1015,6 +1016,7 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                 if (sp->isLastBatch(Database::Learn))
                     deepNet->lastBatch();
             }
+#endif
 
             nbConnectedDev = std::count(sp->getStates().begin(), 
                                    sp->getStates().end(), 
@@ -2323,8 +2325,10 @@ int main(int argc, char* argv[]) try
     }
 
 #ifdef CUDA
+#ifdef NVML
     if (opt.banMultiDevice && opt.learnEpoch > 0)
         deepNet->setBanAllowed(opt.banMultiDevice);
+#endif
 #endif
 
     Database& database = *deepNet->getDatabase();

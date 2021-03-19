@@ -65,9 +65,13 @@ ifdef CUDA
   NVCC=$(CUDA_BIN_PATH)/nvcc
   CPPFLAGS:=$(CPPFLAGS) -isystem $(CUDA_INC_PATH) -DCUDA
   LDFLAGS:=$(LDFLAGS) $(foreach lib_dir,$(CUDA_LIB_PATH),-L$(lib_dir)) \
-    -lcudart -lcublas -lcudadevrt -lcudnn -lnvidia-ml
+    -lcudart -lcublas -lcudadevrt -lcudnn
   NVFLAGS:=$(CPPFLAGS) --compiler-options '-fPIC' -std=c++11 -lcutil -lcudpp -lcudart -lnppi -lnppc \
     -lm -lstdc++ -arch=sm_30 -maxrregcount 64
+
+  ifdef NVML
+    LDFLAGS:=$(LDFLAGS) -lnvidia-ml
+  endif
 
   NVFLAGS:=$(NVFLAGS) -gencode arch=compute_30,code=sm_30 \
     -gencode arch=compute_50,code=sm_50 \

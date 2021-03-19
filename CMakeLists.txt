@@ -234,7 +234,7 @@ if(CUDA_FOUND)
 
     # CUDA
     target_include_directories(n2d2_lib_cuda PUBLIC ${CUDA_INCLUDE_DIRS})
-    target_link_libraries(n2d2_lib_cuda PUBLIC ${CUDA_LIBRARIES} -lnvidia-ml)
+    target_link_libraries(n2d2_lib_cuda PUBLIC ${CUDA_LIBRARIES})
 
     # CuDNN
     target_include_directories(n2d2_lib_cuda PUBLIC ${CUDNN_INCLUDE_DIRS})
@@ -251,6 +251,17 @@ if(CUDA_FOUND)
     # OpenCV
     find_package(OpenCV REQUIRED)
     target_link_libraries(n2d2_lib_cuda PUBLIC ${OpenCV_LIBS})
+
+    # NVML
+    find_package(NVML)
+    if(NVML_FOUND)
+        message(STATUS "NVML Version : ${NVML_API_VERSION}")
+        target_include_directories(n2d2_lib_cuda PUBLIC ${NVML_INCLUDE_DIRS})
+        target_link_libraries(n2d2_lib_cuda PUBLIC ${NVML_LIBRARIES})
+        target_compile_definitions(n2d2_lib_cuda PUBLIC NVML=1)
+    else()
+        message(STATUS "NVML package not found")
+    endif()
 
     target_compile_definitions(n2d2_lib_cuda PUBLIC CUDA=1)
     target_link_libraries(n2d2_lib PUBLIC n2d2_lib_cuda)

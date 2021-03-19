@@ -54,11 +54,14 @@ N2D2::DeepNet::DeepNet(Network& net)
     mNbPassBeforeBan = 10;
     mAveragePowerUsage = 0;
 
+#ifdef NVML
     // Used to catch the power of every device during learning
     // See N2D2::DeepNet::learn for details
     nvmlReturn_t result = nvmlInit();
     if (NVML_SUCCESS != result)
         std::cout << "Failed to initialize NVML: " << nvmlErrorString(result) << std::endl;
+#endif
+
 #endif
 }
 
@@ -2098,6 +2101,7 @@ void N2D2::DeepNet::learn_singleDevice(std::vector<std::pair<std::string, double
 
 #ifdef CUDA
 
+#ifdef NVML
 /** Give the power usage of the target device
  * 
  * @param dev   The identifier of the target device
@@ -2112,6 +2116,7 @@ unsigned int devicePowerUsage(int dev)
 
     return power;
 }
+#endif
 
 /** Launch the phases of propagate and backpropagate. 
  * 
@@ -2139,7 +2144,9 @@ void learnThread(const std::shared_ptr<N2D2::DeepNet>& deepNet,
     if (!deepNet->isDeviceDropped(dev)) {
         N2D2::DeepNet::SharedValues& sharedVal = deepNet->getMultiDevicesInfo();
         sharedVal.finished[dev] = true;
+#ifdef NVML
         sharedVal.power += devicePowerUsage(dev);
+#endif
         sharedVal.nbFinished += 1;
         sharedVal.firstFinished = true;
     }
@@ -2185,6 +2192,7 @@ void N2D2::DeepNet::learn_multiDevices(std::vector<std::pair<std::string, double
             t.detach();
             mDropDevices[devices[dev]] = false;
         }
+#ifdef NVML
         else if (mStates[devices[dev]] == N2D2::DeviceState::Banned) {
             if((double)devicePowerUsage(devices[dev]) < mAveragePowerUsage * coeffPower) 
             {
@@ -2194,6 +2202,7 @@ void N2D2::DeepNet::learn_multiDevices(std::vector<std::pair<std::string, double
         }
         else if (mStates[devices[dev]] == N2D2::DeviceState::Debanned)
             mStates[devices[dev]] = N2D2::DeviceState::Ready;
+#endif
     }
 
     CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
@@ -2233,15 +2242,19 @@ void N2D2::DeepNet::learn_multiDevices(std::vector<std::pair<std::string, double
                 if (!mMultiDevicesInfo.finished[devices[dev]] 
                     && mStates[devices[dev]] == N2D2::DeviceState::Connected) 
                 {
+#ifdef NVML
                     if (mDevicesWarning[devices[dev]] >= warningLimit) {
                         mDropDevices[devices[dev]] = true;
                         mStates[devices[dev]] = N2D2::DeviceState::Banned;
                         std::cout << "\nDevice " << devices[dev] << " has been banned" << std::endl;
                     } else {
+#endif
                         mDevicesWarning[devices[dev]] += 1;
                         while (!mMultiDevicesInfo.finished[devices[dev]])
                             std::this_thread::yield();
+#ifdef NVML
                     }
+#endif
                 }
             }
             // Changing the master device if this one is banned
@@ -2959,11 +2972,15 @@ std::string N2D2::DeepNet::getCellModelType(const Cell& cell) {
 N2D2::DeepNet::~DeepNet()
 {
 #ifdef CUDA
+
+#ifdef NVML
     // Used to catch the power of every device during learning
     // See N2D2::DeepNet::learn_multiDevices for details
     nvmlReturn_t result = nvmlShutdown();
     if (NVML_SUCCESS != result)
         std::cout << "Failed to shutdown NVML: " << nvmlErrorString(result) << std::endl;
+#endif
+
 #endif
 }
 

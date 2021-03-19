@@ -35,7 +35,11 @@
 #include "CudaUtils.hpp"
 #include "Cell/Cell_Frame_CUDA.hpp"
 #include "CMonitor_CUDA.hpp"
+
+#ifdef NVML
 #include <nvml.h>
+#endif
+
 #endif
 
 namespace N2D2 {
