@@ -21,7 +21,7 @@
 import torch
 from torchvision import datasets, transforms 
 import N2D2
-from n2d2.deepnet import Sequence, DeepNet
+from n2d2.deepnet import Group, DeepNet
 from n2d2.cell import Fc, Conv, Softmax, Pool2D, BatchNorm, Dropout
 import n2d2
 import numpy as np

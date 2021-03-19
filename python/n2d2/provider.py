@@ -28,6 +28,9 @@ class Provider(N2D2_Interface):
     def __init__(self, **config_parameters):
         N2D2_Interface.__init__(self, **config_parameters)
 
+    def dims(self):
+        return self._N2D2_object.getSize()
+
 
 class DataProvider(Provider):
     _type = "DataProvider"
@@ -58,11 +61,6 @@ class DataProvider(Provider):
         self._transformations = []
         self._otf_transformations = []
 
-    def get_last(self):
-        return self
-
-    def dims(self):
-        return self._N2D2_object.getSize()
 
     def get_name(self):
         return self._name

@@ -29,6 +29,7 @@ batch_size = 256
 database = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/")
 provider = n2d2.provider.DataProvider(database, [28, 28, 1], batchSize=batch_size)
 
+
 """
 * First way to define a model
 * Create a sequence object on-the-fly and add to sequence by using 'add'. 
@@ -36,12 +37,12 @@ provider = n2d2.provider.DataProvider(database, [28, 28, 1], batchSize=batch_siz
 * cell of the graph.
 """
 
-
-model = n2d2.deepnet.Sequence([])
+"""
+model = n2d2.deepnet.Group([])
 model.add(n2d2.cell.Conv(provider, 5, kernelDims=[5, 5], activationFunction=n2d2.activation.Rectifier()))
 model.add(n2d2.cell.Fc(model, 10, activationFunction=n2d2.activation.Linear()))
 model.add(n2d2.cell.Softmax(model, withLoss=True))
-
+"""
 
 """
 * Second way to define a model.
@@ -51,11 +52,19 @@ model.add(n2d2.cell.Softmax(model, withLoss=True))
 conv1 = n2d2.cell.Conv(provider, 5, kernelDims=[5, 5], activationFunction=n2d2.activation.Rectifier())
 fc = n2d2.cell.Fc(conv1, 10, activationFunction=n2d2.activation.Linear())
 softmax = n2d2.cell.Softmax(fc, withLoss=True)
-model = n2d2.deepnet.Sequence([conv1, fc, softmax])"""
+model = n2d2.deepnet.Group([conv1, fc, softmax])"""
 
-print(model)
 
-classifier = n2d2.application.Classifier(provider, model)
+"""
+* Third way to define a model.
+* Pass cells directly to each other
+"""
+x = n2d2.cell.Conv(provider, 5, kernelDims=[5, 5], activationFunction=n2d2.activation.Rectifier())
+x = n2d2.cell.Fc(x, 10, activationFunction=n2d2.activation.Linear())
+x = n2d2.cell.Softmax(x, withLoss=True)
+
+classifier = n2d2.application.Classifier(provider, x)
+print(x)
 
 for epoch in range(nb_epochs):
 

@@ -66,15 +66,30 @@ class DeepNet(N2D2_Interface):
         self._network = self._N2D2_object.getNetwork()
 
 
+    def propagate(self, inference=False):
+        self._N2D2_object.propagate(inference)
+
+    def back_propagate(self):
+        self._N2D2_object.backPropagate()
+
+    def update(self):
+        self._N2D2_object.update()
+
+    def import_free_parameters(self, dirName, ignoreNotExists=False):
+        print("Importing weights from directory '" + dirName + "'")
+        self._N2D2_object.import_free_parameters(dirName, ignoreNotExists=ignoreNotExists)
+
 
     def add_provider(self, provider):
         self._provider = provider
         self._N2D2_object.setStimuliProvider(provider.N2D2())
 
+    """
     def __str__(self):
         output = "Deepnet" + "(" + self._model + "<" + self._datatype + ">" + ")"
         output += N2D2_Interface.__str__(self)
         return output
+    """
 
     def get_model(self):
         return self._model
@@ -89,67 +104,89 @@ class DeepNet(N2D2_Interface):
         N2D2.DrawNet.drawGraph(self._N2D2_object, filename)
 
 
-def load_from_ONNX(model_path, dims, batch_size=1, ini_file=None):
-    """
-    :param model_path: Path to the model.
-    :type model_path: str
-    :param dims:
-    :type dims: list
-    :param batch_size:
-    :type batch_size: unsigned int
-    Load a deepnet from an ONNX file given its input dimensions.
-    """
-    deepNet = DeepNet()
-    provider = n2d2.provider.DataProvider(n2d2.database.Database(), dims, batchSize=batch_size)
-    deepNet.N2D2().setDatabase(provider.get_database().N2D2())
-    print(provider.get_database().N2D2())
-    deepNet.N2D2().setStimuliProvider(provider.N2D2())
-    N2D2.CellGenerator.defaultModel = "Frame_CUDA" #deepNet.get_model()
-    print(N2D2.CellGenerator.defaultModel)
-    print("Launch generator")
-    ini_parser = N2D2.IniParser()
-    if ini_file is not None:
-        ini_parser.load(ini_file)
-    ini_parser.currentSection("onnx", True)
-    deepNet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, ini_parser, deepNet.N2D2())
-    print("Launch converter")
-    model = n2d2.converter.deepNet_converter(deepNet)
-    model.get_first().clear_input() #Remove dummy stimuli provider
-    return model
+    @classmethod
+    def load_from_ONNX(cls, model_path, dims, batch_size=1, ini_file=None):
+        """
+        :param model_path: Path to the model.
+        :type model_path: str
+        :param dims:
+        :type dims: list
+        :param batch_size:
+        :type batch_size: unsigned int
+        Load a deepnet from an ONNX file given its input dimensions.
+        """
+        deepNet = cls()
+        provider = n2d2.provider.DataProvider(n2d2.database.Database(), dims, batchSize=batch_size)
+        deepNet.N2D2().setDatabase(provider.get_database().N2D2())
+        deepNet.N2D2().setStimuliProvider(provider.N2D2())
+        N2D2.CellGenerator.defaultModel = "Frame_CUDA" #deepNet.get_model()
+        ini_parser = N2D2.IniParser()
+        if ini_file is not None:
+            ini_parser.load(ini_file)
+        ini_parser.currentSection("onnx", True)
+        N2D2_deepNet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, ini_parser, deepNet.N2D2())
+        model = n2d2.converter.deepnet_converter(N2D2_deepNet)
+        model.get_first().clear_input() #Remove dummy stimuli provider
+        return model
 
-def load_from_INI(path):
-    """
-    :param model_path: Path to the ini file.
-    :type model_path: str
-    Load a deepnet from an INI file.
-    """
-    network = N2D2.Network(1)
-    deepNet = N2D2.DeepNetGenerator.generateFromINI(network, path)
-    return n2d2.converter.deepNet_converter(deepNet)
+    @classmethod
+    def load_from_INI(cls, path):
+        """
+        :param model_path: Path to the ini file.
+        :type model_path: str
+        Load a deepnet from an INI file.
+        """
+        deepNet = cls(N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path))
+        return n2d2.converter.deepnet_converter(deepNet)
 
 
 
 """
 Structure that is organised sequentially. 
 """
-class Sequence:
+
+# TODO: Mark the first and last cell in the print
+class Group:
     def __init__(self, sequence, name=""):
         assert isinstance(name, str)
         self._name = name
         assert isinstance(sequence, list)
         self._sequence = sequence
+        last_deepnet = None
+        for ipt in self._sequence:
+            deepnet = ipt.get_last().get_deepnet()
+            if last_deepnet is not None:
+                if not id(deepnet) == id(last_deepnet):
+                    print(id(deepnet))
+                    print(id(last_deepnet))
+                    raise RuntimeError("Cells of group have different deepnets")
+            last_deepnet = deepnet
+        self._deepnet = last_deepnet
+
+        # By default the input and output cells are the first and last element of the sequence
+        # To change this, modify these members
+        self._first = None
+        self._last = None
 
     def add(self, cell):
+        if self._deepnet is not None:
+            if not id(cell.get_deepnet()) == id(self.get_deepnet()):
+                raise RuntimeError("Deepnet of cell is different than group deepnet")
+        else:
+            self._deepnet = cell.get_deepnet()
         self._sequence.append(cell)
 
-    # TODO: Implement in layer
+
+    def get_deepnet(self):
+        return self._deepnet
+
     # TODO: At the moment this does not release memory of deleted cells
-    def remove_subsequence(self, idx, reconnect=True):
+    def remove(self, idx, reconnect=True):
         cell = self._sequence[idx]
         print("Removing cell: " + cell.get_name())
-        if isinstance(cell, Sequence) or isinstance(cell, Layer):
+        if isinstance(cell, Group):
             for _ in cell.get_elements():
-                cell.remove_subsequence(0, reconnect)
+                cell.remove(0, reconnect)
             print("delete: " + self._sequence[idx].get_name())
             del self._sequence[idx]
         elif isinstance(cell, n2d2.cell.Cell):
@@ -188,7 +225,7 @@ class Sequence:
 
     def _get_cells(self, cells):
         for elem in self._sequence:
-            if isinstance(elem, Sequence) or isinstance(elem, Layer):
+            if isinstance(elem, Group):
                 elem._get_cells(cells)
             else:
                 cells[elem.get_name()] = elem
@@ -211,29 +248,16 @@ class Sequence:
     def __getitem__(self, item):
         return self.get_cells()[item]
 
-    # TODO: Is this really used?
-    def initialize(self):
-        for cell in self._sequence:
-            cell.initialize()
 
-    def propagate(self, inference=False):
-        for cell in self._sequence:
-            cell.propagate(inference)
-
-    def back_propagate(self):
-        for cell in reversed(self._sequence):
-            cell.back_propagate()
-
-    def update(self):
-        for cell in self._sequence:
-            cell.update()
-
+    """
     def import_free_parameters(self, dirName, ignoreNotExists=False):
         print("Importing weights from directory '" + dirName + "'")
         for name, cell in self.get_cells().items():
             path = dirName + "/" + name + ".syntxt"
             cell.import_free_parameters(path, ignoreNotExists=ignoreNotExists)
             cell.import_activation_parameters(dirName, ignoreNotExists=ignoreNotExists)
+    """
+
 
     def get_subsequence(self, id):
         if isinstance(id, int):
@@ -254,25 +278,29 @@ class Sequence:
         return self._sequence
 
     def get_last(self):
-        return self._sequence[-1].get_last()
+        if self._last is not None:
+            return self._last
+        else:
+            return self._sequence[-1].get_last()
 
     def get_first(self):
-        return self._sequence[0].get_first()
+        if self._first is not None:
+            return self._first
+        else:
+            return self._sequence[0].get_first()
 
     def __str__(self):
         return self._generate_str(1)
 
     def _generate_str(self, indent_level):
         if not self.get_name() == "":
-            output = "\'" + self.get_name() + "\' " + "Sequence("
+            output = "\'" + self.get_name() + "\' " + "Group("
         else:
-            output = "Sequence("
+            output = "Group("
 
         for idx, value in enumerate(self._sequence):
             output += "\n" + (indent_level * "\t") + "(" + str(idx) + ")"
-            if isinstance(value, n2d2.deepnet.Sequence):
-                output += ": " + value._generate_str(indent_level + 1)
-            elif isinstance(value, n2d2.deepnet.Layer):
+            if isinstance(value, n2d2.deepnet.Group):
                 output += ": " + value._generate_str(indent_level + 1)
             else:
                 output += ": " + value.__str__()
@@ -280,7 +308,7 @@ class Sequence:
         return output
 
 
-
+"""
 class Layer:
     def __init__(self, layer, name=""):
         assert isinstance(name, str)
@@ -297,20 +325,10 @@ class Layer:
 
     def _get_cells(self, cells):
         for elem in self._layer:
-            if isinstance(elem, Sequence):
+            if isinstance(elem, Group):
                 elem._get_cells(cells)
             else:
                 cells[elem.get_name()] = elem
-
-    """
-    def add_input(self, input):
-        for cell in self._layer:
-            cell.add_input(input)
-
-    def clear_input(self):
-        for cell in self._layer:
-            cell.clear_input()
-    """
 
     def get_last(self):
         return self
@@ -351,4 +369,4 @@ class Layer:
                 output += (indent_level * "\t") + "[" + str(idx) + "]: " + elem._generate_str(indent_level+1) + "\n"
         output += ((indent_level-1) * "\t") + ")"
         return output
-
+"""

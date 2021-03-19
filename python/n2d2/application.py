@@ -22,44 +22,64 @@
 import n2d2
 import N2D2
 
+# TODO: Make abstract
 class Application:
-    _target = None
-    _provider = None
-    _mode = None
-
     def __init__(self, provider, model):
-        self._model = model
+        self._deepnet = model
         self._provider = provider
         self._mode = 'Test'
 
+
+   
+
+class Classifier(Application):
+    def __init__(self, provider, cell, **target_config_parameters):
+        deepnet_endpoint = cell.get_last()
+        if not isinstance(deepnet_endpoint, n2d2.cell.Cell):
+            raise RuntimeError("The deepnet endpoint is not a single cell")
+        Application.__init__(self, provider, deepnet_endpoint.get_deepnet())
+
+        self._target = n2d2.target.Score(deepnet_endpoint,
+                                         self._provider,
+                                         **target_config_parameters)
+
+
+    def get_average_success(self, window=0):
+        return self._target.get_average_success(partition=self._mode, window=window)
+
+    def clear_success(self):
+        self._target.clear_success(partition=self._mode)
+
+    def get_average_score(self, metric):
+        return self._target.get_average_score(partition=self._mode, metric=metric)
 
     def set_mode(self, mode):
         if mode not in N2D2.Database.StimuliSet.__members__:
             raise ValueError("Mode " + mode + " not compatible with database stimuli sets")
         self._mode = mode
 
+    def read_random_batch(self):
+        self._provider.read_random_batch(partition=self._mode)
+
+    def read_batch(self, idx):
+        self._provider.read_batch(partition=self._mode, idx=idx)
+
     def process(self):
         # Set target of cell
         self._target.provide_targets(partition=self._mode)
 
         # Propagate
-        self._model.propagate(inference=(self._mode == 'Test' or self._mode == 'Validation'))
+        self._deepnet.propagate(inference=(self._mode == 'Test' or self._mode == 'Validation'))
 
         # Calculate loss and error
         self._target.process(partition=self._mode)
 
     def optimize(self):
         # Backpropagate
-        self._model.back_propagate()
+        self._deepnet.back_propagate()
 
         # Update parameters
-        self._model.update()
-
-    def read_random_batch(self):
-        self._provider.read_random_batch(partition=self._mode)
-
-    def read_batch(self, idx):
-        self._provider.read_batch(partition=self._mode, idx=idx)
+        self._deepnet.update()
 
     def get_loss(self, saveFile=""):
         """
@@ -109,28 +129,29 @@ class Application:
     # TODO : also doesn't work with the current structure of layers and sequences !
     # def show_outputs(self):
     #     string = "Cells outputs :\n###############\n"
-    #     for cell in self._model.get_cells():
+    #     for cell in self._deepnet.get_cells():
     #         string += cell.getName() + ": "
     #         for output in cell.getOutputs():
     #             string += str(output) + " "
     #         string += "\n"
     #     print(string)
 
-class Classifier(Application):
-    def __init__(self, provider, model, **target_config_parameters):
-        Application.__init__(self, provider, model)
-
-        self._target = n2d2.target.Score(self._model.get_last(),
-                                         self._provider,
-                                         **target_config_parameters)
 
 
-    def get_average_success(self, window=0):
-        return self._target.get_average_success(partition=self._mode, window=window)
+class Extractor(Application):
+    def __init__(self, provider, cell):
+        deepnet_endpoint = cell.get_last()
+        if not isinstance(deepnet_endpoint, n2d2.cell.Cell):
+            raise RuntimeError("The deepnet endpoint is not a single cell")
+        Application.__init__(self, provider, deepnet_endpoint.get_deepnet())
 
-    def clear_success(self):
-        self._target.clear_success(partition=self._mode)
+    def read_random_batch(self, partition):
+        self._provider.read_random_batch(partition=partition)
 
-    def get_average_score(self, metric):
-        return self._target.get_average_score(partition=self._mode, metric=metric)
+    def read_batch(self, partition, idx):
+        self._provider.read_batch(partition=partition, idx=idx)
+
+    def process(self):
+        # Propagate
+        self._deepnet.propagate(inference=True)
 

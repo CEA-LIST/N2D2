@@ -9,7 +9,7 @@ from n2d2 import tensor
 
 import n2d2.pytorch as pytorch
 
-from n2d2.deepnet import Sequence, DeepNet
+from n2d2.deepnet import Group, DeepNet
 
 
 # DEFINE THE NETWORK ARCHITECTURE
@@ -155,14 +155,14 @@ class Mixed_P_N(torch.nn.Module):
 
 class NIT(torch.nn.Module):
     """
-    A Pytorch network compose of an n2d2 Sequence object composed of two N2D2 conv cell interfaced with the SequenceN2D2 object.
+    A Pytorch network compose of an n2d2 Group object composed of two N2D2 conv cell interfaced with the SequenceN2D2 object.
     """ 
     def __init__(self):
         super(NIT, self).__init__()
         empty_db = n2d2.database.Database()
         provider = n2d2.provider.DataProvider(empty_db, [3, 3, 1], batchSize=batch_size)
         self.deepnet = DeepNet()
-        self.test = Sequence([], name='test')
+        self.test = Group([], name='test')
         self.test.add(Conv(provider, nbOutputs=1, 
         kernelDims=[3, 3], deepNet=self.deepnet, name="conv1", NoBias=True, strideDims=[1, 1], paddingDims=[1, 1]))
         self.test.add(Conv(self.test.get_last(), nbOutputs=1, 

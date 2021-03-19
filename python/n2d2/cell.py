@@ -42,24 +42,7 @@ class Cell(N2D2_Interface):
         if 'deepNet' in config_parameters:
             self._deepnet = config_parameters.pop('deepNet')
         else:
-            if isinstance(inputs, n2d2.deepnet.Layer) or isinstance(inputs, list):
-                if isinstance(inputs, n2d2.deepnet.Layer):
-                    inputs = inputs.get_elements()
-                last_deepnet = None
-                for ipt in inputs.get_elements():
-                    deepnet = ipt.get_last().get_deepnet()
-                    if last_deepnet is not None:
-                        if not id(deepnet) == id(last_deepnet):
-                            raise RuntimeError("Elements of cell input have different deepnets. "
-                                               "Cannot infer implicit deepnet")
-                    last_deepnet = deepnet
-                self._deepnet = last_deepnet
-            elif isinstance(inputs, n2d2.deepnet.Sequence) or isinstance(inputs, Cell):
-                self._deepnet = inputs.get_last().get_deepnet()
-            elif isinstance(inputs, n2d2.provider.Provider):
-                self._deepnet = n2d2.deepnet.DeepNet()
-            else:
-                raise TypeError("Object of type " + str(type(inputs)) + " cannot implicitly provide a deepNet to cell.")
+            self._deepnet = self._infer_deepnet(inputs)
 
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')
@@ -80,8 +63,27 @@ class Cell(N2D2_Interface):
 
         self._connection_parameters = {}
 
-    def initialize(self):
-        self._N2D2_object.initialize()
+    def _infer_deepnet(self, inputs):
+        if isinstance(inputs, list):
+            if len(inputs) == 0:
+                deepnet = n2d2.deepnet.DeepNet()
+            else:
+                last_deepnet = None
+                for ipt in inputs:
+                    deepnet = ipt.get_last().get_deepnet()
+                    if last_deepnet is not None:
+                        if not id(deepnet) == id(last_deepnet):
+                            raise RuntimeError("Elements of cell input have different deepnets. "
+                                               "Cannot infer implicit deepnet")
+                    last_deepnet = deepnet
+                deepnet = last_deepnet
+        elif isinstance(inputs, Cell) or isinstance(inputs, n2d2.deepnet.Group):
+            deepnet = inputs.get_deepnet()
+        elif isinstance(inputs, n2d2.provider.Provider):
+            deepnet = n2d2.deepnet.DeepNet()
+        else:
+            raise TypeError("Object of type " + str(type(inputs)) + " cannot implicitly provide a deepNet to cell.")
+        return deepnet
 
     def get_outputs(self):
         return self._N2D2_object.getOutputs()
@@ -103,19 +105,17 @@ class Cell(N2D2_Interface):
             return self._type
 
     def add_input(self, inputs):
+        if isinstance(inputs, n2d2.deepnet.Group):
+            inputs = inputs.get_last()
         if isinstance(inputs, list):
             for cell in inputs:
-                self.add_input(cell)
-        elif isinstance(inputs, n2d2.deepnet.Sequence):
-            self.add_input(inputs.get_last())
-        elif isinstance(inputs, n2d2.deepnet.Layer):
-            for cell in inputs.get_elements():
                 self.add_input(cell)
         elif isinstance(inputs, Cell) or isinstance(inputs, n2d2.provider.Provider) or isinstance(inputs, n2d2.tensor.Tensor):
             self._link_N2D2_input(inputs)
             self._inputs.append(inputs)
         else:
             raise TypeError("Cannot add object of type " + str(type(inputs)))
+
 
     """
     Links N2D2 cells tacking into account cell connection parameters
@@ -180,10 +180,6 @@ class Cell(N2D2_Interface):
         self._N2D2_object.getActivation().setQuantizer(quantizer.N2D2())
         # TODO: Create n2d2 objects to obtain visibility of objects in API
 
-
-    def get_deepnet(self):
-        return self._deepnet
-
     def get_inputs(self):
         return self._inputs
 
@@ -217,7 +213,8 @@ class Cell(N2D2_Interface):
     def _sync_inputs_and_parents(self, inputs):
         parents = self._N2D2_object.getParentsCells()
         # Necessary because N2D2 returns [None] if no parents
-        if parents[0] is None:
+        # TODO: Somtimes parents contains [None], sometimes []. Why?
+        if len(parents) > 0 and parents[0] is None:
             parents = []
         if not len(inputs) == len(parents):
             raise RuntimeError("Number of given inputs " + str(len(inputs)) +
@@ -254,7 +251,7 @@ class Fc(Cell):
             'Frame_CUDA<float>': N2D2.FcCell_Frame_CUDA_float,
     }
 
-    def __init__(self, inputs, nbOutputs, N2D2_object=None, **config_parameters):
+    def __init__(self, inputs, nbOutputs, from_arguments=True, **config_parameters):
         # TODO : Add description for filler and solver.
         """
         :param nbOutputs: Number of outputs of the cell.
@@ -273,12 +270,10 @@ class Fc(Cell):
         :type biasFiller: :py:class:`n2d2.filler.Filler`, optional
         """
 
-        if N2D2_object is not None and (nbOutputs is not None or len(config_parameters) > 0):
+        if not from_arguments and (nbOutputs is not None or len(config_parameters) > 0):
             raise RuntimeError("N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
-        if N2D2_object is None:
+        if from_arguments:
             self._create_from_arguments(inputs, nbOutputs, **config_parameters)
-        else:
-            self._create_from_N2D2_object(inputs, N2D2_object)
 
 
     def _create_from_arguments(self, inputs, nbOutputs, **config_parameters):
@@ -317,25 +312,32 @@ class Fc(Cell):
 
         self._add_to_graph(inputs)
 
-    def _create_from_N2D2_object(self, inputs, N2D2_object):
+    @classmethod
+    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
 
-        Cell.__init__(self, inputs,
+        n2d2_cell = cls(inputs, None, from_arguments=False)
+
+        Cell.__init__(n2d2_cell,
+                      inputs,
                       N2D2_object.getNbOutputs(),
-                      deepNet=n2d2.deepnet.DeepNet(N2D2_object=N2D2_object.getAssociatedDeepNet()),
+                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **self._load_N2D2_parameters(N2D2_object))
+                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
 
-        self._N2D2_object = N2D2_object
+        n2d2_cell._N2D2_object = N2D2_object
+
 
         # NOTE: No Fillers because existing cell
         # TODO: Add similar methods to Activation/Solver/Quantizer for nice prints
-        self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
-        self._config_parameters['weightsSolver'] = self._N2D2_object.getWeightsSolver()
-        self._config_parameters['biasSolver'] = self._N2D2_object.getBiasSolver()
-        self._config_parameters['weightsSolver'] = self._N2D2_object.getWeightsSolver()
-        self._config_parameters['quantizer'] = self._N2D2_object.getQuantizer()
+        n2d2_cell._config_parameters['activationFunction'] = n2d2_cell._N2D2_object.getActivation()
+        n2d2_cell._config_parameters['weightsSolver'] = n2d2_cell._N2D2_object.getWeightsSolver()
+        n2d2_cell._config_parameters['biasSolver'] = n2d2_cell._N2D2_object.getBiasSolver()
+        n2d2_cell._config_parameters['weightsSolver'] = n2d2_cell._N2D2_object.getWeightsSolver()
+        n2d2_cell._config_parameters['quantizer'] = n2d2_cell._N2D2_object.getQuantizer()
 
-        self._sync_inputs_and_parents(inputs)
+        n2d2_cell._sync_inputs_and_parents(inputs)
+
+        return n2d2_cell
 
     # TODO: This is not working as expected because solvers are copied in a vector at cell initialization.
     #  setWeightsSolver sets only the solver to be copied but does not modify after cell initialization
@@ -369,11 +371,36 @@ class Conv(Cell):
         'Frame_CUDA<double>': N2D2.ConvCell_Frame_CUDA_double,
     }
 
+    def __init__(self, inputs, nbOutputs, from_arguments=True, **config_parameters):
+        # TODO : Add description for filler and solver.
+        """
+        :param nbOutputs: Number of outputs of the cell.
+        :type nbOutputs: int
+        :param name: Name fo the cell.
+        :type name: str
+        :param activationFunction: Activation function used by the cell.
+        :type activationFunction: :py:class:`n2d2.activation.Activation`, optional
+        :param weightsSolver: TODO
+        :type weightsSolver: :py:class:`n2d2.solver.Solver`, optional
+        :param biasSolver: TODO
+        :type biasSolver: :py:class:`n2d2.solver.Solver`, optional
+        :param weightsFiller: TODO
+        :type weightsFiller: :py:class:`n2d2.filler.Filler`, optional
+        :param biasFiller: TODO
+        :type biasFiller: :py:class:`n2d2.filler.Filler`, optional
+        """
+
+        if not from_arguments and (nbOutputs is not None or len(config_parameters) > 0):
+            raise RuntimeError(
+                "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
+        if from_arguments:
+            self._create_from_arguments(inputs, nbOutputs, **config_parameters)
+
     def __init__(self,
                  inputs,
                  nbOutputs,
                  kernelDims,
-                 N2D2_object=None,
+                 from_arguments=True,
                  **config_parameters):
         """
         :param nbOutputs: Number of outputs of the cell.
@@ -392,12 +419,11 @@ class Conv(Cell):
         :type dilationDims: list, optional     
         """
 
-        if N2D2_object is not None and (nbOutputs is not None or kernelDims is not None or len(config_parameters) > 0):
+        if not from_arguments and (nbOutputs is not None or kernelDims is not None or len(config_parameters) > 0):
             raise RuntimeError("N2D2_object argument give to cell but 'inputs' or 'nbOutputs'  or 'kernelDims' or 'config parameters' not None")
-        if N2D2_object is None:
+        if from_arguments:
             self._create_from_arguments(inputs, nbOutputs, kernelDims, **config_parameters)
-        else:
-            self._create_from_N2D2_object(inputs, N2D2_object)
+
 
     def _create_from_arguments(self, inputs, nbOutputs, kernelDims, **config_parameters):
 
@@ -442,32 +468,38 @@ class Conv(Cell):
         self._add_to_graph(inputs)
 
 
-    def _create_from_N2D2_object(self, inputs, N2D2_object):
+    @classmethod
+    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
 
-        Cell.__init__(self, inputs,
+        n2d2_cell = cls(inputs, None, None, from_arguments=False)
+
+        Cell.__init__(n2d2_cell,
+                      inputs,
                       N2D2_object.getNbOutputs(),
-                      deepNet=n2d2.deepnet.DeepNet(N2D2_object=N2D2_object.getAssociatedDeepNet()),
+                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **self._load_N2D2_parameters(N2D2_object))
+                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
 
-        self._N2D2_object = N2D2_object
+        n2d2_cell._N2D2_object = N2D2_object
 
-        self._constructor_arguments['kernelDims'] = [self._N2D2_object.getKernelWidth(), self._N2D2_object.getKernelHeight()]
-        self._optional_constructor_arguments['subSampleDims'] = [self._N2D2_object.getSubSampleX(), self._N2D2_object.getSubSampleY()]
-        self._optional_constructor_arguments['strideDims'] = [self._N2D2_object.getStrideX(), self._N2D2_object.getStrideY()]
-        self._optional_constructor_arguments['paddingDims'] = [self._N2D2_object.getPaddingX(), self._N2D2_object.getPaddingY()]
-        self._optional_constructor_arguments['dilationDims'] = [self._N2D2_object.getDilationX(), self._N2D2_object.getDilationY()]
+        n2d2_cell._constructor_arguments['kernelDims'] = [n2d2_cell._N2D2_object.getKernelWidth(), n2d2_cell._N2D2_object.getKernelHeight()]
+        n2d2_cell._optional_constructor_arguments['subSampleDims'] = [n2d2_cell._N2D2_object.getSubSampleX(), n2d2_cell._N2D2_object.getSubSampleY()]
+        n2d2_cell._optional_constructor_arguments['strideDims'] = [n2d2_cell._N2D2_object.getStrideX(), n2d2_cell._N2D2_object.getStrideY()]
+        n2d2_cell._optional_constructor_arguments['paddingDims'] = [n2d2_cell._N2D2_object.getPaddingX(), n2d2_cell._N2D2_object.getPaddingY()]
+        n2d2_cell._optional_constructor_arguments['dilationDims'] = [n2d2_cell._N2D2_object.getDilationX(), n2d2_cell._N2D2_object.getDilationY()]
 
 
         # NOTE: No Fillers because existing cell
         # TODO: Add similar methods to Activation/Solver/Quantizer for nice prints
-        self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
-        self._config_parameters['weightsSolver'] = self._N2D2_object.getWeightsSolver()
-        self._config_parameters['biasSolver'] = self._N2D2_object.getBiasSolver()
-        self._config_parameters['weightsSolver'] = self._N2D2_object.getWeightsSolver()
-        self._config_parameters['quantizer'] = self._N2D2_object.getQuantizer()
+        n2d2_cell._config_parameters['activationFunction'] = n2d2_cell._N2D2_object.getActivation()
+        n2d2_cell._config_parameters['weightsSolver'] = n2d2_cell._N2D2_object.getWeightsSolver()
+        n2d2_cell._config_parameters['biasSolver'] = n2d2_cell._N2D2_object.getBiasSolver()
+        n2d2_cell._config_parameters['weightsSolver'] = n2d2_cell._N2D2_object.getWeightsSolver()
+        n2d2_cell._config_parameters['quantizer'] = n2d2_cell._N2D2_object.getQuantizer()
 
-        self._sync_inputs_and_parents(inputs)
+        n2d2_cell._sync_inputs_and_parents(inputs)
+
+        return n2d2_cell
 
     # TODO: This is not working as expected because solvers are copied in a vector at cell initialization.
     #  setWeightsSolver sets only the solver to be copied but does not modify after cell initialization
@@ -529,7 +561,7 @@ class Deconv(Cell):
                  inputs,
                  nbOutputs,
                  kernelDims,
-                 N2D2_object=None,
+                 from_arguments=True,
                  **config_parameters):
         """
         :param nbOutputs: Number of outputs of the cell.
@@ -548,12 +580,11 @@ class Deconv(Cell):
         :type dilationDims: list, optional
         """
 
-        if N2D2_object is not None and (nbOutputs is not None or kernelDims is not None or len(config_parameters) > 0):
+        if not from_arguments and (nbOutputs is not None or kernelDims is not None or len(config_parameters) > 0):
             raise RuntimeError("N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
-        if N2D2_object is None:
+        if from_arguments:
             self._create_from_arguments(inputs, nbOutputs, kernelDims, **config_parameters)
-        else:
-            self._create_from_N2D2_object(inputs, N2D2_object)
+        
 
     def _create_from_arguments(self, inputs, nbOutputs, kernelDims, **config_parameters):
 
@@ -596,30 +627,36 @@ class Deconv(Cell):
         self._add_to_graph(inputs)
 
 
-    def _create_from_N2D2_object(self, inputs, N2D2_object):
+    @classmethod
+    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
 
-        Cell.__init__(self, inputs,
+        n2d2_cell = cls(inputs, None, None, from_arguments=False)
+
+        Cell.__init__(n2d2_cell,
+                      inputs,
                       N2D2_object.getNbOutputs(),
-                      deepNet=n2d2.deepnet.DeepNet(N2D2_object=N2D2_object.getAssociatedDeepNet()),
+                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **self._load_N2D2_parameters(N2D2_object))
+                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
 
-        self._N2D2_object = N2D2_object
+        n2d2_cell._N2D2_object = N2D2_object
 
-        self._constructor_arguments['kernelDims'] = [self._N2D2_object.getKernelWidth(), self._N2D2_object.getKernelHeight()]
-        self._optional_constructor_arguments['strideDims'] = [self._N2D2_object.getStrideX(), self._N2D2_object.getStrideY()]
-        self._optional_constructor_arguments['paddingDims'] = [self._N2D2_object.getPaddingX(), self._N2D2_object.getPaddingY()]
-        self._optional_constructor_arguments['dilationDims'] = [self._N2D2_object.getDilationX(), self._N2D2_object.getDilationY()]
+        n2d2_cell._constructor_arguments['kernelDims'] = [n2d2_cell._N2D2_object.getKernelWidth(), n2d2_cell._N2D2_object.getKernelHeight()]
+        n2d2_cell._optional_constructor_arguments['strideDims'] = [n2d2_cell._N2D2_object.getStrideX(), n2d2_cell._N2D2_object.getStrideY()]
+        n2d2_cell._optional_constructor_arguments['paddingDims'] = [n2d2_cell._N2D2_object.getPaddingX(), n2d2_cell._N2D2_object.getPaddingY()]
+        n2d2_cell._optional_constructor_arguments['dilationDims'] = [n2d2_cell._N2D2_object.getDilationX(), n2d2_cell._N2D2_object.getDilationY()]
 
 
         # NOTE: No Fillers because existing cell
         # TODO: Add similar methods to Activation/Solver/Quantizer for nice prints
-        self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
-        self._config_parameters['weightsSolver'] = self._N2D2_object.getWeightsSolver()
-        self._config_parameters['biasSolver'] = self._N2D2_object.getBiasSolver()
-        self._config_parameters['weightsSolver'] = self._N2D2_object.getWeightsSolver()
+        n2d2_cell._config_parameters['activationFunction'] = n2d2_cell._N2D2_object.getActivation()
+        n2d2_cell._config_parameters['weightsSolver'] = n2d2_cell._N2D2_object.getWeightsSolver()
+        n2d2_cell._config_parameters['biasSolver'] = n2d2_cell._N2D2_object.getBiasSolver()
+        n2d2_cell._config_parameters['weightsSolver'] = n2d2_cell._N2D2_object.getWeightsSolver()
 
-        self._sync_inputs_and_parents(inputs)
+        n2d2_cell._sync_inputs_and_parents(inputs)
+
+        return n2d2_cell
 
     # TODO: This is not working as expected because solvers are copied in a vector at cell initialization.
     #  setWeightsSolver sets only the solver to be copied but does not modify after cell initialization
@@ -642,15 +679,14 @@ class ElemWise(Cell):
         'Frame_CUDA': N2D2.ElemWiseCell_Frame_CUDA,
     }
 
-    def __init__(self, inputs, nbOutputs,  N2D2_object=None, **config_parameters):
+    def __init__(self, inputs, nbOutputs,  from_arguments=True, **config_parameters):
 
-        if N2D2_object is not None and (nbOutputs is not None or len(config_parameters) > 0):
+        if not from_arguments and (nbOutputs is not None or len(config_parameters) > 0):
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
-        if N2D2_object is None:
+        if from_arguments:
             self._create_from_arguments(inputs, nbOutputs, **config_parameters)
-        else:
-            self._create_from_N2D2_object(inputs, N2D2_object)
+        
 
 
     def _create_from_arguments(self, inputs, nbOutputs, **config_parameters):
@@ -675,25 +711,31 @@ class ElemWise(Cell):
 
         self._add_to_graph(inputs)
 
-    def _create_from_N2D2_object(self, inputs, N2D2_object):
+    @classmethod
+    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
 
-        Cell.__init__(self, inputs,
+        n2d2_cell = cls(inputs, None, from_arguments=False)
+
+        Cell.__init__(n2d2_cell,
+                      inputs,
                       N2D2_object.getNbOutputs(),
-                      deepNet=n2d2.deepnet.DeepNet(N2D2_object=N2D2_object.getAssociatedDeepNet()),
+                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **self._load_N2D2_parameters(N2D2_object))
+                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
 
-        self._N2D2_object = N2D2_object
+        n2d2_cell._N2D2_object = N2D2_object
 
-        self._optional_constructor_arguments['operation'] = self._N2D2_object.getOperation()
-        self._optional_constructor_arguments['weights'] = self._N2D2_object.getWeights()
-        self._optional_constructor_arguments['shifts'] = self._N2D2_object.getShifts()
+        n2d2_cell._optional_constructor_arguments['operation'] = n2d2_cell._N2D2_object.getOperation()
+        n2d2_cell._optional_constructor_arguments['weights'] = n2d2_cell._N2D2_object.getWeights()
+        n2d2_cell._optional_constructor_arguments['shifts'] = n2d2_cell._N2D2_object.getShifts()
 
         # NOTE: No Fillers because existing cell
         # TODO: Add similar methods to Activation/Solver/Quantizer for nice prints
-        self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
+        n2d2_cell._config_parameters['activationFunction'] = n2d2_cell._N2D2_object.getActivation()
 
-        self._sync_inputs_and_parents(inputs)
+        n2d2_cell._sync_inputs_and_parents(inputs)
+
+        return n2d2_cell
 
 
 class Softmax(Cell):
@@ -705,15 +747,14 @@ class Softmax(Cell):
         'Frame_CUDA<double>': N2D2.SoftmaxCell_Frame_CUDA_double,
     }
 
-    def __init__(self, inputs,  N2D2_object=None, **config_parameters):
+    def __init__(self, inputs,  from_arguments=True, **config_parameters):
 
-        if N2D2_object is not None and len(config_parameters) > 0:
+        if not from_arguments and len(config_parameters) > 0:
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
-        if N2D2_object is None:
+        if from_arguments:
             self._create_from_arguments(inputs, **config_parameters)
-        else:
-            self._create_from_N2D2_object(inputs, N2D2_object)
+        
 
     def _create_from_arguments(self, inputs, **config_parameters):
         Cell.__init__(self, inputs, inputs.get_nb_outputs(), **config_parameters)
@@ -737,22 +778,28 @@ class Softmax(Cell):
         self._add_to_graph(inputs)
 
 
-    def _create_from_N2D2_object(self, inputs, N2D2_object):
+    @classmethod
+    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
 
-        Cell.__init__(self, inputs,
+        n2d2_cell = cls(inputs, from_arguments=False)
+
+        Cell.__init__(n2d2_cell,
+                      inputs,
                       N2D2_object.getNbOutputs(),
-                      deepNet=n2d2.deepnet.DeepNet(N2D2_object=N2D2_object.getAssociatedDeepNet()),
+                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **self._load_N2D2_parameters(N2D2_object))
+                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
 
-        self._N2D2_object = N2D2_object
+        n2d2_cell._N2D2_object = N2D2_object
 
-        self._optional_constructor_arguments['withLoss'] = self._N2D2_object.getWithLoss()
-        self._optional_constructor_arguments['groupSize'] = self._N2D2_object.getGroupSize()
+        n2d2_cell._optional_constructor_arguments['withLoss'] = n2d2_cell._N2D2_object.getWithLoss()
+        n2d2_cell._optional_constructor_arguments['groupSize'] = n2d2_cell._N2D2_object.getGroupSize()
 
-        self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
+        n2d2_cell._config_parameters['activationFunction'] = n2d2_cell._N2D2_object.getActivation()
 
-        self._sync_inputs_and_parents(inputs)
+        n2d2_cell._sync_inputs_and_parents(inputs)
+
+        return n2d2_cell
 
 
 
@@ -763,15 +810,14 @@ class Dropout(Cell):
         'Frame<double>': N2D2.DropoutCell_Frame_double,
         'Frame_CUDA<double>': N2D2.DropoutCell_Frame_CUDA_double,
     }
-    def __init__(self, inputs, N2D2_object=None, **config_parameters):
+    def __init__(self, inputs, from_arguments=True, **config_parameters):
 
-        if N2D2_object is not None and  len(config_parameters) > 0:
+        if not from_arguments and  len(config_parameters) > 0:
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
-        if N2D2_object is None:
+        if from_arguments:
             self._create_from_arguments(inputs, **config_parameters)
-        else:
-            self._create_from_N2D2_object(inputs, N2D2_object)
+        
 
     def _create_from_arguments(self, inputs, **config_parameters):
         Cell.__init__(self, inputs, inputs.get_nb_outputs(), **config_parameters)
@@ -795,18 +841,25 @@ class Dropout(Cell):
         self._add_to_graph(inputs)
 
 
-    def _create_from_N2D2_object(self, inputs, N2D2_object):
-        Cell.__init__(self, inputs,
+    @classmethod
+    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
+
+        n2d2_cell = cls(inputs, from_arguments=False)
+
+        Cell.__init__(n2d2_cell,
+                      inputs,
                       N2D2_object.getNbOutputs(),
-                      deepNet=n2d2.deepnet.DeepNet(N2D2_object=N2D2_object.getAssociatedDeepNet()),
+                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **self._load_N2D2_parameters(N2D2_object))
+                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
 
-        self._N2D2_object = N2D2_object
+        n2d2_cell._N2D2_object = N2D2_object
 
-        self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
+        n2d2_cell._config_parameters['activationFunction'] = n2d2_cell._N2D2_object.getActivation()
 
-        self._sync_inputs_and_parents(inputs)
+        n2d2_cell._sync_inputs_and_parents(inputs)
+
+        return n2d2_cell
 
 
 class Padding(Cell):
@@ -823,10 +876,10 @@ class Padding(Cell):
                  botPad,
                  leftPad,
                  rightPad,
-                 N2D2_object=None,
+                 from_arguments=True,
                  **config_parameters):
 
-        if N2D2_object is not None and (nbOutputs is not None
+        if not from_arguments and (nbOutputs is not None
                                         or topPad is not None
                                         or botPad is not None
                                         or leftPad is not None
@@ -834,10 +887,9 @@ class Padding(Cell):
                                         or len(config_parameters) > 0):
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
-        if N2D2_object is None:
+        if from_arguments:
             self._create_from_arguments(inputs, nbOutputs, topPad, botPad, leftPad, rightPad, **config_parameters)
-        else:
-            self._create_from_N2D2_object(inputs, N2D2_object)
+        
 
     def _create_from_arguments(self, inputs, nbOutputs, topPad, botPad, leftPad, rightPad, **config_parameters):
 
@@ -870,23 +922,30 @@ class Padding(Cell):
 
         self._add_to_graph(inputs)
 
-    def _create_from_N2D2_object(self, inputs, N2D2_object):
-        Cell.__init__(self, inputs,
+    @classmethod
+    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
+
+        n2d2_cell = cls(inputs, None, None, None, None, None, from_arguments=False)
+
+        Cell.__init__(n2d2_cell,
+                      inputs,
                       N2D2_object.getNbOutputs(),
-                      deepNet=n2d2.deepnet.DeepNet(N2D2_object=N2D2_object.getAssociatedDeepNet()),
+                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **self._load_N2D2_parameters(N2D2_object))
+                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
 
-        self._N2D2_object = N2D2_object
+        n2d2_cell._N2D2_object = N2D2_object
 
-        self._constructor_arguments['topPad'] = self._N2D2_object.getTopPad()
-        self._constructor_arguments['botPad'] = self._N2D2_object.getBotPad()
-        self._constructor_arguments['leftPad'] = self._N2D2_object.getLeftPad()
-        self._constructor_arguments['rightPad'] = self._N2D2_object.getRightPad()
+        n2d2_cell._constructor_arguments['topPad'] = n2d2_cell._N2D2_object.getTopPad()
+        n2d2_cell._constructor_arguments['botPad'] = n2d2_cell._N2D2_object.getBotPad()
+        n2d2_cell._constructor_arguments['leftPad'] = n2d2_cell._N2D2_object.getLeftPad()
+        n2d2_cell._constructor_arguments['rightPad'] = n2d2_cell._N2D2_object.getRightPad()
 
-        self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
+        n2d2_cell._config_parameters['activationFunction'] = n2d2_cell._N2D2_object.getActivation()
 
-        self._sync_inputs_and_parents(inputs)
+        n2d2_cell._sync_inputs_and_parents(inputs)
+
+        return n2d2_cell
 
 
 class Pool(Cell):
@@ -901,16 +960,15 @@ class Pool(Cell):
                  inputs,
                  nbOutputs,
                  poolDims,
-                 N2D2_object=None,
+                 from_arguments=True,
                  **config_parameters):
 
-        if N2D2_object is not None and (nbOutputs is not None or poolDims is not None or len(config_parameters) > 0):
+        if not from_arguments and (nbOutputs is not None or poolDims is not None or len(config_parameters) > 0):
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
-        if N2D2_object is None:
+        if from_arguments:
             self._create_from_arguments(inputs, nbOutputs, poolDims, **config_parameters)
-        else:
-            self._create_from_N2D2_object(inputs, N2D2_object)
+        
 
     def _create_from_arguments(self, inputs, nbOutputs, poolDims, **config_parameters):
         Cell.__init__(self, inputs, nbOutputs, **config_parameters)
@@ -947,26 +1005,33 @@ class Pool(Cell):
 
         self._add_to_graph(inputs)
 
-    def _create_from_N2D2_object(self, inputs, N2D2_object):
-        Cell.__init__(self, inputs,
+    @classmethod
+    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
+
+        n2d2_cell = cls(inputs, None, None, from_arguments=False)
+
+        Cell.__init__(n2d2_cell,
+                      inputs,
                       N2D2_object.getNbOutputs(),
-                      deepNet=n2d2.deepnet.DeepNet(N2D2_object=N2D2_object.getAssociatedDeepNet()),
+                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **self._load_N2D2_parameters(N2D2_object))
+                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
 
-        self._N2D2_object = N2D2_object
+        n2d2_cell._N2D2_object = N2D2_object
 
-        self._constructor_arguments['poolDims'] = [self._N2D2_object.getPoolWidth(),
-                                                     self._N2D2_object.getPoolHeight()]
-        self._optional_constructor_arguments['strideDims'] = [self._N2D2_object.getStrideX(),
-                                                              self._N2D2_object.getStrideY()]
-        self._optional_constructor_arguments['paddingDims'] = [self._N2D2_object.getPaddingX(),
-                                                               self._N2D2_object.getPaddingY()]
-        self._optional_constructor_arguments['pooling'] = self._N2D2_object.getPooling()
+        n2d2_cell._constructor_arguments['poolDims'] = [n2d2_cell._N2D2_object.getPoolWidth(),
+                                                     n2d2_cell._N2D2_object.getPoolHeight()]
+        n2d2_cell._optional_constructor_arguments['strideDims'] = [n2d2_cell._N2D2_object.getStrideX(),
+                                                              n2d2_cell._N2D2_object.getStrideY()]
+        n2d2_cell._optional_constructor_arguments['paddingDims'] = [n2d2_cell._N2D2_object.getPaddingX(),
+                                                               n2d2_cell._N2D2_object.getPaddingY()]
+        n2d2_cell._optional_constructor_arguments['pooling'] = n2d2_cell._N2D2_object.getPooling()
 
-        self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
+        n2d2_cell._config_parameters['activationFunction'] = n2d2_cell._N2D2_object.getActivation()
 
-        self._sync_inputs_and_parents(inputs)
+        n2d2_cell._sync_inputs_and_parents(inputs)
+
+        return n2d2_cell
 
 
 class Pool2D(Pool):
@@ -979,7 +1044,7 @@ class Pool2D(Pool):
             raise RuntimeError('Pool2D does not support custom mappings')
         else:
             config_parameters['mapping'] = n2d2.mapping.Mapping(nbChannelsPerGroup=1)
-        Pool.__init__(self, inputs, inputs.get_outputs().dimZ(), poolDims, **config_parameters)
+        Pool.__init__(self, inputs, inputs.dims()[2], poolDims, **config_parameters)
 
 
 class GlobalPool2D(Pool2D):
@@ -987,7 +1052,7 @@ class GlobalPool2D(Pool2D):
     def __init__(self,
                  inputs,
                  **config_parameters):
-        Pool2D.__init__(self, inputs, [inputs.get_outputs().dimX(), inputs.get_outputs().dimY()],
+        Pool2D.__init__(self, inputs, [inputs.dims()[0], inputs.dims()[1]],
                         strideDims=[1, 1], **config_parameters)
 
 
@@ -999,18 +1064,17 @@ class LRN(Cell):
     }
 
 
-    def __init__(self, inputs, nbOutputs, N2D2_object=None, **config_parameters):
+    def __init__(self, inputs, nbOutputs, from_arguments=True, **config_parameters):
 
-        if N2D2_object is not None and (nbOutputs is not None or len(config_parameters) > 0):
+        if not from_arguments and (nbOutputs is not None or len(config_parameters) > 0):
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
-        if N2D2_object is None:
+        if from_arguments:
             self._create_from_arguments(inputs, nbOutputs, **config_parameters)
-        else:
-            self._create_from_N2D2_object(inputs, N2D2_object)
+        
 
     def _create_from_arguments(self, inputs, nbOutputs, **config_parameters):
-        Cell.__init__(self, inputs, nbOutputs, N2D2_object=None, **config_parameters)
+        Cell.__init__(self, inputs, nbOutputs, **config_parameters)
 
         # No optional args
         self._parse_optional_arguments([])
@@ -1028,33 +1092,38 @@ class LRN(Cell):
 
         self._add_to_graph(inputs)
 
-    def _create_from_N2D2_object(self, inputs, N2D2_object):
-        Cell.__init__(self, inputs,
+    @classmethod
+    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
+
+        n2d2_cell = cls(inputs, None, from_arguments=False)
+
+        Cell.__init__(n2d2_cell,
+                      inputs,
                       N2D2_object.getNbOutputs(),
-                      deepNet=n2d2.deepnet.DeepNet(N2D2_object=N2D2_object.getAssociatedDeepNet()),
+                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **self._load_N2D2_parameters(N2D2_object))
+                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
 
-        self._N2D2_object = N2D2_object
+        n2d2_cell._N2D2_object = N2D2_object
 
-        self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
+        n2d2_cell._config_parameters['activationFunction'] = n2d2_cell._N2D2_object.getActivation()
 
-        self._sync_inputs_and_parents(inputs)
+        n2d2_cell._sync_inputs_and_parents(inputs)
 
-# TODO: make nbOutputs implicit on input
+        return n2d2_cell
+
 class BatchNorm(Cell):
     _cell_constructors = {
         'Frame<float>': N2D2.BatchNormCell_Frame_float,
         'Frame_CUDA<float>': N2D2.BatchNormCell_Frame_CUDA_float,
     }
-    def __init__(self, inputs, N2D2_object=None, **config_parameters):
-        if N2D2_object is not None and len(config_parameters) > 0:
+    def __init__(self, inputs, from_arguments=True, **config_parameters):
+        if not from_arguments and len(config_parameters) > 0:
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
-        if N2D2_object is None:
+        if from_arguments:
             self._create_from_arguments(inputs, **config_parameters)
-        else:
-            self._create_from_N2D2_object(inputs, N2D2_object)
+        
 
     def _create_from_arguments(self, inputs, **config_parameters):
         Cell.__init__(self, inputs, inputs.get_nb_outputs(), **config_parameters)
@@ -1081,21 +1150,28 @@ class BatchNorm(Cell):
 
         self._add_to_graph(inputs)
 
-    def _create_from_N2D2_object(self, inputs, N2D2_object):
-        Cell.__init__(self, inputs,
-                      N2D2_object.getNbOutputs(),
-                      deepNet=n2d2.deepnet.DeepNet(N2D2_object=N2D2_object.getAssociatedDeepNet()),
-                      name=N2D2_object.getName(),
-                      **self._load_N2D2_parameters(N2D2_object))
+    @classmethod
+    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
 
-        self._N2D2_object = N2D2_object
+        n2d2_cell = cls(inputs, from_arguments=False)
+
+        Cell.__init__(n2d2_cell,
+                      inputs,
+                      N2D2_object.getNbOutputs(),
+                      deepNet=n2d2_deepnet,
+                      name=N2D2_object.getName(),
+                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
+
+        n2d2_cell._N2D2_object = N2D2_object
 
         # TODO: Add similar methods to Activation/Solver/Quantizer for nice prints and access
-        self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
-        self._config_parameters['scaleSolver'] = self._N2D2_object.getScaleSolver()
-        self._config_parameters['biasSolver'] = self._N2D2_object.getBiasSolver()
+        n2d2_cell._config_parameters['activationFunction'] = n2d2_cell._N2D2_object.getActivation()
+        n2d2_cell._config_parameters['scaleSolver'] = n2d2_cell._N2D2_object.getScaleSolver()
+        n2d2_cell._config_parameters['biasSolver'] = n2d2_cell._N2D2_object.getBiasSolver()
 
-        self._sync_inputs_and_parents(inputs)
+        n2d2_cell._sync_inputs_and_parents(inputs)
+
+        return n2d2_cell
 
     def set_scale_solver(self, solver):
         self._config_parameters['scaleSolver'] = solver
@@ -1113,18 +1189,17 @@ class Activation(Cell):
         'Frame<float>': N2D2.ActivationCell_Frame_float,
         'Frame_CUDA<float>': N2D2.ActivationCell_Frame_CUDA_float,
     }
-    def __init__(self, inputs, nbOutputs, N2D2_object=None, **config_parameters):
+    def __init__(self, inputs, from_arguments=True, **config_parameters):
 
-        if N2D2_object is not None and (nbOutputs is not None or len(config_parameters) > 0):
+        if not from_arguments and len(config_parameters) > 0:
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
-        if N2D2_object is None:
-            self._create_from_arguments(inputs, nbOutputs, **config_parameters)
-        else:
-            self._create_from_N2D2_object(inputs, N2D2_object)
+        if from_arguments:
+            self._create_from_arguments(inputs, **config_parameters)
+        
 
-    def _create_from_arguments(self, inputs, nbOutputs, **config_parameters):
-        Cell.__init__(self, inputs, nbOutputs, **config_parameters)
+    def _create_from_arguments(self, inputs, **config_parameters):
+        Cell.__init__(self, inputs, inputs.get_nb_outputs(), **config_parameters)
         # No optional parameter
         self._parse_optional_arguments([])
         self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
@@ -1141,18 +1216,25 @@ class Activation(Cell):
 
         self._add_to_graph(inputs)
 
-    def _create_from_N2D2_object(self, inputs, N2D2_object):
-        Cell.__init__(self, inputs,
+    @classmethod
+    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
+
+        n2d2_cell = cls(inputs, from_arguments=False)
+
+        Cell.__init__(n2d2_cell,
+                      inputs,
                       N2D2_object.getNbOutputs(),
-                      deepNet=n2d2.deepnet.DeepNet(N2D2_object=N2D2_object.getAssociatedDeepNet()),
+                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **self._load_N2D2_parameters(N2D2_object))
+                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
 
-        self._N2D2_object = N2D2_object
+        n2d2_cell._N2D2_object = N2D2_object
 
-        self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
+        n2d2_cell._config_parameters['activationFunction'] = n2d2_cell._N2D2_object.getActivation()
 
-        self._sync_inputs_and_parents(inputs)
+        n2d2_cell._sync_inputs_and_parents(inputs)
+
+        return n2d2_cell
 
 
 
@@ -1161,15 +1243,14 @@ class Reshape(Cell):
         'Frame<float>': N2D2.ReshapeCell_Frame_float,
         'Frame_CUDA<float>': N2D2.ReshapeCell_Frame_CUDA_float,
     }
-    def __init__(self, inputs, nbOutputs, dims, N2D2_object=None, **config_parameters):
+    def __init__(self, inputs, nbOutputs, dims, from_arguments=True, **config_parameters):
 
-        if N2D2_object is not None and (nbOutputs is not None or dims is not None or len(config_parameters) > 0):
+        if not from_arguments and (nbOutputs is not None or dims is not None or len(config_parameters) > 0):
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'dims' or 'config parameters' not None")
-        if N2D2_object is None:
+        if from_arguments:
             self._create_from_arguments(inputs, nbOutputs, dims, **config_parameters)
-        else:
-            self._create_from_N2D2_object(inputs, N2D2_object)
+        
 
     def _create_from_arguments(self, inputs, nbOutputs, dims, **config_parameters):
         Cell.__init__(self, inputs, nbOutputs, **config_parameters)
@@ -1195,17 +1276,24 @@ class Reshape(Cell):
 
         self._add_to_graph(inputs)
 
-    def _create_from_N2D2_object(self, inputs, N2D2_object):
-        Cell.__init__(self, inputs,
+    @classmethod
+    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
+
+        n2d2_cell = cls(inputs, None, None, from_arguments=False)
+
+        Cell.__init__(n2d2_cell,
+                      inputs,
                       N2D2_object.getNbOutputs(),
-                      deepNet=n2d2.deepnet.DeepNet(N2D2_object=N2D2_object.getAssociatedDeepNet()),
+                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
-                      **self._load_N2D2_parameters(N2D2_object))
+                      **n2d2_cell._load_N2D2_parameters(N2D2_object))
 
-        self._N2D2_object = N2D2_object
+        n2d2_cell._N2D2_object = N2D2_object
 
-        self._constructor_arguments['dims'] = self._N2D2_object.getDims()
+        n2d2_cell._constructor_arguments['dims'] = n2d2_cell._N2D2_object.getDims()
 
-        self._config_parameters['activationFunction'] = self._N2D2_object.getActivation()
+        n2d2_cell._config_parameters['activationFunction'] = n2d2_cell._N2D2_object.getActivation()
 
-        self._sync_inputs_and_parents(inputs)
+        n2d2_cell._sync_inputs_and_parents(inputs)
+
+        return n2d2_cell

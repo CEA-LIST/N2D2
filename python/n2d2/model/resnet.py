@@ -21,7 +21,7 @@
 
 from n2d2.utils import ConfigSection
 from n2d2.cell import Fc, Conv, Softmax, Pool2D, ElemWise, BatchNorm
-from n2d2.deepnet import Layer, Sequence
+from n2d2.deepnet import Group
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
 from n2d2.filler import He, Xavier, Constant
@@ -30,6 +30,7 @@ import n2d2.global_variables
 from n2d2.transform import Rescale, PadCrop, ColorSpace, RangeAffine, SliceExtraction, Flip, Composite
 from n2d2.model.ILSVRC_outils import ILSVRC_preprocessing
 
+"""
 def conv_def(nb_outputs, **config_parameters):
 
     if 'activationFunction' in config_parameters:
@@ -46,7 +47,7 @@ def conv_def(nb_outputs, **config_parameters):
 # Residual block generator
 def residual_block(nb_outputs, stride, L, projection_shortcut=True, residual_input=None):
     print("Build ResNet block")
-    seq = Sequence([
+    seq = Group([
         conv_def(nb_outputs, kernelDims=[3, 3], strideDims=[stride, stride],
                  weightsFiller=He(scaling=(L**(-1.0/(2*2-2)) if L > 0 else 1.0)), paddingDims=[1, 1]),
         conv_def(nb_outputs,  kernelDims=[3, 3], activationFunction=Linear(),
@@ -55,12 +56,12 @@ def residual_block(nb_outputs, stride, L, projection_shortcut=True, residual_inp
 
     if projection_shortcut:
         projection = conv_def(nb_outputs, kernelDims=[1, 1], strideDims=[stride, stride], paddingDims=[0, 0])
-        net = Sequence([
+        net = Group([
             Layer([seq, projection]),
             ElemWise(nb_outputs, operation='Sum', activationFunction=Rectifier()),
         ])
     elif residual_input is not None:
-        net = Sequence([
+        net = Group([
             seq,
             ElemWise(nb_outputs, operation='Sum', activationFunction=Rectifier(), inputs=residual_input),
         ])
@@ -76,7 +77,7 @@ def resnet18(output_size=1000):
     learning_rate = 0.1
     max_iterations = 100
 
-    stem = Sequence([
+    stem = Group([
         conv_def(int(64*alpha), kernelDims=[7, 7], strideDims=[2, 2], paddingDims=[3, 3]),
         Pool2D(nbOutputs=int(64*alpha), poolDims=[3, 3], strideDims=[2, 2], pooling='Max')
     ])
@@ -93,16 +94,16 @@ def resnet18(output_size=1000):
     blocks.append(residual_block(int(512 * alpha), 2, L, True))
     blocks.append(residual_block(int(512 * alpha), 1, L, False, blocks[6].get_last()))
 
-    body = Sequence(blocks)
+    body = Group(blocks)
 
     # TODO: Automatic PoolDims setting dependent on input size
-    head = Sequence([
+    head = Group([
         Pool2D(nbOutputs=int(512 * alpha), poolDims=[7, 7], strideDims=[1, 1], pooling='Average'),
         Fc(nbOutputs=output_size, activationFunction=Linear(), weightsFiller=Xavier(scaling=(0.0 if L > 0 else 1.0)), biasFiller=Constant(value=0.0))
     ])
     print("Head")
 
-    net = Sequence([
+    net = Group([
         stem,
         body,
         head,
@@ -125,25 +126,25 @@ def resnet18(output_size=1000):
 
     return net
 
+"""
 
 
 
 
-
-class ResNetStem(Sequence):
+class ResNetStem(Group):
     def __init__(self, inputs,  alpha):
             conv = Conv(inputs, int(64*alpha), kernelDims=[7, 7], strideDims=[2, 2], paddingDims=[3, 3], noBias=True,
                  activationFunction=Rectifier(), weightsFiller=He(), name="conv1")
             pool = Pool2D(conv, nbOutputs=int(64*alpha), poolDims=[3, 3], strideDims=[2, 2], pooling='Max', name="pool1")
-            Sequence.__init__(self, [conv, pool], name="stem")
+            Group.__init__(self, [conv, pool], name="stem")
 
 
-class ResNetBottleneckBlock(Sequence):
+class ResNetBottleneckBlock(Group):
     def __init__(self, inputs, bottleneck_size, stride, l, projection_shortcut, no_relu, block_name=""):
 
         self._projection_shortcut = projection_shortcut
 
-        seq = Sequence([ ], name="main_branch")
+        seq = Group([ ], name="main_branch")
         seq.add(Conv(inputs, bottleneck_size, kernelDims=[1, 1], strideDims=[1, 1], noBias=True,
                  activationFunction=Rectifier(), weightsFiller=He(scaling=l**(-1.0/(2*3-2)) if l > 0 else 1.0),
                  name=block_name+"_1x1"))
@@ -168,29 +169,29 @@ class ResNetBottleneckBlock(Sequence):
             elem_wise = ElemWise([seq.get_last(), shortcut], 4 * bottleneck_size, operation='Sum',
                                  activationFunction=Rectifier(), name=block_name + "_sum")
 
-        block = Layer([seq, shortcut])
+        block = Group([seq, shortcut])
 
-        Sequence.__init__(self, [block, elem_wise], name=block_name)
+        Group.__init__(self, [block, elem_wise], name=block_name)
 
 
-class ResNet50BNBody(Sequence):
+class ResNet50BNBody(Group):
     def __init__(self, inputs, alpha, l):
 
         # TODO: Fix scales taking into account stem
-        seq = Sequence([])
+        seq = Group([])
         seq.add(ResNetBottleneckBlock(inputs, int(64 * alpha), 1, l, True, False, "conv2.1"))
         seq.add(ResNetBottleneckBlock(seq.get_last(), int(64 * alpha), 1, l, False, False, "conv2.2"))
         seq.add(ResNetBottleneckBlock(seq.get_last(), int(64 * alpha), 1, l, False, True, "conv2.3"))
         seq.add(BatchNorm(seq.get_last(), 4 * int(64 * alpha), activationFunction=Rectifier(), name="bn2"))
 
-        seq1 = Sequence([])
+        seq1 = Group([])
         seq1.add(ResNetBottleneckBlock(seq.get_last(), int(128 * alpha), 2, l, True, False, "conv3.1"))
         seq1.add(ResNetBottleneckBlock(seq1.get_last(), int(128 * alpha), 1, l, False, False, "conv3.2"))
         seq1.add(ResNetBottleneckBlock(seq1.get_last(), int(128 * alpha), 1, l, False, False, "conv3.3"))
         seq1.add(ResNetBottleneckBlock(seq1.get_last(), int(128 * alpha), 1, l, False, True, "conv3.4"))
         seq1.add(BatchNorm(seq1.get_last(), 4 * int(128 * alpha), activationFunction=Rectifier(), name="bn3"))
 
-        seq2 = Sequence([])
+        seq2 = Group([])
         seq2.add(ResNetBottleneckBlock(seq1.get_last(), int(256 * alpha), 2, l, True, False, "conv4.1"))
         seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, False, "conv4.2"))
         seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, False, "conv4.3"))
@@ -199,7 +200,7 @@ class ResNet50BNBody(Sequence):
         seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, True, "conv4.6"))
         seq2.add(BatchNorm(seq2.get_last(), 4 * int(256 * alpha), activationFunction=Rectifier(), name="bn4"))
 
-        seq3 = Sequence([])
+        seq3 = Group([])
         seq3.add(ResNetBottleneckBlock(seq2.get_last(), int(512 * alpha), 2, l, True, False, "conv5.1"))
         seq3.add(ResNetBottleneckBlock(seq3.get_last(), int(512 * alpha), 1, l, False, False, "conv5.2"))
         seq3.add(ResNetBottleneckBlock(seq3.get_last(), int(512 * alpha), 1, l, False, True, "conv5.3"))
@@ -207,39 +208,39 @@ class ResNet50BNBody(Sequence):
 
         self.scales = {}
         name = str(inputs.get_outputs().dimX()) + "x" + str(inputs.get_outputs().dimX())
-        self.scales[name] = Sequence([seq], name=name)
+        self.scales[name] = Group([seq], name=name)
         name = str(seq.get_last().get_outputs().dimX()) + "x" + str(seq.get_last().get_outputs().dimY())
-        self.scales[name] = Sequence([seq], name=name)
+        self.scales[name] = Group([seq], name=name)
         name = str(seq1.get_last().get_outputs().dimX()) + "x" + str(seq1.get_last().get_outputs().dimY())
-        self.scales[name] = Sequence([seq, seq1], name=name)
+        self.scales[name] = Group([seq, seq1], name=name)
         name = str(seq2.get_last().get_outputs().dimX()) + "x" + str(seq2.get_last().get_outputs().dimY())
-        self.scales[name] = Sequence([seq, seq1, seq2], name=name)
+        self.scales[name] = Group([seq, seq1, seq2], name=name)
         name = str(seq3.get_last().get_outputs().dimX()) + "x" + str(seq3.get_last().get_outputs().dimY())
-        self.scales[name] = Sequence([seq, seq1, seq2, seq3], name=name)
+        self.scales[name] = Group([seq, seq1, seq2, seq3], name=name)
 
-        Sequence.__init__(self, [seq, seq1, seq2, seq3], name="body")
+        Group.__init__(self, [seq, seq1, seq2, seq3], name="body")
 
 
-class ResNetHead(Sequence):
+class ResNetHead(Group):
     def __init__(self, inputs, alpha):
-        Sequence.__init__(self, [
+        Group.__init__(self, [
             Pool2D(inputs, 4 * int(512 * alpha),
                    poolDims=[inputs.get_last().get_outputs().dimX(), inputs.get_last().get_outputs().dimY()],
                    strideDims=[1, 1], pooling='Average', name="pool"),
         ], name="head")
 
 
-class ResNetClassifier(Sequence):
+class ResNetClassifier(Group):
     def __init__(self, inputs, output_size, l):
         fc = Fc(inputs, output_size, activationFunction=Linear(), weightsFiller=Xavier(scaling=(0.0 if l > 0 else 1.0)), biasFiller=Constant(value=0.0), name="fc")
         softmax = Softmax(fc, output_size, withLoss=True,  name="softmax")
-        Sequence.__init__(self, [fc, softmax], name="classifier")
+        Group.__init__(self, [fc, softmax], name="classifier")
 
 
 """
 Abstract ResNet class. TODO: Make true abstract class?
 """
-class ResNet(Sequence):
+class ResNet(Group):
 
     _with_batchnorm = False
     stem = None
@@ -250,7 +251,7 @@ class ResNet(Sequence):
     def __init__(self):
         if self.stem is None or self.body is None or self.head is None or self.classifier is None:
             raise RuntimeError("Missing elements. Did you try to create and abstract ResNet?")
-        Sequence.__init__(self, [self.stem, self.body, self.head, self.classifier])
+        Group.__init__(self, [self.stem, self.body, self.head, self.classifier])
 
     def set_ILSVRC_solvers(self, max_iterations):
         print("Add solvers")
@@ -330,7 +331,7 @@ def load_from_ONNX(resnet_type, version='pre_act', dims=None, batch_size=1, path
             n2d2.global_variables.model_cache + "/ONNX/",
             resnet_name)
         path = n2d2.global_variables.model_cache + "/ONNX/"+resnet_name+"/"+"resnet"+resnet_type+v+".onnx"
-    model = n2d2.deepnet.load_from_ONNX(path, dims, batch_size=batch_size)
+    model = n2d2.deepnet.DeepNet.load_from_ONNX(path, dims, batch_size=batch_size)
     return model
 
 

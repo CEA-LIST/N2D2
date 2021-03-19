@@ -40,7 +40,7 @@ cell_dict = {
 
 
 
-def cell_converter(n2d2_parent_cells, N2D2_cell):
+def cell_converter(n2d2_parent_cells, N2D2_cell, n2d2_deepnet):
     """
     :param N2D2_cell: N2D2 cell to convert.
     :type N2D2_cell: :py:class:`N2D2.Cell`
@@ -53,7 +53,6 @@ def cell_converter(n2d2_parent_cells, N2D2_cell):
     l_model = ["Frame_CUDA",
                "Frame",
                "Spike"]
-
 
     # Retrieving global parameters from the N2D2 object. 
     #inputs = N2D2_cell.getParentsCells()
@@ -71,53 +70,23 @@ def cell_converter(n2d2_parent_cells, N2D2_cell):
         if t in parsed and not data_type:
             data_type = t
 
-
     # Creating n2d2 object.
     print("cell_type: ", cell_type)
 
-
-    if cell_type == "Conv":
-        n2d2_cell = cell_dict[cell_type](n2d2_parent_cells,
-                                        None,
-                                        None,
-                                        N2D2_object=N2D2_cell)
-    elif cell_type == "Padding":
-        n2d2_cell = cell_dict[cell_type](n2d2_parent_cells,
-                                        None,
-                                        None,
-                                        None,
-                                        None,
-                                        None,
-                                        N2D2_object=N2D2_cell)
-    elif cell_type == "Pool":
-        n2d2_cell = cell_dict[cell_type](n2d2_parent_cells,
-                                        None,
-                                        None,
-                                        N2D2_object=N2D2_cell)
-    elif cell_type == "Reshape":
-        n2d2_cell = cell_dict[cell_type](n2d2_parent_cells,
-                                         None,
-                                         None,
-                                         N2D2_object=N2D2_cell)
-    else:
-        # All cases without special obligatory constructor arguments
-        n2d2_cell = cell_dict[cell_type](n2d2_parent_cells, None, N2D2_object=N2D2_cell)
-
-    # We replace the N2D2 object created by n2d2 with the initial N2D2 object.
-    # This way we make sure that the cell is associated with the same deepnet objet.
-    #n2d2_cell._N2D2_object = N2D2_cell
+    n2d2_cell = cell_dict[cell_type].create_from_N2D2_object(n2d2_parent_cells, N2D2_cell, n2d2_deepnet)
 
     return n2d2_cell
 
-def deepNet_converter(N2D2_deepNet):
+def deepnet_converter(N2D2_deepnet):
     """
-    :param N2D2_deepNet: N2D2 cell to convert.
-    :type N2D2_deepNet: :py:class:`N2D2.DeepNet`
-    Convert a N2D2 DeepNet into a n2d2 DeepNet.
+    :param N2D2_deepnet: N2D2 cell to convert.
+    :type N2D2_deepnet: :py:class:`N2D2.DeepNet`
+    Generate a Group with an
     """
-    cells = N2D2_deepNet.getCells()
-    layers = N2D2_deepNet.getLayers()
-    layer_sequence = n2d2.deepnet.Sequence([])
+    n2d2_deepnet = n2d2.deepnet.DeepNet(N2D2_deepnet)
+    cells = N2D2_deepnet.getCells()
+    layers = N2D2_deepnet.getLayers()
+    layer_sequence = n2d2.deepnet.Group([])
     if not layers[0][0] == "env":
         print("Is env:" + layers[0][0])
         raise RuntimeError("First layer of N2D2 deepnet is not a StimuliProvider. You may be skipping cells")
@@ -129,8 +98,8 @@ def deepNet_converter(N2D2_deepNet):
                 n2d2_parents = []
                 for parent in N2D2_cell.getParentsCells():
                     n2d2_parents.append(layer_sequence.get_cells()[parent.getName()])
-                cell_layer.append(cell_converter(n2d2_parents, N2D2_cell))
-            layer_sequence.add(n2d2.deepnet.Layer(cell_layer))
+                cell_layer.append(cell_converter(n2d2_parents, N2D2_cell, n2d2_deepnet))
+            layer_sequence.add(n2d2.deepnet.Group(cell_layer))
         else:
             N2D2_cell = cells[layer[0]]
             n2d2_parents = []
@@ -140,5 +109,6 @@ def deepNet_converter(N2D2_deepNet):
                     n2d2_parents.append(layer_sequence.get_cells()[parent.getName()])
             print("N2D2_cell")
             print(N2D2_cell)
-            layer_sequence.add(cell_converter(n2d2_parents, N2D2_cell))
+            layer_sequence.add(cell_converter(n2d2_parents, N2D2_cell, n2d2_deepnet))
+            print(id(layer_sequence.get_deepnet()))
     return layer_sequence

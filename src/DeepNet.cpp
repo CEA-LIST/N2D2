@@ -2113,6 +2113,31 @@ void N2D2::DeepNet::propagate(
     }
 }
 
+
+void N2D2::DeepNet::propagate(bool inference)
+{
+    const unsigned int nbLayers = mLayers.size();
+
+    // Signal propagation
+    for (unsigned int l = 1; l < nbLayers; ++l) {
+        for (std::vector<std::string>::const_iterator itCell
+             = mLayers[l].begin(),
+             itCellEnd = mLayers[l].end();
+             itCell != itCellEnd;
+             ++itCell) {
+            std::shared_ptr<Cell_Frame_Top> cellFrame
+                = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells[(*itCell)]);
+
+            if (!cellFrame)
+                throw std::runtime_error(
+                    "DeepNet::learn(): learning requires Cell_Frame_Top cells");
+
+            cellFrame->propagate(inference);
+    
+        }
+    }
+}
+
 void N2D2::DeepNet::backPropagate(
     std::vector<std::pair<std::string, double> >* timings)
 {

@@ -21,7 +21,7 @@
 
 from n2d2.utils import ConfigSection
 from n2d2.cell import Fc, Conv, Softmax, Pool2D, BatchNorm, Dropout
-from n2d2.deepnet import Sequence, DeepNet
+from n2d2.deepnet import Group, DeepNet
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
 from n2d2.filler import Normal, Xavier, Constant
@@ -61,12 +61,12 @@ def quant_bn_def():
 
 
 
-class QuantLeNet(Sequence):
+class QuantLeNet(Group):
     def __init__(self, inputs, nb_outputs=10):
 
         self.deepnet = DeepNet()
 
-        self.extractor = Sequence([], name='extractor')
+        self.extractor = Group([], name='extractor')
 
         first_layer_config = quant_conv_def()
         first_layer_config['quantizer'].set_range(255)
@@ -82,7 +82,7 @@ class QuantLeNet(Sequence):
         self.extractor.add(Fc(self.extractor, nbOutputs=84, **quant_fc_def(), name="fc1"))
         self.extractor.add(Dropout(self.extractor, name="fc1.drop"))
 
-        self.classifier = Sequence([], name="classifier")
+        self.classifier = Group([], name="classifier")
 
         last_layer_config = quant_fc_def()
         last_layer_config['quantizer'].set_range(255)
@@ -90,7 +90,7 @@ class QuantLeNet(Sequence):
         self.classifier.add(Fc(self.extractor, nbOutputs=nb_outputs, **last_layer_config,  name="fc2"))
         self.classifier.add(Softmax(self.classifier, withLoss=True, name="softmax"))
 
-        Sequence.__init__(self, [self.extractor, self.classifier])
+        Group.__init__(self, [self.extractor, self.classifier])
 
 
 
@@ -116,15 +116,12 @@ def bn_def():
     return ConfigSection(activationFunction=Rectifier(), scaleSolver=scale_solver, biasSolver=bias_solver)
 
 
-class LeNet(Sequence):
+class LeNet(Group):
     def __init__(self, inputs, nb_outputs=10):
 
-        self.deepnet = DeepNet()
+        self.extractor = Group([], name='extractor')
 
-        self.extractor = Sequence([], name='extractor')
-
-        self.extractor.add(Conv(inputs, nbOutputs=6, kernelDims=[5, 5], **conv_def(), name="conv1",
-                                deepNet=self.deepnet))
+        self.extractor.add(Conv(inputs, nbOutputs=6, kernelDims=[5, 5], **conv_def(), name="conv1"))
         self.extractor.add(BatchNorm(self.extractor, **bn_def(), name="bn1"))
         self.extractor.add(Pool2D(self.extractor, poolDims=[2, 2], strideDims=[2, 2], pooling='Max', name="pool1"))
         self.extractor.add(Conv(self.extractor, nbOutputs=16, kernelDims=[5, 5], **conv_def(), name="conv2"))
@@ -136,12 +133,12 @@ class LeNet(Sequence):
         self.extractor.add(Dropout(self.extractor, name="fc1.drop"))
 
 
-        self.classifier = Sequence([], name="classifier")
+        self.classifier = Group([], name="classifier")
 
         self.classifier.add(Fc(self.extractor, nbOutputs=nb_outputs, **fc_def(),  name="fc2"))
         self.classifier.add(Softmax(self.classifier, withLoss=True, name="lenet_softmax"))
 
-        Sequence.__init__(self, [self.extractor, self.classifier])
+        Group.__init__(self, [self.extractor, self.classifier])
 
 
 

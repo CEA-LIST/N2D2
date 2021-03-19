@@ -27,7 +27,7 @@ import math
 # Change default model
 n2d2.global_variables.default_model = "Frame_CUDA"
 # Change cuda device (default 0)
-n2d2.global_variables.set_cuda_device(1)
+n2d2.global_variables.set_cuda_device(3)
 # Change seed (default 1)
 #n2d2.global_variables.default_seed = 2
 
@@ -45,7 +45,6 @@ print(provider)
 
 print("\n### Loading Model ###")
 model = n2d2.model.LeNet(provider, 10)
-print(model)
 
 classifier = n2d2.application.Classifier(provider, model)
 

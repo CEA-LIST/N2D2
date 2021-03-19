@@ -21,7 +21,7 @@
 
 from n2d2.utils import ConfigSection
 from n2d2.cell import Fc, Conv, ConvDepthWise, Softmax, Pool2D, BatchNorm, ElemWise
-from n2d2.deepnet import Sequence
+from n2d2.deepnet import Group
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
 from n2d2.filler import He, Xavier, Constant
@@ -45,7 +45,7 @@ class ConvElemWise(Conv):
         Conv.__init__(self, nbOutputs=nb_outputs, kernelDims=[1, 1], strideDims=[1, 1], noBias=True, **config_parameters)
 
 
-class MobileNetBottleneckBlock(Sequence):
+class MobileNetBottleneckBlock(Group):
     def __init__(self, output_size, expansion_size, stride, l, residual, block_name=""):
 
         self._residual = residual
@@ -65,36 +65,36 @@ class MobileNetBottleneckBlock(Sequence):
         if self._residual:
             seq.append(ElemWise(output_size, operation='Sum', name=block_name+"_sum"))
 
-        Sequence.__init__(self, seq, name=block_name)
+        Group.__init__(self, seq, name=block_name)
 
-    # Override Sequence method
+    # Override Group method
     def add_input(self, inputs):
-        Sequence.add_input(self, inputs)
+        Group.add_input(self, inputs)
         if self._residual:
             # Connect input directly to ElemWise cell
             self.get_last().add_input(inputs)
 
 
 
-class Mobilenet_v2(Sequence):
+class Mobilenet_v2(Group):
     def __init__(self, output_size=1000, alpha=1.0, size=224, l=10, expansion=6):
 
-        self.stem = Sequence([
+        self.stem = Group([
             Conv(int(32 * alpha), kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[2, 2], noBias=True, name="conv1"),
             MobileNetBottleneckBlock(int(16 * alpha), int(32 * alpha), 1, l, False, "conv2.1")
         ], name="stem")
 
-        self.body = Sequence([
-            Sequence([
+        self.body = Group([
+            Group([
                 MobileNetBottleneckBlock(int(24 * alpha), int(16 * alpha)*expansion, 2, l, False, "conv3.1"),
                 MobileNetBottleneckBlock(int(24 * alpha), int(24 * alpha)*expansion, 1, l, True, "conv3.2"),
             ], name=str(size // 4) + "x" + str(size // 4)),
-            Sequence([
+            Group([
                 MobileNetBottleneckBlock(int(32 * alpha), int(24 * alpha)*expansion, 2, l, False, "conv4.1"),
                 MobileNetBottleneckBlock(int(32 * alpha), int(32 * alpha)*expansion, 1, l, True, "conv4.2"),
                 MobileNetBottleneckBlock(int(32 * alpha), int(32 * alpha)*expansion, 1, l, True, "conv4.3"),
             ], name=str(size // 8) + "x" + str(size // 8)),
-            Sequence([
+            Group([
                 MobileNetBottleneckBlock(int(64 * alpha), int(32 * alpha)*expansion, 2, l, False, "conv5.1"),
                 MobileNetBottleneckBlock(int(64 * alpha), int(64 * alpha)*expansion, 1, l, True, "conv5.2"),
                 MobileNetBottleneckBlock(int(64 * alpha), int(64 * alpha)*expansion, 1, l, True, "conv5.3"),
@@ -103,7 +103,7 @@ class Mobilenet_v2(Sequence):
                 MobileNetBottleneckBlock(int(96 * alpha), int(96 * alpha)*expansion, 1, l, True, "conv6.2"),
                 MobileNetBottleneckBlock(int(96 * alpha), int(96 * alpha)*expansion, 1, l, True, "conv6.3"),
             ], name=str(size // 16) + "x" + str(size // 16)),
-            Sequence([
+            Group([
                 MobileNetBottleneckBlock(int(160 * alpha), int(96 * alpha)*expansion, 2, l, False, "conv7.1"),
                 MobileNetBottleneckBlock(int(160 * alpha), int(160 * alpha)*expansion, 1, l, True, "conv7.2"),
                 MobileNetBottleneckBlock(int(160 * alpha), int(160 * alpha)*expansion, 1, l, True, "conv7.3"),
@@ -111,17 +111,17 @@ class Mobilenet_v2(Sequence):
             ], name=str(size // 32) + "x" + str(size // 32))
         ], name="body")
 
-        self.head =  Sequence([
+        self.head =  Group([
             ConvElemWise(max(1280, int(1280 * alpha)), activationFunction=ReLU6(), weightsFiller=He(), name="conv9"),
             Pool2D(max(1280, int(1280 * alpha)), poolDims=[size // 32, size // 32], strideDims=[1, 1], pooling='Average', name="pool"),
         ], name="head")
 
-        self.classifier = Sequence([
+        self.classifier = Group([
             Fc(output_size, activationFunction=Linear(), weightsFiller=Xavier(scaling=0.0 if l > 0 else 1.0), biasFiller=Constant(value=0.0), name="fc"),
             Softmax(output_size, withLoss=True, name="softmax")
         ], name="classifier")
 
-        Sequence.__init__(self, [self.stem, self.body, self.head, self.classifier])
+        Group.__init__(self, [self.stem, self.body, self.head, self.classifier])
 
 
     def set_ILSVRC_solvers(self, max_iterations):

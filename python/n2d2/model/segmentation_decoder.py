@@ -23,7 +23,7 @@
 
 from n2d2.utils import ConfigSection
 from n2d2.cell import Conv, Deconv, Softmax, Padding, ElemWise
-from n2d2.deepnet import Sequence, Layer, DeepNet
+from n2d2.deepnet import Group, DeepNet
 from n2d2.activation import Linear, Tanh
 from n2d2.solver import SGD
 from n2d2.filler import Constant, Normal
@@ -60,7 +60,7 @@ class DecoderFuse(ElemWise):
         ElemWise.__init__(self, inputs, nbOutputs, operation='Sum', **config_parameters)
 
 
-class SegmentationDecoder(Sequence):
+class SegmentationDecoder(Group):
     def __init__(self, inputs_scales=None, deepNet=None):
 
         if not len(inputs_scales) == 4:
@@ -102,25 +102,25 @@ class SegmentationDecoder(Sequence):
         conv_1x1_x16 = DecoderConv(interface_1x1_x16, nbOutputs=5, name="conv_1x1_x16", deepNet=self._deepNet)
         conv_1x1_x32 = DecoderConv(interface_1x1_x32, nbOutputs=5, name="conv_1x1_x32", deepNet=self._deepNet)
 
-        post_backbone_convs = Layer([conv_1x1_x4, conv_1x1_x8, conv_1x1_x16, conv_1x1_x32], name="post_backbone_convs")
+        post_backbone_convs = Group([conv_1x1_x4, conv_1x1_x8, conv_1x1_x16, conv_1x1_x32], name="post_backbone_convs")
 
         deconv1 = DecoderDeconv(conv_1x1_x32, conv_1x1_x32.get_outputs().dimZ(), name="deconv1", deepNet=self._deepNet)
         deconv1_pad = DecoderPadding(deconv1, deconv1.get_outputs().dimZ(), name="deconv1_pad", deepNet=self._deepNet)
         fuse1 = DecoderFuse([deconv1_pad, conv_1x1_x16], deconv1_pad.get_outputs().dimZ(), name="fuse1", deepNet=self._deepNet)
 
-        deconv_sequence1 = Sequence([deconv1, deconv1_pad, fuse1], name="deconv_sequence1")
+        deconv_sequence1 = Group([deconv1, deconv1_pad, fuse1], name="deconv_sequence1")
 
         deconv_fuse1 = DecoderDeconv(fuse1, fuse1.get_outputs().dimZ(), name="deconv_fuse1", deepNet=self._deepNet)
         deconv_fuse1_pad = DecoderPadding(deconv_fuse1, deconv_fuse1.get_outputs().dimZ(), name="deconv_fuse1_pad", deepNet=self._deepNet)
         fuse2 = DecoderFuse([deconv_fuse1_pad, conv_1x1_x8], deconv_fuse1_pad.get_outputs().dimZ(), name="fuse2", deepNet=self._deepNet)
 
-        deconv_sequence2 = Sequence([deconv_fuse1, deconv_fuse1_pad, fuse2], name="deconv_sequence2")
+        deconv_sequence2 = Group([deconv_fuse1, deconv_fuse1_pad, fuse2], name="deconv_sequence2")
 
         deconv_fuse2 = DecoderDeconv(fuse2, fuse2.get_outputs().dimZ(), name="deconv_fuse2", deepNet=self._deepNet)
         deconv_fuse2_pad = DecoderPadding(deconv_fuse2, deconv_fuse2.get_outputs().dimZ(), name="deconv_fuse2_pad", deepNet=self._deepNet)
         fuse3 = DecoderFuse([deconv_fuse2_pad, conv_1x1_x4], deconv_fuse2_pad.get_outputs().dimZ(), name="fuse3", deepNet=self._deepNet)
 
-        deconv_sequence3 = Sequence([deconv_fuse2, deconv_fuse2_pad, fuse3], name="deconv_sequence3")
+        deconv_sequence3 = Group([deconv_fuse2, deconv_fuse2_pad, fuse3], name="deconv_sequence3")
 
         deconv_fuse3 = Deconv(fuse3, fuse3.get_outputs().dimZ(), kernelDims=[8, 8], strideDims=[4, 4], activationFunction=Linear(),
                     weightsFiller=Normal(stdDev=0.1), biasFiller=Constant(value=0.2),
@@ -129,13 +129,13 @@ class SegmentationDecoder(Sequence):
         out_adapt = Padding(deconv_fuse3, deconv_fuse3.get_outputs().dimZ(),
                     topPad=-2, botPad=-2, leftPad=-2, rightPad=-2, name="out_adapt", deepNet=self._deepNet)
 
-        deconv_sequence4 = Sequence([deconv_fuse3, out_adapt], name="deconv_sequence4")
+        deconv_sequence4 = Group([deconv_fuse3, out_adapt], name="deconv_sequence4")
 
-        decoder_blocks = Sequence([deconv_sequence1, deconv_sequence2, deconv_sequence3, deconv_sequence4], name="decoder_blocks")
+        decoder_blocks = Group([deconv_sequence1, deconv_sequence2, deconv_sequence3, deconv_sequence4], name="decoder_blocks")
 
-        softmax = Softmax(out_adapt, out_adapt.get_outputs().dimZ(), withLoss=True, name="segmentation_decoder_softmax", deepNet=self._deepNet)
+        softmax = Softmax(out_adapt, withLoss=True, name="segmentation_decoder_softmax", deepNet=self._deepNet)
 
-        Sequence.__init__(self, [post_backbone_convs, decoder_blocks, softmax], name="decoder")
+        Group.__init__(self, [post_backbone_convs, decoder_blocks, softmax], name="decoder")
 
     """
     # Note: Not functional

@@ -80,7 +80,7 @@ if args.arch == 'MobileNet_v1':
 
     #extractor = n2d2.model.MobileNet_v1_FeatureExtractor(provider, alpha=0.5)
     extractor = n2d2.model.MobileNet_v1_FeatureExtractor(provider, alpha=0.5)
-    extractor.remove_subsequence(5)
+    extractor.remove(5)
     if not args.weights == "":
         extractor.import_free_parameters(args.weights)
     for key in ['div4', 'div8', 'div16', 'div32']:
@@ -119,9 +119,9 @@ elif args.arch == 'MobileNet_v2':
     provider.add_on_the_fly_transformation(otf_trans)
     extractor = n2d2.model.mobilenet_v2.load_from_ONNX(download=True, dims=size, batch_size=batch_size)
     extractor.add_input(provider)
-    extractor.remove_subsequence(118, False)
-    extractor.remove_subsequence(117, False)
-    extractor.remove_subsequence(116, False)
+    extractor.remove(118, False)
+    extractor.remove(117, False)
+    extractor.remove(116, False)
     #scales.append(extractor['mobilenetv20_features_linearbottleneck1_conv0_fwd'])
     scales.append(extractor['mobilenetv20_features_linearbottleneck3_batchnorm0_fwd'])
     scales.append(extractor['mobilenetv20_features_linearbottleneck10_batchnorm0_fwd'])
@@ -140,9 +140,9 @@ elif args.arch == 'ResNet18':
     provider.add_on_the_fly_transformation(otf_trans)
     extractor = n2d2.model.resnet.load_from_ONNX('18', 'post_act', download=True, dims=size, batch_size=batch_size)
     extractor.add_input(provider)
-    extractor.remove_subsequence(47, False)
-    extractor.remove_subsequence(46, False)
-    extractor.remove_subsequence(45, False)
+    extractor.remove(47, False)
+    extractor.remove(46, False)
+    extractor.remove(45, False)
     # scales.append(extractor['resnetv22_batchnorm1_fwd'])
     scales.append(extractor['resnetv22_stage2_batchnorm0_fwd'])
     scales.append(extractor['resnetv22_stage3_batchnorm0_fwd'])
@@ -173,7 +173,7 @@ for epoch in range(args.epochs):
 
         segmentation_decoder.read_random_batch()
 
-        extractor.propagate(inference=True)
+        extractor.get_last().get_deepnet().propagate(inference=True)
 
         segmentation_decoder.process()
 

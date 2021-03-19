@@ -98,6 +98,7 @@ public:
     void learn(std::vector<std::pair<std::string, double> >* timings = NULL);
     void test(Database::StimuliSet set = Database::Test,
               std::vector<std::pair<std::string, double> >* timings = NULL);
+    void propagate(bool inference);
     void propagate(Database::StimuliSet set,
                    bool inference,
                 std::vector<std::pair<std::string, double> >* timings = NULL);
