@@ -30,7 +30,7 @@ from n2d2.n2d2_interface import N2D2_Interface
 
 class DeepNet(N2D2_Interface):
 
-    def __init__(self, from_parameters=True, **config_parameters):
+    def __init__(self, provider, from_parameters=True, **config_parameters):
         N2D2_Interface.__init__(self, **config_parameters)
 
         if not 'name' in self._config_parameters:
@@ -41,9 +41,8 @@ class DeepNet(N2D2_Interface):
             self._create_from_parameters()
 
         self._groups = Group(self._config_parameters['name'])
-        self._provider = None
+        self.set_provider(provider)
         self._current_group = self._groups
-        self._last_group = None
         self._group_dict = {self._config_parameters['name']: self._groups}
         self._group_counter = 1
 
@@ -55,14 +54,14 @@ class DeepNet(N2D2_Interface):
             name = "Group" + str(self._group_counter)
         if name in self._group_dict:
             raise RuntimeError("Group with name '" + name + "' already exists in DeepNet")
-        self._last_group = self._current_group
-        self._current_group = Group(name)
+        self._current_group = Group(name, self._current_group)
         self._group_dict[name] = self._current_group
         self._group_counter += 1
 
     def end_group(self):
-        self._last_group.add(self._current_group)
-        self._current_group = self._last_group
+        self._current_group.get_parent_group().add(self._current_group)
+        self._current_group = self._current_group.get_parent_group()
+
 
     def _create_from_parameters(self):
         self._network = n2d2.global_variables.default_net 
@@ -147,8 +146,7 @@ class DeepNet(N2D2_Interface):
         self._N2D2_object.update()
 
     def import_free_parameters(self, dirName, ignoreNotExists=False):
-        print("Importing weights from directory '" + dirName + "'")
-        self._N2D2_object.import_free_parameters(dirName, ignoreNotExists=ignoreNotExists)
+        self._N2D2_object.importNetworkFreeParameters(dirName, ignoreNotExists=ignoreNotExists)
 
     def set_provider(self, provider):
         self._provider = provider
@@ -158,13 +156,22 @@ class DeepNet(N2D2_Interface):
         return self._groups.get_cells()
 
     def get_last(self):
-        return self._groups.get_last()
+        if len(self._groups) == 0:
+            return self._provider
+        else:
+            return self._groups.get_last()
 
     def get_first(self):
         return self._groups.get_first()
 
     def get_outputs(self):
         return self.get_last().get_outputs()
+
+    def dims(self):
+        return self.get_outputs().dims()
+
+    def get_group(self, group_id):
+        return self._groups.get_group(group_id)
 
     def draw(self, filename):
         N2D2.DrawNet.draw(self._N2D2_object, filename)
@@ -181,21 +188,29 @@ class DeepNet(N2D2_Interface):
 
 # TODO: Merge into DeepNet
 class Group:
-    def __init__(self, name):
+    def __init__(self, name, parent_group=None):
         self._name = name
         self._sequence = []
+        self._parent_group = parent_group
 
     def add(self, cell):
         self._sequence.append(cell)
 
+    def __len__(self):
+        return len(self._sequence)
+
+    def get_parent_group(self):
+        return self._parent_group
+
+
     # TODO: At the moment this does not release memory of deleted cells
     def remove(self, idx, reconnect=True):
         cell = self._sequence[idx]
-        print("Removing cell: " + cell.get_name())
+        print("Removing element: " + cell.get_name())
         if isinstance(cell, Group):
-            for _ in cell.get_elements():
-                cell.remove(0, reconnect)
-            print("delete: " + self._sequence[idx].get_name())
+            length = len(cell.get_elements())
+            for i in reversed(range(length)):
+                cell.remove(i, reconnect)
             del self._sequence[idx]
         elif isinstance(cell, n2d2.cell.Cell):
             cells = self.get_cells()
@@ -247,14 +262,14 @@ class Group:
             cell.import_activation_parameters(dirName, ignoreNotExists=ignoreNotExists)
     """
 
-    def get_group(self, id):
-        if isinstance(id, int):
-            return self._sequence[id]
+    def get_group(self, group_id):
+        if isinstance(group_id, int):
+            return self._sequence[group_id]
         else:
             for elem in self._sequence:
-                if elem.get_name() == id:
+                if elem.get_name() == group_id:
                     return elem
-            raise RuntimeError("No group with name: \'" + id + "\'")
+            raise RuntimeError("No group with name: \'" + group_id + "\'")
 
     def get_name(self):
         return self._name

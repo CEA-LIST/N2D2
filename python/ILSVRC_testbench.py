@@ -85,19 +85,19 @@ if args.arch == 'MobileNet_v1':
     """Equivalent to N2D2/models/MobileNet_v1.ini. Typically around 56% test Top1"""
     nb_epochs = 120 if args.epochs == -1 else args.epochs
     size = 160
-    model = n2d2.model.Mobilenet_v1(provider, alpha=0.5, extractor_as_deepnet=True)
+    model = n2d2.model.MobileNet_v1(provider, alpha=0.5)
     # 55.87% test Top1
     # "/local/is154584/jt251134/ILSVRC_testbench/MobileNet_v1/weights_validation/"
 elif args.arch == 'MobileNet_v1_batchnorm':
     """Equivalent to N2D2/models/MobileNet_v1_batchnorm.ini. Typically around 59.1% test Top1"""
     nb_epochs = 120 if args.epochs == -1 else args.epochs
     size = 224
-    model = n2d2.model.Mobilenet_v1(provider, alpha=0.5, with_batchnorm=True)
+    model = n2d2.model.MobileNet_v1(provider, alpha=0.5, with_batchnorm=True)
 elif args.arch == 'MobileNet_v2':
     """Equivalent to N2D2/models/MobileNet_v2.ini"""
     nb_epochs = 120 if args.epochs == -1 else args.epochs
     size = 160
-    model = n2d2.model.Mobilenet_v2(alpha=0.5, size=size, l=10, expansion=6)
+    model = n2d2.model.MobileNet_v2(alpha=0.5, size=size, l=10, expansion=6)
 elif args.arch == 'ResNet-50-BN':
     nb_epochs = 90 if args.epochs == -1 else args.epochs
     size = 224
@@ -109,6 +109,9 @@ else:
     raise ValueError("Invalid architecture: " + args.arch)
 
 print(model)
+
+if not args.weights == "":
+    model.import_free_parameters(args.weights)
 
 #model.set_ILSVRC_solvers(int((database.get_nb_stimuli('Learn')*nb_epochs)/batch_size))
 

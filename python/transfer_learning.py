@@ -66,11 +66,11 @@ if args.arch == 'MobileNet_v1':
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
     model_extractor = n2d2.model.MobileNet_v1(provider, alpha=0.5)
+    print(model_extractor)
     model_extractor.remove(1, False)
-    model_extractor.get_group(0).remove(5, False)
+    #model_extractor.get_group(0).remove(5, False)
     if not args.weights == "":
         model_extractor.import_free_parameters(args.weights)
-    print(model_extractor)
 elif args.arch == 'MobileNet_v1_bn':
     trans, otf_trans = n2d2.model.ILSVRC_preprocessing(size=size)
     provider.add_transformation(trans)
@@ -80,7 +80,6 @@ elif args.arch == 'MobileNet_v1_bn':
     model_extractor.get_group(0).remove(54, False)
     if not args.weights == "":
         model_extractor.import_free_parameters(args.weights)
-    print(model_extractor)
 elif args.arch == 'MobileNet_v1_SAT':
     margin = 32
     trans = n2d2.transform.Composite([
@@ -132,6 +131,7 @@ else:
     raise ValueError("Invalid architecture: " + args.arch)
 
 print(model_extractor)
+model_extractor.draw_graph("extractor_graph")
 
 print("Recreate head as separate deepnet")
 interface = n2d2.provider.TensorPlaceholder(model_extractor.get_outputs())

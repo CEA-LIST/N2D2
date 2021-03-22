@@ -36,7 +36,7 @@ class Classifier(Application):
     def __init__(self, provider, deepnet, **target_config_parameters):
         deepnet_endpoint = deepnet.get_last()
         if not isinstance(deepnet_endpoint, n2d2.cell.Softmax):
-            raise RuntimeError("The deepnet endpoint is not a softmax cell")
+            raise ValueError("The deepnet endpoint is not a softmax cell, but object of time " + str(type(deepnet_endpoint)))
         Application.__init__(self, provider, deepnet)
 
         self._target = n2d2.target.Score(deepnet_endpoint,
