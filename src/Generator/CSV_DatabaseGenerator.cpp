@@ -18,26 +18,26 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Generator/DIR_DatabaseGenerator.hpp"
+#include "Generator/CSV_DatabaseGenerator.hpp"
 
 N2D2::Registrar<N2D2::DatabaseGenerator>
-N2D2::DIR_DatabaseGenerator::mRegistrar("DIR_Database",
-                                        N2D2::DIR_DatabaseGenerator::generate);
+N2D2::CSV_DatabaseGenerator::mRegistrar(
+    "CSV_Database", N2D2::CSV_DatabaseGenerator::generate);
 
-std::shared_ptr<N2D2::DIR_Database>
-N2D2::DIR_DatabaseGenerator::generate(IniParser& iniConfig,
-                                      const std::string& section)
+std::shared_ptr<N2D2::CSV_Database>
+N2D2::CSV_DatabaseGenerator::generate(IniParser& iniConfig,
+                                             const std::string& section)
 {
     std::string currentSection = section;
 
     if (!iniConfig.currentSection(section, false))
         throw std::runtime_error("Missing [" + section + "] section.");
 
-    const bool loadInMemory = iniConfig.getProperty
-                              <bool>("LoadInMemory", false);
+    std::shared_ptr<CSV_Database> database = std::make_shared
+        <CSV_Database>();
 
-    std::shared_ptr<DIR_Database> database = std::make_shared
-        <DIR_Database>(loadInMemory);
+    int labelColumn = -1;
+    int nbHeaderLines = 0;
 
     do {
         if (!iniConfig.currentSection(currentSection)) {
@@ -48,63 +48,31 @@ N2D2::DIR_DatabaseGenerator::generate(IniParser& iniConfig,
         const std::string dataPath
             = Utils::expandEnvVars(iniConfig.getProperty<std::string>
                                    ("DataPath"));
-        const int depth = iniConfig.getProperty<int>("Depth", 1);
-        const std::string labelName = iniConfig.getProperty
-                                      <std::string>("LabelName", "");
-        const int labelDepth = iniConfig.getProperty<int>("LabelDepth", 1);
-        const std::string roiFile = Utils::expandEnvVars(
-            iniConfig.getProperty<std::string>("ROIFile", ""));
-        const std::string roiDir = Utils::expandEnvVars(
-            iniConfig.getProperty<std::string>("ROIDir", ""));
-        std::vector<std::string> roiExt = iniConfig.getProperty
-            <std::vector<std::string> >("ROIExtension",
-                                        std::vector<std::string>(1, "json"));
-        std::transform(roiExt.begin(),
-                       roiExt.end(),
-                       roiExt.begin(),
-                       Utils::expandEnvVars);
 
         const bool perLabel = iniConfig.getProperty
                               <bool>("PerLabelPartitioning", true);
         const bool equivLabel = iniConfig.getProperty
                               <bool>("EquivLabelPartitioning", true);
-        const double learn = iniConfig.getProperty<double>("Learn");
-        const double validation = iniConfig.getProperty<double>("Validation",
-                                                                0.0);
+        const double learn = iniConfig.getProperty<double>("Learn", 0.6);
+        const double validation = iniConfig.getProperty<double>("Validation", 0.2);
+        labelColumn = iniConfig.getProperty<int>("LabelColumn", labelColumn);
+        nbHeaderLines = iniConfig.getProperty<int>("NbHeaderLines", nbHeaderLines);
 
         double test = 0.0;
 
         if (iniConfig.isProperty("Test"))
             test = iniConfig.getProperty<double>("Test");
 
-        if (iniConfig.isProperty("IgnoreMasks")) {
-            database->setIgnoreMasks(
-                iniConfig.getProperty<std::vector<std::string> >
-                    ("IgnoreMasks", std::vector<std::string>()));
-        }
-
-        if (iniConfig.isProperty("ValidExtensions")) {
-            database->setValidExtensions(
-                iniConfig.getProperty<std::vector<std::string> >
-                    ("ValidExtensions", std::vector<std::string>()));
-        }
-
         const std::string loadMore
             = iniConfig.getProperty<std::string>("LoadMore", "");
 
         database->setParameters(iniConfig.getSection(currentSection, true));
-        database->loadDir(dataPath, depth, labelName, labelDepth);
-
-        if (!roiFile.empty())
-            database->loadROIs(roiFile, "", true);
-
-        if (!roiDir.empty())
-            database->loadROIsDir(roiDir, roiExt, depth);
+        database->loadRaw(dataPath, labelColumn, nbHeaderLines);
 
         if (perLabel) {
             if (learn + validation > 1.0) {
                 std::stringstream errorMsg;
-                errorMsg << "DIR_DatabaseGenerator: Learn (" << learn << ") + "
+                errorMsg << "CSV_DatabaseGenerator: Learn (" << learn << ") + "
                     "Validation (" << validation << ") cannot be > 1.0";
 
                 throw std::runtime_error(errorMsg.str());

@@ -1832,17 +1832,24 @@ int N2D2::Database::getStimuliDepth() {
             throw std::runtime_error("Can't get the stimuli depth of an empty database.");
         }
 
-        std::string fileExtension = Utils::fileExtension(mStimuli[0].name);
-        std::transform(fileExtension.begin(), fileExtension.end(),
-                       fileExtension.begin(), ::tolower);
+        if (mLoadDataInMemory
+            && !mStimuliData.empty() && !mStimuliData[0].empty())
+        {
+            mStimuliDepth = mStimuliData[0].depth();
+        }
+        else {
+            std::string fileExtension = Utils::fileExtension(mStimuli[0].name);
+            std::transform(fileExtension.begin(), fileExtension.end(),
+                        fileExtension.begin(), ::tolower);
 
-        auto dataFile = Registrar<DataFile>::create(fileExtension)();
-        mStimuliDepth = dataFile->read(mStimuli[0].name).depth();
+            auto dataFile = Registrar<DataFile>::create(fileExtension)();
+            mStimuliDepth = dataFile->read(mStimuli[0].name).depth();
 
-        std::cout << Utils::cnotice << "Notice: stimuli depth is "
-                    << Utils::cvMatDepthToString(mStimuliDepth)
-                    << " (according to database first stimulus)"
-                    << Utils::cdef << std::endl;
+            std::cout << Utils::cnotice << "Notice: stimuli depth is "
+                        << Utils::cvMatDepthToString(mStimuliDepth)
+                        << " (according to database first stimulus)"
+                        << Utils::cdef << std::endl;
+        }
     }
 
     return mStimuliDepth;

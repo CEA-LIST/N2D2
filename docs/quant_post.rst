@@ -136,8 +136,12 @@ Model Zoo are reported in the table below, using ``-calib 1000``:
 | resnet18v1.onnx                                      | 69.83%    | 68.82%            | 68.78%      |
 | (``-no-unsigned -act-rescaling-mode Fixed-point``)   |           |                   |             |
 +------------------------------------------------------+-----------+-------------------+-------------+
-| mobilenetv2-1.0.onnx                                 | 70.95%    | 65.40%            |             |
+| mobilenetv2-1.0.onnx                                 | 70.95%    | 65.40%            | 65.40%      |
 | (``mobilenetv20_output_flatten0_reshape0`` ignored)  |           |                   |             |
++------------------------------------------------------+-----------+-------------------+-------------+
+| mobilenetv2-1.0.onnx                                 |           | 66.67%            | 66.70%      |
+| (``mobilenetv20_output_flatten0_reshape0`` ignored   |           |                   |             |
+| (``-act-rescaling-mode Fixed-point``)                |           |                   |             |
 +------------------------------------------------------+-----------+-------------------+-------------+
 
 
