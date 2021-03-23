@@ -39,7 +39,7 @@ cell_dict = {
 
 
 
-
+# TODO: Move to n2d2.cell
 def cell_converter(n2d2_parent_cells, N2D2_cell, n2d2_deepnet):
     """
     :param N2D2_cell: N2D2 cell to convert.
@@ -77,38 +77,3 @@ def cell_converter(n2d2_parent_cells, N2D2_cell, n2d2_deepnet):
 
     return n2d2_cell
 
-def deepnet_converter(N2D2_deepnet):
-    """
-    :param N2D2_deepnet: N2D2 cell to convert.
-    :type N2D2_deepnet: :py:class:`N2D2.DeepNet`
-    Generate a Group with an
-    """
-    n2d2_deepnet = n2d2.deepnet.DeepNet(N2D2_deepnet)
-    cells = N2D2_deepnet.getCells()
-    layers = N2D2_deepnet.getLayers()
-    layer_sequence = n2d2.deepnet.Group([])
-    if not layers[0][0] == "env":
-        print("Is env:" + layers[0][0])
-        raise RuntimeError("First layer of N2D2 deepnet is not a StimuliProvider. You may be skipping cells")
-    for layer in layers[1:]:
-        if len(layer) > 1:
-            cell_layer = []
-            for cell in layer:
-                N2D2_cell = cells[cell]
-                n2d2_parents = []
-                for parent in N2D2_cell.getParentsCells():
-                    n2d2_parents.append(layer_sequence.get_cells()[parent.getName()])
-                cell_layer.append(cell_converter(n2d2_parents, N2D2_cell, n2d2_deepnet))
-            layer_sequence.add(n2d2.deepnet.Group(cell_layer))
-        else:
-            N2D2_cell = cells[layer[0]]
-            n2d2_parents = []
-            for parent in N2D2_cell.getParentsCells():
-                # Necessary because N2D2 returns [None] if no parent cells
-                if parent is not None:
-                    n2d2_parents.append(layer_sequence.get_cells()[parent.getName()])
-            print("N2D2_cell")
-            print(N2D2_cell)
-            layer_sequence.add(cell_converter(n2d2_parents, N2D2_cell, n2d2_deepnet))
-            print(id(layer_sequence.get_deepnet()))
-    return layer_sequence

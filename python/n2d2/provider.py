@@ -158,6 +158,7 @@ class TensorPlaceholder(Provider):
             self._name = "provider_" + str(n2d2.global_variables.provider_counter)
         n2d2.global_variables.provider_counter += 1
 
+        # TODO: Add cell and DeepNet input
         if isinstance(inputs, list):
             self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
                                                      size=inputs[0:2],

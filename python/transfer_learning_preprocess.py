@@ -118,7 +118,7 @@ classifier = n2d2.application.Classifier(provider, model_head, topN=1)
 
 
 if not args.weights == "":
-    model.get_subsequence(0).import_free_parameters(args.weights)
+    model.get_group(0).import_free_parameters(args.weights)
 
 
 print("Preprocessing")

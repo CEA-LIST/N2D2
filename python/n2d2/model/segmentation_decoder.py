@@ -95,7 +95,7 @@ class SegmentationDecoder(Group):
         interface_1x1_x32 = TensorPlaceholder(inputs[3], name="interface_1x1_x32")
 
         # For graph visualization tools
-        self._deepNet.add_provider(interface_1x1_x4)
+        self._deepNet.set_provider(interface_1x1_x4)
 
         conv_1x1_x4 = DecoderConv(interface_1x1_x4, nbOutputs=5, name="conv_1x1_x4", deepNet=self._deepNet)
         conv_1x1_x8 = DecoderConv(interface_1x1_x8, nbOutputs=5, name="conv_1x1_x8", deepNet=self._deepNet)

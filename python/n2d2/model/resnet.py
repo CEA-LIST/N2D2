@@ -301,7 +301,7 @@ class ResNet50(ResNet):
 
 
 
-def load_from_ONNX(resnet_type, version='pre_act', dims=None, batch_size=1, path=None, download=False):
+def load_from_ONNX(inputs, resnet_type, version='pre_act', dims=None, batch_size=1, path=None, download=False):
     if dims is None:
         dims = [224, 224, 3]
     #if not dims == [224, 224, 3]:
@@ -331,7 +331,7 @@ def load_from_ONNX(resnet_type, version='pre_act', dims=None, batch_size=1, path
             n2d2.global_variables.model_cache + "/ONNX/",
             resnet_name)
         path = n2d2.global_variables.model_cache + "/ONNX/"+resnet_name+"/"+"resnet"+resnet_type+v+".onnx"
-    model = n2d2.deepnet.DeepNet.load_from_ONNX(path, dims, batch_size=batch_size)
+    model = n2d2.deepnet.DeepNet.load_from_ONNX(inputs, path)
     return model
 
 

@@ -30,41 +30,111 @@ from n2d2.n2d2_interface import N2D2_Interface
 
 class DeepNet(N2D2_Interface):
 
-    def __init__(self, N2D2_object=None, **config_parameters):
-
-
-        if 'model' in config_parameters:
-            self._model = config_parameters.pop('model')
-        else:
-            self._model = n2d2.global_variables.default_model
-        if 'dataType' in config_parameters:
-            self._datatype = config_parameters.pop('dataType')
-        else:
-            self._datatype = n2d2.global_variables.default_dataType
-
-        if N2D2_object is None:
-            self._create_from_parameters(**config_parameters)
-        else:
-            if len(config_parameters) > 0:
-                raise RuntimeError("N2D2_object given but len(config_parameters) > 0")
-            self._create_from_N2D2_object(N2D2_object)
-
-        # Even though a deepnet object does not require a provider, some methods using the deepnet
-        # expect it to have one. For these cases we have to add a dummy provider
-        self._provider = None
-
-    def _create_from_parameters(self, **config_parameters):
+    def __init__(self, provider, from_parameters=True, **config_parameters):
         N2D2_Interface.__init__(self, **config_parameters)
-        self._network = n2d2.global_variables.default_net #N2D2.Network(n2d2.global_variables.default_seed)
+
+        if not 'name' in self._config_parameters:
+            self._config_parameters['name'] = "DeepNet" + str(n2d2.global_variables.deepNet_counter)
+            n2d2.global_variables.deepNet_counter += 1
+
+        if from_parameters:
+            self._create_from_parameters()
+
+        self._groups = Group(self._config_parameters['name'])
+        self.set_provider(provider)
+        self._current_group = self._groups
+        self._group_dict = {self._config_parameters['name']: self._groups}
+        self._group_counter = 1
+
+    def add_to_current_group(self, cell):
+        self._current_group.add(cell)
+
+    def begin_group(self, name=None):
+        if name is None:
+            name = "Group" + str(self._group_counter)
+        if name in self._group_dict:
+            raise RuntimeError("Group with name '" + name + "' already exists in DeepNet")
+        self._current_group = Group(name, self._current_group)
+        self._group_dict[name] = self._current_group
+        self._group_counter += 1
+
+    def end_group(self):
+        self._current_group.get_parent_group().add(self._current_group)
+        self._current_group = self._current_group.get_parent_group()
+
+
+    def _create_from_parameters(self):
+        self._network = n2d2.global_variables.default_net 
         self._N2D2_object = N2D2.DeepNet(self._network)
         self._set_N2D2_parameters(self._config_parameters)
 
+    @classmethod
+    def create_from_N2D2_object(cls, N2D2_object):
+        deepnet = cls(from_parameters=False, **N2D2_Interface._load_N2D2_parameters(N2D2_object))
+        deepnet._N2D2_object = N2D2_object
+        deepnet._network = deepnet._N2D2_object.getNetwork()
 
-    def _create_from_N2D2_object(self, N2D2_object):
-        N2D2_Interface.__init__(self,  **self._load_N2D2_parameters(N2D2_object))
-        self._N2D2_object = N2D2_object
-        self._network = self._N2D2_object.getNetwork()
+        cells = deepnet._N2D2_object.getCells()
+        layers = deepnet._N2D2_object.getLayers()
+        if not layers[0][0] == "env":
+            print("Is env:" + layers[0][0])
+            raise RuntimeError("First layer of N2D2 deepnet is not a StimuliProvider. You may be skipping cells")
+        for layer in layers[1:]:
+            if len(layer) > 1:
+                deepnet.begin_group()
+                for cell in layer:
+                    N2D2_cell = cells[cell]
+                    n2d2_parents = []
+                    for parent in N2D2_cell.getParentsCells():
+                        n2d2_parents.append(deepnet.get_cells()[parent.getName()])
+                    n2d2.converter.cell_converter(n2d2_parents, N2D2_cell, deepnet)
+                deepnet.end_group()
+            else:
+                N2D2_cell = cells[layer[0]]
+                n2d2_parents = []
+                for parent in N2D2_cell.getParentsCells():
+                    # Necessary because N2D2 returns [None] if no parent cells
+                    if parent is not None:
+                        n2d2_parents.append(deepnet.get_cells()[parent.getName()])
+                n2d2.converter.cell_converter(n2d2_parents, N2D2_cell, deepnet)
+        return deepnet
 
+
+    @classmethod
+    def load_from_ONNX(cls, provider, model_path, ini_file=None):
+        """
+        :param provider: Provider object to base deepnet upon
+        :type provider: n2d2.provider.Provider
+        :param model_path: Path to the model.
+        :type model_path: str
+        :param ini_file: Path to an optional .ini file with additional onnx import instructions
+        :type model_path: str
+        Load a deepnet from an ONNX file given a provider object.
+        """
+        if not isinstance(provider, n2d2.provider.Provider):
+            raise ValueError("Input needs to be of type 'provider'")
+        N2D2_deepnet = N2D2.DeepNet(n2d2.global_variables.default_net)
+        N2D2_deepnet.setStimuliProvider(provider.N2D2())
+        if isinstance(provider, n2d2.provider.DataProvider):
+            N2D2_deepnet.setDatabase(provider.get_database().N2D2())
+        N2D2.CellGenerator.defaultModel = n2d2.global_variables.default_model
+        ini_parser = N2D2.IniParser()
+        if ini_file is not None:
+            ini_parser.load(ini_file)
+        ini_parser.currentSection("onnx", True)
+        N2D2_deepnet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, ini_parser, N2D2_deepnet)
+        n2d2_deepnet = DeepNet.create_from_N2D2_object(N2D2_deepnet)
+        return n2d2_deepnet
+
+    @classmethod
+    def load_from_INI(cls, path):
+        """
+        :param model_path: Path to the ini file.
+        :type model_path: str
+        Load a deepnet from an INI file.
+        """
+        n2d2_deepnet = DeepNet.create_from_N2D2_object(N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path))
+        return n2d2_deepnet
 
     def propagate(self, inference=False):
         self._N2D2_object.propagate(inference)
@@ -76,26 +146,32 @@ class DeepNet(N2D2_Interface):
         self._N2D2_object.update()
 
     def import_free_parameters(self, dirName, ignoreNotExists=False):
-        print("Importing weights from directory '" + dirName + "'")
-        self._N2D2_object.import_free_parameters(dirName, ignoreNotExists=ignoreNotExists)
+        self._N2D2_object.importNetworkFreeParameters(dirName, ignoreNotExists=ignoreNotExists)
 
-
-    def add_provider(self, provider):
+    def set_provider(self, provider):
         self._provider = provider
         self._N2D2_object.setStimuliProvider(provider.N2D2())
 
-    """
-    def __str__(self):
-        output = "Deepnet" + "(" + self._model + "<" + self._datatype + ">" + ")"
-        output += N2D2_Interface.__str__(self)
-        return output
-    """
+    def get_cells(self):
+        return self._groups.get_cells()
 
-    def get_model(self):
-        return self._model
+    def get_last(self):
+        if len(self._groups) == 0:
+            return self._provider
+        else:
+            return self._groups.get_last()
 
-    def get_datatype(self):
-        return self._datatype
+    def get_first(self):
+        return self._groups.get_first()
+
+    def get_outputs(self):
+        return self.get_last().get_outputs()
+
+    def dims(self):
+        return self.get_outputs().dims()
+
+    def get_group(self, group_id):
+        return self._groups.get_group(group_id)
 
     def draw(self, filename):
         N2D2.DrawNet.draw(self._N2D2_object, filename)
@@ -103,91 +179,38 @@ class DeepNet(N2D2_Interface):
     def draw_graph(self, filename):
         N2D2.DrawNet.drawGraph(self._N2D2_object, filename)
 
+    def remove(self, idx, reconnect=True):
+        self._groups.remove(idx, reconnect)
 
-    @classmethod
-    def load_from_ONNX(cls, model_path, dims, batch_size=1, ini_file=None):
-        """
-        :param model_path: Path to the model.
-        :type model_path: str
-        :param dims:
-        :type dims: list
-        :param batch_size:
-        :type batch_size: unsigned int
-        Load a deepnet from an ONNX file given its input dimensions.
-        """
-        deepNet = cls()
-        provider = n2d2.provider.DataProvider(n2d2.database.Database(), dims, batchSize=batch_size)
-        deepNet.N2D2().setDatabase(provider.get_database().N2D2())
-        deepNet.N2D2().setStimuliProvider(provider.N2D2())
-        N2D2.CellGenerator.defaultModel = "Frame_CUDA" #deepNet.get_model()
-        ini_parser = N2D2.IniParser()
-        if ini_file is not None:
-            ini_parser.load(ini_file)
-        ini_parser.currentSection("onnx", True)
-        N2D2_deepNet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, ini_parser, deepNet.N2D2())
-        model = n2d2.converter.deepnet_converter(N2D2_deepNet)
-        model.get_first().clear_input() #Remove dummy stimuli provider
-        return model
-
-    @classmethod
-    def load_from_INI(cls, path):
-        """
-        :param model_path: Path to the ini file.
-        :type model_path: str
-        Load a deepnet from an INI file.
-        """
-        deepNet = cls(N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path))
-        return n2d2.converter.deepnet_converter(deepNet)
+    def __str__(self):
+        return self._groups.__str__()
 
 
-
-"""
-Structure that is organised sequentially. 
-"""
-
-# TODO: Mark the first and last cell in the print
+# TODO: Merge into DeepNet
 class Group:
-    def __init__(self, sequence, name=""):
-        assert isinstance(name, str)
+    def __init__(self, name, parent_group=None):
         self._name = name
-        assert isinstance(sequence, list)
-        self._sequence = sequence
-        last_deepnet = None
-        for ipt in self._sequence:
-            deepnet = ipt.get_last().get_deepnet()
-            if last_deepnet is not None:
-                if not id(deepnet) == id(last_deepnet):
-                    print(id(deepnet))
-                    print(id(last_deepnet))
-                    raise RuntimeError("Cells of group have different deepnets")
-            last_deepnet = deepnet
-        self._deepnet = last_deepnet
-
-        # By default the input and output cells are the first and last element of the sequence
-        # To change this, modify these members
-        self._first = None
-        self._last = None
+        self._sequence = []
+        self._parent_group = parent_group
 
     def add(self, cell):
-        if self._deepnet is not None:
-            if not id(cell.get_deepnet()) == id(self.get_deepnet()):
-                raise RuntimeError("Deepnet of cell is different than group deepnet")
-        else:
-            self._deepnet = cell.get_deepnet()
         self._sequence.append(cell)
 
+    def __len__(self):
+        return len(self._sequence)
 
-    def get_deepnet(self):
-        return self._deepnet
+    def get_parent_group(self):
+        return self._parent_group
+
 
     # TODO: At the moment this does not release memory of deleted cells
     def remove(self, idx, reconnect=True):
         cell = self._sequence[idx]
-        print("Removing cell: " + cell.get_name())
+        print("Removing element: " + cell.get_name())
         if isinstance(cell, Group):
-            for _ in cell.get_elements():
-                cell.remove(0, reconnect)
-            print("delete: " + self._sequence[idx].get_name())
+            length = len(cell.get_elements())
+            for i in reversed(range(length)):
+                cell.remove(i, reconnect)
             del self._sequence[idx]
         elif isinstance(cell, n2d2.cell.Cell):
             cells = self.get_cells()
@@ -230,25 +253,6 @@ class Group:
             else:
                 cells[elem.get_name()] = elem
 
-    def add_input(self, inputs):
-        self.get_first().add_input(inputs)
-
-    def clear_input(self):
-        self.get_first().clear_input()
-
-    def get_outputs(self):
-        return self.get_last().get_outputs()
-
-    def dims(self):
-        return self.get_last().get_outputs().dims()
-
-    def get_nb_outputs(self):
-        return self.get_last().get_nb_outputs()
-
-    def __getitem__(self, item):
-        return self.get_cells()[item]
-
-
     """
     def import_free_parameters(self, dirName, ignoreNotExists=False):
         print("Importing weights from directory '" + dirName + "'")
@@ -258,43 +262,37 @@ class Group:
             cell.import_activation_parameters(dirName, ignoreNotExists=ignoreNotExists)
     """
 
-
-    def get_subsequence(self, id):
-        if isinstance(id, int):
-            return self._sequence[id]
+    def get_group(self, group_id):
+        if isinstance(group_id, int):
+            return self._sequence[group_id]
         else:
             for elem in self._sequence:
-                if elem.get_name() == id:
+                if elem.get_name() == group_id:
                     return elem
-            raise RuntimeError("No subsequence with name: \'" + id + "\'")
+            raise RuntimeError("No group with name: \'" + group_id + "\'")
 
     def get_name(self):
         return self._name
-
-    def set_name(self, name):
-        self._name = name
 
     def get_elements(self):
         return self._sequence
 
     def get_last(self):
-        if self._last is not None:
-            return self._last
-        else:
-            return self._sequence[-1].get_last()
+        return self._sequence[-1].get_last()
 
     def get_first(self):
-        if self._first is not None:
-            return self._first
-        else:
-            return self._sequence[0].get_first()
+        return self._sequence[0].get_first()
+
+    def get_outputs(self):
+        return self.get_last().get_outputs()
+
 
     def __str__(self):
         return self._generate_str(1)
 
     def _generate_str(self, indent_level):
         if not self.get_name() == "":
-            output = "\'" + self.get_name() + "\' " + "Group("
+            output = "\'" + self.get_name() + "\' " + "("
         else:
             output = "Group("
 
@@ -307,66 +305,3 @@ class Group:
         output += "\n" + ((indent_level-1) * "\t") + ")"
         return output
 
-
-"""
-class Layer:
-    def __init__(self, layer, name=""):
-        assert isinstance(name, str)
-        self._name = name
-        assert isinstance(layer, list)
-        if not layer:
-            raise ValueError("Got empty list as input. List must contain at least one element")
-        self._layer = layer
-
-    def get_cells(self):
-        cells = {}
-        self._get_cells(cells)
-        return cells
-
-    def _get_cells(self, cells):
-        for elem in self._layer:
-            if isinstance(elem, Group):
-                elem._get_cells(cells)
-            else:
-                cells[elem.get_name()] = elem
-
-    def get_last(self):
-        return self
-
-    def get_first(self):
-        return self
-
-    def get_elements(self):
-        return self._layer
-
-    def propagate(self, inference=False):
-        for cell in self._layer:
-            cell.propagate(inference)
-
-    def back_propagate(self):
-        for cell in reversed(self._layer):
-            cell.back_propagate()
-
-    def update(self):
-        for cell in self._layer:
-            cell.update()
-
-    def get_name(self):
-        return self._name
-
-    def __str__(self):
-        return self._generate_str(0)
-
-    def _generate_str(self, indent_level):
-        if not self.get_name() == "":
-            output = "\'" + self.get_name() + "\' " + "Layer(\n"
-        else:
-            output = "Layer(\n"
-        for idx, elem in enumerate(self._layer):
-            if isinstance(elem, n2d2.cell.Cell):
-                output += (indent_level * "\t") + "[" + str(idx) + "]: " + elem.__str__() + "\n"
-            else:
-                output += (indent_level * "\t") + "[" + str(idx) + "]: " + elem._generate_str(indent_level+1) + "\n"
-        output += ((indent_level-1) * "\t") + ")"
-        return output
-"""
