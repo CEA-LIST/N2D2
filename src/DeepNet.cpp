@@ -327,30 +327,41 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
 
     if (reconnect) {
         /**
-         * Each child of 'cell' has only 'cell' as parent and is completely connected to its parent. 
+         * Each child of 'cell' has only 'cell' as parent. 
          * Clear the input of each child and connect all the parents of 'cell' to each child.
          */
         if(cell->isFullMap() &&
            std::all_of(children.begin(), children.end(), 
                        [&](const std::string& childName) { 
-                           return mParentLayers.count(childName) == 0 && 
-                                  mCells.at(childName)->isFullMap(); 
+                           return mParentLayers.count(childName) == 0; 
                         }))
         {
             for(const std::string& childName: children) {
                 auto child = mCells.at(childName);
+                const Tensor<bool> mapping = child->getMapping().clone();
                 child->clearInputs();
 
-                for(const std::string& parentName: parents) {
+                unsigned int nbChannels = 0;
+
+                for (size_t k = 0; k < parents.size(); ++k) {
+                    const std::string parentName = parents[k];
+
                     if (parentName == "env") {
+                        const Tensor<bool> parentMapping = mapping.rows(
+                            nbChannels, mStimuliProvider->getNbChannels());
+                        nbChannels += mStimuliProvider->getNbChannels();
+
                         child->addInput(*mStimuliProvider, 0, 0,
                             mStimuliProvider->getSizeX(),
-                            mStimuliProvider->getSizeY());
+                            mStimuliProvider->getSizeY(), parentMapping);
                     }
                     else {
-                        auto parent = mCells.at(parentName);
+                        auto parentCell = mCells.at(parentName);
+                        const Tensor<bool> parentMapping = mapping.rows(
+                            nbChannels, parentCell->getNbOutputs());
+                        nbChannels += parentCell->getNbOutputs();
 
-                        child->addInput(parent.get());
+                        child->addInput(parentCell.get(), parentMapping);
                     }
 
                     mParentLayers.emplace(childName, parentName);
