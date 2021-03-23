@@ -262,7 +262,7 @@ public:
         wtRoundMode = weightsScalingMode(
                            opts.parse("-wt-round-mode", std::string("NONE"), 
                                           "weights clipping mode on export, "
-                                          "can be 'NONE','RINTF','RINTC,'RINTA'"));
+                                          "can be 'NONE','RINTF','RINTA'"));
         wtClippingMode = parseClippingMode(
                            opts.parse("-wt-clipping-mode", std::string("None"), 
                                           "weights clipping mode on export, "
@@ -389,7 +389,7 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
 
     if(opt.qatSAT) {
         //needed when load network from ini, and not onnx
-        //deepNet->initialize();
+        deepNet->initialize();
         if (opt.logKernels)
             deepNet->logFreeParameters("kernels_fake_quantized");
 

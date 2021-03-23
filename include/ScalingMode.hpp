@@ -55,16 +55,12 @@ inline ScalingMode parseScalingMode(const std::string& str) {
 enum class WeightsApprox {
     NONE,
     RINTF,
-    RINTC,
     RINTA
 };
 
 inline WeightsApprox weightsScalingMode(const std::string& str) {
     if(str == "RINTF") {
         return WeightsApprox::RINTF;
-    }
-    if(str == "RINTC") {
-        return WeightsApprox::RINTC;
     }
     if(str == "RINTA") {
         return WeightsApprox::RINTA;
@@ -74,5 +70,6 @@ inline WeightsApprox weightsScalingMode(const std::string& str) {
     }
     throw std::runtime_error("Unknown weights scaling mode '" + str + "'.");
 }
+
 
 #endif
