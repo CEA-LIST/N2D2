@@ -43,7 +43,7 @@ public:
     using Cell_Frame_CUDA<T>::mActivation;
     using Cell_Frame_CUDA<T>::mActivationDesc;
     using Cell_Frame_CUDA<T>::mKeepInSync;
-    using Cell_Frame_Top::mDevices;
+    using Cell_Frame_CUDA<T>::mDevices;
 
     ConvCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                         const std::vector<unsigned int>& kernelDims,

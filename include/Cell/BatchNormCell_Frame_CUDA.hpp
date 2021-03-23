@@ -46,7 +46,7 @@ public:
     using Cell_Frame_CUDA<T>::mDiffOutputs;
     using Cell_Frame_CUDA<T>::mActivationDesc;
     using Cell_Frame_CUDA<T>::mKeepInSync;
-    using Cell_Frame_Top::mDevices;
+    using Cell_Frame_CUDA<T>::mDevices;
 
     BatchNormCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                              unsigned int nbOutputs,
