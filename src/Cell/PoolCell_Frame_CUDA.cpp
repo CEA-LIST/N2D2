@@ -95,8 +95,14 @@ void N2D2::PoolCell_Frame_CUDA<T>::setExtendedPadding(
 
     mPaddedInputs.clear();
 
-    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k)
-        mPaddedInputs.push_back(new CudaTensor<T>(inputsDims), 0);
+    if (!std::all_of(paddingDims.begin(), paddingDims.end(),
+        Utils::IsZero<int>()))
+    {
+        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+            inputsDims[2] = mInputs[k].dimZ();
+            mPaddedInputs.push_back(new CudaTensor<T>(inputsDims), 0);
+        }
+    }
 }
 
 template <class T>
