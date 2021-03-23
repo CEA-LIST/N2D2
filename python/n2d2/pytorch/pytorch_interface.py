@@ -41,7 +41,7 @@ class LayerN2D2(torch.nn.Module):
         elif isinstance(n2d2_cell, N2D2.Cell):
             self._N2D2 = n2d2_cell
         else:
-            n2d2.error_handler.wrong_input_type('n2d2_cell', str(type(n2d2_cell)), ["N2D2.Cell", "n2d2.cell.Cell"])
+            raise n2d2.error_handler.WrongInputType('n2d2_cell', str(type(n2d2_cell)), ["N2D2.Cell", "n2d2.cell.Cell"])
     
         # We need to add a random parameter to the module else pytorch refuse to compute gradient
         self.register_parameter(name='random_parameter', param=torch.nn.Parameter(torch.randn(1)))

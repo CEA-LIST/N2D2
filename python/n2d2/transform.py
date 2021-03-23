@@ -86,9 +86,9 @@ class Composite(Transformation):
         Transformation.__init__(self, **config_parameters)
 
         if not isinstance(transformations, list):
-            n2d2.error_handler.wrong_input_type("transformations", type(transformations), [str(type(list))])
+            raise n2d2.error_handler.WrongInputType("transformations", type(transformations), [str(type(list))])
         if not transformations:
-            n2d2.error_handler.is_empty(transformations)
+            raise n2d2.error_handler.IsEmptyError(transformations)
 
         self._transformations = transformations
 

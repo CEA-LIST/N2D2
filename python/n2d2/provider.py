@@ -97,7 +97,7 @@ class DataProvider(Provider):
         :type partition: str 
         """
         if partition not in N2D2.Database.StimuliSet.__members__.keys():
-            n2d2.error_handler.wrong_value("partition", partition, " ".join(N2D2.Database.StimuliSet.__members__.keys()))
+            raise n2d2.error_handler.WrongValue("partition", partition, " ".join(N2D2.Database.StimuliSet.__members__.keys()))
         return self._N2D2_object.readRandomBatch(set=N2D2.Database.StimuliSet.__members__[partition])
 
     def read_batch(self, partition, idx):
@@ -116,7 +116,7 @@ class DataProvider(Provider):
         :type idx: int 
         """
         if partition not in N2D2.Database.StimuliSet.__members__.keys():
-            n2d2.error_handler.wrong_value("partition", partition, " ".join(N2D2.Database.StimuliSet.__members__.keys()))
+            raise n2d2.error_handler.WrongValue("partition", partition, " ".join(N2D2.Database.StimuliSet.__members__.keys()))
         return self._N2D2_object.readBatch(set=N2D2.Database.StimuliSet.__members__[partition], startIndex=idx)
 
     def add_transformation(self, transformation):
@@ -170,7 +170,7 @@ class TensorPlaceholder(Provider):
                                                      batchSize=inputs.dimB())
             self._N2D2_object.setStreamedTensor(inputs)
         else:
-            n2d2.error_handler.wrong_input_type("inputs", type(inputs), [type(list), 'n2d2.tensor.Tensor', 'N2D2.BaseTensor'])
+            raise n2d2.error_handler.WrongInputType("inputs", type(inputs), [type(list), 'n2d2.tensor.Tensor', 'N2D2.BaseTensor'])
         self._set_N2D2_parameter('StreamTensor', True)
 
     def set_streamed_tensor(self, tensor):

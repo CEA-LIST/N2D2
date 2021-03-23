@@ -63,7 +63,7 @@ class N2D2_Interface:
         Return the N2D2 object.
         """
         if self._N2D2_object is None:
-            raise n2d2.UndefinedModelError("N2D2 object member has not been created")
+            raise n2d2.error_handler.UndefinedModelError("N2D2 object member has not been created")
         return self._N2D2_object
 
     def _set_N2D2_parameter(self, key, value):

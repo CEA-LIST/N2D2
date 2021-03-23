@@ -183,7 +183,7 @@ class Tensor():
         except ImportError:
             raise ImportError("Numpy is not installed")
         if not isinstance(np_array, ndarray):
-            n2d2.error_handler.wrong_input_type("np_array", type(np_array), ["numpy.array"])
+            raise n2d2.error_handler.WrongInputType("np_array", type(np_array), ["numpy.array"])
 
 
         np_array = np_array.reshape([d for d in reversed(np_array.shape)]) 
@@ -223,7 +223,7 @@ class Tensor():
         elif isinstance(index, slice):
             self._tensor[index] = value
         else:
-            n2d2.error_handler.wrong_input_type("index", type(index), [str(list), str(tuple), str(float), str(int), str(slice)])
+            raise n2d2.error_handler.WrongInputType("index", type(index), [str(list), str(tuple), str(float), str(int), str(slice)])
 
     def __getitem__(self, index):
         """
@@ -238,7 +238,7 @@ class Tensor():
         elif isinstance(index, int) or isinstance(index, float):
             value = self._tensor[int(index)]
         else:
-            n2d2.error_handler.wrong_input_type("index", type(index), [str(list), str(tuple), str(float), str(int)])
+            raise n2d2.error_handler.WrongInputType("index", type(index), [str(list), str(tuple), str(float), str(int)])
         return value
         
     def __len__(self):
