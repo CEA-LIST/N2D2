@@ -42,16 +42,16 @@ if(WIN32)
 elseif(UNIX AND NOT APPLE)
 
     # Headers
-    file(GLOB nvml_header_path_hint /usr/include/nvidia*/include /usr/local/cuda*/include /opt/cuda*/include /usr/lib/*linux-gnu /usr/local/cuda*/targets/*/include "$ENV{CUDA_HOME}/include")
+    file(GLOB nvml_header_path_hint "${CUDA_INCLUDE_DIRS}" "${CUDA_INCLUDE_DIRS}/targets/*/include" "${CUDA_TOOLKIT_ROOT_DIR}/include")
     find_path(NVML_INCLUDE_DIRS NAMES nvml.h
     PATHS ${nvml_header_path_hint} ${PROJECT_BINARY_DIR}/include)
 
     # library
     if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8") # 64bit
-        file(GLOB nvml_lib_path_hint /usr/lib64/nvidia*/ /usr/lib/nvidia*/ /usr/local/cuda*/targets/*/lib/stubs/ "$ENV{CUDA_HOME}/lib64/"
-            "$ENV{CUDA_HOME}/lib/")
+        file(GLOB nvml_lib_path_hint "${CUDA_INCLUDE_DIRS}/targets/*/lib/stubs/" "${CUDA_TOOLKIT_ROOT_DIR}/lib64/"
+            "${CUDA_TOOLKIT_ROOT_DIR}/lib/")
     else() # assume 32bit
-        file(GLOB nvml_lib_path_hint /usr/lib32/nvidia*/ /usr/lib/nvidia*/ /usr/local/cuda*/targets/*/lib/stubs/ "$ENV{CUDA_HOME}/lib/")
+        file(GLOB nvml_lib_path_hint "${CUDA_INCLUDE_DIRS}/targets/*/lib/stubs/" "${CUDA_TOOLKIT_ROOT_DIR}/lib/")
     endif()
 
     find_library(NVML_LIBRARIES NAMES nvidia-ml libnvidia-ml.so.1
