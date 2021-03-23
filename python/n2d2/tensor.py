@@ -277,9 +277,8 @@ class CudaTensor(Tensor):
     def __init__(self, dims, value=None, defaultDataType=float, N2D2_tensor=None):
         super().__init__(dims, value, defaultDataType, N2D2_tensor)
         if value:
-            # TODO : a buyg cause the value argument to be ignored for CUDA tensor :
-            # example : N2D2.CudaTensor_int([2, 2], value=int(5.0))
-
+            # TODO remove : a bug cause the value argument to be ignored for CUDA tensor :
+            # example : N2D2.CudaTensor_int([2, 2], value=int(5.0)
             self._tensor[0:] = value
         self.is_cuda = True 
 

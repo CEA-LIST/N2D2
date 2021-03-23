@@ -50,6 +50,14 @@ class Database(N2D2_Interface):
     def get_nb_stimuli(self, partition):
         return self._N2D2_object.getNbStimuli(N2D2.Database.StimuliSet.__members__[partition])
 
+    def get_label_name(self, label_idx):
+        """
+        :param label_idx: Index of the label 
+        :type label_idx: int
+        :returns: Label name
+        :rtype: string
+        """
+        return self._N2D2_object.getLabelName(label_idx)
     def load(self, dataPath, **kwargs):
         self._N2D2_object.load(dataPath=dataPath, **kwargs)
 
@@ -65,6 +73,10 @@ class DIR(Database):
     _INI_type = 'DIR_Database'
     _type = "DIR"
     def __init__(self, **config_parameters):
+        """
+        :param **config_parameters: Optionnal parameters.
+        :type dataPath: str
+        """
         N2D2_Interface.__init__(self, **config_parameters)
         self._parse_optional_arguments(['loadDataInMemory'])
         self._N2D2_object = N2D2.DIR_Database(**self._optional_constructor_arguments)
@@ -84,11 +96,25 @@ class DIR(Database):
         self._N2D2_object.loadDir(dataPath, depth, labelPath, labelDepth)
 
 class MNIST(Database):
-
+    """
+    MNIST database :cite:`LeCun1998`.
+    Label are hard coded, you don't need to specify a path to the label file.
+    """
     _INI_type = 'MNIST_IDX_Database'
     _type = "MNIST"
 
     def __init__(self, dataPath, **config_parameters):
+        """
+         py::arg("extractROIs") = false, py::arg("validation") = 0.0
+        :param dataPath: Path to the database
+        :type dataPath: str
+        :param labelPath: Path to the label
+        :type labelPath: str (default = "")
+        :param extractROIs: Set if we extract region of interest 
+        :type extractROIs: boolean (default = False)
+        :param validation: Fraction of the learning set used for validation
+        :type validation: float (default = 0.0)
+        """
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
@@ -101,11 +127,16 @@ class MNIST(Database):
 
 
 class CIFAR100(Database):
+    """
+    CIFAR100 database :cite:`Krizhevsky2009`.
+    """
 
     _INI_type = 'CIFAR100_Database'
     _type = "CIFAR100"
 
     def __init__(self, **config_parameters):
+        """:param validation: Fraction of the learning set used for validation
+        :type validation: float (default = 0.0)"""
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['validation', 'useCoarse'])
@@ -114,6 +145,9 @@ class CIFAR100(Database):
 
 
 class ILSVRC2012(Database):
+    """
+    ILSVRC2012 database :cite:`ILSVRC15`.
+    """
 
     _INI_type = 'ILSVRC2012_Database'
     _type = "ILSVRC2012"
@@ -131,11 +165,22 @@ class ILSVRC2012(Database):
 
 
 class Cityscapes(Database):
+    """
+    Cityscapes database :cite:`Cordts2016Cityscapes`.
+    """
 
     _INI_type = 'Cityscapes_Database'
     _type = "Cityscapes"
 
     def __init__(self, **config_parameters):
+        """
+        :param incTrainExtra: If true, includes the left 8-bit images - trainextra set (19,998 images)
+        :type incTrainExtra: boolean (default = False)
+        :param useCoarse: If true, only use coarse annotations (which are the only annotations available for the trainextra set)
+        :type useCoarse: boolean (default = False)
+        :param singleInstanceLabels: If true, convert group labels to single instance labels (for example, cargroup becomes car)    
+        :type useCoarse: boolean (default = True)   
+        """
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['incTrainExtra', 'useCoarse', 'singleInstanceLabels'])

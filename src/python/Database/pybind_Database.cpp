@@ -82,6 +82,13 @@ void init_Database(py::module &m) {
      :param extractROIs: If True extract ROI
      :type extractROIs: bool, optional
     )mydelimiter")
+    .def("getLabelName", &Database::getLabelName, py::arg("label"),
+     R"mydelimiter(
+     Load data.
+     
+     :param label: Label index.
+     :type label: int
+    )mydelimiter")
     ;
 
         // TODO : Find a better method to add description to overloaded method

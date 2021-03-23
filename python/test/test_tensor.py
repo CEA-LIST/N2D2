@@ -26,7 +26,7 @@ class test_tensor(unittest.TestCase):
     def setUp(self):
         self.x, self.y, self.z = (2,3,4)
         self.tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], defaultDataType=int, value=0)
-
+        print("Called !")
     def test_set_index(self):
         self.tensor[0] = 1
         self.assertEqual(self.tensor[0], 1)

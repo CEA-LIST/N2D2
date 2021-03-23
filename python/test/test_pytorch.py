@@ -257,8 +257,8 @@ class test_LayerN2D2(unittest.TestCase):
             j = round(j.item(), 4)
             self.assertEqual(i, j)
 
-
-class test_LayerN2D2(unittest.TestCase):
+@unittest.skip("Sequence is deprecated")
+class test_Serquencen2d2(unittest.TestCase):
 
     def test(self):
         print("===========================================================")
@@ -338,7 +338,7 @@ class test_LayerN2D2(unittest.TestCase):
             self.assertEqual(i, j)
 
 
-class test_LayerN2D2(unittest.TestCase):
+class test_DeepNetN2D2(unittest.TestCase):
 
     def test(self):
         print("===========================================================")

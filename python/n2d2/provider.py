@@ -63,15 +63,60 @@ class DataProvider(Provider):
 
 
     def get_name(self):
+        """
+        :returns: Name of the data provider
+        :rtype: str
+        """
         return self._name
 
+    def get_data(self):
+        """
+        :returns: A tensor containning the data.
+        :rtype: :py:class:`n2d2.Tensor`
+        """
+        return n2d2.Tensor([], N2D2_tensor=self._N2D2_object.getData()) 
+
     def get_database(self):
+        """
+        :returns: A tensor containning the data.
+        :rtype: :py:class:`n2d2.Tensor`
+        """
         return self._constructor_arguments['database']
 
     def read_random_batch(self, partition):
+        """
+        :param partition: Can be one of the following :
+
+            - "Learn"
+
+            - "Validation"
+
+            - "Test"
+
+            - "Unpartitioned"
+        :type partition: str 
+        """
+        if partition not in N2D2.Database.StimuliSet.__members__.keys():
+            n2d2.error_handler.wrong_value("partition", partition, " ".join(N2D2.Database.StimuliSet.__members__.keys()))
         return self._N2D2_object.readRandomBatch(set=N2D2.Database.StimuliSet.__members__[partition])
 
     def read_batch(self, partition, idx):
+        """
+        :param partition: Can be one of the following :
+
+            - "Learn"
+
+            - "Validation"
+
+            - "Test"
+            
+            - "Unpartitioned"
+        :type partition: str 
+        :param idx: Start index to begin reading the stimuli
+        :type idx: int 
+        """
+        if partition not in N2D2.Database.StimuliSet.__members__.keys():
+            n2d2.error_handler.wrong_value("partition", partition, " ".join(N2D2.Database.StimuliSet.__members__.keys()))
         return self._N2D2_object.readBatch(set=N2D2.Database.StimuliSet.__members__[partition], startIndex=idx)
 
     def add_transformation(self, transformation):

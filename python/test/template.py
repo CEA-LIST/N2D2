@@ -31,12 +31,16 @@ python -m unittest discover -s test -v
 The option discovery check for test_*.py files, so for example this file will note be caught !
 
 
-If you need more information please check : https://docs.python.org/2/library/unittest.html
+If you need more information please check : https://docs.python.org/3/library/unittest.html
 '''
 
 import unittest
 
 class test_name(unittest.TestCase):
+    """
+    The class needs to inherite unittest.TestCase, the name doesn't matter and the class doesn't need to be instanciated.
+    """
+
     def setUp(self):
         """
         Method called before each test
@@ -53,7 +57,10 @@ class test_name(unittest.TestCase):
     def test_X(self):
         """
         Method called to test a functionnality. It needs to be named test_* to be called.
-        To test the function you can use one of the following method :
+        """
+
+        """
+        To test the functions you can use one of the following method :
         - self.assertEqual(a, b)
         - self.assertNotEqual(a, b)
         - self.assertTrue(a)
@@ -64,14 +71,24 @@ class test_name(unittest.TestCase):
         - self.assertIn(a, b)
         - self.assertNotIn(a, b)
         - self.assertIsInstance(a, b)
+        """
 
+        """
         You can use the following decorator to test 
         - @unittest.skip(display_text)
         - @unittest.skipIf(cond, display_text)
         - @unittest.skipUnless(cond, display_text)
         - @unittest.expectedFailure()
-
+        """
+        """
+        You can test that a function raises error by putting it in a block :
+        with self.assertRaises(TypeError): 
+        You can replace TypeError by the type of message you are expecting
         """
         pass
 
-    
+if __name__ == '__main__':
+    """
+    You need to had this line for the tests to be run.
+    """
+    unittest.main()

@@ -64,7 +64,7 @@ void init_StimuliProvider(py::module &m) {
     // .def("getChannelTransformation", &StimuliProvider::getChannelTransformation, py::arg("channel"), py::arg("set"))
     // .def("getChannelOnTheFlyTransformation", &StimuliProvider::getChannelOnTheFlyTransformation, py::arg("channel"), py::arg("set"))
     // .def("getBatch", &StimuliProvider::getBatch)
-    // .def("getData", (StimuliProvider::TensorData_T& (StimuliProvider::*)()) &StimuliProvider::getData)
+    .def("getData", (StimuliProvider::TensorData_T& (StimuliProvider::*)()) &StimuliProvider::getData)
     // .def("getLabelsData", (Tensor<int>& (StimuliProvider::*)()) &StimuliProvider::getLabelsData)
     // .def("getLabelsROIs", (const std::vector<std::vector<std::shared_ptr<ROI> > >& (StimuliProvider::*)() const) &StimuliProvider::getLabelsROIs)
     // .def("getData", (const StimuliProvider::TensorData_T (StimuliProvider::*)(unsigned int, unsigned int) const) &StimuliProvider::getData, py::arg("channel"), py::arg("batchPos") = 0)
