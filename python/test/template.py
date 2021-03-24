@@ -38,7 +38,7 @@ import unittest
 
 class test_name(unittest.TestCase):
     """
-    The class needs to inherite unittest.TestCase, the name doesn't matter and the class doesn't need to be instanciated.
+    The class needs to inherit unittest.TestCase, the name doesn't matter and the class doesn't need to be instantiated.
     """
 
     def setUp(self):
@@ -49,14 +49,14 @@ class test_name(unittest.TestCase):
 
     def tearDown(self):
         """
-        Method called after a test even if it failed.
+        Method called after a test, even if it failed.
         Can be used to clean variables
         """
         pass
 
     def test_X(self):
         """
-        Method called to test a functionnality. It needs to be named test_* to be called.
+        Method called to test a functionality. It needs to be named test_* to be called.
         """
 
         """
@@ -74,12 +74,13 @@ class test_name(unittest.TestCase):
         """
 
         """
-        You can use the following decorator to test 
+        You can use the following decorator : 
         - @unittest.skip(display_text)
         - @unittest.skipIf(cond, display_text)
         - @unittest.skipUnless(cond, display_text)
         - @unittest.expectedFailure()
         """
+
         """
         You can test that a function raises error by putting it in a block :
         with self.assertRaises(TypeError): 
@@ -89,6 +90,6 @@ class test_name(unittest.TestCase):
 
 if __name__ == '__main__':
     """
-    You need to had this line for the tests to be run.
+    You need to add this line for the tests to be run.
     """
     unittest.main()

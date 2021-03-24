@@ -26,7 +26,6 @@ class test_tensor(unittest.TestCase):
     def setUp(self):
         self.x, self.y, self.z = (2,3,4)
         self.tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], defaultDataType=int, value=0)
-        print("Called !")
     def test_set_index(self):
         self.tensor[0] = 1
         self.assertEqual(self.tensor[0], 1)
@@ -60,6 +59,14 @@ class test_tensor(unittest.TestCase):
     def test_copy_equal(self):
         copy = self.tensor.copy()
         self.assertTrue(copy is not self.tensor and copy == self.tensor)
+
+    def test_dim(self):
+        self.x, self.y, self.z, self.b = (1, 2, 3, 4)
+        self.tensor = n2d2.tensor.Tensor([self.b, self.z, self.y, self.x], defaultDataType=int, value=0)
+        self.assertEqual(self.tensor.dimX(), self.x)
+        self.assertEqual(self.tensor.dimY(), self.y)
+        self.assertEqual(self.tensor.dimZ(), self.z)
+        self.assertEqual(self.tensor.dimB(), self.b)
 
     def test_reshape(self):
         self.tensor.reshape([self.z, self.y, self.x])

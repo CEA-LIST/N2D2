@@ -54,8 +54,8 @@ class Classifier(Application):
         return self._target.get_average_score(partition=self._mode, metric=metric)
 
     def set_mode(self, mode):
-        if mode not in N2D2.Database.StimuliSet.__members__:
-            raise ValueError("Mode " + mode + " not compatible with database stimuli sets")
+        if mode not in N2D2.Database.StimuliSet.__members__.keys():
+            raise n2d2.error_handler.WrongValue("mode", mode, " ".join(N2D2.Database.StimuliSet.__members__.keys()))
         self._mode = mode
 
     def read_random_batch(self):

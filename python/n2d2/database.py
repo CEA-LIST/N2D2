@@ -73,10 +73,6 @@ class DIR(Database):
     _INI_type = 'DIR_Database'
     _type = "DIR"
     def __init__(self, **config_parameters):
-        """
-        :param **config_parameters: Optionnal parameters.
-        :type dataPath: str
-        """
         N2D2_Interface.__init__(self, **config_parameters)
         self._parse_optional_arguments(['loadDataInMemory'])
         self._N2D2_object = N2D2.DIR_Database(**self._optional_constructor_arguments)
@@ -86,12 +82,12 @@ class DIR(Database):
         """
         :param dataPath: Path to the dataset file.
         :type dataPath: str
-        :param depth: Number of sub-directory levels to include.
-        :type depth: int
-        :param labelPath: Path to the label file.
+        :param depth: Number of sub-directory levels to include, defaults=0 
+        :type depth: int, optional
+        :param labelPath: Path to the label file, defaults="" 
         :type labelPath: str, optional
-        :param labelDepth: Number of sub-directory name levels used to form the data labels.
-        :type labelDepth: int
+        :param labelDepth: Number of sub-directory name levels used to form the data labels, defaults=0
+        :type labelDepth: int, optional
         """
         self._N2D2_object.loadDir(dataPath, depth, labelPath, labelDepth)
 
@@ -105,15 +101,14 @@ class MNIST(Database):
 
     def __init__(self, dataPath, **config_parameters):
         """
-         py::arg("extractROIs") = false, py::arg("validation") = 0.0
         :param dataPath: Path to the database
         :type dataPath: str
-        :param labelPath: Path to the label
-        :type labelPath: str (default = "")
-        :param extractROIs: Set if we extract region of interest 
-        :type extractROIs: boolean (default = False)
-        :param validation: Fraction of the learning set used for validation
-        :type validation: float (default = 0.0)
+        :param labelPath: Path to the label, default=""
+        :type labelPath: str, optional
+        :param extractROIs: Set if we extract region of interest, default=False
+        :type extractROIs: boolean, optional
+        :param validation: Fraction of the learning set used for validation, default=0.0
+        :type validation: float, optional
         """
         N2D2_Interface.__init__(self, **config_parameters)
 
@@ -135,8 +130,10 @@ class CIFAR100(Database):
     _type = "CIFAR100"
 
     def __init__(self, **config_parameters):
-        """:param validation: Fraction of the learning set used for validation
-        :type validation: float (default = 0.0)"""
+        """
+        :param validation: Fraction of the learning set used for validation, default=0.0
+        :type validation: float, optional
+        """
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['validation', 'useCoarse'])
@@ -174,12 +171,12 @@ class Cityscapes(Database):
 
     def __init__(self, **config_parameters):
         """
-        :param incTrainExtra: If true, includes the left 8-bit images - trainextra set (19,998 images)
-        :type incTrainExtra: boolean (default = False)
-        :param useCoarse: If true, only use coarse annotations (which are the only annotations available for the trainextra set)
-        :type useCoarse: boolean (default = False)
-        :param singleInstanceLabels: If true, convert group labels to single instance labels (for example, cargroup becomes car)    
-        :type useCoarse: boolean (default = True)   
+        :param incTrainExtra: If true, includes the left 8-bit images - trainextra set (19,998 images), default=False
+        :type incTrainExtra: boolean, optional
+        :param useCoarse: If true, only use coarse annotations (which are the only annotations available for the trainextra set), default=False
+        :type useCoarse: boolean, optional 
+        :param singleInstanceLabels: If true, convert group labels to single instance labels (for example, cargroup becomes car), default=True
+        :type useCoarse: boolean, optional 
         """
         N2D2_Interface.__init__(self, **config_parameters)
 

@@ -168,7 +168,9 @@ class TensorPlaceholder(Provider):
             self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
                                                      size=dims,
                                                      batchSize=inputs.dimB())
-            self._N2D2_object.setStreamedTensor(inputs)
+            if isinstance(inputs, n2d2.tensor.Tensor):
+                inputs = inputs._tensor
+            self.setStreamedTensor(inputs)
         else:
             raise n2d2.error_handler.WrongInputType("inputs", type(inputs), [type(list), 'n2d2.tensor.Tensor', 'N2D2.BaseTensor'])
         self._set_N2D2_parameter('StreamTensor', True)

@@ -62,6 +62,7 @@ class Tensor():
                 # TODO : Change this error message !
                 raise TypeError("N2D2_tensor should be of type N2D2.Tensor got " + str(type(N2D2_tensor)) + " instead")
             self._tensor = N2D2_tensor
+            # TODO : Need to fix getDataType function in N2D2 !
         self._dataType = defaultDataType
         self.is_cuda = False 
 
@@ -76,6 +77,18 @@ class Tensor():
         Return dimensions with N2D2 convention 
         """
         return self._tensor.dims()
+
+    def dimX(self):
+        return self._tensor.dimX()
+
+    def dimY(self):
+        return self._tensor.dimY()
+
+    def dimZ(self):
+        return self._tensor.dimZ()
+        
+    def dimB(self):
+        return self._tensor.dimB()
 
     def shape(self):
         """
