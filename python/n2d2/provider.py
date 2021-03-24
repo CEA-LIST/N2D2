@@ -170,7 +170,7 @@ class TensorPlaceholder(Provider):
                                                      batchSize=inputs.dimB())
             if isinstance(inputs, n2d2.tensor.Tensor):
                 inputs = inputs._tensor
-            self.setStreamedTensor(inputs)
+            self.set_streamed_tensor(inputs)
         else:
             raise n2d2.error_handler.WrongInputType("inputs", type(inputs), [type(list), 'n2d2.tensor.Tensor', 'N2D2.BaseTensor'])
         self._set_N2D2_parameter('StreamTensor', True)
