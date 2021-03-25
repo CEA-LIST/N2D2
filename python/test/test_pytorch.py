@@ -29,7 +29,7 @@ from n2d2 import tensor
 
 import n2d2.pytorch as pytorch
 
-from n2d2.deepnet import Sequence, DeepNet
+# from n2d2.deepnet import Sequence, DeepNet
 import unittest
 
 

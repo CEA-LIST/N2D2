@@ -257,6 +257,7 @@ public:
         (*mValid) = false;
     };
     virtual const std::type_info* getType() const = 0;
+    virtual const char* getTypeName() const = 0;
 #ifdef CUDA
     virtual BaseTensor* newCuda() const = 0;
 #endif
@@ -421,6 +422,10 @@ public:
     const std::type_info* getType() const
     {
         return &typeid(T);
+    };
+    const char* getTypeName() const
+    {
+        return typeid(T).name();
     };
 #ifdef CUDA
     // Create a CudaTensor<T>*, but due to a compiler bug in MSVC 2015, we return

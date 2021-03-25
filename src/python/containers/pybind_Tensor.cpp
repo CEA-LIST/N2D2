@@ -197,6 +197,7 @@ void init_Tensor(py::module &m) {
     .def("setValid", &BaseTensor::setValid)
     // .def("clearValid", &BaseTensor::clearValid)
     .def("getType", &BaseTensor::getType)
+    .def("getTypeName", &BaseTensor::getTypeName)
     ;
 
     declare_Tensor<float>(m, "float");

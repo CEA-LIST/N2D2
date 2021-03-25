@@ -8,10 +8,7 @@ def _to_n2d2(torch_tensor):
     Convert torch.Tensor -> n2d2.Tensor
     """
     numpy_tensor = torch_tensor.cpu().detach().numpy()
-    if torch_tensor.is_cuda:
-        n2d2_tensor = tensor.CUDA_Tensor([3, 3], defaultDataType=float)
-    else:
-        n2d2_tensor = tensor.Tensor([3, 3], defaultDataType=float)        
+    n2d2_tensor = tensor.Tensor([3, 3], defaultDataType=float, cuda=torch_tensor.is_cuda)
     n2d2_tensor.from_numpy(numpy_tensor)
     return n2d2_tensor
 
@@ -19,7 +16,7 @@ def _to_torch(N2D2_tensor):
     """
     Convert N2D2.Tensor -> torch.Tensor
     """
-    n2d2_tensor = n2d2.Tensor([], N2D2_tensor=N2D2_tensor)
+    n2d2_tensor = n2d2.Tensor.from_N2D2(N2D2_tensor)
     numpy_tensor = n2d2_tensor.to_numpy() 
     torch_tensor = torch.from_numpy(numpy_tensor)
     if torch_tensor.is_cuda:
@@ -57,10 +54,8 @@ class LayerN2D2(torch.nn.Module):
         Intialize N2D2 cell and addInput.
         """
         # OutputDims init with an empty tensor of the same size as the input
-        if n2d2_tensor.is_cuda:
-            diffOutputs = tensor.CUDA_Tensor(n2d2_tensor.shape(), value=0)
-        else:
-            diffOutputs = tensor.Tensor(n2d2_tensor.shape(), value=0)
+        diffOutputs = tensor.Tensor(n2d2_tensor.shape(), value=0, cuda=n2d2_tensor.is_cuda)
+
         self.diffOutput = diffOutputs # save this variable to get it back 
         self._N2D2.clearInputs()
         self._N2D2.addInputBis(n2d2_tensor.N2D2(), diffOutputs.N2D2())

@@ -74,7 +74,7 @@ class DataProvider(Provider):
         :returns: A tensor containning the data.
         :rtype: :py:class:`n2d2.Tensor`
         """
-        return n2d2.Tensor([], N2D2_tensor=self._N2D2_object.getData()) 
+        return n2d2.Tensor.from_N2D2(self._N2D2_object.getData()) 
 
     def get_database(self):
         """
