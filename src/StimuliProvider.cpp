@@ -1709,7 +1709,7 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
     gnuplot.set("grid").set("key off");
     gnuplot.set("size ratio 1");
     gnuplot.setXrange(-0.5, dimX - 0.5);
-    gnuplot.setYrange(-0.5, dimY - 0.5, "reverse");
+    gnuplot.setYrange(dimY - 0.5, -0.5, "reverse");
 
     gnuplot << "if (!exists(\"multiplot\")) set xtics out nomirror";
     gnuplot << "if (!exists(\"multiplot\")) set ytics out nomirror";
@@ -1872,7 +1872,7 @@ void N2D2::StimuliProvider::logData(const std::string& fileName,
     gnuplot.set("grid").set("key off");
     gnuplot.set("size ratio 1");
     gnuplot.setXrange(-0.5, dimX - 0.5);
-    gnuplot.setYrange(-0.5, dimY - 0.5, "reverse");
+    gnuplot.setYrange(dimY - 0.5, -0.5, "reverse");
 
     gnuplot << "if (!exists(\"multiplot\")) set xtics out nomirror";
     gnuplot << "if (!exists(\"multiplot\")) set ytics out nomirror";
