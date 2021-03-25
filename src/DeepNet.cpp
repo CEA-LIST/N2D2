@@ -2180,9 +2180,11 @@ void N2D2::DeepNet::learn_multiDevices(std::vector<std::pair<std::string, double
     const double coeffTime = (nbThreads > 1)
                 ? (double)nbThreads / (nbThreads - 1)
                 : 1.0;
+#ifdef NVML
     const double coeffPower = 0.5;
     /// Limit of consecutive authorized slowdowns
     const unsigned int warningLimit = 3;
+#endif
 
     const std::vector<int> devices(mStimuliProvider->getDevices().begin(),
                                    mStimuliProvider->getDevices().end());
