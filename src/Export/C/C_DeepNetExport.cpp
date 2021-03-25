@@ -215,7 +215,7 @@ void N2D2::C_DeepNetExport::generateHeaderConstants(DeepNet& deepNet,
                     std::string opPlus = " + ";
 
                     outputDepth << "(" << prefix << "_NB_OUTPUTS ";
-                    outputName << prefix << "_";
+                    outputName << prefix ;
 
                     header << "#define " << prefix << "_OUTPUT_OFFSET 0\n";
 
