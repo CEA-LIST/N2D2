@@ -42,7 +42,7 @@ Test the exported network with layer wise profiling:
 
 The results of the layer wise profiling should look like:
 
-::
+.. code-block:: console
 
     (19%)  **************************************** CONV1 + CONV1_ACTIVATION: 0.0219467 ms
     (05%)  ************ POOL1: 0.00675573 ms

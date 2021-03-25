@@ -1,6 +1,17 @@
 Export: other / legacy
 ======================
 
+.. role:: raw-html(raw)
+   :format: html
+
+.. |check|  unicode:: U+02713 .. CHECK MARK
+.. |cross|  unicode:: U+02717 .. BALLOT X
+
+.. |ccheck| replace:: :raw-html:`<font color="green">` |check| :raw-html:`</font>`
+.. |ccross| replace:: :raw-html:`<font color="red">` |cross| :raw-html:`</font>`
+
+
+
 ::
 
     n2d2 "mnist24_16c4s2_24c5s2_150_10.ini" -export CPP_OpenCL

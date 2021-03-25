@@ -4,7 +4,7 @@ Obtain ONNX models
 Convert from PyTorch
 --------------------
 ONNX conversion is natively supported in PyTorch with the ``torch.onnx.export``
-function. A example of pre-training PyTorch model conversion to ONNX is 
+function. An example of a pre-trained PyTorch model conversion to ONNX is 
 provided in ``tools/pytorch_to_onnx.py``:
 
 .. code-block:: python
@@ -24,7 +24,7 @@ provided in ``tools/pytorch_to_onnx.py``:
 Convert from TF/Keras
 ------------------
 ONNX conversion is not natively supported by TF/Keras. Instead, a third-party
-too must be used, like ``keras2onnx`` or ``tf2onnx``. Currently, the ``tf2onnx``
+tool must be used, like ``keras2onnx`` or ``tf2onnx``. Currently, the ``tf2onnx``
 is the most active and most maintained solution.
 
 The ``tf2onnx`` tool can be used in command line, by providing a TensorFlow

@@ -15,7 +15,7 @@ Per layer normalization
  There is a single weights scaling factor, global to the layer.
 
 Per layer and per output channel normalization
- There is a different weights scaling factor for each output channel. The allows
+ There is a different weights scaling factor for each output channel. This allows
  a finer grain quantization, with a better usage of the quantized range for some
  output channels, at the expense of more factors to be saved in memory.
 
@@ -141,7 +141,7 @@ Model Zoo are reported in the table below, using ``-calib 1000``:
 +------------------------------------------------------+-----------+-------------------+-------------+
 | mobilenetv2-1.0.onnx                                 |           | 66.67%            | 66.70%      |
 | (``mobilenetv20_output_flatten0_reshape0`` ignored   |           |                   |             |
-| (``-act-rescaling-mode Fixed-point``)                |           |                   |             |
+| ``-act-rescaling-mode Fixed-point``)                 |           |                   |             |
 +------------------------------------------------------+-----------+-------------------+-------------+
 
 

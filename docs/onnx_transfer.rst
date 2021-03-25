@@ -42,9 +42,12 @@ the ONNX INI section.
 The next step is to add a new classifier (fully connected layer with a softmax)
 and connect it to the last layer in the ONNX model.
 
-In order to properly connect a N2D2 layer to a layer embedded in an ONNX model,
-one must prefix the ONNX layer name with ``onnx,`` in the ``Input`` parameter
-of the ``Fc`` cell, as shown below:
+In order to properly handle graph dependencies, all the N2D2 layers connected 
+to a layer embedded in an ONNX model, must take the ONNX section name 
+(here ``onnx``) as first input in the ``Input`` parameter. The actual inputs 
+are then added in the comma-separated list, which can mix ONNX and N2D2 layers.
+In the example below, the average pooling layer from the ONNX model is connected
+to the ``Fc`` cell:
 
 .. code-block:: ini
 
@@ -85,9 +88,10 @@ If one wants to also fine-tune the existing ONNX layers, one must set the
 solver configuration for the ONNX layers, using default configuration sections.
 
 Default configuration sections applies to all the layers of the same type in the
-ONNX model. For example, to add default parameters to all convolution layers,
+ONNX model. For example, to add default parameters to all convolution layers
+in the ONNX model loaded in a section of type ONNX named ``onnx``,
 just add a section named ``[onnx:Conv_def]`` in the INI file. The name of the
-default section follows the convention ``[onnx:N2D2CellType_def]``.
+default section follows the convention ``[ONNXSection:N2D2CellType_def]``.
 
 
 .. code-block:: ini
@@ -117,7 +121,7 @@ default section follows the convention ``[onnx:N2D2CellType_def]``.
 
 
 It is possible to add parameters for a specific ONNX layer by adding a section
-with the ONNX layer named prefixed by ``onnx:``.
+with the ONNX layer named.
 
 You can fine-tune the whole network or only some of its layers, usually the last
 ones. To stop the fine-tuning at a specific layer, one can simply prevent the
@@ -127,7 +131,7 @@ gradient from back-propagating further. This can be achieved with the
 
 .. code-block:: ini
 
-    [onnx:Conv__250]
+    [Conv__250]
     ConfigSection=common.config,notrain.config
     [notrain.config]
     BackPropagate=0

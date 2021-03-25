@@ -18,15 +18,12 @@ Usage
 -----
 
 To compile and use N2D2, please refer to the
-[manual](https://github.com/CEA-LIST/N2D2/raw/master/manual/manual.pdf), which
+[online documentation](https://cea-list.github.io/N2D2/), which
 contains the following resources:
 - General presentation of the framework;
 - How to compile N2D2 and perform simulations;
 - How to write neural network models;
 - Tutorials.
-
-The PDF manual will soon be superseded by the [online documentation](https://cea-list.github.io/N2D2/). In particular, the N2D2 Python API
-documentation will only be available here.
 
 The N2D2 executables and application examples are located in the [exec](exec)
 directory.

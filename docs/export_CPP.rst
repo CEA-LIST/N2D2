@@ -18,8 +18,10 @@ aware training.
 Summary of the main features of a C++ export:
 
 - Standalone C++11 compliant project;
+
   - No C++ exception (often disabled on embedded code);
   - No <stream> library (which is memory bloated).
+
 - Fully templated compute kernels;
 - Fully inlined compute kernels;
 - No dynamic memory allocation;
@@ -40,10 +42,20 @@ Memory optimizations
 
 In the C++ export, all the memory is allocated statically at compilation time.
 
-This allows some memory optimizations:
+The following memory optimization features are integrated in this export:
 
-- Concatenation can be done directly in memory, no memory copy is needed;
-- Memory buffers are re-used when possible (memory wrapping or in-place).
+- **Strided buffers:** concatenation can be done directly in memory, no memory copy is needed;
+- **Memory wrapping:** memory buffers are re-used when possible (memory wrapping or in-place).
+
+For example, the memory mapping of each layer in a global memory space for
+MobileNet v2 is shown below (generated automatically during an export):
+
+.. figure:: _static/memory_mapping.png
+   :alt: Example of memory mapping for MobileNet v2.
+
+In this example, the largest layer memory buffer overlaps with the memory
+buffer of the preceding layer thanks to the ``OptimizeBufferMemory`` option
+(see the next section).
 
 
 Export parameters
