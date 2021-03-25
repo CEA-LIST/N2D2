@@ -101,6 +101,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quantization aware training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_DNeuro.html">Export: DNeuro</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
@@ -184,7 +185,18 @@
             
   <div class="section" id="quantization-aware-training">
 <h1>Quantization aware training<a class="headerlink" href="#quantization-aware-training" title="Permalink to this headline">¶</a></h1>
-<p>Available upon request.</p>
+<p><strong>N2D2-IP only: available upon request.</strong></p>
+<p>Currently, two quantization aware training (QAT) methods are implemented:</p>
+<ul class="simple">
+<li><p>SAT <a class="bibtex reference internal" href="tuto.html#jin2019efficient" id="id1">[JYL19]</a>;</p></li>
+<li><p>LSQ <a class="bibtex reference internal" href="tuto.html#bhalgat2020lsq" id="id2">[BLN+20]</a>.</p></li>
+</ul>
+<p>These two methods are currently at the top of the state-of-the-art, summarized
+in the figure below. Each dot represents one DNN (from the MobileNet or ResNet
+family), quantized with the number of bits indicated beside.</p>
+<div class="figure align-default">
+<img alt="QAT state-of-the-art." src="_images/qat_sota.png" />
+</div>
 </div>
 
 

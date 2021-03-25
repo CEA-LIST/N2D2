@@ -37,7 +37,7 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Export: other / legacy" href="export_legacy.html" />
+    <link rel="next" title="Export: DNeuro" href="export_DNeuro.html" />
     <link rel="prev" title="Export: C++" href="export_CPP.html" /> 
 </head>
 
@@ -101,6 +101,7 @@
 <li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_DNeuro.html">Export: DNeuro</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
@@ -234,15 +235,15 @@ native TensorRT layers are supported. The export support from TensorRT
 </pre></div>
 </div>
 <p>The results of the layer wise profiling should look like:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">19</span><span class="o">%</span><span class="p">)</span>  <span class="o">****************************************</span> <span class="n">CONV1</span> <span class="o">+</span> <span class="n">CONV1_ACTIVATION</span><span class="p">:</span> <span class="mf">0.0219467</span> <span class="n">ms</span>
-<span class="p">(</span><span class="mi">05</span><span class="o">%</span><span class="p">)</span>  <span class="o">************</span> <span class="n">POOL1</span><span class="p">:</span> <span class="mf">0.00675573</span> <span class="n">ms</span>
-<span class="p">(</span><span class="mi">13</span><span class="o">%</span><span class="p">)</span>  <span class="o">****************************</span> <span class="n">CONV2</span> <span class="o">+</span> <span class="n">CONV2_ACTIVATION</span><span class="p">:</span> <span class="mf">0.0159089</span> <span class="n">ms</span>
-<span class="p">(</span><span class="mi">05</span><span class="o">%</span><span class="p">)</span>  <span class="o">************</span> <span class="n">POOL2</span><span class="p">:</span> <span class="mf">0.00616047</span> <span class="n">ms</span>
-<span class="p">(</span><span class="mi">14</span><span class="o">%</span><span class="p">)</span>  <span class="o">******************************</span> <span class="n">CONV3</span> <span class="o">+</span> <span class="n">CONV3_ACTIVATION</span><span class="p">:</span> <span class="mf">0.0159713</span> <span class="n">ms</span>
-<span class="p">(</span><span class="mi">19</span><span class="o">%</span><span class="p">)</span>  <span class="o">****************************************</span> <span class="n">FC1</span> <span class="o">+</span> <span class="n">FC1_ACTIVATION</span><span class="p">:</span> <span class="mf">0.0222242</span> <span class="n">ms</span>
-<span class="p">(</span><span class="mi">13</span><span class="o">%</span><span class="p">)</span>  <span class="o">****************************</span> <span class="n">FC2</span><span class="p">:</span> <span class="mf">0.0149013</span> <span class="n">ms</span>
-<span class="p">(</span><span class="mi">08</span><span class="o">%</span><span class="p">)</span>  <span class="o">******************</span> <span class="n">SOFTMAX</span><span class="p">:</span> <span class="mf">0.0100633</span> <span class="n">ms</span>
-<span class="n">Average</span> <span class="n">profiled</span> <span class="n">tensorRT</span> <span class="n">process</span> <span class="n">time</span> <span class="n">per</span> <span class="n">stimulus</span> <span class="o">=</span> <span class="mf">0.113932</span> <span class="n">ms</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">(19%)  **************************************** CONV1 + CONV1_ACTIVATION: 0.0219467 ms</span>
+<span class="go">(05%)  ************ POOL1: 0.00675573 ms</span>
+<span class="go">(13%)  **************************** CONV2 + CONV2_ACTIVATION: 0.0159089 ms</span>
+<span class="go">(05%)  ************ POOL2: 0.00616047 ms</span>
+<span class="go">(14%)  ****************************** CONV3 + CONV3_ACTIVATION: 0.0159713 ms</span>
+<span class="go">(19%)  **************************************** FC1 + FC1_ACTIVATION: 0.0222242 ms</span>
+<span class="go">(13%)  **************************** FC2: 0.0149013 ms</span>
+<span class="go">(08%)  ****************** SOFTMAX: 0.0100633 ms</span>
+<span class="go">Average profiled tensorRT process time per stimulus = 0.113932 ms</span>
 </pre></div>
 </div>
 </div>
@@ -255,7 +256,7 @@ native TensorRT layers are supported. The export support from TensorRT
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="export_legacy.html" class="btn btn-neutral float-right" title="Export: other / legacy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="export_DNeuro.html" class="btn btn-neutral float-right" title="Export: DNeuro" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="export_CPP.html" class="btn btn-neutral float-left" title="Export: C++" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

@@ -106,6 +106,7 @@
 <li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_DNeuro.html">Export: DNeuro</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
@@ -192,7 +193,7 @@
 <div class="section" id="convert-from-pytorch">
 <h2>Convert from PyTorch<a class="headerlink" href="#convert-from-pytorch" title="Permalink to this headline">¶</a></h2>
 <p>ONNX conversion is natively supported in PyTorch with the <code class="docutils literal notranslate"><span class="pre">torch.onnx.export</span></code>
-function. A example of pre-training PyTorch model conversion to ONNX is
+function. An example of a pre-trained PyTorch model conversion to ONNX is
 provided in <code class="docutils literal notranslate"><span class="pre">tools/pytorch_to_onnx.py</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">MobileNetV2</span> <span class="kn">import</span> <span class="n">mobilenet_v2</span>
@@ -210,7 +211,7 @@ provided in <code class="docutils literal notranslate"><span class="pre">tools/p
 <div class="section" id="convert-from-tf-keras">
 <h2>Convert from TF/Keras<a class="headerlink" href="#convert-from-tf-keras" title="Permalink to this headline">¶</a></h2>
 <p>ONNX conversion is not natively supported by TF/Keras. Instead, a third-party
-too must be used, like <code class="docutils literal notranslate"><span class="pre">keras2onnx</span></code> or <code class="docutils literal notranslate"><span class="pre">tf2onnx</span></code>. Currently, the <code class="docutils literal notranslate"><span class="pre">tf2onnx</span></code>
+tool must be used, like <code class="docutils literal notranslate"><span class="pre">keras2onnx</span></code> or <code class="docutils literal notranslate"><span class="pre">tf2onnx</span></code>. Currently, the <code class="docutils literal notranslate"><span class="pre">tf2onnx</span></code>
 is the most active and most maintained solution.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">tf2onnx</span></code> tool can be used in command line, by providing a TensorFlow
 frozen graph (.pb).</p>

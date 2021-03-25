@@ -116,6 +116,7 @@
 <li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_DNeuro.html">Export: DNeuro</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
@@ -208,7 +209,7 @@
 <dl class="simple">
 <dt>Per layer normalization</dt><dd><p>There is a single weights scaling factor, global to the layer.</p>
 </dd>
-<dt>Per layer and per output channel normalization</dt><dd><p>There is a different weights scaling factor for each output channel. The allows
+<dt>Per layer and per output channel normalization</dt><dd><p>There is a different weights scaling factor for each output channel. This allows
 a finer grain quantization, with a better usage of the quantized range for some
 output channels, at the expense of more factors to be saved in memory.</p>
 </dd>
@@ -341,7 +342,14 @@ Model Zoo are reported in the table below, using <code class="docutils literal n
 (<code class="docutils literal notranslate"><span class="pre">mobilenetv20_output_flatten0_reshape0</span></code> ignored)</p></td>
 <td><p>70.95%</p></td>
 <td><p>65.40%</p></td>
+<td><p>65.40%</p></td>
+</tr>
+<tr class="row-even"><td><p>mobilenetv2-1.0.onnx
+(<code class="docutils literal notranslate"><span class="pre">mobilenetv20_output_flatten0_reshape0</span></code> ignored
+<code class="docutils literal notranslate"><span class="pre">-act-rescaling-mode</span> <span class="pre">Fixed-point</span></code>)</p></td>
 <td></td>
+<td><p>66.67%</p></td>
+<td><p>66.70%</p></td>
 </tr>
 </tbody>
 </table>

@@ -110,6 +110,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_DNeuro.html">Export: DNeuro</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
@@ -207,9 +208,12 @@ features available in N2D2, like post-training quantization or quantization
 aware training.</p>
 <p>Summary of the main features of a C++ export:</p>
 <ul class="simple">
-<li><p>Standalone C++11 compliant project;
-- No C++ exception (often disabled on embedded code);
-- No &lt;stream&gt; library (which is memory bloated).</p></li>
+<li><p>Standalone C++11 compliant project;</p>
+<ul>
+<li><p>No C++ exception (often disabled on embedded code);</p></li>
+<li><p>No &lt;stream&gt; library (which is memory bloated).</p></li>
+</ul>
+</li>
 <li><p>Fully templated compute kernels;</p></li>
 <li><p>Fully inlined compute kernels;</p></li>
 <li><p>No dynamic memory allocation;</p></li>
@@ -228,11 +232,19 @@ aware training.</p>
 <div class="section" id="memory-optimizations">
 <h3>Memory optimizations<a class="headerlink" href="#memory-optimizations" title="Permalink to this headline">¶</a></h3>
 <p>In the C++ export, all the memory is allocated statically at compilation time.</p>
-<p>This allows some memory optimizations:</p>
+<p>The following memory optimization features are integrated in this export:</p>
 <ul class="simple">
-<li><p>Concatenation can be done directly in memory, no memory copy is needed;</p></li>
-<li><p>Memory buffers are re-used when possible (memory wrapping or in-place).</p></li>
+<li><p><strong>Strided buffers:</strong> concatenation can be done directly in memory, no memory copy is needed;</p></li>
+<li><p><strong>Memory wrapping:</strong> memory buffers are re-used when possible (memory wrapping or in-place).</p></li>
 </ul>
+<p>For example, the memory mapping of each layer in a global memory space for
+MobileNet v2 is shown below (generated automatically during an export):</p>
+<div class="figure align-default">
+<img alt="Example of memory mapping for MobileNet v2." src="_images/memory_mapping.png" />
+</div>
+<p>In this example, the largest layer memory buffer overlaps with the memory
+buffer of the preceding layer thanks to the <code class="docutils literal notranslate"><span class="pre">OptimizeBufferMemory</span></code> option
+(see the next section).</p>
 </div>
 <div class="section" id="export-parameters">
 <h3>Export parameters<a class="headerlink" href="#export-parameters" title="Permalink to this headline">¶</a></h3>
