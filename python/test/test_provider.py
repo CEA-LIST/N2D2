@@ -28,11 +28,19 @@ class test_provider(unittest.TestCase):
     def setUp(self):
         self.db = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/")       
         self.size = [28, 28, 1]
-        self.provider = n2d2.provider.DataProvider(self.db, self.size, batchSize=1)        
+        self.batch_size = 1
+        self.provider = n2d2.provider.DataProvider(self.db, self.size, batchSize=self.batch_size)        
         
     def tearDown(self):
         pass
 
+    def test_get_batch_size(self):
+        self.assertEqual(self.batch_size, self.provider.get_batch_size())
+
+    def test_loop():
+        # TODO : Find a way to test interating over a provider
+        pass
+    
     def test_read_random_batch_error_partition(self):
         with self.assertRaises(ValueError):
             self.provider.read_random_batch(partition='Wrong string !')
@@ -40,6 +48,8 @@ class test_provider(unittest.TestCase):
     def test_read_random_batch_error_partition(self):
         with self.assertRaises(ValueError):
             self.provider.read_batch(partition='Wrong string !', idx=0)
+
+    
 
     def test_read_random_batch(self):
         input_tensor = self.provider.get_data()

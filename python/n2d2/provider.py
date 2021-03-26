@@ -45,7 +45,15 @@ class DataProvider(Provider):
     _type = "DataProvider"
 
     # Be careful to match default parameters in python and N2D2 constructor
-    def __init__(self, database, size, **config_parameters):
+    def __init__(self, database, size, random_read=False, **config_parameters):
+        """
+        :param database: Database used to read data from
+        :type database: :py:class:`n2d2.database.Database` 
+        :param size: Size of the data
+        :type size: list
+        :param random_read: if False we use get_batch when iterating other the provider, else we use get get_random_batch, default = False
+        :type: boolean, optional
+        """
         Provider.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
@@ -66,6 +74,15 @@ class DataProvider(Provider):
         self._otf_transformations = []
 
         self._partition = 'Test'
+        # Index for __iter__ method !
+        self._index = 0
+        self._random_read = random_read
+
+    def set_reading_randomly(self, random_read):
+        """
+        Set if we use get_batch or get_random_batch when iterating other the provider
+        """
+        self._random_read = random_read
 
     def set_partition(self, partition):
         if partition not in N2D2.Database.StimuliSet.__members__.keys():
@@ -90,10 +107,17 @@ class DataProvider(Provider):
         """
         return n2d2.Tensor.from_N2D2(self._N2D2_object.getData()) 
 
+    def get_batch_size(self):
+        """
+        :returns: Batch size
+        :rtype: int
+        """
+        return self._N2D2_object.getBatchSize()
+
     def get_database(self):
         """
-        :returns: A tensor containning the data.
-        :rtype: :py:class:`n2d2.Tensor`
+        :returns: 
+        :rtype: :py:class:`n2d2.database.Database`
         """
         return self._constructor_arguments['database']
 
@@ -102,17 +126,9 @@ class DataProvider(Provider):
 
     def read_random_batch(self):
         """
-              :param partition: Can be one of the following :
-
-                  - "Learn"
-
-                  - "Validation"
-
-                  - "Test"
-
-                  - "Unpartitioned"
-              :type partition: str
-              """
+        :return: Return a random batch 
+        :rtype: :py:class:`n2d2.tensor.GraphTensor`
+        """
 
         self._deepnet = n2d2.deepnet.DeepNet()
         self._deepnet.set_provider(self)
@@ -121,19 +137,11 @@ class DataProvider(Provider):
 
     def read_batch(self, idx):
         """
-               :param partition: Can be one of the following :
-
-                   - "Learn"
-
-                   - "Validation"
-
-                   - "Test"
-
-                   - "Unpartitioned"
-               :type partition: str
-               :param idx: Start index to begin reading the stimuli
-               :type idx: int
-               """
+        :param idx: Start index to begin reading the stimuli
+        :type idx: int
+        :return: Return a batch of data
+        :rtype: :py:class:`n2d2.tensor.GraphTensor`
+        """
         self._deepnet = n2d2.deepnet.DeepNet()
         self._deepnet.set_provider(self)
         self._N2D2_object.readBatch(set=self.get_partition(), startIndex=idx)
@@ -157,6 +165,25 @@ class DataProvider(Provider):
             self._N2D2_object.addOnTheFlyTransformation(transformation.N2D2(), transformation.get_apply_set())
             self._transformations.append(transformation)
 
+    def __next__(self):
+        """
+        Magic method called by __iter__ to access the next element
+        """
+        if self._index < int(self.get_database().get_nb_stimuli(self._partition) / self.get_batch_size()):
+            self._index += 1
+            if self._random_read:
+                return self.read_random_batch(self._mode)
+            else:
+                return self.read_batch(self._index-1)
+        else:
+            self._index = 0
+            raise StopIteration
+            
+
+    def __iter__(self):
+        return self
+
+    
     def __str__(self):
         output = "'" + self.get_name() + "' " + self._type + N2D2_Interface.__str__(self)
         if len(self._transformations) > 0:

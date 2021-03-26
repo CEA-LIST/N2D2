@@ -42,7 +42,4 @@ You can set and get values using :
 .. autoclass:: n2d2.Tensor
    :members:
 
-.. autoclass:: n2d2.CudaTensor
-   :members:
-
 
