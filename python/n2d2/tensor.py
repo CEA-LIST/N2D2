@@ -20,7 +20,10 @@
 """
 
 import N2D2
+import n2d2
 from functools import reduce
+
+
 
 class Tensor():
     
@@ -292,3 +295,22 @@ class CudaTensor(Tensor):
         for i in range(len(copy)):
             copy[i] = self._tensor[i]
         return copy
+
+
+class GraphTensor:
+    def __init__(self, tensor, cell):
+        self.tensor = tensor
+        self.cell = cell
+
+    def dims(self):
+        return self.tensor.dims()
+
+    def get_deepnet(self):
+        return self.cell.get_deepnet()
+
+    def back_propagate(self):
+        # TODO: Add leaf node check
+        self.cell.get_deepnet().back_propagate()
+
+
+

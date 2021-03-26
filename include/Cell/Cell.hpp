@@ -283,6 +283,15 @@ public:
     /// Initialize the state of the cell (e.g. weights random initialization)
     virtual void initialize() {};
 
+    virtual void initializeParameters(unsigned int /*inputDimZ*/, unsigned int /*nbInputs*/) 
+    {
+        throw std::runtime_error("Error: initializeParameters not implemented for this cell type!");
+    };
+    virtual void initializeDataDependent() 
+    {
+        throw std::runtime_error("Error: initializeDataDependent not implemented for this cell type!");
+    };
+
     /**
      * Save cell configuration and free parameters to a directory
      *

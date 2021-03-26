@@ -1121,7 +1121,15 @@ void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
 
 void N2D2::StimuliProvider::setStreamedTensor(TensorData_T& streamedTensor)
 {
-    mStreamedTensor = &streamedTensor;
+    if (!mStreamedTensor) {
+
+        mStreamedTensor = &streamedTensor;
+    }
+    else {
+        // TODO: Do this with = operator?
+        std::copy(streamedTensor.begin(), streamedTensor.end(),
+                  (*mStreamedTensor).begin());
+    }
 }
 
 void N2D2::StimuliProvider::reverseLabels(const cv::Mat& mat,
