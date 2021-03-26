@@ -65,49 +65,79 @@ class DataProvider(Provider):
         self._transformations = []
         self._otf_transformations = []
 
-        self._mode = 'Test'
+        self._partition = 'Test'
 
-    def set_mode(self, mode):
-        if mode not in N2D2.Database.StimuliSet.__members__:
-            raise ValueError("Mode " + mode + " not compatible with database stimuli sets")
-        self._mode = mode
-
-    def get_mode(self):
-        return self._mode
+    def set_partition(self, partition):
+        if partition not in N2D2.Database.StimuliSet.__members__.keys():
+            raise n2d2.error_handler.WrongValue("partition", partition,
+                                                " ".join(N2D2.Database.StimuliSet.__members__.keys()))
+        self._partition = partition
 
     def get_partition(self):
-        return N2D2.Database.StimuliSet.__members__[self.get_mode()]
+        return N2D2.Database.StimuliSet.__members__[self._partition]
 
     def get_name(self):
+        """
+        :returns: Name of the data provider
+        :rtype: str
+        """
         return self._name
 
+    def get_data(self):
+        """
+        :returns: A tensor containning the data.
+        :rtype: :py:class:`n2d2.Tensor`
+        """
+        return n2d2.Tensor.from_N2D2(self._N2D2_object.getData()) 
+
     def get_database(self):
+        """
+        :returns: A tensor containning the data.
+        :rtype: :py:class:`n2d2.Tensor`
+        """
         return self._constructor_arguments['database']
 
     def get_deepnet(self):
         return self._deepnet
 
     def read_random_batch(self):
+        """
+              :param partition: Can be one of the following :
+
+                  - "Learn"
+
+                  - "Validation"
+
+                  - "Test"
+
+                  - "Unpartitioned"
+              :type partition: str
+              """
+
         self._deepnet = n2d2.deepnet.DeepNet()
         self._deepnet.set_provider(self)
-        self._N2D2_object.readRandomBatch(set=N2D2.Database.StimuliSet.__members__[self.get_mode()])
-        #return n2d2.Tensor(self._N2D2_object.getData().dims(),
-        #                N2D2_tensor=self._N2D2_object.getData())
-        return n2d2.tensor.GraphTensor(
-            n2d2.Tensor(self._N2D2_object.getData().dims(),
-                        N2D2_tensor=self._N2D2_object.getData()),
-            self)
+        self._N2D2_object.readRandomBatch(set=self.get_partition())
+        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self._N2D2_object.getData()), self)
 
     def read_batch(self, idx):
+        """
+               :param partition: Can be one of the following :
+
+                   - "Learn"
+
+                   - "Validation"
+
+                   - "Test"
+
+                   - "Unpartitioned"
+               :type partition: str
+               :param idx: Start index to begin reading the stimuli
+               :type idx: int
+               """
         self._deepnet = n2d2.deepnet.DeepNet()
         self._deepnet.set_provider(self)
-        self._N2D2_object.readBatch(set=N2D2.Database.StimuliSet.__members__[self.get_mode()], startIndex=idx)
-        #return n2d2.Tensor(self._N2D2_object.getData().dims(),
-        #                   N2D2_tensor=self._N2D2_object.getData())
-        return n2d2.tensor.GraphTensor(
-            n2d2.Tensor(self._N2D2_object.getData().dims(),
-                        N2D2_tensor=self._N2D2_object.getData()),
-            self)
+        self._N2D2_object.readBatch(set=self.get_partition(), startIndex=idx)
+        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self._N2D2_object.getData()), self)
 
     def add_transformation(self, transformation):
         if isinstance(transformation, n2d2.transform.Composite):

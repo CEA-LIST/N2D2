@@ -54,7 +54,7 @@ for epoch in range(nb_epochs):
 
     print("\n# Train Epoch: " + str(epoch) + " #")
 
-    classifier.set_mode('Learn')
+    classifier.set_partition('Learn')
 
     for i in range(math.ceil(database.get_nb_stimuli('Learn')/batch_size)):
 
@@ -69,7 +69,7 @@ for epoch in range(nb_epochs):
 
     print("\n### Validation ###")
 
-    classifier.set_mode('Validation')
+    classifier.set_partition('Validation')
     classifier.clear_success()
 
     for i in range(math.ceil(database.get_nb_stimuli('Validation') / batch_size)):
@@ -85,7 +85,7 @@ for epoch in range(nb_epochs):
 
 print("\n\n### Testing ###")
 
-classifier.set_mode('Test')
+classifier.set_partition('Test')
 
 for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test')/batch_size)):
     batch_idx = i*batch_size

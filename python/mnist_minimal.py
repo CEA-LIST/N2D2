@@ -22,6 +22,8 @@
 import n2d2
 import math
 
+n2d2.global_variables.default_model = "Frame_CUDA"
+n2d2.global_variables.set_cuda_device(5)
 
 nb_epochs = 10
 batch_size = 256
@@ -29,72 +31,66 @@ batch_size = 256
 database = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/")
 provider = n2d2.provider.DataProvider(database, [28, 28, 1], batchSize=batch_size)
 
-n2d2.global_variables.default_model = "Frame_CUDA"
-n2d2.global_variables.set_cuda_device(5)
+fc1 = n2d2.cell.Fc(28*28, 50, noBias=True)
+#fc2 = n2d2.cell.Fc(50, 50, noBias=True)
+fc2 = n2d2.cell.Fc(50, 10, noBias=True)
 
 
-"""
-* Second way to define a model.
-* Create cell objects and add them to a sequence after creation. The created object can also be added with the 'add' method
-"""
-"""
-deepNet = n2d2.deepnet.DeepNet()
-deepNet.begin_group("body")
-conv1 = n2d2.cell.Conv(provider, 5, kernelDims=[5, 5], activationFunction=n2d2.activation.Rectifier(), deepNet=deepNet)
-fc = n2d2.cell.Fc(conv1, 10, activationFunction=n2d2.activation.Linear())
-deepNet.end_group()
-deepNet.begin_group("head")
-softmax = n2d2.cell.Softmax(fc, withLoss=True)
-deepNet.end_group()
+fc1.N2D2().exportFreeParameters("exported_parameters")
 
-print(deepNet)
-"""
+loss_function = n2d2.application.CrossEntropyClassifier(provider)
 
-"""
-* First way to define a model.
-* Pass cells directly to each other
-"""
+provider.set_partition("Learn")
 
-x = n2d2.cell.Conv(provider, 5, kernelDims=[5, 5], activationFunction=n2d2.activation.Rectifier())
-x = n2d2.cell.Fc(x, 10, activationFunction=n2d2.activation.Linear())
-softmax = n2d2.cell.Softmax(x, withLoss=True)
+#input_provider = n2d2.provider.Input([batch_size, 1, 28, 28])
 
-model = softmax.get_deepnet()
 
-classifier = n2d2.application.Classifier(provider, model)
-
-print(model)
 
 for epoch in range(nb_epochs):
 
     print("\n### Train Epoch: " + str(epoch) + " ###")
 
-    classifier.set_mode('Learn')
-
     for i in range(math.ceil(database.get_nb_stimuli('Learn')/batch_size)):
 
-        classifier.read_random_batch()
+        #x = n2d2.Tensor([batch_size, 1, 28, 28], value=1.0)
+        #x = input_provider(x)
 
-        classifier.process()
+        x = provider.read_random_batch()
+        x = fc1(x)
+        x = fc2(x)
 
-        classifier.optimize()
+        x = loss_function(x)
+
+        #print(x.get_deepnet())
+
+        #print(id(x.get_deepnet().N2D2()))
+
+        x.back_propagate()
+
+        fc1.update()
+        fc2.update()
 
         print("Example: " + str(i*batch_size) + ", loss: "
-              + "{0:.3f}".format(classifier.get_current_loss()), end='\r')
+              + "{0:.3f}".format(x.tensor[0]), end='\r')
 
 print("\n")
 
-classifier.set_mode('Test')
+provider.set_partition('Test')
+
+fc1.test()
+fc2.test()
 
 for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test')/batch_size)):
     batch_idx = i*batch_size
 
-    classifier.read_batch(idx=batch_idx)
-
-    classifier.process()
+    x = provider.read_batch(idx=batch_idx)
+    #x = tensor_placeholder(x)
+    x = fc1(x)
+    x = fc2(x)
+    x = loss_function(x)
 
     print("Example: " + str(i * batch_size) + ", test success: "
-          + "{0:.2f}".format(100 * classifier.get_average_success()) + "%", end='\r')
+          + "{0:.2f}".format(100 * loss_function.get_average_success()) + "%", end='\r')
 
 print("\n")
 

@@ -58,7 +58,7 @@ def pure_n2d2_network():
 
         print("\n### Train Epoch: " + str(epoch) + " ###")
 
-        classifier.set_mode('Learn')
+        classifier.set_partition('Learn')
 
         for i in range(math.ceil(database.get_nb_stimuli('Learn')/batch_size)):
 

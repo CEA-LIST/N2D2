@@ -30,7 +30,6 @@ from n2d2.tensor import *
 import n2d2.model
 
 
-from n2d2.misc import *
 import n2d2.utils
 import n2d2.database 
 import n2d2.cell

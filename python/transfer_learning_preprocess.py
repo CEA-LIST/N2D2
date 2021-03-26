@@ -125,7 +125,7 @@ print("Preprocessing")
 
 saved_features = []
 
-classifier.set_mode('Learn')
+classifier.set_partition('Learn')
 
 for i in range(math.ceil(database.get_nb_stimuli('Learn')/batch_size)):
 
@@ -163,7 +163,7 @@ for epoch in range(args.epochs):
 
     print("\n### Train Epoch: " + str(epoch) + " ###")
 
-    classifier.set_mode('Learn')
+    classifier.set_partition('Learn')
 
     for i, data in enumerate(saved_features):
 
@@ -185,7 +185,7 @@ exit()
 
 print("\n### Test ###")
 
-classifier.set_mode('Test')
+classifier.set_partition('Test')
 
 for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
 

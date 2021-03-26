@@ -408,7 +408,7 @@ class Fc(Cell):
 
         self.propagate(self._inference)
 
-        return n2d2.tensor.GraphTensor(n2d2.Tensor(self.get_outputs().dims(), N2D2_tensor=self.get_outputs()), self)
+        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self.get_outputs()), self)
 
     # TODO: This is not working as expected because solvers are copied in a vector at cell initialization.
     #  setWeightsSolver sets only the solver to be copied but does not modify after cell initialization
@@ -487,7 +487,7 @@ class Softmax(Cell):
 
         self.propagate(self._inference)
 
-        return n2d2.tensor.GraphTensor(n2d2.Tensor(self.get_outputs().dims(), N2D2_tensor=self.get_outputs()), self)
+        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self.get_outputs()), self)
 
 
 

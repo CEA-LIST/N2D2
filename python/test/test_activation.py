@@ -35,61 +35,22 @@ If you need more information please check : https://docs.python.org/3/library/un
 '''
 
 import unittest
+import n2d2
+import N2D2
 
-class test_name(unittest.TestCase):
-    """
-    The class needs to inherit unittest.TestCase, the name doesn't matter and the class doesn't need to be instantiated.
-    """
+class test_Linear(unittest.TestCase):
 
     def setUp(self):
-        """
-        Method called before each test
-        """
-        pass
+        self.input = n2d2.provider.TensorPlaceholder(n2d2.CudaTensor([1, 1, 1, 1]))
+        self.cell = n2d2.cell.Activation(self.input, activationFunction=n2d2.activation.Linear(),from_arguments=False)
+        
 
     def tearDown(self):
-        """
-        Method called after a test, even if it failed.
-        Can be used to clean variables
-        """
         pass
 
-    def test_X(self):
-        """
-        Method called to test a functionality. It needs to be named test_* to be called.
-        """
-
-        """
-        To test the functions you can use one of the following method :
-        - self.assertEqual(a, b)
-        - self.assertNotEqual(a, b)
-        - self.assertTrue(a)
-        - self.assertFalse(a)
-        - self.assertIs(a, b)
-        - self.assertIsNot(a, b)
-        - self.assertIsNotNone(a)
-        - self.assertIn(a, b)
-        - self.assertNotIn(a, b)
-        - self.assertIsInstance(a, b)
-        """
-
-        """
-        You can use the following decorator : 
-        - @unittest.skip(display_text)
-        - @unittest.skipIf(cond, display_text)
-        - @unittest.skipUnless(cond, display_text)
-        - @unittest.expectedFailure()
-        """
-
-        """
-        You can test that a function raises error by putting it in a block :
-        with self.assertRaises(TypeError): 
-        You can replace TypeError by the type of message you are expecting
-        """
+    def test_output(self):
+        
         pass
 
 if __name__ == '__main__':
-    """
-    You need to add this line for the tests to be run.
-    """
     unittest.main()
