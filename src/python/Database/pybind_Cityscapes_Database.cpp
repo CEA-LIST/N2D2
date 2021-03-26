@@ -28,7 +28,6 @@
 
 namespace py = pybind11;
 
-// TODO :Solve "Import Error undefined symbol typeinfo for N2D2::Cityscapes_Database" probably caused by a virtual parameter ?
 
 namespace N2D2 {
 void init_Cityscapes_Database(py::module &m) {

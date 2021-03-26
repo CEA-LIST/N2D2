@@ -22,7 +22,7 @@ import N2D2
 import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
 
-# TODO: Make obligatory to pass model and datatype of cell in cell constrcutor
+# TODO: Make obligatory to pass model and datatype of cell in cell constructor
 class ActivationFunction(N2D2_Interface):
 
     def __init__(self, **config_parameters):

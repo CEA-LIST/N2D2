@@ -8,8 +8,7 @@ def _to_n2d2(torch_tensor):
     Convert torch.Tensor -> n2d2.Tensor
     """
     numpy_tensor = torch_tensor.cpu().detach().numpy()
-    n2d2_tensor = tensor.Tensor([3, 3], defaultDataType=float, cuda=torch_tensor.is_cuda)
-    n2d2_tensor.from_numpy(numpy_tensor)
+    n2d2_tensor = tensor.Tensor.from_numpy(numpy_tensor)
     return n2d2_tensor
 
 def _to_torch(N2D2_tensor):
@@ -255,8 +254,6 @@ class DeepNetN2D2(torch.nn.Module):
 
                 N2D2_outputs = self._N2D2.getCell_Frame_Top(self.last_cell.getName()).getOutputs() 
                 N2D2_outputs.synchronizeDToH()
-                # TODO: N2D2_ouput can be a Tensor_CUDA, there is currently no check for this but if one is done, 
-                # this part can cause a bug.
                 outputs = _to_torch(N2D2_outputs)
                 # The conversion back to pytorch can alter the type so we need to set it back
                 outputs = outputs.to(dtype=inputs.dtype)
@@ -273,7 +270,6 @@ class DeepNetN2D2(torch.nn.Module):
                 self._N2D2.backPropagate([])
                 self._N2D2.update([])
                 # input(self.diffout)
-                # TODO :  at the moment return no gradient because the last cell is connected to nothing 
                 diffOutput = self._N2D2.getCell_Frame_Top(self.first_cell.getName()).getDiffOutputs()
                 outputs = _to_torch(diffOutput)
                 outputs = torch.mul(outputs, -1/self.batch_size)

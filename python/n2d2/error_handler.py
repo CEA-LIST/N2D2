@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-# TODO : create error class and rename erro_handler to something shorter
 class WrongInputType(TypeError):
     def __init__(self, input_name, input_type, array_of_possible_type):
         """

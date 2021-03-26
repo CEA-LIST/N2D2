@@ -47,12 +47,12 @@ class test_provider(unittest.TestCase):
             self.assertEqual(i, 0)
         self.provider.read_random_batch(partition='Test')
         input_tensor = self.provider.get_data()
-        vide = True
+        empty = True
         for i in input_tensor:
             if i != 0:
-                vide = False
+                empty = False
                 break
-        self.assertFalse(vide)
+        self.assertFalse(empty)
 
     def test_read_batch(self):
         input_tensor = self.provider.get_data()
