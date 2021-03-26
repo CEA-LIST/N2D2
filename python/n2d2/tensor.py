@@ -24,10 +24,10 @@ from n2d2 import error_handler
 from functools import reduce
 
 hard_coded_type = {
-    "f":float,
-    "float":float,
-    "i":int,
-    "int":int,
+    "f": float,
+    "float": float,
+    "i": int,
+    "int": int,
 }
 
 
@@ -205,7 +205,7 @@ class Tensor():
         except ImportError:
             raise ImportError("Numpy is not installed !")
         if not isinstance(np_array, ndarray):
-            raise n2d2.error_handler.WrongInputType("np_array", type(np_array), ["numpy.array"])
+            raise error_handler.WrongInputType("np_array", type(np_array), ["numpy.array"])
 
         np_array = np_array.reshape([d for d in reversed(np_array.shape)]) 
         n2d2_tensor = cls([])
@@ -231,7 +231,7 @@ class Tensor():
     @classmethod
     def from_N2D2(cls, N2D2_Tensor):
         if not isinstance(N2D2_Tensor, N2D2.BaseTensor):
-            raise n2d2.error_handler.WrongInputType("N2D2_Tensor", str(type(N2D2_Tensor), [str(N2D2.BaseTensor)]))
+            raise error_handler.WrongInputType("N2D2_Tensor", str(type(N2D2_Tensor), [str(N2D2.BaseTensor)]))
         n2d2_tensor = cls([])
         n2d2_tensor._tensor = N2D2_Tensor
         n2d2_tensor._dataType = hard_coded_type[N2D2_Tensor.getTypeName()]
@@ -254,7 +254,7 @@ class Tensor():
         elif isinstance(index, slice):
             self._tensor[index] = value
         else:
-            raise n2d2.error_handler.WrongInputType("index", type(index), [str(list), str(tuple), str(float), str(int), str(slice)])
+            raise error_handler.WrongInputType("index", type(index), [str(list), str(tuple), str(float), str(int), str(slice)])
 
     def __getitem__(self, index):
         """
@@ -269,7 +269,7 @@ class Tensor():
         elif isinstance(index, int) or isinstance(index, float):
             value = self._tensor[int(index)]
         else:
-            raise n2d2.error_handler.WrongInputType("index", type(index), [str(list), str(tuple), str(float), str(int)])
+            raise error_handler.WrongInputType("index", type(index), [str(list), str(tuple), str(float), str(int)])
         return value
         
     def __len__(self):
@@ -297,4 +297,20 @@ class Tensor():
 
     def __str__(self):
         return str(self._tensor)
-    
+
+
+class GraphTensor:
+    def __init__(self, tensor, cell):
+        self.tensor = tensor
+        self.cell = cell
+
+    def dims(self):
+        return self.tensor.dims()
+
+    def get_deepnet(self):
+        return self.cell.get_deepnet()
+
+    def back_propagate(self):
+        # TODO: Add leaf node check
+        self.cell.get_deepnet().back_propagate()
+

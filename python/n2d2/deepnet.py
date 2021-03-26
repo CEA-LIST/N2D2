@@ -30,7 +30,7 @@ from n2d2.n2d2_interface import N2D2_Interface
 
 class DeepNet(N2D2_Interface):
 
-    def __init__(self, provider, from_parameters=True, **config_parameters):
+    def __init__(self, from_parameters=True, **config_parameters):
         N2D2_Interface.__init__(self, **config_parameters)
 
         if not 'name' in self._config_parameters:
@@ -41,7 +41,7 @@ class DeepNet(N2D2_Interface):
             self._create_from_parameters()
 
         self._groups = Group(self._config_parameters['name'])
-        self.set_provider(provider)
+        #self.set_provider(provider)
         self._current_group = self._groups
         self._group_dict = {self._config_parameters['name']: self._groups}
         self._group_counter = 1
@@ -69,9 +69,13 @@ class DeepNet(N2D2_Interface):
         self._set_N2D2_parameters(self._config_parameters)
 
     @classmethod
-    def create_from_N2D2_object(cls, N2D2_object):
+    def create_from_N2D2_object(cls, provider, N2D2_object):
+        if not provider.dims() == N2D2_object.getStimuliProvider().getData().dims():
+            raise RuntimeError("N2D2 object has input dimensions " + str(N2D2_object.getStimuliProvider().getData().dims()) +
+                               " while given provider has dimensions " + str(provider.dims()))
         deepnet = cls(from_parameters=False, **N2D2_Interface._load_N2D2_parameters(N2D2_object))
         deepnet._N2D2_object = N2D2_object
+        deepnet.set_provider(provider)
         deepnet._network = deepnet._N2D2_object.getNetwork()
 
         cells = deepnet._N2D2_object.getCells()
@@ -79,24 +83,22 @@ class DeepNet(N2D2_Interface):
         if not layers[0][0] == "env":
             print("Is env:" + layers[0][0])
             raise RuntimeError("First layer of N2D2 deepnet is not a StimuliProvider. You may be skipping cells")
-        for layer in layers[1:]:
+        for idx, layer in enumerate(layers[1:]):
             if len(layer) > 1:
                 deepnet.begin_group()
                 for cell in layer:
                     N2D2_cell = cells[cell]
-                    n2d2_parents = []
-                    for parent in N2D2_cell.getParentsCells():
-                        n2d2_parents.append(deepnet.get_cells()[parent.getName()])
-                    n2d2.converter.cell_converter(n2d2_parents, N2D2_cell, deepnet)
+                    n2d2_cell = n2d2.converter.cell_converter(N2D2_cell, deepnet)
+                    if idx == 0:
+                        n2d2_cell.clear_input() # Remove old stimuli provider
+                        n2d2_cell.add_input(n2d2.GraphTensor(None, provider))
                 deepnet.end_group()
             else:
                 N2D2_cell = cells[layer[0]]
-                n2d2_parents = []
-                for parent in N2D2_cell.getParentsCells():
-                    # Necessary because N2D2 returns [None] if no parent cells
-                    if parent is not None:
-                        n2d2_parents.append(deepnet.get_cells()[parent.getName()])
-                n2d2.converter.cell_converter(n2d2_parents, N2D2_cell, deepnet)
+                n2d2_cell = n2d2.converter.cell_converter(N2D2_cell, deepnet)
+                if idx == 0:
+                    n2d2_cell.clear_input()  # Remove old stimuli provider
+                    n2d2_cell.add_input(n2d2.GraphTensor(None, provider))
         return deepnet
 
 
@@ -123,7 +125,7 @@ class DeepNet(N2D2_Interface):
             ini_parser.load(ini_file)
         ini_parser.currentSection("onnx", True)
         N2D2_deepnet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, ini_parser, N2D2_deepnet)
-        n2d2_deepnet = DeepNet.create_from_N2D2_object(N2D2_deepnet)
+        n2d2_deepnet = DeepNet.create_from_N2D2_object(provider, N2D2_deepnet)
         return n2d2_deepnet
 
     @classmethod
@@ -135,9 +137,10 @@ class DeepNet(N2D2_Interface):
         """
         n2d2_deepnet = DeepNet.create_from_N2D2_object(N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path))
         return n2d2_deepnet
+    
 
-    def propagate(self, inference=False):
-        self._N2D2_object.propagate(inference)
+    def propagate(self):
+        self._N2D2_object.propagate(self._inference)
 
     def back_propagate(self):
         self._N2D2_object.backPropagate()
@@ -151,6 +154,9 @@ class DeepNet(N2D2_Interface):
     def set_provider(self, provider):
         self._provider = provider
         self._N2D2_object.setStimuliProvider(provider.N2D2())
+
+    def get_provider(self):
+        return self._provider
 
     def get_cells(self):
         return self._groups.get_cells()
@@ -194,6 +200,9 @@ class Group:
         self._parent_group = parent_group
 
     def add(self, cell):
+        if cell.get_name() in self.get_cells():
+            raise RuntimeError("Cell with name '" + cell.get_name() + "' already exists in group '" + self._name + "'. "
+                               "Are you trying to call the same cell twice? Cyclic graphs are not supported.")
         self._sequence.append(cell)
 
     def __len__(self):

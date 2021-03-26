@@ -27,20 +27,18 @@ class Target(N2D2_Interface):
 
     """Provider is not a parameter in the INI file in the case of Target class,
     but usually inferred from the deepnet in N2D2. Name and Cell are parts of the section name"""
-    def __init__(self, cell, provider, **config_parameters):
+    def __init__(self, **config_parameters):
 
         if 'name' in config_parameters:
             name = config_parameters.pop('name')
         else:
-            name = cell.get_name() + ".target"
+            name = "target_" + str(n2d2.global_variables.target_counter)
             n2d2.global_variables.target_counter += 1
 
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._constructor_parameters = {
             'name': name,
-            'cell': cell,
-            'provider': provider
         }
 
     def get_name(self):
@@ -52,44 +50,68 @@ class Target(N2D2_Interface):
     def log_estimated_labels_json(self, dir_name, **kwargs):
         self._N2D2_object.logEstimatedLabelsJSON(dir_name, **kwargs)
 
+
 class Score(Target):
 
-    def __init__(self, cell, provider, **config_parameters):
+    def __init__(self, provider, **config_parameters):
 
-        Target.__init__(self, cell, provider, **config_parameters)
+        Target.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['targetValue', 'defaultValue', 'topN', 'labelsMapping', 'createMissingLabels'])
-        self._N2D2_object = N2D2.TargetScore(self._constructor_parameters['name'],
-                                             self._constructor_parameters['cell'].N2D2(),
-                                             self._constructor_parameters['provider'].N2D2(),
-                                             **self._optional_constructor_arguments)
-        self._set_N2D2_parameters(self._config_parameters)
+
+        self._provider = provider
 
 
-    def provide_targets(self, partition):
-        self._N2D2_object.provideTargets(N2D2.Database.StimuliSet.__members__[partition])
 
-    def process(self, partition):
-        self._N2D2_object.process(N2D2.Database.StimuliSet.__members__[partition])
+    def __call__(self, inputs):
 
-    def get_average_success(self, partition, window=0):
+        if self._N2D2_object is None:
+            #self._provider = inputs.deepnet.get_provider()
+            cell = inputs.cell
+            self._N2D2_object = N2D2.TargetScore(self._constructor_parameters['name'],
+                                                 cell.N2D2(),
+                                                 self._provider.N2D2(),
+                                                 **self._optional_constructor_arguments)
+
+            self._set_N2D2_parameters(self._config_parameters)
+
+        self.provide_targets()
+        self.process()
+
+
+    def provide_targets(self):
+        self._N2D2_object.provideTargets(self._provider.get_partition())
+
+    def process(self):
+        self._N2D2_object.process(self._provider.get_partition())
+
+    def get_average_success(self, window=0):
         if not self._N2D2_object.getTargetTopN() == 1:
             raise RuntimeWarning("TopN != 1. You may want to use get_average_top_n_success()?")
-        return self._N2D2_object.getAverageSuccess(N2D2.Database.StimuliSet.__members__[partition], window)
+        return self._N2D2_object.getAverageSuccess(self._provider.get_partition(), window)
 
-    def clear_success(self, partition):
-        self._N2D2_object.clearSuccess(N2D2.Database.StimuliSet.__members__[partition])
+    def clear_success(self):
+        self._N2D2_object.clearSuccess(self._provider.get_partition())
+
+    def log_confusionMatrix(self, path):
+        self._N2D2_object.logConfusionMatrix(path, self._provider.get_partition())
+
+    def log_success(self, path):
+        """
+        Save a graph of the loss and the validation score as a function of the step number.
+        """
+        self._N2D2_object.logSuccess(path, self._provider.get_partition())
 
 
     """This only works if TopN > 1, otherwise it returns 0!"""
-    def get_average_top_n_success(self, partition, window=0):
+    def get_average_top_n_success(self, window=0):
         if self._N2D2_object.getTargetTopN() == 1:
             raise RuntimeWarning("TopN == 1, returns 0. You may want to use get_average_success()?")
-        return self._N2D2_object.getAverageTopNSuccess(N2D2.Database.StimuliSet.__members__[partition], window)
+        return self._N2D2_object.getAverageTopNSuccess(self._provider.get_partition(), window)
 
-    def get_average_score(self, partition, metric):
+    def get_average_score(self, metric):
         return self._N2D2_object.getAverageScore(
-            N2D2.Database.StimuliSet.__members__[partition],
+            self._provider.get_partition(),
             N2D2.ConfusionTableMetric.__members__[metric])
 
 

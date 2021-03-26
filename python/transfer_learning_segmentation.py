@@ -167,7 +167,7 @@ for epoch in range(args.epochs):
 
     print("\n### Train Epoch: " + str(epoch) + " ###")
 
-    segmentation_decoder.set_mode('Learn')
+    segmentation_decoder.set_partition('Learn')
 
     for i in range(math.ceil(database.get_nb_stimuli('Learn') / batch_size)):
 
@@ -213,7 +213,7 @@ for epoch in range(args.epochs):
 
 print("\n### Final Test ###")
 
-segmentation_decoder.set_mode('Test')
+segmentation_decoder.set_partition('Test')
 
 for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
 

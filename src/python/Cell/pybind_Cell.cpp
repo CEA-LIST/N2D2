@@ -143,6 +143,10 @@ void init_Cell(py::module &m) {
     R"mydelimiter(
      Initialize the state of the cell (e.g. weights random initialization)
     )mydelimiter")
+
+    .def("initializeParameters", &Cell::initializeParameters, py::arg("inputDimZ"), py::arg("nbInputs"))
+    .def("initializeDataDependent", &Cell::initializeParameters)
+
     .def("save", &Cell::save, py::arg("dirName"),    
     R"mydelimiter(
      Save cell configuration and free parameters to a directory
@@ -212,8 +216,8 @@ void init_Cell(py::module &m) {
     // .def("getChannelsWidth", &Cell::getChannelsWidth)
     // .def("getChannelsHeight", &Cell::getChannelsHeight)
     // .def("getInputsDim", &Cell::getInputsDim, py::arg("dim"))
-    // .def("getInputsDims", &Cell::getInputsDims)
-    // .def("getInputsSize", &Cell::getInputsSize)
+    .def("getInputsDims", &Cell::getInputsDims)
+    .def("getInputsSize", &Cell::getInputsSize)
     .def("getNbOutputs", &Cell::getNbOutputs,
     R"mydelimiter(
      Returns number of output maps in the cell (or number of outputs for 1D cells)

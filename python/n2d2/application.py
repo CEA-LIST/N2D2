@@ -22,64 +22,32 @@
 import n2d2
 import N2D2
 
-# TODO: Make abstract
-class Application:
-    def __init__(self, provider, model):
-        self._deepnet = model
-        self._provider = provider
-        self._mode = 'Test'
 
 
-   
+class CrossEntropyClassifier:
+    def __init__(self, provider, **target_config_parameters):
+        self._softmax = n2d2.cell.Softmax(withLoss=True)
+        self._target = n2d2.target.Score(provider, **target_config_parameters)
 
-class Classifier(Application):
-    def __init__(self, provider, deepnet, **target_config_parameters):
-        deepnet_endpoint = deepnet.get_last()
-        if not isinstance(deepnet_endpoint, n2d2.cell.Softmax):
-            raise ValueError("The deepnet endpoint is not a softmax cell, but object of time " + str(type(deepnet_endpoint)))
-        Application.__init__(self, provider, deepnet)
+    def __call__(self, inputs):
+        x = self._softmax(inputs)
+        self._target(x)
+        #self._target.provide_targets()
+        #self._target.process()
 
-        self._target = n2d2.target.Score(deepnet_endpoint,
-                                         self._provider,
-                                         **target_config_parameters)
+        loss = n2d2.Tensor(dims=[1], value=self.get_current_loss())
+
+        return n2d2.tensor.GraphTensor(loss, self._softmax)
 
 
     def get_average_success(self, window=0):
-        return self._target.get_average_success(partition=self._mode, window=window)
+        return self._target.get_average_success(window=window)
 
     def clear_success(self):
-        self._target.clear_success(partition=self._mode)
+        self._target.clear_success()
 
     def get_average_score(self, metric):
-        return self._target.get_average_score(partition=self._mode, metric=metric)
-
-    def set_mode(self, mode):
-        if mode not in N2D2.Database.StimuliSet.__members__.keys():
-            raise n2d2.error_handler.WrongValue("mode", mode, " ".join(N2D2.Database.StimuliSet.__members__.keys()))
-        self._mode = mode
-
-    def read_random_batch(self):
-        self._provider.read_random_batch(partition=self._mode)
-
-    def read_batch(self, idx):
-        self._provider.read_batch(partition=self._mode, idx=idx)
-
-    def process(self):
-        # Set target of cell
-        self._target.provide_targets(partition=self._mode)
-
-        # Propagate
-        self._deepnet.propagate(inference=(self._mode == 'Test' or self._mode == 'Validation'))
-
-        # Calculate loss and error
-        self._target.process(partition=self._mode)
-
-    def optimize(self):
-        # Backpropagate
-        self._deepnet.back_propagate()
-
-        # Update parameters
-        self._deepnet.update()
+        return self._target.get_average_score(metric=metric)
 
     def get_loss(self, saveFile=""):
         """
@@ -99,25 +67,18 @@ class Classifier(Application):
     def get_current_loss(self):
         return self._target.N2D2().getLoss()[-1]
 
-    def recognitionRate(self):
+    def recognition_rate(self):
         """
         return the recognition rate
         """
-        set = N2D2.Database.StimuliSet.__members__[self._mode]
-        return self._target.N2D2().getAverageSuccess(set)
+        return self._target.get_average_success()
 
-    def logConfusionMatrix(self, path):
-        assert self._provider and self._mode and self._target
-        set = N2D2.Database.StimuliSet.__members__[self._mode]
-        self._target.N2D2().logConfusionMatrix(path, set)
 
-    def logSuccess(self, path):
+    def log_success(self, path):
         """
         Save a graph of the loss and the validation score as a function of the step number.
         """
-        assert self._provider and self._mode and self._target
-        set = N2D2.Database.StimuliSet.__members__[self._mode]
-        self._target.N2D2().logSuccess(path, set)
+        self._target.log_success(path)
 
     def log_estimated_labels(self, path):
         self._target.log_estimated_labels(path)
@@ -136,22 +97,3 @@ class Classifier(Application):
     #         string += "\n"
     #     print(string)
 
-
-"""
-class Extractor(Application):
-    def __init__(self, provider, cell):
-        deepnet_endpoint = cell.get_last()
-        if not isinstance(deepnet_endpoint, n2d2.cell.Cell):
-            raise RuntimeError("The deepnet endpoint is not a single cell")
-        Application.__init__(self, provider, deepnet_endpoint.get_deepnet())
-
-    def read_random_batch(self, partition):
-        self._provider.read_random_batch(partition=partition)
-
-    def read_batch(self, partition, idx):
-        self._provider.read_batch(partition=partition, idx=idx)
-
-    def process(self):
-        # Propagate
-        self._deepnet.propagate(inference=True)
-"""

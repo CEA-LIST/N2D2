@@ -35,6 +35,7 @@ def conv_config_bn():
     return ConfigSection(activationFunction=Linear(), weightsFiller=He(), noBias=True)
 
 
+
 def create_mobilenetv1_extractor(inputs, alpha):
 
     if isinstance(inputs, n2d2.provider.Provider):

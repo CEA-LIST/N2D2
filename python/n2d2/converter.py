@@ -40,7 +40,7 @@ cell_dict = {
 
 
 # TODO: Move to n2d2.cell
-def cell_converter(n2d2_parent_cells, N2D2_cell, n2d2_deepnet):
+def cell_converter(N2D2_cell, n2d2_deepnet):
     """
     :param N2D2_cell: N2D2 cell to convert.
     :type N2D2_cell: :py:class:`N2D2.Cell`
@@ -73,7 +73,7 @@ def cell_converter(n2d2_parent_cells, N2D2_cell, n2d2_deepnet):
     # Creating n2d2 object.
     print("cell_type: ", cell_type)
 
-    n2d2_cell = cell_dict[cell_type].create_from_N2D2_object(n2d2_parent_cells, N2D2_cell, n2d2_deepnet)
+    n2d2_cell = cell_dict[cell_type].create_from_N2D2_object(N2D2_cell, n2d2_deepnet)
 
     return n2d2_cell
 

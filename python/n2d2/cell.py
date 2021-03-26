@@ -29,7 +29,7 @@ class Cell(N2D2_Interface):
 
     _type = None
 
-    def __init__(self, inputs, nbOutputs, **config_parameters):
+    def __init__(self, nbOutputs, **config_parameters):
 
         if 'name' in config_parameters:
             self._name = config_parameters.pop('name')
@@ -38,11 +38,6 @@ class Cell(N2D2_Interface):
         n2d2.global_variables.cell_counter += 1
 
         self._inputs = []
-
-        if 'deepNet' in config_parameters:
-            self._deepnet = config_parameters.pop('deepNet')
-        else:
-            self._deepnet = self._infer_deepnet(inputs)
 
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')
@@ -63,7 +58,16 @@ class Cell(N2D2_Interface):
 
         self._connection_parameters = {}
 
+        self._deepnet = None
+        self._inference = False
 
+    def learn(self):
+        self._inference = False
+
+    def test(self):
+        self._inference = True
+
+    """
     def _infer_deepnet(self, inputs):
         if isinstance(inputs, n2d2.deepnet.DeepNet):
             deepnet = inputs
@@ -88,6 +92,30 @@ class Cell(N2D2_Interface):
         else:
             raise TypeError("Object of type " + str(type(inputs)) + " cannot implicitly provide a deepNet to cell.")
         return deepnet
+    """
+
+    def _infer_deepnet(self, inputs):
+        if isinstance(inputs, n2d2.tensor.GraphTensor):
+            deepnet = inputs.cell.get_deepnet()
+            if deepnet is None:
+                deepnet = n2d2.deepnet.DeepNet()
+        elif isinstance(inputs, list):
+            if len(inputs) == 0:
+                raise RuntimeError("List with 0 elements cannot provide a deepNet")
+            else:
+                last_deepnet = None
+                for ipt in inputs:
+                    deepnet = self._infer_deepnet(ipt)
+                    if last_deepnet is not None:
+                        if not id(deepnet) == id(last_deepnet):
+                            raise RuntimeError("Elements of cell input have different deepnets. "
+                                               "Cannot infer implicit deepnet")
+                    last_deepnet = deepnet
+                deepnet = last_deepnet
+        else:
+            raise TypeError("Object of type " + str(type(inputs)) + " cannot implicitly provide a deepNet to cell.")
+        return deepnet
+
 
     def dims(self):
         return self.get_outputs().dims()
@@ -107,11 +135,9 @@ class Cell(N2D2_Interface):
 
 
     def get_type(self):
-        if self._type is None:
-            return self._N2D2_object.getType()
-        else:
-            return self._type
+        return self._type
 
+    """
     def add_input(self, inputs):
         if isinstance(inputs, n2d2.deepnet.DeepNet):
             self.add_input(inputs.get_last())
@@ -123,63 +149,74 @@ class Cell(N2D2_Interface):
             self._inputs.append(inputs)
         else:
             raise TypeError("Cannot add object of type " + str(type(inputs)))
+    """
+
+    def _check_tensor(self, inputs):
+        if isinstance(inputs, list):
+            for cell in inputs:
+                self._check_tensor(cell)
+        elif isinstance(inputs, n2d2.tensor.GraphTensor):
+            input_dims = inputs.tensor.dims()
+            if not self._N2D2_object.getInputsDims() + [self.dims()[3]] == input_dims:
+                raise RuntimeError("Cell '" + self.get_name() + "' was called with input of dim " + str(inputs.tensor.dims())
+                                   + ", but cell input size is " + str(self._N2D2_object.getInputsDims()+ [self.dims()[3]]) +
+                                   ". Inputs dimensions cannot change after first call.")
+        else:
+            raise TypeError("Invalid inputs object of type " + str(type(inputs)))
+        # Check if inputs have same deepnet
+        self._infer_deepnet(inputs)
+
+    def add_input(self, inputs):
+        self._inputs = []
+        if isinstance(inputs, list):
+            parents = []
+            for ipt in inputs:
+                cell = ipt.cell
+                self._link_N2D2_input(cell)
+                self._inputs.append(cell.get_name())
+                parents.append(cell.N2D2())
+            self._deepnet.N2D2().addCell(self._N2D2_object, parents)
+        elif isinstance(inputs, n2d2.tensor.GraphTensor):
+            cell = inputs.cell
+            self._link_N2D2_input(cell)
+            self._inputs.append(cell.get_name())
+            # TODO: N2D2 should check here that the cell does not already exist in the DeepNet
+            if not isinstance(cell, n2d2.provider.Provider):
+                self._deepnet.N2D2().addCell(self._N2D2_object, [cell.N2D2()])
+            else:
+                self._deepnet.N2D2().addCell(self._N2D2_object, [])
+        else:
+            raise TypeError("Cannot add object of type " + str(type(inputs)))
 
 
     """
     Links N2D2 cells tacking into account cell connection parameters
     """
     # TODO: Simply connection parameters
-    # TODO: Add to add_input
     def _link_N2D2_input(self, inputs):
-        if isinstance(inputs, n2d2.tensor.Tensor):
-            # @Johannes : The method to call is addInputBis (to rename ?).
-            # I have renamed this method in the binding because it's not defined in the same file as the other addInput method. 
-            # Thus Pybind overwrite it.
-            # I also changed the the diffOutput Tensor so that it has the good dimensions !
-            # Reminder : shape get the pythonic dimensions and dims give the N2D2 dimensions.
-            # Here you called the n2d2 constructor so you want to have the pythonic dimensions.
-            # If you called the N2D2 constructor you want to use the dims() method. 
-            self._N2D2_object.addInputBis(inputs.N2D2(), n2d2.tensor.Tensor(inputs.shape()).N2D2(), value=0) # TODO: Tested
-        else:
-            if 'mapping' in self._connection_parameters:
-                if isinstance(inputs, n2d2.cell.Cell):
-                    dim_z = inputs.N2D2().getNbOutputs()
-                elif isinstance(inputs, n2d2.provider.Provider):
-                    dim_z = inputs.N2D2().getNbChannels()
-                else:
-                    raise ValueError("Incompatible inputs of type " + str(type(inputs)))
-                self._connection_parameters['mapping'] = self._connection_parameters['mapping'].create_N2D2_mapping(
-                                               dim_z,
-                                               self._N2D2_object.getNbOutputs()
-                                           ).N2D2()
-            self._N2D2_object.addInput(inputs.N2D2(), **self._connection_parameters)
+        if 'mapping' in self._connection_parameters:
+            if isinstance(inputs, n2d2.cell.Cell):
+                dim_z = inputs.N2D2().getNbOutputs()
+            elif isinstance(inputs, n2d2.provider.Provider):
+                dim_z = inputs.N2D2().getNbChannels()
+            else:
+                raise ValueError("Incompatible inputs of type " + str(type(inputs)))
+            self._connection_parameters['mapping'] = self._connection_parameters['mapping'].create_N2D2_mapping(
+                                           dim_z,
+                                           self._N2D2_object.getNbOutputs()
+                                       ).N2D2()
 
-            #if isinstance(inputs, n2d2.provider.Provider):
-            #    self._deepnet.set_provider(inputs)
+        self._N2D2_object.clearInputs() #Necessary to reinitialize input dimensions. TODO: Add dimension check
+        self._N2D2_object.addInput(inputs.N2D2(), **self._connection_parameters)
 
-
-    def _link_to_N2D2_deepnet(self):
-        parents = []
-        for ipt in self.get_inputs():
-            if not isinstance(ipt, n2d2.provider.Provider):
-                parents.append(ipt.get_last().N2D2())
-        self._deepnet.N2D2().addCell(self._N2D2_object, parents)
+        #if isinstance(inputs, n2d2.provider.Provider):
+        #    self._deepnet.set_provider(inputs)
 
 
     def _add_to_graph(self, inputs):
         self.add_input(inputs)
-        self._link_to_N2D2_deepnet()
-        self._N2D2_object.initialize()
+        #self._N2D2_object.initialize()
         self._deepnet.add_to_current_group(self)
-
-
-    """
-    def initialize(self):
-        #self._N2D2_object.clearInputs()
-        #for cell in self._inputs:
-        #    self._link_N2D2_input(cell)
-        self._N2D2_object.initialize()
-    """
 
     def set_activation(self, activation):
         print("Note: Replacing potentially existing activation in cell: " + self.get_name())
@@ -197,6 +234,7 @@ class Cell(N2D2_Interface):
         self._inputs = []
         self._N2D2_object.clearInputs()
 
+    # TODO: Remove these methods to not expose them
     def propagate(self, inference=False):
         self._N2D2_object.propagate(inference)
 
@@ -205,6 +243,8 @@ class Cell(N2D2_Interface):
 
     def update(self):
         self._N2D2_object.update()
+
+
 
     def import_free_parameters(self, fileName, **kwargs):
         print("import " + fileName)
@@ -220,23 +260,13 @@ class Cell(N2D2_Interface):
     def get_nb_outputs(self):
         return self._N2D2_object.getNbOutputs()
 
-    def _sync_inputs_and_parents(self, inputs):
-        parents = self._N2D2_object.getParentsCells()
+    def _sync_inputs_and_parents(self):
+        parents = self._deepnet.N2D2().getParentCells(self.get_name())
         # Necessary because N2D2 returns [None] if no parents
-        # TODO: Somtimes parents contains [None], sometimes []. Why?
-        if len(parents) > 0 and parents[0] is None:
-            parents = []
-        if not len(inputs) == len(parents):
-            raise RuntimeError("Number of given inputs " + str(len(inputs)) +
-                               " is different than number of N2D2 parent cells " +
-                               str(len(self._N2D2_object.getParentsCells())) +
-                               ". Did you provide the correct input cells?")
-
-        for idx, ipt in enumerate(inputs):
-            if not ipt.get_name() == parents[idx].getName():
-                print(
-                    "Warning: input cell name and N2D2 corresponding parent cell name do not match. Are you connecting the right cell?")
-            self._inputs.append(ipt)
+        # TODO: Sometimes parents contains [None], sometimes []. Why?
+        for idx, ipt in enumerate(parents):
+            if ipt is not None:
+                self._inputs.append(parents[idx].getName())
         self._deepnet.add_to_current_group(self)
 
     def __str__(self):
@@ -244,10 +274,10 @@ class Cell(N2D2_Interface):
         output += N2D2_Interface.__str__(self)
         if len(self.get_inputs()) > 0:
             output += "[inputs="
-            for idx, cell in enumerate(self.get_inputs()):
+            for idx, name in enumerate(self.get_inputs()):
                 if idx > 0:
                     output += ", "
-                output += "'" + cell.get_name() + "'"
+                output += "'" + name + "'"
             output += "]"
         else:
             output += "[inputs=[]]"
@@ -257,12 +287,14 @@ class Cell(N2D2_Interface):
 
 class Fc(Cell):
 
+    _type = "Fc"
+
     _cell_constructors = {
             'Frame<float>': N2D2.FcCell_Frame_float,
             'Frame_CUDA<float>': N2D2.FcCell_Frame_CUDA_float,
     }
 
-    def __init__(self, inputs, nbOutputs, from_arguments=True, **config_parameters):
+    def __init__(self, nbInputs, nbOutputs, from_arguments=True, **config_parameters):
         # TODO : Add description for filler and solver.
         """
         :param nbOutputs: Number of outputs of the cell.
@@ -284,16 +316,20 @@ class Fc(Cell):
         if not from_arguments and (nbOutputs is not None or len(config_parameters) > 0):
             raise RuntimeError("N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
         if from_arguments:
-            self._create_from_arguments(inputs, nbOutputs, **config_parameters)
+            self._create_from_arguments(nbInputs, nbOutputs, **config_parameters)
 
 
-    def _create_from_arguments(self, inputs, nbOutputs, **config_parameters):
-        Cell.__init__(self, inputs, nbOutputs, **config_parameters)
+    def _create_from_arguments(self, nbInputs, nbOutputs, **config_parameters):
+        Cell.__init__(self, nbOutputs, **config_parameters)
 
-        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+        self._constructor_arguments.update({
+            'nbInputs': nbInputs,
+        })
+
+        self._N2D2_object = self._cell_constructors[self._model_key](N2D2.DeepNet(n2d2.global_variables.default_net),
                                                                      self.get_name(),
                                                                      self._constructor_arguments['nbOutputs'])
-        """Set connection and mapping parameters"""
+        # Set connection and mapping parameters
         for key in self._config_parameters:
             if key is 'inputOffsetX':
                 self._connection_parameters['x0'] = self._config_parameters.pop('inputOffsetX')
@@ -304,7 +340,7 @@ class Fc(Cell):
             elif key is 'inputHeight':
                 self._connection_parameters['height'] = self._config_parameters.pop('inputHeight')
 
-        """Set and initialize here all complex cell members"""
+        # Set and initialize here all complex cell members
         for key, value in self._config_parameters.items():
             if key is 'activationFunction':
                 self._N2D2_object.setActivation(value.N2D2())
@@ -321,22 +357,27 @@ class Fc(Cell):
             else:
                 self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
 
-        self._add_to_graph(inputs)
+        self._N2D2_object.initializeParameters(nbInputs, 1)
+
+        self._deepnet = None
+
+
 
     @classmethod
-    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
+    def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
 
-        n2d2_cell = cls(inputs, None, from_arguments=False)
+        n2d2_cell = cls(None, None, from_arguments=False)
 
         Cell.__init__(n2d2_cell,
-                      inputs,
                       N2D2_object.getNbOutputs(),
-                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
                       **N2D2_Interface._load_N2D2_parameters(N2D2_object))
 
-        n2d2_cell._N2D2_object = N2D2_object
+        n2d2_cell._constructor_arguments.update({
+            'nbInputs': N2D2_object.getInputsSize(),
+        })
 
+        n2d2_cell._N2D2_object = N2D2_object
 
         # NOTE: No Fillers because existing cell
         # TODO: Add similar methods to Activation/Solver/Quantizer for nice prints
@@ -346,9 +387,28 @@ class Fc(Cell):
         n2d2_cell._config_parameters['weightsSolver'] = n2d2_cell._N2D2_object.getWeightsSolver()
         n2d2_cell._config_parameters['quantizer'] = n2d2_cell._N2D2_object.getQuantizer()
 
-        n2d2_cell._sync_inputs_and_parents(inputs)
+        if n2d2_deepnet is not None:
+            n2d2_cell._deepnet = n2d2_deepnet
+            n2d2_cell._sync_inputs_and_parents()
+        else:
+            n2d2_cell._deepnet = None
+            n2d2_cell._N2D2_object.clearInputs()
 
         return n2d2_cell
+
+
+    def __call__(self, inputs):
+
+        if self._deepnet is not None:
+            self._check_tensor(inputs)
+
+        self._deepnet = self._infer_deepnet(inputs)
+
+        self._add_to_graph(inputs)
+
+        self.propagate(self._inference)
+
+        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self.get_outputs()), self)
 
     # TODO: This is not working as expected because solvers are copied in a vector at cell initialization.
     #  setWeightsSolver sets only the solver to be copied but does not modify after cell initialization
@@ -368,6 +428,93 @@ class Fc(Cell):
 
 
     # TODO: General set_solver that copies solver and does both
+
+
+
+
+
+class Softmax(Cell):
+
+    _type = "Softmax"
+
+    _cell_constructors = {
+        'Frame<float>': N2D2.SoftmaxCell_Frame_float,
+        'Frame_CUDA<float>': N2D2.SoftmaxCell_Frame_CUDA_float,
+        'Frame<double>': N2D2.SoftmaxCell_Frame_double,
+        'Frame_CUDA<double>': N2D2.SoftmaxCell_Frame_CUDA_double,
+    }
+
+    def __init__(self, from_arguments=True, **config_parameters):
+
+        if not from_arguments and len(config_parameters) > 0:
+            raise RuntimeError(
+                "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
+        if from_arguments:
+            self._create_from_arguments(**config_parameters)
+
+    # TODO: Remove 0
+    def _create_from_arguments(self, **config_parameters):
+        Cell.__init__(self, 0, **config_parameters)
+
+    def __call__(self, inputs):
+
+        if self._deepnet is not None:
+            self._check_tensor(inputs)
+
+        self._deepnet = self._infer_deepnet(inputs)
+
+        if self._N2D2_object is None:
+
+            self._constructor_arguments['nbOutputs'] = inputs.dims()[2]
+
+            self._parse_optional_arguments(['withLoss', 'groupSize'])
+            self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+                                                                         self.get_name(),
+                                                                         self._constructor_arguments['nbOutputs'],
+                                                                         **self._optional_constructor_arguments)
+
+            # Delete to avoid print
+            del self._constructor_arguments['nbOutputs']
+
+            """Set and initialize here all complex cell members"""
+            for key, value in self._config_parameters.items():
+                if key is 'activationFunction':
+                    self._N2D2_object.setActivation(value.N2D2())
+                else:
+                    self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
+
+        self._add_to_graph(inputs)
+
+        self.propagate(self._inference)
+
+        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self.get_outputs()), self)
+
+
+
+
+    @classmethod
+    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
+
+        n2d2_cell = cls(inputs, from_arguments=False)
+
+        Cell.__init__(n2d2_cell,
+                      inputs,
+                      N2D2_object.getNbOutputs(),
+                      deepNet=n2d2_deepnet,
+                      name=N2D2_object.getName(),
+                      **N2D2_Interface._load_N2D2_parameters(N2D2_object))
+
+        n2d2_cell._N2D2_object = N2D2_object
+
+        n2d2_cell._optional_constructor_arguments['withLoss'] = n2d2_cell._N2D2_object.getWithLoss()
+        n2d2_cell._optional_constructor_arguments['groupSize'] = n2d2_cell._N2D2_object.getGroupSize()
+
+        n2d2_cell._config_parameters['activationFunction'] = n2d2_cell._N2D2_object.getActivation()
+
+        n2d2_cell._sync_inputs_and_parents(inputs)
+
+        return n2d2_cell
+
 
 
 
@@ -749,71 +896,6 @@ class ElemWise(Cell):
         n2d2_cell._sync_inputs_and_parents(inputs)
 
         return n2d2_cell
-
-
-class Softmax(Cell):
-
-    _cell_constructors = {
-        'Frame<float>': N2D2.SoftmaxCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.SoftmaxCell_Frame_CUDA_float,
-        'Frame<double>': N2D2.SoftmaxCell_Frame_double,
-        'Frame_CUDA<double>': N2D2.SoftmaxCell_Frame_CUDA_double,
-    }
-
-    def __init__(self, inputs,  from_arguments=True, **config_parameters):
-
-        if not from_arguments and len(config_parameters) > 0:
-            raise RuntimeError(
-                "N2D2_object argument give to cell but 'inputs' or 'nbOutputs' or 'config parameters' not None")
-        if from_arguments:
-            self._create_from_arguments(inputs, **config_parameters)
-        
-
-    def _create_from_arguments(self, inputs, **config_parameters):
-        Cell.__init__(self, inputs, inputs.get_nb_outputs(), **config_parameters)
-
-        self._parse_optional_arguments(['withLoss', 'groupSize'])
-        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
-                                                                     self.get_name(),
-                                                                     self._constructor_arguments['nbOutputs'],
-                                                                     **self._optional_constructor_arguments)
-
-        # Delete to avoid print
-        del self._constructor_arguments['nbOutputs']
-
-        """Set and initialize here all complex cell members"""
-        for key, value in self._config_parameters.items():
-            if key is 'activationFunction':
-                self._N2D2_object.setActivation(value.N2D2())
-            else:
-                self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
-
-        self._add_to_graph(inputs)
-
-
-    @classmethod
-    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
-
-        n2d2_cell = cls(inputs, from_arguments=False)
-
-        Cell.__init__(n2d2_cell,
-                      inputs,
-                      N2D2_object.getNbOutputs(),
-                      deepNet=n2d2_deepnet,
-                      name=N2D2_object.getName(),
-                      **N2D2_Interface._load_N2D2_parameters(N2D2_object))
-
-        n2d2_cell._N2D2_object = N2D2_object
-
-        n2d2_cell._optional_constructor_arguments['withLoss'] = n2d2_cell._N2D2_object.getWithLoss()
-        n2d2_cell._optional_constructor_arguments['groupSize'] = n2d2_cell._N2D2_object.getGroupSize()
-
-        n2d2_cell._config_parameters['activationFunction'] = n2d2_cell._N2D2_object.getActivation()
-
-        n2d2_cell._sync_inputs_and_parents(inputs)
-
-        return n2d2_cell
-
 
 
 class Dropout(Cell):

@@ -28,8 +28,17 @@ class Provider(N2D2_Interface):
     def __init__(self, **config_parameters):
         N2D2_Interface.__init__(self, **config_parameters)
 
-    def dims(self):
+        if 'name' in config_parameters:
+            self._name = config_parameters.pop['name']
+        else:
+            self._name = "provider_" + str(n2d2.global_variables.provider_counter)
+        n2d2.global_variables.provider_counter += 1
+
+    def get_size(self):
         return self._N2D2_object.getSize()
+
+    def dims(self):
+        return self._N2D2_object.getData().dims()
 
 
 class DataProvider(Provider):
@@ -44,11 +53,6 @@ class DataProvider(Provider):
             'size': size
         })
 
-        if 'name' in config_parameters:
-            self._name = config_parameters.pop['name']
-        else:
-            self._name = "provider_" + str(n2d2.global_variables.provider_counter)
-        n2d2.global_variables.provider_counter += 1
 
         self._parse_optional_arguments(['batchSize', 'compositeStimuli'])
 
@@ -61,6 +65,16 @@ class DataProvider(Provider):
         self._transformations = []
         self._otf_transformations = []
 
+        self._partition = 'Test'
+
+    def set_partition(self, partition):
+        if partition not in N2D2.Database.StimuliSet.__members__.keys():
+            raise n2d2.error_handler.WrongValue("partition", partition,
+                                                " ".join(N2D2.Database.StimuliSet.__members__.keys()))
+        self._partition = partition
+
+    def get_partition(self):
+        return N2D2.Database.StimuliSet.__members__[self._partition]
 
     def get_name(self):
         """
@@ -83,41 +97,47 @@ class DataProvider(Provider):
         """
         return self._constructor_arguments['database']
 
-    def read_random_batch(self, partition):
+    def get_deepnet(self):
+        return self._deepnet
+
+    def read_random_batch(self):
         """
-        :param partition: Can be one of the following :
+              :param partition: Can be one of the following :
 
-            - "Learn"
+                  - "Learn"
 
-            - "Validation"
+                  - "Validation"
 
-            - "Test"
+                  - "Test"
 
-            - "Unpartitioned"
-        :type partition: str 
+                  - "Unpartitioned"
+              :type partition: str
+              """
+
+        self._deepnet = n2d2.deepnet.DeepNet()
+        self._deepnet.set_provider(self)
+        self._N2D2_object.readRandomBatch(set=self.get_partition())
+        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self._N2D2_object.getData()), self)
+
+    def read_batch(self, idx):
         """
-        if partition not in N2D2.Database.StimuliSet.__members__.keys():
-            raise n2d2.error_handler.WrongValue("partition", partition, " ".join(N2D2.Database.StimuliSet.__members__.keys()))
-        return self._N2D2_object.readRandomBatch(set=N2D2.Database.StimuliSet.__members__[partition])
+               :param partition: Can be one of the following :
 
-    def read_batch(self, partition, idx):
-        """
-        :param partition: Can be one of the following :
+                   - "Learn"
 
-            - "Learn"
+                   - "Validation"
 
-            - "Validation"
+                   - "Test"
 
-            - "Test"
-            
-            - "Unpartitioned"
-        :type partition: str 
-        :param idx: Start index to begin reading the stimuli
-        :type idx: int 
-        """
-        if partition not in N2D2.Database.StimuliSet.__members__.keys():
-            raise n2d2.error_handler.WrongValue("partition", partition, " ".join(N2D2.Database.StimuliSet.__members__.keys()))
-        return self._N2D2_object.readBatch(set=N2D2.Database.StimuliSet.__members__[partition], startIndex=idx)
+                   - "Unpartitioned"
+               :type partition: str
+               :param idx: Start index to begin reading the stimuli
+               :type idx: int
+               """
+        self._deepnet = n2d2.deepnet.DeepNet()
+        self._deepnet.set_provider(self)
+        self._N2D2_object.readBatch(set=self.get_partition(), startIndex=idx)
+        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self._N2D2_object.getData()), self)
 
     def add_transformation(self, transformation):
         if isinstance(transformation, n2d2.transform.Composite):
@@ -149,38 +169,93 @@ class DataProvider(Provider):
 
 
 class TensorPlaceholder(Provider):
-    def __init__(self, inputs, name=None):
-        #Provider.__init__(self)
+    def __init__(self, inputs, **config_parameters):
+        Provider.__init__(self, **config_parameters)
 
-        if name is not None:
-            self._name = name
+        if isinstance(inputs, n2d2.tensor.Tensor):
+            self._tensor = inputs
         else:
-            self._name = "provider_" + str(n2d2.global_variables.provider_counter)
-        n2d2.global_variables.provider_counter += 1
-
-        # TODO: Add cell and DeepNet input
-        if isinstance(inputs, list):
-            self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
-                                                     size=inputs[0:2],
-                                                     batchSize=inputs[3])
-        elif isinstance(inputs, n2d2.tensor.Tensor) or isinstance(inputs, N2D2.BaseTensor):
-            dims = [inputs.dimX(), inputs.dimY(), inputs.dimZ()]
-            self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
-                                                     size=dims,
-                                                     batchSize=inputs.dimB())
-            if isinstance(inputs, n2d2.tensor.Tensor):
-                inputs = inputs._tensor
-            self.set_streamed_tensor(inputs)
-        else:
-            raise n2d2.error_handler.WrongInputType("inputs", type(inputs), [type(list), 'n2d2.tensor.Tensor', 'N2D2.BaseTensor'])
+            raise ValueError("Wrong input of type " + str(type(inputs)))
+            # n2d2.error_handler.wrong_input_type("inputs", type(inputs), [type(list), 'n2d2.tensor.Tensor', 'N2D2.BaseTensor'])
+        dims = [self._tensor.N2D2().dimX(), self._tensor.N2D2().dimY(), self._tensor.N2D2().dimZ()]
+        self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
+                                                 size=dims,
+                                                 batchSize=self._tensor.N2D2().dimB())
         self._set_N2D2_parameter('StreamTensor', True)
+        self._N2D2_object.setStreamedTensor(self._tensor.N2D2())
+
+        self._deepnet = n2d2.deepnet.DeepNet()
+        self._deepnet.set_provider(self)
+
 
     def set_streamed_tensor(self, tensor):
         self._N2D2_object.setStreamedTensor(tensor)
+
+    def __call__(self):
+        return n2d2.tensor.GraphTensor(self._tensor, self)
 
     def get_name(self):
         return self._name
 
     def __str__(self):
         return "'" + self.get_name() + "' TensorPlaceholder"
+
+
+
+
+
+class Input(Provider):
+    def __init__(self, dims, model=None, **config_parameters):
+        Provider.__init__(self, **config_parameters)
+
+        if model is None:
+            model = n2d2.global_variables.default_model
+
+        if model == "Frame":
+            self._tensor = n2d2.Tensor(dims)
+        elif model == "Frame_CUDA":
+            self._tensor = n2d2.CudaTensor(dims)
+        else:
+            ValueError("Invalid model '" + model + "'")
+
+        # n2d2.error_handler.wrong_input_type("inputs", type(inputs), [type(list), 'n2d2.tensor.Tensor', 'N2D2.BaseTensor'])
+        provider_dims = [self._tensor.N2D2().dimX(), self._tensor.N2D2().dimY(), self._tensor.N2D2().dimZ()]
+        self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
+                                                 size=provider_dims,
+                                                 batchSize=self._tensor.N2D2().dimB())
+        self._set_N2D2_parameter('StreamTensor', True)
+        self._N2D2_object.setStreamedTensor(self._tensor.N2D2())
+
+        self._deepnet = n2d2.deepnet.DeepNet()
+        self._deepnet.set_provider(self)
+
+
+    def set_streamed_tensor(self, tensor):
+        self._N2D2_object.setStreamedTensor(tensor)
+
+    def __call__(self, inputs):
+
+        if not self.dims() == inputs.dims():
+            raise RuntimeError("Received input tensor with dims " + str(inputs.dims()) +
+                               " but object dims are " + str(self.dims()) +
+                               ". Input dimensions cannot change after initialization")
+
+        if "Cuda" in str(type(self._tensor)):
+            if not "Cuda" in str(type(inputs)):
+                raise RuntimeError("'inputs' argument is not a cuda tensor, but internal tensor is.")
+            self._tensor.N2D2().synchronizeHToD()
+        else:
+            if "Cuda" in str(type(inputs)):
+                raise RuntimeError("inputs is a cuda tensor, but internal tensor is not.")
+
+        self._N2D2_object.setStreamedTensor(inputs.N2D2())
+
+
+        return n2d2.tensor.GraphTensor(self._tensor, self)
+
+    def get_name(self):
+        return self._name
+
+    def __str__(self):
+        return "'" + self.get_name() + "' Input"
 

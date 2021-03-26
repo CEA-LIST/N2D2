@@ -194,6 +194,88 @@ void N2D2::ConvCell_Frame<T>::initialize()
     }
 }
 
+
+
+template <class T>
+void N2D2::ConvCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs)
+{
+    if (!mNoBias) {
+        if (mBias->empty()) {
+            mBias->resize({1, 1, getNbOutputs(), 1});
+            mBiasFiller->apply((*mBias));
+        }
+        else {
+            if (mBias->dimX() != 1 || mBias->dimY() != 1
+                || mBias->dimZ() != getNbOutputs() || mBias->dimB() != 1)
+            {
+                throw std::runtime_error("ConvCell_Frame<T>::initialize(): in "
+                    "cell " + mName + ", wrong size for shared bias");
+            }
+        }
+    }
+
+    for (unsigned int k = 0, size = nbInputs; k < size; ++k) {
+        if (k < mWeightsSolvers.size())
+            continue;  // already initialized, skip!
+
+        mWeightsSolvers.push_back(mWeightsSolver->clone());
+
+        typename std::map<unsigned int,
+            std::pair<Interface<T>*, unsigned int> >::iterator
+                it = mExtSharedSynapses.find(k);
+
+        std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
+        kernelDims.push_back(inputDimZ);
+        kernelDims.push_back(getNbOutputs());
+
+        if (it != mExtSharedSynapses.end()) {
+            Tensor<T>* extWeights
+                = &((*(*it).second.first)[(*it).second.second]);
+
+            if (!std::equal(kernelDims.begin(), kernelDims.end(),
+                            extWeights->dims().begin()))
+            {
+                std::stringstream errorStr;
+                errorStr << "ConvCell_Frame<T>::initialize(): in cell "
+                    << mName << ", mismatch between external weights dim. ("
+                    << extWeights->dims() << ") and expected dim. ("
+                    << kernelDims << ")";
+
+                throw std::runtime_error(errorStr.str());
+            }
+
+            mSharedSynapses.push_back(extWeights);
+        }
+        else {
+            mSharedSynapses.push_back(new Tensor<T>(kernelDims), 0);
+            mWeightsFiller->apply(mSharedSynapses.back());
+        }
+
+        mDiffSharedSynapses.push_back(new Tensor<T>(kernelDims), 0);
+    }
+    if (mQuantizer) {
+        for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
+            mQuantizer->addWeights(mSharedSynapses[k], mDiffSharedSynapses[k]);
+        }
+        if (!mNoBias) {
+            mQuantizer->addBiases(*mBias, mDiffBias);
+        }
+        mQuantizer->initialize();
+    }
+}
+
+
+template <class T>
+void N2D2::ConvCell_Frame<T>::initializeDataDependent() 
+{
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].size() == 0)
+            throw std::runtime_error("Zero-sized input for ConvCell " + mName);
+    }
+
+}
+
+
 template <class T>
 void N2D2::ConvCell_Frame<T>::save(const std::string& dirName) const
 {
