@@ -313,4 +313,8 @@ class GraphTensor:
     def back_propagate(self):
         # TODO: Add leaf node check
         self.cell.get_deepnet().back_propagate()
+    
+    def update(self):
+        # TODO: Add leaf node check
+        self.cell.get_deepnet().update()
 
