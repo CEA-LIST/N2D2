@@ -98,6 +98,9 @@ void init_Database(py::module &m) {
     py::options options;
     options.disable_function_signatures(); // Apply only on this scope so no need to enable function signature again.
 
+    db.def("partitionStimuli", (void (Database::*)(unsigned int, Database::StimuliSet))(&Database::partitionStimuli), py::arg("nbStimuli"), py::arg("set"));
+    db.def("partitionStimuli", (void (Database::*)(double, double, double))(&Database::partitionStimuli), py::arg("learn"), py::arg("validation"), py::arg("test"));
+
     db.def("getNbStimuli", (unsigned int (Database::*)() const)(&Database::getNbStimuli),
     R"mydelimiter(
     Returns the total number of loaded stimuli.

@@ -41,16 +41,16 @@ import N2D2
 class test_Linear(unittest.TestCase):
 
     def setUp(self):
-        self.input = n2d2.provider.TensorPlaceholder(n2d2.CudaTensor([1, 1, 1, 1]))
-        self.cell = n2d2.cell.Activation(self.input, activationFunction=n2d2.activation.Linear(),from_arguments=False)
+        self.provider = n2d2.provider.TensorPlaceholder(n2d2.Tensor([1, 1, 1, 1], cuda=True))
+        self.cell = n2d2.cell.Activation(activationFunction=n2d2.activation.Linear(),from_arguments=False)
         
 
     def tearDown(self):
         pass
 
+    @unittest.SkipTest("Need to update Activation cell to the new syntax !")
     def test_output(self):
-        
-        pass
+        print(self.provider())
 
 if __name__ == '__main__':
     unittest.main()

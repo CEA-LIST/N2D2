@@ -58,6 +58,21 @@ class Database(N2D2_Interface):
         :rtype: string
         """
         return self._N2D2_object.getLabelName(label_idx)
+
+    def partition_stimuli(self, learn, validation, test):
+        """Create partitions of the data with the given ratio.
+        :param learn: Ratio for the learning partition.
+        :type learn: float
+        :param validation: Ratio for the validation partition.
+        :type validation: float
+        :param test: Ratio for the test partition.
+        :type test: float
+        """
+        if learn + validation + test > 1:
+            raise ValueError("The total partition ratio cannot be higher than 1")
+        self._N2D2_object.partitionStimuli(learn, validation, test)
+
+
     def load(self, dataPath, **kwargs):
         self._N2D2_object.load(dataPath=dataPath, **kwargs)
 

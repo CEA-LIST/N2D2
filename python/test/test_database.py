@@ -26,12 +26,12 @@ import unittest
 
 
 
-@unittest.skip('Database malformed ...')
 class test_DIR(unittest.TestCase):
     def setUp(self):
-        self.db = n2d2.database.DIR(validation=0.6)
+        self.db = n2d2.database.DIR()
         self.provider = n2d2.provider.DataProvider(self.db, [1, 1, 1], batchSize=1)
-        
+        self.x = 10
+        self.y = 3
         print("Creating data")
         self.data_path = "data"
         self.label_path = "label"
@@ -41,12 +41,11 @@ class test_DIR(unittest.TestCase):
         if not exists(self.label_path):
             mkdir(self.label_path)
         with open(self.data_path + self.suffix, "w") as f:
-            f.write('1, 2, 3\n')
-            f.write('4, 5, 6\n')
+            f.write(str(self.x)+'\n')
         with open(self.label_path + self.suffix, "w") as f:
-            f.write('6\n')
-            f.write('15\n')
+            f.write(str(self.y)+'\n')
         print("Set up done !")
+
     def tearDown(self):
         print("Cleaning data")
         remove(self.data_path + self.suffix)
@@ -56,8 +55,11 @@ class test_DIR(unittest.TestCase):
 
     def test_load(self):
         print('Loading data')
-        self.db.load(data_path, 0, label_path, 0)
-        print(self.provider.read_random_batch(partition='Learn'))
+        self.db.load(self.data_path, 0, self.label_path, 0)
+        self.provider.set_partition("Learn")
+
+        self.db.partition_stimuli(1,0,0)
+        self.assertEqual(self.provider.read_random_batch().tensor[0], self.x)
         
  
 @unittest.skipIf(not exists("/nvme0/DATABASE/MNIST/raw/"), "Data not found !")
@@ -65,12 +67,13 @@ class test_MNIST(unittest.TestCase):
     def setUp(self):
         self.db = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/")       
         self.size = [28, 28, 1]
-        self.provider = n2d2.provider.DataProvider(self.db, self.size, batchSize=1)
+        self.batch_size = 1
+        self.provider = n2d2.provider.DataProvider(self.db, self.size, batchSize=self.batch_size)
     def tearDown(self):
         pass
 
     def test_size(self):
-        self.assertEqual(self.provider.dims(), self.size)
+        self.assertEqual(self.provider.dims(), self.size + [self.batch_size])
 
     def test_label(self):
         self.assertEqual(self.db.get_label_name(0), "0")
@@ -90,7 +93,8 @@ class test_ILSVRC2012(test_MNIST):
         self.db = n2d2.database.ILSVRC2012(learn=1.0)
         self.db.load("/nvme0/DATABASE/ILSVRC2012", labelPath="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
         self.size = [500, 334, 3]
-        provider = n2d2.provider.DataProvider(database=self.db, size=self.size, batchSize=1)
+        self.batch_size = 1
+        provider = n2d2.provider.DataProvider(database=self.db, size=self.size, batchSize=self.batch_size)
         self.provider = n2d2.provider.DataProvider(self.db, self.size, batchSize=1)
     def test_label(self):
         self.assertEqual(self.db.get_label_name(0), "n01440764")
