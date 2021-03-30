@@ -86,7 +86,7 @@ public:
 
     virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     virtual void initialize();
-    virtual void initializeParameters(unsigned int inputDimZ, unsigned int nbInputs);
+    virtual void initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping = Tensor<bool>());
     virtual void initializeDataDependent();
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);
@@ -225,14 +225,18 @@ void N2D2::ConvCell_Frame_CUDA<T>::setWeight(unsigned int output,
         sharedSynapses[output][channel].synchronizeHToD();
 }
 
+
+
 template <class T>
 void
 N2D2::ConvCell_Frame_CUDA<T>::getWeight(unsigned int output,
                                         unsigned int channel,
                                         BaseTensor& value) const
 {
-    const unsigned int k = mInputs.getTensorIndex(channel);
-    channel -= mInputs.getTensorDataOffset(channel);
+    //const unsigned int k = mInputs.getTensorIndex(channel);
+    //channel -= mInputs.getTensorDataOffset(channel);
+    const unsigned int k = mSharedSynapses.getTensorIndex(channel);
+    channel -= mSharedSynapses.getTensorDataOffset(channel);
 
 #if CUDNN_VERSION >= 7000
     if (mNbGroups[k] > 1) {

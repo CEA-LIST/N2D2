@@ -82,6 +82,16 @@ public:
     virtual void replaceInput(BaseTensor& oldInputs,
                               BaseTensor& newInputs,
                               BaseTensor& newDiffOutputs);
+
+    virtual void clearInputTensors();
+    virtual void initializeDataDependent();
+    virtual void linkInput(Cell* cell);
+    virtual void linkInput(StimuliProvider& sp,  
+                    unsigned int x0,
+                    unsigned int y0,
+                    unsigned int width,
+                    unsigned int height);
+    
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();

@@ -110,6 +110,7 @@ public:
                            unsigned int channel,
                            BaseTensor& value) const = 0;
     virtual void getBias(unsigned int output, BaseTensor& value) const = 0;
+    virtual BaseInterface* getWeights() { return NULL; };
     virtual void exportFreeParameters(const std::string& fileName) const;
     virtual void exportQuantFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,
@@ -134,6 +135,7 @@ public:
                                                 std::size_t /*channel*/);
     
     void getStats(Stats& stats) const;
+   
     virtual void setWeight(unsigned int output, unsigned int channel,
                            const BaseTensor& value) = 0;
     virtual void setBias(unsigned int output, const BaseTensor& value) = 0;
@@ -157,6 +159,7 @@ protected:
     std::shared_ptr<Solver> mWeightsSolver;
     std::shared_ptr<Solver> mBiasSolver;
     std::shared_ptr<QuantizerCell> mQuantizer;
+
 };
 }
 namespace {

@@ -144,6 +144,8 @@ void N2D2::Cell_Frame<T>::addInput(Cell* cell, const Tensor<bool>& mapping)
         : Tensor<bool>({getNbOutputs(), cellNbOutputs}, true));
 }
 
+
+
 template <class T>
 void N2D2::Cell_Frame<T>::addInput(Cell* cell,
                                 unsigned int x0,
@@ -248,6 +250,140 @@ void N2D2::Cell_Frame<T>::replaceInput(BaseTensor& oldInputs,
             " match the other inputs!");
     }
 }
+
+
+
+
+// BEGIN code used exlusively in python API
+
+/**
+ * This is run every time the input dimensions have changed to reinitialized the cell tensors.
+**/
+template <class T>
+void N2D2::Cell_Frame<T>::clearInputTensors() {
+    mInputs.clear();
+    mDiffOutputs.clear();
+
+    mInputsDims.clear();
+}
+
+/**
+ * Initialized like addInputs but without initializing mapping. This is run every time the input dimensions have changed
+**/
+template <class T>
+void N2D2::Cell_Frame<T>::initializeDataDependent()
+{
+    if (mInputs.size() == 0){
+         throw std::runtime_error(
+            "Cell_Frame<T>::initializeDataDependent(): cell has no inputs");
+    }
+
+    setOutputsDims();
+
+    /**
+     * At the moment data tensor reinitialisation is not supported, but technically it would be possible. **/
+    if (mOutputs.empty()) {
+        std::vector<size_t> outputsDims(mOutputsDims);
+        outputsDims.push_back(mInputs.dimB());
+
+        mOutputs.resize(outputsDims);
+        mDiffInputs.resize(outputsDims);
+    }
+    else {
+        throw std::runtime_error(
+            "Cell_Frame<T>::initializeDataDependent(): data tensors are already initialized");
+    }
+}
+
+/**
+ * Link an input that has to be of the same size as the current input dimensions of the cell.
+ * If the current input dimensions are empty, the input dimensions are initialized to 
+ * correspond to the cell output dimensions.
+**/
+template <class T>
+void N2D2::Cell_Frame<T>::linkInput(Cell* cell)
+{
+    /*if (cell->getNbOutputs() != getNbChannels()){
+        throw std::runtime_error("Cell has different number of channels than input");
+    }*/
+
+    // Define input-output sizes
+    setInputsDims(cell->getOutputsDims());
+
+    Cell_Frame_Top* cellFrame = dynamic_cast<Cell_Frame_Top*>(cell);
+
+    if (cellFrame != NULL) {
+        mInputs.push_back(&cellFrame->getOutputs());
+        mDiffOutputs.push_back(&cellFrame->getDiffInputs());
+    }
+    else {
+        throw std::runtime_error(
+            "Cell_Frame<T>::addInput(): cannot mix Spike and Frame models");
+    }
+
+    // Define input-output connections
+    const unsigned int cellNbOutputs = cell->getNbOutputs();
+
+    //if (mMapping.empty()){
+    //      throw std::runtime_error("Cell_Frame<T>::linkInput(): Mapping is empty");
+    //}
+    if (!mMapping.empty() && mMapping.dimY() != cellNbOutputs)
+        throw std::runtime_error("Cell_Frame<T>::addInput(): number of mapping "
+                                 "rows must be equal to the number of input "
+                                 "channels");
+    if (mMapping.empty()){
+        mMapping.append(Tensor<bool>({getNbOutputs(), cell->getNbOutputs()}, true));
+    }
+
+}
+
+/**
+ * Link an input that has to be of the same size as the current input dimensions of the cell.
+ * If the current input dimensions are empty, the input dimensions are initialized to 
+ * correspond to the cell output dimensions.
+**/
+template <class T>
+void N2D2::Cell_Frame<T>::linkInput(StimuliProvider& sp,  
+                                unsigned int x0,
+                                unsigned int y0,
+                                unsigned int width,
+                                unsigned int height)
+{
+    if (width == 0)
+        width = sp.getSizeX() - x0;
+    if (height == 0)
+        height = sp.getSizeY() - y0;
+
+    if (x0 > 0 || y0 > 0 || width < sp.getSizeX() || height < sp.getSizeY())
+        throw std::runtime_error("Cell_Frame<T>::linkInput(): adding a cropped "
+                                 "environment channel map as input is not "
+                                 "supported");
+    
+    /*if (sp.getNbChannels() != getNbChannels()){
+        throw std::runtime_error("Cell has different number of channels than input");
+    }*/
+
+     // Define input-output sizes
+    setInputsDims(sp.getSize());
+    mInputs.push_back(&sp.getData());
+
+    //if (mMapping.empty()){
+    //      throw std::runtime_error("Cell_Frame<T>::linkInput(): Mapping is empty");
+    //}
+
+
+    if (!mMapping.empty() && mMapping.dimY() != sp.getNbChannels())
+        throw std::runtime_error("Cell_Frame<T>::addInput(): number of mapping "
+                                 "rows must be equal to the number of input "
+                                 "channels");
+    if (mMapping.empty()){
+        mMapping.append(Tensor<bool>({getNbOutputs(), sp.getNbChannels()}, true));
+    }
+}
+// END code used exlusively in python API
+
+
+
 template <class T>
 void N2D2::Cell_Frame<T>::exportActivationParameters(const std::string& dirName) const
 {

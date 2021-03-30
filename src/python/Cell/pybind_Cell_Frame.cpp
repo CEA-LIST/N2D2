@@ -24,6 +24,8 @@ s
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "StimuliProvider.hpp"
+
 namespace py = pybind11;
 
 namespace N2D2 {
@@ -34,10 +36,15 @@ void declare_Cell_Frame(py::module &m, const std::string& typeStr) {
     // .def("getDiffOutputs", &Cell_Frame<T>::getDiffOutputs)
     .def("setDiffInputs", &Cell_Frame<T>::setDiffInputs, py::arg("diffInput"))
     .def("setDiffInputsValid", &Cell_Frame<T>::setDiffInputsValid)
+
+    .def("clearInputTensors", &Cell_Frame<T>::clearInputTensors)
+    .def("linkInput",  (void (Cell_Frame<T>::*)(Cell*)) &Cell_Frame<T>::linkInput, py::arg("cell"))
+    .def("linkInput",  (void (Cell_Frame<T>::*)(StimuliProvider&, unsigned int, unsigned int, unsigned int, unsigned int)) &Cell_Frame<T>::linkInput, 
+        py::arg("sp"), py::arg("x0")=0, py::arg("y0")=0, py::arg("width")=0, py::arg("height")=0)
     ;
 
 }
-
+ 
 void init_Cell_Frame(py::module &m) {
     declare_Cell_Frame<float>(m, "float");
     declare_Cell_Frame<double>(m, "double");
