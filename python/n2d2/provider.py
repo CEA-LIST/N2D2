@@ -33,6 +33,10 @@ class Provider(N2D2_Interface):
         else:
             self._name = "provider_" + str(n2d2.global_variables.provider_counter)
         n2d2.global_variables.provider_counter += 1
+        self._deepnet = None
+
+    def get_deepnet(self):
+        return self._deepnet
 
     def get_size(self):
         return self._N2D2_object.getSize()
@@ -120,9 +124,6 @@ class DataProvider(Provider):
         :rtype: :py:class:`n2d2.database.Database`
         """
         return self._constructor_arguments['database']
-
-    def get_deepnet(self):
-        return self._deepnet
 
     def read_random_batch(self):
         """

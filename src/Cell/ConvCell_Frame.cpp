@@ -197,8 +197,11 @@ void N2D2::ConvCell_Frame<T>::initialize()
 
 
 template <class T>
-void N2D2::ConvCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs)
+void N2D2::ConvCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
 {
+    // NOTE: this is addition to initialize()
+    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
+
     if (!mNoBias) {
         if (mBias->empty()) {
             mBias->resize({1, 1, getNbOutputs(), 1});
@@ -268,6 +271,9 @@ void N2D2::ConvCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsig
 template <class T>
 void N2D2::ConvCell_Frame<T>::initializeDataDependent() 
 {
+    // NOTE: this is addition to initialize()
+    Cell_Frame<T>::initializeDataDependent();
+    
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for ConvCell " + mName);

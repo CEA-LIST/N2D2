@@ -31,12 +31,21 @@ batch_size = 256
 database = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/")
 provider = n2d2.provider.DataProvider(database, [28, 28, 1], batchSize=batch_size)
 
-fc1 = n2d2.cell.Fc(28*28, 50, noBias=True)
-#fc2 = n2d2.cell.Fc(50, 50, noBias=True)
-fc2 = n2d2.cell.Fc(50, 10, noBias=True)
+database2 = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/")
+provider2 = n2d2.provider.DataProvider(database2, [28, 28, 1], batchSize=batch_size)
 
 
-fc1.N2D2().exportFreeParameters("exported_parameters")
+print("Create Conv")
+cell1 = n2d2.cell.Conv(1, 10, kernelDims=[5, 5])
+#cell1 = n2d2.cell.Fc(28*28, 50)
+#fc1 = n2d2.cell.Fc(50, 50)
+#TODO: Fc input dimension check before call
+print("Create Fc")
+fc2 = n2d2.cell.Fc(10*24*24, 10)
+#fc2 = n2d2.cell.Fc(50, 10)
+
+#cell1.N2D2().exportFreeParameters("exported_parameters")
+#fc2.N2D2().exportFreeParameters("exported_parameters")
 
 loss_function = n2d2.application.CrossEntropyClassifier(provider)
 
@@ -55,10 +64,13 @@ for epoch in range(nb_epochs):
         #x = n2d2.Tensor([batch_size, 1, 28, 28], value=1.0)
         #x = input_provider(x)
 
+        #if i%2 == 0:
+        #    x = provider.read_random_batch()
+        #else:
+        #    x = provider2.read_random_batch()
         x = provider.read_random_batch()
-        x = fc1(x)
+        x = cell1(x)
         x = fc2(x)
-
         x = loss_function(x)
 
         #print(x.get_deepnet())
@@ -75,7 +87,7 @@ print("\n")
 
 provider.set_partition('Test')
 
-fc1.test()
+cell1.test()
 fc2.test()
 
 for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test')/batch_size)):
@@ -83,7 +95,7 @@ for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test')/batch_si
 
     x = provider.read_batch(idx=batch_idx)
     #x = tensor_placeholder(x)
-    x = fc1(x)
+    x = cell1(x)
     x = fc2(x)
     x = loss_function(x)
 

@@ -563,8 +563,12 @@ the API cudnnGetConvolutionForwardMaxCount().
 
 
 template <class T>
-void N2D2::ConvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs)
+void N2D2::ConvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
 {
+    // NOTE: this is addition to initialize()
+    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
+    mMapping.append(Tensor<bool>({getNbOutputs(), inputDimZ}, true));
+
     if (!mNoBias) {
         if (mBias->empty()) {
             mBias->resize({1, 1, getNbOutputs(), 1});
@@ -699,6 +703,8 @@ void N2D2::ConvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, 
 template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::initializeDataDependent() 
 {
+    // NOTE: this is addition to initialize()
+    Cell_Frame_CUDA<T>::initializeDataDependent();
 
     unsigned int nbChannels = 0;
 

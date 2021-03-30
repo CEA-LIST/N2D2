@@ -103,9 +103,11 @@ void N2D2::FcCell_Frame<T>::initialize()
 
 
 template <class T>
-void N2D2::FcCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs)
+void N2D2::FcCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
 {
-    setInputsDims({inputDimZ});
+
+     // NOTE: this is addition to initialize()
+    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
 
     if (!mNoBias && mBias.empty()) {
         mBias.resize({getNbOutputs(), 1, 1, 1});
@@ -141,6 +143,7 @@ void N2D2::FcCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsigne
 
 template <class T>
 void N2D2::FcCell_Frame<T>::initializeDataDependent(){
+    Cell_Frame<T>::initializeDataDependent();
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for FcCell " + mName);

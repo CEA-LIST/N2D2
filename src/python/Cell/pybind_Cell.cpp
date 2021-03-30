@@ -144,8 +144,8 @@ void init_Cell(py::module &m) {
      Initialize the state of the cell (e.g. weights random initialization)
     )mydelimiter")
 
-    .def("initializeParameters", &Cell::initializeParameters, py::arg("inputDimZ"), py::arg("nbInputs"))
-    .def("initializeDataDependent", &Cell::initializeParameters)
+    .def("initializeDataDependent", &Cell::initializeDataDependent)
+    .def("initializeParameters", &Cell::initializeParameters, py::arg("inputDimZ"), py::arg("nbInputs"), py::arg("mapping")=Tensor<bool>())
 
     .def("save", &Cell::save, py::arg("dirName"),    
     R"mydelimiter(

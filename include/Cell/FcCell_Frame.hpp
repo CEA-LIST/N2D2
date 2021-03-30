@@ -51,7 +51,7 @@ public:
     }
 
     virtual void initialize();
-    virtual void initializeParameters(unsigned int inputDimZ, unsigned int nbInputs);
+    virtual void initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping = Tensor<bool>());
     virtual void initializeDataDependent();
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);
@@ -74,6 +74,10 @@ public:
     {
         value.resize(std::initializer_list<size_t>({1}));
         value = Tensor<T>({1}, mBias(output));
+    };
+    inline BaseInterface* getWeights()
+    {
+        return &mSynapses;
     };
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void saveFreeParameters(const std::string& fileName) const;

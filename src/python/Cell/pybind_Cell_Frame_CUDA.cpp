@@ -28,6 +28,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "StimuliProvider.hpp"
+
 namespace py = pybind11;
 
 namespace N2D2 {
@@ -40,6 +42,12 @@ void declare_Cell_Frame_CUDA(py::module &m, const std::string& typeStr) {
     //.def("addInput", (void (Cell_Frame_CUDA<T>::*)(BaseTensor&, BaseTensor&)) &Cell_Frame_CUDA<T>::addInput, py::arg("inputs"), py::arg("diffOutputs"));
     .def("applyLoss", (double (Cell_Frame_CUDA<T>::*)(double, double)) &Cell_Frame_CUDA<T>::applyLoss, py::arg("targetVal"), py::arg("defaultVal"))
     .def("setOutputTarget",  &Cell_Frame_CUDA<T>::setOutputTarget, py::arg("targets"))
+
+    .def("clearInputTensors", &Cell_Frame_CUDA<T>::clearInputTensors)
+    .def("linkInput",  (void (Cell_Frame_CUDA<T>::*)(Cell*)) &Cell_Frame_CUDA<T>::linkInput, py::arg("cell"))
+    .def("linkInput",  (void (Cell_Frame_CUDA<T>::*)(StimuliProvider&, unsigned int, unsigned int, unsigned int, unsigned int)) &Cell_Frame_CUDA<T>::linkInput, 
+        py::arg("sp"), py::arg("x0")=0, py::arg("y0")=0, py::arg("width")=0, py::arg("height")=0)
+
     ;
 
 

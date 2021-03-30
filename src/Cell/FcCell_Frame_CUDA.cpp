@@ -124,8 +124,10 @@ void N2D2::FcCell_Frame_CUDA<T>::initialize()
 
 
 template <class T>
-void N2D2::FcCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs)
+void N2D2::FcCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
 {
+    // NOTE: this is addition to initialize()
+    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
 
     if (!mNoBias && mBias.empty()) {
         mBias.resize({getNbOutputs(), 1, 1, 1});
@@ -178,6 +180,9 @@ void N2D2::FcCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, un
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::initializeDataDependent()
 {
+    // NOTE: this is addition to initialize()
+    Cell_Frame_CUDA<T>::initializeDataDependent();
+
     if (!mNoBias) {
         if (mOnesVector != NULL)
             cudaFree(mOnesVector);
