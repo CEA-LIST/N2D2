@@ -68,7 +68,7 @@ class test_FcCell(unittest.TestCase):
     """
 
     def setUp(self):
-        self.cell = n2d2.cell.Fc(10, 10)
+        self.cell = n2d2.cell.Fc(10, 5)
     def tearDown(self):
         pass
 
@@ -79,7 +79,10 @@ class test_FcCell(unittest.TestCase):
         self.cell.set_weight(0, 0, weight)
         tensor = N2D2.Tensor_float([])
         self.assertTrue(weight == self.cell.get_weight(0, 0))
-
+    
+    def test_get_weights(self):
+        print(self.cell.get_weights())
+    
     def test_getOutput(self):
         self.cell.get_outputs()
 

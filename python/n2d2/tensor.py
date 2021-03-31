@@ -28,6 +28,8 @@ hard_coded_type = {
     "float": float,
     "i": int,
     "int": int,
+    "b": bool,
+    "bool": bool,
 }
 
 
@@ -36,10 +38,12 @@ class Tensor():
     _tensor_generators = {
         float: N2D2.Tensor_float,
         int: N2D2.Tensor_int,
+        bool: N2D2.Tensor_bool,
     }
     _cuda_tensor_generators = {
         float: N2D2.CudaTensor_float,
         int: N2D2.CudaTensor_int,
+        # bool: N2D2.CudaTensor_bool,
     }
     
     def __init__(self, dims, value=None, cuda=False, defaultDataType=float):
@@ -189,8 +193,7 @@ class Tensor():
     @classmethod
     def from_numpy(cls, np_array):
         """Convert a numpy array into a tensor.
-
-        /!\ Known issues /!\ 
+        TODO : fix /!\ Known issues /!\  
         - Using a 1D numpy array have unintended behaviour 
 
         :param np_array: A numpy array to convert to a tensor.
@@ -223,8 +226,18 @@ class Tensor():
                 is_first_element = True
         data_type = type(first_element.item())
 
-        n2d2_tensor._dataType = data_type
-        n2d2_tensor._tensor = n2d2_tensor._tensor_generators[data_type](np_array)
+        if data_type == bool:
+            # Numpy -> N2D2 doesn't work for bool because there is no buffer protocol for it.
+            n2d2_tensor._dataType = data_type
+            tmp_tensor = n2d2_tensor._tensor_generators[int](np_array)
+            shape = [d for d in reversed(tmp_tensor.dims())]
+            n2d2_tensor._tensor = n2d2_tensor._tensor_generators[data_type](shape)
+            for i, value in enumerate(tmp_tensor):
+                n2d2_tensor._tensor[i] = value
+            del tmp_tensor
+        else:
+            n2d2_tensor._dataType = data_type
+            n2d2_tensor._tensor = n2d2_tensor._tensor_generators[data_type](np_array)
 
         return n2d2_tensor
 

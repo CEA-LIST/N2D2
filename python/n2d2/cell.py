@@ -271,6 +271,9 @@ class Cell(N2D2_Interface):
     def get_nb_outputs(self):
         return self._N2D2_object.getNbOutputs()
 
+    def get_nb_channels(self):
+        return self._N2D2_object.getNbChannels()
+
     def _sync_inputs_and_parents(self):
         parents = self._deepnet.N2D2().getParentCells(self.get_name())
         # Necessary because N2D2 returns [None] if no parents
@@ -437,6 +440,10 @@ class Fc(Cell):
         :param value:
         :type value: :py:class:`n2d2.tensor.Tensor`
         """
+        if channel_index >= self.N2D2().getNbChannels():
+            raise ValueError("Channel index : " + str(channel_index) + " must be < " + str(self.N2D2().getNbChannels()) +")")
+        if output_index >= self.N2D2().getNbOutputs():
+            raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
         self.N2D2().setWeight(output_index, channel_index, value.N2D2())
 
     def get_weight(self, output_index, channel_index):
@@ -446,6 +453,10 @@ class Fc(Cell):
         :param channel_index:
         :type channel_index: int
         """
+        if channel_index >= self.N2D2().getNbChannels():
+            raise ValueError("Channel index : " + str(channel_index) + " must be < " + str(self.N2D2().getNbChannels()) +")")
+        if output_index >= self.N2D2().getNbOutputs():
+            raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
         tensor = N2D2.Tensor_float([])
         self.N2D2().getWeight(output_index, channel_index, tensor)
         return n2d2.Tensor.from_N2D2(tensor)
@@ -727,6 +738,11 @@ class Conv(Cell):
         :param value:
         :type value: :py:class:`n2d2.tensor.Tensor`
         """
+        if channel_index >= self.N2D2().getNbChannels():
+            raise ValueError("Channel index : " + str(channel_index) + " must be < " + str(self.N2D2().getNbChannels()) +")")
+        if output_index >= self.N2D2().getNbOutputs():
+            raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
+
         self.N2D2().setWeight(output_index, channel_index, value.N2D2())
 
     def get_weight(self, output_index, channel_index):
@@ -736,6 +752,10 @@ class Conv(Cell):
         :param channel_index:
         :type channel_index: int
         """
+        if channel_index >= self.N2D2().getNbChannels():
+            raise ValueError("Channel index : " + str(channel_index) + " must be < " + str(self.N2D2().getNbChannels()) +")")
+        if output_index >= self.N2D2().getNbOutputs():
+            raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
         tensor = N2D2.Tensor_float([])
         self.N2D2().getWeight(output_index, channel_index, tensor)
         return n2d2.Tensor.from_N2D2(tensor)
