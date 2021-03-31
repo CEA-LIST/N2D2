@@ -306,7 +306,6 @@ class Fc(Cell):
     }
 
     def __init__(self, nbInputs, nbOutputs, from_arguments=True, **config_parameters):
-        # TODO : Add description for filler and solver.
         """
         :param nbOutputs: Number of outputs of the cell.
         :type nbOutputs: int
@@ -428,6 +427,44 @@ class Fc(Cell):
         self._config_parameters['weightsSolver'] = solver
         self._N2D2_object.setWeightsSolver(self._config_parameters['weightsSolver'].N2D2())
     """
+
+    def set_weight(self, output_index, channel_index, value):
+        """
+        :param output_index: 
+        :type output_index:
+        :param channel_index:
+        :type channel_index:
+        :param value:
+        :type value: :py:class:`n2d2.tensor.Tensor`
+        """
+        self.N2D2().setWeight(output_index, channel_index, value.N2D2())
+
+    def get_weight(self, output_index, channel_index):
+        """
+        :param output_index: 
+        :type output_index: int
+        :param channel_index:
+        :type channel_index: int
+        """
+        tensor = N2D2.Tensor_float([])
+        self.N2D2().getWeight(output_index, channel_index, tensor)
+        return n2d2.Tensor.from_N2D2(tensor)
+
+    def get_weights(self):
+        """
+        :return: list of weight
+        :rtype: list
+        """
+        weights = []
+        tensor = N2D2.Tensor_float([])
+        for o in range(self.N2D2().getNbOutputs()):
+            chan = []
+            for c in range(self.N2D2().getNbChannels()):
+                self.N2D2().getWeight(o, c, tensor)
+                chan.append(n2d2.Tensor.from_N2D2(tensor))
+            weights.append(chan)
+        return weights
+
 
     def set_bias_solver(self, solver):
         self._config_parameters['biasSolver'] = solver
@@ -681,7 +718,42 @@ class Conv(Cell):
         self._config_parameters['quantizer'] = quantizer
         self._N2D2_object.setQuantizer(self._config_parameters['quantizer'].N2D2())
 
+    def set_weight(self, output_index, channel_index, value):
+        """
+        :param output_index: 
+        :type output_index:
+        :param channel_index:
+        :type channel_index:
+        :param value:
+        :type value: :py:class:`n2d2.tensor.Tensor`
+        """
+        self.N2D2().setWeight(output_index, channel_index, value.N2D2())
 
+    def get_weight(self, output_index, channel_index):
+        """
+        :param output_index: 
+        :type output_index: int
+        :param channel_index:
+        :type channel_index: int
+        """
+        tensor = N2D2.Tensor_float([])
+        self.N2D2().getWeight(output_index, channel_index, tensor)
+        return n2d2.Tensor.from_N2D2(tensor)
+
+    def get_weights(self):
+        """
+        :return: list of weight
+        :rtype: list
+        """
+        weights = []
+        tensor = N2D2.Tensor_float([])
+        for o in range(self.N2D2().getNbOutputs()):
+            chan = []
+            for c in range(self.N2D2().getNbChannels()):
+                self.N2D2().getWeight(o, c, tensor)
+                chan.append(n2d2.Tensor.from_N2D2(tensor))
+            weights.append(chan)
+        return weights
 
 class ConvDepthWise(Conv):
     _type = 'ConvDepthWise'
