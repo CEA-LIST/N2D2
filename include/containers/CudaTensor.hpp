@@ -200,6 +200,28 @@ public:
     virtual void aggregateAllTo(int dstDev,
                     std::vector<DeviceState> devices) const = 0;
 
+    bool isValid(int dev = -1) const
+    {
+        if (dev == -1)
+            CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+        return (*mValid)[dev];
+    };
+    void setValid(int dev = -1)
+    {
+        if (dev == -1)
+            CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+        (*mValid)[dev] = true;
+    };
+    void clearValid(int dev = -1)
+    {
+        if (dev == -1)
+            CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+        (*mValid)[dev] = false;
+    };
+
     virtual CudaBaseDeviceTensor& deviceTensor() = 0;
     virtual const CudaBaseDeviceTensor& deviceTensor() const = 0;
     inline bool& hostBased() { return mHostBased; }
@@ -860,6 +882,9 @@ N2D2::CudaBaseTensor::CudaBaseTensor(bool hostBased):
     mHostBased(hostBased)
 {
     //ctor
+    int count = 1;
+    CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+    (*mValid).resize(count, false);
 }
 
 template <typename T>

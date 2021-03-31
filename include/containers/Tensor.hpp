@@ -250,35 +250,17 @@ public:
     {
         return mDims;
     };
-    bool isValid(int dev = -1) const
+    virtual bool isValid(int /*dev*/ = -1) const
     {
-#ifdef CUDA
-        if (dev == -1)
-            CHECK_CUDA_STATUS(cudaGetDevice(&dev));
-#else
-        dev = 0;
-#endif
-        return (*mValid)[dev];
+        return (*mValid)[0];
     };
-    void setValid(int dev = -1)
+    virtual void setValid(int /*dev*/ = -1)
     {
-#ifdef CUDA
-        if (dev == -1)
-            CHECK_CUDA_STATUS(cudaGetDevice(&dev));
-#else
-        dev = 0;
-#endif
-        (*mValid)[dev] = true;
+        (*mValid)[0] = true;
     };
-    void clearValid(int dev = -1)
+    virtual void clearValid(int /*dev*/ = -1)
     {
-#ifdef CUDA
-        if (dev == -1)
-            CHECK_CUDA_STATUS(cudaGetDevice(&dev));
-#else
-        dev = 0;
-#endif
-        (*mValid)[dev] = false;
+        (*mValid)[0] = false;
     };
     virtual const std::type_info* getType() const = 0;
 #ifdef CUDA
@@ -289,7 +271,7 @@ public:
 protected:
     BaseTensor(const std::vector<size_t>& dims = std::vector<size_t>(),
                const std::shared_ptr<std::vector<char> >& valid
-                    = std::make_shared<std::vector<char> >(),
+                    = std::make_shared<std::vector<char> >(1, false),
                size_t size = 0,
                size_t sizeM1 = 0)
         : mDims(dims),
@@ -297,11 +279,6 @@ protected:
           mSize(size),
           mSizeM1(sizeM1)
     {
-        int count = 1;
-#ifdef CUDA
-        CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
-#endif
-        (*mValid).resize(count, false);
     }
     size_t computeSize()
     {
