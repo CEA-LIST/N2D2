@@ -48,7 +48,7 @@ Usage example:
     ...
 
 The initial weights distribution for each layer can be checked in the
-*weights\_init* folder, with an example shown in figure
+*weights_init* folder, with an example shown in figure
 [fig:weightsInitDistrib].
 
 .. figure:: _static/weightsInitDistrib.png
@@ -156,8 +156,8 @@ Use an uniform distribution with interval :math:`[-scale,scale]`, with
 Weight solvers
 --------------
 
-SGDSolver\_Frame
-~~~~~~~~~~~~~~~~
+SGDSolver_Frame
+~~~~~~~~~~~~~~~
 
 SGD Solver for ``Frame`` models.
 
@@ -218,8 +218,8 @@ The learning rate decay policies are the following:
   *SolverName*\ ``.MaxIterations`` and :math:`n` the power parameter
   *SolverName*\ ``.Power``
 
-SGDSolver\_Frame\_CUDA
-~~~~~~~~~~~~~~~~~~~~~~
+SGDSolver_Frame_CUDA
+~~~~~~~~~~~~~~~~~~~~
 
 SGD Solver for ``Frame_CUDA`` models.
 
@@ -242,10 +242,10 @@ SGD Solver for ``Frame_CUDA`` models.
 +----------------------------------------------------+----------------------------------------------------------------------------------------------------------+
 
 The learning rate decay policies are identical to the ones in the
-``SGDSolver\_Frame`` solver.
+``SGDSolver_Frame`` solver.
 
-AdamSolver\_Frame
-~~~~~~~~~~~~~~~~~
+AdamSolver_Frame
+~~~~~~~~~~~~~~~~
 
 Adam Solver for ``Frame`` models :cite:`KingmaB14`.
 
@@ -261,8 +261,8 @@ Adam Solver for ``Frame`` models :cite:`KingmaB14`.
 | *SolverName*\ ``.Epsilon`` [1.0e-8]       | Epsilon                                                               |
 +-------------------------------------------+-----------------------------------------------------------------------+
 
-AdamSolver\_Frame\_CUDA
-~~~~~~~~~~~~~~~~~~~~~~~
+AdamSolver_Frame_CUDA
+~~~~~~~~~~~~~~~~~~~~~
 
 Adam Solver for ``Frame_CUDA`` models :cite:`KingmaB14`.
 
@@ -1204,8 +1204,8 @@ LSTM
 
 Long Short Term Memory Layer :cite:`LSTM1997`.
 
-Global layer parameters (*Frame\_CUDA* models)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Global layer parameters (*Frame_CUDA* models)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Option [default value]                  | Description                                                                                                                                                     |
@@ -1249,8 +1249,8 @@ Global layer parameters (*Frame\_CUDA* models)
 | ``CxFiller``                            | Recurrent previous LSTM inner state initialisation. Often set to 0.0                                                                                            |
 +-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-Configuration parameters (*Frame\_CUDA* models)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Configuration parameters (*Frame_CUDA* models)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +--------------------------+---------------+------------------------------------------------------------------------------------------------------------------------------------+
 | Option [default value]   | Model(s)      | Description                                                                                                                        |
@@ -1267,7 +1267,7 @@ Configuration parameters (*Frame\_CUDA* models)
 Current restrictions
 ~~~~~~~~~~~~~~~~~~~~
 
--  Only Frame\_Cuda version is supported yet.
+-  Only Frame_Cuda version is supported yet.
 
 -  The implementation only support input sequences with a fixed length
    associated with a single label.
@@ -1346,7 +1346,7 @@ element of the sequence or scaled at the sequence itself:
 Development guidance
 ~~~~~~~~~~~~~~~~~~~~
 
--  Replace the inner local variables of LSTMCell\_Frame\_Cuda with a
+-  Replace the inner local variables of LSTMCell_Frame_Cuda with a
    generic layer of shuffling (on device) to enable the the process of
    data batch.
 
