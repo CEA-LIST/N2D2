@@ -66,6 +66,15 @@ void N2D2::ActivationCell_Frame_CUDA<T>::initialize()
     }
 }
 
+
+template <class T>
+void N2D2::ActivationCell_Frame_CUDA<T>::initializeDataDependent()
+{
+    Cell_Frame_CUDA<T>::initializeDataDependent();
+    initialize();
+}
+
+
 template <class T>
 void N2D2::ActivationCell_Frame_CUDA<T>::propagate(bool inference)
 {
