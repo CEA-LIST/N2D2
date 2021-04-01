@@ -21,6 +21,7 @@
 
 import N2D2
 from n2d2 import error_handler
+from n2d2.provider import TensorPlaceholder
 from functools import reduce
 
 hard_coded_type = {
@@ -43,7 +44,7 @@ class Tensor():
     _cuda_tensor_generators = {
         float: N2D2.CudaTensor_float,
         int: N2D2.CudaTensor_int,
-        # bool: N2D2.CudaTensor_bool,
+        # bool: N2D2.CudaTensor_bool, # Not defined
     }
     
     def __init__(self, dims, value=None, cuda=False, defaultDataType=float):
@@ -60,13 +61,15 @@ class Tensor():
             generators = self._cuda_tensor_generators
         else:
             generators = self._tensor_generators
+            
         # Dimensions convention on N2D2 are reversed from python. 
         if isinstance(dims, list):
             dims = [d for d in reversed(dims)]
         else:
             raise error_handler.WrongInputType("dims", type(dims), [str(list)])
-        if value and not isinstance(value, defaultDataType):
-            raise TypeError("You want to fill the tensor with " + type(value) + " but " + str(defaultDataType) + " is the defaultDataType.")
+
+        if value and not isinstance(value, defaultDataType): # TODO : We may want to try an auto-cast ! 
+            raise TypeError("You want to fill the tensor with " + str(type(value)) + " but " + str(defaultDataType) + " is the defaultDataType.")
 
         if defaultDataType in generators:
             if not value:
@@ -89,7 +92,13 @@ class Tensor():
         :rtype: :py:class:`N2D2.BaseTensor`
         """
         return self._tensor
-        
+
+    def nb_dims(self):
+        """
+        Return the number of dimensions.
+        """
+        return len(self._tensor.dims())
+
     def dims(self):
         """
         Return dimensions with N2D2 convention 
@@ -312,13 +321,24 @@ class Tensor():
         return str(self._tensor)
 
 
-class GraphTensor:
-    def __init__(self, tensor, cell):
+class GraphTensor(Tensor):
+    def __init__(self, tensor, cell=None):
+    
+        """
+        :param tensor: The streamed tensor
+        :type tensor: :py:class:`n2d2.tensor.Tensor`
+        :param cell: The cell that output the tensor object. If None, the object will create a :py:class:`n2d2.provider.TensorPlaceholder, default= None
+        :type cell: :py:class:`n2d2.cell.Cell` or, if input :py:class:`n2d2.provider.Provider`, optional
+        """
+        self._tensor = tensor.N2D2()
         self.tensor = tensor
-        self.cell = cell
+        if cell is None:
+            self.cell = TensorPlaceholder(tensor)
+        else:
+            self.cell = cell
 
-    def dims(self):
-        return self.tensor.dims()
+    # def dims(self):
+    #     return self.tensor.dims()
 
     def get_deepnet(self):
         return self.cell.get_deepnet()

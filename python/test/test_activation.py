@@ -37,20 +37,72 @@ If you need more information please check : https://docs.python.org/3/library/un
 import unittest
 import n2d2
 import N2D2
+from math import tanh
 
 class test_Linear(unittest.TestCase):
-
     def setUp(self):
-        self.provider = n2d2.provider.TensorPlaceholder(n2d2.Tensor([1, 1, 1, 1], cuda=True))
-        self.cell = n2d2.cell.Activation(activationFunction=n2d2.activation.Linear(),from_arguments=False)
+        self.activation = n2d2.activation.Linear()
         
-
     def tearDown(self):
         pass
 
-    @unittest.SkipTest("Need to update Activation cell to the new syntax !")
     def test_output(self):
-        print(self.provider())
+        
+        ActivationCell = n2d2.cell.Activation(activationFunction=self.activation)
+        input_tensor = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True) 
+        input_tensor[0] = 0
+        input_tensor[1] = 1
+        input_tensor[2] = 2
+        input_tensor[3] = 3
+        inputs = n2d2.GraphTensor(input_tensor)
+        outputs = ActivationCell(inputs)
+        self.assertEqual(outputs[0], 0)
+        self.assertEqual(outputs[1], 1)
+        self.assertEqual(outputs[2], 2)
+        self.assertEqual(outputs[3], 3)
 
+class test_Tanh(unittest.TestCase):
+    def setUp(self):
+        self.activation = n2d2.activation.Tanh()
+        
+    def tearDown(self):
+        pass
+
+    def test_output(self):
+        
+        ActivationCell = n2d2.cell.Activation(activationFunction=self.activation)
+        input_tensor = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True) 
+        input_tensor[0] = 0
+        input_tensor[1] = 1
+        input_tensor[2] = 2
+        input_tensor[3] = 3
+        inputs = n2d2.GraphTensor(input_tensor)
+        outputs = ActivationCell(inputs)
+        self.assertEqual(round(outputs[0], 5), round(tanh(0), 5))
+        self.assertEqual(round(outputs[1], 5), round(tanh(1), 5))
+        self.assertEqual(round(outputs[2], 5), round(tanh(2), 5))
+        self.assertEqual(round(outputs[3], 5), round(tanh(3), 5))
+
+class test_Rectifier(unittest.TestCase):
+    def setUp(self):
+        self.activation = n2d2.activation.Rectifier()
+        
+    def tearDown(self):
+        pass
+
+    def test_output(self):
+        
+        ActivationCell = n2d2.cell.Activation(activationFunction=self.activation)
+        input_tensor = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True) 
+        input_tensor[0] = -1
+        input_tensor[1] = -2
+        input_tensor[2] = 2
+        input_tensor[3] = 3
+        inputs = n2d2.GraphTensor(input_tensor)
+        outputs = ActivationCell(inputs)
+        self.assertEqual(outputs[0], 0)
+        self.assertEqual(outputs[1], 0)
+        self.assertEqual(outputs[2], 2)
+        self.assertEqual(outputs[3], 3)
 if __name__ == '__main__':
     unittest.main()
