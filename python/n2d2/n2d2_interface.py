@@ -67,7 +67,7 @@ class N2D2_Interface:
         return self._N2D2_object
 
     def _set_N2D2_parameter(self, key, value):
-        parsed_parameter = self._parse_py_to_INI_(value)
+        parsed_parameter = self.parse_py_to_ini_(value)
         self._N2D2_object.setParameter(key, parsed_parameter)
         # Test
         returned_parameter, returned_type = self._N2D2_object.getParameterAndType(key)
@@ -80,26 +80,52 @@ class N2D2_Interface:
 
     def _set_N2D2_parameters(self, parameters):
         for key, value in parameters.items():
-            self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
+            self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
     def set_parameter(self, key, value):
         self._config_parameters[key] = value
-        self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
+        self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
     def _parse_optional_arguments(self, optional_argument_keys):
         for key in optional_argument_keys:
             if key in self._config_parameters:
                 self._optional_constructor_arguments[key] = self._config_parameters.pop(key)
 
+
     # Cast first character to lowercase to be compatible with N2D2 constructor name convention
-    def _INI_to_param_convention(self, key):
+    """
+    @staticmethod
+    def _INI_to_param_convention(key):
         return key[0].lower() + key[1:]
+    """
 
-    # Cast first character to uppercase to be compatible with N2D2 parameter name convention
-    def _param_to_INI_convention(self, key):
-        return key[0].upper() + key[1:]
+    # Optional: Cast first character to uppercase to be compatible with N2D2.Parameter name convention
+    # Convert to CamelCase
+    @staticmethod
+    def python_to_n2d2_convention(key, first_upper=True):
+        new_key = ""
+        set_upper = first_upper
+        for c in key:
+            if set_upper:
+                c = c.upper()
+                set_upper = False
+            if not c == "_":
+                new_key += c
+            else:
+                set_upper = True
+        return new_key
 
-    def _parse_py_to_INI_(self, value):
+    @staticmethod
+    def n2d2_function_argument_parser(arguments):
+        new_arguments = {}
+        for key, value in arguments.items():
+            new_key = N2D2_Interface.python_to_n2d2_convention(key, False)
+            new_arguments[new_key] = value
+        return new_arguments
+
+
+    @staticmethod
+    def parse_py_to_ini_(value):
         if isinstance(value, bool):
             return str(int(value))
         elif isinstance(value, list):
@@ -110,8 +136,9 @@ class N2D2_Interface:
         else:
             return str(value)
 
+
     @staticmethod
-    def _load_N2D2_parameters(N2D2_object):
+    def load_N2D2_parameters(N2D2_object):
         str_params = N2D2_object.getParameters()
         parameters = {}
         for param in str_params:

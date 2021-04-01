@@ -30,10 +30,10 @@ class ActivationFunction(N2D2_Interface):
             self._model = config_parameters.pop('model')
         else:
             self._model = n2d2.global_variables.default_model
-        if 'dataType' in config_parameters:
-            self._datatype = config_parameters.pop('dataType')
+        if 'datatype' in config_parameters:
+            self._datatype = config_parameters.pop('datatype')
         else:
-            self._datatype = n2d2.global_variables.default_dataType
+            self._datatype = n2d2.global_variables.default_datatype
 
         self._model_key = self._model + '<' + self._datatype + '>'
 
@@ -69,7 +69,7 @@ class Linear(ActivationFunction):
             if key is 'quantizer':
                 self._N2D2_object.setQuantizer(value.N2D2())
             else:
-                self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
+                self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
 
 class Rectifier(ActivationFunction):
@@ -89,7 +89,7 @@ class Rectifier(ActivationFunction):
             if key is 'quantizer':
                 self._N2D2_object.setQuantizer(value.N2D2())
             else:
-                self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
+                self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
 
 class Tanh(ActivationFunction):
@@ -109,5 +109,5 @@ class Tanh(ActivationFunction):
             if key is 'quantizer':
                 self._N2D2_object.setQuantizer(value.N2D2())
             else:
-                self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
+                self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 

@@ -34,7 +34,7 @@ hard_coded_type = {
 }
 
 
-class Tensor():
+class Tensor:
     
     _tensor_generators = {
         float: N2D2.Tensor_float,
@@ -47,14 +47,14 @@ class Tensor():
         # bool: N2D2.CudaTensor_bool, # Not defined
     }
     
-    def __init__(self, dims, value=None, cuda=False, defaultDataType=float):
+    def __init__(self, dims, value=None, cuda=False, datatype=float):
         """
         :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (Numpy convention)
         :type dims: list
         :param value: A value to fill the :py:class:`n2d2.Tensor` object.
-        :type value: Must be coherent with **defaultDataType**
-        :param defaultDataType: Type of the data stocked by the tensor, default=float
-        :type defaultDataType: type, optional
+        :type value: Must be coherent with **datatype**
+        :param datatype: Type of the data stocked by the tensor, default=float
+        :type datatype: type, optional
         """
 
         if cuda:
@@ -68,22 +68,22 @@ class Tensor():
         else:
             raise error_handler.WrongInputType("dims", type(dims), [str(list)])
 
-        if value and not isinstance(value, defaultDataType): # TODO : We may want to try an auto-cast ! 
-            raise TypeError("You want to fill the tensor with " + str(type(value)) + " but " + str(defaultDataType) + " is the defaultDataType.")
+        if value and not isinstance(value, datatype): # TODO : We may want to try an auto-cast !
+            raise TypeError("You want to fill the tensor with " + str(type(value)) + " but " + str(datatype) + " is the datatype.")
 
-        if defaultDataType in generators:
+        if datatype in generators:
             if not value:
-                self._tensor = generators[defaultDataType](dims)
+                self._tensor = generators[datatype](dims)
             else:
-                self._tensor = generators[defaultDataType](dims, value)
+                self._tensor = generators[datatype](dims, value)
                 if cuda:
                     # TODO a bug cause the "value" argument to be ignored for CUDA tensor :
                     # example : N2D2.CudaTensor_int([2, 2], value=int(5.0)
                     self._tensor[0:] = value
         else:
-            raise TypeError("Unrecognized Tensor datatype " + str(defaultDataType))
+            raise TypeError("Unrecognized Tensor datatype " + str(datatype))
 
-        self._dataType = defaultDataType
+        self._dataType = datatype
         self.is_cuda = cuda
 
     def N2D2(self):
@@ -123,7 +123,7 @@ class Tensor():
         """
         return [d for d in reversed(self._tensor.dims())]
     
-    def data_type(self):
+    def datatype(self):
         """
         Return the data type of the object stored by the tensor.
         """
@@ -182,7 +182,7 @@ class Tensor():
         """
         Copy in memory the Tensor object.
         """
-        copy = Tensor(self.shape(), defaultDataType=self.data_type(), cuda=self.is_cuda)
+        copy = Tensor(self.shape(), datatype=self.datatype(), cuda=self.is_cuda)
         for i in range(len(copy)):
             copy[i] = self._tensor[i]
         return copy
@@ -233,20 +233,20 @@ class Tensor():
                 first_element = first_element[0]
             except:
                 is_first_element = True
-        data_type = type(first_element.item())
+        datatype = type(first_element.item())
 
-        if data_type == bool:
+        if datatype == bool:
             # Numpy -> N2D2 doesn't work for bool because there is no buffer protocol for it.
-            n2d2_tensor._dataType = data_type
+            n2d2_tensor._dataType = datatype
             tmp_tensor = n2d2_tensor._tensor_generators[int](np_array)
             shape = [d for d in reversed(tmp_tensor.dims())]
-            n2d2_tensor._tensor = n2d2_tensor._tensor_generators[data_type](shape)
+            n2d2_tensor._tensor = n2d2_tensor._tensor_generators[datatype](shape)
             for i, value in enumerate(tmp_tensor):
                 n2d2_tensor._tensor[i] = value
             del tmp_tensor
         else:
-            n2d2_tensor._dataType = data_type
-            n2d2_tensor._tensor = n2d2_tensor._tensor_generators[data_type](np_array)
+            n2d2_tensor._dataType = datatype
+            n2d2_tensor._tensor = n2d2_tensor._tensor_generators[datatype](np_array)
 
         return n2d2_tensor
 

@@ -65,10 +65,10 @@ def cell_converter(N2D2_cell, n2d2_deepnet):
     #        model = m
     #if not model:
     #    raise ValueError("No model found in ", str(N2D2_cell))
-    data_type = None
+    datatype = None
     for t in l_type:
-        if t in parsed and not data_type:
-            data_type = t
+        if t in parsed and not datatype:
+            datatype = t
 
     # Creating n2d2 object.
     print("cell_type: ", cell_type)

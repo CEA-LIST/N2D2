@@ -35,11 +35,11 @@ nb_epochs = 10
 batch_size = 256
 
 print("\n### Create database ###")
-database = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/", validation=0.1)
+database = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw/", validation=0.1)
 print(database)
 
 print("\n### Create Provider ###")
-provider = n2d2.provider.DataProvider(database, [32, 32, 1], batchSize=batch_size)
+provider = n2d2.provider.DataProvider(database, [32, 32, 1], batch_size=batch_size)
 provider.add_transformation(n2d2.transform.Rescale(width=32, height=32))
 print(provider)
 
@@ -49,27 +49,19 @@ print(model)
 
 loss_function = n2d2.application.CrossEntropyClassifier(provider)
 
-provider.set_partition("Learn")
-
 print("\n### Training ###")
 for epoch in range(nb_epochs):
 
-    #model.learn()
+    provider.set_partition("Learn")
+    model.learn()
 
     print("\n# Train Epoch: " + str(epoch) + " #")
 
     for i in range(math.ceil(database.get_nb_stimuli('Learn')/batch_size)):
 
         x = provider.read_random_batch()
-
         x = model(x)
-        #x.tensor.N2D2().synchronizeDToH()
-        #print(x.tensor.dims())
-
         x = loss_function(x)
-
-        #print(x.get_deepnet())
-        #exit()
 
         x.back_propagate()
         x.update()
@@ -78,11 +70,11 @@ for epoch in range(nb_epochs):
               + "{0:.3f}".format(x.tensor[0]), end='\r')
 
 
-    """print("\n### Validation ###")
+    print("\n### Validation ###")
+
+    loss_function.clear_success()
     
     provider.set_partition('Validation')
-    loss_function.clear_success()
-
     model.test()
 
     for i in range(math.ceil(database.get_nb_stimuli('Validation') / batch_size)):
@@ -94,7 +86,7 @@ for epoch in range(nb_epochs):
 
         print("Validate example: " + str(i * batch_size) + ", val success: "
               + "{0:.2f}".format(100 * loss_function.get_average_success()) + "%", end='\r')
-    """
+
 
 print("\n\n### Testing ###")
 

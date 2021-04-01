@@ -28,15 +28,15 @@ n2d2.global_variables.set_cuda_device(5)
 nb_epochs = 10
 batch_size = 256
 
-database = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/")
-provider = n2d2.provider.DataProvider(database, [28, 28, 1], batchSize=batch_size)
+database = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw/")
+provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size=batch_size)
 
-database2 = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/")
-provider2 = n2d2.provider.DataProvider(database2, [28, 28, 1], batchSize=batch_size)
+database2 = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw/")
+provider2 = n2d2.provider.DataProvider(database2, [28, 28, 1], batch_size=batch_size)
 
 
 print("Create Conv")
-cell1 = n2d2.cell.Conv(1, 10, kernelDims=[5, 5])
+cell1 = n2d2.cell.Conv(1, 10, kernel_dims=[5, 5])
 #cell1 = n2d2.cell.Fc(28*28, 50)
 #fc1 = n2d2.cell.Fc(50, 50)
 #TODO: Fc input dimension check before call

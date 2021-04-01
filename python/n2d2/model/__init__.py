@@ -20,7 +20,7 @@
 """
 
 from n2d2.model.resnet import ResNet50BN, load_from_ONNX
-from n2d2.model.mobilenet_v1 import *
+#from n2d2.model.mobilenet_v1 import *
 from n2d2.model.mobilenet_v2 import Mobilenet_v2, load_from_ONNX
 from n2d2.model.lenet import *
 from n2d2.model.segmentation_decoder import *

@@ -27,10 +27,10 @@ model_cache = "/local/is154584/jt251134/MODELS"
 
 default_seed = 1
 default_model = 'Frame'
-default_dataType = 'float'
+default_datatype = 'float'
 default_net = N2D2.Network(default_seed)
-#default_deepNet = n2d2.deepnet.DeepNet(default_net, default_model, default_dataType)
-default_deepNet = None
+#default_deepNet = n2d2.deepnet.DeepNet(default_net, default_model, default_datatype)
+#default_deepNet = None
 
 deepNet_counter = 0
 cell_counter = 0

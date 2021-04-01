@@ -66,11 +66,11 @@ class DataProvider(Provider):
         })
 
 
-        self._parse_optional_arguments(['batchSize', 'compositeStimuli'])
+        self._parse_optional_arguments(['batch_size', 'composite_stimuli'])
 
         self._N2D2_object = N2D2.StimuliProvider(database=self._constructor_arguments['database'].N2D2(),
                                                  size=self._constructor_arguments['size'],
-                                                 **self._optional_constructor_arguments)
+                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
 
         # Dictionary of transformation objects
@@ -209,7 +209,7 @@ class TensorPlaceholder(Provider):
         self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
                                                  size=dims,
                                                  batchSize=self._tensor.N2D2().dimB())
-        self._set_N2D2_parameter('StreamTensor', True)
+        self._set_N2D2_parameter('streamed_tensor', True)
         self._N2D2_object.setStreamedTensor(self._tensor.N2D2())
 
         self._deepnet = n2d2.deepnet.DeepNet()
@@ -251,7 +251,7 @@ class Input(Provider):
         self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
                                                  size=provider_dims,
                                                  batchSize=self._tensor.N2D2().dimB())
-        self._set_N2D2_parameter('StreamTensor', True)
+        self._set_N2D2_parameter('streamed_tensor', True)
         self._N2D2_object.setStreamedTensor(self._tensor.N2D2())
 
         self._deepnet = n2d2.deepnet.DeepNet()

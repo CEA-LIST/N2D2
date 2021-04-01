@@ -162,14 +162,14 @@ class ColorSpace(Transformation):
 
     _Type = "ColorSpace"
 
-    def __init__(self, colorSpace, **config_parameters):
+    def __init__(self, color_space, **config_parameters):
         Transformation.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
-            'colorSpace': N2D2.ColorSpaceTransformation.ColorSpace.__members__[colorSpace],
+            'color_space': N2D2.ColorSpaceTransformation.ColorSpace.__members__[color_space],
         })
 
-        self._N2D2_object = N2D2.ColorSpaceTransformation(self._constructor_arguments['colorSpace'])
+        self._N2D2_object = N2D2.ColorSpaceTransformation(self._constructor_arguments['color_space'])
         self._set_N2D2_parameters(self._config_parameters)
 
 
@@ -180,23 +180,23 @@ class RangeAffine(Transformation):
 
     _Type = "RangeAffine"
 
-    def __init__(self, firstOperator, firstValue, **config_parameters):
+    def __init__(self, first_operator, first_value, **config_parameters):
         Transformation.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
-            'firstOperator': N2D2.RangeAffineTransformation.Operator.__members__[firstOperator],
-            'firstValue': firstValue,
+            'first_operator': N2D2.RangeAffineTransformation.Operator.__members__[first_operator],
+            'first_value': first_value,
         })
 
-        self._parse_optional_arguments(['secondOperator', 'secondValue'])
+        self._parse_optional_arguments(['second_operator', 'second_value'])
 
-        if 'secondOperator' in self._optional_constructor_arguments:
-            self._optional_constructor_arguments['secondOperator'] = \
-                N2D2.RangeAffineTransformation.Operator.__members__[self._optional_constructor_arguments['secondOperator']]
+        if 'second_operator' in self._optional_constructor_arguments:
+            self._optional_constructor_arguments['second_operator'] = \
+                N2D2.RangeAffineTransformation.Operator.__members__[self._optional_constructor_arguments['second_operator']]
 
-        self._N2D2_object = N2D2.RangeAffineTransformation(self._constructor_arguments['firstOperator'],
-                                                           self._constructor_arguments['firstValue'],
-                                                           **self._optional_constructor_arguments)
+        self._N2D2_object = N2D2.RangeAffineTransformation(self._constructor_arguments['first_operator'],
+                                                           self._constructor_arguments['first_value'],
+                                                           **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
 
 
@@ -213,11 +213,11 @@ class SliceExtraction(Transformation):
             'height': height,
         })
 
-        self._parse_optional_arguments(['offsetX', 'offsetY'])
+        self._parse_optional_arguments(['offset_x', 'offset_y'])
 
         self._N2D2_object = N2D2.SliceExtractionTransformation(self._constructor_arguments['width'],
                                                            self._constructor_arguments['height'],
-                                                           **self._optional_constructor_arguments)
+                                                           **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
 
 
@@ -229,9 +229,9 @@ class Flip(Transformation):
     def __init__(self, **config_parameters):
         Transformation.__init__(self, **config_parameters)
 
-        self._parse_optional_arguments(['horizontalFlip', 'verticalFlip'])
+        self._parse_optional_arguments(['horizontal_flip', 'vertical_flip'])
 
-        self._N2D2_object = N2D2.FlipTransformation(**self._optional_constructor_arguments)
+        self._N2D2_object = N2D2.FlipTransformation(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
 
 
@@ -250,11 +250,11 @@ class RandomResizeCrop(Transformation):
             'height': height,
         })
 
-        self._parse_optional_arguments(['offsetX', 'offsetY'])
+        self._parse_optional_arguments(['offset_x', 'offset_y'])
 
         self._N2D2_object = N2D2.RandomResizeCropTransformation(self._constructor_arguments['width'],
                                                 self._constructor_arguments['height'],
-                                                **self._optional_constructor_arguments)
+                                                **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
 
 

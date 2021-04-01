@@ -57,7 +57,8 @@ class Score(Target):
 
         Target.__init__(self, **config_parameters)
 
-        self._parse_optional_arguments(['targetValue', 'defaultValue', 'topN', 'labelsMapping', 'createMissingLabels'])
+        self._parse_optional_arguments(['target_value', 'default_value', 'top_n',
+                                        'labels_mapping', 'create_missing_labels'])
 
         self._provider = provider
 
@@ -71,7 +72,7 @@ class Score(Target):
             self._N2D2_object = N2D2.TargetScore(self._constructor_parameters['name'],
                                                  cell.N2D2(),
                                                  self._provider.N2D2(),
-                                                 **self._optional_constructor_arguments)
+                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
 
             self._set_N2D2_parameters(self._config_parameters)
 
@@ -106,7 +107,7 @@ class Score(Target):
     """This only works if TopN > 1, otherwise it returns 0!"""
     def get_average_top_n_success(self, window=0):
         if self._N2D2_object.getTargetTopN() == 1:
-            raise RuntimeWarning("TopN == 1, returns 0. You may want to use get_average_success()?")
+            raise RuntimeWarning("Using this function with TopN=1 returns 0. You may want to use get_average_success()?")
         return self._N2D2_object.getAverageTopNSuccess(self._provider.get_partition(), window)
 
     def get_average_score(self, metric):

@@ -26,7 +26,7 @@ import N2D2
 
 class CrossEntropyClassifier:
     def __init__(self, provider, **target_config_parameters):
-        self._softmax = n2d2.cell.Softmax(withLoss=True)
+        self._softmax = n2d2.cell.Softmax(with_loss=True)
         self._target = n2d2.target.Score(provider, **target_config_parameters)
 
     def __call__(self, inputs):

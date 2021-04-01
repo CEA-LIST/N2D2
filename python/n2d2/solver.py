@@ -30,10 +30,10 @@ class Solver(N2D2_Interface):
             self._model = config_parameters.pop('model')
         else:
             self._model = n2d2.global_variables.default_model
-        if 'dataType' in config_parameters:
-            self._datatype = config_parameters.pop('dataType')
+        if 'datatype' in config_parameters:
+            self._datatype = config_parameters.pop('datatype')
         else:
-            self._datatype = n2d2.global_variables.default_dataType
+            self._datatype = n2d2.global_variables.default_datatype
 
         N2D2_Interface.__init__(self, **config_parameters)
         self._model_key = self._model + '<' + self._datatype + '>'

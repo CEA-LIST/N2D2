@@ -23,40 +23,43 @@ import n2d2
 
 
 class Mapping:
-    def __init__(self, nbGroups = None, nbChannelsPerGroup = None):
-        if not nbGroups and not nbChannelsPerGroup:
+    def __init__(self, nb_groups=None, nb_channels_per_group=None):
+        if not nb_groups and not nb_channels_per_group:
             raise ValueError("Parameter NbGroups and ChannelsPerGroup have no value, one of them need to be set")
-        if nbGroups and nbChannelsPerGroup:
+        if nb_groups and nb_channels_per_group:
             raise ValueError(
                 "Parameters NbGroups and ChannelsPerGroup are both initialized with a value, only one need to be set")
-        self._nbGroups = nbGroups
-        self._nbChannelsPerGroup = nbChannelsPerGroup
+        self._nb_groups = nb_groups
+        self._nb_channels_per_group = nb_channels_per_group
 
 
-    def create_N2D2_mapping(self, nbChannels, nbOutputs):
-        if self._nbGroups:
-            nbChannelsPerGroup = nbChannels / self._nbGroups
-            nbGroups = self._nbGroups
-        if self._nbChannelsPerGroup:
-            nbGroups = nbChannels / self._nbChannelsPerGroup
-            nbChannelsPerGroup = self._nbChannelsPerGroup
-        if nbChannels % nbGroups != 0:
+    def create_N2D2_mapping(self, nb_channels, nb_outputs):
+        if self._nb_groups:
+            nb_channels_per_group = nb_channels / self._nb_groups
+            nb_groups = self._nb_groups
+        elif self._nb_channels_per_group:
+            nb_groups = nb_channels / self._nb_channels_per_group
+            nb_channels_per_group = self._nb_channels_per_group
+        else:
+            raise ValueError("_nb_groups and _nb_channels_per_group are both None")
+
+        if nb_channels % nb_groups != 0:
             raise ValueError(
-                "NbGroups (" + str(nbGroups) + ") must be a multiple of the number of input channels (" + str(
-                    nbChannels) + ")")
+                "NbGroups (" + str(nb_groups) + ") must be a multiple of the number of input channels (" + str(
+                    nb_channels) + ")")
 
-        outputGroupOffset = 0
-        channelGroupOffset = 0
+        output_group_offset = 0
+        channel_group_offset = 0
 
-        map = n2d2.tensor.Tensor([nbOutputs, nbChannels], defaultDataType=bool)
-        for group in range(int(nbGroups)):
-            outputGroupSize = (nbOutputs - outputGroupOffset) / (nbGroups - group)
+        map = n2d2.tensor.Tensor([nb_outputs, nb_channels], datatype=bool)
+        for group in range(int(nb_groups)):
+            outputGroupSize = (nb_outputs - output_group_offset) / (nb_groups - group)
             if outputGroupSize < 1:
                 raise RuntimeError("outputGroupSize < 1")
-            for output in range(int(outputGroupOffset), int(outputGroupOffset + outputGroupSize)):
-                for channel in range(int(channelGroupOffset), int(channelGroupOffset + nbChannelsPerGroup)):
+            for output in range(int(output_group_offset), int(output_group_offset + outputGroupSize)):
+                for channel in range(int(channel_group_offset), int(channel_group_offset + nb_channels_per_group)):
                     map[output, channel] = True
-            outputGroupOffset += outputGroupSize
-            channelGroupOffset += nbChannelsPerGroup
+            output_group_offset += outputGroupSize
+            channel_group_offset += nb_channels_per_group
         return map
 

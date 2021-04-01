@@ -73,7 +73,7 @@ class DeepNet(N2D2_Interface):
         if not provider.dims() == N2D2_object.getStimuliProvider().getData().dims():
             raise RuntimeError("N2D2 object has input dimensions " + str(N2D2_object.getStimuliProvider().getData().dims()) +
                                " while given provider has dimensions " + str(provider.dims()))
-        deepnet = cls(from_parameters=False, **N2D2_Interface._load_N2D2_parameters(N2D2_object))
+        deepnet = cls(from_parameters=False, **N2D2_Interface.load_N2D2_parameters(N2D2_object))
         deepnet._N2D2_object = N2D2_object
         deepnet.set_provider(provider)
         deepnet._network = deepnet._N2D2_object.getNetwork()
@@ -315,13 +315,17 @@ class Group:
         return output
 
 class Sequence:
-    def __init__(self, cells):
+    def __init__(self, cells, name=None):
         assert(isinstance(cells, list))
         self._cells = cells
+        self._name = name
+
 
     def __call__(self, x):
+        x.get_deepnet().begin_group(name=self._name)
         for cell in self._cells:
             x = cell(x)
+        x.get_deepnet().end_group()
         return x
 
     def test(self):

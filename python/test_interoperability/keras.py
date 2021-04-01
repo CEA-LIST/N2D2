@@ -30,14 +30,14 @@ class custom_Conv(layers.Layer):
     def call(self, inputs):
         # TODO : Need to change the shape on the input so that the first pass give the good shape
         if tensorflow.executing_eagerly():
-            data_type = inputs.dtype.name
+            datatype = inputs.dtype.name
             # Ugly ?
-            if data_type == "int32" or data_type == "int64":
-                data_type = int
-            elif data_type == "float32" or data_type == "float64":
-                data_type = float
+            if datatype == "int32" or datatype == "int64":
+                datatype = int
+            elif datatype == "float32" or datatype == "float64":
+                datatype = float
             else:
-                raise TypeError("Unknown type :", data_type)
+                raise TypeError("Unknown type :", datatype)
             numpy_tensor = tensorflow.convert_to_tensor(inputs).numpy()
             n2d2_tensor = n2d2.tensor.Tensor([3, 3], DefaultDataType=float)
             n2d2_tensor.from_numpy(numpy_tensor)
@@ -50,7 +50,7 @@ class custom_Conv(layers.Layer):
                 
             self._n2d2.propagate()
             outputs = self._n2d2.getOutputs()
-            t_outputs = n2d2.tensor.Tensor([3, 3], DefaultDataType=data_type)
+            t_outputs = n2d2.tensor.Tensor([3, 3], DefaultDataType=datatype)
             t_outputs.from_N2D2(outputs)
             print("OutputShape :", t_outputs.shape())
             inputs = tensorflow.convert_to_tensor(t_outputs.to_numpy())
