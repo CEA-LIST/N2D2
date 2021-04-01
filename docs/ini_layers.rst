@@ -20,16 +20,6 @@ Common set of parameters for any kind of layer.
 | ``ConfigSection`` []                 | Name of the configuration section for layer                                             |
 +--------------------------------------+-----------------------------------------------------------------------------------------+
 
-To specify that the back-propagated error must be computed at the output
-of a given layer (generally the last layer, or output layer), one must
-add a target section named *LayerName*\ ``.Target``:
-
-.. code-block:: ini
-
-    ...
-    [LayerName.Target]
-    TargetValue=1.0 ; default: 1.0
-    DefaultValue=0.0 ; default: -1.0
 
 Weight fillers
 --------------

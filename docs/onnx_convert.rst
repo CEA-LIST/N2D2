@@ -22,7 +22,7 @@ provided in ``tools/pytorch_to_onnx.py``:
 
 
 Convert from TF/Keras
-------------------
+---------------------
 ONNX conversion is not natively supported by TF/Keras. Instead, a third-party
 tool must be used, like ``keras2onnx`` or ``tf2onnx``. Currently, the ``tf2onnx``
 is the most active and most maintained solution.

@@ -87,6 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="perfs_tools.html">Performance evaluation tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
 </ul>
 <p class="caption"><span class="caption-text">ONNX Import:</span></p>
@@ -142,8 +143,9 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ini_data_analysis.html">Stimuli data analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ini_environment.html">Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_environment.html">Stimuli provider (Environment)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ini_layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_target.html">Targets (outputs &amp; losses)</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Python API:</span></p>
 <ul>
@@ -224,7 +226,7 @@ so on. That way, no extra step is necessary to be able to directly build
 a network and learn it on these database.</p>
 <div class="section" id="mnist">
 <h2>MNIST<a class="headerlink" href="#mnist" title="Permalink to this headline">¶</a></h2>
-<p>MNIST <a class="bibtex reference internal" href="ini_layers.html#lecun1998" id="id1">[LBBH98]</a> is already fractionned into a
+<p>MNIST <a class="bibtex reference internal" href="tuto.html#lecun1998" id="id1">[LBBH98]</a> is already fractionned into a
 learning set and a testing set, with:</p>
 <ul class="simple">
 <li><p>60,000 digits in the learning set;</p></li>
@@ -261,7 +263,7 @@ learning set and a testing set, with:</p>
 </div>
 <div class="section" id="gtsrb">
 <h2>GTSRB<a class="headerlink" href="#gtsrb" title="Permalink to this headline">¶</a></h2>
-<p>GTSRB <a class="bibtex reference internal" href="ini_layers.html#stallkamp2012" id="id2">[SSSI12]</a> is already fractionned into a
+<p>GTSRB <a class="bibtex reference internal" href="tuto.html#stallkamp2012" id="id2">[SSSI12]</a> is already fractionned into a
 learning set and a testing set, with:</p>
 <ul class="simple">
 <li><p>39,209 digits in the learning set;</p></li>
@@ -480,7 +482,7 @@ correspond to the number of stimuli from the label with the fewest stimuli.</p>
 <div class="section" id="speech-commands-dataset">
 <h3><em>Speech Commands Dataset</em><a class="headerlink" href="#speech-commands-dataset" title="Permalink to this headline">¶</a></h3>
 <p>Use with Speech Commands Data Set, released by the Google
-<a class="bibtex reference internal" href="ini_layers.html#speechcommandsv2" id="id3">[Warden18]</a>.</p>
+<a class="bibtex reference internal" href="tuto.html#speechcommandsv2" id="id3">[Warden18]</a>.</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
 <span class="na">Type</span><span class="o">=</span><span class="s">DIR_Database</span>
 <span class="na">DataPath</span><span class="o">=</span><span class="s">${N2D2_DATA}/speech_commands_v0.02</span>
@@ -589,7 +591,7 @@ validation set with a 0.7/0.3 ratio in the INI file with the following section:<
 <div class="section" id="actitracker-database">
 <h3>Actitracker_Database<a class="headerlink" href="#actitracker-database" title="Permalink to this headline">¶</a></h3>
 <p>Actitracker database, released by the WISDM Lab
-<a class="bibtex reference internal" href="ini_layers.html#lockhart2011" id="id4">[LWX+11]</a>.</p>
+<a class="bibtex reference internal" href="tuto.html#lockhart2011" id="id4">[LWX+11]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 41%" />
@@ -621,7 +623,7 @@ validation set with a 0.7/0.3 ratio in the INI file with the following section:<
 </div>
 <div class="section" id="cifar10-database">
 <h3>CIFAR10_Database<a class="headerlink" href="#cifar10-database" title="Permalink to this headline">¶</a></h3>
-<p>CIFAR10 database <a class="bibtex reference internal" href="ini_layers.html#krizhevsky2009" id="id5">[Kri09]</a>.</p>
+<p>CIFAR10 database <a class="bibtex reference internal" href="tuto.html#krizhevsky2009" id="id5">[Kri09]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 44%" />
@@ -647,7 +649,7 @@ validation set with a 0.7/0.3 ratio in the INI file with the following section:<
 </div>
 <div class="section" id="cifar100-database">
 <h3>CIFAR100_Database<a class="headerlink" href="#cifar100-database" title="Permalink to this headline">¶</a></h3>
-<p>CIFAR100 database <a class="bibtex reference internal" href="ini_layers.html#krizhevsky2009" id="id6">[Kri09]</a>.</p>
+<p>CIFAR100 database <a class="bibtex reference internal" href="tuto.html#krizhevsky2009" id="id6">[Kri09]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 37%" />
@@ -677,7 +679,7 @@ validation set with a 0.7/0.3 ratio in the INI file with the following section:<
 <div class="section" id="ckp-database">
 <h3>CKP_Database<a class="headerlink" href="#ckp-database" title="Permalink to this headline">¶</a></h3>
 <p>The Extended Cohn-Kanade (CK+) database for expression recognition
-<a class="bibtex reference internal" href="ini_layers.html#lucey2010" id="id7">[LuceyCohnKanade+10]</a>.</p>
+<a class="bibtex reference internal" href="tuto.html#lucey2010" id="id7">[LuceyCohnKanade+10]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 46%" />
@@ -706,7 +708,7 @@ validation set with a 0.7/0.3 ratio in the INI file with the following section:<
 </div>
 <div class="section" id="caltech101-dir-database">
 <h3>Caltech101_DIR_Database<a class="headerlink" href="#caltech101-dir-database" title="Permalink to this headline">¶</a></h3>
-<p>Caltech 101 database <a class="bibtex reference internal" href="ini_layers.html#feifei2004" id="id8">[FFFP04]</a>.</p>
+<p>Caltech 101 database <a class="bibtex reference internal" href="tuto.html#feifei2004" id="id8">[FFFP04]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 27%" />
@@ -741,7 +743,7 @@ validation set with a 0.7/0.3 ratio in the INI file with the following section:<
 </div>
 <div class="section" id="caltech256-dir-database">
 <h3>Caltech256_DIR_Database<a class="headerlink" href="#caltech256-dir-database" title="Permalink to this headline">¶</a></h3>
-<p>Caltech 256 database <a class="bibtex reference internal" href="ini_layers.html#griffin2007" id="id9">[GHP07]</a>.</p>
+<p>Caltech 256 database <a class="bibtex reference internal" href="tuto.html#griffin2007" id="id9">[GHP07]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 27%" />
@@ -776,7 +778,7 @@ validation set with a 0.7/0.3 ratio in the INI file with the following section:<
 </div>
 <div class="section" id="caltechpedestrian-database">
 <h3>CaltechPedestrian_Database<a class="headerlink" href="#caltechpedestrian-database" title="Permalink to this headline">¶</a></h3>
-<p>Caltech Pedestrian database <a class="bibtex reference internal" href="ini_layers.html#dollar2009" id="id10">[DollarWSP09]</a>.</p>
+<p>Caltech Pedestrian database <a class="bibtex reference internal" href="tuto.html#dollar2009" id="id10">[DollarWSP09]</a>.</p>
 <p>Note that the images and annotations must first be extracted from the
 seq video data located in the <em>videos</em> directory using the
 <code class="docutils literal notranslate"><span class="pre">dbExtract.m</span></code> Matlab tool provided in the “Matlab evaluation/labeling
@@ -843,7 +845,7 @@ annotations:</p>
 </div>
 <div class="section" id="cityscapes-database">
 <h3>Cityscapes_Database<a class="headerlink" href="#cityscapes-database" title="Permalink to this headline">¶</a></h3>
-<p>Cityscapes database <a class="bibtex reference internal" href="ini_layers.html#cordts2016cityscapes" id="id11">[COR+16]</a>.</p>
+<p>Cityscapes database <a class="bibtex reference internal" href="tuto.html#cordts2016cityscapes" id="id11">[COR+16]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 27%" />
@@ -913,7 +915,7 @@ annotations:</p>
 </div>
 <div class="section" id="dota-database">
 <h3>DOTA_Database<a class="headerlink" href="#dota-database" title="Permalink to this headline">¶</a></h3>
-<p>DOTA database <a class="bibtex reference internal" href="ini_layers.html#dota" id="id12">[XBD+17]</a>.</p>
+<p>DOTA database <a class="bibtex reference internal" href="tuto.html#dota" id="id12">[XBD+17]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 37%" />
@@ -946,7 +948,7 @@ annotations:</p>
 <div class="section" id="fddb-database">
 <h3>FDDB_Database<a class="headerlink" href="#fddb-database" title="Permalink to this headline">¶</a></h3>
 <p>Face Detection Data Set and Benchmark (FDDB)
-<a class="bibtex reference internal" href="ini_layers.html#jain2010" id="id13">[JLM10]</a>.</p>
+<a class="bibtex reference internal" href="tuto.html#jain2010" id="id13">[JLM10]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 31%" />
@@ -981,7 +983,7 @@ annotations:</p>
 </div>
 <div class="section" id="gtsdb-dir-database">
 <h3>GTSDB_DIR_Database<a class="headerlink" href="#gtsdb-dir-database" title="Permalink to this headline">¶</a></h3>
-<p>GTSDB database <a class="bibtex reference internal" href="ini_layers.html#houben2013" id="id14">[HSS+13]</a>.</p>
+<p>GTSDB database <a class="bibtex reference internal" href="tuto.html#houben2013" id="id14">[HSS+13]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 43%" />
@@ -1010,7 +1012,7 @@ annotations:</p>
 </div>
 <div class="section" id="ilsvrc2012-database">
 <h3>ILSVRC2012_Database<a class="headerlink" href="#ilsvrc2012-database" title="Permalink to this headline">¶</a></h3>
-<p>ILSVRC2012 database <a class="bibtex reference internal" href="ini_layers.html#ilsvrc15" id="id15">[RDS+15]</a>.</p>
+<p>ILSVRC2012 database <a class="bibtex reference internal" href="tuto.html#ilsvrc15" id="id15">[RDS+15]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 49%" />
@@ -1135,7 +1137,7 @@ object data set (5 MB). Extract the downloaded archives in your
 </div>
 <div class="section" id="litisrouen-database">
 <h3>LITISRouen_Database<a class="headerlink" href="#litisrouen-database" title="Permalink to this headline">¶</a></h3>
-<p>LITIS Rouen audio scene dataset <a class="bibtex reference internal" href="ini_layers.html#rakotomamonjy2014" id="id16">[RG14]</a>.</p>
+<p>LITIS Rouen audio scene dataset <a class="bibtex reference internal" href="tuto.html#rakotomamonjy2014" id="id16">[RG14]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 41%" />
@@ -1180,9 +1182,6 @@ effectively increases the number of stimuli in the set.</p>
 dataset after slicing. If disabled, the slices are added in order at the
 end of the dataset.</p>
 <p id="bibtex-bibliography-ini_databases-0"><dl class="citation">
-<dt class="bibtex label" id="bhalgat2020lsq"><span class="brackets">BLN+20</span></dt>
-<dd><p>Yash Bhalgat, Jinwon Lee, Markus Nagel, Tijmen Blankevoort, and Nojun Kwak. Lsq+: improving low-bit quantization through learnable offsets and better initialization. 2020. <a class="reference external" href="https://arxiv.org/abs/2004.09576">arXiv:2004.09576</a>.</p>
-</dd>
 <dt class="bibtex label" id="cordts2016cityscapes"><span class="brackets"><a class="fn-backref" href="#id11">COR+16</a></span></dt>
 <dd><p>Marius Cordts, Mohamed Omran, Sebastian Ramos, Timo Rehfeld, Markus Enzweiler, Rodrigo Benenson, Uwe Franke, Stefan Roth, and Bernt Schiele. The cityscapes dataset for semantic urban scene understanding. In <em>Proc. of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)</em>. 2016.</p>
 </dd>
@@ -1192,38 +1191,14 @@ end of the dataset.</p>
 <dt class="bibtex label" id="feifei2004"><span class="brackets"><a class="fn-backref" href="#id8">FFFP04</a></span></dt>
 <dd><p>L. Fei-Fei, R. Fergus, and P. Perona. Learning generative visual models from few training examples: an incremental bayesian approach tested on 101 object categories. In <em>IEEE. CVPR 2004, Workshop on Generative-Model Based Vision</em>. 2004.</p>
 </dd>
-<dt class="bibtex label" id="glorot2010"><span class="brackets">GB10</span></dt>
-<dd><p>X. Glorot and Y. Bengio. Understanding the difficulty of training deep feedforward neural networks. In <em>International conference on artificial intelligence and statistics</em>, 249–256. 2010.</p>
-</dd>
-<dt class="bibtex label" id="dblp-journals-corr-goyaldgnwktjh17"><span class="brackets">GDollarG+17</span></dt>
-<dd><p>Priya Goyal, Piotr Dollár, Ross B. Girshick, Pieter Noordhuis, Lukasz Wesolowski, Aapo Kyrola, Andrew Tulloch, Yangqing Jia, and Kaiming He. Accurate, large minibatch SGD: training imagenet in 1 hour. <em>CoRR</em>, 2017. URL: <a class="reference external" href="http://arxiv.org/abs/1706.02677">http://arxiv.org/abs/1706.02677</a>, <a class="reference external" href="https://arxiv.org/abs/1706.02677">arXiv:1706.02677</a>.</p>
-</dd>
-<dt class="bibtex label" id="graham2014"><span class="brackets">Gra14</span></dt>
-<dd><p>Benjamin Graham. Fractional max-pooling. <em>CoRR</em>, 2014.</p>
-</dd>
 <dt class="bibtex label" id="griffin2007"><span class="brackets"><a class="fn-backref" href="#id9">GHP07</a></span></dt>
 <dd><p>Gregory Griffin, Alex Holub, and Pietro Perona. Caltech-256 object category dataset. Technical Report, 2007.</p>
-</dd>
-<dt class="bibtex label" id="he2015"><span class="brackets">HZRS15</span></dt>
-<dd><p>Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Delving deep into rectifiers: surpassing human-level performance on imagenet classification. In <em>Proceedings of the 2015 IEEE International Conference on Computer Vision (ICCV)</em>, ICCV ‘15, 1026–1034. 2015. <a class="reference external" href="https://doi.org/10.1109/ICCV.2015.123">doi:10.1109/ICCV.2015.123</a>.</p>
-</dd>
-<dt class="bibtex label" id="lstm1997"><span class="brackets">HS97</span></dt>
-<dd><p>Sepp Hochreiter and Jürgen Schmidhuber. Long short-term memory. <em>Neural Computation</em>, 9(8):1735–1780, 1997. <a class="reference external" href="https://doi.org/10.1162/neco.1997.9.8.1735">doi:10.1162/neco.1997.9.8.1735</a>.</p>
 </dd>
 <dt class="bibtex label" id="houben2013"><span class="brackets"><a class="fn-backref" href="#id14">HSS+13</a></span></dt>
 <dd><p>Sebastian Houben, Johannes Stallkamp, Jan Salmen, Marc Schlipsing, and Christian Igel. Detection of traffic signs in real-world images: the German Traffic Sign Detection Benchmark. In <em>International Joint Conference on Neural Networks</em>, number 1288. 2013.</p>
 </dd>
-<dt class="bibtex label" id="ioffe2015"><span class="brackets">IS15</span></dt>
-<dd><p>Sergey Ioffe and Christian Szegedy. Batch normalization: accelerating deep network training by reducing internal covariate shift. <em>CoRR</em>, 2015.</p>
-</dd>
 <dt class="bibtex label" id="jain2010"><span class="brackets"><a class="fn-backref" href="#id13">JLM10</a></span></dt>
 <dd><p>Vidit Jain and Erik Learned-Miller. FDDB: a benchmark for face detection in unconstrained settings. Technical Report UM-CS-2010-009, University of Massachusetts, Amherst, 2010.</p>
-</dd>
-<dt class="bibtex label" id="jin2019efficient"><span class="brackets">JYL19</span></dt>
-<dd><p>Qing Jin, Linjie Yang, and Zhenyu Liao. Towards efficient training for neural network quantization. 2019. <a class="reference external" href="https://arxiv.org/abs/1912.10207">arXiv:1912.10207</a>.</p>
-</dd>
-<dt class="bibtex label" id="kingmab14"><span class="brackets">KB14</span></dt>
-<dd><p>Diederik P. Kingma and Jimmy Ba. Adam: A method for stochastic optimization. <em>CoRR</em>, 2014. URL: <a class="reference external" href="http://arxiv.org/abs/1412.6980">http://arxiv.org/abs/1412.6980</a>, <a class="reference external" href="https://arxiv.org/abs/1412.6980">arXiv:1412.6980</a>.</p>
 </dd>
 <dt class="bibtex label" id="krizhevsky2009"><span class="brackets">Kri09</span><span class="fn-backref">(<a href="#id5">1</a>,<a href="#id6">2</a>)</span></dt>
 <dd><p>Alex Krizhevsky. Learning multiple layers of features from tiny images. Technical Report, 2009.</p>
@@ -1240,26 +1215,17 @@ end of the dataset.</p>
 <dt class="bibtex label" id="ilsvrc15"><span class="brackets"><a class="fn-backref" href="#id15">RDS+15</a></span></dt>
 <dd><p>Olga Russakovsky, Jia Deng, Hao Su, Jonathan Krause, Sanjeev Satheesh, Sean Ma, Zhiheng Huang, Andrej Karpathy, Aditya Khosla, Michael Bernstein, Alexander C. Berg, and Li Fei-Fei. ImageNet Large Scale Visual Recognition Challenge. <em>International Journal of Computer Vision (IJCV)</em>, 115(3):211–252, 2015. <a class="reference external" href="https://doi.org/10.1007/s11263-015-0816-y">doi:10.1007/s11263-015-0816-y</a>.</p>
 </dd>
-<dt class="bibtex label" id="srivastava2014"><span class="brackets">SHK+12</span></dt>
-<dd><p>Nitish Srivastava, Geoffrey Hinton, Alex Krizhevsky, Ilya Sutskever, and Ruslan Salakhutdinov. Dropout: a simple way to prevent neural networks from voverfitting. <em>Journal of Machine Learning Research</em>, 15:1929–1958, 2012.</p>
-</dd>
 <dt class="bibtex label" id="stallkamp2012"><span class="brackets"><a class="fn-backref" href="#id2">SSSI12</a></span></dt>
 <dd><p>J. Stallkamp, M. Schlipsing, J. Salmen, and C. Igel. Man vs. computer: benchmarking machine learning algorithms for traffic sign recognition. <em>Neural Networks</em>, 2012. <a class="reference external" href="https://doi.org/10.1016/j.neunet.2012.02.016">doi:10.1016/j.neunet.2012.02.016</a>.</p>
 </dd>
 <dt class="bibtex label" id="dota"><span class="brackets"><a class="fn-backref" href="#id12">XBD+17</a></span></dt>
 <dd><p>Gui-Song Xia, Xiang Bai, Jian Ding, Zhen Zhu, Serge J. Belongie, Jiebo Luo, Mihai Datcu, Marcello Pelillo, and Liangpei Zhang. DOTA: A large-scale dataset for object detection in aerial images. <em>CoRR</em>, 2017. URL: <a class="reference external" href="http://arxiv.org/abs/1711.10398">http://arxiv.org/abs/1711.10398</a>, <a class="reference external" href="https://arxiv.org/abs/1711.10398">arXiv:1711.10398</a>.</p>
 </dd>
-<dt class="bibtex label" id="zhang2018residual"><span class="brackets">ZDM19</span></dt>
-<dd><p>Hongyi Zhang, Yann N. Dauphin, and Tengyu Ma. Residual learning without normalization via better initialization. In <em>International Conference on Learning Representations</em>. 2019. URL: <a class="reference external" href="https://openreview.net/forum?id=H1gsz30cKX">https://openreview.net/forum?id=H1gsz30cKX</a>.</p>
-</dd>
 <dt class="bibtex label" id="lucey2010"><span class="brackets"><a class="fn-backref" href="#id7">LuceyCohnKanade+10</a></span></dt>
 <dd><p>P. Lucey, J. F. Cohn, T. Kanade, J. Saragih, Z. Ambadar, and I. Matthews. The extended cohn-kanade dataset (ck+): a complete dataset for action unit and emotion-specified expression. In <em>2010 IEEE Computer Society Conference on Computer Vision and Pattern Recognition - Workshops</em>, volume, 94–101. June 2010. <a class="reference external" href="https://doi.org/10.1109/CVPRW.2010.5543262">doi:10.1109/CVPRW.2010.5543262</a>.</p>
 </dd>
 <dt class="bibtex label" id="speechcommandsv2"><span class="brackets"><a class="fn-backref" href="#id3">Warden18</a></span></dt>
 <dd><p>P. Warden. Speech Commands: A Dataset for Limited-Vocabulary Speech Recognition. <em>ArXiv e-prints</em>, April 2018. URL: <a class="reference external" href="https://arxiv.org/abs/1804.03209">https://arxiv.org/abs/1804.03209</a>, <a class="reference external" href="https://arxiv.org/abs/1804.03209">arXiv:1804.03209</a>.</p>
-</dd>
-<dt class="bibtex label" id="arxiv170508292w"><span class="brackets">WilsonRoelofsStern+17</span></dt>
-<dd><p>Ashia C. Wilson, Rebecca Roelofs, Mitchell Stern, Nathan Srebro, and Benjamin Recht. The Marginal Value of Adaptive Gradient Methods in Machine Learning. <em>arXiv e-prints</em>, pages arXiv:1705.08292, May 2017. <a class="reference external" href="https://arxiv.org/abs/1705.08292">arXiv:1705.08292</a>.</p>
 </dd>
 </dl>
 </p>

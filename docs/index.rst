@@ -13,6 +13,7 @@ N2D2
    intro
    about
    simus
+   perfs_tools
    tuto
 
 .. toctree::
@@ -43,6 +44,7 @@ N2D2
    ini_data_analysis
    ini_environment
    ini_layers
+   ini_target
 
 .. toctree::
    :maxdepth: 1

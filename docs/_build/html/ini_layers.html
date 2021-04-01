@@ -37,8 +37,8 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Containers" href="containers.html" />
-    <link rel="prev" title="Environment" href="ini_environment.html" /> 
+    <link rel="next" title="Targets (outputs &amp; losses)" href="ini_target.html" />
+    <link rel="prev" title="Stimuli provider (Environment)" href="ini_environment.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -87,6 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="perfs_tools.html">Performance evaluation tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
 </ul>
 <p class="caption"><span class="caption-text">ONNX Import:</span></p>
@@ -109,7 +110,7 @@
 <li class="toctree-l1"><a class="reference internal" href="ini_intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ini_databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ini_data_analysis.html">Stimuli data analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ini_environment.html">Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_environment.html">Stimuli provider (Environment)</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Network Layers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#layer-definition">Layer definition</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#weight-fillers">Weight fillers</a><ul>
@@ -213,6 +214,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#unpool">Unpool</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ini_target.html">Targets (outputs &amp; losses)</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Python API:</span></p>
 <ul>
@@ -318,15 +320,6 @@
 </tr>
 </tbody>
 </table>
-<p>To specify that the back-propagated error must be computed at the output
-of a given layer (generally the last layer, or output layer), one must
-add a target section named <em>LayerName</em><code class="docutils literal notranslate"><span class="pre">.Target</span></code>:</p>
-<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">...</span>
-<span class="k">[LayerName.Target]</span>
-<span class="na">TargetValue</span><span class="o">=</span><span class="s">1.0 ; default: 1.0</span>
-<span class="na">DefaultValue</span><span class="o">=</span><span class="s">0.0 ; default: -1.0</span>
-</pre></div>
-</div>
 </div>
 <div class="section" id="weight-fillers">
 <h2>Weight fillers<a class="headerlink" href="#weight-fillers" title="Permalink to this headline">¶</a></h2>
@@ -371,7 +364,7 @@ add a target section named <em>LayerName</em><code class="docutils literal notra
 <div class="section" id="hefiller">
 <h3>HeFiller<a class="headerlink" href="#hefiller" title="Permalink to this headline">¶</a></h3>
 <p>Fill with an normal distribution with normalized variance taking into
-account the rectifier nonlinearity <a class="bibtex reference internal" href="#he2015" id="id1">[HZRS15]</a>. This
+account the rectifier nonlinearity <a class="bibtex reference internal" href="tuto.html#he2015" id="id1">[HZRS15]</a>. This
 filler is sometimes referred as MSRA filler.</p>
 <table class="docutils align-default">
 <colgroup>
@@ -453,7 +446,7 @@ with <code class="docutils literal notranslate"><span class="pre">Average</span>
 <div class="section" id="xavierfiller">
 <h3>XavierFiller<a class="headerlink" href="#xavierfiller" title="Permalink to this headline">¶</a></h3>
 <p>Fill with an uniform distribution with normalized variance
-<a class="bibtex reference internal" href="#glorot2010" id="id2">[GB10]</a>.</p>
+<a class="bibtex reference internal" href="tuto.html#glorot2010" id="id2">[GB10]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 44%" />
@@ -608,7 +601,7 @@ current iteration and <span class="math notranslate nohighlight">\(n\)</span> th
 </div>
 <div class="section" id="adamsolver-frame">
 <h3>AdamSolver_Frame<a class="headerlink" href="#adamsolver-frame" title="Permalink to this headline">¶</a></h3>
-<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame</span></code> models <a class="bibtex reference internal" href="#kingmab14" id="id3">[KB14]</a>.</p>
+<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame</span></code> models <a class="bibtex reference internal" href="tuto.html#kingmab14" id="id3">[KB14]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 38%" />
@@ -637,7 +630,7 @@ current iteration and <span class="math notranslate nohighlight">\(n\)</span> th
 </div>
 <div class="section" id="adamsolver-frame-cuda">
 <h3>AdamSolver_Frame_CUDA<a class="headerlink" href="#adamsolver-frame-cuda" title="Permalink to this headline">¶</a></h3>
-<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame_CUDA</span></code> models <a class="bibtex reference internal" href="#kingmab14" id="id4">[KB14]</a>.</p>
+<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame_CUDA</span></code> models <a class="bibtex reference internal" href="tuto.html#kingmab14" id="id4">[KB14]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 38%" />
@@ -918,7 +911,7 @@ following output feature maps ordering:</p>
 </div>
 <div class="section" id="batchnorm">
 <h2>BatchNorm<a class="headerlink" href="#batchnorm" title="Permalink to this headline">¶</a></h2>
-<p>Batch Normalization layer <a class="bibtex reference internal" href="#ioffe2015" id="id5">[IS15]</a>.</p>
+<p>Batch Normalization layer <a class="bibtex reference internal" href="tuto.html#ioffe2015" id="id5">[IS15]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 19%" />
@@ -1621,7 +1614,7 @@ limit)</p></td>
 </div>
 <div class="section" id="dropout">
 <h2>Dropout<a class="headerlink" href="#dropout" title="Permalink to this headline">¶</a></h2>
-<p>Dropout layer <a class="bibtex reference internal" href="#srivastava2014" id="id9">[SHK+12]</a>.</p>
+<p>Dropout layer <a class="bibtex reference internal" href="tuto.html#srivastava2014" id="id9">[SHK+12]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 48%" />
@@ -1757,7 +1750,7 @@ operation:</p>
 </div>
 <div class="section" id="fmp">
 <h2>FMP<a class="headerlink" href="#fmp" title="Permalink to this headline">¶</a></h2>
-<p>Fractional max pooling layer <a class="bibtex reference internal" href="#graham2014" id="id11">[Gra14]</a>.</p>
+<p>Fractional max pooling layer <a class="bibtex reference internal" href="tuto.html#graham2014" id="id11">[Gra14]</a>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 20%" />
@@ -2062,7 +2055,7 @@ expression:</p>
 </div>
 <div class="section" id="lstm">
 <h2>LSTM<a class="headerlink" href="#lstm" title="Permalink to this headline">¶</a></h2>
-<p>Long Short Term Memory Layer <a class="bibtex reference internal" href="#lstm1997" id="id16">[HS97]</a>.</p>
+<p>Long Short Term Memory Layer <a class="bibtex reference internal" href="tuto.html#lstm1997" id="id16">[HS97]</a>.</p>
 <div class="section" id="global-layer-parameters-frame-cuda-models">
 <h3>Global layer parameters (<em>Frame_CUDA</em> models)<a class="headerlink" href="#global-layer-parameters-frame-cuda-models" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
@@ -2819,9 +2812,6 @@ in respect of the cross-entropy loss:</p>
 </pre></div>
 </div>
 <p id="bibtex-bibliography-ini_layers-0"><dl class="citation">
-<dt class="bibtex label" id="bhalgat2020lsq"><span class="brackets">BLN+20</span></dt>
-<dd><p>Yash Bhalgat, Jinwon Lee, Markus Nagel, Tijmen Blankevoort, and Nojun Kwak. Lsq+: improving low-bit quantization through learnable offsets and better initialization. 2020. <a class="reference external" href="https://arxiv.org/abs/2004.09576">arXiv:2004.09576</a>.</p>
-</dd>
 <dt class="bibtex label" id="cordts2016cityscapes"><span class="brackets">COR+16</span></dt>
 <dd><p>Marius Cordts, Mohamed Omran, Sebastian Ramos, Timo Rehfeld, Markus Enzweiler, Rodrigo Benenson, Uwe Franke, Stefan Roth, and Bernt Schiele. The cityscapes dataset for semantic urban scene understanding. In <em>Proc. of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)</em>. 2016.</p>
 </dd>
@@ -2833,9 +2823,6 @@ in respect of the cross-entropy loss:</p>
 </dd>
 <dt class="bibtex label" id="glorot2010"><span class="brackets"><a class="fn-backref" href="#id2">GB10</a></span></dt>
 <dd><p>X. Glorot and Y. Bengio. Understanding the difficulty of training deep feedforward neural networks. In <em>International conference on artificial intelligence and statistics</em>, 249–256. 2010.</p>
-</dd>
-<dt class="bibtex label" id="dblp-journals-corr-goyaldgnwktjh17"><span class="brackets">GDollarG+17</span></dt>
-<dd><p>Priya Goyal, Piotr Dollár, Ross B. Girshick, Pieter Noordhuis, Lukasz Wesolowski, Aapo Kyrola, Andrew Tulloch, Yangqing Jia, and Kaiming He. Accurate, large minibatch SGD: training imagenet in 1 hour. <em>CoRR</em>, 2017. URL: <a class="reference external" href="http://arxiv.org/abs/1706.02677">http://arxiv.org/abs/1706.02677</a>, <a class="reference external" href="https://arxiv.org/abs/1706.02677">arXiv:1706.02677</a>.</p>
 </dd>
 <dt class="bibtex label" id="graham2014"><span class="brackets"><a class="fn-backref" href="#id11">Gra14</a></span></dt>
 <dd><p>Benjamin Graham. Fractional max-pooling. <em>CoRR</em>, 2014.</p>
@@ -2857,9 +2844,6 @@ in respect of the cross-entropy loss:</p>
 </dd>
 <dt class="bibtex label" id="jain2010"><span class="brackets">JLM10</span></dt>
 <dd><p>Vidit Jain and Erik Learned-Miller. FDDB: a benchmark for face detection in unconstrained settings. Technical Report UM-CS-2010-009, University of Massachusetts, Amherst, 2010.</p>
-</dd>
-<dt class="bibtex label" id="jin2019efficient"><span class="brackets">JYL19</span></dt>
-<dd><p>Qing Jin, Linjie Yang, and Zhenyu Liao. Towards efficient training for neural network quantization. 2019. <a class="reference external" href="https://arxiv.org/abs/1912.10207">arXiv:1912.10207</a>.</p>
 </dd>
 <dt class="bibtex label" id="kingmab14"><span class="brackets">KB14</span><span class="fn-backref">(<a href="#id3">1</a>,<a href="#id4">2</a>)</span></dt>
 <dd><p>Diederik P. Kingma and Jimmy Ba. Adam: A method for stochastic optimization. <em>CoRR</em>, 2014. URL: <a class="reference external" href="http://arxiv.org/abs/1412.6980">http://arxiv.org/abs/1412.6980</a>, <a class="reference external" href="https://arxiv.org/abs/1412.6980">arXiv:1412.6980</a>.</p>
@@ -2888,17 +2872,11 @@ in respect of the cross-entropy loss:</p>
 <dt class="bibtex label" id="dota"><span class="brackets">XBD+17</span></dt>
 <dd><p>Gui-Song Xia, Xiang Bai, Jian Ding, Zhen Zhu, Serge J. Belongie, Jiebo Luo, Mihai Datcu, Marcello Pelillo, and Liangpei Zhang. DOTA: A large-scale dataset for object detection in aerial images. <em>CoRR</em>, 2017. URL: <a class="reference external" href="http://arxiv.org/abs/1711.10398">http://arxiv.org/abs/1711.10398</a>, <a class="reference external" href="https://arxiv.org/abs/1711.10398">arXiv:1711.10398</a>.</p>
 </dd>
-<dt class="bibtex label" id="zhang2018residual"><span class="brackets">ZDM19</span></dt>
-<dd><p>Hongyi Zhang, Yann N. Dauphin, and Tengyu Ma. Residual learning without normalization via better initialization. In <em>International Conference on Learning Representations</em>. 2019. URL: <a class="reference external" href="https://openreview.net/forum?id=H1gsz30cKX">https://openreview.net/forum?id=H1gsz30cKX</a>.</p>
-</dd>
 <dt class="bibtex label" id="lucey2010"><span class="brackets">LuceyCohnKanade+10</span></dt>
 <dd><p>P. Lucey, J. F. Cohn, T. Kanade, J. Saragih, Z. Ambadar, and I. Matthews. The extended cohn-kanade dataset (ck+): a complete dataset for action unit and emotion-specified expression. In <em>2010 IEEE Computer Society Conference on Computer Vision and Pattern Recognition - Workshops</em>, volume, 94–101. June 2010. <a class="reference external" href="https://doi.org/10.1109/CVPRW.2010.5543262">doi:10.1109/CVPRW.2010.5543262</a>.</p>
 </dd>
 <dt class="bibtex label" id="speechcommandsv2"><span class="brackets">Warden18</span></dt>
 <dd><p>P. Warden. Speech Commands: A Dataset for Limited-Vocabulary Speech Recognition. <em>ArXiv e-prints</em>, April 2018. URL: <a class="reference external" href="https://arxiv.org/abs/1804.03209">https://arxiv.org/abs/1804.03209</a>, <a class="reference external" href="https://arxiv.org/abs/1804.03209">arXiv:1804.03209</a>.</p>
-</dd>
-<dt class="bibtex label" id="arxiv170508292w"><span class="brackets">WilsonRoelofsStern+17</span></dt>
-<dd><p>Ashia C. Wilson, Rebecca Roelofs, Mitchell Stern, Nathan Srebro, and Benjamin Recht. The Marginal Value of Adaptive Gradient Methods in Machine Learning. <em>arXiv e-prints</em>, pages arXiv:1705.08292, May 2017. <a class="reference external" href="https://arxiv.org/abs/1705.08292">arXiv:1705.08292</a>.</p>
 </dd>
 </dl>
 </p>
@@ -3156,10 +3134,10 @@ limit)</p></td>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="containers.html" class="btn btn-neutral float-right" title="Containers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="ini_target.html" class="btn btn-neutral float-right" title="Targets (outputs &amp; losses)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="ini_environment.html" class="btn btn-neutral float-left" title="Environment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="ini_environment.html" class="btn btn-neutral float-left" title="Stimuli provider (Environment)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

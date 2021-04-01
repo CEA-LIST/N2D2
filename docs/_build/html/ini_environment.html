@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Environment &mdash; N2D2  documentation</title>
+  <title>Stimuli provider (Environment) &mdash; N2D2  documentation</title>
   
 
   
@@ -87,6 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="perfs_tools.html">Performance evaluation tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
 </ul>
 <p class="caption"><span class="caption-text">ONNX Import:</span></p>
@@ -109,7 +110,10 @@
 <li class="toctree-l1"><a class="reference internal" href="ini_intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ini_databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ini_data_analysis.html">Stimuli data analysis</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Environment</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Stimuli provider (Environment)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-range-and-conversion">Data range and conversion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#images-slicing-during-training-and-inference">Images slicing during training and inference</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#built-in-transformations">Built-in transformations</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#affinetransformation">AffineTransformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#apodizationtransformation">ApodizationTransformation</a><ul>
@@ -154,6 +158,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ini_layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_target.html">Targets (outputs &amp; losses)</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Python API:</span></p>
 <ul>
@@ -207,7 +212,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Environment</li>
+      <li>Stimuli provider (Environment)</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -226,16 +231,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="environment">
-<h1>Environment<a class="headerlink" href="#environment" title="Permalink to this headline">¶</a></h1>
-<p>The environment simply specify the input data format of the network
-(width, height and batch size). Example:</p>
-<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[env]</span>
+  <div class="section" id="stimuli-provider-environment">
+<h1>Stimuli provider (Environment)<a class="headerlink" href="#stimuli-provider-environment" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">database</span></code> section must feed a stimuli provider (or environment), which is
+instantiated with a section named <code class="docutils literal notranslate"><span class="pre">sp</span></code> (or <code class="docutils literal notranslate"><span class="pre">env</span></code>) in the INI file. When the
+two sections are present in the INI file, they are implicitly connected: the
+<code class="docutils literal notranslate"><span class="pre">StimuliProvider</span></code> is automatically aware of the <code class="docutils literal notranslate"><span class="pre">Database</span></code> driver that is
+present. The <code class="docutils literal notranslate"><span class="pre">StimuliProvider</span></code> section specifies the input dimensions of the
+network (width, height), as well as the batch size.</p>
+<p>Example:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[sp]</span>
 <span class="na">SizeX</span><span class="o">=</span><span class="s">24</span>
 <span class="na">SizeY</span><span class="o">=</span><span class="s">24</span>
 <span class="na">BatchSize</span><span class="o">=</span><span class="s">12 ; [default: 1]</span>
 </pre></div>
 </div>
+<p>The table below summarizes the parameters available for the <code class="docutils literal notranslate"><span class="pre">sp</span></code> section:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 11%" />
@@ -265,26 +278,152 @@
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CachePath</span></code> []</p></td>
 <td><p>Stimuli cache path (no cache if left empty)</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">StimulusType</span></code> [<code class="docutils literal notranslate"><span class="pre">SingleBurst</span></code>]</p></td>
+</tbody>
+</table>
+<p>The <code class="docutils literal notranslate"><span class="pre">env</span></code> section accepts more parameters dedicated to event-based (spiking)
+simulation:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 89%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option (<code class="docutils literal notranslate"><span class="pre">env</span></code> only) [default]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StimulusType</span></code> [<code class="docutils literal notranslate"><span class="pre">SingleBurst</span></code>]</p></td>
 <td><p>Method for converting stimuli into spike trains. Can be any of <code class="docutils literal notranslate"><span class="pre">SingleBurst</span></code>, <code class="docutils literal notranslate"><span class="pre">Periodic</span></code>, <code class="docutils literal notranslate"><span class="pre">JitteredPeriodic</span></code> or <code class="docutils literal notranslate"><span class="pre">Poissonian</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DiscardedLateStimuli</span></code> [1.0]</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DiscardedLateStimuli</span></code> [1.0]</p></td>
 <td><p>The pixels in the pre-processed stimuli with a value above this limit never generate spiking events</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PeriodMeanMin</span></code> [50 <code class="docutils literal notranslate"><span class="pre">TimeMs</span></code>]</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PeriodMeanMin</span></code> [50 <code class="docutils literal notranslate"><span class="pre">TimeMs</span></code>]</p></td>
 <td><p>Mean minimum period <span class="math notranslate nohighlight">\(\overline{T_{min}}\)</span>, used for periodic temporal codings, corresponding to pixels in the pre-processed stimuli with a value of 0 (which are supposed to be the most significant pixels)</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PeriodMeanMax</span></code> [12 <code class="docutils literal notranslate"><span class="pre">TimeS</span></code>]</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PeriodMeanMax</span></code> [12 <code class="docutils literal notranslate"><span class="pre">TimeS</span></code>]</p></td>
 <td><p>Mean maximum period <span class="math notranslate nohighlight">\(\overline{T_{max}}\)</span>, used for periodic temporal codings, corresponding to pixels in the pre-processed stimuli with a value of 1 (which are supposed to be the least significant pixels). This maximum period may be never reached if <code class="docutils literal notranslate"><span class="pre">DiscardedLateStimuli</span></code> is lower than 1.0</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PeriodRelStdDev</span></code> [0.1]</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PeriodRelStdDev</span></code> [0.1]</p></td>
 <td><p>Relative standard deviation, used for periodic temporal codings, applied to the spiking period of a pixel</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PeriodMin</span></code> [11 <code class="docutils literal notranslate"><span class="pre">TimeMs</span></code>]</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PeriodMin</span></code> [11 <code class="docutils literal notranslate"><span class="pre">TimeMs</span></code>]</p></td>
 <td><p>Absolute minimum period, or spiking interval, used for periodic temporal codings, for any pixel</p></td>
 </tr>
 </tbody>
 </table>
+<p>For image segmentation, the parameter <code class="docutils literal notranslate"><span class="pre">CompositeStimuli=1</span></code> must always be
+present, meaning that the labels of the image must have the same dimension than
+the image (and cannot be a single class value as in classification problem).</p>
+</div>
+<div class="section" id="data-range-and-conversion">
+<h2>Data range and conversion<a class="headerlink" href="#data-range-and-conversion" title="Permalink to this headline">¶</a></h2>
+<p>A configuration section can be associated to a <code class="docutils literal notranslate"><span class="pre">StimuliProvider</span></code>, as shown
+below. The <code class="docutils literal notranslate"><span class="pre">DataSignedMapping=1</span></code> parameter specifies that the input value
+range must be interpreted as signed, even if the values are unsigned, which is
+usually the case for standard image formats (BMP, JPEG, PNG…). In case of
+8-bit images, values from 0 to 255 are therefore mapped to the range -128 to
+127 when this parameter is enabled.</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[sp]</span>
+<span class="na">SizeX</span><span class="o">=</span><span class="s">[database.slicing]Width</span>
+<span class="na">SizeY</span><span class="o">=</span><span class="s">[database.slicing]Height</span>
+<span class="na">BatchSize</span><span class="o">=</span><span class="s">${BATCH_SIZE}</span>
+<span class="na">CompositeStimuli</span><span class="o">=</span><span class="s">1</span>
+<span class="na">ConfigSection</span><span class="o">=</span><span class="s">sp.config</span>
+
+<span class="k">[sp.config]</span>
+<span class="na">DataSignedMapping</span><span class="o">=</span><span class="s">1</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In N2D2, the integer value input range [0, 255] (or [-128, 127] with the
+<code class="docutils literal notranslate"><span class="pre">DataSignedMapping=1</span></code> parameter) (for 8-bit images), is implicitly converted to
+floating point value range [0.0, 1.0] or [-1.0, 1.0] in the <code class="docutils literal notranslate"><span class="pre">StimuliProvider</span></code>,
+after the transformations, unless one of the transformation changes the
+representation and/or the range of the data.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">DataSignedMapping</span></code> parameter only has effect when implicit conversion
+is performed.</p>
+</div>
+<p>The input value range can also be changed explicitly using for example a
+<code class="docutils literal notranslate"><span class="pre">RangeAffineTransformation</span></code>, like below, in which case no implicit conversion
+is performed afterwards (and the <code class="docutils literal notranslate"><span class="pre">DataSignedMapping</span></code> parameter has no effect):</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[sp.Transformation-rangeAffine]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">RangeAffineTransformation</span>
+<span class="na">FirstOperator</span><span class="o">=</span><span class="s">Minus</span>
+<span class="na">FirstValue</span><span class="o">=</span><span class="s">128.0</span>
+<span class="na">SecondOperator</span><span class="o">=</span><span class="s">Divides</span>
+<span class="na">SecondValue</span><span class="o">=</span><span class="s">128.0</span>
+</pre></div>
+</div>
+<p>When running a simulation in N2D2, the graph of the transformations with all
+their parameters as well as the expected output dimension after each
+transformation is automatically generated (in the file <em>transformations.png</em>).
+As transformations can be applied only to one of the learn, validation or test
+datasets, three graphs are generated, as shown in the following figure.</p>
+<div class="figure align-default" id="id1">
+<img alt="Graph of the transformations for the learn, validation and test datasets, automatically generated by N2D2." src="_images/transformations.png" />
+<p class="caption"><span class="caption-text">Graph of the transformations for the learn, validation and test datasets,
+automatically generated by N2D2.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="images-slicing-during-training-and-inference">
+<h2>Images slicing during training and inference<a class="headerlink" href="#images-slicing-during-training-and-inference" title="Permalink to this headline">¶</a></h2>
+<p>In N2D2, the input dimensions of a neural network is fixed and cannot be
+changed dynamically during the training and inference, as images are processed
+in batch, like any other deep learning framework. Therefore, in order to deal
+with datasets containing images of variable dimensions, patches or slices of
+fixed dimensions must be extracted.</p>
+<p>In N2D2, two mechanisms are provided to extract slices:</p>
+<ul class="simple">
+<li><p>For training, random slices can be extracted from bigger images for each batch, thus allowing to cover the full images over the training time with the maximum variability. This also act as basic data augmentation. Random slices extraction is achieved using a <code class="docutils literal notranslate"><span class="pre">SliceExtractionTransformation</span></code>, applied only to the training set with the parameter <code class="docutils literal notranslate"><span class="pre">ApplyTo=LearnOnly</span></code>.</p></li>
+</ul>
+<blockquote>
+<div><div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[sp.OnTheFlyTransformation-1]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">SliceExtractionTransformation</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">${WIDTH}</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">${HEIGHT}</span>
+<span class="na">RandomOffsetX</span><span class="o">=</span><span class="s">1</span>
+<span class="na">RandomOffsetY</span><span class="o">=</span><span class="s">1</span>
+<span class="na">AllowPadding</span><span class="o">=</span><span class="s">1</span>
+<span class="na">ApplyTo</span><span class="o">=</span><span class="s">LearnOnly</span>
+</pre></div>
+</div>
+</div></blockquote>
+<ul class="simple">
+<li><p>For inference, one wants to cover the full images once and only once. This cannot be achieved with a N2D2 <code class="docutils literal notranslate"><span class="pre">Transformation</span></code>, but has to be handled by the <code class="docutils literal notranslate"><span class="pre">Database</span></code> driver. In order to do so, any <code class="docutils literal notranslate"><span class="pre">Database</span></code> driver can have an additional “slicing” section in the N2D2 INI file, which will automatically extract regularly strided fixed size slices from the dataset. The example above can be used to extract slides for the validation and testing datasets, with the parameter <code class="docutils literal notranslate"><span class="pre">ApplyTo=NoLearn</span></code>.</p></li>
+</ul>
+<blockquote>
+<div><div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database.slicing]</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">${WIDTH}</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">${HEIGHT}</span>
+<span class="na">StrideX</span><span class="o">=</span><span class="s">[database.slicing]Width</span>
+<span class="na">StrideY</span><span class="o">=</span><span class="s">[database.slicing]Height</span>
+<span class="na">Overlapping</span><span class="o">=</span><span class="s">1</span>
+<span class="na">ApplyTo</span><span class="o">=</span><span class="s">NoLearn</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>When an image size is not a multiple of the slices size, the most right and
+most bottom slices may have a size lower than the intended fixed slice size
+specified with <code class="docutils literal notranslate"><span class="pre">Width</span></code> and <code class="docutils literal notranslate"><span class="pre">Height</span></code>. There are two ways to deal with these slices:</p>
+<ol class="arabic simple">
+<li><p>Add the <code class="docutils literal notranslate"><span class="pre">Overlapping=1</span></code> parameter, which allows an overlapping between the
+right/bottom-most slice and the preceding one. The overlapping area in the
+right/bottom-most slice is then marked as “ignore” for the labeling, to
+avoid counting twice the classification result on these pixels.</p></li>
+<li><p>Add a <code class="docutils literal notranslate"><span class="pre">PadCropTransformation</span></code> to pad to the slice target size for <code class="docutils literal notranslate"><span class="pre">NoLearn</span></code>
+data. In this case the padded area can be either ignored or mirror padding
+can be used.</p></li>
+</ol>
+</div>
 <div class="section" id="built-in-transformations">
 <h2>Built-in transformations<a class="headerlink" href="#built-in-transformations" title="Permalink to this headline">¶</a></h2>
 <p>There are 6 possible categories of transformations:</p>
