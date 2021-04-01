@@ -61,7 +61,11 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
     // ctor
     int count = 1;
 #ifdef CUDA
-    CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+    // Don't use CHECK_CUDA_STATUS because this class should be usable even when
+    // N2D2 is compiled with CUDA and there is no device. 
+    const cudaError_t status = cudaGetDeviceCount(&count);
+    if (status != cudaSuccess)
+        count = 1;
 #endif
 
     // mProvidedData is a vector, with one element per device
@@ -179,7 +183,9 @@ void N2D2::StimuliProvider::setDevices(const std::set<int>& devices)
 
     int currentDev = 0;
 #ifdef CUDA
-    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+    const cudaError_t status = cudaGetDevice(&currentDev);
+    if (status != cudaSuccess)
+        currentDev = 0;
 #endif
 
     if (devices.empty()) {
@@ -251,7 +257,9 @@ void N2D2::StimuliProvider::addChannel(const CompositeTransformation
 
     int dev = 0;
 #ifdef CUDA
-    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+    const cudaError_t status = cudaGetDevice(&dev);
+    if (status != cudaSuccess)
+        dev = 0;
 #endif
 
     std::vector<size_t> labelSize(mProvidedData[dev].labelsData.dims());
@@ -1404,7 +1412,11 @@ void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
 void N2D2::StimuliProvider::synchronizeToDevices() {
 #ifdef CUDA
     int currentDev = 0;
-    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+    const cudaError_t status = cudaGetDevice(&currentDev);
+    if (status != cudaSuccess)
+        currentDev = 0;
+
+    bool setDeviceBack = false;
 
     for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
         if (mDevices.find(dev) != mDevices.end()) {
@@ -1417,6 +1429,7 @@ void N2D2::StimuliProvider::synchronizeToDevices() {
                 // element, which is the input of the first layer.
                 // The other elements are never synchronized on GPU, they stay on CPU.
                 CHECK_CUDA_STATUS(cudaSetDevice(dev));
+                setDeviceBack = true;
                 mProvidedData[currentDev].data.synchronizeToD(dataRef);
 
                 if (!targetDataRef.empty())
@@ -1425,7 +1438,8 @@ void N2D2::StimuliProvider::synchronizeToDevices() {
         }
     }
 
-    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+    if (setDeviceBack)
+        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
 #endif
 }
 
@@ -1464,7 +1478,9 @@ void N2D2::StimuliProvider::setBatchSize(unsigned int batchSize)
     if (mBatchSize > 0) {
         int dev = 0;
 #ifdef CUDA
-        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+        const cudaError_t status = cudaGetDevice(&dev);
+        if (status != cudaSuccess)
+            dev = 0;
 #endif
 
         std::vector<size_t> dataSize(mProvidedData[dev].data.dims());

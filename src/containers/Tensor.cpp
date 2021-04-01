@@ -187,7 +187,8 @@ N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims, T* dataPtr)
 
 template <class T>
 N2D2::Tensor<T>::Tensor(const cv::Mat& mat, bool signedMapping)
-    : BaseTensor(std::vector<size_t>(), std::make_shared<std::vector<char> >()),
+    : BaseTensor(std::vector<size_t>(),
+                 std::make_shared<std::vector<char> >(1, true)),
       mData(std::make_shared<DataTensor<T> >(std::vector<T>())),
       mDataOffset(0)
 {
@@ -198,12 +199,6 @@ N2D2::Tensor<T>::Tensor(const cv::Mat& mat, bool signedMapping)
 
     if (mat.channels() > 1)
         mDims.push_back(mat.channels());
-
-    int count = 1;
-#ifdef CUDA
-    CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
-#endif
-    (*mValid).resize(count, true);
 
     (*mData)().reserve(computeSize());
 
