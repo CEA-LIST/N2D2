@@ -44,61 +44,75 @@ provider.add_transformation(n2d2.transform.Rescale(width=32, height=32))
 print(provider)
 
 print("\n### Loading Model ###")
-model = n2d2.model.lenet.generate(provider, 10)
+model = n2d2.model.lenet.LeNet(10)
 print(model)
 
-classifier = n2d2.application.Classifier(provider, model)
+loss_function = n2d2.application.CrossEntropyClassifier(provider)
+
+provider.set_partition("Learn")
 
 print("\n### Training ###")
 for epoch in range(nb_epochs):
 
-    print("\n# Train Epoch: " + str(epoch) + " #")
+    #model.learn()
 
-    classifier.set_partition('Learn')
+    print("\n# Train Epoch: " + str(epoch) + " #")
 
     for i in range(math.ceil(database.get_nb_stimuli('Learn')/batch_size)):
 
-        classifier.read_random_batch()
+        x = provider.read_random_batch()
 
-        classifier.process()
+        x = model(x)
+        #x.tensor.N2D2().synchronizeDToH()
+        #print(x.tensor.dims())
 
-        classifier.optimize()
+        x = loss_function(x)
+
+        #print(x.get_deepnet())
+        #exit()
+
+        x.back_propagate()
+        x.update()
 
         print("Example: " + str(i * batch_size) + ", loss: "
-              + "{0:.3f}".format(classifier.get_current_loss()), end='\r')
+              + "{0:.3f}".format(x.tensor[0]), end='\r')
 
-    print("\n### Validation ###")
 
-    classifier.set_partition('Validation')
-    classifier.clear_success()
+    """print("\n### Validation ###")
+    
+    provider.set_partition('Validation')
+    loss_function.clear_success()
+
+    model.test()
 
     for i in range(math.ceil(database.get_nb_stimuli('Validation') / batch_size)):
         batch_idx = i * batch_size
 
-        classifier.read_batch(idx=batch_idx)
-
-        classifier.process()
+        x = provider.read_batch(batch_idx)
+        x = model(x)
+        x = loss_function(x)
 
         print("Validate example: " + str(i * batch_size) + ", val success: "
-              + "{0:.2f}".format(100 * classifier.get_average_success()) + "%", end='\r')
-
+              + "{0:.2f}".format(100 * loss_function.get_average_success()) + "%", end='\r')
+    """
 
 print("\n\n### Testing ###")
 
-classifier.set_partition('Test')
+provider.set_partition('Test')
+model.test()
 
 for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test')/batch_size)):
     batch_idx = i*batch_size
 
-    classifier.read_batch(idx=batch_idx)
-
-    classifier.process()
+    x = provider.read_batch(batch_idx)
+    x = model(x)
+    x = loss_function(x)
 
     print("Example: " + str(i * batch_size) + ", test success: "
-          + "{0:.2f}".format(100 * classifier.get_average_success()) + "%", end='\r')
+          + "{0:.2f}".format(100 * loss_function.get_average_success()) + "%", end='\r')
 
 print("\n")
 # save a confusion matrix
-classifier.logConfusionMatrix("lenet_confusion_matrix")
+loss_function.log_confusion_matrix("lenet_confusion_matrix")
 # save a graph of the loss and the validation score as a function of the number of steps
-classifier.logSuccess("lenet_success")
+loss_function.log_success("lenet_success")

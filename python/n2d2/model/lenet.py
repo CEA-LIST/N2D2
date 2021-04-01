@@ -20,8 +20,8 @@
 """
 
 from n2d2.utils import ConfigSection
-from n2d2.cell import Fc, Conv, Softmax, Pool2D, BatchNorm, Dropout
-from n2d2.deepnet import Group, DeepNet
+from n2d2.cell import Fc, Conv, Softmax, Pool2d, BatchNorm2d, Dropout
+from n2d2.deepnet import Group, DeepNet, Sequence
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
 from n2d2.filler import Normal, Xavier, Constant
@@ -73,13 +73,13 @@ class QuantLeNet(Group):
         first_layer_config['quantizer'].set_range(255)
         self.extractor.add(Conv(inputs, nbOutputs=6, kernelDims=[5, 5], **first_layer_config, name="conv1",
                                 deepNet=self.deepnet))
-        self.extractor.add(BatchNorm(self.extractor, **quant_bn_def(), name="bn1"))
-        self.extractor.add(Pool2D(self.extractor, poolDims=[2, 2], strideDims=[2, 2], pooling='Max', name="pool1"))
+        self.extractor.add(BatchNorm2d(self.extractor, **quant_bn_def(), name="bn1"))
+        self.extractor.add(Pool2d(self.extractor, poolDims=[2, 2], strideDims=[2, 2], pooling='Max', name="pool1"))
         self.extractor.add(Conv(self.extractor, nbOutputs=16, kernelDims=[5, 5], **quant_conv_def(), name="conv2"))
-        self.extractor.add(BatchNorm(self.extractor, **quant_bn_def(), name="bn2"))
-        self.extractor.add(Pool2D(self.extractor, poolDims=[2, 2], strideDims=[2, 2], pooling='Max', name="pool2"))
+        self.extractor.add(BatchNorm2d(self.extractor, **quant_bn_def(), name="bn2"))
+        self.extractor.add(Pool2d(self.extractor, poolDims=[2, 2], strideDims=[2, 2], pooling='Max', name="pool2"))
         self.extractor.add(Conv(self.extractor, nbOutputs=120, kernelDims=[5, 5], **quant_conv_def(), name="conv3"))
-        self.extractor.add(BatchNorm(self.extractor, **quant_bn_def(), name="bn3"))
+        self.extractor.add(BatchNorm2d(self.extractor, **quant_bn_def(), name="bn3"))
         self.extractor.add(Fc(self.extractor, nbOutputs=84, **quant_fc_def(), name="fc1"))
         self.extractor.add(Dropout(self.extractor, name="fc1.drop"))
 
@@ -107,7 +107,7 @@ def fc_def():
     weights_filler = Normal(mean=0.0, stdDev=0.01)
     weights_solver = SGD(**solver_config)
     bias_solver = SGD(**solver_config)
-    return ConfigSection(activationFunction=Rectifier(), weightsSolver=weights_solver, biasSolver=bias_solver,
+    return ConfigSection(weightsSolver=weights_solver, biasSolver=bias_solver,
                            noBias=True, weightsFiller=weights_filler)
 
 def bn_def():
@@ -117,20 +117,37 @@ def bn_def():
 
 
 def generate(inputs, nb_outputs=10):
-    x = Conv(inputs, nbOutputs=6, kernelDims=[5, 5], **conv_def(), name="conv1")
-    x = BatchNorm(x, **bn_def(), name="bn1")
-    x = Pool2D(x, poolDims=[2, 2], strideDims=[2, 2], pooling='Max', name="pool1")
-    x = Conv(x, nbOutputs=16, kernelDims=[5, 5], **conv_def(), name="conv2")
-    x = BatchNorm(x, **bn_def(), name="bn2")
-    x = Pool2D(x, poolDims=[2, 2], strideDims=[2, 2], pooling='Max', name="pool2")
-    x = Conv(x, nbOutputs=120, kernelDims=[5, 5], **conv_def(), name="conv3")
-    x = BatchNorm(x, **bn_def(), name="bn3")
-    x = Fc(x, nbOutputs=84, **fc_def(), name="fc1")
-    x = Dropout(x, name="fc1.drop")
-    x = Fc(x, nbOutputs=nb_outputs, **fc_def(),  name="fc2")
-    x = Softmax(x, withLoss=True, name="lenet_softmax")
-    return x.get_deepnet()
+    x = Conv(1, 6, kernelDims=[5, 5], **conv_def())(inputs)
+    #x = BatchNorm2d(**bn_def())(x)
+    x = Pool2d(poolDims=[2, 2], strideDims=[2, 2], pooling='Max')(x)
+    x = Conv(6, 16, kernelDims=[5, 5], **conv_def())(x)
+    #x = BatchNorm2d(x, **bn_def())(x)
+    x = Pool2d(poolDims=[2, 2], strideDims=[2, 2], pooling='Max')(x)
+    x = Conv(16, 120, kernelDims=[5, 5], **conv_def())(x)
+    #x = BatchNorm2d(x, **bn_def())(x)
+    x = Fc(120, 84, **fc_def())(x)
+    #x = Dropout(name="fc1.drop")(x)
+    x = Fc(84, nb_outputs, **fc_def())(x)
+    #x = Softmax(withLoss=True)(x)
+    return x
 
+
+
+class LeNet(Sequence):
+    def __init__(self, nb_outputs=10):
+        Sequence.__init__(self, [
+            Conv(1, 6, kernelDims=[5, 5], **conv_def()),
+            BatchNorm2d(6, **bn_def()),
+            Pool2d(poolDims=[2, 2], strideDims=[2, 2], pooling='Max'),
+            Conv(6, 16, kernelDims=[5, 5], **conv_def()),
+            BatchNorm2d(16, **bn_def()),
+            Pool2d(poolDims=[2, 2], strideDims=[2, 2], pooling='Max'),
+            Conv(16, 120, kernelDims=[5, 5], **conv_def()),
+            BatchNorm2d(120, **bn_def()),
+            Fc(120, 84, activationFunction=Rectifier(), **fc_def()),
+            #Dropout(name="fc1.drop"),
+            Fc(84, nb_outputs, activationFunction=Linear(), **fc_def()),
+        ])
 
 
 

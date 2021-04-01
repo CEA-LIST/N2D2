@@ -314,3 +314,20 @@ class Group:
         output += "\n" + ((indent_level-1) * "\t") + ")"
         return output
 
+class Sequence:
+    def __init__(self, cells):
+        assert(isinstance(cells, list))
+        self._cells = cells
+
+    def __call__(self, x):
+        for cell in self._cells:
+            x = cell(x)
+        return x
+
+    def test(self):
+        for cell in self._cells:
+            cell.test()
+
+    def learn(self):
+        for cell in self._cells:
+            cell.learn()

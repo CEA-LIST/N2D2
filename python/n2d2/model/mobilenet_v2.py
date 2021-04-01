@@ -20,7 +20,7 @@
 """
 
 from n2d2.utils import ConfigSection
-from n2d2.cell import Fc, Conv, ConvDepthWise, Softmax, Pool2D, BatchNorm, ElemWise
+from n2d2.cell import Fc, Conv, ConvDepthWise, Softmax, Pool2d, BatchNorm2d, ElemWise
 from n2d2.deepnet import Group
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
@@ -113,7 +113,7 @@ class Mobilenet_v2(Group):
 
         self.head =  Group([
             ConvElemWise(max(1280, int(1280 * alpha)), activationFunction=ReLU6(), weightsFiller=He(), name="conv9"),
-            Pool2D(max(1280, int(1280 * alpha)), poolDims=[size // 32, size // 32], strideDims=[1, 1], pooling='Average', name="pool"),
+            Pool2d(max(1280, int(1280 * alpha)), poolDims=[size // 32, size // 32], strideDims=[1, 1], pooling='Average', name="pool"),
         ], name="head")
 
         self.classifier = Group([

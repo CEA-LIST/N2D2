@@ -86,6 +86,9 @@ class CrossEntropyClassifier:
     def log_estimated_labels_json(self, dir_name, **kwargs):
         self._target.log_estimated_labels_json(dir_name, **kwargs)
 
+    def log_confusion_matrix(self, path):
+        self._target.log_confusion_matrix(path)
+
     # TODO : doesn't work for frame_CUDA and Spike
     # TODO : also doesn't work with the current structure of layers and sequences !
     # def show_outputs(self):

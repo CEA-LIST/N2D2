@@ -111,6 +111,15 @@ void N2D2::PoolCell_Frame<T>::initialize()
     }
 }
 
+
+template <class T>
+void N2D2::PoolCell_Frame<T>::initializeDataDependent()
+{
+    Cell_Frame<T>::initializeDataDependent();
+    initialize();
+}
+
+
 template <class T>
 void N2D2::PoolCell_Frame<T>::propagate(bool inference)
 {

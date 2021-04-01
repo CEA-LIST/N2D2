@@ -20,7 +20,7 @@
 """
 
 from n2d2.utils import ConfigSection
-from n2d2.cell import Fc, Conv, ConvDepthWise, ConvPointWise, Softmax, GlobalPool2D, BatchNorm
+from n2d2.cell import Fc, Conv, ConvDepthWise, ConvPointWise, Softmax, GlobalPool2d, BatchNorm2d
 from n2d2.deepnet import Group, DeepNet
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
@@ -100,73 +100,73 @@ class MobileNet_v1_FeatureExtractor_BN(Group):
 
         self.add(Conv(inputs, int(32 * alpha), kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[2, 2],
              **conv_config_bn(), deepNet=self._deepNet, name="conv1"))
-        self.add(BatchNorm(self, int(32 * alpha), activationFunction=Rectifier(), name="bn1"))
+        self.add(BatchNorm2d(self, int(32 * alpha), activationFunction=Rectifier(), name="bn1"))
         self.add(ConvDepthWise(self, int(32 * alpha), 1, name="conv1_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm(self, int(32 * alpha), activationFunction=Rectifier(), name="bn1_3x3_dw"))
+        self.add(BatchNorm2d(self, int(32 * alpha), activationFunction=Rectifier(), name="bn1_3x3_dw"))
         self.add(ConvPointWise(self, int(64 * alpha), name="conv1_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm(self, int(64 * alpha), activationFunction=Rectifier(), name="bn1_1x1"))
+        self.add(BatchNorm2d(self, int(64 * alpha), activationFunction=Rectifier(), name="bn1_1x1"))
         self.add(ConvDepthWise(self, int(64 * alpha), 2, name="conv2_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm(self, int(64 * alpha), activationFunction=Rectifier(), name="bn2_3x3_dw"))
+        self.add(BatchNorm2d(self, int(64 * alpha), activationFunction=Rectifier(), name="bn2_3x3_dw"))
         self.add(ConvPointWise(self, int(128 * alpha), name="conv2_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm(self, int(128 * alpha), activationFunction=Rectifier(), name="bn2_1x1"))
+        self.add(BatchNorm2d(self, int(128 * alpha), activationFunction=Rectifier(), name="bn2_1x1"))
         self.add(ConvDepthWise(self, int(128 * alpha), 1, name="conv3_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm(self, int(128 * alpha), activationFunction=Rectifier(), name="bn3_3x3_dw"))
+        self.add(BatchNorm2d(self, int(128 * alpha), activationFunction=Rectifier(), name="bn3_3x3_dw"))
         self.add(ConvPointWise(self, int(128 * alpha), name="conv3_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm(self, int(128 * alpha), activationFunction=Rectifier(), name="bn3_1x1"))
+        self.add(BatchNorm2d(self, int(128 * alpha), activationFunction=Rectifier(), name="bn3_1x1"))
         self.add(ConvDepthWise(self, int(128 * alpha), 2, name="conv4_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm(self, int(128 * alpha), activationFunction=Rectifier(), name="bn4_3x3_dw"))
+        self.add(BatchNorm2d(self, int(128 * alpha), activationFunction=Rectifier(), name="bn4_3x3_dw"))
         self.add(ConvPointWise(self, int(256 * alpha), name="conv4_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm(self, int(256 * alpha), activationFunction=Rectifier(), name="bn4_1x1"))
+        self.add(BatchNorm2d(self, int(256 * alpha), activationFunction=Rectifier(), name="bn4_1x1"))
         self.add(ConvDepthWise(self, int(256 * alpha), 1, name="conv5_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm(self, int(256 * alpha), activationFunction=Rectifier(), name="bn5_3x3_dw"))
+        self.add(BatchNorm2d(self, int(256 * alpha), activationFunction=Rectifier(), name="bn5_3x3_dw"))
         self.add(ConvPointWise(self, int(256 * alpha), name="conv5_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm(self, int(256 * alpha), activationFunction=Rectifier(), name="bn5_1x1"))
+        self.add(BatchNorm2d(self, int(256 * alpha), activationFunction=Rectifier(), name="bn5_1x1"))
         self.add(ConvDepthWise(self, int(256 * alpha), 2, name="conv6_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm(self, int(256 * alpha), activationFunction=Rectifier(), name="bn6_3x3_dw"))
+        self.add(BatchNorm2d(self, int(256 * alpha), activationFunction=Rectifier(), name="bn6_3x3_dw"))
         self.add(ConvPointWise(self, int(512 * alpha), name="conv6_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm(self, int(512 * alpha), activationFunction=Rectifier(), name="bn6_1x1"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn6_1x1"))
         self.add(ConvDepthWise(self, int(512 * alpha), 1, name="conv7_1_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_1_3x3_dw"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_1_3x3_dw"))
         self.add(ConvPointWise(self, int(512 * alpha), name="conv7_1_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_1_1x1"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_1_1x1"))
         self.add(ConvDepthWise(self, int(512 * alpha), 1, name="conv7_2_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_2_3x3_dw"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_2_3x3_dw"))
         self.add(ConvPointWise(self, int(512 * alpha), name="conv7_2_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_2_1x1"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_2_1x1"))
         self.add(ConvDepthWise(self, int(512 * alpha), 1, name="conv7_3_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_3_3x3_dw"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_3_3x3_dw"))
         self.add(ConvPointWise(self, int(512 * alpha), name="conv7_3_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_3_1x1"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_3_1x1"))
         self.add(ConvDepthWise(self, int(512 * alpha), 1, name="conv7_4_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_4_3x3_dw"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_4_3x3_dw"))
         self.add(ConvPointWise(self, int(512 * alpha), name="conv7_4_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_4_1x1"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_4_1x1"))
         self.add(ConvDepthWise(self, int(512 * alpha), 1, name="conv7_5_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_5_3x3_dw"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_5_3x3_dw"))
         self.add(ConvPointWise(self, int(512 * alpha), name="conv7_5_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_5_1x1"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_5_1x1"))
         self.add(ConvDepthWise(self, int(512 * alpha), 2, name="conv8_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm(self, int(512 * alpha), activationFunction=Rectifier(), name="bn8_3x3_dw"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn8_3x3_dw"))
         self.add(ConvPointWise(self, int(1024 * alpha), name="conv8_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm(self, int(1024 * alpha), activationFunction=Rectifier(), name="bn8_1x1"))
+        self.add(BatchNorm2d(self, int(1024 * alpha), activationFunction=Rectifier(), name="bn8_1x1"))
         self.add(ConvDepthWise(self, int(1024 * alpha), 1, name="conv9_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm(self, int(1024 * alpha), activationFunction=Rectifier(), name="bn9_3x3_dw"))
+        self.add(BatchNorm2d(self, int(1024 * alpha), activationFunction=Rectifier(), name="bn9_3x3_dw"))
         self.add(ConvPointWise(self, int(1024 * alpha), name="conv9_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm(self, int(1024 * alpha), activationFunction=Rectifier(), name="bn9_1x1"))
-        self.add(GlobalPool2D(self, int(1024 * alpha), pooling='Average', name="pool1"))
+        self.add(BatchNorm2d(self, int(1024 * alpha), activationFunction=Rectifier(), name="bn9_1x1"))
+        self.add(GlobalPool2d(self, int(1024 * alpha), pooling='Average', name="pool1"))
 
 
 
@@ -182,7 +182,7 @@ def create_mobilenetv1_head(inputs, nb_outputs):
         deepnet = inputs
     else:
         raise ValueError("Needs Provider or DeepNet as input")
-    x = GlobalPool2D(deepnet, pooling='Average', name="pool1")
+    x = GlobalPool2d(deepnet, pooling='Average', name="pool1")
     x = Fc(x, nbOutputs=nb_outputs, activationFunction=Linear(), weightsFiller=Xavier(),
             biasFiller=Constant(value=0.0), name="fc")
     Softmax(x, withLoss=True, name="softmax")
@@ -229,7 +229,7 @@ class MobileNet_v1(DeepNet):
                 cell.set_weights_solver(weights_solver(**weights_solver_config.get()))
                 cell.set_bias_solver(bias_solver(**bias_solver_config.get()))
 
-            if self._with_batchnorm and isinstance(cell, BatchNorm):
+            if self._with_batchnorm and isinstance(cell, BatchNorm2d):
                 cell.set_scale_solver(bn_solver(**bn_solver_config.get()))
                 cell.set_bias_solver(bn_solver(**bn_solver_config.get()))
     """

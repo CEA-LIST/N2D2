@@ -22,7 +22,7 @@ import torch
 from torchvision import datasets, transforms 
 import N2D2
 from n2d2.deepnet import Group, DeepNet
-from n2d2.cell import Fc, Conv, Softmax, Pool2D, BatchNorm, Dropout
+from n2d2.cell import Fc, Conv, Softmax, Pool2d, BatchNorm2d, Dropout
 import n2d2
 import numpy as np
 import n2d2.pytorch.pytorch_interface as pytorch_interface

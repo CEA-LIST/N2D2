@@ -331,9 +331,9 @@ void N2D2::Cell_Frame<T>::linkInput(Cell* cell)
         throw std::runtime_error("Cell_Frame<T>::addInput(): number of mapping "
                                  "rows must be equal to the number of input "
                                  "channels");
-    if (mMapping.empty()){
-        mMapping.append(Tensor<bool>({getNbOutputs(), cell->getNbOutputs()}, true));
-    }
+    //if (mMapping.empty()){
+    //    mMapping.append(Tensor<bool>({getNbOutputs(), cell->getNbOutputs()}, true));
+    //}
 
 }
 
@@ -376,9 +376,9 @@ void N2D2::Cell_Frame<T>::linkInput(StimuliProvider& sp,
         throw std::runtime_error("Cell_Frame<T>::addInput(): number of mapping "
                                  "rows must be equal to the number of input "
                                  "channels");
-    if (mMapping.empty()){
-        mMapping.append(Tensor<bool>({getNbOutputs(), sp.getNbChannels()}, true));
-    }
+    //if (mMapping.empty()){
+     //   mMapping.append(Tensor<bool>({getNbOutputs(), sp.getNbChannels()}, true));
+    //}
 }
 // END code used exlusively in python API
 

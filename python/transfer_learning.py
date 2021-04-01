@@ -135,7 +135,7 @@ model_extractor.draw_graph("extractor_graph")
 
 print("Recreate head as separate deepnet")
 interface = n2d2.provider.TensorPlaceholder(model_extractor.get_outputs())
-x = n2d2.cell.GlobalPool2D(interface, pooling='Average', name="pool1",)
+x = n2d2.cell.GlobalPool2d(interface, pooling='Average', name="pool1", )
 x = n2d2.model.Fc(x, nbOutputs=nb_outputs, activationFunction=n2d2.activation.Linear(),
                              weightsFiller=n2d2.filler.Xavier(),
                              biasFiller=n2d2.filler.Constant(value=0.0),

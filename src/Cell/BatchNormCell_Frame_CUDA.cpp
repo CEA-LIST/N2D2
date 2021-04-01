@@ -179,6 +179,143 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initialize()
     mDiffBias.resize(requiredDims, ParamT(0.0));
 }
 
+
+
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
+{
+    // NOTE: this is addition to initialize()
+    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
+
+    /*
+    cudnnTensorDescriptor_t derivedBnDesc;
+    CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&derivedBnDesc));
+    CHECK_CUDNN_STATUS(cudnnDeriveBNTensorDescriptor(
+        derivedBnDesc, mInputs[0].getCudnnTensorDesc(), mMode));
+
+    cudnnDataType_t dataType;
+    const unsigned int nbDimsRequested = 5;
+    std::vector<int> dims(nbDimsRequested);
+    std::vector<int> strides(nbDimsRequested);
+    int nbDims;
+
+    CHECK_CUDNN_STATUS(cudnnGetTensorNdDescriptor(derivedBnDesc,
+                                                  nbDimsRequested,
+                                                  &dataType,
+                                                  &nbDims,
+                                                  &dims[0],
+                                                  &strides[0]));
+
+    dims.resize(nbDims);
+    strides.resize(nbDims);
+
+    CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(derivedBnDesc));
+
+    const std::vector<size_t> requiredDims(dims.rbegin(), dims.rend());
+    */
+
+    std::vector<size_t> requiredDims(4, 1);
+    requiredDims[2] = inputDimZ;
+
+    if (mScale->empty())
+        mScale->resize(requiredDims, ParamT(1.0));
+    else {
+        if (mScale->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared scale, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mScale->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    if (mBias->empty())
+        mBias->resize(requiredDims, ParamT(0.0));
+    else {
+        if (mBias->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared bias, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mBias->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    if (mMean->empty())
+        mMean->resize(requiredDims, ParamT(0.0));
+    else {
+        if (mMean->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared mean, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mMean->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    if (mVariance->empty())
+        mVariance->resize(requiredDims, ParamT(0.0));
+    else {
+        if (mVariance->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared variance, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mVariance->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    if(mMovingAverageMomentum < 0.0 || mMovingAverageMomentum >= 1.0)
+    {
+        std::stringstream msgStr;
+        msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
+            " in cell " + mName + ", wrong value for MovingAverageMomentum. "
+            "Expected value range [0.0, 1.0[ whereas actual value is "
+            << mMovingAverageMomentum << std::endl;
+
+        throw std::runtime_error(msgStr.str());
+
+    }
+
+    mSavedMean.resize(requiredDims, ParamT(0.0));
+    mSavedVariance.resize(requiredDims, ParamT(0.0));
+
+    mDiffScale.resize(requiredDims, ParamT(0.0));
+    mDiffBias.resize(requiredDims, ParamT(0.0));
+
+}
+
+
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::initializeDataDependent(){
+    // NOTE: this is addition to initialize()
+    Cell_Frame_CUDA<T>::initializeDataDependent();
+
+    if (mInputs.size() > 1)
+        throw std::domain_error("BatchNormCell_Frame_CUDA<T>::initialize(): "
+                                "inputs concatenation is not supported.");
+
+    mMode = CUDNN_BATCHNORM_SPATIAL;
+    mNbPropagate = 0;
+
+    // CUDNN_BN_MIN_EPSILON is set to 0.0 since cuDNN 7.5.0
+    if (CUDNN_BN_MIN_EPSILON > 0.0 && mEpsilon < CUDNN_BN_MIN_EPSILON) {
+        mEpsilon = CUDNN_BN_MIN_EPSILON;
+    }
+   
+}
+
+
+
+
 template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
 {

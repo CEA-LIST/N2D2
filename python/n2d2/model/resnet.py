@@ -20,7 +20,7 @@
 """
 
 from n2d2.utils import ConfigSection
-from n2d2.cell import Fc, Conv, Softmax, Pool2D, ElemWise, BatchNorm
+from n2d2.cell import Fc, Conv, Softmax, Pool2d, ElemWise, BatchNorm2d
 from n2d2.deepnet import Group
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
@@ -79,7 +79,7 @@ def resnet18(output_size=1000):
 
     stem = Group([
         conv_def(int(64*alpha), kernelDims=[7, 7], strideDims=[2, 2], paddingDims=[3, 3]),
-        Pool2D(nbOutputs=int(64*alpha), poolDims=[3, 3], strideDims=[2, 2], pooling='Max')
+        Pool2d(nbOutputs=int(64*alpha), poolDims=[3, 3], strideDims=[2, 2], pooling='Max')
     ])
     print(stem)
 
@@ -98,7 +98,7 @@ def resnet18(output_size=1000):
 
     # TODO: Automatic PoolDims setting dependent on input size
     head = Group([
-        Pool2D(nbOutputs=int(512 * alpha), poolDims=[7, 7], strideDims=[1, 1], pooling='Average'),
+        Pool2d(nbOutputs=int(512 * alpha), poolDims=[7, 7], strideDims=[1, 1], pooling='Average'),
         Fc(nbOutputs=output_size, activationFunction=Linear(), weightsFiller=Xavier(scaling=(0.0 if L > 0 else 1.0)), biasFiller=Constant(value=0.0))
     ])
     print("Head")
@@ -135,7 +135,7 @@ class ResNetStem(Group):
     def __init__(self, inputs,  alpha):
             conv = Conv(inputs, int(64*alpha), kernelDims=[7, 7], strideDims=[2, 2], paddingDims=[3, 3], noBias=True,
                  activationFunction=Rectifier(), weightsFiller=He(), name="conv1")
-            pool = Pool2D(conv, nbOutputs=int(64*alpha), poolDims=[3, 3], strideDims=[2, 2], pooling='Max', name="pool1")
+            pool = Pool2d(conv, nbOutputs=int(64 * alpha), poolDims=[3, 3], strideDims=[2, 2], pooling='Max', name="pool1")
             Group.__init__(self, [conv, pool], name="stem")
 
 
@@ -182,14 +182,14 @@ class ResNet50BNBody(Group):
         seq.add(ResNetBottleneckBlock(inputs, int(64 * alpha), 1, l, True, False, "conv2.1"))
         seq.add(ResNetBottleneckBlock(seq.get_last(), int(64 * alpha), 1, l, False, False, "conv2.2"))
         seq.add(ResNetBottleneckBlock(seq.get_last(), int(64 * alpha), 1, l, False, True, "conv2.3"))
-        seq.add(BatchNorm(seq.get_last(), 4 * int(64 * alpha), activationFunction=Rectifier(), name="bn2"))
+        seq.add(BatchNorm2d(seq.get_last(), 4 * int(64 * alpha), activationFunction=Rectifier(), name="bn2"))
 
         seq1 = Group([])
         seq1.add(ResNetBottleneckBlock(seq.get_last(), int(128 * alpha), 2, l, True, False, "conv3.1"))
         seq1.add(ResNetBottleneckBlock(seq1.get_last(), int(128 * alpha), 1, l, False, False, "conv3.2"))
         seq1.add(ResNetBottleneckBlock(seq1.get_last(), int(128 * alpha), 1, l, False, False, "conv3.3"))
         seq1.add(ResNetBottleneckBlock(seq1.get_last(), int(128 * alpha), 1, l, False, True, "conv3.4"))
-        seq1.add(BatchNorm(seq1.get_last(), 4 * int(128 * alpha), activationFunction=Rectifier(), name="bn3"))
+        seq1.add(BatchNorm2d(seq1.get_last(), 4 * int(128 * alpha), activationFunction=Rectifier(), name="bn3"))
 
         seq2 = Group([])
         seq2.add(ResNetBottleneckBlock(seq1.get_last(), int(256 * alpha), 2, l, True, False, "conv4.1"))
@@ -198,13 +198,13 @@ class ResNet50BNBody(Group):
         seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, False, "conv4.4"))
         seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, False, "conv4.5"))
         seq2.add(ResNetBottleneckBlock(seq2.get_last(), int(256 * alpha), 1, l, False, True, "conv4.6"))
-        seq2.add(BatchNorm(seq2.get_last(), 4 * int(256 * alpha), activationFunction=Rectifier(), name="bn4"))
+        seq2.add(BatchNorm2d(seq2.get_last(), 4 * int(256 * alpha), activationFunction=Rectifier(), name="bn4"))
 
         seq3 = Group([])
         seq3.add(ResNetBottleneckBlock(seq2.get_last(), int(512 * alpha), 2, l, True, False, "conv5.1"))
         seq3.add(ResNetBottleneckBlock(seq3.get_last(), int(512 * alpha), 1, l, False, False, "conv5.2"))
         seq3.add(ResNetBottleneckBlock(seq3.get_last(), int(512 * alpha), 1, l, False, True, "conv5.3"))
-        seq3.add(BatchNorm(seq3.get_last(), 4 * int(512 * alpha), activationFunction=Rectifier(), name="bn5"))
+        seq3.add(BatchNorm2d(seq3.get_last(), 4 * int(512 * alpha), activationFunction=Rectifier(), name="bn5"))
 
         self.scales = {}
         name = str(inputs.get_outputs().dimX()) + "x" + str(inputs.get_outputs().dimX())
@@ -224,7 +224,7 @@ class ResNet50BNBody(Group):
 class ResNetHead(Group):
     def __init__(self, inputs, alpha):
         Group.__init__(self, [
-            Pool2D(inputs, 4 * int(512 * alpha),
+            Pool2d(inputs, 4 * int(512 * alpha),
                    poolDims=[inputs.get_last().get_outputs().dimX(), inputs.get_last().get_outputs().dimY()],
                    strideDims=[1, 1], pooling='Average', name="pool"),
         ], name="head")
@@ -274,7 +274,7 @@ class ResNet(Group):
                 cell.set_weights_solver(weights_solver(**weights_solver_config.get()))
                 cell.set_bias_solver(bias_solver(**bias_solver_config.get()))
 
-            if self._with_batchnorm and isinstance(cell, BatchNorm):
+            if self._with_batchnorm and isinstance(cell, BatchNorm2d):
                 cell.set_scale_solver(bn_solver(**bn_solver_config.get()))
                 cell.set_bias_solver(bn_solver(**bn_solver_config.get()))
 

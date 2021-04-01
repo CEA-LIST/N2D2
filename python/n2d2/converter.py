@@ -32,7 +32,7 @@ cell_dict = {
     "Padding": n2d2.cell.Padding,
     "Pool": n2d2.cell.Pool,
     "LRN": n2d2.cell.LRN,
-    "BatchNorm": n2d2.cell.BatchNorm,
+    "BatchNorm2d": n2d2.cell.BatchNorm2d,
     "Reshape": n2d2.cell.Reshape,
 
 }
