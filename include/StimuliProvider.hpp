@@ -634,8 +634,11 @@ N2D2::StimuliProvider::readRawData(Database::StimuliSet set,
 
 int N2D2::StimuliProvider::getDevice(int dev) const {
 #ifdef CUDA
-    if (dev == -1)
-        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+    if (dev == -1) {
+        const cudaError_t status = cudaGetDevice(&dev);
+        if (status != cudaSuccess)
+            dev = 0;
+    }
 
     return dev;
 #else
