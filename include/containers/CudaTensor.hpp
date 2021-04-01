@@ -883,7 +883,10 @@ N2D2::CudaBaseTensor::CudaBaseTensor(bool hostBased):
 {
     //ctor
     int count = 1;
-    CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+    const cudaError_t status = cudaGetDevice(&count);
+    if (status != cudaSuccess)
+        count = 1;
+
     (*mValid).resize(count, false);
 }
 

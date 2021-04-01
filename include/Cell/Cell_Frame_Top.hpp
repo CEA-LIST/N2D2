@@ -50,8 +50,11 @@ public:
         : mActivation(activation)
     {
 #ifdef CUDA
-        int count;
-        CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+        int count = 1;
+        const cudaError_t status = cudaGetDevice(&count);
+        if (status != cudaSuccess)
+            count = 1;
+
         mDevices.resize(count, N2D2::DeviceState::Connected);
 #endif
     }
