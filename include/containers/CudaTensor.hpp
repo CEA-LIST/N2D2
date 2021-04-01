@@ -533,8 +533,10 @@ N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
       mTensor(NULL)
 {
     // ctor
-    int count;
-    CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+    int count = 1;
+    const cudaError_t status = cudaGetDeviceCount(&count);
+    if (status != cudaSuccess)
+        count = 1;
 
     mDataDevice.resize(count, NULL);
     mForeignDataDevice.resize(count, NULL);
