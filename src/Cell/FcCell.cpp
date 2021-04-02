@@ -106,9 +106,13 @@ void N2D2::FcCell::exportFreeParameters(const std::string& fileName) const
         for (unsigned int channel = 0; channel < channelsSize; ++channel) {
             Tensor<Float_T> weight;
             getWeight(output, channel, weight);
-            weights << weight(0) << " ";
+            if(mQuantizer){
+                weights << std::setprecision(10) << weight(0) << " ";
+            }
+            else{
+                weights << weight(0) << " ";
+            }
         }
-
         weights << "\n";
     }
 
@@ -122,7 +126,12 @@ void N2D2::FcCell::exportFreeParameters(const std::string& fileName) const
         for (unsigned int output = 0; output < getNbOutputs(); ++output) {
             Tensor<Float_T> bias;
             getBias(output, bias);
-            biases << bias(0) << "\n";
+            if(mQuantizer){
+                biases << std::setprecision(10) << bias(0) << "\n";
+            }
+            else{
+                biases << bias(0) << "\n";
+            }
         }
     }
     if(mQuantizer) {
@@ -161,9 +170,8 @@ void N2D2::FcCell::exportQuantFreeParameters(const std::string& fileName) const
         for (unsigned int channel = 0; channel < channelsSize; ++channel) {
             Tensor<Float_T> weight;
             getQuantWeight(output, channel, weight);
-            weights << weight(0) << " ";
+            weights << std::setprecision(10) << weight(0) << " ";
         }
-
         weights << "\n";
     }
 }
@@ -329,6 +337,7 @@ void N2D2::FcCell::logFreeParametersDistrib(
         Utils::createDirectories(dirName);
 
     std::ofstream data(fileName.c_str());
+    data.precision(10);
 
     if (!data.good())
         throw std::runtime_error("Could not save weights distrib file.");
