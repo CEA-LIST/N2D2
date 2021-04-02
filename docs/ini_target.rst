@@ -69,7 +69,7 @@ and the second column to the index of the associated output neuron.
 
 Two special label names exist:
 
--	``*`` corresponding to annotations without valid label (label ID is -1 in N2D2), sometimes referred to as â€œignore labelâ€ in N2D2;
+-	``*`` corresponding to annotations without valid label (label ID is -1 in N2D2), sometimes referred to as "ignore label" in N2D2;
 -	``default`` meaning any valid label name that is not explicitly listed in the label mapping file;
 
 The ``background`` name is not a reserved label name, it is simply the name 
@@ -156,36 +156,147 @@ derivative multiplied by the functions gradient.
 Target types
 ------------
 
+Target
+~~~~~~
+
+Base ``Target`` class.
+
+Base parameters:
+
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| Parameter                       | Default value   | Description                                                                               |
++=================================+=================+===========================================================================================+
+| ``Type``                        | ``TargetScore`` | Type of ``Target``                                                                        |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| ``TargetValue``                 | 1.0             | Target value for the target output neuron(s) (for classification)                         |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| ``DefaultValue``                | 0.0             | Default value for the non-target output neuron(s) (for classification)                    |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| ``TopN``                        | 1               | The top-N estimated targets per output neuron to save                                     |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| ``BinaryThreshold``             | 0.5             | Threshold for single output (binary classification).                                      |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+
+
+Labels to targets parameters:
+
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| Parameter                       | Default value   | Description                                                                               |
++=================================+=================+===========================================================================================+
+| ``DataAsTarget``                | 0               | If true (1), the data, and not the labels, is the target (for auto-encoders)              |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| ``LabelsMapping``               |                 | Path to the file containing the labels to target mapping                                  |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| ``CreateMissingLabels``         | 0               | If true (1), labels present in the labels mapping file but that are non-existent in the   |
+|                                 |                 | database are created (with 0 associated stimuli)                                          |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| ``WeakTarget``                  | -2              | When attributing a target to an output macropixel, any target other than                  |
+|                                 |                 | ``WeakTarget`` in the macropixel takes precedence over ``WeakTarget``,                    |
+|                                 |                 | regardless of their respective occurrence.                                                |
+|                                 |                 |  - Value can be -1 (meaning any target other than "ignore" takes precedence).             |
+|                                 |                 |  - Default value is -2 (meaning that there is no weak target, as a target is >= -1).      |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+
+
+Masking parameters:
+
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| Parameter                       | Default value   | Description                                                                               |
++=================================+=================+===========================================================================================+
+| ``MaskLabelTarget``             |                 | Name of the ``Target`` to use for ``MaskedLabel``                                         |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| ``MaskedLabel``                 | -1              | If >= 0, only estimated targets with ID ``MaskedLabel`` in the ``MaskLabelTarget`` target |
+|                                 |                 | are considered in the estimated targets                                                   |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| ``MaskedLabelValue``            | 0               | If true (1), the considered estimated targets values are weighted by the estimated        |
+|                                 |                 | targets values with ID ``MaskedLabel`` in the ``MaskLabelTarget``                         |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+
+
+
+Estimated output images parameters:
+
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| Parameter                       | Default value   | Description                                                                               |
++=================================+=================+===========================================================================================+
+| ``NoDisplayLabel``              | -1              | If >= 0, the corresponding label ID is ignored in the estimated output image              |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| ``LabelsHueOffset``             | 0               | Hue offset for the first label ID (starting from 0), for the estimated output image       |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| ``EstimatedLabelsValueDisplay`` | 1               | If true (1), the value in the HSV colorspace is equal to the estimated                    |
+|                                 |                 | value. Otherwise, displayed value is 255 regardless of the confidence.                    |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| ``ValueThreshold``              | 0.0             | Threshold for estimated value to be considered in the output logs.                        |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+| ``ImageLogFormat``              | jpg             | If left empty, use the database image origin format                                       |
++---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
+
+
+
+
+
 TargetScore
 ~~~~~~~~~~~
 
-The default target, which automatically compute the confusion matrix.
+The default target, which automatically compute the confusion matrix, confusion 
+metrics and score, for classification or segmentation networks.
+
+Confusion matrix:
+
+.. figure:: _static/confusion_matrix.png
+   :alt: Example of confusion matrix generated by a ``TargetScore``.
+
+   Example of confusion matrix generated by a ``TargetScore``.
+
+
+Confusion metrics:
+
+.. figure:: _static/metrics.png
+   :alt: Example of confusion metrics generated by a ``TargetScore``.
+
+   Example of confusion metrics generated by a ``TargetScore``.
+
+
+Score:
+
+.. figure:: _static/validation_score.png
+   :alt: Example of validation score generated by a ``TargetScore``.
+
+   Example of validation score generated by a ``TargetScore``.
+
+
 
 
 TargetROIs
 ~~~~~~~~~~
 
+The ``TargetROIs`` allow to perform connected-component labeling (CCL) on 
+pixel-wise segmentation networks, to retrieve bounding boxes.
 
-+----------------------+---------------+-------------------------------------------------------------------------------------------+
-| Parameter            | Default value | Description                                                                               |
-+======================+===============+===========================================================================================+
-| MinSize              | 0             | Minimum number of macro-pixels above threshold than can constitute a bounding box.        |
-|                      |               | Bounding boxes with fewer than ``MinSize`` macro-pixels above threshold are discarded     |
-+----------------------+---------------+-------------------------------------------------------------------------------------------+
-| MinOverlap           | 0.5           | Minimum overlap (IoU) of a bounding box with an annotation to be considered a match       |
-+----------------------+---------------+-------------------------------------------------------------------------------------------+
-| FilterMinHeight      | 0             | Minimum height of the ROI to keep it                                                      |
-+----------------------+---------------+-------------------------------------------------------------------------------------------+
-| FilterMinWidth       | 0             | Minimum width of the ROI to keep it                                                       |
-+----------------------+---------------+-------------------------------------------------------------------------------------------+
-| FilterMinAspectRatio | 0.0           | Minimum aspect ratio (width/height) of the ROI to keep it (default is 0.0 = no minimum)   |
-+----------------------+---------------+-------------------------------------------------------------------------------------------+
-| FilterMaxAspectRatio | 0.0           | Maximum aspect ratio (width/height) of the ROI to keep it (default is 0.0 = no minimum)   |
-+----------------------+---------------+-------------------------------------------------------------------------------------------+
-| MergeMaxHDist        | 1             | Maximum horizontal distance for merging (in macro-pixels)                                 |
-+----------------------+---------------+-------------------------------------------------------------------------------------------+
-| MergeMaxVDist        | 1             | Maximum vertical distance for merging (in macro-pixels)                                   |
-+----------------------+---------------+-------------------------------------------------------------------------------------------+
-| ScoreTopN            | 1             | TopN number of class scores to keep for the ROI                                           |
-+----------------------+---------------+-------------------------------------------------------------------------------------------+
+This approach is different from classical object detection networks, like SSD or 
+Yolo, where bounding boxes are directly inferred from anchors.
+
+
++--------------------------+---------------+-------------------------------------------------------------------------------------------+
+| Parameter                | Default value | Description                                                                               |
++==========================+===============+===========================================================================================+
+| ``MinSize``              | 0             | Minimum number of macro-pixels above threshold than can constitute a bounding box.        |
+|                          |               | Bounding boxes with fewer than ``MinSize`` macro-pixels above threshold are discarded     |
++--------------------------+---------------+-------------------------------------------------------------------------------------------+
+| ``MinOverlap``           | 0.5           | Minimum overlap (IoU) of a bounding box with an annotation to be considered a match       |
++--------------------------+---------------+-------------------------------------------------------------------------------------------+
+| ``FilterMinHeight``      | 0             | Minimum height of the ROI to keep it                                                      |
++--------------------------+---------------+-------------------------------------------------------------------------------------------+
+| ``FilterMinWidth``       | 0             | Minimum width of the ROI to keep it                                                       |
++--------------------------+---------------+-------------------------------------------------------------------------------------------+
+| ``FilterMinAspectRatio`` | 0.0           | Minimum aspect ratio (width/height) of the ROI to keep it (default is 0.0 = no minimum)   |
++--------------------------+---------------+-------------------------------------------------------------------------------------------+
+| ``FilterMaxAspectRatio`` | 0.0           | Maximum aspect ratio (width/height) of the ROI to keep it (default is 0.0 = no minimum)   |
++--------------------------+---------------+-------------------------------------------------------------------------------------------+
+| ``MergeMaxHDist``        | 1             | Maximum horizontal distance for merging (in macro-pixels)                                 |
++--------------------------+---------------+-------------------------------------------------------------------------------------------+
+| ``MergeMaxVDist``        | 1             | Maximum vertical distance for merging (in macro-pixels)                                   |
++--------------------------+---------------+-------------------------------------------------------------------------------------------+
+| ``ScoreTopN``            | 1             | TopN number of class scores to keep for the ROI                                           |
++--------------------------+---------------+-------------------------------------------------------------------------------------------+
 

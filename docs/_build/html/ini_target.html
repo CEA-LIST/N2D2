@@ -119,6 +119,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#loss-functions">Loss functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#target-types">Target types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#target">Target</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#targetscore">TargetScore</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#targetrois">TargetROIs</a></li>
 </ul>
@@ -256,7 +257,7 @@ with the first column corresponding to the name of the label in the dataset
 and the second column to the index of the associated output neuron.</p>
 <p>Two special label names exist:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">*</span></code> corresponding to annotations without valid label (label ID is -1 in N2D2), sometimes referred to as â€œignore labelâ€ in N2D2;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">*</span></code> corresponding to annotations without valid label (label ID is -1 in N2D2), sometimes referred to as “ignore label” in N2D2;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">default</span></code> meaning any valid label name that is not explicitly listed in the label mapping file;</p></li>
 </ul>
 <p>The <code class="docutils literal notranslate"><span class="pre">background</span></code> name is not a reserved label name, it is simply the name
@@ -335,17 +336,15 @@ derivative multiplied by the functions gradient.</p>
 </div>
 <div class="section" id="target-types">
 <h2>Target types<a class="headerlink" href="#target-types" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="targetscore">
-<h3>TargetScore<a class="headerlink" href="#targetscore" title="Permalink to this headline">¶</a></h3>
-<p>The default target, which automatically compute the confusion matrix.</p>
-</div>
-<div class="section" id="targetrois">
-<h3>TargetROIs<a class="headerlink" href="#targetrois" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="target">
+<h3>Target<a class="headerlink" href="#target" title="Permalink to this headline">¶</a></h3>
+<p>Base <code class="docutils literal notranslate"><span class="pre">Target</span></code> class.</p>
+<p>Base parameters:</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 17%" />
+<col style="width: 23%" />
 <col style="width: 12%" />
-<col style="width: 71%" />
+<col style="width: 65%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Parameter</p></th>
@@ -354,40 +353,211 @@ derivative multiplied by the functions gradient.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>MinSize</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Type</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TargetScore</span></code></p></td>
+<td><p>Type of <code class="docutils literal notranslate"><span class="pre">Target</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TargetValue</span></code></p></td>
+<td><p>1.0</p></td>
+<td><p>Target value for the target output neuron(s) (for classification)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DefaultValue</span></code></p></td>
+<td><p>0.0</p></td>
+<td><p>Default value for the non-target output neuron(s) (for classification)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TopN</span></code></p></td>
+<td><p>1</p></td>
+<td><p>The top-N estimated targets per output neuron to save</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BinaryThreshold</span></code></p></td>
+<td><p>0.5</p></td>
+<td><p>Threshold for single output (binary classification).</p></td>
+</tr>
+</tbody>
+</table>
+<p>Labels to targets parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 12%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default value</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DataAsTarget</span></code></p></td>
+<td><p>0</p></td>
+<td><p>If true (1), the data, and not the labels, is the target (for auto-encoders)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LabelsMapping</span></code></p></td>
+<td></td>
+<td><p>Path to the file containing the labels to target mapping</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CreateMissingLabels</span></code></p></td>
+<td><p>0</p></td>
+<td><p>If true (1), labels present in the labels mapping file but that are non-existent in the
+database are created (with 0 associated stimuli)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">WeakTarget</span></code></p></td>
+<td><p>-2</p></td>
+<td><p>When attributing a target to an output macropixel, any target other than
+<code class="docutils literal notranslate"><span class="pre">WeakTarget</span></code> in the macropixel takes precedence over <code class="docutils literal notranslate"><span class="pre">WeakTarget</span></code>,
+regardless of their respective occurrence.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Value can be -1 (meaning any target other than “ignore” takes precedence).</p></li>
+<li><p>Default value is -2 (meaning that there is no weak target, as a target is &gt;= -1).</p></li>
+</ul>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Masking parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 12%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default value</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MaskLabelTarget</span></code></p></td>
+<td></td>
+<td><p>Name of the <code class="docutils literal notranslate"><span class="pre">Target</span></code> to use for <code class="docutils literal notranslate"><span class="pre">MaskedLabel</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MaskedLabel</span></code></p></td>
+<td><p>-1</p></td>
+<td><p>If &gt;= 0, only estimated targets with ID <code class="docutils literal notranslate"><span class="pre">MaskedLabel</span></code> in the <code class="docutils literal notranslate"><span class="pre">MaskLabelTarget</span></code> target
+are considered in the estimated targets</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MaskedLabelValue</span></code></p></td>
+<td><p>0</p></td>
+<td><p>If true (1), the considered estimated targets values are weighted by the estimated
+targets values with ID <code class="docutils literal notranslate"><span class="pre">MaskedLabel</span></code> in the <code class="docutils literal notranslate"><span class="pre">MaskLabelTarget</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Estimated output images parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 12%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default value</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NoDisplayLabel</span></code></p></td>
+<td><p>-1</p></td>
+<td><p>If &gt;= 0, the corresponding label ID is ignored in the estimated output image</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LabelsHueOffset</span></code></p></td>
+<td><p>0</p></td>
+<td><p>Hue offset for the first label ID (starting from 0), for the estimated output image</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EstimatedLabelsValueDisplay</span></code></p></td>
+<td><p>1</p></td>
+<td><p>If true (1), the value in the HSV colorspace is equal to the estimated
+value. Otherwise, displayed value is 255 regardless of the confidence.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ValueThreshold</span></code></p></td>
+<td><p>0.0</p></td>
+<td><p>Threshold for estimated value to be considered in the output logs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ImageLogFormat</span></code></p></td>
+<td><p>jpg</p></td>
+<td><p>If left empty, use the database image origin format</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="targetscore">
+<h3>TargetScore<a class="headerlink" href="#targetscore" title="Permalink to this headline">¶</a></h3>
+<p>The default target, which automatically compute the confusion matrix, confusion
+metrics and score, for classification or segmentation networks.</p>
+<p>Confusion matrix:</p>
+<div class="figure align-default" id="id1">
+<img alt="Example of confusion matrix generated by a ``TargetScore``." src="_images/confusion_matrix.png" />
+<p class="caption"><span class="caption-text">Example of confusion matrix generated by a <code class="docutils literal notranslate"><span class="pre">TargetScore</span></code>.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>Confusion metrics:</p>
+<div class="figure align-default" id="id2">
+<img alt="Example of confusion metrics generated by a ``TargetScore``." src="_images/metrics.png" />
+<p class="caption"><span class="caption-text">Example of confusion metrics generated by a <code class="docutils literal notranslate"><span class="pre">TargetScore</span></code>.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<p>Score:</p>
+<div class="figure align-default" id="id3">
+<img alt="Example of validation score generated by a ``TargetScore``." src="_images/validation_score.png" />
+<p class="caption"><span class="caption-text">Example of validation score generated by a <code class="docutils literal notranslate"><span class="pre">TargetScore</span></code>.</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="targetrois">
+<h3>TargetROIs<a class="headerlink" href="#targetrois" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">TargetROIs</span></code> allow to perform connected-component labeling (CCL) on
+pixel-wise segmentation networks, to retrieve bounding boxes.</p>
+<p>This approach is different from classical object detection networks, like SSD or
+Yolo, where bounding boxes are directly inferred from anchors.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 11%" />
+<col style="width: 69%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default value</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MinSize</span></code></p></td>
 <td><p>0</p></td>
 <td><p>Minimum number of macro-pixels above threshold than can constitute a bounding box.
 Bounding boxes with fewer than <code class="docutils literal notranslate"><span class="pre">MinSize</span></code> macro-pixels above threshold are discarded</p></td>
 </tr>
-<tr class="row-odd"><td><p>MinOverlap</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MinOverlap</span></code></p></td>
 <td><p>0.5</p></td>
 <td><p>Minimum overlap (IoU) of a bounding box with an annotation to be considered a match</p></td>
 </tr>
-<tr class="row-even"><td><p>FilterMinHeight</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FilterMinHeight</span></code></p></td>
 <td><p>0</p></td>
 <td><p>Minimum height of the ROI to keep it</p></td>
 </tr>
-<tr class="row-odd"><td><p>FilterMinWidth</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FilterMinWidth</span></code></p></td>
 <td><p>0</p></td>
 <td><p>Minimum width of the ROI to keep it</p></td>
 </tr>
-<tr class="row-even"><td><p>FilterMinAspectRatio</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FilterMinAspectRatio</span></code></p></td>
 <td><p>0.0</p></td>
 <td><p>Minimum aspect ratio (width/height) of the ROI to keep it (default is 0.0 = no minimum)</p></td>
 </tr>
-<tr class="row-odd"><td><p>FilterMaxAspectRatio</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FilterMaxAspectRatio</span></code></p></td>
 <td><p>0.0</p></td>
 <td><p>Maximum aspect ratio (width/height) of the ROI to keep it (default is 0.0 = no minimum)</p></td>
 </tr>
-<tr class="row-even"><td><p>MergeMaxHDist</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MergeMaxHDist</span></code></p></td>
 <td><p>1</p></td>
 <td><p>Maximum horizontal distance for merging (in macro-pixels)</p></td>
 </tr>
-<tr class="row-odd"><td><p>MergeMaxVDist</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MergeMaxVDist</span></code></p></td>
 <td><p>1</p></td>
 <td><p>Maximum vertical distance for merging (in macro-pixels)</p></td>
 </tr>
-<tr class="row-even"><td><p>ScoreTopN</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ScoreTopN</span></code></p></td>
 <td><p>1</p></td>
 <td><p>TopN number of class scores to keep for the ROI</p></td>
 </tr>
