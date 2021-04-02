@@ -91,14 +91,14 @@ class DeepNet(N2D2_Interface):
                     n2d2_cell = n2d2.converter.cell_converter(N2D2_cell, deepnet)
                     if idx == 0:
                         n2d2_cell.clear_input() # Remove old stimuli provider
-                        n2d2_cell.add_input(n2d2.GraphTensor(None, provider))
+                        n2d2_cell.add_input(n2d2.Tensor([], cell=provider))
                 deepnet.end_group()
             else:
                 N2D2_cell = cells[layer[0]]
                 n2d2_cell = n2d2.converter.cell_converter(N2D2_cell, deepnet)
                 if idx == 0:
                     n2d2_cell.clear_input()  # Remove old stimuli provider
-                    n2d2_cell.add_input(n2d2.GraphTensor(None, provider))
+                    n2d2_cell.add_input(n2d2.Tensor([], cell=provider))
         return deepnet
 
 

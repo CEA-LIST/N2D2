@@ -47,43 +47,44 @@ class Tensor():
         # bool: N2D2.CudaTensor_bool, # Not defined
     }
     
-    def __init__(self, dims, value=None, cuda=False, default_data_type=float):
+    def __init__(self, dims, value=None, cuda=False, datatype=float, cell=None):
         """
         :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (Numpy convention)
         :type dims: list
         :param value: A value to fill the :py:class:`n2d2.Tensor` object.
-        :type value: Must be coherent with **default_data_type**
-        :param default_data_type: Type of the data stocked by the tensor, default=float
-        :type default_data_type: type, optional
+        :type value: Must be coherent with **datatype**
+        :param datatype: Type of the data stocked by the tensor, default=float
+        :type datatype: type, optional
+        :param cell: A reference to the object that created this tensor, default=None
+        :type cell: :py:class:`n2d2.cell.Cell`, optional
         """
-
+        self.cell = cell
         if cuda:
             generators = self._cuda_tensor_generators
         else:
             generators = self._tensor_generators
-            
         # Dimensions convention on N2D2 are reversed from python. 
         if isinstance(dims, list):
             dims = [d for d in reversed(dims)]
         else:
             raise error_handler.WrongInputType("dims", type(dims), [str(list)])
 
-        if value and not isinstance(value, default_data_type): # TODO : We may want to try an auto-cast ! 
-            raise TypeError("You want to fill the tensor with " + str(type(value)) + " but " + str(default_data_type) + " is the default_data_type.")
+        if value and not isinstance(value, datatype): # TODO : We may want to try an auto-cast ! 
+            raise TypeError("You want to fill the tensor with " + str(type(value)) + " but " + str(datatype) + " is the datatype.")
 
-        if default_data_type in generators:
+        if datatype in generators:
             if not value:
-                self._tensor = generators[default_data_type](dims)
+                self._tensor = generators[datatype](dims)
             else:
-                self._tensor = generators[default_data_type](dims, value)
+                self._tensor = generators[datatype](dims, value)
                 if cuda:
                     # TODO a bug cause the "value" argument to be ignored for CUDA tensor :
                     # example : N2D2.CudaTensor_int([2, 2], value=int(5)
                     self._tensor[0:] = value
         else:
-            raise TypeError("Unrecognized Tensor datatype " + str(default_data_type))
+            raise TypeError("Unrecognized Tensor datatype " + str(datatype))
 
-        self._data_type = default_data_type
+        self._data_type = datatype
         self.is_cuda = cuda
 
     def N2D2(self):
@@ -92,6 +93,42 @@ class Tensor():
         :rtype: :py:class:`N2D2.BaseTensor`
         """
         return self._tensor
+
+    def set_values(self, values):
+        """
+        Fill a tensor with a list of values.
+
+        .. testcode::
+
+            tensor = n2d2.Tensor([1, 1, 2, 2]) 
+            tensor.set_values([[[1, 2],
+                                [3, 4]]])
+ 
+
+        :param values: A nested list that represent the tensor.
+        :type values: list
+        """
+        if not isinstance(values, list):
+            raise error_handler.WrongInputType("values", type(values), [str(list)])
+        # TODO : check dimensions !
+        # TODO : check type ?
+
+        def flatten(list_to_flatten):
+            if len(list_to_flatten) == 1:
+                if type(list_to_flatten[0]) == list:
+                    result = flatten(list_to_flatten[0])
+                else:
+                    result = list_to_flatten
+            elif type(list_to_flatten[0]) == list:
+                result = flatten(list_to_flatten[0]) + flatten(list_to_flatten[1:])
+            else:
+                result = [list_to_flatten[0]] + flatten(list_to_flatten[1:])
+            return result
+
+        flatten_list = flatten(values)
+        for index, value in enumerate(flatten_list):
+            self._tensor[index] = value
+
 
     def nb_dims(self):
         """
@@ -130,10 +167,9 @@ class Tensor():
         return self._data_type
 
     def _get_index(self, coord):
-        """
+        """From the coordinate returns the 1D index of an element in the tensor.
         :param coord: Tuple of the coordinate
         :type coord: tuple
-        From the coordinate returns the 1D index of an element in the tensor.
         """
         dims = self.dims()
         coord = [i for i in reversed(coord)]
@@ -151,10 +187,9 @@ class Tensor():
         return idx
         
     def _get_coord(self, index):
-        """
+        """From the the 1D index, return the coordinate of an element in the tensor.
         :param index: index of an element
         :type index: int
-        From the the 1D index, return the coordinate of an element in the tensor.
         """ 
         coord = []
         for i in self.shapes():
@@ -163,10 +198,9 @@ class Tensor():
         return [i for i in reversed(coord)]
 
     def reshape(self, new_dims):
-        """
+        """Reshape the Tensor to the specified dims (defined by the Numpy convention). 
         :param new_dims: New dimensions
         :type new_dims: list
-        Reshape the Tensor to the specified dims (defined by the Numpy convention). 
         """
         if reduce((lambda x,y: x*y), new_dims) != len(self):
             new_dims_str = ""
@@ -182,11 +216,12 @@ class Tensor():
         """
         Copy in memory the Tensor object.
         """
-        copy = Tensor(self.shape(), default_data_type=self.data_type(), cuda=self.is_cuda)
+        copy = Tensor(self.shape(), datatype=self.data_type(), cuda=self.is_cuda)
         for i in range(len(copy)):
             copy[i] = self._tensor[i]
         return copy
     
+    # TODO : create a  cpu() method ?
     def cuda(self):
         """
         Transform the tensor to a cuda tensor
@@ -328,34 +363,24 @@ class Tensor():
     def __str__(self):
         return str(self._tensor)
 
-
-class GraphTensor(Tensor):
-    def __init__(self, tensor, cell=None):
-    
-        """
-        :param tensor: The streamed tensor
-        :type tensor: :py:class:`n2d2.tensor.Tensor`
-        :param cell: The cell that output the tensor object. If None, the object will create a :py:class:`n2d2.provider.TensorPlaceholder, default= None
-        :type cell: :py:class:`n2d2.cell.Cell` or, if input :py:class:`n2d2.provider.Provider`, optional
-        """
-        self._tensor = tensor.N2D2()
-        self.tensor = tensor
-        if cell is None:
-            self.cell = TensorPlaceholder(tensor)
-        else:
-            self.cell = cell
-
-    # def dims(self):
-    #     return self.tensor.dims()
+    def set_cell(self, cell):
+        self.cell = cell
+        return self
 
     def get_deepnet(self):
+        if self.cell is None:
+            self.cell = TensorPlaceholder(self)
         return self.cell.get_deepnet()
 
     def back_propagate(self):
         # TODO: Add leaf node check
+        if self.cell is None:
+            raise RuntimeError('This tensor is not part of a graph')
         self.cell.get_deepnet().back_propagate()
     
     def update(self):
         # TODO: Add leaf node check
+        if self.cell is None:
+            raise RuntimeError('This tensor is not part of a graph')
         self.cell.get_deepnet().update()
 

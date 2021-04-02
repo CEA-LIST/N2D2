@@ -91,8 +91,8 @@ class Cell(N2D2_Interface):
     """
 
     def _infer_deepnet(self, inputs):
-        if isinstance(inputs, n2d2.tensor.GraphTensor):
-            deepnet = inputs.cell.get_deepnet()
+        if isinstance(inputs, n2d2.tensor.Tensor):
+            deepnet = inputs.get_deepnet()
             if deepnet is None:
                 deepnet = n2d2.deepnet.DeepNet()
         elif isinstance(inputs, list):
@@ -174,7 +174,7 @@ class Cell(N2D2_Interface):
                 self.add_input(cell)
                 parents.append(cell.N2D2())
             self._deepnet.N2D2().addCell(self._N2D2_object, parents)
-        elif isinstance(inputs, n2d2.tensor.GraphTensor):
+        elif isinstance(inputs, n2d2.tensor.Tensor):
             cell = inputs.cell
             self._N2D2_object.clearInputTensors()
             self._link_N2D2_input(cell)
@@ -414,7 +414,7 @@ class Fc(Cell):
 
         self.propagate(self._inference)
 
-        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self.get_outputs()), self)
+        return n2d2.Tensor.from_N2D2(self.get_outputs()).set_cell(self)
 
     # TODO: This is not working as expected because solvers are copied in a vector at cell initialization.
     #  setWeightsSolver sets only the solver to be copied but does not modify after cell initialization
@@ -623,7 +623,7 @@ class Conv(Cell):
 
         self.propagate(self._inference)
 
-        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self.get_outputs()), self)
+        return n2d2.Tensor.from_N2D2(self.get_outputs()).set_cell(self)
 
 
     # TODO: This is not working as expected because solvers are copied in a vector at cell initialization.
@@ -762,7 +762,7 @@ class Softmax(Cell):
 
         self.propagate(self._inference)
 
-        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self.get_outputs()), self)
+        return n2d2.Tensor.from_N2D2(self.get_outputs()).set_cell(self)
 
 
 
@@ -886,8 +886,7 @@ class Pool(Cell):
 
         self.propagate(self._inference)
 
-        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self.get_outputs()), self)
-
+        return n2d2.Tensor.from_N2D2(self.get_outputs()).set_cell(self)     
 
 class Pool2d(Cell):
     _type = 'Pool2d'
@@ -954,8 +953,7 @@ class Pool2d(Cell):
 
         self.propagate(self._inference)
 
-        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self.get_outputs()), self)
-
+        return n2d2.Tensor.from_N2D2(self.get_outputs()).set_cell(self)
 
 class GlobalPool2d(Cell):
     _type = 'GlobalPool2d'
@@ -1022,7 +1020,7 @@ class GlobalPool2d(Cell):
 
         self.propagate(self._inference)
 
-        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self.get_outputs()), self)
+        return n2d2.Tensor.from_N2D2(self.get_outputs()).set_cell(self)
 
 
 
@@ -1486,7 +1484,7 @@ class BatchNorm2d(Cell):
 
         self.propagate(self._inference)
 
-        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self.get_outputs()), self)
+        return n2d2.Tensor.from_N2D2(self.get_outputs()).set_cell(self)     
 
     def set_scale_solver(self, solver):
         self._config_parameters['scale_solver'] = solver
@@ -1549,7 +1547,7 @@ class Activation(Cell):
 
         self.propagate(self._inference)
 
-        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self.get_outputs()), self)
+        return n2d2.Tensor.from_N2D2(self.get_outputs()).set_cell(self)     
 
     @classmethod
     def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):

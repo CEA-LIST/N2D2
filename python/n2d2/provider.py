@@ -128,25 +128,25 @@ class DataProvider(Provider):
     def read_random_batch(self):
         """
         :return: Return a random batch 
-        :rtype: :py:class:`n2d2.tensor.GraphTensor`
+        :rtype: :py:class:`n2d2.tensor.Tensor`
         """
 
         self._deepnet = n2d2.deepnet.DeepNet()
         self._deepnet.set_provider(self)
         self._N2D2_object.readRandomBatch(set=self.get_partition())
-        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self._N2D2_object.getData()), self)
+        return n2d2.Tensor.from_N2D2(self._N2D2_object.getData()).set_cell(self)
 
     def read_batch(self, idx):
         """
         :param idx: Start index to begin reading the stimuli
         :type idx: int
         :return: Return a batch of data
-        :rtype: :py:class:`n2d2.tensor.GraphTensor`
+        :rtype: :py:class:`n2d2.tensor.Tensor`
         """
         self._deepnet = n2d2.deepnet.DeepNet()
         self._deepnet.set_provider(self)
         self._N2D2_object.readBatch(set=self.get_partition(), startIndex=idx)
-        return n2d2.tensor.GraphTensor(n2d2.Tensor.from_N2D2(self._N2D2_object.getData()), self)
+        return n2d2.Tensor.from_N2D2(self._N2D2_object.getData()).set_cell(self)
 
     def add_transformation(self, transformation):
         if isinstance(transformation, n2d2.transform.Composite):
@@ -209,7 +209,7 @@ class TensorPlaceholder(Provider):
         self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
                                                  size=dims,
                                                  batchSize=self._tensor.N2D2().dimB())
-        self._set_N2D2_parameter('StreamTensor', True) # TODO :  this crash when  launching unittest but every test pas ? (initial value : streamed_tensor)
+        self._set_N2D2_parameter('StreamTensor', True) 
         self._N2D2_object.setStreamedTensor(self._tensor.N2D2())
 
         self._deepnet = n2d2.deepnet.DeepNet()
@@ -220,7 +220,7 @@ class TensorPlaceholder(Provider):
         self._N2D2_object.setStreamedTensor(tensor)
 
     def __call__(self):
-        return n2d2.tensor.GraphTensor(self._tensor, self)
+        return self._tensor # TODO : Not sure about this one
 
     def get_name(self):
         return self._name
@@ -233,6 +233,9 @@ class TensorPlaceholder(Provider):
 
 
 class Input(Provider):
+    """
+    TODO : Not up to date to keep ?
+    """
     def __init__(self, dims, model=None, **config_parameters):
         Provider.__init__(self, **config_parameters)
 

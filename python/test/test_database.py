@@ -59,7 +59,7 @@ class test_DIR(unittest.TestCase):
         self.provider.set_partition("Learn")
 
         self.db.partition_stimuli(1,0,0)
-        self.assertEqual(self.provider.read_random_batch().tensor[0], self.x)
+        self.assertEqual(self.provider.read_random_batch()[0], self.x)
         
  
 @unittest.skipIf(not exists("/nvme0/DATABASE/MNIST/raw/"), "Data not found !")

@@ -41,21 +41,18 @@ from math import tanh
 
 class test_Linear(unittest.TestCase):
     def setUp(self):
-        def setUp(self):
-        self.activation = n2d2.activation.Tanh()
+        self.activation = n2d2.activation.Linear()
 
     def tearDown(self):
         pass
 
     def test_output(self):
         activationCell = n2d2.cell.Activation(activationFunction=self.activation)
-        input_tensor = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True) 
-        input_tensor[0] = 0
-        input_tensor[1] = 1
-        input_tensor[2] = 2
-        input_tensor[3] = 3
-        inputs = n2d2.GraphTensor(input_tensor)
+        inputs = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True) 
+        inputs.set_values([[[0,1],
+                            [2, 3]]])
         outputs = activationCell(inputs)
+        print(outputs)
         self.assertEqual(outputs[0], 0)
         self.assertEqual(outputs[1], 1)
         self.assertEqual(outputs[2], 2)
@@ -70,13 +67,11 @@ class test_Tanh(unittest.TestCase):
 
     def test_output(self):
         ActivationCell = n2d2.cell.Activation(activationFunction=self.activation)
-        input_tensor = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True) 
-        input_tensor[0] = 0
-        input_tensor[1] = 1
-        input_tensor[2] = 2
-        input_tensor[3] = 3
-        inputs = n2d2.GraphTensor(input_tensor)
+        inputs = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True) 
+        inputs.set_values([[[0, 1],
+                            [2, 3]]])
         outputs = ActivationCell(inputs)
+        print(outputs)
         self.assertEqual(round(outputs[0], 5), round(tanh(0), 5))
         self.assertEqual(round(outputs[1], 5), round(tanh(1), 5))
         self.assertEqual(round(outputs[2], 5), round(tanh(2), 5))
@@ -91,12 +86,9 @@ class test_Rectifier(unittest.TestCase):
 
     def test_output(self):
         ActivationCell = n2d2.cell.Activation(activationFunction=self.activation)
-        input_tensor = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True) 
-        input_tensor[0] = -1
-        input_tensor[1] = -2
-        input_tensor[2] = 2
-        input_tensor[3] = 3
-        inputs = n2d2.GraphTensor(input_tensor)
+        inputs = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True) 
+        inputs.set_values([[[-1, -2],
+                            [ 2,  3]]])
         outputs = ActivationCell(inputs)
         self.assertEqual(outputs[0], 0)
         self.assertEqual(outputs[1], 0)

@@ -35,10 +35,10 @@ class CrossEntropyClassifier:
         #self._target.provide_targets()
         #self._target.process()
 
-        loss = n2d2.Tensor(dims=[1], value=self.get_current_loss())
+        return n2d2.Tensor(dims=[1], value=self.get_current_loss(), cell=self)
 
-        return n2d2.tensor.GraphTensor(loss, self._softmax)
-
+    def get_deepnet(self):
+        return self._softmax.get_deepnet()
 
     def get_average_success(self, window=0):
         return self._target.get_average_success(window=window)
