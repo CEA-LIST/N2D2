@@ -952,7 +952,9 @@ void N2D2::DeepNet::initialize()
 
 #ifdef CUDA
     int count = 1;
-    CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+    cudaError_t status = cudaGetDeviceCount(&count);
+    if (status != cudaSuccess)
+        count = 1;
 
     mStates.resize(count, N2D2::DeviceState::Excluded);
     mDevicesWarning.resize(count, 0);
@@ -960,16 +962,19 @@ void N2D2::DeepNet::initialize()
     (mMultiDevicesInfo.finished).resize(count, false);
 
     int currentDev = 0;
-    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+    status = cudaGetDevice(&currentDev);
+    if (status != cudaSuccess)
+        currentDev = 0;
+
     mMasterDevice = currentDev;
 #endif
 
     // Enable Peer-to-Peer communications between devices
 #ifdef CUDA
-    int canAccessPeer = 0;
     for (int i = 0; i < (int)devices.size(); ++i) {
         for (int j = 0; j < (int)devices.size(); ++j) {
             if (i != j) {
+                int canAccessPeer = 0;
                 CHECK_CUDA_STATUS(cudaDeviceCanAccessPeer(&canAccessPeer,
                                               devices[j], devices[i]));
                 if (canAccessPeer) {
@@ -985,7 +990,9 @@ void N2D2::DeepNet::initialize()
     for (int dev = 0; dev < (int)devices.size(); ++dev) {
 #ifdef CUDA
         mStates[devices[dev]] = N2D2::DeviceState::Connected;
-        CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
+        if (devices.size() > 1 || devices[dev] != currentDev) {
+            CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
+        }
 #endif
         for (unsigned int l = 1, nbLayers = mLayers.size(); l < nbLayers; ++l) {
             for (std::vector<std::string>::const_iterator itCell
@@ -999,7 +1006,9 @@ void N2D2::DeepNet::initialize()
     }
 
 #ifdef CUDA
-    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+    if (devices.size() > 1 || (devices.size() > 0 && devices[0] != currentDev)) {
+        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+    }
 #endif
 }
 
@@ -2358,14 +2367,18 @@ void N2D2::DeepNet::test(
 
 #ifdef CUDA
     int currentDev = 0;
-    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+    const cudaError_t status = cudaGetDevice(&currentDev);
+    if (status != cudaSuccess)
+        currentDev = 0;
 #endif
 
 #pragma omp parallel for if (devices.size() > 1)
     for (int dev = 0; dev < (int)devices.size(); ++dev) {
 #ifdef CUDA
         if (mStates[devices[dev]] == N2D2::DeviceState::Connected) {
-            CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
+            if (devices.size() > 1 || devices[dev] != currentDev) {
+                CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
+            }
             propagate(set, true, (dev == 0) ? timings : NULL);
         }
 #else
@@ -2374,7 +2387,9 @@ void N2D2::DeepNet::test(
     }
 
 #ifdef CUDA
-    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+    if (devices.size() > 1 || (devices.size() > 0 && devices[0] != currentDev)) {
+        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+    }
 #endif
 }
 
