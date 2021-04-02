@@ -251,7 +251,7 @@ class Input(Provider):
         self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
                                                  size=provider_dims,
                                                  batchSize=self._tensor.N2D2().dimB())
-        self._set_N2D2_parameter('streamed_tensor', True)
+        self._set_N2D2_parameter('StreamTensor', True)
         self._N2D2_object.setStreamedTensor(self._tensor.N2D2())
 
         self._deepnet = n2d2.deepnet.DeepNet()
