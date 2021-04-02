@@ -346,7 +346,7 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
                         weights << std::setprecision(10) << weight << " ";
                     }
                     else{
-                        weights << weight << " "
+                        weights << weight << " ";
                     }
                 }
             }
