@@ -21,9 +21,9 @@
 
 import N2D2
 # import n2d2.deepnet
+from os.path import expanduser
 
-# TODO: In final version this should be in the use home or the API launch folder
-model_cache = "/local/is154584/jt251134/MODELS"
+model_cache = expanduser("~") + "/MODELS"
 
 default_seed = 1
 default_model = 'Frame'

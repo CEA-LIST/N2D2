@@ -72,8 +72,8 @@ class Database(N2D2_Interface):
         self._N2D2_object.partitionStimuli(learn, validation, test)
 
 
-    def load(self, data_path, **kwargs):
-        self._N2D2_object.load(data_path=data_path, **kwargs)
+    def load(self, data_path, label_path='', extract_ROIs=False):
+        self._N2D2_object.load(dataPath=data_path, labelPath=label_path, extractROIs=extract_ROIs)
 
     def __str__(self):
         return self._type + N2D2_Interface.__str__(self)

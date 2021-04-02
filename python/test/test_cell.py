@@ -44,7 +44,7 @@ class test_ConvCell(unittest.TestCase):
     """
 
     def setUp(self):
-        self.cell = n2d2.cell.Conv(1, 10, kernelDims=[2, 2])
+        self.cell = n2d2.cell.Conv(1, 10, kernel_dims=[2, 2])
 
     def tearDown(self):
         pass

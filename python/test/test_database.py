@@ -29,7 +29,7 @@ import unittest
 class test_DIR(unittest.TestCase):
     def setUp(self):
         self.db = n2d2.database.DIR()
-        self.provider = n2d2.provider.DataProvider(self.db, [1, 1, 1], batchSize=1)
+        self.provider = n2d2.provider.DataProvider(self.db, [1, 1, 1], batch_size=1)
         self.x = 10
         self.y = 3
         print("Creating data")
@@ -65,10 +65,10 @@ class test_DIR(unittest.TestCase):
 @unittest.skipIf(not exists("/nvme0/DATABASE/MNIST/raw/"), "Data not found !")
 class test_MNIST(unittest.TestCase):
     def setUp(self):
-        self.db = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/")       
+        self.db = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw/")       
         self.size = [28, 28, 1]
         self.batch_size = 1
-        self.provider = n2d2.provider.DataProvider(self.db, self.size, batchSize=self.batch_size)
+        self.provider = n2d2.provider.DataProvider(self.db, self.size, batch_size=self.batch_size)
     def tearDown(self):
         pass
 
@@ -91,11 +91,11 @@ class test_MNIST(unittest.TestCase):
 class test_ILSVRC2012(test_MNIST):
     def setUp(self):
         self.db = n2d2.database.ILSVRC2012(learn=1.0)
-        self.db.load("/nvme0/DATABASE/ILSVRC2012", labelPath="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
+        self.db.load("/nvme0/DATABASE/ILSVRC2012", label_path="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
         self.size = [500, 334, 3]
         self.batch_size = 1
-        provider = n2d2.provider.DataProvider(database=self.db, size=self.size, batchSize=self.batch_size)
-        self.provider = n2d2.provider.DataProvider(self.db, self.size, batchSize=1)
+        provider = n2d2.provider.DataProvider(database=self.db, size=self.size, batch_size=self.batch_size)
+        self.provider = n2d2.provider.DataProvider(self.db, self.size, batch_size=1)
     def test_label(self):
         self.assertEqual(self.db.get_label_name(0), "n01440764")
         self.assertEqual(self.db.get_label_name(1), "n01443537")

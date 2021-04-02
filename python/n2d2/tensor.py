@@ -34,7 +34,7 @@ hard_coded_type = {
 }
 
 
-class Tensor:
+class Tensor():
     
     _tensor_generators = {
         float: N2D2.Tensor_float,
@@ -47,14 +47,14 @@ class Tensor:
         # bool: N2D2.CudaTensor_bool, # Not defined
     }
     
-    def __init__(self, dims, value=None, cuda=False, datatype=float):
+    def __init__(self, dims, value=None, cuda=False, default_data_type=float):
         """
         :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (Numpy convention)
         :type dims: list
         :param value: A value to fill the :py:class:`n2d2.Tensor` object.
-        :type value: Must be coherent with **datatype**
-        :param datatype: Type of the data stocked by the tensor, default=float
-        :type datatype: type, optional
+        :type value: Must be coherent with **default_data_type**
+        :param default_data_type: Type of the data stocked by the tensor, default=float
+        :type default_data_type: type, optional
         """
 
         if cuda:
@@ -68,22 +68,22 @@ class Tensor:
         else:
             raise error_handler.WrongInputType("dims", type(dims), [str(list)])
 
-        if value and not isinstance(value, datatype): # TODO : We may want to try an auto-cast !
-            raise TypeError("You want to fill the tensor with " + str(type(value)) + " but " + str(datatype) + " is the datatype.")
+        if value and not isinstance(value, default_data_type): # TODO : We may want to try an auto-cast ! 
+            raise TypeError("You want to fill the tensor with " + str(type(value)) + " but " + str(default_data_type) + " is the default_data_type.")
 
-        if datatype in generators:
+        if default_data_type in generators:
             if not value:
-                self._tensor = generators[datatype](dims)
+                self._tensor = generators[default_data_type](dims)
             else:
-                self._tensor = generators[datatype](dims, value)
+                self._tensor = generators[default_data_type](dims, value)
                 if cuda:
                     # TODO a bug cause the "value" argument to be ignored for CUDA tensor :
-                    # example : N2D2.CudaTensor_int([2, 2], value=int(5.0)
+                    # example : N2D2.CudaTensor_int([2, 2], value=int(5)
                     self._tensor[0:] = value
         else:
-            raise TypeError("Unrecognized Tensor datatype " + str(datatype))
+            raise TypeError("Unrecognized Tensor datatype " + str(default_data_type))
 
-        self._dataType = datatype
+        self._data_type = default_data_type
         self.is_cuda = cuda
 
     def N2D2(self):
@@ -123,11 +123,11 @@ class Tensor:
         """
         return [d for d in reversed(self._tensor.dims())]
     
-    def datatype(self):
+    def data_type(self):
         """
         Return the data type of the object stored by the tensor.
         """
-        return self._dataType
+        return self._data_type
 
     def _get_index(self, coord):
         """
@@ -182,10 +182,18 @@ class Tensor:
         """
         Copy in memory the Tensor object.
         """
-        copy = Tensor(self.shape(), datatype=self.datatype(), cuda=self.is_cuda)
+        copy = Tensor(self.shape(), default_data_type=self.data_type(), cuda=self.is_cuda)
         for i in range(len(copy)):
             copy[i] = self._tensor[i]
         return copy
+    
+    def cuda(self):
+        """
+        Transform the tensor to a cuda tensor
+        """
+        if not self.is_cuda:
+            self.is_cuda = True
+            self._tensor = self._tensor.newCuda()
 
     def to_numpy(self):
         """
@@ -233,20 +241,20 @@ class Tensor:
                 first_element = first_element[0]
             except:
                 is_first_element = True
-        datatype = type(first_element.item())
+        data_type = type(first_element.item())
 
-        if datatype == bool:
+        if data_type == bool:
             # Numpy -> N2D2 doesn't work for bool because there is no buffer protocol for it.
-            n2d2_tensor._dataType = datatype
+            n2d2_tensor._data_type = data_type
             tmp_tensor = n2d2_tensor._tensor_generators[int](np_array)
             shape = [d for d in reversed(tmp_tensor.dims())]
-            n2d2_tensor._tensor = n2d2_tensor._tensor_generators[datatype](shape)
+            n2d2_tensor._tensor = n2d2_tensor._tensor_generators[data_type](shape)
             for i, value in enumerate(tmp_tensor):
                 n2d2_tensor._tensor[i] = value
             del tmp_tensor
         else:
-            n2d2_tensor._dataType = datatype
-            n2d2_tensor._tensor = n2d2_tensor._tensor_generators[datatype](np_array)
+            n2d2_tensor._data_type = data_type
+            n2d2_tensor._tensor = n2d2_tensor._tensor_generators[data_type](np_array)
 
         return n2d2_tensor
 
@@ -256,7 +264,7 @@ class Tensor:
             raise error_handler.WrongInputType("N2D2_Tensor", str(type(N2D2_Tensor), [str(N2D2.BaseTensor)]))
         n2d2_tensor = cls([])
         n2d2_tensor._tensor = N2D2_Tensor
-        n2d2_tensor._dataType = hard_coded_type[N2D2_Tensor.getTypeName()]
+        n2d2_tensor._data_type = hard_coded_type[N2D2_Tensor.getTypeName()]
         n2d2_tensor.is_cuda = "CudaTensor" in str(type(N2D2_Tensor))
         return n2d2_tensor
 

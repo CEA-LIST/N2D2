@@ -26,14 +26,14 @@ class test_tensor(unittest.TestCase):
     def setUp(self):
         self.cuda = False
         self.x, self.y, self.z = (2,3,4)
-        self.tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], defaultDataType=int, value=0, cuda=self.cuda)
+        self.tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], default_data_type=int, value=0, cuda=self.cuda)
     def test_set_index(self):
         self.tensor[0] = 1
         self.assertEqual(self.tensor[0], 1)
         self.assertEqual(self.tensor[0, 0, 0], 1)
 
     def test_value_param(self):
-        self.tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], defaultDataType=int, value=5, cuda=self.cuda)
+        self.tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], default_data_type=int, value=5, cuda=self.cuda)
         for i in self.tensor:
             self.assertEqual(i, 5)
 
@@ -63,7 +63,7 @@ class test_tensor(unittest.TestCase):
 
     def test_dim(self):
         self.x, self.y, self.z, self.b = (1, 2, 3, 4)
-        self.tensor = n2d2.tensor.Tensor([self.b, self.z, self.y, self.x], defaultDataType=int, value=0, cuda=self.cuda)
+        self.tensor = n2d2.tensor.Tensor([self.b, self.z, self.y, self.x], default_data_type=int, value=0, cuda=self.cuda)
         self.assertEqual(self.tensor.dimX(), self.x)
         self.assertEqual(self.tensor.dimY(), self.y)
         self.assertEqual(self.tensor.dimZ(), self.z)
@@ -74,10 +74,10 @@ class test_tensor(unittest.TestCase):
         self.assertEqual(self.tensor.shape(), [self.z, self.y, self.x])
 
     def test_equal(self):
-        same_tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], defaultDataType=int, value=0, cuda=self.cuda)
-        type_different = n2d2.tensor.Tensor([self.x, self.y, self.z], defaultDataType=float, value=0, cuda=self.cuda)
-        different_tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], defaultDataType=int, value=1, cuda=self.cuda)
-        dim_different = n2d2.tensor.Tensor([self.x, self.y], defaultDataType=int, value=0, cuda=self.cuda)
+        same_tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], default_data_type=int, value=0, cuda=self.cuda)
+        type_different = n2d2.tensor.Tensor([self.x, self.y, self.z], default_data_type=float, value=0, cuda=self.cuda)
+        different_tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], default_data_type=int, value=1, cuda=self.cuda)
+        dim_different = n2d2.tensor.Tensor([self.x, self.y], default_data_type=int, value=0, cuda=self.cuda)
         self.assertTrue(self.tensor == same_tensor)
         self.assertTrue(self.tensor == type_different)
         self.assertTrue(self.tensor != different_tensor)
@@ -113,13 +113,13 @@ class test_tensor(unittest.TestCase):
         n2d2_tensor = n2d2.Tensor.from_N2D2(N2D2_tensor)
         
         self.assertTrue(np.array_equal(n2d2_tensor._tensor, N2D2_tensor))
-        self.assertTrue(n2d2_tensor._dataType == int)
+        self.assertTrue(n2d2_tensor._data_type == int)
 
 class test_cudatensor(test_tensor):
     def setUp(self):
         self.cuda = True
         self.x, self.y, self.z = (2,3,4)
-        self.tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], defaultDataType=int, value=0, cuda=self.cuda)
+        self.tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], default_data_type=int, value=0, cuda=self.cuda)
     
 
     

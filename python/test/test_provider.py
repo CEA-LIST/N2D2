@@ -26,10 +26,10 @@ import unittest
 
 class test_provider(unittest.TestCase):
     def setUp(self):
-        self.db = n2d2.database.MNIST(dataPath="/nvme0/DATABASE/MNIST/raw/")       
+        self.db = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw/")       
         self.size = [28, 28, 1]
         self.batch_size = 1
-        self.provider = n2d2.provider.DataProvider(self.db, self.size, batchSize=self.batch_size)        
+        self.provider = n2d2.provider.DataProvider(self.db, self.size, batch_size=self.batch_size)        
         
     def tearDown(self):
         pass
@@ -37,25 +37,17 @@ class test_provider(unittest.TestCase):
     def test_get_batch_size(self):
         self.assertEqual(self.batch_size, self.provider.get_batch_size())
 
-    def test_loop():
-        # TODO : Find a way to test interating over a provider
-        pass
-    
-    def test_read_random_batch_error_partition(self):
+    def test_set_partition(self):
         with self.assertRaises(ValueError):
-            self.provider.read_random_batch(partition='Wrong string !')
-        
-    def test_read_random_batch_error_partition(self):
-        with self.assertRaises(ValueError):
-            self.provider.read_batch(partition='Wrong string !', idx=0)
-
-    
+            self.provider.set_partition('Wrong string !')
+  
 
     def test_read_random_batch(self):
         input_tensor = self.provider.get_data()
+        self.provider.set_partition('Test')
         for i in input_tensor:
             self.assertEqual(i, 0)
-        self.provider.read_random_batch(partition='Test')
+        self.provider.read_random_batch()
         input_tensor = self.provider.get_data()
         empty = True
         for i in input_tensor:
@@ -68,7 +60,8 @@ class test_provider(unittest.TestCase):
         input_tensor = self.provider.get_data()
         for i in input_tensor:
             self.assertEqual(i, 0)
-        self.provider.read_batch(partition='Test', idx=0)
+        self.provider.set_partition('Test')
+        self.provider.read_batch(idx=0)
         input_tensor = self.provider.get_data()
         vide = True
         for i in input_tensor:
