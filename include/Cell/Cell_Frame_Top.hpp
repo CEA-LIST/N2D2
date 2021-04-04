@@ -51,7 +51,7 @@ public:
     {
 #ifdef CUDA
         int count = 1;
-        const cudaError_t status = cudaGetDevice(&count);
+        const cudaError_t status = cudaGetDeviceCount(&count);
         if (status != cudaSuccess)
             count = 1;
 
