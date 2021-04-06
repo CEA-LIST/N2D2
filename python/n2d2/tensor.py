@@ -84,7 +84,7 @@ class Tensor():
         else:
             raise TypeError("Unrecognized Tensor datatype " + str(datatype))
 
-        self._data_type = datatype
+        self._datatype = datatype
         self.is_cuda = cuda
 
     def N2D2(self):
@@ -101,17 +101,27 @@ class Tensor():
         .. testcode::
 
             tensor = n2d2.Tensor([1, 1, 2, 2]) 
-            tensor.set_values([[[1, 2],
-                                [3, 4]]])
+            input_tensor.set_values([[[[1,2],
+                                       [3, 4]]]])
  
-
         :param values: A nested list that represent the tensor.
         :type values: list
         """
         if not isinstance(values, list):
             raise error_handler.WrongInputType("values", type(values), [str(list)])
-        # TODO : check dimensions !
-        # TODO : check type ?
+
+        tmp = values
+        nb_dims = 0
+        dims = []
+        while isinstance(tmp, list):
+            dims.append(len(tmp))
+            tmp = tmp[0]
+            nb_dims += 1
+        del tmp
+        if nb_dims != self.nb_dims():
+            raise ValueError("The number of dims should be " + str(self.nb_dims()) + " but is "+ str(nb_dims) + " instead.")
+        if dims != self.shape():
+            raise ValueError('Dimension are'+ str(dims) + " should be "+ str(self.shape()) + " instead.")
 
         def flatten(list_to_flatten):
             if len(list_to_flatten) == 1:
@@ -127,7 +137,7 @@ class Tensor():
 
         flatten_list = flatten(values)
         for index, value in enumerate(flatten_list):
-            self._tensor[index] = value
+            self[index] = value
 
 
     def nb_dims(self):
@@ -164,7 +174,7 @@ class Tensor():
         """
         Return the data type of the object stored by the tensor.
         """
-        return self._data_type
+        return self._datatype
 
     def _get_index(self, coord):
         """From the coordinate returns the 1D index of an element in the tensor.
@@ -216,15 +226,25 @@ class Tensor():
         """
         Copy in memory the Tensor object.
         """
-        copy = Tensor(self.shape(), datatype=self.data_type(), cuda=self.is_cuda)
+        copy = Tensor(self.shape(), datatype=self.data_type(), cuda=self.is_cuda, cell=self.cell)
         for i in range(len(copy)):
             copy[i] = self._tensor[i]
         return copy
     
-    # TODO : create a  cpu() method ?
+    def cpu(self):
+        """
+        Convert the tensor to a cpu tensor
+        """
+        if self.is_cuda:
+            self.is_cuda = False
+            new_tensor = self._tensor_generators[self._datatype](self.dims())
+            for index, value in enumerate(self):
+                new_tensor[index] = value
+            self._tensor = new_tensor
+
     def cuda(self):
         """
-        Transform the tensor to a cuda tensor
+        Convert the tensor to a cuda tensor
         """
         if not self.is_cuda:
             self.is_cuda = True
@@ -246,7 +266,7 @@ class Tensor():
     def from_numpy(cls, np_array):
         """Convert a numpy array into a tensor.
         TODO : fix /!\ Known issues /!\  
-        - Using a 1D numpy array have unintended behaviour 
+        - Using a 1D numpy array have unintended behavior 
 
         :param np_array: A numpy array to convert to a tensor.
         :type np_array: :py:class:`numpy.array`
@@ -280,7 +300,7 @@ class Tensor():
 
         if data_type == bool:
             # Numpy -> N2D2 doesn't work for bool because there is no buffer protocol for it.
-            n2d2_tensor._data_type = data_type
+            n2d2_tensor._datatype = data_type
             tmp_tensor = n2d2_tensor._tensor_generators[int](np_array)
             shape = [d for d in reversed(tmp_tensor.dims())]
             n2d2_tensor._tensor = n2d2_tensor._tensor_generators[data_type](shape)
@@ -288,7 +308,7 @@ class Tensor():
                 n2d2_tensor._tensor[i] = value
             del tmp_tensor
         else:
-            n2d2_tensor._data_type = data_type
+            n2d2_tensor._datatype = data_type
             n2d2_tensor._tensor = n2d2_tensor._tensor_generators[data_type](np_array)
 
         return n2d2_tensor
@@ -299,18 +319,30 @@ class Tensor():
             raise error_handler.WrongInputType("N2D2_Tensor", str(type(N2D2_Tensor), [str(N2D2.BaseTensor)]))
         n2d2_tensor = cls([])
         n2d2_tensor._tensor = N2D2_Tensor
-        n2d2_tensor._data_type = hard_coded_type[N2D2_Tensor.getTypeName()]
+        n2d2_tensor._datatype = hard_coded_type[N2D2_Tensor.getTypeName()]
         n2d2_tensor.is_cuda = "CudaTensor" in str(type(N2D2_Tensor))
         return n2d2_tensor
 
-    def __setitem__(self, index, value):
+    def __setitem__(self, index, value): # TODO : Need to check the type before setting values + need to add an autocast !
         """
         Set an element of the tensor.
         To select the element to modify you can use :
             - the coordinate of the element;
             - the index of the flatten tensor;
             - a slice index of the flatten tensor. 
+        :param index: Indicate the index of the item you want to set
+        :type index: tuple, int, float, slice
+        :param value: The value the item will take
+        :type value: same type as self._datatype
         """
+        if not isinstance(value, self._datatype):
+            # TODO : Set a warning here ?
+            # print("Warning : Autocasting : " + str(type(value)) + " to " + str(self._datatype))
+            try:
+                value = self._datatype(value)
+            except:
+                raise RuntimeError("Autocast failed, tried to cast : " + str(type(value)) + " to " + str(self._datatype))
+
         if isinstance(index, tuple) or isinstance(index, list):
             self._tensor[self._get_index(index)] = value
         elif isinstance(index, int) or isinstance(index, float):
@@ -362,6 +394,9 @@ class Tensor():
 
     def __str__(self):
         return str(self._tensor)
+
+    def detach_cell(self):
+        self.cell = None
 
     def set_cell(self, cell):
         self.cell = cell

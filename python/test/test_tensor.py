@@ -113,7 +113,7 @@ class test_tensor(unittest.TestCase):
         n2d2_tensor = n2d2.Tensor.from_N2D2(N2D2_tensor)
         
         self.assertTrue(np.array_equal(n2d2_tensor._tensor, N2D2_tensor))
-        self.assertTrue(n2d2_tensor._data_type == int)
+        self.assertTrue(n2d2_tensor._datatype == int)
 
 class test_cudatensor(test_tensor):
     def setUp(self):

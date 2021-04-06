@@ -67,7 +67,7 @@ for epoch in range(nb_epochs):
         x.update()
 
         print("Example: " + str(i * batch_size) + ", loss: "
-              + "{0:.3f}".format(x.tensor[0]), end='\r')
+              + "{0:.3f}".format(x[0]), end='\r')
 
 
     print("\n### Validation ###")
