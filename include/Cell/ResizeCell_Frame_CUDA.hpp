@@ -81,9 +81,6 @@ protected:
     Float_T mScaleX;
     Float_T mScaleY;
 
-    std::vector<dim3> GPU_BLOCK_GRID;
-    std::vector<dim3> GPU_THREAD_GRID;
-
 private:
     static Registrar<ResizeCell> mRegistrar;
 };

@@ -140,7 +140,8 @@ __global__ void cudaSBilinearTF_BackWard_kernel( unsigned int outputWidth,
     }
 }
 
-void N2D2::cudaSResizeFWBilinearTF(unsigned int outputSizeX,
+void N2D2::cudaSResizeFWBilinearTF(const cudaDeviceProp& deviceProp,
+                                   unsigned int outputSizeX,
                                    unsigned int outputSizeY,
                                    unsigned int outputNbChannels,
                                    unsigned int batchSize,
@@ -153,12 +154,23 @@ void N2D2::cudaSResizeFWBilinearTF(unsigned int outputSizeX,
                                    unsigned int* xHighIdx,
                                    float* xInter,
                                    const float* input,
-                                   float* outputs,
-                                   const dim3 blocksPerGrid,
-                                   const dim3 threadsPerBlock)
+                                   float* outputs)
 {
+    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
-    cudaSBilinearTF_Forward_kernel<<<blocksPerGrid, threadsPerBlock>>>( outputSizeX,
+    const unsigned int groupSize = (outputSizeX * outputSizeY < maxSize)
+                                       ? outputSizeX * outputSizeY
+                                       : maxSize;
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputSizeX);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
+
+    const dim3 blocksPerGrid = {outputNbChannels, 1, batchSize};
+    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
+
+    cudaSBilinearTF_Forward_kernel<<<blocksPerGrid, threadsPerBlocks>>>( outputSizeX,
                                                                         outputSizeY,
                                                                         outputNbChannels,
                                                                         batchSize,
@@ -176,7 +188,8 @@ void N2D2::cudaSResizeFWBilinearTF(unsigned int outputSizeX,
 
 }
 
-void N2D2::cudaSResizeBWBilinearTF(unsigned int outputSizeX,
+void N2D2::cudaSResizeBWBilinearTF(const cudaDeviceProp& deviceProp,
+                           unsigned int outputSizeX,
                            unsigned int outputSizeY,
                            unsigned int outputNbChannels,
                            unsigned int batchSize,
@@ -185,12 +198,23 @@ void N2D2::cudaSResizeBWBilinearTF(unsigned int outputSizeX,
                            const float scaleX,
                            const float scaleY,
                            const float* input,
-                           float* outputs,
-                           const dim3 blocksPerGrid,
-                           const dim3 threadsPerBlock)
+                           float* outputs)
 {
+    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
-    cudaSBilinearTF_BackWard_kernel<<<blocksPerGrid, threadsPerBlock>>>( outputSizeX,
+    const unsigned int groupSize = (inputSizeX * inputSizeY < maxSize)
+                                       ? inputSizeX * inputSizeY
+                                       : maxSize;
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)inputSizeX);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
+
+    const dim3 blocksPerGrid = {outputNbChannels, 1, batchSize};
+    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
+
+    cudaSBilinearTF_BackWard_kernel<<<blocksPerGrid, threadsPerBlocks>>>( outputSizeX,
                                                                         outputSizeY,
                                                                         outputNbChannels,
                                                                         batchSize,
@@ -237,23 +261,51 @@ __global__ void cudaSNearestNeighborKernel(const float* input, size_t inputSizeX
 }
 
 
-void N2D2::cudaSResizeFWNearestNeighbor(const float* input, size_t inputSizeX, size_t inputSizeY,
+void N2D2::cudaSResizeFWNearestNeighbor(const cudaDeviceProp& deviceProp,
+                                        const float* input, size_t inputSizeX, size_t inputSizeY,
                                         float* output, size_t outputSizeX, size_t outputSizeY,
-                                        size_t nbChannels, size_t batchSize,
-                                        const dim3 blocksPerGrid, const dim3 threadsPerBlock) 
+                                        size_t nbChannels, size_t batchSize) 
 {
-    cudaSNearestNeighborKernel<<<blocksPerGrid, threadsPerBlock>>>(input, inputSizeX, inputSizeY,
+    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
+
+    const unsigned int groupSize = (outputSizeX * outputSizeY < maxSize)
+                                       ? outputSizeX * outputSizeY
+                                       : maxSize;
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)outputSizeX);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
+
+    const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
+    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
+
+    cudaSNearestNeighborKernel<<<blocksPerGrid, threadsPerBlocks>>>(input, inputSizeX, inputSizeY,
                                                                    output, outputSizeX, outputSizeY, 
                                                                    nbChannels, batchSize);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-void N2D2::cudaSResizeBWNearestNeighbor(const float* input, size_t inputSizeX, size_t inputSizeY,
+void N2D2::cudaSResizeBWNearestNeighbor(const cudaDeviceProp& deviceProp,
+                                        const float* input, size_t inputSizeX, size_t inputSizeY,
                                         float* output, size_t outputSizeX, size_t outputSizeY,
-                                        size_t nbChannels, size_t batchSize,
-                                        const dim3 blocksPerGrid, const dim3 threadsPerBlock) 
+                                        size_t nbChannels, size_t batchSize) 
 {
-    cudaSNearestNeighborKernel<<<blocksPerGrid, threadsPerBlock>>>(input, inputSizeX, inputSizeY,
+    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
+
+    const unsigned int groupSize = (inputSizeX * inputSizeY < maxSize)
+                                       ? inputSizeX * inputSizeY
+                                       : maxSize;
+    const unsigned int reqWidth
+        = (unsigned int)ceilf((float)groupSize / (float)inputSizeX);
+
+    const unsigned int groupWidth = min(prefMultiple, reqWidth);
+
+    const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
+    const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
+
+    cudaSNearestNeighborKernel<<<blocksPerGrid, threadsPerBlocks>>>(input, inputSizeX, inputSizeY,
                                                                    output, outputSizeX, outputSizeY, 
                                                                    nbChannels, batchSize);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
