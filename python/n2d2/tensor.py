@@ -80,7 +80,7 @@ class Tensor():
                 if cuda:
                     # TODO a bug cause the "value" argument to be ignored for CUDA tensor :
                     # example : N2D2.CudaTensor_int([2, 2], value=int(5)
-                    self._tensor[0:] = value
+                    self[0:] = value
         else:
             raise TypeError("Unrecognized Tensor datatype " + str(datatype))
 

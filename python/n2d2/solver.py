@@ -56,6 +56,27 @@ class SGD(Solver):
     }
 
     def __init__(self, **config_parameters):
+        """
+        :param datatype: Datatype of the weights, default=float
+        :type datatype: str, optional
+        :param model: Can be either ``Frame`` or ``Frame_CUDA``, default='Frame'
+        :type model: str, optional 
+        :param learning_rate: Learning rate, default=0.01
+        :type learning_rate: float, optional
+        :param momentum: Momentum, default=0.0
+        :type momentum: float, optional
+        :param decay: Decay, default=0.0
+        :type decay: float, optional
+        :param learning_rate_policy: Learning rate decay policy. Can be any of ``None``, ``StepDecay``, ``ExponentialDecay``, ``InvTDecay``, default='None'
+        :type learning_rate_policy: str, optional
+        :param learning_rate_step_size: Learning rate step size (in number of stimuli), default=1
+        :type learning_rate_step_size: int, optional
+        :param learning_rate_decay: Learning rate decay, default=0.1
+        :type learning_rate_decay: float, optional
+        :param clamping: If true, clamp the weights and bias between -1 and 1, default=False
+        :type clamping: boolean, optional
+
+        """
         Solver.__init__(self, **config_parameters)
         self._N2D2_object = self._solver_generators[self._model_key]()
         self._set_N2D2_parameters(self._config_parameters)

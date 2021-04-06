@@ -42,7 +42,9 @@ class Filler(N2D2_Interface):
 
 
 class He(Filler):
-
+    """
+    Fill with an normal distribution with normalized variance taking into account the rectifier nonlinearity :cite:`He2015`. This filler is sometimes referred as MSRA filler.
+    """
     _type = "HeFiller"
 
     _filler_generators = {
@@ -50,6 +52,14 @@ class He(Filler):
     }
 
     def __init__(self, **config_parameters):
+        """
+        :param datatype: datatype, default='float'
+        :type datatype: str, optional
+        :param variance_norm: Normalization, can be ``FanIn``, ``Average`` or ``FanOut``, default='FanIn'
+        :type variance_norm: str, optional
+        :param scaling: Scaling factor, default=1.0
+        :type scaling: float, optional
+        """
         Filler.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['variance_norm', 'mean_norm', 'scaling'])
@@ -58,6 +68,9 @@ class He(Filler):
 
 
 class Normal(Filler):
+    """
+    Fill with a normal distribution.
+    """
 
     _type = "NormalFiller"
 
@@ -67,6 +80,14 @@ class Normal(Filler):
     }
 
     def __init__(self, **config_parameters):
+        """
+        :param datatype: datatype, default='float'
+        :type datatype: str, optional
+        :param mean: Mean value of the distribution, default=0.0
+        :type mean: float, optional
+        :param std_dev: Standard deviation of the distribution, default=1.0
+        :type std_dev: float, optional
+        """
         Filler.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['mean', 'std_dev'])
@@ -75,7 +96,9 @@ class Normal(Filler):
 
 
 class Xavier(Filler):
-
+    """
+    Fill with an uniform distribution with normalized variance :cite:`Glorot2010`.
+    """
     _type = "XavierFiller"
 
     """Static members"""
@@ -84,6 +107,16 @@ class Xavier(Filler):
     }
 
     def __init__(self, **config_parameters):
+        """
+        :param datatype: datatype, default='float'
+        :type datatype: str, optional
+        :param variance_norm: Normalization, can be ``FanIn``, ``Average`` or ``FanOut``, default='FanIn'
+        :type variance_norm: str, optional
+        :param distribution: Distribution, can be ``Uniform`` or ``Normal``, default='Uniform'
+        :type distribution: str, optional
+        :param scaling: Scaling factor, default=1.0
+        :type scaling: float, optional
+        """
         Filler.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['variance_norm', 'distribution', 'scaling'])
@@ -98,7 +131,9 @@ class Xavier(Filler):
 
 
 class Constant(Filler):
-
+    """
+    Fill with a constant value.
+    """
     _type = "ConstantFiller"
 
     """Static members"""
@@ -107,6 +142,12 @@ class Constant(Filler):
     }
 
     def __init__(self, **config_parameters):
+        """
+        :param datatype: datatype, default='float'
+        :type datatype: str, optional
+        :param value: Value for the filling
+        :type value: float
+        """
         Filler.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['value'])

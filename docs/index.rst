@@ -33,7 +33,6 @@ N2D2
    python_api/databases
    python_api/cells
    python_api/tensor
-   python_api/activations
    python_api/deepnet
    python_api/transformations
    python_api/data_provider
