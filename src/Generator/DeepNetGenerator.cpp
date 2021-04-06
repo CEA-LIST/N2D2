@@ -1761,24 +1761,12 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             }
 
             if ((itConcat = concat.find(inputX)) != concat.end()) {
-                unsigned int mapOffset = 0;
-
                 for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
                     const std::string input = (*itConcat).second[i];
                     std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
                     parentCells.push_back(inputCell);
 
-                    // Make a unit map
-                    Tensor<bool> inputMap({nbOutputs,
-                                            inputCell->getNbOutputs()}, false);
-
-                    for (unsigned int i = 0; i < inputCell->getNbOutputs();
-                        ++i)
-                    {
-                        inputMap(mapOffset + i, i) = true;
-                    }
-                    dropoutCell->addInput(inputCell.get(), inputMap);
-                    mapOffset += inputCell->getNbOutputs();
+                    dropoutCell->addInput(inputCell.get());
                 }
             }
             else {
