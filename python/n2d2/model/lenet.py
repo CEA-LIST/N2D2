@@ -67,7 +67,6 @@ class LeNet(Sequence):
             Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling='Max'),
             Conv(16, 120, kernel_dims=[5, 5], **conv_def()),
             Fc(120, 84, **fc_def()),
-            # Dropout(name="fc1.drop"),
             Fc(84, nb_outputs, **fc_def()),
             Softmax(with_loss=True),
         ])

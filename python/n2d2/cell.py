@@ -801,9 +801,6 @@ class Softmax(Cell):
 
         return n2d2.Tensor.from_N2D2(self.get_outputs()).set_cell(self)
 
-
-
-
     @classmethod
     def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
 
@@ -1278,44 +1275,54 @@ class ElemWise(Cell):
         return n2d2.Tensor.from_N2D2(self.get_outputs()).set_cell(self)
 
 
-
 class Dropout(Cell):
+    _type = "Dropout"
+
     _cell_constructors = {
         'Frame<float>': N2D2.DropoutCell_Frame_float,
         'Frame_CUDA<float>': N2D2.DropoutCell_Frame_CUDA_float,
         'Frame<double>': N2D2.DropoutCell_Frame_double,
         'Frame_CUDA<double>': N2D2.DropoutCell_Frame_CUDA_double,
     }
-    def __init__(self, inputs, from_arguments=True, **config_parameters):
+
+    def __init__(self, from_arguments=True, **config_parameters):
 
         if not from_arguments and  len(config_parameters) > 0:
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nb_outputs' or 'config parameters' not None")
         if from_arguments:
-            self._create_from_arguments(inputs, **config_parameters)
-        
+            self._create_from_arguments(**config_parameters)
 
-    def _create_from_arguments(self, inputs, **config_parameters):
-        Cell.__init__(self, inputs, inputs.get_nb_outputs(), **config_parameters)
+    def _create_from_arguments(self,  **config_parameters):
+        Cell.__init__(self, **config_parameters)
         # No optionnal args
         self._parse_optional_arguments([])
-        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
-                                                        self.get_name(),
-                                                        self._constructor_arguments['nb_outputs'],
-                                                        **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
+        
+    def __call__(self, inputs):
+        if inputs.nb_dims() != 4:
+            raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
+        self._deepnet = self._infer_deepnet(inputs)
 
-        # Delete to avoid print
-        del self._constructor_arguments['nb_outputs']
+        if self._N2D2_object is None:
+            nb_outputs = inputs.dims()[2]
 
-        """Set and initialize here all complex cell members"""
-        for key, value in self._config_parameters.items():
-            if key is 'activation_function':
-                self._N2D2_object.setActivation(value.N2D2())
-            else:
-                self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+            self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+                                                                         self.get_name(),
+                                                                         nb_outputs,
+                                                                         **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
+
+            """Set and initialize here all complex cell members"""
+            for key, value in self._config_parameters.items():
+                if key is 'activation_function':
+                    self._N2D2_object.setActivation(value.N2D2())
+                else:
+                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
         self._add_to_graph(inputs)
 
+        self.propagate(self._inference)
+
+        return n2d2.Tensor.from_N2D2(self.get_outputs()).set_cell(self)
 
     @classmethod
     def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
