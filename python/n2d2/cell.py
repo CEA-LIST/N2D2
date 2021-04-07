@@ -154,11 +154,14 @@ class Cell(N2D2_Interface):
             input_dims = inputs.dims()
             if not self.dims(): # If not initialized
                 return True
+            """"
+            # TODO: Does not work for multi inputs, because getInputsDims returns sum of all channel dims
             if not self._N2D2_object.getInputsDims() + [self.dims()[3]] == input_dims: # If input dimesions changed
-                raise RuntimeError("Cell '" + self.get_name() + "' was called with input of dim " + str(inputs.tensor.dims())
+                raise RuntimeError("Cell '" + self.get_name() + "' was called with input of dim " + str(inputs.dims())
                                    + ", but cell input size is " + str(self._N2D2_object.getInputsDims()+ [self.dims()[3]]) +
                                    ". Inputs dimensions cannot change after first call.")
                 #return True
+            """
         else:
             raise TypeError("Invalid inputs object of type " + str(type(inputs)))
         # Check if inputs have same deepnet
@@ -166,28 +169,46 @@ class Cell(N2D2_Interface):
         return False
 
     def add_input(self, inputs):
-        self._inputs = []
         if isinstance(inputs, list):
-            parents = []
-            for ipt in inputs:
-                cell = ipt.cell
-                self.add_input(cell)
-                parents.append(cell.N2D2())
-            self._deepnet.N2D2().addCell(self._N2D2_object, parents)
+
+            pass
         elif isinstance(inputs, n2d2.tensor.Tensor):
-            cell = inputs.cell
-            self._N2D2_object.clearInputTensors()
-            self._link_N2D2_input(cell)
-            if self._check_tensor(cell):
-                self._N2D2_object.initializeDataDependent()
-            self._inputs.append(cell.get_name())
-            # TODO: N2D2 should check here that the cell does not already exist in the DeepNet
-            if not isinstance(cell, n2d2.provider.Provider):
-                self._deepnet.N2D2().addCell(self._N2D2_object, [cell.N2D2()])
-            else:
-                self._deepnet.N2D2().addCell(self._N2D2_object, [])
+            inputs = [inputs]
         else:
             raise TypeError("Cannot add object of type " + str(type(inputs)))
+
+        self._inputs = []
+        self._N2D2_object.clearInputTensors()
+        initialize = False
+
+        parents = []
+        for ipt in inputs:
+            cell = ipt.cell
+            self._link_N2D2_input(cell)
+            if self._check_tensor(cell):
+                initialize = True
+
+            if not isinstance(cell, n2d2.provider.Provider):
+                parents.append(cell.N2D2())
+            self._inputs.append(cell.get_name())
+
+        self._deepnet.N2D2().addCell(self._N2D2_object, parents)
+        if initialize:
+            self._N2D2_object.initializeDataDependent()
+
+        """
+        cell = inputs.cell
+        self._N2D2_object.clearInputTensors()
+        self._link_N2D2_input(cell)
+        if self._check_tensor(cell):
+            self._N2D2_object.initializeDataDependent()
+        self._inputs.append(cell.get_name())
+        # TODO: N2D2 should check here that the cell does not already exist in the DeepNet
+        if not isinstance(cell, n2d2.provider.Provider):
+            self._deepnet.N2D2().addCell(self._N2D2_object, [cell.N2D2()])
+        else:
+            self._deepnet.N2D2().addCell(self._N2D2_object, [])
+        """
 
 
     """
@@ -248,14 +269,17 @@ class Cell(N2D2_Interface):
         self._N2D2_object.update()
 
 
+    def import_free_parameters(self, dir_name, ignoreNotExists=False):
+        if self._N2D2_object:
+            filename = dir_name + "/" + self.get_name() + ".syntxt"
+            print("import " + filename)
+            self._N2D2_object.importFreeParameters(filename, ignoreNotExists)
 
-    def import_free_parameters(self, fileName, **kwargs):
-        print("import " + fileName)
-        self._N2D2_object.importFreeParameters(fileName, **kwargs)
-
-    def import_activation_parameters(self, fileName, **kwargs):
-        print("import " + fileName)
-        self._N2D2_object.importActivationParameters(fileName, **kwargs)
+    """
+    def import_activation_parameters(self, filename, **kwargs):
+        print("import " + filename)
+        self._N2D2_object.importActivationParameters(filename, **kwargs)
+    """
 
     def get_name(self):
         return self._name
@@ -579,7 +603,10 @@ class Conv(Cell):
             else:
                 self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
-        self._N2D2_object.initializeParameters(nb_inputs, 1, **self._connection_parameters)
+        if isinstance(self, ConvDepthWise):
+            self._N2D2_object.initializeParameters(nb_inputs, 1, **self._connection_parameters)
+        else:
+            self._N2D2_object.initializeParameters(nb_inputs, 1, **self._connection_parameters)
 
 
 
@@ -1019,7 +1046,7 @@ class GlobalPool2d(Cell):
                                                                          self.get_name(),
                                                                          [inputs.dims()[0], inputs.dims()[1]],
                                                                          inputs.dims()[2],
-                                                                         stride_dims=[1, 1],
+                                                                         strideDims=[1, 1],
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
 
             """Set and initialize here all complex cell members"""
@@ -1173,37 +1200,25 @@ class ElemWise(Cell):
         'Frame_CUDA': N2D2.ElemWiseCell_Frame_CUDA,
     }
 
-    def __init__(self, inputs, nb_outputs,  from_arguments=True, **config_parameters):
+    def __init__(self, from_arguments=True, **config_parameters):
 
-        if not from_arguments and (nb_outputs is not None or len(config_parameters) > 0):
+        if not from_arguments and (len(config_parameters) > 0):
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nb_outputs' or 'config parameters' not None")
         if from_arguments:
-            self._create_from_arguments(inputs, nb_outputs, **config_parameters)
+            self._create_from_arguments(**config_parameters)
         
 
 
-    def _create_from_arguments(self, inputs, nb_outputs, **config_parameters):
-        Cell.__init__(self, inputs, nb_outputs, **config_parameters)
+    def _create_from_arguments(self, **config_parameters):
+        Cell.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['operation', 'weights', 'shifts'])
 
         self._optional_constructor_arguments['operation'] = \
             N2D2.ElemWiseCell.Operation.__members__[self._optional_constructor_arguments['operation']]
 
-        self._N2D2_object = self._cell_constructors[self._model](self._deepnet.N2D2(),
-                                                self.get_name(),
-                                                self._constructor_arguments['nb_outputs'],
-                                                **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
 
-        """Set and initialize here all complex cell members"""
-        for key, value in self._config_parameters.items():
-            if key is 'activation_function':
-                self._N2D2_object.setActivation(value.N2D2())
-            else:
-                self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
-
-        self._add_to_graph(inputs)
 
     @classmethod
     def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
@@ -1230,6 +1245,38 @@ class ElemWise(Cell):
         n2d2_cell._sync_inputs_and_parents(inputs)
 
         return n2d2_cell
+
+    def __call__(self, inputs):
+
+        for elem in inputs:
+            if elem.nb_dims() != 4:
+                raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
+
+        self._deepnet = self._infer_deepnet(inputs)
+
+        if self._N2D2_object is None:
+
+            nb_outputs = inputs[0].dims()[2]
+
+            self._N2D2_object = self._cell_constructors[self._model](self._deepnet.N2D2(),
+                                                                     self.get_name(),
+                                                                     nb_outputs,
+                                                                     **self.n2d2_function_argument_parser(
+                                                                         self._optional_constructor_arguments))
+
+            """Set and initialize here all complex cell members"""
+            for key, value in self._config_parameters.items():
+                if key is 'activation_function':
+                    self._N2D2_object.setActivation(value.N2D2())
+                else:
+                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+
+        self._add_to_graph(inputs)
+
+        self.propagate(self._inference)
+
+        return n2d2.Tensor.from_N2D2(self.get_outputs()).set_cell(self)
+
 
 
 class Dropout(Cell):

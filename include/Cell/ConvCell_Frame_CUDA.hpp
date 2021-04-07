@@ -188,14 +188,20 @@ template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::setWeight(unsigned int output,
                                              unsigned int channel,
                                              const BaseTensor& value)
-{
-    const unsigned int k = mInputs.getTensorIndex(channel);
-    channel -= mInputs.getTensorDataOffset(channel);
+{   
+    // TODO: Add an Interface that knows all input dimesions before cell connection!
+    //const unsigned int k = mInputs.getTensorIndex(channel);
+    //channel -= mInputs.getTensorDataOffset(channel);
+    const unsigned int k = 0; //mSharedSynapses.getTensorIndex(channel);
+    //const unsigned int k = mSharedSynapses.getTensorIndex(channel);
+    //std::cout << getName() << " k: " << k << std::endl;
+    //channel -= mSharedSynapses.getTensorDataOffset(channel);
 
 #if CUDNN_VERSION >= 7000
     if (mNbGroups[k] > 1) {
         const size_t outputGroupSize = getNbOutputs() / mNbGroups[k];
-        const size_t channelGroupSize = mInputs[k].dimZ() / mNbGroups[k];
+        //const size_t channelGroupSize = mInputs[k].dimZ() / mNbGroups[k];
+        const size_t channelGroupSize = getNbChannels() / mNbGroups[k];
         const size_t outputGroup = output / outputGroupSize;
         const size_t channelGroup = channel / channelGroupSize;
 
@@ -223,8 +229,8 @@ void N2D2::ConvCell_Frame_CUDA<T>::setWeight(unsigned int output,
 
     if (mKeepInSync)
         sharedSynapses[output][channel].synchronizeHToD();
-}
 
+}
 
 
 template <class T>
@@ -233,15 +239,19 @@ N2D2::ConvCell_Frame_CUDA<T>::getWeight(unsigned int output,
                                         unsigned int channel,
                                         BaseTensor& value) const
 {
+     // TODO: Add an Interface that knows all input dimesions before cell connection!
     //const unsigned int k = mInputs.getTensorIndex(channel);
     //channel -= mInputs.getTensorDataOffset(channel);
-    const unsigned int k = mSharedSynapses.getTensorIndex(channel);
-    channel -= mSharedSynapses.getTensorDataOffset(channel);
+    const unsigned int k = 0; //mSharedSynapses.getTensorIndex(channel);
+    //const unsigned int k = mSharedSynapses.getTensorIndex(channel);
+    //std::cout << getName() << " k: " << k << std::endl;
+    //channel -= mSharedSynapses.getTensorDataOffset(channel);
 
 #if CUDNN_VERSION >= 7000
     if (mNbGroups[k] > 1) {
         const size_t outputGroupSize = getNbOutputs() / mNbGroups[k];
-        const size_t channelGroupSize = mInputs[k].dimZ() / mNbGroups[k];
+        //const size_t channelGroupSize = mInputs[k].dimZ() / mNbGroups[k];
+        const size_t channelGroupSize = getNbChannels() / mNbGroups[k];
         const size_t outputGroup = output / outputGroupSize;
         const size_t channelGroup = channel / channelGroupSize;
 
@@ -257,6 +267,8 @@ N2D2::ConvCell_Frame_CUDA<T>::getWeight(unsigned int output,
         channel = channel % channelGroupSize;
     }
 #endif
+
+
 /*
     const CudaTensor<T>& sharedSynapses = mSharedSynapses[k];
 

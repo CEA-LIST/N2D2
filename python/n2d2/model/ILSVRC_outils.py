@@ -27,16 +27,16 @@ def ILSVRC_preprocessing(size=224):
     margin = 32
 
     trans = Composite([
-        Rescale(width=size+margin, height=size+margin, keepAspectRatio=True, resizeToFit=False),
+        Rescale(width=size+margin, height=size+margin, keep_aspect_ratio=True, resize_to_fit=False),
         PadCrop(width=size+margin, height=size+margin),
-        ColorSpace(colorSpace='BGR'),
-        RangeAffine(firstOperator='Minus', firstValue=[103.94, 116.78, 123.68], secondOperator='Multiplies', secondValue=[0.017]),
-        SliceExtraction(width=size, height=size, offsetX=margin//2, offsetY=margin//2, applyTo='NoLearn')
+        ColorSpace(color_space='BGR'),
+        RangeAffine(first_operator='Minus', first_value=[103.94, 116.78, 123.68], second_operator='Multiplies', second_value=[0.017]),
+        SliceExtraction(width=size, height=size, offset_x=margin//2, offset_y=margin//2, apply_to='NoLearn')
     ])
 
     otf_trans = Composite([
-        SliceExtraction(width=size, height=size, randomOffsetX=True, randomOffsetY=True, applyTo='LearnOnly'),
-        Flip(randomHorizontalFlip=True, applyTo='LearnOnly')
+        SliceExtraction(width=size, height=size, random_offset_x=True, random_offset_y=True, apply_to='LearnOnly'),
+        Flip(random_horizontal_flip=True, apply_to='LearnOnly')
     ])
 
     return trans, otf_trans

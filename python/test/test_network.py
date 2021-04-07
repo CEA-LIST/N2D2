@@ -27,14 +27,14 @@ class test_modibleNet(unittest.TestCase):
     def setUp(self):
         n2d2.global_variables.set_cuda_device(4)
         net = N2D2.Network(1)
-        self.N2D2_deepNet = N2D2.DeepNetGenerator.generate(net, "../models/MobileNet_v1.ini")
+        self.N2D2_deepNet = N2D2.DeepNetGenerator.generate(net, "../models/MobileNetv1.ini")
         self.N2D2_deepNet.initialize()
 
     def test_Output(self):
         
         db = n2d2.database.ILSVRC2012(0.01)
         provider = n2d2.provider.DataProvider(db, [160, 160, 3], batchSize=256)
-        n2d2_deepNet = n2d2.model.MobileNet_v1(provider)._deepnet
+        n2d2_deepNet = n2d2.model.MobileNetv1(provider)._deepnet
 
         n2d2_first_cell = n2d2_deepNet.getCells()[n2d2_deepNet.getLayers()[1][0]] # The first layer is the env, so we get the second.
         n2d2_last_cell  = n2d2_deepNet.getCells()[n2d2_deepNet.getLayers()[-1][-1]]

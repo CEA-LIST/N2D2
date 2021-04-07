@@ -85,7 +85,7 @@ class DeepNet(N2D2_Interface):
             raise RuntimeError("First layer of N2D2 deepnet is not a StimuliProvider. You may be skipping cells")
         for idx, layer in enumerate(layers[1:]):
             if len(layer) > 1:
-                deepnet.begin_group()
+                #deepnet.begin_group()
                 for cell in layer:
                     N2D2_cell = cells[cell]
                     n2d2_cell = n2d2.converter.cell_converter(N2D2_cell, deepnet)
@@ -93,6 +93,7 @@ class DeepNet(N2D2_Interface):
                         n2d2_cell.clear_input() # Remove old stimuli provider
                         n2d2_cell.add_input(n2d2.Tensor([], cell=provider))
                 deepnet.end_group()
+
             else:
                 N2D2_cell = cells[layer[0]]
                 n2d2_cell = n2d2.converter.cell_converter(N2D2_cell, deepnet)
@@ -148,8 +149,8 @@ class DeepNet(N2D2_Interface):
     def update(self):
         self._N2D2_object.update()
 
-    def import_free_parameters(self, dirName, ignoreNotExists=False):
-        self._N2D2_object.importNetworkFreeParameters(dirName, ignoreNotExists=ignoreNotExists)
+    def import_free_parameters(self, dir_name, ignoreNotExists=False):
+        self._N2D2_object.importNetworkFreeParameters(dir_name, ignoreNotExists=ignoreNotExists)
 
     def set_provider(self, provider):
         self._provider = provider
@@ -211,7 +212,7 @@ class Group:
     def get_parent_group(self):
         return self._parent_group
 
-
+    """
     # TODO: At the moment this does not release memory of deleted cells
     def remove(self, idx, reconnect=True):
         cell = self._sequence[idx]
@@ -248,6 +249,7 @@ class Group:
             del self._sequence[idx]
         else:
             raise RuntimeError("Unknown object at index: " + str(idx))
+    """
 
 
     def get_cells(self):
@@ -263,12 +265,12 @@ class Group:
                 cells[elem.get_name()] = elem
 
     """
-    def import_free_parameters(self, dirName, ignoreNotExists=False):
-        print("Importing weights from directory '" + dirName + "'")
+    def import_free_parameters(self, dir_name, ignoreNotExists=False):
+        print("Importing weights from directory '" + dir_name + "'")
         for name, cell in self.get_cells().items():
-            path = dirName + "/" + name + ".syntxt"
+            path = dir_name + "/" + name + ".syntxt"
             cell.import_free_parameters(path, ignoreNotExists=ignoreNotExists)
-            cell.import_activation_parameters(dirName, ignoreNotExists=ignoreNotExists)
+            cell.import_activation_parameters(dir_name, ignoreNotExists=ignoreNotExists)
     """
 
     def get_group(self, group_id):
@@ -320,7 +322,6 @@ class Sequence:
         self._cells = cells
         self._name = name
 
-
     def __call__(self, x):
         x.get_deepnet().begin_group(name=self._name)
         for cell in self._cells:
@@ -335,3 +336,36 @@ class Sequence:
     def learn(self):
         for cell in self._cells:
             cell.learn()
+
+    def import_free_parameters(self, dir_name, ignoreNotExists=False):
+        for cell in self._cells:
+            cell.import_free_parameters(dir_name, ignoreNotExists=ignoreNotExists)
+
+    # TODO: Fix this
+    def get_name(self):
+        return ""
+
+
+class Callable:
+    def __init__(self, cells, name=None):
+        assert (isinstance(cells, list))
+        self._cells = cells
+        self._name = name
+
+    def __call__(self, x):
+        raise RuntimeError("Callable instance without __call__() method")
+
+    def test(self):
+        for cell in self._cells:
+            cell.test()
+
+    def learn(self):
+        for cell in self._cells:
+            cell.learn()
+
+    def import_free_parameters(self, dir_name, ignoreNotExists=False):
+        for cell in self._cells:
+            cell.import_free_parameters(dir_name, ignoreNotExists=ignoreNotExists)
+
+    def get_name(self):
+        return ""

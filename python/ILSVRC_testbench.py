@@ -30,8 +30,8 @@ import argparse
 
 # ARGUMENTS PARSING
 parser = argparse.ArgumentParser(description="Testbench for several standard architectures on the ILSVRC2012 dataset")
-parser.add_argument('--arch', type=str, default='MobileNet_v1', metavar='N',
-                    help='MobileNet_v1|MobileNet_v1_batchnorm|')
+parser.add_argument('--arch', type=str, default='MobileNetv1', metavar='N',
+                    help='MobileNetv1|MobileNetv1_batchnorm|')
 parser.add_argument('--weights', type=str, default='', metavar='N',
                     help='weights directory')
 parser.add_argument('--epochs', type=int, default=-1, metavar='S',
@@ -45,13 +45,13 @@ n2d2.global_variables.set_cuda_device(args.dev)
 n2d2.global_variables.default_model = "Frame_CUDA"
 
 
-if args.arch == 'MobileNet_v1':
+if args.arch == 'MobileNetv1':
     batch_size = 256
-elif args.arch == 'MobileNet_v1_batchnorm':
+elif args.arch == 'MobileNetv1_batchnorm':
     batch_size = 64
 elif args.arch == 'MobileNet_v2':
     batch_size = 256
-elif args.arch == 'ResNet-50-BN':
+elif args.arch == 'ResNet50Bn':
     batch_size = 64
 elif args.arch == 'ResNet-onnx':
     batch_size = 16
@@ -63,12 +63,12 @@ avg_window = int(10000 / batch_size)
 size = 224
 
 print("Create database")
-database = n2d2.database.ILSVRC2012(learn=1.0, randomPartitioning=False)
-database.load("/nvme0/DATABASE/ILSVRC2012", labelPath="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
+database = n2d2.database.ILSVRC2012(learn=1.0, random_partitioning=False)
+database.load("/nvme0/DATABASE/ILSVRC2012", label_path="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
 print(database)
 
 print("Create provider")
-provider = n2d2.provider.DataProvider(database=database, size=[size, size, 3], batchSize=batch_size)
+provider = n2d2.provider.DataProvider(database=database, size=[size, size, 3], batch_size=batch_size)
 
 
 print("Add transformation")
@@ -81,27 +81,27 @@ provider.add_on_the_fly_transformation(otf_trans)
 
 
 
-if args.arch == 'MobileNet_v1':
-    """Equivalent to N2D2/models/MobileNet_v1.ini. Typically around 56% test Top1"""
+if args.arch == 'MobileNetv1':
+    """Equivalent to N2D2/models/MobileNetv1.ini. Typically around 56% test Top1"""
     nb_epochs = 120 if args.epochs == -1 else args.epochs
     size = 160
-    model = n2d2.model.MobileNet_v1(provider, alpha=0.5)
+    model = n2d2.model.MobileNetv1(alpha=0.5)
     # 55.87% test Top1
-    # "/local/is154584/jt251134/ILSVRC_testbench/MobileNet_v1/weights_validation/"
-elif args.arch == 'MobileNet_v1_batchnorm':
-    """Equivalent to N2D2/models/MobileNet_v1_batchnorm.ini. Typically around 59.1% test Top1"""
+    # "/local/is154584/jt251134/ILSVRC_testbench/MobileNetv1/weights_validation/"
+elif args.arch == 'MobileNetv1_batchnorm':
+    """Equivalent to N2D2/models/MobileNetv1_batchnorm.ini. Typically around 59.1% test Top1"""
     nb_epochs = 120 if args.epochs == -1 else args.epochs
     size = 224
-    model = n2d2.model.MobileNet_v1(provider, alpha=0.5, with_batchnorm=True)
+    model = n2d2.model.MobileNetv1(provider, alpha=0.5, with_batchnorm=True)
 elif args.arch == 'MobileNet_v2':
     """Equivalent to N2D2/models/MobileNet_v2.ini"""
     nb_epochs = 120 if args.epochs == -1 else args.epochs
     size = 160
     model = n2d2.model.MobileNet_v2(alpha=0.5, size=size, l=10, expansion=6)
-elif args.arch == 'ResNet-50-BN':
+elif args.arch == 'ResNet50Bn':
     nb_epochs = 90 if args.epochs == -1 else args.epochs
     size = 224
-    model = n2d2.model.ResNet50BN(provider, output_size=1000, alpha=1.0, l=0)
+    model = n2d2.model.ResNet50Bn(output_size=1000, alpha=1.0, l=0)
 elif args.arch == 'ResNet-onnx':
     nb_epochs = 0 if args.epochs == -1 else args.epochs
     model = n2d2.model.resnet.load_from_ONNX('18', 'post_act', download=True, batch_size=batch_size)
@@ -116,61 +116,57 @@ if not args.weights == "":
 #model.set_ILSVRC_solvers(int((database.get_nb_stimuli('Learn')*nb_epochs)/batch_size))
 
 print("Create classifier")
-classifier = n2d2.application.Classifier(provider, model, topN=1)
+loss_function = n2d2.application.CrossEntropyClassifier(provider, top_n=1)
 
-
+print("\n### Training ###")
 for epoch in range(nb_epochs):
 
-    print("\n### Train Epoch: " + str(epoch) + " ###")
+    provider.set_partition("Learn")
+    model.learn()
 
-    classifier.set_partition('Learn')
+    print("\n# Train Epoch: " + str(epoch) + " #")
 
-    for i in range(math.ceil(database.get_nb_stimuli('Learn')/batch_size)):
+    for i in range(math.ceil(database.get_nb_stimuli('Learn') / batch_size)):
+        x = provider.read_random_batch()
+        x = model(x)
+        x = loss_function(x)
 
-        # Load example
-        classifier.read_random_batch()
+        x.back_propagate()
+        x.update()
 
-        classifier.process()
+        print("Example: " + str(i * batch_size) + ", loss: "
+              + "{0:.3f}".format(x.tensor[0]), end='\r')
 
-        classifier.optimize()
+    print("\n### Validation ###")
 
-        print("Example: " + str(i*batch_size) + ", train success: "
-              + "{0:.2f}".format(100*classifier.get_average_success(window=avg_window)) + "%", end='\r')
+    loss_function.clear_success()
 
+    provider.set_partition('Validation')
+    model.test()
 
-    print("\n### Validate Epoch: " + str(epoch) + " ###")
+    for i in range(math.ceil(database.get_nb_stimuli('Validation') / batch_size)):
+        batch_idx = i * batch_size
 
-    classifier.set_partition('Validation')
+        x = provider.read_batch(batch_idx)
+        x = model(x)
+        x = loss_function(x)
 
-    for i in range(math.ceil(database.get_nb_stimuli('Validation')/batch_size)):
+        print("Validate example: " + str(i * batch_size) + ", val success: "
+              + "{0:.2f}".format(100 * loss_function.get_average_success()) + "%", end='\r')
 
-        batch_idx = i*batch_size
+print("\n\n### Testing ###")
 
-        # Load example
-        classifier.read_batch(idx=batch_idx)
+provider.set_partition('Test')
+model.test()
 
-        classifier.process()
+for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test') / batch_size)):
+    batch_idx = i * batch_size
 
-        print("Example: " + str(i*batch_size) + ", val success: "
-              + "{0:.2f}".format(100 * classifier.get_average_score(metric='Sensitivity')) + "%", end='\r')
+    x = provider.read_batch(batch_idx)
+    x = model(x)
+    x = loss_function(x)
 
-
-
-
-print("\n### Test ###")
-
-classifier.set_partition('Test')
-
-for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
-
-    batch_idx = i*batch_size
-
-    # Load example
-    classifier.read_batch(idx=batch_idx)
-
-    classifier.process()
-
-    print("Example: " + str(i*batch_size) + ", test success: "
-          + "{0:.2f}".format(100 * classifier.get_average_success()) + "%", end='\r')
+    print("Example: " + str(i * batch_size) + ", test success: "
+          + "{0:.2f}".format(100 * loss_function.get_average_success()) + "%", end='\r')
 
 

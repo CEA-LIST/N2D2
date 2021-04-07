@@ -62,8 +62,8 @@ class Transformation(N2D2_Interface):
     def __init__(self, **config_parameters):
 
         self._apply_to = N2D2.Database.StimuliSetMask.All
-        if 'applyTo' in config_parameters:
-            self._apply_to = N2D2.Database.StimuliSetMask.__members__[config_parameters.pop('applyTo')]
+        if 'apply_to' in config_parameters:
+            self._apply_to = N2D2.Database.StimuliSetMask.__members__[config_parameters.pop('apply_to')]
 
         N2D2_Interface.__init__(self, **config_parameters)
 
@@ -71,7 +71,7 @@ class Transformation(N2D2_Interface):
         output = self._Type #+ "Transformation"
         output += N2D2_Interface.__str__(self)
         if self._apply_to is not N2D2.Database.StimuliSetMask.All:
-            output += "[applyTo=" + str(self._apply_to) + "]"
+            output += "[apply_to=" + str(self._apply_to) + "]"
         return output
 
     def get_apply_set(self):

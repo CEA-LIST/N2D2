@@ -30,203 +30,188 @@ from n2d2.model.ILSVRC_outils import ILSVRC_preprocessing
 
 
 def conv_config():
-    return ConfigSection(activationFunction=Rectifier(), weightsFiller=He(), noBias=True)
+    return ConfigSection(activation_function=Rectifier(), weights_filler=He(), no_bias=True)
+
 def conv_config_bn():
-    return ConfigSection(activationFunction=Linear(), weightsFiller=He(), noBias=True)
+    return ConfigSection(activation_function=Linear(), weights_filler=He(), no_bias=True)
 
 
 
 class MobileNetv1Extractor(Sequence):
     def __init__(self, alpha):
 
-        Sequence([
-            Conv(nbOutputs=int(32 * alpha), kernelDims=[3, 3], strideDims=[2, 2], paddingDims=[1, 1],
+        base_nb_outputs = int(32 * alpha)
+
+        self.div2 = Sequence([
+            Conv(3, base_nb_outputs, kernel_dims=[3, 3], stride_dims=[2, 2], padding_dims=[1, 1],
                  **conv_config(), name="conv1"),
-            ConvDepthWise(kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[1, 1], name="conv1_3x3_dw",
+            ConvDepthWise(base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv1_3x3_dw",
                           **conv_config()),
-            ConvPointWise(2 * x.dims()[2], name="conv1_1x1", **conv_config())
+            ConvPointWise(base_nb_outputs, 2 * base_nb_outputs, name="conv1_1x1", **conv_config())
         ], "div2")
 
-        x = Conv(deepnet, nbOutputs=int(32 * alpha), kernelDims=[3, 3], strideDims=[2, 2], paddingDims=[1, 1],
-                 **conv_config(), name="conv1")
-        x = ConvDepthWise(x, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[1, 1], name="conv1_3x3_dw",
-                          **conv_config())
-        x = ConvPointWise(x, 2 * x.dims()[2], name="conv1_1x1", **conv_config())
+        self.div4 = Sequence([
+            ConvDepthWise(2 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[2, 2], name="conv2_3x3_dw",
+                          **conv_config()),
+            ConvPointWise(2 * base_nb_outputs, 4 * base_nb_outputs, name="conv2_1x1", **conv_config()),
+            ConvDepthWise(4 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv3_3x3_dw",
+                          **conv_config()),
+            ConvPointWise(4 * base_nb_outputs, 4 * base_nb_outputs, name="conv3_1x1", **conv_config()),
+        ], "div4")
 
-        deepnet.begin_group("div4")
-        x = ConvDepthWise(x, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[2, 2], name="conv2_3x3_dw",
-                          **conv_config())
-        x = ConvPointWise(x, 2 * x.dims()[2], name="conv2_1x1", **conv_config())
-        x = ConvDepthWise(x, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[1, 1], name="conv3_3x3_dw",
-                          **conv_config())
-        x = ConvPointWise(x, x.dims()[2], name="conv3_1x1", **conv_config())
-        deepnet.end_group()
+        self.div8 = Sequence([
+            ConvDepthWise(4 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[2, 2], name="conv4_3x3_dw",
+                              **conv_config()),
+            ConvPointWise(4 * base_nb_outputs, 8 * base_nb_outputs, name="conv4_1x1", **conv_config()),
+            ConvDepthWise(8 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv5_3x3_dw",
+                          **conv_config()),
+            ConvPointWise(8 * base_nb_outputs, 8 * base_nb_outputs, name="conv5_1x1", **conv_config())
+        ], "div8")
 
-        deepnet.begin_group("div8")
-        x = ConvDepthWise(x, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[2, 2], name="conv4_3x3_dw",
-                          **conv_config())
-        x = ConvPointWise(x, 2 * x.dims()[2], name="conv4_1x1", **conv_config())
-        x = ConvDepthWise(x, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[1, 1], name="conv5_3x3_dw",
-                          **conv_config())
-        x = ConvPointWise(x, x.dims()[2], name="conv5_1x1", **conv_config())
-        deepnet.end_group()
+        self.div16 = Sequence([
+            ConvDepthWise(8 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[2, 2], name="conv6_3x3_dw",
+                              **conv_config()),
+            ConvPointWise(8 * base_nb_outputs, 16 * base_nb_outputs, name="conv6_1x1", **conv_config()),
+            ConvDepthWise(16 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv7_1_3x3_dw",
+                              **conv_config()),
+            ConvPointWise(16 * base_nb_outputs, 16 * base_nb_outputs, name="conv7_1_1x1", **conv_config()),
+            ConvDepthWise(16 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv7_2_3x3_dw",
+                              **conv_config()),
+            ConvPointWise(16 * base_nb_outputs, 16 * base_nb_outputs, name="conv7_2_1x1", **conv_config()),
+            ConvDepthWise(16 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv7_3_3x3_dw",
+                              **conv_config()),
+            ConvPointWise(16 * base_nb_outputs, 16 * base_nb_outputs, name="conv7_3_1x1", **conv_config()),
+            ConvDepthWise(16 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv7_4_3x3_dw",
+                              **conv_config()),
+            ConvPointWise(16 * base_nb_outputs, 16 * base_nb_outputs, name="conv7_4_1x1", **conv_config()),
+            ConvDepthWise(16 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv7_5_3x3_dw",
+                              **conv_config()),
+            ConvPointWise(16 * base_nb_outputs, 16 * base_nb_outputs, name="conv7_5_1x1", **conv_config())
+        ], "div16")
 
-        deepnet.begin_group("div16")
-        x = ConvDepthWise(x, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[2, 2], name="conv6_3x3_dw",
-                          **conv_config())
-        x = ConvPointWise(x, 2 * x.dims()[2], name="conv6_1x1", **conv_config())
-        x = ConvDepthWise(x, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[1, 1], name="conv7_1_3x3_dw",
-                          **conv_config())
-        x = ConvPointWise(x, x.dims()[2], name="conv7_1_1x1", **conv_config())
-        x = ConvDepthWise(x, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[1, 1], name="conv7_2_3x3_dw",
-                          **conv_config())
-        x = ConvPointWise(x, x.dims()[2], name="conv7_2_1x1", **conv_config())
-        x = ConvDepthWise(x, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[1, 1], name="conv7_3_3x3_dw",
-                          **conv_config())
-        x = ConvPointWise(x, x.dims()[2], name="conv7_3_1x1", **conv_config())
-        x = ConvDepthWise(x, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[1, 1], name="conv7_4_3x3_dw",
-                          **conv_config())
-        x = ConvPointWise(x, x.dims()[2], name="conv7_4_1x1", **conv_config())
-        x = ConvDepthWise(x, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[1, 1], name="conv7_5_3x3_dw",
-                          **conv_config())
-        x = ConvPointWise(x, x.dims()[2], name="conv7_5_1x1", **conv_config())
-        deepnet.end_group()
+        self.div32 = Sequence([
+            ConvDepthWise(16 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[2, 2], name="conv8_3x3_dw",
+                              **conv_config()),
+            ConvPointWise(16 * base_nb_outputs, 32 * base_nb_outputs, name="conv8_1x1", **conv_config()),
+            ConvDepthWise(32 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv9_3x3_dw",
+                              **conv_config()),
+            ConvPointWise(32 * base_nb_outputs, 32 * base_nb_outputs, name="conv9_1x1", **conv_config())
+        ], "div32")
 
-        deepnet.begin_group("div32")
-        x = ConvDepthWise(x, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[2, 2], name="conv8_3x3_dw",
-                          **conv_config())
-        x = ConvPointWise(x, 2 * x.dims()[2], name="conv8_1x1", **conv_config())
-        x = ConvDepthWise(x, kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[1, 1], name="conv9_3x3_dw",
-                          **conv_config())
-        x = ConvPointWise(x, x.dims()[2], name="conv9_1x1", **conv_config())
-        deepnet.end_group()
-
-
-        Sequence.__init__(self, [
-
-        ])
-
-    def __call__(self, x):
+        Sequence.__init__(self, [self.div2, self.div4, self.div8, self.div16, self.div32], "extractor")
 
 
 
 
+class MobileNetv1Extractor_BN(Sequence):
+     def __init__(self, alpha):
 
-class MobileNet_v1_FeatureExtractor_BN(Group):
-    def __init__(self, inputs, alpha):
+        base_nb_outputs = int(32 * alpha)
 
-        self._deepNet = DeepNet()
+        """
 
-        Group.__init__(self, [], name="extractor")
-
-        self.add(Conv(inputs, int(32 * alpha), kernelDims=[3, 3], paddingDims=[1, 1], strideDims=[2, 2],
+        self.add(Conv(inputs, int(32 * alpha), kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[2, 2],
              **conv_config_bn(), deepNet=self._deepNet, name="conv1"))
-        self.add(BatchNorm2d(self, int(32 * alpha), activationFunction=Rectifier(), name="bn1"))
+        self.add(BatchNorm2d(self, int(32 * alpha), activation_function=Rectifier(), name="bn1"))
         self.add(ConvDepthWise(self, int(32 * alpha), 1, name="conv1_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm2d(self, int(32 * alpha), activationFunction=Rectifier(), name="bn1_3x3_dw"))
+        self.add(BatchNorm2d(self, int(32 * alpha), activation_function=Rectifier(), name="bn1_3x3_dw"))
         self.add(ConvPointWise(self, int(64 * alpha), name="conv1_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm2d(self, int(64 * alpha), activationFunction=Rectifier(), name="bn1_1x1"))
+        self.add(BatchNorm2d(self, int(64 * alpha), activation_function=Rectifier(), name="bn1_1x1"))
         self.add(ConvDepthWise(self, int(64 * alpha), 2, name="conv2_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm2d(self, int(64 * alpha), activationFunction=Rectifier(), name="bn2_3x3_dw"))
+        self.add(BatchNorm2d(self, int(64 * alpha), activation_function=Rectifier(), name="bn2_3x3_dw"))
         self.add(ConvPointWise(self, int(128 * alpha), name="conv2_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm2d(self, int(128 * alpha), activationFunction=Rectifier(), name="bn2_1x1"))
+        self.add(BatchNorm2d(self, int(128 * alpha), activation_function=Rectifier(), name="bn2_1x1"))
         self.add(ConvDepthWise(self, int(128 * alpha), 1, name="conv3_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm2d(self, int(128 * alpha), activationFunction=Rectifier(), name="bn3_3x3_dw"))
+        self.add(BatchNorm2d(self, int(128 * alpha), activation_function=Rectifier(), name="bn3_3x3_dw"))
         self.add(ConvPointWise(self, int(128 * alpha), name="conv3_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm2d(self, int(128 * alpha), activationFunction=Rectifier(), name="bn3_1x1"))
+        self.add(BatchNorm2d(self, int(128 * alpha), activation_function=Rectifier(), name="bn3_1x1"))
         self.add(ConvDepthWise(self, int(128 * alpha), 2, name="conv4_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm2d(self, int(128 * alpha), activationFunction=Rectifier(), name="bn4_3x3_dw"))
+        self.add(BatchNorm2d(self, int(128 * alpha), activation_function=Rectifier(), name="bn4_3x3_dw"))
         self.add(ConvPointWise(self, int(256 * alpha), name="conv4_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm2d(self, int(256 * alpha), activationFunction=Rectifier(), name="bn4_1x1"))
+        self.add(BatchNorm2d(self, int(256 * alpha), activation_function=Rectifier(), name="bn4_1x1"))
         self.add(ConvDepthWise(self, int(256 * alpha), 1, name="conv5_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm2d(self, int(256 * alpha), activationFunction=Rectifier(), name="bn5_3x3_dw"))
+        self.add(BatchNorm2d(self, int(256 * alpha), activation_function=Rectifier(), name="bn5_3x3_dw"))
         self.add(ConvPointWise(self, int(256 * alpha), name="conv5_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm2d(self, int(256 * alpha), activationFunction=Rectifier(), name="bn5_1x1"))
+        self.add(BatchNorm2d(self, int(256 * alpha), activation_function=Rectifier(), name="bn5_1x1"))
         self.add(ConvDepthWise(self, int(256 * alpha), 2, name="conv6_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm2d(self, int(256 * alpha), activationFunction=Rectifier(), name="bn6_3x3_dw"))
+        self.add(BatchNorm2d(self, int(256 * alpha), activation_function=Rectifier(), name="bn6_3x3_dw"))
         self.add(ConvPointWise(self, int(512 * alpha), name="conv6_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn6_1x1"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activation_function=Rectifier(), name="bn6_1x1"))
         self.add(ConvDepthWise(self, int(512 * alpha), 1, name="conv7_1_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_1_3x3_dw"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activation_function=Rectifier(), name="bn7_1_3x3_dw"))
         self.add(ConvPointWise(self, int(512 * alpha), name="conv7_1_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_1_1x1"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activation_function=Rectifier(), name="bn7_1_1x1"))
         self.add(ConvDepthWise(self, int(512 * alpha), 1, name="conv7_2_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_2_3x3_dw"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activation_function=Rectifier(), name="bn7_2_3x3_dw"))
         self.add(ConvPointWise(self, int(512 * alpha), name="conv7_2_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_2_1x1"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activation_function=Rectifier(), name="bn7_2_1x1"))
         self.add(ConvDepthWise(self, int(512 * alpha), 1, name="conv7_3_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_3_3x3_dw"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activation_function=Rectifier(), name="bn7_3_3x3_dw"))
         self.add(ConvPointWise(self, int(512 * alpha), name="conv7_3_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_3_1x1"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activation_function=Rectifier(), name="bn7_3_1x1"))
         self.add(ConvDepthWise(self, int(512 * alpha), 1, name="conv7_4_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_4_3x3_dw"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activation_function=Rectifier(), name="bn7_4_3x3_dw"))
         self.add(ConvPointWise(self, int(512 * alpha), name="conv7_4_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_4_1x1"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activation_function=Rectifier(), name="bn7_4_1x1"))
         self.add(ConvDepthWise(self, int(512 * alpha), 1, name="conv7_5_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_5_3x3_dw"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activation_function=Rectifier(), name="bn7_5_3x3_dw"))
         self.add(ConvPointWise(self, int(512 * alpha), name="conv7_5_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn7_5_1x1"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activation_function=Rectifier(), name="bn7_5_1x1"))
         self.add(ConvDepthWise(self, int(512 * alpha), 2, name="conv8_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm2d(self, int(512 * alpha), activationFunction=Rectifier(), name="bn8_3x3_dw"))
+        self.add(BatchNorm2d(self, int(512 * alpha), activation_function=Rectifier(), name="bn8_3x3_dw"))
         self.add(ConvPointWise(self, int(1024 * alpha), name="conv8_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm2d(self, int(1024 * alpha), activationFunction=Rectifier(), name="bn8_1x1"))
+        self.add(BatchNorm2d(self, int(1024 * alpha), activation_function=Rectifier(), name="bn8_1x1"))
         self.add(ConvDepthWise(self, int(1024 * alpha), 1, name="conv9_3x3_dw", **conv_config_bn()))
-        self.add(BatchNorm2d(self, int(1024 * alpha), activationFunction=Rectifier(), name="bn9_3x3_dw"))
+        self.add(BatchNorm2d(self, int(1024 * alpha), activation_function=Rectifier(), name="bn9_3x3_dw"))
         self.add(ConvPointWise(self, int(1024 * alpha), name="conv9_1x1", **conv_config_bn()))
 
-        self.add(BatchNorm2d(self, int(1024 * alpha), activationFunction=Rectifier(), name="bn9_1x1"))
+        self.add(BatchNorm2d(self, int(1024 * alpha), activation_function=Rectifier(), name="bn9_1x1"))
         self.add(GlobalPool2d(self, int(1024 * alpha), pooling='Average', name="pool1"))
+        
+        """
+
+        Sequence.__init__(self, [], "extractor")
 
 
 
 
-def create_mobilenetv1_head(inputs, nb_outputs):
 
-    # We need to identify the deepnet to add groups
-    # If a DeepNet is provided as input, add new cell to existing DeepNet
-    # If Provider is given, new create new DeepNet object
-    if isinstance(inputs, n2d2.provider.Provider):
-        deepnet = DeepNet(inputs)
-    elif isinstance(inputs, n2d2.deepnet.DeepNet):
-        deepnet = inputs
-    else:
-        raise ValueError("Needs Provider or DeepNet as input")
-    x = GlobalPool2d(deepnet, pooling='Average', name="pool1")
-    x = Fc(x, nbOutputs=nb_outputs, activationFunction=Linear(), weightsFiller=Xavier(),
-            biasFiller=Constant(value=0.0), name="fc")
-    Softmax(x, withLoss=True, name="softmax")
+class MobileNetv1Head(Sequence):
 
-    return deepnet
+    def __init__(self, nb_outputs, alpha):
+
+        pool = GlobalPool2d(pooling='Average', name="pool1")
+        fc = Fc(32 * int(32 * alpha), nb_outputs, activation_function=Linear(), weights_filler=Xavier(),
+                bias_filler=Constant(value=0.0), name="fc")
+
+        Sequence.__init__(self, [pool, fc], "head")
 
 
 
-class MobileNet_v1(DeepNet):
-    def __init__(self, inputs, nb_outputs=1000, alpha=1.0, with_batchnorm=False):
+class MobileNetv1(Sequence):
+    def __init__(self, nb_outputs=1000, alpha=1.0, with_batchnorm=False):
 
-        DeepNet.__init__(self, inputs, name="MobileNetv1")
-
-        self.begin_group("extractor")
         if with_batchnorm:
-            create_mobilenetv1_extractor(self, alpha)
+            self.extractor = MobileNetv1Extractor_BN(alpha)
         else:
-            create_mobilenetv1_extractor(self, alpha)
-        self.end_group()
+            self.extractor = MobileNetv1Extractor(alpha)
 
-        self.begin_group("head")
-        create_mobilenetv1_head(self, nb_outputs)
-        self.end_group()
+        self.head = MobileNetv1Head(nb_outputs, alpha)
+
+        Sequence.__init__(self, [self.extractor, self.head], "mobilenet_v1")
+
 
 
     """
