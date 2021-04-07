@@ -30,8 +30,8 @@ import argparse
 
 # ARGUMENTS PARSING
 parser = argparse.ArgumentParser(description="Testbench for several standard architectures on the ILSVRC2012 dataset")
-parser.add_argument('--arch', type=str, default='MobileNet_v1', metavar='N',
-                    help='MobileNet_v1')
+parser.add_argument('--arch', type=str, default='MobileNetv1', metavar='N',
+                    help='MobileNetv1')
 parser.add_argument('--weights', type=str, default='', metavar='N',
                     help='weights directory')
 parser.add_argument('--epochs', type=int, default=0, metavar='S',
@@ -59,18 +59,18 @@ print("Create provider")
 provider = n2d2.provider.DataProvider(database=database, size=size, batchSize=batch_size, compositeStimuli=True)
 
 otf_trans = n2d2.transform.Composite([
-    n2d2.transform.Flip(applyTo='LearnOnly', randomHorizontalFlip=True),
-    n2d2.transform.Distortion(applyTo='LearnOnly', elasticGaussianSize=21, elasticSigma=6.0,
+    n2d2.transform.Flip(apply_to='LearnOnly', random_horizontal_flip=True),
+    n2d2.transform.Distortion(apply_to='LearnOnly', elasticGaussianSize=21, elasticSigma=6.0,
                               elasticScaling=36.0, scaling=10.0, rotation=10.0),
 ])
 
 scales = []
-if args.arch == 'MobileNet_v1':
+if args.arch == 'MobileNetv1':
     trans = n2d2.transform.Composite([
         n2d2.transform.Rescale(width=size[0], height=size[1]),
-        n2d2.transform.ColorSpace(colorSpace='BGR'),
-        n2d2.transform.RangeAffine(firstOperator='Minus', firstValue=[103.94, 116.78, 123.68], secondOperator='Multiplies',
-                    secondValue=[0.017]),
+        n2d2.transform.ColorSpace(color_space='BGR'),
+        n2d2.transform.RangeAffine(first_operator='Minus', first_value=[103.94, 116.78, 123.68], second_operator='Multiplies',
+                    second_value=[0.017]),
     ])
 
     print(trans)
@@ -78,20 +78,20 @@ if args.arch == 'MobileNet_v1':
     provider.add_transformation(trans)
     #provider.add_on_the_fly_transformation(otf_trans)
 
-    #extractor = n2d2.model.MobileNet_v1_FeatureExtractor(provider, alpha=0.5)
-    extractor = n2d2.model.MobileNet_v1_FeatureExtractor(provider, alpha=0.5)
+    #extractor = n2d2.model.MobileNetv1_FeatureExtractor(provider, alpha=0.5)
+    extractor = n2d2.model.MobileNetv1_FeatureExtractor(provider, alpha=0.5)
     extractor.remove(5)
     if not args.weights == "":
         extractor.import_free_parameters(args.weights)
     for key in ['div4', 'div8', 'div16', 'div32']:
         scales.append(extractor.scales[key])
-elif args.arch == 'MobileNet_v1_SAT':
+elif args.arch == 'MobileNetv1_SAT':
 
     print("Add transformation")
     trans = n2d2.transform.Composite([
         n2d2.transform.Rescale(width=size[0], height=size[1]),
-        n2d2.transform.ColorSpace(colorSpace='RGB'),
-        n2d2.transform.RangeAffine(firstOperator='Divides', firstValue=[255.0]),
+        n2d2.transform.ColorSpace(color_space='RGB'),
+        n2d2.transform.RangeAffine(first_operator='Divides', first_value=[255.0]),
     ])
 
     print(trans)
@@ -109,10 +109,10 @@ elif args.arch == 'MobileNet_v1_SAT':
 elif args.arch == 'MobileNet_v2':
     trans = n2d2.transform.Composite([
         n2d2.transform.Rescale(width=size[0], height=size[1]),
-        n2d2.transform.RangeAffine(firstOperator='Divides', firstValue=[255.0]),
-        n2d2.transform.ColorSpace(colorSpace='RGB'),
-        n2d2.transform.RangeAffine(firstOperator='Minus', firstValue=[0.485, 0.456, 0.406], secondOperator='Divides',
-                    secondValue=[0.229, 0.224, 0.225])
+        n2d2.transform.RangeAffine(first_operator='Divides', first_value=[255.0]),
+        n2d2.transform.ColorSpace(color_space='RGB'),
+        n2d2.transform.RangeAffine(first_operator='Minus', first_value=[0.485, 0.456, 0.406], second_operator='Divides',
+                    second_value=[0.229, 0.224, 0.225])
     ])
 
     provider.add_transformation(trans)
@@ -130,10 +130,10 @@ elif args.arch == 'MobileNet_v2':
 elif args.arch == 'ResNet18':
     trans = n2d2.transform.Composite([
         n2d2.transform.Rescale(width=size[0], height=size[1]),
-        n2d2.transform.RangeAffine(firstOperator='Divides', firstValue=[255.0]),
-        n2d2.transform.ColorSpace(colorSpace='RGB'),
-        n2d2.transform.RangeAffine(firstOperator='Minus', firstValue=[0.485, 0.456, 0.406], secondOperator='Divides',
-                    secondValue=[0.229, 0.224, 0.225]),
+        n2d2.transform.RangeAffine(first_operator='Divides', first_value=[255.0]),
+        n2d2.transform.ColorSpace(color_space='RGB'),
+        n2d2.transform.RangeAffine(first_operator='Minus', first_value=[0.485, 0.456, 0.406], second_operator='Divides',
+                    second_value=[0.229, 0.224, 0.225]),
     ])
 
     provider.add_transformation(trans)

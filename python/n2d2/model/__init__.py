@@ -19,8 +19,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-from n2d2.model.resnet import ResNet50BN, load_from_ONNX
-#from n2d2.model.mobilenet_v1 import *
+from n2d2.model.resnet import ResNet50Bn, load_from_ONNX
+from n2d2.model.mobilenet_v1 import MobileNetv1
 from n2d2.model.mobilenet_v2 import Mobilenet_v2, load_from_ONNX
 from n2d2.model.lenet import *
 from n2d2.model.segmentation_decoder import *

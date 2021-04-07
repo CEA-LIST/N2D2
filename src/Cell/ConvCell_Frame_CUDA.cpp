@@ -567,7 +567,9 @@ void N2D2::ConvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, 
 {
     // NOTE: this is addition to initialize()
     Cell::initializeParameters(inputDimZ, nbInputs, mapping);
-    mMapping.append(Tensor<bool>({getNbOutputs(), inputDimZ}, true));
+    if (mapping.empty()) {
+        mMapping.append(Tensor<bool>({getNbOutputs(), inputDimZ}, true));
+    }
 
     if (!mNoBias) {
         if (mBias->empty()) {

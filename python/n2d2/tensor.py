@@ -34,7 +34,7 @@ hard_coded_type = {
 }
 
 
-class Tensor():
+class Tensor:
     
     _tensor_generators = {
         float: N2D2.Tensor_float,

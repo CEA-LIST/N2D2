@@ -30,7 +30,7 @@ import argparse
 
 # ARGUMENTS PARSING
 parser = argparse.ArgumentParser(description="Testbench for several standard architectures on the ILSVRC2012 dataset")
-parser.add_argument('--arch', type=str, default='MobileNet_v1', metavar='N',
+parser.add_argument('--arch', type=str, default='MobileNetv1', metavar='N',
                     help='MobileNet_v2')
 parser.add_argument('--weights', type=str, default='', metavar='N',
                     help='weights directory')
@@ -67,12 +67,12 @@ print(otf_trans)
 provider.add_transformation(trans)
 provider.add_on_the_fly_transformation(otf_trans)
 
-if args.arch == 'MobileNet_v1':
+if args.arch == 'MobileNetv1':
     """Equivalent to N2D2/models/MobileNet_v2.ini"""
-    model = n2d2.model.MobileNet_v1(provider, alpha=0.5)
+    model = n2d2.model.MobileNetv1(provider, alpha=0.5)
     model.remove(1, False)
     model_extractor = model
-elif args.arch == 'MobileNet_v1_SAT':
+elif args.arch == 'MobileNetv1_SAT':
     model = n2d2.deepnet.load_from_ONNX("/home/jt251134/N2D2-IP/models/Quantization/SAT/model_mobilenet-v1-32b-clamp.onnx",
                                             dims=[size, size, 3], batch_size=batch_size, ini_file="ignore_onnx.ini")
     model.get_first().add_input(provider)
@@ -104,7 +104,7 @@ dummy_provider = n2d2.provider.DataProvider(n2d2.database.Database(), model_extr
 placeholder = n2d2.CudaTensor(model_extractor.get_last().get_outputs().dims())
 dummy_provider.N2D2().setStreamedTensor(placeholder.N2D2())
 #head_deepnet.setDatabase(dummy_provider.get_database().N2D2())
-model_head = n2d2.model.MobileNet_v1_head(dummy_provider, 100, head_deepnet)
+model_head = n2d2.model.MobileNetv1_head(dummy_provider, 100, head_deepnet)
 #model.add(model.head)
 print(model_head)
 
