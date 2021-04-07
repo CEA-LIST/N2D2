@@ -447,8 +447,9 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
 
         if (opt.logKernels)
             deepNet->logFreeParameters("kernels_quantized");
-
+            
         deepNet->exportNetworkFreeParameters("weights_quantized");
+
     }
 
 
@@ -812,6 +813,8 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                     DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision,
                                     opt.exportNbStimuliMax);
     if(opt.qatSAT) {
+        deepNet->initialize();
+
         if (opt.logKernels)
             deepNet->logFreeParameters("kernels_fake_quantized");
 
