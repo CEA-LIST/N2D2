@@ -977,6 +977,14 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
                     << id << "_" << set << ".valid";
 
     dev = getDevice(dev);
+#ifdef CUDA
+    // readStimulus() is typically  called in an OpenMP thread.
+    // The current CUDA device therefore will not necessarily match dev.
+    // However, some transformations may need the correct device, such as
+    // BlendingTransformation.
+    cudaSetDevice(dev);
+#endif
+
     std::vector<std::shared_ptr<ROI> >& labelsROI = (mFuture)
         ? mFutureProvidedData[dev].labelsROI[batchPos]
         : mProvidedData[dev].labelsROI[batchPos];
