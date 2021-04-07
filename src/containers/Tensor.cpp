@@ -613,28 +613,100 @@ const N2D2::Tensor<T> N2D2::Tensor<T>::operator[](size_t i) const
 
 template <class T>
 N2D2::Tensor<T> N2D2::Tensor<T>::rows(size_t j0,
-                                          size_t nb)
+                                          size_t nb, int towardsDim)
 {
-    assert(mDims.size() > 1);
-    assert(j0 + nb <= mDims.back());
+    const size_t absTowardsDim = (towardsDim >= 0)
+        ? towardsDim : mDims.size() + towardsDim;
+
+    assert(absTowardsDim < mDims.size());
+    assert(j0 + nb <= mDims[absTowardsDim]);
 
     std::vector<size_t> newDims = mDims;
-    newDims.back() = nb;
-    return Tensor<T>(newDims, mData, mValid, mDataOffset + j0 * mSizeM1,
-                     nb * mSizeM1, mSizeM1);
+    newDims[absTowardsDim] = nb;
+
+    if (absTowardsDim == mDims.size() - 1) {
+        return Tensor<T>(newDims, mData, mValid, mDataOffset + j0 * mSizeM1,
+                        nb * mSizeM1, mSizeM1);
+    }
+    else {
+        const size_t newSize = std::accumulate(newDims.begin(),
+                                            newDims.end(),
+                                            1U,
+                                            std::multiplies<size_t>());
+
+        size_t stride = 1;
+        for (unsigned int dim = 0; dim < absTowardsDim; ++dim)
+            stride *= mDims[dim];
+
+        size_t offset = 0;
+        std::vector<T> newData;
+        newData.reserve(newSize);
+
+        while (offset < (*mData)().size()) {
+            assert(offset < (*mData)().size());
+            newData.insert(newData.end(),
+                          (*mData)().begin() + offset + stride * j0,
+                          (*mData)().begin() + offset + stride * (j0 + nb));
+
+            offset += stride * mDims[absTowardsDim];
+        }
+
+        assert(offset == (*mData)().size());
+        assert(newData.size() == newSize);
+
+        Tensor<T> subTensor(newDims);
+        subTensor.data().swap(newData);
+        return subTensor;
+    }
 }
 
 template <class T>
 const N2D2::Tensor<T> N2D2::Tensor<T>::rows(size_t j0,
-                                                size_t nb) const
+                                                size_t nb, int towardsDim) const
 {
-    assert(mDims.size() > 1);
-    assert(j0 + nb <= mDims.back());
+    const size_t absTowardsDim = (towardsDim >= 0)
+        ? towardsDim : mDims.size() + towardsDim;
+
+    assert(absTowardsDim < mDims.size());
+    assert(j0 + nb <= mDims[absTowardsDim]);
 
     std::vector<size_t> newDims = mDims;
-    newDims.back() = nb;
-    return Tensor<T>(newDims, mData, mValid, mDataOffset + j0 * mSizeM1,
-                     nb * mSizeM1, mSizeM1);
+    newDims[absTowardsDim] = nb;
+
+    if (absTowardsDim == mDims.size() - 1) {
+        return Tensor<T>(newDims, mData, mValid, mDataOffset + j0 * mSizeM1,
+                        nb * mSizeM1, mSizeM1);
+    }
+    else {
+        const size_t newSize = std::accumulate(newDims.begin(),
+                                            newDims.end(),
+                                            1U,
+                                            std::multiplies<size_t>());
+
+        size_t stride = 1;
+        for (unsigned int dim = 0; dim < absTowardsDim; ++dim)
+            stride *= mDims[dim];
+
+        size_t offset = 0;
+        std::vector<T> newData;
+        newData.reserve(newSize);
+
+        while (offset < (*mData)().size()) {
+            assert(offset < (*mData)().size());
+            newData.insert(newData.end(),
+                          (*mData)().begin() + offset + stride * j0,
+                          (*mData)().begin() + offset + stride * (j0 + nb));
+
+            offset += stride * mDims[absTowardsDim];
+        }
+
+        assert(offset == (*mData)().size());
+        assert(newData.size() == newSize);
+
+        Tensor<T> subTensor(newDims);
+        subTensor.data().swap(newData);
+        return subTensor;
+    }
 }
 
 template <class T>

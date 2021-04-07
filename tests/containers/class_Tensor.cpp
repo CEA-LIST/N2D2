@@ -739,6 +739,70 @@ TEST(Tensor4d, append_1)
     }
 }
 
+TEST(Tensor4d, rows)
+{
+    Tensor<int> A({2, 3, 4, 5});
+    int idxA = 0;
+    std::iota(A.begin(), A.end(), idxA);
+
+    unsigned int offset = 1;
+    unsigned int size = 2;
+    Tensor<int> B = A.rows(offset, size, 2);
+
+    ASSERT_EQUALS(B.dimX(), 2U);
+    ASSERT_EQUALS(B.dimY(), 3U);
+    ASSERT_EQUALS(B.dimZ(), size);
+    ASSERT_EQUALS(B.dimB(), 5U);
+
+    for (unsigned int b = 0; b < 5; ++b) {
+        for (unsigned int k = 0; k < 4; ++k) {
+            for (unsigned int j = 0; j < 3; ++j) {
+                for (unsigned int i = 0; i < 2; ++i) {
+                    ASSERT_EQUALS(A(i, j, k, b), idxA);
+
+                    if (k >= offset && k < offset + size) {
+                        ASSERT_EQUALS(B(i, j, k - offset, b), idxA);
+                    }
+
+                    ++idxA;
+                }
+            }
+        }
+    }
+}
+
+TEST(Tensor4d, rows_0)
+{
+    Tensor<int> A({10, 3, 4, 5});
+    int idxA = 0;
+    std::iota(A.begin(), A.end(), idxA);
+
+    unsigned int offset = 5;
+    unsigned int size = 5;
+    Tensor<int> B = A.rows(offset, size, 0);
+
+    ASSERT_EQUALS(B.dimX(), size);
+    ASSERT_EQUALS(B.dimY(), 3U);
+    ASSERT_EQUALS(B.dimZ(), 4U);
+    ASSERT_EQUALS(B.dimB(), 5U);
+
+    for (unsigned int b = 0; b < 5; ++b) {
+        for (unsigned int k = 0; k < 4; ++k) {
+            for (unsigned int j = 0; j < 3; ++j) {
+                for (unsigned int i = 0; i < 10; ++i) {
+                    ASSERT_EQUALS(A(i, j, k, b), idxA);
+
+                    if (i >= offset && i < offset + size) {
+                        ASSERT_EQUALS(B(i - offset, j, k, b), idxA);
+                    }
+
+                    ++idxA;
+                }
+            }
+        }
+    }
+}
+
 TEST(Tensor4d, clear)
 {
     Tensor<double> A({2, 3, 4, 5}, 1.0);

@@ -281,8 +281,8 @@ public:
     inline CudaTensor<T> clone() const;
     inline CudaTensor<T> operator[](size_t i);
     inline const CudaTensor<T> operator[](size_t i) const;
-    inline CudaTensor<T> rows(size_t j0, size_t nb);
-    inline const CudaTensor<T> rows(size_t j0, size_t nb) const;
+    inline CudaTensor<T> rows(size_t j0, size_t nb, int towardsDim = -1);
+    inline const CudaTensor<T> rows(size_t j0, size_t nb, int towardsDim = -1) const;
     CudaTensor<T>& operator=(const Tensor<T>& tensor);
     template <class U> CudaTensor<T>& operator=(const Tensor<U>& tensor);
 
@@ -1139,23 +1139,37 @@ const N2D2::CudaTensor<T> N2D2::CudaTensor<T>::operator[](size_t i) const
 }
 
 template <class T>
-N2D2::CudaTensor<T> N2D2::CudaTensor<T>::rows(size_t j0, size_t nb)
+N2D2::CudaTensor<T> N2D2::CudaTensor<T>::rows(size_t j0, size_t nb, int towardsDim)
 {
-    return CudaTensor<T>(
-        Tensor<T>::rows(j0, nb),
-        mDeviceTensor,
-        j0 * mSizeM1,
-        mHostBased);
+    if (towardsDim == -1) {
+        return CudaTensor<T>(
+            Tensor<T>::rows(j0, nb, towardsDim),
+            mDeviceTensor,
+            j0 * mSizeM1,
+            mHostBased);
+    }
+    else {
+        return CudaTensor<T>(
+            Tensor<T>::rows(j0, nb, towardsDim),
+            mHostBased);
+    }
 }
 
 template <class T>
-const N2D2::CudaTensor<T> N2D2::CudaTensor<T>::rows(size_t j0, size_t nb) const
+const N2D2::CudaTensor<T> N2D2::CudaTensor<T>::rows(size_t j0, size_t nb, int towardsDim) const
 {
-    return CudaTensor<T>(
-        Tensor<T>::rows(j0, nb),
-        mDeviceTensor,
-        j0 * mSizeM1,
-        mHostBased);
+    if (towardsDim == -1) {
+        return CudaTensor<T>(
+            Tensor<T>::rows(j0, nb, towardsDim),
+            mDeviceTensor,
+            j0 * mSizeM1,
+            mHostBased);
+    }
+    else {
+        return CudaTensor<T>(
+            Tensor<T>::rows(j0, nb, towardsDim),
+            mHostBased);
+    }
 }
 
 template <class T>

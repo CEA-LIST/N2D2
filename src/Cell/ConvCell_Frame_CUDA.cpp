@@ -168,6 +168,8 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
 
     unsigned int nbChannels = 0;
 
+    mNbGroups.clear();
+    mWeightsSolvers.clear();
     mDiffSharedSynapses.clear();
 
     for (unsigned int k = 0, size = mFilterDesc.size(); k < size; ++k)
@@ -178,12 +180,11 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for ConvCell " + mName);
 
-        if (k >= mNbGroups.size()) {
-            mNbGroups.push_back(getNbGroups(mMapping.rows(nbChannels,
-                                                    mInputs[k].dimZ())));
+        mNbGroups.push_back(getNbGroups(mMapping.rows(nbChannels,
+                                                mInputs[k].dimZ())));
+        mWeightsSolvers.push_back(mWeightsSolver->clone());
 
-            mWeightsSolvers.push_back(mWeightsSolver->clone());
-
+        if (k >= mSharedSynapses.size()) {
             typename std::map<unsigned int,
                 std::pair<CudaInterface<T>*, unsigned int> >::iterator
                     it = mExtSharedSynapses.find(k);
@@ -243,9 +244,9 @@ void N2D2::ConvCell_Frame_CUDA<T>::initialize()
 
                 mSharedSynapses.back().synchronizeHToD();
             }
-
-            nbChannels += mInputs[k].dimZ();
         }
+
+        nbChannels += mInputs[k].dimZ();
 
         mDiffSharedSynapses.push_back(
             new CudaTensor<T>(mSharedSynapses[k].dims()), 0);
@@ -640,11 +641,11 @@ void N2D2::ConvCell_Frame_CUDA<T>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
-    if (mInputs.size() < mSharedSynapses.size()) {
-        std::cout << Utils::cnotice << "Squeezing " << mSharedSynapses.size()
+    if (mInputs.size() != mSharedSynapses.size()) {
+        std::cout << Utils::cnotice << "Partition " << mSharedSynapses.size()
             << " synapses to fit " << mInputs.size() << " inputs for ConvCell "
             << mName << Utils::cdef << std::endl;
-        squeezeSharedSynapses();
+        partitionSharedSynapses();
     }
 
     /**
@@ -1203,20 +1204,21 @@ void N2D2::ConvCell_Frame_CUDA<T>::synchronizeToD(bool keepInSync_)
 }
 
 template <class T>
-void N2D2::ConvCell_Frame_CUDA<T>::squeezeSharedSynapses()
+void N2D2::ConvCell_Frame_CUDA<T>::partitionSharedSynapses()
 {
     mSharedSynapses.synchronizeDToH();
 
     unsigned int ks = 0;
+    unsigned int lastChannel = 0;
     CudaInterface<T> sharedSynapses;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        unsigned int lastChannel = 0;
+        const unsigned int startChannel = lastChannel;
         CudaTensor<T>* kSharedSynapses = &mSharedSynapses[ks];
         const bool kExt = (mSharedSynapses.getDataRefs(ks) > 0);
         mSharedSynapses.setDataRefs(ks, 1); // don't delete this pointer during swap
 
-        for (; lastChannel < mInputs[k].dimZ(); ++ks) {
+        for (; lastChannel < mInputs[k].dimZ(); ) {
             unsigned int nbChannels = mSharedSynapses[ks].dimZ();
 
 #if CUDNN_VERSION >= 7000
@@ -1224,10 +1226,10 @@ void N2D2::ConvCell_Frame_CUDA<T>::squeezeSharedSynapses()
                 nbChannels *= mNbGroups[ks];
 #endif
 
-            if (lastChannel > 0) {
+            if (lastChannel > startChannel) {
                 if (kExt || mSharedSynapses.getDataRefs(ks) > 0) {
                     throw std::runtime_error("ConvCell_Frame_CUDA<T>::"
-                        "squeezeSharedSynapses(): cannot squeeze external "
+                        "partitionSharedSynapses(): cannot partition external "
                         "synapses.");
                 }
 
@@ -1235,19 +1237,28 @@ void N2D2::ConvCell_Frame_CUDA<T>::squeezeSharedSynapses()
             }
 
             lastChannel += nbChannels;
+
+            if (lastChannel <= mInputs[k].dimZ())
+                ++ks;
         }
 
-        if (lastChannel != mInputs[k].dimZ()) {
-            throw std::runtime_error("ConvCell_Frame_CUDA<T>::"
-                "squeezeSharedSynapses(): cannot squeeze synapses not aligned "
-                "with inputs.");
+        if (startChannel > 0 || lastChannel > mInputs[k].dimZ()) {
+            // kSharedSynapses must be splitted
+            kSharedSynapses = new CudaTensor<T>(
+                kSharedSynapses->rows(startChannel, mInputs[k].dimZ(), 2));
         }
 
+        lastChannel = (lastChannel - mInputs[k].dimZ());
         sharedSynapses.push_back(kSharedSynapses, 0);
+
+        assert(kSharedSynapses->dimZ() == mInputs[k].dimZ());
+        assert(kSharedSynapses->dimB() == mOutputs.dimZ());
     }
 
     mSharedSynapses.swap(sharedSynapses);
     mSharedSynapses.synchronizeHToD();
+
+    assert(mSharedSynapses.size() == mInputs.size());
 
     // Need to re-initialize the layer to have the correct mDiffSharedSynapses 
     // and mFilterDesc
