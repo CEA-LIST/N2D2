@@ -213,7 +213,7 @@ TEST(DeepNet, fuseBatchNormWithConv)
 
     ASSERT_EQUALS(deepNet.getLayers().size(), 2U);
     ASSERT_EQUALS(conv1->getParameter<bool>("NoBias"), false);
-    ASSERT_EQUALS(conv1->getActivation()->getType(), "Rectifier");
+    ASSERT_EQUALS(conv1->getActivation()->getType(), RectifierActivation::Type);
 
     // Outputs after fuse
     conv1->propagate(true);

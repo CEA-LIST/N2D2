@@ -36,8 +36,10 @@ void declare_CudaDeviceTensor(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("CudaDeviceTensor_" + typeStr);
     py::class_<CudaDeviceTensor<T>, CudaBaseDeviceTensor>(m, pyClassName.c_str(), py::multiple_inheritance())
     .def("fill", &CudaDeviceTensor<T>::fill, py::arg("value"))
-    .def("getDevicePtr", &CudaDeviceTensor<T>::getDevicePtr)
-    .def("setDevicePtr", &CudaDeviceTensor<T>::setDevicePtr, py::arg("dataDevice"))
+    .def("getDevicePtr", (T* (CudaDeviceTensor<T>::*)() const) &CudaDeviceTensor<T>::getDevicePtr)
+    .def("getDevicePtr", (T* (CudaDeviceTensor<T>::*)(int) const) &CudaDeviceTensor<T>::getDevicePtr, py::arg("dev") = -1)
+    .def("isDevicePtr", &CudaDeviceTensor<T>::isDevicePtr, py::arg("dev") = -1)
+    .def("setDevicePtr", (void (CudaDeviceTensor<T>::*)(T*)) &CudaDeviceTensor<T>::setDevicePtr, py::arg("dataDevice"))
     .def("isOwner", &CudaDeviceTensor<T>::isOwner);
 }
 

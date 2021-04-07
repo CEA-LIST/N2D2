@@ -43,6 +43,7 @@ public:
     using Cell_Frame_CUDA<T>::mActivation;
     using Cell_Frame_CUDA<T>::mActivationDesc;
     using Cell_Frame_CUDA<T>::mKeepInSync;
+    using Cell_Frame_CUDA<T>::mDevices;
 
     FcCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                       unsigned int nbOutputs,
@@ -114,7 +115,7 @@ protected:
     CudaInterface<T> mDiffSynapses;
     CudaTensor<T> mDiffBias;
 
-    T* mOnesVector; // Bias inputs
+    std::vector<T*> mOnesVector; // Bias inputs
 
 private:
     static Registrar<FcCell> mRegistrar;

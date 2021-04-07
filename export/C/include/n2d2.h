@@ -530,6 +530,7 @@ scalingcell_propagate( unsigned int nbChannels,
                    unsigned int outputsHeight,
                    unsigned int outputsWidth,
                    unsigned int nbOutputs,
+                   unsigned int outputOffset,
                    DATA_T outputs[nbOutputs][outputsHeight][outputsWidth],
                    const int32_t rescaleFactorPerOutput[nbOutputs],
                    unsigned int nbFractionalBits);

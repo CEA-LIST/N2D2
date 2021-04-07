@@ -100,14 +100,14 @@ void N2D2::PoolCell_Frame<T>::setExtendedPadding(
 template <class T>
 void N2D2::PoolCell_Frame<T>::initialize()
 {
+    mArgMax.clear();
+
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for PoolCell " + mName);
 
-        if (mArgMax.size() == k) {
-            mArgMax.push_back(new Tensor<PoolCell_Frame_Kernels::ArgMax>
-                              (mOutputs.dims()), 0);
-        }
+        mArgMax.push_back(new Tensor<PoolCell_Frame_Kernels::ArgMax>
+                            (mOutputs.dims()), 0);
     }
 }
 
@@ -115,6 +115,13 @@ template <class T>
 void N2D2::PoolCell_Frame<T>::propagate(bool inference)
 {
     mInputs.synchronizeDBasedToH();
+
+    if (mInputs.size() != mArgMax.size()) {
+        std::cout << Utils::cnotice << "Changing the number of inputs from "
+            << mArgMax.size() << " to " << mInputs.size()
+            << " for PoolCell " << mName << Utils::cdef << std::endl;
+        initialize();
+    }
 
     const T alpha = T(1.0);
     T beta = T(0.0);

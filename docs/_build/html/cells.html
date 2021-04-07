@@ -87,14 +87,32 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ONNX Import:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="onnx_convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_transfer.html">Train from ONNX models</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Quantization and Export:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quant_post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="ini_intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ini_databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ini_data_analysis.html">Stimuli data analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ini_environment.html">Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_environment.html">Stimuli provider (Environment)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ini_layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_target.html">Targets (outputs &amp; losses)</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Python API:</span></p>
 <ul class="current">
@@ -107,10 +125,6 @@
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Tutorials:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
 </ul>
 
             
@@ -192,8 +206,7 @@
 <dl class="method">
 <dt id="N2D2.Cell.FreeParametersType.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.Cell.FreeParametersType.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>(self: handle) -&gt; str</p>
-</dd></dl>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -202,21 +215,16 @@
 <code class="sig-name descname">addInput</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.Cell.addInput" title="Permalink to this definition">¶</a></dt>
 <dd><p>Overloaded function.</p>
 <ol class="arabic simple">
-<li><p>addInput(self: N2D2.Cell, sp: N2D2.StimuliProvider, channel: int, x0: int, y0: int, width: int, height: int, mapping: N2D2.Tensor_bool = &lt;N2D2.Tensor_bool object at 0x7fb1d43ef260&gt;) -&gt; None</p></li>
-<li><p>addInput(self: N2D2.Cell, sp: N2D2.StimuliProvider, x0: int = 0, y0: int = 0, width: int = 0, height: int = 0, mapping: N2D2.Tensor_bool = &lt;N2D2.Tensor_bool object at 0x7fb1d43ef148&gt;) -&gt; None</p></li>
-<li><p>addInput(self: N2D2.Cell, cell: N2D2.Cell, mapping: N2D2.Tensor_bool = &lt;N2D2.Tensor_bool object at 0x7fb1d43ef1f0&gt;) -&gt; None</p></li>
+<li><p>addInput(self: N2D2.Cell, sp: N2D2.StimuliProvider, channel: int, x0: int, y0: int, width: int, height: int, mapping: N2D2.Tensor_bool = &lt;N2D2.Tensor_bool object at 0x7f130b284cf0&gt;) -&gt; None</p></li>
+<li><p>addInput(self: N2D2.Cell, sp: N2D2.StimuliProvider, x0: int = 0, y0: int = 0, width: int = 0, height: int = 0, mapping: N2D2.Tensor_bool = &lt;N2D2.Tensor_bool object at 0x7f130b284df0&gt;) -&gt; None</p></li>
+<li><p>addInput(self: N2D2.Cell, cell: N2D2.Cell, mapping: N2D2.Tensor_bool = &lt;N2D2.Tensor_bool object at 0x7f130b284ef0&gt;) -&gt; None</p></li>
 <li><p>addInput(self: N2D2.Cell, cell: N2D2.Cell, x0: int, y0: int, width: int = 0, height: int = 0) -&gt; None</p></li>
 </ol>
 </dd></dl>
 
 <dl class="method">
 <dt id="N2D2.Cell.addMultiscaleInput">
-<code class="sig-name descname">addMultiscaleInput</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">sp: N2D2::HeteroStimuliProvider</em>, <em class="sig-param">x0: int = 0</em>, <em class="sig-param">y0: int = 0</em>, <em class="sig-param">width: int = 0</em>, <em class="sig-param">height: int = 0</em>, <em class="sig-param">mapping: N2D2.Tensor_bool = &lt;N2D2.Tensor_bool object at 0x7fb1d43ef2d0&gt;</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.addMultiscaleInput" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="N2D2.Cell.discretizeFreeParameters">
-<code class="sig-name descname">discretizeFreeParameters</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">nbLevels: int</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.discretizeFreeParameters" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">addMultiscaleInput</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">sp: N2D2::HeteroStimuliProvider</em>, <em class="sig-param">x0: int = 0</em>, <em class="sig-param">y0: int = 0</em>, <em class="sig-param">width: int = 0</em>, <em class="sig-param">height: int = 0</em>, <em class="sig-param">mapping: N2D2.Tensor_bool = &lt;N2D2.Tensor_bool object at 0x7f130b284e70&gt;</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.addMultiscaleInput" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -241,12 +249,12 @@
 
 <dl class="method">
 <dt id="N2D2.Cell.getFreeParametersRange">
-<code class="sig-name descname">getFreeParametersRange</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">withAdditiveParameters: bool</em><span class="sig-paren">)</span> &#x2192; Tuple[float, float]<a class="headerlink" href="#N2D2.Cell.getFreeParametersRange" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getFreeParametersRange</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">type: N2D2.Cell.FreeParametersType</em><span class="sig-paren">)</span> &#x2192; Tuple[float, float]<a class="headerlink" href="#N2D2.Cell.getFreeParametersRange" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="N2D2.Cell.getFreeParametersRangePerOutput">
-<code class="sig-name descname">getFreeParametersRangePerOutput</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">output: int</em>, <em class="sig-param">withAdditiveParameters: bool</em><span class="sig-paren">)</span> &#x2192; Tuple[float, float]<a class="headerlink" href="#N2D2.Cell.getFreeParametersRangePerOutput" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getFreeParametersRangePerOutput</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">output: int</em>, <em class="sig-param">type: N2D2.Cell.FreeParametersType</em><span class="sig-paren">)</span> &#x2192; Tuple[float, float]<a class="headerlink" href="#N2D2.Cell.getFreeParametersRangePerOutput" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -371,17 +379,17 @@
 
 <dl class="method">
 <dt id="N2D2.Cell.logFreeParametersDistrib">
-<code class="sig-name descname">logFreeParametersDistrib</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">fileName: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.logFreeParametersDistrib" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">logFreeParametersDistrib</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">fileName: str</em>, <em class="sig-param">type: N2D2.Cell.FreeParametersType</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.logFreeParametersDistrib" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="N2D2.Cell.processFreeParameters">
-<code class="sig-name descname">processFreeParameters</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">func: std::function&lt;double (double)&gt;</em>, <em class="sig-param">type: N2D2.Cell.FreeParametersType</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.processFreeParameters" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">processFreeParameters</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">func: std::function&lt;float (float)&gt;</em>, <em class="sig-param">type: N2D2.Cell.FreeParametersType</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.processFreeParameters" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="N2D2.Cell.processFreeParametersPerOutput">
-<code class="sig-name descname">processFreeParametersPerOutput</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">func: std::function&lt;double (double)&gt;</em>, <em class="sig-param">output: int</em>, <em class="sig-param">type: N2D2.Cell.FreeParametersType</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.processFreeParametersPerOutput" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">processFreeParametersPerOutput</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell</em>, <em class="sig-param">func: std::function&lt;float (float)&gt;</em>, <em class="sig-param">output: int</em>, <em class="sig-param">type: N2D2.Cell.FreeParametersType</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell.processFreeParametersPerOutput" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -412,8 +420,7 @@
 <dl class="method">
 <dt id="N2D2.Cell_Frame_Top.Signals.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.Cell_Frame_Top.Signals.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>(self: handle) -&gt; str</p>
-</dd></dl>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -433,11 +440,6 @@
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="N2D2.Cell_Frame_Top.discretizeSignals">
-<code class="sig-name descname">discretizeSignals</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell_Frame_Top</em>, <em class="sig-param">nbLevels: int</em>, <em class="sig-param">signals: N2D2.Cell_Frame_Top.Signals = Signals.In</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell_Frame_Top.discretizeSignals" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
 <dt id="N2D2.Cell_Frame_Top.getActivation">
 <code class="sig-name descname">getActivation</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell_Frame_Top</em><span class="sig-paren">)</span> &#x2192; N2D2::Activation<a class="headerlink" href="#N2D2.Cell_Frame_Top.getActivation" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -445,6 +447,16 @@
 <dl class="method">
 <dt id="N2D2.Cell_Frame_Top.getDiffInputs">
 <code class="sig-name descname">getDiffInputs</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell_Frame_Top</em><span class="sig-paren">)</span> &#x2192; N2D2.BaseTensor<a class="headerlink" href="#N2D2.Cell_Frame_Top.getDiffInputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell_Frame_Top.getDiffOutputs">
+<code class="sig-name descname">getDiffOutputs</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell_Frame_Top</em>, <em class="sig-param">index: int = 0</em><span class="sig-paren">)</span> &#x2192; N2D2.BaseTensor<a class="headerlink" href="#N2D2.Cell_Frame_Top.getDiffOutputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="N2D2.Cell_Frame_Top.getInputs">
+<code class="sig-name descname">getInputs</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell_Frame_Top</em>, <em class="sig-param">index: int = 0</em><span class="sig-paren">)</span> &#x2192; N2D2.BaseTensor<a class="headerlink" href="#N2D2.Cell_Frame_Top.getInputs" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -494,18 +506,13 @@
 
 <dl class="method">
 <dt id="N2D2.Cell_Frame_Top.setOutputTarget">
-<code class="sig-name descname">setOutputTarget</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell_Frame_Top</em>, <em class="sig-param">targets: N2D2.Tensor_int</em>, <em class="sig-param">targetVal: float = 1.0</em>, <em class="sig-param">defaultVal: float = 0.0</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#N2D2.Cell_Frame_Top.setOutputTarget" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setOutputTarget</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell_Frame_Top</em>, <em class="sig-param">targets: N2D2.Tensor_int</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell_Frame_Top.setOutputTarget" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="N2D2.Cell_Frame_Top.setOutputTargets">
-<code class="sig-name descname">setOutputTargets</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.setOutputTargets" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overloaded function.</p>
-<ol class="arabic simple">
-<li><p>setOutputTargets(self: N2D2.Cell_Frame_Top, targets: N2D2.Tensor_int, targetVal: float = 1.0, defaultVal: float = 0.0) -&gt; float</p></li>
-<li><p>setOutputTargets(self: N2D2.Cell_Frame_Top, targets: N2D2.BaseTensor) -&gt; float</p></li>
-</ol>
-</dd></dl>
+<code class="sig-name descname">setOutputTargets</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Cell_Frame_Top</em>, <em class="sig-param">targets: N2D2.BaseTensor</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Cell_Frame_Top.setOutputTargets" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="N2D2.Cell_Frame_Top.update">

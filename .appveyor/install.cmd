@@ -31,7 +31,8 @@ cuda_8.0.44_windows.exe -s compiler_8.0 ^
                            cublas_dev_8.0 ^
                            cudart_8.0 ^
                            curand_8.0 ^
-                           curand_dev_8.0
+                           curand_dev_8.0 ^
+                           nvml_dev_8.0
 
 set PATH=%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin;%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\libnvvp;%PATH%
 

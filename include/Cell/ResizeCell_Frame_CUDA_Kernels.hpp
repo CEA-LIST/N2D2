@@ -29,7 +29,8 @@
 #include "CudaUtils.hpp"
 namespace N2D2 {
 // Forward
-void cudaSResizeFWBilinearTF(unsigned int outputSizeX,
+void cudaSResizeFWBilinearTF(const cudaDeviceProp& deviceProp, 
+                           unsigned int outputSizeX,
                            unsigned int outputSizeY,
                            unsigned int outputNbChannels,
                            unsigned int batchSize,
@@ -42,11 +43,10 @@ void cudaSResizeFWBilinearTF(unsigned int outputSizeX,
                            unsigned int* xHighIdx,
                            float* xInter,
                            const float* input,
-                           float* outputs,
-                           const dim3 blocksPerGrid,
-                           const dim3 threadsPerBlock);
+                           float* outputs);
 
-void cudaSResizeBWBilinearTF(   unsigned int outputSizeX,
+void cudaSResizeBWBilinearTF(const cudaDeviceProp& deviceProp, 
+                               unsigned int outputSizeX,
                                unsigned int outputSizeY,
                                unsigned int outputNbChannels,
                                unsigned int batchSize,
@@ -55,19 +55,15 @@ void cudaSResizeBWBilinearTF(   unsigned int outputSizeX,
                                const float scaleX,
                                const float scaleY,
                                const float* input,
-                               float* outputs,
-                               const dim3 blocksPerGrid,
-                               const dim3 threadsPerBlock);
+                               float* outputs);
 
-void cudaSResizeFWNearestNeighbor(const float* input, size_t inputSizeX, size_t inputSizeY,
+void cudaSResizeFWNearestNeighbor(const cudaDeviceProp& deviceProp, const float* input, size_t inputSizeX, size_t inputSizeY,
                                   float* output, size_t outputSizeX, size_t outputSizeY,
-                                  size_t nbChannels, size_t batchSize,
-                                  const dim3 blocksPerGrid, const dim3 threadsPerBlock);
+                                  size_t nbChannels, size_t batchSize);
 
-void cudaSResizeBWNearestNeighbor(const float* input, size_t inputSizeX, size_t inputSizeY,
+void cudaSResizeBWNearestNeighbor(const cudaDeviceProp& deviceProp, const float* input, size_t inputSizeX, size_t inputSizeY,
                                   float* output, size_t outputSizeX, size_t outputSizeY,
-                                  size_t nbChannels, size_t batchSize,
-                                  const dim3 blocksPerGrid, const dim3 threadsPerBlock);
+                                  size_t nbChannels, size_t batchSize);
 }
 
 #endif // N2D2_RESIZECELL_FRAME_CUDA_KERNELS_H

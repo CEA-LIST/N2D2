@@ -22,6 +22,7 @@
 #ifndef N2D2_CUDA_CONTEXT_H
 #define N2D2_CUDA_CONTEXT_H
 
+#include <vector>
 #include <iostream>
 
 #include "CudaUtils.hpp"
@@ -45,43 +46,81 @@ public:
 
     static const cudaDeviceProp& getDeviceProp()
     {
-        static cudaDeviceProp deviceProp;
-        static bool init = false;
+        static std::vector<cudaDeviceProp> deviceProp;
+        static std::vector<bool> init;
 
-        if (!init) {
-            int device;
-            CHECK_CUDA_STATUS(cudaGetDevice(&device));
-            CHECK_CUDA_STATUS(cudaGetDeviceProperties(&deviceProp, device));
-            init = true;
+        if (deviceProp.empty()) {
+#pragma omp critical(CudaContext__getDeviceProp)
+            if (deviceProp.empty()) {
+                int count = 1;
+                CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+
+                deviceProp.resize(count);
+                init.resize(count, false);
+            }
         }
 
-        return deviceProp;
+        int dev;
+        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+        if (!init[dev]) {
+            CHECK_CUDA_STATUS(cudaGetDeviceProperties(&deviceProp[dev], dev));
+            init[dev] = true;
+        }
+
+        return deviceProp[dev];
     }
 
     // Declare cublas handle
     static cublasHandle_t& cublasHandle()
     {
-        static cublasHandle_t cublas_h = NULL;
+        static std::vector<cublasHandle_t> cublas_h;
 
-        if (!cublas_h) {
-            CHECK_CUBLAS_STATUS(cublasCreate(&cublas_h));
-            std::cout << "CUBLAS initialized" << std::endl;
+        if (cublas_h.empty()) {
+#pragma omp critical(CudaContext__cublasHandle)
+            if (cublas_h.empty()) {
+                int count = 1;
+                CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+
+                cublas_h.resize(count, NULL);
+            }
         }
 
-        return cublas_h;
+        int dev;
+        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+        if (cublas_h[dev] == NULL) {
+            CHECK_CUBLAS_STATUS(cublasCreate(&cublas_h[dev]));
+            std::cout << "CUBLAS initialized on device #" << dev << std::endl;
+        }
+
+        return cublas_h[dev];
     }
 
     // Declare cudnn handle
     static cudnnHandle_t& cudnnHandle()
     {
-        static cudnnHandle_t cudnn_h = NULL;
+        static std::vector<cudnnHandle_t> cudnn_h;
 
-        if (!cudnn_h) {
-            CHECK_CUDNN_STATUS(cudnnCreate(&cudnn_h));
-            std::cout << "CUDNN initialized" << std::endl;
+        if (cudnn_h.empty()) {
+#pragma omp critical(CudaContext__cudnnHandle)
+            if (cudnn_h.empty()) {
+                int count = 1;
+                CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+
+                cudnn_h.resize(count, NULL);
+            }
         }
 
-        return cudnn_h;
+        int dev;
+        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+        if (cudnn_h[dev] == NULL) {
+            CHECK_CUDNN_STATUS(cudnnCreate(&cudnn_h[dev]));
+            std::cout << "CUDNN initialized on device #" << dev << std::endl;
+        }
+
+        return cudnn_h[dev];
     }
 
     template <class T>

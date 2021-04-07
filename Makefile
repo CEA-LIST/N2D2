@@ -69,6 +69,10 @@ ifdef CUDA
   NVFLAGS:=$(CPPFLAGS) --compiler-options '-fPIC' -std=c++11 -lcutil -lcudpp -lcudart -lnppi -lnppc \
     -lm -lstdc++ -arch=sm_30 -maxrregcount 64
 
+  ifdef NVML
+    LDFLAGS:=$(LDFLAGS) -lnvidia-ml
+  endif
+
   NVFLAGS:=$(NVFLAGS) -gencode arch=compute_30,code=sm_30 \
     -gencode arch=compute_50,code=sm_50 \
     -gencode arch=compute_52,code=sm_52 \

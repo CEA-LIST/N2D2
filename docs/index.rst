@@ -13,6 +13,27 @@ N2D2
    intro
    about
    simus
+   perfs_tools
+   tuto
+
+.. toctree::
+   :maxdepth: 1
+   :caption: ONNX Import:
+
+   onnx_convert
+   onnx_import
+   onnx_transfer
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Quantization and Export:
+
+   quant_post
+   quant_qat
+   export_CPP
+   export_TensorRT
+   export_DNeuro
+   export_legacy
 
 .. toctree::
    :maxdepth: 1
@@ -23,6 +44,7 @@ N2D2
    ini_data_analysis
    ini_environment
    ini_layers
+   ini_target
 
 .. toctree::
    :maxdepth: 1
@@ -34,11 +56,7 @@ N2D2
    stimuliprovider
    deepnet
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Tutorials:
 
-   tuto
 
 Indices and tables
 ==================

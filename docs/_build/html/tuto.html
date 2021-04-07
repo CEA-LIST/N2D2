@@ -37,7 +37,8 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="DeepNet" href="deepnet.html" /> 
+    <link rel="next" title="Obtain ONNX models" href="onnx_convert.html" />
+    <link rel="prev" title="Performance evaluation tools" href="perfs_tools.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -82,29 +83,11 @@
             
             
               <p class="caption"><span class="caption-text">Introduction:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
-</ul>
-<p class="caption"><span class="caption-text">INI File Interface:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="ini_intro.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ini_databases.html">Databases</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ini_data_analysis.html">Stimuli data analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ini_environment.html">Environment</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ini_layers.html">Network Layers</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Python API:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
-<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
-<li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Tutorials:</span></p>
-<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="perfs_tools.html">Performance evaluation tools</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#learning-deep-neural-networks-tips-and-tricks">Learning deep neural networks: tips and tricks</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#choose-the-learning-solver">Choose the learning solver</a></li>
@@ -127,6 +110,38 @@
 </li>
 </ul>
 </li>
+</ul>
+<p class="caption"><span class="caption-text">ONNX Import:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="onnx_convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_transfer.html">Train from ONNX models</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Quantization and Export:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quant_post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
+</ul>
+<p class="caption"><span class="caption-text">INI File Interface:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ini_intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_data_analysis.html">Stimuli data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_environment.html">Stimuli provider (Environment)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_target.html">Targets (outputs &amp; losses)</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
 </ul>
 
             
@@ -861,6 +876,9 @@ synapse per input stimulus in the network. If this number if below 1.0,
 it means that the spiking version of the network is more efficient than
 its formal counterpart in terms of total number of operations!</p>
 <p id="bibtex-bibliography-tuto-0"><dl class="citation">
+<dt class="bibtex label" id="bhalgat2020lsq"><span class="brackets">BLN+20</span></dt>
+<dd><p>Yash Bhalgat, Jinwon Lee, Markus Nagel, Tijmen Blankevoort, and Nojun Kwak. Lsq+: improving low-bit quantization through learnable offsets and better initialization. 2020. <a class="reference external" href="https://arxiv.org/abs/2004.09576">arXiv:2004.09576</a>.</p>
+</dd>
 <dt class="bibtex label" id="cordts2016cityscapes"><span class="brackets">COR+16</span></dt>
 <dd><p>Marius Cordts, Mohamed Omran, Sebastian Ramos, Timo Rehfeld, Markus Enzweiler, Rodrigo Benenson, Uwe Franke, Stefan Roth, and Bernt Schiele. The cityscapes dataset for semantic urban scene understanding. In <em>Proc. of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)</em>. 2016.</p>
 </dd>
@@ -896,6 +914,9 @@ its formal counterpart in terms of total number of operations!</p>
 </dd>
 <dt class="bibtex label" id="jain2010"><span class="brackets">JLM10</span></dt>
 <dd><p>Vidit Jain and Erik Learned-Miller. FDDB: a benchmark for face detection in unconstrained settings. Technical Report UM-CS-2010-009, University of Massachusetts, Amherst, 2010.</p>
+</dd>
+<dt class="bibtex label" id="jin2019efficient"><span class="brackets">JYL19</span></dt>
+<dd><p>Qing Jin, Linjie Yang, and Zhenyu Liao. Towards efficient training for neural network quantization. 2019. <a class="reference external" href="https://arxiv.org/abs/1912.10207">arXiv:1912.10207</a>.</p>
 </dd>
 <dt class="bibtex label" id="kingmab14"><span class="brackets">KB14</span></dt>
 <dd><p>Diederik P. Kingma and Jimmy Ba. Adam: A method for stochastic optimization. <em>CoRR</em>, 2014. URL: <a class="reference external" href="http://arxiv.org/abs/1412.6980">http://arxiv.org/abs/1412.6980</a>, <a class="reference external" href="https://arxiv.org/abs/1412.6980">arXiv:1412.6980</a>.</p>
@@ -950,8 +971,10 @@ its formal counterpart in terms of total number of operations!</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
+        <a href="onnx_convert.html" class="btn btn-neutral float-right" title="Obtain ONNX models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-        <a href="deepnet.html" class="btn btn-neutral float-left" title="DeepNet" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+        <a href="perfs_tools.html" class="btn btn-neutral float-left" title="Performance evaluation tools" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

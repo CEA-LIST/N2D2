@@ -96,8 +96,6 @@ void N2D2::TargetROIs::processEstimatedLabels(Database::StimuliSet set,
     const bool validDatabase
         = (mStimuliProvider->getDatabase().getNbStimuli() > 0);
 
-    mDetectedBB.assign(mTargets.dimB(), std::vector<DetectedBB>());
-
     const unsigned int nbTargets = getNbTargets();
     ConfusionMatrix<unsigned long long int>& confusionMatrix
         = mScoreSet[set].confusionMatrix;
@@ -109,10 +107,24 @@ void N2D2::TargetROIs::processEstimatedLabels(Database::StimuliSet set,
     const double xRatio = labels.dimX() / (double)mCell->getOutputsWidth();
     const double yRatio = labels.dimY() / (double)mCell->getOutputsHeight();
 
-    mEstimatedLabels.synchronizeDBasedToH();
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
 
-#pragma omp parallel for if (mTargets.dimB() > 4)
-    for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
+    const Tensor<int>& targets = mTargetData[dev].targets;
+    const TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
+
+    estimatedLabels.synchronizeDBasedToH();
+
+    mDetectedBB.assign(targets.dimB(), std::vector<DetectedBB>());
+
+#pragma omp parallel for if (targets.dimB() > 4)
+    for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
         const int id = mStimuliProvider->getBatch()[batchPos];
 
         if (id < 0) {
@@ -121,20 +133,16 @@ void N2D2::TargetROIs::processEstimatedLabels(Database::StimuliSet set,
             continue;
         }
 
-#ifdef CUDA
-        CudaContext::setDevice();
-#endif
-
         std::vector<DetectedBB> detectedBB;
 
         // Extract estimated BB
-        const Tensor<int> estimatedLabels = mEstimatedLabels[batchPos][0];
+        const Tensor<int> estLabels = estimatedLabels[batchPos][0];
 
         ComputerVision::LSL_Box lsl(mMinSize);
-        lsl.process(Matrix<int>(estimatedLabels.dimY(),
-                                estimatedLabels.dimX(),
-                                estimatedLabels.begin(),
-                                estimatedLabels.end()));
+        lsl.process(Matrix<int>(estLabels.dimY(),
+                                estLabels.dimX(),
+                                estLabels.begin(),
+                                estLabels.end()));
 
         std::vector<ComputerVision::ROI::Roi_T> estimatedROIs = lsl.getRoi();
 
@@ -213,7 +221,7 @@ void N2D2::TargetROIs::processEstimatedLabels(Database::StimuliSet set,
         std::sort(detectedBB.begin(), detectedBB.end(), scoreCompare);
 
         if (validDatabase) {
-            const Tensor<int> target = mTargets[batchPos];
+            const Tensor<int> target = targets[batchPos];
 
             // Extract ground true ROIs
             std::vector<std::shared_ptr<ROI> > labelROIs
@@ -368,7 +376,7 @@ cv::Mat N2D2::TargetROIs::drawEstimatedLabels(unsigned int batchPos) const
     const std::vector<std::string>& labelsName = getTargetLabelsName();
 
     // Input image
-    cv::Mat img = (cv::Mat)mStimuliProvider->getData(0, batchPos);
+    cv::Mat img = (cv::Mat)mStimuliProvider->getDataChannel(0, batchPos);
     cv::Mat img8U;
     // img.convertTo(img8U, CV_8U, 255.0);
 
@@ -389,8 +397,15 @@ cv::Mat N2D2::TargetROIs::drawEstimatedLabels(unsigned int batchPos) const
     std::vector<std::shared_ptr<ROI> > labelROIs
         = mStimuliProvider->getLabelsROIs(batchPos);
 
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    const Tensor<int>& targets = mTargetData[dev].targets;
+
     if (mGenerateLabelsROIs
-        && labelROIs.empty() && mTargets[batchPos].size() > 1)
+        && labelROIs.empty() && targets[batchPos].size() > 1)
     {
         const Tensor<int>& labels = mStimuliProvider->getLabelsData();
         labelROIs = generateLabelsROIs(labels[batchPos][0]);
@@ -488,7 +503,7 @@ cv::Mat N2D2::TargetROIs::getBBData(const DetectedBB& bb,
                                     unsigned int batchPos) const
 {
     // Input image
-    cv::Mat img = (cv::Mat)mStimuliProvider->getData(0, batchPos);
+    cv::Mat img = (cv::Mat)mStimuliProvider->getDataChannel(0, batchPos);
     cv::Mat img8U;
     img.convertTo(img8U, CV_8U, 255.0);
 
@@ -566,8 +581,19 @@ void N2D2::TargetROIs::logEstimatedLabels(const std::string& dirName) const
     } // avoid ignoring return value warning
 #endif
 
-#pragma omp parallel for if (mTargets.dimB() > 4)
-    for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    const Tensor<int>& targets = mTargetData[dev].targets;
+
+#pragma omp parallel for if (targets.dimB() > 4)
+    for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
         const int id = mStimuliProvider->getBatch()[batchPos];
 
         if (id < 0) {
@@ -644,13 +670,24 @@ void N2D2::TargetROIs::logEstimatedLabelsJSON(const std::string& dirName,
 
     const std::vector<std::string>& labelsName = getTargetLabelsName();
 
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    const Tensor<int>& targets = mTargetData[dev].targets;
+
 #ifdef _OPENMP
     omp_lock_t appendLock;
     omp_init_lock(&appendLock);
 #endif
 
-#pragma omp parallel for if (mTargets.dimB() > 4) schedule(dynamic)
-    for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
+#pragma omp parallel for if (targets.dimB() > 4) schedule(dynamic)
+    for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
         const int id = mStimuliProvider->getBatch()[batchPos];
 
         if (id < 0) {

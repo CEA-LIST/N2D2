@@ -106,12 +106,14 @@ void N2D2::HeteroStimuliProvider::readStimulus(Database::StimulusID id,
                   std::bind(static_cast
                             <void (StimuliProvider::*)(Database::StimulusID,
                                                        Database::StimuliSet,
-                                                       unsigned int)>(
+                                                       unsigned int,
+                                                       int)>(
                                 &StimuliProvider::readStimulus),
                             std::placeholders::_1,
                             id,
                             set,
-                            batchPos));
+                            batchPos,
+                            -1));
 }
 
 N2D2::Database::StimulusID N2D2::HeteroStimuliProvider::readStimulus(
@@ -126,12 +128,14 @@ N2D2::Database::StimulusID N2D2::HeteroStimuliProvider::readStimulus(
             static_cast
             <Database::StimulusID (StimuliProvider::*)(Database::StimuliSet,
                                                        unsigned int,
-                                                       unsigned int)>(
+                                                       unsigned int,
+                                                       int)>(
                 &StimuliProvider::readStimulus),
             std::placeholders::_1,
             set,
             index,
-            batchPos));
+            batchPos,
+            -1));
 
     return database.getStimulusID(set, index);
 }

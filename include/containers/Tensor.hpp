@@ -60,6 +60,10 @@
     #endif
 #endif
 
+#ifdef CUDA
+#include "CudaUtils.hpp"
+#endif
+
 #include "third_party/half.hpp"
 
 namespace N2D2 {
@@ -234,6 +238,8 @@ public:
     /** Synchronize Host data To Device-based */
     virtual void synchronizeHToDBased() const {};
 
+    virtual void synchronizeToH(BaseTensor& tensor) const = 0;
+
     virtual BaseTensor& operator=(const BaseTensor& base) = 0;
 
     size_t nbDims() const
@@ -244,17 +250,17 @@ public:
     {
         return mDims;
     };
-    bool isValid() const
+    virtual bool isValid(int /*dev*/ = -1) const
     {
-        return (*mValid);
+        return (*mValid)[0];
     };
-    void setValid()
+    virtual void setValid(int /*dev*/ = -1)
     {
-        (*mValid) = true;
+        (*mValid)[0] = true;
     };
-    void clearValid()
+    virtual void clearValid(int /*dev*/ = -1)
     {
-        (*mValid) = false;
+        (*mValid)[0] = false;
     };
     virtual const std::type_info* getType() const = 0;
 #ifdef CUDA
@@ -264,14 +270,16 @@ public:
 
 protected:
     BaseTensor(const std::vector<size_t>& dims = std::vector<size_t>(),
-               const std::shared_ptr<bool>& valid
-                    = std::make_shared<bool>(false),
+               const std::shared_ptr<std::vector<char> >& valid
+                    = std::make_shared<std::vector<char> >(1, false),
                size_t size = 0,
                size_t sizeM1 = 0)
         : mDims(dims),
           mValid(valid),
           mSize(size),
-          mSizeM1(sizeM1) {}
+          mSizeM1(sizeM1)
+    {
+    }
     size_t computeSize()
     {
         mSizeM1 = (!mDims.empty()) ? std::accumulate(mDims.begin(),
@@ -306,7 +314,7 @@ protected:
 
 protected:
     std::vector<size_t> mDims;
-    const std::shared_ptr<bool> mValid;
+    const std::shared_ptr<std::vector<char> > mValid;
 
     // Cached data
     size_t mSize;
@@ -376,7 +384,7 @@ public:
     virtual void push_back(const std::vector<T>& vec);
     virtual void push_back(const Tensor<T>& frame);
     virtual void append(const std::vector<T>& vec);
-    virtual void append(const Tensor<T>& frame);
+    virtual void append(const Tensor<T>& frame, int towardsDim = -1);
     virtual void clear();
     virtual void save(std::ostream& stream) const;
     virtual void load(std::istream& stream);
@@ -394,9 +402,10 @@ public:
     const Tensor<T> operator[](size_t i) const;
     Tensor<T> rows(size_t j0, size_t nb);
     const Tensor<T> rows(size_t j0, size_t nb) const;
-    double sum(bool valAbs=false) const;
-    double mean(bool valAbs=false) const;
+    double sum(bool valAbs = false) const;
+    double mean(bool valAbs = false) const;
     double std() const;
+    virtual void synchronizeToH(BaseTensor& tensor) const;
     BaseTensor& operator=(const BaseTensor& base);
     Tensor<T>& operator=(const Tensor<T>& tensor);
     template <class U> Tensor<T>& operator=(const Tensor<U>& tensor);
@@ -432,11 +441,10 @@ public:
 protected:
     Tensor(const std::vector<size_t>& dims,
              const std::shared_ptr<DataTensor<T> >& data,
-             const std::shared_ptr<bool>& valid,
+             const std::shared_ptr<std::vector<char> >& valid,
              size_t dataOffset,
              size_t size,
              size_t sizeM1);
-    
 
     template <class CV_T, class U,
               typename std::enable_if<std::is_arithmetic<U>::value && 

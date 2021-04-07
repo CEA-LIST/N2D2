@@ -632,6 +632,113 @@ TEST_DATASET(Tensor4d,
     }
 }
 
+TEST(Tensor4d, append)
+{
+    Tensor<int> A({2, 3, 4, 5});
+    Tensor<int> B({2, 3, 4, 3});
+
+    int idxA = 0;
+    int idxB = -100000;
+    std::iota(A.begin(), A.end(), idxA);
+    std::iota(B.begin(), B.end(), idxB);
+
+    A.append(B);
+
+    ASSERT_EQUALS(A.dimX(), 2U);
+    ASSERT_EQUALS(A.dimY(), 3U);
+    ASSERT_EQUALS(A.dimZ(), 4U);
+    ASSERT_EQUALS(A.dimB(), 8U);
+
+    for (unsigned int b = 0; b < 5; ++b) {
+        for (unsigned int k = 0; k < 4; ++k) {
+            for (unsigned int j = 0; j < 3; ++j) {
+                for (unsigned int i = 0; i < 2; ++i) {
+                    ASSERT_EQUALS(A(i, j, k, b), idxA);
+                    ++idxA;
+                }
+            }
+        }
+    }
+    for (unsigned int b = 5; b < 8; ++b) {
+        for (unsigned int k = 0; k < 4; ++k) {
+            for (unsigned int j = 0; j < 3; ++j) {
+                for (unsigned int i = 0; i < 2; ++i) {
+                    ASSERT_EQUALS(A(i, j, k, b), idxB);
+                    ++idxB;
+                }
+            }
+        }
+    }
+}
+
+TEST(Tensor4d, append_0)
+{
+    Tensor<int> A({2, 3, 4, 5});
+    Tensor<int> B({10, 3, 4, 5});
+
+    int idxA = 0;
+    int idxB = -100000;
+    std::iota(A.begin(), A.end(), idxA);
+    std::iota(B.begin(), B.end(), idxB);
+
+    A.append(B, 0);
+
+    ASSERT_EQUALS(A.dimX(), 12U);
+    ASSERT_EQUALS(A.dimY(), 3U);
+    ASSERT_EQUALS(A.dimZ(), 4U);
+    ASSERT_EQUALS(A.dimB(), 5U);
+
+    for (unsigned int b = 0; b < 5; ++b) {
+        for (unsigned int k = 0; k < 4; ++k) {
+            for (unsigned int j = 0; j < 3; ++j) {
+                for (unsigned int i = 0; i < 2; ++i) {
+                    ASSERT_EQUALS(A(i, j, k, b), idxA);
+                    ++idxA;
+                }
+                for (unsigned int i = 2; i < 12; ++i) {
+                    ASSERT_EQUALS(A(i, j, k, b), idxB);
+                    ++idxB;
+                }
+            }
+        }
+    }
+}
+
+TEST(Tensor4d, append_1)
+{
+    Tensor<int> A({2, 3, 4, 5});
+    Tensor<int> B({2, 1, 4, 5});
+
+    int idxA = 0;
+    int idxB = -100000;
+    std::iota(A.begin(), A.end(), idxA);
+    std::iota(B.begin(), B.end(), idxB);
+
+    A.append(B, 1);
+
+    ASSERT_EQUALS(A.dimX(), 2U);
+    ASSERT_EQUALS(A.dimY(), 4U);
+    ASSERT_EQUALS(A.dimZ(), 4U);
+    ASSERT_EQUALS(A.dimB(), 5U);
+
+    for (unsigned int b = 0; b < 5; ++b) {
+        for (unsigned int k = 0; k < 4; ++k) {
+            for (unsigned int j = 0; j < 3; ++j) {
+                for (unsigned int i = 0; i < 2; ++i) {
+                    ASSERT_EQUALS(A(i, j, k, b), idxA);
+                    ++idxA;
+                }
+            }
+            for (unsigned int j = 3; j < 4; ++j) {
+                for (unsigned int i = 0; i < 2; ++i) {
+                    ASSERT_EQUALS(A(i, j, k, b), idxB);
+                    ++idxB;
+                }
+            }
+        }
+    }
+}
+
 TEST(Tensor4d, clear)
 {
     Tensor<double> A({2, 3, 4, 5}, 1.0);

@@ -79,17 +79,35 @@ void N2D2::TargetRP::initialize(TargetType targetType,
     mTargetType = targetType;
     mRPCell = RPCell;
     mAnchorCell = anchorCell;
-    mTargets.resize({mCell->getOutputsWidth(),
-                    mCell->getOutputsHeight(),
-                    (mTargetType == BBox) ? 4U : 1U,
-                    outputsShape.dimB()});
+
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    if (mTargetData.empty()) {
+        int count = 1;
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+#endif
+        mTargetData.resize(count);
+    }
+
+    Tensor<int>& targets = mTargetData[dev].targets;
+    TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
+    TensorLabelsValue_T& estimatedLabelsValue = mTargetData[dev].estimatedLabelsValue;
+
+    targets.resize({mCell->getOutputsWidth(),
+                mCell->getOutputsHeight(),
+                (mTargetType == BBox) ? 4U : 1U,
+                outputsShape.dimB()});
 
     if (mTargetType == Cls) {
-        mEstimatedLabels.resize({mCell->getOutputsWidth(),
+        estimatedLabels.resize({mCell->getOutputsWidth(),
                                 mCell->getOutputsHeight(),
                                 mTargetTopN,
                                 outputsShape.dimB()});
-        mEstimatedLabelsValue.resize({mCell->getOutputsWidth(),
+        estimatedLabelsValue.resize({mCell->getOutputsWidth(),
                                      mCell->getOutputsHeight(),
                                      mTargetTopN,
                                      outputsShape.dimB()});
@@ -117,31 +135,45 @@ void N2D2::TargetRP::processCls(Database::StimuliSet set)
 {
     std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mCell);
-    
-    targetCell->getOutputs().synchronizeDToH();
-    const Tensor<Float_T>& values
-        = tensor_cast<Float_T>(targetCell->getOutputs());
+
+    BaseTensor& valuesBaseTensor = targetCell->getOutputs();
+    Tensor<Float_T> values;
+    valuesBaseTensor.synchronizeToH(values);
+
     const std::vector<Tensor<int>::Index> anchors = mRPCell->getAnchors();
 
     ConfusionMatrix<unsigned long long int>& confusionMatrix
         = mScoreSet[set].confusionMatrix;
 
-    if (confusionMatrix.empty())
+    if (confusionMatrix.empty()) {
         confusionMatrix.resize(values.size() / values.dimB(),
                                values.size() / values.dimB(),
                                0);
-
-    assert(anchors.size() == mTargets.dimB());
+    }
 
     const int defaultLabel = getLabelTarget(mStimuliProvider->getDatabase()
                                                 .getDefaultLabelID());
 
-#pragma omp parallel for if (mTargets.dimB() > 16)
-    for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    Tensor<int>& targets = mTargetData[dev].targets;
+    TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
+    TensorLabelsValue_T& estimatedLabelsValue = mTargetData[dev].estimatedLabelsValue;
+
+    assert(anchors.size() == targets.dimB());
+
+#pragma omp parallel for if (targets.dimB() > 16)
+    for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
         const Tensor<Float_T> value = values[batchPos];
-        Tensor<int> estimatedLabels = mEstimatedLabels[batchPos];
-        Tensor<Float_T> estimatedLabelsValue
-            = mEstimatedLabelsValue[batchPos];
+        Tensor<int> estLabels = estimatedLabels[batchPos];
+        Tensor<Float_T> estLabelsValue = estimatedLabelsValue[batchPos];
+
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
 
         if (value.size() > 1) {
             std::vector
@@ -160,14 +192,14 @@ void N2D2::TargetRP::processCls(Database::StimuliSet set)
                 std::greater<std::pair<Float_T, size_t> >());
 
             for (unsigned int i = 0; i < mTargetTopN; ++i) {
-                estimatedLabels(i) = sortedLabelsValues[i].second;
-                estimatedLabelsValue(i)
+                estLabels(i) = sortedLabelsValues[i].second;
+                estLabelsValue(i)
                     = sortedLabelsValues[i].first;
             }
         }
         else {
-            estimatedLabels(0) = (value(0) > mBinaryThreshold);
-            estimatedLabelsValue(0) = value(0);
+            estLabels(0) = (value(0) > mBinaryThreshold);
+            estLabelsValue(0) = value(0);
         }
 
         const double IoU = mAnchorCell->getAnchorIoU(anchors[batchPos]);
@@ -177,17 +209,17 @@ void N2D2::TargetRP::processCls(Database::StimuliSet set)
                 = mAnchorCell->getAnchorROI(anchors[batchPos]);
             const int targetLabel = getLabelTarget(ROI->getLabel());
 
-            mTargets(0, batchPos) = targetLabel;
-            confusionMatrix(targetLabel, estimatedLabels(0)) += 1ULL;
+            targets(0, batchPos) = targetLabel;
+            confusionMatrix(targetLabel, estLabels(0)) += 1ULL;
         }
         else {
-            mTargets(0, batchPos) = defaultLabel;
-            confusionMatrix(defaultLabel, estimatedLabels(0)) += 1ULL;
+            targets(0, batchPos) = defaultLabel;
+            confusionMatrix(defaultLabel, estLabels(0)) += 1ULL;
         }
     }
 
     if (set == Database::Learn) {
-        targetCell->setOutputTarget(mTargets);
+        targetCell->setOutputTarget(targets);
         targetCell->applyLoss(mTargetValue, mDefaultValue);
     }
 }
@@ -198,25 +230,36 @@ void N2D2::TargetRP::processBBox(Database::StimuliSet set)
         <Cell_Frame_Top>(mCell);
     const std::vector<Tensor<int>::Index> anchors = mRPCell->getAnchors();
 
-    targetCell->getOutputs().synchronizeDToH();
-    const Tensor<Float_T>& values
-        = tensor_cast<Float_T>(targetCell->getOutputs());
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    const Tensor<int>& targets = mTargetData[dev].targets;
+
+    BaseTensor& valuesBaseTensor = targetCell->getOutputs();
+    Tensor<Float_T> values;
+    valuesBaseTensor.synchronizeToH(values);
 
     Tensor<Float_T> smoothTargets({mCell->getOutputsWidth(),
                                     mCell->getOutputsHeight(),
-                                    mTargets.dimZ(),
-                                    mTargets.dimB()},
+                                    targets.dimZ(),
+                                    targets.dimB()},
                                     0.0);
 
-#pragma omp parallel for if (mTargets.dimB() > 16)
-    for (int batchPos = 0; batchPos < (int)mTargets.dimB(); ++batchPos) {
+#pragma omp parallel for if (targets.dimB() > 16)
+    for (int batchPos = 0; batchPos < (int)targets.dimB(); ++batchPos) {
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
+
         const AnchorCell_Frame_Kernels::BBox_T& gt
             = mAnchorCell->getAnchorGT(anchors[batchPos]);
 /*
-        mTargets(0, batchPos) = gt.x;
-        mTargets(1, batchPos) = gt.y;
-        mTargets(2, batchPos) = gt.w;
-        mTargets(3, batchPos) = gt.h;
+        targets(0, batchPos) = gt.x;
+        targets(1, batchPos) = gt.y;
+        targets(2, batchPos) = gt.w;
+        targets(3, batchPos) = gt.h;
 */
         const double IoU = mAnchorCell->getAnchorIoU(anchors[batchPos]);
 
@@ -255,7 +298,7 @@ cv::Mat N2D2::TargetRP::drawEstimatedLabels(unsigned int batchPos) const
                                                 .getDefaultLabelID());
 
     // Input image
-    cv::Mat img = (cv::Mat)mStimuliProvider->getData(0, batchPos);
+    cv::Mat img = (cv::Mat)mStimuliProvider->getDataChannel(0, batchPos);
     cv::Mat img8U;
     // img.convertTo(img8U, CV_8U, 255.0);
 
@@ -323,17 +366,24 @@ cv::Mat N2D2::TargetRP::drawEstimatedLabels(unsigned int batchPos) const
     std::shared_ptr<Cell_Frame_Top> targetBBoxCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mTargetRP[targetRP][BBox]->getCell());
 
-    targetBBoxCell->getOutputs().synchronizeDToH();
-    const Tensor<Float_T>& valuesBBox
-        = tensor_cast_nocopy<Float_T>(targetBBoxCell->getOutputs());
+    BaseTensor& valuesBBoxBaseTensor = targetCell->getOutputs();
+    Tensor<Float_T> valuesBBox;
+    valuesBBoxBaseTensor.synchronizeToH(valuesBBox);
 
     const std::vector<Tensor<int>::Index> anchors = mRPCell->getAnchors();
+
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    const TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
 
     for (unsigned int n = 0, nbProposals = mRPCell->getNbProposals();
         n < nbProposals; ++n)
     {
         const unsigned int outputBatchPos = n + batchPos * nbProposals;
-        const int cls = mEstimatedLabels(0, outputBatchPos);
+        const int cls = estimatedLabels(0, outputBatchPos);
 
         const AnchorCell_Frame_Kernels::BBox_T& bb
             = mAnchorCell->getAnchorBBox(anchors[outputBatchPos]);
@@ -410,6 +460,11 @@ void N2D2::TargetRP::logEstimatedLabels(const std::string& dirName) const
 
     const std::vector<int>& batch = mStimuliProvider->getBatch();
 
+#ifdef CUDA
+    int dev = 0;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
 #pragma omp parallel for if (batch.size() > 4)
     for (int batchPos = 0; batchPos < (int)batch.size(); ++batchPos) {
         const int id = batch[batchPos];
@@ -419,6 +474,10 @@ void N2D2::TargetRP::logEstimatedLabels(const std::string& dirName) const
             // set)
             continue;
         }
+
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
 
         const std::string imgFile
             = mStimuliProvider->getDatabase().getStimulusName(id);

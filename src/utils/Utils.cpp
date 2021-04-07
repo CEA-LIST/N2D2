@@ -605,6 +605,8 @@ std::string N2D2::Utils::exec(const std::string& cmd, int* status) {
     waitpid(pid, &ret, 0);
     posix_spawn_file_actions_destroy(&action);
 
+    close(coutPipe[0]), close(cerrPipe[0]);
+
     if (status != NULL)
         (*status) = ret;
 #endif

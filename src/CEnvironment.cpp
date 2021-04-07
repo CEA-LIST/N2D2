@@ -55,29 +55,15 @@ void N2D2::CEnvironment::initialize()
 
 void N2D2::CEnvironment::setBatchSize(unsigned int batchSize)
 {
-    mBatchSize = batchSize;
+    StimuliProvider::setBatchSize(batchSize);
 
     if (mBatchSize > 0) {
-        std::vector<size_t> dataSize(mData.dims());
-        dataSize.back() = mBatchSize;
-
-        mData.resize(dataSize);
-        mFutureData.resize(dataSize);
-
-        std::vector<size_t> labelSize(mLabelsData.dims());
-        labelSize.back() = mBatchSize;
-
-        mLabelsData.resize(labelSize);
-        mFutureLabelsData.resize(labelSize);
-
         std::vector<size_t> dims({getSizeX(), getSizeY(), getNbChannels(), getBatchSize()});
         
         mTickData.resize(dims);
         mTickActivity.resize(dims);
         mTickFiringRate.resize(dims);
-        
     }
-
 }
 
 
@@ -89,10 +75,13 @@ void N2D2::CEnvironment::readBatch(Database::StimuliSet set,
 
     // Fill mData batch elements which are not used with 0
     if (batchSize < mBatchSize) {
-        std::fill(mData.begin(), mData.end(), 0);
+        std::fill(mProvidedData[0].data.begin(),
+                  mProvidedData[0].data.end(), 0);
     }
 
-    std::vector<int>& batchRef = (mFuture) ? mFutureBatch : mBatch;
+    std::vector<int>& batchRef = (mFuture)
+        ? mFutureProvidedData[0].batch
+        : mProvidedData[0].batch;
 
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
         batchRef[batchPos]
@@ -111,8 +100,10 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
         return;
     }
     if (mNoConversion) {
-        for (unsigned int idx = 0, size = mData.size(); idx < size; ++idx) {
-            mTickData(idx) = mScaling*mData(idx);
+        for (unsigned int idx = 0, size = mProvidedData[0].data.size();
+            idx < size; ++idx)
+        {
+            mTickData(idx) = mScaling*mProvidedData[0].data(idx);
             mTickActivity(idx) += mScaling*mTickData(idx);
         }
 #ifdef CUDA
@@ -126,7 +117,9 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
     if (aerDatabase) {
 
         SpikeGenerator::checkParameters();
-        for (unsigned int idx = 0, size = mData.size(); idx < size; ++idx) {
+        for (unsigned int idx = 0, size = mProvidedData[0].data.size();
+            idx < size; ++idx)
+        {
             // If next event is valid set mTickData to spiking and search next event,
             // else set to non spiking
             if (mNextEvent(idx).second != 0 && mNextEvent(idx).first <= timestamp) {
@@ -148,7 +141,7 @@ void N2D2::CEnvironment::tick(Time_T timestamp, Time_T start, Time_T stop)
 
                     event = mNextEvent(idx);
                     SpikeGenerator::nextEvent(
-                        mNextEvent(idx), mData(idx), start, stop);
+                        mNextEvent(idx), mProvidedData[0].data(idx), start, stop);
 
                 }
 
@@ -234,7 +227,7 @@ void N2D2::CEnvironment::reset(Time_T timestamp)
     mTickFiringRate.assign(mTickFiringRate.dims(), 0);
 
     // This is usually overwritten immediately by initialize()
-    mNextEvent.assign(mData.dims(),
+    mNextEvent.assign(mProvidedData[0].data.dims(),
                         std::make_pair(timestamp, 0));
 
     mStopStimulus = false;
@@ -244,10 +237,10 @@ void N2D2::CEnvironment::reset(Time_T timestamp)
 void N2D2::CEnvironment::initializeSpikeGenerator(Time_T start, Time_T stop)
 {
 
-    for (unsigned int idx = 0, size = mData.size();
+    for (unsigned int idx = 0, size = mProvidedData[0].data.size();
     idx < size; ++idx){
         SpikeGenerator::nextEvent(mNextEvent(idx),
-                                    mData(idx),
+                                    mProvidedData[0].data(idx),
                                     start,
                                     stop);
         //mTickData[k](idx) = mNextEvent[k](idx).second;

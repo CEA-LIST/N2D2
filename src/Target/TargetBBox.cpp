@@ -222,11 +222,28 @@ void N2D2::TargetBBox::initialize(  bool genAnchors,
 
     }
 
-    mTargets.resize({mCell->getOutputsWidth(),
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
+    if (mTargetData.empty()) {
+        int count = 1;
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+#endif
+        mTargetData.resize(count);
+    }
+
+    Tensor<int>& targets = mTargetData[dev].targets;
+
+    if (targets.empty()) {
+        targets.resize({mCell->getOutputsWidth(),
                     mCell->getOutputsHeight(),
                     outputsShape.dimZ(),
                     outputsShape.dimB()});
-    
+    }
+
     //if(mGenerateAnchors)
     //    computeKmeansClustering(Database::Learn);
 
@@ -243,17 +260,15 @@ void N2D2::TargetBBox::initialize(  bool genAnchors,
 
 void N2D2::TargetBBox::process(Database::StimuliSet set)
 {
-
     std::shared_ptr<Cell_Frame_Top> targetCell = std::dynamic_pointer_cast
         <Cell_Frame_Top>(mCell);
 
+    BaseTensor& valuesBaseTensor = targetCell->getOutputs();
+    Tensor<Float_T> values;
+    valuesBaseTensor.synchronizeToH(values);
+
     const std::vector<int>& batch = mStimuliProvider->getBatch();
-    const int nbBBoxMax = (int)mTargets.dimB()/batch.size();
-
-    targetCell->getOutputs().synchronizeDToH();
-    const Tensor<Float_T>& values
-        = tensor_cast<Float_T>(targetCell->getOutputs());
-
+    const int nbBBoxMax = (int)values.dimB()/batch.size();
     const unsigned int nbTargets = mLabelsBBoxName.size(); 
 
     ConfusionMatrix<unsigned long long int>& confusionMatrix
@@ -262,9 +277,9 @@ void N2D2::TargetBBox::process(Database::StimuliSet set)
     if (confusionMatrix.empty())
         confusionMatrix.resize(nbTargets, nbTargets, 0);
 
-    mBatchDetectedBBox.assign(mTargets.dimB(), std::vector<DetectedBB>());
+    mBatchDetectedBBox.assign(values.dimB(), std::vector<DetectedBB>());
 
-    //#pragma omp parallel for if (mTargets.dimB() > 4)
+    //#pragma omp parallel for if (values.dimB() > 4)
     for (int batchPos = 0; batchPos < (int)batch.size(); ++batchPos) {
 
         // Extract ground true ROIs
@@ -464,7 +479,7 @@ cv::Mat N2D2::TargetBBox::drawEstimatedBBox(unsigned int batchPos) const
     //                                            .getDefaultLabelID());
 
     // Input image
-    cv::Mat img = (cv::Mat)mStimuliProvider->getData(0, batchPos);
+    cv::Mat img = (cv::Mat)mStimuliProvider->getDataChannel(0, batchPos);
     cv::Mat img8U;
     // img.convertTo(img8U, CV_8U, 255.0);
 
@@ -609,6 +624,11 @@ void N2D2::TargetBBox::logEstimatedLabels(const std::string& dirName) const
     Utils::createDirectories(dirPath);
     const std::vector<int>& batch = mStimuliProvider->getBatch();
 
+#ifdef CUDA
+    int dev = 0;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
 #pragma omp parallel for if (batch.size() > 4)
     for (int batchPos = 0; batchPos < (int)batch.size(); ++batchPos) {
         const int id = batch[batchPos];
@@ -618,6 +638,10 @@ void N2D2::TargetBBox::logEstimatedLabels(const std::string& dirName) const
             // set)
             continue;
         }
+
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
 
         const std::string imgFile
             = mStimuliProvider->getDatabase().getStimulusName(id);

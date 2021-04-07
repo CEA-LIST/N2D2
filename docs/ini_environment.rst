@@ -1,15 +1,27 @@
-Environment
-===========
+Stimuli provider (Environment)
+==============================
 
-The environment simply specify the input data format of the network
-(width, height and batch size). Example:
+Introduction
+------------
+
+The ``database`` section must feed a stimuli provider (or environment), which is 
+instantiated with a section named ``sp`` (or ``env``) in the INI file. When the 
+two sections are present in the INI file, they are implicitly connected: the 
+``StimuliProvider`` is automatically aware of the ``Database`` driver that is 
+present. The ``StimuliProvider`` section specifies the input dimensions of the 
+network (width, height), as well as the batch size.
+
+Example:
 
 .. code-block:: ini
 
-    [env]
+    [sp]
     SizeX=24
     SizeY=24
     BatchSize=12 ; [default: 1]
+
+
+The table below summarizes the parameters available for the ``sp`` section:
 
 +--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Option [default value]               | Description                                                                                                                                                                                                                                                                                                  |
@@ -26,6 +38,14 @@ The environment simply specify the input data format of the network
 +--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | ``CachePath`` []                     | Stimuli cache path (no cache if left empty)                                                                                                                                                                                                                                                                  |
 +--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+The ``env`` section accepts more parameters dedicated to event-based (spiking) 
+simulation:
+
++--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Option (``env`` only) [default]      | Description                                                                                                                                                                                                                                                                                                  |
++======================================+==============================================================================================================================================================================================================================================================================================================+
++--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | ``StimulusType`` [``SingleBurst``]   | Method for converting stimuli into spike trains. Can be any of ``SingleBurst``, ``Periodic``, ``JitteredPeriodic`` or ``Poissonian``                                                                                                                                                                         |
 +--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | ``DiscardedLateStimuli`` [1.0]       | The pixels in the pre-processed stimuli with a value above this limit never generate spiking events                                                                                                                                                                                                          |
@@ -38,6 +58,125 @@ The environment simply specify the input data format of the network
 +--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | ``PeriodMin`` [11 ``TimeMs``]        | Absolute minimum period, or spiking interval, used for periodic temporal codings, for any pixel                                                                                                                                                                                                              |
 +--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+For image segmentation, the parameter ``CompositeStimuli=1`` must always be 
+present, meaning that the labels of the image must have the same dimension than 
+the image (and cannot be a single class value as in classification problem).
+
+
+
+Data range and conversion
+-------------------------
+
+A configuration section can be associated to a ``StimuliProvider``, as shown 
+below. The ``DataSignedMapping=1`` parameter specifies that the input value 
+range must be interpreted as signed, even if the values are unsigned, which is 
+usually the case for standard image formats (BMP, JPEG, PNG...). In case of 
+8-bit images, values from 0 to 255 are therefore mapped to the range -128 to 
+127 when this parameter is enabled.
+
+.. code-block:: ini
+
+  [sp]
+  SizeX=[database.slicing]Width
+  SizeY=[database.slicing]Height
+  BatchSize=${BATCH_SIZE}
+  CompositeStimuli=1 
+  ConfigSection=sp.config
+
+  [sp.config]
+  DataSignedMapping=1
+
+.. Note::
+
+  In N2D2, the integer value input range [0, 255] (or [-128, 127] with the 
+  ``DataSignedMapping=1`` parameter) (for 8-bit images), is implicitly converted to 
+  floating point value range [0.0, 1.0] or [-1.0, 1.0] in the ``StimuliProvider``, 
+  after the transformations, unless one of the transformation changes the 
+  representation and/or the range of the data.
+
+.. Note::
+
+  The ``DataSignedMapping`` parameter only has effect when implicit conversion 
+  is performed.
+
+The input value range can also be changed explicitly using for example a
+``RangeAffineTransformation``, like below, in which case no implicit conversion 
+is performed afterwards (and the ``DataSignedMapping`` parameter has no effect):
+
+.. code-block:: ini
+
+  [sp.Transformation-rangeAffine]
+  Type=RangeAffineTransformation
+  FirstOperator=Minus
+  FirstValue=128.0
+  SecondOperator=Divides
+  SecondValue=128.0
+
+When running a simulation in N2D2, the graph of the transformations with all 
+their parameters as well as the expected output dimension after each 
+transformation is automatically generated (in the file *transformations.png*).
+As transformations can be applied only to one of the learn, validation or test 
+datasets, three graphs are generated, as shown in the following figure.
+
+
+.. figure:: _static/transformations.png
+   :alt: Graph of the transformations for the learn, validation and test datasets, 
+         automatically generated by N2D2.
+
+   Graph of the transformations for the learn, validation and test datasets, 
+   automatically generated by N2D2.
+
+
+
+Images slicing during training and inference
+--------------------------------------------
+
+In N2D2, the input dimensions of a neural network is fixed and cannot be 
+changed dynamically during the training and inference, as images are processed 
+in batch, like any other deep learning framework. Therefore, in order to deal 
+with datasets containing images of variable dimensions, patches or slices of 
+fixed dimensions must be extracted.
+
+In N2D2, two mechanisms are provided to extract slices:
+
+-	For training, random slices can be extracted from bigger images for each batch, thus allowing to cover the full images over the training time with the maximum variability. This also act as basic data augmentation. Random slices extraction is achieved using a ``SliceExtractionTransformation``, applied only to the training set with the parameter ``ApplyTo=LearnOnly``.
+
+  .. code-block:: ini
+
+    [sp.OnTheFlyTransformation-1]
+    Type=SliceExtractionTransformation
+    Width=${WIDTH}
+    Height=${HEIGHT}
+    RandomOffsetX=1
+    RandomOffsetY=1
+    AllowPadding=1
+    ApplyTo=LearnOnly
+
+-	For inference, one wants to cover the full images once and only once. This cannot be achieved with a N2D2 ``Transformation``, but has to be handled by the ``Database`` driver. In order to do so, any ``Database`` driver can have an additional "slicing" section in the N2D2 INI file, which will automatically extract regularly strided fixed size slices from the dataset. The example above can be used to extract slides for the validation and testing datasets, with the parameter ``ApplyTo=NoLearn``.
+
+  .. code-block:: ini
+
+    [database.slicing]
+    Width=${WIDTH}
+    Height=${HEIGHT}
+    StrideX=[database.slicing]Width
+    StrideY=[database.slicing]Height
+    Overlapping=1
+    ApplyTo=NoLearn
+
+When an image size is not a multiple of the slices size, the most right and 
+most bottom slices may have a size lower than the intended fixed slice size 
+specified with ``Width`` and ``Height``. There are two ways to deal with these slices:
+
+1) Add the ``Overlapping=1`` parameter, which allows an overlapping between the 
+   right/bottom-most slice and the preceding one. The overlapping area in the 
+   right/bottom-most slice is then marked as “ignore” for the labeling, to 
+   avoid counting twice the classification result on these pixels.
+2) Add a ``PadCropTransformation`` to pad to the slice target size for ``NoLearn`` 
+   data. In this case the padded area can be either ignored or mirror padding 
+   can be used.
+
 
 Built-in transformations
 ------------------------

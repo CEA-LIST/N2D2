@@ -1768,24 +1768,12 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             }
 
             if ((itConcat = concat.find(inputX)) != concat.end()) {
-                unsigned int mapOffset = 0;
-
                 for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
                     const std::string input = (*itConcat).second[i];
                     std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
                     parentCells.push_back(inputCell);
 
-                    // Make a unit map
-                    Tensor<bool> inputMap({nbOutputs,
-                                            inputCell->getNbOutputs()}, false);
-
-                    for (unsigned int i = 0; i < inputCell->getNbOutputs();
-                        ++i)
-                    {
-                        inputMap(mapOffset + i, i) = true;
-                    }
-                    dropoutCell->addInput(inputCell.get(), inputMap);
-                    mapOffset += inputCell->getNbOutputs();
+                    dropoutCell->addInput(inputCell.get());
                 }
             }
             else {
@@ -2427,13 +2415,8 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     for (int dim = 0; dim < (int)shapeTensor.size(); ++dim)
                         newShape.push_back(shapeTensor(dim));
                 }
-                else {
-                    std::stringstream msgStr;
-                    msgStr << "  No initializer for \"" << node.input(1)
-                        << "\"" << std::endl;
-
-                    throw std::runtime_error(msgStr.str());
-                }
+                // if no initializer is found, the shape is non-constant and
+                // computed by previous layers.
             }
             else if ((itAttr = attribute.find("shape")) != attribute.end()) {
                 for (int dim = 0; dim < (*itAttr).second->ints_size(); ++dim)
@@ -2444,14 +2427,24 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 //newShape = shapeTensor.data();
             }
 
+            if (newShape.empty()) {
+                std::cout << Utils::cnotice << "  Ignore Reshape operation"
+                    << " with non-constant shape" << Utils::cdef << std::endl;
+
+                std::cout << "  " << node.output(0) << " -> "
+                    << inputX << std::endl;
+                redirect[node.output(0)] = inputX;
+                continue;
+            }
+
             std::reverse(newShape.begin(), newShape.end());
 
             if ((itInit = initializer.find(inputX)) != initializer.end()) {
                 shape[inputX] = newShape;
 
                 std::cout << "  " << node.output(0) << " -> "
-                    << redirectName(node.input(0)) << std::endl;
-                redirect[node.output(0)] = redirectName(node.input(0));
+                    << inputX << std::endl;
+                redirect[node.output(0)] = inputX;
                 continue;
             }
             else {

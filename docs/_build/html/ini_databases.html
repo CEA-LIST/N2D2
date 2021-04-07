@@ -87,6 +87,23 @@
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ONNX Import:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="onnx_convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_transfer.html">Train from ONNX models</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Quantization and Export:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quant_post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
 <ul class="current">
@@ -96,6 +113,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#gtsrb">GTSRB</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#directory">Directory</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#speech-commands-dataset"><em>Speech Commands Dataset</em></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#csv-data-files">CSV data files</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#usage-example">Usage example</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#other-built-in-databases">Other built-in databases</a><ul>
@@ -122,8 +143,9 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ini_data_analysis.html">Stimuli data analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ini_environment.html">Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_environment.html">Stimuli provider (Environment)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ini_layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_target.html">Targets (outputs &amp; losses)</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Python API:</span></p>
 <ul>
@@ -132,10 +154,6 @@
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
-</ul>
-<p class="caption"><span class="caption-text">Tutorials:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
 </ul>
 
             
@@ -296,9 +314,9 @@ environment variable):</p>
 using the following parameters:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
 <span class="na">Type</span><span class="o">=</span><span class="s">DIR_Database</span>
-<span class="na">DataPath</span><span class="o">=</span><span class="s">\${N2D2_DATA}/GST</span>
-<span class="na">Learn</span><span class="o">=</span><span class="s">0.4 ; 40\% of images of the smallest category = 49 (0.4x123) images for each category will be used for learning</span>
-<span class="na">Validation</span><span class="o">=</span><span class="s">0.2 ; 20\% of images of the smallest category = 25 (0.2x123) images for each category will be used for validation</span>
+<span class="na">DataPath</span><span class="o">=</span><span class="s">${N2D2_DATA}/GST</span>
+<span class="na">Learn</span><span class="o">=</span><span class="s">0.4 ; 40% of images of the smallest category = 49 (0.4x123) images for each category will be used for learning</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.2 ; 20% of images of the smallest category = 25 (0.2x123) images for each category will be used for validation</span>
 <span class="c1">; the remaining images will be used for testing</span>
 </pre></div>
 </div>
@@ -404,43 +422,54 @@ the example above, the partitioning will be the following:</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">LabelDepth</span></code> = 1: uses <code class="docutils literal notranslate"><span class="pre">LabelName</span></code> for stimuli in the current directory (<code class="docutils literal notranslate"><span class="pre">DataPath</span></code>) and <code class="docutils literal notranslate"><span class="pre">LabelName</span></code>/<em>sub-directory name</em> for stimuli in the sub-directories</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PerLabelPartitioning</span></code> [1]</p></td>
-<td><p>If true, the stimuli are equi-partitioned for the learn/validation/test sets, meaning that the same number of stimuli for each label is used</p></td>
+<td><p>If true (1), the <code class="docutils literal notranslate"><span class="pre">Learn</span></code>, <code class="docutils literal notranslate"><span class="pre">Validation</span></code> and  <code class="docutils literal notranslate"><span class="pre">Test</span></code> parameters represent the fraction of the total stimuli to be partitioned in each set,
+instead of a number of stimuli</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.0]</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EquivLabelPartitioning</span></code> [1]</p></td>
+<td><p>If true (1), the stimuli are equi-partitioned in the learn and validation sets, meaning that the same number of stimuli <strong>for each label</strong> is used
+(only when <code class="docutils literal notranslate"><span class="pre">PerLabelPartitioning</span></code> is 1). The remaining stimuli are partitioned in the test set</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.0]</p></td>
 <td><p>If <code class="docutils literal notranslate"><span class="pre">PerLabelPartitioning</span></code> is true, fraction of images used for the validation; else, number of images used for the validation, regardless of their labels</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Test</span></code> [1.0-<code class="docutils literal notranslate"><span class="pre">Learn</span></code>-<code class="docutils literal notranslate"><span class="pre">Validation</span></code>]</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Test</span></code> [1.0-<code class="docutils literal notranslate"><span class="pre">Learn</span></code>-<code class="docutils literal notranslate"><span class="pre">Validation</span></code>]</p></td>
 <td><p>If <code class="docutils literal notranslate"><span class="pre">PerLabelPartitioning</span></code> is true, fraction of images used for the test; else, number of images used for the test, regardless of their labels</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ValidExtensions</span></code> []</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ValidExtensions</span></code> []</p></td>
 <td><p>List of space-separated valid stimulus file extensions (if left empty, any file extension is considered a valid stimulus)</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LoadMore</span></code> []</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LoadMore</span></code> []</p></td>
 <td><p>Name of an other section with the same options to load a different <code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ROIFile</span></code> []</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ROIFile</span></code> []</p></td>
 <td><p>File containing the stimuli ROIs. If a ROI file is specified, <code class="docutils literal notranslate"><span class="pre">LabelDepth</span></code> should be set to -1</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DefaultLabel</span></code> []</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DefaultLabel</span></code> []</p></td>
 <td><p>Label name for pixels outside any ROI (default is no label, pixels are ignored)</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ROIsMargin</span></code> [0]</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ROIsMargin</span></code> [0]</p></td>
 <td><p>Number of pixels around ROIs that are ignored (and not considered as <code class="docutils literal notranslate"><span class="pre">DefaultLabel</span></code> pixels)</p></td>
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">EquivLabelPartitioning</span></code> is 1 (default setting), the number of stimuli
+per label that will be partitioned in the learn and validation sets will
+correspond to the number of stimuli from the label with the fewest stimuli.</p>
+</div>
 <p>To load and partition more than one <code class="docutils literal notranslate"><span class="pre">DataPath</span></code>, one can use the
 <code class="docutils literal notranslate"><span class="pre">LoadMore</span></code> option:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
 <span class="na">Type</span><span class="o">=</span><span class="s">DIR_Database</span>
-<span class="na">DataPath</span><span class="o">=</span><span class="s">\${N2D2_DATA}/GST</span>
+<span class="na">DataPath</span><span class="o">=</span><span class="s">${N2D2_DATA}/GST</span>
 <span class="na">Learn</span><span class="o">=</span><span class="s">0.6</span>
 <span class="na">Validation</span><span class="o">=</span><span class="s">0.4</span>
 <span class="na">LoadMore</span><span class="o">=</span><span class="s">database.test</span>
 
 <span class="c1">; Load stimuli from the &quot;GST_Test&quot; path in the test dataset</span>
 <span class="k">[database.test]</span>
-<span class="na">DataPath</span><span class="o">=</span><span class="s">\${N2D2_DATA}/GST_Test</span>
+<span class="na">DataPath</span><span class="o">=</span><span class="s">${N2D2_DATA}/GST_Test</span>
 <span class="na">Learn</span><span class="o">=</span><span class="s">0.0</span>
 <span class="na">Test</span><span class="o">=</span><span class="s">1.0</span>
 <span class="c1">; The LoadMore option is recursive:</span>
@@ -456,11 +485,103 @@ the example above, the partitioning will be the following:</p>
 <a class="bibtex reference internal" href="tuto.html#speechcommandsv2" id="id3">[Warden18]</a>.</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
 <span class="na">Type</span><span class="o">=</span><span class="s">DIR_Database</span>
-<span class="na">DataPath</span><span class="o">=</span><span class="s">\${N2D2_DATA}/speech_commands_v0.02</span>
+<span class="na">DataPath</span><span class="o">=</span><span class="s">${N2D2_DATA}/speech_commands_v0.02</span>
 <span class="na">ValidExtensions</span><span class="o">=</span><span class="s">wav</span>
 <span class="na">IgnoreMasks</span><span class="o">=</span><span class="s">*/_background_noise_</span>
 <span class="na">Learn</span><span class="o">=</span><span class="s">0.6</span>
 <span class="na">Validation</span><span class="o">=</span><span class="s">0.2</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="csv-data-files">
+<h2>CSV data files<a class="headerlink" href="#csv-data-files" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CSV_Database</span></code> is a generic driver for handling CSV data files. It can be used
+to load one or several CSV files where each line is a different stimulus and one
+column contains the label.</p>
+<p>The parameters are the following:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 59%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code> [0.6]</p></td>
+<td><p>Fraction of data used for the learning</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.2]</p></td>
+<td><p>Fraction of data used for the validation</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PerLabelPartitioning</span></code> [1]</p></td>
+<td><p>If true (1), the <code class="docutils literal notranslate"><span class="pre">Learn</span></code>, <code class="docutils literal notranslate"><span class="pre">Validation</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Test</span></code> parameters represent the fraction of the
+total stimuli to be partitioned in each set,
+instead of a number of stimuli</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EquivLabelPartitioning</span></code> [1]</p></td>
+<td><p>If true (1), the stimuli are equi-partitioned in
+the learn and validation sets, meaning that the
+same number of stimuli <strong>for each label</strong> is used
+(only when <code class="docutils literal notranslate"><span class="pre">PerLabelPartitioning</span></code> is 1).
+The remaining stimuli are partitioned in the test
+set</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LabelColumn</span></code> [-1]</p></td>
+<td><p>Index of the column containing the label (if &lt; 0,
+from the end of the row)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NbHeaderLines</span></code> [0]</p></td>
+<td><p>Number of header lines to skip</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Test</span></code> [1.0-<code class="docutils literal notranslate"><span class="pre">Learn</span></code>-
+<code class="docutils literal notranslate"><span class="pre">Validation</span></code>]</p></td>
+<td><p>If <code class="docutils literal notranslate"><span class="pre">PerLabelPartitioning</span></code> is true, fraction of
+images used for the test; else, number of images
+used for the test, regardless of their labels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LoadMore</span></code> []</p></td>
+<td><p>Name of an other section with the same options to
+load a different <code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">EquivLabelPartitioning</span></code> is 1 (default setting), the number of stimuli
+per label that will be partitioned in the learn and validation sets will
+correspond to the number of stimuli from the label with the fewest stimuli.</p>
+</div>
+<div class="section" id="usage-example">
+<h3>Usage example<a class="headerlink" href="#usage-example" title="Permalink to this headline">¶</a></h3>
+<p>In this example, we load the <em>Electrical Grid Stability Simulated Data Data Set</em>
+(<a class="reference external" href="https://archive.ics.uci.edu/ml/datasets/Electrical+Grid+Stability+Simulated+Data+">https://archive.ics.uci.edu/ml/datasets/Electrical+Grid+Stability+Simulated+Data+</a>).</p>
+<p>The CSV data file (<code class="docutils literal notranslate"><span class="pre">Data_for_UCI_named.csv</span></code>) is the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;tau1&quot;</span><span class="p">,</span><span class="s2">&quot;tau2&quot;</span><span class="p">,</span><span class="s2">&quot;tau3&quot;</span><span class="p">,</span><span class="s2">&quot;tau4&quot;</span><span class="p">,</span><span class="s2">&quot;p1&quot;</span><span class="p">,</span><span class="s2">&quot;p2&quot;</span><span class="p">,</span><span class="s2">&quot;p3&quot;</span><span class="p">,</span><span class="s2">&quot;p4&quot;</span><span class="p">,</span><span class="s2">&quot;g1&quot;</span><span class="p">,</span><span class="s2">&quot;g2&quot;</span><span class="p">,</span><span class="s2">&quot;g3&quot;</span><span class="p">,</span><span class="s2">&quot;g4&quot;</span><span class="p">,</span><span class="s2">&quot;stab&quot;</span><span class="p">,</span><span class="s2">&quot;stabf&quot;</span>
+<span class="mf">2.95906002455997</span><span class="p">,</span><span class="mf">3.07988520422811</span><span class="p">,</span><span class="mf">8.38102539191882</span><span class="p">,</span><span class="mf">9.78075443222607</span><span class="p">,</span><span class="mf">3.76308477206316</span><span class="p">,</span><span class="o">-</span><span class="mf">0.782603630987543</span><span class="p">,</span><span class="o">-</span><span class="mf">1.25739482958732</span><span class="p">,</span><span class="o">-</span><span class="mf">1.7230863114883</span><span class="p">,</span><span class="mf">0.650456460887227</span><span class="p">,</span><span class="mf">0.859578105752345</span><span class="p">,</span><span class="mf">0.887444920638513</span><span class="p">,</span><span class="mf">0.958033987602737</span><span class="p">,</span><span class="mf">0.0553474891727752</span><span class="p">,</span><span class="s2">&quot;unstable&quot;</span>
+<span class="mf">9.3040972346785</span><span class="p">,</span><span class="mf">4.90252411201167</span><span class="p">,</span><span class="mf">3.04754072762177</span><span class="p">,</span><span class="mf">1.36935735529605</span><span class="p">,</span><span class="mf">5.06781210427845</span><span class="p">,</span><span class="o">-</span><span class="mf">1.94005842705193</span><span class="p">,</span><span class="o">-</span><span class="mf">1.87274168559721</span><span class="p">,</span><span class="o">-</span><span class="mf">1.25501199162931</span><span class="p">,</span><span class="mf">0.41344056837935</span><span class="p">,</span><span class="mf">0.862414076352903</span><span class="p">,</span><span class="mf">0.562139050527675</span><span class="p">,</span><span class="mf">0.781759910653126</span><span class="p">,</span><span class="o">-</span><span class="mf">0.00595746432603695</span><span class="p">,</span><span class="s2">&quot;stable&quot;</span>
+<span class="mf">8.97170690932022</span><span class="p">,</span><span class="mf">8.84842842134833</span><span class="p">,</span><span class="mf">3.04647874898866</span><span class="p">,</span><span class="mf">1.21451813833956</span><span class="p">,</span><span class="mf">3.40515818001095</span><span class="p">,</span><span class="o">-</span><span class="mf">1.20745559234302</span><span class="p">,</span><span class="o">-</span><span class="mf">1.27721014673295</span><span class="p">,</span><span class="o">-</span><span class="mf">0.92049244093498</span><span class="p">,</span><span class="mf">0.163041039311334</span><span class="p">,</span><span class="mf">0.766688656526962</span><span class="p">,</span><span class="mf">0.839444015400588</span><span class="p">,</span><span class="mf">0.109853244952427</span><span class="p">,</span><span class="mf">0.00347087904838871</span><span class="p">,</span><span class="s2">&quot;unstable&quot;</span>
+<span class="mf">0.716414776295121</span><span class="p">,</span><span class="mf">7.66959964406565</span><span class="p">,</span><span class="mf">4.48664083058949</span><span class="p">,</span><span class="mf">2.34056298396795</span><span class="p">,</span><span class="mf">3.96379106326633</span><span class="p">,</span><span class="o">-</span><span class="mf">1.02747330413905</span><span class="p">,</span><span class="o">-</span><span class="mf">1.9389441526466</span><span class="p">,</span><span class="o">-</span><span class="mf">0.997373606480681</span><span class="p">,</span><span class="mf">0.446208906537321</span><span class="p">,</span><span class="mf">0.976744082924302</span><span class="p">,</span><span class="mf">0.929380522872661</span><span class="p">,</span><span class="mf">0.36271777426931</span><span class="p">,</span><span class="mf">0.028870543444887</span><span class="p">,</span><span class="s2">&quot;unstable&quot;</span>
+<span class="mf">3.13411155161342</span><span class="p">,</span><span class="mf">7.60877161603408</span><span class="p">,</span><span class="mf">4.94375930178099</span><span class="p">,</span><span class="mf">9.85757326996638</span><span class="p">,</span><span class="mf">3.52581081652096</span><span class="p">,</span><span class="o">-</span><span class="mf">1.12553095451115</span><span class="p">,</span><span class="o">-</span><span class="mf">1.84597485447561</span><span class="p">,</span><span class="o">-</span><span class="mf">0.554305007534195</span><span class="p">,</span><span class="mf">0.797109525792467</span><span class="p">,</span><span class="mf">0.455449947148291</span><span class="p">,</span><span class="mf">0.656946658473716</span><span class="p">,</span><span class="mf">0.820923486481631</span><span class="p">,</span><span class="mf">0.0498603734837059</span><span class="p">,</span><span class="s2">&quot;unstable&quot;</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>There is one header line and the last column is the label, which is the default.</p>
+<p>This file is loaded and the data is splitted between the learning set and the
+validation set with a 0.7/0.3 ratio in the INI file with the following section:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">CSV_Database</span>
+<span class="na">Learn</span><span class="o">=</span><span class="s">0.7</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.3</span>
+<span class="na">DataPath</span><span class="o">=</span><span class="s">Data_for_UCI_named.csv</span>
+<span class="na">NbHeaderLines</span><span class="o">=</span><span class="s">1</span>
 </pre></div>
 </div>
 </div>

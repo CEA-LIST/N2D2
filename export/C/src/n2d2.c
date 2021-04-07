@@ -1487,6 +1487,7 @@ scalingcell_propagate( unsigned int nbChannels,
                    unsigned int outputsHeight,
                    unsigned int outputsWidth,
                    unsigned int nbOutputs,
+                   unsigned int outputOffset,
                    DATA_T outputs[nbOutputs][outputsHeight][outputsWidth],
                    const int32_t rescaleFactorPerOutput[nbOutputs],
                    unsigned int nbFractionalBits)
@@ -1503,11 +1504,11 @@ scalingcell_propagate( unsigned int nbChannels,
             for(unsigned int ox = 0; ox < channelsWidth; ++ox) {
 #if NB_BITS > 0
                 const size_t half = (1u << (nbFractionalBits -1));
-                outputs[output][oy][ox] 
+                outputs[output + outputOffset][oy][ox] 
                     = (inputs[output][oy][ox]*rescaleFactorPerOutput[output] 
                         + half) >> nbFractionalBits;
 #else
-                outputs[output][oy][ox]  = inputs[output][oy][ox];
+                outputs[output + outputOffset][oy][ox]  = inputs[output][oy][ox];
 #endif
             }
         }

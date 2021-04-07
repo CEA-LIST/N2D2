@@ -100,6 +100,12 @@ void N2D2::RandomAffineTransformation::applyRandomAffine(cv::Mat& mat,
 
         for (int j = 0; j < mat.cols; ++j) {
             if (gamma != 1.0) {
+                if (rowPtr[j] < 0.0) {
+#pragma omp critical(RandomAffineTransformation__applyRandomAffine)
+                    throw std::runtime_error("RandomAffineTransformation: "
+                        "cannot apply a gamma on negative numbers.");
+                }
+
                 rowPtr[j] = cv::saturate_cast<T>(gain
                     * (std::pow(rowPtr[j] / range, gamma) * range)
                                                  + bias * range);

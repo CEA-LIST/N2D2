@@ -137,6 +137,7 @@ void N2D2::C_ScalingCellExport::generateCellFunction(
         << prefix << "_OUTPUTS_HEIGHT, "
         << prefix << "_OUTPUTS_WIDTH, "
         << prefix << "_NB_OUTPUTS, "
+        << prefix << "_OUTPUT_OFFSET, "
         << outputName << ", "
         << prefix << "_SCALING_FACTOR_PER_OUTPUT, "
         << prefix << "_NB_FRACTIONAL_BITS);\n ";
