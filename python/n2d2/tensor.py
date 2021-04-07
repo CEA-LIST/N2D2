@@ -121,7 +121,7 @@ class Tensor():
         if nb_dims != self.nb_dims():
             raise ValueError("The number of dims should be " + str(self.nb_dims()) + " but is "+ str(nb_dims) + " instead.")
         if dims != self.shape():
-            raise ValueError('Dimension are'+ str(dims) + " should be "+ str(self.shape()) + " instead.")
+            raise ValueError("Dimension are "+ str(dims) + " should be "+ str(self.shape()) + " instead.")
 
         def flatten(list_to_flatten):
             if len(list_to_flatten) == 1:

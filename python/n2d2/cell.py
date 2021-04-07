@@ -346,9 +346,13 @@ class Fc(Cell):
             elif key is 'inputHeight':
                 self._connection_parameters['height'] = self._config_parameters.pop('inputHeight')
             elif key is 'mapping':
-                self._connection_parameters['mapping'] = self._config_parameters.pop('mapping').create_N2D2_mapping(nb_inputs, nb_outputs).N2D2()
-
-
+                mapping = self._config_parameters.pop('mapping')
+                if isinstance(mapping, n2d2.mapping.Mapping):
+                    self._connection_parameters['mapping'] = mapping.create_N2D2_mapping(nb_inputs, nb_outputs).N2D2()
+                elif isinstance(mapping, n2d2.Tensor):
+                    self._connection_parameters['mapping'] = mapping.N2D2()
+                else:
+                    raise WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor)), str(type(n2d2.mapping.Mapping))])
         # Set and initialize here all complex cell members
         for key, value in self._config_parameters.items():
             if key is 'activation_function':
@@ -548,7 +552,13 @@ class Conv(Cell):
 
         """Set connection and mapping parameters"""
         if 'mapping' in self._config_parameters:
-            self._connection_parameters['mapping'] = self._config_parameters.pop('mapping')
+            mapping = self._config_parameters.pop('mapping')
+            if isinstance(mapping, n2d2.mapping.Mapping):
+                self._connection_parameters['mapping'] = mapping.create_N2D2_mapping(nb_inputs, nb_outputs).N2D2()
+            elif isinstance(mapping, n2d2.Tensor):
+                self._connection_parameters['mapping'] = mapping.N2D2()
+            else:
+                raise WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor)), str(type(n2d2.mapping.Mapping))])
 
         # TODO: Add Kernel section of generator
 
@@ -828,7 +838,13 @@ class Pool(Cell):
 
         """Set connection and mapping parameters"""
         if 'mapping' in self._config_parameters:
-            self._connection_parameters['mapping'] = self._config_parameters.pop('mapping').create_N2D2_mapping(nb_inputs, nb_outputs).N2D2()
+            mapping = self._config_parameters.pop('mapping')
+            if isinstance(mapping, n2d2.mapping.Mapping):
+                self._connection_parameters['mapping'] = mapping.create_N2D2_mapping(nb_inputs, nb_outputs).N2D2()
+            elif isinstance(mapping, n2d2.Tensor):
+                self._connection_parameters['mapping'] = mapping.N2D2()
+            else:
+                raise WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor)), str(type(n2d2.mapping.Mapping))])
 
 
     @classmethod

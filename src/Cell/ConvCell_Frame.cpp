@@ -201,7 +201,9 @@ void N2D2::ConvCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsig
 {
     // NOTE: this is addition to initialize()
     Cell::initializeParameters(inputDimZ, nbInputs, mapping);
-    mMapping.append(Tensor<bool>({getNbOutputs(), inputDimZ}, true));
+    if (mMapping.empty()) {
+        mMapping.append(Tensor<bool>({getNbOutputs(), inputDimZ}, true));
+    }
 
     if (!mNoBias) {
         if (mBias->empty()) {
