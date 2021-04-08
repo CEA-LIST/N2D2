@@ -171,26 +171,32 @@ void N2D2::BitmapROI<T>::rescale(double xRatio, double yRatio)
 template <class T>
 void N2D2::BitmapROI<T>::rotate(int centerX, int centerY, double angle)
 {
-    const double ox = centerX + (mOrigin.x - centerX) * std::cos(angle)
-                              - (mOrigin.y - centerY) * std::sin(angle);
-    const double oy = centerY + (mOrigin.x - centerX) * std::sin(angle)
-                              + (mOrigin.y - centerY) * std::cos(angle);
-    mOrigin.x = Utils::round(ox);
-    mOrigin.y = Utils::round(oy);
+    const int scale = std::abs(mScale);
 
-    throw std::runtime_error("BitmapROI::rotate() not supported yet");
+    // get the center of the bitmap
+    const double cx = mOrigin.x + mData.cols * scale / 2.0;
+    const double cy = mOrigin.y + mData.rows * scale / 2.0;
 
-/* TODO
-    // get the rotation matrix
-    const cv::Point center = cv::Point(centerX, centerY);
+    // compute new, rotated center
+    const double ox = centerX + (cx - centerX) * std::cos(angle)
+                              - (cy - centerY) * std::sin(angle);
+    const double oy = centerY + (cx - centerX) * std::sin(angle)
+                              + (cy - centerY) * std::cos(angle);
+
+    // get the rotation matrix, relative to the center of bitmap
+    const cv::Point center = cv::Point(mData.cols / 2.0, mData.rows / 2.0);
     const cv::Mat rotMat
         = cv::getRotationMatrix2D(center, -Utils::radToDeg(angle), 1.0);
 
     // perform the affine transformation
     cv::Mat rotated;
-    cv::warpAffine(frame, rotated, rotMat, frame.size(),
-                    cv::INTER_LINEAR, borderType, bgColor);
-*/
+    cv::warpAffine(mData, rotated, rotMat, mData.size(),
+                    cv::INTER_NEAREST, cv::BORDER_CONSTANT, cv::Scalar(0));
+    mData = rotated;
+
+    // compute new origin
+    mOrigin.x = Utils::round(ox - mData.cols * scale / 2.0);
+    mOrigin.y = Utils::round(oy - mData.rows * scale / 2.0);
 }
 
 template <class T>
