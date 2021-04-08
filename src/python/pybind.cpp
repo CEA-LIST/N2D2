@@ -268,7 +268,14 @@ void init_QuantizerActivation_Frame_CUDA(py::module&);
 
 
 void init_N2D2(py::module& m) {
-      //utils
+    // Creating a variable to know if CUDA have been used for the compilation.
+    #ifdef CUDA
+    m.attr("cuda_compiled") = true;
+    #elif
+    m.attr("cuda_compiled") = false;
+    #endif
+    
+    //utils
     init_ConfusionMatrix(m);
     init_WindowFunction(m);
     init_Random(m);

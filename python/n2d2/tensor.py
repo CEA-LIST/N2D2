@@ -59,6 +59,8 @@ class Tensor:
         :type cell: :py:class:`n2d2.cell.Cell`, optional
         """
         self.cell = cell
+        self._datatype = datatype
+        self.is_cuda = cuda
         if cuda:
             generators = self._cuda_tensor_generators
         else:
@@ -84,8 +86,7 @@ class Tensor:
         else:
             raise TypeError("Unrecognized Tensor datatype " + str(datatype))
 
-        self._datatype = datatype
-        self.is_cuda = cuda
+        
 
     def N2D2(self):
         """

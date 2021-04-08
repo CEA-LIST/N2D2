@@ -210,17 +210,23 @@ class TensorPlaceholder(Provider):
                                                  size=dims,
                                                  batchSize=self._tensor.N2D2().dimB())
         self._set_N2D2_parameter('StreamTensor', True) 
-        self._N2D2_object.setStreamedTensor(self._tensor.N2D2())
+        self.set_streamed_tensor()
 
         self._deepnet = n2d2.deepnet.DeepNet()
         self._deepnet.set_provider(self)
 
 
-    def set_streamed_tensor(self, tensor):
-        self._N2D2_object.setStreamedTensor(tensor)
+    def set_streamed_tensor(self):
+        """
+        Streamed a tensor in a data provider to simulate the output of a database.
+        The model of the tensor is defined by the compilation of the library.
+        """
+        if N2D2.cuda_compiled and not self._tensor.is_cuda: 
+            raise ValueError("You compiled N2D2 with CUDA this doesn't match the tensor model you are providing to the network.")
+        self._N2D2_object.setStreamedTensor(self._tensor.N2D2())
 
     def __call__(self):
-        return self._tensor # TODO : Not sure about this one
+        return self._tensor
 
     def get_name(self):
         return self._name
