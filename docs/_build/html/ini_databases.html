@@ -112,6 +112,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#mnist">MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#gtsrb">GTSRB</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#directory">Directory</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#multi-channel-handling">Multi-channel handling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#speech-commands-dataset"><em>Speech Commands Dataset</em></a></li>
 </ul>
 </li>
@@ -478,6 +479,33 @@ correspond to the number of stimuli from the label with the fewest stimuli.</p>
 <span class="c1">; [database.more]</span>
 <span class="c1">; Load even more data here</span>
 </pre></div>
+</div>
+<div class="section" id="multi-channel-handling">
+<h3>Multi-channel handling<a class="headerlink" href="#multi-channel-handling" title="Permalink to this headline">¶</a></h3>
+<p>Multi-channel images are automatically handled and the default image format in
+N2D2 is <strong>BGR</strong>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">DIR_Database</span></code> can also handle multi-channel data, where each channel is stored
+in a different file. In order to be able to interpret a series of files as an
+additional data channel to a first series of files, the file names must follow
+a simple yet arbitrary naming convention. A first <code class="docutils literal notranslate"><span class="pre">DIR_Database</span></code> parameter,
+<code class="docutils literal notranslate"><span class="pre">MultiChannelMatch</span></code>, is used to match the files constituting a single
+channel. Then, a second parameter, <code class="docutils literal notranslate"><span class="pre">MultiChannelReplace</span></code> is used to indicate
+how the file names of the other channels are obtained. See the example below:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">DIR_Database</span>
+<span class="na">...</span>
+<span class="c1">; Multi-channel handling:</span>
+<span class="c1">; MultiChannelMatch is a regular expression for matching a single channel (for example the first one).</span>
+<span class="c1">; Here we match anything followed by &quot;_0&quot;, followed by &quot;.&quot; and anything except</span>
+<span class="c1">; &quot;.&quot;, so we match &quot;_0&quot; before the file extension.</span>
+<span class="na">MultiChannelMatch</span><span class="o">=</span><span class="s">(.*)_0(\.[^.]+)</span>
+<span class="c1">; Replace what we matched to obtain the file name of the different channels.</span>
+<span class="c1">; For the first channel, replace &quot;_0&quot; by &quot;_0&quot;, so the name doesn&#39;t change.</span>
+<span class="c1">; For the second channel, replace &quot;_0&quot; by &quot;_1&quot; in the file name.</span>
+<span class="c1">; To disable the second channel, replace $1_1$2 by &quot;&quot;</span>
+<span class="na">MultiChannelReplace</span><span class="o">=</span><span class="s">$1_0$2 $1_1$2</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="speech-commands-dataset">
 <h3><em>Speech Commands Dataset</em><a class="headerlink" href="#speech-commands-dataset" title="Permalink to this headline">¶</a></h3>

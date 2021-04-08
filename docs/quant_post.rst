@@ -130,19 +130,22 @@ Examples and results
 Post-training quantization accuracy obtained with some models from the ONNX 
 Model Zoo are reported in the table below, using ``-calib 1000``:
 
-+------------------------------------------------------+-----------+-------------------+-------------+
-| *ONNX Model Zoo* model (specificities)               | FP acc.   | Fake 8 bits acc.  | 8 bits acc. |
-+======================================================+===========+===================+=============+
-| resnet18v1.onnx                                      | 69.83%    | 68.82%            | 68.78%      |
-| (``-no-unsigned -act-rescaling-mode Fixed-point``)   |           |                   |             |
-+------------------------------------------------------+-----------+-------------------+-------------+
-| mobilenetv2-1.0.onnx                                 | 70.95%    | 65.40%            | 65.40%      |
-| (``mobilenetv20_output_flatten0_reshape0`` ignored)  |           |                   |             |
-+------------------------------------------------------+-----------+-------------------+-------------+
-| mobilenetv2-1.0.onnx                                 |           | 66.67%            | 66.70%      |
-| (``mobilenetv20_output_flatten0_reshape0`` ignored   |           |                   |             |
-| ``-act-rescaling-mode Fixed-point``)                 |           |                   |             |
-+------------------------------------------------------+-----------+-------------------+-------------+
++-------------------------------------------------------+-----------+-------------------+-------------+
+| *ONNX Model Zoo* model (specificities)                | FP acc.   | Fake 8 bits acc.  | 8 bits acc. |
++=======================================================+===========+===================+=============+
+| resnet18v1.onnx                                       | 69.83%    | 68.82%            | 68.78%      |
+| (``-no-unsigned -act-rescaling-mode Fixed-point``)    |           |                   |             |
++-------------------------------------------------------+-----------+-------------------+-------------+
+| mobilenetv2-1.0.onnx                                  | 70.95%    | 65.40%            | 65.40%      |
+| (``mobilenetv20_output_flatten0_reshape0`` ignored)   |           |                   |             |
++-------------------------------------------------------+-----------+-------------------+-------------+
+| mobilenetv2-1.0.onnx                                  |           | 66.67%            | 66.70%      |
+| (``mobilenetv20_output_flatten0_reshape0`` ignored    |           |                   |             |
+| ``-act-rescaling-mode Fixed-point``)                  |           |                   |             |
++-------------------------------------------------------+-----------+-------------------+-------------+
+| squeezenet/model.onnx                                 | 57.58%    | 57.11%            | 54.98%      |
+| (``-no-unsigned -act-rescaling-mode Floating-point``) |           |                   |             |
++-------------------------------------------------------+-----------+-------------------+-------------+
 
 
 - *FP acc.* is the floating point accuracy obtained before post-training

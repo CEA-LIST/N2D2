@@ -32,10 +32,18 @@ control of the DSP and memory resources, for each layer in a network.
 Globally, the FPGA resource usage can be maximized for a given network
 topology in order to minimize its latency.
 
+The main features of the DNeuro are:
+
+- Data flow architecture requiring few memory (potentially **no DDR**);
+- Very high use rate of the DSP per cycle (> 90%);
+- Configurable precision (integers from 2 to 16 bits, typically 8 bits);
+- Up to 4 MAC/DSP operations per cycle.
+
 The DNeuro is composed of specialized computing blocs, corresponding to
 specific type and configuration of layers (convolution, max pooling...),
 that can be chained to form a full neural network. The bloc allocation
 and chaining is done automatically with N2D2.
+
 
 Interface
 ~~~~~~~~~

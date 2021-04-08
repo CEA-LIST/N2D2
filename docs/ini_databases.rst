@@ -193,6 +193,38 @@ To load and partition more than one ``DataPath``, one can use the
     ; [database.more]
     ; Load even more data here
 
+    
+Multi-channel handling
+~~~~~~~~~~~~~~~~~~~~~~
+
+Multi-channel images are automatically handled and the default image format in 
+N2D2 is **BGR**.
+
+The ``DIR_Database`` can also handle multi-channel data, where each channel is stored
+in a different file. In order to be able to interpret a series of files as an 
+additional data channel to a first series of files, the file names must follow
+a simple yet arbitrary naming convention. A first ``DIR_Database`` parameter,
+``MultiChannelMatch``, is used to match the files constituting a single
+channel. Then, a second parameter, ``MultiChannelReplace`` is used to indicate
+how the file names of the other channels are obtained. See the example below:
+
+.. code-block:: ini
+
+    [database]
+    Type=DIR_Database
+    ...
+    ; Multi-channel handling:
+    ; MultiChannelMatch is a regular expression for matching a single channel (for example the first one).
+    ; Here we match anything followed by "_0", followed by "." and anything except 
+    ; ".", so we match "_0" before the file extension.
+    MultiChannelMatch=(.*)_0(\.[^.]+)
+    ; Replace what we matched to obtain the file name of the different channels.
+    ; For the first channel, replace "_0" by "_0", so the name doesn't change.
+    ; For the second channel, replace "_0" by "_1" in the file name.
+    ; To disable the second channel, replace $1_1$2 by ""
+    MultiChannelReplace=$1_0$2 $1_1$2
+
+
 *Speech Commands Dataset*
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 

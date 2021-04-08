@@ -217,6 +217,13 @@ convolutional neural networks (CNN). It allows a fine grain allocation
 control of the DSP and memory resources, for each layer in a network.
 Globally, the FPGA resource usage can be maximized for a given network
 topology in order to minimize its latency.</p>
+<p>The main features of the DNeuro are:</p>
+<ul class="simple">
+<li><p>Data flow architecture requiring few memory (potentially <strong>no DDR</strong>);</p></li>
+<li><p>Very high use rate of the DSP per cycle (&gt; 90%);</p></li>
+<li><p>Configurable precision (integers from 2 to 16 bits, typically 8 bits);</p></li>
+<li><p>Up to 4 MAC/DSP operations per cycle.</p></li>
+</ul>
 <p>The DNeuro is composed of specialized computing blocs, corresponding to
 specific type and configuration of layers (convolution, max pooling…),
 that can be chained to form a full neural network. The bloc allocation

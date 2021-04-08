@@ -221,7 +221,10 @@ frozen graph (.pb).</p>
 <p class="admonition-title">Note</p>
 <p>Make sure to use the option <code class="docutils literal notranslate"><span class="pre">--inputs-as-nchw</span></code> on the model input(s)
 because N2D2 expects NCHW inputs, but the default format in TF/Keras is
-NHWC.</p>
+NHWC. Otherwise you would typically get an error like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Error</span><span class="p">:</span> <span class="n">Unexpected</span> <span class="n">size</span> <span class="k">for</span> <span class="n">ONNX</span> <span class="nb">input</span> <span class="s2">&quot;conv2d_77_input&quot;</span><span class="p">:</span> <span class="n">got</span> <span class="mi">3</span> <span class="mi">224</span> <span class="mi">224</span>  <span class="p">,</span> <span class="n">but</span> <span class="n">StimuliProvider</span> <span class="n">provides</span> <span class="mi">224</span> <span class="mi">224</span> <span class="mi">3</span>
+</pre></div>
+</div>
 <p>The format of the exported ONNX graph from TF/Keras will depend on the
 execution platform (CPU or GPU). The default format is NHWC on CPU and
 NCHW on GPU. ONNX mandates the NCHW format for the operators, so exporting
