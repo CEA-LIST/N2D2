@@ -157,20 +157,35 @@ void N2D2::BitmapROI<T>::append(cv::Mat& labels,
 template <class T>
 void N2D2::BitmapROI<T>::rescale(double xRatio, double yRatio)
 {
+    if (mData.empty())
+        return;
+
     mOrigin.x *= xRatio;
     mOrigin.y *= yRatio;
 
-    cv::Mat resizedData;
-    cv::resize(mData,
-        resizedData,
-        cv::Size(mData.cols * xRatio, mData.rows * yRatio),
-        0.0, 0.0, cv::INTER_NEAREST);
-    mData = resizedData;
+    const cv::Size newSize(Utils::round(mData.cols * xRatio),
+                           Utils::round(mData.rows * yRatio));
+
+    if (newSize.area() > 0) {
+        cv::Mat resizedData;
+        cv::resize(mData,
+            resizedData,
+            newSize,
+            0.0, 0.0, cv::INTER_NEAREST);
+        mData = resizedData;
+    }
+    else {
+        // too small => eliminated
+        mData = cv::Mat::zeros(cv::Size(0, 0), mData.type());
+    }
 }
 
 template <class T>
 void N2D2::BitmapROI<T>::rotate(int centerX, int centerY, double angle)
 {
+    if (mData.empty())
+        return;
+
     const int scale = std::abs(mScale);
 
     // get the center of the bitmap
@@ -205,6 +220,9 @@ void N2D2::BitmapROI<T>::padCrop(int offsetX,
                                  unsigned int width,
                                  unsigned int height)
 {
+    if (mData.empty())
+        return;
+
     mOrigin.x -= offsetX;
     mOrigin.y -= offsetY;
 
@@ -252,6 +270,9 @@ template <class T>
 void N2D2::BitmapROI
     <T>::flip(unsigned int width, unsigned int height, bool hFlip, bool vFlip)
 {
+    if (mData.empty())
+        return;
+
     if (hFlip) {
         mOrigin.x = width - mOrigin.x;
         mOrigin.x -= mData.cols * std::abs(mScale);
