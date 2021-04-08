@@ -315,6 +315,13 @@ class Tensor:
 
     @classmethod
     def from_N2D2(cls, N2D2_Tensor):
+        """Convert an N2D2 tensor into a Tensor.
+
+        :param N2D2_Tensor: A numpy array to convert to a tensor.
+        :type N2D2_Tensor: :py:class:`N2D2.BaseTensor` or :py:class:`N2D2.CudaBaseTensor`
+        :return: Converted tensor
+        :rtype: :py:class:`n2d2.Tensor`
+        """
         if not isinstance(N2D2_Tensor, N2D2.BaseTensor):
             raise error_handler.WrongInputType("N2D2_Tensor", str(type(N2D2_Tensor), [str(N2D2.BaseTensor)]))
         n2d2_tensor = cls([])
@@ -323,13 +330,14 @@ class Tensor:
         n2d2_tensor.is_cuda = "CudaTensor" in str(type(N2D2_Tensor))
         return n2d2_tensor
 
-    def __setitem__(self, index, value): # TODO : Need to check the type before setting values + need to add an autocast !
+    def __setitem__(self, index, value):
         """
         Set an element of the tensor.
         To select the element to modify you can use :
             - the coordinate of the element;
             - the index of the flatten tensor;
             - a slice index of the flatten tensor. 
+        If the ``value`` type doesn't match datatype, n2d2 tries an autocast. 
         :param index: Indicate the index of the item you want to set
         :type index: tuple, int, float, slice
         :param value: The value the item will take
@@ -379,9 +387,6 @@ class Tensor:
         return self._tensor.__contains__(value)
 
     def __eq__(self, other_tensor):
-        """
-        Magic method called when comparing two tensors with the "==" operator.
-        """
         if not isinstance(other_tensor, Tensor):
             raise TypeError("You can only compare tensor with each other.")
         # Quick initialization of is_equal by checking the tensors have the same dimensions
@@ -396,24 +401,36 @@ class Tensor:
         return str(self._tensor)
 
     def detach_cell(self):
+        """
+        Detach the cell from the tensor, this allow you to pass the output of a deepnet to another one.
+        """
         self.cell = None
 
-    def set_cell(self, cell):
+    def _set_cell(self, cell):
         self.cell = cell
         return self
 
     def get_deepnet(self):
+        """
+        Method called by the cells, if the tensor is not part of a graph, it will be linked to an :py:class:`n22d.provider.Provider` object.
+        """
         if self.cell is None:
             self.cell = TensorPlaceholder(self)
         return self.cell.get_deepnet()
 
     def back_propagate(self):
+        """
+        Compute the backpropagation on the deepnet.
+        """
         # TODO: Add leaf node check
         if self.cell is None:
             raise RuntimeError('This tensor is not part of a graph')
         self.cell.get_deepnet().back_propagate()
     
     def update(self):
+        """
+        Update weights and biases of the cells.
+        """
         # TODO: Add leaf node check
         if self.cell is None:
             raise RuntimeError('This tensor is not part of a graph')
