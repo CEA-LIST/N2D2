@@ -54,7 +54,7 @@ class ActivationFunction(N2D2_Interface):
 
 class Linear(ActivationFunction):
     """
-    Linear activation function for n2d2.
+    Linear activation function.
     """
     _linear_activation_generators = {
         'Frame<float>': N2D2.LinearActivation_Frame_float,
@@ -62,6 +62,10 @@ class Linear(ActivationFunction):
     }
 
     def __init__(self, **config_parameters):
+        """
+        :param quantizer: Quantizer
+        :type quantizer: :py:class:`n2d2.quantizer.ActivationQuantizer`, optional
+        """
         ActivationFunction.__init__(self, **config_parameters)
         # No optional constructor arguments
         self._N2D2_object = self._linear_activation_generators[self._model_key]()
@@ -74,7 +78,7 @@ class Linear(ActivationFunction):
 
 class Rectifier(ActivationFunction):
     """
-    Rectifier activation function for n2d2.
+    Rectifier or ReLU activation function.
     """
     _rectifier_activation_generators = {
         'Frame<float>': N2D2.RectifierActivation_Frame_float,
@@ -82,6 +86,14 @@ class Rectifier(ActivationFunction):
     }
 
     def __init__(self, **config_parameters):
+        """
+        :param leak_slope: Leak slope for negative inputs, default=0.0
+        :type leak_slope: float, optional
+        :param clipping: Clipping value for positive outputs, default=0.0
+        :type clipping: float, optional
+        :param quantizer: Quantizer
+        :type quantizer: :py:class:`n2d2.quantizer.ActivationQuantizer`, optional
+        """
         ActivationFunction.__init__(self, **config_parameters)
         # No optional constructor arguments
         self._N2D2_object = self._rectifier_activation_generators[self._model_key]()
@@ -93,8 +105,10 @@ class Rectifier(ActivationFunction):
 
 
 class Tanh(ActivationFunction):
-    """
-    Tanh activation function for n2d2.
+    r"""
+    Tanh activation function.
+
+    Computes :math:`y = tanh(\alpha.x)`.
     """
     _tanh_activation_generators = {
         'Frame<float>': N2D2.TanhActivation_Frame_float,
@@ -102,6 +116,12 @@ class Tanh(ActivationFunction):
     }
 
     def __init__(self, **config_parameters):
+        r"""
+        :param alpha: :math:`\alpha` parameter, default=1.0
+        :type alpha: float, optional
+        :param quantizer: Quantizer
+        :type quantizer: :py:class:`n2d2.quantizer.ActivationQuantizer`, optional
+        """
         ActivationFunction.__init__(self, **config_parameters)
         # No optional constructor arguments
         self._N2D2_object = self._tanh_activation_generators[self._model_key]()

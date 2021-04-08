@@ -103,7 +103,6 @@
 <li class="toctree-l1"><a class="reference internal" href="python_api/databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_api/cells.html">Cells</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_api/tensor.html">Tensor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="python_api/activations.html">Activations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_api/deepnet.html">DeepNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_api/transformations.html">Transformations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_api/data_provider.html">Data provider</a></li>
@@ -222,8 +221,6 @@
       <li><a href="core/databases.html#N2D2.Actitracker_Database.StimuliSetMask">Actitracker_Database.StimuliSetMask (class in N2D2)</a>
 </li>
       <li><a href="core/activations.html#N2D2.Activation">Activation (class in N2D2)</a>
-</li>
-      <li><a href="python_api/activations.html#n2d2.activation.ActivationFunction">ActivationFunction (class in n2d2.activation)</a>
 </li>
       <li><a href="core/deepnet.html#N2D2.DeepNet.addCell">addCell() (N2D2.DeepNet method)</a>
 </li>
@@ -1121,7 +1118,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="core/containers.html#N2D2.BaseTensor">BaseTensor (class in N2D2)</a>
 </li>
-      <li><a href="python_api/cells.html#n2d2.cell.BatchNorm">BatchNorm (class in n2d2.cell)</a>
+      <li><a href="python_api/cells.html#n2d2.cell.BatchNorm2d">BatchNorm2d (class in n2d2.cell)</a>
 </li>
       <li><a href="core/cells.html#N2D2.BatchNormCell">BatchNormCell (class in N2D2)</a>
 </li>
@@ -1625,6 +1622,160 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="core/cells.html#N2D2.AnchorCell_Frame.clearInputTensors">clearInputTensors() (N2D2.AnchorCell_Frame method)</a>
+
+      <ul>
+        <li><a href="core/cells.html#N2D2.AnchorCell_Frame_CUDA.clearInputTensors">(N2D2.AnchorCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_double.clearInputTensors">(N2D2.BatchNormCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_float.clearInputTensors">(N2D2.BatchNormCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_double.clearInputTensors">(N2D2.BatchNormCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_float.clearInputTensors">(N2D2.BatchNormCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_CUDA_double.clearInputTensors">(N2D2.Cell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_CUDA_float.clearInputTensors">(N2D2.Cell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_double.clearInputTensors">(N2D2.Cell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_float.clearInputTensors">(N2D2.Cell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_CUDA_double.clearInputTensors">(N2D2.ConvCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_CUDA_float.clearInputTensors">(N2D2.ConvCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_double.clearInputTensors">(N2D2.ConvCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_float.clearInputTensors">(N2D2.ConvCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_CUDA_double.clearInputTensors">(N2D2.DeconvCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_CUDA_float.clearInputTensors">(N2D2.DeconvCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_double.clearInputTensors">(N2D2.DeconvCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_float.clearInputTensors">(N2D2.DeconvCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_CUDA_double.clearInputTensors">(N2D2.DropoutCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_CUDA_float.clearInputTensors">(N2D2.DropoutCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_double.clearInputTensors">(N2D2.DropoutCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_float.clearInputTensors">(N2D2.DropoutCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell_Frame.clearInputTensors">(N2D2.ElemWiseCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell_Frame_CUDA.clearInputTensors">(N2D2.ElemWiseCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_CUDA_double.clearInputTensors">(N2D2.FcCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_CUDA_float.clearInputTensors">(N2D2.FcCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_double.clearInputTensors">(N2D2.FcCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_float.clearInputTensors">(N2D2.FcCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell_Frame.clearInputTensors">(N2D2.FMPCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell_Frame_CUDA.clearInputTensors">(N2D2.FMPCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_CUDA_double.clearInputTensors">(N2D2.LRNCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_CUDA_float.clearInputTensors">(N2D2.LRNCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_double.clearInputTensors">(N2D2.LRNCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_float.clearInputTensors">(N2D2.LRNCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell_Frame_CUDA_double.clearInputTensors">(N2D2.LSTMCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell_Frame_CUDA_float.clearInputTensors">(N2D2.LSTMCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_CUDA_double.clearInputTensors">(N2D2.NormalizeCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_CUDA_float.clearInputTensors">(N2D2.NormalizeCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_double.clearInputTensors">(N2D2.NormalizeCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_float.clearInputTensors">(N2D2.NormalizeCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell_Frame.clearInputTensors">(N2D2.ObjectDetCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell_Frame_CUDA.clearInputTensors">(N2D2.ObjectDetCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell_Frame.clearInputTensors">(N2D2.PaddingCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell_Frame_CUDA.clearInputTensors">(N2D2.PaddingCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_CUDA_double.clearInputTensors">(N2D2.PoolCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_CUDA_float.clearInputTensors">(N2D2.PoolCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_double.clearInputTensors">(N2D2.PoolCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_EXT_CUDA_double.clearInputTensors">(N2D2.PoolCell_Frame_EXT_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_EXT_CUDA_float.clearInputTensors">(N2D2.PoolCell_Frame_EXT_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_float.clearInputTensors">(N2D2.PoolCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell_Frame.clearInputTensors">(N2D2.ProposalCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell_Frame_CUDA.clearInputTensors">(N2D2.ProposalCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell_Frame.clearInputTensors">(N2D2.ResizeCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell_Frame_CUDA.clearInputTensors">(N2D2.ResizeCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell_Frame.clearInputTensors">(N2D2.ROIPoolingCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell_Frame_CUDA.clearInputTensors">(N2D2.ROIPoolingCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell_Frame.clearInputTensors">(N2D2.RPCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell_Frame_CUDA.clearInputTensors">(N2D2.RPCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_CUDA_double.clearInputTensors">(N2D2.ScalingCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_CUDA_float.clearInputTensors">(N2D2.ScalingCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_double.clearInputTensors">(N2D2.ScalingCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_float.clearInputTensors">(N2D2.ScalingCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_CUDA_double.clearInputTensors">(N2D2.SoftmaxCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_CUDA_float.clearInputTensors">(N2D2.SoftmaxCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_double.clearInputTensors">(N2D2.SoftmaxCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_float.clearInputTensors">(N2D2.SoftmaxCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_CUDA_double.clearInputTensors">(N2D2.TargetBiasCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_CUDA_float.clearInputTensors">(N2D2.TargetBiasCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_double.clearInputTensors">(N2D2.TargetBiasCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_float.clearInputTensors">(N2D2.TargetBiasCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell_Frame.clearInputTensors">(N2D2.ThresholdCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell_Frame_CUDA.clearInputTensors">(N2D2.ThresholdCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell_Frame.clearInputTensors">(N2D2.TransformationCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell_Frame_CUDA.clearInputTensors">(N2D2.TransformationCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell_Frame.clearInputTensors">(N2D2.UnpoolCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.clearInputTensors">(N2D2.UnpoolCell_Frame_CUDA method)</a>
+</li>
+      </ul></li>
       <li><a href="core/transformation.html#N2D2.ColorSpaceTransformation">ColorSpaceTransformation (class in N2D2)</a>
 </li>
       <li><a href="core/transformation.html#N2D2.ColorSpaceTransformation.ColorSpace">ColorSpaceTransformation.ColorSpace (class in N2D2)</a>
@@ -1634,6 +1785,8 @@
       <li><a href="core/transformation.html#N2D2.CompositeTransformation">CompositeTransformation (class in N2D2)</a>
 </li>
       <li><a href="core/transformation.html#N2D2.CompressionNoiseTransformation">CompressionNoiseTransformation (class in N2D2)</a>
+</li>
+      <li><a href="python_api/cells.html#n2d2.filler.Constant">Constant (class in n2d2.filler)</a>
 </li>
       <li><a href="python_api/cells.html#n2d2.cell.Conv">Conv (class in n2d2.cell)</a>
 </li>
@@ -1699,23 +1852,21 @@
 </li>
       <li><a href="core/cells.html#N2D2.ConvCell_Spike_RRAM.WeightsExportFormat">ConvCell_Spike_RRAM.WeightsExportFormat (class in N2D2)</a>
 </li>
-      <li><a href="python_api/tensor.html#n2d2.CudaTensor.copy">copy() (n2d2.CudaTensor method)</a>
-
-      <ul>
-        <li><a href="python_api/tensor.html#n2d2.Tensor.copy">(n2d2.Tensor method)</a>
+      <li><a href="python_api/tensor.html#n2d2.Tensor.copy">copy() (n2d2.Tensor method)</a>
 </li>
-      </ul></li>
+      <li><a href="python_api/tensor.html#n2d2.Tensor.cpu">cpu() (n2d2.Tensor method)</a>
+</li>
       <li><a href="core/deepnet.html#N2D2.DeepNet.cReset">cReset() (N2D2.DeepNet method)</a>
 </li>
       <li><a href="core/deepnet.html#N2D2.DeepNet.cTargetsProcess">cTargetsProcess() (N2D2.DeepNet method)</a>
 </li>
       <li><a href="core/deepnet.html#N2D2.DeepNet.cTicks">cTicks() (N2D2.DeepNet method)</a>
 </li>
+      <li><a href="python_api/tensor.html#n2d2.Tensor.cuda">cuda() (n2d2.Tensor method)</a>
+</li>
       <li><a href="core/containers.html#N2D2.CudaBaseDeviceTensor">CudaBaseDeviceTensor (class in N2D2)</a>
 </li>
       <li><a href="core/containers.html#N2D2.CudaBaseTensor">CudaBaseTensor (class in N2D2)</a>
-</li>
-      <li><a href="python_api/tensor.html#n2d2.CudaTensor">CudaTensor (class in n2d2)</a>
 </li>
       <li><a href="core/containers.html#N2D2.CudaTensor_double">CudaTensor_double (class in N2D2)</a>
 </li>
@@ -1748,6 +1899,8 @@
       <li><a href="python_api/data_provider.html#n2d2.provider.DataProvider">DataProvider (class in n2d2.provider)</a>
 </li>
       <li><a href="core/transformation.html#N2D2.DCTTransformation">DCTTransformation (class in N2D2)</a>
+</li>
+      <li><a href="python_api/cells.html#n2d2.cell.Deconv">Deconv (class in n2d2.cell)</a>
 </li>
       <li><a href="core/cells.html#N2D2.DeconvCell">DeconvCell (class in N2D2)</a>
 </li>
@@ -1857,6 +2010,8 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="python_api/cells.html#n2d2.cell.ElemWise">ElemWise (class in n2d2.cell)</a>
+</li>
       <li><a href="core/cells.html#N2D2.ElemWiseCell">ElemWiseCell (class in N2D2)</a>
 </li>
       <li><a href="core/cells.html#N2D2.ElemWiseCell.FreeParametersType">ElemWiseCell.FreeParametersType (class in N2D2)</a>
@@ -2235,7 +2390,7 @@
         <li><a href="python_api/interoperability.html#n2d2.pytorch.LayerN2D2.forward">(n2d2.pytorch.LayerN2D2 method)</a>
 </li>
       </ul></li>
-      <li><a href="python_api/tensor.html#n2d2.Tensor.from_numpy">from_numpy() (n2d2.Tensor method)</a>
+      <li><a href="python_api/tensor.html#n2d2.Tensor.from_numpy">from_numpy() (n2d2.Tensor class method)</a>
 </li>
       <li><a href="core/deepnet.html#N2D2.DeepNet.fuseBatchNormWithConv">fuseBatchNormWithConv() (N2D2.DeepNet method)</a>
 </li>
@@ -2245,12 +2400,36 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="python_api/data_provider.html#n2d2.provider.DataProvider.get_batch_size">get_batch_size() (n2d2.provider.DataProvider method)</a>
+</li>
       <li><a href="python_api/data_provider.html#n2d2.provider.DataProvider.get_data">get_data() (n2d2.provider.DataProvider method)</a>
 </li>
       <li><a href="python_api/data_provider.html#n2d2.provider.DataProvider.get_database">get_database() (n2d2.provider.DataProvider method)</a>
 </li>
+      <li><a href="python_api/databases.html#n2d2.database.Database.get_label_name">get_label_name() (n2d2.database.Database method)</a>
+
+      <ul>
+        <li><a href="python_api/databases.html#n2d2.database.DIR.get_label_name">(n2d2.database.DIR method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.database.ILSVRC2012.get_label_name">(n2d2.database.ILSVRC2012 method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.database.MNIST.get_label_name">(n2d2.database.MNIST method)</a>
+</li>
+      </ul></li>
       <li><a href="python_api/data_provider.html#n2d2.provider.DataProvider.get_name">get_name() (n2d2.provider.DataProvider method)</a>
 </li>
+      <li><a href="python_api/cells.html#n2d2.cell.Conv.get_weight">get_weight() (n2d2.cell.Conv method)</a>
+
+      <ul>
+        <li><a href="python_api/cells.html#n2d2.cell.Fc.get_weight">(n2d2.cell.Fc method)</a>
+</li>
+      </ul></li>
+      <li><a href="python_api/cells.html#n2d2.cell.Conv.get_weights">get_weights() (n2d2.cell.Conv method)</a>
+
+      <ul>
+        <li><a href="python_api/cells.html#n2d2.cell.Fc.get_weights">(n2d2.cell.Fc method)</a>
+</li>
+      </ul></li>
       <li><a href="core/cells.html#N2D2.AnchorCell_Frame.getActivation">getActivation() (N2D2.AnchorCell_Frame method)</a>
 
       <ul>
@@ -3491,6 +3670,454 @@
         <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.getInputs">(N2D2.UnpoolCell_Frame_CUDA method)</a>
 </li>
       </ul></li>
+      <li><a href="core/cells.html#N2D2.AnchorCell.getInputsDims">getInputsDims() (N2D2.AnchorCell method)</a>
+
+      <ul>
+        <li><a href="core/cells.html#N2D2.AnchorCell_Frame.getInputsDims">(N2D2.AnchorCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.AnchorCell_Frame_CUDA.getInputsDims">(N2D2.AnchorCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell.getInputsDims">(N2D2.BatchNormCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_double.getInputsDims">(N2D2.BatchNormCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_float.getInputsDims">(N2D2.BatchNormCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_double.getInputsDims">(N2D2.BatchNormCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_float.getInputsDims">(N2D2.BatchNormCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell.getInputsDims">(N2D2.Cell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_CUDA_double.getInputsDims">(N2D2.Cell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_CUDA_float.getInputsDims">(N2D2.Cell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_double.getInputsDims">(N2D2.Cell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_float.getInputsDims">(N2D2.Cell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Spike.getInputsDims">(N2D2.Cell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell.getInputsDims">(N2D2.ConvCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_CUDA_double.getInputsDims">(N2D2.ConvCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_CUDA_float.getInputsDims">(N2D2.ConvCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_double.getInputsDims">(N2D2.ConvCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_float.getInputsDims">(N2D2.ConvCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike.getInputsDims">(N2D2.ConvCell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike_Analog.getInputsDims">(N2D2.ConvCell_Spike_Analog method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike_PCM.getInputsDims">(N2D2.ConvCell_Spike_PCM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike_RRAM.getInputsDims">(N2D2.ConvCell_Spike_RRAM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell.getInputsDims">(N2D2.DeconvCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_CUDA_double.getInputsDims">(N2D2.DeconvCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_CUDA_float.getInputsDims">(N2D2.DeconvCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_double.getInputsDims">(N2D2.DeconvCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_float.getInputsDims">(N2D2.DeconvCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell.getInputsDims">(N2D2.DropoutCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_CUDA_double.getInputsDims">(N2D2.DropoutCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_CUDA_float.getInputsDims">(N2D2.DropoutCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_double.getInputsDims">(N2D2.DropoutCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_float.getInputsDims">(N2D2.DropoutCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell.getInputsDims">(N2D2.ElemWiseCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell_Frame.getInputsDims">(N2D2.ElemWiseCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell_Frame_CUDA.getInputsDims">(N2D2.ElemWiseCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell.getInputsDims">(N2D2.FcCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_CUDA_double.getInputsDims">(N2D2.FcCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_CUDA_float.getInputsDims">(N2D2.FcCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_double.getInputsDims">(N2D2.FcCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_float.getInputsDims">(N2D2.FcCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike.getInputsDims">(N2D2.FcCell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike_Analog.getInputsDims">(N2D2.FcCell_Spike_Analog method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike_PCM.getInputsDims">(N2D2.FcCell_Spike_PCM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike_RRAM.getInputsDims">(N2D2.FcCell_Spike_RRAM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell.getInputsDims">(N2D2.FMPCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell_Frame.getInputsDims">(N2D2.FMPCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell_Frame_CUDA.getInputsDims">(N2D2.FMPCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell.getInputsDims">(N2D2.LRNCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_CUDA_double.getInputsDims">(N2D2.LRNCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_CUDA_float.getInputsDims">(N2D2.LRNCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_double.getInputsDims">(N2D2.LRNCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_float.getInputsDims">(N2D2.LRNCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell.getInputsDims">(N2D2.LSTMCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell_Frame_CUDA_double.getInputsDims">(N2D2.LSTMCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell_Frame_CUDA_float.getInputsDims">(N2D2.LSTMCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell.getInputsDims">(N2D2.NormalizeCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_CUDA_double.getInputsDims">(N2D2.NormalizeCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_CUDA_float.getInputsDims">(N2D2.NormalizeCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_double.getInputsDims">(N2D2.NormalizeCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_float.getInputsDims">(N2D2.NormalizeCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell.getInputsDims">(N2D2.ObjectDetCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell_Frame.getInputsDims">(N2D2.ObjectDetCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell_Frame_CUDA.getInputsDims">(N2D2.ObjectDetCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell.getInputsDims">(N2D2.PaddingCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell_Frame.getInputsDims">(N2D2.PaddingCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell_Frame_CUDA.getInputsDims">(N2D2.PaddingCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell.getInputsDims">(N2D2.PoolCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_CUDA_double.getInputsDims">(N2D2.PoolCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_CUDA_float.getInputsDims">(N2D2.PoolCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_double.getInputsDims">(N2D2.PoolCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_EXT_CUDA_double.getInputsDims">(N2D2.PoolCell_Frame_EXT_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_EXT_CUDA_float.getInputsDims">(N2D2.PoolCell_Frame_EXT_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_float.getInputsDims">(N2D2.PoolCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Spike.getInputsDims">(N2D2.PoolCell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell.getInputsDims">(N2D2.ProposalCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell_Frame.getInputsDims">(N2D2.ProposalCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell_Frame_CUDA.getInputsDims">(N2D2.ProposalCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell.getInputsDims">(N2D2.ResizeCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell_Frame.getInputsDims">(N2D2.ResizeCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell_Frame_CUDA.getInputsDims">(N2D2.ResizeCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell.getInputsDims">(N2D2.ROIPoolingCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell_Frame.getInputsDims">(N2D2.ROIPoolingCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell_Frame_CUDA.getInputsDims">(N2D2.ROIPoolingCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell.getInputsDims">(N2D2.RPCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell_Frame.getInputsDims">(N2D2.RPCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell_Frame_CUDA.getInputsDims">(N2D2.RPCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell.getInputsDims">(N2D2.ScalingCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_CUDA_double.getInputsDims">(N2D2.ScalingCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_CUDA_float.getInputsDims">(N2D2.ScalingCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_double.getInputsDims">(N2D2.ScalingCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_float.getInputsDims">(N2D2.ScalingCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell.getInputsDims">(N2D2.SoftmaxCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_CUDA_double.getInputsDims">(N2D2.SoftmaxCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_CUDA_float.getInputsDims">(N2D2.SoftmaxCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_double.getInputsDims">(N2D2.SoftmaxCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_float.getInputsDims">(N2D2.SoftmaxCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell.getInputsDims">(N2D2.TargetBiasCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_CUDA_double.getInputsDims">(N2D2.TargetBiasCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_CUDA_float.getInputsDims">(N2D2.TargetBiasCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_double.getInputsDims">(N2D2.TargetBiasCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_float.getInputsDims">(N2D2.TargetBiasCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell.getInputsDims">(N2D2.ThresholdCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell_Frame.getInputsDims">(N2D2.ThresholdCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell_Frame_CUDA.getInputsDims">(N2D2.ThresholdCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell.getInputsDims">(N2D2.TransformationCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell_Frame.getInputsDims">(N2D2.TransformationCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell_Frame_CUDA.getInputsDims">(N2D2.TransformationCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell.getInputsDims">(N2D2.UnpoolCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell_Frame.getInputsDims">(N2D2.UnpoolCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.getInputsDims">(N2D2.UnpoolCell_Frame_CUDA method)</a>
+</li>
+      </ul></li>
+      <li><a href="core/cells.html#N2D2.AnchorCell.getInputsSize">getInputsSize() (N2D2.AnchorCell method)</a>
+
+      <ul>
+        <li><a href="core/cells.html#N2D2.AnchorCell_Frame.getInputsSize">(N2D2.AnchorCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.AnchorCell_Frame_CUDA.getInputsSize">(N2D2.AnchorCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell.getInputsSize">(N2D2.BatchNormCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_double.getInputsSize">(N2D2.BatchNormCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_float.getInputsSize">(N2D2.BatchNormCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_double.getInputsSize">(N2D2.BatchNormCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_float.getInputsSize">(N2D2.BatchNormCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell.getInputsSize">(N2D2.Cell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_CUDA_double.getInputsSize">(N2D2.Cell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_CUDA_float.getInputsSize">(N2D2.Cell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_double.getInputsSize">(N2D2.Cell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_float.getInputsSize">(N2D2.Cell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Spike.getInputsSize">(N2D2.Cell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell.getInputsSize">(N2D2.ConvCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_CUDA_double.getInputsSize">(N2D2.ConvCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_CUDA_float.getInputsSize">(N2D2.ConvCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_double.getInputsSize">(N2D2.ConvCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_float.getInputsSize">(N2D2.ConvCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike.getInputsSize">(N2D2.ConvCell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike_Analog.getInputsSize">(N2D2.ConvCell_Spike_Analog method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike_PCM.getInputsSize">(N2D2.ConvCell_Spike_PCM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike_RRAM.getInputsSize">(N2D2.ConvCell_Spike_RRAM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell.getInputsSize">(N2D2.DeconvCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_CUDA_double.getInputsSize">(N2D2.DeconvCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_CUDA_float.getInputsSize">(N2D2.DeconvCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_double.getInputsSize">(N2D2.DeconvCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_float.getInputsSize">(N2D2.DeconvCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell.getInputsSize">(N2D2.DropoutCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_CUDA_double.getInputsSize">(N2D2.DropoutCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_CUDA_float.getInputsSize">(N2D2.DropoutCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_double.getInputsSize">(N2D2.DropoutCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_float.getInputsSize">(N2D2.DropoutCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell.getInputsSize">(N2D2.ElemWiseCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell_Frame.getInputsSize">(N2D2.ElemWiseCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell_Frame_CUDA.getInputsSize">(N2D2.ElemWiseCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell.getInputsSize">(N2D2.FcCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_CUDA_double.getInputsSize">(N2D2.FcCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_CUDA_float.getInputsSize">(N2D2.FcCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_double.getInputsSize">(N2D2.FcCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_float.getInputsSize">(N2D2.FcCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike.getInputsSize">(N2D2.FcCell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike_Analog.getInputsSize">(N2D2.FcCell_Spike_Analog method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike_PCM.getInputsSize">(N2D2.FcCell_Spike_PCM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike_RRAM.getInputsSize">(N2D2.FcCell_Spike_RRAM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell.getInputsSize">(N2D2.FMPCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell_Frame.getInputsSize">(N2D2.FMPCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell_Frame_CUDA.getInputsSize">(N2D2.FMPCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell.getInputsSize">(N2D2.LRNCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_CUDA_double.getInputsSize">(N2D2.LRNCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_CUDA_float.getInputsSize">(N2D2.LRNCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_double.getInputsSize">(N2D2.LRNCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_float.getInputsSize">(N2D2.LRNCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell.getInputsSize">(N2D2.LSTMCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell_Frame_CUDA_double.getInputsSize">(N2D2.LSTMCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell_Frame_CUDA_float.getInputsSize">(N2D2.LSTMCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell.getInputsSize">(N2D2.NormalizeCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_CUDA_double.getInputsSize">(N2D2.NormalizeCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_CUDA_float.getInputsSize">(N2D2.NormalizeCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_double.getInputsSize">(N2D2.NormalizeCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_float.getInputsSize">(N2D2.NormalizeCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell.getInputsSize">(N2D2.ObjectDetCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell_Frame.getInputsSize">(N2D2.ObjectDetCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell_Frame_CUDA.getInputsSize">(N2D2.ObjectDetCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell.getInputsSize">(N2D2.PaddingCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell_Frame.getInputsSize">(N2D2.PaddingCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell_Frame_CUDA.getInputsSize">(N2D2.PaddingCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell.getInputsSize">(N2D2.PoolCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_CUDA_double.getInputsSize">(N2D2.PoolCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_CUDA_float.getInputsSize">(N2D2.PoolCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_double.getInputsSize">(N2D2.PoolCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_EXT_CUDA_double.getInputsSize">(N2D2.PoolCell_Frame_EXT_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_EXT_CUDA_float.getInputsSize">(N2D2.PoolCell_Frame_EXT_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_float.getInputsSize">(N2D2.PoolCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Spike.getInputsSize">(N2D2.PoolCell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell.getInputsSize">(N2D2.ProposalCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell_Frame.getInputsSize">(N2D2.ProposalCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell_Frame_CUDA.getInputsSize">(N2D2.ProposalCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell.getInputsSize">(N2D2.ResizeCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell_Frame.getInputsSize">(N2D2.ResizeCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell_Frame_CUDA.getInputsSize">(N2D2.ResizeCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell.getInputsSize">(N2D2.ROIPoolingCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell_Frame.getInputsSize">(N2D2.ROIPoolingCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell_Frame_CUDA.getInputsSize">(N2D2.ROIPoolingCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell.getInputsSize">(N2D2.RPCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell_Frame.getInputsSize">(N2D2.RPCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell_Frame_CUDA.getInputsSize">(N2D2.RPCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell.getInputsSize">(N2D2.ScalingCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_CUDA_double.getInputsSize">(N2D2.ScalingCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_CUDA_float.getInputsSize">(N2D2.ScalingCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_double.getInputsSize">(N2D2.ScalingCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_float.getInputsSize">(N2D2.ScalingCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell.getInputsSize">(N2D2.SoftmaxCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_CUDA_double.getInputsSize">(N2D2.SoftmaxCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_CUDA_float.getInputsSize">(N2D2.SoftmaxCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_double.getInputsSize">(N2D2.SoftmaxCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_float.getInputsSize">(N2D2.SoftmaxCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell.getInputsSize">(N2D2.TargetBiasCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_CUDA_double.getInputsSize">(N2D2.TargetBiasCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_CUDA_float.getInputsSize">(N2D2.TargetBiasCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_double.getInputsSize">(N2D2.TargetBiasCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_float.getInputsSize">(N2D2.TargetBiasCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell.getInputsSize">(N2D2.ThresholdCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell_Frame.getInputsSize">(N2D2.ThresholdCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell_Frame_CUDA.getInputsSize">(N2D2.ThresholdCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell.getInputsSize">(N2D2.TransformationCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell_Frame.getInputsSize">(N2D2.TransformationCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell_Frame_CUDA.getInputsSize">(N2D2.TransformationCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell.getInputsSize">(N2D2.UnpoolCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell_Frame.getInputsSize">(N2D2.UnpoolCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.getInputsSize">(N2D2.UnpoolCell_Frame_CUDA method)</a>
+</li>
+      </ul></li>
       <li><a href="core/cells.html#N2D2.ConvCell.getKernelHeight">getKernelHeight() (N2D2.ConvCell method)</a>
 
       <ul>
@@ -3549,6 +4176,58 @@
         <li><a href="core/cells.html#N2D2.DeconvCell_Frame_double.getKernelWidth">(N2D2.DeconvCell_Frame_double method)</a>
 </li>
         <li><a href="core/cells.html#N2D2.DeconvCell_Frame_float.getKernelWidth">(N2D2.DeconvCell_Frame_float method)</a>
+</li>
+      </ul></li>
+      <li><a href="core/databases.html#N2D2.Actitracker_Database.getLabelName">getLabelName() (N2D2.Actitracker_Database method)</a>
+
+      <ul>
+        <li><a href="core/databases.html#N2D2.AER_Database.getLabelName">(N2D2.AER_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.Caltech101_DIR_Database.getLabelName">(N2D2.Caltech101_DIR_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.Caltech256_DIR_Database.getLabelName">(N2D2.Caltech256_DIR_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.CaltechPedestrian_Database.getLabelName">(N2D2.CaltechPedestrian_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.CelebA_Database.getLabelName">(N2D2.CelebA_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.CIFAR_Database.getLabelName">(N2D2.CIFAR_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.CKP_Database.getLabelName">(N2D2.CKP_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.Daimler_Database.getLabelName">(N2D2.Daimler_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.Database.getLabelName">(N2D2.Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.DIR_Database.getLabelName">(N2D2.DIR_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.DOTA_Database.getLabelName">(N2D2.DOTA_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.Fashion_MNIST_IDX_Database.getLabelName">(N2D2.Fashion_MNIST_IDX_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.FDDB_Database.getLabelName">(N2D2.FDDB_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.GTSDB_DIR_Database.getLabelName">(N2D2.GTSDB_DIR_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.GTSRB_DIR_Database.getLabelName">(N2D2.GTSRB_DIR_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.IDX_Database.getLabelName">(N2D2.IDX_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.ILSVRC2012_Database.getLabelName">(N2D2.ILSVRC2012_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.IMDBWIKI_Database.getLabelName">(N2D2.IMDBWIKI_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.KITTI_Database.getLabelName">(N2D2.KITTI_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.KITTI_Object_Database.getLabelName">(N2D2.KITTI_Object_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.KITTI_Road_Database.getLabelName">(N2D2.KITTI_Road_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.LITISRouen_Database.getLabelName">(N2D2.LITISRouen_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.MNIST_IDX_Database.getLabelName">(N2D2.MNIST_IDX_Database method)</a>
+</li>
+        <li><a href="core/databases.html#N2D2.N_MNIST_Database.getLabelName">(N2D2.N_MNIST_Database method)</a>
 </li>
       </ul></li>
       <li><a href="core/target.html#N2D2.Target.getLabelTarget">getLabelTarget() (N2D2.Target method)</a>
@@ -3779,6 +4458,8 @@
         <li><a href="core/cells.html#N2D2.DeconvCell_Frame_double.getName">(N2D2.DeconvCell_Frame_double method)</a>
 </li>
         <li><a href="core/cells.html#N2D2.DeconvCell_Frame_float.getName">(N2D2.DeconvCell_Frame_float method)</a>
+</li>
+        <li><a href="core/deepnet.html#N2D2.DeepNet.getName">(N2D2.DeepNet method)</a>
 </li>
         <li><a href="core/cells.html#N2D2.DropoutCell.getName">(N2D2.DropoutCell method)</a>
 </li>
@@ -4175,6 +4856,8 @@
         <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.getNbChannels">(N2D2.UnpoolCell_Frame_CUDA method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="core/cells.html#N2D2.AnchorCell.getNbOutputs">getNbOutputs() (N2D2.AnchorCell method)</a>
 
       <ul>
@@ -4451,8 +5134,6 @@
         <li><a href="core/databases.html#N2D2.N_MNIST_Database.getNbStimuli">(N2D2.N_MNIST_Database method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="core/target.html#N2D2.Target.getNbTargets">getNbTargets() (N2D2.Target method)</a>
 </li>
       <li><a href="core/deepnet.html#N2D2.DeepNet.getNetwork">getNetwork() (N2D2.DeepNet method)</a>
@@ -6501,6 +7182,8 @@
         <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.getType">(N2D2.UnpoolCell_Frame_CUDA method)</a>
 </li>
       </ul></li>
+      <li><a href="core/containers.html#N2D2.BaseTensor.getTypeName">getTypeName() (N2D2.BaseTensor method)</a>
+</li>
       <li><a href="core/cells.html#N2D2.ConvCell.getWeight">getWeight() (N2D2.ConvCell method)</a>
 
       <ul>
@@ -6626,6 +7309,10 @@
 
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="python_api/cells.html#n2d2.filler.He">He (class in n2d2.filler)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="core/containers.html#N2D2.CudaBaseTensor.hostBased">hostBased() (N2D2.CudaBaseTensor method)</a>
 </li>
@@ -7103,8 +7790,6 @@
         <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.importFreeParameters">(N2D2.UnpoolCell_Frame_CUDA method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="core/deepnet.html#N2D2.DeepNet.importNetworkFreeParameters">importNetworkFreeParameters() (N2D2.DeepNet method)</a>
 </li>
       <li><a href="core/cells.html#N2D2.AnchorCell.initialize">initialize() (N2D2.AnchorCell method)</a>
@@ -7333,8 +8018,458 @@
         <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.initialize">(N2D2.UnpoolCell_Frame_CUDA method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="core/deepnet.html#N2D2.DeepNet.initializeCMonitors">initializeCMonitors() (N2D2.DeepNet method)</a>
 </li>
+      <li><a href="core/cells.html#N2D2.AnchorCell.initializeDataDependent">initializeDataDependent() (N2D2.AnchorCell method)</a>
+
+      <ul>
+        <li><a href="core/cells.html#N2D2.AnchorCell_Frame.initializeDataDependent">(N2D2.AnchorCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.AnchorCell_Frame_CUDA.initializeDataDependent">(N2D2.AnchorCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell.initializeDataDependent">(N2D2.BatchNormCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_double.initializeDataDependent">(N2D2.BatchNormCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_float.initializeDataDependent">(N2D2.BatchNormCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_double.initializeDataDependent">(N2D2.BatchNormCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_float.initializeDataDependent">(N2D2.BatchNormCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell.initializeDataDependent">(N2D2.Cell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_CUDA_double.initializeDataDependent">(N2D2.Cell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_CUDA_float.initializeDataDependent">(N2D2.Cell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_double.initializeDataDependent">(N2D2.Cell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_float.initializeDataDependent">(N2D2.Cell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Spike.initializeDataDependent">(N2D2.Cell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell.initializeDataDependent">(N2D2.ConvCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_CUDA_double.initializeDataDependent">(N2D2.ConvCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_CUDA_float.initializeDataDependent">(N2D2.ConvCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_double.initializeDataDependent">(N2D2.ConvCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_float.initializeDataDependent">(N2D2.ConvCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike.initializeDataDependent">(N2D2.ConvCell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike_Analog.initializeDataDependent">(N2D2.ConvCell_Spike_Analog method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike_PCM.initializeDataDependent">(N2D2.ConvCell_Spike_PCM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike_RRAM.initializeDataDependent">(N2D2.ConvCell_Spike_RRAM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell.initializeDataDependent">(N2D2.DeconvCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_CUDA_double.initializeDataDependent">(N2D2.DeconvCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_CUDA_float.initializeDataDependent">(N2D2.DeconvCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_double.initializeDataDependent">(N2D2.DeconvCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_float.initializeDataDependent">(N2D2.DeconvCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell.initializeDataDependent">(N2D2.DropoutCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_CUDA_double.initializeDataDependent">(N2D2.DropoutCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_CUDA_float.initializeDataDependent">(N2D2.DropoutCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_double.initializeDataDependent">(N2D2.DropoutCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_float.initializeDataDependent">(N2D2.DropoutCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell.initializeDataDependent">(N2D2.ElemWiseCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell_Frame.initializeDataDependent">(N2D2.ElemWiseCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell_Frame_CUDA.initializeDataDependent">(N2D2.ElemWiseCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell.initializeDataDependent">(N2D2.FcCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_CUDA_double.initializeDataDependent">(N2D2.FcCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_CUDA_float.initializeDataDependent">(N2D2.FcCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_double.initializeDataDependent">(N2D2.FcCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_float.initializeDataDependent">(N2D2.FcCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike.initializeDataDependent">(N2D2.FcCell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike_Analog.initializeDataDependent">(N2D2.FcCell_Spike_Analog method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike_PCM.initializeDataDependent">(N2D2.FcCell_Spike_PCM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike_RRAM.initializeDataDependent">(N2D2.FcCell_Spike_RRAM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell.initializeDataDependent">(N2D2.FMPCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell_Frame.initializeDataDependent">(N2D2.FMPCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell_Frame_CUDA.initializeDataDependent">(N2D2.FMPCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell.initializeDataDependent">(N2D2.LRNCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_CUDA_double.initializeDataDependent">(N2D2.LRNCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_CUDA_float.initializeDataDependent">(N2D2.LRNCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_double.initializeDataDependent">(N2D2.LRNCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_float.initializeDataDependent">(N2D2.LRNCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell.initializeDataDependent">(N2D2.LSTMCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell_Frame_CUDA_double.initializeDataDependent">(N2D2.LSTMCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell_Frame_CUDA_float.initializeDataDependent">(N2D2.LSTMCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell.initializeDataDependent">(N2D2.NormalizeCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_CUDA_double.initializeDataDependent">(N2D2.NormalizeCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_CUDA_float.initializeDataDependent">(N2D2.NormalizeCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_double.initializeDataDependent">(N2D2.NormalizeCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_float.initializeDataDependent">(N2D2.NormalizeCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell.initializeDataDependent">(N2D2.ObjectDetCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell_Frame.initializeDataDependent">(N2D2.ObjectDetCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell_Frame_CUDA.initializeDataDependent">(N2D2.ObjectDetCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell.initializeDataDependent">(N2D2.PaddingCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell_Frame.initializeDataDependent">(N2D2.PaddingCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell_Frame_CUDA.initializeDataDependent">(N2D2.PaddingCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell.initializeDataDependent">(N2D2.PoolCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_CUDA_double.initializeDataDependent">(N2D2.PoolCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_CUDA_float.initializeDataDependent">(N2D2.PoolCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_double.initializeDataDependent">(N2D2.PoolCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_EXT_CUDA_double.initializeDataDependent">(N2D2.PoolCell_Frame_EXT_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_EXT_CUDA_float.initializeDataDependent">(N2D2.PoolCell_Frame_EXT_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_float.initializeDataDependent">(N2D2.PoolCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Spike.initializeDataDependent">(N2D2.PoolCell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell.initializeDataDependent">(N2D2.ProposalCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell_Frame.initializeDataDependent">(N2D2.ProposalCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell_Frame_CUDA.initializeDataDependent">(N2D2.ProposalCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell.initializeDataDependent">(N2D2.ResizeCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell_Frame.initializeDataDependent">(N2D2.ResizeCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell_Frame_CUDA.initializeDataDependent">(N2D2.ResizeCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell.initializeDataDependent">(N2D2.ROIPoolingCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell_Frame.initializeDataDependent">(N2D2.ROIPoolingCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell_Frame_CUDA.initializeDataDependent">(N2D2.ROIPoolingCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell.initializeDataDependent">(N2D2.RPCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell_Frame.initializeDataDependent">(N2D2.RPCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell_Frame_CUDA.initializeDataDependent">(N2D2.RPCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell.initializeDataDependent">(N2D2.ScalingCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_CUDA_double.initializeDataDependent">(N2D2.ScalingCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_CUDA_float.initializeDataDependent">(N2D2.ScalingCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_double.initializeDataDependent">(N2D2.ScalingCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_float.initializeDataDependent">(N2D2.ScalingCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell.initializeDataDependent">(N2D2.SoftmaxCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_CUDA_double.initializeDataDependent">(N2D2.SoftmaxCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_CUDA_float.initializeDataDependent">(N2D2.SoftmaxCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_double.initializeDataDependent">(N2D2.SoftmaxCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_float.initializeDataDependent">(N2D2.SoftmaxCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell.initializeDataDependent">(N2D2.TargetBiasCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_CUDA_double.initializeDataDependent">(N2D2.TargetBiasCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_CUDA_float.initializeDataDependent">(N2D2.TargetBiasCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_double.initializeDataDependent">(N2D2.TargetBiasCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_float.initializeDataDependent">(N2D2.TargetBiasCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell.initializeDataDependent">(N2D2.ThresholdCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell_Frame.initializeDataDependent">(N2D2.ThresholdCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell_Frame_CUDA.initializeDataDependent">(N2D2.ThresholdCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell.initializeDataDependent">(N2D2.TransformationCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell_Frame.initializeDataDependent">(N2D2.TransformationCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell_Frame_CUDA.initializeDataDependent">(N2D2.TransformationCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell.initializeDataDependent">(N2D2.UnpoolCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell_Frame.initializeDataDependent">(N2D2.UnpoolCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.initializeDataDependent">(N2D2.UnpoolCell_Frame_CUDA method)</a>
+</li>
+      </ul></li>
+      <li><a href="core/cells.html#N2D2.AnchorCell.initializeParameters">initializeParameters() (N2D2.AnchorCell method)</a>
+
+      <ul>
+        <li><a href="core/cells.html#N2D2.AnchorCell_Frame.initializeParameters">(N2D2.AnchorCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.AnchorCell_Frame_CUDA.initializeParameters">(N2D2.AnchorCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell.initializeParameters">(N2D2.BatchNormCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_double.initializeParameters">(N2D2.BatchNormCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_float.initializeParameters">(N2D2.BatchNormCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_double.initializeParameters">(N2D2.BatchNormCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_float.initializeParameters">(N2D2.BatchNormCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell.initializeParameters">(N2D2.Cell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_CUDA_double.initializeParameters">(N2D2.Cell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_CUDA_float.initializeParameters">(N2D2.Cell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_double.initializeParameters">(N2D2.Cell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_float.initializeParameters">(N2D2.Cell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Spike.initializeParameters">(N2D2.Cell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell.initializeParameters">(N2D2.ConvCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_CUDA_double.initializeParameters">(N2D2.ConvCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_CUDA_float.initializeParameters">(N2D2.ConvCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_double.initializeParameters">(N2D2.ConvCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_float.initializeParameters">(N2D2.ConvCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike.initializeParameters">(N2D2.ConvCell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike_Analog.initializeParameters">(N2D2.ConvCell_Spike_Analog method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike_PCM.initializeParameters">(N2D2.ConvCell_Spike_PCM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Spike_RRAM.initializeParameters">(N2D2.ConvCell_Spike_RRAM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell.initializeParameters">(N2D2.DeconvCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_CUDA_double.initializeParameters">(N2D2.DeconvCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_CUDA_float.initializeParameters">(N2D2.DeconvCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_double.initializeParameters">(N2D2.DeconvCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_float.initializeParameters">(N2D2.DeconvCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell.initializeParameters">(N2D2.DropoutCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_CUDA_double.initializeParameters">(N2D2.DropoutCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_CUDA_float.initializeParameters">(N2D2.DropoutCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_double.initializeParameters">(N2D2.DropoutCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_float.initializeParameters">(N2D2.DropoutCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell.initializeParameters">(N2D2.ElemWiseCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell_Frame.initializeParameters">(N2D2.ElemWiseCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell_Frame_CUDA.initializeParameters">(N2D2.ElemWiseCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell.initializeParameters">(N2D2.FcCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_CUDA_double.initializeParameters">(N2D2.FcCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_CUDA_float.initializeParameters">(N2D2.FcCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_double.initializeParameters">(N2D2.FcCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_float.initializeParameters">(N2D2.FcCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike.initializeParameters">(N2D2.FcCell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike_Analog.initializeParameters">(N2D2.FcCell_Spike_Analog method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike_PCM.initializeParameters">(N2D2.FcCell_Spike_PCM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Spike_RRAM.initializeParameters">(N2D2.FcCell_Spike_RRAM method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell.initializeParameters">(N2D2.FMPCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell_Frame.initializeParameters">(N2D2.FMPCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell_Frame_CUDA.initializeParameters">(N2D2.FMPCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell.initializeParameters">(N2D2.LRNCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_CUDA_double.initializeParameters">(N2D2.LRNCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_CUDA_float.initializeParameters">(N2D2.LRNCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_double.initializeParameters">(N2D2.LRNCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_float.initializeParameters">(N2D2.LRNCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell.initializeParameters">(N2D2.LSTMCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell_Frame_CUDA_double.initializeParameters">(N2D2.LSTMCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell_Frame_CUDA_float.initializeParameters">(N2D2.LSTMCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell.initializeParameters">(N2D2.NormalizeCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_CUDA_double.initializeParameters">(N2D2.NormalizeCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_CUDA_float.initializeParameters">(N2D2.NormalizeCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_double.initializeParameters">(N2D2.NormalizeCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_float.initializeParameters">(N2D2.NormalizeCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell.initializeParameters">(N2D2.ObjectDetCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell_Frame.initializeParameters">(N2D2.ObjectDetCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell_Frame_CUDA.initializeParameters">(N2D2.ObjectDetCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell.initializeParameters">(N2D2.PaddingCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell_Frame.initializeParameters">(N2D2.PaddingCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell_Frame_CUDA.initializeParameters">(N2D2.PaddingCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell.initializeParameters">(N2D2.PoolCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_CUDA_double.initializeParameters">(N2D2.PoolCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_CUDA_float.initializeParameters">(N2D2.PoolCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_double.initializeParameters">(N2D2.PoolCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_EXT_CUDA_double.initializeParameters">(N2D2.PoolCell_Frame_EXT_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_EXT_CUDA_float.initializeParameters">(N2D2.PoolCell_Frame_EXT_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_float.initializeParameters">(N2D2.PoolCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Spike.initializeParameters">(N2D2.PoolCell_Spike method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell.initializeParameters">(N2D2.ProposalCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell_Frame.initializeParameters">(N2D2.ProposalCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell_Frame_CUDA.initializeParameters">(N2D2.ProposalCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell.initializeParameters">(N2D2.ResizeCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell_Frame.initializeParameters">(N2D2.ResizeCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell_Frame_CUDA.initializeParameters">(N2D2.ResizeCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell.initializeParameters">(N2D2.ROIPoolingCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell_Frame.initializeParameters">(N2D2.ROIPoolingCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell_Frame_CUDA.initializeParameters">(N2D2.ROIPoolingCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell.initializeParameters">(N2D2.RPCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell_Frame.initializeParameters">(N2D2.RPCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell_Frame_CUDA.initializeParameters">(N2D2.RPCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell.initializeParameters">(N2D2.ScalingCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_CUDA_double.initializeParameters">(N2D2.ScalingCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_CUDA_float.initializeParameters">(N2D2.ScalingCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_double.initializeParameters">(N2D2.ScalingCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_float.initializeParameters">(N2D2.ScalingCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell.initializeParameters">(N2D2.SoftmaxCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_CUDA_double.initializeParameters">(N2D2.SoftmaxCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_CUDA_float.initializeParameters">(N2D2.SoftmaxCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_double.initializeParameters">(N2D2.SoftmaxCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_float.initializeParameters">(N2D2.SoftmaxCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell.initializeParameters">(N2D2.TargetBiasCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_CUDA_double.initializeParameters">(N2D2.TargetBiasCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_CUDA_float.initializeParameters">(N2D2.TargetBiasCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_double.initializeParameters">(N2D2.TargetBiasCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_float.initializeParameters">(N2D2.TargetBiasCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell.initializeParameters">(N2D2.ThresholdCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell_Frame.initializeParameters">(N2D2.ThresholdCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell_Frame_CUDA.initializeParameters">(N2D2.ThresholdCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell.initializeParameters">(N2D2.TransformationCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell_Frame.initializeParameters">(N2D2.TransformationCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell_Frame_CUDA.initializeParameters">(N2D2.TransformationCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell.initializeParameters">(N2D2.UnpoolCell method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell_Frame.initializeParameters">(N2D2.UnpoolCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.initializeParameters">(N2D2.UnpoolCell_Frame_CUDA method)</a>
+</li>
+      </ul></li>
       <li><a href="core/containers.html#N2D2.BaseTensor.isValid">isValid() (N2D2.BaseTensor method)</a>
 </li>
   </ul></td>
@@ -7377,7 +8512,7 @@
 </li>
       <li><a href="python_api/interoperability.html#n2d2.pytorch.LayerN2D2">LayerN2D2 (class in n2d2.pytorch)</a>
 </li>
-      <li><a href="python_api/activations.html#n2d2.activation.Linear">Linear (class in n2d2.activation)</a>
+      <li><a href="python_api/cells.html#n2d2.activation.Linear">Linear (class in n2d2.activation)</a>
 </li>
       <li><a href="core/activations.html#N2D2.LinearActivation">LinearActivation (class in N2D2)</a>
 </li>
@@ -7389,6 +8524,160 @@
 </li>
       <li><a href="core/activations.html#N2D2.LinearActivation_Frame_float">LinearActivation_Frame_float (class in N2D2)</a>
 </li>
+      <li><a href="core/cells.html#N2D2.AnchorCell_Frame.linkInput">linkInput() (N2D2.AnchorCell_Frame method)</a>
+
+      <ul>
+        <li><a href="core/cells.html#N2D2.AnchorCell_Frame_CUDA.linkInput">(N2D2.AnchorCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_double.linkInput">(N2D2.BatchNormCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_float.linkInput">(N2D2.BatchNormCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_double.linkInput">(N2D2.BatchNormCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_float.linkInput">(N2D2.BatchNormCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_CUDA_double.linkInput">(N2D2.Cell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_CUDA_float.linkInput">(N2D2.Cell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_double.linkInput">(N2D2.Cell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.Cell_Frame_float.linkInput">(N2D2.Cell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_CUDA_double.linkInput">(N2D2.ConvCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_CUDA_float.linkInput">(N2D2.ConvCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_double.linkInput">(N2D2.ConvCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ConvCell_Frame_float.linkInput">(N2D2.ConvCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_CUDA_double.linkInput">(N2D2.DeconvCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_CUDA_float.linkInput">(N2D2.DeconvCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_double.linkInput">(N2D2.DeconvCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DeconvCell_Frame_float.linkInput">(N2D2.DeconvCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_CUDA_double.linkInput">(N2D2.DropoutCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_CUDA_float.linkInput">(N2D2.DropoutCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_double.linkInput">(N2D2.DropoutCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_float.linkInput">(N2D2.DropoutCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell_Frame.linkInput">(N2D2.ElemWiseCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ElemWiseCell_Frame_CUDA.linkInput">(N2D2.ElemWiseCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_CUDA_double.linkInput">(N2D2.FcCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_CUDA_float.linkInput">(N2D2.FcCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_double.linkInput">(N2D2.FcCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FcCell_Frame_float.linkInput">(N2D2.FcCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell_Frame.linkInput">(N2D2.FMPCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.FMPCell_Frame_CUDA.linkInput">(N2D2.FMPCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_CUDA_double.linkInput">(N2D2.LRNCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_CUDA_float.linkInput">(N2D2.LRNCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_double.linkInput">(N2D2.LRNCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LRNCell_Frame_float.linkInput">(N2D2.LRNCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell_Frame_CUDA_double.linkInput">(N2D2.LSTMCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.LSTMCell_Frame_CUDA_float.linkInput">(N2D2.LSTMCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_CUDA_double.linkInput">(N2D2.NormalizeCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_CUDA_float.linkInput">(N2D2.NormalizeCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_double.linkInput">(N2D2.NormalizeCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.NormalizeCell_Frame_float.linkInput">(N2D2.NormalizeCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell_Frame.linkInput">(N2D2.ObjectDetCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ObjectDetCell_Frame_CUDA.linkInput">(N2D2.ObjectDetCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell_Frame.linkInput">(N2D2.PaddingCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PaddingCell_Frame_CUDA.linkInput">(N2D2.PaddingCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_CUDA_double.linkInput">(N2D2.PoolCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_CUDA_float.linkInput">(N2D2.PoolCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_double.linkInput">(N2D2.PoolCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_EXT_CUDA_double.linkInput">(N2D2.PoolCell_Frame_EXT_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_EXT_CUDA_float.linkInput">(N2D2.PoolCell_Frame_EXT_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.PoolCell_Frame_float.linkInput">(N2D2.PoolCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell_Frame.linkInput">(N2D2.ProposalCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ProposalCell_Frame_CUDA.linkInput">(N2D2.ProposalCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell_Frame.linkInput">(N2D2.ResizeCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ResizeCell_Frame_CUDA.linkInput">(N2D2.ResizeCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell_Frame.linkInput">(N2D2.ROIPoolingCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ROIPoolingCell_Frame_CUDA.linkInput">(N2D2.ROIPoolingCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell_Frame.linkInput">(N2D2.RPCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.RPCell_Frame_CUDA.linkInput">(N2D2.RPCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_CUDA_double.linkInput">(N2D2.ScalingCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_CUDA_float.linkInput">(N2D2.ScalingCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_double.linkInput">(N2D2.ScalingCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ScalingCell_Frame_float.linkInput">(N2D2.ScalingCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_CUDA_double.linkInput">(N2D2.SoftmaxCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_CUDA_float.linkInput">(N2D2.SoftmaxCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_double.linkInput">(N2D2.SoftmaxCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_float.linkInput">(N2D2.SoftmaxCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_CUDA_double.linkInput">(N2D2.TargetBiasCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_CUDA_float.linkInput">(N2D2.TargetBiasCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_double.linkInput">(N2D2.TargetBiasCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_float.linkInput">(N2D2.TargetBiasCell_Frame_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell_Frame.linkInput">(N2D2.ThresholdCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.ThresholdCell_Frame_CUDA.linkInput">(N2D2.ThresholdCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell_Frame.linkInput">(N2D2.TransformationCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.TransformationCell_Frame_CUDA.linkInput">(N2D2.TransformationCell_Frame_CUDA method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell_Frame.linkInput">(N2D2.UnpoolCell_Frame method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.linkInput">(N2D2.UnpoolCell_Frame_CUDA method)</a>
+</li>
+      </ul></li>
       <li><a href="core/databases.html#N2D2.LITISRouen_Database">LITISRouen_Database (class in N2D2)</a>
 </li>
       <li><a href="core/databases.html#N2D2.LITISRouen_Database.StimuliSet">LITISRouen_Database.StimuliSet (class in N2D2)</a>
@@ -7677,6 +8966,10 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="python_api/deepnet.html#n2d2.deepnet.DeepNet.load_from_INI">load_from_INI() (in module n2d2.deepnet.DeepNet)</a>
+</li>
+      <li><a href="python_api/deepnet.html#n2d2.deepnet.DeepNet.load_from_ONNX">load_from_ONNX() (in module n2d2.deepnet.DeepNet)</a>
+</li>
       <li><a href="core/databases.html#N2D2.Daimler_Database.loadDir">loadDir() (N2D2.Daimler_Database method)</a>
 
       <ul>
@@ -7815,22 +9108,24 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="python_api/activations.html#n2d2.activation.ActivationFunction.N2D2">N2D2() (n2d2.activation.ActivationFunction method)</a>
+      <li><a href="python_api/cells.html#n2d2.activation.Linear.N2D2">N2D2() (n2d2.activation.Linear method)</a>
 
       <ul>
-        <li><a href="python_api/activations.html#n2d2.activation.Linear.N2D2">(n2d2.activation.Linear method)</a>
+        <li><a href="python_api/cells.html#n2d2.activation.Rectifier.N2D2">(n2d2.activation.Rectifier method)</a>
 </li>
-        <li><a href="python_api/activations.html#n2d2.activation.Rectifier.N2D2">(n2d2.activation.Rectifier method)</a>
+        <li><a href="python_api/cells.html#n2d2.activation.Tanh.N2D2">(n2d2.activation.Tanh method)</a>
 </li>
-        <li><a href="python_api/activations.html#n2d2.activation.Tanh.N2D2">(n2d2.activation.Tanh method)</a>
-</li>
-        <li><a href="python_api/cells.html#n2d2.cell.BatchNorm.N2D2">(n2d2.cell.BatchNorm method)</a>
+        <li><a href="python_api/cells.html#n2d2.cell.BatchNorm2d.N2D2">(n2d2.cell.BatchNorm2d method)</a>
 </li>
         <li><a href="python_api/cells.html#n2d2.cell.Cell.N2D2">(n2d2.cell.Cell method)</a>
 </li>
         <li><a href="python_api/cells.html#n2d2.cell.Conv.N2D2">(n2d2.cell.Conv method)</a>
 </li>
+        <li><a href="python_api/cells.html#n2d2.cell.Deconv.N2D2">(n2d2.cell.Deconv method)</a>
+</li>
         <li><a href="python_api/cells.html#n2d2.cell.Dropout.N2D2">(n2d2.cell.Dropout method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.cell.ElemWise.N2D2">(n2d2.cell.ElemWise method)</a>
 </li>
         <li><a href="python_api/cells.html#n2d2.cell.Fc.N2D2">(n2d2.cell.Fc method)</a>
 </li>
@@ -7850,7 +9145,17 @@
 </li>
         <li><a href="python_api/databases.html#n2d2.database.MNIST.N2D2">(n2d2.database.MNIST method)</a>
 </li>
+        <li><a href="python_api/cells.html#n2d2.filler.Constant.N2D2">(n2d2.filler.Constant method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.filler.He.N2D2">(n2d2.filler.He method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.filler.Normal.N2D2">(n2d2.filler.Normal method)</a>
+</li>
         <li><a href="python_api/data_provider.html#n2d2.provider.DataProvider.N2D2">(n2d2.provider.DataProvider method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.solver.SGD.N2D2">(n2d2.solver.SGD method)</a>
+</li>
+        <li><a href="python_api/tensor.html#n2d2.Tensor.N2D2">(n2d2.Tensor method)</a>
 </li>
         <li><a href="python_api/transformations.html#n2d2.transform.Composite.N2D2">(n2d2.transform.Composite method)</a>
 </li>
@@ -8445,7 +9750,19 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="python_api/tensor.html#n2d2.Tensor.nb_dims">nb_dims() (n2d2.Tensor method)</a>
+</li>
       <li><a href="core/containers.html#N2D2.BaseTensor.nbDims">nbDims() (N2D2.BaseTensor method)</a>
+</li>
+      <li><a href="core/containers.html#N2D2.Tensor_bool.newCuda">newCuda() (N2D2.Tensor_bool method)</a>
+
+      <ul>
+        <li><a href="core/containers.html#N2D2.Tensor_double.newCuda">(N2D2.Tensor_double method)</a>
+</li>
+        <li><a href="core/containers.html#N2D2.Tensor_float.newCuda">(N2D2.Tensor_float method)</a>
+</li>
+      </ul></li>
+      <li><a href="python_api/cells.html#n2d2.filler.Normal">Normal (class in n2d2.filler)</a>
 </li>
       <li><a href="core/cells.html#N2D2.NormalizeCell">NormalizeCell (class in N2D2)</a>
 </li>
@@ -8541,6 +9858,16 @@
 </li>
       <li><a href="core/cells.html#N2D2.PaddingCell_Frame_CUDA.Signals">PaddingCell_Frame_CUDA.Signals (class in N2D2)</a>
 </li>
+      <li><a href="python_api/databases.html#n2d2.database.Database.partition_stimuli">partition_stimuli() (n2d2.database.Database method)</a>
+
+      <ul>
+        <li><a href="python_api/databases.html#n2d2.database.DIR.partition_stimuli">(n2d2.database.DIR method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.database.ILSVRC2012.partition_stimuli">(n2d2.database.ILSVRC2012 method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.database.MNIST.partition_stimuli">(n2d2.database.MNIST method)</a>
+</li>
+      </ul></li>
       <li><a href="python_api/cells.html#n2d2.cell.Pool">Pool (class in n2d2.cell)</a>
 </li>
       <li><a href="core/cells.html#N2D2.PoolCell">PoolCell (class in N2D2)</a>
@@ -8799,6 +10126,8 @@
 </li>
       <li><a href="core/transformation.html#N2D2.RangeClippingTransformation">RangeClippingTransformation (class in N2D2)</a>
 </li>
+      <li><a href="python_api/data_provider.html#n2d2.provider.DataProvider.read_batch">read_batch() (n2d2.provider.DataProvider method)</a>
+</li>
       <li><a href="python_api/data_provider.html#n2d2.provider.DataProvider.read_random_batch">read_random_batch() (n2d2.provider.DataProvider method)</a>
 </li>
       <li><a href="core/stimuliprovider.html#N2D2.StimuliProvider.readBatch">readBatch() (N2D2.StimuliProvider method)</a>
@@ -8807,7 +10136,7 @@
 </li>
       <li><a href="core/stimuliprovider.html#N2D2.StimuliProvider.readRandomStimulus">readRandomStimulus() (N2D2.StimuliProvider method)</a>
 </li>
-      <li><a href="python_api/activations.html#n2d2.activation.Rectifier">Rectifier (class in n2d2.activation)</a>
+      <li><a href="python_api/cells.html#n2d2.activation.Rectifier">Rectifier (class in n2d2.activation)</a>
 </li>
       <li><a href="core/activations.html#N2D2.RectifierActivation">RectifierActivation (class in N2D2)</a>
 </li>
@@ -8847,10 +10176,10 @@
 </li>
       <li><a href="core/cells.html#N2D2.ResizeCell.FreeParametersType">ResizeCell.FreeParametersType (class in N2D2)</a>
 </li>
-      <li><a href="core/cells.html#N2D2.ResizeCell.ResizeMode">ResizeCell.ResizeMode (class in N2D2)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="core/cells.html#N2D2.ResizeCell.ResizeMode">ResizeCell.ResizeMode (class in N2D2)</a>
+</li>
       <li><a href="core/cells.html#N2D2.ResizeCell_Frame">ResizeCell_Frame (class in N2D2)</a>
 </li>
       <li><a href="core/cells.html#N2D2.ResizeCell_Frame.FreeParametersType">ResizeCell_Frame.FreeParametersType (class in N2D2)</a>
@@ -9395,6 +10724,16 @@
 </li>
       <li><a href="core/cells.html#N2D2.ScalingCell_Frame_float.Signals">ScalingCell_Frame_float.Signals (class in N2D2)</a>
 </li>
+      <li><a href="python_api/data_provider.html#n2d2.provider.DataProvider.set_reading_randomly">set_reading_randomly() (n2d2.provider.DataProvider method)</a>
+</li>
+      <li><a href="python_api/tensor.html#n2d2.Tensor.set_values">set_values() (n2d2.Tensor method)</a>
+</li>
+      <li><a href="python_api/cells.html#n2d2.cell.Conv.set_weight">set_weight() (n2d2.cell.Conv method)</a>
+
+      <ul>
+        <li><a href="python_api/cells.html#n2d2.cell.Fc.set_weight">(n2d2.cell.Fc method)</a>
+</li>
+      </ul></li>
       <li><a href="core/cells.html#N2D2.AnchorCell_Frame.setActivation">setActivation() (N2D2.AnchorCell_Frame method)</a>
 
       <ul>
@@ -10947,6 +12286,8 @@
         <li><a href="core/cells.html#N2D2.FcCell_Spike_RRAM.setWeightsSolver">(N2D2.FcCell_Spike_RRAM method)</a>
 </li>
       </ul></li>
+      <li><a href="python_api/cells.html#n2d2.solver.SGD">SGD (class in n2d2.solver)</a>
+</li>
       <li><a href="python_api/tensor.html#n2d2.Tensor.shape">shape() (n2d2.Tensor method)</a>
 </li>
       <li><a href="core/containers.html#N2D2.BaseTensor.size">size() (N2D2.BaseTensor method)</a>
@@ -11027,7 +12368,7 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="python_api/activations.html#n2d2.activation.Tanh">Tanh (class in n2d2.activation)</a>
+      <li><a href="python_api/cells.html#n2d2.activation.Tanh">Tanh (class in n2d2.activation)</a>
 </li>
       <li><a href="core/activations.html#N2D2.TanhActivation">TanhActivation (class in N2D2)</a>
 </li>

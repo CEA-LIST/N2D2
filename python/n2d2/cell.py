@@ -316,6 +316,9 @@ class Cell(N2D2_Interface):
 
 
 class Fc(Cell):
+    """
+    Fully connected layer.
+    """
 
     _type = "Fc"
 
@@ -330,16 +333,22 @@ class Fc(Cell):
         :type nb_outputs: int
         :param name: Name fo the cell.
         :type name: str
-        :param activation_function: Activation function used by the cell.
-        :type activation_function: :py:class:`n2d2.activation.Activation`, optional
+        :param activation_function: Activation function, default=:py:class:`n2d2.activation.Tanh`
+        :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param weights_solver: Solver for weights
         :type weights_solver: :py:class:`n2d2.solver.Solver`, optional
         :param bias_solver: Solver for biases
         :type bias_solver: :py:class:`n2d2.solver.Solver`, optional
-        :param weights_filler: Algorithm used to fill the weights.
+        :param weights_filler: Weights initial values filler.
         :type weights_filler: :py:class:`n2d2.filler.Filler`, optional
-        :param bias_filler: Algorithm used to fill the biases.
+        :param bias_filler: Biases initial values filler.
         :type bias_filler: :py:class:`n2d2.filler.Filler`, optional
+        :param mapping: Mapping
+        :type mapping: :py:class:`n2d2.tensor.Tensor`
+        :param no_bias: If True, don’t use bias, default=False
+        :type no_bias: bool, optional
+        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
+        :type  from_arguments: bool, optional
         """
 
         if not from_arguments and (nb_inputs is not None or nb_outputs is not None or len(config_parameters) > 0):
@@ -515,6 +524,9 @@ class Fc(Cell):
 
 # TODO: This is less powerful than the generator, in the sense that it does not accept several formats for the stride, conv, etc.
 class Conv(Cell):
+    """
+    Convolutional layer.
+    """
     _type = "Conv"
 
     _cell_constructors = {
@@ -531,22 +543,40 @@ class Conv(Cell):
                  from_arguments=True,
                  **config_parameters):
         """
-        :param nb_outputs: Number of outputs of the cell.
+        :param nb_outputs: Number of output channels
         :type nb_outputs: int
-        :param name: Name fo the cell.
+        :param name: Name for the cell.
         :type name: str
         :param kernel_dims: Kernel dimension.
         :type kernel_dims: list
-        :param sub_sample_dims: TODO
+        :param sub_sample_dims: Dimension of the subsampling factor of the output feature maps
         :type sub_sample_dims: list, optional
-        :param stride_dims: Size of the stride
+        :param stride_dims: Dimension of the stride of the kernel.
         :type stride_dims: list, optional
-        :param padding_dims: TODO
+        :param padding_dims: Dimensions of the padding.
         :type padding_dims: list, optional
-        :param dilation_dims: TODO
+        :param dilation_dims: Dimensions of the dilation of the kernels 
         :type dilation_dims: list, optional
-        :param noBias: TODO
-        :type dilation_dims: list, optional 
+        :param activation_function: Activation function, default=:py:class:`n2d2.activation.Tanh`
+        :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
+        :param mapping: Mapping
+        :type mapping: :py:class:`n2d2.tensor.Tensor`
+        :param weights_filler: Weights initial values filler, default=NormalFiller
+        :type weights_filler: :py:class:`n2d2.filler.Filler`, optional
+        :param bias_filler: Biases initial values filler, default=NormalFiller
+        :type bias_filler: :py:class:`n2d2.filler.Filler`, optional
+        :param weights_solver: Solver for weights
+        :type weights_solver: :py:class:`n2d2.solver.Solver`, optional
+        :param bias_solver: Solver for biases
+        :type bias_solver: :py:class:`n2d2.solver.Solver`, optional
+        :param no_bias: If True, don’t use bias, default=False
+        :type no_bias: bool, optional
+        :param weights_export_flip: If true, import/export flipped kernels, default=False
+        :type weights_export_flip: bool, optional
+        :param back_propagate: If true, enable backpropagation, default=True
+        :type back_propagate: bool, optional
+        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
+        :type  from_arguments: bool, optional
         """
 
         if not from_arguments and (nb_inputs is not None or nb_outputs is not None or kernel_dims is not None or len(config_parameters) > 0):
@@ -753,6 +783,9 @@ class ConvPointWise(Conv):
 
 
 class Softmax(Cell):
+    """
+    Softmax layer.
+    """
 
     _type = "Softmax"
 
@@ -764,7 +797,18 @@ class Softmax(Cell):
     }
 
     def __init__(self, from_arguments=True, **config_parameters):
-
+        r"""
+        :param nb_outputs: Number of output channels
+        :type nb_outputs: int
+        :param name: Name for the cell.
+        :type name: str
+        :param with_loss: Softmax followed with a multinomial logistic layer, default=False
+        :type with_loss: bool, optional
+        :param group_size: Softmax is applied on groups of outputs. The group size must be a divisor of ``nb_outputs`` parameter, default=0
+        :type group_size: int, optional
+        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
+        :type  from_arguments: bool, optional
+        """
         if not from_arguments and len(config_parameters) > 0:
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nb_outputs' or 'config parameters' not None")
@@ -829,6 +873,9 @@ class Softmax(Cell):
 
 
 class Pool(Cell):
+    '''
+    Pooling layer.
+    '''
     _type = 'Pool'
 
     _cell_constructors = {
@@ -840,6 +887,20 @@ class Pool(Cell):
                  pool_dims,
                  from_arguments=True,
                  **config_parameters):
+        r"""
+        :param pool_dims: Pooling area dimensions
+        :type pool_dims: list
+        :param pooling: Type of pooling (``Max`` or ``Average``), default="Max" 
+        :type pooling : str, optional
+        :param stride_dims: Dimension of the stride of the kernel.
+        :type stride_dims: list, optional
+        :param padding_dims: Dimensions of the padding.
+        :type padding_dims: list, optional
+        :param activation_function: Activation function, default=:py:class:`n2d2.activation.Linear`
+        :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
+        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
+        :type  from_arguments: bool, optional
+        """
 
         if not from_arguments and (pool_dims is not None or len(config_parameters) > 0):
             raise RuntimeError(
@@ -1067,7 +1128,9 @@ class GlobalPool2d(Cell):
 
 # TODO: This is less powerful than the generator, in the sense that it does not accept several formats for the stride, conv, etc.
 class Deconv(Cell):
-
+    """
+    Deconvolution layer.
+    """
     _cell_constructors = {
         'Frame<float>': N2D2.DeconvCell_Frame_float,
         'Frame_CUDA<float>': N2D2.DeconvCell_Frame_CUDA_float,
@@ -1082,20 +1145,38 @@ class Deconv(Cell):
                  from_arguments=True,
                  **config_parameters):
         """
-        :param nb_outputs: Number of outputs of the cell.
+        :param nb_outputs: Number of output channels
         :type nb_outputs: int
-        :param name: Name fo the cell.
+        :param name: Name for the cell.
         :type name: str
         :param kernel_dims: Kernel dimension.
         :type kernel_dims: list
-        :param sub_sample_dims: TODO
+        :param sub_sample_dims: Dimension of the subsampling factor of the output feature maps
         :type sub_sample_dims: list, optional
-        :param stride_dims: TODO
+        :param stride_dims: Dimension of the stride of the kernel.
         :type stride_dims: list, optional
-        :param padding_dims: TODO
+        :param padding_dims: Dimensions of the padding.
         :type padding_dims: list, optional
-        :param dilation_dims: TODO
+        :param dilation_dims: Dimensions of the dilation of the kernels 
         :type dilation_dims: list, optional
+        :param activation_function: Activation function, default=:py:class:`n2d2.activation.Tanh`
+        :type activation_function::py:class:`n2d2.activation.ActivationFunction`, optional
+        :param weights_filler: Weights initial values filler, default=NormalFiller
+        :type weights_filler: :py:class:`n2d2.filler.Filler`, optional
+        :param bias_filler: Biases initial values filler, default=NormalFiller
+        :type bias_filler: :py:class:`n2d2.filler.Filler`, optional
+        :param weights_solver: Solver for weights
+        :type weights_solver: :py:class:`n2d2.solver.Solver`, optional
+        :param bias_solver: Solver for biases
+        :type bias_solver: :py:class:`n2d2.solver.Solver`, optional
+        :param no_bias: If True, don’t use bias, default=False
+        :type no_bias: bool, optional
+        :param back_propagate: If True, enable backpropagation, default=True
+        :type back_propagate: bool, optional
+        :param weights_export_flip: If true, import/export flipped kernels, default=False
+        :type weights_export_flip: bool, optional
+        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
+        :type  from_arguments: bool, optional
         """
 
         if not from_arguments and (nb_outputs is not None or kernel_dims is not None or len(config_parameters) > 0):
@@ -1191,6 +1272,9 @@ class Deconv(Cell):
 
 
 class ElemWise(Cell):
+    """
+    Element-wise operation layer.
+    """
 
     _cell_constructors = {
         'Frame': N2D2.ElemWiseCell_Frame,
@@ -1198,7 +1282,22 @@ class ElemWise(Cell):
     }
 
     def __init__(self, from_arguments=True, **config_parameters):
-
+        """
+        :param nb_outputs: Number of output channels
+        :type nb_outputs: int
+        :param name: Name for the cell.
+        :type name: str
+        :param operation: Type of operation (``Sum``, ``AbsSum``, ``EuclideanSum``, ``Prod``, or ``Max``), default="Sum"
+        :type operation: str, optional
+        :param weights: Weights for the ``Sum``, ``AbsSum``, and ``EuclideanSum`` operation, in the same order as the inputs, default=1.0
+        :type weights: float, optional
+        :param shifts: Shifts for the ``Sum`` and ``EuclideanSum`` operation, in the same order as the inputs, default=0.0
+        :type shifts: float, optional
+        :param activation_function: Activation function, default=:py:class:`n2d2.activation.Linear`
+        :type activation_function::py:class:`n2d2.activation.ActivationFunction`, optional
+        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
+        :type  from_arguments: bool, optional
+        """
         if not from_arguments and (len(config_parameters) > 0):
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nb_outputs' or 'config parameters' not None")
@@ -1276,6 +1375,9 @@ class ElemWise(Cell):
 
 
 class Dropout(Cell):
+    """
+    Dropout layer :cite:`Srivastava2014`.
+    """
     _type = "Dropout"
 
     _cell_constructors = {
@@ -1286,6 +1388,16 @@ class Dropout(Cell):
     }
 
     def __init__(self, from_arguments=True, **config_parameters):
+        """
+        :param nb_outputs: Number of output channels
+        :type nb_outputs: int
+        :param name: Name for the cell.
+        :type name: str
+        :param dropout: The probability with which the value from input would be dropped, default=0.5
+        :type dropout: float, optional
+        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
+        :type  from_arguments: bool, optional
+        """
 
         if not from_arguments and  len(config_parameters) > 0:
             raise RuntimeError(
@@ -1431,6 +1543,13 @@ class Padding(Cell):
         return n2d2_cell
 
 class LRN(Cell):
+    r"""
+    Local Response Normalization (LRN) layer.
+    The response-normalized activity :math:`b_{x,y}^{i}` is given by the expression:
+
+    .. math:: {b_{x,y}^{i}= \frac{a_{x,y}^{i}}{\left(k + \alpha \sum\limits_{j=max(0,i-n/2)}^{min(N-1,i+n/2)}{\left(a_{x,y}^{j}\right)^2}\right)^{\beta}}}
+
+    """
     _cell_constructors = {
         'Frame<float>': N2D2.LRNCell_Frame_float,
         'Frame_CUDA<float>': N2D2.LRNCell_Frame_CUDA_float,
@@ -1438,7 +1557,22 @@ class LRN(Cell):
 
 
     def __init__(self, inputs, nb_outputs, from_arguments=True, **config_parameters):
-
+        """
+        :param nb_outputs: Number of output channels
+        :type nb_outputs: int
+        :param name: Name for the cell.
+        :type name: str
+        :param n: Normalization window width in elements, default=5
+        :type n: int, optional
+        :param alpha: Value of the alpha variance scaling parameter in the normalization formula, default=1.0e-4
+        :type alpha: float, optional
+        :param beta: Value of the beta power parameter in the normalization formula, default=0.75
+        :type beta: float, optional
+        :param k: Value of the k parameter in normalization formula, default=2.0
+        :type k: float, optional
+        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
+        :type  from_arguments: bool, optional
+        """
         if not from_arguments and (nb_outputs is not None or len(config_parameters) > 0):
             raise RuntimeError(
                 "N2D2_object argument give to cell but 'inputs' or 'nb_outputs' or 'config parameters' not None")
@@ -1568,7 +1702,7 @@ class BatchNorm2d(Cell):
 
 class Activation(Cell):
 
-    _type = "Activation" # TODO : used ?
+    _type = "Activation"
 
     _cell_constructors = {
         'Frame<float>': N2D2.ActivationCell_Frame_float,
