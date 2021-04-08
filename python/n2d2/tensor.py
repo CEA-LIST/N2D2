@@ -23,6 +23,7 @@ import N2D2
 from n2d2 import error_handler
 from n2d2.provider import TensorPlaceholder
 from functools import reduce
+import random
 
 hard_coded_type = {
     "f": float,
@@ -97,7 +98,7 @@ class Tensor:
 
     def set_values(self, values):
         """
-        Fill a tensor with a list of values.
+        Fill the tensor with a list of values.
 
         .. testcode::
 

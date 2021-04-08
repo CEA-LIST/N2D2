@@ -20,7 +20,7 @@
 """
 
 from n2d2.utils import ConfigSection
-from n2d2.cell import Fc, Conv, Softmax, Pool2d, BatchNorm2d, Dropout
+from n2d2.cell import Fc, Conv, Softmax, Pool, BatchNorm2d, Dropout
 from n2d2.deepnet import Group, DeepNet, Sequence
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
@@ -62,9 +62,9 @@ class LeNet(Sequence):
 
         Sequence.__init__(self, [
             Conv(1, 6, kernel_dims=[5, 5], **conv_def()),
-            Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling='Max'),
+            Pool(pool_dims=[2, 2], stride_dims=[2, 2], pooling='Max'),
             Conv(6, 16, kernel_dims=[5, 5], mapping=conv2_mapping, **conv_def()),
-            Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling='Max'),
+            Pool(pool_dims=[2, 2], stride_dims=[2, 2], pooling='Max'),
             Conv(16, 120, kernel_dims=[5, 5], **conv_def()),
             Fc(120, 84, **fc_def()),
             Fc(84, nb_outputs, **fc_def()),

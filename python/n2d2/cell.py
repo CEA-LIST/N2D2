@@ -922,14 +922,14 @@ class Pool(Cell):
             N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
 
         """Set connection and mapping parameters"""
-        if 'mapping' in self._config_parameters:
+        if 'mapping' in self._config_parameters: 
             mapping = self._config_parameters.pop('mapping')
             if isinstance(mapping, n2d2.mapping.Mapping):
-                self._connection_parameters['mapping'] = mapping.create_N2D2_mapping(nb_inputs, nb_outputs).N2D2()
+                self._connection_parameters['mapping'] = mapping
             elif isinstance(mapping, n2d2.Tensor):
-                self._connection_parameters['mapping'] = mapping.N2D2()
+                raise TypeError("Tensor mapping are not supported for PoolCell")
             else:
-                raise WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor)), str(type(n2d2.mapping.Mapping))])
+                raise WrongInputType('mapping', type(mapping), [str(type(n2d2.mapping.Mapping))])
 
 
     @classmethod
@@ -980,9 +980,11 @@ class Pool(Cell):
                     self._N2D2_object.setActivation(value.N2D2())
                 else:
                     self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
-
-            self._N2D2_object.initializeParameters(0, 1, self._connection_parameters['mapping'].create_N2D2_mapping(inputs.dims()[2], inputs.dims()[2]))
-
+            if "mapping" in self._connection_parameters:
+                self._N2D2_object.initializeParameters(0, 1, self._connection_parameters['mapping'].create_N2D2_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2())
+            else:
+                self._N2D2_object.initializeParameters(0, 1, n2d2.mapping.Mapping(nb_channels_per_group=1).create_N2D2_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2())
+                
         self._add_to_graph(inputs)
 
         self.propagate(self._inference)
