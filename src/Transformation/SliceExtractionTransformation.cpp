@@ -300,8 +300,8 @@ N2D2::SliceExtractionTransformation::extract(unsigned int x,
                        cv::INTER_LINEAR, borderType, bgColor);
 
         // crop the resulting image
-        const cv::Rect subRect((rotated.cols - width) / 2.0,
-                               (rotated.rows - height) / 2.0,
+        const cv::Rect subRect((rotated.cols - (int)width) / 2.0,
+                               (rotated.rows - (int)height) / 2.0,
                                width, height);
         frame = rotated(subRect);
 
@@ -340,8 +340,8 @@ N2D2::SliceExtractionTransformation::extract(unsigned int x,
                       Utils::degToRad(rotation)));
 
         // pad crop to patch rect
-        padCropLabelsROI(labelsROI, (rect.width - width) / 2.0,
-                                    (rect.height - height) / 2.0,
+        padCropLabelsROI(labelsROI, (rect.width - (int)width) / 2.0,
+                                    (rect.height - (int)height) / 2.0,
                          width, height);
 
         return rect;
