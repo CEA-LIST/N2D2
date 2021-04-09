@@ -31,6 +31,7 @@ N2D2
    quant_post
    quant_qat
    export_CPP
+   export_CPP_STM32
    export_TensorRT
    export_DNeuro
    export_legacy

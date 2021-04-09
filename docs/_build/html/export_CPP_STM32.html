@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>About N2D2-IP &mdash; N2D2  documentation</title>
+  <title>Export: C++/STM32 &mdash; N2D2  documentation</title>
   
 
   
@@ -34,11 +34,11 @@
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="author" title="About these documents" href="#" />
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Performing simulations" href="simus.html" />
-    <link rel="prev" title="Presentation" href="intro.html" /> 
+    <link rel="next" title="Export: TensorRT" href="export_TensorRT.html" />
+    <link rel="prev" title="Export: C++" href="export_CPP.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -83,9 +83,9 @@
             
             
               <p class="caption"><span class="caption-text">Introduction:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="perfs_tools.html">Performance evaluation tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
@@ -97,11 +97,15 @@
 <li class="toctree-l1"><a class="reference internal" href="onnx_transfer.html">Train from ONNX models</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Quantization and Export:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="quant_post.html">Post-training quantization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
-<li class="toctree-l1"><a class="reference internal" href="export_CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Export: C++/STM32</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#principle">Principle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_DNeuro.html">Export: DNeuro</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
@@ -167,13 +171,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>About N2D2-IP</li>
+      <li>Export: C++/STM32</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/about.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/export_CPP_STM32.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -186,24 +190,54 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="about-n2d2-ip">
-<h1>About N2D2-IP<a class="headerlink" href="#about-n2d2-ip" title="Permalink to this headline">¶</a></h1>
-<p>While N2D2 is our deep learning open-source core framework, some modules
-referred as “N2D2-IP” in the manual, are only available through custom
-license agreement with CEA LIST.</p>
-<p>If you are interested in obtaining some of these modules, please contact
-our business developer for more information on available licensing
-options:</p>
-<blockquote>
-<div><p>Sandrine VARENNE
-(<a class="reference external" href="mailto:Sandrine&#46;VARENNE&#37;&#52;&#48;cea&#46;fr?subject=[N2D2-IPinquiry]&amp;body=Iaminterestedinobtaining[&#46;&#46;&#46;]N2D2-IPmodule(s)&#46;%0A%0A[pleasedescribebrieflytheintendedusage]&#46;%0A%0A[youraffiliationandcontactinformation]&#46;">Sandrine<span>&#46;</span>VARENNE<span>&#64;</span>cea<span>&#46;</span>fr</a>)</p>
-</div></blockquote>
-<p>In addition to N2D2-IP modules, we can also provide our expertise to
-design specific solutions for integrating DNN in embedded hardware
-systems, where power, latency, form factor and/or cost are constrained.
-We can target CPU/DSP/GPU CoTS hardware as well as our own PNeuro
-(programmable) and DNeuro (dataflow) dedicated hardware accelerator IPs
-for DNN on FPGA or ASIC.</p>
+  <div class="section" id="export-c-stm32">
+<h1>Export: C++/STM32<a class="headerlink" href="#export-c-stm32" title="Permalink to this headline">¶</a></h1>
+<p><strong>N2D2-IP only: available upon request.</strong></p>
+<dl class="simple">
+<dt>Export type: <code class="docutils literal notranslate"><span class="pre">CPP_STM32</span></code></dt><dd><p>C++ export for STM32.</p>
+</dd>
+</dl>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">n2d2</span> <span class="n">MobileNet_ONNX</span><span class="o">.</span><span class="n">ini</span> <span class="o">-</span><span class="n">seed</span> <span class="mi">1</span> <span class="o">-</span><span class="n">w</span> <span class="o">/</span><span class="n">dev</span><span class="o">/</span><span class="n">null</span> <span class="o">-</span><span class="n">export</span> <span class="n">CPP_STM32</span>
+</pre></div>
+</div>
+<div class="section" id="principle">
+<h2>Principle<a class="headerlink" href="#principle" title="Permalink to this headline">¶</a></h2>
+<p>This export inherit the properties and optimizations from the C++ export, but
+includes optimized kernels for the Cortex-M4 and the Cortex-M7. Please refer
+to the <a class="reference internal" href="export_CPP.html#export-cpp-label"><span class="std std-ref">Export: C++</span></a> for the available export parameters.</p>
+<dl class="simple">
+<dt>SIMD</dt><dd><p>The <code class="docutils literal notranslate"><span class="pre">SMLAD</span></code> intrinsic is used to do two 16-bit signed integers multiplications with
+accumulation. To extend the 8-bit data to the necessary 16-bit, the <code class="docutils literal notranslate"><span class="pre">XTB16</span></code> intrinsic is used.</p>
+</dd>
+<dt>Loop unrolling</dt><dd><p>The unrolling of the loops can be done with <code class="docutils literal notranslate"><span class="pre">#pragma</span> <span class="pre">GCC</span> <span class="pre">unroll</span> <span class="pre">NB_ITERATIONS</span></code>
+but it does not always perform as well as expected. Some loops are manually unrolled instead using C++
+templates. This increases the size of the compiled binary further but it provides a faster inference.</p>
+</dd>
+<dt>Usage of intrinsics</dt><dd><p>Intrinsics provided by ARM are preferred to normal library methods calls
+when possible. For example the <code class="docutils literal notranslate"><span class="pre">SSAT</span></code> and <code class="docutils literal notranslate"><span class="pre">USAT</span></code> intrinsics are used to clamp the output value resulting
+in better results than a naive call to the std::clamp method.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">n2d2</span> <span class="n">MobileNet_ONNX</span><span class="o">.</span><span class="n">ini</span> <span class="o">-</span><span class="n">seed</span> <span class="mi">1</span> <span class="o">-</span><span class="n">w</span> <span class="o">/</span><span class="n">dev</span><span class="o">/</span><span class="n">null</span> <span class="o">-</span><span class="n">export</span> <span class="n">CPP_STM32</span> <span class="o">-</span><span class="n">fuse</span> <span class="o">-</span><span class="n">nbbits</span> <span class="mi">8</span> <span class="o">-</span><span class="n">calib</span> <span class="o">-</span><span class="mi">1</span> <span class="o">-</span><span class="n">db</span><span class="o">-</span><span class="n">export</span> <span class="mi">100</span> <span class="o">-</span><span class="n">test</span>
+</pre></div>
+</div>
+<p>This command generates a C++ project in the sub-directory <code class="docutils literal notranslate"><span class="pre">export_CPP_STM32_int8</span></code>.
+This project is ready to be cross-compiled with a <code class="docutils literal notranslate"><span class="pre">Makefile</span></code>, using the
+<em>GNU Arm Embedded Toolchain</em> (which provides the <code class="docutils literal notranslate"><span class="pre">arm-none-eabi-gcc</span></code> compiler).</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">make</span></code></dt><dd><p>To cross-compile the project using the <em>GNU Arm Embedded Toolchain</em>. An ELF
+binary file is generated in <code class="docutils literal notranslate"><span class="pre">bin/n2d2_stm32.elf</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">flash</span></code></dt><dd><p>To flash the board using OpenOCD with the previously generated <code class="docutils literal notranslate"><span class="pre">bin/n2d2_stm32.elf</span></code> binary. In the
+provided Makefile, the default OpenOCD location is <code class="docutils literal notranslate"><span class="pre">/usr/local/bin/openocd</span></code>
+and the default script is <code class="docutils literal notranslate"><span class="pre">stm32h7x3i_eval.cfg</span></code>, for the STM32H7x3I evaluation
+board family. These can be changed in the first lines of the Makefile.</p>
+</dd>
+</dl>
+</div>
 </div>
 
 
@@ -214,10 +248,10 @@ for DNN on FPGA or ASIC.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="simus.html" class="btn btn-neutral float-right" title="Performing simulations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="export_TensorRT.html" class="btn btn-neutral float-right" title="Export: TensorRT" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="intro.html" class="btn btn-neutral float-left" title="Presentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="export_CPP.html" class="btn btn-neutral float-left" title="Export: C++" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

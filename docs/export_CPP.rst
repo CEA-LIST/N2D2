@@ -1,3 +1,5 @@
+.. _export_cpp-label:
+
 Export: C++
 ===========
 
@@ -27,6 +29,29 @@ Summary of the main features of a C++ export:
 - No dynamic memory allocation;
 - Memory alignment support;
 - OpenMP parallelism.
+
+Data order
+  The input of a layer is ordered by Height-Width-Channels (HWC) and the weights
+  of the kernel for a convolution by Output-Height-Width-Channels (OHWC). This order allows
+  us to do read *kernel_width* × *nb_channels* inputs and weights sequentially in memory to do the
+  necessary MACs.
+
+Templated layer parameters
+  The current export uses C++ templates heavily, most of the
+  parameters of the layers are passed as template parameters. This allows the compiler to better
+  optimize the code and make it easier to unroll the loops. It comes at the cost of a larger compiled
+  binary.
+
+Force inline
+  Most of the methods are forced to be inlined. As previously this increases the binary
+  size to provide a faster inference.
+
+Loop boundaries
+  The boundaries of the loops are fixed at compile time through the template
+  parameters. If some steps in a loop must be skipped an if and continue are used inside the loop. It
+  results in better results than having variable loop boundaries.
+
+
 
 Graph optimizations
 ~~~~~~~~~~~~~~~~~~~

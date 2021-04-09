@@ -37,7 +37,7 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Export: TensorRT" href="export_TensorRT.html" />
+    <link rel="next" title="Export: C++/STM32" href="export_CPP_STM32.html" />
     <link rel="prev" title="Quantization aware training" href="quant_qat.html" /> 
 </head>
 
@@ -110,6 +110,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#example">Example</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP_STM32.html">Export: C++/STM32</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_DNeuro.html">Export: DNeuro</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
@@ -195,7 +196,7 @@
            <div itemprop="articleBody">
             
   <div class="section" id="export-c">
-<h1>Export: C++<a class="headerlink" href="#export-c" title="Permalink to this headline">¶</a></h1>
+<span id="export-cpp-label"></span><h1>Export: C++<a class="headerlink" href="#export-c" title="Permalink to this headline">¶</a></h1>
 <dl class="simple">
 <dt>Export type: <code class="docutils literal notranslate"><span class="pre">CPP</span></code></dt><dd><p>C++ export using OpenMP.</p>
 </dd>
@@ -222,6 +223,25 @@ aware training.</p>
 <li><p>Memory alignment support;</p></li>
 <li><p>OpenMP parallelism.</p></li>
 </ul>
+<dl class="simple">
+<dt>Data order</dt><dd><p>The input of a layer is ordered by Height-Width-Channels (HWC) and the weights
+of the kernel for a convolution by Output-Height-Width-Channels (OHWC). This order allows
+us to do read <em>kernel_width</em> × <em>nb_channels</em> inputs and weights sequentially in memory to do the
+necessary MACs.</p>
+</dd>
+<dt>Templated layer parameters</dt><dd><p>The current export uses C++ templates heavily, most of the
+parameters of the layers are passed as template parameters. This allows the compiler to better
+optimize the code and make it easier to unroll the loops. It comes at the cost of a larger compiled
+binary.</p>
+</dd>
+<dt>Force inline</dt><dd><p>Most of the methods are forced to be inlined. As previously this increases the binary
+size to provide a faster inference.</p>
+</dd>
+<dt>Loop boundaries</dt><dd><p>The boundaries of the loops are fixed at compile time through the template
+parameters. If some steps in a loop must be skipped an if and continue are used inside the loop. It
+results in better results than having variable loop boundaries.</p>
+</dd>
+</dl>
 <div class="section" id="graph-optimizations">
 <h3>Graph optimizations<a class="headerlink" href="#graph-optimizations" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
@@ -307,7 +327,7 @@ before export, as it is not compatible with low precision integer computing.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="export_TensorRT.html" class="btn btn-neutral float-right" title="Export: TensorRT" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="export_CPP_STM32.html" class="btn btn-neutral float-right" title="Export: C++/STM32" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="quant_qat.html" class="btn btn-neutral float-left" title="Quantization aware training" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
