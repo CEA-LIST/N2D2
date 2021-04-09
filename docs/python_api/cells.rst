@@ -106,9 +106,11 @@ Filler
 
 You can associate to some cell a specific weight filler.
 
+
 ..autoclass:: n2d2.filler.Filler
         :members:
         :inherited-members:
+
 
 He
 ~~

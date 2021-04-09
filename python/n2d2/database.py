@@ -47,6 +47,9 @@ class Database(N2D2_Interface):
         self._set_N2D2_parameters(self._config_parameters)
 
     def get_nb_stimuli(self, partition):
+        """
+        :returns: The number of stimuli available for the partition
+        """
         return self._N2D2_object.getNbStimuli(N2D2.Database.StimuliSet.__members__[partition])
 
     def get_label_name(self, label_idx):
@@ -60,6 +63,7 @@ class Database(N2D2_Interface):
 
     def partition_stimuli(self, learn, validation, test):
         """Create partitions of the data with the given ratio.
+
         :param learn: Ratio for the learning partition.
         :type learn: float
         :param validation: Ratio for the validation partition.
@@ -142,8 +146,12 @@ class CIFAR100(Database):
 
     def __init__(self, **config_parameters):
         """
+        :param data_path: Path to the database, default="``$N2D2_DATA``/cifar-100-binary"
+        :type data_path: str, optional
         :param validation: Fraction of the learning set used for validation, default=0.0
         :type validation: float, optional
+        :param use_coarse: If true, use the coarse labeling (10 labels instead of 100), default=False
+        :type use_coarse: bool, optional
         """
         N2D2_Interface.__init__(self, **config_parameters)
 
@@ -160,6 +168,18 @@ class ILSVRC2012(Database):
     _type = "ILSVRC2012"
 
     def __init__(self, learn, **config_parameters):
+        """
+        :param learn: Fraction of images used for the learning
+        :type learn: float
+        :param data_path: Path to the database, default="``$N2D2_DATA``/ILSVRC2012"
+        :type data_path: str, optional
+        :param label_path: Path to the label, default="``$N2D2_DATA``/ILSVRC2012/synsets.txt"
+        :type label_path: str, optional
+        :param validation: Fraction of the learning set used for validation, default=0.0
+        :type validation: float, optional
+        :param use_validation_for_test: If True, use the validation partition for test, default=False
+        :type use_validation_for_test: bool, optional
+        """
         N2D2_Interface.__init__(self, **config_parameters)
         self._constructor_arguments.update({
             'learn': learn,
@@ -180,6 +200,10 @@ class Cityscapes(Database):
 
     def __init__(self, **config_parameters):
         """
+        :param data_path: Path to the database, default="``$N2D2_DATA``/Cityscapes"
+        :type data_path: str, optional
+        :param label_path: Path to the database annotations (deduced from ``data_path`` if left empty), default=""
+        :type label_path: str, optional
         :param inc_train_extra: If true, includes the left 8-bit images - trainextra set (19,998 images), default=False
         :type inc_train_extra: boolean, optional
         :param use_coarse: If true, only use coarse annotations (which are the only annotations available for the trainextra set), default=False

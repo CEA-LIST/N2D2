@@ -333,15 +333,15 @@ class Fc(Cell):
         :type nb_outputs: int
         :param name: Name fo the cell.
         :type name: str
-        :param activation_function: Activation function, default=:py:class:`n2d2.activation.Tanh`
+        :param activation_function: Activation function, default= :py:class:`n2d2.activation.Tanh`
         :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param weights_solver: Solver for weights
         :type weights_solver: :py:class:`n2d2.solver.Solver`, optional
-        :param bias_solver: Solver for biases
+        :param bias_solver: Solver for biases, default= :py:class:`n2d2.filler.Normal`
         :type bias_solver: :py:class:`n2d2.solver.Solver`, optional
-        :param weights_filler: Weights initial values filler.
+        :param weights_filler: Weights initial values filler, default= :py:class:`n2d2.filler.Normal`
         :type weights_filler: :py:class:`n2d2.filler.Filler`, optional
-        :param bias_filler: Biases initial values filler.
+        :param bias_filler: Biases initial values filler, default= :py:class:`n2d2.filler.Normal`
         :type bias_filler: :py:class:`n2d2.filler.Filler`, optional
         :param mapping: Mapping
         :type mapping: :py:class:`n2d2.tensor.Tensor`
@@ -557,13 +557,13 @@ class Conv(Cell):
         :type padding_dims: list, optional
         :param dilation_dims: Dimensions of the dilation of the kernels 
         :type dilation_dims: list, optional
-        :param activation_function: Activation function, default=:py:class:`n2d2.activation.Tanh`
+        :param activation_function: Activation function, default= :py:class:`n2d2.activation.Tanh`
         :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param mapping: Mapping
         :type mapping: :py:class:`n2d2.tensor.Tensor`
-        :param weights_filler: Weights initial values filler, default=NormalFiller
+        :param weights_filler: Weights initial values filler, default= :py:class:`n2d2.filler.Normal`
         :type weights_filler: :py:class:`n2d2.filler.Filler`, optional
-        :param bias_filler: Biases initial values filler, default=NormalFiller
+        :param bias_filler: Biases initial values filler, default= :py:class:`n2d2.filler.Normal`
         :type bias_filler: :py:class:`n2d2.filler.Filler`, optional
         :param weights_solver: Solver for weights
         :type weights_solver: :py:class:`n2d2.solver.Solver`, optional
@@ -891,12 +891,12 @@ class Pool(Cell):
         :param pool_dims: Pooling area dimensions
         :type pool_dims: list
         :param pooling: Type of pooling (``Max`` or ``Average``), default="Max" 
-        :type pooling : str, optional
+        :type pooling: str, optional
         :param stride_dims: Dimension of the stride of the kernel.
         :type stride_dims: list, optional
         :param padding_dims: Dimensions of the padding.
         :type padding_dims: list, optional
-        :param activation_function: Activation function, default=:py:class:`n2d2.activation.Linear`
+        :param activation_function: Activation function, default= :py:class:`n2d2.activation.Linear`
         :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
         :type  from_arguments: bool, optional
@@ -1161,8 +1161,8 @@ class Deconv(Cell):
         :type padding_dims: list, optional
         :param dilation_dims: Dimensions of the dilation of the kernels 
         :type dilation_dims: list, optional
-        :param activation_function: Activation function, default=:py:class:`n2d2.activation.Tanh`
-        :type activation_function::py:class:`n2d2.activation.ActivationFunction`, optional
+        :param activation_function: Activation function, default= :py:class:`n2d2.activation.Tanh`
+        :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param weights_filler: Weights initial values filler, default=NormalFiller
         :type weights_filler: :py:class:`n2d2.filler.Filler`, optional
         :param bias_filler: Biases initial values filler, default=NormalFiller
@@ -1295,8 +1295,8 @@ class ElemWise(Cell):
         :type weights: float, optional
         :param shifts: Shifts for the ``Sum`` and ``EuclideanSum`` operation, in the same order as the inputs, default=0.0
         :type shifts: float, optional
-        :param activation_function: Activation function, default=:py:class:`n2d2.activation.Linear`
-        :type activation_function::py:class:`n2d2.activation.ActivationFunction`, optional
+        :param activation_function: Activation function, default= :py:class:`n2d2.activation.Linear`
+        :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
         :type  from_arguments: bool, optional
         """

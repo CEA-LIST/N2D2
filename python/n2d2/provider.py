@@ -36,6 +36,10 @@ class Provider(N2D2_Interface):
         self._deepnet = None
 
     def get_deepnet(self):
+        """
+        :returns: DeepNet object
+        :rtype: :py:class:`n2d2.deepnet.DeepNet` 
+        """
         return self._deepnet
 
     def get_size(self):
@@ -46,6 +50,9 @@ class Provider(N2D2_Interface):
 
 
 class DataProvider(Provider):
+    """
+    Provide the data to the network.
+    """
     _type = "DataProvider"
 
     # Be careful to match default parameters in python and N2D2 constructor
@@ -53,10 +60,14 @@ class DataProvider(Provider):
         """
         :param database: Database used to read data from
         :type database: :py:class:`n2d2.database.Database` 
+        :param batch_size: Batch size, default=1
+        :type batch_size: int, optional
+        :param composite_stimuli: If true, use pixel-wise stimuli labels, default=False
+        :type composite_stimuli: bool, optional
         :param size: Size of the data
         :type size: list
         :param random_read: if False we use get_batch when iterating other the provider, else we use get get_random_batch, default = False
-        :type: boolean, optional
+        :type random_read: boolean, optional
         """
         Provider.__init__(self, **config_parameters)
 
@@ -85,16 +96,27 @@ class DataProvider(Provider):
     def set_reading_randomly(self, random_read):
         """
         Set if we use get_batch or get_random_batch when iterating other the provider
+
+        :param random_read: If True, the provider will give stimuli in a random order.
+        :type random_read: bool
         """
         self._random_read = random_read
 
     def set_partition(self, partition):
+        """
+        :param partition: The partition can be  ```Test``, ``Validation``, ``Test``,  ``Unpartitioned``
+        :type partition: str 
+        """
         if partition not in N2D2.Database.StimuliSet.__members__.keys():
             raise n2d2.error_handler.WrongValue("partition", partition,
                                                 " ".join(N2D2.Database.StimuliSet.__members__.keys()))
         self._partition = partition
 
     def get_partition(self):
+        """
+        :returns: The partition can be  ```Test``, ``Validation``, ``Test``,  ``Unpartitioned``
+        :rtype: str
+        """
         return N2D2.Database.StimuliSet.__members__[self._partition]
 
     def get_name(self):
@@ -106,7 +128,7 @@ class DataProvider(Provider):
 
     def get_data(self):
         """
-        :returns: A tensor containning the data.
+        :returns: Data.
         :rtype: :py:class:`n2d2.Tensor`
         """
         return n2d2.Tensor.from_N2D2(self._N2D2_object.getData()) 
@@ -120,7 +142,7 @@ class DataProvider(Provider):
 
     def get_database(self):
         """
-        :returns: 
+        :returns: Give the database
         :rtype: :py:class:`n2d2.database.Database`
         """
         return self._constructor_arguments['database']
@@ -149,6 +171,11 @@ class DataProvider(Provider):
         return n2d2.Tensor.from_N2D2(self._N2D2_object.getData())._set_cell(self)
 
     def add_transformation(self, transformation):
+        """Apply transformation to the dataset.
+
+        :param transformation: Transformation to apply
+        :type transformation: :py:class:`n2d2.transformation.Transformation`
+        """ 
         if isinstance(transformation, n2d2.transform.Composite):
             for trans in transformation.get_transformations():
                 self._N2D2_object.addTransformation(trans.N2D2(), trans.get_apply_set())
@@ -158,6 +185,11 @@ class DataProvider(Provider):
             self._transformations.append(transformation)
 
     def add_on_the_fly_transformation(self, transformation):
+        """Add transformation to apply to the dataset when reading them.
+
+        :param transformation: Transformation to apply
+        :type transformation: :py:class:`n2d2.transformation.Transformation`
+        """ 
         if isinstance(transformation, n2d2.transform.Composite):
             for trans in transformation.get_transformations():
                 self._N2D2_object.addOnTheFlyTransformation(trans.N2D2(), trans.get_apply_set())
@@ -177,11 +209,11 @@ class DataProvider(Provider):
             else:
                 return self.read_batch(self._index-1)
         else:
-            self._index = 0
             raise StopIteration
             
 
     def __iter__(self):
+        self._index = 0
         return self
 
     
@@ -197,7 +229,15 @@ class DataProvider(Provider):
 
 
 class TensorPlaceholder(Provider):
+    """
+    A provider used to stream a single tensor through a neural network.
+    This is automatically used when you pass a Tensor that doesn't come from :py:class:`n2d2.provider.DataProvider`.
+    """
     def __init__(self, inputs, **config_parameters):
+        """
+        :param inputs: The tensor you want to stream
+        :type inputs: :py:class:`N2D2.tensor.Tensor`
+        """
         Provider.__init__(self, **config_parameters)
 
         if isinstance(inputs, n2d2.tensor.Tensor):
