@@ -117,7 +117,7 @@ elif args.arch == 'MobileNet_v2':
 
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
-    extractor = n2d2.model.mobilenet_v2.load_from_ONNX(download=True, dims=size, batch_size=batch_size)
+    extractor = n2d2.model.mobilenetv2.load_from_ONNX(download=True, dims=size, batch_size=batch_size)
     extractor.add_input(provider)
     extractor.remove(118, False)
     extractor.remove(117, False)

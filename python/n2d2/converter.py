@@ -24,7 +24,7 @@ import n2d2.cell
 
 
 cell_dict = {
-    "Fc" : n2d2.cell.Fc,
+    "Fc": n2d2.cell.Fc,
     "Conv": n2d2.cell.Conv,
     "ElemWise": n2d2.cell.ElemWise,
     "Softmax": n2d2.cell.Softmax,
@@ -32,11 +32,10 @@ cell_dict = {
     "Padding": n2d2.cell.Padding,
     "Pool": n2d2.cell.Pool,
     "LRN": n2d2.cell.LRN,
-    "BatchNorm2d": n2d2.cell.BatchNorm2d,
+    "BatchNorm": n2d2.cell.BatchNorm2d,
     "Reshape": n2d2.cell.Reshape,
 
 }
-
 
 
 # TODO: Move to n2d2.cell
@@ -47,31 +46,10 @@ def cell_converter(N2D2_cell, n2d2_deepnet):
     Convert a N2D2 cell into a n2d2 cell.
     The _N2D2_object attribute of the generated n2d2 cell is replaced by the N2D2_cell given in entry.
     """
-    l_type = ["float", 
-            "int"]
-
-    l_model = ["Frame_CUDA",
-               "Frame",
-               "Spike"]
-
-    # Retrieving global parameters from the N2D2 object. 
-    #inputs = N2D2_cell.getParentsCells()
-    #nb_outputs = N2D2_cell.getNbOutputs()
     cell_type = N2D2_cell.getType()
-    parsed = str(N2D2_cell).split(" ")[0].split("_")
-    #model = None
-    #for m in l_model:
-    #    if m in parsed and not model:
-    #        model = m
-    #if not model:
-    #    raise ValueError("No model found in ", str(N2D2_cell))
-    datatype = None
-    for t in l_type:
-        if t in parsed and not datatype:
-            datatype = t
 
     # Creating n2d2 object.
-    print("cell_type: ", cell_type)
+    #print("cell_type: ", cell_type)
 
     n2d2_cell = cell_dict[cell_type].create_from_N2D2_object(N2D2_cell, n2d2_deepnet)
 

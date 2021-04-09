@@ -38,6 +38,10 @@ class Provider(N2D2_Interface):
     def get_deepnet(self):
         return self._deepnet
 
+    def set_deepnet(self, deepnet):
+        self._deepnet = deepnet
+        deepnet.set_provider(self)
+
     def get_size(self):
         return self._N2D2_object.getSize()
 
@@ -209,7 +213,7 @@ class TensorPlaceholder(Provider):
         self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
                                                  size=dims,
                                                  batchSize=self._tensor.N2D2().dimB())
-        self._set_N2D2_parameter('StreamTensor', True) 
+        self._set_N2D2_parameter('StreamTensor', True)
         self.set_streamed_tensor()
 
         self._deepnet = n2d2.deepnet.DeepNet()

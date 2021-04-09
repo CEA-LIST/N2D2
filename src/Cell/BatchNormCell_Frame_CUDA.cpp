@@ -381,6 +381,13 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
 template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
 {
+    if (mDiffOutputs.empty()) {
+        std::cout << "Warning: BatchNormCell_Frame_CUDA::backPropagate() in cell " <<   
+            getName() << " is not compatible with empty mDiffOutputs. Skipping backpropagation"  
+            << std::endl;
+        return;
+    }
+
     if (!mDiffInputs.isValid())
         return;
 
@@ -428,6 +435,7 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
     mDiffOutputs[0].deviceTensor() = *diffOutput0;
     mDiffOutputs[0].setValid();
     mDiffOutputs.synchronizeDToHBased();
+
 }
 
 template <class T>

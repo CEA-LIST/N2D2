@@ -407,6 +407,7 @@ class Tensor:
         Detach the cell from the tensor, this allow you to pass the output of a deepnet to another one.
         """
         self.cell = None
+        return self
 
     def _set_cell(self, cell):
         self.cell = cell
