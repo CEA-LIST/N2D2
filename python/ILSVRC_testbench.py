@@ -49,8 +49,8 @@ if args.arch == 'MobileNetv1':
     batch_size = 256
 elif args.arch == 'MobileNetv1_batchnorm':
     batch_size = 64
-elif args.arch == 'MobileNet_v2':
-    batch_size = 256
+elif args.arch == 'MobileNetv2-onnx':
+    batch_size = 64
 elif args.arch == 'ResNet50Bn':
     batch_size = 64
 elif args.arch == 'ResNet-onnx':
@@ -71,13 +71,13 @@ print("Create provider")
 provider = n2d2.provider.DataProvider(database=database, size=[size, size, 3], batch_size=batch_size)
 
 
-print("Add transformation")
-trans, otf_trans = n2d2.model.ILSVRC_preprocessing(size=size)
+#print("Add transformation")
+#trans, otf_trans = n2d2.model.ILSVRC_preprocessing(size=size)
 
-print(trans)
-print(otf_trans)
-provider.add_transformation(trans)
-provider.add_on_the_fly_transformation(otf_trans)
+#print(trans)
+#print(otf_trans)
+#provider.add_transformation(trans)
+#provider.add_on_the_fly_transformation(otf_trans)
 
 
 
@@ -88,27 +88,29 @@ if args.arch == 'MobileNetv1':
     model = n2d2.model.MobileNetv1(alpha=0.5)
     # 55.87% test Top1
     # "/local/is154584/jt251134/ILSVRC_testbench/MobileNetv1/weights_validation/"
-elif args.arch == 'MobileNetv1_batchnorm':
-    """Equivalent to N2D2/models/MobileNetv1_batchnorm.ini. Typically around 59.1% test Top1"""
-    nb_epochs = 120 if args.epochs == -1 else args.epochs
-    size = 224
-    model = n2d2.model.MobileNetv1(provider, alpha=0.5, with_batchnorm=True)
-elif args.arch == 'MobileNet_v2':
-    """Equivalent to N2D2/models/MobileNet_v2.ini"""
-    nb_epochs = 120 if args.epochs == -1 else args.epochs
-    size = 160
-    model = n2d2.model.MobileNet_v2(alpha=0.5, size=size, l=10, expansion=6)
+elif args.arch == 'MobileNetv2-onnx':
+    nb_epochs = 0 if args.epochs == -1 else args.epochs
+    provider.add_transformation(n2d2.model.mobilenetv2.ONNX_preprocessing(size=size))
+    model = n2d2.model.mobilenetv2.load_from_ONNX(provider, download=True, batch_size=batch_size)
+    model.remove("mobilenetv20_output_flatten0_reshape0", False)
 elif args.arch == 'ResNet50Bn':
     nb_epochs = 90 if args.epochs == -1 else args.epochs
     size = 224
     model = n2d2.model.ResNet50Bn(output_size=1000, alpha=1.0, l=0)
+    trans, otf_trans = n2d2.model.ILSVRC_preprocessing(size=size)
+    provider.add_transformation(trans)
+    provider.add_on_the_fly_transformation(otf_trans)
 elif args.arch == 'ResNet-onnx':
     nb_epochs = 0 if args.epochs == -1 else args.epochs
-    model = n2d2.model.resnet.load_from_ONNX('18', 'post_act', download=True, batch_size=batch_size)
+    model = n2d2.model.resnet.load_from_ONNX(provider, '18', 'post_act', download=True, batch_size=batch_size)
+    provider.add_transformation(n2d2.model.resnet.ONNX_preprocessing(size))
 else:
     raise ValueError("Invalid architecture: " + args.arch)
 
-print(model)
+#print(model.get_core_deepnet())
+#model.remove("resnetv22_dense0_fwd", False)
+#print(model.get_core_deepnet())
+#exit()
 
 if not args.weights == "":
     model.import_free_parameters(args.weights)
@@ -135,7 +137,7 @@ for epoch in range(nb_epochs):
         x.update()
 
         print("Example: " + str(i * batch_size) + ", loss: "
-              + "{0:.3f}".format(x.tensor[0]), end='\r')
+              + "{0:.3f}".format(x[0]), end='\r')
 
     print("\n### Validation ###")
 

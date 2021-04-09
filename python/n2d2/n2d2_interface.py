@@ -144,8 +144,8 @@ class N2D2_Interface:
         for param in str_params:
             parameters[param] = N2D2_Interface._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](
                 N2D2_object.getParameterAndType(param)[0])
-            print(param, ":",
-                  N2D2_Interface._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](N2D2_object.getParameterAndType(param)[0]))
+            #print(param, ":",
+            #      N2D2_Interface._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](N2D2_object.getParameterAndType(param)[0]))
         return parameters
 
     def __str__(self):

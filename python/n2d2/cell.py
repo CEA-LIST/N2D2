@@ -27,8 +27,6 @@ from n2d2.n2d2_interface import N2D2_Interface
 
 class Cell(N2D2_Interface):
 
-    _type = None
-
     def __init__(self,  **config_parameters):
 
         if 'name' in config_parameters:
@@ -129,9 +127,11 @@ class Cell(N2D2_Interface):
     def get_deepnet(self):
         return self._deepnet
 
+    def set_deepnet(self, deepnet):
+        self._deepnet = deepnet
 
     def get_type(self):
-        return self._type
+        return str(type(self))
 
     """
     def add_input(self, inputs):
@@ -320,8 +320,6 @@ class Fc(Cell):
     Fully connected layer.
     """
 
-    _type = "Fc"
-
     _cell_constructors = {
             'Frame<float>': N2D2.FcCell_Frame_float,
             'Frame_CUDA<float>': N2D2.FcCell_Frame_CUDA_float,
@@ -414,7 +412,6 @@ class Fc(Cell):
         n2d2_cell = cls(None, None, from_arguments=False)
 
         Cell.__init__(n2d2_cell,
-                      N2D2_object.getNbOutputs(),
                       name=N2D2_object.getName(),
                       **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
@@ -527,7 +524,7 @@ class Conv(Cell):
     """
     Convolutional layer.
     """
-    _type = "Conv"
+
 
     _cell_constructors = {
         'Frame<float>': N2D2.ConvCell_Frame_float,
@@ -646,18 +643,17 @@ class Conv(Cell):
         n2d2_cell = cls(None, None, None, from_arguments=False)
 
         Cell.__init__(n2d2_cell,
-                      N2D2_object.getNbOutputs(),
                       name=N2D2_object.getName(),
                       **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
-
-        n2d2_cell._constructor_arguments.update({
-            'nb_inputs': N2D2_object.getInputsSize(),
-        })
-
         n2d2_cell._N2D2_object = N2D2_object
 
-        n2d2_cell._constructor_arguments['kernel_dims'] = [n2d2_cell._N2D2_object.getKernelWidth(), n2d2_cell._N2D2_object.getKernelHeight()]
+        n2d2_cell._constructor_arguments.update({
+            'nb_inputs':  n2d2_cell._N2D2_object.getNbChannels(),
+            'nb_outputs':  n2d2_cell._N2D2_object.getNbOutputs(),
+            'kernel_dims': [n2d2_cell._N2D2_object.getKernelWidth(), n2d2_cell._N2D2_object.getKernelHeight()]
+        })
+
         n2d2_cell._optional_constructor_arguments['sub_sample_dims'] = [n2d2_cell._N2D2_object.getSubSampleX(), n2d2_cell._N2D2_object.getSubSampleY()]
         n2d2_cell._optional_constructor_arguments['stride_dims'] = [n2d2_cell._N2D2_object.getStrideX(), n2d2_cell._N2D2_object.getStrideY()]
         n2d2_cell._optional_constructor_arguments['padding_dims'] = [n2d2_cell._N2D2_object.getPaddingX(), n2d2_cell._N2D2_object.getPaddingY()]
@@ -756,7 +752,6 @@ class Conv(Cell):
         return weights
 
 class ConvDepthWise(Conv):
-    _type = 'ConvDepthWise'
 
     def __init__(self,
                  nbChannels,
@@ -771,7 +766,6 @@ class ConvDepthWise(Conv):
 
 
 class ConvPointWise(Conv):
-    _type = 'ConvPointWise'
 
     def __init__(self,
                  nb_inputs,
@@ -786,8 +780,6 @@ class Softmax(Cell):
     """
     Softmax layer.
     """
-
-    _type = "Softmax"
 
     _cell_constructors = {
         'Frame<float>': N2D2.SoftmaxCell_Frame_float,
@@ -822,6 +814,7 @@ class Softmax(Cell):
     def __call__(self, inputs):
         if inputs.nb_dims() != 4:
             raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
+
         self._deepnet = self._infer_deepnet(inputs)
 
         if self._N2D2_object is None:
@@ -846,14 +839,11 @@ class Softmax(Cell):
         return n2d2.Tensor.from_N2D2(self.get_outputs())._set_cell(self)
 
     @classmethod
-    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
+    def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
 
-        n2d2_cell = cls(inputs, from_arguments=False)
+        n2d2_cell = cls(from_arguments=False)
 
         Cell.__init__(n2d2_cell,
-                      inputs,
-                      N2D2_object.getNbOutputs(),
-                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
                       **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
@@ -864,7 +854,12 @@ class Softmax(Cell):
 
         n2d2_cell._config_parameters['activation_function'] = n2d2_cell._N2D2_object.getActivation()
 
-        n2d2_cell._sync_inputs_and_parents(inputs)
+        if n2d2_deepnet is not None:
+            n2d2_cell._deepnet = n2d2_deepnet
+            n2d2_cell._sync_inputs_and_parents()
+        else:
+            n2d2_cell._deepnet = None
+            n2d2_cell._N2D2_object.clearInputs()
 
         return n2d2_cell
 
@@ -876,7 +871,6 @@ class Pool(Cell):
     '''
     Pooling layer.
     '''
-    _type = 'Pool'
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
@@ -933,14 +927,11 @@ class Pool(Cell):
 
 
     @classmethod
-    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
+    def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet):
 
-        n2d2_cell = cls(inputs, None, None, from_arguments=False)
+        n2d2_cell = cls(None, from_arguments=False)
 
         Cell.__init__(n2d2_cell,
-                      inputs,
-                      N2D2_object.getNbOutputs(),
-                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
                       **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
@@ -956,7 +947,12 @@ class Pool(Cell):
 
         n2d2_cell._config_parameters['activation_function'] = n2d2_cell._N2D2_object.getActivation()
 
-        n2d2_cell._sync_inputs_and_parents(inputs)
+        if n2d2_deepnet is not None:
+            n2d2_cell._deepnet = n2d2_deepnet
+            n2d2_cell._sync_inputs_and_parents()
+        else:
+            n2d2_cell._deepnet = None
+            n2d2_cell._N2D2_object.clearInputs()
 
         return n2d2_cell
 
@@ -992,7 +988,6 @@ class Pool(Cell):
         return n2d2.Tensor.from_N2D2(self.get_outputs())._set_cell(self)     
 
 class Pool2d(Cell):
-    _type = 'Pool2d'
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
@@ -1059,7 +1054,6 @@ class Pool2d(Cell):
         return n2d2.Tensor.from_N2D2(self.get_outputs())._set_cell(self)
 
 class GlobalPool2d(Cell):
-    _type = 'GlobalPool2d'
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
@@ -1319,14 +1313,11 @@ class ElemWise(Cell):
 
 
     @classmethod
-    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
+    def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
 
-        n2d2_cell = cls(inputs, None, from_arguments=False)
+        n2d2_cell = cls(from_arguments=False)
 
         Cell.__init__(n2d2_cell,
-                      inputs,
-                      N2D2_object.getNbOutputs(),
-                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
                       **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
@@ -1340,7 +1331,12 @@ class ElemWise(Cell):
         # TODO: Add similar methods to Activation/Solver/Quantizer for nice prints
         n2d2_cell._config_parameters['activation_function'] = n2d2_cell._N2D2_object.getActivation()
 
-        n2d2_cell._sync_inputs_and_parents(inputs)
+        if n2d2_deepnet is not None:
+            n2d2_cell._deepnet = n2d2_deepnet
+            n2d2_cell._sync_inputs_and_parents()
+        else:
+            n2d2_cell._deepnet = None
+            n2d2_cell._N2D2_object.clearInputs()
 
         return n2d2_cell
 
@@ -1439,14 +1435,11 @@ class Dropout(Cell):
         return n2d2.Tensor.from_N2D2(self.get_outputs())._set_cell(self)
 
     @classmethod
-    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
+    def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
 
-        n2d2_cell = cls(inputs, from_arguments=False)
+        n2d2_cell = cls(from_arguments=False)
 
         Cell.__init__(n2d2_cell,
-                      inputs,
-                      N2D2_object.getNbOutputs(),
-                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
                       **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
@@ -1454,7 +1447,12 @@ class Dropout(Cell):
 
         n2d2_cell._config_parameters['activation_function'] = n2d2_cell._N2D2_object.getActivation()
 
-        n2d2_cell._sync_inputs_and_parents(inputs)
+        if n2d2_deepnet is not None:
+            n2d2_cell._deepnet = n2d2_deepnet
+            n2d2_cell._sync_inputs_and_parents()
+        else:
+            n2d2_cell._deepnet = None
+            n2d2_cell._N2D2_object.clearInputs()
 
         return n2d2_cell
 
@@ -1544,6 +1542,7 @@ class Padding(Cell):
 
         return n2d2_cell
 
+
 class LRN(Cell):
     r"""
     Local Response Normalization (LRN) layer.
@@ -1592,7 +1591,7 @@ class LRN(Cell):
                                                 self._constructor_arguments['nb_outputs'],
                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
 
-        """Set and initialize here all complex cell members"""
+        # Set and initialize here all complex cell members
         for key, value in self._config_parameters.items():
             if key is 'activation_function':
                 self._N2D2_object.setActivation(value.N2D2())
@@ -1621,7 +1620,9 @@ class LRN(Cell):
 
         return n2d2_cell
 
+
 class BatchNorm2d(Cell):
+
     _cell_constructors = {
         'Frame<float>': N2D2.BatchNormCell_Frame_float,
         'Frame_CUDA<float>': N2D2.BatchNormCell_Frame_CUDA_float,
@@ -1658,25 +1659,31 @@ class BatchNorm2d(Cell):
 
 
     @classmethod
-    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
+    def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
 
-        n2d2_cell = cls(inputs, from_arguments=False)
+        n2d2_cell = cls(None, from_arguments=False)
 
         Cell.__init__(n2d2_cell,
-                      inputs,
-                      N2D2_object.getNbOutputs(),
-                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
                       **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
+
+        n2d2_cell._constructor_arguments.update({
+            'nb_inputs': n2d2_cell._N2D2_object.getNbChannels(),
+        })
 
         # TODO: Add similar methods to Activation/Solver/Quantizer for nice prints and access
         n2d2_cell._config_parameters['activation_function'] = n2d2_cell._N2D2_object.getActivation()
         n2d2_cell._config_parameters['scale_solver'] = n2d2_cell._N2D2_object.getScaleSolver()
         n2d2_cell._config_parameters['bias_solver'] = n2d2_cell._N2D2_object.getBiasSolver()
 
-        n2d2_cell._sync_inputs_and_parents(inputs)
+        if n2d2_deepnet is not None:
+            n2d2_cell._deepnet = n2d2_deepnet
+            n2d2_cell._sync_inputs_and_parents()
+        else:
+            n2d2_cell._deepnet = None
+            n2d2_cell._N2D2_object.clearInputs()
 
         return n2d2_cell
 
@@ -1703,8 +1710,6 @@ class BatchNorm2d(Cell):
 
 
 class Activation(Cell):
-
-    _type = "Activation"
 
     _cell_constructors = {
         'Frame<float>': N2D2.ActivationCell_Frame_float,
@@ -1756,14 +1761,11 @@ class Activation(Cell):
         return n2d2.Tensor.from_N2D2(self.get_outputs())._set_cell(self)     
 
     @classmethod
-    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
+    def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
 
-        n2d2_cell = cls(inputs, from_arguments=False)
+        n2d2_cell = cls(from_arguments=False)
 
         Cell.__init__(n2d2_cell,
-                      inputs,
-                      N2D2_object.getNbOutputs(),
-                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
                       **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
@@ -1771,13 +1773,19 @@ class Activation(Cell):
 
         n2d2_cell._config_parameters['activation_function'] = n2d2_cell._N2D2_object.getActivation()
 
-        n2d2_cell._sync_inputs_and_parents(inputs)
+        if n2d2_deepnet is not None:
+            n2d2_cell._deepnet = n2d2_deepnet
+            n2d2_cell._sync_inputs_and_parents()
+        else:
+            n2d2_cell._deepnet = None
+            n2d2_cell._N2D2_object.clearInputs()
 
         return n2d2_cell
 
 
 
 class Reshape(Cell):
+
     _cell_constructors = {
         'Frame<float>': N2D2.ReshapeCell_Frame_float,
         'Frame_CUDA<float>': N2D2.ReshapeCell_Frame_CUDA_float,
@@ -1816,14 +1824,11 @@ class Reshape(Cell):
         self._add_to_graph(inputs)
 
     @classmethod
-    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
+    def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
 
-        n2d2_cell = cls(inputs, None, None, from_arguments=False)
+        n2d2_cell = cls(None, None, None, from_arguments=False)
 
         Cell.__init__(n2d2_cell,
-                      inputs,
-                      N2D2_object.getNbOutputs(),
-                      deepNet=n2d2_deepnet,
                       name=N2D2_object.getName(),
                       **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
@@ -1833,6 +1838,11 @@ class Reshape(Cell):
 
         n2d2_cell._config_parameters['activation_function'] = n2d2_cell._N2D2_object.getActivation()
 
-        n2d2_cell._sync_inputs_and_parents(inputs)
+        if n2d2_deepnet is not None:
+            n2d2_cell._deepnet = n2d2_deepnet
+            n2d2_cell._sync_inputs_and_parents()
+        else:
+            n2d2_cell._deepnet = None
+            n2d2_cell._N2D2_object.clearInputs()
 
         return n2d2_cell

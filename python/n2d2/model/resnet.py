@@ -326,7 +326,7 @@ def load_from_ONNX(inputs, resnet_type, version='pre_act', dims=None, batch_size
             n2d2.global_variables.model_cache + "/ONNX/",
             resnet_name)
         path = n2d2.global_variables.model_cache + "/ONNX/"+resnet_name+"/"+"resnet"+resnet_type+v+".onnx"
-    model = n2d2.deepnet.DeepNet.load_from_ONNX(inputs, path)
+    model = n2d2.deepnet.DeepNetCell.load_from_ONNX(inputs, path)
     return model
 
 

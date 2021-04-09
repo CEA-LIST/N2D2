@@ -79,7 +79,7 @@ elif args.arch == 'MobileNetv1_SAT':
 elif args.arch == 'MobileNet_v2':
     """Equivalent to N2D2/models/MobileNet_v2.ini"""
     #model = n2d2.model.Mobilenet_v2(alpha=0.5, size=size, l=10, expansion=6)
-    model = n2d2.model.mobilenet_v2.load_from_ONNX(download=True, batch_size=batch_size)
+    model = n2d2.model.mobilenetv2.load_from_ONNX(download=True, batch_size=batch_size)
     model.remove(1, False)
     model_extractor = model
 else:
