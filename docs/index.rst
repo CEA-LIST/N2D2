@@ -57,6 +57,12 @@ N2D2
    stimuliprovider
    deepnet
 
+.. toctree::
+   :maxdepth: 1
+   :caption: C++ API / Developer:
+
+   dev_intro
+
 
 
 Indices and tables

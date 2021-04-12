@@ -44,7 +44,12 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinxcontrib.bibtex',
+    'breathe',
 ]
+
+# Breathe Configuration
+breathe_default_project = "N2D2"
+breathe_default_members = ('members', 'undoc-members')
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -981,14 +981,41 @@ this transformation will ensure that the learning is done on a more
 balanced set of every labels, regardless of their actual pixel-wise
 ratio.
 
+Illustration of the working behavior of ``LabelSliceExtractionTransformation`` 
+with ``SlicesMargin`` = 0:
+
+.. figure:: _static/LabelSliceExtractionTransformation_apply__ter_W64_H64_S0.png
+   :alt: Randomly extracted slices with label 0.
+
+   Randomly extracted slices with label 0.
+
+.. figure:: _static/LabelSliceExtractionTransformation_apply__quater_W64_H64_S0.png
+   :alt: Randomly extracted slices with label 1.
+
+   Randomly extracted slices with label 1.
+
+
 When ``SlicesMargin`` is 0, only slices that fully include a given label
-are extracted, as shown in figure
-[fig:LabelSliceExtractionTransformation0]. The behavior with
-``SlicesMargin`` < 0 is illustrated in figure
-[fig:LabelSliceExtractionTransformation1]. Note that setting a negative
+are extracted, as shown in figures above. The behavior with
+``SlicesMargin`` < 0 is illustrated in figures below. Note that setting a negative
 ``SlicesMargin`` larger in absolute value than ``Width``/2 or
 ``Height``/2 will lead in some (random) cases in incorrect slice labels
 in respect to the majority pixel label in the slice.
+
+Illustration of the working behavior of ``LabelSliceExtractionTransformation`` 
+with ``SlicesMargin`` = -32:
+
+.. figure:: _static/LabelSliceExtractionTransformation_apply__ter_W64_H64_S-32.png
+   :alt: Randomly extracted slices including label 0.
+
+   Randomly extracted slices including label 0.
+
+.. figure:: _static/LabelSliceExtractionTransformation_apply__quater_W64_H64_S-32.png
+   :alt: Randomly extracted slices including label 1.
+
+   Randomly extracted slices including label 1.
+
+
 
 MagnitudePhaseTransformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
