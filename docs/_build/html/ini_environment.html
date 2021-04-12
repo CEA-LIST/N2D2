@@ -21,11 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -179,6 +178,10 @@
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++ API / Developer:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev_intro.html">Introduction</a></li>
 </ul>
 
             
@@ -1516,14 +1519,32 @@ lot of background. If the dataset is very unbalanced towards background,
 this transformation will ensure that the learning is done on a more
 balanced set of every labels, regardless of their actual pixel-wise
 ratio.</p>
+<p>Illustration of the working behavior of <code class="docutils literal notranslate"><span class="pre">LabelSliceExtractionTransformation</span></code>
+with <code class="docutils literal notranslate"><span class="pre">SlicesMargin</span></code> = 0:</p>
+<div class="figure align-default" id="id4">
+<img alt="Randomly extracted slices with label 0." src="_images/LabelSliceExtractionTransformation_apply__ter_W64_H64_S0.png" />
+<p class="caption"><span class="caption-text">Randomly extracted slices with label 0.</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-default" id="id5">
+<img alt="Randomly extracted slices with label 1." src="_images/LabelSliceExtractionTransformation_apply__quater_W64_H64_S0.png" />
+<p class="caption"><span class="caption-text">Randomly extracted slices with label 1.</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+</div>
 <p>When <code class="docutils literal notranslate"><span class="pre">SlicesMargin</span></code> is 0, only slices that fully include a given label
-are extracted, as shown in figure
-[fig:LabelSliceExtractionTransformation0]. The behavior with
-<code class="docutils literal notranslate"><span class="pre">SlicesMargin</span></code> &lt; 0 is illustrated in figure
-[fig:LabelSliceExtractionTransformation1]. Note that setting a negative
+are extracted, as shown in figures above. The behavior with
+<code class="docutils literal notranslate"><span class="pre">SlicesMargin</span></code> &lt; 0 is illustrated in figures below. Note that setting a negative
 <code class="docutils literal notranslate"><span class="pre">SlicesMargin</span></code> larger in absolute value than <code class="docutils literal notranslate"><span class="pre">Width</span></code>/2 or
 <code class="docutils literal notranslate"><span class="pre">Height</span></code>/2 will lead in some (random) cases in incorrect slice labels
 in respect to the majority pixel label in the slice.</p>
+<p>Illustration of the working behavior of <code class="docutils literal notranslate"><span class="pre">LabelSliceExtractionTransformation</span></code>
+with <code class="docutils literal notranslate"><span class="pre">SlicesMargin</span></code> = -32:</p>
+<div class="figure align-default" id="id6">
+<img alt="Randomly extracted slices including label 0." src="_images/LabelSliceExtractionTransformation_apply__ter_W64_H64_S-32.png" />
+<p class="caption"><span class="caption-text">Randomly extracted slices including label 0.</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-default" id="id7">
+<img alt="Randomly extracted slices including label 1." src="_images/LabelSliceExtractionTransformation_apply__quater_W64_H64_S-32.png" />
+<p class="caption"><span class="caption-text">Randomly extracted slices including label 1.</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+</div>
 </div>
 <div class="section" id="magnitudephasetransformation">
 <h3>MagnitudePhaseTransformation<a class="headerlink" href="#magnitudephasetransformation" title="Permalink to this headline">¶</a></h3>
