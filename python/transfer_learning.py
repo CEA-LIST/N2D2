@@ -129,16 +129,8 @@ elif args.arch == 'ResNet18':
 else:
     raise ValueError("Invalid architecture: " + args.arch)
 
-print(extractor)
-extractor.get_core_deepnet().draw_graph("extractor_graph")
-
-#model_head = x.get_deepnet()
-#print(model_head)
-
 print("Create classifier")
 loss_function = n2d2.application.CrossEntropyClassifier(provider, top_n=1)
-
-extractor.test()
 
 
 print("\n### Training ###")
@@ -146,6 +138,8 @@ for epoch in range(args.epochs):
 
     provider.set_partition("Learn")
 
+    extractor.test() # To prevent batchnorm updates
+    #extractor.learn()
     head.learn()
 
     print("\n# Train Epoch: " + str(epoch) + " #")
@@ -153,6 +147,7 @@ for epoch in range(args.epochs):
     for i in range(math.ceil(database.get_nb_stimuli('Learn') / batch_size)):
         x = provider.read_random_batch()
         x = extractor(x)
+        #x.detach_cell()
         x = head(x)
         x = loss_function(x)
 

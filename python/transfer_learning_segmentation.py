@@ -44,6 +44,7 @@ args = parser.parse_args()
 n2d2.global_variables.set_cuda_device(args.dev)
 n2d2.global_variables.default_model = "Frame_CUDA"
 
+
 batch_size = 8
 avg_window = 10000//batch_size
 size = [1024, 512, 3]
@@ -51,17 +52,17 @@ size = [1024, 512, 3]
 
 
 print("Create database")
-database = n2d2.database.Cityscapes(randomPartitioning=False)
+database = n2d2.database.Cityscapes(random_partitioning=False)
 database.load("/nvme0/DATABASE/Cityscapes/leftImg8bit")
 print(database)
 
 print("Create provider")
-provider = n2d2.provider.DataProvider(database=database, size=size, batchSize=batch_size, compositeStimuli=True)
+provider = n2d2.provider.DataProvider(database=database, size=size, batch_size=batch_size, composite_stimuli=True)
 
 otf_trans = n2d2.transform.Composite([
     n2d2.transform.Flip(apply_to='LearnOnly', random_horizontal_flip=True),
-    n2d2.transform.Distortion(apply_to='LearnOnly', elasticGaussianSize=21, elasticSigma=6.0,
-                              elasticScaling=36.0, scaling=10.0, rotation=10.0),
+    n2d2.transform.Distortion(apply_to='LearnOnly', elastic_gaussian_size=21, elastic_sigma=6.0,
+                              elastic_scaling=36.0, scaling=10.0, rotation=10.0),
 ])
 
 scales = []
@@ -106,27 +107,28 @@ elif args.arch == 'MobileNetv1_SAT':
     scales.append(extractor['196'])
     scales.append(extractor['232'])
     scales.append(extractor['244'])
-elif args.arch == 'MobileNet_v2':
+
+elif args.arch == 'MobileNetv2-onnx':
     trans = n2d2.transform.Composite([
         n2d2.transform.Rescale(width=size[0], height=size[1]),
         n2d2.transform.RangeAffine(first_operator='Divides', first_value=[255.0]),
         n2d2.transform.ColorSpace(color_space='RGB'),
         n2d2.transform.RangeAffine(first_operator='Minus', first_value=[0.485, 0.456, 0.406], second_operator='Divides',
-                    second_value=[0.229, 0.224, 0.225])
+                                   second_value=[0.229, 0.224, 0.225]),
     ])
 
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
-    extractor = n2d2.model.mobilenetv2.load_from_ONNX(download=True, dims=size, batch_size=batch_size)
-    extractor.add_input(provider)
-    extractor.remove(118, False)
-    extractor.remove(117, False)
-    extractor.remove(116, False)
+
+    extractor = n2d2.model.mobilenetv2.load_from_ONNX(provider, download=True, batch_size=batch_size)
+    extractor.remove("mobilenetv20_output_pred_fwd", False)
+    extractor.remove("mobilenetv20_output_flatten0_reshape0", False)
     #scales.append(extractor['mobilenetv20_features_linearbottleneck1_conv0_fwd'])
     scales.append(extractor['mobilenetv20_features_linearbottleneck3_batchnorm0_fwd'])
     scales.append(extractor['mobilenetv20_features_linearbottleneck10_batchnorm0_fwd'])
     scales.append(extractor['mobilenetv20_features_linearbottleneck13_batchnorm0_fwd'])
     scales.append(extractor['mobilenetv20_features_batchnorm1_fwd'])
+    scales_nb_inputs = [scales[0].dims()[2], scales[1].dims()[2], scales[2].dims()[2], scales[3].dims()[2]]
 elif args.arch == 'ResNet18':
     trans = n2d2.transform.Composite([
         n2d2.transform.Rescale(width=size[0], height=size[1]),
@@ -151,17 +153,101 @@ elif args.arch == 'ResNet18':
 else:
     raise ValueError("Invalid architecture: " + args.arch)
 
-print(extractor)
+
 
 print("Create decoder")
-decoder = n2d2.model.SegmentationDecoder(scales)
-print(decoder)
+decoder = n2d2.model.SegmentationDecoder(scales_nb_inputs)
 
 print("Create classifier")
-segmentation_decoder = n2d2.application.Classifier(provider, decoder, noDisplayLabel=0, defaultValue=0.0, targetValue=1.0, name=args.arch+".segmentation_softmax",
-                        labelsMapping="/home/jt251134/N2D2-IP/models/Segmentation_GoogleNet/cityscapes_5cls.target")
+loss_function = n2d2.application.CrossEntropyClassifier(provider, no_display_label=0, default_value=0.0, target_value=1.0,
+                                                        name=args.arch+".segmentation_softmax",
+                        labels_mapping="/home/jt251134/N2D2-IP/models/Segmentation_GoogleNet/cityscapes_5cls.target")
 
-print("\n### Train ###")
+
+print("\n### Training ###")
+for epoch in range(args.epochs):
+
+    provider.set_partition("Learn")
+
+    extractor.test()
+    #extractor.learn()
+    decoder.learn()
+
+    print("\n# Train Epoch: " + str(epoch) + " #")
+
+    for i in range(math.ceil(database.get_nb_stimuli('Learn') / batch_size)):
+        x = provider.read_random_batch()
+        extractor(x)
+        x = []
+        # TODO: There is currenly a problem if multiple detached tensors are fed to a network, since by default for each one a new deepnet is created
+        for scale in scales:
+            x.append(scale.get_outputs())
+        x = decoder(x)
+        x = loss_function(x)
+
+        #x.get_deepnet().draw_graph("segmentation_graph")
+
+        x.back_propagate()
+        x.update()
+
+        #exit()
+
+        print("Example: " + str(i * batch_size) + ", loss: "
+              + "{0:.3f}".format(x[0]), end='\r')
+
+    """
+    print("\n### Validation ###")
+
+    loss_function.clear_success()
+
+    provider.set_partition('Validation')
+    decoder.test()
+
+    for i in range(math.ceil(database.get_nb_stimuli('Validation') / batch_size)):
+        batch_idx = i * batch_size
+
+        x = provider.read_batch(batch_idx)
+        x = extractor(x)
+        x = decoder(x)
+        x = loss_function(x)
+
+        print("Validate example: " + str(i * batch_size) + ", val success: "
+              + "{0:.2f}".format(100 * loss_function.get_average_success()) + "%", end='\r')
+    """
+
+
+print("\n\n### Testing ###")
+
+provider.set_partition('Test')
+extractor.test()
+decoder.test()
+
+for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test') / batch_size)):
+    batch_idx = i * batch_size
+
+    x = provider.read_batch(batch_idx)
+    extractor(x)
+    x = []
+    # TODO: There is currenly a problem if multiple detached tensors are fed to a network, since by default for each one a new deepnet is created
+    for scale in scales:
+        x.append(scale.get_outputs())
+    x = decoder(x)
+    x = loss_function(x)
+
+    print("Example: " + str(i * batch_size) + ", test success: "
+          + "{0:.2f}".format(100 * loss_function.get_average_success()) + "%", end='\r')
+
+    if i >= math.ceil(database.get_nb_stimuli('Test') / batch_size) - 5:
+        loss_function.log_estimated_labels("test")
+
+
+
+exit()
+
+
+
+
+
 
 for epoch in range(args.epochs):
 

@@ -54,10 +54,32 @@ class DeepNet(N2D2_Interface):
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object):
-        deepnet = cls(from_parameters=False, name=N2D2_object.getName())
-        deepnet._N2D2_object = N2D2_object
-        return deepnet
 
+        deepnet = cls(from_parameters=False, name=N2D2_object.getName())
+
+        deepnet._N2D2_object = N2D2_object
+
+        cells = deepnet.N2D2().getCells()
+        layers = deepnet.N2D2().getLayers()
+        if not layers[0][0] == "env":
+            print("Is env:" + layers[0][0])
+            raise RuntimeError("First layer of N2D2 deepnet is not a StimuliProvider. You may be skipping cells")
+
+        for idx, layer in enumerate(layers[1:]):
+            if len(layer) > 1:
+                deepnet.begin_group("layer" + str(idx))
+
+            for cell in layer:
+                N2D2_cell = cells[cell]
+                n2d2_cell = n2d2.converter.cell_converter(N2D2_cell, deepnet)
+                if idx == 0:
+                    n2d2_cell.clear_input()  # Remove old stimuli provider
+                    # n2d2_cell.add_input(n2d2.Tensor([], cell=provider))
+            if len(layer) > 1:
+                deepnet.end_group()
+
+
+        return deepnet
 
 
     def add_to_current_group(self, cell):
@@ -126,39 +148,48 @@ class DeepNet(N2D2_Interface):
 
 
 
+class Callable:
+    def __init__(self, cells, name=None):
+        assert (isinstance(cells, list))
+        self._cells = {}
+        for cell in cells:
+            self._cells[cell.get_name()] = cell
+        self._name = name
 
-class DeepNetCell:
+    def __getitem__(self, name):
+        return self._cells[name]
+
+    def __call__(self, x):
+        raise RuntimeError("Callable instance without __call__() method")
+
+    def test(self):
+        for name, cell in self._cells.items():
+            cell.test()
+
+    def learn(self):
+        for name, cell in self._cells:
+            cell.learn()
+
+    def import_free_parameters(self, dir_name, ignoreNotExists=False):
+        for name, cell in self._cells:
+            cell.import_free_parameters(dir_name, ignoreNotExists=ignoreNotExists)
+
+    def get_name(self):
+        return ""
+
+
+
+class DeepNetCell(Callable):
 
     def __init__(self, N2D2_object):
 
-        self._core_deepnet = DeepNetCell._create_from_N2D2_object(N2D2_object)
+        self._core_deepnet = DeepNet.create_from_N2D2_object(N2D2_object)
+
+        Callable.__init__(self, [], name=N2D2_object.getName())
+        self._cells = self._core_deepnet.get_cells()
+
         self._deepnet = None
         self._inference = False
-
-    @classmethod
-    def _create_from_N2D2_object(cls, N2D2_object):
-        deepnet = DeepNet.create_from_N2D2_object(N2D2_object)
-
-        cells = deepnet.N2D2().getCells()
-        layers = deepnet.N2D2().getLayers()
-        if not layers[0][0] == "env":
-            print("Is env:" + layers[0][0])
-            raise RuntimeError("First layer of N2D2 deepnet is not a StimuliProvider. You may be skipping cells")
-
-        for idx, layer in enumerate(layers[1:]):
-            if len(layer) > 1:
-                deepnet.begin_group("layer" + str(idx))
-
-            for cell in layer:
-                N2D2_cell = cells[cell]
-                n2d2_cell = n2d2.converter.cell_converter(N2D2_cell, deepnet)
-                if idx == 0:
-                    n2d2_cell.clear_input()  # Remove old stimuli provider
-                    # n2d2_cell.add_input(n2d2.Tensor([], cell=provider))
-            if len(layer) > 1:
-                deepnet.end_group()
-
-        return deepnet
 
 
     @classmethod
@@ -207,6 +238,8 @@ class DeepNetCell:
 
         #self._deepnet = self._infer_deepnet(inputs)
 
+        #print(self._core_deepnet)
+
         # Recreate graph with underlying N2D2 deepnet
         self._deepnet = self.concat_to_deepnet(inputs.cell.get_deepnet())
 
@@ -224,10 +257,11 @@ class DeepNetCell:
 
         self._deepnet.N2D2().propagate(self._inference)
 
-        return n2d2.Tensor.from_N2D2(self._deepnet.get_outputs())._set_cell(self._deepnet.get_last())
+        return self._deepnet.get_outputs()
 
     def concat_to_deepnet(self, deepnet):
         new_n2d2_deepnet = deepnet
+
 
         #new_n2d2_deepnet.N2D2().setStimuliProvider(self._N2D2_object.getStimuliProvider())
         cells = self._core_deepnet.N2D2().getCells()
@@ -279,7 +313,9 @@ class DeepNetCell:
     def remove(self, name, reconnect=True):
         cell = self._core_deepnet.N2D2().getCells()[name]
         self._core_deepnet.N2D2().removeCell(cell, reconnect)
-        self._core_deepnet = DeepNetCell._create_from_N2D2_object(self._core_deepnet.N2D2())
+        self._core_deepnet = DeepNet.create_from_N2D2_object(self._core_deepnet.N2D2())
+        self._cells = self._core_deepnet.get_cells()
+
 
     def get_deepnet(self):
         return self._deepnet
@@ -451,22 +487,27 @@ class Sequence:
 class Callable:
     def __init__(self, cells, name=None):
         assert (isinstance(cells, list))
-        self._cells = cells
+        self._cells = {}
+        for cell in cells:
+            self._cells[cell.get_name()] = cell
         self._name = name
+
+    def __getitem__(self, name):
+        return self._cells[name]
 
     def __call__(self, x):
         raise RuntimeError("Callable instance without __call__() method")
 
     def test(self):
-        for cell in self._cells:
+        for name, cell in self._cells.items():
             cell.test()
 
     def learn(self):
-        for cell in self._cells:
+        for name, cell in self._cells.items():
             cell.learn()
 
     def import_free_parameters(self, dir_name, ignoreNotExists=False):
-        for cell in self._cells:
+        for name, cell in self._cells.items():
             cell.import_free_parameters(dir_name, ignoreNotExists=ignoreNotExists)
 
     def get_name(self):

@@ -170,6 +170,104 @@ void N2D2::DeconvCell_Frame<T>::initialize()
     }
 }
 
+
+
+
+
+
+template <class T>
+void N2D2::DeconvCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
+{
+    // NOTE: this is addition to initialize()
+    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
+    if (mapping.empty()) {
+        mMapping.append(Tensor<bool>({getNbOutputs(), inputDimZ}, true));
+    }
+
+   if (!mNoBias) {
+        if (mBias->empty()) {
+            mBias->resize({1, 1, getNbOutputs(), 1});
+            mBiasFiller->apply((*mBias));
+        }
+        else {
+            if (mBias->dimX() != 1 || mBias->dimY() != 1
+                || mBias->dimZ() != getNbOutputs() || mBias->dimB() != 1)
+            {
+                throw std::runtime_error("DeconvCell_Frame<T>::initialize(): in "
+                    "cell " + mName + ", wrong size for shared bias");
+            }
+        }
+    }
+
+    for (unsigned int k = 0, size = nbInputs; k < size; ++k) {
+
+        if (k < mWeightsSolvers.size())
+            continue;  // already initialized, skip!
+
+        mWeightsSolvers.push_back(mWeightsSolver->clone());
+
+        typename std::map<unsigned int,
+            std::pair<Interface<T>*, unsigned int> >::iterator
+                it = mExtSharedSynapses.find(k);
+
+        std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
+        kernelDims.push_back(getNbOutputs());
+        kernelDims.push_back(inputDimZ);
+
+        if (it != mExtSharedSynapses.end()) {
+            Tensor<T>* extWeights
+                = &((*(*it).second.first)[(*it).second.second]);
+
+            if (!std::equal(kernelDims.begin(), kernelDims.end(),
+                            extWeights->dims().begin()))
+            {
+                std::stringstream errorStr;
+                errorStr << "DeconvCell_Frame<T>::initialize(): in cell "
+                    << mName << ", mismatch between external weights dim. ("
+                    << extWeights->dims() << ") and expected dim. ("
+                    << kernelDims << ")";
+
+                throw std::runtime_error(errorStr.str());
+            }
+
+            mSharedSynapses.push_back(extWeights);
+        }
+        else {
+            // Weight filler expect dimZ as input and dimB as output
+            std::vector<size_t> fillerKernelDims(kernelDims);
+            std::swap(fillerKernelDims.back(),
+                      fillerKernelDims[kernelDims.size() - 2]);
+
+            Tensor<T>* sharedSynapses = new Tensor<T>(fillerKernelDims);
+            mWeightsFiller->apply(*sharedSynapses);
+            // Inverse dimZ and dimB for Deconv
+            sharedSynapses->reshape(kernelDims);
+
+            mSharedSynapses.push_back(sharedSynapses, 0);
+        }
+
+        mDiffSharedSynapses.push_back(new Tensor<T>(kernelDims), 0);
+    }
+}
+
+
+template <class T>
+void N2D2::DeconvCell_Frame<T>::initializeDataDependent() 
+{
+    // NOTE: this is addition to initialize()
+    Cell_Frame<T>::initializeDataDependent();
+
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].size() == 0) {
+            throw std::runtime_error("Zero-sized input for DeconvCell "
+                                     + mName);
+        }
+    }
+}
+
+
+
+
 template <class T>
 void N2D2::DeconvCell_Frame<T>::propagate(bool inference)
 {

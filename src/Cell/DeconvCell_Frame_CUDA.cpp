@@ -525,6 +525,468 @@ the API cudnnGetConvolutionForwardMaxCount().
     }
 }
 
+
+
+
+
+
+
+template <class T>
+void N2D2::DeconvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
+{
+     // NOTE: this is addition to initialize()
+    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
+    if (mapping.empty()) {
+        mMapping.append(Tensor<bool>({getNbOutputs(), inputDimZ}, true));
+    }
+    
+    if (!mNoBias) {
+        if (mBias->empty()) {
+            mBias->resize({1, 1, getNbOutputs(), 1});
+            mBiasFiller->apply((*mBias));
+            mBias->synchronizeHToD();
+        }
+        else {
+            if (mBias->dimX() != 1 || mBias->dimY() != 1
+                || mBias->dimZ() != getNbOutputs() || mBias->dimB() != 1)
+            {
+                throw std::runtime_error("DeconvCell_Frame_CUDA<T>::initialize():"
+                    " in cell " + mName + ", wrong size for shared bias");
+            }
+        }
+    }
+
+    const std::vector<int> strides(mStrideDims.rbegin(), mStrideDims.rend());
+    const std::vector<int> paddings(mPaddingDims.rbegin(), mPaddingDims.rend());
+    const std::vector<int> upscales(mDilationDims.rbegin(),
+                                    mDilationDims.rend());
+
+    CHECK_CUDNN_STATUS(
+        cudnnSetConvolutionNdDescriptor(mConvDesc,
+                                        mKernelDims.size(),
+                                        &paddings[0],
+                                        &strides[0],
+                                        &upscales[0],
+                                        CUDNN_CROSS_CORRELATION,
+                                        CudaContext::data_type<T>::value));
+
+    unsigned int nbChannels = 0;
+
+    for (unsigned int k = 0, size = nbInputs; k < size; ++k) {
+
+        if (k < mNbGroups.size()) {
+            nbChannels += inputDimZ;
+            continue;  // already initialized, skip!
+        }
+
+        mNbGroups.push_back(getNbGroups(mMapping.rows(nbChannels,
+                                                   inputDimZ)));
+
+        mWeightsSolvers.push_back(mWeightsSolver->clone());
+
+        typename std::map<unsigned int,
+            std::pair<CudaInterface<T>*, unsigned int> >::iterator
+                it = mExtSharedSynapses.find(k);
+
+        std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
+
+#if CUDNN_VERSION >= 7000
+        if (mNbGroups[k] > 1)
+            kernelDims.push_back(getNbOutputs() / mNbGroups[k]);
+        else
+            kernelDims.push_back(getNbOutputs());
+#endif
+
+        kernelDims.push_back(inputDimZ);
+
+        if (it != mExtSharedSynapses.end()) {
+            CudaTensor<T>* extWeights
+                = &((*(*it).second.first)[(*it).second.second]);
+
+            if (!std::equal(kernelDims.begin(), kernelDims.end(),
+                            extWeights->dims().begin()))
+            {
+                std::stringstream errorStr;
+                errorStr << "DeconvCell_Frame_CUDA<T>::initialize(): in cell "
+                    << mName << ", mismatch between external weights dim. ("
+                    << extWeights->dims() << ") and expected dim. ("
+                    << kernelDims << ")";
+
+                throw std::runtime_error(errorStr.str());
+            }
+
+            mSharedSynapses.push_back(extWeights);
+        }
+        else {
+            // Weight filler expect dimZ as input and dimB as output
+            std::vector<size_t> fillerKernelDims(kernelDims);
+            std::swap(fillerKernelDims.back(),
+                      fillerKernelDims[kernelDims.size() - 2]);
+
+            CudaTensor<T>* sharedSynapses = new CudaTensor<T>(fillerKernelDims);
+            mWeightsFiller->apply(*sharedSynapses);
+            // Inverse dimZ and dimB for Deconv
+            sharedSynapses->reshape(kernelDims);
+
+            mSharedSynapses.push_back(sharedSynapses, 0);
+
+#if CUDNN_VERSION >= 7000
+            if (mNbGroups[k] > 1)
+                cudnnSetConvolutionGroupCount(mConvDesc, mNbGroups[k]);
+            else
+#endif
+            if (mNbGroups[k] == 0) {
+                // Set the non-connected kernels coefficients to 0
+                for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+                    for (unsigned int channel = 0; channel < inputDimZ;
+                         ++channel) {
+                        if (!isConnection(nbChannels + channel, output))
+                            mSharedSynapses.back()[channel][output]
+                                                                .fill(T(0.0));
+                    }
+                }
+            }
+
+            mSharedSynapses.back().synchronizeHToD();
+        }
+
+        mDiffSharedSynapses.push_back(new CudaTensor<T>(kernelDims), 0);
+
+        mFilterDesc.push_back(cudnnFilterDescriptor_t());
+
+        const std::vector<int> cudaKernelDims(kernelDims.rbegin(),
+                                              kernelDims.rend());
+
+        CHECK_CUDNN_STATUS(cudnnCreateFilterDescriptor(&mFilterDesc.back()));
+#if CUDNN_VERSION >= 5000
+        CHECK_CUDNN_STATUS(cudnnSetFilterNdDescriptor(mFilterDesc.back(),
+                                                      CudaContext::data_type<T>::value,
+                                                      CUDNN_TENSOR_NCHW,
+                                                      cudaKernelDims.size(),
+                                                      &cudaKernelDims[0]));
+#else
+        CHECK_CUDNN_STATUS(cudnnSetFilterNdDescriptor(mFilterDesc.back(),
+                                                      CudaContext::data_type<T>::value,
+                                                      cudaKernelDims.size(),
+                                                      &cudaKernelDims[0]));
+#endif
+
+        nbChannels += inputDimZ;
+
+    }
+
+}
+
+
+template <class T>
+void N2D2::DeconvCell_Frame_CUDA<T>::initializeDataDependent() 
+{
+    // NOTE: this is addition to initialize()
+    Cell_Frame_CUDA<T>::initializeDataDependent();
+
+    unsigned int nbChannels = 0;
+
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].size() == 0) {
+            throw std::runtime_error("Zero-sized input for DeconvCell "
+                                     + mName);
+        }
+
+       // Need to cast mInputs[k] so that getCudnnTensorDesc() returns the
+        // right data type. No need to actually copy any data.
+        std::shared_ptr<CudaDeviceTensor<T> > input
+            = cuda_device_tensor_cast_nocopy<T>(mInputs[k]);
+
+#if CUDNN_VERSION >= 7000
+        int maxAlgoIterations = 0;
+        cudnnGetConvolutionForwardAlgorithmMaxCount(CudaContext::cudnnHandle(),
+                                                    &maxAlgoIterations);
+        if (maxAlgoIterations == 0)
+            throw std::runtime_error("No available CUDNN ConvolutionForwardAlgorithm for cell  " + mName);
+
+        int returnAlgoCounts = 0;
+
+        std::vector<cudnnConvolutionFwdAlgoPerf_t> returnFwdAlgo(maxAlgoIterations);
+/**************************************************************************************************************
+https://docs.nvidia.com/deeplearning/sdk/cudnn-developer-guide/index.html#cudnnFindConvolutionForwardAlgorithm
+This function attempts all cuDNN algorithms (including CUDNN_TENSOR_OP_MATH and CUDNN_DEFAULT_MATH
+versions of algorithms where CUDNN_TENSOR_OP_MATH may be available) for cudnnConvolutionForward(),
+using memory allocated via cudaMalloc(), and outputs performance metrics to a user-allocated array
+of cudnnConvolutionFwdAlgoPerf_t. These metrics are written in sorted fashion where the first element
+has the lowest compute time. The total number of resulting algorithms can be queried through
+the API cudnnGetConvolutionForwardMaxCount().
+***************************************************************************************************************/
+
+        CHECK_CUDNN_STATUS(cudnnFindConvolutionForwardAlgorithm(
+                            CudaContext::cudnnHandle(),
+                            mOutputs.getCudnnTensorDesc(),
+                            mFilterDesc.back(),
+                            mConvDesc,
+                            input->getCudnnTensorDesc(),
+                            maxAlgoIterations,
+                            &returnAlgoCounts,
+                            &returnFwdAlgo[0]));
+        // std::cout << "Layer " << mName << "(" << k  << ")"
+        //     << " cuDNN forward algorithm heuristic results: " << std::endl;
+
+        for(unsigned int fwdAlgo = 0; fwdAlgo < (unsigned int) maxAlgoIterations; ++fwdAlgo)
+        {
+
+
+            std::string algoName
+                                = (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_GEMM)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_GEMM"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_DIRECT)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_DIRECT"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_FFT)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_FFT"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_FFT_TILING"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED"
+                                : (returnFwdAlgo[fwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_FWD_ALGO_COUNT)
+                                    ? "CUDNN_CONVOLUTION_FWD_ALGO_COUNT"
+                                : "Undetermined Algorithm";
+
+
+            // std::cout << "----> Forward convolution algorithm: " << algoName
+            //     << " [" << returnFwdAlgo[fwdAlgo].time << " ms][" << returnFwdAlgo[fwdAlgo].memory / 1.0e6 << " MB]"
+            //     << std::endl;
+        }
+        mFwdAlgo.push_back(returnFwdAlgo[0].algo);
+#else
+
+        mFwdAlgo.push_back(cudnnConvolutionFwdAlgo_t());
+
+
+        CHECK_CUDNN_STATUS(cudnnGetConvolutionForwardAlgorithm(
+            CudaContext::cudnnHandle(),
+            mOutputs.getCudnnTensorDesc(),
+            mFilterDesc.back(),
+            mConvDesc,
+            input->getCudnnTensorDesc(),
+            CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
+            0,
+            &mFwdAlgo.back()));
+
+#endif
+
+#if CUDNN_VERSION >= 7000
+
+        maxAlgoIterations = 0;
+        cudnnGetConvolutionBackwardFilterAlgorithmMaxCount(CudaContext::cudnnHandle(),
+                                                    &maxAlgoIterations);
+        if (maxAlgoIterations == 0)
+            throw std::runtime_error("No available CUDNN ConvolutionBackwardFilterAlgorithm for cell  " + mName);
+
+        returnAlgoCounts = 0;
+        std::vector< cudnnConvolutionBwdFilterAlgoPerf_t > returnBwdFilterAlgo(maxAlgoIterations);
+
+
+        CHECK_CUDNN_STATUS(cudnnFindConvolutionBackwardFilterAlgorithm(
+                            CudaContext::cudnnHandle(),
+                            mOutputs.getCudnnTensorDesc(),
+                            input->getCudnnTensorDesc(),
+                            mConvDesc,
+                            mFilterDesc.back(),
+                            maxAlgoIterations,
+                            &returnAlgoCounts,
+                            &returnBwdFilterAlgo[0]));
+
+        for(unsigned int bwdAlgo = 0; bwdAlgo < (unsigned int) maxAlgoIterations; ++bwdAlgo)
+        {
+            std::string algoName
+                                = (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0)
+                                    ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0"
+                                : (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1)
+                                    ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1"
+                                : (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT)
+                                    ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT"
+                                : (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_3)
+                                    ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_3"
+                                : (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD)
+                                    ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD"
+                                : (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD_NONFUSED)
+                                    ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD_NONFUSED"
+                                : (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT_TILING)
+                                    ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_FFT_TILING"
+                                : (returnBwdFilterAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_FILTER_ALGO_COUNT)
+                                    ? "CUDNN_CONVOLUTION_BWD_FILTER_ALGO_COUNT"
+                                : "Undetermined Algorithm";
+
+
+            // std::cout << "----> Backward filter convolution algorithm: " << algoName
+            //     << " [" << returnBwdFilterAlgo[bwdAlgo].time << " ms][" << returnBwdFilterAlgo[bwdAlgo].memory / 1.0e6 << " MB]"
+            //     << std::endl;
+        }
+        mBwdFilterAlgo.push_back(returnBwdFilterAlgo[0].algo);
+
+        maxAlgoIterations = 0;
+        cudnnGetConvolutionBackwardDataAlgorithmMaxCount(CudaContext::cudnnHandle(),
+                                                    &maxAlgoIterations);
+        if (maxAlgoIterations == 0)
+            throw std::runtime_error("No available CUDNN ConvolutionBackwardDataAlgorithm for cell  " + mName);
+
+        returnAlgoCounts = 0;
+        std::vector< cudnnConvolutionBwdDataAlgoPerf_t > returnBwdDataAlgo(maxAlgoIterations);
+
+        CHECK_CUDNN_STATUS(cudnnFindConvolutionBackwardDataAlgorithm(
+                            CudaContext::cudnnHandle(),
+                            mFilterDesc.back(),
+                            input->getCudnnTensorDesc(),
+                            mConvDesc,
+                            mOutputs.getCudnnTensorDesc(),
+                            maxAlgoIterations,
+                            &returnAlgoCounts,
+                            &returnBwdDataAlgo[0]));
+        for(unsigned int bwdAlgo = 0; bwdAlgo < (unsigned int) maxAlgoIterations; ++bwdAlgo)
+        {
+            std::string algoName
+                                = (returnBwdDataAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_0)
+                                    ? "CUDNN_CONVOLUTION_BWD_DATA_ALGO_0"
+                                : (returnBwdDataAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_1)
+                                    ? "CUDNN_CONVOLUTION_BWD_DATA_ALGO_1"
+                                : (returnBwdDataAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT)
+                                    ? "CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT"
+                                : (returnBwdDataAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT_TILING)
+                                    ? "CUDNN_CONVOLUTION_BWD_DATA_ALGO_FFT_TILING"
+                                : (returnBwdDataAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD)
+                                    ? "CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD"
+                                : (returnBwdDataAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED)
+                                    ? "CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED"
+                                : (returnBwdDataAlgo[bwdAlgo].algo
+                                        == CUDNN_CONVOLUTION_BWD_DATA_ALGO_COUNT)
+                                    ? "CUDNN_CONVOLUTION_BWD_DATA_ALGO_COUNT"
+                                : "Undetermined Algorithm";
+
+
+            // std::cout << "----> Backward data convolution algorithm: " << algoName
+            //     << " [" << returnBwdDataAlgo[bwdAlgo].time << " ms][" << returnBwdDataAlgo[bwdAlgo].memory / 1.0e6 << " MB]"
+            //     << std::endl;
+        }
+
+        mBwdDataAlgo.push_back(returnBwdDataAlgo[0].algo);
+
+#else
+
+#if CUDNN_VERSION >= 5000 && CUDNN_VERSION < 7000
+        mBwdFilterAlgo.push_back(cudnnConvolutionBwdFilterAlgo_t());
+
+        CHECK_CUDNN_STATUS(cudnnGetConvolutionBackwardFilterAlgorithm(
+            CudaContext::cudnnHandle(),
+            mOutputs.getCudnnTensorDesc(),
+            input->getCudnnTensorDesc(),
+            mConvDesc,
+            mFilterDesc.back(),
+            CUDNN_CONVOLUTION_BWD_FILTER_PREFER_FASTEST,
+            0,
+            &mBwdFilterAlgo.back()));
+
+        mBwdDataAlgo.push_back(cudnnConvolutionBwdDataAlgo_t());
+
+        CHECK_CUDNN_STATUS(cudnnGetConvolutionBackwardDataAlgorithm(
+            CudaContext::cudnnHandle(),
+            mFilterDesc.back(),
+            input->getCudnnTensorDesc(),
+            mConvDesc,
+            mOutputs.getCudnnTensorDesc(),
+            CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST,
+            0,
+            &mBwdDataAlgo.back()));
+#endif
+
+#endif
+
+
+        size_t workspaceSize = 0;
+
+        CHECK_CUDNN_STATUS(cudnnGetConvolutionForwardWorkspaceSize(
+            CudaContext::cudnnHandle(),
+            mOutputs.getCudnnTensorDesc(),
+            mFilterDesc.back(),
+            mConvDesc,
+            input->getCudnnTensorDesc(),
+            mFwdAlgo.back(),
+            &workspaceSize));
+
+        if (workspaceSize > mWorkspaceSize)
+            mWorkspaceSize = workspaceSize;
+
+#if CUDNN_VERSION >= 5000
+        CHECK_CUDNN_STATUS(cudnnGetConvolutionBackwardFilterWorkspaceSize(
+            CudaContext::cudnnHandle(),
+            // same arguments as cudnnGetConvolutionBackwardFilterAlgorithm()
+            // -->
+            mOutputs.getCudnnTensorDesc(),
+            input->getCudnnTensorDesc(),
+            mConvDesc,
+            mFilterDesc.back(),
+            // <--
+            mBwdFilterAlgo.back(),
+            &workspaceSize));
+
+        if (workspaceSize > mWorkspaceSize)
+            mWorkspaceSize = workspaceSize;
+
+        CHECK_CUDNN_STATUS(cudnnGetConvolutionBackwardDataWorkspaceSize(
+            CudaContext::cudnnHandle(),
+            // same arguments as cudnnGetConvolutionBackwardDataAlgorithm() -->
+            mFilterDesc.back(),
+            input->getCudnnTensorDesc(),
+            mConvDesc,
+            mOutputs.getCudnnTensorDesc(),
+            // <--
+            mBwdDataAlgo.back(),
+            &workspaceSize));
+#endif
+
+        if (workspaceSize > mWorkspaceSize)
+            mWorkspaceSize = workspaceSize;
+
+        nbChannels += mInputs[k].dimZ();
+    }
+
+    if (mWorkspaceSize > 0) {
+        if (mWorkspace != NULL)
+            cudaFree(mWorkspace);
+
+        CHECK_CUDA_STATUS(cudaMalloc(&mWorkspace, mWorkspaceSize));
+    }
+}
+
+
+
+
+
 template <class T>
 void N2D2::DeconvCell_Frame_CUDA<T>::propagate(bool inference)
 {

@@ -73,6 +73,13 @@ void N2D2::PaddingCell_Frame_CUDA::initialize()
     }
 }
 
+
+void N2D2::PaddingCell_Frame_CUDA::initializeDataDependent(){
+    Cell_Frame_CUDA<Float_T>::initializeDataDependent();
+
+    initialize();
+}
+
 void N2D2::PaddingCell_Frame_CUDA::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();

@@ -62,6 +62,15 @@ void N2D2::PaddingCell_Frame::initialize()
     }
 }
 
+
+
+void N2D2::PaddingCell_Frame::initializeDataDependent(){
+    Cell_Frame<Float_T>::initializeDataDependent();
+
+    initialize();
+}
+
+
 void N2D2::PaddingCell_Frame::propagate(bool inference)
 {
     mInputs.synchronizeDBasedToH();

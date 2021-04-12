@@ -22,120 +22,105 @@
 
 
 from n2d2.utils import ConfigSection
-from n2d2.cell import Conv, Deconv, Softmax, Padding, ElemWise
-from n2d2.deepnet import Group, DeepNet
+from n2d2.cell import Conv, Deconv, Padding, ElemWise
+from n2d2.deepnet import Callable
 from n2d2.activation import Linear, Tanh
 from n2d2.solver import SGD
 from n2d2.filler import Constant, Normal
-from n2d2.provider import TensorPlaceholder
-import n2d2.global_variables
 
-decoder_solver_config = ConfigSection(learningRatePolicy='CosineDecay', learningRate=0.01, momentum=0.9,
-                              decay=0.00004, warmUpDuration=0, maxIterations=59500, polyakMomentum=False)
+
+decoder_solver_config = ConfigSection(learning_rate_policy='CosineDecay', learning_rate=0.01, momentum=0.9,
+                              decay=0.00004, warm_up_duration=0, max_iterations=59500, polyak_momentum=False)
 
 class DecoderConv(Conv):
-    def __init__(self, inputs, nbOutputs, **config_parameters):
-        Conv.__init__(self, inputs, nbOutputs, kernelDims=[1, 1], strideDims=[1, 1], activationFunction=Tanh(), backPropagate=False,
-                    weightsFiller=Normal(stdDev=0.1), biasFiller=Constant(value=0.2),
-                    weightsSolver=SGD(**decoder_solver_config), biasSolver=SGD(**decoder_solver_config),
+    def __init__(self, nb_inputs, nb_outputs, **config_parameters):
+        Conv.__init__(self, nb_inputs, nb_outputs, kernel_dims=[1, 1], stride_dims=[1, 1], activation_function=Tanh(), back_propagate=False,
+                    weights_filler=Normal(std_dev=0.1), bias_filler=Constant(value=0.2),
+                    weights_solver=SGD(**decoder_solver_config), bias_solver=SGD(**decoder_solver_config),
                     **config_parameters)
 
 
 class DecoderDeconv(Deconv):
-    def __init__(self, inputs, nbOutputs, **config_parameters):
-        Deconv.__init__(self, inputs, nbOutputs, activationFunction=Linear(), kernelDims=[4, 4], strideDims=[2, 2],
-                    weightsFiller=Normal(stdDev=0.1), biasFiller=Constant(value=0.2),
-                    weightsSolver=SGD(**decoder_solver_config), biasSolver=SGD(**decoder_solver_config),
+    def __init__(self, nb_inputs, nb_outputs, **config_parameters):
+        Deconv.__init__(self, nb_inputs, nb_outputs, activation_function=Linear(), kernel_dims=[4, 4], stride_dims=[2, 2],
+                    weights_filler=Normal(std_dev=0.1), bias_filler=Constant(value=0.2),
+                    weights_solver=SGD(**decoder_solver_config), bias_solver=SGD(**decoder_solver_config),
                     **config_parameters)
 
 
 class DecoderPadding(Padding):
-    def __init__(self, inputs, nbOutputs, **config_parameters):
-        Padding.__init__(self, inputs, nbOutputs,
-                         topPad=-1, botPad=-1, leftPad=-1, rightPad=-1, **config_parameters)
+    def __init__(self, **config_parameters):
+        Padding.__init__(self, top_pad=-1, bot_pad=-1, left_pad=-1, right_pad=-1, **config_parameters)
 
 
 class DecoderFuse(ElemWise):
-    def __init__(self, inputs, nbOutputs, **config_parameters):
-        ElemWise.__init__(self, inputs, nbOutputs, operation='Sum', **config_parameters)
+    def __init__(self, **config_parameters):
+        ElemWise.__init__(self, operation='Sum', **config_parameters)
 
 
-class SegmentationDecoder(Group):
-    def __init__(self, inputs_scales=None, deepNet=None):
+class SegmentationDecoder(Callable):
+    def __init__(self, nb_inputs):
 
-        if not len(inputs_scales) == 4:
-            RuntimeError("'input_scales' needs exactly 4 elements.")
+        if not len(nb_inputs) == 4:
+            RuntimeError("'nb_inputs' needs exactly 4 elements.")
 
-        inputs = []
-        for scale in inputs_scales:
-            if isinstance(scale, list):
-                size = []
-                for elem in scale:
-                    size.append(elem)
-                inputs.append(size)
-            elif isinstance(scale, n2d2.cell.Cell):
-                inputs.append(scale.get_outputs())
-            else:
-                ValueError("'inputs_scales' has to be list of int lists or cells")
+        Callable.__init__(self, [
+            DecoderConv(nb_inputs[0], 5, name="conv_1x1_x4"),
+            DecoderConv(nb_inputs[1], 5, name="conv_1x1_x8"),
+            DecoderConv(nb_inputs[2], 5, name="conv_1x1_x16"),
+            DecoderConv(nb_inputs[3], 5, name="conv_1x1_x32"),
 
-        if deepNet is None:
-            self._deepNet = DeepNet()
-        else:
-            self._deepNet = deepNet
+            DecoderDeconv(5, 5, name="deconv1"),
+            DecoderPadding(name="deconv1_pad"),
+            DecoderFuse(name="fuse1"),
 
-        print("scales")
-        print(inputs[0].dims())
-        print(inputs[1].dims())
-        print(inputs[2].dims())
-        print(inputs[3].dims())
+            DecoderDeconv(5, 5, name="deconv_fuse1"),
+            DecoderPadding(name="deconv_fuse1_pad"),
+            DecoderFuse(name="fuse2"),
 
-        interface_1x1_x4 = TensorPlaceholder(inputs[0], name="interface_1x1_x4")
-        interface_1x1_x8 = TensorPlaceholder(inputs[1], name="interface_1x1_x8")
-        interface_1x1_x16 = TensorPlaceholder(inputs[2], name="interface_1x1_x16")
-        interface_1x1_x32 = TensorPlaceholder(inputs[3], name="interface_1x1_x32")
+            DecoderDeconv(5, 5, name="deconv_fuse2"),
+            DecoderPadding(name="deconv_fuse2_pad"),
+            DecoderFuse(name="fuse3"),
 
-        # For graph visualization tools
-        self._deepNet.set_provider(interface_1x1_x4)
+            Deconv(5, 5, kernel_dims=[8, 8], stride_dims=[4, 4], activation_function=Linear(),
+                                  weights_filler=Normal(std_dev=0.1), bias_filler=Constant(value=0.2),
+                                  weights_solver=SGD(**decoder_solver_config), bias_solver=SGD(**decoder_solver_config),
+                                  name="deconv_fuse3"),
+            Padding(top_pad=-2, bot_pad=-2, left_pad=-2, right_pad=-2, name="out_adapt")
+        ])
 
-        conv_1x1_x4 = DecoderConv(interface_1x1_x4, nbOutputs=5, name="conv_1x1_x4", deepNet=self._deepNet)
-        conv_1x1_x8 = DecoderConv(interface_1x1_x8, nbOutputs=5, name="conv_1x1_x8", deepNet=self._deepNet)
-        conv_1x1_x16 = DecoderConv(interface_1x1_x16, nbOutputs=5, name="conv_1x1_x16", deepNet=self._deepNet)
-        conv_1x1_x32 = DecoderConv(interface_1x1_x32, nbOutputs=5, name="conv_1x1_x32", deepNet=self._deepNet)
+    def __call__(self, inputs):
 
-        post_backbone_convs = Group([conv_1x1_x4, conv_1x1_x8, conv_1x1_x16, conv_1x1_x32], name="post_backbone_convs")
+        if not len(inputs) == 4:
+            RuntimeError("'inputs' needs exactly 4 elements.")
 
-        deconv1 = DecoderDeconv(conv_1x1_x32, conv_1x1_x32.get_outputs().dimZ(), name="deconv1", deepNet=self._deepNet)
-        deconv1_pad = DecoderPadding(deconv1, deconv1.get_outputs().dimZ(), name="deconv1_pad", deepNet=self._deepNet)
-        fuse1 = DecoderFuse([deconv1_pad, conv_1x1_x16], deconv1_pad.get_outputs().dimZ(), name="fuse1", deepNet=self._deepNet)
+        # post_backbone_convs
+        x_x4 = self["conv_1x1_x4"](inputs[0])
+        x_x8 = self["conv_1x1_x8"](inputs[1])
+        x_x16 = self["conv_1x1_x16"](inputs[2])
+        x_x32 = self["conv_1x1_x32"](inputs[3])
 
-        deconv_sequence1 = Group([deconv1, deconv1_pad, fuse1], name="deconv_sequence1")
+        # deconv_sequence1
+        x = self["deconv1"](x_x32)
+        x = self["deconv1_pad"](x)
+        x = self["fuse1"]([x, x_x16])
 
-        deconv_fuse1 = DecoderDeconv(fuse1, fuse1.get_outputs().dimZ(), name="deconv_fuse1", deepNet=self._deepNet)
-        deconv_fuse1_pad = DecoderPadding(deconv_fuse1, deconv_fuse1.get_outputs().dimZ(), name="deconv_fuse1_pad", deepNet=self._deepNet)
-        fuse2 = DecoderFuse([deconv_fuse1_pad, conv_1x1_x8], deconv_fuse1_pad.get_outputs().dimZ(), name="fuse2", deepNet=self._deepNet)
+        # deconv_sequence2
+        x = self["deconv_fuse1"](x)
+        x = self["deconv_fuse1_pad"](x)
+        x = self["fuse2"]([x, x_x8])
 
-        deconv_sequence2 = Group([deconv_fuse1, deconv_fuse1_pad, fuse2], name="deconv_sequence2")
+        # deconv_sequence3
+        x = self["deconv_fuse2"](x)
+        x = self["deconv_fuse2_pad"](x)
+        x = self["fuse3"]([x, x_x4])
 
-        deconv_fuse2 = DecoderDeconv(fuse2, fuse2.get_outputs().dimZ(), name="deconv_fuse2", deepNet=self._deepNet)
-        deconv_fuse2_pad = DecoderPadding(deconv_fuse2, deconv_fuse2.get_outputs().dimZ(), name="deconv_fuse2_pad", deepNet=self._deepNet)
-        fuse3 = DecoderFuse([deconv_fuse2_pad, conv_1x1_x4], deconv_fuse2_pad.get_outputs().dimZ(), name="fuse3", deepNet=self._deepNet)
+        # deconv_sequence4
+        x = self["deconv_fuse3"](x)
+        x = self["out_adapt"](x)
 
-        deconv_sequence3 = Group([deconv_fuse2, deconv_fuse2_pad, fuse3], name="deconv_sequence3")
+        return x
 
-        deconv_fuse3 = Deconv(fuse3, fuse3.get_outputs().dimZ(), kernelDims=[8, 8], strideDims=[4, 4], activationFunction=Linear(),
-                    weightsFiller=Normal(stdDev=0.1), biasFiller=Constant(value=0.2),
-                    weightsSolver=SGD(**decoder_solver_config), biasSolver=SGD(**decoder_solver_config),
-                    name="deconv_fuse3", deepNet=self._deepNet)
-        out_adapt = Padding(deconv_fuse3, deconv_fuse3.get_outputs().dimZ(),
-                    topPad=-2, botPad=-2, leftPad=-2, rightPad=-2, name="out_adapt", deepNet=self._deepNet)
-
-        deconv_sequence4 = Group([deconv_fuse3, out_adapt], name="deconv_sequence4")
-
-        decoder_blocks = Group([deconv_sequence1, deconv_sequence2, deconv_sequence3, deconv_sequence4], name="decoder_blocks")
-
-        softmax = Softmax(out_adapt, withLoss=True, name="segmentation_decoder_softmax", deepNet=self._deepNet)
-
-        Group.__init__(self, [post_backbone_convs, decoder_blocks, softmax], name="decoder")
 
     """
     # Note: Not functional
@@ -143,10 +128,10 @@ class SegmentationDecoder(Group):
         print("Add solvers")
 
 
-        #solver_config = ConfigSection(learningRatePolicy='CosineDecay', learningRate=0.01, momentum=0.9,
-        #                decay=0.00004, warmUpDuration=0, maxIterations=max_iterations, polyakMomentum=False)
+        #solver_config = ConfigSection(learning_rate_policy='CosineDecay', learning_rate=0.01, momentum=0.9,
+        #                decay=0.00004, warm_up_duration=0, max_iterations=max_iterations, polyak_momentum=False)
 
-        solver_config = ConfigSection(learningRate=0.03)
+        solver_config = ConfigSection(learning_rate=0.03)
 
         weights_solver = SGD
         weights_solver_config = solver_config
