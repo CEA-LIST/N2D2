@@ -63,7 +63,8 @@ public:
     enum QuantMode{
         Default,
         Symmetric,
-        Asymmetric
+        Asymmetric,
+        FullRange
     };
     QuantMode getQuantMode(){
         return mQuantMode;
@@ -108,7 +109,8 @@ template <>
 const char* const EnumStrings<N2D2::QuantizerCell::QuantMode>::data[]
     = {"Default",
        "Symmetric",
-       "Asymmetric"};
+       "Asymmetric",
+       "FullRange"};
 }
 
 
