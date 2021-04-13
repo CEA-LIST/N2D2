@@ -201,6 +201,9 @@ class DataProvider(Provider):
         else:
             self._N2D2_object.addOnTheFlyTransformation(transformation.N2D2(), transformation.get_apply_set())
             self._transformations.append(transformation)
+            
+    def batch_number(self):
+        return self._index
 
     def __next__(self):
         """
@@ -209,7 +212,7 @@ class DataProvider(Provider):
         if self._index < int(self.get_database().get_nb_stimuli(self._partition) / self.get_batch_size()):
             self._index += 1
             if self._random_read:
-                return self.read_random_batch(self._mode)
+                return self.read_random_batch()
             else:
                 return self.read_batch(self._index-1)
         else:

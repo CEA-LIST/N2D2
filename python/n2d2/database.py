@@ -48,9 +48,28 @@ class Database(N2D2_Interface):
 
     def get_nb_stimuli(self, partition):
         """
-        :returns: The number of stimuli available for the partition
+        Return the number fo stimuli  available for this partition
+        :param partition: The partition can be  ```Test``, ``Validation``, ``Test``,  ``Unpartitioned``
+        :type partition: str 
         """
-        return self._N2D2_object.getNbStimuli(N2D2.Database.StimuliSet.__members__[partition])
+        return self.N2D2().getNbStimuli(N2D2.Database.StimuliSet.__members__[partition])
+
+    def get_partition_summary(self):
+        """
+        Print the number of stimuli for each partition.
+        """
+        learn = self.get_nb_stimuli("Learn")
+        test = self.get_nb_stimuli("Test")
+        validation = self.get_nb_stimuli("Validation")
+        unpartitioned = self.get_nb_stimuli("Unpartitioned")
+        total = validation + learn + test + unpartitioned
+
+        print("Number of stimuli : " + str(total) +"\n"+
+        "Learn         : " + str(learn) + " stimuli (" + str(round(((learn/total) * 100), 2)) + "%)\n"+
+        "Test          : " + str(test) + " stimuli (" + str(round(((test/total) * 100), 2)) + "%)\n"+
+        "Validation    : " + str(validation) + " stimuli (" + str(round(((validation/total) * 100), 2)) + "%)\n"+
+        "Unpartitioned : " + str(unpartitioned) + " stimuli (" + str(round(((unpartitioned/total) * 100), 2)) + "%)\n"
+        )
 
     def get_label_name(self, label_idx):
         """
@@ -217,3 +236,22 @@ class Cityscapes(Database):
         self._N2D2_object = N2D2.Cityscapes_Database(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
 
+class GTSRB(Database):
+    """
+    The German Traffic Sign Benchmark (https://benchmark.ini.rub.de/) is a multi-class, single-image classification challenge held at the International Joint Conference on Neural Networks (IJCNN) 2011.
+    """
+
+    _type = "GTSRB"
+
+    def __init__(self, validation, **config_parameters):
+        """
+        :param validation: Fraction of the learning set used for validation
+        :type validation: float
+        :param extract_ROIs: Set if we extract region of interest, default=False
+        :type extract_ROIs: boolean, optional
+        """
+        N2D2_Interface.__init__(self, **config_parameters)
+
+        self._parse_optional_arguments(['extract_ROIs'])
+        self._N2D2_object = N2D2.GTSRB_DIR_Database(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
+        self._set_N2D2_parameters(self._config_parameters)

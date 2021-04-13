@@ -10,6 +10,30 @@ Cell objects are the atomics elements that compose a deep neural network.
 Cell
 ----
 
+If you wan to add the same parameters to multiple cells, you can use a ``ConfigSection`` 
+
+.. testcode::
+
+        from n2d2.cell import Conv, Pool 
+
+        conv_config = n2d2.ConfigSection(activation_function=Rectifier(), 
+                                weights_filler=He(), 
+                                weights_solver=SGD(**solver_config), 
+                                no_bias=True)
+        model = n2d2.deepnet.Sequence([
+                Conv(3, 32, [4, 4], **conv_config),
+                Pool([2, 2], stride_dims=[2, 2], pooling='Max'),
+                Conv(20, 48, [5, 5], **conv_config),
+                Pool([3, 3], stride_dims=[2, 2], pooling='Max'),
+        ])
+
+If you have compiled N2D2 with *CUDA*, you can also accelerate your network by using CUDA model. For this you just have to add this line at the beginning of the script :
+
+..testcode::
+
+        n2d2.global_variables.default_model = "Frame_CUDA"
+
+
 .. autoclass:: n2d2.cell.Cell
         :members:
         :inherited-members:

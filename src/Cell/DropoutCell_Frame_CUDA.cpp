@@ -117,6 +117,16 @@ void N2D2::DropoutCell_Frame_CUDA<T>::initialize()
     }
 }
 
+
+template <class T>
+void N2D2::DropoutCell_Frame_CUDA<T>::initializeDataDependent()
+{
+    // NOTE: this is addition to initialize()
+    Cell_Frame_CUDA<T>::initializeDataDependent();
+
+    initialize();
+}
+
 template <class T>
 void N2D2::DropoutCell_Frame_CUDA<T>::propagate(bool inference)
 {

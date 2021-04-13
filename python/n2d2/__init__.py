@@ -25,12 +25,13 @@ try:
     import numpy
 except:
     pass
-import n2d2.global_variables
+# It's better to access these variable without mentioning global_variable in the path
+from n2d2.global_variables import * 
 from n2d2.tensor import *
 import n2d2.model
 
-
-import n2d2.utils
+# It's better to access these variable without mentioning global_variable in the path
+from n2d2.utils import *
 import n2d2.database 
 import n2d2.cell
 import n2d2.provider

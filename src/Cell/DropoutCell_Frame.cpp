@@ -69,6 +69,17 @@ void N2D2::DropoutCell_Frame<T>::initialize()
     mMask.resize(mOutputs.dims());
 }
 
+
+template <class T>
+void N2D2::DropoutCell_Frame<T>::initializeDataDependent()
+{
+    // NOTE: this is addition to initialize()
+    Cell_Frame<T>::initializeDataDependent();
+
+    initialize();
+}
+
+
 template <class T>
 void N2D2::DropoutCell_Frame<T>::propagate(bool inference)
 {
