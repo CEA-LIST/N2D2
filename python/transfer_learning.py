@@ -62,13 +62,13 @@ provider = n2d2.provider.DataProvider(database=database, size=[size, size, 3], b
 
 
 if args.arch == 'MobileNetv1':
-    trans, otf_trans = n2d2.model.mobilenetv1.ILSVRC_preprocessing(size=size)
+    trans, otf_trans = n2d2.models.mobilenetv1.ILSVRC_preprocessing(size=size)
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
-    extractor = n2d2.model.mobilenetv1.MobileNetv1(alpha=0.5).extractor
+    extractor = n2d2.models.mobilenetv1.MobileNetv1(alpha=0.5).extractor
     if not args.weights == "":
         extractor.import_free_parameters(args.weights)
-    head = n2d2.model.mobilenetv1.MobileNetv1(alpha=0.5).head
+    head = n2d2.models.mobilenetv1.MobileNetv1(alpha=0.5).head
 elif args.arch == 'MobileNetv1_SAT':
     margin = 32
     trans = n2d2.transform.Composite([
@@ -100,31 +100,31 @@ elif args.arch == 'MobileNetv1_SAT':
     if not args.weights == "":
         extractor.import_free_parameters(args.weights)
 elif args.arch == 'MobileNetv2-onnx':
-    provider.add_transformation(n2d2.model.mobilenetv2.ONNX_preprocessing(size=size))
-    extractor = n2d2.model.mobilenetv2.load_from_ONNX(provider, download=True, batch_size=batch_size)
+    provider.add_transformation(n2d2.models.mobilenetv2.ONNX_preprocessing(size=size))
+    extractor = n2d2.models.mobilenetv2.load_from_ONNX(provider, download=True, batch_size=batch_size)
     print(extractor.get_core_deepnet())
     extractor.remove("mobilenetv20_output_pred_fwd", False)
     extractor.remove("mobilenetv20_output_flatten0_reshape0", False)
     print(extractor.get_core_deepnet())
-    head = n2d2.cell.Fc(1280, nb_outputs, activation_function=n2d2.activation.Linear(),
-                        weights_filler=n2d2.filler.Xavier(), name="fc")
+    head = n2d2.cells.cell.Fc(1280, nb_outputs, activation_function=n2d2.activation.Linear(),
+                              weights_filler=n2d2.filler.Xavier(), name="fc")
 elif args.arch == 'ResNet50Bn':
-    model = n2d2.model.ResNet50Bn(output_size=100, alpha=1.0, l=0)
+    model = n2d2.models.ResNet50Bn(output_size=100, alpha=1.0, l=0)
     extractor = model.extractor
     if not args.weights == "":
         extractor.import_free_parameters(args.weights)
     head = model.head
-    trans, otf_trans = n2d2.model.ILSVRC_preprocessing(size=size)
+    trans, otf_trans = n2d2.models.ILSVRC_preprocessing(size=size)
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
 elif args.arch == 'ResNet18':
-    provider.add_transformation(n2d2.model.resnet.ONNX_preprocessing(size))
-    extractor = n2d2.model.resnet.load_from_ONNX(provider, '18', 'post_act', download=True, batch_size=batch_size)
+    provider.add_transformation(n2d2.models.resnet.ONNX_preprocessing(size))
+    extractor = n2d2.models.resnet.load_from_ONNX(provider, '18', 'post_act', download=True, batch_size=batch_size)
     print(extractor)
     extractor.remove("resnetv22_flatten0_reshape0", False)
     extractor.remove("resnetv22_dense0_fwd", False)
-    head = n2d2.cell.Fc(512, nb_outputs, activation_function=n2d2.activation.Linear(),
-                        weights_filler=n2d2.filler.Xavier(), name="fc")
+    head = n2d2.cells.cell.Fc(512, nb_outputs, activation_function=n2d2.activation.Linear(),
+                              weights_filler=n2d2.filler.Xavier(), name="fc")
 
 else:
     raise ValueError("Invalid architecture: " + args.arch)

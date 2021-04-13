@@ -36,7 +36,6 @@
 
 import unittest
 import n2d2
-import N2D2
 from math import tanh
 
 class test_Linear(unittest.TestCase):
@@ -47,7 +46,7 @@ class test_Linear(unittest.TestCase):
         pass
 
     def test_output(self):
-        activationCell = n2d2.cell.Activation(activationFunction=self.activation)
+        activationCell = n2d2.cells.cell.Activation(activationFunction=self.activation)
         inputs = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True) 
         inputs.set_values([[[0,1],
                             [2, 3]]])
@@ -66,7 +65,7 @@ class test_Tanh(unittest.TestCase):
         pass
 
     def test_output(self):
-        ActivationCell = n2d2.cell.Activation(activationFunction=self.activation)
+        ActivationCell = n2d2.cells.cell.Activation(activationFunction=self.activation)
         inputs = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True) 
         inputs.set_values([[[0, 1],
                             [2, 3]]])
@@ -85,7 +84,7 @@ class test_Rectifier(unittest.TestCase):
         pass
 
     def test_output(self):
-        ActivationCell = n2d2.cell.Activation(activationFunction=self.activation)
+        ActivationCell = n2d2.cells.cell.Activation(activationFunction=self.activation)
         inputs = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True) 
         inputs.set_values([[[-1, -2],
                             [ 2,  3]]])

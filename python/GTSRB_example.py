@@ -24,7 +24,7 @@ This script reproduce the "LAB : Optimized DNN implementation with N2D2" practic
 """
 import N2D2
 import n2d2
-from n2d2.cell import Conv, Pool, Fc, Dropout
+from n2d2.cells.nn import Conv, Pool, Fc, Dropout
 from n2d2.activation import Linear, Rectifier
 from n2d2.filler import He
 from n2d2.solver import SGD
@@ -55,7 +55,7 @@ conv_config = ConfigSection(activation_function=Rectifier(),
 
 # TODO :  look to support Pool mapping with tensor 
 
-model = n2d2.deepnet.Sequence([
+model = n2d2.cells.Sequence([
     Conv(3, 32, [4, 4], **conv_config),
     Pool([2, 2], stride_dims=[2, 2], pooling='Max'),
     Conv(32, 48, [5, 5], **conv_config),

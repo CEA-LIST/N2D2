@@ -22,22 +22,27 @@ import N2D2
 import n2d2.activation
 import n2d2.solver
 from n2d2.n2d2_interface import N2D2_Interface
+from n2d2.cells.cell import Cell
 
 
-
-class Cell(N2D2_Interface):
+class NeuralNetworkCell(N2D2_Interface, Cell):
 
     def __init__(self,  **config_parameters):
 
         if 'name' in config_parameters:
-            self._name = config_parameters.pop('name')
+            name = config_parameters.pop('name')
         else:
-            self._name = "cell_" + str(n2d2.global_variables.cell_counter)
+            name = "cell_" + str(n2d2.global_variables.cell_counter)
         n2d2.global_variables.cell_counter += 1
+
+        Cell.__init__(self, name)
 
         self._inputs = []
 
-        self._model = n2d2.global_variables.default_model
+        if 'model' in config_parameters:
+            self._model = config_parameters.pop('model')
+        else:
+            self._model = n2d2.global_variables.default_model
         if 'datatype' in config_parameters:
             self.datatype = config_parameters.pop('datatype')
         else:
@@ -58,33 +63,6 @@ class Cell(N2D2_Interface):
     def test(self):
         self._inference = True
 
-    """
-    def _infer_deepnet(self, inputs):
-        if isinstance(inputs, n2d2.deepnet.DeepNet):
-            deepnet = inputs
-            # TODO: Check if has stimuli provider/dims/output cell?
-        elif isinstance(inputs, list):
-            if len(inputs) == 0:
-                raise RuntimeError("List with 0 elements cannot provide a deepNet")
-            else:
-                last_deepnet = None
-                for ipt in inputs:
-                    deepnet = ipt.get_last().get_deepnet()
-                    if last_deepnet is not None:
-                        if not id(deepnet) == id(last_deepnet):
-                            raise RuntimeError("Elements of cell input have different deepnets. "
-                                               "Cannot infer implicit deepnet")
-                    last_deepnet = deepnet
-                deepnet = last_deepnet
-        elif isinstance(inputs, Cell):
-            deepnet = inputs.get_deepnet()
-        elif isinstance(inputs, n2d2.provider.Provider):
-            deepnet = n2d2.deepnet.DeepNet(inputs)
-        else:
-            raise TypeError("Object of type " + str(type(inputs)) + " cannot implicitly provide a deepNet to cell.")
-        return deepnet
-    """
-
     def _infer_deepnet(self, inputs):
         if isinstance(inputs, n2d2.tensor.Tensor):
             deepnet = inputs.get_deepnet()
@@ -99,12 +77,12 @@ class Cell(N2D2_Interface):
                     deepnet = self._infer_deepnet(ipt)
                     if last_deepnet is not None:
                         if not id(deepnet) == id(last_deepnet):
-                            raise RuntimeError("Elements of cell input have different deepnets. "
+                            raise RuntimeError("Elements of cells input have different deepnets. "
                                                "Cannot infer implicit deepnet")
                     last_deepnet = deepnet
                 deepnet = last_deepnet
         else:
-            raise TypeError("Object of type " + str(type(inputs)) + " cannot implicitly provide a deepNet to cell.")
+            raise TypeError("Object of type " + str(type(inputs)) + " cannot implicitly provide a deepNet to cells.")
         return deepnet
 
 
@@ -120,42 +98,26 @@ class Cell(N2D2_Interface):
     def get_last(self):
         return self
 
-    # TODO: Add check that final cell
+    # TODO: Add check that final cells
     def get_deepnet(self):
         return self._deepnet
 
     def set_deepnet(self, deepnet):
         self._deepnet = deepnet
 
-    def get_type(self):
-        return type(self).__name__
-
-    """
-    def add_input(self, inputs):
-        if isinstance(inputs, n2d2.deepnet.DeepNet):
-            self.add_input(inputs.get_last())
-        elif isinstance(inputs, list):
-            for cell in inputs:
-                self.add_input(cell)
-        elif isinstance(inputs, Cell) or isinstance(inputs, n2d2.provider.Provider):
-            self._link_N2D2_input(inputs)
-            self._inputs.append(inputs)
-        else:
-            raise TypeError("Cannot add object of type " + str(type(inputs)))
-    """
 
     # TODO: What exactly should be checked? Input identity and/or input dimensions? At the moment we only check dimensions
-    # This means a new Cell with same dimensions is will not be connected!
+    # This means a new NeuralNetworkCell with same dimensions is will not be connected!
     def _check_tensor(self, inputs):
-        if isinstance(inputs, n2d2.cell.Cell) or isinstance(inputs, n2d2.provider.Provider):
+        if isinstance(inputs, n2d2.cells.nn.NeuralNetworkCell) or isinstance(inputs, n2d2.provider.Provider):
             input_dims = inputs.dims()
             if not self.dims(): # If not initialized
                 return True
             """"
             # TODO: Does not work for multi inputs, because getInputsDims returns sum of all channel dims
             if not self._N2D2_object.getInputsDims() + [self.dims()[3]] == input_dims: # If input dimesions changed
-                raise RuntimeError("Cell '" + self.get_name() + "' was called with input of dim " + str(inputs.dims())
-                                   + ", but cell input size is " + str(self._N2D2_object.getInputsDims()+ [self.dims()[3]]) +
+                raise RuntimeError("NeuralNetworkCell '" + self.get_name() + "' was called with input of dim " + str(inputs.dims())
+                                   + ", but cells input size is " + str(self._N2D2_object.getInputsDims()+ [self.dims()[3]]) +
                                    ". Inputs dimensions cannot change after first call.")
                 #return True
             """
@@ -193,7 +155,7 @@ class Cell(N2D2_Interface):
             self._N2D2_object.initializeDataDependent()
 
     """
-    Links N2D2 cells taking into account cell connection parameters
+    Links N2D2 cells taking into account cells connection parameters
     """
     def _link_N2D2_input(self, inputs):
         self._N2D2_object.linkInput(inputs.N2D2())
@@ -203,7 +165,7 @@ class Cell(N2D2_Interface):
         self._deepnet.add_to_current_group(self)
 
     def set_activation(self, activation):
-        print("Note: Replacing potentially existing activation in cell: " + self.get_name())
+        print("Note: Replacing potentially existing activation in cells: " + self.get_name())
         self._config_parameters['activation'] = activation
         self._N2D2_object.setActivation(self._config_parameters['activation'].N2D2())
 
@@ -233,9 +195,6 @@ class Cell(N2D2_Interface):
         self._N2D2_object.importActivationParameters(filename, **kwargs)
     """
 
-    def get_name(self):
-        return self._name
-
     def get_nb_outputs(self):
         return self._N2D2_object.getNbOutputs()
 
@@ -255,19 +214,19 @@ class Cell(N2D2_Interface):
         output = "\'" + self.get_name() + "\' " + self.get_type() + "(" + self._model_key + ")"
         output += N2D2_Interface.__str__(self)
         if len(self.get_inputs()) > 0:
-            output += "[inputs="
+            output += "(inputs=["
             for idx, name in enumerate(self.get_inputs()):
                 if idx > 0:
                     output += ", "
                 output += "'" + name + "'"
-            output += "]"
+            output += "])"
         else:
-            output += "[inputs=[]]"
+            output += ""
         return output
 
 
 
-class Fc(Cell):
+class Fc(NeuralNetworkCell):
     """
     Fully connected layer.
     """
@@ -279,9 +238,9 @@ class Fc(Cell):
 
     def __init__(self, nb_inputs, nb_outputs, from_arguments=True, **config_parameters):
         """
-        :param nb_outputs: Number of outputs of the cell.
+        :param nb_outputs: Number of outputs of the cells.
         :type nb_outputs: int
-        :param name: Name fo the cell.
+        :param name: Name fo the cells.
         :type name: str
         :param activation_function: Activation function, default= :py:class:`n2d2.activation.Tanh`
         :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
@@ -297,18 +256,18 @@ class Fc(Cell):
         :type mapping: :py:class:`n2d2.tensor.Tensor`
         :param no_bias: If True, don’t use bias, default=False
         :type no_bias: bool, optional
-        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
+        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
         :type  from_arguments: bool, optional
         """
 
         if not from_arguments and (nb_inputs is not None or nb_outputs is not None or len(config_parameters) > 0):
-            raise RuntimeError("N2D2_object argument give to cell but 'nb_inputs' or 'nb_outputs' or 'config parameters' not None")
+            raise RuntimeError("N2D2_object argument give to cells but 'nb_inputs' or 'nb_outputs' or 'config parameters' not None")
         if from_arguments:
             self._create_from_arguments(nb_inputs, nb_outputs, **config_parameters)
 
 
     def _create_from_arguments(self, nb_inputs, nb_outputs, **config_parameters):
-        Cell.__init__(self, **config_parameters)
+        NeuralNetworkCell.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
             'nb_inputs': nb_inputs,
@@ -336,7 +295,7 @@ class Fc(Cell):
                     self._connection_parameters['mapping'] = mapping.N2D2()
                 else:
                     raise WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor)), str(type(n2d2.mapping.Mapping))])
-        # Set and initialize here all complex cell members
+        # Set and initialize here all complex cells members
         for key, value in self._config_parameters.items():
             if key is 'activation_function':
                 self._N2D2_object.setActivation(value.N2D2())
@@ -363,9 +322,9 @@ class Fc(Cell):
 
         n2d2_cell = cls(None, None, from_arguments=False)
 
-        Cell.__init__(n2d2_cell,
-                      name=N2D2_object.getName(),
-                      **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+        NeuralNetworkCell.__init__(n2d2_cell,
+                                   name=N2D2_object.getName(),
+                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._constructor_arguments.update({
             'nb_inputs': N2D2_object.getInputsSize(),
@@ -373,7 +332,7 @@ class Fc(Cell):
 
         n2d2_cell._N2D2_object = N2D2_object
 
-        # NOTE: No Fillers because existing cell
+        # NOTE: No Fillers because existing cells
         # TODO: Add similar methods to Activation/Solver/Quantizer for nice prints
         n2d2_cell._config_parameters['activation_function'] = n2d2_cell._N2D2_object.getActivation()
         n2d2_cell._config_parameters['weights_solver'] = n2d2_cell._N2D2_object.getWeightsSolver()
@@ -402,8 +361,8 @@ class Fc(Cell):
 
         return self.get_outputs()
 
-    # TODO: This is not working as expected because solvers are copied in a vector at cell initialization.
-    #  setWeightsSolver sets only the solver to be copied but does not modify after cell initialization
+    # TODO: This is not working as expected because solvers are copied in a vector at cells initialization.
+    #  setWeightsSolver sets only the solver to be copied but does not modify after cells initialization
     """
     def set_weights_solver(self, solver):
         self._config_parameters['weights_solver'] = solver
@@ -471,8 +430,7 @@ class Fc(Cell):
 
 
 
-# TODO: This is less powerful than the generator, in the sense that it does not accept several formats for the stride, conv, etc.
-class Conv(Cell):
+class Conv(NeuralNetworkCell):
     """
     Convolutional layer.
     """
@@ -494,7 +452,7 @@ class Conv(Cell):
         """
         :param nb_outputs: Number of output channels
         :type nb_outputs: int
-        :param name: Name for the cell.
+        :param name: Name for the cells.
         :type name: str
         :param kernel_dims: Kernel dimension.
         :type kernel_dims: list
@@ -524,19 +482,19 @@ class Conv(Cell):
         :type weights_export_flip: bool, optional
         :param back_propagate: If true, enable backpropagation, default=True
         :type back_propagate: bool, optional
-        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
+        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
         :type  from_arguments: bool, optional
         """
 
         if not from_arguments and (nb_inputs is not None or nb_outputs is not None or kernel_dims is not None or len(config_parameters) > 0):
-            raise RuntimeError("N2D2_object argument give to cell but 'nb_inputs' or 'nb_outputs'  or 'kernel_dims' or 'config parameters' not None")
+            raise RuntimeError("N2D2_object argument give to cells but 'nb_inputs' or 'nb_outputs'  or 'kernel_dims' or 'config parameters' not None")
         if from_arguments:
             self._create_from_arguments(nb_inputs, nb_outputs, kernel_dims, **config_parameters)
 
 
     def _create_from_arguments(self, nb_inputs, nb_outputs, kernel_dims, **config_parameters):
 
-        Cell.__init__(self, **config_parameters)
+        NeuralNetworkCell.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
             'nb_inputs': nb_inputs,
@@ -565,7 +523,7 @@ class Conv(Cell):
 
         # TODO: Add Kernel section of generator
 
-        """Set and initialize here all complex cell members"""
+        """Set and initialize here all complex cells members"""
         for key, value in self._config_parameters.items():
             if key is 'activation_function':
                 self._N2D2_object.setActivation(value.N2D2())
@@ -591,9 +549,9 @@ class Conv(Cell):
 
         n2d2_cell = cls(None, None, None, from_arguments=False)
 
-        Cell.__init__(n2d2_cell,
-                      name=N2D2_object.getName(),
-                      **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+        NeuralNetworkCell.__init__(n2d2_cell,
+                                   name=N2D2_object.getName(),
+                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -609,7 +567,7 @@ class Conv(Cell):
         n2d2_cell._optional_constructor_arguments['dilation_dims'] = [n2d2_cell._N2D2_object.getDilationX(), n2d2_cell._N2D2_object.getDilationY()]
 
 
-        # NOTE: No Fillers because existing cell
+        # NOTE: No Fillers because existing cells
         # TODO: Add similar methods to Activation/Solver/Quantizer for nice prints
         n2d2_cell._config_parameters['activation_function'] = n2d2_cell._N2D2_object.getActivation()
         n2d2_cell._config_parameters['weights_solver'] = n2d2_cell._N2D2_object.getWeightsSolver()
@@ -638,8 +596,8 @@ class Conv(Cell):
         return self.get_outputs()
 
 
-    # TODO: This is not working as expected because solvers are copied in a vector at cell initialization.
-    #  setWeightsSolver sets only the solver to be copied but does not modify after cell initialization
+    # TODO: This is not working as expected because solvers are copied in a vector at cells initialization.
+    #  setWeightsSolver sets only the solver to be copied but does not modify after cells initialization
     """
     def set_weights_solver(self, solver):
         self._config_parameters['weights_solver'] = solver
@@ -725,7 +683,7 @@ class ConvPointWise(Conv):
 
 
 
-class Softmax(Cell):
+class Softmax(NeuralNetworkCell):
     """
     Softmax layer.
     """
@@ -741,23 +699,23 @@ class Softmax(Cell):
         r"""
         :param nb_outputs: Number of output channels
         :type nb_outputs: int
-        :param name: Name for the cell.
+        :param name: Name for the cells.
         :type name: str
         :param with_loss: Softmax followed with a multinomial logistic layer, default=False
         :type with_loss: bool, optional
         :param group_size: Softmax is applied on groups of outputs. The group size must be a divisor of ``nb_outputs`` parameter, default=0
         :type group_size: int, optional
-        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
+        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
         :type  from_arguments: bool, optional
         """
         if not from_arguments and len(config_parameters) > 0:
             raise RuntimeError(
-                "N2D2_object argument give to cell but 'inputs' or 'nb_outputs' or 'config parameters' not None")
+                "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'config parameters' not None")
         if from_arguments:
             self._create_from_arguments(**config_parameters)
 
     def _create_from_arguments(self, **config_parameters):
-        Cell.__init__(self, **config_parameters)
+        NeuralNetworkCell.__init__(self, **config_parameters)
         self._parse_optional_arguments(['with_loss', 'group_size'])
 
     def __call__(self, inputs):
@@ -774,7 +732,7 @@ class Softmax(Cell):
                                                                          nb_outputs,
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
 
-            """Set and initialize here all complex cell members"""
+            """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
                 if key is 'activation_function':
                     self._N2D2_object.setActivation(value.N2D2())
@@ -792,9 +750,9 @@ class Softmax(Cell):
 
         n2d2_cell = cls(from_arguments=False)
 
-        Cell.__init__(n2d2_cell,
-                      name=N2D2_object.getName(),
-                      **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+        NeuralNetworkCell.__init__(n2d2_cell,
+                                   name=N2D2_object.getName(),
+                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -816,7 +774,7 @@ class Softmax(Cell):
 
 
 
-class Pool(Cell):
+class Pool(NeuralNetworkCell):
     '''
     Pooling layer.
     '''
@@ -841,18 +799,18 @@ class Pool(Cell):
         :type padding_dims: list, optional
         :param activation_function: Activation function, default= :py:class:`n2d2.activation.Linear`
         :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
-        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
+        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
         :type  from_arguments: bool, optional
         """
 
         if not from_arguments and (pool_dims is not None or len(config_parameters) > 0):
             raise RuntimeError(
-                "N2D2_object argument give to cell but 'inputs' or 'nb_outputs' or 'config parameters' not None")
+                "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'config parameters' not None")
         if from_arguments:
             self._create_from_arguments(pool_dims, **config_parameters)
 
     def _create_from_arguments(self, pool_dims, **config_parameters):
-        Cell.__init__(self, **config_parameters)
+        NeuralNetworkCell.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
             'pool_dims': pool_dims,
@@ -880,9 +838,9 @@ class Pool(Cell):
 
         n2d2_cell = cls(None, from_arguments=False)
 
-        Cell.__init__(n2d2_cell,
-                      name=N2D2_object.getName(),
-                      **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+        NeuralNetworkCell.__init__(n2d2_cell,
+                                   name=N2D2_object.getName(),
+                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -919,7 +877,7 @@ class Pool(Cell):
                                                                          inputs.dims()[2],
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
 
-            """Set and initialize here all complex cell members"""
+            """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
                 if key is 'activation_function':
                     self._N2D2_object.setActivation(value.N2D2())
@@ -936,7 +894,7 @@ class Pool(Cell):
 
         return self.get_outputs()
 
-class Pool2d(Cell):
+class Pool2d(NeuralNetworkCell):
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
@@ -951,13 +909,13 @@ class Pool2d(Cell):
 
         if not from_arguments and (pool_dims is not None or len(config_parameters) > 0):
             raise RuntimeError(
-                "N2D2_object argument give to cell but 'inputs' or 'nb_outputs' or 'config parameters' not None")
+                "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'config parameters' not None")
         if from_arguments:
             self._create_from_arguments(pool_dims, **config_parameters)
 
     def _create_from_arguments(self, pool_dims, **config_parameters):
 
-        Cell.__init__(self, **config_parameters)
+        NeuralNetworkCell.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
             'pool_dims': pool_dims,
@@ -987,7 +945,7 @@ class Pool2d(Cell):
                                                                          inputs.dims()[2],
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
 
-            """Set and initialize here all complex cell members"""
+            """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
                 if key is 'activation_function':
                     self._N2D2_object.setActivation(value.N2D2())
@@ -1002,7 +960,7 @@ class Pool2d(Cell):
 
         return self.get_outputs()
 
-class GlobalPool2d(Cell):
+class GlobalPool2d(NeuralNetworkCell):
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
@@ -1015,12 +973,12 @@ class GlobalPool2d(Cell):
 
         if not from_arguments and (len(config_parameters) > 0):
             raise RuntimeError(
-                "N2D2_object argument give to cell")
+                "N2D2_object argument give to cells")
         if from_arguments:
             self._create_from_arguments(**config_parameters)
 
     def _create_from_arguments(self, **config_parameters):
-        Cell.__init__(self, **config_parameters)
+        NeuralNetworkCell.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['pooling'])
 
@@ -1052,7 +1010,7 @@ class GlobalPool2d(Cell):
                                                                          strideDims=[1, 1],
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
 
-            """Set and initialize here all complex cell members"""
+            """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
                 if key is 'activation_function':
                     self._N2D2_object.setActivation(value.N2D2())
@@ -1069,8 +1027,7 @@ class GlobalPool2d(Cell):
         return self.get_outputs()
 
 
-# TODO: This is less powerful than the generator, in the sense that it does not accept several formats for the stride, conv, etc.
-class Deconv(Cell):
+class Deconv(NeuralNetworkCell):
     """
     Deconvolution layer.
     """
@@ -1090,7 +1047,7 @@ class Deconv(Cell):
         """
         :param nb_outputs: Number of output channels
         :type nb_outputs: int
-        :param name: Name for the cell.
+        :param name: Name for the cells.
         :type name: str
         :param kernel_dims: Kernel dimension.
         :type kernel_dims: list
@@ -1118,12 +1075,12 @@ class Deconv(Cell):
         :type back_propagate: bool, optional
         :param weights_export_flip: If true, import/export flipped kernels, default=False
         :type weights_export_flip: bool, optional
-        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
+        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
         :type  from_arguments: bool, optional
         """
 
         if not from_arguments and (nb_inputs is not None or nb_outputs is not None or kernel_dims is not None or len(config_parameters) > 0):
-            raise RuntimeError("N2D2_object argument give to cell but 'nb_inputs' or 'nb_outputs'  or 'kernel_dims' or 'config parameters' not None")
+            raise RuntimeError("N2D2_object argument give to cells but 'nb_inputs' or 'nb_outputs'  or 'kernel_dims' or 'config parameters' not None")
         if from_arguments:
             self._create_from_arguments(nb_inputs, nb_outputs, kernel_dims, **config_parameters)
 
@@ -1131,7 +1088,7 @@ class Deconv(Cell):
 
     def _create_from_arguments(self, nb_inputs, nb_outputs, kernel_dims, **config_parameters):
 
-        Cell.__init__(self, **config_parameters)
+        NeuralNetworkCell.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
             'nb_inputs': nb_inputs,
@@ -1160,7 +1117,7 @@ class Deconv(Cell):
 
         # TODO: Add Kernel section of generator
 
-        """Set and initialize here all complex cell members"""
+        """Set and initialize here all complex cells members"""
         for key, value in self._config_parameters.items():
             if key is 'activation_function':
                 self._N2D2_object.setActivation(value.N2D2())
@@ -1183,9 +1140,9 @@ class Deconv(Cell):
 
         n2d2_cell = cls(None, None, None, from_arguments=False)
 
-        Cell.__init__(n2d2_cell,
-                      name=N2D2_object.getName(),
-                      **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+        NeuralNetworkCell.__init__(n2d2_cell,
+                                   name=N2D2_object.getName(),
+                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -1202,7 +1159,7 @@ class Deconv(Cell):
         n2d2_cell._optional_constructor_arguments['dilation_dims'] = [n2d2_cell._N2D2_object.getDilationX(),
                                                                       n2d2_cell._N2D2_object.getDilationY()]
 
-        # NOTE: No Fillers because existing cell
+        # NOTE: No Fillers because existing cells
         # TODO: Add similar methods to Activation/Solver/Quantizer for nice prints
         n2d2_cell._config_parameters['activation_function'] = n2d2_cell._N2D2_object.getActivation()
         n2d2_cell._config_parameters['weights_solver'] = n2d2_cell._N2D2_object.getWeightsSolver()
@@ -1230,8 +1187,8 @@ class Deconv(Cell):
         return self.get_outputs()
 
 
-    # TODO: This is not working as expected because solvers are copied in a vector at cell initialization.
-    #  setWeightsSolver sets only the solver to be copied but does not modify after cell initialization
+    # TODO: This is not working as expected because solvers are copied in a vector at cells initialization.
+    #  setWeightsSolver sets only the solver to be copied but does not modify after cells initialization
     """
     def set_weights_solver(self, solver):
         self._config_parameters['weights_solver'] = solver
@@ -1244,7 +1201,7 @@ class Deconv(Cell):
 
 
 
-class ElemWise(Cell):
+class ElemWise(NeuralNetworkCell):
     """
     Element-wise operation layer.
     """
@@ -1258,7 +1215,7 @@ class ElemWise(Cell):
         """
         :param nb_outputs: Number of output channels
         :type nb_outputs: int
-        :param name: Name for the cell.
+        :param name: Name for the cells.
         :type name: str
         :param operation: Type of operation (``Sum``, ``AbsSum``, ``EuclideanSum``, ``Prod``, or ``Max``), default="Sum"
         :type operation: str, optional
@@ -1268,19 +1225,19 @@ class ElemWise(Cell):
         :type shifts: float, optional
         :param activation_function: Activation function, default= :py:class:`n2d2.activation.Linear`
         :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
-        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
+        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
         :type  from_arguments: bool, optional
         """
         if not from_arguments and (len(config_parameters) > 0):
             raise RuntimeError(
-                "N2D2_object argument give to cell but 'inputs' or 'nb_outputs' or 'config parameters' not None")
+                "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'config parameters' not None")
         if from_arguments:
             self._create_from_arguments(**config_parameters)
         
 
 
     def _create_from_arguments(self, **config_parameters):
-        Cell.__init__(self, **config_parameters)
+        NeuralNetworkCell.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['operation', 'weights', 'shifts'])
 
@@ -1294,9 +1251,9 @@ class ElemWise(Cell):
 
         n2d2_cell = cls(from_arguments=False)
 
-        Cell.__init__(n2d2_cell,
-                      name=N2D2_object.getName(),
-                      **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+        NeuralNetworkCell.__init__(n2d2_cell,
+                                   name=N2D2_object.getName(),
+                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -1304,7 +1261,7 @@ class ElemWise(Cell):
         n2d2_cell._optional_constructor_arguments['weights'] = n2d2_cell._N2D2_object.getWeights()
         n2d2_cell._optional_constructor_arguments['shifts'] = n2d2_cell._N2D2_object.getShifts()
 
-        # NOTE: No Fillers because existing cell
+        # NOTE: No Fillers because existing cells
         # TODO: Add similar methods to Activation/Solver/Quantizer for nice prints
         n2d2_cell._config_parameters['activation_function'] = n2d2_cell._N2D2_object.getActivation()
 
@@ -1335,7 +1292,7 @@ class ElemWise(Cell):
                                                                      **self.n2d2_function_argument_parser(
                                                                          self._optional_constructor_arguments))
 
-            """Set and initialize here all complex cell members"""
+            """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
                 if key is 'activation_function':
                     self._N2D2_object.setActivation(value.N2D2())
@@ -1349,7 +1306,7 @@ class ElemWise(Cell):
         return self.get_outputs()
 
 
-class Dropout(Cell):
+class Dropout(NeuralNetworkCell):
     """
     Dropout layer :cite:`Srivastava2014`.
     """
@@ -1366,22 +1323,22 @@ class Dropout(Cell):
         """
         :param nb_outputs: Number of output channels
         :type nb_outputs: int
-        :param name: Name for the cell.
+        :param name: Name for the cells.
         :type name: str
         :param dropout: The probability with which the value from input would be dropped, default=0.5
         :type dropout: float, optional
-        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
+        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
         :type  from_arguments: bool, optional
         """
 
         if not from_arguments and  len(config_parameters) > 0:
             raise RuntimeError(
-                "N2D2_object argument give to cell but 'inputs' or 'nb_outputs' or 'config parameters' not None")
+                "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'config parameters' not None")
         if from_arguments:
             self._create_from_arguments(**config_parameters)
 
     def _create_from_arguments(self,  **config_parameters):
-        Cell.__init__(self, **config_parameters)
+        NeuralNetworkCell.__init__(self, **config_parameters)
         # No optionnal args
         self._parse_optional_arguments([])
 
@@ -1390,9 +1347,9 @@ class Dropout(Cell):
 
         n2d2_cell = cls(from_arguments=False)
 
-        Cell.__init__(n2d2_cell,
-                      name=N2D2_object.getName(),
-                      **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+        NeuralNetworkCell.__init__(n2d2_cell,
+                                   name=N2D2_object.getName(),
+                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -1420,7 +1377,7 @@ class Dropout(Cell):
                                                                          nb_outputs,
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
 
-            """Set and initialize here all complex cell members"""
+            """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
                 if key is 'activation_function':
                     self._N2D2_object.setActivation(value.N2D2())
@@ -1436,7 +1393,7 @@ class Dropout(Cell):
 
 
 
-class Padding(Cell):
+class Padding(NeuralNetworkCell):
 
     _cell_constructors = {
         'Frame': N2D2.PaddingCell_Frame,
@@ -1458,14 +1415,14 @@ class Padding(Cell):
                                         or right_pad is not None
                                         or len(config_parameters) > 0):
             raise RuntimeError(
-                "N2D2_object argument give to cell but 'inputs' or 'nb_outputs' or 'config parameters' not None")
+                "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'config parameters' not None")
         if from_arguments:
             self._create_from_arguments(top_pad, bot_pad, left_pad, right_pad, **config_parameters)
         
 
     def _create_from_arguments(self, top_pad, bot_pad, left_pad, right_pad, **config_parameters):
 
-        Cell.__init__(self, **config_parameters)
+        NeuralNetworkCell.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
                  'top_pad': top_pad,
@@ -1481,9 +1438,9 @@ class Padding(Cell):
 
         n2d2_cell = cls(None, None, None, None, from_arguments=False)
 
-        Cell.__init__(n2d2_cell,
-                      name=N2D2_object.getName(),
-                      **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+        NeuralNetworkCell.__init__(n2d2_cell,
+                                   name=N2D2_object.getName(),
+                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -1521,7 +1478,7 @@ class Padding(Cell):
                                                                      self._constructor_arguments['right_pad'],
                                                                      **self.n2d2_function_argument_parser(
                                                                          self._optional_constructor_arguments))
-            """Set and initialize here all complex cell members"""
+            """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
                 if key is 'activation_function':
                     self._N2D2_object.setActivation(value.N2D2())
@@ -1535,86 +1492,7 @@ class Padding(Cell):
         return self.get_outputs()
 
 
-# TODO: Adapt to dynamic graphs
-class LRN(Cell):
-    r"""
-    Local Response Normalization (LRN) layer.
-    The response-normalized activity :math:`b_{x,y}^{i}` is given by the expression:
-
-    .. math:: {b_{x,y}^{i}= \frac{a_{x,y}^{i}}{\left(k + \alpha \sum\limits_{j=max(0,i-n/2)}^{min(N-1,i+n/2)}{\left(a_{x,y}^{j}\right)^2}\right)^{\beta}}}
-
-    """
-    _cell_constructors = {
-        'Frame<float>': N2D2.LRNCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.LRNCell_Frame_CUDA_float,
-    }
-
-
-    def __init__(self, inputs, nb_outputs, from_arguments=True, **config_parameters):
-        """
-        :param nb_outputs: Number of output channels
-        :type nb_outputs: int
-        :param name: Name for the cell.
-        :type name: str
-        :param n: Normalization window width in elements, default=5
-        :type n: int, optional
-        :param alpha: Value of the alpha variance scaling parameter in the normalization formula, default=1.0e-4
-        :type alpha: float, optional
-        :param beta: Value of the beta power parameter in the normalization formula, default=0.75
-        :type beta: float, optional
-        :param k: Value of the k parameter in normalization formula, default=2.0
-        :type k: float, optional
-        :param from_arguments: If False, allow you to create cell with mandatory arguments set as None, default=False
-        :type  from_arguments: bool, optional
-        """
-        if not from_arguments and (nb_outputs is not None or len(config_parameters) > 0):
-            raise RuntimeError(
-                "N2D2_object argument give to cell but 'inputs' or 'nb_outputs' or 'config parameters' not None")
-        if from_arguments:
-            self._create_from_arguments(inputs, nb_outputs, **config_parameters)
-        
-
-    def _create_from_arguments(self, inputs, nb_outputs, **config_parameters):
-        Cell.__init__(self, inputs, nb_outputs, **config_parameters)
-
-        # No optional args
-        self._parse_optional_arguments([])
-        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
-                                                self.get_name(),
-                                                self._constructor_arguments['nb_outputs'],
-                                                **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
-
-        # Set and initialize here all complex cell members
-        for key, value in self._config_parameters.items():
-            if key is 'activation_function':
-                self._N2D2_object.setActivation(value.N2D2())
-            else:
-                self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
-
-        self._add_to_graph(inputs)
-
-    @classmethod
-    def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
-
-        n2d2_cell = cls(inputs, None, from_arguments=False)
-
-        Cell.__init__(n2d2_cell,
-                      inputs,
-                      N2D2_object.getNbOutputs(),
-                      deepNet=n2d2_deepnet,
-                      name=N2D2_object.getName(),
-                      **N2D2_Interface.load_N2D2_parameters(N2D2_object))
-
-        n2d2_cell._N2D2_object = N2D2_object
-
-        n2d2_cell._config_parameters['activation_function'] = n2d2_cell._N2D2_object.getActivation()
-
-        n2d2_cell._sync_inputs_and_parents(inputs)
-
-        return n2d2_cell
-
-
-class BatchNorm2d(Cell):
+class BatchNorm2d(NeuralNetworkCell):
 
     _cell_constructors = {
         'Frame<float>': N2D2.BatchNormCell_Frame_float,
@@ -1623,13 +1501,13 @@ class BatchNorm2d(Cell):
     def __init__(self, nb_inputs, from_arguments=True, **config_parameters):
         if not from_arguments and len(config_parameters) > 0:
             raise RuntimeError(
-                "N2D2_object argument give to cell but 'inputs' or 'nb_outputs' or 'config parameters' not None")
+                "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'config parameters' not None")
         if from_arguments:
             self._create_from_arguments(nb_inputs, **config_parameters)
         
 
     def _create_from_arguments(self, nb_inputs, **config_parameters):
-        Cell.__init__(self, **config_parameters)
+        NeuralNetworkCell.__init__(self, **config_parameters)
         # No optional parameter
         self._parse_optional_arguments([])
         self._N2D2_object = self._cell_constructors[self._model_key](N2D2.DeepNet(n2d2.global_variables.default_net),
@@ -1637,7 +1515,7 @@ class BatchNorm2d(Cell):
                                                 nb_inputs,
                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
 
-        """Set and initialize here all complex cell members"""
+        """Set and initialize here all complex cells members"""
         for key, value in self._config_parameters.items():
             if key is 'activation_function':
                 self._N2D2_object.setActivation(value.N2D2())
@@ -1656,9 +1534,9 @@ class BatchNorm2d(Cell):
 
         n2d2_cell = cls(None, from_arguments=False)
 
-        Cell.__init__(n2d2_cell,
-                      name=N2D2_object.getName(),
-                      **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+        NeuralNetworkCell.__init__(n2d2_cell,
+                                   name=N2D2_object.getName(),
+                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -1702,7 +1580,7 @@ class BatchNorm2d(Cell):
 
 
 
-class Activation(Cell):
+class Activation(NeuralNetworkCell):
 
     _cell_constructors = {
         'Frame<float>': N2D2.ActivationCell_Frame_float,
@@ -1714,16 +1592,39 @@ class Activation(Cell):
 
         if not from_arguments and len(config_parameters) > 0:
             raise RuntimeError(
-                "N2D2_object argument give to cell but 'config parameters' not None")
+                "N2D2_object argument give to cells but 'config parameters' not None")
 
         if from_arguments:
             self._create_from_arguments(**config_parameters)
         
 
     def _create_from_arguments(self, **config_parameters):
-        Cell.__init__(self,  **config_parameters)
+        NeuralNetworkCell.__init__(self, **config_parameters)
         # No optional parameter
         self._parse_optional_arguments([])
+
+
+    @classmethod
+    def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
+
+        n2d2_cell = cls(from_arguments=False)
+
+        NeuralNetworkCell.__init__(n2d2_cell,
+                                   name=N2D2_object.getName(),
+                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+
+        n2d2_cell._N2D2_object = N2D2_object
+
+        n2d2_cell._config_parameters['activation_function'] = n2d2_cell._N2D2_object.getActivation()
+
+        if n2d2_deepnet is not None:
+            n2d2_cell._deepnet = n2d2_deepnet
+            n2d2_cell._sync_inputs_and_parents()
+        else:
+            n2d2_cell._deepnet = None
+            n2d2_cell._N2D2_object.clearInputs()
+
+        return n2d2_cell
 
     def __call__(self, inputs):
         if inputs.nb_dims() != 4:
@@ -1739,12 +1640,12 @@ class Activation(Cell):
                                                                          nb_outputs,
                                                                          **self._optional_constructor_arguments)
 
-            """Set and initialize here all complex cell members"""
+            """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
                 if key is 'activationFunction':
                     self._N2D2_object.setActivation(value.N2D2())
                 else:
-                    self._set_N2D2_parameter(self._param_to_INI_convention(key), value)
+                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
 
         self._add_to_graph(inputs)
@@ -1753,47 +1654,25 @@ class Activation(Cell):
 
         return self.get_outputs()
 
-    @classmethod
-    def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
-
-        n2d2_cell = cls(from_arguments=False)
-
-        Cell.__init__(n2d2_cell,
-                      name=N2D2_object.getName(),
-                      **N2D2_Interface.load_N2D2_parameters(N2D2_object))
-
-        n2d2_cell._N2D2_object = N2D2_object
-
-        n2d2_cell._config_parameters['activation_function'] = n2d2_cell._N2D2_object.getActivation()
-
-        if n2d2_deepnet is not None:
-            n2d2_cell._deepnet = n2d2_deepnet
-            n2d2_cell._sync_inputs_and_parents()
-        else:
-            n2d2_cell._deepnet = None
-            n2d2_cell._N2D2_object.clearInputs()
-
-        return n2d2_cell
 
 
-# TODO: Adapt to dynamic graphs
-class Reshape(Cell):
+class Reshape(NeuralNetworkCell):
 
     _cell_constructors = {
         'Frame<float>': N2D2.ReshapeCell_Frame_float,
         'Frame_CUDA<float>': N2D2.ReshapeCell_Frame_CUDA_float,
     }
-    def __init__(self, inputs, nb_outputs, dims, from_arguments=True, **config_parameters):
+    def __init__(self, dims, from_arguments=True, **config_parameters):
 
-        if not from_arguments and (nb_outputs is not None or dims is not None or len(config_parameters) > 0):
+        if not from_arguments and (dims is not None or len(config_parameters) > 0):
             raise RuntimeError(
-                "N2D2_object argument give to cell but 'inputs' or 'nb_outputs' or 'dims' or 'config parameters' not None")
+                "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'dims' or 'config parameters' not None")
         if from_arguments:
-            self._create_from_arguments(inputs, nb_outputs, dims, **config_parameters)
+            self._create_from_arguments(dims, **config_parameters)
         
 
-    def _create_from_arguments(self, inputs, nb_outputs, dims, **config_parameters):
-        Cell.__init__(self, inputs, nb_outputs, **config_parameters)
+    def _create_from_arguments(self, dims, **config_parameters):
+        NeuralNetworkCell.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
             'dims': dims,
@@ -1801,29 +1680,17 @@ class Reshape(Cell):
 
         # No optional parameter
         self._parse_optional_arguments([])
-        self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
-                                                self.get_name(),
-                                                self._constructor_arguments['nb_outputs'],
-                                                self._constructor_arguments['dims'],
-                                                **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
 
-        """Set and initialize here all complex cell members"""
-        for key, value in self._config_parameters.items():
-            if key is 'activation_function':
-                self._N2D2_object.setActivation(value.N2D2())
-            else:
-                self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
-        self._add_to_graph(inputs)
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
 
-        n2d2_cell = cls(None, None, None, from_arguments=False)
+        n2d2_cell = cls(None, from_arguments=False)
 
-        Cell.__init__(n2d2_cell,
-                      name=N2D2_object.getName(),
-                      **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+        NeuralNetworkCell.__init__(n2d2_cell,
+                                   name=N2D2_object.getName(),
+                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._N2D2_object = N2D2_object
 
@@ -1839,3 +1706,60 @@ class Reshape(Cell):
             n2d2_cell._N2D2_object.clearInputs()
 
         return n2d2_cell
+
+
+    def __call__(self, inputs):
+        if inputs.nb_dims() != 4:
+            raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
+
+        self._deepnet = self._infer_deepnet(inputs)
+
+        if self._N2D2_object is None:
+            nb_outputs = inputs.dims()[2]
+
+            self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+                                                                         self.get_name(),
+                                                                         nb_outputs,
+                                                                         self._constructor_arguments['dims'],
+                                                                         **self.n2d2_function_argument_parser(
+                                                                             self._optional_constructor_arguments))
+
+            """Set and initialize here all complex cells members"""
+            for key, value in self._config_parameters.items():
+                if key is 'activation_function':
+                    self._N2D2_object.setActivation(value.N2D2())
+                else:
+                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+
+        self._add_to_graph(inputs)
+
+        self._N2D2_object.propagate(self._inference)
+
+        return self.get_outputs()
+
+
+cell_dict = {
+    "Fc": Fc,
+    "Conv": Conv,
+    "ElemWise": ElemWise,
+    "Softmax": Softmax,
+    "Dropout": Dropout,
+    "Padding": Padding,
+    "Pool": Pool,
+    "BatchNorm": BatchNorm2d,
+    "Reshape": Reshape,
+}
+
+
+def from_N2D2_object(N2D2_cell, n2d2_deepnet=None):
+    """
+    :param N2D2_cell: N2D2 cells to convert.
+    :type N2D2_cell: :py:class:`N2D2.NeuralNetworkCell`
+    Convert a N2D2 cells into a n2d2 cells.
+    The _N2D2_object attribute of the generated n2d2 cells is replaced by the N2D2_cell given in entry.
+    """
+    cell_type = N2D2_cell.getType()
+
+    n2d2_cell = cell_dict[cell_type].create_from_N2D2_object(N2D2_cell, n2d2_deepnet)
+
+    return n2d2_cell

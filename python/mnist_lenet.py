@@ -44,7 +44,7 @@ provider.add_transformation(n2d2.transform.Rescale(width=32, height=32))
 print(provider)
 
 print("\n### Loading Model ###")
-model = n2d2.model.lenet.LeNet(10)
+model = n2d2.models.lenet.LeNet(10)
 print(model)
 
 loss_function = n2d2.application.CrossEntropyClassifier(provider)

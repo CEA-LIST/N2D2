@@ -19,30 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-import N2D2
-from os.path import expanduser
-
-model_cache = expanduser("~") + "/MODELS"
-
-default_seed = 1
-default_model = 'Frame'
-default_datatype = 'float'
-default_net = N2D2.Network(default_seed)
-
-
-deep_net_cell_counter = 0
-cell_counter = 0
-target_counter = 0
-provider_counter = 0
-sequence_counter = 0
-block_counter = 0
-
-class Verbosity:
-    short = 0  # Constructor arguments only
-    detailed = 1  # Config parameters and their parameters
-
-verbosity = Verbosity.detailed
-
-def set_cuda_device(id):
-    N2D2.CudaContext.setDevice(id)
+from n2d2.cells.nn import *
+from n2d2.cells.cell import *
 

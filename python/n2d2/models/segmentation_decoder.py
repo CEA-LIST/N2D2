@@ -22,8 +22,8 @@
 
 
 from n2d2.utils import ConfigSection
-from n2d2.cell import Conv, Deconv, Padding, ElemWise
-from n2d2.deepnet import Callable
+from n2d2.cells.nn import Conv, Deconv, Padding, ElemWise
+from n2d2.cells import Block
 from n2d2.activation import Linear, Tanh
 from n2d2.solver import SGD
 from n2d2.filler import Constant, Normal
@@ -58,13 +58,13 @@ class DecoderFuse(ElemWise):
         ElemWise.__init__(self, operation='Sum', **config_parameters)
 
 
-class SegmentationDecoder(Callable):
+class SegmentationDecoder(Block):
     def __init__(self, nb_inputs):
 
         if not len(nb_inputs) == 4:
             RuntimeError("'nb_inputs' needs exactly 4 elements.")
 
-        Callable.__init__(self, [
+        Block.__init__(self, [
             DecoderConv(nb_inputs[0], 5, name="conv_1x1_x4"),
             DecoderConv(nb_inputs[1], 5, name="conv_1x1_x8"),
             DecoderConv(nb_inputs[2], 5, name="conv_1x1_x16"),
@@ -83,9 +83,9 @@ class SegmentationDecoder(Callable):
             DecoderFuse(name="fuse3"),
 
             Deconv(5, 5, kernel_dims=[8, 8], stride_dims=[4, 4], activation_function=Linear(),
-                                  weights_filler=Normal(std_dev=0.1), bias_filler=Constant(value=0.2),
-                                  weights_solver=SGD(**decoder_solver_config), bias_solver=SGD(**decoder_solver_config),
-                                  name="deconv_fuse3"),
+                  weights_filler=Normal(std_dev=0.1), bias_filler=Constant(value=0.2),
+                  weights_solver=SGD(**decoder_solver_config), bias_solver=SGD(**decoder_solver_config),
+                  name="deconv_fuse3"),
             Padding(top_pad=-2, bot_pad=-2, left_pad=-2, right_pad=-2, name="out_adapt")
         ])
 
@@ -138,11 +138,11 @@ class SegmentationDecoder(Callable):
         bias_solver = SGD
         bias_solver_config = solver_config
 
-        for name, cell in self.get_cells().items():
-            if isinstance(cell, Conv) or isinstance(cell, Deconv):
+        for name, cells in self.get_cells().items():
+            if isinstance(cells, Conv) or isinstance(cells, Deconv):
                 print("Add solver: " + name)
-                cell.set_weights_solver(SGD(**weights_solver_config))
-                cell.set_bias_solver(SGD(**bias_solver_config))
+                cells.set_weights_solver(SGD(**weights_solver_config))
+                cells.set_bias_solver(SGD(**bias_solver_config))
     """
 
 

@@ -45,19 +45,19 @@ def _to_torch(N2D2_tensor):
 
 class LayerN2D2(torch.nn.Module):
     """
-    PyTorch Module used to interface N2D2 cell or an n2d2 cell in a PyTorch network.
+    PyTorch Module used to interface N2D2 cells or an n2d2 cells in a PyTorch network.
     """
     _initialized = False
     
     # TODO : This class is not up to date ! Need to rework the prop and backprop so that it work like DeepNetN2D2
     def __init__(self, n2d2_cell, trainable=True):
         super().__init__()
-        if isinstance(n2d2_cell, n2d2.cell.Cell):
+        if isinstance(n2d2_cell, n2d2.cells.cell.NeuralNetworkCell):
             self._N2D2 = n2d2_cell.N2D2()
-        elif isinstance(n2d2_cell, N2D2.Cell):
+        elif isinstance(n2d2_cell, N2D2.NeuralNetworkCell):
             self._N2D2 = n2d2_cell
         else:
-            raise n2d2.error_handler.WrongInputType('n2d2_cell', str(type(n2d2_cell)), ["N2D2.Cell", "n2d2.cell.Cell"])
+            raise n2d2.error_handler.WrongInputType('n2d2_cell', str(type(n2d2_cell)), ["N2D2.NeuralNetworkCell", "n2d2.cells.NeuralNetworkCell"])
     
         # We need to add a random parameter to the module else pytorch refuse to compute gradient
         self.register_parameter(name='random_parameter', param=torch.nn.Parameter(torch.randn(1)))
@@ -70,7 +70,7 @@ class LayerN2D2(torch.nn.Module):
 
     def _add_input(self, n2d2_tensor):
         """
-        Intialize N2D2 cell and addInput.
+        Intialize N2D2 cells and addInput.
         """
         # OutputDims init with an empty tensor of the same size as the input
         diffOutputs = tensor.Tensor(n2d2_tensor.shape(), value=0, cuda=n2d2_tensor.is_cuda)
@@ -258,9 +258,9 @@ class DeepNetN2D2(torch.nn.Module):
                 self.batch_size = inputs.shape[0]
                 self.input = n2d2_tensor # Save the input in the object to avoid that python remove it 
                 
-                # The first cell of the N2D2 Network is not linked to another cell.
+                # The first cells of the N2D2 Network is not linked to another cells.
                 # Thus mDiffOutputs is empty. 
-                # In order to send a gradient in the backward method we add an Input to force the cell to compute a gradient.
+                # In order to send a gradient in the backward method we add an Input to force the cells to compute a gradient.
                 shape = [i for i in reversed(n2d2_tensor.dims())]
                 diffOutputs = tensor.Tensor(shape, value=0)
                 self.first_cell.clearInputs()

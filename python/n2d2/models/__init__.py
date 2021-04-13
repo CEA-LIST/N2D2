@@ -19,9 +19,9 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-from n2d2.model.resnet import ResNet50Bn, load_from_ONNX
-# from n2d2.model.mobilenetv1 import MobileNetv1
-# from n2d2.model.mobilenetv2 import Mobilenetv2, load_from_ONNX, ONNX_preprocessing
-from n2d2.model.lenet import *
-from n2d2.model.segmentation_decoder import *
-from n2d2.model.ILSVRC_outils import *
+from n2d2.models.resnet import ResNet50Bn, load_from_ONNX
+from n2d2.models.mobilenetv1 import MobileNetv1
+from n2d2.models.mobilenetv2 import Mobilenetv2, load_from_ONNX, ONNX_preprocessing
+from n2d2.models.lenet import *
+from n2d2.models.segmentation_decoder import *
+from n2d2.models.ILSVRC_outils import *

@@ -79,8 +79,8 @@ if args.arch == 'MobileNetv1':
     provider.add_transformation(trans)
     #provider.add_on_the_fly_transformation(otf_trans)
 
-    #extractor = n2d2.model.MobileNetv1_FeatureExtractor(provider, alpha=0.5)
-    extractor = n2d2.model.MobileNetv1_FeatureExtractor(provider, alpha=0.5)
+    #extractor = n2d2.modelss.MobileNetv1_FeatureExtractor(provider, alpha=0.5)
+    extractor = n2d2.models.MobileNetv1_FeatureExtractor(provider, alpha=0.5)
     extractor.remove(5)
     if not args.weights == "":
         extractor.import_free_parameters(args.weights)
@@ -120,7 +120,7 @@ elif args.arch == 'MobileNetv2-onnx':
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
 
-    extractor = n2d2.model.mobilenetv2.load_from_ONNX(provider, download=True, batch_size=batch_size)
+    extractor = n2d2.models.mobilenetv2.load_from_ONNX(provider, download=True, batch_size=batch_size)
     extractor.remove("mobilenetv20_output_pred_fwd", False)
     extractor.remove("mobilenetv20_output_flatten0_reshape0", False)
     #scales.append(extractor['mobilenetv20_features_linearbottleneck1_conv0_fwd'])
@@ -140,7 +140,7 @@ elif args.arch == 'ResNet18':
 
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
-    extractor = n2d2.model.resnet.load_from_ONNX('18', 'post_act', download=True, dims=size, batch_size=batch_size)
+    extractor = n2d2.models.resnet.load_from_ONNX('18', 'post_act', download=True, dims=size, batch_size=batch_size)
     extractor.add_input(provider)
     extractor.remove(47, False)
     extractor.remove(46, False)
@@ -156,7 +156,7 @@ else:
 
 
 print("Create decoder")
-decoder = n2d2.model.SegmentationDecoder(scales_nb_inputs)
+decoder = n2d2.models.SegmentationDecoder(scales_nb_inputs)
 
 print("Create classifier")
 loss_function = n2d2.application.CrossEntropyClassifier(provider, no_display_label=0, default_value=0.0, target_value=1.0,

@@ -112,7 +112,7 @@ class SATAct(ActivationQuantizer):
         # No optional constructor arguments
         self._N2D2_object = self._quantizer_generators[self._model_key]()
 
-        """Set and initialize here all complex cell members"""
+        """Set and initialize here all complex cells members"""
         for key, value in self._config_parameters.items():
             if key is 'solver':
                 self._N2D2_object.setSolver(value.N2D2())

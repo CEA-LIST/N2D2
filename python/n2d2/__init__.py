@@ -28,12 +28,11 @@ except:
 # It's better to access these variable without mentioning global_variable in the path
 from n2d2.global_variables import * 
 from n2d2.tensor import *
-import n2d2.model
 
 # It's better to access these variable without mentioning global_variable in the path
 from n2d2.utils import *
 import n2d2.database 
-import n2d2.cell
+import n2d2.cells
 import n2d2.provider
 import n2d2.transform
 import n2d2.deepnet
@@ -42,14 +41,10 @@ import n2d2.filler
 import n2d2.target
 import n2d2.application
 import n2d2.activation
-import n2d2.converter
 import n2d2.mapping
 import n2d2.error_handler
+import n2d2.models
 
-"""
-Packages that exist, but should not be used directly in API
-"""
-#import n2d2.parameterizable
 
 # IP functions
 import n2d2.quantizer
