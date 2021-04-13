@@ -196,6 +196,9 @@ class Cell(N2D2_Interface):
     Links N2D2 cells taking into account cell connection parameters
     """
     def _link_N2D2_input(self, inputs):
+        if isinstance(input, n2d2.cell.Cell):
+            input(inputs.N2D2().getOutputsDim())
+
         self._N2D2_object.linkInput(inputs.N2D2())
 
     def _add_to_graph(self, inputs):
@@ -867,10 +870,8 @@ class Pool(Cell):
         """Set connection and mapping parameters"""
         if 'mapping' in self._config_parameters: 
             mapping = self._config_parameters.pop('mapping')
-            if isinstance(mapping, n2d2.mapping.Mapping):
+            if isinstance(mapping, n2d2.mapping.Mapping) or isinstance(mapping, n2d2.Tensor):
                 self._connection_parameters['mapping'] = mapping
-            elif isinstance(mapping, n2d2.Tensor):
-                raise TypeError("Tensor mapping are not supported for PoolCell")
             else:
                 raise WrongInputType('mapping', type(mapping), [str(type(n2d2.mapping.Mapping)), str(type(n2d2.Tensor))])
 
@@ -926,7 +927,18 @@ class Pool(Cell):
                 else:
                     self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
             if "mapping" in self._connection_parameters:
-                self._N2D2_object.initializeParameters(0, 1, self._connection_parameters['mapping'].create_N2D2_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2())
+                if isinstance(self._connection_parameters['mapping'], n2d2.mapping.Mapping):
+                    mapping = self._connection_parameters['mapping'].create_N2D2_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2()
+                elif isinstance(self._connection_parameters['mapping'], n2d2.Tensor):
+                    
+                    mapping = self._connection_parameters['mapping'].N2D2()
+                    # TODO : Test if the mapping is 2D ?
+                    if mapping.dimX() != mapping.dimY():
+                        raise ValueError("Pool Cell supports only unit maps")
+                else:
+                    raise WrongInputType('mapping', type(mapping), [str(type(n2d2.mapping.Mapping)), str(type(n2d2.Tensor))])
+                self._N2D2_object.initializeParameters(0, 1, mapping)
+
             else:
                 self._N2D2_object.initializeParameters(0, 1, n2d2.mapping.Mapping(nb_channels_per_group=1).create_N2D2_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2())
                 
