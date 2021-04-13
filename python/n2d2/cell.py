@@ -128,7 +128,7 @@ class Cell(N2D2_Interface):
         self._deepnet = deepnet
 
     def get_type(self):
-        return str(type(self))
+        return type(self).__name__
 
     """
     def add_input(self, inputs):
@@ -252,7 +252,7 @@ class Cell(N2D2_Interface):
         self._deepnet.add_to_current_group(self)
 
     def __str__(self):
-        output = "\'" + self.get_name() + "\' " + self.get_type()+"(" + self._model_key + ")"
+        output = "\'" + self.get_name() + "\' " + self.get_type() + "(" + self._model_key + ")"
         output += N2D2_Interface.__str__(self)
         if len(self.get_inputs()) > 0:
             output += "[inputs="
