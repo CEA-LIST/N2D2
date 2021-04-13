@@ -458,7 +458,11 @@ class Sequence:
     def __init__(self, cells, name=None):
         assert(isinstance(cells, list))
         self._cells = cells
-        self._name = name
+        if name is None:
+            self._name = "Sequence" + str(n2d2.global_variables.sequence_counter)
+            n2d2.global_variables.sequence_counter =+ 1
+        else:
+            self._name = name
 
     def __call__(self, x):
         x.get_deepnet().begin_group(name=self._name)
@@ -466,6 +470,13 @@ class Sequence:
             x = cell(x)
         x.get_deepnet().end_group()
         return x
+
+    def __str__(self):
+        output = "\'" + self._name + "\' " + "[\n"
+        for cell in self._cells:
+            output += "\t" + str(cell) + "\n"
+        output += "]\n"
+        return output
 
     def test(self):
         for cell in self._cells:

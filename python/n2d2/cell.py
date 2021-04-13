@@ -830,7 +830,7 @@ class Pool(Cell):
                  pool_dims,
                  from_arguments=True,
                  **config_parameters):
-        r"""
+        """
         :param pool_dims: Pooling area dimensions
         :type pool_dims: list
         :param pooling: Type of pooling (``Max`` or ``Average``), default="Max" 
@@ -872,7 +872,7 @@ class Pool(Cell):
             elif isinstance(mapping, n2d2.Tensor):
                 raise TypeError("Tensor mapping are not supported for PoolCell")
             else:
-                raise WrongInputType('mapping', type(mapping), [str(type(n2d2.mapping.Mapping))])
+                raise WrongInputType('mapping', type(mapping), [str(type(n2d2.mapping.Mapping)), str(type(n2d2.Tensor))])
 
 
     @classmethod

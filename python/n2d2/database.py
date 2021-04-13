@@ -63,13 +63,15 @@ class Database(N2D2_Interface):
         validation = self.get_nb_stimuli("Validation")
         unpartitioned = self.get_nb_stimuli("Unpartitioned")
         total = validation + learn + test + unpartitioned
-
-        print("Number of stimuli : " + str(total) +"\n"+
-        "Learn         : " + str(learn) + " stimuli (" + str(round(((learn/total) * 100), 2)) + "%)\n"+
-        "Test          : " + str(test) + " stimuli (" + str(round(((test/total) * 100), 2)) + "%)\n"+
-        "Validation    : " + str(validation) + " stimuli (" + str(round(((validation/total) * 100), 2)) + "%)\n"+
-        "Unpartitioned : " + str(unpartitioned) + " stimuli (" + str(round(((unpartitioned/total) * 100), 2)) + "%)\n"
-        )
+        if total != 0:
+            print("Number of stimuli : " + str(total) +"\n"+
+            "Learn         : " + str(learn) + " stimuli (" + str(round(((learn/total) * 100), 2)) + "%)\n"+
+            "Test          : " + str(test) + " stimuli (" + str(round(((test/total) * 100), 2)) + "%)\n"+
+            "Validation    : " + str(validation) + " stimuli (" + str(round(((validation/total) * 100), 2)) + "%)\n"+
+            "Unpartitioned : " + str(unpartitioned) + " stimuli (" + str(round(((unpartitioned/total) * 100), 2)) + "%)\n"
+            )
+        else:
+            print("No stimulus in the database !")
 
     def get_label_name(self, label_idx):
         """
@@ -81,8 +83,8 @@ class Database(N2D2_Interface):
         return self._N2D2_object.getLabelName(label_idx)
 
     def partition_stimuli(self, learn, validation, test):
-        """Create partitions of the data with the given ratio.
-
+        """Partition the ``Unpartitioned`` data with the given ratio (the sum of the given ratio must be equal to 1).
+        
         :param learn: Ratio for the learning partition.
         :type learn: float
         :param validation: Ratio for the validation partition.
@@ -253,5 +255,5 @@ class GTSRB(Database):
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['extract_ROIs'])
-        self._N2D2_object = N2D2.GTSRB_DIR_Database(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
+        self._N2D2_object = N2D2.GTSRB_DIR_Database(validation, **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)

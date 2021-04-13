@@ -30,15 +30,12 @@ from n2d2.filler import He
 from n2d2.solver import SGD
 from n2d2 import ConfigSection
 
-n2d2.global_variables.default_model = "Frame_CUDA" # TODO without this an error occur
+n2d2.global_variables.default_model = "Frame_CUDA"
 
 db = n2d2.database.GTSRB(0.2)
 db.load("/nvme0/DATABASE/GTSRB")
 
 print("\n### Data imported ###\n")
-db.partition_stimuli(0.5, 0.2, 0.3)
-
-# Print the ratio for each partition 
 db.get_partition_summary()
 
 provider = n2d2.provider.DataProvider(db, [29, 29, 3], batch_size=24)
@@ -72,14 +69,13 @@ print("\n### Model ###\n")
 print(model)
 loss_function = n2d2.application.CrossEntropyClassifier(provider)
 for epoch in range(50):
-    print("\n### Learning ###\n")
+    print("\n### Learning ###")
 
     provider.set_partition("Learn")
     model.learn()
     provider.set_reading_randomly(True)
-    # input(str(type(model._cells[0].N2D2())))
     for stimuli in provider:
-        output = model(stimuli) # TODO: Cause seg fault if model = Frame
+        output = model(stimuli)
         loss = loss_function(output)
         loss.back_propagate()
         loss.update()
@@ -100,7 +96,7 @@ for epoch in range(50):
                 + "{0:.2f}".format(100 * loss_function.get_average_success()) + "%", end='\r')
 
 
-print("\n\n### Testing ###")
+print("\n### Testing ###")
 
 provider.set_partition('Test')
 model.test()

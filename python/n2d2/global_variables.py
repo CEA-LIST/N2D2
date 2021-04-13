@@ -36,6 +36,7 @@ deepNet_counter = 0
 cell_counter = 0
 target_counter = 0
 provider_counter = 0
+sequence_counter = 0
 
 class Verbosity:
     short = 0  # Constructor arguments only
