@@ -27,8 +27,8 @@ import n2d2.cell
 import n2d2.converter
 from n2d2.n2d2_interface import N2D2_Interface
 
-# TODO: make possible to have several N2D2 deepnets in one DeepNet graph object.
-# This way we can couple and backpropagate through several deepnets
+"""
+"""
 class DeepNet(N2D2_Interface):
 
     def __init__(self, from_parameters=True, **config_parameters):
@@ -176,6 +176,124 @@ class Callable:
 
     def get_name(self):
         return ""
+
+
+
+
+class Group:
+    def __init__(self, name, parent_group=None):
+        self._name = name
+        self._sequence = []
+        self._parent_group = parent_group
+
+    def add(self, cell):
+        if cell.get_name() in self.get_cells():
+            raise RuntimeError("Cell with name '" + cell.get_name() + "' already exists in group '" + self._name + "'. "
+                               "Are you trying to call the same cell twice? Cyclic graphs are not supported.")
+        self._sequence.append(cell)
+
+    def __len__(self):
+        return len(self._sequence)
+
+    def get_parent_group(self):
+        return self._parent_group
+
+    """
+    # TODO: At the moment this does not release memory of deleted cells
+    def remove(self, idx, reconnect=True):
+        cell = self._sequence[idx]
+        print("Removing element: " + cell.get_name())
+        if isinstance(cell, Group):
+            length = len(cell.get_elements())
+            for i in reversed(range(length)):
+                cell.remove(i, reconnect)
+            del self._sequence[idx]
+        elif isinstance(cell, n2d2.cell.Cell):
+            cells = self.get_cells()
+            children = cell.N2D2().getChildrenCells()
+            parents = cell.N2D2().getParentsCells()
+            for child in children:
+                if child.getName() in cells:
+                    n2d2_child = cells[child.getName()]
+                    print("Child: " + n2d2_child.get_name())
+                    for idx, ipt in enumerate(n2d2_child.get_inputs()):
+                        if ipt.get_name() == cell.get_name():
+                            del n2d2_child.get_inputs()[idx]
+                    if reconnect:
+                        for parent in parents:
+                            if parent.getName() in cells:
+                                n2d2_child.add_input(cells[parent.getName()])
+                            else:
+                                print("Warning: parent '" + parent.getName() + "' of removed cell '" + cell.get_name() +
+                                "' not found in same sequence as removed cell. If the parent is part of another sequence, "
+                                "please reconnect it manually.")
+                else:
+                    print("Warning: child '" + child.getName() + "' of removed cell '" + cell.get_name() +
+                          "' not found in same sequence as removed cell. If the child is part of another sequence, "
+                          "please remove the corresponding parent cell manually.")
+            cell.get_deepnet().N2D2().removeCell(cell.N2D2(), reconnect)
+            del self._sequence[idx]
+        else:
+            raise RuntimeError("Unknown object at index: " + str(idx))
+    """
+
+
+    def get_cells(self):
+        cells = {}
+        self._get_cells(cells)
+        return cells
+
+    def _get_cells(self, cells):
+        for elem in self._sequence:
+            if isinstance(elem, Group):
+                elem._get_cells(cells)
+            else:
+                cells[elem.get_name()] = elem
+
+    def get_group(self, group_id):
+        if isinstance(group_id, int):
+            return self._sequence[group_id]
+        else:
+            for elem in self._sequence:
+                if elem.get_name() == group_id:
+                    return elem
+            raise RuntimeError("No group with name: \'" + group_id + "\'")
+
+    def get_name(self):
+        return self._name
+
+    def get_elements(self):
+        return self._sequence
+
+    def get_last(self):
+        return self._sequence[-1].get_last()
+
+    def get_first(self):
+        return self._sequence[0].get_first()
+
+    def get_outputs(self):
+        return self.get_last().get_outputs()
+
+    def __str__(self):
+        return self._generate_str(1)
+
+    def _generate_str(self, indent_level):
+        if not self.get_name() == "":
+            output = "\'" + self.get_name() + "\' " + "("
+        else:
+            output = "Group("
+
+        for idx, value in enumerate(self._sequence):
+            output += "\n" + (indent_level * "\t") + "(" + str(idx) + ")"
+            if isinstance(value, n2d2.deepnet.Group):
+                output += ": " + value._generate_str(indent_level + 1)
+            else:
+                output += ": " + value.__str__()
+        output += "\n" + ((indent_level-1) * "\t") + ")"
+        return output
+
+
+
 
 
 
@@ -341,119 +459,6 @@ class DeepNetCell(Callable):
 
 
 
-class Group:
-    def __init__(self, name, parent_group=None):
-        self._name = name
-        self._sequence = []
-        self._parent_group = parent_group
-
-    def add(self, cell):
-        if cell.get_name() in self.get_cells():
-            raise RuntimeError("Cell with name '" + cell.get_name() + "' already exists in group '" + self._name + "'. "
-                               "Are you trying to call the same cell twice? Cyclic graphs are not supported.")
-        self._sequence.append(cell)
-
-    def __len__(self):
-        return len(self._sequence)
-
-    def get_parent_group(self):
-        return self._parent_group
-
-    """
-    # TODO: At the moment this does not release memory of deleted cells
-    def remove(self, idx, reconnect=True):
-        cell = self._sequence[idx]
-        print("Removing element: " + cell.get_name())
-        if isinstance(cell, Group):
-            length = len(cell.get_elements())
-            for i in reversed(range(length)):
-                cell.remove(i, reconnect)
-            del self._sequence[idx]
-        elif isinstance(cell, n2d2.cell.Cell):
-            cells = self.get_cells()
-            children = cell.N2D2().getChildrenCells()
-            parents = cell.N2D2().getParentsCells()
-            for child in children:
-                if child.getName() in cells:
-                    n2d2_child = cells[child.getName()]
-                    print("Child: " + n2d2_child.get_name())
-                    for idx, ipt in enumerate(n2d2_child.get_inputs()):
-                        if ipt.get_name() == cell.get_name():
-                            del n2d2_child.get_inputs()[idx]
-                    if reconnect:
-                        for parent in parents:
-                            if parent.getName() in cells:
-                                n2d2_child.add_input(cells[parent.getName()])
-                            else:
-                                print("Warning: parent '" + parent.getName() + "' of removed cell '" + cell.get_name() +
-                                "' not found in same sequence as removed cell. If the parent is part of another sequence, "
-                                "please reconnect it manually.")
-                else:
-                    print("Warning: child '" + child.getName() + "' of removed cell '" + cell.get_name() +
-                          "' not found in same sequence as removed cell. If the child is part of another sequence, "
-                          "please remove the corresponding parent cell manually.")
-            cell.get_deepnet().N2D2().removeCell(cell.N2D2(), reconnect)
-            del self._sequence[idx]
-        else:
-            raise RuntimeError("Unknown object at index: " + str(idx))
-    """
-
-
-    def get_cells(self):
-        cells = {}
-        self._get_cells(cells)
-        return cells
-
-    def _get_cells(self, cells):
-        for elem in self._sequence:
-            if isinstance(elem, Group):
-                elem._get_cells(cells)
-            else:
-                cells[elem.get_name()] = elem
-
-    def get_group(self, group_id):
-        if isinstance(group_id, int):
-            return self._sequence[group_id]
-        else:
-            for elem in self._sequence:
-                if elem.get_name() == group_id:
-                    return elem
-            raise RuntimeError("No group with name: \'" + group_id + "\'")
-
-    def get_name(self):
-        return self._name
-
-    def get_elements(self):
-        return self._sequence
-
-    def get_last(self):
-        return self._sequence[-1].get_last()
-
-    def get_first(self):
-        return self._sequence[0].get_first()
-
-    def get_outputs(self):
-        return self.get_last().get_outputs()
-
-    def __str__(self):
-        return self._generate_str(1)
-
-    def _generate_str(self, indent_level):
-        if not self.get_name() == "":
-            output = "\'" + self.get_name() + "\' " + "("
-        else:
-            output = "Group("
-
-        for idx, value in enumerate(self._sequence):
-            output += "\n" + (indent_level * "\t") + "(" + str(idx) + ")"
-            if isinstance(value, n2d2.deepnet.Group):
-                output += ": " + value._generate_str(indent_level + 1)
-            else:
-                output += ": " + value.__str__()
-        output += "\n" + ((indent_level-1) * "\t") + ")"
-        return output
-
-
 class Sequence:
     def __init__(self, cells, name=None):
         assert(isinstance(cells, list))
@@ -483,32 +488,3 @@ class Sequence:
     def get_name(self):
         return ""
 
-
-class Callable:
-    def __init__(self, cells, name=None):
-        assert (isinstance(cells, list))
-        self._cells = {}
-        for cell in cells:
-            self._cells[cell.get_name()] = cell
-        self._name = name
-
-    def __getitem__(self, name):
-        return self._cells[name]
-
-    def __call__(self, x):
-        raise RuntimeError("Callable instance without __call__() method")
-
-    def test(self):
-        for name, cell in self._cells.items():
-            cell.test()
-
-    def learn(self):
-        for name, cell in self._cells.items():
-            cell.learn()
-
-    def import_free_parameters(self, dir_name, ignoreNotExists=False):
-        for name, cell in self._cells.items():
-            cell.import_free_parameters(dir_name, ignoreNotExists=ignoreNotExists)
-
-    def get_name(self):
-        return ""

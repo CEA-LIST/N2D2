@@ -44,10 +44,14 @@ args = parser.parse_args()
 n2d2.global_variables.set_cuda_device(args.dev)
 n2d2.global_variables.default_model = "Frame_CUDA"
 
+size = 224
 
 if args.arch == 'MobileNetv1':
     batch_size = 256
 elif args.arch == 'MobileNetv1_batchnorm':
+    batch_size = 64
+elif args.arch == 'MobileNetv2':
+    size = 224
     batch_size = 64
 elif args.arch == 'MobileNetv2-onnx':
     batch_size = 64
@@ -60,7 +64,6 @@ else:
 
 avg_window = int(10000 / batch_size)
 
-size = 224
 
 print("Create database")
 database = n2d2.database.ILSVRC2012(learn=1.0, random_partitioning=False)
@@ -93,6 +96,12 @@ elif args.arch == 'MobileNetv2-onnx':
     provider.add_transformation(n2d2.model.mobilenetv2.ONNX_preprocessing(size=size))
     model = n2d2.model.mobilenetv2.load_from_ONNX(provider, download=True, batch_size=batch_size)
     model.remove("mobilenetv20_output_flatten0_reshape0", False)
+elif args.arch == 'MobileNetv2':
+    nb_epochs = 0 if args.epochs == -1 else args.epochs
+    trans, otf_trans = n2d2.model.ILSVRC_preprocessing(size=size)
+    provider.add_transformation(trans)
+    provider.add_on_the_fly_transformation(otf_trans)
+    model = n2d2.model.mobilenetv2.Mobilenetv2(output_size=1000, alpha=0.5, size=size)
 elif args.arch == 'ResNet50Bn':
     nb_epochs = 90 if args.epochs == -1 else args.epochs
     size = 224
@@ -167,6 +176,9 @@ for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test') / batch_
     x = provider.read_batch(batch_idx)
     x = model(x)
     x = loss_function(x)
+
+    print(x.get_deepnet())
+    exit()
 
     print("Example: " + str(i * batch_size) + ", test success: "
           + "{0:.2f}".format(100 * loss_function.get_average_success()) + "%", end='\r')
