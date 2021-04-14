@@ -1302,7 +1302,7 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set)
                     ? mFutureProvidedData[dev].batch
                     : mProvidedData[dev].batch;
 
-            if (index > 0) {
+            if (index >= 0) {
                 const unsigned int batchSize
                     = std::min(mBatchSize, mDatabase.getNbStimuli(set) - index);
                 for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
@@ -1328,7 +1328,7 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set)
                     ? mFutureProvidedData[dev].batch
                     : mProvidedData[dev].batch;
 
-				if (batchRef[batchPos] > 0) {
+				if (batchRef[batchPos] >= 0) {
                     try {
                         readStimulus(batchRef[batchPos], set, batchPos, dev);
                     }
@@ -1356,7 +1356,7 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set)
                     : mProvidedData[dev].batch;   
 
                 for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
-                    if (batchRef[batchPos] > 0) 
+                    if (batchRef[batchPos] >= 0) 
                         readStimulus(batchRef[batchPos], set, batchPos, dev);
                 }
             }
