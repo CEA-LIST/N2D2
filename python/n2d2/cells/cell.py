@@ -26,6 +26,8 @@ from n2d2.deepnet import DeepNet
 # TODO: Make abstract class
 class Cell:
     def __init__(self, name):
+        if not name:
+            name = n2d2.global_variables.generate_name(self)
         self._name = name
 
     def __call__(self, x):
@@ -53,11 +55,6 @@ class Block(Cell):
         self._cells = {}
         for cell in cells:
             self._cells[cell.get_name()] = cell
-        if name is None:
-            name = "Block" + str(n2d2.global_variables.block_counter)
-            n2d2.global_variables.block_counter = + 1
-        else:
-            name = name
         Cell.__init__(self, name)
 
     def __getitem__(self, name):
@@ -106,11 +103,6 @@ class Block(Cell):
 
 class Sequence(Block):
     def __init__(self, cells, name=None):
-        if name is None:
-            name = "Sequence" + str(n2d2.global_variables.sequence_counter)
-            n2d2.global_variables.sequence_counter += 1
-        else:
-            name = name
         Block.__init__(self, cells, name)
 
     def __call__(self, x):
@@ -136,8 +128,7 @@ class DeepNetCell(Block):
         if not N2D2_object.getName() == "":
             name = N2D2_object.getName()
         else:
-            name = "DeepNetCell_" + str(n2d2.global_variables.deep_net_cell_counter)
-            n2d2.global_variables.deep_net_cell_counter += 1
+            name = None
 
         #self._cells = self._core_deepnet.get_cells()
         Block.__init__(self, list(self._core_deepnet.get_cells().values()), name=name)

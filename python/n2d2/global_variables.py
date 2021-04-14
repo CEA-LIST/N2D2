@@ -30,12 +30,17 @@ default_datatype = 'float'
 default_net = N2D2.Network(default_seed)
 
 
-deep_net_cell_counter = 0
-cell_counter = 0
-target_counter = 0
-provider_counter = 0
-sequence_counter = 0
-block_counter = 0
+objects_counter = {}
+
+# TODO : Move this function to utils ?
+def generate_name(obj):
+    name = obj.__class__.__name__
+    if name in objects_counter:
+        objects_counter[name] += 1
+    else:
+        objects_counter[name] = 0
+    name += "_"+str(objects_counter[name])
+    return name
 
 class Verbosity:
     short = 0  # Constructor arguments only
@@ -43,6 +48,7 @@ class Verbosity:
 
 verbosity = Verbosity.detailed
 
+# TODO : Move this function to utils ?
 def set_cuda_device(id):
     N2D2.CudaContext.setDevice(id)
 

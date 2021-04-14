@@ -32,8 +32,7 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
         if 'name' in config_parameters:
             name = config_parameters.pop('name')
         else:
-            name = "cell_" + str(n2d2.global_variables.cell_counter)
-        n2d2.global_variables.cell_counter += 1
+            name = None
 
         Cell.__init__(self, name)
 

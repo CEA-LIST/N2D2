@@ -31,8 +31,7 @@ class Provider(N2D2_Interface):
         if 'name' in config_parameters:
             self._name = config_parameters.pop['name']
         else:
-            self._name = "provider_" + str(n2d2.global_variables.provider_counter)
-        n2d2.global_variables.provider_counter += 1
+            self._name = n2d2.global_variables.generate_name(self)
         self._deepnet = None
 
     def get_deepnet(self):

@@ -32,9 +32,8 @@ class Target(N2D2_Interface):
         if 'name' in config_parameters:
             name = config_parameters.pop('name')
         else:
-            name = "target_" + str(n2d2.global_variables.target_counter)
-            n2d2.global_variables.target_counter += 1
-
+            name = n2d2.global_variables.generate_name(self)
+            
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._constructor_parameters = {
