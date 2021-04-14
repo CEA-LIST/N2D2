@@ -196,9 +196,6 @@ class Cell(N2D2_Interface):
     Links N2D2 cells taking into account cell connection parameters
     """
     def _link_N2D2_input(self, inputs):
-        if isinstance(input, n2d2.cell.Cell):
-            input(inputs.N2D2().getOutputsDim())
-
         self._N2D2_object.linkInput(inputs.N2D2())
 
     def _add_to_graph(self, inputs):

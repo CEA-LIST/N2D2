@@ -416,6 +416,42 @@ class RandomResizeCrop(Transformation):
                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
 
+class ChannelExtraction(Transformation):
+    """
+    Extract an image channel.
+    """
+    def __init__(self, channel, **config_parameters):
+        """
+            The ``channel`` parameter can take the following values :
+            ``Blue``: blue channel in the BGR colorspace, or first channel of any colorspace, 
+            ``Green``: green channel in the BGR colorspace, or second channel of any colorspace,
+            ``Red``: red channel in the BGR colorspace, or third channel of any colorspace,
+            ``Hue``: hue channel in the HSV colorspace,
+            ``Saturation``: saturation channel in the HSV colorspace,
+            ``Value``: value channel in the HSV colorspace,
+            ``Gray``: gray conversion,
+            ``Y``: Y channel in the YCbCr colorspace,
+            ``Cb``: Cb channel in the YCbCr colorspace,
+            ``Cr``: Cr channel in the YCbCr colorspace
+
+            :param channel: channel to extract
+            :type channel: str
+        """
+        Transformation.__init__(self, **config_parameters)
+        
+        if channel not in N2D2.ChannelExtractionTransformation.Channel.__members__.keys():
+            raise n2d2.error_handler.WrongValue("channel", channel,
+                                                " ".join(N2D2.ChannelExtractionTransformation.Channel.__members__.keys()))
+
+        self._constructor_arguments.update({
+            'channel': N2D2.ChannelExtractionTransformation.Channel.__members__[channel],
+        })
+
+        self._parse_optional_arguments([])
+
+        self._N2D2_object = N2D2.ChannelExtractionTransformation(self._constructor_arguments['channel'],
+                                                **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
+        self._set_N2D2_parameters(self._config_parameters)
 
 # TODO : Change binding to expose apply method 
 # class CustomTransformation(Transformation):

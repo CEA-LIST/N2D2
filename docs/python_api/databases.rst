@@ -142,6 +142,13 @@ RandomResizeCrop
         :members:
         :inherited-members:
 
+ChannelExtraction
+~~~~~~~~~~~~~~~~~
+
+.. autoclass:: n2d2.transform.ChannelExtraction
+        :members:
+        :inherited-members:
+
 Data provider
 -------------
 

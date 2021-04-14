@@ -80,6 +80,12 @@ class CrossEntropyClassifier:
         """
         self._target.log_success(path)
 
+    def log_stats(self, path):
+        """
+        Save computational stats on the cells.
+        """
+        self.get_deepnet().N2D2().logStats(path)
+
     def log_estimated_labels(self, path):
         self._target.log_estimated_labels(path)
 

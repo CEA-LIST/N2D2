@@ -38,6 +38,7 @@ void init_ChannelExtractionTransformation(py::module &m) {
     .value("Hue", ChannelExtractionTransformation::Channel::Hue)
     .value("Saturation", ChannelExtractionTransformation::Channel::Saturation)
     .value("Value", ChannelExtractionTransformation::Channel::Value)
+    .value("Gray", ChannelExtractionTransformation::Channel::Gray)
     .value("Y", ChannelExtractionTransformation::Channel::Y)
     .value("Cb", ChannelExtractionTransformation::Channel::Cb)
     .value("Cr", ChannelExtractionTransformation::Channel::Cr)
