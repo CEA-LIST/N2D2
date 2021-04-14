@@ -316,13 +316,30 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
             iniConfig.currentSection((*it), false);
             const std::string type = iniConfig.getProperty<std::string>("Type");
 
+            std::vector<std::shared_ptr<Cell> > parentCells;
+
+            for (std::vector<std::string>::const_iterator itParent
+                = parentLayers[(*it)].begin();
+                itParent != parentLayers[(*it)].end();
+                ++itParent)
+            {
+                if ((*itParent) == "env")
+                    parentCells.push_back(std::shared_ptr<Cell>());
+                else if (ignoreParents.find((*itParent))
+                    == ignoreParents.end())
+                {
+                    parentCells.push_back(deepNet->getCell((*itParent)));
+                }
+            }
+
             if (type == "ONNX") {
                 const std::string fileName
                     = iniConfig.getProperty<std::string>("File");
                 std::string fullFileName 
                     = Utils::expandEnvVars(fileName);
 
-                generateFromONNX(network, fullFileName, iniConfig, deepNet);
+                generateFromONNX(network, fullFileName, iniConfig, deepNet,
+                                 parentCells);
 
                 const std::vector<std::string> targets
                     = iniConfig.getSections("*.Target*");
@@ -350,22 +367,6 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
             }
             else {
 #endif
-                std::vector<std::shared_ptr<Cell> > parentCells;
-
-                for (std::vector<std::string>::const_iterator itParent
-                    = parentLayers[(*it)].begin();
-                    itParent != parentLayers[(*it)].end();
-                    ++itParent)
-                {
-                    if ((*itParent) == "env")
-                        parentCells.push_back(std::shared_ptr<Cell>());
-                    else if (ignoreParents.find((*itParent))
-                        == ignoreParents.end())
-                    {
-                        parentCells.push_back(deepNet->getCell((*itParent)));
-                    }
-                }
-
                 std::shared_ptr<Cell> cell
                     = CellGenerator::generate(network, *deepNet,
                                             *deepNet->getStimuliProvider(),
@@ -509,9 +510,10 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
 #ifdef ONNX
 std::shared_ptr<N2D2::DeepNet>
 N2D2::DeepNetGenerator::generateFromONNX(Network& network,
-                                         const std::string& fileName,
-                                         IniParser& iniConfig,
-                                         std::shared_ptr<DeepNet> deepNet)
+    const std::string& fileName,
+    IniParser& iniConfig,
+    std::shared_ptr<DeepNet> deepNet,
+    const std::vector<std::shared_ptr<Cell> >& parentCells)
 {
     if (!deepNet) {
         deepNet = std::shared_ptr<DeepNet>(new DeepNet(network));
@@ -574,7 +576,8 @@ N2D2::DeepNetGenerator::generateFromONNX(Network& network,
 
     std::cout << "Opset version is: " << opsetVersion << std::endl;
 
-    ONNX_processGraph(deepNet, onnxModel.graph(), opsetVersion, iniConfig);
+    ONNX_processGraph(deepNet, parentCells,
+                      onnxModel.graph(), opsetVersion, iniConfig);
 
     return deepNet;
 }
@@ -616,6 +619,7 @@ std::shared_ptr<N2D2::BaseTensor> N2D2::DeepNetGenerator::ONNX_unpackTensor(
 
 void N2D2::DeepNetGenerator::ONNX_processGraph(
     std::shared_ptr<DeepNet> deepNet,
+    const std::vector<std::shared_ptr<Cell> >& graphParentCells,
     const onnx::GraphProto& graph,
     int opsetVersion,
     IniParser& iniConfig)
@@ -630,80 +634,99 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
     }
     std::map<std::string, std::vector<size_t> > shape;
 
-    std::map<std::string, const onnx::ValueInfoProto*> input;
-    std::map<std::string, const onnx::ValueInfoProto*> dataInput;
+    // Map the ONNX graph inputs to the graphParentCells
+    std::map<std::string, std::shared_ptr<Cell> > inputsMapping;
+    std::shared_ptr<StimuliProvider> sp;
+    unsigned int nbInputs = 0;
+
     for (int i = 0; i < graph.input_size(); ++i) {
         const onnx::ValueInfoProto* valueInfo = &(graph.input(i));
-        input[valueInfo->name()] = valueInfo;
 
-        if (initializer.find(valueInfo->name()) == initializer.end())
-            dataInput[valueInfo->name()] = valueInfo;
-    }
+        // If there is a constant initializer, no parent is required
+        if (initializer.find(valueInfo->name()) != initializer.end())
+            continue;
 
-    std::map<std::string, const onnx::ValueInfoProto*> output;
-    for (int o = 0; o < graph.output_size(); ++o) {
-        const onnx::ValueInfoProto* valueInfo = &(graph.output(o));
-        output[valueInfo->name()] = valueInfo;
-    }
+        // Not enough parents in graphParentCells
+        if (nbInputs >= graphParentCells.size()) {
+            std::stringstream msgStr;
+            msgStr << "The number of parents provided ("
+                << graphParentCells.size() << ") is less than the required "
+                "number of data input in the ONNX graph";
+            throw std::runtime_error(msgStr.str());
+        }
 
-    if (dataInput.size() != 1)
-        throw std::runtime_error("Number of data input should be 1");
+        std::shared_ptr<Cell> parentCell = graphParentCells[nbInputs];
+        ++nbInputs;
 
-    const onnx::TypeProto_Tensor& inputType
-        = (*dataInput.begin()).second->type().tensor_type();
-    const onnx::TensorShapeProto& inputShape = inputType.shape();
+        inputsMapping[valueInfo->name()] = parentCell;
 
-    std::vector<size_t> size;
-    for (int i = 1; i < inputShape.dim_size(); ++i)
-        size.push_back(inputShape.dim(i).dim_value());
-    std::reverse(size.begin(), size.end());
+        if (parentCell)
+            continue;
 
-    std::shared_ptr<StimuliProvider> sp;
+        // parentCell is the StimuliProvider
+        const onnx::TypeProto_Tensor& inputType
+            = valueInfo->type().tensor_type();
+        const onnx::TensorShapeProto& inputShape
+            = inputType.shape();
 
-    if (!deepNet->getStimuliProvider()) {
-        // Input: StimuliProvider construction
-        unsigned int batchSize = inputShape.dim(0).dim_value();
-        if (batchSize < 1)
-            batchSize = 1;
+        std::vector<size_t> size;
+        for (int i = 1; i < inputShape.dim_size(); ++i)
+            size.push_back(inputShape.dim(i).dim_value());
+        std::reverse(size.begin(), size.end());
 
-        const bool compositeStimuli = false;
 
-        sp = std::shared_ptr<StimuliProvider>(new StimuliProvider(
-            *deepNet->getDatabase(), size, batchSize, compositeStimuli));
-        deepNet->setStimuliProvider(sp);
+        if (!deepNet->getStimuliProvider()) {
+            // Input: StimuliProvider construction
+            unsigned int batchSize = inputShape.dim(0).dim_value();
+            if (batchSize < 1)
+                batchSize = 1;
 
-        std::cout << "StimuliProvider: " << size << " (" << batchSize << ")"
-            << std::endl;
+            const bool compositeStimuli = false;
 
-        // Pre-processing for ImageNet used by the MobileNet families
-        //sp->addTransformation(RescaleTransformation(256, 256));
-        //sp->addTransformation(PadCropTransformation(size[0], size[1]));
-        //sp->addTransformation(ColorSpaceTransformation(
-        //    ColorSpaceTransformation::RGB));
-        //sp->addTransformation(RangeAffineTransformation(
-        //    RangeAffineTransformation::Minus, {127.5},
-        //    RangeAffineTransformation::Divides, {127.5}));
-    }
-    else if (deepNet->getCells().empty()) {
-        sp = deepNet->getStimuliProvider();
+            sp = std::shared_ptr<StimuliProvider>(new StimuliProvider(
+                *deepNet->getDatabase(), size, batchSize, compositeStimuli));
+            deepNet->setStimuliProvider(sp);
 
-        const bool ignoreInputSize
-            = iniConfig.getProperty<bool>("IgnoreInputSize", false);
-
-        if (!ignoreInputSize && sp->getSize() != size
-            && !(std::equal(size.begin(), size.end(), sp->getSize().begin())
-                && std::all_of(sp->getSize().begin() + size.size(),
-                               sp->getSize().end(), [](size_t i){return i == 1;})))
-        {
-            std::ostringstream errorStr;
-            errorStr << "Unexpected size for ONNX input \""
-                << (*dataInput.begin()).first << "\": got " << size
-                << " , but StimuliProvider provides " << sp->getSize()
+            std::cout << "StimuliProvider: " << size << " (" << batchSize << ")"
                 << std::endl;
+        }
+        else {
+            sp = deepNet->getStimuliProvider();
 
-            throw std::runtime_error(errorStr.str());
+            const bool ignoreInputSize
+                = iniConfig.getProperty<bool>("IgnoreInputSize", false);
+
+            if (!ignoreInputSize && sp->getSize() != size
+                && !(std::equal(size.begin(), size.end(), sp->getSize().begin())
+                    && std::all_of(sp->getSize().begin() + size.size(),
+                                sp->getSize().end(), [](size_t i){return i == 1;})))
+            {
+                std::ostringstream errorStr;
+                errorStr << "Unexpected size for ONNX input \""
+                    << valueInfo->name() << "\": got " << size
+                    << " , but StimuliProvider provides " << sp->getSize()
+                    << std::endl;
+
+                throw std::runtime_error(errorStr.str());
+            }
         }
     }
+
+    if (nbInputs != graphParentCells.size()) {
+        std::stringstream msgStr;
+        msgStr << "The number of parents provided (" << graphParentCells.size()
+            << ") does not match the number of data input in the ONNX graph ("
+            << nbInputs << ")";
+        throw std::runtime_error(msgStr.str());
+    }
+
+    auto getCell = [&inputsMapping, &deepNet](const std::string& name)
+    {
+        auto it = inputsMapping.find(name);
+        return (it != inputsMapping.end())
+            ? (*it).second  // Input
+            : deepNet->getCell(name);
+    };
 
     // Cells
     std::shared_ptr<Cell> cell;
@@ -785,17 +808,14 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             if ((itConcat = concat.find(inputX)) != concat.end()) {
                 for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
                     const std::string input = (*itConcat).second[i];
-                    std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
+                    std::shared_ptr<Cell> inputCell = getCell(input);
 
                     nbOutputs += inputCell->getNbOutputs();
                     inputsDims = inputCell->getOutputsDims();
                 }
             }
             else {
-                std::shared_ptr<Cell> inputXCell
-                    = (deepNet->getCells().empty())
-                        ? std::shared_ptr<Cell>()
-                        : deepNet->getCell(inputX);
+                std::shared_ptr<Cell> inputXCell = getCell(inputX);
                 
                 if (inputXCell) {
                     nbOutputs += inputXCell->getNbOutputs();
@@ -962,17 +982,14 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 if ((itConcat = concat.find(inputX)) != concat.end()) {
                     for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
                         const std::string input = (*itConcat).second[i];
-                        std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
+                        std::shared_ptr<Cell> inputCell = getCell(input);
                         parentCells.push_back(inputCell);
 
                         paddingCell->addInput(inputCell.get());
                     }
                 }
                 else {
-                    std::shared_ptr<Cell> inputXCell
-                        = (deepNet->getCells().empty())
-                            ? std::shared_ptr<Cell>()
-                            : deepNet->getCell(inputX);
+                    std::shared_ptr<Cell> inputXCell = getCell(inputX);
                     parentCells.push_back(inputXCell);
 
                     if (inputXCell)
@@ -997,7 +1014,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 
                     for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
                         const std::string input = (*itConcat).second[i];
-                        std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
+                        std::shared_ptr<Cell> inputCell = getCell(input);
                         parentCells.push_back(inputCell);
 
                         // Make a unit map
@@ -1015,10 +1032,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     }
                 }
                 else {
-                    std::shared_ptr<Cell> inputXCell
-                        = (deepNet->getCells().empty())
-                            ? std::shared_ptr<Cell>()
-                            : deepNet->getCell(inputX);
+                    std::shared_ptr<Cell> inputXCell = getCell(inputX);
                     parentCells.push_back(inputXCell);
 
                     if (inputXCell)
@@ -1111,10 +1125,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     "BatchNorm");
             }
             else {
-                std::shared_ptr<Cell> inputXCell
-                    = (deepNet->getCells().empty())
-                        ? std::shared_ptr<Cell>()
-                        : deepNet->getCell(inputX);
+                std::shared_ptr<Cell> inputXCell = getCell(inputX);
                 parentCells.push_back(inputXCell);
 
                 if (inputXCell)
@@ -1566,17 +1577,14 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 if ((itConcat = concat.find(inputX)) != concat.end()) {
                     for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
                         const std::string input = (*itConcat).second[i];
-                        std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
+                        std::shared_ptr<Cell> inputCell = getCell(input);
                         parentCells.push_back(inputCell);
 
                         paddingCell->addInput(inputCell.get());
                     }
                 }
                 else {
-                    std::shared_ptr<Cell> inputXCell
-                        = (deepNet->getCells().empty())
-                            ? std::shared_ptr<Cell>()
-                            : deepNet->getCell(inputX);
+                    std::shared_ptr<Cell> inputXCell = getCell(inputX);
                     parentCells.push_back(inputXCell);
 
                     if (inputXCell)
@@ -1599,17 +1607,14 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 if ((itConcat = concat.find(inputX)) != concat.end()) {
                     for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
                         const std::string input = (*itConcat).second[i];
-                        std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
+                        std::shared_ptr<Cell> inputCell = getCell(input);
                         parentCells.push_back(inputCell);
 
                         convCell->addInput(inputCell.get(), map);
                     }
                 }
                 else {
-                    std::shared_ptr<Cell> inputXCell
-                        = (deepNet->getCells().empty())
-                            ? std::shared_ptr<Cell>()
-                            : deepNet->getCell(inputX);
+                    std::shared_ptr<Cell> inputXCell = getCell(inputX);
                     parentCells.push_back(inputXCell);
 
                     if (inputXCell)
@@ -1724,17 +1729,14 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             if ((itConcat = concat.find(inputX)) != concat.end()) {
                 for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
                     const std::string input = (*itConcat).second[i];
-                    std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
+                    std::shared_ptr<Cell> inputCell = getCell(input);
 
                     nbOutputs += inputCell->getNbOutputs();
                     inputsDims = inputCell->getOutputsDims();
                 }
             }
             else {
-                std::shared_ptr<Cell> inputXCell
-                    = (deepNet->getCells().empty())
-                        ? std::shared_ptr<Cell>()
-                        : deepNet->getCell(inputX);
+                std::shared_ptr<Cell> inputXCell = getCell(inputX);
                 
                 if (inputXCell) {
                     nbOutputs += inputXCell->getNbOutputs();
@@ -1763,17 +1765,14 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             if ((itConcat = concat.find(inputX)) != concat.end()) {
                 for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
                     const std::string input = (*itConcat).second[i];
-                    std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
+                    std::shared_ptr<Cell> inputCell = getCell(input);
                     parentCells.push_back(inputCell);
 
                     dropoutCell->addInput(inputCell.get());
                 }
             }
             else {
-                std::shared_ptr<Cell> inputXCell
-                    = (deepNet->getCells().empty())
-                        ? std::shared_ptr<Cell>()
-                        : deepNet->getCell(inputX);
+                std::shared_ptr<Cell> inputXCell = getCell(inputX);
                 parentCells.push_back(inputXCell);
 
                 if (inputXCell)
@@ -1884,17 +1883,14 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 if ((itConcat = concat.find(inputData)) != concat.end()) {
                     for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
                         const std::string input = (*itConcat).second[i];
-                        std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
+                        std::shared_ptr<Cell> inputCell = getCell(input);
                         parentCells.push_back(inputCell);
 
                         fcCell->addInput(inputCell.get());
                     }
                 }
                 else {
-                    std::shared_ptr<Cell> inputDataCell
-                        = (deepNet->getCells().empty())
-                            ? std::shared_ptr<Cell>()
-                            : deepNet->getCell(inputData);
+                    std::shared_ptr<Cell> inputDataCell = getCell(inputData);
                     parentCells.push_back(inputDataCell);
 
                     if (inputDataCell)
@@ -2046,10 +2042,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             }
 
             const std::string inputX = redirectName(node.input(0));
-            std::shared_ptr<Cell> inputXCell
-                = (deepNet->getCells().empty())
-                    ? std::shared_ptr<Cell>()
-                    : deepNet->getCell(inputX);
+            std::shared_ptr<Cell> inputXCell = getCell(inputX);
 
             std::map<std::string, std::vector<std::string> >
                 ::const_iterator itConcat;
@@ -2079,10 +2072,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     "LRN");
             }
             else {
-                std::shared_ptr<Cell> inputXCell
-                    = (deepNet->getCells().empty())
-                        ? std::shared_ptr<Cell>()
-                        : deepNet->getCell(inputX);
+                std::shared_ptr<Cell> inputXCell = getCell(inputX);
                 parentCells.push_back(inputXCell);
 
                 if (inputXCell)
@@ -2202,10 +2192,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             std::reverse(paddingDimsEnd.begin(), paddingDimsEnd.end());
 
             const std::string inputX = redirectName(node.input(0));
-            std::shared_ptr<Cell> inputXCell
-                = (deepNet->getCells().empty())
-                    ? std::shared_ptr<Cell>()
-                    : deepNet->getCell(inputX);
+            std::shared_ptr<Cell> inputXCell = getCell(inputX);
 
             std::map<std::string, std::vector<std::string> >
                 ::const_iterator itConcat;
@@ -2223,17 +2210,14 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             if ((itConcat = concat.find(inputX)) != concat.end()) {
                 for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
                     const std::string input = (*itConcat).second[i];
-                    std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
+                    std::shared_ptr<Cell> inputCell = getCell(input);
                     parentCells.push_back(inputCell);
 
                     paddingCell->addInput(inputCell.get());
                 }
             }
             else {
-                std::shared_ptr<Cell> inputXCell
-                    = (deepNet->getCells().empty())
-                        ? std::shared_ptr<Cell>()
-                        : deepNet->getCell(inputX);
+                std::shared_ptr<Cell> inputXCell = getCell(inputX);
                 parentCells.push_back(inputXCell);
 
                 if (inputXCell)
@@ -2349,11 +2333,6 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 continue;
             }
             else {
-                std::shared_ptr<Cell> inputXCell
-                    = (deepNet->getCells().empty())
-                        ? std::shared_ptr<Cell>()
-                        : deepNet->getCell(inputX);
-
                 const unsigned int nbOutputs = newShape[2];
 
                 std::map<std::string, std::vector<std::string> >
@@ -2371,10 +2350,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         "Reshape");
                 }
                 else {
-                    std::shared_ptr<Cell> inputXCell
-                        = (deepNet->getCells().empty())
-                            ? std::shared_ptr<Cell>()
-                            : deepNet->getCell(inputX);
+                    std::shared_ptr<Cell> inputXCell = getCell(inputX);
                     parentCells.push_back(inputXCell);
 
                     if (inputXCell)
@@ -2464,10 +2440,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             }
 
             const std::string inputX = redirectName(node.input(0));
-            std::shared_ptr<Cell> inputXCell
-                = (deepNet->getCells().empty())
-                    ? std::shared_ptr<Cell>()
-                    : deepNet->getCell(inputX);
+            std::shared_ptr<Cell> inputXCell = getCell(inputX);
 
             const int outputsDim = (!perm.empty()) ? perm[2] : 2;
             const unsigned int nbOutputs = (inputXCell)
@@ -2490,10 +2463,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     "Softmax");
             }
             else {
-                std::shared_ptr<Cell> inputXCell
-                    = (deepNet->getCells().empty())
-                        ? std::shared_ptr<Cell>()
-                        : deepNet->getCell(inputX);
+                std::shared_ptr<Cell> inputXCell = getCell(inputX);
                 parentCells.push_back(inputXCell);
 
                 if (!perm.empty()) {
@@ -2658,9 +2628,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             }
 
             if (!inputData.empty() && node.input_size() == 2) {
-                std::shared_ptr<Cell> dataCell = (deepNet->getCells().empty())
-                                                ? std::shared_ptr<Cell>()
-                                                : deepNet->getCell(inputData);
+                std::shared_ptr<Cell> dataCell = getCell(inputData);
 
                 // Special case for bias (CNTK)
                 // In CNTK models, bias is added as constant after the operator
@@ -2802,10 +2770,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     " operands non-constant");
             }
 
-            std::shared_ptr<Cell> inputDataCell
-                = (deepNet->getCells().empty())
-                    ? std::shared_ptr<Cell>()
-                    : deepNet->getCell(inputData1);
+            std::shared_ptr<Cell> inputDataCell = getCell(inputData1);
 
             const ElemWiseCell::Operation operation
                 = (node.op_type() == "Max") ? ElemWiseCell::Max
@@ -2844,10 +2809,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         "ElemWise");
                 }
                 else {
-                    std::shared_ptr<Cell> inputDataCell
-                        = (deepNet->getCells().empty())
-                            ? std::shared_ptr<Cell>()
-                            : deepNet->getCell(inputData);
+                    std::shared_ptr<Cell> inputDataCell = getCell(inputData);
                     parentCells.push_back(inputDataCell);
 
                     if (inputDataCell)
@@ -2890,10 +2852,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //TopK
         else if (node.op_type() == "Transpose") {
             const std::string inputX = redirectName(node.input(0));
-            std::shared_ptr<Cell> inputXCell
-                = (deepNet->getCells().empty())
-                    ? std::shared_ptr<Cell>()
-                    : deepNet->getCell(inputX);
+            std::shared_ptr<Cell> inputXCell = getCell(inputX);
 
             // perm
             std::vector<int> perm;
@@ -2932,10 +2891,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     "Transpose");
             }
             else {
-                std::shared_ptr<Cell> inputXCell
-                    = (deepNet->getCells().empty())
-                        ? std::shared_ptr<Cell>()
-                        : deepNet->getCell(inputX);
+                std::shared_ptr<Cell> inputXCell = getCell(inputX);
                 parentCells.push_back(inputXCell);
 
                 if (inputXCell)
