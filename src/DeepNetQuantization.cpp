@@ -49,6 +49,7 @@
 #include "Cell/ResizeCell.hpp"
 #include "Cell/ScalingCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
+#include "Cell/TransposeCell.hpp"
 #include "Export/DeepNetExport.hpp"
 #include "Transformation/RangeAffineTransformation.hpp"
 
@@ -699,7 +700,8 @@ void N2D2::DeepNetQuantization::quantizeActivations(
                     cell->getType() == PoolCell::Type || 
                     cell->getType() == ResizeCell::Type || 
                     cell->getType() == ScalingCell::Type || 
-                    cell->getType() == SoftmaxCell::Type)
+                    cell->getType() == SoftmaxCell::Type || 
+                    cell->getType() == TransposeCell::Type)
             {
                 activationScalings[cell->getName()] = prevActivationScaling;
                 continue;
