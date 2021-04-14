@@ -24,7 +24,7 @@ This script reproduce "models/GTSRB29_32c4s1_32mp2_48c5s1_48mp3_200_43.ini"
 """
 import N2D2
 import n2d2
-from n2d2.cell import Conv, Pool, Fc, Dropout
+from n2d2.cells.nn import Conv, Pool, Fc, Dropout
 from n2d2.activation import Linear, Rectifier
 from n2d2.filler import He, Xavier
 from n2d2.solver import SGD
@@ -95,7 +95,7 @@ conv2_mapping.set_values([
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]])
 
 
-model = n2d2.deepnet.Sequence([
+model = n2d2.cells.Sequence([
     Conv(3, 32, [4, 4], **conv_config),
     Pool([2, 2], stride_dims=[2, 2], pooling='Max'),
     Conv(32, 48, [5, 5], mapping=conv2_mapping, **conv_config),

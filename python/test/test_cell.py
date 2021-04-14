@@ -44,7 +44,7 @@ class test_ConvCell(unittest.TestCase):
     """
 
     def setUp(self):
-        self.cell = n2d2.cell.Conv(1, 10, kernel_dims=[2, 2])
+        self.cell = n2d2.cells.cell.Conv(1, 10, kernel_dims=[2, 2])
 
     def tearDown(self):
         pass
@@ -68,7 +68,7 @@ class test_FcCell(unittest.TestCase):
     """
 
     def setUp(self):
-        self.cell = n2d2.cell.Fc(10, 5)
+        self.cell = n2d2.cells.cell.Fc(10, 5)
     def tearDown(self):
         pass
 

@@ -20,15 +20,15 @@
 """
 
 from n2d2.utils import ConfigSection
-from n2d2.cell import Fc, Conv, Pool2d, GlobalPool2d, ElemWise, BatchNorm2d
-from n2d2.deepnet import Sequence, Callable
+from n2d2.cells.nn import Fc, Conv, Pool2d, GlobalPool2d, ElemWise, BatchNorm2d
+from n2d2.cells import Sequence, Block
 from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
 from n2d2.filler import He, Xavier, Constant
 import n2d2.deepnet
 import n2d2.global_variables
 from n2d2.transform import Rescale, PadCrop, ColorSpace, RangeAffine, SliceExtraction, Flip, Composite
-from n2d2.model.ILSVRC_outils import ILSVRC_preprocessing
+from n2d2.models.ILSVRC_outils import ILSVRC_preprocessing
 
 """
 def conv_def(nb_outputs, **config_parameters):
@@ -118,11 +118,11 @@ def resnet18(output_size=1000):
     bias_solver = SGD
     bias_solver_config = ConfigSection(learningRate=2 * learning_rate, decay=0.0, **solver_config.get())
 
-    for name, cell in net.get_cells().items():
+    for name, cells in net.get_cells().items():
         print(name)
-        if isinstance(cell, Conv) or isinstance(cell, Fc):
-            cell.set_weights_solver(weights_solver(**weights_solver_config.get()))
-            cell.set_bias_solver(bias_solver(**bias_solver_config.get()))
+        if isinstance(cells, Conv) or isinstance(cells, Fc):
+            cells.set_weights_solver(weights_solver(**weights_solver_config.get()))
+            cells.set_bias_solver(bias_solver(**bias_solver_config.get()))
 
     return net
 
@@ -131,7 +131,7 @@ def resnet18(output_size=1000):
 
 
 
-class ResNetBottleneckBlock(Callable):
+class ResNetBottleneckBlock(Block):
     def __init__(self, inputs_size, bottleneck_size, stride, l, projection_shortcut, no_relu, block_name=""):
 
         self._main_branch = Sequence([
@@ -164,9 +164,9 @@ class ResNetBottleneckBlock(Callable):
             self._elem_wise = ElemWise(operation='Sum', activation_function=Rectifier(), name=block_name + "_sum")
 
         if self._projection_shortcut:
-            Callable.__init__(self, [self._main_branch, self._projection_shortcut, self._elem_wise], block_name)
+            Block.__init__(self, [self._main_branch, self._projection_shortcut, self._elem_wise], block_name)
         else:
-            Callable.__init__(self, [self._main_branch, self._elem_wise], block_name)
+            Block.__init__(self, [self._main_branch, self._elem_wise], block_name)
 
 
     def __call__(self, x):
@@ -267,7 +267,7 @@ class ResNet50Bn(Sequence):
         Sequence.__init__(self, [self.extractor, self.head], name="resnet50bn")
 
 
-
+"""
 def set_ILSVRC_solvers(self, max_iterations):
     print("Add solvers")
     learning_rate = 0.1
@@ -293,7 +293,7 @@ def set_ILSVRC_solvers(self, max_iterations):
             cell.set_scale_solver(bn_solver(**bn_solver_config.get()))
             cell.set_bias_solver(bn_solver(**bn_solver_config.get()))
 
-
+"""
 
 
 def load_from_ONNX(inputs, resnet_type, version='pre_act', dims=None, batch_size=1, path=None, download=False):
@@ -326,7 +326,7 @@ def load_from_ONNX(inputs, resnet_type, version='pre_act', dims=None, batch_size
             n2d2.global_variables.model_cache + "/ONNX/",
             resnet_name)
         path = n2d2.global_variables.model_cache + "/ONNX/"+resnet_name+"/"+"resnet"+resnet_type+v+".onnx"
-    model = n2d2.deepnet.DeepNetCell.load_from_ONNX(inputs, path)
+    model = n2d2.cells.DeepNetCell.load_from_ONNX(inputs, path)
     return model
 
 

@@ -34,7 +34,7 @@ class test_modibleNet(unittest.TestCase):
         
         db = n2d2.database.ILSVRC2012(0.01)
         provider = n2d2.provider.DataProvider(db, [160, 160, 3], batchSize=256)
-        n2d2_deepNet = n2d2.model.MobileNetv1(provider)._deepnet
+        n2d2_deepNet = n2d2.models.MobileNetv1(provider)._deepnet
 
         n2d2_first_cell = n2d2_deepNet.getCells()[n2d2_deepNet.getLayers()[1][0]] # The first layer is the env, so we get the second.
         n2d2_last_cell  = n2d2_deepNet.getCells()[n2d2_deepNet.getLayers()[-1][-1]]

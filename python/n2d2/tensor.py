@@ -57,7 +57,7 @@ class Tensor:
         :param datatype: Type of the data stocked by the tensor, default=float
         :type datatype: type, optional
         :param cell: A reference to the object that created this tensor, default=None
-        :type cell: :py:class:`n2d2.cell.Cell`, optional
+        :type cell: :py:class:`n2d2.cells.NeuralNetworkCell`, optional
         """
         self.cell = cell
         self._datatype = datatype
@@ -404,7 +404,7 @@ class Tensor:
 
     def detach_cell(self):
         """
-        Detach the cell from the tensor, this allow you to pass the output of a deepnet to another one.
+        Detach the cells from the tensor, this allow you to pass the output of a deepnet to another one.
         """
         self.cell = None
         return self

@@ -26,7 +26,7 @@ from n2d2.n2d2_interface import N2D2_Interface
 class Target(N2D2_Interface):
 
     """Provider is not a parameter in the INI file in the case of Target class,
-    but usually inferred from the deepnet in N2D2. Name and Cell are parts of the section name"""
+    but usually inferred from the deepnet in N2D2. Name and NeuralNetworkCell are parts of the section name"""
     def __init__(self, **config_parameters):
 
         if 'name' in config_parameters:
@@ -63,14 +63,11 @@ class Score(Target):
         self._provider = provider
 
 
-
     def __call__(self, inputs):
 
         if self._N2D2_object is None:
-            #self._provider = inputs.deepnet.get_provider()
-            cell = inputs.cell
             self._N2D2_object = N2D2.TargetScore(self._constructor_parameters['name'],
-                                                 cell.N2D2(),
+                                                 inputs.cell.N2D2(),
                                                  self._provider.N2D2(),
                                                  **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
 

@@ -20,11 +20,9 @@
 """
 from os import remove
 import torch
-from torchvision import datasets, transforms 
-import numpy as np
 import N2D2
 import n2d2
-from n2d2.cell import Conv
+from n2d2.cells.nn import Conv
 from n2d2 import tensor
 
 import n2d2.pytorch as pytorch
@@ -40,7 +38,7 @@ device = torch.device('cpu')
 # DEFINE NETWORKS ARCHITECTURE
 class Custom_Net(torch.nn.Module): 
     """
-    A Pytorch network compose of one N2D2 conv cell interfaced with the LayerN2D2 object. 
+    A Pytorch network compose of one N2D2 conv cells interfaced with the LayerN2D2 object.
     """  
     def __init__(self):
         super(Custom_Net, self).__init__()
@@ -73,7 +71,7 @@ class Custom_Net(torch.nn.Module):
         return v
 class Net(torch.nn.Module): 
     """
-    A Pytorch network compose of one Pytorch conv cell. 
+    A Pytorch network compose of one Pytorch conv cells.
     """    
     def __init__(self):
         super(Net, self).__init__()
@@ -93,7 +91,7 @@ class Net(torch.nn.Module):
 
 class Double(torch.nn.Module):  
     """
-    A Pytorch network compose of two Pytorch conv cell. 
+    A Pytorch network compose of two Pytorch conv cells.
     """ 
     def __init__(self):
         super(Double, self).__init__()
@@ -120,7 +118,7 @@ class Double(torch.nn.Module):
 
 class NIT(torch.nn.Module):
     """
-    A Pytorch network compose of an n2d2 Sequence object composed of two N2D2 conv cell interfaced with the SequenceN2D2 object.
+    A Pytorch network compose of an n2d2 Sequence object composed of two N2D2 conv cells interfaced with the SequenceN2D2 object.
     """ 
     def __init__(self):
         super(NIT, self).__init__()

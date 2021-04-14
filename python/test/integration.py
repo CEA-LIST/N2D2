@@ -25,7 +25,7 @@ import n2d2
 # Fill this list and run the script. If the network described with ini is different from 
 # the one described with python an assertion error will be raised.
 test_list = [
-    ["../../models/LeNet.ini", n2d2.model.lenet.LeNet(10), [128, 1, 32, 32]],
+    ["../../models/LeNet.ini", n2d2.models.lenet.LeNet(10), [128, 1, 32, 32]],
 ]
 
 weights_value = 1

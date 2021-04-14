@@ -58,7 +58,7 @@ elif args.arch == 'MobileNetv2-onnx':
 elif args.arch == 'ResNet50Bn':
     batch_size = 64
 elif args.arch == 'ResNet-onnx':
-    batch_size = 16
+    batch_size = 1
 else:
     raise ValueError("Invalid architecture: " + args.arch)
 
@@ -75,7 +75,7 @@ provider = n2d2.provider.DataProvider(database=database, size=[size, size, 3], b
 
 
 #print("Add transformation")
-#trans, otf_trans = n2d2.model.ILSVRC_preprocessing(size=size)
+#trans, otf_trans = n2d2.models.ILSVRC_preprocessing(size=size)
 
 #print(trans)
 #print(otf_trans)
@@ -88,31 +88,31 @@ if args.arch == 'MobileNetv1':
     """Equivalent to N2D2/models/MobileNetv1.ini. Typically around 56% test Top1"""
     nb_epochs = 120 if args.epochs == -1 else args.epochs
     size = 160
-    model = n2d2.model.MobileNetv1(alpha=0.5)
+    model = n2d2.models.MobileNetv1(alpha=0.5)
     # 55.87% test Top1
     # "/local/is154584/jt251134/ILSVRC_testbench/MobileNetv1/weights_validation/"
 elif args.arch == 'MobileNetv2-onnx':
     nb_epochs = 0 if args.epochs == -1 else args.epochs
-    provider.add_transformation(n2d2.model.mobilenetv2.ONNX_preprocessing(size=size))
-    model = n2d2.model.mobilenetv2.load_from_ONNX(provider, download=True, batch_size=batch_size)
+    provider.add_transformation(n2d2.models.mobilenetv2.ONNX_preprocessing(size=size))
+    model = n2d2.models.mobilenetv2.load_from_ONNX(provider, download=True, batch_size=batch_size)
     model.remove("mobilenetv20_output_flatten0_reshape0", False)
 elif args.arch == 'MobileNetv2':
     nb_epochs = 0 if args.epochs == -1 else args.epochs
-    trans, otf_trans = n2d2.model.ILSVRC_preprocessing(size=size)
+    trans, otf_trans = n2d2.models.ILSVRC_preprocessing(size=size)
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
-    model = n2d2.model.mobilenetv2.Mobilenetv2(output_size=1000, alpha=0.5, size=size)
+    model = n2d2.models.mobilenetv2.Mobilenetv2(output_size=1000, alpha=0.5, size=size)
 elif args.arch == 'ResNet50Bn':
     nb_epochs = 90 if args.epochs == -1 else args.epochs
     size = 224
-    model = n2d2.model.ResNet50Bn(output_size=1000, alpha=1.0, l=0)
-    trans, otf_trans = n2d2.model.ILSVRC_preprocessing(size=size)
+    model = n2d2.models.ResNet50Bn(output_size=1000, alpha=1.0, l=0)
+    trans, otf_trans = n2d2.models.ILSVRC_preprocessing(size=size)
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
 elif args.arch == 'ResNet-onnx':
     nb_epochs = 0 if args.epochs == -1 else args.epochs
-    model = n2d2.model.resnet.load_from_ONNX(provider, '18', 'post_act', download=True, batch_size=batch_size)
-    provider.add_transformation(n2d2.model.resnet.ONNX_preprocessing(size))
+    model = n2d2.models.resnet.load_from_ONNX(provider, '18', 'post_act', download=True, batch_size=batch_size)
+    provider.add_transformation(n2d2.models.resnet.ONNX_preprocessing(size))
 else:
     raise ValueError("Invalid architecture: " + args.arch)
 
@@ -169,6 +169,8 @@ print("\n\n### Testing ###")
 
 provider.set_partition('Test')
 model.test()
+
+print(model)
 
 for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test') / batch_size)):
     batch_idx = i * batch_size

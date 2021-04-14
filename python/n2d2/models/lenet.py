@@ -20,12 +20,11 @@
 """
 
 from n2d2.utils import ConfigSection
-from n2d2.cell import Fc, Conv, Softmax, Pool, BatchNorm2d, Dropout
-from n2d2.deepnet import Group, DeepNet, Sequence
-from n2d2.activation import Rectifier, Linear
+from n2d2.cells.nn import Fc, Conv, Softmax, Pool
+from n2d2.cells import Sequence
+from n2d2.activation import Rectifier
 from n2d2.solver import SGD
-from n2d2.filler import Normal, He, Constant
-from n2d2.quantizer import SATCell, SATAct
+from n2d2.filler import Normal, He
 import n2d2.global_variables
 
 solver_config = ConfigSection(learningRate=0.05, momentum=0.9, decay=0.0005, learningRateDecay=0.993)
