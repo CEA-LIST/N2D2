@@ -1715,31 +1715,32 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                             if (!convCell->isConnection(channel, output))
                                 continue;
 
-                        if (globTranspose) {
-                            Tensor<Float_T> kernel
-                                = kernels[output][channel / group];
+                            if (globTranspose) {
+                                Tensor<Float_T> kernel
+                                    = kernels[output][channel / group];
 
-                            if (kernel.nbDims() < 2)
-                                kernel.reshape({kernel.dims()[0], 1});
+                                if (kernel.nbDims() < 2)
+                                    kernel.reshape({kernel.dims()[0], 1});
 
-                            Tensor<Float_T> transKernel(
-                                {kernel.dimY(), kernel.dimX()});
+                                Tensor<Float_T> transKernel(
+                                    {kernel.dimY(), kernel.dimX()});
 
-                            for (unsigned int sx = 0; sx < kernel.dimX();
-                                ++sx)
-                            {
-                                for (unsigned int sy = 0; sy < kernel.dimY();
-                                    ++sy)
+                                for (unsigned int sx = 0; sx < kernel.dimX();
+                                    ++sx)
                                 {
-                                    transKernel(sy, sx) = kernel(sx, sy);
+                                    for (unsigned int sy = 0; sy < kernel.dimY();
+                                        ++sy)
+                                    {
+                                        transKernel(sy, sx) = kernel(sx, sy);
+                                    }
                                 }
-                            }
 
-                            convCell->setWeight(output, channel, transKernel);
-                        }
-                        else {
-                            convCell->setWeight(output, channel,
-                                        kernels[output][channel / group]);
+                                convCell->setWeight(output, channel, transKernel);
+                            }
+                            else {
+                                convCell->setWeight(output, channel,
+                                            kernels[output][channel / group]);
+                            }
                         }
                     }
                 }
@@ -2017,26 +2018,27 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 #else
 #pragma omp parallel for if (weights.size() > 1024)
 #endif
-                for (unsigned int output = 0;
-                    output < fcCell->getNbOutputs(); ++output)
-                {
-                    for (unsigned int ch = 0; ch < fcCell->getNbChannels(); ++ch) {
-                        for (unsigned int iy = 0; iy < fcCell->getChannelsHeight(); ++iy) {
-                            for (unsigned int ix = 0; ix < fcCell->getChannelsWidth(); ++ix) {
-                                const unsigned int channel = (globTranspose)
-                                    ? iy + fcCell->getChannelsHeight() * (ix + fcCell->getChannelsWidth() * ch)
-                                    : ix + fcCell->getChannelsWidth() * (iy + fcCell->getChannelsHeight() * ch);
+                    for (unsigned int output = 0;
+                        output < fcCell->getNbOutputs(); ++output)
+                    {
+                        for (unsigned int ch = 0; ch < fcCell->getNbChannels(); ++ch) {
+                            for (unsigned int iy = 0; iy < fcCell->getChannelsHeight(); ++iy) {
+                                for (unsigned int ix = 0; ix < fcCell->getChannelsWidth(); ++ix) {
+                                    const unsigned int channel = (globTranspose)
+                                        ? iy + fcCell->getChannelsHeight() * (ix + fcCell->getChannelsWidth() * ch)
+                                        : ix + fcCell->getChannelsWidth() * (iy + fcCell->getChannelsHeight() * ch);
 
-                                Tensor<Float_T> w = (transB)
-                                    ? weights[output][channel]
-                                    : weights[channel][output];
+                                    Tensor<Float_T> w = (transB)
+                                        ? weights[output][channel]
+                                        : weights[channel][output];
 
-                                if (alpha != 1.0) {
-                                    for (unsigned int i = 0; i < w.size(); ++i)
-                                        w(i) *= alpha;
+                                    if (alpha != 1.0) {
+                                        for (unsigned int i = 0; i < w.size(); ++i)
+                                            w(i) *= alpha;
+                                    }
+
+                                    fcCell->setWeight(output, channel, w);
                                 }
-
-                                fcCell->setWeight(output, channel, w);
                             }
                         }
                     }
