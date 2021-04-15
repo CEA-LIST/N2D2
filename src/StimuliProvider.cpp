@@ -1303,8 +1303,11 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set)
                     : mProvidedData[dev].batch;
 
             if (index >= 0) {
-                const unsigned int batchSize
-                    = std::min(mBatchSize, mDatabase.getNbStimuli(set) - index);
+                unsigned int batchSize = mBatchSize;
+
+                if (set != Database::StimuliSet::Learn)
+                    batchSize = std::min(mBatchSize, mDatabase.getNbStimuli(set) - index);
+
                 for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
                     batchRef[batchPos] = mDatabase.getStimulusID(set, batchs[index + batchPos]);
                 }

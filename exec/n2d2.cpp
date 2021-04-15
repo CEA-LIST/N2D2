@@ -1108,8 +1108,6 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
             std::cout.flags(f);
         }
-        // Still in future mode, need to synchronize for the following
-        sp->synchronize();
 
         // Validation and Log Success phase
         if ((epoch+1) % numLog == 0 || epoch == nbEpoch-1) {
@@ -1169,6 +1167,8 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                 sp->setBatch(Database::Validation, false);
                 const int nbBatchVal = sp->nbBatchsRemaining(Database::Validation);
 
+                // We are alread in sp->future(), read the first validation
+                // batch
                 sp->readBatch(Database::Validation);
 
                 while (!sp->allBatchsProvided(Database::Validation)) {
@@ -1192,8 +1192,6 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                         progressPrev = progress;
                     }
                 }
-                // Still in future mode, need to synchronize for the following
-                sp->synchronize();
 
                 std::cout << std::endl;
 
@@ -1389,6 +1387,9 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     }
     if (opt.logKernels)
         deepNet->logFreeParameters("kernels");
+    
+    // Still in future mode, need to synchronize for the following
+    sp->synchronize();
 }
 
 void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
