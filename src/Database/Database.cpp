@@ -1889,16 +1889,8 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id)
                    fileExtension.begin(),
                    ::tolower);
 
-    cv::Mat labels;
-    (this->readLabel(id)).copyTo(labels);
+    cv::Mat labels = this->readLabel(id);
 
-/*
-    if (mDataFileLabel && Registrar<DataFile>::exists(fileExtension)) {
-        std::shared_ptr<DataFile> dataFile = Registrar
-            <DataFile>::create(fileExtension)();
-        labels = dataFile->readLabel(mStimuli[id].name);
-    }
-*/
     if (mCompositeLabel != None && (mCompositeLabel != Auto
                                     || mStimuli[id].label == -1
                                     || !labels.empty()))
