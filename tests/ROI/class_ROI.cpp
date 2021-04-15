@@ -557,6 +557,57 @@ TEST_DATASET(BitmapROI,
 }
 
 TEST_DATASET(BitmapROI,
+             rotate,
+             (cv::Point origin, int scale, cv::Size size),
+             std::make_tuple(cv::Point(0, 0), 1, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(0, 0), 4, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(50, 100), 1, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(50, 100), 4, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(472, 472), 1, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(352, 352), 4, cv::Size(40, 40)),
+             std::make_tuple(cv::Point(0, 0), 1, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(0, 0), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(50, 100), 1, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(50, 100), 4, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(472, 432), 1, cv::Size(40, 80)),
+             std::make_tuple(cv::Point(352, 192), 4, cv::Size(40, 80)))
+{
+    cv::Mat data = cv::Mat::zeros(size, CV_8UC1);
+    data(cv::Rect(0, 0, size.width / 2, size.height / 4)) = 1;
+    data(cv::Rect(size.width / 3, size.height / 4, size.width / 3, 3 * size.height / 4)) = 1;
+    data(cv::Rect(2 * size.width / 3, 7 * size.height / 8, size.width / 3, size.height / 8)) = 1;
+
+    Utils::createDirectories("ROI");
+
+    BitmapROI<int> roi(1, origin, scale, data);
+    roi.rotate(256, 256, M_PI);
+
+    cv::Mat img = cv::imread("tests_data/Lenna.png",
+#if CV_MAJOR_VERSION >= 3
+        cv::IMREAD_COLOR);
+#else
+        CV_LOAD_IMAGE_COLOR);
+#endif
+
+    if (!img.data)
+        throw std::runtime_error(
+            "Could not open or find image: tests_data/Lenna.png");
+
+    roi.draw(img);
+
+    std::ostringstream fileName;
+    fileName << "ROI/BitmapROI_rotate"
+        << "_O" << origin.x << "x" << origin.y
+        << "_S" << scale
+        << "_" << size.width << "x" << size.height
+        << ".png";
+
+    if (!cv::imwrite(fileName.str().c_str(), img))
+        throw std::runtime_error(
+            "Unable to write image: " + fileName.str());
+}
+
+TEST_DATASET(BitmapROI,
              append,
              (cv::Point origin, int scale, cv::Size size),
              std::make_tuple(cv::Point(0, 0), 1, cv::Size(40, 40)),

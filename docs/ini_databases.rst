@@ -1,10 +1,107 @@
 Databases
 =========
 
-The tool integrates pre-defined modules for several well-known database
+Introduction
+------------
+
+A ``Database`` handles the raw data, annotations and how the datasets 
+(learn, validation or test) should be build.
+N2D2 integrates pre-defined modules for several well-known database
 used in the deep learning community, such as MNIST, GTSRB, CIFAR10 and
 so on. That way, no extra step is necessary to be able to directly build
 a network and learn it on these database.
+
+All the database modules inherit from a base ``Database``, which contains some
+generic configuration options:
+
++--------------------------+------------------------------------------------------------------+
+| Option [default value]   | Description                                                      |
++==========================+==================================================================+
+| ``DefaultLabel`` []      | Default label for composite image (for areas outside the ROIs).  |
+|                          | If empty, no default label is created and default label ID is -1 |
++--------------------------+------------------------------------------------------------------+
+| ``ROIsMargin`` [0]       | Margin around the ROIs, in pixels, with no label (label ID = -1) |
++--------------------------+------------------------------------------------------------------+
+| ``RandomPartitioning``   | If true (1), the partitioning in the learn, validation and test  |
+| [1]                      | sets is random, otherwise partitioning is in the order           |
++--------------------------+------------------------------------------------------------------+
+| ``DataFileLabel`` [1]    | If true (1), load pixel-wise image labels, if they exist         |
++--------------------------+------------------------------------------------------------------+
+| ``CompositeLabel``       | See the following ``CompositeLabel`` section                     |
+| [``Auto``]               |                                                                  |
++--------------------------+------------------------------------------------------------------+
+| ``TargetDataPath`` []    | Data path to target data, to be used in conjunction with the     |
+|                          | ``DataAsTarget`` option in ``Target`` modules                    |
++--------------------------+------------------------------------------------------------------+
+| ``MultiChannelMatch`` [] | See the following *multi-channel handling* section               |
++--------------------------+------------------------------------------------------------------+
+| ``MultiChannelReplace``  | See the following *multi-channel handling* section               |
++--------------------------+------------------------------------------------------------------+
+
+
+``CompositeLabel`` parameter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A label is said to be composite when it is not a single *labelID* for the 
+stimulus (the stimulus label is a matrix of size > 1).
+For the same stimulus, different type of labels can be specified,
+i.e. the *labelID*, pixel-wise data and/or ROIs.
+The way these different label types are handled is configured with the
+``CompositeLabel`` parameter:
+
+- ``None``: only the *labelID* is used, pixel-wise data are ignored and ROIs 
+  are loaded but ignored as well by ``loadStimulusLabelsData()``.
+- ``Auto``: the label is only composite when pixel-wise data are present
+  or the stimulus *labelID* is -1 (in which case the ``DefaultLabel``
+  is used for the whole label matrix). If the label is composite
+  ROIs, if present, are applied. Otherwise, a single ROI is
+  allowed and is automatically extracted when fetching the stimulus.
+- ``Default``: the label is always composite. The *labelID* is ignored.
+  If there is no pixel-wise data, the ``DefaultLabel`` is used.
+  ROIs, if present, are applied.
+- ``Disjoint``: the label is always composite. If there is no pixel-wise data:
+  
+  - the *labelID* is used if there is no ROI;
+  - the ``DefaultLabel`` is used if there is any ROI.
+
+  ROIs, if present, are applied.
+- ``Combine``: the label is always composite.
+  If there is no pixel-wise data, the *labelID* is used.
+  ROIs, if present, are applied.
+
+    
+Multi-channel handling
+~~~~~~~~~~~~~~~~~~~~~~
+
+Multi-channel images are automatically handled and the default image format in 
+N2D2 is **BGR**.
+
+Any ``Database`` can also handle multi-channel data, where each channel is stored
+in a different file. In order to be able to interpret a series of files as an 
+additional data channel to a first series of files, the file names must follow
+a simple yet arbitrary naming convention. A first parameter,
+``MultiChannelMatch``, is used to match the files constituting a single
+channel. Then, a second parameter, ``MultiChannelReplace`` is used to indicate
+how the file names of the other channels are obtained. See the example below,
+with the ``DIR_Database``:
+
+.. code-block:: ini
+
+    [database]
+    Type=DIR_Database
+    ...
+    ; Multi-channel handling:
+    ; MultiChannelMatch is a regular expression for matching a single channel (for example the first one).
+    ; Here we match anything followed by "_0", followed by "." and anything except 
+    ; ".", so we match "_0" before the file extension.
+    MultiChannelMatch=(.*)_0(\.[^.]+)
+    ; Replace what we matched to obtain the file name of the different channels.
+    ; For the first channel, replace "_0" by "_0", so the name doesn't change.
+    ; For the second channel, replace "_0" by "_1" in the file name.
+    ; To disable the second channel, replace $1_1$2 by ""
+    MultiChannelReplace=$1_0$2 $1_1$2
+
+
 
 MNIST
 -----
@@ -192,6 +289,7 @@ To load and partition more than one ``DataPath``, one can use the
 
     ; [database.more]
     ; Load even more data here
+
 
 *Speech Commands Dataset*
 ~~~~~~~~~~~~~~~~~~~~~~~~~

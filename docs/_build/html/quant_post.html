@@ -21,11 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -116,6 +115,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP_STM32.html">Export: C++/STM32</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_DNeuro.html">Export: DNeuro</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
@@ -136,6 +136,10 @@
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++ API / Developer:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev_intro.html">Introduction</a></li>
 </ul>
 
             
@@ -323,7 +327,7 @@ Model Zoo are reported in the table below, using <code class="docutils literal n
 <colgroup>
 <col style="width: 56%" />
 <col style="width: 11%" />
-<col style="width: 20%" />
+<col style="width: 19%" />
 <col style="width: 13%" />
 </colgroup>
 <thead>
@@ -352,6 +356,12 @@ Model Zoo are reported in the table below, using <code class="docutils literal n
 <td></td>
 <td><p>66.67%</p></td>
 <td><p>66.70%</p></td>
+</tr>
+<tr class="row-odd"><td><p>squeezenet/model.onnx
+(<code class="docutils literal notranslate"><span class="pre">-no-unsigned</span> <span class="pre">-act-rescaling-mode</span> <span class="pre">Floating-point</span></code>)</p></td>
+<td><p>57.58%</p></td>
+<td><p>57.11%</p></td>
+<td><p>54.98%</p></td>
 </tr>
 </tbody>
 </table>

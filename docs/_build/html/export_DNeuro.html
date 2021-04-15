@@ -21,11 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -101,6 +100,7 @@
 <li class="toctree-l1"><a class="reference internal" href="quant_post.html">Post-training quantization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP_STM32.html">Export: C++/STM32</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Export: DNeuro</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a><ul>
@@ -136,6 +136,10 @@
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++ API / Developer:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev_intro.html">Introduction</a></li>
 </ul>
 
             
@@ -217,6 +221,13 @@ convolutional neural networks (CNN). It allows a fine grain allocation
 control of the DSP and memory resources, for each layer in a network.
 Globally, the FPGA resource usage can be maximized for a given network
 topology in order to minimize its latency.</p>
+<p>The main features of the DNeuro are:</p>
+<ul class="simple">
+<li><p>Data flow architecture requiring few memory (potentially <strong>no DDR</strong>);</p></li>
+<li><p>Very high use rate of the DSP per cycle (&gt; 90%);</p></li>
+<li><p>Configurable precision (integers from 2 to 16 bits, typically 8 bits);</p></li>
+<li><p>Up to 4 MAC/DSP operations per cycle.</p></li>
+</ul>
 <p>The DNeuro is composed of specialized computing blocs, corresponding to
 specific type and configuration of layers (convolution, max pooling…),
 that can be chained to form a full neural network. The bloc allocation

@@ -18,13 +18,11 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "DataFile/DataFile.hpp"
 #include "LabelFile/LabelFile.hpp"
 #include "LabelFile/CsvLabelFile.hpp"
 #include "Database/Database.hpp"
 #include "ROI/RectangularROI.hpp"
 #include "utils/Gnuplot.hpp"
-#include "utils/Registrar.hpp"
 
 #include <regex>
 
@@ -1730,12 +1728,14 @@ cv::Mat N2D2::Database::getStimulusLabelsData(StimulusID id)
                 mStimuliLabelsData.resize(mStimuli.size());
         }
 
-        if (mStimuliLabelsData[id].empty())
+        if (mStimuliLabelsData[id].empty()) {
             mStimuliLabelsData[id] = loadStimulusLabelsData(id);
+        }
 
         return mStimuliLabelsData[id];
-    } else
+    } else {
         return loadStimulusLabelsData(id);
+    }
 }
 
 cv::Mat N2D2::Database::getStimulusTargetData(StimulusID id,
@@ -1881,7 +1881,7 @@ cv::Mat N2D2::Database::loadStimulusData(StimulusID id)
     return loadData(id, mStimuliDepth, mStimuli[id].name);
 }
 
-cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
+cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id)
 {
     std::string fileExtension = Utils::fileExtension(mStimuli[id].name);
     std::transform(fileExtension.begin(),
@@ -1889,13 +1889,7 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
                    fileExtension.begin(),
                    ::tolower);
 
-    cv::Mat labels;
-
-    if (mDataFileLabel && Registrar<DataFile>::exists(fileExtension)) {
-        std::shared_ptr<DataFile> dataFile = Registrar
-            <DataFile>::create(fileExtension)();
-        labels = dataFile->readLabel(mStimuli[id].name);
-    }
+    cv::Mat labels = this->readLabel(id);
 
     if (mCompositeLabel != None && (mCompositeLabel != Auto
                                     || mStimuli[id].label == -1

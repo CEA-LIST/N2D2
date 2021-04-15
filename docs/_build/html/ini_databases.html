@@ -21,11 +21,9 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -101,6 +99,7 @@
 <li class="toctree-l1"><a class="reference internal" href="quant_post.html">Post-training quantization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP_STM32.html">Export: C++/STM32</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_DNeuro.html">Export: DNeuro</a></li>
 <li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
@@ -109,6 +108,11 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="ini_intro.html">Introduction</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Databases</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#compositelabel-parameter"><code class="docutils literal notranslate"><span class="pre">CompositeLabel</span></code> parameter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multi-channel-handling">Multi-channel handling</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#mnist">MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#gtsrb">GTSRB</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#directory">Directory</a><ul>
@@ -154,6 +158,10 @@
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++ API / Developer:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev_intro.html">Introduction</a></li>
 </ul>
 
             
@@ -220,10 +228,118 @@
             
   <div class="section" id="databases">
 <h1>Databases<a class="headerlink" href="#databases" title="Permalink to this headline">¶</a></h1>
-<p>The tool integrates pre-defined modules for several well-known database
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">Database</span></code> handles the raw data, annotations and how the datasets
+(learn, validation or test) should be build.
+N2D2 integrates pre-defined modules for several well-known database
 used in the deep learning community, such as MNIST, GTSRB, CIFAR10 and
 so on. That way, no extra step is necessary to be able to directly build
 a network and learn it on these database.</p>
+<p>All the database modules inherit from a base <code class="docutils literal notranslate"><span class="pre">Database</span></code>, which contains some
+generic configuration options:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 72%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DefaultLabel</span></code> []</p></td>
+<td><p>Default label for composite image (for areas outside the ROIs).
+If empty, no default label is created and default label ID is -1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ROIsMargin</span></code> [0]</p></td>
+<td><p>Margin around the ROIs, in pixels, with no label (label ID = -1)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RandomPartitioning</span></code>
+[1]</p></td>
+<td><p>If true (1), the partitioning in the learn, validation and test
+sets is random, otherwise partitioning is in the order</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DataFileLabel</span></code> [1]</p></td>
+<td><p>If true (1), load pixel-wise image labels, if they exist</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CompositeLabel</span></code>
+[<code class="docutils literal notranslate"><span class="pre">Auto</span></code>]</p></td>
+<td><p>See the following <code class="docutils literal notranslate"><span class="pre">CompositeLabel</span></code> section</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TargetDataPath</span></code> []</p></td>
+<td><p>Data path to target data, to be used in conjunction with the
+<code class="docutils literal notranslate"><span class="pre">DataAsTarget</span></code> option in <code class="docutils literal notranslate"><span class="pre">Target</span></code> modules</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MultiChannelMatch</span></code> []</p></td>
+<td><p>See the following <em>multi-channel handling</em> section</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MultiChannelReplace</span></code></p></td>
+<td><p>See the following <em>multi-channel handling</em> section</p></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="compositelabel-parameter">
+<h3><code class="docutils literal notranslate"><span class="pre">CompositeLabel</span></code> parameter<a class="headerlink" href="#compositelabel-parameter" title="Permalink to this headline">¶</a></h3>
+<p>A label is said to be composite when it is not a single <em>labelID</em> for the
+stimulus (the stimulus label is a matrix of size &gt; 1).
+For the same stimulus, different type of labels can be specified,
+i.e. the <em>labelID</em>, pixel-wise data and/or ROIs.
+The way these different label types are handled is configured with the
+<code class="docutils literal notranslate"><span class="pre">CompositeLabel</span></code> parameter:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code>: only the <em>labelID</em> is used, pixel-wise data are ignored and ROIs
+are loaded but ignored as well by <code class="docutils literal notranslate"><span class="pre">loadStimulusLabelsData()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Auto</span></code>: the label is only composite when pixel-wise data are present
+or the stimulus <em>labelID</em> is -1 (in which case the <code class="docutils literal notranslate"><span class="pre">DefaultLabel</span></code>
+is used for the whole label matrix). If the label is composite
+ROIs, if present, are applied. Otherwise, a single ROI is
+allowed and is automatically extracted when fetching the stimulus.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Default</span></code>: the label is always composite. The <em>labelID</em> is ignored.
+If there is no pixel-wise data, the <code class="docutils literal notranslate"><span class="pre">DefaultLabel</span></code> is used.
+ROIs, if present, are applied.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Disjoint</span></code>: the label is always composite. If there is no pixel-wise data:</p>
+<ul class="simple">
+<li><p>the <em>labelID</em> is used if there is no ROI;</p></li>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">DefaultLabel</span></code> is used if there is any ROI.</p></li>
+</ul>
+<p>ROIs, if present, are applied.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Combine</span></code>: the label is always composite.
+If there is no pixel-wise data, the <em>labelID</em> is used.
+ROIs, if present, are applied.</p></li>
+</ul>
+</div>
+<div class="section" id="multi-channel-handling">
+<h3>Multi-channel handling<a class="headerlink" href="#multi-channel-handling" title="Permalink to this headline">¶</a></h3>
+<p>Multi-channel images are automatically handled and the default image format in
+N2D2 is <strong>BGR</strong>.</p>
+<p>Any <code class="docutils literal notranslate"><span class="pre">Database</span></code> can also handle multi-channel data, where each channel is stored
+in a different file. In order to be able to interpret a series of files as an
+additional data channel to a first series of files, the file names must follow
+a simple yet arbitrary naming convention. A first parameter,
+<code class="docutils literal notranslate"><span class="pre">MultiChannelMatch</span></code>, is used to match the files constituting a single
+channel. Then, a second parameter, <code class="docutils literal notranslate"><span class="pre">MultiChannelReplace</span></code> is used to indicate
+how the file names of the other channels are obtained. See the example below,
+with the <code class="docutils literal notranslate"><span class="pre">DIR_Database</span></code>:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">DIR_Database</span>
+<span class="na">...</span>
+<span class="c1">; Multi-channel handling:</span>
+<span class="c1">; MultiChannelMatch is a regular expression for matching a single channel (for example the first one).</span>
+<span class="c1">; Here we match anything followed by &quot;_0&quot;, followed by &quot;.&quot; and anything except</span>
+<span class="c1">; &quot;.&quot;, so we match &quot;_0&quot; before the file extension.</span>
+<span class="na">MultiChannelMatch</span><span class="o">=</span><span class="s">(.*)_0(\.[^.]+)</span>
+<span class="c1">; Replace what we matched to obtain the file name of the different channels.</span>
+<span class="c1">; For the first channel, replace &quot;_0&quot; by &quot;_0&quot;, so the name doesn&#39;t change.</span>
+<span class="c1">; For the second channel, replace &quot;_0&quot; by &quot;_1&quot; in the file name.</span>
+<span class="c1">; To disable the second channel, replace $1_1$2 by &quot;&quot;</span>
+<span class="na">MultiChannelReplace</span><span class="o">=</span><span class="s">$1_0$2 $1_1$2</span>
+</pre></div>
+</div>
+</div>
+</div>
 <div class="section" id="mnist">
 <h2>MNIST<a class="headerlink" href="#mnist" title="Permalink to this headline">¶</a></h2>
 <p>MNIST <a class="bibtex reference internal" href="tuto.html#lecun1998" id="id1">[LBBH98]</a> is already fractionned into a

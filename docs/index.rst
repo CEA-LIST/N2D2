@@ -31,6 +31,7 @@ N2D2
    quant_post
    quant_qat
    export_CPP
+   export_CPP_STM32
    export_TensorRT
    export_DNeuro
    export_legacy
@@ -55,6 +56,12 @@ N2D2
    databases
    stimuliprovider
    deepnet
+
+.. toctree::
+   :maxdepth: 1
+   :caption: C++ API / Developer:
+
+   dev_intro
 
 
 

@@ -1075,6 +1075,14 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
                     << id << "_" << set << ".valid";
 
     dev = getDevice(dev);
+#ifdef CUDA
+    // readStimulus() is typically  called in an OpenMP thread.
+    // The current CUDA device therefore will not necessarily match dev.
+    // However, some transformations may need the correct device, such as
+    // BlendingTransformation.
+    cudaSetDevice(dev);
+#endif
+
     std::vector<std::shared_ptr<ROI> >& labelsROI = (mFuture)
         ? mFutureProvidedData[dev].labelsROI[batchPos]
         : mProvidedData[dev].labelsROI[batchPos];
@@ -1392,9 +1400,12 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set)
                     ? mFutureProvidedData[dev].batch
                     : mProvidedData[dev].batch;
 
-            if (index > 0) {
-                const unsigned int batchSize
-                    = std::min(mBatchSize, mDatabase.getNbStimuli(set) - index);
+            if (index >= 0) {
+                unsigned int batchSize = mBatchSize;
+
+                if (set != Database::StimuliSet::Learn)
+                    batchSize = std::min(mBatchSize, mDatabase.getNbStimuli(set) - index);
+
                 for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos) {
                     batchRef[batchPos] = mDatabase.getStimulusID(set, batchs[index + batchPos]);
                 }
@@ -1418,7 +1429,7 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set)
                     ? mFutureProvidedData[dev].batch
                     : mProvidedData[dev].batch;
 
-				if (batchRef[batchPos] > 0) {
+				if (batchRef[batchPos] >= 0) {
                     try {
                         readStimulus(batchRef[batchPos], set, batchPos, dev);
                     }
@@ -1446,7 +1457,7 @@ void N2D2::StimuliProvider::readBatch(Database::StimuliSet set)
                     : mProvidedData[dev].batch;   
 
                 for (int batchPos = 0; batchPos < (int)mBatchSize; ++batchPos) {
-                    if (batchRef[batchPos] > 0) 
+                    if (batchRef[batchPos] >= 0) 
                         readStimulus(batchRef[batchPos], set, batchPos, dev);
                 }
             }

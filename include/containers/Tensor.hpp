@@ -400,11 +400,10 @@ public:
     template <typename... Args> const_reference at(Args... args) const;
     Tensor<T> operator[](size_t i);
     const Tensor<T> operator[](size_t i) const;
-    Tensor<T> rows(size_t j0, size_t nb);
-    const Tensor<T> rows(size_t j0, size_t nb) const;
-    double sum(bool valAbs = false) const;
-    double mean(bool valAbs = false) const;
-    double std() const;
+    Tensor<T> rows(size_t j0, size_t nb, int towardsDim = -1);
+    const Tensor<T> rows(size_t j0, size_t nb, int towardsDim = -1) const;
+    double sum() const;
+    double mean() const;
     virtual void synchronizeToH(BaseTensor& tensor) const;
     BaseTensor& operator=(const BaseTensor& base);
     Tensor<T>& operator=(const Tensor<T>& tensor);

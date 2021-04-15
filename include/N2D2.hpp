@@ -19,42 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-/** @mainpage N2D2 Index Page
- *
- * @section intro_sec Introduction
- *
- * This is a simple yet customizable event-driven simulator for spiking neural
- *network. @n
- * To get started and build your network, go to N2D2::Network.
- *
- * @section prereq_sec Dependences
- *
- * gnuplot (for raster plot generation) @n
- * OpenCV 2.x (for image and video handling and display) @n
- * Doxygen [optional] (for documentation generation) @n
- *
- * @section intall_basic Installation basic steps
- *
- * @subsection step1 Step 1: Get a local copy of the Git repository with 'git
- *clone'.
- *
- * @subsection step2 Step 2: Compile the project with one of the following
- *commands:
- * @verbatim make @endverbatim
- * @verbatim make debug @endverbatim
- *
- * Please report any error/warning during the compilation with your version of
- *GCC.
- *
- * @subsection step3 Step 3: Generate the documentation with 'make doc'.
- *
- * Optional step to generate this documentation.
- *
- * @section install_detailed Detailed installation guide
- *
- * \verbinclude README
-*/
-
 #ifndef N2D2_N2D2_H
 #define N2D2_N2D2_H
 

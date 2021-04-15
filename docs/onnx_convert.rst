@@ -34,7 +34,11 @@ frozen graph (.pb).
 
     Make sure to use the option ``--inputs-as-nchw`` on the model input(s)
     because N2D2 expects NCHW inputs, but the default format in TF/Keras is
-    NHWC.
+    NHWC. Otherwise you would typically get an error like:
+
+    ::
+
+        Error: Unexpected size for ONNX input "conv2d_77_input": got 3 224 224  , but StimuliProvider provides 224 224 3
 
     The format of the exported ONNX graph from TF/Keras will depend on the
     execution platform (CPU or GPU). The default format is NHWC on CPU and

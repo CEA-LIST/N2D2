@@ -72,7 +72,7 @@ public:
     friend class UnitTest_ConvCell_Frame_CUDA_float_addInput;
     friend class UnitTest_ConvCell_Frame_CUDA_float_propagate_input_check;
     friend class UnitTest_ConvCell_Frame_CUDA_float_propagate_2_input_check;
-    friend class UnitTest_ConvCell_Frame_CUDA_float_squeezeSharedSynapses;
+    friend class UnitTest_ConvCell_Frame_CUDA_float_partitionSharedSynapses;
     friend class UnitTest_ConvCell_Frame_CUDA_float_setWeight;
     friend class UnitTest_ConvCell_Frame_CUDA_double_addInput__env;
     friend class UnitTest_ConvCell_Frame_CUDA_double_addInput;
@@ -867,7 +867,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 }
 
 TEST_DATASET(ConvCell_Frame_CUDA_float,
-             squeezeSharedSynapses,
+             partitionSharedSynapses,
              (unsigned int kernelWidth,
               unsigned int kernelHeight,
               unsigned int subSampleX,
@@ -981,7 +981,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
     ASSERT_EQUALS(conv1.mSharedSynapses[1].dims()[2], 1U);
     ASSERT_EQUALS(conv1.mSharedSynapses[2].dims()[2], 1U);
 
-    conv1.squeezeSharedSynapses();
+    conv1.partitionSharedSynapses();
 
     ASSERT_EQUALS(conv1.getNbChannels(), 3U);
     ASSERT_EQUALS(conv1.mSharedSynapses.size(), 1U);

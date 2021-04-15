@@ -294,3 +294,56 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         add_n2d2_test(${file} tests n2d2_lib)
     endforeach()
 endif()
+
+find_package(Doxygen)
+if(Doxygen_FOUND)
+    # Find all the public headers
+    get_target_property(N2D2_PUBLIC_HEADER_DIR n2d2_lib INTERFACE_INCLUDE_DIRECTORIES)
+    file(GLOB_RECURSE N2D2_PUBLIC_HEADERS ${N2D2_PUBLIC_HEADER_DIR}/*.hpp)
+
+    set(DOXYGEN_INPUT_DIR ${PROJECT_SOURCE_DIR})
+    set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/docs/doxygen)
+    set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/html/index.html)
+    set(DOXYFILE_IN ${CMAKE_CURRENT_LIST_DIR}/Doxyfile.in)
+    set(DOXYFILE_OUT ${CMAKE_CURRENT_LIST_DIR}/Doxyfile)
+    
+    #Replace variables inside @@ with the current values
+    configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
+
+    file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR}) #Doxygen won't create this for us
+    add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
+                       DEPENDS ${CAT_CUTIFIER_PUBLIC_HEADERS}
+                       COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT}
+                       MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN}
+                       COMMENT "Generating docs")
+
+    add_custom_target(doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE})
+
+    find_package(Sphinx)
+    if(Sphinx_FOUND)
+        set(SPHINX_SOURCE ${CMAKE_CURRENT_LIST_DIR}/docs/)
+        set(SPHINX_BUILD ${CMAKE_CURRENT_LIST_DIR}/docs/_build/html)
+        set(SPHINX_INDEX_FILE ${SPHINX_BUILD}/index.html)
+
+        # Only regenerate Sphinx when:
+        # - Doxygen has rerun
+        # - Our doc files have been updated
+        # - The Sphinx config has been updated
+        add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
+                           COMMAND 
+                             ${SPHINX_EXECUTABLE} -b html
+                             # Tell Breathe where to find the Doxygen output
+                             -Dbreathe_projects.N2D2=${DOXYGEN_OUTPUT_DIR}/xml
+                           ${SPHINX_SOURCE} ${SPHINX_BUILD}
+                           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                           DEPENDS
+                           # Other docs files you want to track should go here (or in some variable)
+                           ${SPHINX_SOURCE}/*
+                           ${DOXYGEN_INDEX_FILE}
+                           MAIN_DEPENDENCY ${SPHINX_SOURCE}/conf.py
+                           COMMENT "Generating documentation with Sphinx")
+        
+        # Nice named target so we can run the job easily
+        add_custom_target(sphinx ALL DEPENDS ${SPHINX_INDEX_FILE})
+    endif()
+endif()
