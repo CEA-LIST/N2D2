@@ -47,6 +47,8 @@ extensions = [
     'breathe',
 ]
 
+bibtex_bibfiles = ['refs.bib']
+
 # Breathe Configuration
 breathe_default_project = "N2D2"
 breathe_default_members = ('members', 'undoc-members')
