@@ -20,6 +20,7 @@
 """
 
 import N2D2
+import n2d2 # To remove if interface is moved to provider
 from n2d2 import error_handler
 from n2d2.provider import TensorPlaceholder
 from functools import reduce
@@ -402,7 +403,7 @@ class Tensor:
     def __str__(self):
         return str(self._tensor)
 
-    def detach_cell(self):
+    def detach_cell(self): # TODO : May become useless, check if we se it for transfer learning !  
         """
         Detach the cells from the tensor, this allow you to pass the output of a deepnet to another one.
         """
@@ -439,3 +440,37 @@ class Tensor:
             raise RuntimeError('This tensor is not part of a graph')
         self.cell.get_deepnet().update()
 
+
+class Interface(n2d2.provider.Provider):
+    def __init__(self, tensors):
+        self._name = n2d2.global_variables.generate_name(self)
+        self.tensors = []
+        if not isinstance(tensors, list):
+            raise ValueError("'tensors' should be a list !")
+        nb_channels = 0
+        for tensor in tensors:
+            # TODO : check they have the same X, Y and B shape
+            if not isinstance(tensor, Tensor):
+                raise ValueError("The elements of 'tensors' should be Tensor")
+            else:
+                tensor.cell=self # Interface is a Provider
+                nb_channels += tensor.dimZ()
+                self.tensors.append(tensor)
+        size =[tensors[0].dimX(), tensors[0].dimY(), nb_channels]
+        self.batch_size = tensors[0].dimB()
+        self.dimZ = nb_channels
+        self._N2D2_object = N2D2.StimuliProvider(database=N2D2.Database(),
+                                                 size=size,
+                                                 batchSize=self.batch_size)
+        self._deepnet = n2d2.deepnet.DeepNet()
+        self._deepnet.set_provider(self)
+
+    def dimB(self):
+        return self.batch_size
+
+
+    def dimZ(self):
+        return self.dimZ
+
+    def get_tensors(self):
+        return self.tensors

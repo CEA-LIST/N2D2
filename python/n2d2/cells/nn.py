@@ -63,23 +63,26 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
         self._inference = True
 
     def _infer_deepnet(self, inputs):
-        if isinstance(inputs, n2d2.tensor.Tensor):
+        if isinstance(inputs, n2d2.tensor.Interface) or isinstance(inputs, n2d2.tensor.Tensor):
             deepnet = inputs.get_deepnet()
-            if deepnet is None:
-                deepnet = n2d2.deepnet.DeepNet()
-        elif isinstance(inputs, list):
-            if len(inputs) == 0:
-                raise RuntimeError("List with 0 elements cannot provide a deepNet")
-            else:
-                last_deepnet = None
-                for ipt in inputs:
-                    deepnet = self._infer_deepnet(ipt)
-                    if last_deepnet is not None:
-                        if not id(deepnet) == id(last_deepnet):
-                            raise RuntimeError("Elements of cells input have different deepnets. "
-                                               "Cannot infer implicit deepnet")
-                    last_deepnet = deepnet
-                deepnet = last_deepnet
+        # if isinstance(inputs, n2d2.tensor.Tensor):
+        #     deepnet = inputs.get_deepnet()
+        #     if deepnet is None:
+        #         deepnet = n2d2.deepnet.DeepNet()
+        
+        # elif isinstance(inputs, list):
+        #     if len(inputs) == 0:
+        #         raise RuntimeError("List with 0 elements cannot provide a deepNet")
+        #     else:
+        #         last_deepnet = None
+        #         for ipt in inputs:
+        #             deepnet = self._infer_deepnet(ipt)
+        #             if last_deepnet is not None:
+        #                 if not id(deepnet) == id(last_deepnet):
+        #                     raise RuntimeError("Elements of cells input have different deepnets. "
+        #                                        "Cannot infer implicit deepnet")
+        #             last_deepnet = deepnet
+        #         deepnet = last_deepnet
         else:
             raise TypeError("Object of type " + str(type(inputs)) + " cannot implicitly provide a deepNet to cells.")
         return deepnet
@@ -108,27 +111,35 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
     # TODO: What exactly should be checked? Input identity and/or input dimensions? At the moment we only check dimensions
     # This means a new NeuralNetworkCell with same dimensions is will not be connected!
     def _check_tensor(self, inputs):
-        if isinstance(inputs, n2d2.cells.nn.NeuralNetworkCell) or isinstance(inputs, n2d2.provider.Provider):
-            input_dims = inputs.dims()
+        if isinstance(inputs.cell, n2d2.cells.nn.NeuralNetworkCell) or isinstance(inputs.cell, n2d2.provider.Provider):
+            input_dims = inputs.cell.dims()
             if not self.dims(): # If not initialized
                 return True
-            """"
-            # TODO: Does not work for multi inputs, because getInputsDims returns sum of all channel dims
-            if not self._N2D2_object.getInputsDims() + [self.dims()[3]] == input_dims: # If input dimesions changed
-                raise RuntimeError("NeuralNetworkCell '" + self.get_name() + "' was called with input of dim " + str(inputs.dims())
-                                   + ", but cells input size is " + str(self._N2D2_object.getInputsDims()+ [self.dims()[3]]) +
-                                   ". Inputs dimensions cannot change after first call.")
-                #return True
-            """
         else:
-            raise TypeError("Invalid inputs object of type " + str(type(inputs)))
-        # Check if inputs have same deepnet
-        #self._infer_deepnet(inputs)
-        return False
+            raise TypeError("Invalid inputs object of type " + str(type(inputs.cell)))
+
+        if inputs.get_deepnet() is not self.get_deepnet():
+            raise RuntimeError("The deepnet of the input doesn't match with the deepnet of the cell")
+        
+
+        # if self._N2D2_object.getInputsDims()+ [self.dims()[3]]: # If input dimesions changed
+        #     raise RuntimeError("NeuralNetworkCell '" + self.get_name() + "' was called with input of dim " + str(inputs.dims())
+        #                         + ", but cells input size is " + str(self._N2D2_object.getInputsDims()+ [self.dims()[3]]) +
+        #                         ". Inputs dimensions cannot change after first call.")
+        return False 
+
 
     def add_input(self, inputs):
-        if isinstance(inputs, list):
-            pass
+        # A little hacky, some cells like Pool don't have a defined number of channels so I try this to catch them
+        # Is it good to keep it this way ?
+        have_an_defined_input_size = (self.N2D2().getInputsDims() != [0] and self.N2D2().getInputsDims() != [])
+
+        if have_an_defined_input_size and inputs.dimZ() != self.get_nb_channels():
+            raise ValueError("NeuralNetworkCell '" + self.get_name() + "' received a tensor with " + str(inputs.dimZ()) +
+            " channels, was expecting : " + str(self.get_nb_channels()))
+        
+        if isinstance(inputs, n2d2.tensor.Interface):
+            inputs = inputs.get_tensors()
         elif isinstance(inputs, n2d2.tensor.Tensor):
             inputs = [inputs]
         else:
@@ -140,10 +151,10 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
 
         parents = []
         for ipt in inputs:
+            if self._check_tensor(ipt):
+                initialize = True
             cell = ipt.cell
             self._link_N2D2_input(cell)
-            if self._check_tensor(cell):
-                initialize = True
 
             if not isinstance(cell, n2d2.provider.Provider):
                 parents.append(cell.N2D2())
@@ -817,9 +828,9 @@ class Pool(NeuralNetworkCell):
 
         # Note: Removed Pooling
         self._parse_optional_arguments(['stride_dims', 'padding_dims', 'pooling'])
-
-        self._optional_constructor_arguments['pooling'] = \
-            N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
+        if "pooling" in self._optional_constructor_arguments: 
+            self._optional_constructor_arguments['pooling'] = \
+                N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
 
         """Set connection and mapping parameters"""
         if 'mapping' in self._config_parameters: 
@@ -861,9 +872,23 @@ class Pool(NeuralNetworkCell):
         return n2d2_cell
 
     def __call__(self, inputs):
-        if inputs.nb_dims() != 4:
-            raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
+        # TODO : not good for multi inputs
+        # if inputs.nb_dims() != 4:
+        #     raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
+        mapping_row = 0
 
+        if isinstance(inputs, n2d2.tensor.Interface): # This may change in the future ! (Becoming an Interface instead of a list)
+            for tensor in inputs.get_tensors():
+                if tensor.nb_dims() != 4:
+                    raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
+                mapping_row += tensor.dimZ()
+        elif isinstance(inputs, n2d2.Tensor):
+            if inputs.nb_dims() != 4:
+                raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
+            mapping_row += inputs.dimZ()
+
+        else:
+            raise n2d2.wrong_input_type("inputs", inputs, [str(type(list)), str(type(n2d2.Tensor))])
         self._deepnet = self._infer_deepnet(inputs)
 
         if self._N2D2_object is None:
@@ -871,7 +896,7 @@ class Pool(NeuralNetworkCell):
             self._N2D2_object = self._cell_constructors[self._model_key](self._deepnet.N2D2(),
                                                                          self.get_name(),
                                                                          self._constructor_arguments['pool_dims'],
-                                                                         inputs.dims()[2],
+                                                                         mapping_row,
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
 
             """Set and initialize here all complex cells members"""
@@ -882,7 +907,7 @@ class Pool(NeuralNetworkCell):
                     self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
             if "mapping" in self._connection_parameters:
                 if isinstance(self._connection_parameters['mapping'], n2d2.mapping.Mapping):
-                    mapping = self._connection_parameters['mapping'].create_N2D2_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2()
+                    mapping = self._connection_parameters['mapping'].create_N2D2_mapping(mapping_row, mapping_row).N2D2()
                 elif isinstance(self._connection_parameters['mapping'], n2d2.Tensor):
                     
                     mapping = self._connection_parameters['mapping'].N2D2()
@@ -894,10 +919,11 @@ class Pool(NeuralNetworkCell):
                 self._N2D2_object.initializeParameters(0, 1, mapping)
 
             else:
-                self._N2D2_object.initializeParameters(0, 1, n2d2.mapping.Mapping(nb_channels_per_group=1).create_N2D2_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2())
+                # input(inputs.dims()[2])
+                self._N2D2_object.initializeParameters(0, 1, n2d2.mapping.Mapping(nb_channels_per_group=1).create_N2D2_mapping(mapping_row, mapping_row).N2D2())
                 
         self._add_to_graph(inputs)
-
+        
         self._N2D2_object.propagate(self._inference)
 
         return self.get_outputs()

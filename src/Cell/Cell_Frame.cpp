@@ -380,7 +380,7 @@ void N2D2::Cell_Frame<T>::linkInput(StimuliProvider& sp,
      //   mMapping.append(Tensor<bool>({getNbOutputs(), sp.getNbChannels()}, true));
     //}
 }
-// END code used exlusively in python API
+// END code used exclusively in python API
 
 
 

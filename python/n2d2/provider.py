@@ -51,6 +51,12 @@ class Provider(N2D2_Interface):
     def dims(self):
         return self._N2D2_object.getData().dims()
 
+    def get_name(self):
+        """
+        :returns: Name of the data provider
+        :rtype: str
+        """
+        return self._name
 
 class DataProvider(Provider):
     """
@@ -122,12 +128,6 @@ class DataProvider(Provider):
         """
         return N2D2.Database.StimuliSet.__members__[self._partition]
 
-    def get_name(self):
-        """
-        :returns: Name of the data provider
-        :rtype: str
-        """
-        return self._name
 
     def get_data(self):
         """
@@ -256,13 +256,13 @@ class TensorPlaceholder(Provider):
                                                  size=dims,
                                                  batchSize=self._tensor.N2D2().dimB())
         self._set_N2D2_parameter('StreamTensor', True)
-        self.set_streamed_tensor()
+        self._set_streamed_tensor()
 
         self._deepnet = n2d2.deepnet.DeepNet()
         self._deepnet.set_provider(self)
 
 
-    def set_streamed_tensor(self):
+    def _set_streamed_tensor(self): # TODO : only used in the constructor at the moment, remove the method ?
         """
         Streamed a tensor in a data provider to simulate the output of a database.
         The model of the tensor is defined by the compilation of the library.
@@ -274,71 +274,70 @@ class TensorPlaceholder(Provider):
     def __call__(self):
         return self._tensor
 
-    def get_name(self):
-        return self._name
+    
 
     def __str__(self):
         return "'" + self.get_name() + "' TensorPlaceholder"
 
 
 
+"""
+TODO : Not up to date to keep ?
+"""
+
+# class Input(Provider):
+#     
+#     def __init__(self, dims, model=None, **config_parameters):
+#         Provider.__init__(self, **config_parameters)
+
+#         if model is None:
+#             model = n2d2.global_variables.default_model
+
+#         if model == "Frame":
+#             self._tensor = n2d2.Tensor(dims)
+#         elif model == "Frame_CUDA":
+#             self._tensor = n2d2.CudaTensor(dims)
+#         else:
+#             ValueError("Invalid model '" + model + "'")
+
+#         # n2d2.error_handler.wrong_input_type("inputs", type(inputs), [type(list), 'n2d2.tensor.Tensor', 'N2D2.BaseTensor'])
+#         provider_dims = [self._tensor.N2D2().dimX(), self._tensor.N2D2().dimY(), self._tensor.N2D2().dimZ()]
+#         self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
+#                                                  size=provider_dims,
+#                                                  batchSize=self._tensor.N2D2().dimB())
+#         self._set_N2D2_parameter('StreamTensor', True)
+#         self._N2D2_object.setStreamedTensor(self._tensor.N2D2())
+
+#         self._deepnet = n2d2.deepnet.DeepNet()
+#         self._deepnet.set_provider(self)
 
 
-class Input(Provider):
-    """
-    TODO : Not up to date to keep ?
-    """
-    def __init__(self, dims, model=None, **config_parameters):
-        Provider.__init__(self, **config_parameters)
+#     def set_streamed_tensor(self, tensor):
+#         self._N2D2_object.setStreamedTensor(tensor)
 
-        if model is None:
-            model = n2d2.global_variables.default_model
+#     def __call__(self, inputs):
 
-        if model == "Frame":
-            self._tensor = n2d2.Tensor(dims)
-        elif model == "Frame_CUDA":
-            self._tensor = n2d2.CudaTensor(dims)
-        else:
-            ValueError("Invalid model '" + model + "'")
+#         if not self.dims() == inputs.dims():
+#             raise RuntimeError("Received input tensor with dims " + str(inputs.dims()) +
+#                                " but object dims are " + str(self.dims()) +
+#                                ". Input dimensions cannot change after initialization")
 
-        # n2d2.error_handler.wrong_input_type("inputs", type(inputs), [type(list), 'n2d2.tensor.Tensor', 'N2D2.BaseTensor'])
-        provider_dims = [self._tensor.N2D2().dimX(), self._tensor.N2D2().dimY(), self._tensor.N2D2().dimZ()]
-        self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
-                                                 size=provider_dims,
-                                                 batchSize=self._tensor.N2D2().dimB())
-        self._set_N2D2_parameter('StreamTensor', True)
-        self._N2D2_object.setStreamedTensor(self._tensor.N2D2())
+#         if "Cuda" in str(type(self._tensor)):
+#             if not "Cuda" in str(type(inputs)):
+#                 raise RuntimeError("'inputs' argument is not a cuda tensor, but internal tensor is.")
+#             self._tensor.N2D2().synchronizeHToD()
+#         else:
+#             if "Cuda" in str(type(inputs)):
+#                 raise RuntimeError("inputs is a cuda tensor, but internal tensor is not.")
 
-        self._deepnet = n2d2.deepnet.DeepNet()
-        self._deepnet.set_provider(self)
+#         self._N2D2_object.setStreamedTensor(inputs.N2D2())
 
 
-    def set_streamed_tensor(self, tensor):
-        self._N2D2_object.setStreamedTensor(tensor)
+#         return n2d2.tensor.GraphTensor(self._tensor, self)
 
-    def __call__(self, inputs):
+#     def get_name(self):
+#         return self._name
 
-        if not self.dims() == inputs.dims():
-            raise RuntimeError("Received input tensor with dims " + str(inputs.dims()) +
-                               " but object dims are " + str(self.dims()) +
-                               ". Input dimensions cannot change after initialization")
-
-        if "Cuda" in str(type(self._tensor)):
-            if not "Cuda" in str(type(inputs)):
-                raise RuntimeError("'inputs' argument is not a cuda tensor, but internal tensor is.")
-            self._tensor.N2D2().synchronizeHToD()
-        else:
-            if "Cuda" in str(type(inputs)):
-                raise RuntimeError("inputs is a cuda tensor, but internal tensor is not.")
-
-        self._N2D2_object.setStreamedTensor(inputs.N2D2())
-
-
-        return n2d2.tensor.GraphTensor(self._tensor, self)
-
-    def get_name(self):
-        return self._name
-
-    def __str__(self):
-        return "'" + self.get_name() + "' Input"
+#     def __str__(self):
+#         return "'" + self.get_name() + "' Input"
 

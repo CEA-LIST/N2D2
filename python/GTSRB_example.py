@@ -33,7 +33,7 @@ from n2d2 import ConfigSection
 nb_epoch = 1
 batch_size = 24
 n2d2.global_variables.default_model = "Frame_CUDA"
-n2d2.global_variables.set_cuda_device(1)
+n2d2.global_variables.set_cuda_device(0)
 
 db = n2d2.database.GTSRB(0.2)
 db.load("/nvme0/DATABASE/GTSRB")
@@ -42,6 +42,10 @@ print("\n### Data imported ###\n")
 db.get_partition_summary()
 
 provider = n2d2.provider.DataProvider(db, [29, 29, 3], batch_size=batch_size)
+
+# provider = n2d2.provider.DataProvider(db, [29, 29, 1], batch_size=batch_size)
+# provider.add_transformation(n2d2.transform.ChannelExtraction('Gray'))
+
 provider.add_transformation(n2d2.transform.Rescale(width=29, height=29))
 
 solver_config = ConfigSection(
@@ -96,6 +100,7 @@ conv2_mapping.set_values([
 
 
 model = n2d2.cells.Sequence([
+    # Conv(1, 32, [4, 4], **conv_config),
     Conv(3, 32, [4, 4], **conv_config),
     Pool([2, 2], stride_dims=[2, 2], pooling='Max'),
     Conv(32, 48, [5, 5], mapping=conv2_mapping, **conv_config),
@@ -152,10 +157,10 @@ print("\n")
 
 # save computational stats on the network 
 # TODO : Implement it in the library !
-x.get_deepnet().N2D2().logStats("GTSRB")
+loss_function.log_stats("vis_GTSRB")
 # TODO : save freeeParameters cause segfault
 # x.get_deepnet().N2D2().logFreeParameters("test_freeparam")
 # save a confusion matrix
-loss_function.log_confusion_matrix("GTSRB")
+loss_function.log_confusion_matrix("vis_GTSRB")
 # save a graph of the loss and the validation score as a function of the number of steps
-loss_function.log_success("GTSRB")
+loss_function.log_success("vis_GTSRB")
