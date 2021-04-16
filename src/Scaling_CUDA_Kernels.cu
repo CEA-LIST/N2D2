@@ -29,7 +29,7 @@ using N2D2::Cuda::clamp;
 template<typename T>
 __device__ T saturate(T value, std::size_t quantizedNbBits, bool isOutputUnsigned) {
     assert(quantizedNbBits > 0);
-    
+
     const T min = isOutputUnsigned?0:
                                   -(1ll << (quantizedNbBits - 1ll));
     const T max = isOutputUnsigned?(1ll << quantizedNbBits) - 1ll:
@@ -65,16 +65,22 @@ __global__ void cudaFloatingPointScaling_kernel(const T* input, T* output,
                 //clipping before scaling
                 T res = input[index];
                 if(isClipped){
-                    res = (res < T(0.0)) ? T(0.0) 
+                    if(clippingFactorPerChannel[ch]>0){
+                        res = (res < T(0.0)) ? T(0.0)
                         : (res > T(clippingFactorPerChannel[ch])) ? T(clippingFactorPerChannel[ch]) 
                         : res;
+                    }
+                    else{
+                        res = (res > T(0.0)) ? T(0.0)
+                        : (res < T(clippingFactorPerChannel[ch])) ? T(clippingFactorPerChannel[ch])
+                        : res;
+                    }
+
                 }
                 res *= scalingFactorPerChannel[ch];
-
                 if(quantizedNbBits > 0) {
                     res = saturate(round(res), quantizedNbBits, isOutputUnsigned);
                 }
-
                 output[index] = res;
             }
         }
