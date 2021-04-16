@@ -111,20 +111,12 @@ __global__ void cudaFixedPointScaling_kernel(const T* input, T* output,
                                           ch*heigth*width +
                                           i;
                 
-                //
-                /*
-                const long long half = (nbFractionalBits > 0)
-                    ? (1ll << (nbFractionalBits - 1))
-                    : 0ll;
-                const long long res = (
-                    static_cast<long long>(round(input[index])) * scalingFactorPerChannel[ch] + half
-                )  >> nbFractionalBits;
-                */
-                
                 //adding the clipping
                 T realInput = input[index];
                 if(isClipped){
-                    realInput = (realInput > T(clippingFactorPerChannel[ch])) ? T(clippingFactorPerChannel[ch]) : realInput;
+                    realInput = (realInput < T(0.0)) ? T(0.0) 
+                        : (realInput > T(clippingFactorPerChannel[ch])) ? T(clippingFactorPerChannel[ch]) 
+                        : realInput;
                 }
 
                 const long long half = (nbFractionalBits > 0)
