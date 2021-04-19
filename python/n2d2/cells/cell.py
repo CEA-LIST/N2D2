@@ -123,15 +123,15 @@ class DeepNetCell(Block):
 
     def __init__(self, N2D2_object):
 
-        self._core_deepnet = DeepNet.create_from_N2D2_object(N2D2_object)
+        self._embedded_deepnet = DeepNet.create_from_N2D2_object(N2D2_object)
 
         if not N2D2_object.getName() == "":
             name = N2D2_object.getName()
         else:
             name = None
 
-        #self._cells = self._core_deepnet.get_cells()
-        Block.__init__(self, list(self._core_deepnet.get_cells().values()), name=name)
+        #self._cells = self._embedded_deepnet.get_cells()
+        Block.__init__(self, list(self._embedded_deepnet.get_cells().values()), name=name)
 
         self._deepnet = None
         self._inference = False
@@ -183,7 +183,7 @@ class DeepNetCell(Block):
 
         #self._deepnet = self._infer_deepnet(inputs)
 
-        #print(self._core_deepnet)
+        #print(self._embedded_deepnet)
 
         # Recreate graph with underlying N2D2 deepnet
         self._deepnet = self.concat_to_deepnet(inputs.cell.get_deepnet())
@@ -197,20 +197,27 @@ class DeepNetCell(Block):
         #    raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
 
         #self.get_first().set_deepnet(self._deepnet)
-        self.get_first().N2D2().clearInputTensors()
-        self.get_first()._link_N2D2_input(inputs.cell)
+        for cell in self.get_input_cells():
+            cell.N2D2().clearInputTensors()
+            cell._link_N2D2_input(inputs.cell)
 
         self._deepnet.N2D2().propagate(self._inference)
 
-        return self._deepnet.get_outputs()
+        outputs = []
+        for cell in self.get_output_cells():
+            outputs.append(cell.get_outputs())
+        if len(outputs) == 1:
+            return outputs[0]
+        else:
+            return outputs
 
     def concat_to_deepnet(self, deepnet):
         new_n2d2_deepnet = deepnet
 
 
         #new_n2d2_deepnet.N2D2().setStimuliProvider(self._N2D2_object.getStimuliProvider())
-        cells = self._core_deepnet.N2D2().getCells()
-        layers = self._core_deepnet.N2D2().getLayers()
+        cells = self._embedded_deepnet.N2D2().getCells()
+        layers = self._embedded_deepnet.N2D2().getLayers()
         if not layers[0][0] == "env":
             print("Is env:" + layers[0][0])
             raise RuntimeError("First layer of N2D2 deepnet is not a StimuliProvider. You may be skipping cells")
@@ -218,7 +225,7 @@ class DeepNetCell(Block):
         # print("copy graph groups")
         # print(new_n2d2_deepnet._groups)
 
-        new_n2d2_deepnet.begin_group()
+        #new_n2d2_deepnet.begin_group()
         for idx, layer in enumerate(layers[1:]):
             if len(layer) > 1:
                 new_n2d2_deepnet.begin_group("layer" + str(idx))
@@ -229,19 +236,22 @@ class DeepNetCell(Block):
             for cell in layer:
                 N2D2_cell = cells[cell]
                 # print("Adding cells: " + N2D2_cell.getName())
-                parents = self._core_deepnet.N2D2().getParentCells(N2D2_cell.getName())
+                parents = self._embedded_deepnet.N2D2().getParentCells(N2D2_cell.getName())
                 if len(parents) == 1 and parents[0] is None:
                     parents = []
                 new_n2d2_deepnet.N2D2().addCell(N2D2_cell, parents)
-                n2d2_cell = self._core_deepnet.get_cells()[N2D2_cell.getName()]
+                n2d2_cell = self._embedded_deepnet.get_cells()[N2D2_cell.getName()]
                 n2d2_cell.set_deepnet(new_n2d2_deepnet)
                 new_n2d2_deepnet.add_to_current_group(n2d2_cell)
             if len(layer) > 1:
                 new_n2d2_deepnet.end_group()
-        new_n2d2_deepnet.end_group()
+        #new_n2d2_deepnet.end_group()
 
         return new_n2d2_deepnet
-
+    
+    #def clear_data_tensors(self):
+    #    for cell in self._embedded_deepnet.get_cells().values():
+    #        cell.clear_data_tensors()
 
     def update(self):
         self.get_deepnet().update()
@@ -255,30 +265,40 @@ class DeepNetCell(Block):
     def import_free_parameters(self, dir_name, ignoreNotExists=False):
         self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignoreNotExists=ignoreNotExists)
 
-    def remove(self, name, reconnect=True):
-        cell = self._core_deepnet.N2D2().getCells()[name]
-        self._core_deepnet.N2D2().removeCell(cell, reconnect)
-        self._core_deepnet = DeepNet.create_from_N2D2_object(self._core_deepnet.N2D2())
-        self._cells = self._core_deepnet.get_cells()
-
+    def remove(self, name):
+        cell = self._embedded_deepnet.N2D2().getCells()[name]
+        self._embedded_deepnet.N2D2().removeCell(cell, False)
+        self._embedded_deepnet = DeepNet.create_from_N2D2_object(self._embedded_deepnet.N2D2())
+        self._cells = self._embedded_deepnet.get_cells()
 
     def get_deepnet(self):
         return self._deepnet
 
-    def get_core_deepnet(self):
-        return self._core_deepnet
+    def get_embedded_deepnet(self):
+        return self._embedded_deepnet
 
-    def get_first(self):
-        return self.get_deepnet().get_first()
+    def get_input_cells(self):
+        output = []
+        cells = self._embedded_deepnet.get_groups().get_elements()[0]
+        if isinstance(cells, n2d2.deepnet.Group):
+            for name in cells.get_cells():
+                output.append(self._embedded_deepnet.get_cells()[name])
+        else:
+            output.append(cells)
+        return output
 
-    def get_last(self):
-        return self.get_deepnet().get_last()
+    def get_output_cells(self):
+        output = []
+        cells = self._embedded_deepnet.get_groups().get_elements()[-1]
+        if isinstance(cells, n2d2.deepnet.Group):
+            for name in cells.get_cells():
+                output.append(self._embedded_deepnet.get_cells()[name])
+        else:
+            output.append(cells)
+        return output
 
-    def get_outputs(self):
-        return self.get_last().get_outputs()
 
-    def dims(self):
-        return self.get_outputs().dims()
+
 
 
 

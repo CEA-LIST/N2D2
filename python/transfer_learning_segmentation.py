@@ -121,8 +121,8 @@ elif args.arch == 'MobileNetv2-onnx':
     provider.add_on_the_fly_transformation(otf_trans)
 
     extractor = n2d2.models.mobilenetv2.load_from_ONNX(provider, download=True, batch_size=batch_size)
-    extractor.remove("mobilenetv20_output_pred_fwd", False)
-    extractor.remove("mobilenetv20_output_flatten0_reshape0", False)
+    extractor.remove("mobilenetv20_output_pred_fwd")
+    extractor.remove("mobilenetv20_output_flatten0_reshape0")
     #scales.append(extractor['mobilenetv20_features_linearbottleneck1_conv0_fwd'])
     scales.append(extractor['mobilenetv20_features_linearbottleneck3_batchnorm0_fwd'])
     scales.append(extractor['mobilenetv20_features_linearbottleneck10_batchnorm0_fwd'])
@@ -142,9 +142,9 @@ elif args.arch == 'ResNet18':
     provider.add_on_the_fly_transformation(otf_trans)
     extractor = n2d2.models.resnet.load_from_ONNX('18', 'post_act', download=True, dims=size, batch_size=batch_size)
     extractor.add_input(provider)
-    extractor.remove(47, False)
-    extractor.remove(46, False)
-    extractor.remove(45, False)
+    extractor.remove(47)
+    extractor.remove(46)
+    extractor.remove(45)
     # scales.append(extractor['resnetv22_batchnorm1_fwd'])
     scales.append(extractor['resnetv22_stage2_batchnorm0_fwd'])
     scales.append(extractor['resnetv22_stage3_batchnorm0_fwd'])
@@ -241,79 +241,3 @@ for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test') / batch_
         loss_function.log_estimated_labels("test")
 
 
-
-exit()
-
-
-
-
-
-
-for epoch in range(args.epochs):
-
-    print("\n### Train Epoch: " + str(epoch) + " ###")
-
-    segmentation_decoder.set_partition('Learn')
-
-    for i in range(math.ceil(database.get_nb_stimuli('Learn') / batch_size)):
-
-        segmentation_decoder.read_random_batch()
-
-        extractor.get_last().get_deepnet().propagate(inference=True)
-
-        segmentation_decoder.process()
-
-        segmentation_decoder.optimize()
-
-        print("Example: " + str(i*batch_size) + " of " + str(database.get_nb_stimuli('Learn')) + ", train success: "
-              + "{0:.2f}".format(100*segmentation_decoder.get_average_success(window=avg_window)) + "%", end='\n')
-
-
-    """
-    if epoch % 1 == 0:
-        print("\n### Test ###")
-
-        segmentation_decoder.set_mode('Test')
-
-        for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
-
-            batch_idx = i*batch_size
-
-            # Load example
-            segmentation_decoder.read_batch(idx=batch_idx)
-
-            extractor.propagate(inference=True)
-
-            segmentation_decoder.process()
-
-            print("Example: " + str(i*batch_size) + " of " + str(database.get_nb_stimuli('Test')) + ", test success: "
-                  + "{0:.2f}".format(100 * segmentation_decoder.get_average_success()) + "%", end='\n')
-
-            if i >= math.ceil(database.get_nb_stimuli('Test') / batch_size) - 5:
-                segmentation_decoder.log_estimated_labels("test")
-
-        print("")
-    """
-
-
-
-print("\n### Final Test ###")
-
-segmentation_decoder.set_partition('Test')
-
-for i in range(math.ceil(database.get_nb_stimuli('Test')/batch_size)):
-
-    batch_idx = i*batch_size
-
-    # Load example
-    segmentation_decoder.read_batch(idx=batch_idx)
-
-    extractor.propagate(inference=True)
-
-    segmentation_decoder.process()
-
-    print("Example: " + str(i*batch_size)+ " of " + str(database.get_nb_stimuli('Test')) + ", test success: "
-          + "{0:.2f}".format(100 * segmentation_decoder.get_average_success()) + "%", end='\n')
-
-    if i >= math.ceil(database.get_nb_stimuli('Test') / batch_size) - 5:
-        segmentation_decoder.log_estimated_labels("test")

@@ -44,6 +44,7 @@ void declare_Cell_Frame_CUDA(py::module &m, const std::string& typeStr) {
     .def("setOutputTarget",  &Cell_Frame_CUDA<T>::setOutputTarget, py::arg("targets"))
 
     .def("clearInputTensors", &Cell_Frame_CUDA<T>::clearInputTensors)
+    .def("clearOutputTensors", &Cell_Frame_CUDA<T>::clearOutputTensors)
     .def("linkInput",  (void (Cell_Frame_CUDA<T>::*)(Cell*)) &Cell_Frame_CUDA<T>::linkInput, py::arg("cell"))
     .def("linkInput",  (void (Cell_Frame_CUDA<T>::*)(StimuliProvider&, unsigned int, unsigned int, unsigned int, unsigned int)) &Cell_Frame_CUDA<T>::linkInput, 
         py::arg("sp"), py::arg("x0")=0, py::arg("y0")=0, py::arg("width")=0, py::arg("height")=0)

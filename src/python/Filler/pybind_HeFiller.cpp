@@ -49,7 +49,11 @@ void declare_HeFiller(py::module &m, const std::string& typeStr) {
     .def(py::init<typename HeFiller<T>::VarianceNorm, T, T>(), 
         py::arg("varianceNorm") = HeFiller<T>::VarianceNorm::FanIn, 
         py::arg("meanNorm") = 0.0, 
-        py::arg("scaling") = 1.0);
+        py::arg("scaling") = 1.0)
+    .def("getVarianceNorm", &HeFiller<T>::getVarianceNorm)
+    .def("getMeanNorm", &HeFiller<T>::getMeanNorm)
+    .def("getScaling", &HeFiller<T>::getScaling)
+    ;
 }
 
 void init_HeFiller(py::module &m) {

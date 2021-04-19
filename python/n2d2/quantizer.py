@@ -23,8 +23,7 @@ from n2d2.n2d2_interface import N2D2_Interface
 import n2d2.global_variables
 
 
-class CellQuantizer(N2D2_Interface):
-
+class Quantizer(N2D2_Interface):
     def __init__(self, **config_parameters):
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')
@@ -43,8 +42,7 @@ class CellQuantizer(N2D2_Interface):
         self._N2D2_object.setRange(integer_range)
 
     def get_type(self):
-        return self._N2D2_object.getType()
-
+        return type(self).__name__
 
     def __str__(self):
         output = self.get_type()
@@ -52,33 +50,16 @@ class CellQuantizer(N2D2_Interface):
         return output
 
 
-
-class ActivationQuantizer(N2D2_Interface):
+class CellQuantizer(Quantizer):
 
     def __init__(self, **config_parameters):
-        if 'model' in config_parameters:
-            self._model = config_parameters.pop('model')
-        else:
-            self._model = n2d2.global_variables.default_model
-        if 'datatype' in config_parameters:
-            self._datatype = config_parameters.pop('datatype')
-        else:
-            self._datatype = n2d2.global_variables.default_datatype
+        Quantizer.__init__(self, **config_parameters)
 
-        self._model_key = self._model + '<' + self._datatype + '>'
 
-        N2D2_Interface.__init__(self, **config_parameters)
+class ActivationQuantizer(Quantizer):
 
-    def set_range(self, integer_range):
-        self._N2D2_object.setRange(integer_range)
-
-    def get_type(self):
-        return self._N2D2_object.getType()
-
-    def __str__(self):
-        output = self.get_type()
-        output += N2D2_Interface.__str__(self)
-        return output
+    def __init__(self, **config_parameters):
+        Quantizer.__init__(self, **config_parameters)
 
 
 class SATCell(CellQuantizer):
@@ -90,11 +71,12 @@ class SATCell(CellQuantizer):
         'Frame_CUDA<float>': N2D2.SATQuantizerCell_Frame_CUDA_float
     }
 
-    def __init__(self, **config_parameters):
+    def __init__(self, from_arguments=True, **config_parameters):
         CellQuantizer.__init__(self, **config_parameters)
-        # No optional constructor arguments
-        self._N2D2_object = self._quantizer_generators[self._model_key]()
-        self._set_N2D2_parameters(self._config_parameters)
+        if from_arguments:
+            # No optional constructor arguments
+            self._set_N2D2_object(self._quantizer_generators[self._model_key]())
+            self._set_N2D2_parameters(self._config_parameters)
 
 
 
@@ -107,17 +89,19 @@ class SATAct(ActivationQuantizer):
         'Frame_CUDA<float>': N2D2.SATQuantizerActivation_Frame_CUDA_float
     }
 
-    def __init__(self, **config_parameters):
+    def __init__(self, from_arguments=True, **config_parameters):
         ActivationQuantizer.__init__(self, **config_parameters)
-        # No optional constructor arguments
-        self._N2D2_object = self._quantizer_generators[self._model_key]()
 
-        """Set and initialize here all complex cells members"""
-        for key, value in self._config_parameters.items():
-            if key is 'solver':
-                self._N2D2_object.setSolver(value.N2D2())
-            else:
-                self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+        if from_arguments:
+            # No optional constructor arguments
+            self._N2D2_object = self._quantizer_generators[self._model_key]()
+
+            """Set and initialize here all complex cells members"""
+            for key, value in self._config_parameters.items():
+                if key is 'solver':
+                    self._N2D2_object.setSolver(value.N2D2())
+                else:
+                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
     """
     def set_solver(self, solver):

@@ -44,7 +44,7 @@ args = parser.parse_args()
 n2d2.global_variables.set_cuda_device(args.dev)
 n2d2.global_variables.default_model = "Frame_CUDA"
 
-batch_size = 32
+batch_size = 1
 avg_window = 10000//batch_size
 size = 224
 nb_outputs = 100
@@ -92,7 +92,7 @@ elif args.arch == 'MobileNetv1_SAT':
     #print(otf_trans)
     provider.add_transformation(trans)
     #provider.add_on_the_fly_transformation(otf_trans)
-    extractor = n2d2.deepnet.load_from_ONNX("/home/jt251134/N2D2-IP/models/Quantization/SAT/model_mobilenet-v1-32b-clamp.onnx",
+    extractor = n2d2.cells.DeepNetCell.load_from_ONNX("/home/jt251134/N2D2-IP/models/Quantization/SAT/model_mobilenet-v1-32b-clamp.onnx",
                                             dims=[size, size, 3], batch_size=batch_size, ini_file="ignore_onnx.ini")
     extractor.add_input(provider)
     print(extractor)
@@ -103,10 +103,10 @@ elif args.arch == 'MobileNetv2-onnx':
     provider.add_transformation(n2d2.models.mobilenetv2.ONNX_preprocessing(size=size))
     extractor = n2d2.models.mobilenetv2.load_from_ONNX(provider, download=True, batch_size=batch_size)
     print(extractor.get_core_deepnet())
-    extractor.remove("mobilenetv20_output_pred_fwd", False)
-    extractor.remove("mobilenetv20_output_flatten0_reshape0", False)
+    extractor.remove("mobilenetv20_output_pred_fwd")
+    extractor.remove("mobilenetv20_output_flatten0_reshape0")
     print(extractor.get_core_deepnet())
-    head = n2d2.cells.cell.Fc(1280, nb_outputs, activation_function=n2d2.activation.Linear(),
+    head = n2d2.cells.Fc(1280, nb_outputs, activation_function=n2d2.activation.Linear(),
                               weights_filler=n2d2.filler.Xavier(), name="fc")
 elif args.arch == 'ResNet50Bn':
     model = n2d2.models.ResNet50Bn(output_size=100, alpha=1.0, l=0)
@@ -117,13 +117,13 @@ elif args.arch == 'ResNet50Bn':
     trans, otf_trans = n2d2.models.ILSVRC_preprocessing(size=size)
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
-elif args.arch == 'ResNet18':
+elif args.arch == 'ResNet-onnx':
     provider.add_transformation(n2d2.models.resnet.ONNX_preprocessing(size))
     extractor = n2d2.models.resnet.load_from_ONNX(provider, '18', 'post_act', download=True, batch_size=batch_size)
     print(extractor)
-    extractor.remove("resnetv22_flatten0_reshape0", False)
-    extractor.remove("resnetv22_dense0_fwd", False)
-    head = n2d2.cells.cell.Fc(512, nb_outputs, activation_function=n2d2.activation.Linear(),
+    extractor.remove("resnetv22_flatten0_reshape0")
+    extractor.remove("resnetv22_dense0_fwd")
+    head = n2d2.cells.Fc(512, nb_outputs, activation_function=n2d2.activation.Linear(),
                               weights_filler=n2d2.filler.Xavier(), name="fc")
 
 else:

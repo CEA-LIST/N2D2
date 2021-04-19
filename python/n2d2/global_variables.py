@@ -43,8 +43,9 @@ def generate_name(obj):
     return name
 
 class Verbosity:
-    short = 0  # Constructor arguments only
-    detailed = 1  # Config parameters and their parameters
+    graph_only = 0  # Only names, cell types and inputs
+    short = 1  # Constructor arguments only
+    detailed = 2  # Config parameters and their parameters
 
 verbosity = Verbosity.detailed
 

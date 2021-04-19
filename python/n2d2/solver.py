@@ -38,12 +38,11 @@ class Solver(N2D2_Interface):
         N2D2_Interface.__init__(self, **config_parameters)
         self._model_key = self._model + '<' + self._datatype + '>'
 
-
     def get_type(self):
-        return self._N2D2_object.getType()
+        return type(self).__name__
 
     def __str__(self):
-        output = self.get_type() + "Solver"
+        output = self.get_type()
         output += N2D2_Interface.__str__(self)
         return output
 
@@ -55,8 +54,10 @@ class SGD(Solver):
         'Frame_CUDA<float>': N2D2.SGDSolver_Frame_CUDA_float
     }
 
-    def __init__(self, **config_parameters):
+    def __init__(self, from_arguments=True, **config_parameters):
         """
+        :param from_arguments: If False, N2D2_object is not created based on config_parameters
+        :type  from_arguments: bool, optional
         :param datatype: Datatype of the weights, default=float
         :type datatype: str, optional
         :param model: Can be either ``Frame`` or ``Frame_CUDA``, default='Frame'
@@ -78,8 +79,9 @@ class SGD(Solver):
 
         """
         Solver.__init__(self, **config_parameters)
-        self._N2D2_object = self._solver_generators[self._model_key]()
-        self._set_N2D2_parameters(self._config_parameters)
+        if from_arguments:
+            self._set_N2D2_object(self._solver_generators[self._model_key]())
+            self._set_N2D2_parameters(self._config_parameters)
 
 
 

@@ -30,6 +30,16 @@ template <class T> class NormalFiller : public Filler {
 public:
     NormalFiller(double mean = 0.0, double stdDev = 1.0);
     void apply(BaseTensor& data, bool restrictPositive=false);
+    const char* getType() const
+    {
+        return "Normal";
+    };
+    double getMean(){
+        return mMean;
+    };
+    double getStdDev(){
+        return mStdDev;
+    }; 
     virtual ~NormalFiller() {};
 
 private:

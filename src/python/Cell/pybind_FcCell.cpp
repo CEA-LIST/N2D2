@@ -47,9 +47,11 @@ void init_FcCell(py::module &m) {
     .def("setWeightsSolver", &FcCell::setWeightsSolver, py::arg("solver"))
     .def("getWeightsSolver", &FcCell::getWeightsSolver)
     .def("setWeightsFiller", &FcCell::setWeightsFiller, py::arg("filler"))
+    .def("getWeightsFiller", &FcCell::getWeightsFiller)
     .def("setBiasSolver", &FcCell::setBiasSolver, py::arg("solver"))
     .def("getBiasSolver", &FcCell::getBiasSolver)
     .def("setBiasFiller", &FcCell::setBiasFiller, py::arg("filler"))
+    .def("getBiasFiller", &FcCell::getBiasFiller)
     .def("setQuantizer", &FcCell::setQuantizer, py::arg("quantizer"))
     .def("getQuantizer", &FcCell::getQuantizer)
     ;

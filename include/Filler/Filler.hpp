@@ -30,6 +30,7 @@ class BaseTensor;
 class Filler : public Parameterizable {
 public:
     virtual void apply(BaseTensor& data, bool restrictPositive=false) = 0;
+    virtual const char* getType() const = 0;
     virtual ~Filler() {};
 };
 }

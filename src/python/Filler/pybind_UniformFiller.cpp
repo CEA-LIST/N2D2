@@ -41,7 +41,10 @@ void declare_UniformFiller(py::module &m, const std::string& typeStr) {
     filler
     .def(py::init<T, T>(), 
         py::arg("min"), 
-        py::arg("max"));
+        py::arg("max"))
+    .def("getMax", &UniformFiller<T>::getMax)
+    .def("getMin", &UniformFiller<T>::getMin)
+    ;
 }
 
 void init_UniformFiller(py::module &m) {

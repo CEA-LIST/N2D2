@@ -25,9 +25,9 @@ import math
 
 
 # Change default model
-# n2d2.global_variables.default_model = "Frame_CUDA"
+n2d2.global_variables.default_model = "Frame_CUDA"
 # Change cuda device (default 0)
-# n2d2.global_variables.set_cuda_device(3)
+n2d2.global_variables.set_cuda_device(2)
 # Change seed (default 1)
 #n2d2.global_variables.default_seed = 2
 

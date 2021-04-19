@@ -38,7 +38,9 @@ void declare_ConstantFiller(py::module &m, const std::string& typeStr) {
             m, pyClassName.c_str(), py::multiple_inheritance()
     )
 
-    .def(py::init<T>(), py::arg("value")=0.0);
+    .def(py::init<T>(), py::arg("value")=0.0)
+    .def("getValue", &ConstantFiller<T>::getValue)
+    ;
 }
 
 void init_ConstantFiller(py::module &m) {
