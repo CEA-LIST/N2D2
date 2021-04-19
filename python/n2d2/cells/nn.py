@@ -132,7 +132,6 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
     def add_input(self, inputs):
         # Some cells like Pool don't have a defined number of channels so I try this to catch them
         # Is it good to keep it this way ?
-<<<<<<< HEAD
         have_a_defined_input_size = (self.N2D2().getInputsDims() != [0] and self.N2D2().getInputsDims() != [])
         initialized = self.dims() == True 
         # TODO :this test doesn't pass for Fc cells if it is not initialized.
@@ -141,14 +140,6 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
         if have_a_defined_input_size and inputs.dimZ() != self.get_nb_channels() and initialized:
             raise ValueError("NeuralNetworkCell '" + self.get_name() + "' received a tensor with " + str(inputs.dimZ()) +
             " channels, was expecting : " + str(self.get_nb_channels()))
-=======
-        have_an_defined_input_size = (self.N2D2().getInputsDims() != [0] and self.N2D2().getInputsDims() != [])
-
-        # TODO: Raises invalid error for Fc cell!
-        #if have_an_defined_input_size and inputs.dimZ() != self.get_nb_channels():
-        #    raise ValueError("NeuralNetworkCell '" + self.get_name() + "' received a tensor with " + str(inputs.dimZ()) +
-        #    " channels, was expecting : " + str(self.get_nb_channels()))
->>>>>>> eaadfeb7d48095afc0eb2c300414174f57380d4a
         
         if isinstance(inputs, n2d2.tensor.Interface):
             inputs = inputs.get_tensors()
