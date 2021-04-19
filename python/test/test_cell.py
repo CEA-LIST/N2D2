@@ -44,7 +44,7 @@ class test_ConvCell(unittest.TestCase):
     """
 
     def setUp(self):
-        self.cell = n2d2.cells.cell.Conv(1, 10, kernel_dims=[2, 2])
+        self.cell = n2d2.cells.Conv(1, 10, kernel_dims=[2, 2], no_bias=True)
 
     def tearDown(self):
         pass
@@ -55,12 +55,23 @@ class test_ConvCell(unittest.TestCase):
         weight[1] = 2
         self.cell.set_weight(0, 0, weight)
         self.assertTrue(weight == self.cell.get_weight(0, 0))
-        
-    def test_get_weights(self):
-        print(self.cell.get_weights())
+    
+    # def test_get_weights(self):
+    #     print(self.cell.get_weights())
 
     def test_getOutput(self):
         self.cell.get_outputs()
+
+    def test_link(self):
+        inputs = n2d2.Tensor([1, 1, 2, 2], cuda=True)
+        new_cell = n2d2.cells.Fc(10, 5)
+        output = new_cell(self.cell(inputs))
+        N2D2_deep = output.get_deepnet().N2D2() 
+        cells = N2D2_deep.getCells()
+        first_cell = cells[N2D2_deep.getLayers()[1][0]] # The first layer is the env, so we get the second.
+        last_cell =cells[N2D2_deep.getLayers()[-1][-1]]
+        self.assertTrue(first_cell is self.cell.N2D2())
+        self.assertTrue(last_cell is new_cell.N2D2())
 
 class test_FcCell(unittest.TestCase):
     """
@@ -68,23 +79,76 @@ class test_FcCell(unittest.TestCase):
     """
 
     def setUp(self):
-        self.cell = n2d2.cells.cell.Fc(10, 5)
+        self.cell = n2d2.cells.Fc(1, 10, no_bias=True)
     def tearDown(self):
         pass
 
     def test_get_set_weight(self):
         weight = n2d2.Tensor([1])
         weight[0] = 1
-        print(weight)
         self.cell.set_weight(0, 0, weight)
         tensor = N2D2.Tensor_float([])
         self.assertTrue(weight == self.cell.get_weight(0, 0))
     
-    def test_get_weights(self):
-        print(self.cell.get_weights())
+    # def test_get_weights(self):
+    #     print(self.cell.get_weights())
     
+    def test_link(self):
+        inputs = n2d2.Tensor([1, 1, 2, 2], cuda=True)
+        new_cell = n2d2.cells.Fc(10, 5)
+        output = new_cell(self.cell(inputs))
+        N2D2_deep = output.get_deepnet().N2D2() 
+        cells = N2D2_deep.getCells()
+        first_cell = cells[N2D2_deep.getLayers()[1][0]] # The first layer is the env, so we get the second.
+        last_cell =cells[N2D2_deep.getLayers()[-1][-1]]
+        self.assertTrue(first_cell is self.cell.N2D2())
+        self.assertTrue(last_cell is new_cell.N2D2())
+
     def test_getOutput(self):
         self.cell.get_outputs()
+
+
+class test_SoftmaxCell(unittest.TestCase):
+    """
+    The class needs to inherit unittest.TestCase, the name doesn't matter and the class doesn't need to be instanciated.
+    """
+
+    def setUp(self):
+        self.cell = n2d2.cells.Softmax()
+    def tearDown(self):
+        pass
+
+    def test_link(self):
+        inputs = n2d2.Tensor([1, 1, 2, 2], cuda=True)
+        new_cell = n2d2.cells.Fc(1, 5)
+        output = self.cell(new_cell(inputs))
+        N2D2_deep = output.get_deepnet().N2D2() 
+        cells = N2D2_deep.getCells()
+        first_cell = cells[N2D2_deep.getLayers()[1][0]]
+        last_cell = cells[N2D2_deep.getLayers()[-1][-1]]
+        self.assertTrue(first_cell is new_cell.N2D2())
+        self.assertTrue(last_cell is self.cell.N2D2())
+
+class test_PoolCell(unittest.TestCase):
+    """
+    The class needs to inherit unittest.TestCase, the name doesn't matter and the class doesn't need to be instanciated.
+    """
+
+    def setUp(self):
+        self.cell = n2d2.cells.Pool([1, 1])
+    def tearDown(self):
+        pass
+
+    def test_link(self):
+        inputs = n2d2.Tensor([1, 1, 2, 2], cuda=True)
+        new_cell = n2d2.cells.Fc(1, 5)
+        output = new_cell(self.cell(inputs))
+        N2D2_deep = output.get_deepnet().N2D2() 
+        cells = N2D2_deep.getCells()
+        first_cell = cells[N2D2_deep.getLayers()[1][0]]
+        last_cell = cells[N2D2_deep.getLayers()[-1][-1]]
+        self.assertTrue(last_cell is new_cell.N2D2())
+        self.assertTrue(first_cell is self.cell.N2D2())
 
 if __name__ == '__main__':
     unittest.main()
