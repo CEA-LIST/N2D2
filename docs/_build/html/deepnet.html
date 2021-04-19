@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -12,26 +11,30 @@
   
 
   
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
   
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -50,7 +53,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> N2D2
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> N2D2
           
 
           
@@ -73,6 +76,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -133,6 +137,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -171,7 +176,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>DeepNet</li>
     
@@ -234,160 +239,125 @@ first and unique target of the model and get the estimated labels and values:</p
 <h2>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="N2D2.DeepNet">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">N2D2.</span></code><code class="sig-name descname"><span class="pre">DeepNet</span></code><a class="headerlink" href="#N2D2.DeepNet" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">DeepNet</code><a class="headerlink" href="#N2D2.DeepNet" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py method">
 <dt id="N2D2.DeepNet.addCMonitor">
-<code class="sig-name descname"><span class="pre">addCMonitor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self:</span> <span class="pre">N2D2.DeepNet</span></em>, <em class="sig-param"><span class="pre">name:</span> <span class="pre">str</span></em>, <em class="sig-param"><span class="pre">monitor:</span> <span class="pre">N2D2::CMonitor</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.addCMonitor" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">addCMonitor</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.DeepNet</em>, <em class="sig-param">name: str</em>, <em class="sig-param">monitor: N2D2::CMonitor</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.addCMonitor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.addCell">
-<code class="sig-name descname"><span class="pre">addCell</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="cells.html#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="cells.html#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.addCell" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">addCell</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.DeepNet, cell: N2D2::Cell, parents: List[N2D2::Cell]</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.addCell" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.addMonitor">
-<code class="sig-name descname"><span class="pre">addMonitor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self:</span> <span class="pre">N2D2.DeepNet</span></em>, <em class="sig-param"><span class="pre">name:</span> <span class="pre">str</span></em>, <em class="sig-param"><span class="pre">monitor:</span> <span class="pre">N2D2::Monitor</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.addMonitor" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">addMonitor</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.DeepNet</em>, <em class="sig-param">name: str</em>, <em class="sig-param">monitor: N2D2::Monitor</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.addMonitor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.addTarget">
-<code class="sig-name descname"><span class="pre">addTarget</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">N2D2.Target</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.addTarget" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">addTarget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">target</span><span class="p">:</span> <span class="n">N2D2.Target</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.addTarget" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.backPropagate">
-<code class="sig-name descname"><span class="pre">backPropagate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">timings</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.backPropagate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">backPropagate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">timings</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Tuple<span class="p">[</span>str<span class="p">, </span>float<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">[]</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.backPropagate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.cReset">
-<code class="sig-name descname"><span class="pre">cReset</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.cReset" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cReset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">timestamp</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.cReset" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.cTargetsProcess">
-<code class="sig-name descname"><span class="pre">cTargetsProcess</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><span class="pre">N2D2.Database.StimuliSet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.cTargetsProcess" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cTargetsProcess</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">set</span><span class="p">:</span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet">N2D2.Database.StimuliSet</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.cTargetsProcess" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.cTicks">
-<code class="sig-name descname"><span class="pre">cTicks</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestep</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.cTicks" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.checkGradient">
-<code class="sig-name descname"><span class="pre">checkGradient</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxError</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.checkGradient" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.clear">
-<code class="sig-name descname"><span class="pre">clear</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><span class="pre">N2D2.Database.StimuliSet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.clear" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.clearActivity">
-<code class="sig-name descname"><span class="pre">clearActivity</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.clearActivity" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.clearAll">
-<code class="sig-name descname"><span class="pre">clearAll</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.clearAll" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.clearFiringRate">
-<code class="sig-name descname"><span class="pre">clearFiringRate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.clearFiringRate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.clearSuccess">
-<code class="sig-name descname"><span class="pre">clearSuccess</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.clearSuccess" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cTicks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">start</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">stop</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">timestep</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">record</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.cTicks" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.exportNetworkFreeParameters">
-<code class="sig-name descname"><span class="pre">exportNetworkFreeParameters</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.exportNetworkFreeParameters" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">exportNetworkFreeParameters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">dirName</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.exportNetworkFreeParameters" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.exportNetworkSolverParameters">
-<code class="sig-name descname"><span class="pre">exportNetworkSolverParameters</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.exportNetworkSolverParameters" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">exportNetworkSolverParameters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">dirName</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.exportNetworkSolverParameters" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.fuseBatchNormWithConv">
-<code class="sig-name descname"><span class="pre">fuseBatchNormWithConv</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.fuseBatchNormWithConv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">fuseBatchNormWithConv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.fuseBatchNormWithConv" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.getCMonitor">
-<code class="sig-name descname"><span class="pre">getCMonitor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">N2D2::CMonitor</span><a class="headerlink" href="#N2D2.DeepNet.getCMonitor" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getCMonitor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; N2D2::CMonitor<a class="headerlink" href="#N2D2.DeepNet.getCMonitor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.getCell">
-<code class="sig-name descname"><span class="pre">getCell</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="cells.html#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a><a class="headerlink" href="#N2D2.DeepNet.getCell" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getCell</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; N2D2::Cell<a class="headerlink" href="#N2D2.DeepNet.getCell" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.getCell_Frame_Top">
-<code class="sig-name descname"><span class="pre">getCell_Frame_Top</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="cells.html#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a><a class="headerlink" href="#N2D2.DeepNet.getCell_Frame_Top" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getCell_Frame_Top</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; N2D2::Cell_Frame_Top<a class="headerlink" href="#N2D2.DeepNet.getCell_Frame_Top" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.getCells">
-<code class="sig-name descname"><span class="pre">getCells</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="cells.html#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#N2D2.DeepNet.getCells" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getCells</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em><span class="sig-paren">)</span> &#x2192; Dict[str, N2D2::Cell]<a class="headerlink" href="#N2D2.DeepNet.getCells" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.getChildCells">
-<code class="sig-name descname"><span class="pre">getChildCells</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="cells.html#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#N2D2.DeepNet.getChildCells" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.getDatabase">
-<code class="sig-name descname"><span class="pre">getDatabase</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="databases.html#N2D2.Database" title="N2D2.Database"><span class="pre">N2D2.Database</span></a><a class="headerlink" href="#N2D2.DeepNet.getDatabase" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.getLayer">
-<code class="sig-name descname"><span class="pre">getLayer</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#N2D2.DeepNet.getLayer" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getChildCells</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; List[N2D2::Cell]<a class="headerlink" href="#N2D2.DeepNet.getChildCells" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.getLayers">
-<code class="sig-name descname"><span class="pre">getLayers</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#N2D2.DeepNet.getLayers" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getLayers</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span><a class="headerlink" href="#N2D2.DeepNet.getLayers" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.getMonitor">
-<code class="sig-name descname"><span class="pre">getMonitor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">N2D2::Monitor</span><a class="headerlink" href="#N2D2.DeepNet.getMonitor" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getMonitor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; N2D2::Monitor<a class="headerlink" href="#N2D2.DeepNet.getMonitor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.DeepNet.getName">
+<code class="sig-name descname">getName</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#N2D2.DeepNet.getName" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.DeepNet.getNetwork">
+<code class="sig-name descname">getNetwork</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em><span class="sig-paren">)</span> &#x2192; N2D2.Network<a class="headerlink" href="#N2D2.DeepNet.getNetwork" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.getParentCells">
-<code class="sig-name descname"><span class="pre">getParentCells</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="cells.html#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#N2D2.DeepNet.getParentCells" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.getStats">
-<code class="sig-name descname"><span class="pre">getStats</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self:</span> <span class="pre">N2D2.DeepNet</span></em>, <em class="sig-param"><span class="pre">arg0:</span> <span class="pre">N2D2::Cell::Stats</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.getStats" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getParentCells</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; List[N2D2::Cell]<a class="headerlink" href="#N2D2.DeepNet.getParentCells" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.getStimuliProvider">
-<code class="sig-name descname"><span class="pre">getStimuliProvider</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="stimuliprovider.html#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a><a class="headerlink" href="#N2D2.DeepNet.getStimuliProvider" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getStimuliProvider</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="stimuliprovider.html#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a><a class="headerlink" href="#N2D2.DeepNet.getStimuliProvider" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.getTargets">
-<code class="sig-name descname"><span class="pre">getTargets</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">N2D2.Target</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#N2D2.DeepNet.getTargets" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getTargets</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>N2D2.Target<span class="p">]</span><a class="headerlink" href="#N2D2.DeepNet.getTargets" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.importNetworkFreeParameters">
-<code class="sig-name descname"><span class="pre">importNetworkFreeParameters</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.DeepNet.importNetworkFreeParameters" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">importNetworkFreeParameters</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.DeepNet.importNetworkFreeParameters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Overloaded function.</p>
 <ol class="arabic simple">
 <li><p>importNetworkFreeParameters(self: N2D2.DeepNet, dirName: str, ignoreNotExists: bool = False) -&gt; None</p></li>
@@ -397,146 +367,111 @@ first and unique target of the model and get the estimated labels and values:</p
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.initialize">
-<code class="sig-name descname"><span class="pre">initialize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.initialize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.initialize" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.initializeCMonitors">
-<code class="sig-name descname"><span class="pre">initializeCMonitors</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">nbTimesteps</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.initializeCMonitors" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.learn">
-<code class="sig-name descname"><span class="pre">learn</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">timings</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.learn" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initializeCMonitors</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">nbTimesteps</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.initializeCMonitors" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.load">
-<code class="sig-name descname"><span class="pre">load</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.load" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">dirName</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.load" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.loadNetworkParameters">
-<code class="sig-name descname"><span class="pre">loadNetworkParameters</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.loadNetworkParameters" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">loadNetworkParameters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.loadNetworkParameters" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.log">
-<code class="sig-name descname"><span class="pre">log</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">baseName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><span class="pre">N2D2.Database.StimuliSet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.log" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.logDiffInputs">
-<code class="sig-name descname"><span class="pre">logDiffInputs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batchPos</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.logDiffInputs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.logEstimatedLabels">
-<code class="sig-name descname"><span class="pre">logEstimatedLabels</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.logEstimatedLabels" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.logEstimatedLabelsJSON">
-<code class="sig-name descname"><span class="pre">logEstimatedLabelsJSON</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.logEstimatedLabelsJSON" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">log</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">baseName</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">set</span><span class="p">:</span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet">N2D2.Database.StimuliSet</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.log" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.logFreeParameters">
-<code class="sig-name descname"><span class="pre">logFreeParameters</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.logFreeParameters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.logLabelsLegend">
-<code class="sig-name descname"><span class="pre">logLabelsLegend</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.logLabelsLegend" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">logFreeParameters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">dirName</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.logFreeParameters" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.logLabelsMapping">
-<code class="sig-name descname"><span class="pre">logLabelsMapping</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.logLabelsMapping" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.logOutputs">
-<code class="sig-name descname"><span class="pre">logOutputs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batchPos</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.logOutputs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">logLabelsMapping</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">fileName</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.logLabelsMapping" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.logReceptiveFields">
-<code class="sig-name descname"><span class="pre">logReceptiveFields</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.logReceptiveFields" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.logSchedule">
-<code class="sig-name descname"><span class="pre">logSchedule</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.logSchedule" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.DeepNet.logSpikeStats">
-<code class="sig-name descname"><span class="pre">logSpikeStats</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nbPatterns</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.logSpikeStats" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">logReceptiveFields</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">fileName</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.logReceptiveFields" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.logStats">
-<code class="sig-name descname"><span class="pre">logStats</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.logStats" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">logStats</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">dirName</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.logStats" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.logTimings">
-<code class="sig-name descname"><span class="pre">logTimings</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timings</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.logTimings" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">logTimings</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">fileName</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">timings</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Tuple<span class="p">[</span>str<span class="p">, </span>float<span class="p">]</span><span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.logTimings" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.propagate">
-<code class="sig-name descname"><span class="pre">propagate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><span class="pre">N2D2.Database.StimuliSet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">inference</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timings</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.propagate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">propagate</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.DeepNet.propagate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>propagate(self: N2D2.DeepNet, inference: bool) -&gt; None</p></li>
+<li><p>propagate(self: N2D2.DeepNet, set: N2D2.Database.StimuliSet, inference: bool, timings: List[Tuple[str, float]] = 0) -&gt; None</p></li>
+</ol>
+</dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.removeCell">
-<code class="sig-name descname"><span class="pre">removeCell</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="cells.html#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">reconnect</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.removeCell" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">removeCell</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.DeepNet</em>, <em class="sig-param">cell: N2D2::Cell</em>, <em class="sig-param">reconnect: bool = True</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.removeCell" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.removeDropout">
-<code class="sig-name descname"><span class="pre">removeDropout</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.removeDropout" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">removeDropout</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.removeDropout" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.save">
-<code class="sig-name descname"><span class="pre">save</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.save" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">dirName</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.save" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.saveNetworkParameters">
-<code class="sig-name descname"><span class="pre">saveNetworkParameters</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.saveNetworkParameters" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">saveNetworkParameters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.saveNetworkParameters" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.setDatabase">
-<code class="sig-name descname"><span class="pre">setDatabase</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">database</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database" title="N2D2.Database"><span class="pre">N2D2.Database</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.setDatabase" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setDatabase</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">database</span><span class="p">:</span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database" title="N2D2.Database">N2D2.Database</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.setDatabase" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.setStimuliProvider">
-<code class="sig-name descname"><span class="pre">setStimuliProvider</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="stimuliprovider.html#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.setStimuliProvider" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setStimuliProvider</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">sp</span><span class="p">:</span> <span class="n"><a class="reference internal" href="stimuliprovider.html#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.setStimuliProvider" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.spikeCodingCompare">
-<code class="sig-name descname"><span class="pre">spikeCodingCompare</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.spikeCodingCompare" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">spikeCodingCompare</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">dirName</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">idx</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.spikeCodingCompare" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.test">
-<code class="sig-name descname"><span class="pre">test</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet"><span class="pre">N2D2.DeepNet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><span class="pre">N2D2.Database.StimuliSet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">timings</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.DeepNet.test" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">test</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DeepNet" title="N2D2.DeepNet">N2D2.DeepNet</a></span></em>, <em class="sig-param"><span class="n">set</span><span class="p">:</span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet">N2D2.Database.StimuliSet</a></span></em>, <em class="sig-param"><span class="n">timings</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Tuple<span class="p">[</span>str<span class="p">, </span>float<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DeepNet.test" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.DeepNet.update">
-<code class="sig-name descname"><span class="pre">update</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.DeepNet.update" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.DeepNet.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Overloaded function.</p>
 <ol class="arabic simple">
 <li><p>update(self: N2D2.DeepNet, log: bool, start: int, stop: int = 0, update: bool = True) -&gt; List[Tuple[str, int]]</p></li>
-<li><p>update(self: N2D2.DeepNet, timings: List[Tuple[str, float]] = 0) -&gt; None</p></li>
+<li><p>update(self: N2D2.DeepNet, timings: List[Tuple[str, float]] = []) -&gt; None</p></li>
 </ol>
 </dd></dl>
 
@@ -565,11 +500,19 @@ first and unique target of the model and get the estimated labels and values:</p
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2019, CEA LIST
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -580,7 +523,6 @@ first and unique target of the model and get the estimated labels and values:</p
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

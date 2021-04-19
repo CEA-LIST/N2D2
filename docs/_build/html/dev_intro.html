@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -12,26 +11,30 @@
   
 
   
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
   
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -49,7 +52,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> N2D2
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> N2D2
           
 
           
@@ -72,6 +75,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -139,6 +143,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -177,7 +182,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Introduction</li>
     
@@ -251,29 +256,9 @@ direct, GEMM or FFT algorithms for the convolution.</p></li>
 <p>The base <code class="docutils literal notranslate"><span class="pre">Cell</span></code> class only handles the topological information: the inputs
 and outputs dimensions and virtual methods to connect the cells, among other.
 The main methods are listed here:</p>
-<div class="breathe-sectiondef docutils container">
-<dl class="cpp function">
-<dt id="_CPPv4NK4N2D24Cell7getNameEv">
-<span id="_CPPv3NK4N2D24Cell7getNameEv"></span><span id="_CPPv2NK4N2D24Cell7getNameEv"></span><span id="N2D2::Cell::getNameC"></span><span class="target" id="classN2D2_1_1Cell_1aca4e8ebbe83a75f75dea7071325f88f5"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">const</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">string</span> <span class="pre">&amp;</span><code class="sig-name descname"><span class="pre">getName</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK4N2D24Cell7getNameEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Returns cell name. </p>
-</dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4NK4N2D24Cell7getTypeEv">
-<span id="_CPPv3NK4N2D24Cell7getTypeEv"></span><span id="_CPPv2NK4N2D24Cell7getTypeEv"></span><span id="N2D2::Cell::getTypeC"></span><span class="target" id="classN2D2_1_1Cell_1ac9aacf89700c29012883d0e4ac8a6364"></span><em class="property"><span class="pre">virtual</span></em> <em class="property"><span class="pre">const</span></em> <span class="pre">char</span> <span class="pre">*</span><code class="sig-name descname"><span class="pre">getType</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4NK4N2D24Cell7getTypeEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Returns cell type. </p>
-</dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4NK4N2D24Cell13getInputsDimsEv">
-<span id="_CPPv3NK4N2D24Cell13getInputsDimsEv"></span><span id="_CPPv2NK4N2D24Cell13getInputsDimsEv"></span><span id="N2D2::Cell::getInputsDimsC"></span><span class="target" id="classN2D2_1_1Cell_1a00735bc841777bc30331ec9ac07e5d7b"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">const</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">vector</span><span class="pre">&lt;</span><span class="pre">size_t</span><span class="pre">&gt;</span> <span class="pre">&amp;</span><code class="sig-name descname"><span class="pre">getInputsDims</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK4N2D24Cell13getInputsDimsEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4NK4N2D24Cell14getOutputsDimsEv">
-<span id="_CPPv3NK4N2D24Cell14getOutputsDimsEv"></span><span id="_CPPv2NK4N2D24Cell14getOutputsDimsEv"></span><span id="N2D2::Cell::getOutputsDimsC"></span><span class="target" id="classN2D2_1_1Cell_1a0221ac90d66d9d5c4b51e8dec8da9598"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">const</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">vector</span><span class="pre">&lt;</span><span class="pre">size_t</span><span class="pre">&gt;</span> <span class="pre">&amp;</span><code class="sig-name descname"><span class="pre">getOutputsDims</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK4N2D24Cell14getOutputsDimsEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>doxygenclass: breathe_default_project value ‘N2D2’ does not seem to be a valid key for the breathe_projects dictionary</p>
 </div>
 <p>In order to create a computing graph, or neural network, cells can be connected
 together thanks to the <code class="docutils literal notranslate"><span class="pre">addInput</span></code> method. An <code class="docutils literal notranslate"><span class="pre">Cell</span></code> can be connected to
@@ -282,81 +267,9 @@ for the data. It is up to the implementation to allow or not multiple inputs.
 The <code class="docutils literal notranslate"><span class="pre">initialize</span></code> virtual member initializes the state of the <code class="docutils literal notranslate"><span class="pre">Cell</span></code> in the
 implementation (initialization may be different depending on the coding or
 programming model).</p>
-<div class="breathe-sectiondef docutils container">
-<dl class="cpp function">
-<dt id="_CPPv4N4N2D24Cell8addInputER15StimuliProviderjjjjjRK6TensorIbE">
-<span id="_CPPv3N4N2D24Cell8addInputER15StimuliProviderjjjjjRK6TensorIbE"></span><span id="_CPPv2N4N2D24Cell8addInputER15StimuliProviderjjjjjRK6TensorIbE"></span><span id="N2D2::Cell::addInput__StimuliProviderR.unsigned-i.unsigned-i.unsigned-i.unsigned-i.unsigned-i.Tensor:b:CR"></span><span class="target" id="classN2D2_1_1Cell_1a247b14e4513d7835db6f83068c12b451"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">addInput</span></code><span class="sig-paren">(</span><span class="pre">StimuliProvider</span> <span class="pre">&amp;</span><em><span class="pre">sp</span></em>, <span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">channel</span></em>, <span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">x0</span></em>, <span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">y0</span></em>, <span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">width</span></em>, <span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">height</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">Tensor</span><span class="pre">&lt;</span><span class="pre">bool</span><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">mapping</span></em> <span class="pre">=</span> <span class="pre">Tensor</span><span class="pre">&lt;</span><span class="pre">bool</span><span class="pre">&gt;</span><span class="pre">(</span><span class="pre">)</span><span class="sig-paren">)</span> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4N4N2D24Cell8addInputER15StimuliProviderjjjjjRK6TensorIbE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Connect an input filter from the environment to the cell. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>sp</strong> – N2D2 StimuliProvider object reference </p></li>
-<li><p><strong>channel</strong> – Channel number in the environment </p></li>
-<li><p><strong>x0</strong> – Left offset </p></li>
-<li><p><strong>y0</strong> – Top offset </p></li>
-<li><p><strong>width</strong> – Width </p></li>
-<li><p><strong>height</strong> – Height </p></li>
-<li><p><strong>mapping</strong> – Connection between the environment map and the cell output maps (size of the vector = number of output maps in the cell) </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4N4N2D24Cell8addInputER15StimuliProviderjjjjRK6TensorIbE">
-<span id="_CPPv3N4N2D24Cell8addInputER15StimuliProviderjjjjRK6TensorIbE"></span><span id="_CPPv2N4N2D24Cell8addInputER15StimuliProviderjjjjRK6TensorIbE"></span><span id="N2D2::Cell::addInput__StimuliProviderR.unsigned-i.unsigned-i.unsigned-i.unsigned-i.Tensor:b:CR"></span><span class="target" id="classN2D2_1_1Cell_1a95d5f3a02da988542a918ac23af3038f"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">addInput</span></code><span class="sig-paren">(</span><span class="pre">StimuliProvider</span> <span class="pre">&amp;</span><em><span class="pre">sp</span></em>, <span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">x0</span></em> <span class="pre">=</span> <span class="pre">0</span>, <span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">y0</span></em> <span class="pre">=</span> <span class="pre">0</span>, <span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">width</span></em> <span class="pre">=</span> <span class="pre">0</span>, <span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">height</span></em> <span class="pre">=</span> <span class="pre">0</span>, <em class="property"><span class="pre">const</span></em> <span class="pre">Tensor</span><span class="pre">&lt;</span><span class="pre">bool</span><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">mapping</span></em> <span class="pre">=</span> <span class="pre">Tensor</span><span class="pre">&lt;</span><span class="pre">bool</span><span class="pre">&gt;</span><span class="pre">(</span><span class="pre">)</span><span class="sig-paren">)</span> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4N4N2D24Cell8addInputER15StimuliProviderjjjjRK6TensorIbE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Connect an input map from the environment to the cell. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>sp</strong> – N2D2 StimuliProvider object reference </p></li>
-<li><p><strong>x0</strong> – Left offset </p></li>
-<li><p><strong>y0</strong> – Top offset </p></li>
-<li><p><strong>width</strong> – Width </p></li>
-<li><p><strong>height</strong> – Height </p></li>
-<li><p><strong>mapping</strong> – Connection between the environment map filters and the cell output maps (size of the matrix = number of output maps in the cell [cols] x number of filters in the environment map [rows]) </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4N4N2D24Cell8addInputEP4CellRK6TensorIbE">
-<span id="_CPPv3N4N2D24Cell8addInputEP4CellRK6TensorIbE"></span><span id="_CPPv2N4N2D24Cell8addInputEP4CellRK6TensorIbE"></span><span id="N2D2::Cell::addInput__CellP.Tensor:b:CR"></span><span class="target" id="classN2D2_1_1Cell_1a696b557dcdad9b3b28035e4f2504338e"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">addInput</span></code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4N2D24CellE" title="N2D2::Cell"><span class="pre">Cell</span></a> <span class="pre">*</span><em><span class="pre">cell</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">Tensor</span><span class="pre">&lt;</span><span class="pre">bool</span><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">mapping</span></em> <span class="pre">=</span> <span class="pre">Tensor</span><span class="pre">&lt;</span><span class="pre">bool</span><span class="pre">&gt;</span><span class="pre">(</span><span class="pre">)</span><span class="sig-paren">)</span> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4N4N2D24Cell8addInputEP4CellRK6TensorIbE" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Connect an input cell to the cell. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>cell</strong> – Pointer to the input cell </p></li>
-<li><p><strong>mapping</strong> – Connection between the input cell output maps (input channels) and the cell output maps (size of the matrix = number of output maps in the cell [cols] x number of input cell output maps (input channels) [rows]) </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4N4N2D24Cell8addInputEP4Celljjjj">
-<span id="_CPPv3N4N2D24Cell8addInputEP4Celljjjj"></span><span id="_CPPv2N4N2D24Cell8addInputEP4Celljjjj"></span><span id="N2D2::Cell::addInput__CellP.unsigned-i.unsigned-i.unsigned-i.unsigned-i"></span><span class="target" id="classN2D2_1_1Cell_1a0f2efb60d7fb24987e31754bdf3af4b1"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">addInput</span></code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4N2D24CellE" title="N2D2::Cell"><span class="pre">Cell</span></a> <span class="pre">*</span><em><span class="pre">cell</span></em>, <span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">x0</span></em>, <span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">y0</span></em>, <span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">width</span></em> <span class="pre">=</span> <span class="pre">0</span>, <span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">height</span></em> <span class="pre">=</span> <span class="pre">0</span><span class="sig-paren">)</span> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4N4N2D24Cell8addInputEP4Celljjjj" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Connect an input cell to the cell. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>cell</strong> – Pointer to the input cell </p></li>
-<li><p><strong>x0</strong> – Left offset </p></li>
-<li><p><strong>y0</strong> – Top offset </p></li>
-<li><p><strong>width</strong> – Width </p></li>
-<li><p><strong>height</strong> – Height </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4N4N2D24Cell10initializeEv">
-<span id="_CPPv3N4N2D24Cell10initializeEv"></span><span id="_CPPv2N4N2D24Cell10initializeEv"></span><span id="N2D2::Cell::initialize"></span><span class="target" id="classN2D2_1_1Cell_1aca0f62b30fc941092d2c183fc185ec5b"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">initialize</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4N2D24Cell10initializeEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd><p>Initialize the state of the cell (e.g. weights random initialization) </p>
-</dd></dl>
-
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>doxygenclass: breathe_default_project value ‘N2D2’ does not seem to be a valid key for the breathe_projects dictionary</p>
 </div>
 </div>
 <div class="section" id="cell-frame-top-class">
@@ -370,36 +283,15 @@ a forward data path and backward data path for the gradient. It is however not
 mandatory for the implementation to handle the backward path, for non-differentiable
 cells for example.</p>
 <p>The main interfaces provided by <code class="docutils literal notranslate"><span class="pre">Cell_Frame_Top</span></code> are listed below:</p>
-<div class="breathe-sectiondef docutils container">
-<dl class="cpp function">
-<dt id="_CPPv4N4N2D214Cell_Frame_Top9propagateEb">
-<span id="_CPPv3N4N2D214Cell_Frame_Top9propagateEb"></span><span id="_CPPv2N4N2D214Cell_Frame_Top9propagateEb"></span><span id="N2D2::Cell_Frame_Top::propagate__b"></span><span class="target" id="classN2D2_1_1Cell__Frame__Top_1ae23690330577716fa4691c9488c78ce1"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">propagate</span></code><span class="sig-paren">(</span><span class="pre">bool</span> <em><span class="pre">inference</span></em> <span class="pre">=</span> <span class="pre">false</span><span class="sig-paren">)</span> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4N4N2D214Cell_Frame_Top9propagateEb" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4N4N2D214Cell_Frame_Top13backPropagateEv">
-<span id="_CPPv3N4N2D214Cell_Frame_Top13backPropagateEv"></span><span id="_CPPv2N4N2D214Cell_Frame_Top13backPropagateEv"></span><span id="N2D2::Cell_Frame_Top::backPropagate"></span><span class="target" id="classN2D2_1_1Cell__Frame__Top_1ab173fb0f3906fff66998b9ac5910a03b"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">backPropagate</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4N4N2D214Cell_Frame_Top13backPropagateEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4N4N2D214Cell_Frame_Top6updateEv">
-<span id="_CPPv3N4N2D214Cell_Frame_Top6updateEv"></span><span id="_CPPv2N4N2D214Cell_Frame_Top6updateEv"></span><span id="N2D2::Cell_Frame_Top::update"></span><span class="target" id="classN2D2_1_1Cell__Frame__Top_1ae9a67bc2590ea47e9529250ed8ddc28c"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">update</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4N4N2D214Cell_Frame_Top6updateEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>doxygenclass: breathe_default_project value ‘N2D2’ does not seem to be a valid key for the breathe_projects dictionary</p>
 </div>
 <p>This class also handles the <code class="docutils literal notranslate"><span class="pre">Activation</span></code> and contains the shared pointer to
 the <code class="docutils literal notranslate"><span class="pre">Activation</span></code> object to use.</p>
-<div class="breathe-sectiondef docutils container">
-<dl class="cpp function">
-<dt id="_CPPv4NK4N2D214Cell_Frame_Top13getActivationEv">
-<span id="_CPPv3NK4N2D214Cell_Frame_Top13getActivationEv"></span><span id="_CPPv2NK4N2D214Cell_Frame_Top13getActivationEv"></span><span id="N2D2::Cell_Frame_Top::getActivationC"></span><span class="target" id="classN2D2_1_1Cell__Frame__Top_1a50b7b3674d673513c6ae32cc76bc1cc1"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">const</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">shared_ptr</span><span class="pre">&lt;</span><span class="pre">Activation</span><span class="pre">&gt;</span> <span class="pre">&amp;</span><code class="sig-name descname"><span class="pre">getActivation</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK4N2D214Cell_Frame_Top13getActivationEv" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4N4N2D214Cell_Frame_Top13setActivationERKNSt10shared_ptrI10ActivationEE">
-<span id="_CPPv3N4N2D214Cell_Frame_Top13setActivationERKNSt10shared_ptrI10ActivationEE"></span><span id="_CPPv2N4N2D214Cell_Frame_Top13setActivationERKNSt10shared_ptrI10ActivationEE"></span><span id="N2D2::Cell_Frame_Top::setActivation__std::shared_ptr:Activation:CR"></span><span class="target" id="classN2D2_1_1Cell__Frame__Top_1a4ec112284c39cb61845c709340729814"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">setActivation</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">shared_ptr</span><span class="pre">&lt;</span><span class="pre">Activation</span><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">activation</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4N2D214Cell_Frame_Top13setActivationERKNSt10shared_ptrI10ActivationEE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>doxygenclass: breathe_default_project value ‘N2D2’ does not seem to be a valid key for the breathe_projects dictionary</p>
 </div>
 </div>
 <div class="section" id="cell-frame-t-class">
@@ -424,47 +316,9 @@ is however not defined in this class, but in the implementation
 (<code class="docutils literal notranslate"><span class="pre">ConvCell_Frame</span></code>), because it can depend on the programming model and data
 precision.</p>
 <p>The main members (for <code class="docutils literal notranslate"><span class="pre">ConvCell</span></code>) are:</p>
-<div class="breathe-sectiondef docutils container">
-<dl class="cpp function">
-<dt id="_CPPv4N4N2D28ConvCell16setWeightsFillerERKNSt10shared_ptrI6FillerEE">
-<span id="_CPPv3N4N2D28ConvCell16setWeightsFillerERKNSt10shared_ptrI6FillerEE"></span><span id="_CPPv2N4N2D28ConvCell16setWeightsFillerERKNSt10shared_ptrI6FillerEE"></span><span id="N2D2::ConvCell::setWeightsFiller__std::shared_ptr:Filler:CR"></span><span class="target" id="classN2D2_1_1ConvCell_1a4f2a044f229a9196ad85caa2f49c5725"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">setWeightsFiller</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">shared_ptr</span><span class="pre">&lt;</span><span class="pre">Filler</span><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">filler</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4N2D28ConvCell16setWeightsFillerERKNSt10shared_ptrI6FillerEE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4N4N2D28ConvCell13setBiasFillerERKNSt10shared_ptrI6FillerEE">
-<span id="_CPPv3N4N2D28ConvCell13setBiasFillerERKNSt10shared_ptrI6FillerEE"></span><span id="_CPPv2N4N2D28ConvCell13setBiasFillerERKNSt10shared_ptrI6FillerEE"></span><span id="N2D2::ConvCell::setBiasFiller__std::shared_ptr:Filler:CR"></span><span class="target" id="classN2D2_1_1ConvCell_1a538460fb556d487d0cca81e8eca311c3"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">setBiasFiller</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">shared_ptr</span><span class="pre">&lt;</span><span class="pre">Filler</span><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">filler</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4N2D28ConvCell13setBiasFillerERKNSt10shared_ptrI6FillerEE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4N4N2D28ConvCell16setWeightsSolverERKNSt10shared_ptrI6SolverEE">
-<span id="_CPPv3N4N2D28ConvCell16setWeightsSolverERKNSt10shared_ptrI6SolverEE"></span><span id="_CPPv2N4N2D28ConvCell16setWeightsSolverERKNSt10shared_ptrI6SolverEE"></span><span id="N2D2::ConvCell::setWeightsSolver__std::shared_ptr:Solver:CR"></span><span class="target" id="classN2D2_1_1ConvCell_1a3193f39df4519a9c86a45136bdc5c9b3"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">setWeightsSolver</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">shared_ptr</span><span class="pre">&lt;</span><span class="pre">Solver</span><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">solver</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4N2D28ConvCell16setWeightsSolverERKNSt10shared_ptrI6SolverEE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4N4N2D28ConvCell13setBiasSolverERKNSt10shared_ptrI6SolverEE">
-<span id="_CPPv3N4N2D28ConvCell13setBiasSolverERKNSt10shared_ptrI6SolverEE"></span><span id="_CPPv2N4N2D28ConvCell13setBiasSolverERKNSt10shared_ptrI6SolverEE"></span><span id="N2D2::ConvCell::setBiasSolver__std::shared_ptr:Solver:CR"></span><span class="target" id="classN2D2_1_1ConvCell_1a91a7e4e0f420953797dd1041dd74d6c1"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">setBiasSolver</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">shared_ptr</span><span class="pre">&lt;</span><span class="pre">Solver</span><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">solver</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4N2D28ConvCell13setBiasSolverERKNSt10shared_ptrI6SolverEE" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4NK4N2D28ConvCell9getWeightEjjR10BaseTensor">
-<span id="_CPPv3NK4N2D28ConvCell9getWeightEjjR10BaseTensor"></span><span id="_CPPv2NK4N2D28ConvCell9getWeightEjjR10BaseTensor"></span><span id="N2D2::ConvCell::getWeight__unsigned-i.unsigned-i.BaseTensorRC"></span><span class="target" id="classN2D2_1_1ConvCell_1a182687318aa6f1c4fdceef52a03074c7"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">getWeight</span></code><span class="sig-paren">(</span><span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">output</span></em>, <span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">channel</span></em>, <span class="pre">BaseTensor</span> <span class="pre">&amp;</span><em><span class="pre">value</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4NK4N2D28ConvCell9getWeightEjjR10BaseTensor" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4NK4N2D28ConvCell7getBiasEjR10BaseTensor">
-<span id="_CPPv3NK4N2D28ConvCell7getBiasEjR10BaseTensor"></span><span id="_CPPv2NK4N2D28ConvCell7getBiasEjR10BaseTensor"></span><span id="N2D2::ConvCell::getBias__unsigned-i.BaseTensorRC"></span><span class="target" id="classN2D2_1_1ConvCell_1a5f39d338d2279a1af658c0392788b900"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">getBias</span></code><span class="sig-paren">(</span><span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">output</span></em>, <span class="pre">BaseTensor</span> <span class="pre">&amp;</span><em><span class="pre">value</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4NK4N2D28ConvCell7getBiasEjR10BaseTensor" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4N4N2D28ConvCell9setWeightEjjRK10BaseTensor">
-<span id="_CPPv3N4N2D28ConvCell9setWeightEjjRK10BaseTensor"></span><span id="_CPPv2N4N2D28ConvCell9setWeightEjjRK10BaseTensor"></span><span id="N2D2::ConvCell::setWeight__unsigned-i.unsigned-i.BaseTensorCR"></span><span class="target" id="classN2D2_1_1ConvCell_1af518c399531d4e9279d18e6ed3605058"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">setWeight</span></code><span class="sig-paren">(</span><span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">output</span></em>, <span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">channel</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">BaseTensor</span> <span class="pre">&amp;</span><em><span class="pre">value</span></em><span class="sig-paren">)</span> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4N4N2D28ConvCell9setWeightEjjRK10BaseTensor" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
-<dl class="cpp function">
-<dt id="_CPPv4N4N2D28ConvCell7setBiasEjRK10BaseTensor">
-<span id="_CPPv3N4N2D28ConvCell7setBiasEjRK10BaseTensor"></span><span id="_CPPv2N4N2D28ConvCell7setBiasEjRK10BaseTensor"></span><span id="N2D2::ConvCell::setBias__unsigned-i.BaseTensorCR"></span><span class="target" id="classN2D2_1_1ConvCell_1a5b8207782207281a6789c349b8f6288d"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">setBias</span></code><span class="sig-paren">(</span><span class="pre">unsigned</span> <span class="pre">int</span> <em><span class="pre">output</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">BaseTensor</span> <span class="pre">&amp;</span><em><span class="pre">value</span></em><span class="sig-paren">)</span> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4N4N2D28ConvCell7setBiasEjRK10BaseTensor" title="Permalink to this definition">¶</a><br /></dt>
-<dd></dd></dl>
-
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>doxygenclass: breathe_default_project value ‘N2D2’ does not seem to be a valid key for the breathe_projects dictionary</p>
 </div>
 </div>
 <div class="section" id="convcell-frame-t-class">
@@ -524,11 +378,19 @@ conversion is still valid, thus incurring zero overhead.</p></li>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2019, CEA LIST
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -539,7 +401,6 @@ conversion is still valid, thus incurring zero overhead.</p></li>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

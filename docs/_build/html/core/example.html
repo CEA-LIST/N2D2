@@ -1,0 +1,371 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Example &mdash; N2D2  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Target" href="target.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> N2D2
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simus.html">Performing simulations</a></li>
+</ul>
+<p class="caption"><span class="caption-text">INI File Interface:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ini/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/data_analysis.html">Stimuli data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/environment.html">Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/tensor.html">Tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/deepnet.html">DeepNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/transformations.html">Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/data_provider.html">Data provider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/interoperability.html">Interoperability</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++/Python core:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="activations.html">Activation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filler.html">Filler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver.html">Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transformation.html">Transformation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="target.html">Target</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creation-of-the-network">Creation of the network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#importation-of-the-dataset">Importation of the dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#applying-transformation-to-the-dataset">Applying transformation to the dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#defining-network-topology">Defining network topology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#learning-phase">Learning phase</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">N2D2</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Example</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/core/example.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="example">
+<h1>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h1>
+<p>In this section we will create a simple convolutional neural network for the dataset <a class="reference external" href="https://en.wikipedia.org/wiki/MNIST_database">MNIST</a> using the python binding of N2D2.</p>
+<div class="section" id="creation-of-the-network">
+<h2>Creation of the network<a class="headerlink" href="#creation-of-the-network" title="Permalink to this headline">¶</a></h2>
+<p>We first have to create an object Network. This object will be the backbone of the model, linking the different cells.</p>
+<p>We have to begin with the initialisation of this object since it creates a seed that generates randomness.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">net</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">Network</span><span class="p">()</span>
+<span class="n">deepNet</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">DeepNet</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="importation-of-the-dataset">
+<h2>Importation of the dataset<a class="headerlink" href="#importation-of-the-dataset" title="Permalink to this headline">¶</a></h2>
+<p>To import the MNIST dataset we will use a custom class <a class="reference internal" href="databases.html#N2D2.MNIST_IDX_Database" title="N2D2.MNIST_IDX_Database"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.MNIST_IDX_Database</span></code></a>.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">database</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">MNIST_IDX_Database</span><span class="p">()</span>
+<span class="n">database</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the following code, the <em>path</em> variable represent the path to the dataset MNIST.</p>
+</div>
+<div class="section" id="applying-transformation-to-the-dataset">
+<h2>Applying transformation to the dataset<a class="headerlink" href="#applying-transformation-to-the-dataset" title="Permalink to this headline">¶</a></h2>
+<p>We can create transformation using the class <a class="reference internal" href="transformation.html#N2D2.Transformation" title="N2D2.Transformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.Transformation</span></code></a>.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">trans</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">DistortionTransformation</span><span class="p">()</span>
+<span class="n">trans</span><span class="o">.</span><span class="n">setParameter</span><span class="p">(</span><span class="s2">&quot;ElasticGaussianSize&quot;</span><span class="p">,</span> <span class="s2">&quot;21&quot;</span><span class="p">)</span>
+<span class="n">trans</span><span class="o">.</span><span class="n">setParameter</span><span class="p">(</span><span class="s2">&quot;ElasticSigma&quot;</span><span class="p">,</span> <span class="s2">&quot;6.0&quot;</span><span class="p">)</span>
+<span class="n">trans</span><span class="o">.</span><span class="n">setParameter</span><span class="p">(</span><span class="s2">&quot;ElasticScaling&quot;</span><span class="p">,</span> <span class="s2">&quot;36.0&quot;</span><span class="p">)</span>
+<span class="n">trans</span><span class="o">.</span><span class="n">setParameter</span><span class="p">(</span><span class="s2">&quot;Scaling&quot;</span><span class="p">,</span> <span class="s2">&quot;10.0&quot;</span><span class="p">)</span>
+<span class="n">trans</span><span class="o">.</span><span class="n">setParameter</span><span class="p">(</span><span class="s2">&quot;Rotation&quot;</span><span class="p">,</span> <span class="s2">&quot;10.0&quot;</span><span class="p">)</span>
+<span class="n">padcrop</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">PadCropTransformation</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">24</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>But to apply them to the data, we need <a class="reference internal" href="stimuliprovider.html#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.StimuliProvider</span></code></a>.</p>
+<p><a class="reference internal" href="stimuliprovider.html#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.StimuliProvider</span></code></a> is a class that acts as a data loader for the neural network.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">stimuli</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">StimuliProvider</span><span class="p">(</span><span class="n">database</span><span class="p">,</span> <span class="p">[</span><span class="mi">24</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">batchSize</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="n">stimuli</span><span class="o">.</span><span class="n">addTransformation</span><span class="p">(</span><span class="n">N2D2</span><span class="o">.</span><span class="n">PadCropTransformation</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">24</span><span class="p">),</span> <span class="n">database</span><span class="o">.</span><span class="n">StimuliSetMask</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">stimuli</span><span class="o">.</span><span class="n">addOnTheFlyTransformation</span><span class="p">(</span><span class="n">trans</span><span class="p">,</span> <span class="n">database</span><span class="o">.</span><span class="n">StimuliSetMask</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>We can apply transformation in two ways.
+The first one is the standard one, we apply the transformation once to the whole dataset.
+This is useful for transformation like normalization or <a class="reference internal" href="transformation.html#N2D2.PadCropTransformation" title="N2D2.PadCropTransformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.PadCropTransformation</span></code></a>.
+The other way is to add the transformation “on the fly”, this mean that each time we load a data, we apply the transformation.
+This is especially adapted to random transformation like <a class="reference internal" href="transformation.html#N2D2.DistortionTransformation" title="N2D2.DistortionTransformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.DistortionTransformation</span></code></a> since you add more diversity to the data.</p>
+</div>
+<div class="section" id="defining-network-topology">
+<h2>Defining network topology<a class="headerlink" href="#defining-network-topology" title="Permalink to this headline">¶</a></h2>
+<p>To define our network topology, we use <a class="reference internal" href="cells.html#N2D2.Cell" title="N2D2.Cell"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.Cell</span></code></a> objects.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">conv1</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">ConvCell_Frame_float</span><span class="p">(</span><span class="n">deepNet</span><span class="p">,</span> <span class="s2">&quot;conv1&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="mi">16</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">TanhActivation_Frame_float</span><span class="p">())</span>
+<span class="n">conv2</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">ConvCell_Frame_float</span><span class="p">(</span><span class="n">deepNet</span><span class="p">,</span> <span class="s2">&quot;conv2&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="mi">24</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">TanhActivation_Frame_float</span><span class="p">())</span>
+<span class="n">fc1</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">FcCell_Frame_float</span><span class="p">(</span><span class="n">deepNet</span><span class="p">,</span> <span class="s2">&quot;fc1&quot;</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">TanhActivation_Frame_float</span><span class="p">())</span>
+<span class="n">fc2</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">FcCell_Frame_float</span><span class="p">(</span><span class="n">deepNet</span><span class="p">,</span> <span class="s2">&quot;fc2&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">TanhActivation_Frame_float</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Once the cells are created, we need to connect them.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">conv2mapping</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">]</span>
+
+<span class="n">t_conv2mapping</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">Tensor_bool</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">conv2mapping</span><span class="p">))</span>
+
+<span class="n">conv1</span><span class="o">.</span><span class="n">addInput</span><span class="p">(</span><span class="n">stimuli</span><span class="p">)</span>
+<span class="n">conv2</span><span class="o">.</span><span class="n">addInput</span><span class="p">(</span><span class="n">conv1</span><span class="p">,</span> <span class="n">t_conv2mapping</span><span class="p">)</span>
+<span class="n">fc1</span><span class="o">.</span><span class="n">addInput</span><span class="p">(</span><span class="n">conv2</span><span class="p">)</span>
+<span class="n">fc2</span><span class="o">.</span><span class="n">addInput</span><span class="p">(</span><span class="n">fc1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The first layer receive the <a class="reference internal" href="stimuliprovider.html#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.StimuliProvider</span></code></a> class as an input. The other layers have their input set with the previous cell.
+In this example, we also create a different mapping for the <a class="reference internal" href="cells.html#N2D2.ConvCell_Frame_float" title="N2D2.ConvCell_Frame_float"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.ConvCell_Frame_float</span></code></a> <em>conv2</em>.</p>
+</div>
+<div class="section" id="learning-phase">
+<h2>Learning phase<a class="headerlink" href="#learning-phase" title="Permalink to this headline">¶</a></h2>
+<p>Once the network is created, we can begin the learning phase. First, we need to create a <a class="reference internal" href="target.html#N2D2.Target" title="N2D2.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.Target</span></code></a> object. This object defines the output of the network.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tar</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">TargetScore</span><span class="p">(</span><span class="s1">&#39;target&#39;</span><span class="p">,</span> <span class="n">fc2</span><span class="p">,</span> <span class="n">stimuli</span><span class="p">)</span>
+
+<span class="n">conv1</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
+<span class="n">conv2</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
+<span class="n">fc1</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
+<span class="n">fc2</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Finally, we can initiate the learning loop.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_epochs</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epoch_size</span><span class="p">):</span>
+        <span class="n">stimuli</span><span class="o">.</span><span class="n">readRandomBatch</span><span class="p">(</span><span class="nb">set</span><span class="o">=</span><span class="n">N2D2</span><span class="o">.</span><span class="n">Database</span><span class="o">.</span><span class="n">Learn</span><span class="p">)</span>
+        <span class="n">tar</span><span class="o">.</span><span class="n">provideTargets</span><span class="p">(</span><span class="n">N2D2</span><span class="o">.</span><span class="n">Database</span><span class="o">.</span><span class="n">Learn</span><span class="p">)</span>
+        <span class="n">conv1</span><span class="o">.</span><span class="n">propagate</span><span class="p">()</span>
+        <span class="n">conv2</span><span class="o">.</span><span class="n">propagate</span><span class="p">()</span>
+        <span class="n">fc1</span><span class="o">.</span><span class="n">propagate</span><span class="p">()</span>
+        <span class="n">fc2</span><span class="o">.</span><span class="n">propagate</span><span class="p">()</span>
+        <span class="n">tar</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">N2D2</span><span class="o">.</span><span class="n">Database</span><span class="o">.</span><span class="n">Learn</span><span class="p">)</span>
+        <span class="n">fc2</span><span class="o">.</span><span class="n">backPropagate</span><span class="p">()</span>
+        <span class="n">fc1</span><span class="o">.</span><span class="n">backPropagate</span><span class="p">()</span>
+        <span class="n">conv2</span><span class="o">.</span><span class="n">backPropagate</span><span class="p">()</span>
+        <span class="n">conv1</span><span class="o">.</span><span class="n">backPropagate</span><span class="p">()</span>
+        <span class="n">conv1</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="n">conv2</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="n">fc1</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="n">fc2</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="target.html" class="btn btn-neutral float-left" title="Target" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, CEA LIST
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

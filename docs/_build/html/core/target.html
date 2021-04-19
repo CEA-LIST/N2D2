@@ -1,0 +1,422 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Target &mdash; N2D2  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Example" href="example.html" />
+    <link rel="prev" title="Transformation" href="transformation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> N2D2
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simus.html">Performing simulations</a></li>
+</ul>
+<p class="caption"><span class="caption-text">INI File Interface:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ini/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/data_analysis.html">Stimuli data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/environment.html">Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/tensor.html">Tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/deepnet.html">DeepNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/interoperability.html">Interoperability</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++/Python core:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="activations.html">Activation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filler.html">Filler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver.html">Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transformation.html">Transformation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Target</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">N2D2</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Target</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/core/target.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="target">
+<h1>Target<a class="headerlink" href="#target" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>A <a class="reference internal" href="#N2D2.Target" title="N2D2.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.Target</span></code></a> is associated to a <a class="reference internal" href="cells.html#N2D2.Cell" title="N2D2.Cell"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.Cell</span></code></a>, it define the output of the network.
+The computation of the loss and other tools to compute score such as the confusion matrix are also computed with this class.</p>
+<p>To train a neural network you need to use <a class="reference internal" href="#N2D2.Target.provideTargets" title="N2D2.Target.provideTargets"><code class="xref py py-meth docutils literal notranslate"><span class="pre">N2D2.Target.provideTargets()</span></code></a> then to <code class="xref py py-meth docutils literal notranslate"><span class="pre">N2D2.cell.propagate()</span></code> then <a class="reference internal" href="#N2D2.Target.process" title="N2D2.Target.process"><code class="xref py py-meth docutils literal notranslate"><span class="pre">N2D2.Target.process()</span></code></a> and finally <code class="xref py py-meth docutils literal notranslate"><span class="pre">N2D2.Cell.backpropagate()</span></code>.
+(See <a class="reference internal" href="example.html"><span class="doc">the MNIST example</span></a>.)</p>
+<dl class="py class">
+<dt id="N2D2.Target">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">Target</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Target</em>, <em class="sig-param">name: str</em>, <em class="sig-param">cell: N2D2::Cell</em>, <em class="sig-param">sp: N2D2.StimuliProvider</em>, <em class="sig-param">targetValue: float = 1.0</em>, <em class="sig-param">defaultValue: float = 0.0</em>, <em class="sig-param">topN: int = 1</em>, <em class="sig-param">labelsMapping: str = ''</em>, <em class="sig-param">createMissingLabels: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Target" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.Target.clear">
+<code class="sig-name descname">clear</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Target</em>, <em class="sig-param">set: N2D2::Database::StimuliSet</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Target.clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getCell">
+<code class="sig-name descname">getCell</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em><span class="sig-paren">)</span> &#x2192; N2D2::Cell<a class="headerlink" href="#N2D2.Target.getCell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getDefaultTarget">
+<code class="sig-name descname">getDefaultTarget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Target.getDefaultTarget" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getDefaultValue">
+<code class="sig-name descname">getDefaultValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#N2D2.Target.getDefaultValue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getEstimatedLabel">
+<code class="sig-name descname">getEstimatedLabel</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Target</em>, <em class="sig-param">roi: N2D2::ROI</em>, <em class="sig-param">batchPos: int = 0</em>, <em class="sig-param">values: float = 0</em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>int<span class="p">, </span>float<span class="p">]</span><a class="headerlink" href="#N2D2.Target.getEstimatedLabel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getEstimatedLabels">
+<code class="sig-name descname">getEstimatedLabels</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.Target.getEstimatedLabels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>getEstimatedLabels(self: N2D2.Target) -&gt; N2D2.CudaTensor_int</p></li>
+<li><p>getEstimatedLabels(self: N2D2.Target, roi: N2D2::ROI, batchPos: int = 0, values: float = 0) -&gt; N2D2.CudaTensor_float</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getEstimatedLabelsValue">
+<code class="sig-name descname">getEstimatedLabelsValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="containers.html#N2D2.CudaTensor_float" title="N2D2.CudaTensor_float">N2D2.CudaTensor_float</a><a class="headerlink" href="#N2D2.Target.getEstimatedLabelsValue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getLabelTarget">
+<code class="sig-name descname">getLabelTarget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em>, <em class="sig-param"><span class="n">label</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Target.getLabelTarget" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getLoss">
+<code class="sig-name descname">getLoss</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>float<span class="p">]</span><a class="headerlink" href="#N2D2.Target.getLoss" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getName">
+<code class="sig-name descname">getName</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#N2D2.Target.getName" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getNbTargets">
+<code class="sig-name descname">getNbTargets</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Target.getNbTargets" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getStimuliProvider">
+<code class="sig-name descname">getStimuliProvider</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="stimuliprovider.html#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a><a class="headerlink" href="#N2D2.Target.getStimuliProvider" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getTargetLabels">
+<code class="sig-name descname">getTargetLabels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em>, <em class="sig-param"><span class="n">output</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>int<span class="p">]</span><a class="headerlink" href="#N2D2.Target.getTargetLabels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getTargetLabelsName">
+<code class="sig-name descname">getTargetLabelsName</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>str<span class="p">]</span><a class="headerlink" href="#N2D2.Target.getTargetLabelsName" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getTargetTopN">
+<code class="sig-name descname">getTargetTopN</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.Target.getTargetTopN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getTargetValue">
+<code class="sig-name descname">getTargetValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#N2D2.Target.getTargetValue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.getType">
+<code class="sig-name descname">getType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#N2D2.Target.getType" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.labelsMapping">
+<code class="sig-name descname">labelsMapping</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em>, <em class="sig-param"><span class="n">fileName</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">createMissingLabels</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Target.labelsMapping" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.log">
+<code class="sig-name descname">log</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Target</em>, <em class="sig-param">fileName: str</em>, <em class="sig-param">set: N2D2::Database::StimuliSet</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Target.log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.logEstimatedLabels">
+<code class="sig-name descname">logEstimatedLabels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em>, <em class="sig-param"><span class="n">dirName</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Target.logEstimatedLabels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.logEstimatedLabelsJSON">
+<code class="sig-name descname">logEstimatedLabelsJSON</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em>, <em class="sig-param"><span class="n">dirName</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">fileName</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">xOffset</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">yOffset</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">append</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Target.logEstimatedLabelsJSON" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.logLabelsLegend">
+<code class="sig-name descname">logLabelsLegend</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em>, <em class="sig-param"><span class="n">fileName</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Target.logLabelsLegend" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.logLabelsMapping">
+<code class="sig-name descname">logLabelsMapping</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em>, <em class="sig-param"><span class="n">fileName</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Target.logLabelsMapping" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.process">
+<code class="sig-name descname">process</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Target</em>, <em class="sig-param">set: N2D2::Database::StimuliSet</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Target.process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the loss to the cell the target is bind to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>set</strong> (<a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.Database.StimuliSet</span></code></a>) – Set of stimuli</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.provideTargets">
+<code class="sig-name descname">provideTargets</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.Target</em>, <em class="sig-param">set: N2D2::Database::StimuliSet</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Target.provideTargets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the output target of a cell. Also create the mapping if labelsMapping option is defined.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>set</strong> (<a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.Database.StimuliSet</span></code></a>) – Set of stimuli</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.setDefaultTarget">
+<code class="sig-name descname">setDefaultTarget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em>, <em class="sig-param"><span class="n">output</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Target.setDefaultTarget" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.setLabelTarget">
+<code class="sig-name descname">setLabelTarget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em>, <em class="sig-param"><span class="n">label</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">output</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Target.setLabelTarget" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Target.setMaskLabelTarget">
+<code class="sig-name descname">setMaskLabelTarget</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em>, <em class="sig-param"><span class="n">target</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Target.setMaskLabelTarget" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="example.html" class="btn btn-neutral float-right" title="Example" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="transformation.html" class="btn btn-neutral float-left" title="Transformation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, CEA LIST
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -12,26 +11,30 @@
   
 
   
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
   
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -50,7 +53,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> N2D2
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> N2D2
           
 
           
@@ -73,6 +76,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -129,6 +133,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -167,7 +172,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>StimuliProvider</li>
     
@@ -192,206 +197,63 @@
 <h1>StimuliProvider<a class="headerlink" href="#stimuliprovider" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="N2D2.StimuliProvider">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">N2D2.</span></code><code class="sig-name descname"><span class="pre">StimuliProvider</span></code><a class="headerlink" href="#N2D2.StimuliProvider" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
-<dt id="N2D2.StimuliProvider.cloneParameters">
-<code class="sig-name descname"><span class="pre">cloneParameters</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a><a class="headerlink" href="#N2D2.StimuliProvider.cloneParameters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">StimuliProvider</code><a class="headerlink" href="#N2D2.StimuliProvider" title="Permalink to this definition">¶</a></dt>
+<dd><p>StimuliProvider is a class that acts as a data loader for the neural network.</p>
+<dl class="py method">
+<dt id="N2D2.StimuliProvider.addOnTheFlyTransformation">
+<code class="sig-name descname">addOnTheFlyTransformation</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">transformation: N2D2::CompositeTransformation</em>, <em class="sig-param">setMask: N2D2::Database::StimuliSetMask</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.addOnTheFlyTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add global ON-THE-FLY transformations, before applying any channel transformation. The order of transformations is: global CACHEABLE, then global ON-THE-FLY</p>
+</dd></dl>
 
 <dl class="py method">
-<dt id="N2D2.StimuliProvider.future">
-<code class="sig-name descname"><span class="pre">future</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.StimuliProvider.future" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getBatch">
-<code class="sig-name descname"><span class="pre">getBatch</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#N2D2.StimuliProvider.getBatch" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="N2D2.StimuliProvider.addTransformation">
+<code class="sig-name descname">addTransformation</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">transformation: N2D2::CompositeTransformation</em>, <em class="sig-param">setMask: N2D2::Database::StimuliSetMask</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.addTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add global CACHEABLE transformations, before applying any channel transformation</p>
+</dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.StimuliProvider.getBatchSize">
-<code class="sig-name descname"><span class="pre">getBatchSize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.StimuliProvider.getBatchSize" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getCachePath">
-<code class="sig-name descname"><span class="pre">getCachePath</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">str</span><a class="headerlink" href="#N2D2.StimuliProvider.getCachePath" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getChannelOnTheFlyTransformation">
-<code class="sig-name descname"><span class="pre">getChannelOnTheFlyTransformation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><span class="pre">N2D2.Database.StimuliSet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">N2D2::CompositeTransformation</span><a class="headerlink" href="#N2D2.StimuliProvider.getChannelOnTheFlyTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getChannelTransformation">
-<code class="sig-name descname"><span class="pre">getChannelTransformation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><span class="pre">N2D2.Database.StimuliSet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">N2D2::CompositeTransformation</span><a class="headerlink" href="#N2D2.StimuliProvider.getChannelTransformation" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getBatchSize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.StimuliProvider.getBatchSize" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.StimuliProvider.getData">
-<code class="sig-name descname"><span class="pre">getData</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="containers.html#N2D2.CudaTensor_float" title="N2D2.CudaTensor_float"><span class="pre">N2D2.CudaTensor_float</span></a><a class="headerlink" href="#N2D2.StimuliProvider.getData" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getData</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="containers.html#N2D2.CudaTensor_float" title="N2D2.CudaTensor_float">N2D2.CudaTensor_float</a><a class="headerlink" href="#N2D2.StimuliProvider.getData" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getDataChannel">
-<code class="sig-name descname"><span class="pre">getDataChannel</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batchPos</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="containers.html#N2D2.CudaTensor_float" title="N2D2.CudaTensor_float"><span class="pre">N2D2.CudaTensor_float</span></a><a class="headerlink" href="#N2D2.StimuliProvider.getDataChannel" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getDatabase">
-<code class="sig-name descname"><span class="pre">getDatabase</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="databases.html#N2D2.Database" title="N2D2.Database"><span class="pre">N2D2.Database</span></a><a class="headerlink" href="#N2D2.StimuliProvider.getDatabase" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getLabelsData">
-<code class="sig-name descname"><span class="pre">getLabelsData</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">N2D2.Tensor_int</span><a class="headerlink" href="#N2D2.StimuliProvider.getLabelsData" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getLabelsDataChannel">
-<code class="sig-name descname"><span class="pre">getLabelsDataChannel</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batchPos</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">N2D2.Tensor_int</span><a class="headerlink" href="#N2D2.StimuliProvider.getLabelsDataChannel" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getLabelsROIs">
-<code class="sig-name descname"><span class="pre">getLabelsROIs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.getLabelsROIs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overloaded function.</p>
-<ol class="arabic simple">
-<li><p>getLabelsROIs(self: N2D2.StimuliProvider) -&gt; List[List[N2D2::ROI]]</p></li>
-<li><p>getLabelsROIs(self: N2D2.StimuliProvider, batchPos: int = 0) -&gt; List[N2D2::ROI]</p></li>
-</ol>
-</dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.StimuliProvider.getNbChannels">
-<code class="sig-name descname"><span class="pre">getNbChannels</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.StimuliProvider.getNbChannels" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getNbTransformations">
-<code class="sig-name descname"><span class="pre">getNbTransformations</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><span class="pre">N2D2.Database.StimuliSet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.StimuliProvider.getNbTransformations" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getOnTheFlyTransformation">
-<code class="sig-name descname"><span class="pre">getOnTheFlyTransformation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><span class="pre">N2D2.Database.StimuliSet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">N2D2::CompositeTransformation</span><a class="headerlink" href="#N2D2.StimuliProvider.getOnTheFlyTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getRandomID">
-<code class="sig-name descname"><span class="pre">getRandomID</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><span class="pre">N2D2.Database.StimuliSet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.StimuliProvider.getRandomID" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getRandomIndex">
-<code class="sig-name descname"><span class="pre">getRandomIndex</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><span class="pre">N2D2.Database.StimuliSet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.StimuliProvider.getRandomIndex" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getNbChannels</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.StimuliProvider.getNbChannels" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.StimuliProvider.getSize">
-<code class="sig-name descname"><span class="pre">getSize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#N2D2.StimuliProvider.getSize" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getSizeD">
-<code class="sig-name descname"><span class="pre">getSizeD</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.StimuliProvider.getSizeD" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getSizeX">
-<code class="sig-name descname"><span class="pre">getSizeX</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.StimuliProvider.getSizeX" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getSizeY">
-<code class="sig-name descname"><span class="pre">getSizeY</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.StimuliProvider.getSizeY" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.getTransformation">
-<code class="sig-name descname"><span class="pre">getTransformation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><span class="pre">N2D2.Database.StimuliSet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">N2D2::CompositeTransformation</span><a class="headerlink" href="#N2D2.StimuliProvider.getTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.isCompositeStimuli">
-<code class="sig-name descname"><span class="pre">isCompositeStimuli</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">bool</span><a class="headerlink" href="#N2D2.StimuliProvider.isCompositeStimuli" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.logTransformations">
-<code class="sig-name descname"><span class="pre">logTransformations</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setMask</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSetMask" title="N2D2.Database.StimuliSetMask"><span class="pre">N2D2.Database.StimuliSetMask</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.StimuliProvider.logTransformations" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getSize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>int<span class="p">]</span><a class="headerlink" href="#N2D2.StimuliProvider.getSize" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.StimuliProvider.readBatch">
-<code class="sig-name descname"><span class="pre">readBatch</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.readBatch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overloaded function.</p>
-<ol class="arabic simple">
-<li><p>readBatch(self: N2D2.StimuliProvider, set: N2D2.Database.StimuliSet, startIndex: int) -&gt; None</p></li>
-<li><p>readBatch(self: N2D2.StimuliProvider, set: N2D2.Database.StimuliSet) -&gt; None</p></li>
-</ol>
+<code class="sig-name descname">readBatch</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2::Database::StimuliSet</em>, <em class="sig-param">startIndex: int = 0</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.readBatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a whole batch from the StimuliSet, apply all the transformations and set the targets</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.StimuliProvider.readRandomBatch">
-<code class="sig-name descname"><span class="pre">readRandomBatch</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><span class="pre">N2D2.Database.StimuliSet</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.StimuliProvider.readRandomBatch" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">readRandomBatch</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2::Database::StimuliSet</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.readRandomBatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a whole random batch from the StimuliSet, apply the transformations and set the targets.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.StimuliProvider.readRandomStimulus">
-<code class="sig-name descname"><span class="pre">readRandomStimulus</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">set</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="databases.html#N2D2.Database.StimuliSet" title="N2D2.Database.StimuliSet"><span class="pre">N2D2.Database.StimuliSet</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">batchPos</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.StimuliProvider.readRandomStimulus" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.readRawData">
-<code class="sig-name descname"><span class="pre">readRawData</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.readRawData" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overloaded function.</p>
-<ol class="arabic simple">
-<li><p>readRawData(self: N2D2.StimuliProvider, id: int) -&gt; N2D2.Tensor_float</p></li>
-<li><p>readRawData(self: N2D2.StimuliProvider, set: N2D2.Database.StimuliSet, index: int) -&gt; N2D2.Tensor_float</p></li>
-</ol>
+<code class="sig-name descname">readRandomStimulus</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2::Database::StimuliSet</em>, <em class="sig-param">batchPos: int = 0</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.StimuliProvider.readRandomStimulus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a single random stimulus from the StimuliSet, apply all the transformations and setthe targets. Return StimulusID of the randomly chosen stimulus</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="N2D2.StimuliProvider.readStimulus">
-<code class="sig-name descname"><span class="pre">readStimulus</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.readStimulus" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overloaded function.</p>
-<ol class="arabic simple">
-<li><p>readStimulus(self: N2D2.StimuliProvider, id: int, set: N2D2.Database.StimuliSet, batchPos: int = 0, dev: int = -1) -&gt; None</p></li>
-<li><p>readStimulus(self: N2D2.StimuliProvider, set: N2D2.Database.StimuliSet, index: int, batchPos: int = 0, dev: int = -1) -&gt; int</p></li>
-</ol>
+<dt id="N2D2.StimuliProvider.setStreamedTensor">
+<code class="sig-name descname">setStreamedTensor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em>, <em class="sig-param"><span class="n">streamedTensor</span><span class="p">:</span> <span class="n"><a class="reference internal" href="containers.html#N2D2.CudaTensor_float" title="N2D2.CudaTensor_float">N2D2.CudaTensor_float</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.setStreamedTensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set Tensor that is streamed directly to connected Deepnet</p>
 </dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.readStimulusBatch">
-<code class="sig-name descname"><span class="pre">readStimulusBatch</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.readStimulusBatch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overloaded function.</p>
-<ol class="arabic simple">
-<li><p>readStimulusBatch(self: N2D2.StimuliProvider, id: int, set: N2D2.Database.StimuliSet, dev: int = -1) -&gt; None</p></li>
-<li><p>readStimulusBatch(self: N2D2.StimuliProvider, set: N2D2.Database.StimuliSet, index: int, dev: int = -1) -&gt; int</p></li>
-</ol>
-</dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.setBatchSize">
-<code class="sig-name descname"><span class="pre">setBatchSize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">batchSize</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.StimuliProvider.setBatchSize" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.setCachePath">
-<code class="sig-name descname"><span class="pre">setCachePath</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.StimuliProvider.setCachePath" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.streamBatch">
-<code class="sig-name descname"><span class="pre">streamBatch</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">startIndex</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.StimuliProvider.streamBatch" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.StimuliProvider.synchronize">
-<code class="sig-name descname"><span class="pre">synchronize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><span class="pre">N2D2.StimuliProvider</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.StimuliProvider.synchronize" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -417,11 +279,19 @@
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2019, CEA LIST
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -432,7 +302,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {
