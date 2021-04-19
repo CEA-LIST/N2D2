@@ -130,11 +130,14 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
 
 
     def add_input(self, inputs):
-        # A little hacky, some cells like Pool don't have a defined number of channels so I try this to catch them
+        # Some cells like Pool don't have a defined number of channels so I try this to catch them
         # Is it good to keep it this way ?
-        have_an_defined_input_size = (self.N2D2().getInputsDims() != [0] and self.N2D2().getInputsDims() != [])
-
-        if have_an_defined_input_size and inputs.dimZ() != self.get_nb_channels():
+        have_a_defined_input_size = (self.N2D2().getInputsDims() != [0] and self.N2D2().getInputsDims() != [])
+        initialized = self.dims() == True 
+        # TODO :this test doesn't pass for Fc cells if it is not initialized.
+        # The get_nb_channels() returns dimX * dimY * dimZ if not initialized and then just dimZ.
+        # Maybe we want to do an other test if the cell is not initialized (testing if the weights correspond to the inputs)
+        if have_a_defined_input_size and inputs.dimZ() != self.get_nb_channels() and initialized:
             raise ValueError("NeuralNetworkCell '" + self.get_name() + "' received a tensor with " + str(inputs.dimZ()) +
             " channels, was expecting : " + str(self.get_nb_channels()))
         
@@ -363,6 +366,7 @@ class Fc(NeuralNetworkCell):
     def __call__(self, inputs):
         if inputs.nb_dims() != 4:
             raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
+        # print("\n", self.get_name(), " input dims :", inputs.shape())
         self._deepnet = self._infer_deepnet(inputs)
 
         self._add_to_graph(inputs)
