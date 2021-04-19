@@ -279,7 +279,23 @@ class TensorPlaceholder(Provider):
     def __str__(self):
         return "'" + self.get_name() + "' TensorPlaceholder"
 
-
+class MultipleOutputsProvider(Provider):
+    """
+    Provider used to give multiple tensors to the network.
+    """
+    def __init__(self, size, batch_size=1):
+        """
+        :param size: List of X, Y and Z dimensions
+        :type size: list
+        :param batch_size: Batch size, default=1
+        :type batch_size: int, optional
+        """
+        self._N2D2_object = N2D2.StimuliProvider(database=N2D2.Database(),
+                                                 size=size,
+                                                 batchSize=batch_size)
+        self._deepnet = n2d2.deepnet.DeepNet()
+        self._deepnet.set_provider(self)
+        self._name = n2d2.global_variables.generate_name(self)
 
 """
 TODO : Not up to date to keep ?

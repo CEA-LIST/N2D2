@@ -330,7 +330,7 @@ class Tensor:
         n2d2_tensor = cls([])
         n2d2_tensor._tensor = N2D2_Tensor
         n2d2_tensor._datatype = hard_coded_type[N2D2_Tensor.getTypeName()]
-        n2d2_tensor.is_cuda = "CudaTensor" in str(type(N2D2_Tensor))
+        n2d2_tensor.is_cuda = "CudaTensor" in str(type(N2D2_Tensor)) # TODO : add gettype to the Tensor class in cpp
         return n2d2_tensor
 
     def __setitem__(self, index, value):
@@ -442,38 +442,58 @@ class Tensor:
 
 
 class Interface(n2d2.provider.Provider):
+    """
+    Interface is  class used to feed multiple tensors to a cell.
+    It can be used 
+    """
     def __init__(self, tensors):
         self._name = n2d2.global_variables.generate_name(self)
         self.tensors = []
         if not isinstance(tensors, list):
             raise ValueError("'tensors' should be a list !")
+        if not tensors:
+            raise n2d2d.error_handler.IsEmptyError('Tensors')
+
+        if not tensors[0].cell: # Check if the first tensor is linked to a deepnet
+            self._deepnet = None
+        else:
+            self._deepnet = tensors[0].cell.get_deepnet()
+        
         nb_channels = 0
         for tensor in tensors:
-            # TODO : check they have the same X, Y and B shape
             if not isinstance(tensor, Tensor):
-                raise ValueError("The elements of 'tensors' should be Tensor")
+                raise ValueError("The elements of 'tensors' should all be of type " + str(type(n2d2.tensor.Tensor)))
             else:
-                tensor.cell=self # Interface is a Provider
+                if tensor.dimX() != tensors[0].dimX():
+                    raise ValueError("Tensors should have the same X dimension.")
+                if tensor.dimY() != tensors[0].dimY():
+                    raise ValueError("Tensors should have the same Y dimension.")
+                if tensor.dimB() != tensors[0].dimB():
+                    raise ValueError("Tensors should have the same batch size.")
+                current_deepnet = None if not tensor.cell else tensor.cell.get_deepnet()
+                if current_deepnet is not self._deepnet:
+                    raise ValueError("The tensors used to create the Interface are not linked to the same DeepNet (maybe you want to detach the cell of the tensors ?).")
                 nb_channels += tensor.dimZ()
                 self.tensors.append(tensor)
-        size =[tensors[0].dimX(), tensors[0].dimY(), nb_channels]
-        self.batch_size = tensors[0].dimB()
-        self.dimZ = nb_channels # TODO: What about other dims?
-        self._N2D2_object = N2D2.StimuliProvider(database=N2D2.Database(),
-                                                 size=size,
-                                                 batchSize=self.batch_size)
-        # TODO: What if we want to keep the deepnet of the tensors? Add check that they all have the same
-        # TODO: Also I think in this case there should be no Provider attached to the network that receives the Interface
-        # TODO: Only attach a new provider if a new deepnet is created
-        self._deepnet = n2d2.deepnet.DeepNet()
-        self._deepnet.set_provider(self)
+        if not self._deepnet:
+            size =[tensors[0].dimX(), tensors[0].dimY(), nb_channels]
+            self.batch_size = tensors[0].dimB()
+            cell = n2d2.provider.MultipleOutputsProvider(size, self.batch_size)
+            for tensor in self.tensors:
+                tensor.cell = cell
+        # The dimZ of the interface correspond to the sum of the dimZ of the tensor that composed it.
+        self.dimZ = nb_channels 
 
+    def get_deepnet(self):
+        return self.tensors[0].get_deepnet()
     def dimB(self):
-        return self.batch_size
-
+        return self.tensors[0].dimB()
+    def dimY(self):
+        return self.tensors[0].dimY()
+    def dimX(self):
+        return self.tensors[0].dimX()
     # TODO: better to do general dims() method
     def dimZ(self):
         return self.dimZ
-
     def get_tensors(self):
         return self.tensors
