@@ -458,17 +458,20 @@ class Interface(n2d2.provider.Provider):
                 self.tensors.append(tensor)
         size =[tensors[0].dimX(), tensors[0].dimY(), nb_channels]
         self.batch_size = tensors[0].dimB()
-        self.dimZ = nb_channels
+        self.dimZ = nb_channels # TODO: What about other dims?
         self._N2D2_object = N2D2.StimuliProvider(database=N2D2.Database(),
                                                  size=size,
                                                  batchSize=self.batch_size)
+        # TODO: What if we want to keep the deepnet of the tensors? Add check that they all have the same
+        # TODO: Also I think in this case there should be no Provider attached to the network that receives the Interface
+        # TODO: Only attach a new provider if a new deepnet is created
         self._deepnet = n2d2.deepnet.DeepNet()
         self._deepnet.set_provider(self)
 
     def dimB(self):
         return self.batch_size
 
-
+    # TODO: better to do general dims() method
     def dimZ(self):
         return self.dimZ
 
