@@ -41,10 +41,10 @@ db.load("/nvme0/DATABASE/GTSRB")
 print("\n### Data imported ###\n")
 db.get_partition_summary()
 
-provider = n2d2.provider.DataProvider(db, [29, 29, 3], batch_size=batch_size)
+# provider = n2d2.provider.DataProvider(db, [29, 29, 3], batch_size=batch_size)
 
-# provider = n2d2.provider.DataProvider(db, [29, 29, 1], batch_size=batch_size)
-# provider.add_transformation(n2d2.transform.ChannelExtraction('Gray'))
+provider = n2d2.provider.DataProvider(db, [29, 29, 1], batch_size=batch_size)
+provider.add_transformation(n2d2.transform.ChannelExtraction('Gray'))
 
 provider.add_transformation(n2d2.transform.Rescale(width=29, height=29))
 
@@ -100,8 +100,8 @@ conv2_mapping.set_values([
 
 
 model = n2d2.cells.Sequence([
-    # Conv(1, 32, [4, 4], **conv_config),
-    Conv(3, 32, [4, 4], **conv_config),
+    Conv(1, 32, [4, 4], **conv_config),
+    # Conv(3, 32, [4, 4], **conv_config),
     Pool([2, 2], stride_dims=[2, 2], pooling='Max'),
     Conv(32, 48, [5, 5], mapping=conv2_mapping, **conv_config),
     Pool([3, 3], stride_dims=[3, 3], pooling='Max'),
