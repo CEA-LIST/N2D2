@@ -46,7 +46,7 @@ class DeepNet(N2D2_Interface):
 
     def _create_from_parameters(self):
         self._network = n2d2.global_variables.default_net
-        self._N2D2_object = N2D2.DeepNet(self._network)
+        self._set_N2D2_object(N2D2.DeepNet(self._network))
         self._set_N2D2_parameters(self._config_parameters)
 
     @classmethod
@@ -64,11 +64,12 @@ class DeepNet(N2D2_Interface):
 
         for idx, layer in enumerate(layers[1:]):
             if len(layer) > 1:
+                # TODO: This does not seems to add the group
                 deepnet.begin_group("layer" + str(idx))
 
             for cell in layer:
                 N2D2_cell = cells[cell]
-                n2d2_cell = n2d2.cells.nn.from_N2D2_object(N2D2_cell, deepnet)
+                n2d2_cell = n2d2.converter.from_N2D2_object(N2D2_cell, n2d2_deepnet=deepnet)
                 if idx == 0:
                     n2d2_cell.clear_input()  # Remove old stimuli provider
                     # n2d2_cell.add_input(n2d2.Tensor([], cells=provider))
@@ -77,7 +78,6 @@ class DeepNet(N2D2_Interface):
 
 
         return deepnet
-
 
     def add_to_current_group(self, cell):
         self._current_group.add(cell)
@@ -95,7 +95,6 @@ class DeepNet(N2D2_Interface):
         self._current_group.get_parent_group().add(self._current_group)
         self._current_group = self._current_group.get_parent_group()
 
-
     def back_propagate(self):
         self._N2D2_object.backPropagate()
 
@@ -112,32 +111,17 @@ class DeepNet(N2D2_Interface):
     def get_cells(self):
         return self._groups.get_cells()
 
-    def get_last(self):
-        if len(self._groups) == 0:
-            return self._provider
-        else:
-            return self._groups.get_last()
-
-    def get_first(self):
-        return self._groups.get_first()
-
-    def get_outputs(self):
-        return self.get_last().get_outputs()
-
-    def dims(self):
-        return self.get_outputs().dims()
-
     def get_group(self, group_id):
         return self._groups.get_group(group_id)
+
+    def get_groups(self):
+        return self._groups
 
     def draw(self, filename):
         N2D2.DrawNet.draw(self._N2D2_object, filename)
 
     def draw_graph(self, filename):
         N2D2.DrawNet.drawGraph(self._N2D2_object, filename)
-
-    #def remove(self, idx, reconnect=True):
-    #    self._groups.remove(idx, reconnect)
 
     def __str__(self):
         return self._groups.__str__()
@@ -147,60 +131,23 @@ class DeepNet(N2D2_Interface):
 class Group:
     def __init__(self, name, parent_group=None):
         self._name = name
-        self._sequence = []
+        self._elements = []
         self._parent_group = parent_group
 
     def add(self, cell):
         if cell.get_name() in self.get_cells():
             raise RuntimeError("NeuralNetworkCell with name '" + cell.get_name() + "' already exists in group '" + self._name + "'. "
                                "Are you trying to call the same cells twice? Cyclic graphs are not supported.")
-        self._sequence.append(cell)
+        self._elements.append(cell)
 
     def __len__(self):
-        return len(self._sequence)
+        return len(self._elements)
+
+    def get_elements(self):
+        return self._elements
 
     def get_parent_group(self):
         return self._parent_group
-
-    """
-    # TODO: At the moment this does not release memory of deleted cells
-    def remove(self, idx, reconnect=True):
-        cells = self._sequence[idx]
-        print("Removing element: " + cells.get_name())
-        if isinstance(cells, Group):
-            length = len(cells.get_elements())
-            for i in reversed(range(length)):
-                cells.remove(i, reconnect)
-            del self._sequence[idx]
-        elif isinstance(cells, n2d2.cells.NeuralNetworkCell):
-            cells = self.get_cells()
-            children = cells.N2D2().getChildrenCells()
-            parents = cells.N2D2().getParentsCells()
-            for child in children:
-                if child.getName() in cells:
-                    n2d2_child = cells[child.getName()]
-                    print("Child: " + n2d2_child.get_name())
-                    for idx, ipt in enumerate(n2d2_child.get_inputs()):
-                        if ipt.get_name() == cells.get_name():
-                            del n2d2_child.get_inputs()[idx]
-                    if reconnect:
-                        for parent in parents:
-                            if parent.getName() in cells:
-                                n2d2_child.add_input(cells[parent.getName()])
-                            else:
-                                print("Warning: parent '" + parent.getName() + "' of removed cells '" + cells.get_name() +
-                                "' not found in same sequence as removed cells. If the parent is part of another sequence, "
-                                "please reconnect it manually.")
-                else:
-                    print("Warning: child '" + child.getName() + "' of removed cells '" + cells.get_name() +
-                          "' not found in same sequence as removed cells. If the child is part of another sequence, "
-                          "please remove the corresponding parent cells manually.")
-            cells.get_deepnet().N2D2().removeCell(cells.N2D2(), reconnect)
-            del self._sequence[idx]
-        else:
-            raise RuntimeError("Unknown object at index: " + str(idx))
-    """
-
 
     def get_cells(self):
         cells = {}
@@ -208,7 +155,7 @@ class Group:
         return cells
 
     def _get_cells(self, cells):
-        for elem in self._sequence:
+        for elem in self._elements:
             if isinstance(elem, Group):
                 elem._get_cells(cells)
             else:
@@ -216,27 +163,15 @@ class Group:
 
     def get_group(self, group_id):
         if isinstance(group_id, int):
-            return self._sequence[group_id]
+            return self._elements[group_id]
         else:
-            for elem in self._sequence:
+            for elem in self._elements:
                 if elem.get_name() == group_id:
                     return elem
             raise RuntimeError("No group with name: \'" + group_id + "\'")
 
     def get_name(self):
         return self._name
-
-    def get_elements(self):
-        return self._sequence
-
-    def get_last(self):
-        return self._sequence[-1].get_last()
-
-    def get_first(self):
-        return self._sequence[0].get_first()
-
-    def get_outputs(self):
-        return self.get_last().get_outputs()
 
     def __str__(self):
         return self._generate_str(1)
@@ -247,7 +182,7 @@ class Group:
         else:
             output = "Group("
 
-        for idx, value in enumerate(self._sequence):
+        for idx, value in enumerate(self._elements):
             output += "\n" + (indent_level * "\t") + "(" + str(idx) + ")"
             if isinstance(value, n2d2.deepnet.Group):
                 output += ": " + value._generate_str(indent_level + 1)

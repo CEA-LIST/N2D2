@@ -38,12 +38,21 @@ class ActivationFunction(N2D2_Interface):
 
         N2D2_Interface.__init__(self, **config_parameters)
 
+    @classmethod
+    def create_from_N2D2_object(cls, N2D2_object):
+        activation = cls(**N2D2_Interface.load_N2D2_parameters(N2D2_object), from_arguments=False)
+        activation._N2D2_object = N2D2_object
+        quantizer = activation._N2D2_object.getQuantizer()
+        if quantizer:
+            activation._config_parameters['quantizer'] = \
+                n2d2.quantizer.ActivationQuantizer.create_from_N2D2_object(quantizer)
+        return activation
+
     def get_quantizer(self):
         return self._config_parameters['quantizer']
 
-
     def get_type(self):
-        return self._N2D2_object.getType()
+        return type(self).__name__
 
     def __str__(self):
         output = self.get_type()
@@ -60,19 +69,21 @@ class Linear(ActivationFunction):
         'Frame_CUDA<float>': N2D2.LinearActivation_Frame_CUDA_float
     }
 
-    def __init__(self, **config_parameters):
+    def __init__(self, from_arguments=True, **config_parameters):
         """
         :param quantizer: Quantizer
         :type quantizer: :py:class:`n2d2.quantizer.ActivationQuantizer`, optional
         """
         ActivationFunction.__init__(self, **config_parameters)
-        # No optional constructor arguments
-        self._N2D2_object = self._linear_activation_generators[self._model_key]()
-        for key, value in self._config_parameters.items():
-            if key is 'quantizer':
-                self._N2D2_object.setQuantizer(value.N2D2())
-            else:
-                self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+
+        if from_arguments:
+            # No optional constructor arguments
+            self._set_N2D2_object(self._linear_activation_generators[self._model_key]())
+            for key, value in self._config_parameters.items():
+                if key is 'quantizer':
+                    self._N2D2_object.setQuantizer(value.N2D2())
+                else:
+                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
 
 class Rectifier(ActivationFunction):
@@ -84,7 +95,7 @@ class Rectifier(ActivationFunction):
         'Frame_CUDA<float>': N2D2.RectifierActivation_Frame_CUDA_float,
     }
 
-    def __init__(self, **config_parameters):
+    def __init__(self, from_arguments=True, **config_parameters):
         """
         :param leak_slope: Leak slope for negative inputs, default=0.0
         :type leak_slope: float, optional
@@ -94,13 +105,15 @@ class Rectifier(ActivationFunction):
         :type quantizer: :py:class:`n2d2.quantizer.ActivationQuantizer`, optional
         """
         ActivationFunction.__init__(self, **config_parameters)
-        # No optional constructor arguments
-        self._N2D2_object = self._rectifier_activation_generators[self._model_key]()
-        for key, value in self._config_parameters.items():
-            if key is 'quantizer':
-                self._N2D2_object.setQuantizer(value.N2D2())
-            else:
-                self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+
+        if from_arguments:
+            # No optional constructor arguments
+            self._set_N2D2_object(self._rectifier_activation_generators[self._model_key]())
+            for key, value in self._config_parameters.items():
+                if key is 'quantizer':
+                    self._N2D2_object.setQuantizer(value.N2D2())
+                else:
+                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
 
 class Tanh(ActivationFunction):
@@ -114,7 +127,7 @@ class Tanh(ActivationFunction):
         'Frame_CUDA<float>': N2D2.TanhActivation_Frame_CUDA_float,
     }
 
-    def __init__(self, **config_parameters):
+    def __init__(self, from_arguments=True, **config_parameters):
         r"""
         :param alpha: :math:`\alpha` parameter, default=1.0
         :type alpha: float, optional
@@ -122,11 +135,14 @@ class Tanh(ActivationFunction):
         :type quantizer: :py:class:`n2d2.quantizer.ActivationQuantizer`, optional
         """
         ActivationFunction.__init__(self, **config_parameters)
-        # No optional constructor arguments
-        self._N2D2_object = self._tanh_activation_generators[self._model_key]()
-        for key, value in self._config_parameters.items():
-            if key is 'quantizer':
-                self._N2D2_object.setQuantizer(value.N2D2())
-            else:
-                self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+
+        if from_arguments:
+            # No optional constructor arguments
+            self._set_N2D2_object(self._tanh_activation_generators[self._model_key]())
+            for key, value in self._config_parameters.items():
+                if key is 'quantizer':
+                    self._N2D2_object.setQuantizer(value.N2D2())
+                else:
+                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+
 

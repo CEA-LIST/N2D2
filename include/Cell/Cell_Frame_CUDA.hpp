@@ -91,6 +91,7 @@ public:
                               BaseTensor& newDiffOutputs);
 
     virtual void clearInputTensors();
+    virtual void clearOutputTensors();
     virtual void initializeDataDependent();
     virtual void linkInput(Cell* cell);
     virtual void linkInput(StimuliProvider& sp,  

@@ -38,7 +38,10 @@ void declare_NormalFiller(py::module &m, const std::string& typeStr) {
             m, pyClassName.c_str(), py::multiple_inheritance()
     )
 
-    .def(py::init<double, double>(), py::arg("mean")=0.0, py::arg("stdDev")=1.0);
+    .def(py::init<double, double>(), py::arg("mean")=0.0, py::arg("stdDev")=1.0)
+    .def("getMean", &NormalFiller<T>::getMean)
+    .def("getStdDev", &NormalFiller<T>::getStdDev)
+    ;
 }
 
 void init_NormalFiller(py::module &m) {

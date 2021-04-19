@@ -43,6 +43,7 @@ args = parser.parse_args()
 
 n2d2.global_variables.set_cuda_device(args.dev)
 n2d2.global_variables.default_model = "Frame_CUDA"
+n2d2.global_variables.verbosity = n2d2.global_variables.Verbosity.graph_only
 
 size = 224
 
@@ -129,6 +130,9 @@ if not args.weights == "":
 print("Create classifier")
 loss_function = n2d2.application.CrossEntropyClassifier(provider, top_n=1)
 
+
+print(model)
+
 print("\n### Training ###")
 for epoch in range(nb_epochs):
 
@@ -170,7 +174,6 @@ print("\n\n### Testing ###")
 provider.set_partition('Test')
 model.test()
 
-print(model)
 
 for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test') / batch_size)):
     batch_idx = i * batch_size
@@ -178,9 +181,6 @@ for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test') / batch_
     x = provider.read_batch(batch_idx)
     x = model(x)
     x = loss_function(x)
-
-    print(x.get_deepnet())
-    exit()
 
     print("Example: " + str(i * batch_size) + ", test success: "
           + "{0:.2f}".format(100 * loss_function.get_average_success()) + "%", end='\r')

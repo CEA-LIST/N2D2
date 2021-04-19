@@ -340,7 +340,7 @@ def ONNX_preprocessing(size=224):
     margin = 32
 
     trans = Composite([
-        Rescale(width=size+margin, height=size+margin, keep_aspect_ratio=False, ResizeToFit=False),
+        Rescale(width=size+margin, height=size+margin, keep_aspect_ratio=False, resize_to_fit=False),
         PadCrop(width=size, height=size),
         RangeAffine(first_operator='Divides', first_value=[255.0]),
         ColorSpace(color_space='RGB'),

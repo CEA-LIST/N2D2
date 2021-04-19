@@ -261,7 +261,7 @@ void N2D2::Cell_Frame_CUDA<T>::replaceInput(BaseTensor& oldInputs,
 // BEGIN code used exlusively in python API
 
 /**
- * This is run every time the input dimensions have changed to reinitialized the cell tensors.
+ * This is run every time the input dimensions have changed to relink the cell input/diffOutput tensors.
 **/
 template <class T>
 void N2D2::Cell_Frame_CUDA<T>::clearInputTensors() {
@@ -269,6 +269,17 @@ void N2D2::Cell_Frame_CUDA<T>::clearInputTensors() {
     mDiffOutputs.clear();
 
     mInputsDims.clear();
+}
+
+/**
+ * This is run every time the input dimensions have changed to reinitialized the cell output/diffInput tensors.
+**/
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::clearOutputTensors() {
+    mOutputs.clear();
+    mDiffInputs.clear();
+
+    mOutputsDims.clear();
 }
 
 /**
@@ -286,7 +297,7 @@ void N2D2::Cell_Frame_CUDA<T>::initializeDataDependent()
 
     /**
      * At the moment data tensor reinitialisation is not supported, but technically it would be possible. **/
-    if (mOutputs.empty()) {
+    if (mOutputs.empty() && mDiffInputs.empty()) {
         std::vector<size_t> outputsDims(mOutputsDims);
         outputsDims.push_back(mInputs.dimB());
 

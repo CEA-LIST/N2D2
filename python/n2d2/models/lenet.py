@@ -27,7 +27,7 @@ from n2d2.solver import SGD
 from n2d2.filler import Normal, He
 import n2d2.global_variables
 
-solver_config = ConfigSection(learningRate=0.05, momentum=0.9, decay=0.0005, learningRateDecay=0.993)
+solver_config = ConfigSection(learning_rate=0.05, momentum=0.9, decay=0.0005, learning_rate_decay=0.993)
 
 def conv_def():
     weights_filler = He()

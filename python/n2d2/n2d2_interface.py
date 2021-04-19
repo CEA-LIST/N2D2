@@ -55,7 +55,22 @@ class N2D2_Interface:
         Parameters are set post N2D2 object creation. Reconfigurable
         """
         self._config_parameters = config_parameters
+        N2D2_Interface._check_parameter_uniqueness(self._config_parameters)
         self._N2D2_object = None
+
+
+
+    @classmethod
+    def create_from_N2D2_object(cls, N2D2_object):
+        interface = cls(**N2D2_Interface.load_N2D2_parameters(N2D2_object), from_arguments=False)
+        interface._set_N2D2_object(N2D2_object)
+        return interface
+
+    def _set_N2D2_object(self, N2D2_object):
+        if self._N2D2_object:
+            raise RuntimeError("Error: N2D2_object is already initialized")
+        else:
+            self._N2D2_object = N2D2_object
 
 
     def N2D2(self):
@@ -69,22 +84,37 @@ class N2D2_Interface:
     def _set_N2D2_parameter(self, key, value):
         parsed_parameter = self.parse_py_to_ini_(value)
         self._N2D2_object.setParameter(key, parsed_parameter)
-        # Test
+
+        # Tests
         returned_parameter, returned_type = self._N2D2_object.getParameterAndType(key)
         returned_parameter = self._N2D2_type_map[returned_type](returned_parameter)
         #print(key + " " + str(returned_parameter) + " " + str(value))
         if not value == returned_parameter:
-            raise RuntimeError("Parameter incoherence detected. Injected value is \'" + str(value) +
+            raise RuntimeWarning("Parameter incoherence detected. Injected value is \'" + str(value) +
                                "\', while returned value is \'" + str(returned_parameter) + "\'.")
+
+    # TODO: This method is currently a safety check because the convention conversions are potentially not unique.
+    @staticmethod
+    def _check_parameter_uniqueness(parameters, first_upper=True):
+        existing_keys = []
+        for key in parameters:
+            converted_key = N2D2_Interface.python_to_n2d2_convention(key, first_upper)
+            if converted_key in existing_keys:
+                raise RuntimeError("Ambiguous parameter key '" + converted_key + "' detected.")
+            else:
+                existing_keys.append(converted_key)
 
 
     def _set_N2D2_parameters(self, parameters):
         for key, value in parameters.items():
             self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
+
     def set_parameter(self, key, value):
         self._config_parameters[key] = value
         self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+        N2D2_Interface._check_parameter_uniqueness(self._config_parameters)
+
 
     def _parse_optional_arguments(self, optional_argument_keys):
         for key in optional_argument_keys:
@@ -92,21 +122,21 @@ class N2D2_Interface:
                 self._optional_constructor_arguments[key] = self._config_parameters.pop(key)
 
 
-    # Cast first character to lowercase to be compatible with N2D2 constructor name convention
     """
-    @staticmethod
-    def _INI_to_param_convention(key):
-        return key[0].lower() + key[1:]
-    """
-
-    # Optional: Cast first character to uppercase to be compatible with N2D2.Parameter name convention
-    # Convert to CamelCase
+        Optional: Cast first character to uppercase to be compatible with N2D2.Parameter name convention
+        Converts to CamelCase, which is the N2D2 parameter convention. Function arguments are first letter
+        lower case, while N2D2::Parameter objects are first letter upper case.
+        """
     @staticmethod
     def python_to_n2d2_convention(key, first_upper=True):
         new_key = ""
         set_upper = first_upper
         for c in key:
+            if c.isupper():
+                raise ValueError("Illegal upper case letter '" + c + "' in python parameter '" + key + "' detected.")
             if set_upper:
+                if c == "_":
+                    raise ValueError("Leading or double '_' in python parameter '" + key + "' detected.")
                 c = c.upper()
                 set_upper = False
             if not c == "_":
@@ -115,8 +145,25 @@ class N2D2_Interface:
                 set_upper = True
         return new_key
 
+    """
+       Converts to "python_parameter_convention" from N2D2 parameter convention.
+       """
+    @staticmethod
+    def n2d2_to_python_convention(key):
+        new_key = key[0].lower()
+        for c in key[1:]:
+            if c.isupper():
+                new_key += "_"
+            new_key += c.lower()
+        if not key == N2D2_Interface.python_to_n2d2_convention(new_key):
+            raise RuntimeWarning("Warning: Incoherent parameter conversion detected: " +
+                                 key + " vs. " + N2D2_Interface.python_to_n2d2_convention(new_key) +
+                                 ". Please check consistence of parameter convention in for N2D2 parameter")
+        return new_key
+
     @staticmethod
     def n2d2_function_argument_parser(arguments):
+        N2D2_Interface._check_parameter_uniqueness(arguments, False)
         new_arguments = {}
         for key, value in arguments.items():
             new_key = N2D2_Interface.python_to_n2d2_convention(key, False)
@@ -142,13 +189,16 @@ class N2D2_Interface:
         str_params = N2D2_object.getParameters()
         parameters = {}
         for param in str_params:
-            parameters[param] = N2D2_Interface._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](
+            parameters[N2D2_Interface.n2d2_to_python_convention(param)] = N2D2_Interface._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](
                 N2D2_object.getParameterAndType(param)[0])
             #print(param, ":",
             #      N2D2_Interface._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](N2D2_object.getParameterAndType(param)[0]))
         return parameters
 
     def __str__(self):
+        if n2d2.global_variables.verbosity == n2d2.global_variables.Verbosity.graph_only:
+            return ""
+
         def add_delimiter(condition, delimiter):
             return delimiter+" " if condition else ""
 

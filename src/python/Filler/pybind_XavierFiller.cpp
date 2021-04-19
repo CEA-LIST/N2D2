@@ -54,7 +54,11 @@ void declare_XavierFiller(py::module &m, const std::string& typeStr) {
     .def(py::init<typename XavierFiller<T>::VarianceNorm, typename XavierFiller<T>::Distribution, T>(), 
         py::arg("varianceNorm") = XavierFiller<T>::VarianceNorm::FanIn, 
         py::arg("distribution") = XavierFiller<T>::Distribution::Uniform, 
-        py::arg("scaling") = 1.0);
+        py::arg("scaling") = 1.0) 
+    .def("getVarianceNorm", &XavierFiller<T>::getVarianceNorm)
+    .def("getDistribution", &XavierFiller<T>::getDistribution)
+    .def("getScaling", &XavierFiller<T>::getScaling)
+    ;
 }
 
 void init_XavierFiller(py::module &m) {

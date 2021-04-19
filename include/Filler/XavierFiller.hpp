@@ -43,6 +43,19 @@ public:
                  Distribution distribution = Uniform,
                  T scaling = 1.0);
     void apply(BaseTensor& data, bool restrictPositive=false);
+    const char* getType() const
+    {
+        return "Xavier";
+    };
+    VarianceNorm getVarianceNorm(){
+        return mVarianceNorm;
+    };
+    Distribution getDistribution(){
+        return mDistribution;
+    }; 
+    T getScaling(){
+        return mScaling;
+    };
     virtual ~XavierFiller() {};
 
 private:

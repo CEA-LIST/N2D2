@@ -87,6 +87,14 @@ public:
     {
         return Type;
     };
+    std::shared_ptr<Filler> getWeightsFiller()
+    {
+        return mWeightsFiller;
+    };
+    std::shared_ptr<Filler> getBiasFiller()
+    {
+        return mBiasFiller;
+    };
     void setWeightsFiller(const std::shared_ptr<Filler>& filler)
     {
         mWeightsFiller = filler;
