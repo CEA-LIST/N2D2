@@ -178,11 +178,11 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
 
     def set_activation(self, activation):
         print("Note: Replacing potentially existing activation in cells: " + self.get_name())
-        self._config_parameters['activation'] = activation
-        self._N2D2_object.setActivation(self._config_parameters['activation'].N2D2())
+        self._config_parameters['activation_function'] = activation
+        self._N2D2_object.setActivation(self._config_parameters['activation_function'].N2D2())
 
-    def get_activation(self, activation):
-        return self._config_parameters['activation']
+    def get_activation(self):
+        return self._config_parameters['activation_function']
 
     def get_inputs(self):
         return self._inputs
