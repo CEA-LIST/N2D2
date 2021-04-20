@@ -52,9 +52,9 @@ class LayerN2D2(torch.nn.Module):
     # TODO : This class is not up to date ! Need to rework the prop and backprop so that it work like DeepNetN2D2
     def __init__(self, n2d2_cell, trainable=True):
         super().__init__()
-        if isinstance(n2d2_cell, n2d2.cells.cell.NeuralNetworkCell):
+        if isinstance(n2d2_cell, n2d2.cells.NeuralNetworkCell):
             self._N2D2 = n2d2_cell.N2D2()
-        elif isinstance(n2d2_cell, N2D2.NeuralNetworkCell):
+        elif isinstance(n2d2_cell, N2D2.Cell):
             self._N2D2 = n2d2_cell
         else:
             raise n2d2.error_handler.WrongInputType('n2d2_cell', str(type(n2d2_cell)), ["N2D2.NeuralNetworkCell", "n2d2.cells.NeuralNetworkCell"])

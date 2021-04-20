@@ -46,10 +46,11 @@ class test_Linear(unittest.TestCase):
         pass
 
     def test_output(self):
-        activationCell = n2d2.cells.cell.Activation(activationFunction=self.activation)
-        inputs = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True) 
-        inputs.set_values([[[0,1],
-                            [2, 3]]])
+        activationCell = n2d2.cells.Activation(activation_function=self.activation)
+        inputs = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True)
+
+        inputs.set_values([[[[0, 1],
+                            [2, 3]]]])
         outputs = activationCell(inputs)
         print(outputs)
         self.assertEqual(outputs[0], 0)
@@ -65,10 +66,10 @@ class test_Tanh(unittest.TestCase):
         pass
 
     def test_output(self):
-        ActivationCell = n2d2.cells.cell.Activation(activationFunction=self.activation)
+        ActivationCell = n2d2.cells.Activation(activation_function=self.activation)
         inputs = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True) 
-        inputs.set_values([[[0, 1],
-                            [2, 3]]])
+        inputs.set_values([[[[0, 1],
+                            [2, 3]]]])
         outputs = ActivationCell(inputs)
         print(outputs)
         self.assertEqual(round(outputs[0], 5), round(tanh(0), 5))
@@ -84,10 +85,10 @@ class test_Rectifier(unittest.TestCase):
         pass
 
     def test_output(self):
-        ActivationCell = n2d2.cells.cell.Activation(activationFunction=self.activation)
+        ActivationCell = n2d2.cells.Activation(activation_function=self.activation)
         inputs = n2d2.Tensor([1, 1, 2, 2], value=1.0, cuda=True) 
-        inputs.set_values([[[-1, -2],
-                            [ 2,  3]]])
+        inputs.set_values([[[[-1, -2],
+                            [ 2,  3]]]])
         outputs = ActivationCell(inputs)
         self.assertEqual(outputs[0], 0)
         self.assertEqual(outputs[1], 0)

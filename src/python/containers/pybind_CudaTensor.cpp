@@ -48,7 +48,7 @@ void declare_CudaTensor(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("CudaTensor_" + typeStr);
     py::class_<CudaTensor<T>, Tensor<T>, CudaBaseTensor, BaseTensor>(m, pyClassName.c_str(), py::multiple_inheritance(), py::buffer_protocol())
     .def(py::init<>())
-    // .def(py::init<const std::vector<size_t>&, const T&>(), py::arg("dims"), py::arg("value") = T())
+    .def(py::init<const std::vector<size_t>&, const T&>(), py::arg("dims"), py::arg("value") = T())
     /// Bare bones interface
     .def("__getitem__", [](const CudaTensor<T>& b, size_t i) {
         if (i >= b.size()) throw py::index_error();
@@ -168,11 +168,11 @@ void init_CudaTensor(py::module &m) {
     declare_CudaTensor<float>(m, "float");
     declare_CudaTensor<double>(m, "double");
     declare_CudaTensor<char>(m, "char");
-    // declare_CudaTensor<unsigned char>(m, "unsigned_char");
+    declare_CudaTensor<unsigned char>(m, "unsigned_char");
     declare_CudaTensor<short>(m, "short");
     declare_CudaTensor<int>(m, "int");
-    // declare_CudaTensor<unsigned int>(m, "unsigned_int");
-    // declare_CudaTensor<unsigned long long>(m, "unsigned_long_long");
+    declare_CudaTensor<unsigned int>(m, "unsigned_int");
+    declare_CudaTensor<unsigned long long>(m, "unsigned_long_long");
 }
 }
 #endif
