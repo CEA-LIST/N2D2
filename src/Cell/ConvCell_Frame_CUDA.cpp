@@ -580,7 +580,6 @@ the API cudnnGetConvolutionForwardMaxCount().
 
 
 
-
 template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
 {
@@ -717,6 +716,25 @@ void N2D2::ConvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, 
     
         nbChannels += inputDimZ;
 
+    }
+
+    initializeWeightQuantizer();
+}
+
+
+
+
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::initializeWeightQuantizer()
+{
+    if (mQuantizer) {
+        for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
+            mQuantizer->addWeights(mSharedSynapses[k], mDiffSharedSynapses[k]);
+        }
+        if (!mNoBias) {
+            mQuantizer->addBiases(*mBias, mDiffBias);
+        }
+        mQuantizer->initialize();
     }
 }
 
@@ -1027,16 +1045,9 @@ the API cudnnGetConvolutionForwardMaxCount().
         CHECK_CUDA_STATUS(cudaMalloc(&mWorkspace[dev], mWorkspaceSize));
     }
 
-    if (mQuantizer) {
-        for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
-            mQuantizer->addWeights(mSharedSynapses[k], mDiffSharedSynapses[k]);
-        }
-        if (!mNoBias) {
-            mQuantizer->addBiases(*mBias, mDiffBias);
-        }
-        mQuantizer->initialize();
-    }
 }
+
+
 
 
 

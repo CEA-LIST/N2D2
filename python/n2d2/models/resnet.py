@@ -20,6 +20,7 @@
 """
 
 from n2d2.utils import ConfigSection
+from n2d2.tensor import Interface
 from n2d2.cells.nn import Fc, Conv, Pool2d, GlobalPool2d, ElemWise, BatchNorm2d
 from n2d2.cells import Sequence, Block
 from n2d2.activation import Rectifier, Linear
@@ -177,7 +178,7 @@ class ResNetBottleneckBlock(Block):
         else:
             shortcut = x
         x = self._main_branch(x)
-        x = self._elem_wise([x, shortcut])
+        x = self._elem_wise(Interface([x, shortcut]))
 
         x.get_deepnet().end_group()
 
@@ -199,7 +200,7 @@ class ResNet50BnExtractor(Sequence):
             ResNetBottleneckBlock(bottleneck_size, bottleneck_size, 1, l, True, False, "conv2.1"),
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, False, "conv2.2"),
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, True, "conv2.3"),
-            BatchNorm2d(4 * bottleneck_size, 4 * bottleneck_size, activation_function=Rectifier(), name="bn2")
+            BatchNorm2d(4 * bottleneck_size, activation_function=Rectifier(), name="bn2")
         ], name="div4")
 
         bottleneck_size = 2 * bottleneck_size
@@ -208,7 +209,7 @@ class ResNet50BnExtractor(Sequence):
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, False, "conv3.2"),
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, False, "conv3.3"),
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, True, "conv3.4"),
-            BatchNorm2d(4 * bottleneck_size, 4 * bottleneck_size, activation_function=Rectifier(), name="bn3")
+            BatchNorm2d(4 * bottleneck_size, activation_function=Rectifier(), name="bn3")
         ], name="div8")
 
         bottleneck_size = 2 * bottleneck_size
@@ -219,15 +220,15 @@ class ResNet50BnExtractor(Sequence):
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, False, "conv4.4"),
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, False, "conv4.5"),
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, True, "conv4.6"),
-            BatchNorm2d(4 * bottleneck_size, 4 * bottleneck_size, activation_function=Rectifier(), name="bn4")
+            BatchNorm2d(4 * bottleneck_size, activation_function=Rectifier(), name="bn4")
         ], name="div16")
 
         bottleneck_size = 2 * bottleneck_size
         self.div32 = Sequence([
-            ResNetBottleneckBlock(2 * bottleneck_size, int(512 * alpha), 2, l, True, False, "conv5.1"),
-            ResNetBottleneckBlock(4 * bottleneck_size, int(512 * alpha), 1, l, False, False, "conv5.2"),
-            ResNetBottleneckBlock(4 * bottleneck_size, int(512 * alpha), 1, l, False, True, "conv5.3"),
-            BatchNorm2d(4 * bottleneck_size, 4 * int(512 * alpha), activation_function=Rectifier(), name="bn5")
+            ResNetBottleneckBlock(2 * bottleneck_size, bottleneck_size, 2, l, True, False, "conv5.1"),
+            ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, False, "conv5.2"),
+            ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, True, "conv5.3"),
+            BatchNorm2d(4 * bottleneck_size, activation_function=Rectifier(), name="bn5")
         ], name="div32")
 
 

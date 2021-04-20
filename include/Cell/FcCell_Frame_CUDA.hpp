@@ -62,6 +62,7 @@ public:
 
     virtual void initialize();
     virtual void initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping = Tensor<bool>());
+    virtual void initializeWeightQuantizer();
     virtual void initializeDataDependent();
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);

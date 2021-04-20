@@ -181,9 +181,8 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
         self._config_parameters['activation'] = activation
         self._N2D2_object.setActivation(self._config_parameters['activation'].N2D2())
 
-    def set_activation_quantizer(self, quantizer):
-        self._N2D2_object.getActivation().setQuantizer(quantizer.N2D2())
-        # TODO: Create n2d2 objects to obtain visibility of objects in API
+    def get_activation(self, activation):
+        return self._config_parameters['activation']
 
     def get_inputs(self):
         return self._inputs
@@ -200,6 +199,7 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
             filename = dir_name + "/" + self.get_name() + ".syntxt"
             print("import " + filename)
             self._N2D2_object.importFreeParameters(filename, ignoreNotExists)
+            self._N2D2_object.importActivationParameters(dir_name, ignoreNotExists)
 
     """
     def import_activation_parameters(self, filename, **kwargs):
@@ -458,8 +458,12 @@ class Fc(NeuralNetworkCell):
         self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
 
     def set_quantizer(self, quantizer):
-        self._config_parameters['quantizer'] = quantizer
-        self._N2D2_object.setQuantizer(self._config_parameters['quantizer'].N2D2())
+        if 'quantizer' in self._config_parameters:
+            raise RuntimeError("Quantizer already exists in cell '" + self.get_name() + "'")
+        else:
+            self._config_parameters['quantizer'] = quantizer
+            self._N2D2_object.setQuantizer(self._config_parameters['quantizer'].N2D2())
+            self._N2D2_object.initializeWeightQuantizer()
 
     def get_bias_solver(self):
         return self._config_parameters['bias_solver']
@@ -675,8 +679,12 @@ class Conv(NeuralNetworkCell):
         self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
 
     def set_quantizer(self, quantizer):
-        self._config_parameters['quantizer'] = quantizer
-        self._N2D2_object.setQuantizer(self._config_parameters['quantizer'].N2D2())
+        if 'quantizer' in self._config_parameters:
+            raise RuntimeError("Quantizer already exists in cell '" + self.get_name() + "'")
+        else:
+            self._config_parameters['quantizer'] = quantizer
+            self._N2D2_object.setQuantizer(self._config_parameters['quantizer'].N2D2())
+            self._N2D2_object.initializeWeightQuantizer()
 
     def set_weight(self, output_index, channel_index, value):
         """
@@ -1408,19 +1416,37 @@ class ElemWise(NeuralNetworkCell):
 
     def __call__(self, inputs):
 
-        for elem in inputs:
-            if elem.nb_dims() != 4:
-                raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-
         self._deepnet = self._infer_deepnet(inputs)
 
         if self._N2D2_object is None:
 
-            nb_outputs = inputs[0].dims()[2]
+            # TODO : not good for multi inputs
+            # if inputs.nb_dims() != 4:
+            #     raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
+            mapping_row = 0
+
+            if isinstance(inputs,
+                          n2d2.tensor.Interface):  # This may change in the future ! (Becoming an Interface instead of a list)
+                for tensor in inputs.get_tensors():
+                    if tensor.nb_dims() != 4:
+                        raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()),
+                                         " were given.")
+                    # TODO: Add check that all Z are the same
+                    mapping_row = tensor.dimZ()
+            elif isinstance(inputs, n2d2.Tensor):
+                if inputs.nb_dims() != 4:
+                    raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
+                mapping_row = inputs.dimZ()
+
+            else:
+                raise n2d2.wrong_input_type("inputs", inputs, [str(type(list)), str(type(n2d2.Tensor))])
+            self._deepnet = self._infer_deepnet(inputs)
+
+            print(mapping_row)
 
             self._set_N2D2_object(self._cell_constructors[self._model](self._deepnet.N2D2(),
                                                                      self.get_name(),
-                                                                     nb_outputs,
+                                                                     mapping_row,
                                                                      **self.n2d2_function_argument_parser(
                                                                          self._optional_constructor_arguments)))
 

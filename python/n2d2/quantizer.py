@@ -79,7 +79,6 @@ class SATCell(CellQuantizer):
             self._set_N2D2_parameters(self._config_parameters)
 
 
-
 class SATAct(ActivationQuantizer):
     """
     SAT activation quantizer.

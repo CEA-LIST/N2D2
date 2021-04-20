@@ -129,6 +129,14 @@ void N2D2::FcCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsigne
         mWeightsFiller->apply(mSynapses.back());
     }
 
+    initializeWeightQuantizer();
+}
+
+
+
+template <class T>
+void N2D2::FcCell_Frame<T>::initializeWeightQuantizer()
+{
     if (mQuantizer) {
         for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
             mQuantizer->addWeights(mSynapses[k], mDiffSynapses[k]);

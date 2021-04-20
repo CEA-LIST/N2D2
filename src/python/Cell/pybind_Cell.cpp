@@ -146,6 +146,7 @@ void init_Cell(py::module &m) {
 
     .def("initializeDataDependent", &Cell::initializeDataDependent)
     .def("initializeParameters", &Cell::initializeParameters, py::arg("inputDimZ"), py::arg("nbInputs"), py::arg("mapping")=Tensor<bool>())
+    .def("initializeWeightQuantizer", &Cell::initializeWeightQuantizer)
 
     .def("save", &Cell::save, py::arg("dirName"),    
     R"mydelimiter(
