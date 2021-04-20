@@ -13,6 +13,28 @@ N2D2
    intro
    about
    simus
+   perfs_tools
+   tuto
+
+.. toctree::
+   :maxdepth: 1
+   :caption: ONNX Import:
+
+   onnx_convert
+   onnx_import
+   onnx_transfer
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Quantization and Export:
+
+   quant_post
+   quant_qat
+   export_CPP
+   export_CPP_STM32
+   export_TensorRT
+   export_DNeuro
+   export_legacy
 
 .. toctree::
    :maxdepth: 1
@@ -23,7 +45,7 @@ N2D2
    ini/data_analysis
    ini/environment
    ini/layers
-   ini/tuto
+   ini/target
 
 .. toctree::
    :maxdepth: 1
@@ -53,6 +75,14 @@ N2D2
    core/transformation
    core/target
    core/example
+
+.. toctree::
+   :maxdepth: 1
+   :caption: C++ API / Developer:
+
+   dev_intro
+
+
 
 Indices and tables
 ==================

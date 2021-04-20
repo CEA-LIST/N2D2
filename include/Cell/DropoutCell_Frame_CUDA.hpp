@@ -62,14 +62,14 @@ public:
     virtual ~DropoutCell_Frame_CUDA();
 
 protected:
-    size_t mStatesSize;
-    void* mStates;
+    std::vector<size_t> mStatesSize;
+    std::vector<void*> mStates;
 
-    std::vector<size_t> mReserveSpaceSize;
-    std::vector<void*> mReserveSpace;
+    std::vector<std::vector<size_t> > mReserveSpaceSize;
+    std::vector<std::vector<void*> > mReserveSpace;
 
-    std::vector<cudnnTensorDescriptor_t> mOutputDesc;
-    cudnnDropoutDescriptor_t mDropoutDesc;
+    std::vector<std::vector<cudnnTensorDescriptor_t> > mOutputDesc;
+    std::vector<cudnnDropoutDescriptor_t > mDropoutDesc;
 
 private:
     static Registrar<DropoutCell> mRegistrar;

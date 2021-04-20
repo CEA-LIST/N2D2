@@ -23,6 +23,7 @@
 #include "StimuliProvider.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/ConvCell.hpp"
+#include "Cell/FcCell.hpp"
 #include "Cell/DeconvCell.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/ElemWiseCell.hpp"
@@ -431,6 +432,8 @@ void N2D2::DrawNet::drawGraph(DeepNet& deepNet, const std::string& fileName)
 
             const std::shared_ptr<ConvCell> cellConv
                 = std::dynamic_pointer_cast<ConvCell>(cell);
+            const std::shared_ptr<FcCell> cellFc
+                = std::dynamic_pointer_cast<FcCell>(cell);
             const std::shared_ptr<DeconvCell> cellDeconv
                 = std::dynamic_pointer_cast<DeconvCell>(cell);
             const std::shared_ptr<PoolCell> cellPool
@@ -526,12 +529,32 @@ void N2D2::DrawNet::drawGraph(DeepNet& deepNet, const std::string& fileName)
             if(cellElemWise)
                 nodeLabel << "\n" << cellElemWise->getOperation() << "\n";
 
+            if(cellConv) {
+                if(cellConv->getQuantizer()) {
+                    nodeLabel << "QWeights: " << cellConv->getQuantizer()->getType() 
+                    <<  " on range [" << cellConv->getQuantizer()->getRange() << " q-step]"
+                    << "\n";
+                }
+            }
+            if(cellFc) {
+                if(cellFc->getQuantizer()) {
+                    nodeLabel << "QWeights: " << cellFc->getQuantizer()->getType() 
+                    <<  " on range [" << cellFc->getQuantizer()->getRange() << " q-step]"
+                    << "\n";
+                }
+            }
+
             const std::shared_ptr<Cell_Frame_Top> cellFrame
                 = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
 
             if (cellFrame && cellFrame->getActivation()) {
                 nodeLabel << "\nACT: " << cellFrame->getActivation()->getType()
                     << "\n";
+                if(cellFrame->getActivation()->getQuantizer()) {
+                    nodeLabel << "QAct: " << cellFrame->getActivation()->getQuantizer()->getType() 
+                    <<  " on range [" << cellFrame->getActivation()->getQuantizer()->getRange() << " q-step]"
+                    << "\n";
+                }
             }
             
             graph.node(cellName, nodeLabel.str());

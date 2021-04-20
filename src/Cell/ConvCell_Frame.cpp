@@ -322,6 +322,12 @@ void N2D2::ConvCell_Frame<T>::propagate(bool inference)
 {
     mInputs.synchronizeDBasedToH();
 
+    if (mInputs.size() < mSharedSynapses.size()) {
+        throw std::runtime_error("ConvCell_Frame<T>::propagate(): multiple "
+            "synapse tensors per input is not supported for ConvCell "
+            + mName);
+    }
+
     const T alpha = T(1.0);
     T beta = T(0.0);
 

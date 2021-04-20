@@ -102,6 +102,14 @@ N2D2::DIR_DatabaseGenerator::generate(IniParser& iniConfig,
             database->loadROIsDir(roiDir, roiExt, depth);
 
         if (perLabel) {
+            if (learn + validation > 1.0) {
+                std::stringstream errorMsg;
+                errorMsg << "DIR_DatabaseGenerator: Learn (" << learn << ") + "
+                    "Validation (" << validation << ") cannot be > 1.0";
+
+                throw std::runtime_error(errorMsg.str());
+            }
+
             if (!iniConfig.isProperty("Test"))
                 test = 1.0 - learn - validation;
 

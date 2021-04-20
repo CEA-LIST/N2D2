@@ -1,0 +1,834 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Transformation &mdash; N2D2  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Target" href="target.html" />
+    <link rel="prev" title="StimuliProvider" href="stimuliprovider.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> N2D2
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ONNX Import:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../onnx_convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx_import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx_transfer.html">Train from ONNX models</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Quantization and Export:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quant_post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant_qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_legacy.html">Export: other / legacy</a></li>
+</ul>
+<p class="caption"><span class="caption-text">INI File Interface:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ini/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/data_analysis.html">Stimuli data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/environment.html">Stimuli provider (Environment)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/layers.html">Network Layers</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/tensor.html">Tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/deepnet.html">DeepNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/interoperability.html">Interoperability</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++/Python core:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="activations.html">Activation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filler.html">Filler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver.html">Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Transformation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#transformations">Transformations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Transformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#distortiontransformation">DistortionTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#padcroptransformation">PadCropTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compositetransformation">CompositeTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#affinetransformation">AffineTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#channelextractiontransformation">ChannelExtractionTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#colorspacetransformation">ColorSpaceTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compressionnoisetransformation">CompressionNoiseTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dcttransformation">DCTTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dfttransformation">DFTTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#equalizetransformation">EqualizeTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#expandlabeltransformation">ExpandLabelTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wallisfiltertransformation">WallisFilterTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#thresholdtransformation">ThresholdTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sliceextractiontransformation">SliceExtractionTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#reshapetransformation">ReshapeTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rescaletransformation">RescaleTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rangeclippingtransformation">RangeClippingTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rangeaffinetransformation">RangeAffineTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#randomaffinetransformation">RandomAffineTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#normalizetransformation">NormalizeTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#morphologytransformation">MorphologyTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#morphologicalreconstructiontransformation">MorphologicalReconstructionTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#magnitudephasetransformation">MagnitudePhaseTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#labelsliceextractiontransformation">LabelSliceExtractionTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#labelextractiontransformation">LabelExtractionTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gradientfiltertransformation">GradientFilterTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#apodizationtransformation">ApodizationTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#filtertransformation">FilterTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fliptransformation">FlipTransformation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="target.html">Target</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++ API / Developer:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev_intro.html">Introduction</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">N2D2</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Transformation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/core/transformation.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="transformation">
+<h1>Transformation<a class="headerlink" href="#transformation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>In order to apply transformation to a dataset, we use the transformation object.</p>
+<p>Creation of different Transformation object.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">dist</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">DistortionTransformation</span><span class="p">()</span>
+<span class="n">dist</span><span class="o">.</span><span class="n">setParameter</span><span class="p">(</span><span class="s2">&quot;ElasticGaussianSize&quot;</span><span class="p">,</span> <span class="s2">&quot;21&quot;</span><span class="p">)</span>
+<span class="n">dist</span><span class="o">.</span><span class="n">setParameter</span><span class="p">(</span><span class="s2">&quot;ElasticSigma&quot;</span><span class="p">,</span> <span class="s2">&quot;6.0&quot;</span><span class="p">)</span>
+<span class="n">dist</span><span class="o">.</span><span class="n">setParameter</span><span class="p">(</span><span class="s2">&quot;ElasticScaling&quot;</span><span class="p">,</span> <span class="s2">&quot;36.0&quot;</span><span class="p">)</span>
+<span class="n">dist</span><span class="o">.</span><span class="n">setParameter</span><span class="p">(</span><span class="s2">&quot;Scaling&quot;</span><span class="p">,</span> <span class="s2">&quot;10.0&quot;</span><span class="p">)</span>
+<span class="n">dist</span><span class="o">.</span><span class="n">setParameter</span><span class="p">(</span><span class="s2">&quot;Rotation&quot;</span><span class="p">,</span> <span class="s2">&quot;10.0&quot;</span><span class="p">)</span>
+
+<span class="n">padcrop</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">PadCropTransformation</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">24</span><span class="p">)</span>
+
+<span class="n">ct</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">CompositeTransformation</span><span class="p">(</span><span class="n">padcrop</span><span class="p">)</span>
+<span class="n">ct</span><span class="o">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To apply Transformation to a dataset, we use an object <a class="reference internal" href="stimuliprovider.html#N2D2.StimuliProvider" title="N2D2.StimuliProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.StimuliProvider</span></code></a> which acts as a data loader.</p>
+</div>
+<div class="section" id="transformations">
+<h2>Transformations<a class="headerlink" href="#transformations" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>Transformation<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.Transformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">Transformation</code><a class="headerlink" href="#N2D2.Transformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="distortiontransformation">
+<h3>DistortionTransformation<a class="headerlink" href="#distortiontransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.DistortionTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">DistortionTransformation</code><a class="headerlink" href="#N2D2.DistortionTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="padcroptransformation">
+<h3>PadCropTransformation<a class="headerlink" href="#padcroptransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.PadCropTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">PadCropTransformation</code><a class="headerlink" href="#N2D2.PadCropTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py class">
+<dt id="N2D2.PadCropTransformation.BorderType">
+<em class="property">class </em><code class="sig-name descname">BorderType</code><a class="headerlink" href="#N2D2.PadCropTransformation.BorderType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Members:</p>
+<p>ConstantBorder</p>
+<p>ReplicateBorder</p>
+<p>ReflectBorder</p>
+<p>WrapBorder</p>
+<p>MinusOneReflectBorder</p>
+<p>MeanBorder</p>
+<dl class="py method">
+<dt id="N2D2.PadCropTransformation.BorderType.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.PadCropTransformation.BorderType.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="compositetransformation">
+<h3>CompositeTransformation<a class="headerlink" href="#compositetransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.CompositeTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">CompositeTransformation</code><a class="headerlink" href="#N2D2.CompositeTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.CompositeTransformation.push_back">
+<code class="sig-name descname">push_back</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.CompositeTransformation.push_back" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.CompositeTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="2">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.DistortionTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="3">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.PadCropTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="4">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.AffineTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="5">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.ChannelExtractionTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="6">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.ColorSpaceTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="7">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.CompressionNoiseTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="8">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.DCTTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="9">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.DFTTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="10">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.EqualizeTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="11">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.ExpandLabelTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="12">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.FlipTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="13">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.WallisFilterTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="14">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.ThresholdTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="15">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.SliceExtractionTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="16">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.ReshapeTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="17">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.RescaleTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="18">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.RangeClippingTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="19">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.RangeAffineTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="20">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.RandomAffineTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="21">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.NormalizeTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="22">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.MorphologyTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="23">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.MorphologicalReconstructionTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="24">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.MagnitudePhaseTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="25">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.LabelSliceExtractionTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="26">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.LabelExtractionTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="27">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.GradientFilterTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="28">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.ApodizationTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="29">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.FilterTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="30">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.RandomResizeCropTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+<ol class="arabic simple" start="31">
+<li><p>push_back(self: N2D2.CompositeTransformation, arg0: N2D2.CustomTransformation) -&gt; None</p></li>
+</ol>
+<p>Add a transformation to the list of transformation.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="affinetransformation">
+<h3>AffineTransformation<a class="headerlink" href="#affinetransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.AffineTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">AffineTransformation</code><a class="headerlink" href="#N2D2.AffineTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py class">
+<dt id="N2D2.AffineTransformation.Operator">
+<em class="property">class </em><code class="sig-name descname">Operator</code><a class="headerlink" href="#N2D2.AffineTransformation.Operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Members:</p>
+<p>Plus</p>
+<p>Minus</p>
+<p>Multiplies</p>
+<p>Divides</p>
+<dl class="py method">
+<dt id="N2D2.AffineTransformation.Operator.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.AffineTransformation.Operator.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="channelextractiontransformation">
+<h3>ChannelExtractionTransformation<a class="headerlink" href="#channelextractiontransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.ChannelExtractionTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">ChannelExtractionTransformation</code><a class="headerlink" href="#N2D2.ChannelExtractionTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py class">
+<dt id="N2D2.ChannelExtractionTransformation.Channel">
+<em class="property">class </em><code class="sig-name descname">Channel</code><a class="headerlink" href="#N2D2.ChannelExtractionTransformation.Channel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Members:</p>
+<p>Red</p>
+<p>Green</p>
+<p>Blue</p>
+<p>Hue</p>
+<p>Saturation</p>
+<p>Value</p>
+<p>Gray</p>
+<p>Y</p>
+<p>Cb</p>
+<p>Cr</p>
+<dl class="py method">
+<dt id="N2D2.ChannelExtractionTransformation.Channel.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.ChannelExtractionTransformation.Channel.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="colorspacetransformation">
+<h3>ColorSpaceTransformation<a class="headerlink" href="#colorspacetransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.ColorSpaceTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">ColorSpaceTransformation</code><a class="headerlink" href="#N2D2.ColorSpaceTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py class">
+<dt id="N2D2.ColorSpaceTransformation.ColorSpace">
+<em class="property">class </em><code class="sig-name descname">ColorSpace</code><a class="headerlink" href="#N2D2.ColorSpaceTransformation.ColorSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Members:</p>
+<p>BGR</p>
+<p>RGB</p>
+<p>HSV</p>
+<p>HLS</p>
+<p>YCrCb</p>
+<p>CIELab</p>
+<p>CIELuv</p>
+<p>RGB_to_BGR</p>
+<p>RGB_to_HSV</p>
+<p>RGB_to_HLS</p>
+<p>RGB_to_YCrCb</p>
+<p>RGB_to_CIELab</p>
+<p>RGB_to_CIELuv</p>
+<p>HSV_to_BGR</p>
+<p>HSV_to_RGB</p>
+<p>HLS_to_BGR</p>
+<p>HLS_to_RGB</p>
+<p>YCrCb_to_BGR</p>
+<p>YCrCb_to_RGB</p>
+<p>CIELab_to_BGR</p>
+<p>CIELab_to_RGB</p>
+<p>CIELuv_to_BGR</p>
+<p>CIELuv_to_RGB</p>
+<dl class="py method">
+<dt id="N2D2.ColorSpaceTransformation.ColorSpace.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.ColorSpaceTransformation.ColorSpace.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="compressionnoisetransformation">
+<h3>CompressionNoiseTransformation<a class="headerlink" href="#compressionnoisetransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.CompressionNoiseTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">CompressionNoiseTransformation</code><a class="headerlink" href="#N2D2.CompressionNoiseTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="dcttransformation">
+<h3>DCTTransformation<a class="headerlink" href="#dcttransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.DCTTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">DCTTransformation</code><a class="headerlink" href="#N2D2.DCTTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="dfttransformation">
+<h3>DFTTransformation<a class="headerlink" href="#dfttransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.DFTTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">DFTTransformation</code><a class="headerlink" href="#N2D2.DFTTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="equalizetransformation">
+<h3>EqualizeTransformation<a class="headerlink" href="#equalizetransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.EqualizeTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">EqualizeTransformation</code><a class="headerlink" href="#N2D2.EqualizeTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="expandlabeltransformation">
+<h3>ExpandLabelTransformation<a class="headerlink" href="#expandlabeltransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.ExpandLabelTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">ExpandLabelTransformation</code><a class="headerlink" href="#N2D2.ExpandLabelTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="wallisfiltertransformation">
+<h3>WallisFilterTransformation<a class="headerlink" href="#wallisfiltertransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.WallisFilterTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">WallisFilterTransformation</code><a class="headerlink" href="#N2D2.WallisFilterTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="thresholdtransformation">
+<h3>ThresholdTransformation<a class="headerlink" href="#thresholdtransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.ThresholdTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">ThresholdTransformation</code><a class="headerlink" href="#N2D2.ThresholdTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="sliceextractiontransformation">
+<h3>SliceExtractionTransformation<a class="headerlink" href="#sliceextractiontransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.SliceExtractionTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">SliceExtractionTransformation</code><a class="headerlink" href="#N2D2.SliceExtractionTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="reshapetransformation">
+<h3>ReshapeTransformation<a class="headerlink" href="#reshapetransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.ReshapeTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">ReshapeTransformation</code><a class="headerlink" href="#N2D2.ReshapeTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="rescaletransformation">
+<h3>RescaleTransformation<a class="headerlink" href="#rescaletransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.RescaleTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">RescaleTransformation</code><a class="headerlink" href="#N2D2.RescaleTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="rangeclippingtransformation">
+<h3>RangeClippingTransformation<a class="headerlink" href="#rangeclippingtransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.RangeClippingTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">RangeClippingTransformation</code><a class="headerlink" href="#N2D2.RangeClippingTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="rangeaffinetransformation">
+<h3>RangeAffineTransformation<a class="headerlink" href="#rangeaffinetransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.RangeAffineTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">RangeAffineTransformation</code><a class="headerlink" href="#N2D2.RangeAffineTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py class">
+<dt id="N2D2.RangeAffineTransformation.Operator">
+<em class="property">class </em><code class="sig-name descname">Operator</code><a class="headerlink" href="#N2D2.RangeAffineTransformation.Operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Members:</p>
+<p>Plus</p>
+<p>Minus</p>
+<p>Multiplies</p>
+<p>Divides</p>
+<dl class="py method">
+<dt id="N2D2.RangeAffineTransformation.Operator.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.RangeAffineTransformation.Operator.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="randomaffinetransformation">
+<h3>RandomAffineTransformation<a class="headerlink" href="#randomaffinetransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.RandomAffineTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">RandomAffineTransformation</code><a class="headerlink" href="#N2D2.RandomAffineTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="normalizetransformation">
+<h3>NormalizeTransformation<a class="headerlink" href="#normalizetransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.NormalizeTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">NormalizeTransformation</code><a class="headerlink" href="#N2D2.NormalizeTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="morphologytransformation">
+<h3>MorphologyTransformation<a class="headerlink" href="#morphologytransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.MorphologyTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">MorphologyTransformation</code><a class="headerlink" href="#N2D2.MorphologyTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py class">
+<dt id="N2D2.MorphologyTransformation.Operation">
+<em class="property">class </em><code class="sig-name descname">Operation</code><a class="headerlink" href="#N2D2.MorphologyTransformation.Operation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Members:</p>
+<p>Erode</p>
+<p>Dilate</p>
+<p>Opening</p>
+<p>Closing</p>
+<p>Gradient</p>
+<p>TopHat</p>
+<p>BlackHat</p>
+<dl class="py method">
+<dt id="N2D2.MorphologyTransformation.Operation.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.MorphologyTransformation.Operation.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="morphologicalreconstructiontransformation">
+<h3>MorphologicalReconstructionTransformation<a class="headerlink" href="#morphologicalreconstructiontransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.MorphologicalReconstructionTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">MorphologicalReconstructionTransformation</code><a class="headerlink" href="#N2D2.MorphologicalReconstructionTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py class">
+<dt id="N2D2.MorphologicalReconstructionTransformation.Operation">
+<em class="property">class </em><code class="sig-name descname">Operation</code><a class="headerlink" href="#N2D2.MorphologicalReconstructionTransformation.Operation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Members:</p>
+<p>ReconstructionByErosion</p>
+<p>ReconstructionByDilation</p>
+<p>OpeningByReconstruction</p>
+<p>ClosingByReconstruction</p>
+<dl class="py method">
+<dt id="N2D2.MorphologicalReconstructionTransformation.Operation.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.MorphologicalReconstructionTransformation.Operation.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="magnitudephasetransformation">
+<h3>MagnitudePhaseTransformation<a class="headerlink" href="#magnitudephasetransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.MagnitudePhaseTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">MagnitudePhaseTransformation</code><a class="headerlink" href="#N2D2.MagnitudePhaseTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="labelsliceextractiontransformation">
+<h3>LabelSliceExtractionTransformation<a class="headerlink" href="#labelsliceextractiontransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.LabelSliceExtractionTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">LabelSliceExtractionTransformation</code><a class="headerlink" href="#N2D2.LabelSliceExtractionTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="labelextractiontransformation">
+<h3>LabelExtractionTransformation<a class="headerlink" href="#labelextractiontransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.LabelExtractionTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">LabelExtractionTransformation</code><a class="headerlink" href="#N2D2.LabelExtractionTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="gradientfiltertransformation">
+<h3>GradientFilterTransformation<a class="headerlink" href="#gradientfiltertransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.GradientFilterTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">GradientFilterTransformation</code><a class="headerlink" href="#N2D2.GradientFilterTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="apodizationtransformation">
+<h3>ApodizationTransformation<a class="headerlink" href="#apodizationtransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.ApodizationTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">ApodizationTransformation</code><a class="headerlink" href="#N2D2.ApodizationTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="filtertransformation">
+<h3>FilterTransformation<a class="headerlink" href="#filtertransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.FilterTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">FilterTransformation</code><a class="headerlink" href="#N2D2.FilterTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="fliptransformation">
+<h3>FlipTransformation<a class="headerlink" href="#fliptransformation" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="N2D2.FlipTransformation">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">FlipTransformation</code><a class="headerlink" href="#N2D2.FlipTransformation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="target.html" class="btn btn-neutral float-right" title="Target" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="stimuliprovider.html" class="btn btn-neutral float-left" title="StimuliProvider" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, CEA LIST
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -45,7 +45,6 @@ void init_Target(py::module&);
 void init_TargetScore(py::module&);
 
 void init_DeepNet(py::module&);
-void init_DeepNetGenerator(py::module&);
 void init_DrawNet(py::module&);
 //Database
 void init_Database(py::module&);
@@ -266,6 +265,7 @@ void init_QuantizerActivation(py::module&m);
 void init_QuantizerActivation_Frame(py::module&);
 void init_QuantizerActivation_Frame_CUDA(py::module&);
 
+void init_DeepNetGenerator(py::module&);
 
 void init_N2D2(py::module& m) {
     // Creating a variable to know if CUDA have been used for the compilation.
@@ -325,7 +325,6 @@ void init_N2D2(py::module& m) {
 
 
     init_DeepNet(m);
-    init_DeepNetGenerator(m);
     init_DrawNet(m);
 
     //Activation
@@ -514,6 +513,8 @@ void init_N2D2(py::module& m) {
     init_QuantizerActivation(m);
     init_QuantizerActivation_Frame(m);
     init_QuantizerActivation_Frame_CUDA(m);
+    init_DeepNetGenerator(m);
+
 }
 
 /*

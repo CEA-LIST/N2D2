@@ -14,7 +14,7 @@ If you wan to add the same parameters to multiple cells, you can use a ``ConfigS
 
 .. testcode::
 
-        from n2d2.cell import Conv, Pool 
+        from n2d2.cells import Conv, Pool 
 
         conv_config = n2d2.ConfigSection(activation_function=Rectifier(), 
                                 weights_filler=He(), 
@@ -34,77 +34,71 @@ If you have compiled N2D2 with *CUDA*, you can also accelerate your network by u
         n2d2.global_variables.default_model = "Frame_CUDA"
 
 
-.. autoclass:: n2d2.cell.Cell
+.. autoclass:: n2d2.cells.Cell
         :members:
         :inherited-members:
 
 Conv
 ~~~~
 
-.. autoclass:: n2d2.cell.Conv
+.. autoclass:: n2d2.cells.Conv
         :members:
         :inherited-members:
 
 Deconv
 ~~~~~~
 
-.. autoclass:: n2d2.cell.Deconv
+.. autoclass:: n2d2.cells.Deconv
         :members:
         :inherited-members:
 
 Fc
 ~~
 
-.. autoclass:: n2d2.cell.Fc
+.. autoclass:: n2d2.cells.Fc
         :members:
         :inherited-members:
 
 Dropout
 ~~~~~~~
 
-.. autoclass:: n2d2.cell.Dropout
+.. autoclass:: n2d2.cells.Dropout
         :members:
         :inherited-members:
 
 ElemWise
 ~~~~~~~~
 
-.. autoclass:: n2d2.cell.ElemWise
+.. autoclass:: n2d2.cells.ElemWise
         :members:
         :inherited-members:
 
 Padding
 ~~~~~~~
 
-.. autoclass:: n2d2.cell.Padding
+.. autoclass:: n2d2.cells.Padding
         :members:
         :inherited-members:
         
 Softmax
 ~~~~~~~
 
-.. autoclass:: n2d2.cell.Softmax
+.. autoclass:: n2d2.cells.Softmax
         :members:
         :inherited-members:
 
 BatchNorm2d
 ~~~~~~~~~~~
 
-.. autoclass:: n2d2.cell.BatchNorm2d
+.. autoclass:: n2d2.cells.BatchNorm2d
         :members:
         :inherited-members:
 
-LRN
-~~~
-
-.. autoclass:: n2d2.cell.LRN
-        :members:
-        :inherited-members:
 
 Pool
 ~~~~
 
-.. autoclass:: n2d2.cell.Pool
+.. autoclass:: n2d2.cells.Pool
         :members:
         :inherited-members:
 

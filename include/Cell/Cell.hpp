@@ -410,6 +410,9 @@ public:
         return (mMapping.dimX() == mMapping.dimY()
                 && groupMap() == mMapping.dimX());
     };
+    const Tensor<bool>& getMapping() const {
+        return mMapping;
+    }
     /// Destructor
     virtual ~Cell() {};
 

@@ -29,12 +29,17 @@
 
 #include <thrust/device_ptr.h>
 #include <thrust/fill.h>
+#include <thrust/functional.h>
+#include <thrust/transform.h>
 
 #include "CudaUtils.hpp"
 #include "CudaContext.hpp"
 #include "containers/Tensor.hpp"
 
 namespace N2D2 {
+
+enum class DeviceState { Excluded, Banned, Debanned, Ready, Connected };
+
 template <typename T> void thrust_fill(T* devData, size_t size, T value);
 
 template <typename T, typename U>
@@ -60,6 +65,21 @@ template <> void thrust_copy(float* srcData, float* dstData,
 template <> void thrust_copy(double* srcData, double* dstData,
                              size_t size);
 
+template <typename T>
+void thrust_aggregate(T* /*srcData*/, T* /*dstData*/, size_t /*size*/) {}
+
+template <> void thrust_aggregate(half_float::half* srcData,
+                                  half_float::half* dstData,
+                                  size_t size);
+template <> void thrust_aggregate(float* srcData,
+                                  float* dstData,
+                                  size_t size);
+template <> void thrust_aggregate(double* srcData,
+                                  double* dstData,
+                                  size_t size);
+
+std::vector<std::pair<int, int>> pairDevices(std::vector<int>& /*array*/);
+
 class CudaBaseTensor;
 template <typename T> class CudaTensor;
 
@@ -84,6 +104,8 @@ public:
         size_t dataDeviceOffset = 0);
     inline void fill(const T& value);
     T* getDevicePtr() const;
+    T* getDevicePtr(int dev) const;
+    bool isDevicePtr(int dev) const;
     void setDevicePtr(T* dataDevice)
     {
         if (mDataDeviceOwner) {
@@ -91,7 +113,11 @@ public:
                                      "data device owner is not null!");
         }
 
-        mDataDevice = dataDevice;
+        int dev;
+        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+        assert(dev < (int)mDataDevice.size());
+        mDataDevice[dev] = dataDevice;
     }
     bool isOwner() const
     {
@@ -106,10 +132,21 @@ public:
                                         const CudaBaseDeviceTensor& baseDevice);
     inline CudaDeviceTensor<T>& operator=(
                                         const CudaDeviceTensor<T>& device);
+
+    void broadcast(int srcDev, int dstDev) const;
+    void broadcastAllFrom(int srcDev) const;
+    void broadcastAllFrom(int srcDev, std::vector<DeviceState> devices) const;
+    void broadcastAnyTo(int dstDev) const;
+
+    void aggregate(int srcDev, int dstDev) const;
+    void aggregateAllTo(int dstDev) const;
+    void aggregateAllTo(int dstDev, std::vector<DeviceState> devices) const;
+
     virtual ~CudaDeviceTensor();
 
 protected:
-    mutable T* mDataDevice;
+    mutable std::vector<T*> mDataDevice;
+    mutable std::vector<T*> mForeignDataDevice;
     const std::shared_ptr<CudaDeviceTensor<T> > mDataDeviceOwner;
     const size_t mDataDeviceOffset;
     mutable cudnnTensorDescriptor_t mTensor;
@@ -149,6 +186,41 @@ public:
 
     /** Synchronize Host data To Device-based */
     virtual void synchronizeHToDBased() const = 0;
+
+    virtual void synchronizeToH(BaseTensor& tensor) const = 0;
+
+    virtual void broadcast(int srcDev, int dstDev) const = 0;
+    virtual void broadcastAllFrom(int srcDev) const = 0;
+    virtual void broadcastAllFrom(int srcDev,
+                    std::vector<DeviceState> devices) const = 0;
+    virtual void broadcastAnyTo(int dstDev) const = 0;
+
+    virtual void aggregate(int srcDev, int dstDev) const = 0;
+    virtual void aggregateAllTo(int dstDev) const = 0;
+    virtual void aggregateAllTo(int dstDev,
+                    std::vector<DeviceState> devices) const = 0;
+
+    bool isValid(int dev = -1) const
+    {
+        if (dev == -1)
+            CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+        return (*mValid)[dev];
+    };
+    void setValid(int dev = -1)
+    {
+        if (dev == -1)
+            CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+        (*mValid)[dev] = true;
+    };
+    void clearValid(int dev = -1)
+    {
+        if (dev == -1)
+            CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+        (*mValid)[dev] = false;
+    };
 
     virtual CudaBaseDeviceTensor& deviceTensor() = 0;
     virtual const CudaBaseDeviceTensor& deviceTensor() const = 0;
@@ -203,14 +275,14 @@ public:
     inline void push_back(const std::vector<T>& vec);
     inline void push_back(const Tensor<T>& frame);
     inline void append(const std::vector<T>& vec);
-    inline void append(const Tensor<T>& frame);
+    inline void append(const Tensor<T>& frame, int towardsDim = -1);
     inline void clear();
     inline void swap(CudaTensor<T>& tensor);
     inline CudaTensor<T> clone() const;
     inline CudaTensor<T> operator[](size_t i);
     inline const CudaTensor<T> operator[](size_t i) const;
-    inline CudaTensor<T> rows(size_t j0, size_t nb);
-    inline const CudaTensor<T> rows(size_t j0, size_t nb) const;
+    inline CudaTensor<T> rows(size_t j0, size_t nb, int towardsDim = -1);
+    inline const CudaTensor<T> rows(size_t j0, size_t nb, int towardsDim = -1) const;
     CudaTensor<T>& operator=(const Tensor<T>& tensor);
     template <class U> CudaTensor<T>& operator=(const Tensor<U>& tensor);
 
@@ -239,6 +311,22 @@ public:
 
     /** Synchronize Host data To Device-based */
     void synchronizeHToDBased() const;
+
+    void synchronizeToD(const Tensor<T>& tensor) const;
+    void synchronizeToH(BaseTensor& tensor) const;
+    void synchronizeToH(Tensor<T>& tensor) const;
+    Tensor<T> synchronizeToH() const;
+
+    void broadcast(int srcDev, int dstDev) const;
+    void broadcastAllFrom(int srcDev) const;
+    void broadcastAllFrom(int srcDev,
+                std::vector<DeviceState> devices) const;
+    void broadcastAnyTo(int dstDev) const;
+
+    void aggregate(int srcDev, int dstDev) const;
+    void aggregateAllTo(int dstDev) const;
+    void aggregateAllTo(int dstDev,
+                std::vector<DeviceState> devices) const;
 
     CudaDeviceTensor<T>& deviceTensor()
     {
@@ -441,27 +529,55 @@ N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
     const std::shared_ptr<CudaDeviceTensor<T> >& dataDeviceOwner,
     size_t dataDeviceOffset)
     : CudaBaseDeviceTensor(base),
-      mDataDevice(NULL),
       mDataDeviceOwner(dataDeviceOwner),
       mDataDeviceOffset(dataDeviceOffset),
       mTensor(NULL)
 {
     // ctor
+    int count = 1;
+    const cudaError_t status = cudaGetDeviceCount(&count);
+    if (status != cudaSuccess)
+        count = 1;
+
+    mDataDevice.resize(count, NULL);
+    mForeignDataDevice.resize(count, NULL);
 }
 
 template <typename T>
 T* N2D2::CudaDeviceTensor<T>::getDevicePtr() const
 {
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+    return getDevicePtr(dev);
+}
+
+template <typename T>
+T* N2D2::CudaDeviceTensor<T>::getDevicePtr(int dev) const
+{
     if (mDataDeviceOwner)
-        return mDataDeviceOwner->getDevicePtr() + mDataDeviceOffset;
+        return mDataDeviceOwner->getDevicePtr(dev) + mDataDeviceOffset;
     else {
-        if (mDataDevice == NULL) {
+        assert(dev < (int)mDataDevice.size());
+
+        if (mDataDevice[dev] == NULL) {
             // Lazy memory allocation
-            CHECK_CUDA_STATUS(cudaMalloc(&mDataDevice,
+            CHECK_CUDA_STATUS(cudaMalloc(&(mDataDevice[dev]),
                                          mCudaBaseTensor.size() * sizeof(T)));
         }
 
-        return mDataDevice;
+        return mDataDevice[dev];
+    }
+}
+
+template <typename T>
+bool N2D2::CudaDeviceTensor<T>::isDevicePtr(int dev) const
+{
+    if (mDataDeviceOwner)
+        return mDataDeviceOwner->isDevicePtr(dev);
+    else {
+        assert(dev < (int)mDataDevice.size());
+        return (mDataDevice[dev] != NULL);
     }
 }
 
@@ -579,13 +695,187 @@ N2D2::CudaDeviceTensor<T>& N2D2::CudaDeviceTensor<T>::operator=(
 
     return *this;
 }
+template <typename T> void N2D2::CudaDeviceTensor<T>::broadcast(
+    int srcDev,
+    int dstDev) const
+{
+    CHECK_CUDA_STATUS(cudaMemcpyPeer(
+        getDevicePtr(dstDev), dstDev,
+        getDevicePtr(srcDev), srcDev,
+        mCudaBaseTensor.size() * sizeof(T)));
+}
+
+template <typename T> void N2D2::CudaDeviceTensor<T>::broadcastAllFrom(
+    int srcDev) const
+{
+    assert(mCudaBaseTensor.size() == 0 || isDevicePtr(srcDev));
+    
+    for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
+        if (dev != srcDev && isDevicePtr(dev))
+            broadcast(srcDev, dev);
+    }
+}
+
+template <typename T> void N2D2::CudaDeviceTensor<T>::broadcastAllFrom(
+    int srcDev, std::vector<DeviceState> devices) const
+{
+    assert(mCudaBaseTensor.size() == 0 || isDevicePtr(srcDev));
+    assert(devices.size() == mDataDevice.size());
+
+    for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
+        if (dev != srcDev && isDevicePtr(dev)) {
+            if (devices[dev] == N2D2::DeviceState::Connected
+                || devices[dev] == N2D2::DeviceState::Ready) {
+                    broadcast(srcDev, dev);
+            }
+        }
+    }
+}
+
+template <typename T> void N2D2::CudaDeviceTensor<T>::broadcastAnyTo(
+    int dstDev) const
+{
+    // TODO: this method may be optimized by selecting the source device
+    // for the fastest transfer (NVLink pair for example)
+    for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
+        if (dev != dstDev && isDevicePtr(dev)) {
+            broadcast(dev, dstDev);
+            break;
+        }
+    }
+}
+
+template <typename T> 
+void N2D2::CudaDeviceTensor<T>::aggregate(int srcDev, int dstDev) const
+{
+    if (mForeignDataDevice[dstDev] == NULL) {
+		// Lazy allocation
+		CHECK_CUDA_STATUS(cudaMalloc(
+		&mForeignDataDevice[dstDev], mCudaBaseTensor.size() * sizeof(T)));
+    }
+
+    CHECK_CUDA_STATUS(cudaMemcpyPeer(
+        mForeignDataDevice[dstDev], dstDev,
+        getDevicePtr(srcDev), srcDev,
+        mCudaBaseTensor.size() * sizeof(T)));
+
+    thrust_aggregate(mForeignDataDevice[dstDev], getDevicePtr(dstDev),
+                     mCudaBaseTensor.size());
+}
+
+template <typename T> 
+void N2D2::CudaDeviceTensor<T>::aggregateAllTo(int dstDev) const
+{
+    assert(mCudaBaseTensor.size() == 0 || isDevicePtr(dstDev));
+
+    int currentDev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+
+    if (currentDev != dstDev)
+        CHECK_CUDA_STATUS(cudaSetDevice(dstDev));
+
+    for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
+        if (dev != dstDev && isDevicePtr(dev)) {
+            aggregate(dev, dstDev); 
+        }
+    }
+
+    if (currentDev != dstDev)
+        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+}
+
+template <typename T> 
+void N2D2::CudaDeviceTensor<T>::aggregateAllTo(int dstDev, 
+                                std::vector<DeviceState> devices) const
+{
+    assert(mCudaBaseTensor.size() == 0 || isDevicePtr(dstDev));
+    assert(devices.size() == mDataDevice.size());
+
+    int currentDev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+
+    if (currentDev != dstDev)
+        CHECK_CUDA_STATUS(cudaSetDevice(dstDev));
+
+    for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
+        if (dev != dstDev && isDevicePtr(dev)) {
+            if (devices[dev] == N2D2::DeviceState::Connected) {
+                aggregate(dev, dstDev);
+            }
+        }
+    }
+
+    if (currentDev != dstDev)
+        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+}
+
+/* 
+// Prototype to improve the aggregateAllTo function 
+// by performing pairwise aggregations (complexity in O(log(n))
+// However the function decreases the accuracy of the whole network
+// TODO : find the issue and implement this function
+// The function uses pairDevices, defined in CudaTensor.cpp
+template <typename T> 
+void N2D2::CudaDeviceTensor<T>::aggregateAllTo(int dstDev, 
+                                std::vector<DeviceState> devices) const
+{
+    assert(mCudaBaseTensor.size() == 0 || isDevicePtr(dstDev));
+    assert(devices.size() == mDataDevice.size());
+
+    int currentDev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&currentDev));
+
+    std::vector<int> availableDevices;
+
+    for (int dev = 0; dev < (int)mDataDevice.size(); ++dev) {
+        if (devices[dev] == N2D2::DeviceState::Connected) {
+            availableDevices.push_back(dev);
+        }
+    }
+
+    while (availableDevices.size() > 1) {
+        std::vector<std::pair<int, int>> pairDev = pairDevices(availableDevices);
+        
+#pragma omp parallel for schedule(dynamic)
+        for (int i = 0; i < (int)pairDev.size(); ++i) {
+            std::pair<int, int> p = pairDev[i];
+
+            if (p.first == dstDev) {
+                CHECK_CUDA_STATUS(cudaSetDevice(p.first));
+                aggregate(p.second, p.first);
+                availableDevices.push_back(p.first);
+            } else if (p.first == -1) {
+                availableDevices.push_back(p.second);
+            } else {
+                CHECK_CUDA_STATUS(cudaSetDevice(p.second));
+                aggregate(p.first, p.second);
+                availableDevices.push_back(p.second);
+            }
+
+        }
+    }
+
+    // Mandatory to resynchronize the master device
+    CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
+}
+*/
 
 template <typename T> N2D2::CudaDeviceTensor<T>::~CudaDeviceTensor()
 {
-    if (mDataDevice != NULL) {
-        cudaFree(mDataDevice);
-        mDataDevice = NULL;
+    for (size_t dev = 0; dev < mDataDevice.size(); ++dev) {
+        if (mDataDevice[dev] != NULL) {
+            cudaSetDevice(dev);
+            cudaFree(mDataDevice[dev]);
+            mDataDevice[dev] = NULL;
+        }
+
+        if (mForeignDataDevice[dev] != NULL) {
+            // BUG: current device may not be the one on which memory was allocated!
+            cudaFree(mForeignDataDevice[dev]);
+            mForeignDataDevice[dev] = NULL;
+        }
     }
+
 
     if (mTensor != NULL)
         cudnnDestroyTensorDescriptor(mTensor);
@@ -595,6 +885,12 @@ N2D2::CudaBaseTensor::CudaBaseTensor(bool hostBased):
     mHostBased(hostBased)
 {
     //ctor
+    int count = 1;
+    const cudaError_t status = cudaGetDevice(&count);
+    if (status != cudaSuccess)
+        count = 1;
+
+    (*mValid).resize(count, false);
 }
 
 template <typename T>
@@ -790,9 +1086,9 @@ void N2D2::CudaTensor<T>::append(const std::vector<T>& vec)
 }
 
 template <typename T>
-void N2D2::CudaTensor<T>::append(const Tensor<T>& frame)
+void N2D2::CudaTensor<T>::append(const Tensor<T>& frame, int towardsDim)
 {
-    Tensor<T>::append(frame);
+    Tensor<T>::append(frame, towardsDim);
 
     mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this);
     synchronizeHToD(); // Copy data into device memory
@@ -844,23 +1140,37 @@ const N2D2::CudaTensor<T> N2D2::CudaTensor<T>::operator[](size_t i) const
 }
 
 template <class T>
-N2D2::CudaTensor<T> N2D2::CudaTensor<T>::rows(size_t j0, size_t nb)
+N2D2::CudaTensor<T> N2D2::CudaTensor<T>::rows(size_t j0, size_t nb, int towardsDim)
 {
-    return CudaTensor<T>(
-        Tensor<T>::rows(j0, nb),
-        mDeviceTensor,
-        j0 * mSizeM1,
-        mHostBased);
+    if (towardsDim == -1) {
+        return CudaTensor<T>(
+            Tensor<T>::rows(j0, nb, towardsDim),
+            mDeviceTensor,
+            j0 * mSizeM1,
+            mHostBased);
+    }
+    else {
+        return CudaTensor<T>(
+            Tensor<T>::rows(j0, nb, towardsDim),
+            mHostBased);
+    }
 }
 
 template <class T>
-const N2D2::CudaTensor<T> N2D2::CudaTensor<T>::rows(size_t j0, size_t nb) const
+const N2D2::CudaTensor<T> N2D2::CudaTensor<T>::rows(size_t j0, size_t nb, int towardsDim) const
 {
-    return CudaTensor<T>(
-        Tensor<T>::rows(j0, nb),
-        mDeviceTensor,
-        j0 * mSizeM1,
-        mHostBased);
+    if (towardsDim == -1) {
+        return CudaTensor<T>(
+            Tensor<T>::rows(j0, nb, towardsDim),
+            mDeviceTensor,
+            j0 * mSizeM1,
+            mHostBased);
+    }
+    else {
+        return CudaTensor<T>(
+            Tensor<T>::rows(j0, nb, towardsDim),
+            mHostBased);
+    }
 }
 
 template <class T>
@@ -1005,6 +1315,96 @@ template <typename T> void N2D2::CudaTensor<T>::synchronizeHToDBased() const
 {
     if (!mHostBased)
         synchronizeHToD();
+}
+
+template <typename T> void N2D2::CudaTensor<T>::synchronizeToD(
+    const Tensor<T>& tensor) const
+{
+    assert(size() == tensor.size());
+    assert(dims() == tensor.dims());
+
+    CHECK_CUDA_STATUS(cudaMemcpy(mDeviceTensor->getDevicePtr(),
+                                 &(*tensor.begin()),
+                                 size() * sizeof(T),
+                                 cudaMemcpyHostToDevice));
+}
+
+template <typename T> void N2D2::CudaTensor<T>::synchronizeToH(
+    BaseTensor& baseTensor) const
+{
+    Tensor<T> tensor(dims());
+    CHECK_CUDA_STATUS(cudaMemcpy(&(*tensor.begin()),
+                                 mDeviceTensor->getDevicePtr(),
+                                 size() * sizeof(T),
+                                 cudaMemcpyDeviceToHost));
+
+    baseTensor.resize(dims());
+    baseTensor = tensor;
+}
+
+template <typename T> void N2D2::CudaTensor<T>::synchronizeToH(
+    Tensor<T>& tensor) const
+{
+    assert(size() == tensor.size());
+    assert(dims() == tensor.dims());
+
+    CHECK_CUDA_STATUS(cudaMemcpy(&(*tensor.begin()),
+                                 mDeviceTensor->getDevicePtr(),
+                                 size() * sizeof(T),
+                                 cudaMemcpyDeviceToHost));
+}
+
+template <typename T> N2D2::Tensor<T> N2D2::CudaTensor<T>::synchronizeToH() 
+    const
+{
+    Tensor<T> tensor(dims());
+    CHECK_CUDA_STATUS(cudaMemcpy(&(*tensor.begin()),
+                                 mDeviceTensor->getDevicePtr(),
+                                 size() * sizeof(T),
+                                 cudaMemcpyDeviceToHost));
+    return tensor;
+}
+
+template <typename T> void N2D2::CudaTensor<T>::broadcast(int srcDev,
+                                                          int dstDev) const
+{
+    mDeviceTensor->broadcast(srcDev, dstDev);
+}
+
+template <typename T> void N2D2::CudaTensor<T>::broadcastAllFrom(int srcDev)
+    const
+{
+    mDeviceTensor->broadcastAllFrom(srcDev);
+}
+
+template <typename T> void N2D2::CudaTensor<T>::broadcastAllFrom(int srcDev,
+    std::vector<DeviceState> devices) const
+{
+    mDeviceTensor->broadcastAllFrom(srcDev, devices);
+}
+
+template <typename T> void N2D2::CudaTensor<T>::broadcastAnyTo(int dstDev)
+    const
+{
+    mDeviceTensor->broadcastAnyTo(dstDev);
+}
+
+template <typename T> void N2D2::CudaTensor<T>::aggregate(int srcDev,
+                                                          int dstDev) const
+{
+    mDeviceTensor->aggregate(srcDev, dstDev);
+}
+
+template <typename T> void N2D2::CudaTensor<T>::aggregateAllTo(int dstDev)
+    const
+{
+    mDeviceTensor->aggregateAllTo(dstDev);    
+}
+
+template <typename T> void N2D2::CudaTensor<T>::aggregateAllTo(int dstDev,
+    std::vector<DeviceState> devices) const
+{
+    mDeviceTensor->aggregateAllTo(dstDev, devices);    
 }
 
 #endif // N2D2_CUDATENSOR_H

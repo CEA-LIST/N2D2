@@ -56,8 +56,8 @@ public:
         unsigned long long int count;
     } RunningMean_T;
 
-    template<typename Input_T>
-    void propagate(const Input_T* inputs, int32_t* outputs) const;
+    template<typename Input_T, typename Output_T>
+    void propagate(const Input_T* inputs, Output_T* outputs) const;
 
     std::size_t inputHeight() const;
     std::size_t inputWidth() const;
@@ -297,6 +297,28 @@ private:
         const Input_T* __restrict inputs,
         Output_T* __restrict outputs,
         const Rescaling_T& __restrict rescaling) const;
+
+    template<int NB_CHANNELS, 
+            int CHANNELS_HEIGHT, int CHANNELS_WIDTH,
+            int NB_OUTPUTS,
+            int OUTPUTS_HEIGHT, int OUTPUTS_WIDTH,
+            // Memory mapping: inputs
+            int INPUT_MEM_CONT_OFFSET,
+            int INPUT_MEM_CONT_SIZE,
+            int INPUT_MEM_WRAP_OFFSET,
+            int INPUT_MEM_WRAP_SIZE,
+            int INPUT_MEM_STRIDE,
+            // Memory mapping: outputs
+            int OUTPUT_MEM_CONT_OFFSET,
+            int OUTPUT_MEM_CONT_SIZE,
+            int OUTPUT_MEM_WRAP_OFFSET,
+            int OUTPUT_MEM_WRAP_SIZE,
+            int OUTPUT_MEM_STRIDE,
+            typename Input_T, typename Output_T>
+    N2D2_ALWAYS_INLINE void transposePropagate(
+        const Input_T* __restrict inputs,
+        Output_T* __restrict outputs,
+        const int perm[4]) const;
 
     template<int NB_CHANNELS,
             int INPUTS_HEIGHT, int INPUTS_WIDTH,
@@ -1422,6 +1444,47 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::scalingPropagate(
             for (int ch = 0; ch < NB_OUTPUTS; ++ch) {
                 outputs[oOffset + ch]
                     = sat<Output_T>(inputs[iOffset + ch], ch, Linear, rescaling);
+            }
+        }
+    }
+}
+
+template<int NB_CHANNELS, 
+         int CHANNELS_HEIGHT, int CHANNELS_WIDTH,
+         int NB_OUTPUTS,
+         int OUTPUTS_HEIGHT, int OUTPUTS_WIDTH,
+         // Memory mapping: inputs
+         int INPUT_MEM_CONT_OFFSET,
+         int INPUT_MEM_CONT_SIZE,
+         int INPUT_MEM_WRAP_OFFSET,
+         int INPUT_MEM_WRAP_SIZE,
+         int INPUT_MEM_STRIDE,
+         // Memory mapping: outputs
+         int OUTPUT_MEM_CONT_OFFSET,
+         int OUTPUT_MEM_CONT_SIZE,
+         int OUTPUT_MEM_WRAP_OFFSET,
+         int OUTPUT_MEM_WRAP_SIZE,
+         int OUTPUT_MEM_STRIDE,
+         typename Input_T, typename Output_T>
+N2D2_ALWAYS_INLINE inline void N2D2::Network::transposePropagate(
+    const Input_T* __restrict inputs,
+    Output_T* __restrict outputs,
+    const int perm[4]) const
+{
+    constexpr std::size_t dims[3] = {CHANNELS_WIDTH, CHANNELS_HEIGHT,
+                                     NB_CHANNELS};
+    std::size_t coords[3];
+
+    for (coords[2] = 0; coords[2] < dims[2]; ++coords[2]) {
+        for (coords[1] = 0; coords[1] < dims[1]; ++coords[1]) {
+            for (coords[0] = 0; coords[0] < dims[0]; ++coords[0]) {
+                const std::size_t iOffset = coords[0]
+                    + dims[0] * (coords[1] + dims[1] * (coords[2]));
+                const std::size_t oOffset = coords[perm[0]]
+                    + dims[perm[0]] * (coords[perm[1]]
+                        + dims[perm[1]] * (coords[perm[2]]));
+
+                outputs[oOffset] = inputs[iOffset];
             }
         }
     }

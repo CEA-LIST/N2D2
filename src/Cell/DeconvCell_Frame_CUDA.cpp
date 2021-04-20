@@ -67,8 +67,7 @@ N2D2::DeconvCell_Frame_CUDA<T>::DeconvCell_Frame_CUDA(
       // setParameter() or loadParameters().
       mBias(std::make_shared<CudaTensor<T> >()),
       mDiffBias({1, 1, getNbOutputs(), 1}),
-      mWorkspaceSize(0),
-      mWorkspace(NULL)
+      mWorkspaceSize(0)
 {
     if (strideDims.size() != kernelDims.size()) {
         throw std::domain_error("DeconvCell_Frame_CUDA: the number of dimensions"
@@ -94,6 +93,11 @@ N2D2::DeconvCell_Frame_CUDA<T>::DeconvCell_Frame_CUDA(
     mBiasSolver = std::make_shared<SGDSolver_Frame_CUDA<T> >();
 
     CHECK_CUDNN_STATUS(cudnnCreateConvolutionDescriptor(&mConvDesc));
+
+    int count;
+    CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+
+    mWorkspace.resize(count, NULL);
 }
 
 template <class T>
@@ -517,11 +521,19 @@ the API cudnnGetConvolutionForwardMaxCount().
         nbChannels += mInputs[k].dimZ();
     }
 
-    if (mWorkspaceSize > 0) {
-        if (mWorkspace != NULL)
-            cudaFree(mWorkspace);
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
 
-        CHECK_CUDA_STATUS(cudaMalloc(&mWorkspace, mWorkspaceSize));
+    mBias->broadcastAnyTo(dev);
+    mSharedSynapses.broadcastAnyTo(dev);
+
+    if (mWorkspaceSize > 0) {
+         assert(dev < (int)mWorkspace.size());
+
+        if (mWorkspace[dev] != NULL)
+            cudaFree(mWorkspace[dev]);
+
+        CHECK_CUDA_STATUS(cudaMalloc(&mWorkspace[dev], mWorkspaceSize));
     }
 }
 
@@ -974,12 +986,13 @@ the API cudnnGetConvolutionForwardMaxCount().
 
         nbChannels += mInputs[k].dimZ();
     }
-
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
     if (mWorkspaceSize > 0) {
-        if (mWorkspace != NULL)
-            cudaFree(mWorkspace);
+        if (mWorkspace[dev] != NULL)
+            cudaFree(mWorkspace[dev]);
 
-        CHECK_CUDA_STATUS(cudaMalloc(&mWorkspace, mWorkspaceSize));
+        CHECK_CUDA_STATUS(cudaMalloc(&mWorkspace[dev], mWorkspaceSize));
     }
 }
 
@@ -1000,6 +1013,9 @@ void N2D2::DeconvCell_Frame_CUDA<T>::propagate(bool inference)
     const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
     typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;
 
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (k > 0)
             beta = 1.0f;
@@ -1017,7 +1033,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::propagate(bool inference)
                                          input->getDevicePtr(),
                                          mConvDesc,
                                          mBwdDataAlgo[k],
-                                         mWorkspace,
+                                         mWorkspace[dev],
                                          mWorkspaceSize,
                                          &beta,
                                          mOutputs.getCudnnTensorDesc(),
@@ -1085,6 +1101,9 @@ void N2D2::DeconvCell_Frame_CUDA<T>::backPropagate()
 
     unsigned int nbChannels = 0;
 
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         const typename Cuda::cudnn_scaling_type<T>::type beta
             = (mWeightsSolvers[k]->isNewIteration()) ? 0.0f : 1.0f;
@@ -1102,7 +1121,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::backPropagate()
             input->getDevicePtr(),
             mConvDesc,
             mBwdFilterAlgo[k],
-            mWorkspace,
+            mWorkspace[dev],
             mWorkspaceSize,
             &beta,
             mFilterDesc[k],
@@ -1188,7 +1207,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::backPropagate()
                                         mSharedSynapses[k].getDevicePtr(),
                                         mConvDesc,
                                         mFwdAlgo[k],
-                                        mWorkspace,
+                                        mWorkspace[dev],
                                         mWorkspaceSize,
                                         &beta,
                                         diffOutput->getCudnnTensorDesc(),
@@ -1205,16 +1224,24 @@ void N2D2::DeconvCell_Frame_CUDA<T>::backPropagate()
 template <class T>
 void N2D2::DeconvCell_Frame_CUDA<T>::update()
 {
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
     for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
         if (mDiffSharedSynapses[k].isValid()) {
+            mDiffSharedSynapses[k].aggregateAllTo(dev, mDevices);
             mWeightsSolvers[k]->update(
                 mSharedSynapses[k], mDiffSharedSynapses[k], mInputs.dimB());
+            mSharedSynapses[k].broadcastAllFrom(dev, mDevices);
         }
     }
 
-    if (!mNoBias && mDiffBias.isValid())
+    if (!mNoBias && mDiffBias.isValid()) {
+        mDiffBias.aggregateAllTo(dev, mDevices);
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
-        
+        mBias->broadcastAllFrom(dev, mDevices);
+    }
+    
     Cell_Frame_CUDA<T>::update();
 }
 
@@ -1342,6 +1369,9 @@ void N2D2::DeconvCell_Frame_CUDA<T>::loadFreeParameters(const std::string
 {
     std::ifstream syn(fileName.c_str(), std::fstream::binary);
 
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
     if (!syn.good()) {
         if (ignoreNotExists) {
             std::cout << Utils::cnotice
@@ -1357,10 +1387,12 @@ void N2D2::DeconvCell_Frame_CUDA<T>::loadFreeParameters(const std::string
         mSharedSynapses[k].load(syn);
 
     mSharedSynapses.synchronizeHToD();
+    mSharedSynapses.broadcastAllFrom(dev);
 
     if (!mNoBias) {
         mBias->load(syn);
         mBias->synchronizeHToD();
+        mBias->broadcastAllFrom(dev);
     }
 
     if (syn.eof())
@@ -1417,6 +1449,12 @@ void N2D2::DeconvCell_Frame_CUDA<T>::synchronizeToD(bool keepInSync_)
     mSharedSynapses.synchronizeHToD();
     mBias->synchronizeHToD();
     keepInSync(keepInSync_);
+
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
+    mSharedSynapses.broadcastAllFrom(dev);
+    mBias->broadcastAllFrom(dev);
 }
 
 template <class T>
@@ -1425,8 +1463,19 @@ N2D2::DeconvCell_Frame_CUDA<T>::~DeconvCell_Frame_CUDA()
     for (unsigned int k = 0, size = mFilterDesc.size(); k < size; ++k)
         cudnnDestroyFilterDescriptor(mFilterDesc[k]);
 
-    if (mWorkspaceSize > 0)
-        cudaFree(mWorkspace);
+    if (mWorkspaceSize > 0) {
+        int currentDev;
+        cudaGetDevice(&currentDev);
+
+        for (size_t dev = 0; dev < mWorkspace.size(); ++dev) {
+            if (mWorkspace[dev] != NULL) {
+                cudaSetDevice(dev);
+                cudaFree(mWorkspace[dev]);
+            }
+        }
+
+        cudaSetDevice(currentDev);
+    }
 
     cudnnDestroyConvolutionDescriptor(mConvDesc);
 }

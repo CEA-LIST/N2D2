@@ -45,6 +45,13 @@ void N2D2::IniParser::load(std::istream& data, const std::string& parentSection)
     std::string tplIni;
 
     while (std::getline(data, line)) {
+        if (line.size() > 2 &&
+            line[0] == '\xEF' && line[1] == '\xBB' && line[2] == '\xBF')
+        {
+            // UTF-8 BOM => ignore
+            line = line.substr(3);
+        }
+
         // Support for escaped new line
         if (!line.empty() && *(line.rbegin()) == '\\') {
             preLine.append(line.substr(0, line.size() - 1));

@@ -122,6 +122,9 @@ else:
 #print(model.get_core_deepnet())
 #exit()
 
+# model = n2d2.models.resnet.load_from_ONNX(provider,'18','post_act',download=True,batch_size=batch_size)
+# provider.add_transformation(n2d2.models.resnet.ONNX_preprocessing(size)) 
+
 if not args.weights == "":
     model.import_free_parameters(args.weights)
 

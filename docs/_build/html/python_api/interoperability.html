@@ -1,0 +1,397 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Interoperability &mdash; N2D2  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Introduction" href="../core/intro.html" />
+    <link rel="prev" title="DeepNet" href="deepnet.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> N2D2
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ONNX Import:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../onnx_convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx_import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx_transfer.html">Train from ONNX models</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Quantization and Export:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quant_post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant_qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_legacy.html">Export: other / legacy</a></li>
+</ul>
+<p class="caption"><span class="caption-text">INI File Interface:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ini/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/data_analysis.html">Stimuli data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/environment.html">Stimuli provider (Environment)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/layers.html">Network Layers</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Python API:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensor.html">Tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Interoperability</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pytorch">Pytorch</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#integration-of-a-cell">Integration of a Cell</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#integration-of-a-deepnet">Integration of a DeepNet</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">C++/Python core:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../core/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/activations.html">Activation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/deepnet.html">DeepNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/filler.html">Filler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/solver.html">Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/stimuliprovider.html">StimuliProvider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/transformation.html">Transformation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/target.html">Target</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/example.html">Example</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++ API / Developer:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev_intro.html">Introduction</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">N2D2</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Interoperability</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/python_api/interoperability.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="interoperability">
+<h1>Interoperability<a class="headerlink" href="#interoperability" title="Permalink to this headline">¶</a></h1>
+<p>In this section, we will present how you can use n2d2 with other python framework.</p>
+<div class="section" id="pytorch">
+<h2>Pytorch<a class="headerlink" href="#pytorch" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="integration-of-a-cell">
+<h3>Integration of a Cell<a class="headerlink" href="#integration-of-a-cell" title="Permalink to this headline">¶</a></h3>
+<p>You can use the <a class="reference internal" href="#n2d2.pytorch.LayerN2D2" title="n2d2.pytorch.LayerN2D2"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.pytorch.LayerN2D2</span></code></a> to wrap an <code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.cell.Cell</span></code> or an <a class="reference internal" href="../core/cells.html#N2D2.Cell" title="N2D2.Cell"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.Cell</span></code></a> into a Pytorch network.</p>
+<p><strong>Documentation :</strong></p>
+<dl class="py class">
+<dt id="n2d2.pytorch.LayerN2D2">
+<em class="property">class </em><code class="sig-prename descclassname">n2d2.pytorch.</code><code class="sig-name descname">LayerN2D2</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n2d2_cell</span></em>, <em class="sig-param"><span class="n">trainable</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.pytorch.LayerN2D2" title="Permalink to this definition">¶</a></dt>
+<dd><p>PyTorch Module used to interface N2D2 cells or an n2d2 cells in a PyTorch network.</p>
+<dl class="py method">
+<dt id="n2d2.pytorch.LayerN2D2.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.pytorch.LayerN2D2.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<p><strong>Example :</strong></p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Custom_Net</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Pytorch network composed of one N2D2 conv cell interfaced with the LayerN2D2 object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">Custom_Net</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+            <span class="c1"># Defining empty</span>
+            <span class="n">empty_db</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">Database</span><span class="p">()</span>
+            <span class="n">provider</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">DataProvider</span><span class="p">(</span><span class="n">empty_db</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">batchSize</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
+            <span class="n">deepnet</span> <span class="o">=</span> <span class="n">DeepNet</span><span class="p">()</span>
+            <span class="n">n2d2_conv</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">pytorch</span><span class="o">.</span><span class="n">LayerN2D2</span><span class="p">(</span><span class="n">n2d2</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">Conv</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="n">nbOutputs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kernelDims</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">deepNet</span><span class="o">=</span><span class="n">deepnet</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;conv1&quot;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sequential</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">n2d2_conv</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sequential</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">x</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="integration-of-a-deepnet">
+<h3>Integration of a DeepNet<a class="headerlink" href="#integration-of-a-deepnet" title="Permalink to this headline">¶</a></h3>
+<p>You can use the <a class="reference internal" href="#n2d2.pytorch.LayerN2D2" title="n2d2.pytorch.LayerN2D2"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.pytorch.LayerN2D2</span></code></a> to wrap an <a class="reference internal" href="../core/deepnet.html#N2D2.DeepNet" title="N2D2.DeepNet"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.DeepNet</span></code></a> into a Pytorch network.</p>
+<p><strong>Documentation :</strong></p>
+<dl class="py class">
+<dt id="n2d2.pytorch.DeepNetN2D2">
+<em class="property">class </em><code class="sig-prename descclassname">n2d2.pytorch.</code><code class="sig-name descname">DeepNetN2D2</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">N2D2_DeepNet</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.pytorch.DeepNetN2D2" title="Permalink to this definition">¶</a></dt>
+<dd><p>PyTorch layer used to interface an N2D2 DeepNet object in a PyTorch Network.</p>
+<dl class="py method">
+<dt id="n2d2.pytorch.DeepNetN2D2.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inputs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.pytorch.DeepNetN2D2.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<p><strong>Example :</strong></p>
+<p>In this example, we will define a Pytorch network. Export a layer with ONNX, import it to N2D2 and then replace the Pytorch layer with the N2D2 one.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MNIST_CNN</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="nb">super</span><span class="p">(</span><span class="n">MNIST_CNN</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+                <span class="c1"># Defining the cnn layer that we will extract and export to ONNX</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cnn_layers</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span> <span class="c1"># This is the layer we will replace</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()</span>
+                <span class="p">)</span>
+                <span class="c1"># linear layer</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">linear_layers</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">576</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">(),</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Defining the forward pass</span>
+                <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cnn_layers</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_layers</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">x</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">MNIST_CNN</span><span class="p">()</span>
+<span class="n">model_path</span> <span class="o">=</span> <span class="s1">&#39;./tmp.onnx&#39;</span>
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="c1"># Exporting to ONNX</span>
+<span class="n">dummy_in</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
+<span class="n">torch</span><span class="o">.</span><span class="n">onnx</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dummy_in</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Importing the ONNX to N2D2</span>
+<span class="n">net</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">Network</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">deepNet</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">DeepNetGenerator</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">model_path</span><span class="p">)</span>
+<span class="n">deepNet</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
+<span class="c1"># Deleting temporary onnx file !</span>
+<span class="n">remove</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+
+<span class="c1"># Wrapping the N2D2 deepNet</span>
+<span class="n">n2d2_deepNet</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">pytorch</span><span class="o">.</span><span class="n">DeepNetN2D2</span><span class="p">(</span><span class="n">deepNet</span><span class="p">)</span>
+<span class="c1"># Replacing the pytorch layer</span>
+<span class="n">model</span><span class="o">.</span><span class="n">cnn_layers</span> <span class="o">=</span> <span class="n">n2d2_deepNet</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../core/intro.html" class="btn btn-neutral float-right" title="Introduction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="deepnet.html" class="btn btn-neutral float-left" title="DeepNet" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, CEA LIST
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

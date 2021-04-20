@@ -145,21 +145,21 @@ Variable substitution
 Control statements
 ~~~~~~~~~~~~~~~~~~
 
-Control statements are between ``{\%`` and ``\%}`` delimiters.
+Control statements are between ``{%`` and ``%}`` delimiters.
 
 block
 ^^^^^
 
-``{\% block ARRAY \%}`` ... ``{\% endblock \%}``
+``{% block ARRAY %}`` ... ``{% endblock %}``
 
 The ``#`` template parameter is automatically generated from the
-``{\% block ... \%}`` template control statement and corresponds to the
+``{% block ... %}`` template control statement and corresponds to the
 current item position, starting from 0.
 
 for
 ^^^
 
-``{\% for VAR in range([START, ]END]) \%}`` ... ``{\% endfor \%}``
+``{% for VAR in range([START, ]END]) %}`` ... ``{% endfor %}``
 
 If ``START`` is not specified, the loop begins at 0 (first value of
 ``VAR``). The last value of ``VAR`` is ``END``-1.
@@ -167,15 +167,15 @@ If ``START`` is not specified, the loop begins at 0 (first value of
 if
 ^^
 
-``{\% if VAR OP [VALUE] \%}`` ... ``[{\% else \%}]`` ...
-``{\% endif \%}``
+``{% if VAR OP [VALUE] %}`` ... ``[{% else %}]`` ...
+``{% endif %}``
 
 ``OP`` may be ``==``, ``!=``, ``exists`` or ``not_exists``.
 
 include
 ^^^^^^^
 
-``{\% include FILENAME \%}``
+``{% include FILENAME %}``
 
 Global parameters
 -----------------
@@ -187,3 +187,7 @@ Global parameters
 +----------------------------------------+--------------------------------------------------------------------------------------+
 | ``DefaultDataType`` [``Float32``]      | Default layers data type. Can be ``Float16``, ``Float32`` or ``Float64``             |
 +----------------------------------------+--------------------------------------------------------------------------------------+
+| ``InsertBatchNormAfterConv`` [0]       | If true (1), batch normalization is automatically inserted after each convolution    |
+|                                        | when not already present                                                             |
++----------------------------------------+--------------------------------------------------------------------------------------+
+

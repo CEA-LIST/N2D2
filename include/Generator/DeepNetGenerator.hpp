@@ -44,10 +44,13 @@ public:
     static std::shared_ptr<DeepNet> generateFromONNX(Network& network,
         const std::string& fileName,
         IniParser& iniConfig,
-        std::shared_ptr<DeepNet> deepNet = std::shared_ptr<DeepNet>());
+        std::shared_ptr<DeepNet> deepNet = std::shared_ptr<DeepNet>(),
+        const std::vector<std::shared_ptr<Cell>>& parentCells
+            = std::vector<std::shared_ptr<Cell>>());
 
 private:
     static void ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,
+        const std::vector<std::shared_ptr<Cell> >& parentCells,
         const onnx::GraphProto& graph,
         int opsetVersion,
         IniParser& iniConfig);

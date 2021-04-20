@@ -147,13 +147,21 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeights(const ConvCell& cell, std::
 
     const bool isDWConv = isDWConvolution(cell);
     if(isDWConv) {
+        header << "#define " << prefix << "_NB_GROUPS "
+                << cell.groupMap() << "\n"
+            "#define " << prefix << "_OUTPUT_GROUP_SIZE ("
+                << prefix << "_NB_OUTPUTS / " << prefix << "_NB_GROUPS)\n"
+            "#define " << prefix << "_CHANNEL_GROUP_SIZE ("
+                << prefix << "_NB_CHANNELS / " << prefix << "_NB_GROUPS)\n";
+
         header << "#define " << prefix << "_WEIGHTS_SIZE (" 
                              << prefix << "_NB_OUTPUTS*" 
                              << prefix << "_KERNEL_WIDTH*" 
-                             << prefix << "_KERNEL_HEIGHT)\n\n";
+                             << prefix << "_KERNEL_HEIGHT*"
+                             << prefix << "_CHANNEL_GROUP_SIZE)\n\n";
 
         header << "// Flatten weights with the order " 
-            << "[NB_OUTPUTS][KERNEL_HEIGHT][KERNEL_WIDTH]\n";
+            << "[NB_OUTPUTS][KERNEL_HEIGHT][KERNEL_WIDTH][CHANNEL_GROUP_SIZE]\n";
     }
     else {
         header << "#define " << prefix << "_WEIGHTS_SIZE (" 
@@ -176,10 +184,17 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeights(const ConvCell& cell, std::
         for(std::size_t sy = 0; sy < cell.getKernelHeight(); ++sy) {
             for(std::size_t sx = 0; sx < cell.getKernelWidth(); ++sx) {
                 for(std::size_t ch = 0; ch < cell.getNbChannels(); ++ch) {
-                    if(isDWConv && ch != o) {
-                        continue;
+                    if(isDWConv) {
+                        const size_t outputGroupSize = cell.getNbOutputs() / cell.groupMap();
+                        const size_t channelGroupSize = cell.getNbChannels() / cell.groupMap();
+                        const size_t outputGroup = o / outputGroupSize;
+                        const size_t channelGroup = ch / channelGroupSize;
+
+                        if (outputGroup != channelGroup)
+                            continue;
                     }
-                    else if (!cell.isConnection(ch, o)) {
+
+                    if (!cell.isConnection(ch, o)) {
                         header << "0";
                     }
                     else {

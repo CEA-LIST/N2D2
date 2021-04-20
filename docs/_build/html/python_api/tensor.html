@@ -1,0 +1,465 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Tensor &mdash; N2D2  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="DeepNet" href="deepnet.html" />
+    <link rel="prev" title="Cells" href="cells.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> N2D2
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ONNX Import:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../onnx_convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx_import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx_transfer.html">Train from ONNX models</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Quantization and Export:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quant_post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant_qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_legacy.html">Export: other / legacy</a></li>
+</ul>
+<p class="caption"><span class="caption-text">INI File Interface:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ini/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/data_analysis.html">Stimuli data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/environment.html">Stimuli provider (Environment)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/layers.html">Network Layers</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Python API:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tensor</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction :</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-and-getting-values">Setting and getting values :</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interoperability.html">Interoperability</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++/Python core:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../core/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/activations.html">Activation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/deepnet.html">DeepNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/filler.html">Filler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/solver.html">Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/stimuliprovider.html">StimuliProvider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/transformation.html">Transformation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/target.html">Target</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/example.html">Example</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++ API / Developer:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev_intro.html">Introduction</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">N2D2</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Tensor</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/python_api/tensor.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tensor">
+<h1>Tensor<a class="headerlink" href="#tensor" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction :<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The n2d2 library propose a tensor implementation with the <a class="reference internal" href="#n2d2.Tensor" title="n2d2.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.Tensor</span></code></a> class.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>You can store your tensor with CPU or GPU (using CUDA). By default, n2d2 creates a CPU tensor.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span> <span class="c1"># Converting to a CUDA tensor</span>
+<span class="n">tensor</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>  <span class="c1"># Converting back the tensor to a regular one.</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="setting-and-getting-values">
+<h2>Setting and getting values :<a class="headerlink" href="#setting-and-getting-values" title="Permalink to this headline">¶</a></h2>
+<p>When setting values, n2d2 tries to perform an auto cast to fit the datatype if there is a discrepancy.
+You can set and get values using :</p>
+<p><strong>Coordinates :</strong></p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># Using coordinates</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tensor</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><strong>Index :</strong></p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tensor</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><strong>Slice :</strong></p>
+<p>(Slice are supported only for assignment.)</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tensor</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">tensor</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><strong>Set values method :</strong></p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="o">.</span><span class="n">set_values</span><span class="p">([[[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                    <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]],</span>
+                    <span class="p">[[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+                    <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">]]]])</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt id="n2d2.Tensor">
+<em class="property">class </em><code class="sig-prename descclassname">n2d2.</code><code class="sig-name descname">Tensor</code><span class="sig-paren">(</span><em class="sig-param">dims</em>, <em class="sig-param">value=None</em>, <em class="sig-param">cuda=False</em>, <em class="sig-param">datatype=&lt;class 'float'&gt;</em>, <em class="sig-param">cell=None</em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="n2d2.Tensor.N2D2">
+<code class="sig-name descname">N2D2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.N2D2" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The N2D2 tensor object</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="../core/containers.html#N2D2.BaseTensor" title="N2D2.BaseTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.BaseTensor</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.back_propagate">
+<code class="sig-name descname">back_propagate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.back_propagate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the backpropagation on the deepnet.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.copy">
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy in memory the Tensor object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.cpu">
+<code class="sig-name descname">cpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.cpu" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the tensor to a cpu tensor</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.cuda">
+<code class="sig-name descname">cuda</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.cuda" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the tensor to a cuda tensor</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.data_type">
+<code class="sig-name descname">data_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.data_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the data type of the object stored by the tensor.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.detach_cell">
+<code class="sig-name descname">detach_cell</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.detach_cell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detach the cells from the tensor, this allow you to pass the output of a deepnet to another one.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.dims">
+<code class="sig-name descname">dims</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.dims" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return dimensions with N2D2 convention</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.from_N2D2">
+<em class="property">classmethod </em><code class="sig-name descname">from_N2D2</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">N2D2_Tensor</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.from_N2D2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert an N2D2 tensor into a Tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>N2D2_Tensor</strong> (<a class="reference internal" href="../core/containers.html#N2D2.BaseTensor" title="N2D2.BaseTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.BaseTensor</span></code></a> or <a class="reference internal" href="../core/containers.html#N2D2.CudaBaseTensor" title="N2D2.CudaBaseTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.CudaBaseTensor</span></code></a>) – A numpy array to convert to a tensor.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Converted tensor</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#n2d2.Tensor" title="n2d2.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.Tensor</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.from_numpy">
+<em class="property">classmethod </em><code class="sig-name descname">from_numpy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">np_array</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.from_numpy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a numpy array into a tensor.
+TODO : fix /!Known issues /! 
+- Using a 1D numpy array have unintended behavior</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>np_array</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.array</span></code>) – A numpy array to convert to a tensor.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Converted tensor</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#n2d2.Tensor" title="n2d2.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.Tensor</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.get_deepnet">
+<code class="sig-name descname">get_deepnet</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.get_deepnet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method called by the cells, if the tensor is not part of a graph, it will be linked to an <code class="xref py py-class docutils literal notranslate"><span class="pre">n22d.provider.Provider</span></code> object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.nb_dims">
+<code class="sig-name descname">nb_dims</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.nb_dims" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of dimensions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.reshape">
+<code class="sig-name descname">reshape</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_dims</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.reshape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reshape the Tensor to the specified dims (defined by the Numpy convention). 
+:param new_dims: New dimensions
+:type new_dims: list</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.set_values">
+<code class="sig-name descname">set_values</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">values</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.set_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fill the tensor with a list of values.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> 
+<span class="n">input_tensor</span><span class="o">.</span><span class="n">set_values</span><span class="p">([[[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span>
+                           <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]]])</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>values</strong> (<em>list</em>) – A nested list that represent the tensor.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.shape">
+<code class="sig-name descname">shape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return dimensions with python convention</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.to_numpy">
+<code class="sig-name descname">to_numpy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.to_numpy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a numpy array equivalent to the tensor.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update weights and biases of the cells.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="deepnet.html" class="btn btn-neutral float-right" title="DeepNet" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="cells.html" class="btn btn-neutral float-left" title="Cells" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, CEA LIST
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

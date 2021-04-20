@@ -44,10 +44,14 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinxcontrib.bibtex',
+    'breathe',
 ]
 
-# Generate doc for constructor method
-autoclass_content = 'both'
+bibtex_bibfiles = ['refs.bib']
+
+# Breathe Configuration
+breathe_default_project = "N2D2"
+breathe_default_members = ('members', 'undoc-members')
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

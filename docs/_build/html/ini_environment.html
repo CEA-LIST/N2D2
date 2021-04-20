@@ -1,0 +1,2277 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Stimuli provider (Environment) &mdash; N2D2  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Network Layers" href="ini_layers.html" />
+    <link rel="prev" title="Stimuli data analysis" href="ini_data_analysis.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> N2D2
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ONNX Import:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="onnx_convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_transfer.html">Train from ONNX models</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Quantization and Export:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quant_post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
+</ul>
+<p class="caption"><span class="caption-text">INI File Interface:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="ini_intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_data_analysis.html">Stimuli data analysis</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Stimuli provider (Environment)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-range-and-conversion">Data range and conversion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#images-slicing-during-training-and-inference">Images slicing during training and inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#blending-for-data-augmentation">Blending for data augmentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#built-in-transformations">Built-in transformations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#affinetransformation">AffineTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#apodizationtransformation">ApodizationTransformation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#gaussian-window">Gaussian window</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#blackman-window">Blackman window</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kaiser-window">Kaiser window</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#blendingtransformation">BlendingTransformation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#blendingmethod"><code class="docutils literal notranslate"><span class="pre">BlendingMethod</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#channeldroptransformation">ChannelDropTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#channelextractiontransformation">ChannelExtractionTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#channelshaketransformation">ChannelShakeTransformation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#distribution"><code class="docutils literal notranslate"><span class="pre">Distribution</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#colorspacetransformation">ColorSpaceTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dfttransformation">DFTTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#distortiontransformation">DistortionTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#equalizetransformation">EqualizeTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#expandlabeltransformation">ExpandLabelTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#filtertransformation">FilterTransformation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#kernel">* kernel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gaussian-kernel">Gaussian kernel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#log-kernel">LoG kernel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dog-kernel">DoG kernel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gabor-kernel">Gabor kernel</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#fliptransformation">FlipTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gradientfiltertransformation">GradientFilterTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#labelsliceextractiontransformation">LabelSliceExtractionTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#magnitudephasetransformation">MagnitudePhaseTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#morphologicalreconstructiontransformation">MorphologicalReconstructionTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#morphologytransformation">MorphologyTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#normalizetransformation">NormalizeTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#padcroptransformation">PadCropTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#roiextractiontransformation">ROIExtractionTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#randomaffinetransformation">RandomAffineTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rangeaffinetransformation">RangeAffineTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rangeclippingtransformation">RangeClippingTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rescaletransformation">RescaleTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#reshapetransformation">ReshapeTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sliceextractiontransformation">SliceExtractionTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#thresholdtransformation">ThresholdTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#trimtransformation">TrimTransformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wallisfiltertransformation">WallisFilterTransformation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ini_layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_target.html">Targets (outputs &amp; losses)</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++ API / Developer:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev_intro.html">Introduction</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">N2D2</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Stimuli provider (Environment)</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/ini_environment.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="stimuli-provider-environment">
+<h1>Stimuli provider (Environment)<a class="headerlink" href="#stimuli-provider-environment" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">database</span></code> section must feed a stimuli provider (or environment), which is
+instantiated with a section named <code class="docutils literal notranslate"><span class="pre">sp</span></code> (or <code class="docutils literal notranslate"><span class="pre">env</span></code>) in the INI file. When the
+two sections are present in the INI file, they are implicitly connected: the
+<code class="docutils literal notranslate"><span class="pre">StimuliProvider</span></code> is automatically aware of the <code class="docutils literal notranslate"><span class="pre">Database</span></code> driver that is
+present. The <code class="docutils literal notranslate"><span class="pre">StimuliProvider</span></code> section specifies the input dimensions of the
+network (width, height), as well as the batch size.</p>
+<p>Example:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[sp]</span>
+<span class="na">SizeX</span><span class="o">=</span><span class="s">24</span>
+<span class="na">SizeY</span><span class="o">=</span><span class="s">24</span>
+<span class="na">BatchSize</span><span class="o">=</span><span class="s">12 ; [default: 1]</span>
+</pre></div>
+</div>
+<p>Data augmentation and conditioning <code class="docutils literal notranslate"><span class="pre">Transformation</span></code> blocks and data analysis
+<code class="docutils literal notranslate"><span class="pre">StimuliData</span></code> blocks can be associated to a stimuli provider as shown below:</p>
+<div class="figure align-default" id="id1">
+<img alt="Data augmentation, conditioning and analysis flow." src="_images/data_conditioning.png" />
+<p class="caption"><span class="caption-text">Data augmentation, conditioning and analysis flow.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>The table below summarizes the parameters available for the <code class="docutils literal notranslate"><span class="pre">sp</span></code> section:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 89%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SizeX</span></code></p></td>
+<td><p>Environment width</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SizeY</span></code></p></td>
+<td><p>Environment height</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NbChannels</span></code> [1]</p></td>
+<td><p>Number of channels (applicable only if there is no <code class="docutils literal notranslate"><span class="pre">env.ChannelTransformation[...]</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BatchSize</span></code> [1]</p></td>
+<td><p>Batch size</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CompositeStimuli</span></code> [0]</p></td>
+<td><p>If true, use pixel-wise stimuli labels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CachePath</span></code> []</p></td>
+<td><p>Stimuli cache path (no cache if left empty)</p></td>
+</tr>
+</tbody>
+</table>
+<p>The <code class="docutils literal notranslate"><span class="pre">env</span></code> section accepts more parameters dedicated to event-based (spiking)
+simulation:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 89%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option (<code class="docutils literal notranslate"><span class="pre">env</span></code> only) [default]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StimulusType</span></code> [<code class="docutils literal notranslate"><span class="pre">SingleBurst</span></code>]</p></td>
+<td><p>Method for converting stimuli into spike trains. Can be any of <code class="docutils literal notranslate"><span class="pre">SingleBurst</span></code>, <code class="docutils literal notranslate"><span class="pre">Periodic</span></code>, <code class="docutils literal notranslate"><span class="pre">JitteredPeriodic</span></code> or <code class="docutils literal notranslate"><span class="pre">Poissonian</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DiscardedLateStimuli</span></code> [1.0]</p></td>
+<td><p>The pixels in the pre-processed stimuli with a value above this limit never generate spiking events</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PeriodMeanMin</span></code> [50 <code class="docutils literal notranslate"><span class="pre">TimeMs</span></code>]</p></td>
+<td><p>Mean minimum period <span class="math notranslate nohighlight">\(\overline{T_{min}}\)</span>, used for periodic temporal codings, corresponding to pixels in the pre-processed stimuli with a value of 0 (which are supposed to be the most significant pixels)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PeriodMeanMax</span></code> [12 <code class="docutils literal notranslate"><span class="pre">TimeS</span></code>]</p></td>
+<td><p>Mean maximum period <span class="math notranslate nohighlight">\(\overline{T_{max}}\)</span>, used for periodic temporal codings, corresponding to pixels in the pre-processed stimuli with a value of 1 (which are supposed to be the least significant pixels). This maximum period may be never reached if <code class="docutils literal notranslate"><span class="pre">DiscardedLateStimuli</span></code> is lower than 1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PeriodRelStdDev</span></code> [0.1]</p></td>
+<td><p>Relative standard deviation, used for periodic temporal codings, applied to the spiking period of a pixel</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PeriodMin</span></code> [11 <code class="docutils literal notranslate"><span class="pre">TimeMs</span></code>]</p></td>
+<td><p>Absolute minimum period, or spiking interval, used for periodic temporal codings, for any pixel</p></td>
+</tr>
+</tbody>
+</table>
+<p>For image segmentation, the parameter <code class="docutils literal notranslate"><span class="pre">CompositeStimuli=1</span></code> must always be
+present, meaning that the labels of the image must have the same dimension than
+the image (and cannot be a single class value as in classification problem).</p>
+</div>
+<div class="section" id="data-range-and-conversion">
+<h2>Data range and conversion<a class="headerlink" href="#data-range-and-conversion" title="Permalink to this headline">¶</a></h2>
+<p>A configuration section can be associated to a <code class="docutils literal notranslate"><span class="pre">StimuliProvider</span></code>, as shown
+below. The <code class="docutils literal notranslate"><span class="pre">DataSignedMapping=1</span></code> parameter specifies that the input value
+range must be interpreted as signed, even if the values are unsigned, which is
+usually the case for standard image formats (BMP, JPEG, PNG…). In case of
+8-bit images, values from 0 to 255 are therefore mapped to the range -128 to
+127 when this parameter is enabled.</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[sp]</span>
+<span class="na">SizeX</span><span class="o">=</span><span class="s">[database.slicing]Width</span>
+<span class="na">SizeY</span><span class="o">=</span><span class="s">[database.slicing]Height</span>
+<span class="na">BatchSize</span><span class="o">=</span><span class="s">${BATCH_SIZE}</span>
+<span class="na">CompositeStimuli</span><span class="o">=</span><span class="s">1</span>
+<span class="na">ConfigSection</span><span class="o">=</span><span class="s">sp.config</span>
+
+<span class="k">[sp.config]</span>
+<span class="na">DataSignedMapping</span><span class="o">=</span><span class="s">1</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In N2D2, the integer value input range [0, 255] (or [-128, 127] with the
+<code class="docutils literal notranslate"><span class="pre">DataSignedMapping=1</span></code> parameter) (for 8-bit images), is implicitly converted to
+floating point value range [0.0, 1.0] or [-1.0, 1.0] in the <code class="docutils literal notranslate"><span class="pre">StimuliProvider</span></code>,
+after the transformations, unless one of the transformation changes the
+representation and/or the range of the data.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">DataSignedMapping</span></code> parameter only has effect when implicit conversion
+is performed.</p>
+</div>
+<p>The input value range can also be changed explicitly using for example a
+<code class="docutils literal notranslate"><span class="pre">RangeAffineTransformation</span></code>, like below, in which case no implicit conversion
+is performed afterwards (and the <code class="docutils literal notranslate"><span class="pre">DataSignedMapping</span></code> parameter has no effect):</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[sp.Transformation-rangeAffine]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">RangeAffineTransformation</span>
+<span class="na">FirstOperator</span><span class="o">=</span><span class="s">Minus</span>
+<span class="na">FirstValue</span><span class="o">=</span><span class="s">128.0</span>
+<span class="na">SecondOperator</span><span class="o">=</span><span class="s">Divides</span>
+<span class="na">SecondValue</span><span class="o">=</span><span class="s">128.0</span>
+</pre></div>
+</div>
+<p>When running a simulation in N2D2, the graph of the transformations with all
+their parameters as well as the expected output dimension after each
+transformation is automatically generated (in the file <em>transformations.png</em>).
+As transformations can be applied only to one of the learn, validation or test
+datasets, three graphs are generated, as shown in the following figure.</p>
+<div class="figure align-default" id="id2">
+<img alt="Graph of the transformations for the learn, validation and test datasets, automatically generated by N2D2." src="_images/transformations.png" />
+<p class="caption"><span class="caption-text">Graph of the transformations for the learn, validation and test datasets,
+automatically generated by N2D2.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="images-slicing-during-training-and-inference">
+<h2>Images slicing during training and inference<a class="headerlink" href="#images-slicing-during-training-and-inference" title="Permalink to this headline">¶</a></h2>
+<p>In N2D2, the input dimensions of a neural network is fixed and cannot be
+changed dynamically during the training and inference, as images are processed
+in batch, like any other deep learning framework. Therefore, in order to deal
+with datasets containing images of variable dimensions, patches or slices of
+fixed dimensions must be extracted.</p>
+<p>In N2D2, two mechanisms are provided to extract slices:</p>
+<ul class="simple">
+<li><p>For training, random slices can be extracted from bigger images for each batch, thus allowing to cover the full images over the training time with the maximum variability. This also act as basic data augmentation. Random slices extraction is achieved using a <code class="docutils literal notranslate"><span class="pre">SliceExtractionTransformation</span></code>, applied only to the training set with the parameter <code class="docutils literal notranslate"><span class="pre">ApplyTo=LearnOnly</span></code>.</p></li>
+</ul>
+<blockquote>
+<div><div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[sp.OnTheFlyTransformation-1]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">SliceExtractionTransformation</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">${WIDTH}</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">${HEIGHT}</span>
+<span class="na">RandomOffsetX</span><span class="o">=</span><span class="s">1</span>
+<span class="na">RandomOffsetY</span><span class="o">=</span><span class="s">1</span>
+<span class="na">AllowPadding</span><span class="o">=</span><span class="s">1</span>
+<span class="na">ApplyTo</span><span class="o">=</span><span class="s">LearnOnly</span>
+</pre></div>
+</div>
+</div></blockquote>
+<ul class="simple">
+<li><p>For inference, one wants to cover the full images once and only once. This cannot be achieved with a N2D2 <code class="docutils literal notranslate"><span class="pre">Transformation</span></code>, but has to be handled by the <code class="docutils literal notranslate"><span class="pre">Database</span></code> driver. In order to do so, any <code class="docutils literal notranslate"><span class="pre">Database</span></code> driver can have an additional “slicing” section in the N2D2 INI file, which will automatically extract regularly strided fixed size slices from the dataset. The example above can be used to extract slides for the validation and testing datasets, with the parameter <code class="docutils literal notranslate"><span class="pre">ApplyTo=NoLearn</span></code>.</p></li>
+</ul>
+<blockquote>
+<div><div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database.slicing]</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">${WIDTH}</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">${HEIGHT}</span>
+<span class="na">StrideX</span><span class="o">=</span><span class="s">[database.slicing]Width</span>
+<span class="na">StrideY</span><span class="o">=</span><span class="s">[database.slicing]Height</span>
+<span class="na">Overlapping</span><span class="o">=</span><span class="s">1</span>
+<span class="na">ApplyTo</span><span class="o">=</span><span class="s">NoLearn</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>When an image size is not a multiple of the slices size, the most right and
+most bottom slices may have a size lower than the intended fixed slice size
+specified with <code class="docutils literal notranslate"><span class="pre">Width</span></code> and <code class="docutils literal notranslate"><span class="pre">Height</span></code>. There are two ways to deal with these slices:</p>
+<ol class="arabic simple">
+<li><p>Add the <code class="docutils literal notranslate"><span class="pre">Overlapping=1</span></code> parameter, which allows an overlapping between the
+right/bottom-most slice and the preceding one. The overlapping area in the
+right/bottom-most slice is then marked as “ignore” for the labeling, to
+avoid counting twice the classification result on these pixels.</p></li>
+<li><p>Add a <code class="docutils literal notranslate"><span class="pre">PadCropTransformation</span></code> to pad to the slice target size for <code class="docutils literal notranslate"><span class="pre">NoLearn</span></code>
+data. In this case the padded area can be either ignored or mirror padding
+can be used.</p></li>
+</ol>
+</div>
+<div class="section" id="blending-for-data-augmentation">
+<h2>Blending for data augmentation<a class="headerlink" href="#blending-for-data-augmentation" title="Permalink to this headline">¶</a></h2>
+<p>Complex data augmentation / pre-processing pipelines can be created by combining
+the different available transformations. It is even possible to use multiple
+<code class="docutils literal notranslate"><span class="pre">Database</span></code> and <code class="docutils literal notranslate"><span class="pre">StimuliProvider</span></code>, to create for example a “blending” pipeline,
+which is introduced here and illustrated in the figure below.</p>
+<div class="figure align-default" id="id3">
+<img alt="Blending pipeline working principle." src="_images/blending.png" />
+<p class="caption"><span class="caption-text">Blending pipeline working principle.</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+<p>An example of a blending pipeline in the INI file is given here. The first part
+is the <code class="docutils literal notranslate"><span class="pre">BlendingTransformation</span></code>, which is inserted in the main image processing
+pipeline.</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="na">...</span>
+
+<span class="c1">; Here we add a blending transformation, which will perform objects blending</span>
+<span class="c1">; to images with the specified labels in the dataset, selected by the</span>
+<span class="c1">; ApplyToLabels parameter.</span>
+<span class="k">[sp.OnTheFlyTransformation-blend]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">BlendingTransformation</span>
+<span class="na">ApplyTo</span><span class="o">=</span><span class="s">LearnOnly</span>
+<span class="na">Database</span><span class="o">=</span><span class="s">database_objects ; database driver to use for the objects to blend</span>
+<span class="na">StimuliProvider</span><span class="o">=</span><span class="s">sp_objects  ; stimuli provider specifying the transformations</span>
+<span class="s">                            ; to apply on the object data before blending</span>
+<span class="c1">; Specifies the name of the image label(s) on which a blending can be performed.</span>
+<span class="c1">; Here, any image in a &quot;backgrounds&quot; sub-directory in the dataset will be used</span>
+<span class="c1">; for the blending</span>
+<span class="c1">; POSSIBLE FUTURE EXTENSION: possibility to associate some backgrounds to some</span>
+<span class="c1">; object types only. Adding a background in a &quot;backgrounds&quot; sub-directory in the</span>
+<span class="c1">; object directory may allow this.</span>
+<span class="c1">; POSSIBLE FUTURE EXTENSION: specify ROIs for blending some object types.</span>
+<span class="na">ApplyToLabels</span><span class="o">=</span><span class="s">*backgrounds*</span>
+<span class="c1">; Indicate whether multiple object types can be mixed on the same background</span>
+<span class="na">TypeMixing</span><span class="o">=</span><span class="s">0</span>
+<span class="c1">; Density of the object in the background, from 0.0 to 1.0</span>
+<span class="na">DensityRange</span><span class="o">=</span><span class="s">0.0 0.2</span>
+<span class="c1">; Horizontal margin between objects (in pixels)</span>
+<span class="na">MarginH</span><span class="o">=</span><span class="s">0</span>
+<span class="c1">; Vertical margin between objects (in pixels)</span>
+<span class="na">MarginV</span><span class="o">=</span><span class="s">0</span>
+<span class="c1">; Blending method</span>
+<span class="c1">; POSSIBLE FUTURE EXTENSION: add other blending methods...</span>
+<span class="na">BlendingMethod</span><span class="o">=</span><span class="s">SmoothEdge</span>
+<span class="na">BlendingSmoothSize</span><span class="o">=</span><span class="s">5</span>
+<span class="c1">; For DEBUG purpose, specifying a non-empty SavePath will save all the generated</span>
+<span class="c1">; blending with their associated JSON annotation in the SavePath directory.</span>
+<span class="na">SavePath</span><span class="o">=</span><span class="s">blending</span>
+
+<span class="na">...</span>
+</pre></div>
+</div>
+<p>The second part is the object pre-processing and extraction pipeline, that is
+attached to the <code class="docutils literal notranslate"><span class="pre">BlendingTransformation</span></code>.</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="c1">; --- BEGIN --- DATA TO BLEND PRE-PROCESSING ---</span>
+<span class="c1">; Database driver for the objects. Can be a sub-set of the main pipe image</span>
+<span class="c1">; dataset, or even the full main dataset itself</span>
+<span class="k">[database_objects]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">DIR_Database</span>
+<span class="na">DataPath</span><span class="o">=</span><span class="s">${DATA_PATH}</span>
+<span class="na">Depth</span><span class="o">=</span><span class="s">-1</span>
+<span class="na">LabelDepth</span><span class="o">=</span><span class="s">1</span>
+<span class="na">Learn</span><span class="o">=</span><span class="s">1.0</span>
+<span class="na">EquivLabelPartitioning</span><span class="o">=</span><span class="s">0</span>
+<span class="c1">; Since we use the same dataset, ignore the background images that contain</span>
+<span class="c1">; no object to blend.</span>
+<span class="na">IgnoreMasks</span><span class="o">=</span><span class="s">*backgrounds*</span>
+<span class="na">DefaultLabel</span><span class="o">=</span><span class="s">background ; Label for pixels outside any ROI (default is no label, pixels are ignored)</span>
+
+<span class="c1">; Simuli provider for objects =&gt; no need to change this part.</span>
+<span class="k">[sp_objects]</span>
+<span class="c1">; Sizes to 0 means any size, require that BatchSize=0</span>
+<span class="na">SizeX</span><span class="o">=</span><span class="s">0</span>
+<span class="na">SizeY</span><span class="o">=</span><span class="s">0</span>
+<span class="na">BatchSize</span><span class="o">=</span><span class="s">0</span>
+
+<span class="c1">; Apply random rotation &amp; scaling to objects</span>
+<span class="c1">; POSSIBLE FUTURE EXTENSION: apply different transformations depending on the</span>
+<span class="c1">; type of object</span>
+<span class="k">[sp_objects.OnTheFlyTransformation-0]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">SliceExtractionTransformation</span>
+<span class="c1">; Sizes to 0 means any size, size will not be changed by the transformation</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">0</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">0</span>
+<span class="na">RandomRotation</span><span class="o">=</span><span class="s">1</span>
+<span class="na">RandomScaling</span><span class="o">=</span><span class="s">1</span>
+<span class="na">RandomScalingRange</span><span class="o">=</span><span class="s">0.5 2.0</span>
+
+<span class="c1">; ... add here other transformations to apply to objects before extraction and</span>
+<span class="c1">; blending</span>
+
+<span class="c1">; Extend the object labels to have a smooth transition with background</span>
+<span class="k">[sp_objects.OnTheFlyTransformation-1]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">MorphologyTransformation</span>
+<span class="na">Operation</span><span class="o">=</span><span class="s">Dilate</span>
+<span class="na">Size</span><span class="o">=</span><span class="s">3</span>
+<span class="na">ApplyToLabels</span><span class="o">=</span><span class="s">1</span>
+<span class="na">NbIterations</span><span class="o">=</span><span class="s">2</span>
+
+<span class="c1">; This has to be the last transformation in the pre-processing of the images</span>
+<span class="c1">; that will be blended.</span>
+<span class="c1">; After data augmentation, a random object is extracted from the image,</span>
+<span class="c1">; using ROIs or connected-component labeling.</span>
+<span class="k">[sp_objects.OnTheFlyTransformation-2]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">ROIExtractionTransformation</span>
+<span class="c1">; Extract any label ID</span>
+<span class="na">Label</span><span class="o">=</span><span class="s">-1</span>
+<span class="c1">; Perform connected-component labeling to the label to obtain objects ROIs.</span>
+<span class="na">LabelSegmentation</span><span class="o">=</span><span class="s">1</span>
+<span class="na">Margin</span><span class="o">=</span><span class="s">0</span>
+<span class="na">KeepComposite</span><span class="o">=</span><span class="s">1</span>
+<span class="c1">; Possibility to filter the ROIs to keep before random selection of a single</span>
+<span class="c1">; one:</span>
+<span class="na">MinSize</span><span class="o">=</span><span class="s">0</span>
+<span class="na">FilterMinHeight</span><span class="o">=</span><span class="s">0</span>
+<span class="na">FilterMinWidth</span><span class="o">=</span><span class="s">0</span>
+<span class="na">FilterMinAspectRatio</span><span class="o">=</span><span class="s">0.0</span>
+<span class="na">FilterMaxAspectRatio</span><span class="o">=</span><span class="s">0.0</span>
+<span class="na">MergeMaxHDist</span><span class="o">=</span><span class="s">10</span>
+<span class="na">MergeMaxVDist</span><span class="o">=</span><span class="s">10</span>
+<span class="c1">; --- END --- DATA TO BLEND PRE-PROCESSING ---</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="built-in-transformations">
+<h2>Built-in transformations<a class="headerlink" href="#built-in-transformations" title="Permalink to this headline">¶</a></h2>
+<p>There are 6 possible categories of transformations:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">env.Transformation[...]</span></code> Transformations applied to the input images
+before channels creation;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">env.OnTheFlyTransformation[...]</span></code> On-the-fly transformations applied
+to the input images before channels creation;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">env.ChannelTransformation[...]</span></code> Create or add transformation for a
+specific channel;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">env.ChannelOnTheFlyTransformation[...]</span></code> Create or add on-the-fly
+transformation for a specific channel;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">env.ChannelsTransformation[...]</span></code> Transformations applied to all the
+channels of the input images;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">env.ChannelsOnTheFlyTransformation[...]</span></code> On-the-fly transformations
+applied to all the channels of the input images.</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[env.Transformation]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">PadCropTransformation</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">24</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">24</span>
+</pre></div>
+</div>
+<p>Several transformations can applied successively. In this case, to be
+able to apply multiple transformations of the same category, a different
+suffix (<code class="docutils literal notranslate"><span class="pre">[...]</span></code>) must be added to each transformation.</p>
+<p><strong>The transformations will be processed in the order of appearance in
+the INI file regardless of their suffix.</strong></p>
+<p>Common set of parameters for any kind of transformation:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 73%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ApplyTo</span></code> [<code class="docutils literal notranslate"><span class="pre">All</span></code>]</p></td>
+<td><p>Apply the transformation only to the specified stimuli sets. Can be:</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">LearnOnly</span></code>: learning set only</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ValidationOnly</span></code>: validation set only</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TestOnly</span></code>: testing set only</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">NoLearn</span></code>: validation and testing sets only</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">NoValidation</span></code>: learning and testing sets only</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">NoTest</span></code>: learning and validation sets only</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">All</span></code>: all sets (default)</p></td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[env.Transformation-1]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">ChannelExtractionTransformation</span>
+<span class="na">CSChannel</span><span class="o">=</span><span class="s">Gray</span>
+
+<span class="k">[env.Transformation-2]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">RescaleTransformation</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">29</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">29</span>
+
+<span class="k">[env.Transformation-3]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">EqualizeTransformation</span>
+
+<span class="k">[env.OnTheFlyTransformation]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">DistortionTransformation</span>
+<span class="na">ApplyTo</span><span class="o">=</span><span class="s">LearnOnly ; Apply this transformation for the Learning set only</span>
+<span class="na">ElasticGaussianSize</span><span class="o">=</span><span class="s">21</span>
+<span class="na">ElasticSigma</span><span class="o">=</span><span class="s">6.0</span>
+<span class="na">ElasticScaling</span><span class="o">=</span><span class="s">20.0</span>
+<span class="na">Scaling</span><span class="o">=</span><span class="s">15.0</span>
+<span class="na">Rotation</span><span class="o">=</span><span class="s">15.0</span>
+</pre></div>
+</div>
+<p>List of available transformations:</p>
+<div class="section" id="affinetransformation">
+<h3>AffineTransformation<a class="headerlink" href="#affinetransformation" title="Permalink to this headline">¶</a></h3>
+<p>Apply an element-wise affine transformation to the image with matrixes
+of the same size.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 73%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FirstOperator</span></code></p></td>
+<td><p>First element-wise operator, can be <code class="docutils literal notranslate"><span class="pre">Plus</span></code>, <code class="docutils literal notranslate"><span class="pre">Minus</span></code>, <code class="docutils literal notranslate"><span class="pre">Multiplies</span></code>, <code class="docutils literal notranslate"><span class="pre">Divides</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FirstValue</span></code></p></td>
+<td><p>First matrix file name</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SecondOperator</span></code> [<code class="docutils literal notranslate"><span class="pre">Plus</span></code>]</p></td>
+<td><p>Second element-wise operator, can be <code class="docutils literal notranslate"><span class="pre">Plus</span></code>, <code class="docutils literal notranslate"><span class="pre">Minus</span></code>, <code class="docutils literal notranslate"><span class="pre">Multiplies</span></code>, <code class="docutils literal notranslate"><span class="pre">Divides</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SecondValue</span></code> []</p></td>
+<td><p>Second matrix file name</p></td>
+</tr>
+</tbody>
+</table>
+<p>The final operation is the following, with <span class="math notranslate nohighlight">\(A\)</span> the image matrix,
+<span class="math notranslate nohighlight">\(B_{1st}\)</span>, <span class="math notranslate nohighlight">\(B_{2nd}\)</span> the matrixes to
+add/substract/multiply/divide and <span class="math notranslate nohighlight">\(\odot\)</span> the element-wise
+operator :</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}f(A) = \left(A\;\substack{\odot\\op_{1st}}\;B_{1st}\right)\;
+\substack{\odot\\op_{2nd}}\;B_{2nd}\end{split}\]</div>
+</div>
+<div class="section" id="apodizationtransformation">
+<h3>ApodizationTransformation<a class="headerlink" href="#apodizationtransformation" title="Permalink to this headline">¶</a></h3>
+<p>Apply an apodization window to each data row.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 63%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Size</span></code></p></td>
+<td><p>Window total size (must match the number of data columns)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">WindowName</span></code> [<code class="docutils literal notranslate"><span class="pre">Rectangular</span></code>]</p></td>
+<td><p>Window name. Possible values are:</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Rectangular</span></code>: Rectangular</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Hann</span></code>: Hann</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Hamming</span></code>: Hamming</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Cosine</span></code>: Cosine</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Gaussian</span></code>: Gaussian</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Blackman</span></code>: Blackman</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Kaiser</span></code>: Kaiser</p></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="gaussian-window">
+<h4>Gaussian window<a class="headerlink" href="#gaussian-window" title="Permalink to this headline">¶</a></h4>
+<p>Gaussian window.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 58%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><em>WindowName</em><code class="docutils literal notranslate"><span class="pre">.Sigma</span></code> [0.4]</p></td>
+<td><p>Sigma</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="blackman-window">
+<h4>Blackman window<a class="headerlink" href="#blackman-window" title="Permalink to this headline">¶</a></h4>
+<p>Blackman window.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 58%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><em>WindowName</em><code class="docutils literal notranslate"><span class="pre">.Alpha</span></code> [0.16]</p></td>
+<td><p>Alpha</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="kaiser-window">
+<h4>Kaiser window<a class="headerlink" href="#kaiser-window" title="Permalink to this headline">¶</a></h4>
+<p>Kaiser window.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 58%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><em>WindowName</em><code class="docutils literal notranslate"><span class="pre">.Beta</span></code> [5.0]</p></td>
+<td><p>Beta</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="blendingtransformation">
+<h3>BlendingTransformation<a class="headerlink" href="#blendingtransformation" title="Permalink to this headline">¶</a></h3>
+<p><strong>N2D2-IP only: available upon request.</strong></p>
+<p>This transformation can be used to blend image objects, provided by another
+<code class="docutils literal notranslate"><span class="pre">Database</span></code> and associated <code class="docutils literal notranslate"><span class="pre">StimuliProvider</span></code>, to the images of the current
+<code class="docutils literal notranslate"><span class="pre">StimuliProvider</span></code>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Database</span></code></p></td>
+<td><p>Name of the <code class="docutils literal notranslate"><span class="pre">Database</span></code> section to use for the objects to blend</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StimuliProvider</span></code></p></td>
+<td><p>Name of the <code class="docutils literal notranslate"><span class="pre">StimuliProvider</span></code> section specifying the transformations to apply on the objects data before blending</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ApplyToLabels</span></code> []</p></td>
+<td><p>Space-separated list that specifies the name of the image label(s) on which a blending can be performed (in the current
+data pipe). The usual * and + wildcards are allowed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TypeMixing</span></code> [0]</p></td>
+<td><p>If true (1), multiple object types can be mixed on the same image</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DensityRange</span></code> [0.0 0.0]</p></td>
+<td><p>Range of density of the objects to blend in the image (values are from 0.0 to 1.0). A different random density in this
+range is used for each image. If the two values are equal, the density is constant.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MarginH</span></code> [0]</p></td>
+<td><p>Minimum horizontal margin between inserted objects (in pixels)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MarginV</span></code> [0]</p></td>
+<td><p>Minimum vertical margin between inserted objects (in pixels)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BlendingMethod</span></code>
+[<code class="docutils literal notranslate"><span class="pre">Linear</span></code>]</p></td>
+<td><p>Blending method to use (see the <code class="docutils literal notranslate"><span class="pre">BlendingMethod</span></code> section)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BlendingAlpha</span></code> [0.2]</p></td>
+<td><p><span class="math notranslate nohighlight">\(\alpha\)</span> factor for the blending. Depends on the blending method (see the <code class="docutils literal notranslate"><span class="pre">BlendingMethod</span></code> section)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BlendingBeta</span></code> [0.8]</p></td>
+<td><p><span class="math notranslate nohighlight">\(\beta\)</span> factor for the blending. Depends on the blending method (see the <code class="docutils literal notranslate"><span class="pre">BlendingMethod</span></code> section)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BlendingSmoothSize</span></code> [5]</p></td>
+<td><p>Blurring kernel size, used in some blending methods (see the <code class="docutils literal notranslate"><span class="pre">BlendingMethod</span></code> section)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SavePath</span></code> []</p></td>
+<td><p>If not empty, all the blended images are stored in <code class="docutils literal notranslate"><span class="pre">SavePath</span></code> during the simulation</p></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="blendingmethod">
+<h4><code class="docutils literal notranslate"><span class="pre">BlendingMethod</span></code><a class="headerlink" href="#blendingmethod" title="Permalink to this headline">¶</a></h4>
+<p>In the following equations, <span class="math notranslate nohighlight">\(O\)</span> is the object image, <span class="math notranslate nohighlight">\(I\)</span> is the image
+of the current pipe on which objects must be inserted.
+And <span class="math notranslate nohighlight">\(R\)</span> is the resulting image.</p>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">Linear</span></code>: no smoothing.</dt><dd><p><span class="math notranslate nohighlight">\(R=\alpha.O + \beta.I\)</span></p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">LinearByDistance</span></code>: limit the blur in the blended object background.</dt><dd><div class="line-block">
+<div class="line"><span class="math notranslate nohighlight">\(\Delta = \frac{\|O-I\|-min(\|O-I\|)}{max(\|O-I\|)-min(\|O-I\|)}\)</span></div>
+<div class="line"><span class="math notranslate nohighlight">\(R=\alpha.O.(1-\Delta) + \beta.I.\Delta\)</span></div>
+</div>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">SmoothEdge</span></code>: smoothing at the borders of the objects.</dt><dd><div class="line-block">
+<div class="line"><span class="math notranslate nohighlight">\(\alpha = \begin{cases}
+  1 &amp; \text{when } LABEL \neq 0\\
+  0 &amp; \text{otherwise}
+\end{cases}\)</span></div>
+<div class="line"><span class="math notranslate nohighlight">\(\alpha' = gaussian\_blur(\alpha)\)</span></div>
+<div class="line"><span class="math notranslate nohighlight">\(R=\alpha'.O + (1-\alpha').B\)</span></div>
+</div>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">SmoothEdgeByDistance</span></code>: combines <code class="docutils literal notranslate"><span class="pre">SmoothEdge</span></code> and <code class="docutils literal notranslate"><span class="pre">LinearByDistance</span></code>.</dt><dd><div class="line-block">
+<div class="line"><span class="math notranslate nohighlight">\(\alpha = \begin{cases}
+  \Delta &amp; \text{when } LABEL \neq 0\\
+  0 &amp; \text{otherwise}
+\end{cases}\)</span></div>
+<div class="line"><span class="math notranslate nohighlight">\(\alpha' = gaussian\_blur(\alpha)\)</span></div>
+<div class="line"><span class="math notranslate nohighlight">\(R=\alpha'.O + (1-\alpha').B\)</span></div>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="channeldroptransformation">
+<h3>ChannelDropTransformation<a class="headerlink" href="#channeldroptransformation" title="Permalink to this headline">¶</a></h3>
+<p><strong>N2D2-IP only: available upon request.</strong></p>
+<p>Randomly drop some channels of the image and replace them with a constant value.
+This can be useful to simulate missing channel data in multi-channel data.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DropProb</span></code></p></td>
+<td><p>Channel’s drop probabilities (space-separated list of
+probabilities, in the order of the image channels)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DropValue</span></code> [0.0]</p></td>
+<td><p>Value to use for dropped channels pixels</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="channelextractiontransformation">
+<h3>ChannelExtractionTransformation<a class="headerlink" href="#channelextractiontransformation" title="Permalink to this headline">¶</a></h3>
+<p>Extract an image channel.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 84%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CSChannel</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Blue</span></code>: blue channel in the BGR colorspace, or first channel of any colorspace</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Green</span></code>: green channel in the BGR colorspace, or second channel of any colorspace</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Red</span></code>: red channel in the BGR colorspace, or third channel of any colorspace</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Hue</span></code>: hue channel in the HSV colorspace</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Saturation</span></code>: saturation channel in the HSV colorspace</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Value</span></code>: value channel in the HSV colorspace</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Gray</span></code>: gray conversion</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Y</span></code>: Y channel in the YCbCr colorspace</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Cb</span></code>: Cb channel in the YCbCr colorspace</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Cr</span></code>: Cr channel in the YCbCr colorspace</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="channelshaketransformation">
+<h3>ChannelShakeTransformation<a class="headerlink" href="#channelshaketransformation" title="Permalink to this headline">¶</a></h3>
+<p><strong>N2D2-IP only: available upon request.</strong></p>
+<p>Randomly shift some channels of the image.
+This can be useful to simulate misalignment between multiple channel data.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 77%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">VerticalRange[*]</span></code></p></td>
+<td><p>Vertical shift range (in pixels) for each channel. For example, to randomly shift the second channel by +/- 5
+pixels in the vertical direction, use: <code class="docutils literal notranslate"><span class="pre">VerticalRange[1]=-5.0</span> <span class="pre">5.0</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">HorizontalRange[*]</span></code></p></td>
+<td><p>Horizontal shift range (in pixels) for each channel</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Distribution</span></code> [<code class="docutils literal notranslate"><span class="pre">Uniform</span></code>]</p></td>
+<td><p>Random distribution to use for the shift</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Rounded</span></code> [1]</p></td>
+<td><p>If true (1), use integer value for the shifts (no pixel interpolation needed)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BorderType</span></code></p></td>
+<td><p>Border type used when padding. Possible values:</p></td>
+</tr>
+<tr class="row-odd"><td><p>[<code class="docutils literal notranslate"><span class="pre">MinusOneReflectBorder</span></code>]</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ConstantBorder</span></code>: pad with <code class="docutils literal notranslate"><span class="pre">BorderValue</span></code></p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ReplicateBorder</span></code>: last element is replicated throughout, like aaaaaa|abcdefgh|hhhhhhh</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ReflectBorder</span></code>: border will be mirror reflection of the border elements, like fedcba|abcdefgh|hgfedcb</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">WrapBorder</span></code>: it will look like cdefgh|abcdefgh|abcdefg</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MinusOneReflectBorder</span></code>: same as <code class="docutils literal notranslate"><span class="pre">ReflectBorder</span></code> but with a slight change, like gfedcb|abcdefgh|gfedcba</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MeanBorder</span></code>: pad with the mean color of the image</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BorderValue</span></code> [0.0 0.0 0.0]</p></td>
+<td><p>Background color used when padding with <code class="docutils literal notranslate"><span class="pre">BorderType</span></code> is <code class="docutils literal notranslate"><span class="pre">ConstantBorder</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="distribution">
+<h4><code class="docutils literal notranslate"><span class="pre">Distribution</span></code><a class="headerlink" href="#distribution" title="Permalink to this headline">¶</a></h4>
+<p>Possible distribution and meaning of the range.
+For example with <code class="docutils literal notranslate"><span class="pre">VerticalRange[1]=-5.0</span> <span class="pre">5.0</span></code>.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">Uniform</span></code></dt><dd><p>Uniform between -5 and 5.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Normal</span></code></dt><dd><p>Normal with mean (-5+5)/2=0 and std. dev. = (5-(-5))/6 = 1.67.
+The range defines the std. dev. such that range = 6 sigma.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">TruncatedNormal</span></code></dt><dd><p>Same as <code class="docutils literal notranslate"><span class="pre">Normal</span></code>, but truncated between -5 and 5.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="colorspacetransformation">
+<h3>ColorSpaceTransformation<a class="headerlink" href="#colorspacetransformation" title="Permalink to this headline">¶</a></h3>
+<p>Change the current image colorspace.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 75%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ColorSpace</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BGR</span></code>: convert any gray, BGR or BGRA image to BGR</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RGB</span></code>: convert any gray, BGR or BGRA image to RGB</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">HSV</span></code>: convert BGR image to HSV</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">HLS</span></code>: convert BGR image to HLS</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">YCrCb</span></code>: convert BGR image to YCrCb</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CIELab</span></code>: convert BGR image to CIELab</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CIELuv</span></code>: convert BGR image to CIELuv</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RGB_to_BGR</span></code>: convert RGB image to BGR</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RGB_to_HSV</span></code>: convert RGB image to HSV</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RGB_to_HLS</span></code>: convert RGB image to HLS</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RGB_to_YCrCb</span></code>: convert RGB image to YCrCb</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RGB_to_CIELab</span></code>: convert RGB image to CIELab</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RGB_to_CIELuv</span></code>: convert RGB image to CIELuv</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">HSV_to_BGR</span></code>: convert HSV image to BGR</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">HSV_to_RGB</span></code>: convert HSV image to RGB</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">HLS_to_BGR</span></code>: convert HLS image to BGR</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">HLS_to_RGB</span></code>: convert HLS image to RGB</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">YCrCb_to_BGR</span></code>: convert YCrCb image to BGR</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">YCrCb_to_RGB</span></code>: convert YCrCb image to RGB</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CIELab_to_BGR</span></code>: convert CIELab image to BGR</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CIELab_to_RGB</span></code>: convert CIELab image to RGB</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CIELuv_to_BGR</span></code>: convert CIELuv image to BGR</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CIELuv_to_RGB</span></code>: convert CIELuv image to RGB</p></td>
+</tr>
+</tbody>
+</table>
+<p>Note that the default colorspace in N2D2 is BGR, the same as in OpenCV.</p>
+</div>
+<div class="section" id="dfttransformation">
+<h3>DFTTransformation<a class="headerlink" href="#dfttransformation" title="Permalink to this headline">¶</a></h3>
+<p>Apply a DFT to the data. The input data must be single channel, the
+resulting data is two channels, the first for the real part and the
+second for the imaginary part.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 76%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TwoDimensional</span></code> [1]</p></td>
+<td><p>If true, compute a 2D image DFT. Otherwise, compute the 1D DFT of each data row</p></td>
+</tr>
+</tbody>
+</table>
+<p>Note that this transformation can add zero-padding if required by the
+underlying FFT implementation.</p>
+</div>
+<div class="section" id="distortiontransformation">
+<h3>DistortionTransformation<a class="headerlink" href="#distortiontransformation" title="Permalink to this headline">¶</a></h3>
+<p>Apply elastic distortion to the image. This transformation is generally
+used on-the-fly (so that a different distortion is performed for each
+image), and for the learning only.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ElasticGaussianSize</span></code> [15]</p></td>
+<td><p>Size of the gaussian for elastic distortion (in pixels)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ElasticSigma</span></code> [6.0]</p></td>
+<td><p>Sigma of the gaussian for elastic distortion</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ElasticScaling</span></code> [0.0]</p></td>
+<td><p>Scaling of the gaussian for elastic distortion</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Scaling</span></code> [0.0]</p></td>
+<td><p>Maximum random scaling amplitude (+/-, in percentage)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Rotation</span></code> [0.0]</p></td>
+<td><p>Maximum random rotation amplitude (+/-, in °)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="equalizetransformation">
+<h3>EqualizeTransformation<a class="headerlink" href="#equalizetransformation" title="Permalink to this headline">¶</a></h3>
+<p>Image histogram equalization.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 87%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Method</span></code> [<code class="docutils literal notranslate"><span class="pre">Standard</span></code>]</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Standard</span></code>: standard histogram equalization</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CLAHE</span></code>: contrast limited adaptive histogram equalization</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CLAHE_ClipLimit</span></code> [40.0]</p></td>
+<td><p>Threshold for contrast limiting (for <code class="docutils literal notranslate"><span class="pre">CLAHE</span></code> only)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CLAHE_GridSize</span></code> [8]</p></td>
+<td><p>Size of grid for histogram equalization (for <code class="docutils literal notranslate"><span class="pre">CLAHE</span></code> only). Input image will be divided into equally sized rectangular tiles. This parameter defines the number of tiles in row and column.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="expandlabeltransformation">
+<h3>ExpandLabelTransformation<a class="headerlink" href="#expandlabeltransformation" title="Permalink to this headline">¶</a></h3>
+<p>Expand single image label (1x1 pixel) to full frame label.</p>
+</div>
+<div class="section" id="filtertransformation">
+<h3>FilterTransformation<a class="headerlink" href="#filtertransformation" title="Permalink to this headline">¶</a></h3>
+<p>Apply a convolution filter to the image.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 63%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel</span></code></p></td>
+<td><p>Convolution kernel. Possible values are:</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">*</span></code>: custom kernel</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Gaussian</span></code>: Gaussian kernel</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">LoG</span></code>: Laplacian Of Gaussian kernel</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DoG</span></code>: Difference Of Gaussian kernel</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Gabor</span></code>: Gabor kernel</p></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="kernel">
+<h4>* kernel<a class="headerlink" href="#kernel" title="Permalink to this headline">¶</a></h4>
+<p>Custom kernel.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 71%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code> [0]</p></td>
+<td><p>Width of the kernel (numer of columns)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code> [0]</p></td>
+<td><p>Height of the kernel (number of rows)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Mat</span></code></p></td>
+<td><p>List of row-major ordered coefficients of the kernel</p></td>
+</tr>
+</tbody>
+</table>
+<p>If both <code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code> and <code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code> are 0, the kernel is
+assumed to be square.</p>
+</div>
+<div class="section" id="gaussian-kernel">
+<h4>Gaussian kernel<a class="headerlink" href="#gaussian-kernel" title="Permalink to this headline">¶</a></h4>
+<p>Gaussian kernel.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 59%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code></p></td>
+<td><p>Width of the kernel (numer of columns)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code></p></td>
+<td><p>Height of the kernel (number of rows)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Positive</span></code> [1]</p></td>
+<td><p>If true, the center of the kernel is positive</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Sigma</span></code> [<span class="math notranslate nohighlight">\(\sqrt{2.0}\)</span>]</p></td>
+<td><p>Sigma of the kernel</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="log-kernel">
+<h4>LoG kernel<a class="headerlink" href="#log-kernel" title="Permalink to this headline">¶</a></h4>
+<p>Laplacian Of Gaussian kernel.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 59%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code></p></td>
+<td><p>Width of the kernel (numer of columns)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code></p></td>
+<td><p>Height of the kernel (number of rows)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Positive</span></code> [1]</p></td>
+<td><p>If true, the center of the kernel is positive</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Sigma</span></code> [<span class="math notranslate nohighlight">\(\sqrt{2.0}\)</span>]</p></td>
+<td><p>Sigma of the kernel</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="dog-kernel">
+<h4>DoG kernel<a class="headerlink" href="#dog-kernel" title="Permalink to this headline">¶</a></h4>
+<p>Difference Of Gaussian kernel kernel.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 59%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code></p></td>
+<td><p>Width of the kernel (numer of columns)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code></p></td>
+<td><p>Height of the kernel (number of rows)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Positive</span></code> [1]</p></td>
+<td><p>If true, the center of the kernel is positive</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Sigma1</span></code> [2.0]</p></td>
+<td><p>Sigma1 of the kernel</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Sigma2</span></code> [1.0]</p></td>
+<td><p>Sigma2 of the kernel</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="gabor-kernel">
+<h4>Gabor kernel<a class="headerlink" href="#gabor-kernel" title="Permalink to this headline">¶</a></h4>
+<p>Gabor kernel.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 59%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeX</span></code></p></td>
+<td><p>Width of the kernel (numer of columns)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.SizeY</span></code></p></td>
+<td><p>Height of the kernel (number of rows)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Theta</span></code></p></td>
+<td><p>Theta of the kernel</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Sigma</span></code> [<span class="math notranslate nohighlight">\(\sqrt{2.0}\)</span>]</p></td>
+<td><p>Sigma of the kernel</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Lambda</span></code> [10.0]</p></td>
+<td><p>Lambda of the kernel</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Psi</span></code> [<span class="math notranslate nohighlight">\(\pi/2.0\)</span>]</p></td>
+<td><p>Psi of the kernel</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Kernel.Gamma</span></code> [0.5]</p></td>
+<td><p>Gamma of the kernel</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="fliptransformation">
+<h3>FlipTransformation<a class="headerlink" href="#fliptransformation" title="Permalink to this headline">¶</a></h3>
+<p>Image flip transformation.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">HorizontalFlip</span></code> [0]</p></td>
+<td><p>If true, flip the image horizontally</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VerticalFlip</span></code> [0]</p></td>
+<td><p>If true, flip the image vertically</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RandomHorizontalFlip</span></code> [0]</p></td>
+<td><p>If true, randomly flip the image horizontally</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RandomVerticalFlip</span></code> [0]</p></td>
+<td><p>If true, randomly flip the image vertically</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="gradientfiltertransformation">
+<h3>GradientFilterTransformation<a class="headerlink" href="#gradientfiltertransformation" title="Permalink to this headline">¶</a></h3>
+<p>Compute image gradient.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 85%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Scale</span></code> [1.0]</p></td>
+<td><p>Scale to apply to the computed gradient</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Delta</span></code> [0.0]</p></td>
+<td><p>Bias to add to the computed gradient</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GradientFilter</span></code> [<code class="docutils literal notranslate"><span class="pre">Sobel</span></code>]</p></td>
+<td><p>Filter type to use for computing the gradient. Possible options are: <code class="docutils literal notranslate"><span class="pre">Sobel</span></code>, <code class="docutils literal notranslate"><span class="pre">Scharr</span></code> and <code class="docutils literal notranslate"><span class="pre">Laplacian</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">KernelSize</span></code> [3]</p></td>
+<td><p>Size of the filter kernel (has no effect when using the <code class="docutils literal notranslate"><span class="pre">Scharr</span></code> filter, which kernel size is always 3x3)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ApplyToLabels</span></code> [0]</p></td>
+<td><p>If true, use the computed gradient to filter the image label and ignore pixel areas where the gradient is below the <code class="docutils literal notranslate"><span class="pre">Threshold</span></code>. In this case, only the labels are modified, not the image</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">InvThreshold</span></code> [0]</p></td>
+<td><p>If true, ignored label pixels will be the ones with a low gradient (low contrasted areas)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Threshold</span></code> [0.5]</p></td>
+<td><p>Threshold applied on the image gradient</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Label</span></code> []</p></td>
+<td><p>List of labels to filter (space-separated)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GradientScale</span></code> [1.0]</p></td>
+<td><p>Rescale the image by this factor before applying the gradient and the threshold, then scale it back to filter the labels</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="labelsliceextractiontransformation">
+<h3>LabelSliceExtractionTransformation<a class="headerlink" href="#labelsliceextractiontransformation" title="Permalink to this headline">¶</a></h3>
+<p>Extract a slice from an image belonging to a given label.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 89%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Width</span></code></p></td>
+<td><p>Width of the slice to extract</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Height</span></code></p></td>
+<td><p>Height of the slice to extract</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Label</span></code> [-1]</p></td>
+<td><p>Slice should belong to this label ID. If -1, the label ID is random</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RandomRotation</span></code> [0]</p></td>
+<td><p>If true, extract randomly rotated slices</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RandomRotationRange</span></code> [0.0 360.0]</p></td>
+<td><p>Range of the random rotations, in degrees, counterclockwise (if <code class="docutils literal notranslate"><span class="pre">RandomRotation</span></code> is enabled)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SlicesMargin</span></code> [0]</p></td>
+<td><p>Positive or negative, indicates the margin around objects that can be extracted in the slice</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KeepComposite</span></code> [0]</p></td>
+<td><p>If false, the 2D label image is reduced to a single value corresponding to the extracted object label (useful for patches classification tasks). Note that if <code class="docutils literal notranslate"><span class="pre">SlicesMargin</span></code> is &gt; 0, the 2D label image may contain other labels before reduction. For pixel-wise segmentation tasks, set <code class="docutils literal notranslate"><span class="pre">KeepComposite</span></code> to true.</p></td>
+</tr>
+</tbody>
+</table>
+<p>This transformation is useful to learn sparse object occurrences in a
+lot of background. If the dataset is very unbalanced towards background,
+this transformation will ensure that the learning is done on a more
+balanced set of every labels, regardless of their actual pixel-wise
+ratio.</p>
+<p>Illustration of the working behavior of <code class="docutils literal notranslate"><span class="pre">LabelSliceExtractionTransformation</span></code>
+with <code class="docutils literal notranslate"><span class="pre">SlicesMargin</span></code> = 0:</p>
+<div class="figure align-default" id="id4">
+<img alt="Randomly extracted slices with label 0." src="_images/LabelSliceExtractionTransformation_apply__ter_W64_H64_S0.png" />
+<p class="caption"><span class="caption-text">Randomly extracted slices with label 0.</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-default" id="id5">
+<img alt="Randomly extracted slices with label 1." src="_images/LabelSliceExtractionTransformation_apply__quater_W64_H64_S0.png" />
+<p class="caption"><span class="caption-text">Randomly extracted slices with label 1.</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+</div>
+<p>When <code class="docutils literal notranslate"><span class="pre">SlicesMargin</span></code> is 0, only slices that fully include a given label
+are extracted, as shown in figures above. The behavior with
+<code class="docutils literal notranslate"><span class="pre">SlicesMargin</span></code> &lt; 0 is illustrated in figures below. Note that setting a negative
+<code class="docutils literal notranslate"><span class="pre">SlicesMargin</span></code> larger in absolute value than <code class="docutils literal notranslate"><span class="pre">Width</span></code>/2 or
+<code class="docutils literal notranslate"><span class="pre">Height</span></code>/2 will lead in some (random) cases in incorrect slice labels
+in respect to the majority pixel label in the slice.</p>
+<p>Illustration of the working behavior of <code class="docutils literal notranslate"><span class="pre">LabelSliceExtractionTransformation</span></code>
+with <code class="docutils literal notranslate"><span class="pre">SlicesMargin</span></code> = -32:</p>
+<div class="figure align-default" id="id6">
+<img alt="Randomly extracted slices including label 0." src="_images/LabelSliceExtractionTransformation_apply__ter_W64_H64_S-32.png" />
+<p class="caption"><span class="caption-text">Randomly extracted slices including label 0.</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-default" id="id7">
+<img alt="Randomly extracted slices including label 1." src="_images/LabelSliceExtractionTransformation_apply__quater_W64_H64_S-32.png" />
+<p class="caption"><span class="caption-text">Randomly extracted slices including label 1.</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="magnitudephasetransformation">
+<h3>MagnitudePhaseTransformation<a class="headerlink" href="#magnitudephasetransformation" title="Permalink to this headline">¶</a></h3>
+<p>Compute the magnitude and phase of a complex two channels input data,
+with the first channel <span class="math notranslate nohighlight">\(x\)</span> being the real part and the second
+channel <span class="math notranslate nohighlight">\(y\)</span> the imaginary part. The resulting data is two
+channels, the first one with the magnitude and the second one with the
+phase.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 64%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LogScale</span></code> [0]</p></td>
+<td><p>If true, compute the magnitude in log scale</p></td>
+</tr>
+</tbody>
+</table>
+<p>The magnitude is:</p>
+<div class="math notranslate nohighlight">
+\[M_{i,j} = \sqrt{x_{i,j}^2 + x_{i,j}^2}\]</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">LogScale</span></code> = 1, compute <span class="math notranslate nohighlight">\(M'_{i,j} = log(1 + M_{i,j})\)</span>.</p>
+<p>The phase is:</p>
+<div class="math notranslate nohighlight">
+\[\theta_{i,j} = atan2(y_{i,j}, x_{i,j})\]</div>
+</div>
+<div class="section" id="morphologicalreconstructiontransformation">
+<h3>MorphologicalReconstructionTransformation<a class="headerlink" href="#morphologicalreconstructiontransformation" title="Permalink to this headline">¶</a></h3>
+<p>Apply a morphological reconstruction transformation to the image. This
+transformation is also useful for post-processing.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 79%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Operation</span></code></p></td>
+<td><p>Morphological operation to apply. Can be:</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ReconstructionByErosion</span></code>: reconstruction by erosion operation</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ReconstructionByDilation</span></code>: reconstruction by dilation operation</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OpeningByReconstruction</span></code>: opening by reconstruction operation</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ClosingByReconstruction</span></code>: closing by reconstruction operation</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Size</span></code></p></td>
+<td><p>Size of the structuring element</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ApplyToLabels</span></code> [0]</p></td>
+<td><p>If true, apply the transformation to the labels instead of the image</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Shape</span></code> [<code class="docutils literal notranslate"><span class="pre">Rectangular</span></code>]</p></td>
+<td><p>Shape of the structuring element used for morphology operations. Can be <code class="docutils literal notranslate"><span class="pre">Rectangular</span></code>, <code class="docutils literal notranslate"><span class="pre">Elliptic</span></code> or <code class="docutils literal notranslate"><span class="pre">Cross</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NbIterations</span></code> [1]</p></td>
+<td><p>Number of times erosion and dilation are applied for opening and closing reconstructions</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="morphologytransformation">
+<h3>MorphologyTransformation<a class="headerlink" href="#morphologytransformation" title="Permalink to this headline">¶</a></h3>
+<p>Apply a morphology transformation to the image. This transformation is
+also useful for post-processing.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 79%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Operation</span></code></p></td>
+<td><p>Morphological operation to apply. Can be:</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Erode</span></code>: erode operation (<span class="math notranslate nohighlight">\(=erode(src)\)</span>)</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Dilate</span></code>: dilate operation (<span class="math notranslate nohighlight">\(=dilate(src)\)</span>)</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Opening</span></code>: opening operation (<span class="math notranslate nohighlight">\(open(src)=dilate(erode(src))\)</span>)</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Closing</span></code>: closing operation (<span class="math notranslate nohighlight">\(close(src)=erode(dilate(src))\)</span>)</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Gradient</span></code>: morphological gradient (<span class="math notranslate nohighlight">\(=dilate(src)-erode(src)\)</span>)</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TopHat</span></code>: top hat (<span class="math notranslate nohighlight">\(=src-open(src)\)</span>)</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BlackHat</span></code>: black hat (<span class="math notranslate nohighlight">\(=close(src)-src\)</span>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Size</span></code></p></td>
+<td><p>Size of the structuring element</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ApplyToLabels</span></code> [0]</p></td>
+<td><p>If true, apply the transformation to the labels instead of the image</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Shape</span></code> [<code class="docutils literal notranslate"><span class="pre">Rectangular</span></code>]</p></td>
+<td><p>Shape of the structuring element used for morphology operations. Can be <code class="docutils literal notranslate"><span class="pre">Rectangular</span></code>, <code class="docutils literal notranslate"><span class="pre">Elliptic</span></code> or <code class="docutils literal notranslate"><span class="pre">Cross</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NbIterations</span></code> [1]</p></td>
+<td><p>Number of times erosion and dilation are applied</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="normalizetransformation">
+<h3>NormalizeTransformation<a class="headerlink" href="#normalizetransformation" title="Permalink to this headline">¶</a></h3>
+<p>Normalize the image.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 66%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Norm</span></code> [<code class="docutils literal notranslate"><span class="pre">MinMax</span></code>]</p></td>
+<td><p>Norm type, can be:</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">L1</span></code>: L1 normalization</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">L2</span></code>: L2 normalization</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Linf</span></code>: Linf normalization</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MinMax</span></code>: min-max normalization</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NormValue</span></code> [1.0]</p></td>
+<td><p>Norm value (for <code class="docutils literal notranslate"><span class="pre">L1</span></code>, <code class="docutils literal notranslate"><span class="pre">L2</span></code> and <code class="docutils literal notranslate"><span class="pre">Linf</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Such that <span class="math notranslate nohighlight">\(||data||_{L_{p}} = NormValue\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NormMin</span></code> [0.0]</p></td>
+<td><p>Min value (for <code class="docutils literal notranslate"><span class="pre">MinMax</span></code> only)</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Such that <span class="math notranslate nohighlight">\(min(data) = NormMin\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NormMax</span></code> [1.0]</p></td>
+<td><p>Max value (for <code class="docutils literal notranslate"><span class="pre">MinMax</span></code> only)</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Such that <span class="math notranslate nohighlight">\(max(data) = NormMax\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PerChannel</span></code> [0]</p></td>
+<td><p>If true, normalize each channel individually</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="padcroptransformation">
+<h3>PadCropTransformation<a class="headerlink" href="#padcroptransformation" title="Permalink to this headline">¶</a></h3>
+<p>Pad/crop the image to a specified size.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 71%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Width</span></code></p></td>
+<td><p>Width of the padded/cropped image</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Height</span></code></p></td>
+<td><p>Height of the padded/cropped image</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BorderType</span></code> [<code class="docutils literal notranslate"><span class="pre">MinusOneReflectBorder</span></code>]</p></td>
+<td><p>Border type used when padding. Possible values:</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ConstantBorder</span></code>: pad with <code class="docutils literal notranslate"><span class="pre">BorderValue</span></code></p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ReplicateBorder</span></code>: last element is replicated throughout, like aaaaaa|abcdefgh|hhhhhhh</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ReflectBorder</span></code>: border will be mirror reflection of the border elements, like fedcba|abcdefgh|hgfedcb</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">WrapBorder</span></code>: it will look like cdefgh|abcdefgh|abcdefg</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MinusOneReflectBorder</span></code>: same as <code class="docutils literal notranslate"><span class="pre">ReflectBorder</span></code> but with a slight change, like gfedcb|abcdefgh|gfedcba</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MeanBorder</span></code>: pad with the mean color of the image</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BorderValue</span></code> [0.0 0.0 0.0]</p></td>
+<td><p>Background color used when padding with <code class="docutils literal notranslate"><span class="pre">BorderType</span></code> is <code class="docutils literal notranslate"><span class="pre">ConstantBorder</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="roiextractiontransformation">
+<h3>ROIExtractionTransformation<a class="headerlink" href="#roiextractiontransformation" title="Permalink to this headline">¶</a></h3>
+<p>The transformation is typically used as the last transformation of the object
+extraction pipeline to be used for blending in a <code class="docutils literal notranslate"><span class="pre">BlendingTransformation</span></code>.
+A random object of with the label <code class="docutils literal notranslate"><span class="pre">Label</span></code> is extracted from the image.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Label</span></code> [-1]</p></td>
+<td><p>Label ID to extract (-1 means any label ID)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LabelSegmentation</span></code> [0]</p></td>
+<td><p>If true (1), perform connected-component
+labeling to the label to obtain object ROIs</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Margin</span></code> [0]</p></td>
+<td><p>Margin to keep around the object (in pixels)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">KeepComposite</span></code> [1]</p></td>
+<td><p>If true (1), the extracted object label remains
+composite. Otherwise, the label is reduced to a
+single value</p></td>
+</tr>
+</tbody>
+</table>
+<p>Additional parameters for ROI filtering, before random selection of a single one:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 11%" />
+<col style="width: 69%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default value</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MinSize</span></code></p></td>
+<td><p>0</p></td>
+<td><p>Minimum number of pixels than can constitute a bounding box.
+Bounding boxes with fewer than <code class="docutils literal notranslate"><span class="pre">MinSize</span></code> pixels are discarded</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FilterMinHeight</span></code></p></td>
+<td><p>0</p></td>
+<td><p>Minimum height of the ROI to keep it</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FilterMinWidth</span></code></p></td>
+<td><p>0</p></td>
+<td><p>Minimum width of the ROI to keep it</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FilterMinAspectRatio</span></code></p></td>
+<td><p>0.0</p></td>
+<td><p>Minimum aspect ratio (width/height) of the ROI to keep it (default is 0.0 = no minimum)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FilterMaxAspectRatio</span></code></p></td>
+<td><p>0.0</p></td>
+<td><p>Maximum aspect ratio (width/height) of the ROI to keep it (default is 0.0 = no minimum)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MergeMaxHDist</span></code></p></td>
+<td><p>1</p></td>
+<td><p>Maximum horizontal distance for merging (in pixels)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MergeMaxVDist</span></code></p></td>
+<td><p>1</p></td>
+<td><p>Maximum vertical distance for merging (in pixels)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="randomaffinetransformation">
+<h3>RandomAffineTransformation<a class="headerlink" href="#randomaffinetransformation" title="Permalink to this headline">¶</a></h3>
+<p>Apply a global random affine transformation to the values of the image.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 94%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GainRange</span></code> [1.0 1.0]</p></td>
+<td><p>Random gain (<span class="math notranslate nohighlight">\(\alpha\)</span>) range (identical for all channels)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GainRange[*]</span></code> [1.0 1.0]</p></td>
+<td><p>Random gain (<span class="math notranslate nohighlight">\(\alpha\)</span>) range for channel <code class="docutils literal notranslate"><span class="pre">*</span></code>. Mutually exclusive with <code class="docutils literal notranslate"><span class="pre">GainRange</span></code>. If any specified, a different random gain will always be sampled for each channel. Default gain is 1.0 (no gain) for missing channels</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>The gain control the <em>contrast</em> of the image</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BiasRange</span></code> [0.0 0.0]</p></td>
+<td><p>Random bias (<span class="math notranslate nohighlight">\(\beta\)</span>) range (identical for all channels)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BiasRange[*]</span></code> [0.0 0.0]</p></td>
+<td><p>Random bias (<span class="math notranslate nohighlight">\(\beta\)</span>) range for channel <code class="docutils literal notranslate"><span class="pre">*</span></code>. Mutually exclusive with <code class="docutils literal notranslate"><span class="pre">BiasRange</span></code>. If any specified, a different random bias will always be sampled for each channel. Default bias is 0.0 (no bias) for missing channels</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>The bias control the <em>brightness</em> of the image</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GammaRange</span></code> [1.0 1.0]</p></td>
+<td><p>Random gamma (<span class="math notranslate nohighlight">\(\gamma\)</span>) range (identical for all channels)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GammaRange[*]</span></code> [1.0 1.0]</p></td>
+<td><p>Random gamma (<span class="math notranslate nohighlight">\(\gamma\)</span>) range for channel <code class="docutils literal notranslate"><span class="pre">*</span></code>. Mutually exclusive with <code class="docutils literal notranslate"><span class="pre">GammaRange</span></code>. If any specified, a different random gamma will always be sampled for each channel. Default gamma is 1.0 (no change) for missing channels</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>The gamma control more or less the <em>exposure</em> of the image</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GainVarProb</span></code> [1.0]</p></td>
+<td><p>Probability to have a gain variation for each channel. If only one value is specified, the same probability applies to all the channels. In this case, the same gain variation will be sampled for all the channels only if a single range if specified for all the channels using <code class="docutils literal notranslate"><span class="pre">GainRange</span></code>. If more than one value is specified, a different random gain will always be sampled for each channel, even if the probabilities and ranges are identical</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BiasVarProb</span></code> [1.0]</p></td>
+<td><p>Probability to have a bias variation for each channel. If only one value is specified, the same probability applies to all the channels. In this case, the same bias variation will be sampled for all the channels only if a single range if specified for all the channels using <code class="docutils literal notranslate"><span class="pre">BiasRange</span></code>. If more than one value is specified, a different random bias will always be sampled for each channel, even if the probabilities and ranges are identical</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GammaVarProb</span></code> [1.0]</p></td>
+<td><p>Probability to have a gamma variation for each channel. If only one value is specified, the same probability applies to all the channels. In this case, the same gamma variation will be sampled for all the channels only if a single range if specified for all the channels using <code class="docutils literal notranslate"><span class="pre">GammaRange</span></code>. If more than one value is specified, a different random gamma will always be sampled for each channel, even if the probabilities and ranges are identical</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DisjointGamma</span></code> [0]</p></td>
+<td><p>If true, gamma variation and gain/bias variation are mutually exclusive. The probability to have a random gamma variation is therefore <code class="docutils literal notranslate"><span class="pre">GammaVarProb</span></code> and the probability to have a gain/bias variation is 1-<code class="docutils literal notranslate"><span class="pre">GammaVarProb</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ChannelsMask</span></code> []</p></td>
+<td><p>If not empty, specifies on which channels the transformation is applied. For example, to apply the transformation only to the first and third channel, set <code class="docutils literal notranslate"><span class="pre">ChannelsMask</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">0</span> <span class="pre">1</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>The equation of the transformation is:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}S =
+   \begin{cases}
+      \text{numeric\_limits&lt;T&gt;::max()}  &amp;  \text{if } \text{is\_integer&lt;T&gt;} \\
+      1.0   &amp; \text{otherwise}
+   \end{cases}\end{split}\]</div>
+<div class="math notranslate nohighlight">
+\[v(i,j) = \text{cv::saturate\_cast&lt;T&gt;}\left(\alpha \left(\frac{v(i,j)}{S}\right)^{\gamma} S + \beta.S\right)\]</div>
+</div>
+<div class="section" id="rangeaffinetransformation">
+<h3>RangeAffineTransformation<a class="headerlink" href="#rangeaffinetransformation" title="Permalink to this headline">¶</a></h3>
+<p>Apply an affine transformation to the values of the image.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 70%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FirstOperator</span></code></p></td>
+<td><p>First operator, can be <code class="docutils literal notranslate"><span class="pre">Plus</span></code>, <code class="docutils literal notranslate"><span class="pre">Minus</span></code>, <code class="docutils literal notranslate"><span class="pre">Multiplies</span></code>, <code class="docutils literal notranslate"><span class="pre">Divides</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FirstValue</span></code></p></td>
+<td><p>First value</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SecondOperator</span></code> [<code class="docutils literal notranslate"><span class="pre">Plus</span></code>]</p></td>
+<td><p>Second operator, can be <code class="docutils literal notranslate"><span class="pre">Plus</span></code>, <code class="docutils literal notranslate"><span class="pre">Minus</span></code>, <code class="docutils literal notranslate"><span class="pre">Multiplies</span></code>, <code class="docutils literal notranslate"><span class="pre">Divides</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SecondValue</span></code> [0.0]</p></td>
+<td><p>Second value</p></td>
+</tr>
+</tbody>
+</table>
+<p>The final operation is the following:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}f(x) = \left(x\;\substack{o\\op_{1st}}\;val_{1st}\right)\;
+\substack{o\\op_{2nd}}\;val_{2nd}\end{split}\]</div>
+</div>
+<div class="section" id="rangeclippingtransformation">
+<h3>RangeClippingTransformation<a class="headerlink" href="#rangeclippingtransformation" title="Permalink to this headline">¶</a></h3>
+<p>Clip the value range of the image.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 74%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RangeMin</span></code> [<span class="math notranslate nohighlight">\(min(data)\)</span>]</p></td>
+<td><p>Image values below <code class="docutils literal notranslate"><span class="pre">RangeMin</span></code> are clipped to 0</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RangeMax</span></code> [<span class="math notranslate nohighlight">\(max(data)\)</span>]</p></td>
+<td><p>Image values above <code class="docutils literal notranslate"><span class="pre">RangeMax</span></code> are clipped to 1 (or the maximum integer value of the data type)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="rescaletransformation">
+<h3>RescaleTransformation<a class="headerlink" href="#rescaletransformation" title="Permalink to this headline">¶</a></h3>
+<p>Rescale the image to a specified size.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 75%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Width</span></code></p></td>
+<td><p>Width of the rescaled image</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Height</span></code></p></td>
+<td><p>Height of the rescaled image</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KeepAspectRatio</span></code> [0]</p></td>
+<td><p>If true, keeps the aspect ratio of the image</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ResizeToFit</span></code> [1]</p></td>
+<td><p>If true, resize along the longest dimension when <code class="docutils literal notranslate"><span class="pre">KeepAspectRatio</span></code> is true</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="reshapetransformation">
+<h3>ReshapeTransformation<a class="headerlink" href="#reshapetransformation" title="Permalink to this headline">¶</a></h3>
+<p>Reshape the data to a specified size.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 62%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NbRows</span></code></p></td>
+<td><p>New number of rows</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NbCols</span></code> [0]</p></td>
+<td><p>New number of cols (0 = no check)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NbChannels</span></code> [0]</p></td>
+<td><p>New number of channels (0 = no change)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="sliceextractiontransformation">
+<h3>SliceExtractionTransformation<a class="headerlink" href="#sliceextractiontransformation" title="Permalink to this headline">¶</a></h3>
+<p>Extract a slice from an image.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 71%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Width</span></code></p></td>
+<td><p>Width of the slice to extract</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Height</span></code></p></td>
+<td><p>Height of the slice to extract</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">OffsetX</span></code> [0]</p></td>
+<td><p>X offset of the slice to extract</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OffsetY</span></code> [0]</p></td>
+<td><p>Y offset of the slice to extract</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RandomOffsetX</span></code> [0]</p></td>
+<td><p>If true, the X offset is chosen randomly</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RandomOffsetY</span></code> [0]</p></td>
+<td><p>If true, the Y offset is chosen randomly</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RandomRotation</span></code> [0]</p></td>
+<td><p>If true, extract randomly rotated slices</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RandomRotationRange</span></code> [0.0 360.0]</p></td>
+<td><p>Range of the random rotations, in degrees, counterclockwise (if <code class="docutils literal notranslate"><span class="pre">RandomRotation</span></code> is enabled)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RandomScaling</span></code> [0]</p></td>
+<td><p>If true, extract randomly scaled slices</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RandomScalingRange</span></code> [0.8 1.2]</p></td>
+<td><p>Range of the random scaling (if <code class="docutils literal notranslate"><span class="pre">RandomRotation</span></code> is enabled)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AllowPadding</span></code> [0]</p></td>
+<td><p>If true, zero-padding is allowed if the image is smaller than the slice to extract</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BorderType</span></code> [<code class="docutils literal notranslate"><span class="pre">MinusOneReflectBorder</span></code>]</p></td>
+<td><p>Border type used when padding. Possible values:</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ConstantBorder</span></code>: pad with <code class="docutils literal notranslate"><span class="pre">BorderValue</span></code></p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ReplicateBorder</span></code>: last element is replicated throughout, like aaaaaa|abcdefgh|hhhhhhh</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ReflectBorder</span></code>: border will be mirror reflection of the border elements, like fedcba|abcdefgh|hgfedcb</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">WrapBorder</span></code>: it will look like cdefgh|abcdefgh|abcdefg</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MinusOneReflectBorder</span></code>: same as <code class="docutils literal notranslate"><span class="pre">ReflectBorder</span></code> but with a slight change, like gfedcb|abcdefgh|gfedcba</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MeanBorder</span></code>: pad with the mean color of the image</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BorderValue</span></code> [0.0 0.0 0.0]</p></td>
+<td><p>Background color used when padding with <code class="docutils literal notranslate"><span class="pre">BorderType</span></code> is <code class="docutils literal notranslate"><span class="pre">ConstantBorder</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="thresholdtransformation">
+<h3>ThresholdTransformation<a class="headerlink" href="#thresholdtransformation" title="Permalink to this headline">¶</a></h3>
+<p>Apply a thresholding transformation to the image. This transformation is
+also useful for post-processing.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Threshold</span></code></p></td>
+<td><p>Threshold value</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OtsuMethod</span></code> [0]</p></td>
+<td><p>Use Otsu’s method to determine the optimal threshold (if true, the <code class="docutils literal notranslate"><span class="pre">Threshold</span></code> value is ignored)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Operation</span></code> [Binary]</p></td>
+<td><p>Thresholding operation to apply. Can be:</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Binary</span></code></p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BinaryInverted</span></code></p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Truncate</span></code></p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ToZero</span></code></p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ToZeroInverted</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MaxValue</span></code> [1.0]</p></td>
+<td><p>Max. value to use with <code class="docutils literal notranslate"><span class="pre">Binary</span></code> and <code class="docutils literal notranslate"><span class="pre">BinaryInverted</span></code> operations</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="trimtransformation">
+<h3>TrimTransformation<a class="headerlink" href="#trimtransformation" title="Permalink to this headline">¶</a></h3>
+<p>Trim the image.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 67%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NbLevels</span></code></p></td>
+<td><p>Number of levels for the color discretization of the image</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Method</span></code> [<code class="docutils literal notranslate"><span class="pre">Discretize</span></code>]</p></td>
+<td><p>Possible values are:</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Reduce</span></code>: discretization using K-means</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Discretize</span></code>: simple discretization</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="wallisfiltertransformation">
+<h3>WallisFilterTransformation<a class="headerlink" href="#wallisfiltertransformation" title="Permalink to this headline">¶</a></h3>
+<p>Apply Wallis filter to the image.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 81%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Size</span></code></p></td>
+<td><p>Size of the filter</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Mean</span></code> [0.0]</p></td>
+<td><p>Target mean value</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">StdDev</span></code> [1.0]</p></td>
+<td><p>Target standard deviation</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PerChannel</span></code> [0]</p></td>
+<td><p>If true, apply Wallis filter to each channel individually (this parameter is meaningful only if <code class="docutils literal notranslate"><span class="pre">Size</span></code> is 0)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ini_layers.html" class="btn btn-neutral float-right" title="Network Layers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ini_data_analysis.html" class="btn btn-neutral float-left" title="Stimuli data analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, CEA LIST
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

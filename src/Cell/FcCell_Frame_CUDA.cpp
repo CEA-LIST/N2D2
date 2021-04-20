@@ -57,36 +57,47 @@ N2D2::FcCell_Frame_CUDA<T>::FcCell_Frame_CUDA(const DeepNet& deepNet, const std:
       Cell_Frame_CUDA<T>(deepNet, name, nbOutputs, activation),
       // IMPORTANT: Do not change the value of the parameters here! Use
       // setParameter() or loadParameters().
-      mOnesVector(NULL)
+      mOnesVector(0)
 {
     // ctor
     mWeightsFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
     mBiasFiller = std::make_shared<NormalFiller<T> >(0.0, 0.05);
     mWeightsSolver = std::make_shared<SGDSolver_Frame_CUDA<T> >();
     mBiasSolver = std::make_shared<SGDSolver_Frame_CUDA<T> >();
+
+    int count;
+    CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+
+    mOnesVector.resize(count, NULL);
 }
 
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::initialize()
 {
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
 
-    if (!mNoBias && mBias.empty()) {
-        mBias.resize({mOutputs.dimZ(), 1, 1, 1});
-        mDiffBias.resize({mOutputs.dimZ(), 1, 1, 1});
-        mBiasFiller->apply(mBias);
-        mBias.synchronizeHToD();
+    if (!mNoBias) {
+        if (mBias.empty()) {
+            mBias.resize({mOutputs.dimZ(), 1, 1, 1});
+            mDiffBias.resize({mOutputs.dimZ(), 1, 1, 1});
+            mBiasFiller->apply(mBias);
+            mBias.synchronizeHToD();
+        }
 
-        if (mOnesVector != NULL)
-            cudaFree(mOnesVector);
+        if (mOnesVector[dev] != NULL)
+            cudaFree(mOnesVector[dev]);
 
         //  1   <-->    batch   <-->    mInputs.b()
         CHECK_CUDA_STATUS(
-            cudaMalloc(&mOnesVector, mInputs.dimB() * sizeof(T)));
+            cudaMalloc(&mOnesVector[dev], mInputs.dimB() * sizeof(T)));
         std::vector<T> onesVec(mInputs.dimB(), T(1.0));
-        CHECK_CUDA_STATUS(cudaMemcpy(mOnesVector,
+        CHECK_CUDA_STATUS(cudaMemcpy(mOnesVector[dev],
                                     &onesVec[0],
                                     mInputs.dimB() * sizeof(T),
                                     cudaMemcpyHostToDevice));
+        
+        mBias.broadcastAnyTo(dev);
     }
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
@@ -107,6 +118,8 @@ void N2D2::FcCell_Frame_CUDA<T>::initialize()
 
     if (mNormalize)
         mSynapsesNorm.resize({mOutputs.dimZ()});
+    
+    mSynapses.broadcastAnyTo(dev);
 
     if (mQuantizer) {
         for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
@@ -117,7 +130,6 @@ void N2D2::FcCell_Frame_CUDA<T>::initialize()
         }
         mQuantizer->initialize();
     }
-
 }
 
 
@@ -129,20 +141,23 @@ void N2D2::FcCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, un
     // NOTE: this is addition to initialize()
     Cell::initializeParameters(inputDimZ, nbInputs, mapping);
 
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
     if (!mNoBias && mBias.empty()) {
         mBias.resize({getNbOutputs(), 1, 1, 1});
         mDiffBias.resize({getNbOutputs(), 1, 1, 1});
         mBiasFiller->apply(mBias);
         mBias.synchronizeHToD();
 
-        if (mOnesVector != NULL)
-            cudaFree(mOnesVector);
+        if (mOnesVector[dev] != NULL)
+            cudaFree(mOnesVector[dev]);
 
         //  1   <-->    batch   <-->    mInputs.b()
         CHECK_CUDA_STATUS(
-            cudaMalloc(&mOnesVector, mInputs.dimB() * sizeof(T)));
+            cudaMalloc(&mOnesVector[dev], mInputs.dimB() * sizeof(T)));
         std::vector<T> onesVec(mInputs.dimB(), T(1.0));
-        CHECK_CUDA_STATUS(cudaMemcpy(mOnesVector,
+        CHECK_CUDA_STATUS(cudaMemcpy(mOnesVector[dev],
                                     &onesVec[0],
                                     mInputs.dimB() * sizeof(T),
                                     cudaMemcpyHostToDevice));
@@ -183,15 +198,18 @@ void N2D2::FcCell_Frame_CUDA<T>::initializeDataDependent()
     // NOTE: this is addition to initialize()
     Cell_Frame_CUDA<T>::initializeDataDependent();
 
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
     if (!mNoBias) {
-        if (mOnesVector != NULL)
-            cudaFree(mOnesVector);
+        if (mOnesVector[dev] != NULL)
+            cudaFree(mOnesVector[dev]);
 
         //  1   <-->    batch   <-->    mInputs.b()
         CHECK_CUDA_STATUS(
-            cudaMalloc(&mOnesVector, mInputs.dimB() * sizeof(T)));
+            cudaMalloc(&mOnesVector[dev], mInputs.dimB() * sizeof(T)));
         std::vector<T> onesVec(mInputs.dimB(), T(1.0));
-        CHECK_CUDA_STATUS(cudaMemcpy(mOnesVector,
+        CHECK_CUDA_STATUS(cudaMemcpy(mOnesVector[dev],
                                     &onesVec[0],
                                     mInputs.dimB() * sizeof(T),
                                     cudaMemcpyHostToDevice));
@@ -240,6 +258,9 @@ template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
+
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
 
     if (mNormalize) {
         mSynapsesNorm.deviceTensor().fill(T(0.0f));
@@ -310,12 +331,12 @@ void N2D2::FcCell_Frame_CUDA<T>::propagate(bool inference)
     }
 
     if (!mNoBias) {
-        if (mOnesVector == NULL) {
+        if (mOnesVector[dev] == NULL) {
             //  1   <-->    batch   <-->    mInputs.b()
             CHECK_CUDA_STATUS(
-                cudaMalloc(&mOnesVector, mInputs.dimB() * sizeof(T)));
+                cudaMalloc(&mOnesVector[dev], mInputs.dimB() * sizeof(T)));
             std::vector<T> onesVec(mInputs.dimB(), T(1.0));
-            CHECK_CUDA_STATUS(cudaMemcpy(mOnesVector,
+            CHECK_CUDA_STATUS(cudaMemcpy(mOnesVector[dev],
                                         &onesVec[0],
                                         mInputs.dimB() * sizeof(T),
                                         cudaMemcpyHostToDevice));
@@ -330,7 +351,7 @@ void N2D2::FcCell_Frame_CUDA<T>::propagate(bool inference)
             biases = cuda_device_tensor_cast<T>(mBias);
         }
 
-        // Computes mOutputs = alpha*mBias*mOnesVector + alpha*mOutputs
+        // Computes mOutputs = alpha*mBias*mOnesVector[dev] + alpha*mOutputs
         CHECK_CUBLAS_STATUS(cublasGemm(
             CudaContext::cublasHandle(),
             CUBLAS_OP_N,
@@ -341,7 +362,7 @@ void N2D2::FcCell_Frame_CUDA<T>::propagate(bool inference)
             reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(&alpha),
             reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(biases->getDevicePtr()),
             mOutputs.dimZ(),
-            reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(mOnesVector),
+            reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(mOnesVector[dev]),
             1,
             reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(&alpha),
             reinterpret_cast<typename Cuda::cuda_type<T>::type*>(mOutputs.getDevicePtr()),
@@ -361,6 +382,9 @@ void N2D2::FcCell_Frame_CUDA<T>::backPropagate()
         return;
 
     Cell_Frame_CUDA<T>::backPropagate();
+
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
 
     //  1   <-->    batch   <-->    mInputs.b()
 
@@ -416,7 +440,7 @@ void N2D2::FcCell_Frame_CUDA<T>::backPropagate()
             diffBias = cuda_device_tensor_cast<T>(mDiffBias);
         }
 
-        // mDiffBias.getDevicePtr() = mDiffInputs.getDevicePtr * mOnesVector
+        // mDiffBias.getDevicePtr() = mDiffInputs.getDevicePtr * mOnesVector[dev]
         CHECK_CUBLAS_STATUS(cublasGemv(
             CudaContext::cublasHandle(),
             CUBLAS_OP_N,
@@ -425,7 +449,7 @@ void N2D2::FcCell_Frame_CUDA<T>::backPropagate()
             reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(&alpha),
             reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(mDiffInputs.getDevicePtr()),
             mOutputs.dimZ(),
-            reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(mOnesVector),
+            reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(mOnesVector[dev]),
             1,
             reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(&beta),
             reinterpret_cast<typename Cuda::cuda_type<T>::type*>(diffBias->getDevicePtr()),
@@ -488,19 +512,27 @@ void N2D2::FcCell_Frame_CUDA<T>::backPropagate()
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::update()
 {
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
     for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
         if (mDiffSynapses[k].isValid() && !mQuantizer) {
+            mDiffSynapses[k].aggregateAllTo(dev, mDevices);
             mWeightsSolvers[k]
                 ->update(mSynapses[k], mDiffSynapses[k], mInputs.dimB());
+            mSynapses[k].broadcastAllFrom(dev, mDevices);
         }
         else if (mDiffSynapses[k].isValid() && mQuantizer) {
             mWeightsSolvers[k]->update(
                 mSynapses[k], mQuantizer->getDiffFullPrecisionWeights(k), mInputs.dimB());
         }
     }
+
     if (!mNoBias && mDiffBias.isValid()){
         if(!mQuantizer) {
+            mDiffBias.aggregateAllTo(dev, mDevices);
             mBiasSolver->update(mBias, mDiffBias, mInputs.dimB());
+            mBias.broadcastAllFrom(dev, mDevices);
         }
         else {
             mBiasSolver->update(mBias, mQuantizer->getDiffFullPrecisionBiases(), mInputs.dimB());
@@ -510,6 +542,7 @@ void N2D2::FcCell_Frame_CUDA<T>::update()
         mQuantizer->update((unsigned int)mInputs.dimB());
     }
     Cell_Frame_CUDA<T>::update();
+
 }
 
 template <class T>
@@ -594,6 +627,9 @@ void N2D2::FcCell_Frame_CUDA<T>::loadFreeParameters(const std::string& fileName,
 {
     std::ifstream syn(fileName.c_str(), std::fstream::binary);
 
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
     if (!syn.good()) {
         if (ignoreNotExists) {
             std::cout << Utils::cnotice
@@ -609,10 +645,12 @@ void N2D2::FcCell_Frame_CUDA<T>::loadFreeParameters(const std::string& fileName,
         mSynapses[k].load(syn);
 
     mSynapses.synchronizeHToD();
+    mSynapses.broadcastAllFrom(dev);
 
     if (!mNoBias) {
         mBias.load(syn);
         mBias.synchronizeHToD();
+        mBias.broadcastAllFrom(dev);
     }
 
     if (syn.eof())
@@ -796,15 +834,28 @@ void N2D2::FcCell_Frame_CUDA<T>::synchronizeToD(bool keepInSync_)
     mSynapses.synchronizeHToD();
     mBias.synchronizeHToD();
     keepInSync(keepInSync_);
+
+    int dev;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+    
+    mSynapses.broadcastAllFrom(dev);
+    mBias.broadcastAllFrom(dev);
 }
 
 template <class T>
 N2D2::FcCell_Frame_CUDA<T>::~FcCell_Frame_CUDA()
 {
-    if (mOnesVector != NULL) {
-        cudaFree(mOnesVector);
-        mOnesVector = NULL;
+    int currentDev;
+    cudaGetDevice(&currentDev);    
+    for (size_t dev = 0; dev < mOnesVector.size(); ++dev) {
+        if (mOnesVector[dev] != NULL) {
+            cudaSetDevice(dev);
+            cudaFree(mOnesVector[dev]);
+            mOnesVector[dev] = NULL;
+        }
     }
+    
+    cudaSetDevice(currentDev);
 }
 
 namespace N2D2 {

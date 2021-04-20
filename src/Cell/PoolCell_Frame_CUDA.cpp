@@ -95,8 +95,14 @@ void N2D2::PoolCell_Frame_CUDA<T>::setExtendedPadding(
 
     mPaddedInputs.clear();
 
-    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k)
-        mPaddedInputs.push_back(new CudaTensor<T>(inputsDims), 0);
+    if (!std::all_of(paddingDims.begin(), paddingDims.end(),
+        Utils::IsZero<int>()))
+    {
+        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+            inputsDims[2] = mInputs[k].dimZ();
+            mPaddedInputs.push_back(new CudaTensor<T>(inputsDims), 0);
+        }
+    }
 }
 
 template <class T>
@@ -108,12 +114,14 @@ void N2D2::PoolCell_Frame_CUDA<T>::initialize()
                 "supported for cell " + mName + ".");
     }
 
+    for (unsigned int k = 0, size = mOutputDesc.size(); k < size; ++k)
+        cudnnDestroyTensorDescriptor(mOutputDesc[k]);
+
+    mOutputDesc.clear();
+
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for PoolCell " + mName);
-
-        if (k < mOutputDesc.size())
-            continue;  // already initialized, skip!
 
         mOutputDesc.push_back(cudnnTensorDescriptor_t());
 
@@ -171,6 +179,8 @@ void N2D2::PoolCell_Frame_CUDA<T>::initialize()
         &paddings[0],
         &strides[0]));
 #endif
+
+    setExtendedPadding(mExtPaddingDims);
 }
 
 template <class T>
@@ -224,6 +234,13 @@ template <class T>
 void N2D2::PoolCell_Frame_CUDA<T>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
+
+    if (mInputs.size() != mOutputDesc.size()) {
+        std::cout << Utils::cnotice << "Changing the number of inputs from "
+            << mOutputDesc.size() << " to " << mInputs.size()
+            << " for PoolCell " << mName << Utils::cdef << std::endl;
+        initialize();
+    }
 
     const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
     const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;

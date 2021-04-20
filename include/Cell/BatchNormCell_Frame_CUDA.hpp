@@ -46,6 +46,7 @@ public:
     using Cell_Frame_CUDA<T>::mDiffOutputs;
     using Cell_Frame_CUDA<T>::mActivationDesc;
     using Cell_Frame_CUDA<T>::mKeepInSync;
+    using Cell_Frame_CUDA<T>::mDevices;
 
     BatchNormCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                              unsigned int nbOutputs,
@@ -119,6 +120,7 @@ protected:
     CudaTensor<ParamT> mDiffScale;
     CudaTensor<ParamT> mDiffBias;
     std::shared_ptr<CudaTensor<ParamT> > mMean;
+    std::shared_ptr<CudaTensor<ParamT> > mCopyMean;
     std::shared_ptr<CudaTensor<ParamT> > mVariance;
     CudaTensor<ParamT> mSavedMean;
     CudaTensor<ParamT> mSavedVariance;

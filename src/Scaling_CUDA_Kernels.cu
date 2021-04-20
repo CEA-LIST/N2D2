@@ -29,7 +29,7 @@ using N2D2::Cuda::clamp;
 template<typename T>
 __device__ T saturate(T value, std::size_t quantizedNbBits, bool isOutputUnsigned) {
     assert(quantizedNbBits > 0);
-    
+
     const T min = isOutputUnsigned?0:
                                   -(1ll << (quantizedNbBits - 1ll));
     const T max = isOutputUnsigned?(1ll << quantizedNbBits) - 1ll:
@@ -65,16 +65,22 @@ __global__ void cudaFloatingPointScaling_kernel(const T* input, T* output,
                 //clipping before scaling
                 T res = input[index];
                 if(isClipped){
-                    res = (res < T(0.0)) ? T(0.0) 
+                    if(clippingFactorPerChannel[ch]>0){
+                        res = (res < T(0.0)) ? T(0.0)
                         : (res > T(clippingFactorPerChannel[ch])) ? T(clippingFactorPerChannel[ch]) 
                         : res;
+                    }
+                    else{
+                        res = (res > T(0.0)) ? T(0.0)
+                        : (res < T(clippingFactorPerChannel[ch])) ? T(clippingFactorPerChannel[ch])
+                        : res;
+                    }
+
                 }
                 res *= scalingFactorPerChannel[ch];
-
                 if(quantizedNbBits > 0) {
                     res = saturate(round(res), quantizedNbBits, isOutputUnsigned);
                 }
-
                 output[index] = res;
             }
         }
@@ -105,20 +111,12 @@ __global__ void cudaFixedPointScaling_kernel(const T* input, T* output,
                                           ch*heigth*width +
                                           i;
                 
-                //
-                /*
-                const long long half = (nbFractionalBits > 0)
-                    ? (1ll << (nbFractionalBits - 1))
-                    : 0ll;
-                const long long res = (
-                    static_cast<long long>(round(input[index])) * scalingFactorPerChannel[ch] + half
-                )  >> nbFractionalBits;
-                */
-                
                 //adding the clipping
                 T realInput = input[index];
                 if(isClipped){
-                    realInput = (realInput > T(clippingFactorPerChannel[ch])) ? T(clippingFactorPerChannel[ch]) : realInput;
+                    realInput = (realInput < T(0.0)) ? T(0.0) 
+                        : (realInput > T(clippingFactorPerChannel[ch])) ? T(clippingFactorPerChannel[ch]) 
+                        : realInput;
                 }
 
                 const long long half = (nbFractionalBits > 0)

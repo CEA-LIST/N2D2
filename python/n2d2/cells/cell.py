@@ -159,8 +159,9 @@ class DeepNetCell(Block):
         if ini_file is not None:
             ini_parser.load(ini_file)
         ini_parser.currentSection("onnx", True)
+        # TODO : do it with generate method
         N2D2_deepnet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, ini_parser,
-                                                              N2D2_deepnet)
+                                            N2D2_deepnet, [None])
         n2d2_deepnet = cls(N2D2_deepnet)
         return n2d2_deepnet
 

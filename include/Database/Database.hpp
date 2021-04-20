@@ -49,6 +49,8 @@
 #include "Transformation/CompositeTransformation.hpp"
 #include "utils/Parameterizable.hpp"
 #include "utils/Utils.hpp"
+#include "utils/Registrar.hpp"
+#include "DataFile/DataFile.hpp"
 
 namespace N2D2 {
 
@@ -327,6 +329,16 @@ public:
                             = std::vector<std::shared_ptr<ROI> >());
     std::vector<StimuliSet> getStimuliSets(StimuliSetMask setMask) const;
     StimuliSetMask getStimuliSetMask(StimuliSet set) const;
+    virtual cv::Mat readLabel(const StimulusID id) { 
+        std::string fileExtension = Utils::fileExtension(mStimuli[id].name);
+        if(mDataFileLabel && Registrar<DataFile>::exists(fileExtension)){
+            std::shared_ptr<DataFile> dataFile = Registrar
+            <DataFile>::create(fileExtension)();
+            return(dataFile->readLabel(mStimuli[id].name));
+        } else {
+            return cv::Mat();
+        }
+    }; 
 
     virtual ~Database();
 
@@ -337,7 +349,7 @@ protected:
     getRelPathStimuli(const std::string& fileName, const std::string& relPath);
     int labelID(const std::string& labelName);
     cv::Mat loadStimulusData(StimulusID id);
-    cv::Mat loadStimulusLabelsData(StimulusID id) const;
+    cv::Mat loadStimulusLabelsData(StimulusID id);
     cv::Mat loadStimulusTargetData(StimulusID id);
     cv::Mat loadData(StimulusID id, int depth, const std::string fileName) const;
     std::vector<unsigned int> getLabelStimuliSetIndexes(int label,

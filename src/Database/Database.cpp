@@ -18,13 +18,11 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "DataFile/DataFile.hpp"
 #include "LabelFile/LabelFile.hpp"
 #include "LabelFile/CsvLabelFile.hpp"
 #include "Database/Database.hpp"
 #include "ROI/RectangularROI.hpp"
 #include "utils/Gnuplot.hpp"
-#include "utils/Registrar.hpp"
 
 #include <regex>
 
@@ -1730,12 +1728,14 @@ cv::Mat N2D2::Database::getStimulusLabelsData(StimulusID id)
                 mStimuliLabelsData.resize(mStimuli.size());
         }
 
-        if (mStimuliLabelsData[id].empty())
+        if (mStimuliLabelsData[id].empty()) {
             mStimuliLabelsData[id] = loadStimulusLabelsData(id);
+        }
 
         return mStimuliLabelsData[id];
-    } else
+    } else {
         return loadStimulusLabelsData(id);
+    }
 }
 
 cv::Mat N2D2::Database::getStimulusTargetData(StimulusID id,
@@ -1832,17 +1832,24 @@ int N2D2::Database::getStimuliDepth() {
             throw std::runtime_error("Can't get the stimuli depth of an empty database.");
         }
 
-        std::string fileExtension = Utils::fileExtension(mStimuli[0].name);
-        std::transform(fileExtension.begin(), fileExtension.end(),
-                       fileExtension.begin(), ::tolower);
+        if (mLoadDataInMemory
+            && !mStimuliData.empty() && !mStimuliData[0].empty())
+        {
+            mStimuliDepth = mStimuliData[0].depth();
+        }
+        else {
+            std::string fileExtension = Utils::fileExtension(mStimuli[0].name);
+            std::transform(fileExtension.begin(), fileExtension.end(),
+                        fileExtension.begin(), ::tolower);
 
-        auto dataFile = Registrar<DataFile>::create(fileExtension)();
-        mStimuliDepth = dataFile->read(mStimuli[0].name).depth();
+            auto dataFile = Registrar<DataFile>::create(fileExtension)();
+            mStimuliDepth = dataFile->read(mStimuli[0].name).depth();
 
-        std::cout << Utils::cnotice << "Notice: stimuli depth is "
-                    << Utils::cvMatDepthToString(mStimuliDepth)
-                    << " (according to database first stimulus)"
-                    << Utils::cdef << std::endl;
+            std::cout << Utils::cnotice << "Notice: stimuli depth is "
+                        << Utils::cvMatDepthToString(mStimuliDepth)
+                        << " (according to database first stimulus)"
+                        << Utils::cdef << std::endl;
+        }
     }
 
     return mStimuliDepth;
@@ -1874,7 +1881,7 @@ cv::Mat N2D2::Database::loadStimulusData(StimulusID id)
     return loadData(id, mStimuliDepth, mStimuli[id].name);
 }
 
-cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
+cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id)
 {
     std::string fileExtension = Utils::fileExtension(mStimuli[id].name);
     std::transform(fileExtension.begin(),
@@ -1882,13 +1889,7 @@ cv::Mat N2D2::Database::loadStimulusLabelsData(StimulusID id) const
                    fileExtension.begin(),
                    ::tolower);
 
-    cv::Mat labels;
-
-    if (mDataFileLabel && Registrar<DataFile>::exists(fileExtension)) {
-        std::shared_ptr<DataFile> dataFile = Registrar
-            <DataFile>::create(fileExtension)();
-        labels = dataFile->readLabel(mStimuli[id].name);
-    }
+    cv::Mat labels = this->readLabel(id);
 
     if (mCompositeLabel != None && (mCompositeLabel != Auto
                                     || mStimuli[id].label == -1

@@ -1,0 +1,1413 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Databases &mdash; N2D2  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Stimuli data analysis" href="ini_data_analysis.html" />
+    <link rel="prev" title="Introduction" href="ini_intro.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> N2D2
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ONNX Import:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="onnx_convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx_transfer.html">Train from ONNX models</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Quantization and Export:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quant_post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
+</ul>
+<p class="caption"><span class="caption-text">INI File Interface:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="ini_intro.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Databases</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#compositelabel-parameter"><code class="docutils literal notranslate"><span class="pre">CompositeLabel</span></code> parameter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multi-channel-handling">Multi-channel handling</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mnist">MNIST</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gtsrb">GTSRB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#directory">Directory</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#speech-commands-dataset"><em>Speech Commands Dataset</em></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#csv-data-files">CSV data files</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#usage-example">Usage example</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#other-built-in-databases">Other built-in databases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#actitracker-database">Actitracker_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cifar10-database">CIFAR10_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cifar100-database">CIFAR100_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ckp-database">CKP_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#caltech101-dir-database">Caltech101_DIR_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#caltech256-dir-database">Caltech256_DIR_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#caltechpedestrian-database">CaltechPedestrian_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cityscapes-database">Cityscapes_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#daimler-database">Daimler_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dota-database">DOTA_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fddb-database">FDDB_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gtsdb-dir-database">GTSDB_DIR_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ilsvrc2012-database">ILSVRC2012_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kitti-database">KITTI_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kitti-road-database">KITTI_Road_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kitti-object-database">KITTI_Object_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#litisrouen-database">LITISRouen_Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dataset-images-slicing">Dataset images slicing</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ini_data_analysis.html">Stimuli data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_environment.html">Stimuli provider (Environment)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ini_target.html">Targets (outputs &amp; losses)</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++ API / Developer:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev_intro.html">Introduction</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">N2D2</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Databases</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/ini_databases.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="databases">
+<h1>Databases<a class="headerlink" href="#databases" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">Database</span></code> handles the raw data, annotations and how the datasets
+(learn, validation or test) should be build.
+N2D2 integrates pre-defined modules for several well-known database
+used in the deep learning community, such as MNIST, GTSRB, CIFAR10 and
+so on. That way, no extra step is necessary to be able to directly build
+a network and learn it on these database.</p>
+<p>All the database modules inherit from a base <code class="docutils literal notranslate"><span class="pre">Database</span></code>, which contains some
+generic configuration options:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 72%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DefaultLabel</span></code> []</p></td>
+<td><p>Default label for composite image (for areas outside the ROIs).
+If empty, no default label is created and default label ID is -1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ROIsMargin</span></code> [0]</p></td>
+<td><p>Margin around the ROIs, in pixels, with no label (label ID = -1)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RandomPartitioning</span></code>
+[1]</p></td>
+<td><p>If true (1), the partitioning in the learn, validation and test
+sets is random, otherwise partitioning is in the order</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DataFileLabel</span></code> [1]</p></td>
+<td><p>If true (1), load pixel-wise image labels, if they exist</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CompositeLabel</span></code>
+[<code class="docutils literal notranslate"><span class="pre">Auto</span></code>]</p></td>
+<td><p>See the following <code class="docutils literal notranslate"><span class="pre">CompositeLabel</span></code> section</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TargetDataPath</span></code> []</p></td>
+<td><p>Data path to target data, to be used in conjunction with the
+<code class="docutils literal notranslate"><span class="pre">DataAsTarget</span></code> option in <code class="docutils literal notranslate"><span class="pre">Target</span></code> modules</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MultiChannelMatch</span></code> []</p></td>
+<td><p>See the following <em>multi-channel handling</em> section</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MultiChannelReplace</span></code></p></td>
+<td><p>See the following <em>multi-channel handling</em> section</p></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="compositelabel-parameter">
+<h3><code class="docutils literal notranslate"><span class="pre">CompositeLabel</span></code> parameter<a class="headerlink" href="#compositelabel-parameter" title="Permalink to this headline">¶</a></h3>
+<p>A label is said to be composite when it is not a single <em>labelID</em> for the
+stimulus (the stimulus label is a matrix of size &gt; 1).
+For the same stimulus, different type of labels can be specified,
+i.e. the <em>labelID</em>, pixel-wise data and/or ROIs.
+The way these different label types are handled is configured with the
+<code class="docutils literal notranslate"><span class="pre">CompositeLabel</span></code> parameter:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code>: only the <em>labelID</em> is used, pixel-wise data are ignored and ROIs
+are loaded but ignored as well by <code class="docutils literal notranslate"><span class="pre">loadStimulusLabelsData()</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Auto</span></code>: the label is only composite when pixel-wise data are present
+or the stimulus <em>labelID</em> is -1 (in which case the <code class="docutils literal notranslate"><span class="pre">DefaultLabel</span></code>
+is used for the whole label matrix). If the label is composite
+ROIs, if present, are applied. Otherwise, a single ROI is
+allowed and is automatically extracted when fetching the stimulus.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Default</span></code>: the label is always composite. The <em>labelID</em> is ignored.
+If there is no pixel-wise data, the <code class="docutils literal notranslate"><span class="pre">DefaultLabel</span></code> is used.
+ROIs, if present, are applied.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Disjoint</span></code>: the label is always composite. If there is no pixel-wise data:</p>
+<ul class="simple">
+<li><p>the <em>labelID</em> is used if there is no ROI;</p></li>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">DefaultLabel</span></code> is used if there is any ROI.</p></li>
+</ul>
+<p>ROIs, if present, are applied.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Combine</span></code>: the label is always composite.
+If there is no pixel-wise data, the <em>labelID</em> is used.
+ROIs, if present, are applied.</p></li>
+</ul>
+</div>
+<div class="section" id="multi-channel-handling">
+<h3>Multi-channel handling<a class="headerlink" href="#multi-channel-handling" title="Permalink to this headline">¶</a></h3>
+<p>Multi-channel images are automatically handled and the default image format in
+N2D2 is <strong>BGR</strong>.</p>
+<p>Any <code class="docutils literal notranslate"><span class="pre">Database</span></code> can also handle multi-channel data, where each channel is stored
+in a different file. In order to be able to interpret a series of files as an
+additional data channel to a first series of files, the file names must follow
+a simple yet arbitrary naming convention. A first parameter,
+<code class="docutils literal notranslate"><span class="pre">MultiChannelMatch</span></code>, is used to match the files constituting a single
+channel. Then, a second parameter, <code class="docutils literal notranslate"><span class="pre">MultiChannelReplace</span></code> is used to indicate
+how the file names of the other channels are obtained. See the example below,
+with the <code class="docutils literal notranslate"><span class="pre">DIR_Database</span></code>:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">DIR_Database</span>
+<span class="na">...</span>
+<span class="c1">; Multi-channel handling:</span>
+<span class="c1">; MultiChannelMatch is a regular expression for matching a single channel (for example the first one).</span>
+<span class="c1">; Here we match anything followed by &quot;_0&quot;, followed by &quot;.&quot; and anything except</span>
+<span class="c1">; &quot;.&quot;, so we match &quot;_0&quot; before the file extension.</span>
+<span class="na">MultiChannelMatch</span><span class="o">=</span><span class="s">(.*)_0(\.[^.]+)</span>
+<span class="c1">; Replace what we matched to obtain the file name of the different channels.</span>
+<span class="c1">; For the first channel, replace &quot;_0&quot; by &quot;_0&quot;, so the name doesn&#39;t change.</span>
+<span class="c1">; For the second channel, replace &quot;_0&quot; by &quot;_1&quot; in the file name.</span>
+<span class="c1">; To disable the second channel, replace $1_1$2 by &quot;&quot;</span>
+<span class="na">MultiChannelReplace</span><span class="o">=</span><span class="s">$1_0$2 $1_1$2</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="mnist">
+<h2>MNIST<a class="headerlink" href="#mnist" title="Permalink to this headline">¶</a></h2>
+<p>MNIST <a class="bibtex reference internal" href="tuto.html#lecun1998" id="id1">[LBBH98]</a> is already fractionned into a
+learning set and a testing set, with:</p>
+<ul class="simple">
+<li><p>60,000 digits in the learning set;</p></li>
+<li><p>10,000 digits in the testing set.</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">MNIST_IDX_Database</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.2  ; Fraction of learning stimuli used for the validation [default: 0.0]</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 67%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.0]</p></td>
+<td><p>Fraction of the learning set used for validation</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database</p></td>
+</tr>
+<tr class="row-even"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/mnist]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="gtsrb">
+<h2>GTSRB<a class="headerlink" href="#gtsrb" title="Permalink to this headline">¶</a></h2>
+<p>GTSRB <a class="bibtex reference internal" href="tuto.html#stallkamp2012" id="id2">[SSSI12]</a> is already fractionned into a
+learning set and a testing set, with:</p>
+<ul class="simple">
+<li><p>39,209 digits in the learning set;</p></li>
+<li><p>12,630 digits in the testing set.</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">GTSRB_DIR_Database</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.2  ; Fraction of learning stimuli used for the validation [default: 0.0]</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 67%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.0]</p></td>
+<td><p>Fraction of the learning set used for validation</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database</p></td>
+</tr>
+<tr class="row-even"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/GTSRB]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="directory">
+<h2>Directory<a class="headerlink" href="#directory" title="Permalink to this headline">¶</a></h2>
+<p>Hand made database stored in files directories are directly supported
+with the <code class="docutils literal notranslate"><span class="pre">DIR_Database</span></code> module. For example, suppose your database is
+organized as following (in the path specified in the <code class="docutils literal notranslate"><span class="pre">N2D2_DATA</span></code>
+environment variable):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">GST/airplanes</span></code>: 800 images</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GST/car_side</span></code>: 123 images</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GST/Faces</span></code>: 435 images</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GST/Motorbikes</span></code>: 798 images</p></li>
+</ul>
+<p>You can then instanciate this database as input of your neural network
+using the following parameters:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">DIR_Database</span>
+<span class="na">DataPath</span><span class="o">=</span><span class="s">${N2D2_DATA}/GST</span>
+<span class="na">Learn</span><span class="o">=</span><span class="s">0.4 ; 40% of images of the smallest category = 49 (0.4x123) images for each category will be used for learning</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.2 ; 20% of images of the smallest category = 25 (0.2x123) images for each category will be used for validation</span>
+<span class="c1">; the remaining images will be used for testing</span>
+</pre></div>
+</div>
+<p>Each subdirectory will be treated as a different label, so there will be
+4 different labels, named after the directory name.</p>
+<p>The stimuli are equi-partitioned for the learning set and the validation
+set, meaning that the same number of stimuli for each category is used.
+If the learn fraction is 0.4 and the validation fraction is 0.2, as in
+the example above, the partitioning will be the following:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 24%" />
+<col style="width: 18%" />
+<col style="width: 24%" />
+<col style="width: 16%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Label ID</p></td>
+<td><p>Label name</p></td>
+<td><p>Learn set</p></td>
+<td><p>Validation set</p></td>
+<td><p>Test set</p></td>
+</tr>
+<tr class="row-even"><td><p>[0.5ex] 0</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">airplanes</span></code></p></td>
+<td><p>49</p></td>
+<td><p>25</p></td>
+<td><p>726</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">car_side</span></code></p></td>
+<td><p>49</p></td>
+<td><p>25</p></td>
+<td><p>49</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Faces</span></code></p></td>
+<td><p>49</p></td>
+<td><p>25</p></td>
+<td><p>361</p></td>
+</tr>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Motorbikes</span></code></p></td>
+<td><p>49</p></td>
+<td><p>25</p></td>
+<td><p>724</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>Total:</p></td>
+<td><p>196</p></td>
+<td><p>100</p></td>
+<td><p>1860</p></td>
+</tr>
+</tbody>
+</table>
+<p><em>Mandatory option</em></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the root stimuli directory</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code></p></td>
+<td><p>If <code class="docutils literal notranslate"><span class="pre">PerLabelPartitioning</span></code> is true, fraction of images used for the learning; else, number of images used for the learning, regardless of their labels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LoadInMemory</span></code> [0]</p></td>
+<td><p>Load the whole database into memory</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Depth</span></code> [1]</p></td>
+<td><p>Number of sub-directory levels to include. Examples:</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Depth</span></code> = 0: load stimuli only from the current directory (<code class="docutils literal notranslate"><span class="pre">DataPath</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Depth</span></code> = 1: load stimuli from <code class="docutils literal notranslate"><span class="pre">DataPath</span></code> and stimuli contained in the sub-directories of <code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Depth</span></code> &lt; 0: load stimuli recursively from <code class="docutils literal notranslate"><span class="pre">DataPath</span></code> and all its sub-directories</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LabelName</span></code> []</p></td>
+<td><p>Base stimuli label name</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LabelDepth</span></code> [1]</p></td>
+<td><p>Number of sub-directory name levels used to form the stimuli labels. Examples:</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">LabelDepth</span></code> = -1: no label for all stimuli (label ID = -1)</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">LabelDepth</span></code> = 0: uses <code class="docutils literal notranslate"><span class="pre">LabelName</span></code> for all stimuli</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">LabelDepth</span></code> = 1: uses <code class="docutils literal notranslate"><span class="pre">LabelName</span></code> for stimuli in the current directory (<code class="docutils literal notranslate"><span class="pre">DataPath</span></code>) and <code class="docutils literal notranslate"><span class="pre">LabelName</span></code>/<em>sub-directory name</em> for stimuli in the sub-directories</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PerLabelPartitioning</span></code> [1]</p></td>
+<td><p>If true (1), the <code class="docutils literal notranslate"><span class="pre">Learn</span></code>, <code class="docutils literal notranslate"><span class="pre">Validation</span></code> and  <code class="docutils literal notranslate"><span class="pre">Test</span></code> parameters represent the fraction of the total stimuli to be partitioned in each set,
+instead of a number of stimuli</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EquivLabelPartitioning</span></code> [1]</p></td>
+<td><p>If true (1), the stimuli are equi-partitioned in the learn and validation sets, meaning that the same number of stimuli <strong>for each label</strong> is used
+(only when <code class="docutils literal notranslate"><span class="pre">PerLabelPartitioning</span></code> is 1). The remaining stimuli are partitioned in the test set</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.0]</p></td>
+<td><p>If <code class="docutils literal notranslate"><span class="pre">PerLabelPartitioning</span></code> is true, fraction of images used for the validation; else, number of images used for the validation, regardless of their labels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Test</span></code> [1.0-<code class="docutils literal notranslate"><span class="pre">Learn</span></code>-<code class="docutils literal notranslate"><span class="pre">Validation</span></code>]</p></td>
+<td><p>If <code class="docutils literal notranslate"><span class="pre">PerLabelPartitioning</span></code> is true, fraction of images used for the test; else, number of images used for the test, regardless of their labels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ValidExtensions</span></code> []</p></td>
+<td><p>List of space-separated valid stimulus file extensions (if left empty, any file extension is considered a valid stimulus)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LoadMore</span></code> []</p></td>
+<td><p>Name of an other section with the same options to load a different <code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ROIFile</span></code> []</p></td>
+<td><p>File containing the stimuli ROIs. If a ROI file is specified, <code class="docutils literal notranslate"><span class="pre">LabelDepth</span></code> should be set to -1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DefaultLabel</span></code> []</p></td>
+<td><p>Label name for pixels outside any ROI (default is no label, pixels are ignored)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ROIsMargin</span></code> [0]</p></td>
+<td><p>Number of pixels around ROIs that are ignored (and not considered as <code class="docutils literal notranslate"><span class="pre">DefaultLabel</span></code> pixels)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">EquivLabelPartitioning</span></code> is 1 (default setting), the number of stimuli
+per label that will be partitioned in the learn and validation sets will
+correspond to the number of stimuli from the label with the fewest stimuli.</p>
+</div>
+<p>To load and partition more than one <code class="docutils literal notranslate"><span class="pre">DataPath</span></code>, one can use the
+<code class="docutils literal notranslate"><span class="pre">LoadMore</span></code> option:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">DIR_Database</span>
+<span class="na">DataPath</span><span class="o">=</span><span class="s">${N2D2_DATA}/GST</span>
+<span class="na">Learn</span><span class="o">=</span><span class="s">0.6</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.4</span>
+<span class="na">LoadMore</span><span class="o">=</span><span class="s">database.test</span>
+
+<span class="c1">; Load stimuli from the &quot;GST_Test&quot; path in the test dataset</span>
+<span class="k">[database.test]</span>
+<span class="na">DataPath</span><span class="o">=</span><span class="s">${N2D2_DATA}/GST_Test</span>
+<span class="na">Learn</span><span class="o">=</span><span class="s">0.0</span>
+<span class="na">Test</span><span class="o">=</span><span class="s">1.0</span>
+<span class="c1">; The LoadMore option is recursive:</span>
+<span class="c1">; LoadMore=database.more</span>
+
+<span class="c1">; [database.more]</span>
+<span class="c1">; Load even more data here</span>
+</pre></div>
+</div>
+<div class="section" id="speech-commands-dataset">
+<h3><em>Speech Commands Dataset</em><a class="headerlink" href="#speech-commands-dataset" title="Permalink to this headline">¶</a></h3>
+<p>Use with Speech Commands Data Set, released by the Google
+<a class="bibtex reference internal" href="tuto.html#speechcommandsv2" id="id3">[Warden18]</a>.</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">DIR_Database</span>
+<span class="na">DataPath</span><span class="o">=</span><span class="s">${N2D2_DATA}/speech_commands_v0.02</span>
+<span class="na">ValidExtensions</span><span class="o">=</span><span class="s">wav</span>
+<span class="na">IgnoreMasks</span><span class="o">=</span><span class="s">*/_background_noise_</span>
+<span class="na">Learn</span><span class="o">=</span><span class="s">0.6</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.2</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="csv-data-files">
+<h2>CSV data files<a class="headerlink" href="#csv-data-files" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CSV_Database</span></code> is a generic driver for handling CSV data files. It can be used
+to load one or several CSV files where each line is a different stimulus and one
+column contains the label.</p>
+<p>The parameters are the following:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 59%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code> [0.6]</p></td>
+<td><p>Fraction of data used for the learning</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.2]</p></td>
+<td><p>Fraction of data used for the validation</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PerLabelPartitioning</span></code> [1]</p></td>
+<td><p>If true (1), the <code class="docutils literal notranslate"><span class="pre">Learn</span></code>, <code class="docutils literal notranslate"><span class="pre">Validation</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Test</span></code> parameters represent the fraction of the
+total stimuli to be partitioned in each set,
+instead of a number of stimuli</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EquivLabelPartitioning</span></code> [1]</p></td>
+<td><p>If true (1), the stimuli are equi-partitioned in
+the learn and validation sets, meaning that the
+same number of stimuli <strong>for each label</strong> is used
+(only when <code class="docutils literal notranslate"><span class="pre">PerLabelPartitioning</span></code> is 1).
+The remaining stimuli are partitioned in the test
+set</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LabelColumn</span></code> [-1]</p></td>
+<td><p>Index of the column containing the label (if &lt; 0,
+from the end of the row)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NbHeaderLines</span></code> [0]</p></td>
+<td><p>Number of header lines to skip</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Test</span></code> [1.0-<code class="docutils literal notranslate"><span class="pre">Learn</span></code>-
+<code class="docutils literal notranslate"><span class="pre">Validation</span></code>]</p></td>
+<td><p>If <code class="docutils literal notranslate"><span class="pre">PerLabelPartitioning</span></code> is true, fraction of
+images used for the test; else, number of images
+used for the test, regardless of their labels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LoadMore</span></code> []</p></td>
+<td><p>Name of an other section with the same options to
+load a different <code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">EquivLabelPartitioning</span></code> is 1 (default setting), the number of stimuli
+per label that will be partitioned in the learn and validation sets will
+correspond to the number of stimuli from the label with the fewest stimuli.</p>
+</div>
+<div class="section" id="usage-example">
+<h3>Usage example<a class="headerlink" href="#usage-example" title="Permalink to this headline">¶</a></h3>
+<p>In this example, we load the <em>Electrical Grid Stability Simulated Data Data Set</em>
+(<a class="reference external" href="https://archive.ics.uci.edu/ml/datasets/Electrical+Grid+Stability+Simulated+Data+">https://archive.ics.uci.edu/ml/datasets/Electrical+Grid+Stability+Simulated+Data+</a>).</p>
+<p>The CSV data file (<code class="docutils literal notranslate"><span class="pre">Data_for_UCI_named.csv</span></code>) is the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;tau1&quot;</span><span class="p">,</span><span class="s2">&quot;tau2&quot;</span><span class="p">,</span><span class="s2">&quot;tau3&quot;</span><span class="p">,</span><span class="s2">&quot;tau4&quot;</span><span class="p">,</span><span class="s2">&quot;p1&quot;</span><span class="p">,</span><span class="s2">&quot;p2&quot;</span><span class="p">,</span><span class="s2">&quot;p3&quot;</span><span class="p">,</span><span class="s2">&quot;p4&quot;</span><span class="p">,</span><span class="s2">&quot;g1&quot;</span><span class="p">,</span><span class="s2">&quot;g2&quot;</span><span class="p">,</span><span class="s2">&quot;g3&quot;</span><span class="p">,</span><span class="s2">&quot;g4&quot;</span><span class="p">,</span><span class="s2">&quot;stab&quot;</span><span class="p">,</span><span class="s2">&quot;stabf&quot;</span>
+<span class="mf">2.95906002455997</span><span class="p">,</span><span class="mf">3.07988520422811</span><span class="p">,</span><span class="mf">8.38102539191882</span><span class="p">,</span><span class="mf">9.78075443222607</span><span class="p">,</span><span class="mf">3.76308477206316</span><span class="p">,</span><span class="o">-</span><span class="mf">0.782603630987543</span><span class="p">,</span><span class="o">-</span><span class="mf">1.25739482958732</span><span class="p">,</span><span class="o">-</span><span class="mf">1.7230863114883</span><span class="p">,</span><span class="mf">0.650456460887227</span><span class="p">,</span><span class="mf">0.859578105752345</span><span class="p">,</span><span class="mf">0.887444920638513</span><span class="p">,</span><span class="mf">0.958033987602737</span><span class="p">,</span><span class="mf">0.0553474891727752</span><span class="p">,</span><span class="s2">&quot;unstable&quot;</span>
+<span class="mf">9.3040972346785</span><span class="p">,</span><span class="mf">4.90252411201167</span><span class="p">,</span><span class="mf">3.04754072762177</span><span class="p">,</span><span class="mf">1.36935735529605</span><span class="p">,</span><span class="mf">5.06781210427845</span><span class="p">,</span><span class="o">-</span><span class="mf">1.94005842705193</span><span class="p">,</span><span class="o">-</span><span class="mf">1.87274168559721</span><span class="p">,</span><span class="o">-</span><span class="mf">1.25501199162931</span><span class="p">,</span><span class="mf">0.41344056837935</span><span class="p">,</span><span class="mf">0.862414076352903</span><span class="p">,</span><span class="mf">0.562139050527675</span><span class="p">,</span><span class="mf">0.781759910653126</span><span class="p">,</span><span class="o">-</span><span class="mf">0.00595746432603695</span><span class="p">,</span><span class="s2">&quot;stable&quot;</span>
+<span class="mf">8.97170690932022</span><span class="p">,</span><span class="mf">8.84842842134833</span><span class="p">,</span><span class="mf">3.04647874898866</span><span class="p">,</span><span class="mf">1.21451813833956</span><span class="p">,</span><span class="mf">3.40515818001095</span><span class="p">,</span><span class="o">-</span><span class="mf">1.20745559234302</span><span class="p">,</span><span class="o">-</span><span class="mf">1.27721014673295</span><span class="p">,</span><span class="o">-</span><span class="mf">0.92049244093498</span><span class="p">,</span><span class="mf">0.163041039311334</span><span class="p">,</span><span class="mf">0.766688656526962</span><span class="p">,</span><span class="mf">0.839444015400588</span><span class="p">,</span><span class="mf">0.109853244952427</span><span class="p">,</span><span class="mf">0.00347087904838871</span><span class="p">,</span><span class="s2">&quot;unstable&quot;</span>
+<span class="mf">0.716414776295121</span><span class="p">,</span><span class="mf">7.66959964406565</span><span class="p">,</span><span class="mf">4.48664083058949</span><span class="p">,</span><span class="mf">2.34056298396795</span><span class="p">,</span><span class="mf">3.96379106326633</span><span class="p">,</span><span class="o">-</span><span class="mf">1.02747330413905</span><span class="p">,</span><span class="o">-</span><span class="mf">1.9389441526466</span><span class="p">,</span><span class="o">-</span><span class="mf">0.997373606480681</span><span class="p">,</span><span class="mf">0.446208906537321</span><span class="p">,</span><span class="mf">0.976744082924302</span><span class="p">,</span><span class="mf">0.929380522872661</span><span class="p">,</span><span class="mf">0.36271777426931</span><span class="p">,</span><span class="mf">0.028870543444887</span><span class="p">,</span><span class="s2">&quot;unstable&quot;</span>
+<span class="mf">3.13411155161342</span><span class="p">,</span><span class="mf">7.60877161603408</span><span class="p">,</span><span class="mf">4.94375930178099</span><span class="p">,</span><span class="mf">9.85757326996638</span><span class="p">,</span><span class="mf">3.52581081652096</span><span class="p">,</span><span class="o">-</span><span class="mf">1.12553095451115</span><span class="p">,</span><span class="o">-</span><span class="mf">1.84597485447561</span><span class="p">,</span><span class="o">-</span><span class="mf">0.554305007534195</span><span class="p">,</span><span class="mf">0.797109525792467</span><span class="p">,</span><span class="mf">0.455449947148291</span><span class="p">,</span><span class="mf">0.656946658473716</span><span class="p">,</span><span class="mf">0.820923486481631</span><span class="p">,</span><span class="mf">0.0498603734837059</span><span class="p">,</span><span class="s2">&quot;unstable&quot;</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>There is one header line and the last column is the label, which is the default.</p>
+<p>This file is loaded and the data is splitted between the learning set and the
+validation set with a 0.7/0.3 ratio in the INI file with the following section:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">CSV_Database</span>
+<span class="na">Learn</span><span class="o">=</span><span class="s">0.7</span>
+<span class="na">Validation</span><span class="o">=</span><span class="s">0.3</span>
+<span class="na">DataPath</span><span class="o">=</span><span class="s">Data_for_UCI_named.csv</span>
+<span class="na">NbHeaderLines</span><span class="o">=</span><span class="s">1</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="other-built-in-databases">
+<h2>Other built-in databases<a class="headerlink" href="#other-built-in-databases" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="actitracker-database">
+<h3>Actitracker_Database<a class="headerlink" href="#actitracker-database" title="Permalink to this headline">¶</a></h3>
+<p>Actitracker database, released by the WISDM Lab
+<a class="bibtex reference internal" href="tuto.html#lockhart2011" id="id4">[LWX+11]</a>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 59%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code> [0.6]</p></td>
+<td><p>Fraction of data used for the learning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.2]</p></td>
+<td><p>Fraction of data used for the validation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">UseUnlabeledForTest</span></code> [0]</p></td>
+<td><p>If true, use the unlabeled dataset for the test</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database</p></td>
+</tr>
+<tr class="row-even"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/WISDM_at_v2.0]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="cifar10-database">
+<h3>CIFAR10_Database<a class="headerlink" href="#cifar10-database" title="Permalink to this headline">¶</a></h3>
+<p>CIFAR10 database <a class="bibtex reference internal" href="tuto.html#krizhevsky2009" id="id5">[Kri09]</a>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 44%" />
+<col style="width: 56%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.0]</p></td>
+<td><p>Fraction of the learning set used for validation</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database</p></td>
+</tr>
+<tr class="row-even"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/cifar-10-batches-bin]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="cifar100-database">
+<h3>CIFAR100_Database<a class="headerlink" href="#cifar100-database" title="Permalink to this headline">¶</a></h3>
+<p>CIFAR100 database <a class="bibtex reference internal" href="tuto.html#krizhevsky2009" id="id6">[Kri09]</a>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 63%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.0]</p></td>
+<td><p>Fraction of the learning set used for validation</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">UseCoarse</span></code> [0]</p></td>
+<td><p>If true, use the coarse labeling (10 labels instead of 100)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database</p></td>
+</tr>
+<tr class="row-odd"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/cifar-100-binary]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="ckp-database">
+<h3>CKP_Database<a class="headerlink" href="#ckp-database" title="Permalink to this headline">¶</a></h3>
+<p>The Extended Cohn-Kanade (CK+) database for expression recognition
+<a class="bibtex reference internal" href="tuto.html#lucey2010" id="id7">[LuceyCohnKanade+10]</a>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 46%" />
+<col style="width: 54%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code></p></td>
+<td><p>Fraction of images used for the learning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.0]</p></td>
+<td><p>Fraction of images used for the validation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database</p></td>
+</tr>
+<tr class="row-odd"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/cohn-kanade-images]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="caltech101-dir-database">
+<h3>Caltech101_DIR_Database<a class="headerlink" href="#caltech101-dir-database" title="Permalink to this headline">¶</a></h3>
+<p>Caltech 101 database <a class="bibtex reference internal" href="tuto.html#feifei2004" id="id8">[FFFP04]</a>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 73%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code></p></td>
+<td><p>Fraction of images used for the learning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.0]</p></td>
+<td><p>Fraction of images used for the validation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IncClutter</span></code> [0]</p></td>
+<td><p>If true, includes the BACKGROUND_Google directory of the database</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database</p></td>
+</tr>
+<tr class="row-even"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>101_ObjectCategories]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="caltech256-dir-database">
+<h3>Caltech256_DIR_Database<a class="headerlink" href="#caltech256-dir-database" title="Permalink to this headline">¶</a></h3>
+<p>Caltech 256 database <a class="bibtex reference internal" href="tuto.html#griffin2007" id="id9">[GHP07]</a>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 73%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code></p></td>
+<td><p>Fraction of images used for the learning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.0]</p></td>
+<td><p>Fraction of images used for the validation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IncClutter</span></code> [0]</p></td>
+<td><p>If true, includes the BACKGROUND_Google directory of the database</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database</p></td>
+</tr>
+<tr class="row-even"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>256_ObjectCategories]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="caltechpedestrian-database">
+<h3>CaltechPedestrian_Database<a class="headerlink" href="#caltechpedestrian-database" title="Permalink to this headline">¶</a></h3>
+<p>Caltech Pedestrian database <a class="bibtex reference internal" href="tuto.html#dollar2009" id="id10">[DollarWSP09]</a>.</p>
+<p>Note that the images and annotations must first be extracted from the
+seq video data located in the <em>videos</em> directory using the
+<code class="docutils literal notranslate"><span class="pre">dbExtract.m</span></code> Matlab tool provided in the “Matlab evaluation/labeling
+code” downloadable on the dataset website.</p>
+<p>Assuming the following directory structure (in the path specified in the
+<code class="docutils literal notranslate"><span class="pre">N2D2_DATA</span></code> environment variable):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CaltechPedestrians/data-USA/videos/...</span></code> (from the <em>setxx.tar</em> files)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CaltechPedestrians/data-USA/annotations/...</span></code> (from the <em>setxx.tar</em>
+files)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CaltechPedestrians/tools/piotr_toolbox/toolbox</span></code> (from the Piotr’s
+Matlab Toolbox archive)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CaltechPedestrians/*.m</span></code> including <code class="docutils literal notranslate"><span class="pre">dbExtract.m</span></code> (from the Matlab
+evaluation/labeling code)</p></li>
+</ul>
+<p>Use the following command in Matlab to generate the images and
+annotations:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span><span class="p">([</span><span class="n">getenv</span><span class="p">(</span><span class="s">&#39;N2D2_DATA&#39;</span><span class="p">)</span> <span class="s">&#39;/CaltechPedestrians&#39;</span><span class="p">])</span>
+<span class="n">addpath</span><span class="p">(</span><span class="n">genpath</span><span class="p">(</span><span class="s">&#39;tools/piotr_toolbox/toolbox&#39;</span><span class="p">))</span> <span class="c">% add the Piotr&#39;s Matlab Toolbox in the Matlab path</span>
+<span class="n">dbInfo</span><span class="p">(</span><span class="s">&#39;USA&#39;</span><span class="p">)</span>
+<span class="n">dbExtract</span><span class="p">()</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 66%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.0]</p></td>
+<td><p>Fraction of the learning set used for validation</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SingleLabel</span></code> [1]</p></td>
+<td><p>Use the same label for “person” and “people” bounding box</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IncAmbiguous</span></code> [0]</p></td>
+<td><p>Include ambiguous bounding box labeled “person?” using the same label as “person”</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database images</p></td>
+</tr>
+<tr class="row-even"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>CaltechPedestrians/data-USA/images]</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LabelPath</span></code></p></td>
+<td><p>Path to the database annotations</p></td>
+</tr>
+<tr class="row-odd"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>CaltechPedestrians/data-USA/annotations]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="cityscapes-database">
+<h3>Cityscapes_Database<a class="headerlink" href="#cityscapes-database" title="Permalink to this headline">¶</a></h3>
+<p>Cityscapes database <a class="bibtex reference internal" href="tuto.html#cordts2016cityscapes" id="id11">[COR+16]</a>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 73%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IncTrainExtra</span></code> [0]</p></td>
+<td><p>If true, includes the left 8-bit images - trainextra set (19,998 images)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">UseCoarse</span></code> [0]</p></td>
+<td><p>If true, only use coarse annotations (which are the only annotations available for the trainextra set)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SingleInstanceLabels</span></code> [1]</p></td>
+<td><p>If true, convert group labels to single instance labels (for example, <code class="docutils literal notranslate"><span class="pre">cargroup</span></code> becomes <code class="docutils literal notranslate"><span class="pre">car</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database images</p></td>
+</tr>
+<tr class="row-even"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>Cityscapes/leftImg8bit] or</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>[<code class="docutils literal notranslate"><span class="pre">$CITYSCAPES_DATASET</span></code>] if defined</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LabelPath</span></code> []</p></td>
+<td><p>Path to the database annotations (deduced from <code class="docutils literal notranslate"><span class="pre">DataPath</span></code> if left empty)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="daimler-database">
+<h3>Daimler_Database<a class="headerlink" href="#daimler-database" title="Permalink to this headline">¶</a></h3>
+<p>Daimler Monocular Pedestrian Detection Benchmark (Daimler Pedestrian).</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 75%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code> [1.0]</p></td>
+<td><p>Fraction of images used for the learning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.0]</p></td>
+<td><p>Fraction of images used for the validation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Test</span></code> [0.0]</p></td>
+<td><p>Fraction of images used for the test</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Fully</span></code> [0]</p></td>
+<td><p>When activate it use the test dataset to learn. Use only on fully-cnn mode</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="dota-database">
+<h3>DOTA_Database<a class="headerlink" href="#dota-database" title="Permalink to this headline">¶</a></h3>
+<p>DOTA database <a class="bibtex reference internal" href="tuto.html#dota" id="id12">[XBD+17]</a>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 63%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code></p></td>
+<td><p>Fraction of images used for the learning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database</p></td>
+</tr>
+<tr class="row-even"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/DOTA]</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LabelPath</span></code></p></td>
+<td><p>Path to the database labels list file</p></td>
+</tr>
+<tr class="row-even"><td><p>[]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="fddb-database">
+<h3>FDDB_Database<a class="headerlink" href="#fddb-database" title="Permalink to this headline">¶</a></h3>
+<p>Face Detection Data Set and Benchmark (FDDB)
+<a class="bibtex reference internal" href="tuto.html#jain2010" id="id13">[JLM10]</a>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 69%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code></p></td>
+<td><p>Fraction of images used for the learning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.0]</p></td>
+<td><p>Fraction of images used for the validation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the images (decompressed originalPics.tar.gz)</p></td>
+</tr>
+<tr class="row-odd"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/FDDB]</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LabelPath</span></code></p></td>
+<td><p>Path to the annotations (decompressed FDDB-folds.tgz)</p></td>
+</tr>
+<tr class="row-odd"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/FDDB]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="gtsdb-dir-database">
+<h3>GTSDB_DIR_Database<a class="headerlink" href="#gtsdb-dir-database" title="Permalink to this headline">¶</a></h3>
+<p>GTSDB database <a class="bibtex reference internal" href="tuto.html#houben2013" id="id14">[HSS+13]</a>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 43%" />
+<col style="width: 58%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code></p></td>
+<td><p>Fraction of images used for the learning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.0]</p></td>
+<td><p>Fraction of images used for the validation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database</p></td>
+</tr>
+<tr class="row-odd"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/FullIJCNN2013]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="ilsvrc2012-database">
+<h3>ILSVRC2012_Database<a class="headerlink" href="#ilsvrc2012-database" title="Permalink to this headline">¶</a></h3>
+<p>ILSVRC2012 database <a class="bibtex reference internal" href="tuto.html#ilsvrc15" id="id15">[RDS+15]</a>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 49%" />
+<col style="width: 51%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code></p></td>
+<td><p>Fraction of images used for the learning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database</p></td>
+</tr>
+<tr class="row-even"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/ILSVRC2012]</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LabelPath</span></code></p></td>
+<td><p>Path to the database labels list file</p></td>
+</tr>
+<tr class="row-even"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/ILSVRC2012/synsets.txt]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="kitti-database">
+<h3>KITTI_Database<a class="headerlink" href="#kitti-database" title="Permalink to this headline">¶</a></h3>
+<p>The KITTI Database provide ROI which can be use for autonomous driving
+and environment perception. The database provide 8 labeled different
+classes. Utilization of the KITTI Database is under licensing conditions
+and request an email registration. To install it you have to follow this
+link: <a class="reference external" href="http://www.cvlibs.net/datasets/kitti/eval_tracking.php">http://www.cvlibs.net/datasets/kitti/eval_tracking.php</a> and
+download the left color images (15 GB) and the trainling labels of
+tracking data set (9 MB). Extract the downloaded archives in your
+<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA/KITTI</span></code> folder.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 64%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code> [0.8]</p></td>
+<td><p>Fraction of images used for the learning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.2]</p></td>
+<td><p>Fraction of images used for the validation</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="kitti-road-database">
+<h3>KITTI_Road_Database<a class="headerlink" href="#kitti-road-database" title="Permalink to this headline">¶</a></h3>
+<p>The KITTI Road Database provide ROI which can be used to road
+segmentation. The dataset provide 1 labeled class (road) on 289 training
+images. The 290 test images are not labeled. Utilization of the KITTI
+Road Database is under licensing conditions and request an email
+registration. To install it you have to follow this link:
+<a class="reference external" href="http://www.cvlibs.net/datasets/kitti/eval_road.php">http://www.cvlibs.net/datasets/kitti/eval_road.php</a> and download the
+“base kit” of (0.5 GB) with left color images, calibration and training
+labels. Extract the downloaded archive in your <code class="docutils literal notranslate"><span class="pre">$N2D2_DATA/KITTI</span></code>
+folder.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 64%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code> [0.8]</p></td>
+<td><p>Fraction of images used for the learning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.2]</p></td>
+<td><p>Fraction of images used for the validation</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="kitti-object-database">
+<h3>KITTI_Object_Database<a class="headerlink" href="#kitti-object-database" title="Permalink to this headline">¶</a></h3>
+<p>The KITTI Object Database provide ROI which can be use for autonomous
+driving and environment perception. The database provide 8 labeled
+different classes on 7481 training images. The 7518 test images are not
+labeled. The whole database provide 80256 labeled objects. Utilization
+of the KITTI Object Database is under licensing conditions and request
+an email registration. To install it you have to follow this link:
+<a class="reference external" href="http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark">http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark</a> and
+download the “lef color images” (12 GB) and the training labels of
+object data set (5 MB). Extract the downloaded archives in your
+<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA/KITTI_Object</span></code> folder.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 64%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code> [0.8]</p></td>
+<td><p>Fraction of images used for the learning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.2]</p></td>
+<td><p>Fraction of images used for the validation</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="litisrouen-database">
+<h3>LITISRouen_Database<a class="headerlink" href="#litisrouen-database" title="Permalink to this headline">¶</a></h3>
+<p>LITIS Rouen audio scene dataset <a class="bibtex reference internal" href="tuto.html#rakotomamonjy2014" id="id16">[RG14]</a>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 59%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Learn</span></code> [0.4]</p></td>
+<td><p>Fraction of images used for the learning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Validation</span></code> [0.4]</p></td>
+<td><p>Fraction of images used for the validation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DataPath</span></code></p></td>
+<td><p>Path to the database</p></td>
+</tr>
+<tr class="row-odd"><td><p>[<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/data_rouen]</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="dataset-images-slicing">
+<h3>Dataset images slicing<a class="headerlink" href="#dataset-images-slicing" title="Permalink to this headline">¶</a></h3>
+<p>It is possible to automatically slice images from a dataset, with a
+given slice size and stride, using the <code class="docutils literal notranslate"><span class="pre">.slicing</span></code> attribute. This
+effectively increases the number of stimuli in the set.</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database.slicing]</span>
+<span class="na">ApplyTo</span><span class="o">=</span><span class="s">NoLearn</span>
+<span class="na">Width</span><span class="o">=</span><span class="s">2048</span>
+<span class="na">Height</span><span class="o">=</span><span class="s">1024</span>
+<span class="na">StrideX</span><span class="o">=</span><span class="s">2048</span>
+<span class="na">StrideY</span><span class="o">=</span><span class="s">1024</span>
+<span class="na">RandomShuffle</span><span class="o">=</span><span class="s">1  ; 1 is the default value</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">RandomShuffle</span></code> option, enabled by default, randomly shuffle the
+dataset after slicing. If disabled, the slices are added in order at the
+end of the dataset.</p>
+<p id="bibtex-bibliography-ini_databases-0"><dl class="citation">
+<dt class="bibtex label" id="cordts2016cityscapes"><span class="brackets"><a class="fn-backref" href="#id11">COR+16</a></span></dt>
+<dd><p>Marius Cordts, Mohamed Omran, Sebastian Ramos, Timo Rehfeld, Markus Enzweiler, Rodrigo Benenson, Uwe Franke, Stefan Roth, and Bernt Schiele. The cityscapes dataset for semantic urban scene understanding. In <em>Proc. of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)</em>. 2016.</p>
+</dd>
+<dt class="bibtex label" id="dollar2009"><span class="brackets"><a class="fn-backref" href="#id10">DollarWSP09</a></span></dt>
+<dd><p>P. Dollár, C. Wojek, B. Schiele, and P. Perona. Pedestrian detection: a benchmark. In <em>CVPR</em>. 2009.</p>
+</dd>
+<dt class="bibtex label" id="feifei2004"><span class="brackets"><a class="fn-backref" href="#id8">FFFP04</a></span></dt>
+<dd><p>L. Fei-Fei, R. Fergus, and P. Perona. Learning generative visual models from few training examples: an incremental bayesian approach tested on 101 object categories. In <em>IEEE. CVPR 2004, Workshop on Generative-Model Based Vision</em>. 2004.</p>
+</dd>
+<dt class="bibtex label" id="griffin2007"><span class="brackets"><a class="fn-backref" href="#id9">GHP07</a></span></dt>
+<dd><p>Gregory Griffin, Alex Holub, and Pietro Perona. Caltech-256 object category dataset. Technical Report, 2007.</p>
+</dd>
+<dt class="bibtex label" id="houben2013"><span class="brackets"><a class="fn-backref" href="#id14">HSS+13</a></span></dt>
+<dd><p>Sebastian Houben, Johannes Stallkamp, Jan Salmen, Marc Schlipsing, and Christian Igel. Detection of traffic signs in real-world images: the German Traffic Sign Detection Benchmark. In <em>International Joint Conference on Neural Networks</em>, number 1288. 2013.</p>
+</dd>
+<dt class="bibtex label" id="jain2010"><span class="brackets"><a class="fn-backref" href="#id13">JLM10</a></span></dt>
+<dd><p>Vidit Jain and Erik Learned-Miller. FDDB: a benchmark for face detection in unconstrained settings. Technical Report UM-CS-2010-009, University of Massachusetts, Amherst, 2010.</p>
+</dd>
+<dt class="bibtex label" id="krizhevsky2009"><span class="brackets">Kri09</span><span class="fn-backref">(<a href="#id5">1</a>,<a href="#id6">2</a>)</span></dt>
+<dd><p>Alex Krizhevsky. Learning multiple layers of features from tiny images. Technical Report, 2009.</p>
+</dd>
+<dt class="bibtex label" id="lecun1998"><span class="brackets"><a class="fn-backref" href="#id1">LBBH98</a></span></dt>
+<dd><p>Y. LeCun, L. Bottou, Y. Bengio, and P. Haffner. Gradient-based learning applied to document recognition. In <em>Proceedings of the IEEE</em>, volume 86, 2278–2324. 1998.</p>
+</dd>
+<dt class="bibtex label" id="lockhart2011"><span class="brackets"><a class="fn-backref" href="#id4">LWX+11</a></span></dt>
+<dd><p>Jeffrey W. Lockhart, Gary M. Weiss, Jack C. Xue, Shaun T. Gallagher, Andrew B. Grosner, and Tony T. Pulickal. Design considerations for the wisdm smart phone-based sensor mining architecture. In <em>Proceedings of the Fifth International Workshop on Knowledge Discovery from Sensor Data</em>, SensorKDD ‘11, 25–33. New York, NY, USA, 2011. ACM. URL: <a class="reference external" href="http://doi.acm.org/10.1145/2003653.2003656">http://doi.acm.org/10.1145/2003653.2003656</a>, <a class="reference external" href="https://doi.org/10.1145/2003653.2003656">doi:10.1145/2003653.2003656</a>.</p>
+</dd>
+<dt class="bibtex label" id="rakotomamonjy2014"><span class="brackets"><a class="fn-backref" href="#id16">RG14</a></span></dt>
+<dd><p>A. Rakotomamonjy and G. Gasso. Histogram of gradients of time-frequency representations for audio scene detection. Technical Report, 2014.</p>
+</dd>
+<dt class="bibtex label" id="ilsvrc15"><span class="brackets"><a class="fn-backref" href="#id15">RDS+15</a></span></dt>
+<dd><p>Olga Russakovsky, Jia Deng, Hao Su, Jonathan Krause, Sanjeev Satheesh, Sean Ma, Zhiheng Huang, Andrej Karpathy, Aditya Khosla, Michael Bernstein, Alexander C. Berg, and Li Fei-Fei. ImageNet Large Scale Visual Recognition Challenge. <em>International Journal of Computer Vision (IJCV)</em>, 115(3):211–252, 2015. <a class="reference external" href="https://doi.org/10.1007/s11263-015-0816-y">doi:10.1007/s11263-015-0816-y</a>.</p>
+</dd>
+<dt class="bibtex label" id="stallkamp2012"><span class="brackets"><a class="fn-backref" href="#id2">SSSI12</a></span></dt>
+<dd><p>J. Stallkamp, M. Schlipsing, J. Salmen, and C. Igel. Man vs. computer: benchmarking machine learning algorithms for traffic sign recognition. <em>Neural Networks</em>, 2012. <a class="reference external" href="https://doi.org/10.1016/j.neunet.2012.02.016">doi:10.1016/j.neunet.2012.02.016</a>.</p>
+</dd>
+<dt class="bibtex label" id="dota"><span class="brackets"><a class="fn-backref" href="#id12">XBD+17</a></span></dt>
+<dd><p>Gui-Song Xia, Xiang Bai, Jian Ding, Zhen Zhu, Serge J. Belongie, Jiebo Luo, Mihai Datcu, Marcello Pelillo, and Liangpei Zhang. DOTA: A large-scale dataset for object detection in aerial images. <em>CoRR</em>, 2017. URL: <a class="reference external" href="http://arxiv.org/abs/1711.10398">http://arxiv.org/abs/1711.10398</a>, <a class="reference external" href="https://arxiv.org/abs/1711.10398">arXiv:1711.10398</a>.</p>
+</dd>
+<dt class="bibtex label" id="lucey2010"><span class="brackets"><a class="fn-backref" href="#id7">LuceyCohnKanade+10</a></span></dt>
+<dd><p>P. Lucey, J. F. Cohn, T. Kanade, J. Saragih, Z. Ambadar, and I. Matthews. The extended cohn-kanade dataset (ck+): a complete dataset for action unit and emotion-specified expression. In <em>2010 IEEE Computer Society Conference on Computer Vision and Pattern Recognition - Workshops</em>, volume, 94–101. June 2010. <a class="reference external" href="https://doi.org/10.1109/CVPRW.2010.5543262">doi:10.1109/CVPRW.2010.5543262</a>.</p>
+</dd>
+<dt class="bibtex label" id="speechcommandsv2"><span class="brackets"><a class="fn-backref" href="#id3">Warden18</a></span></dt>
+<dd><p>P. Warden. Speech Commands: A Dataset for Limited-Vocabulary Speech Recognition. <em>ArXiv e-prints</em>, April 2018. URL: <a class="reference external" href="https://arxiv.org/abs/1804.03209">https://arxiv.org/abs/1804.03209</a>, <a class="reference external" href="https://arxiv.org/abs/1804.03209">arXiv:1804.03209</a>.</p>
+</dd>
+</dl>
+</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ini_data_analysis.html" class="btn btn-neutral float-right" title="Stimuli data analysis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ini_intro.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, CEA LIST
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

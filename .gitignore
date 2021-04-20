@@ -12,4 +12,4 @@ doc/
 *.pyc
 *~
 *.gch
-*build
+Doxyfile

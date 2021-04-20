@@ -34,7 +34,7 @@ N2D2::Environment::Environment(Network& network,
                                bool compositeStimuli)
     : StimuliProvider(database, size, batchSize, compositeStimuli),
       mNetwork(network),
-      mNodes(mData.dims(), (NodeEnv*)NULL)
+      mNodes(mProvidedData[0].data.dims(), (NodeEnv*)NULL)
 
 {
     // ctor
@@ -103,10 +103,10 @@ void N2D2::Environment::addChannel(const CompositeTransformation
 
     StimuliProvider::addChannel(transformation);
 
-    assert(mNodes.nbDims() == mData.nbDims());
+    assert(mNodes.nbDims() == mProvidedData[0].data.nbDims());
     assert(std::equal(mNodes.dims().begin(), mNodes.dims().end(),
-                      mData.dims().begin()));
-    assert(mNodes.size() == mData.size());
+                      mProvidedData[0].data.dims().begin()));
+    assert(mNodes.size() == mProvidedData[0].data.size());
 }
 
 void N2D2::Environment::propagate(Time_T start, Time_T end)
@@ -128,7 +128,7 @@ void N2D2::Environment::propagate(Time_T start, Time_T end)
         }
     }
     else {
-        assert(mNodes.size() == mData.size());
+        assert(mNodes.size() == mProvidedData[0].data.size());
 
         SpikeGenerator::checkParameters();
 
@@ -140,7 +140,8 @@ void N2D2::Environment::propagate(Time_T start, Time_T end)
                 std::pair<Time_T, int> event = std::make_pair(start, 0);
 
                 do {
-                    SpikeGenerator::nextEvent(event, mData(it - itBegin), start, end);
+                    SpikeGenerator::nextEvent(event,
+                        mProvidedData[0].data(it - itBegin), start, end);
 
                     if (event.second != 0)
                         (*it)->incomingSpike(
@@ -205,7 +206,9 @@ void N2D2::Environment::readAerStimulus(Database::StimulusID id,
 
 void N2D2::Environment::readRandomAerBatch(Database::StimuliSet set)
 {
-    std::vector<int>& batchRef = (mFuture) ? mFutureBatch : mBatch;
+    std::vector<int>& batchRef = (mFuture)
+        ? mFutureProvidedData[0].batch
+        : mProvidedData[0].batch;
 
     for (unsigned int batchPos = 0; batchPos < mBatchSize; ++batchPos)
         batchRef[batchPos] = getRandomID(set);
@@ -251,7 +254,9 @@ void N2D2::Environment::readAerBatch(Database::StimuliSet set,
 
     const unsigned int batchSize
         = std::min(mBatchSize, mDatabase.getNbStimuli(set) - startIndex);
-    std::vector<int>& batchRef = (mFuture) ? mFutureBatch : mBatch;
+    std::vector<int>& batchRef = (mFuture)
+        ? mFutureProvidedData[0].batch
+        : mProvidedData[0].batch;
 
     for (unsigned int batchPos = 0; batchPos < batchSize; ++batchPos)
         batchRef[batchPos]

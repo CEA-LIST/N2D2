@@ -24,6 +24,7 @@
 
 #include <string>
 #include <vector>
+#include <atomic>
 
 #include "Cell/Cell.hpp"
 #include "Database/Database.hpp"
@@ -34,6 +35,11 @@
 #include "CudaUtils.hpp"
 #include "Cell/Cell_Frame_CUDA.hpp"
 #include "CMonitor_CUDA.hpp"
+
+#ifdef NVML
+#include <nvml.h>
+#endif
+
 #endif
 
 namespace N2D2 {
@@ -46,6 +52,13 @@ class Monitor;
 class DeepNet : public Parameterizable, public std::enable_shared_from_this<DeepNet> {
 public:
     DeepNet(Network& net);
+
+    typedef struct {
+        std::vector<char> finished;
+        std::atomic<bool> firstFinished;
+        std::atomic<unsigned int> nbFinished;
+        std::atomic<unsigned int> power;
+    } SharedValues;
 
     /**
      * TODO Simplify the management of the network graph.
@@ -96,6 +109,10 @@ public:
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void initialize();
     void learn(std::vector<std::pair<std::string, double> >* timings = NULL);
+    void learn_singleDevice(std::vector<std::pair<std::string, double> >* timings = NULL);
+#ifdef CUDA
+    void learn_multiDevices(std::vector<std::pair<std::string, double> >* timings = NULL);
+#endif
     void test(Database::StimuliSet set = Database::Test,
               std::vector<std::pair<std::string, double> >* timings = NULL);
     void propagate(bool inference);
@@ -114,6 +131,12 @@ public:
     void insertBatchNormAfterConv(bool moveActivation = true);
     void fusePadding();
     void removeDropout();
+
+#ifdef CUDA
+    void lastBatch() {
+        mLastPass = true;
+    };
+#endif
 
     // Setters
     void setDatabase(const std::shared_ptr<Database>& database)
@@ -138,6 +161,16 @@ public:
                            T mean,
                            double stdDev,
                            bool ignoreUnknown = false);
+#ifdef CUDA
+    void setBanAllowed(bool option)
+    {
+        mBanAllowed = option;
+    };
+    char isDeviceDropped(int dev) const
+    {
+        return mDropDevices[dev];
+    };
+#endif
 
     // Getters
     Network& getNetwork()
@@ -196,6 +229,17 @@ public:
                                 const std::vector<unsigned int>& outputField
                                         = std::vector<unsigned int>()) const;
 
+#ifdef CUDA
+    std::vector<N2D2::DeviceState> getStates() 
+    {
+        return mStates;
+    };
+    SharedValues& getMultiDevicesInfo()
+    {
+        return mMultiDevicesInfo;
+    };
+#endif
+
     // Clear
     void clearAll();
     void clearActivity();
@@ -223,7 +267,7 @@ public:
                     <std::pair<std::string, double> >& timings) const;
     void logReceptiveFields(const std::string& fileName) const;
 
-    virtual ~DeepNet() {};
+    virtual ~DeepNet();
 
     static void drawHistogram(std::string title, const std::string& dataFileName,
                    unsigned int fileRow, unsigned int maxLabelSize, bool isLog,
@@ -243,6 +287,29 @@ private:
     std::map<std::string, std::shared_ptr<Monitor> > mMonitors;
     std::map<std::string, std::shared_ptr<CMonitor> > mCMonitors;
     std::vector<std::vector<std::string> > mLayers;
+
+#ifdef CUDA
+    /// Device states
+    std::vector<N2D2::DeviceState> mStates;
+    /// Vector of warnings for all devices
+    std::vector<unsigned int> mDevicesWarning;
+    /// Parameter to know if the batchs used during 
+    /// learning are the last
+    bool mLastPass;
+    /// Parameter to allow banishment
+    bool mBanAllowed;
+    /// Number of passages allowed before banning
+    unsigned int mNbPassBeforeBan;
+    /// Average power usage from all connected devices
+    unsigned int mAveragePowerUsage;
+    /// Vector of all devices which have been dropped
+    std::vector<char> mDropDevices;
+    /// Information shared among all connected devices
+    SharedValues mMultiDevicesInfo;
+    /// Identifier of the device where data is 
+    /// gathered during update
+    int mMasterDevice;    
+#endif
 
     // cellName -> parentsNames
     std::multimap<std::string, std::string> mParentLayers;
@@ -414,756 +481,5 @@ std::shared_ptr<T> N2D2::DeepNet::getTarget(const std::string& name) const
 
     return target;
 }
-
-/** @mainpage N2D2 Index Page
- *
- * @section intro_sec Introduction
- *
- * The N2D2 sub-project allows you to create and study convolutional neural
- *network, using standard back-propagation
- * learning and/or spike-based learning or forward propagation.
- *
- * @section ini_sec Network INI File Description Syntax
- * @subsection global Global Parameters
- *
- *  <table>
- *  <tr>
- *      <th>Parameter</th>
- *      <th>Default value</th>
- *      <th>Description</th>
- *  </tr>
- *  <tr>
- *      <td><tt>DefaultModel</tt></td>
- *      <td>@p Static</td>
- *      <td>Default synaptic model for the layers. Can be any of @p Static, @p
- *Analog, @p RRAM or @p PCM</td>
- *  </tr>
- *  <tr>
- *      <td><tt>ProgramMethod(RRAM)</tt></td>
- *      <td>@p Ideal</td>
- *      <td>Programming method for RRAM synapses. Can be any of
- *<tt>N2D2::Synapse_RRAM::ProgramMethod</tt></td>
- *  </tr>
- *  <tr>
- *      <td><tt>ProgramMethod(PCM)</tt></td>
- *      <td>@p Ideal</td>
- *      <td>Programming method for PCM synapses. Can be any of
- *<tt>N2D2::Synapse_PCM::ProgramMethod</tt></td>
- *  </tr>
- *  <tr>
- *      <td><tt>CheckWeightRange</tt></td>
- *      <td>1</td>
- *      <td>Check synaptic weight range when loading the weights</td>
- *  </tr>
- *  <tr>
- *      <td><tt>LearningRateDecay</tt></td>
- *      <td>1.0</td>
- *      <td>Learning rate decay during static learning. After each epoch, the
- *learning rate is multiplied by @p
- *          LearningRateDecay</td>
- *  </tr>
- *  </table>
- *
- * @subsection env Environment Layer
- *
- * The environment layer defines the input of the network, and must be defined
- *in the <b><tt>[env]</tt></b> mandatory section.
- *
- *  <table>
- *  <tr>
- *      <th>Parameter</th>
- *      <th>Default value</th>
- *      <th>Description</th>
- *  </tr>
- *  <tr>
- *      <td><tt>SizeX</tt></td>
- *      <td>[REQUIRED]</td>
- *      <td>Base width (at scale 1.0) of the environment</td>
- *  </tr>
- *  <tr>
- *      <td><tt>SizeY</tt></td>
- *      <td>[REQUIRED]</td>
- *      <td>Base height (at scale 1.0) of the environment</td>
- *  </tr>
- *  <tr>
- *      <td><tt>ConfigSection</tt></td>
- *      <td></td>
- *      <td>Name of the configuration section for
- *<tt>N2D2::Environment</tt></td>
- *  </tr>
- *  </table>
- *
- * @subsubsection filter Environment Filters Definition
- *
- *  <table>
- *  <tr>
- *      <th>Parameter</th>
- *      <th>Default value</th>
- *      <th>Description</th>
- *  </tr>
- *  <tr>
- *      <td><tt>Scale</tt></td>
- *      <td>1.0</td>
- *      <td>Scale of the filter (> 0.0 and <= 1.0)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Kernel</tt></td>
- *      <td></td>
- *      <td>Kernel type of the filter</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Channel</tt></td>
- *      <td>@p Gray</td>
- *      <td>Channel of the filter. Can be any of
- *<tt>N2D2::Filter::Channel</tt></td>
- *  </tr>
- *  </table>
- *
- * @subsection layer Layers Definition
- *
- *  <table>
- *  <tr>
- *      <th>Parameter</th>
- *      <th>Default value</th>
- *      <th>Description</th>
- *  </tr>
- *  <tr>
- *      <td><tt>Input</tt></td>
- *      <td>[REQUIRED]</td>
- *      <td>Name of the section(s) for the input layer(s). Comma separated</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Type</tt></td>
- *      <td>[REQUIRED]</td>
- *      <td>Type of the layer. Can be any of @p Conv, @p Lc, @p Pool, @p Fc or
- *@p Rbf</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Model</tt></td>
- *      <td>@p DefaultModel value</td>
- *      <td>Synaptic model for this layer. Can be any of @p Static, @p Analog,
- *@p RRAM or @p PCM</td>
- *  </tr>
- *  <tr>
- *      <td><tt>ConfigSection</tt></td>
- *      <td></td>
- *      <td>Name of the configuration section for layer</td>
- *  </tr>
- *  </table>
- *
- * @subsubsection ConvCell ConvCell Layer
- *
- *  <table>
- *  <tr>
- *      <th>Parameter</th>
- *      <th>Default value</th>
- *      <th>Description</th>
- *  </tr>
- *  <tr>
- *      <td><tt>KernelWidth</tt></td>
- *      <td>[REQUIRED]</td>
- *      <td>Width of the kernel</td>
- *  </tr>
- *  <tr>
- *      <td><tt>KernelHeight</tt></td>
- *      <td>[REQUIRED]</td>
- *      <td>Height of the kernel</td>
- *  </tr>
- *  <tr>
- *      <td><tt>NbOutputs</tt></td>
- *      <td>[REQUIRED]</td>
- *      <td>Number of output channels</td>
- *  </tr>
- *  <tr>
- *      <td><tt>SubSampleX</tt></td>
- *      <td>1</td>
- *      <td>X-axis subsampling factor of the output feature maps</td>
- *  </tr>
- *  <tr>
- *      <td><tt>SubSampleY</tt></td>
- *      <td>1</td>
- *      <td>Y-axis subsampling factor of the output feature maps</td>
- *  </tr>
- *  <tr>
- *      <td><tt>SubSample</tt></td>
- *      <td></td>
- *      <td>Subsampling factor of the output feature maps (mutually exclusive
- *with @p SubSampleX and @p SubSampleY)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>StrideX</tt></td>
- *      <td>1</td>
- *      <td>X-axis stride of the kernels</td>
- *  </tr>
- *  <tr>
- *      <td><tt>StrideY</tt></td>
- *      <td>1</td>
- *      <td>Y-axis stride of the kernels</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Stride</tt></td>
- *      <td></td>
- *      <td>Stride of the kernels (mutually exclusive with @p StrideX and @p
- *StrideY)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>PaddingX</tt></td>
- *      <td>0</td>
- *      <td>X-axis input padding</td>
- *  </tr>
- *  <tr>
- *      <td><tt>PaddingY</tt></td>
- *      <td>0</td>
- *      <td>Y-axis input padding</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Padding</tt></td>
- *      <td></td>
- *      <td>Input padding (mutually exclusive with @p PaddingX and @p
- *PaddingY)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>ActivationFunction</tt></td>
- *      <td>@p Tanh</td>
- *      <td>Activation function. Can be any of @p Sigmoid, @p Rectifier, @p
- *Linear or @p Tanh</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.SizeX</tt></td>
- *      <td>1</td>
- *      <td>Mapping canvas pattern default width</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.SizeY</tt></td>
- *      <td>1</td>
- *      <td>Mapping canvas pattern default height</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.Size</tt></td>
- *      <td></td>
- *      <td>Mapping canvas pattern default size (mutually exclusive with
- *<tt>Mapping.SizeX</tt> and <tt>Mapping.SizeY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.StrideX</tt></td>
- *      <td>1</td>
- *      <td>Mapping canvas default X-axis step</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.StrideY</tt></td>
- *      <td>1</td>
- *      <td>Mapping canvas default Y-axis step</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.Stride</tt></td>
- *      <td></td>
- *      <td>Mapping canvas default step (mutually exclusive with
- *<tt>Mapping.StrideX</tt> and <tt>Mapping.StrideY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.OffsetX</tt></td>
- *      <td>0</td>
- *      <td>Mapping canvas default X-axis offset</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.OffsetY</tt></td>
- *      <td>0</td>
- *      <td>Mapping canvas default Y-axis offset</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.Offset</tt></td>
- *      <td></td>
- *      <td>Mapping canvas default offset (mutually exclusive with
- *<tt>Mapping.OffsetX</tt> and <tt>Mapping.OffsetY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.NbIterations</tt></td>
- *      <td>0</td>
- *      <td>Mapping canvas pattern default number of iterations (0 means no
- *limit)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).SizeX</tt></td>
- *      <td><tt>Mapping.SizeX</tt> value</td>
- *      <td>Mapping canvas pattern width for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).SizeY</tt></td>
- *      <td><tt>Mapping.SizeY</tt> value</td>
- *      <td>Mapping canvas pattern height for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).Size</tt></td>
- *      <td></td>
- *      <td>Mapping canvas pattern default size for input layer @a in (mutually
- *exclusive with <tt>Mapping(@a in).SizeX</tt> and
- *          <tt>Mapping(@a in).SizeY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).StrideX</tt></td>
- *      <td><tt>Mapping.StrideX</tt> value</td>
- *      <td>Mapping canvas X-axis step for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).StrideY</tt></td>
- *      <td><tt>Mapping.StrideY</tt> value</td>
- *      <td>Mapping canvas Y-axis step for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).Stride</tt></td>
- *      <td></td>
- *      <td>Mapping canvas step for input layer @a in (mutually exclusive with
- *<tt>Mapping(@a in).StrideX</tt> and
- *          <tt>Mapping(@a in).StrideY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).OffsetX</tt></td>
- *      <td><tt>Mapping.OffsetX</tt> value</td>
- *      <td>Mapping canvas X-axis offset for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).OffsetY</tt></td>
- *      <td><tt>Mapping.OffsetY</tt> value</td>
- *      <td>Mapping canvas Y-axis offset for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).Offset</tt></td>
- *      <td></td>
- *      <td>Mapping canvas offset for input layer @a in (mutually exclusive with
- *<tt>Mapping(@a in).OffsetX</tt> and
- *          <tt>Mapping(@a in).OffsetY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).NbIterations</tt></td>
- *      <td><tt>Mapping.NbIterations</tt> value</td>
- *      <td>Mapping canvas pattern number of iterations for input layer @a in (0
- *means no limit)</td>
- *  </tr>
- *  </table>
- *
- * @subsubsection LcCell LcCell Layer
- *
- *  <table>
- *  <tr>
- *      <th>Parameter</th>
- *      <th>Default value</th>
- *      <th>Description</th>
- *  </tr>
- *  <tr>
- *      <td><tt>KernelWidth</tt></td>
- *      <td>[REQUIRED]</td>
- *      <td>Width of the kernel</td>
- *  </tr>
- *  <tr>
- *      <td><tt>KernelHeight</tt></td>
- *      <td>[REQUIRED]</td>
- *      <td>Height of the kernel</td>
- *  </tr>
- *  <tr>
- *      <td><tt>NbOutputs</tt></td>
- *      <td>[REQUIRED]</td>
- *      <td>Number of output channels</td>
- *  </tr>
- *  <tr>
- *      <td><tt>SubSampleX</tt></td>
- *      <td>1</td>
- *      <td>X-axis subsampling factor of the output feature maps</td>
- *  </tr>
- *  <tr>
- *      <td><tt>SubSampleY</tt></td>
- *      <td>1</td>
- *      <td>Y-axis subsampling factor of the output feature maps</td>
- *  </tr>
- *  <tr>
- *      <td><tt>SubSample</tt></td>
- *      <td></td>
- *      <td>Subsampling factor of the output feature maps (mutually exclusive
- *with @p SubSampleX and @p SubSampleY)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>StrideX</tt></td>
- *      <td>1</td>
- *      <td>X-axis stride of the kernels</td>
- *  </tr>
- *  <tr>
- *      <td><tt>StrideY</tt></td>
- *      <td>1</td>
- *      <td>Y-axis stride of the kernels</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Stride</tt></td>
- *      <td></td>
- *      <td>Stride of the kernels (mutually exclusive with @p StrideX and @p
- *StrideY)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>PaddingX</tt></td>
- *      <td>0</td>
- *      <td>X-axis input padding</td>
- *  </tr>
- *  <tr>
- *      <td><tt>PaddingY</tt></td>
- *      <td>0</td>
- *      <td>Y-axis input padding</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Padding</tt></td>
- *      <td></td>
- *      <td>Input padding (mutually exclusive with @p PaddingX and @p
- *PaddingY)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>ActivationFunction</tt></td>
- *      <td>@p Tanh</td>
- *      <td>Activation function. Can be any of @p Sigmoid, @p Rectifier, @p
- *Linear or @p Tanh</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.SizeX</tt></td>
- *      <td>1</td>
- *      <td>Mapping canvas pattern default width</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.SizeY</tt></td>
- *      <td>1</td>
- *      <td>Mapping canvas pattern default height</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.Size</tt></td>
- *      <td></td>
- *      <td>Mapping canvas pattern default size (mutually exclusive with
- *<tt>Mapping.SizeX</tt> and <tt>Mapping.SizeY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.StrideX</tt></td>
- *      <td>1</td>
- *      <td>Mapping canvas default X-axis step</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.StrideY</tt></td>
- *      <td>1</td>
- *      <td>Mapping canvas default Y-axis step</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.Stride</tt></td>
- *      <td></td>
- *      <td>Mapping canvas default step (mutually exclusive with
- *<tt>Mapping.StrideX</tt> and <tt>Mapping.StrideY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.OffsetX</tt></td>
- *      <td>0</td>
- *      <td>Mapping canvas default X-axis offset</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.OffsetY</tt></td>
- *      <td>0</td>
- *      <td>Mapping canvas default Y-axis offset</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.Offset</tt></td>
- *      <td></td>
- *      <td>Mapping canvas default offset (mutually exclusive with
- *<tt>Mapping.OffsetX</tt> and <tt>Mapping.OffsetY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.NbIterations</tt></td>
- *      <td>0</td>
- *      <td>Mapping canvas pattern default number of iterations (0 means no
- *limit)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).SizeX</tt></td>
- *      <td><tt>Mapping.SizeX</tt> value</td>
- *      <td>Mapping canvas pattern width for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).SizeY</tt></td>
- *      <td><tt>Mapping.SizeY</tt> value</td>
- *      <td>Mapping canvas pattern height for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).Size</tt></td>
- *      <td></td>
- *      <td>Mapping canvas pattern default size for input layer @a in (mutually
- *exclusive with <tt>Mapping(@a in).SizeX</tt> and
- *          <tt>Mapping(@a in).SizeY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).StrideX</tt></td>
- *      <td><tt>Mapping.StrideX</tt> value</td>
- *      <td>Mapping canvas X-axis step for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).StrideY</tt></td>
- *      <td><tt>Mapping.StrideY</tt> value</td>
- *      <td>Mapping canvas Y-axis step for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).Stride</tt></td>
- *      <td></td>
- *      <td>Mapping canvas step for input layer @a in (mutually exclusive with
- *<tt>Mapping(@a in).StrideX</tt> and
- *          <tt>Mapping(@a in).StrideY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).OffsetX</tt></td>
- *      <td><tt>Mapping.OffsetX</tt> value</td>
- *      <td>Mapping canvas X-axis offset for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).OffsetY</tt></td>
- *      <td><tt>Mapping.OffsetY</tt> value</td>
- *      <td>Mapping canvas Y-axis offset for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).Offset</tt></td>
- *      <td></td>
- *      <td>Mapping canvas offset for input layer @a in (mutually exclusive with
- *<tt>Mapping(@a in).OffsetX</tt> and
- *          <tt>Mapping(@a in).OffsetY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).NbIterations</tt></td>
- *      <td><tt>Mapping.NbIterations</tt> value</td>
- *      <td>Mapping canvas pattern number of iterations for input layer @a in (0
- *means no limit)</td>
- *  </tr>
- *  </table>
- *
- * @subsubsection PoolCell PoolCell Layer
- *
- *  <table>
- *  <tr>
- *      <th>Parameter</th>
- *      <th>Default value</th>
- *      <th>Description</th>
- *  </tr>
- *  <tr>
- *      <td><tt>PoolWidth</tt></td>
- *      <td>[REQUIRED]</td>
- *      <td>Width of the pooling area</td>
- *  </tr>
- *  <tr>
- *      <td><tt>PoolHeight</tt></td>
- *      <td>[REQUIRED]</td>
- *      <td>Height of the pooling area</td>
- *  </tr>
- *  <tr>
- *      <td><tt>NbOutputs</tt></td>
- *      <td>[REQUIRED]</td>
- *      <td>Number of output channels</td>
- *  </tr>
- *  <tr>
- *      <td><tt>StrideX</tt></td>
- *      <td>1</td>
- *      <td>X-axis stride of the pooling areas</td>
- *  </tr>
- *  <tr>
- *      <td><tt>StrideY</tt></td>
- *      <td>1</td>
- *      <td>Y-axis stride of the pooling areas</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Stride</tt></td>
- *      <td></td>
- *      <td>Stride of the pooling areas (mutually exclusive with @p StrideX and
- *@p StrideY)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>ActivationFunction</tt></td>
- *      <td>@p Linear</td>
- *      <td>Activation function. Can be any of @p Sigmoid, @p Rectifier, @p
- *Linear or @p Tanh</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.SizeX</tt></td>
- *      <td>1</td>
- *      <td>Mapping canvas pattern default width</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.SizeY</tt></td>
- *      <td>1</td>
- *      <td>Mapping canvas pattern default height</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.Size</tt></td>
- *      <td></td>
- *      <td>Mapping canvas pattern default size (mutually exclusive with
- *<tt>Mapping.SizeX</tt> and <tt>Mapping.SizeY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.StrideX</tt></td>
- *      <td>1</td>
- *      <td>Mapping canvas default X-axis step</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.StrideY</tt></td>
- *      <td>1</td>
- *      <td>Mapping canvas default Y-axis step</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.Stride</tt></td>
- *      <td></td>
- *      <td>Mapping canvas default step (mutually exclusive with
- *<tt>Mapping.StrideX</tt> and <tt>Mapping.StrideY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.OffsetX</tt></td>
- *      <td>0</td>
- *      <td>Mapping canvas default X-axis offset</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.OffsetY</tt></td>
- *      <td>0</td>
- *      <td>Mapping canvas default Y-axis offset</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.Offset</tt></td>
- *      <td></td>
- *      <td>Mapping canvas default offset (mutually exclusive with
- *<tt>Mapping.OffsetX</tt> and <tt>Mapping.OffsetY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping.NbIterations</tt></td>
- *      <td>0</td>
- *      <td>Mapping canvas pattern default number of iterations (0 means no
- *limit)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).SizeX</tt></td>
- *      <td><tt>Mapping.SizeX</tt> value</td>
- *      <td>Mapping canvas pattern width for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).SizeY</tt></td>
- *      <td><tt>Mapping.SizeY</tt> value</td>
- *      <td>Mapping canvas pattern height for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).Size</tt></td>
- *      <td></td>
- *      <td>Mapping canvas pattern default size for input layer @a in (mutually
- *exclusive with <tt>Mapping(@a in).SizeX</tt> and
- *          <tt>Mapping(@a in).SizeY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).StrideX</tt></td>
- *      <td><tt>Mapping.StrideX</tt> value</td>
- *      <td>Mapping canvas X-axis step for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).StrideY</tt></td>
- *      <td><tt>Mapping.StrideY</tt> value</td>
- *      <td>Mapping canvas Y-axis step for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).Stride</tt></td>
- *      <td></td>
- *      <td>Mapping canvas step for input layer @a in (mutually exclusive with
- *<tt>Mapping(@a in).StrideX</tt> and
- *          <tt>Mapping(@a in).StrideY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).OffsetX</tt></td>
- *      <td><tt>Mapping.OffsetX</tt> value</td>
- *      <td>Mapping canvas X-axis offset for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).OffsetY</tt></td>
- *      <td><tt>Mapping.OffsetY</tt> value</td>
- *      <td>Mapping canvas Y-axis offset for input layer @a in</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).Offset</tt></td>
- *      <td></td>
- *      <td>Mapping canvas offset for input layer @a in (mutually exclusive with
- *<tt>Mapping(@a in).OffsetX</tt> and
- *          <tt>Mapping(@a in).OffsetY</tt>)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>Mapping(@a in).NbIterations</tt></td>
- *      <td><tt>Mapping.NbIterations</tt> value</td>
- *      <td>Mapping canvas pattern number of iterations for input layer @a in (0
- *means no limit)</td>
- *  </tr>
- *  </table>
- *
- * @subsubsection FcCell FcCell Layer
- *
- *  <table>
- *  <tr>
- *      <th>Parameter</th>
- *      <th>Default value</th>
- *      <th>Description</th>
- *  </tr>
- *  <tr>
- *      <td><tt>NbOutputs</tt></td>
- *      <td>[REQUIRED]</td>
- *      <td>Number of output neurons</td>
- *  </tr>
- *  <tr>
- *      <td><tt>InputOffsetX</tt></td>
- *      <td>0</td>
- *      <td>X-axis offset for input layer connection</td>
- *  </tr>
- *  <tr>
- *      <td><tt>InputOffsetY</tt></td>
- *      <td>0</td>
- *      <td>Y-axis offset for input layer connection (non applicable for 1D
- *inputs)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>InputWidth</tt></td>
- *      <td>0</td>
- *      <td>Width of the input layer connection, if 0, use the full input
- *width</td>
- *  </tr>
- *  <tr>
- *      <td><tt>InputHeight</tt></td>
- *      <td>0</td>
- *      <td>Height of the input layer connection, if 0, use the full input
- *height (non applicable for 1D inputs)</td>
- *  </tr>
- *  </table>
- *
- * @subsubsection RbfCell RbfCell Layer
- *
- *  <table>
- *  <tr>
- *      <th>Parameter</th>
- *      <th>Default value</th>
- *      <th>Description</th>
- *  </tr>
- *  <tr>
- *      <td><tt>NbOutputs</tt></td>
- *      <td>[REQUIRED]</td>
- *      <td>Number of output neurons</td>
- *  </tr>
- *  <tr>
- *      <td><tt>InputOffsetX</tt></td>
- *      <td>0</td>
- *      <td>X-axis offset for input layer connection</td>
- *  </tr>
- *  <tr>
- *      <td><tt>InputOffsetY</tt></td>
- *      <td>0</td>
- *      <td>Y-axis offset for input layer connection (non applicable for 1D
- *inputs)</td>
- *  </tr>
- *  <tr>
- *      <td><tt>InputWidth</tt></td>
- *      <td>0</td>
- *      <td>Width of the input layer connection, if 0, use the full input
- *width</td>
- *  </tr>
- *  <tr>
- *      <td><tt>InputHeight</tt></td>
- *      <td>0</td>
- *      <td>Height of the input layer connection, if 0, use the full input
- *height (non applicable for 1D inputs)</td>
- *  </tr>
- *  </table>
-*/
 
 #endif // N2D2_DEEPNET_H

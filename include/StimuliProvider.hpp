@@ -27,6 +27,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <set>
+#include <deque>
 
 #include "Database/Database.hpp"
 #include "Transformation/CompositeTransformation.hpp"
@@ -64,6 +66,44 @@ public:
     typedef Tensor<Float_T> TensorData_T;
 #endif
 
+    struct ProvidedData {
+#ifdef CUDA
+        ProvidedData():
+            // mData and mFutureData are host-based by default.
+            // This can be changed with the hostBased() method if data is directly
+            // supplied to mData's device pointer.
+            data(true),
+            targetData(true) {}
+#else
+        ProvidedData() {}
+#endif
+
+        ProvidedData(ProvidedData&& other);
+        void swap(ProvidedData& other);
+
+        /// StimuliID of current batch
+        std::vector<int> batch;
+        /// Tensor (x, y, channel, batch)
+        TensorData_T data;
+        /// Tensor (x, y, channel, batch)
+        Tensor<int> labelsData;
+        /// Tensor (x, y, channel, batch)
+        TensorData_T targetData;
+        /// ROIs of current batch
+        std::vector<std::vector<std::shared_ptr<ROI> > > labelsROI;
+    };
+
+    struct DevicesInfo {
+#ifdef CUDA
+        /// State of the devices
+        std::vector<N2D2::DeviceState> states;
+#endif
+        /// Current batch's number provided to the devices
+        std::vector<int> numBatchs;
+        /// Future batch's number provided to the devices
+        std::vector<int> numFutureBatchs;
+    };
+
     StimuliProvider(Database& database,
                     const std::vector<size_t>& size,
                     unsigned int batchSize = 1,
@@ -75,6 +115,8 @@ public:
     /// Return a partial copy of the StimuliProvider. Only the parameters of the
     /// StimuliProvider are copied, the loaded stimuli data are zero-initialized.
     StimuliProvider cloneParameters() const;
+
+    void setDevices(const std::set<int>& devices = std::set<int>());
 
     virtual void addChannel(const CompositeTransformation& /*transformation*/);
 
@@ -159,6 +201,56 @@ public:
     void logTransformations(const std::string& fileName,
         Database::StimuliSetMask setMask = Database::All) const;
 
+    /// Return the number of batches remaining 
+    /// in the indexes queue of the set
+    unsigned int nbBatchsRemaining(Database::StimuliSet set)
+    {
+        std::deque<Database::StimulusID>& indexes = 
+                (set == Database::StimuliSet::Learn) ? mIndexesLearn :
+                (set == Database::StimuliSet::Validation) ? mIndexesVal :
+                mIndexesTest;
+        return indexes.size();
+    };
+
+    /// Return true if all batches from the set have been read, false otherwise
+    /// Must be used with StimuliProvider::readBatch(Database::StimuliSet set)
+    bool allBatchsProvided(Database::StimuliSet set)
+    {
+        bool allProvided = true;
+        if (nbBatchsRemaining(set) == 0) {
+            for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
+                if (mDevices.find(dev) != mDevices.end()) {
+                    if (mDevicesInfo.numFutureBatchs[dev] != -1)
+                        allProvided = false;
+                }
+            }
+        } else
+            allProvided = false;
+        
+        return allProvided;
+    };
+
+    /// Return true if there are enough batches left for a last run
+    /// Must be used with StimuliProvider::readBatch(Database::StimuliSet set) 
+    bool isLastBatch(Database::StimuliSet set)
+    {
+        bool last = false;
+        if (nbBatchsRemaining(set) == 0) {
+            for (int dev = 0; dev < (int)mProvidedData.size(); ++dev) {
+                if (mDevices.find(dev) != mDevices.end()) {
+                    if (mDevicesInfo.numFutureBatchs[dev] != -1)
+                        last = true;
+                }
+            }
+        }
+        return last;
+    };
+
+#ifdef CUDA
+    /// Put back the batches of banned devices in the index queue.
+    /// Must be used with StimuliProvider::readBatch(Database::StimuliSet set) 
+    void adjustBatchs(Database::StimuliSet set);
+#endif
 
     void future();
     void synchronize();
@@ -174,7 +266,7 @@ public:
     /// transformations and put the results in
     /// mData and mLabelsData
     virtual void readRandomBatch(Database::StimuliSet set);
-
+/*
     /// Read a whole batch from the StimuliSet @p set and 
     /// the specific data indexes, apply all the
     /// transformations and put the results in
@@ -182,7 +274,7 @@ public:
     virtual void readEpochBatch( Database::StimuliSet set,
                                  unsigned int startIndex,
                                  unsigned int epochIndex);
-
+*/
 //TODO: Required for spiking neural network batch parallelization
 /*
     /// Read a whole random batch from the StimuliSet @p set, apply all the
@@ -197,13 +289,14 @@ public:
     /// position @p batchPos in mData and mLabelsData
     /// @return StimulusID of the randomly chosen stimulus
     Database::StimulusID readRandomStimulus(Database::StimuliSet set,
-                                            unsigned int batchPos = 0);
+                                            unsigned int batchPos = 0,
+                                            int dev = -1);
 
     /// Read a whole batch from the StimuliSet @p set, apply all the
     /// transformations and put the results in
     /// mData and mLabelsData
     virtual void readBatch(Database::StimuliSet set, unsigned int startIndex);
-    void streamBatch(int startIndex = -1);
+    void streamBatch(int startIndex = -1, int dev = -1);
 
 //TODO: Required for spiking neural network batch parallelization
 /*
@@ -215,28 +308,51 @@ public:
 */
 
     void readStimulusBatch(Database::StimulusID id,
-                           Database::StimuliSet set);
+                           Database::StimuliSet set,
+                           int dev = -1);
 
     /// Read the stimulus with StimulusID @p id, apply all the transformations
     /// and put the results at batch
     /// position @p batchPos in mData and mLabelsData
     virtual void readStimulus(Database::StimulusID id,
                       Database::StimuliSet set,
-                      unsigned int batchPos = 0);
+                      unsigned int batchPos = 0,
+                      int dev = -1);
 
     Database::StimulusID readStimulusBatch(Database::StimuliSet set,
-                                           unsigned int index);
+                                           unsigned int index,
+                                           int dev = -1);
 
     /// Read the stimulus with index @p index in StimuliSet @p set, apply all
     /// the transformations and put the results at batch
     /// position @p batchPos in mData and mLabelsData
     Database::StimulusID readStimulus(Database::StimuliSet set,
                                       unsigned int index,
-                                      unsigned int batchPos = 0);
+                                      unsigned int batchPos = 0,
+                                      int dev = -1);
+
+    /** Read the batchs from a set
+     * 
+     * Select a batch from the set for each device which is 
+     * connected to the deepNet. 
+     * Then each device reads the whole assigned batch with the function 
+     * StimuliProvider::readStimulus(). 
+     * This function cannot be used without having previously called 
+     * StimuliProvider::setBatch()
+     * 
+     * @param set   StimuliSet
+     */
+    void readBatch(Database::StimuliSet set); 
+    
     void streamStimulus(const cv::Mat& mat,
                         Database::StimuliSet set,
-                        unsigned int batchPos = 0);
+                        unsigned int batchPos = 0,
+                        int dev = -1);
+
     void setStreamedTensor(TensorData_T& streamedTensor);
+                        
+    void synchronizeToDevices();
+
     void reverseLabels(const cv::Mat& mat,
                        Database::StimuliSet set,
                        Tensor<int>& labels,
@@ -249,6 +365,35 @@ public:
     virtual void setBatchSize(unsigned int batchSize);
     void setTargetSize(const std::vector<size_t>& size);
     void setCachePath(const std::string& path = "");
+
+    /** Set the batchs for reading
+     * 
+     * All stimulus from the set are placed in a vector. 
+     * The vector may be shuffled depending the value of @p randShuffle. 
+     * Then the indexes of each batch start are placed in a
+     * double-ended queue to facilitate batch reading. 
+     * This function has to be used before
+     * StimuliProvider::readBatch(Database::StimuliSet set)
+     * 
+     * @param set           StimuliSet
+     * @param randShuffle   Boolean to shuffle all stimulus among batchs
+     * @param nbMax         Maximum number of stimulus used to set up the batchs
+     *                      (0 = all stimulus from the set are used)
+     */
+    void setBatch(Database::StimuliSet set,
+                    bool randShuffle,
+                    unsigned int nbMax = 0);
+    
+#ifdef CUDA
+    /** Set the state of each device
+     * 
+     * @param states    Vector of device states
+     */
+    void setStates(std::vector<N2D2::DeviceState> states)
+    {
+       mDevicesInfo.states.assign(states.begin(), states.end()); 
+    };
+#endif
 
     // Getters
     Database& getDatabase()
@@ -282,6 +427,14 @@ public:
     {
         return mBatchSize;
     };
+    unsigned int getMultiBatchSize() const
+    {
+        return mBatchSize * mDevices.size();
+    };
+    const std::set<int>& getDevices() const
+    {
+        return mDevices;
+    };
     bool isCompositeStimuli() const
     {
         return mCompositeStimuli;
@@ -297,9 +450,8 @@ public:
     getChannelOnTheFlyTransformation(unsigned int channel,
                                      Database::StimuliSet set);
     void iterTransformations(Database::StimuliSet set,
-                        std::function<void(const Transformation&)> func) const;
-    std::vector<unsigned int>& getDatabaseLearnIndex(const unsigned int epoch)
-    {
+                        std::function<void(const Transformation&)> func) const;       
+    std::vector<unsigned int>& getDatabaseLearnIndex(const unsigned int epoch) {
         if(epoch > mDatabaseLearnIndexes.size()) {
             std::stringstream msg;
             msg << "StimuliProvider::getDatabaseIndexOnEpoch(): epochId (" << epoch
@@ -309,13 +461,24 @@ public:
         }
 
         return mDatabaseLearnIndexes[epoch];
-    };
-    const std::vector<int>& getBatch()
+     };
+#ifdef CUDA
+    std::vector<N2D2::DeviceState>& getStates()
     {
-        return mBatch;
+        return mDevicesInfo.states;
     };
-    TensorData_T& getData()
+#endif
+    const std::vector<int>& getBatch(int dev = -1)
     {
+        return mProvidedData[getDevice(dev)].batch;
+    };
+    TensorData_T& getDataInput()
+    {
+        return mProvidedData[getDevice(-1)].data;
+    };
+    TensorData_T& getData(int dev = -1)
+    {
+        // TODO : mStreamTensor may need to be reworked, if we want to have multiGPU for python ! 
         if (mStreamTensor) {
             if (!mStreamedTensor) {
                 throw std::runtime_error("Error: StreamTensor==true but StreamedTensor is not initialized");
@@ -323,44 +486,53 @@ public:
             return *mStreamedTensor;
         }
         else {
-            return mData;
+            return mProvidedData[getDevice(dev)].data;
         }
     };
-    TensorData_T& getTargetData()
+    TensorData_T& getTargetData(int dev = -1)
     {
-        return (!mTargetData.empty()) ? mTargetData : mData;
+        return (!mProvidedData[getDevice(dev)].targetData.empty())
+            ? mProvidedData[getDevice(dev)].targetData
+            : mProvidedData[getDevice(dev)].data;
     };
-    Tensor<int>& getLabelsData()
+    Tensor<int>& getLabelsData(int dev = -1)
     {
-        return mLabelsData;
+        return mProvidedData[getDevice(dev)].labelsData;
     };
-    const TensorData_T& getData() const
+    const TensorData_T& getData(int dev = -1) const
     {
-        return mData;
+        return mProvidedData[getDevice(dev)].data;
     };
-    const Tensor<int>& getLabelsData() const
+    const Tensor<int>& getLabelsData(int dev = -1) const
     {
-        return mLabelsData;
+        return mProvidedData[getDevice(dev)].labelsData;
     };
-    const TensorData_T& getTargetData() const
+    const TensorData_T& getTargetData(int dev = -1) const
     {
-        return (!mTargetData.empty()) ? mTargetData : mData;
+        return (!mProvidedData[getDevice(dev)].targetData.empty())
+            ? mProvidedData[getDevice(dev)].targetData
+            : mProvidedData[getDevice(dev)].data;
     };
+/*
     const std::vector<std::vector<std::shared_ptr<ROI> > >&
-    getLabelsROIs() const
+    getLabelsROIs(int dev = -1) const
     {
-        return mLabelsROI;
+        return mProvidedData[getDevice(dev)].labelsROI;
     };
-    const TensorData_T getData(unsigned int channel,
-                                    unsigned int batchPos = 0) const;
-    const Tensor<int> getLabelsData(unsigned int channel,
-                                      unsigned int batchPos = 0) const;
-    const TensorData_T getTargetData(unsigned int channel,
-                                     unsigned int batchPos = 0) const;
+*/
+    const TensorData_T getDataChannel(unsigned int channel,
+                                      unsigned int batchPos = 0,
+                                      int dev = -1) const;
+    const Tensor<int> getLabelsDataChannel(unsigned int channel,
+                                           unsigned int batchPos = 0,
+                                           int dev = -1) const;
+    const TensorData_T getTargetDataChannel(unsigned int channel,
+                                            unsigned int batchPos = 0,
+                                            int dev = -1) const;
     const std::vector<std::shared_ptr<ROI> >&
-    getLabelsROIs(unsigned int batchPos = 0) const
+    getLabelsROIs(unsigned int batchPos = 0, int dev = -1) const
     {
-        return mLabelsROI[batchPos];
+        return mProvidedData[getDevice(dev)].labelsROI[batchPos];
     };
     const std::string& getCachePath() const
     {
@@ -387,6 +559,7 @@ protected:
     std::vector<cv::Mat> loadDataCache(const std::string& fileName) const;
     void saveDataCache(const std::string& fileName,
                        const std::vector<cv::Mat>& data) const;
+    inline int getDevice(int dev) const;
 
 protected:
     /// Map unsigned integer range to signed before convertion to Float_T
@@ -413,28 +586,33 @@ protected:
     TransformationsSets mTransformations;
     /// Channel transformations
     std::vector<TransformationsSets> mChannelsTransformations;
-    /// StimuliID of current batch
-    std::vector<int> mBatch;
-    std::vector<int> mFutureBatch;
-    /// Tensor (x, y, channel, batch)
-    TensorData_T mData;
-    TensorData_T mFutureData;
-    /// Tensor (x, y, channel, batch)
-    Tensor<int> mLabelsData;
-    Tensor<int> mFutureLabelsData;
-    /// Tensor (x, y, channel, batch)
-    TensorData_T mTargetData;
-    TensorData_T mFutureTargetData;
-    /// ROIs of current batch
-    std::vector<std::vector<std::shared_ptr<ROI> > > mLabelsROI;
-    std::vector<std::vector<std::shared_ptr<ROI> > > mFutureLabelsROI;
+    /// Provided data
+    std::vector<ProvidedData> mProvidedData;
+    /// Future provided data
+    std::vector<ProvidedData> mFutureProvidedData;
+    /// Devices information
+    DevicesInfo mDevicesInfo;
     bool mFuture;
 
     TensorData_T* mStreamedTensor;
-    std::vector<std::vector<unsigned int > > mDatabaseLearnIndexes;
-    std::vector<std::vector<unsigned int > > mDatabaseValIndexes;
-    std::vector<std::vector<unsigned int > > mDatabaseTestIndexes;
+    
+    //Deprecated vector
+    std::vector<std::vector<unsigned int >> mDatabaseLearnIndexes;
+    std::vector<std::vector<unsigned int >> mDatabaseValIndexes;
+    std::vector<std::vector<unsigned int >> mDatabaseTestIndexes;
 
+    /// Set of Device IDs used by the deepNet
+    std::set<int> mDevices;
+
+    /// Vectors containing StimulusIDs from datasets
+    std::vector<unsigned int> mBatchsLearnIndexes;
+    std::vector<unsigned int> mBatchsValIndexes;
+    std::vector<unsigned int> mBatchsTestIndexes;
+
+    /// Queues containing indexes of the batchs
+    std::deque<unsigned int> mIndexesLearn;
+    std::deque<unsigned int> mIndexesVal;
+    std::deque<unsigned int> mIndexesTest;
 };
 }
 
@@ -493,6 +671,22 @@ N2D2::StimuliProvider::readRawData(Database::StimuliSet set,
                                    unsigned int index) const
 {
     return readRawData(mDatabase.getStimulusID(set, index));
+}
+
+int N2D2::StimuliProvider::getDevice(int dev) const {
+#ifdef CUDA
+    if (dev == -1) {
+        const cudaError_t status = cudaGetDevice(&dev);
+        if (status != cudaSuccess)
+            dev = 0;
+    }
+
+    return dev;
+#else
+    // unused argument
+    (void)(dev);
+    return 0;
+#endif
 }
 
 #endif // N2D2_STIMULIPROVIDER_H

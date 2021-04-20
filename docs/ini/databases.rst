@@ -1,10 +1,107 @@
 Databases
 =========
 
-The tool integrates pre-defined modules for several well-known database
+Introduction
+------------
+
+A ``Database`` handles the raw data, annotations and how the datasets 
+(learn, validation or test) should be build.
+N2D2 integrates pre-defined modules for several well-known database
 used in the deep learning community, such as MNIST, GTSRB, CIFAR10 and
 so on. That way, no extra step is necessary to be able to directly build
 a network and learn it on these database.
+
+All the database modules inherit from a base ``Database``, which contains some
+generic configuration options:
+
++--------------------------+------------------------------------------------------------------+
+| Option [default value]   | Description                                                      |
++==========================+==================================================================+
+| ``DefaultLabel`` []      | Default label for composite image (for areas outside the ROIs).  |
+|                          | If empty, no default label is created and default label ID is -1 |
++--------------------------+------------------------------------------------------------------+
+| ``ROIsMargin`` [0]       | Margin around the ROIs, in pixels, with no label (label ID = -1) |
++--------------------------+------------------------------------------------------------------+
+| ``RandomPartitioning``   | If true (1), the partitioning in the learn, validation and test  |
+| [1]                      | sets is random, otherwise partitioning is in the order           |
++--------------------------+------------------------------------------------------------------+
+| ``DataFileLabel`` [1]    | If true (1), load pixel-wise image labels, if they exist         |
++--------------------------+------------------------------------------------------------------+
+| ``CompositeLabel``       | See the following ``CompositeLabel`` section                     |
+| [``Auto``]               |                                                                  |
++--------------------------+------------------------------------------------------------------+
+| ``TargetDataPath`` []    | Data path to target data, to be used in conjunction with the     |
+|                          | ``DataAsTarget`` option in ``Target`` modules                    |
++--------------------------+------------------------------------------------------------------+
+| ``MultiChannelMatch`` [] | See the following *multi-channel handling* section               |
++--------------------------+------------------------------------------------------------------+
+| ``MultiChannelReplace``  | See the following *multi-channel handling* section               |
++--------------------------+------------------------------------------------------------------+
+
+
+``CompositeLabel`` parameter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A label is said to be composite when it is not a single *labelID* for the 
+stimulus (the stimulus label is a matrix of size > 1).
+For the same stimulus, different type of labels can be specified,
+i.e. the *labelID*, pixel-wise data and/or ROIs.
+The way these different label types are handled is configured with the
+``CompositeLabel`` parameter:
+
+- ``None``: only the *labelID* is used, pixel-wise data are ignored and ROIs 
+  are loaded but ignored as well by ``loadStimulusLabelsData()``.
+- ``Auto``: the label is only composite when pixel-wise data are present
+  or the stimulus *labelID* is -1 (in which case the ``DefaultLabel``
+  is used for the whole label matrix). If the label is composite
+  ROIs, if present, are applied. Otherwise, a single ROI is
+  allowed and is automatically extracted when fetching the stimulus.
+- ``Default``: the label is always composite. The *labelID* is ignored.
+  If there is no pixel-wise data, the ``DefaultLabel`` is used.
+  ROIs, if present, are applied.
+- ``Disjoint``: the label is always composite. If there is no pixel-wise data:
+  
+  - the *labelID* is used if there is no ROI;
+  - the ``DefaultLabel`` is used if there is any ROI.
+
+  ROIs, if present, are applied.
+- ``Combine``: the label is always composite.
+  If there is no pixel-wise data, the *labelID* is used.
+  ROIs, if present, are applied.
+
+    
+Multi-channel handling
+~~~~~~~~~~~~~~~~~~~~~~
+
+Multi-channel images are automatically handled and the default image format in 
+N2D2 is **BGR**.
+
+Any ``Database`` can also handle multi-channel data, where each channel is stored
+in a different file. In order to be able to interpret a series of files as an 
+additional data channel to a first series of files, the file names must follow
+a simple yet arbitrary naming convention. A first parameter,
+``MultiChannelMatch``, is used to match the files constituting a single
+channel. Then, a second parameter, ``MultiChannelReplace`` is used to indicate
+how the file names of the other channels are obtained. See the example below,
+with the ``DIR_Database``:
+
+.. code-block:: ini
+
+    [database]
+    Type=DIR_Database
+    ...
+    ; Multi-channel handling:
+    ; MultiChannelMatch is a regular expression for matching a single channel (for example the first one).
+    ; Here we match anything followed by "_0", followed by "." and anything except 
+    ; ".", so we match "_0" before the file extension.
+    MultiChannelMatch=(.*)_0(\.[^.]+)
+    ; Replace what we matched to obtain the file name of the different channels.
+    ; For the first channel, replace "_0" by "_0", so the name doesn't change.
+    ; For the second channel, replace "_0" by "_1" in the file name.
+    ; To disable the second channel, replace $1_1$2 by ""
+    MultiChannelReplace=$1_0$2 $1_1$2
+
+
 
 MNIST
 -----
@@ -85,9 +182,9 @@ using the following parameters:
 
     [database]
     Type=DIR_Database
-    DataPath=\${N2D2_DATA}/GST
-    Learn=0.4 ; 40\% of images of the smallest category = 49 (0.4x123) images for each category will be used for learning
-    Validation=0.2 ; 20\% of images of the smallest category = 25 (0.2x123) images for each category will be used for validation
+    DataPath=${N2D2_DATA}/GST
+    Learn=0.4 ; 40% of images of the smallest category = 49 (0.4x123) images for each category will be used for learning
+    Validation=0.2 ; 20% of images of the smallest category = 25 (0.2x123) images for each category will be used for validation
     ; the remaining images will be used for testing
 
 Each subdirectory will be treated as a different label, so there will be
@@ -141,7 +238,11 @@ the example above, the partitioning will be the following:
 +-------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                           | ``LabelDepth`` = 1: uses ``LabelName`` for stimuli in the current directory (``DataPath``) and ``LabelName``/*sub-directory name* for stimuli in the sub-directories   |
 +-------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``PerLabelPartitioning`` [1]              | If true, the stimuli are equi-partitioned for the learn/validation/test sets, meaning that the same number of stimuli for each label is used                           |
+| ``PerLabelPartitioning`` [1]              | If true (1), the ``Learn``, ``Validation`` and  ``Test`` parameters represent the fraction of the total stimuli to be partitioned in each set,                         |
+|                                           | instead of a number of stimuli                                                                                                                                         |
++-------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``EquivLabelPartitioning`` [1]            | If true (1), the stimuli are equi-partitioned in the learn and validation sets, meaning that the same number of stimuli **for each label** is used                     |
+|                                           | (only when ``PerLabelPartitioning`` is 1). The remaining stimuli are partitioned in the test set                                                                       |
 +-------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | ``Validation`` [0.0]                      | If ``PerLabelPartitioning`` is true, fraction of images used for the validation; else, number of images used for the validation, regardless of their labels            |
 +-------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -158,6 +259,14 @@ the example above, the partitioning will be the following:
 | ``ROIsMargin`` [0]                        | Number of pixels around ROIs that are ignored (and not considered as ``DefaultLabel`` pixels)                                                                          |
 +-------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
+
+.. Note::
+
+    If ``EquivLabelPartitioning`` is 1 (default setting), the number of stimuli
+    per label that will be partitioned in the learn and validation sets will 
+    correspond to the number of stimuli from the label with the fewest stimuli.
+
+
 To load and partition more than one ``DataPath``, one can use the
 ``LoadMore`` option:
 
@@ -165,14 +274,14 @@ To load and partition more than one ``DataPath``, one can use the
 
     [database]
     Type=DIR_Database
-    DataPath=\${N2D2_DATA}/GST
+    DataPath=${N2D2_DATA}/GST
     Learn=0.6
     Validation=0.4
     LoadMore=database.test
 
     ; Load stimuli from the "GST_Test" path in the test dataset
     [database.test]
-    DataPath=\${N2D2_DATA}/GST_Test
+    DataPath=${N2D2_DATA}/GST_Test
     Learn=0.0
     Test=1.0
     ; The LoadMore option is recursive:
@@ -180,6 +289,7 @@ To load and partition more than one ``DataPath``, one can use the
 
     ; [database.more]
     ; Load even more data here
+
 
 *Speech Commands Dataset*
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -191,17 +301,104 @@ Use with Speech Commands Data Set, released by the Google
 
     [database]
     Type=DIR_Database
-    DataPath=\${N2D2_DATA}/speech_commands_v0.02
+    DataPath=${N2D2_DATA}/speech_commands_v0.02
     ValidExtensions=wav
     IgnoreMasks=*/_background_noise_
     Learn=0.6
     Validation=0.2
 
+
+CSV data files
+--------------
+
+``CSV_Database`` is a generic driver for handling CSV data files. It can be used
+to load one or several CSV files where each line is a different stimulus and one
+column contains the label.
+
+The parameters are the following:
+
++------------------------------------+---------------------------------------------------+
+| Option [default value]             | Description                                       |
++====================================+===================================================+
+| ``DataPath``                       | Path to the database                              |
++------------------------------------+---------------------------------------------------+
+| ``Learn`` [0.6]                    | Fraction of data used for the learning            |
++------------------------------------+---------------------------------------------------+
+| ``Validation`` [0.2]               | Fraction of data used for the validation          |
++------------------------------------+---------------------------------------------------+
+| ``PerLabelPartitioning`` [1]       | If true (1), the ``Learn``, ``Validation`` and    |
+|                                    | ``Test`` parameters represent the fraction of the |
+|                                    | total stimuli to be partitioned in each set,      |
+|                                    | instead of a number of stimuli                    |
++------------------------------------+---------------------------------------------------+
+| ``EquivLabelPartitioning`` [1]     | If true (1), the stimuli are equi-partitioned in  |
+|                                    | the learn and validation sets, meaning that the   |
+|                                    | same number of stimuli **for each label** is used |
+|                                    | (only when ``PerLabelPartitioning`` is 1).        |
+|                                    | The remaining stimuli are partitioned in the test |
+|                                    | set                                               |
++------------------------------------+---------------------------------------------------+
+| ``LabelColumn`` [-1]               | Index of the column containing the label (if < 0, |
+|                                    | from the end of the row)                          |
++------------------------------------+---------------------------------------------------+
+| ``NbHeaderLines`` [0]              | Number of header lines to skip                    |
++------------------------------------+---------------------------------------------------+
+| ``Test`` [1.0-``Learn``-           | If ``PerLabelPartitioning`` is true, fraction of  |
+| ``Validation``]                    | images used for the test; else, number of images  |
+|                                    | used for the test, regardless of their labels     |
++------------------------------------+---------------------------------------------------+
+| ``LoadMore`` []                    | Name of an other section with the same options to |
+|                                    | load a different ``DataPath``                     |
++------------------------------------+---------------------------------------------------+
+
+
+.. Note::
+
+    If ``EquivLabelPartitioning`` is 1 (default setting), the number of stimuli
+    per label that will be partitioned in the learn and validation sets will 
+    correspond to the number of stimuli from the label with the fewest stimuli.
+
+
+
+Usage example
+~~~~~~~~~~~~~
+
+In this example, we load the *Electrical Grid Stability Simulated Data Data Set*
+(https://archive.ics.uci.edu/ml/datasets/Electrical+Grid+Stability+Simulated+Data+).
+
+The CSV data file (``Data_for_UCI_named.csv``) is the following:
+
+::
+
+    "tau1","tau2","tau3","tau4","p1","p2","p3","p4","g1","g2","g3","g4","stab","stabf"
+    2.95906002455997,3.07988520422811,8.38102539191882,9.78075443222607,3.76308477206316,-0.782603630987543,-1.25739482958732,-1.7230863114883,0.650456460887227,0.859578105752345,0.887444920638513,0.958033987602737,0.0553474891727752,"unstable"
+    9.3040972346785,4.90252411201167,3.04754072762177,1.36935735529605,5.06781210427845,-1.94005842705193,-1.87274168559721,-1.25501199162931,0.41344056837935,0.862414076352903,0.562139050527675,0.781759910653126,-0.00595746432603695,"stable"
+    8.97170690932022,8.84842842134833,3.04647874898866,1.21451813833956,3.40515818001095,-1.20745559234302,-1.27721014673295,-0.92049244093498,0.163041039311334,0.766688656526962,0.839444015400588,0.109853244952427,0.00347087904838871,"unstable"
+    0.716414776295121,7.66959964406565,4.48664083058949,2.34056298396795,3.96379106326633,-1.02747330413905,-1.9389441526466,-0.997373606480681,0.446208906537321,0.976744082924302,0.929380522872661,0.36271777426931,0.028870543444887,"unstable"
+    3.13411155161342,7.60877161603408,4.94375930178099,9.85757326996638,3.52581081652096,-1.12553095451115,-1.84597485447561,-0.554305007534195,0.797109525792467,0.455449947148291,0.656946658473716,0.820923486481631,0.0498603734837059,"unstable"
+    ...
+
+There is one header line and the last column is the label, which is the default.
+
+This file is loaded and the data is splitted between the learning set and the 
+validation set with a 0.7/0.3 ratio in the INI file with the following section:
+
+.. code-block:: ini
+
+    [database]
+    Type=CSV_Database
+    Learn=0.7
+    Validation=0.3
+    DataPath=Data_for_UCI_named.csv
+    NbHeaderLines=1
+
+
+
 Other built-in databases
 ------------------------
 
-Actitracker\_Database
-~~~~~~~~~~~~~~~~~~~~~
+Actitracker_Database
+~~~~~~~~~~~~~~~~~~~~
 
 Actitracker database, released by the WISDM Lab
 :cite:`Lockhart2011`.
@@ -217,11 +414,11 @@ Actitracker database, released by the WISDM Lab
 +------------------------------------+---------------------------------------------------+
 | ``DataPath``                       | Path to the database                              |
 +------------------------------------+---------------------------------------------------+
-| [``$N2D2_DATA``/WISDM\_at\_v2.0]   |                                                   |
+| [``$N2D2_DATA``/WISDM_at_v2.0]     |                                                   |
 +------------------------------------+---------------------------------------------------+
 
-CIFAR10\_Database
-~~~~~~~~~~~~~~~~~
+CIFAR10_Database
+~~~~~~~~~~~~~~~~
 
 CIFAR10 database :cite:`Krizhevsky2009`.
 
@@ -235,8 +432,8 @@ CIFAR10 database :cite:`Krizhevsky2009`.
 | [``$N2D2_DATA``/cifar-10-batches-bin]   |                                                    |
 +-----------------------------------------+----------------------------------------------------+
 
-CIFAR100\_Database
-~~~~~~~~~~~~~~~~~~
+CIFAR100_Database
+~~~~~~~~~~~~~~~~~
 
 CIFAR100 database :cite:`Krizhevsky2009`.
 
@@ -252,8 +449,8 @@ CIFAR100 database :cite:`Krizhevsky2009`.
 | [``$N2D2_DATA``/cifar-100-binary]   |                                                               |
 +-------------------------------------+---------------------------------------------------------------+
 
-CKP\_Database
-~~~~~~~~~~~~~
+CKP_Database
+~~~~~~~~~~~~
 
 The Extended Cohn-Kanade (CK+) database for expression recognition
 :cite:`Lucey2010`.
@@ -270,8 +467,8 @@ The Extended Cohn-Kanade (CK+) database for expression recognition
 | [``$N2D2_DATA``/cohn-kanade-images]   |                                              |
 +---------------------------------------+----------------------------------------------+
 
-Caltech101\_DIR\_Database
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Caltech101_DIR_Database
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Caltech 101 database :cite:`FeiFei2004`.
 
@@ -282,17 +479,17 @@ Caltech 101 database :cite:`FeiFei2004`.
 +--------------------------+----------------------------------------------------------------------+
 | ``Validation`` [0.0]     | Fraction of images used for the validation                           |
 +--------------------------+----------------------------------------------------------------------+
-| ``IncClutter`` [0]       | If true, includes the BACKGROUND\_Google directory of the database   |
+| ``IncClutter`` [0]       | If true, includes the BACKGROUND_Google directory of the database    |
 +--------------------------+----------------------------------------------------------------------+
 | ``DataPath``             | Path to the database                                                 |
 +--------------------------+----------------------------------------------------------------------+
 | [``$N2D2_DATA``/         |                                                                      |
 +--------------------------+----------------------------------------------------------------------+
-| 101\_ObjectCategories]   |                                                                      |
+| 101_ObjectCategories]    |                                                                      |
 +--------------------------+----------------------------------------------------------------------+
 
-Caltech256\_DIR\_Database
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Caltech256_DIR_Database
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Caltech 256 database :cite:`Griffin2007`.
 
@@ -303,17 +500,17 @@ Caltech 256 database :cite:`Griffin2007`.
 +--------------------------+----------------------------------------------------------------------+
 | ``Validation`` [0.0]     | Fraction of images used for the validation                           |
 +--------------------------+----------------------------------------------------------------------+
-| ``IncClutter`` [0]       | If true, includes the BACKGROUND\_Google directory of the database   |
+| ``IncClutter`` [0]       | If true, includes the BACKGROUND_Google directory of the database    |
 +--------------------------+----------------------------------------------------------------------+
 | ``DataPath``             | Path to the database                                                 |
 +--------------------------+----------------------------------------------------------------------+
 | [``$N2D2_DATA``/         |                                                                      |
 +--------------------------+----------------------------------------------------------------------+
-| 256\_ObjectCategories]   |                                                                      |
+| 256_ObjectCategories]    |                                                                      |
 +--------------------------+----------------------------------------------------------------------+
 
-CaltechPedestrian\_Database
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+CaltechPedestrian_Database
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Caltech Pedestrian database :cite:`Dollar2009`.
 
@@ -368,8 +565,8 @@ annotations:
 | CaltechPedestrians/data-USA/annotations]   |                                                                                     |
 +--------------------------------------------+-------------------------------------------------------------------------------------+
 
-Cityscapes\_Database
-~~~~~~~~~~~~~~~~~~~~
+Cityscapes_Database
+~~~~~~~~~~~~~~~~~~~
 
 Cityscapes database :cite:`Cordts2016Cityscapes`.
 
@@ -393,8 +590,8 @@ Cityscapes database :cite:`Cordts2016Cityscapes`.
 | ``LabelPath`` []                       | Path to the database annotations (deduced from ``DataPath`` if left empty)                               |
 +----------------------------------------+----------------------------------------------------------------------------------------------------------+
 
-Daimler\_Database
-~~~~~~~~~~~~~~~~~
+Daimler_Database
+~~~~~~~~~~~~~~~~
 
 Daimler Monocular Pedestrian Detection Benchmark (Daimler Pedestrian).
 
@@ -410,8 +607,8 @@ Daimler Monocular Pedestrian Detection Benchmark (Daimler Pedestrian).
 | ``Fully`` [0]            | When activate it use the test dataset to learn. Use only on fully-cnn mode   |
 +--------------------------+------------------------------------------------------------------------------+
 
-DOTA\_Database
-~~~~~~~~~~~~~~
+DOTA_Database
+~~~~~~~~~~~~~
 
 DOTA database :cite:`DOTA`.
 
@@ -429,8 +626,8 @@ DOTA database :cite:`DOTA`.
 | []                       |                                            |
 +--------------------------+--------------------------------------------+
 
-FDDB\_Database
-~~~~~~~~~~~~~~
+FDDB_Database
+~~~~~~~~~~~~~
 
 Face Detection Data Set and Benchmark (FDDB)
 :cite:`Jain2010`.
@@ -451,8 +648,8 @@ Face Detection Data Set and Benchmark (FDDB)
 | [``$N2D2_DATA``/FDDB]    |                                                         |
 +--------------------------+---------------------------------------------------------+
 
-GTSDB\_DIR\_Database
-~~~~~~~~~~~~~~~~~~~~
+GTSDB_DIR_Database
+~~~~~~~~~~~~~~~~~~
 
 GTSDB database :cite:`Houben2013`.
 
@@ -468,8 +665,8 @@ GTSDB database :cite:`Houben2013`.
 | [``$N2D2_DATA``/FullIJCNN2013]   |                                              |
 +----------------------------------+----------------------------------------------+
 
-ILSVRC2012\_Database
-~~~~~~~~~~~~~~~~~~~~
+ILSVRC2012_Database
+~~~~~~~~~~~~~~~~~~~
 
 ILSVRC2012 database :cite:`ILSVRC15`.
 
@@ -487,8 +684,8 @@ ILSVRC2012 database :cite:`ILSVRC15`.
 | [``$N2D2_DATA``/ILSVRC2012/synsets.txt]   |                                            |
 +-------------------------------------------+--------------------------------------------+
 
-KITTI\_Database
-~~~~~~~~~~~~~~~
+KITTI_Database
+~~~~~~~~~~~~~~
 
 The KITTI Database provide ROI which can be use for autonomous driving
 and environment perception. The database provide 8 labeled different
@@ -507,8 +704,8 @@ tracking data set (9 MB). Extract the downloaded archives in your
 | ``Validation`` [0.2]     | Fraction of images used for the validation   |
 +--------------------------+----------------------------------------------+
 
-KITTI\_Road\_Database
-~~~~~~~~~~~~~~~~~~~~~
+KITTI_Road_Database
+~~~~~~~~~~~~~~~~~~~
 
 The KITTI Road Database provide ROI which can be used to road
 segmentation. The dataset provide 1 labeled class (road) on 289 training
@@ -528,8 +725,8 @@ folder.
 | ``Validation`` [0.2]     | Fraction of images used for the validation   |
 +--------------------------+----------------------------------------------+
 
-KITTI\_Object\_Database
-~~~~~~~~~~~~~~~~~~~~~~~
+KITTI_Object_Database
+~~~~~~~~~~~~~~~~~~~~~
 
 The KITTI Object Database provide ROI which can be use for autonomous
 driving and environment perception. The database provide 8 labeled
@@ -550,8 +747,8 @@ object data set (5 MB). Extract the downloaded archives in your
 | ``Validation`` [0.2]     | Fraction of images used for the validation   |
 +--------------------------+----------------------------------------------+
 
-LITISRouen\_Database
-~~~~~~~~~~~~~~~~~~~~
+LITISRouen_Database
+~~~~~~~~~~~~~~~~~~~
 
 LITIS Rouen audio scene dataset :cite:`Rakotomamonjy2014`.
 
@@ -564,7 +761,7 @@ LITIS Rouen audio scene dataset :cite:`Rakotomamonjy2014`.
 +--------------------------------+----------------------------------------------+
 | ``DataPath``                   | Path to the database                         |
 +--------------------------------+----------------------------------------------+
-| [``$N2D2_DATA``/data\_rouen]   |                                              |
+| [``$N2D2_DATA``/data_rouen]    |                                              |
 +--------------------------------+----------------------------------------------+
 
 Dataset images slicing

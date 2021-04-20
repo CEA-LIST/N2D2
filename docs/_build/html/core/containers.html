@@ -1,0 +1,543 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Containers &mdash; N2D2  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Cells" href="cells.html" />
+    <link rel="prev" title="Activation" href="activations.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> N2D2
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ONNX Import:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../onnx_convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx_import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx_transfer.html">Train from ONNX models</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Quantization and Export:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quant_post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant_qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_legacy.html">Export: other / legacy</a></li>
+</ul>
+<p class="caption"><span class="caption-text">INI File Interface:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ini/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/data_analysis.html">Stimuli data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/environment.html">Stimuli provider (Environment)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/layers.html">Network Layers</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/tensor.html">Tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/deepnet.html">DeepNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/interoperability.html">Interoperability</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++/Python core:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="activations.html">Activation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Containers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tensor">Tensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cudatensor">CudaTensor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="filler.html">Filler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver.html">Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stimuliprovider.html">StimuliProvider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transformation.html">Transformation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="target.html">Target</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++ API / Developer:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev_intro.html">Introduction</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">N2D2</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Containers</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/core/containers.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="containers">
+<h1>Containers<a class="headerlink" href="#containers" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>N2D2 has his own Tensor implementation.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">N2D2</span><span class="o">.</span><span class="n">Tensor_float</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Tensor can be also be created using numpy.array object.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">N2D2</span><span class="o">.</span><span class="n">CudaTensor_float</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">]]))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="tensor">
+<h2>Tensor<a class="headerlink" href="#tensor" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="N2D2.BaseTensor">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">BaseTensor</code><a class="headerlink" href="#N2D2.BaseTensor" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.BaseTensor.clear">
+<code class="sig-name descname">clear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.BaseTensor.clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.dimB">
+<code class="sig-name descname">dimB</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.BaseTensor.dimB" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.dimD">
+<code class="sig-name descname">dimD</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.BaseTensor.dimD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.dimX">
+<code class="sig-name descname">dimX</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.BaseTensor.dimX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.dimY">
+<code class="sig-name descname">dimY</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.BaseTensor.dimY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.dimZ">
+<code class="sig-name descname">dimZ</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.BaseTensor.dimZ" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.dims">
+<code class="sig-name descname">dims</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>int<span class="p">]</span><a class="headerlink" href="#N2D2.BaseTensor.dims" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.empty">
+<code class="sig-name descname">empty</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.BaseTensor.empty" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.getType">
+<code class="sig-name descname">getType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; std::type_info<a class="headerlink" href="#N2D2.BaseTensor.getType" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.getTypeName">
+<code class="sig-name descname">getTypeName</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#N2D2.BaseTensor.getTypeName" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.isValid">
+<code class="sig-name descname">isValid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.BaseTensor.isValid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.nbDims">
+<code class="sig-name descname">nbDims</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.BaseTensor.nbDims" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.op_assign">
+<code class="sig-name descname">op_assign</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em>, <em class="sig-param"><span class="n">arg0</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a><a class="headerlink" href="#N2D2.BaseTensor.op_assign" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.reshape">
+<code class="sig-name descname">reshape</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em>, <em class="sig-param"><span class="n">dims</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.BaseTensor.reshape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.resize">
+<code class="sig-name descname">resize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em>, <em class="sig-param"><span class="n">dims</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.BaseTensor.resize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.setValid">
+<code class="sig-name descname">setValid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.BaseTensor.setValid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.size">
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.BaseTensor.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.synchronizeDBasedToH">
+<code class="sig-name descname">synchronizeDBasedToH</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.BaseTensor.synchronizeDBasedToH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.synchronizeDToH">
+<code class="sig-name descname">synchronizeDToH</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.BaseTensor.synchronizeDToH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.synchronizeDToHBased">
+<code class="sig-name descname">synchronizeDToHBased</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.BaseTensor.synchronizeDToHBased" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.synchronizeHBasedToD">
+<code class="sig-name descname">synchronizeHBasedToD</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.BaseTensor.synchronizeHBasedToD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.synchronizeHToD">
+<code class="sig-name descname">synchronizeHToD</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.BaseTensor.synchronizeHToD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.BaseTensor.synchronizeHToDBased">
+<code class="sig-name descname">synchronizeHToDBased</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.BaseTensor.synchronizeHToDBased" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="N2D2.Tensor_float">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">Tensor_float</code><a class="headerlink" href="#N2D2.Tensor_float" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.Tensor_float.fill">
+<code class="sig-name descname">fill</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Tensor_float" title="N2D2.Tensor_float">N2D2.Tensor_float</a></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Tensor_float.fill" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Tensor_float.mean">
+<code class="sig-name descname">mean</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Tensor_float" title="N2D2.Tensor_float">N2D2.Tensor_float</a></span></em>, <em class="sig-param"><span class="n">valAbs</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#N2D2.Tensor_float.mean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Tensor_float.newCuda">
+<code class="sig-name descname">newCuda</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Tensor_float" title="N2D2.Tensor_float">N2D2.Tensor_float</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a><a class="headerlink" href="#N2D2.Tensor_float.newCuda" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Tensor_float.resize">
+<code class="sig-name descname">resize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Tensor_float" title="N2D2.Tensor_float">N2D2.Tensor_float</a></span></em>, <em class="sig-param"><span class="n">dims</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Tensor_float.resize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Tensor_float.sum">
+<code class="sig-name descname">sum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Tensor_float" title="N2D2.Tensor_float">N2D2.Tensor_float</a></span></em>, <em class="sig-param"><span class="n">valAbs</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#N2D2.Tensor_float.sum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="N2D2.Tensor_double">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">Tensor_double</code><a class="headerlink" href="#N2D2.Tensor_double" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.Tensor_double.fill">
+<code class="sig-name descname">fill</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Tensor_double" title="N2D2.Tensor_double">N2D2.Tensor_double</a></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Tensor_double.fill" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Tensor_double.mean">
+<code class="sig-name descname">mean</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Tensor_double" title="N2D2.Tensor_double">N2D2.Tensor_double</a></span></em>, <em class="sig-param"><span class="n">valAbs</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#N2D2.Tensor_double.mean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Tensor_double.newCuda">
+<code class="sig-name descname">newCuda</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Tensor_double" title="N2D2.Tensor_double">N2D2.Tensor_double</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a><a class="headerlink" href="#N2D2.Tensor_double.newCuda" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Tensor_double.resize">
+<code class="sig-name descname">resize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Tensor_double" title="N2D2.Tensor_double">N2D2.Tensor_double</a></span></em>, <em class="sig-param"><span class="n">dims</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Tensor_double.resize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Tensor_double.sum">
+<code class="sig-name descname">sum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Tensor_double" title="N2D2.Tensor_double">N2D2.Tensor_double</a></span></em>, <em class="sig-param"><span class="n">valAbs</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#N2D2.Tensor_double.sum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="N2D2.Tensor_bool">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">Tensor_bool</code><a class="headerlink" href="#N2D2.Tensor_bool" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.Tensor_bool.fill">
+<code class="sig-name descname">fill</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Tensor_bool" title="N2D2.Tensor_bool">N2D2.Tensor_bool</a></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Tensor_bool.fill" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Tensor_bool.mean">
+<code class="sig-name descname">mean</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Tensor_bool" title="N2D2.Tensor_bool">N2D2.Tensor_bool</a></span></em>, <em class="sig-param"><span class="n">valAbs</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#N2D2.Tensor_bool.mean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Tensor_bool.newCuda">
+<code class="sig-name descname">newCuda</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Tensor_bool" title="N2D2.Tensor_bool">N2D2.Tensor_bool</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#N2D2.BaseTensor" title="N2D2.BaseTensor">N2D2.BaseTensor</a><a class="headerlink" href="#N2D2.Tensor_bool.newCuda" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Tensor_bool.resize">
+<code class="sig-name descname">resize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Tensor_bool" title="N2D2.Tensor_bool">N2D2.Tensor_bool</a></span></em>, <em class="sig-param"><span class="n">dims</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.Tensor_bool.resize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.Tensor_bool.sum">
+<code class="sig-name descname">sum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Tensor_bool" title="N2D2.Tensor_bool">N2D2.Tensor_bool</a></span></em>, <em class="sig-param"><span class="n">valAbs</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#N2D2.Tensor_bool.sum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="cudatensor">
+<h2>CudaTensor<a class="headerlink" href="#cudatensor" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="N2D2.CudaBaseDeviceTensor">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">CudaBaseDeviceTensor</code><a class="headerlink" href="#N2D2.CudaBaseDeviceTensor" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.CudaBaseDeviceTensor.getCudaTensor">
+<code class="sig-name descname">getCudaTensor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.CudaBaseDeviceTensor" title="N2D2.CudaBaseDeviceTensor">N2D2.CudaBaseDeviceTensor</a></span></em><span class="sig-paren">)</span> &#x2192; N2D2::CudaBaseTensor<a class="headerlink" href="#N2D2.CudaBaseDeviceTensor.getCudaTensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.CudaBaseDeviceTensor.getType">
+<code class="sig-name descname">getType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.CudaBaseDeviceTensor" title="N2D2.CudaBaseDeviceTensor">N2D2.CudaBaseDeviceTensor</a></span></em><span class="sig-paren">)</span> &#x2192; std::type_info<a class="headerlink" href="#N2D2.CudaBaseDeviceTensor.getType" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="N2D2.CudaBaseTensor">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">CudaBaseTensor</code><a class="headerlink" href="#N2D2.CudaBaseTensor" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.CudaBaseTensor.deviceTensor">
+<code class="sig-name descname">deviceTensor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.CudaBaseTensor" title="N2D2.CudaBaseTensor">N2D2.CudaBaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#N2D2.CudaBaseDeviceTensor" title="N2D2.CudaBaseDeviceTensor">N2D2.CudaBaseDeviceTensor</a><a class="headerlink" href="#N2D2.CudaBaseTensor.deviceTensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.CudaBaseTensor.hostBased">
+<code class="sig-name descname">hostBased</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.CudaBaseTensor" title="N2D2.CudaBaseTensor">N2D2.CudaBaseTensor</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.CudaBaseTensor.hostBased" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="N2D2.CudaTensor_float">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">CudaTensor_float</code><a class="headerlink" href="#N2D2.CudaTensor_float" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt id="N2D2.CudaTensor_double">
+<em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">CudaTensor_double</code><a class="headerlink" href="#N2D2.CudaTensor_double" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="cells.html" class="btn btn-neutral float-right" title="Cells" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="activations.html" class="btn btn-neutral float-left" title="Activation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, CEA LIST
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

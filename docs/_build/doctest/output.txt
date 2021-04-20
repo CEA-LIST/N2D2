@@ -1,0 +1,161 @@
+Results of doctest builder run on 2021-03-17 16:57:31
+=====================================================
+
+Document: python_api/interoperability
+-------------------------------------
+**********************************************************************
+File "python_api/interoperability.rst", line 143, in default
+Failed example:
+    class MNIST_CNN(torch.nn.Module):
+            def __init__(self):
+                    super(MNIST_CNN, self).__init__()
+                    # Defining the cnn layer that we will extract and export to ONNX
+                    self.cnn_layers = torch.nn.Sequential( # This is the layer we will replace
+                    torch.nn.Conv2d(1, 4, 3, 1),
+                    torch.nn.ReLU(),
+                    torch.nn.Conv2d(4, 4, 3),
+                    torch.nn.ReLU(),
+                    )
+                    # linear layer
+                    self.linear_layers = torch.nn.Sequential(
+                    torch.nn.MaxPool2d(2),
+                    torch.nn.Flatten(),
+                    torch.nn.Linear(576, 128),
+                    torch.nn.ReLU(),
+                    torch.nn.Linear(128, 10),
+                    torch.nn.Softmax(),
+                    )
+
+                    # Defining the forward pass
+                    def forward(self, x):
+                            x = self.cnn_layers(x)
+                            x = self.linear_layers(x)
+                            return x
+    model = MNIST_CNN()
+    model_path = './tmp.onnx'
+    batch_size = 10
+    # Exporting to ONNX
+    dummy_in = torch.randn(batch_size, 1, 28, 28)
+    torch.onnx.export(model, dummy_in, model_path, verbose=True)
+
+    # Importing the ONNX to N2D2
+    net = N2D2.Network(1)
+    deepNet = N2D2.DeepNetGenerator.generate(net, model_path)
+    deepNet.initialize()
+    # Deleting temporary onnx file !
+    remove(model_path)
+
+    # Wrapping the N2D2 deepNet
+    n2d2_deepNet = n2d2.pytorch.DeepNetN2D2(deepNet)
+    # Replacing the pytorch layer
+    model.cnn_layers = n2d2_deepNet
+Exception raised:
+    Traceback (most recent call last):
+      File "/usr/lib/python3.7/doctest.py", line 1329, in __run
+        compileflags, 1), test.globs)
+      File "<doctest default[0]>", line 31, in <module>
+        torch.onnx.export(model, dummy_in, model_path, verbose=True)
+      File "/home/cm264821/virtualenv/n2d2_binding/lib/python3.7/site-packages/torch/onnx/__init__.py", line 230, in export
+        custom_opsets, enable_onnx_checker, use_external_data_format)
+      File "/home/cm264821/virtualenv/n2d2_binding/lib/python3.7/site-packages/torch/onnx/utils.py", line 91, in export
+        use_external_data_format=use_external_data_format)
+      File "/home/cm264821/virtualenv/n2d2_binding/lib/python3.7/site-packages/torch/onnx/utils.py", line 639, in _export
+        dynamic_axes=dynamic_axes)
+      File "/home/cm264821/virtualenv/n2d2_binding/lib/python3.7/site-packages/torch/onnx/utils.py", line 411, in _model_to_graph
+        use_new_jit_passes)
+      File "/home/cm264821/virtualenv/n2d2_binding/lib/python3.7/site-packages/torch/onnx/utils.py", line 379, in _create_jit_graph
+        graph, torch_out = _trace_and_get_graph_from_model(model, args)
+      File "/home/cm264821/virtualenv/n2d2_binding/lib/python3.7/site-packages/torch/onnx/utils.py", line 342, in _trace_and_get_graph_from_model
+        torch.jit._get_trace_graph(model, args, strict=False, _force_outplace=False, _return_inputs_states=True)
+      File "/home/cm264821/virtualenv/n2d2_binding/lib/python3.7/site-packages/torch/jit/_trace.py", line 1148, in _get_trace_graph
+        outs = ONNXTracedModule(f, strict, _force_outplace, return_inputs, _return_inputs_states)(*args, **kwargs)
+      File "/home/cm264821/virtualenv/n2d2_binding/lib/python3.7/site-packages/torch/nn/modules/module.py", line 727, in _call_impl
+        result = self.forward(*input, **kwargs)
+      File "/home/cm264821/virtualenv/n2d2_binding/lib/python3.7/site-packages/torch/jit/_trace.py", line 130, in forward
+        self._force_outplace,
+      File "/home/cm264821/virtualenv/n2d2_binding/lib/python3.7/site-packages/torch/jit/_trace.py", line 116, in wrapper
+        outs.append(self.inner(*trace_inputs))
+      File "/home/cm264821/virtualenv/n2d2_binding/lib/python3.7/site-packages/torch/nn/modules/module.py", line 725, in _call_impl
+        result = self._slow_forward(*input, **kwargs)
+      File "/home/cm264821/virtualenv/n2d2_binding/lib/python3.7/site-packages/torch/nn/modules/module.py", line 709, in _slow_forward
+        result = self.forward(*input, **kwargs)
+      File "/home/cm264821/virtualenv/n2d2_binding/lib/python3.7/site-packages/torch/nn/modules/module.py", line 175, in _forward_unimplemented
+        raise NotImplementedError
+    NotImplementedError
+**********************************************************************
+1 items had failures:
+   1 of   2 in default
+2 tests in 1 items.
+1 passed and 1 failed.
+***Test Failed*** 1 failures.
+
+Document: core/deepnet
+----------------------
+1 items passed all tests:
+   5 tests in default
+5 tests in 1 items.
+5 passed and 0 failed.
+Test passed.
+
+Document: core/activations
+--------------------------
+1 items passed all tests:
+   2 tests in default
+2 tests in 1 items.
+2 passed and 0 failed.
+Test passed.
+
+Document: core/containers
+-------------------------
+1 items passed all tests:
+   2 tests in default
+2 tests in 1 items.
+2 passed and 0 failed.
+Test passed.
+
+Document: core/transformation
+-----------------------------
+1 items passed all tests:
+   2 tests in default
+2 tests in 1 items.
+2 passed and 0 failed.
+Test passed.
+
+Document: core/databases
+------------------------
+1 items passed all tests:
+   2 tests in default
+2 tests in 1 items.
+2 passed and 0 failed.
+Test passed.
+
+Document: core/example
+----------------------
+1 items passed all tests:
+   8 tests in default
+8 tests in 1 items.
+8 passed and 0 failed.
+Test passed.
+
+Document: python_api/tensor
+---------------------------
+1 items passed all tests:
+   2 tests in default
+2 tests in 1 items.
+2 passed and 0 failed.
+Test passed.
+
+Document: core/cells
+--------------------
+1 items passed all tests:
+   1 tests in default
+1 tests in 1 items.
+1 passed and 0 failed.
+Test passed.
+
+Doctest summary
+===============
+   26 tests
+    1 failure in tests
+    0 failures in setup code
+    0 failures in cleanup code

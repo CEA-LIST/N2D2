@@ -23,7 +23,8 @@ class QuantizerCell:  public Parameterizable {
 public:
 
     QuantizerCell()
-      : mRange(this, "Range", 255)
+      : mRange(this, "Range", 255),
+      mQuantMode(this, "QuantMode", Default)
     {};
 
     virtual void addWeights(BaseTensor& weights, BaseTensor& diffWeights) = 0;
@@ -59,7 +60,15 @@ public:
     {
         return mRange;
     };
-
+    enum QuantMode{
+        Default,
+        Symmetric,
+        Asymmetric,
+        FullRange
+    };
+    QuantMode getQuantMode(){
+        return mQuantMode;
+    }
 
     virtual const char* getType() const = 0;
 
@@ -88,10 +97,20 @@ protected:
     std::shared_ptr<Solver> mSolver;
     
     Parameter<size_t> mRange;
+    Parameter<QuantMode> mQuantMode;
     
 private:
 
 };
+}
+
+namespace {
+template <>
+const char* const EnumStrings<N2D2::QuantizerCell::QuantMode>::data[]
+    = {"Default",
+       "Symmetric",
+       "Asymmetric",
+       "FullRange"};
 }
 
 

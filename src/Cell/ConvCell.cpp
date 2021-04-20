@@ -314,6 +314,9 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
 
     std::ofstream weights(weightsFile.c_str());
 
+    const std::string binaryWeightsFile = fileBase + "_weights.bin";
+    std::ofstream binaryWeight(binaryWeightsFile.c_str(),std::fstream::binary);
+
     if (!weights.good())
         throw std::runtime_error("Could not create synaptic file: "
                                  + weightsFile);
@@ -339,8 +342,12 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
                     const Float_T weight = (mWeightsExportFlip)
                         ? kernel(size - 1 - index)
                         : kernel(index);
-
-                    weights << weight << " ";
+                    if(mQuantizer){
+                        weights << std::setprecision(10) << weight << " ";
+                    }
+                    else{
+                        weights << weight << " ";
+                    }
                 }
             }
 
@@ -371,8 +378,12 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
                     const Float_T weight = (mWeightsExportFlip)
                         ? kernel(kernelSize - 1 - index)
                         : kernel(index);
-
-                    weights << weight << " ";
+                    if(mQuantizer){
+                        weights << std::setprecision(10) << weight << " ";
+                    }
+                    else{
+                        weights << weight << " ";
+                    }
                 }
             }
 
@@ -395,7 +406,12 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
 
             Tensor<Float_T> bias;
             getBias(outputRemap, bias);
-            biases << bias(0) << "\n";
+            if(mQuantizer){
+                biases << std::setprecision(10) << bias(0) << "\n";
+            }
+            else{
+                biases << bias(0) << "\n";
+            }
         }
     }
     if(mQuantizer) {
@@ -450,8 +466,7 @@ void N2D2::ConvCell::exportQuantFreeParameters(const std::string& fileName) cons
                     const Float_T weight = (mWeightsExportFlip)
                         ? kernel(size - 1 - index)
                         : kernel(index);
-
-                    weights << weight << " ";
+                    weights << std::setprecision(10) << weight << " ";
                 }
             }
 
@@ -483,7 +498,8 @@ void N2D2::ConvCell::exportQuantFreeParameters(const std::string& fileName) cons
                         ? kernel(kernelSize - 1 - index)
                         : kernel(index);
 
-                    weights << weight << " ";
+                    //weights << weight << " ";
+                    weights << std::setprecision(10) << weight << " ";
                 }
             }
 
@@ -712,6 +728,7 @@ void N2D2::ConvCell::logFreeParametersDistrib(
         Utils::createDirectories(dirName);
 
     std::ofstream data(fileName.c_str());
+    data.precision(10);
 
     if (!data.good())
         throw std::runtime_error("Could not save weights distrib file.");
