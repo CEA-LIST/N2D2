@@ -442,7 +442,7 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
             deepNet->logFreeParameters("kernels_fake_quantized");
 
         DeepNetQAT dnQAT(*deepNet);
-        dnQAT.fuseQATGraph(opt.actScalingMode, opt.wtRoundMode, opt.bRoundMode, opt.cRoundMode);
+        dnQAT.fuseQATGraph(*sp, opt.actScalingMode, opt.wtRoundMode, opt.bRoundMode, opt.cRoundMode);
         DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
 
         if (opt.logKernels)
@@ -697,7 +697,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                         database->getNbStimuli(dbSet);
 
     bool afterCalibration = false;
-    if(opt.calibration != 0 && opt.nbBits > 0) {
+    if(opt.calibration != 0 && opt.nbBits > 0 && !opt.qatSAT) {
         if (nbStimuli == 0) {
             std::stringstream msgStr;
             msgStr << "The " << dbSet
@@ -819,7 +819,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             deepNet->logFreeParameters("kernels_fake_quantized");
 
         DeepNetQAT dnQAT(*deepNet);
-        dnQAT.fuseQATGraph(opt.actScalingMode, opt.wtRoundMode, opt.bRoundMode, opt.cRoundMode);
+        dnQAT.fuseQATGraph(*sp, opt.actScalingMode, opt.wtRoundMode, opt.bRoundMode, opt.cRoundMode);
         DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
     }
 

@@ -39,7 +39,7 @@ public:
     virtual ~Activation() {};
 
     virtual const char* getType() const = 0;
-
+    
     virtual void propagate(const Cell& cell,
                            const BaseTensor& input,
                            BaseTensor& output,
@@ -85,6 +85,19 @@ public:
     {
         mQuantizer = quant;
     }
+
+    bool isQuantized() const {
+        return mQuantizedNbBits > 0;
+    }
+
+    void setQuantized(std::size_t nbBits) {
+        mQuantizedNbBits = nbBits;
+    }
+
+    std::size_t getQuantizedNbBits() const {
+        return mQuantizedNbBits;
+    }
+
 protected:
     virtual void saveInternal(std::ostream& /*state*/,
                               std::ostream& /*log*/) const {};
@@ -92,6 +105,8 @@ protected:
 
     Scaling mScaling;
     std::shared_ptr<QuantizerActivation> mQuantizer;
+    std::size_t mQuantizedNbBits = 0;
+
 };
 }
 
