@@ -1808,7 +1808,7 @@ class Activation(NeuralNetworkCell):
 
             """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
-                if key is 'activationFunction':
+                if key is 'activation_function':
                     self._N2D2_object.setActivation(value.N2D2())
                 else:
                     self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
