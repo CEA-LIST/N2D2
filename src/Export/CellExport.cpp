@@ -63,8 +63,8 @@ long long int N2D2::CellExport::getIntApprox(double value, IntApprox method) {
     return 0;
 }
 
-long long int N2D2::CellExport::getIntFreeParameter(double value) {
-    if(!Utils::isIntegral(value, 0.01)) {
+long long int N2D2::CellExport::getIntFreeParameter(double value, bool truncMode) {
+    if(!Utils::isIntegral(value, 0.01) && !truncMode) {
 #pragma omp critical
         throw std::runtime_error("Can't export a non-integral floating-point as an integral parameter. "
                                  "The network must be quantized beforehand with the -calib option "

@@ -208,35 +208,35 @@ void N2D2::StimuliProviderExport::writeStimulusValue(Float_T value, bool unsigne
         writeToStream(static_cast<float>(value), envStimuli, asBinary);
     }
     else if (precision <= 8 && unsignedData) {
-        writeToStream(Utils::saturate_cast<std::uint8_t>(CellExport::getIntFreeParameter(value)), 
+        writeToStream(Utils::saturate_cast<std::uint8_t>(CellExport::getIntFreeParameter(value, true)), 
                       envStimuli, asBinary);
     }
     else if (precision <= 8 && !unsignedData) {
-        writeToStream(Utils::saturate_cast<std::int8_t>(CellExport::getIntFreeParameter(value)), 
+        writeToStream(Utils::saturate_cast<std::int8_t>(CellExport::getIntFreeParameter(value, true)), 
                       envStimuli, asBinary);
     }
     else if (precision <= 16 && unsignedData) {
-        writeToStream(Utils::saturate_cast<std::uint16_t>(CellExport::getIntFreeParameter(value)), 
+        writeToStream(Utils::saturate_cast<std::uint16_t>(CellExport::getIntFreeParameter(value, true)), 
                       envStimuli, asBinary);
     }
     else if (precision <= 16 && !unsignedData) {
-        writeToStream(Utils::saturate_cast<std::int16_t>(CellExport::getIntFreeParameter(value)), 
+        writeToStream(Utils::saturate_cast<std::int16_t>(CellExport::getIntFreeParameter(value, true)), 
                       envStimuli, asBinary);
     }
     else if (precision <= 32 && unsignedData) {
-        writeToStream(Utils::saturate_cast<std::uint32_t>(CellExport::getIntFreeParameter(value)), 
+        writeToStream(Utils::saturate_cast<std::uint32_t>(CellExport::getIntFreeParameter(value, true)), 
                       envStimuli, asBinary);
     }
     else if (precision <= 32 && !unsignedData) {
-        writeToStream(Utils::saturate_cast<std::int32_t>(CellExport::getIntFreeParameter(value)), 
+        writeToStream(Utils::saturate_cast<std::int32_t>(CellExport::getIntFreeParameter(value, true)), 
                       envStimuli, asBinary);
     }
     else if (precision <= 64 && unsignedData) {
-        writeToStream(Utils::saturate_cast<std::uint64_t>(CellExport::getIntFreeParameter(value)), 
+        writeToStream(Utils::saturate_cast<std::uint64_t>(CellExport::getIntFreeParameter(value, true)), 
                       envStimuli, asBinary);
     }
     else if (precision <= 64 && !unsignedData) {
-        writeToStream(Utils::saturate_cast<std::int64_t>(CellExport::getIntFreeParameter(value)), 
+        writeToStream(Utils::saturate_cast<std::int64_t>(CellExport::getIntFreeParameter(value, true)), 
                       envStimuli, asBinary);
     }
     else {
