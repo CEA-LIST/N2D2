@@ -448,7 +448,7 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
         if (opt.logKernels)
             deepNet->logFreeParameters("kernels_quantized");
             
-        deepNet->exportNetworkFreeParameters("weights_quantized");
+        //deepNet->exportNetworkFreeParameters("weights_quantized");
 
     }
 
@@ -808,10 +808,13 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     }
 
     sp->logTransformations(exportDir + "/transformations.dot", Database::TestOnly);
+    if(!opt.qatSAT) {
 
-    StimuliProviderExport::generate(*deepNet, *sp, exportDir + "/stimuli", opt.genExport, Database::Test, 
-                                    DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision,
-                                    opt.exportNbStimuliMax);
+        StimuliProviderExport::generate(*deepNet, *sp, exportDir + "/stimuli", opt.genExport, Database::Test, 
+                                        DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision,
+                                        opt.exportNbStimuliMax);
+    }
+
     if(opt.qatSAT) {
         deepNet->initialize();
 
@@ -821,6 +824,10 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         DeepNetQAT dnQAT(*deepNet);
         dnQAT.fuseQATGraph(*sp, opt.actScalingMode, opt.wtRoundMode, opt.bRoundMode, opt.cRoundMode);
         DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
+
+        StimuliProviderExport::generate(*deepNet, *sp, exportDir + "/stimuli", opt.genExport, Database::Test, 
+                                        DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision,
+                                        opt.exportNbStimuliMax);
     }
 
     DeepNetExport::generate(*deepNet, exportDir, opt.genExport);
