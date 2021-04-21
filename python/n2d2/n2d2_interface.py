@@ -83,8 +83,11 @@ class N2D2_Interface:
 
     def _set_N2D2_parameter(self, key, value):
         parsed_parameter = self.parse_py_to_ini_(value)
-        self._N2D2_object.setParameter(key, parsed_parameter)
-
+        try:
+            self._N2D2_object.setParameter(key, parsed_parameter)
+        except RuntimeError:
+            raise RuntimeError("Parameter does not exist: " + 
+                                self.n2d2_to_python_convention(key))
         # Tests
         returned_parameter, returned_type = self._N2D2_object.getParameterAndType(key)
         returned_parameter = self._N2D2_type_map[returned_type](returned_parameter)

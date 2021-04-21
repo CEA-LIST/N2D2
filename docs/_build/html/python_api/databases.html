@@ -115,6 +115,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../ini/data_analysis.html">Stimuli data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ini/environment.html">Stimuli provider (Environment)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ini/layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/target.html">Targets (outputs &amp; losses)</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Python API:</span></p>
 <ul class="current">
@@ -272,6 +273,12 @@ The library allow you to add pre-process data with built in Transformation.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="n2d2.database.Database.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.Database.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="n2d2.database.Database.get_label_name">
 <code class="sig-name descname">get_label_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">label_idx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.Database.get_label_name" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
@@ -328,6 +335,12 @@ The library allow you to add pre-process data with built in Transformation.</p>
 <dt id="n2d2.database.DIR.N2D2">
 <code class="sig-name descname">N2D2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.DIR.N2D2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the N2D2 object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.database.DIR.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.DIR.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -398,12 +411,27 @@ The library allow you to add pre-process data with built in Transformation.</p>
 <dl class="py class">
 <dt id="n2d2.database.MNIST">
 <em class="property">class </em><code class="sig-prename descclassname">n2d2.database.</code><code class="sig-name descname">MNIST</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_path</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.MNIST" title="Permalink to this definition">¶</a></dt>
-<dd><p>MNIST database <a class="bibtex reference internal" href="../z_ref.html#lecun1998" id="id1">[LBBH98]</a>.
+<dd><p>MNIST database <span class="bibtex" id="id1">[LeCun1998]</span>.
 Label are hard coded, you don’t need to specify a path to the label file.</p>
 <dl class="py method">
 <dt id="n2d2.database.MNIST.N2D2">
 <code class="sig-name descname">N2D2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.MNIST.N2D2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the N2D2 object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.database.MNIST.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_path</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.MNIST.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_path</strong> (<em>str</em>) – Path to the database</p></li>
+<li><p><strong>label_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the label, default=””</p></li>
+<li><p><strong>extract_ROIs</strong> (<em>boolean</em><em>, </em><em>optional</em>) – Set if we extract region of interest, default=False</p></li>
+<li><p><strong>validation</strong> (<em>float</em><em>, </em><em>optional</em>) – Fraction of the learning set used for validation, default=0.0</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -459,11 +487,27 @@ Label are hard coded, you don’t need to specify a path to the label file.</p>
 <dl class="py class">
 <dt id="n2d2.database.ILSVRC2012">
 <em class="property">class </em><code class="sig-prename descclassname">n2d2.database.</code><code class="sig-name descname">ILSVRC2012</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">learn</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.ILSVRC2012" title="Permalink to this definition">¶</a></dt>
-<dd><p>ILSVRC2012 database <a class="bibtex reference internal" href="../z_ref.html#ilsvrc15" id="id2">[RDS+15]</a>.</p>
+<dd><p>ILSVRC2012 database <span class="bibtex" id="id2">[ILSVRC15]</span>.</p>
 <dl class="py method">
 <dt id="n2d2.database.ILSVRC2012.N2D2">
 <code class="sig-name descname">N2D2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.ILSVRC2012.N2D2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the N2D2 object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.database.ILSVRC2012.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">learn</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.ILSVRC2012.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>learn</strong> (<em>float</em>) – Fraction of images used for the learning</p></li>
+<li><p><strong>data_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the database, default=”<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/ILSVRC2012”</p></li>
+<li><p><strong>label_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the label, default=”<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/ILSVRC2012/synsets.txt”</p></li>
+<li><p><strong>validation</strong> (<em>float</em><em>, </em><em>optional</em>) – Fraction of the learning set used for validation, default=0.0</p></li>
+<li><p><strong>use_validation_for_test</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, use the validation partition for test, default=False</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -519,11 +563,25 @@ Label are hard coded, you don’t need to specify a path to the label file.</p>
 <dl class="py class">
 <dt id="n2d2.database.CIFAR100">
 <em class="property">class </em><code class="sig-prename descclassname">n2d2.database.</code><code class="sig-name descname">CIFAR100</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.CIFAR100" title="Permalink to this definition">¶</a></dt>
-<dd><p>CIFAR100 database <a class="bibtex reference internal" href="../z_ref.html#krizhevsky2009" id="id3">[Kri09]</a>.</p>
+<dd><p>CIFAR100 database <span class="bibtex" id="id3">[Krizhevsky2009]</span>.</p>
 <dl class="py method">
 <dt id="n2d2.database.CIFAR100.N2D2">
 <code class="sig-name descname">N2D2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.CIFAR100.N2D2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the N2D2 object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.database.CIFAR100.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.CIFAR100.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the database, default=”<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/cifar-100-binary”</p></li>
+<li><p><strong>validation</strong> (<em>float</em><em>, </em><em>optional</em>) – Fraction of the learning set used for validation, default=0.0</p></li>
+<li><p><strong>use_coarse</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, use the coarse labeling (10 labels instead of 100), default=False</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -579,11 +637,27 @@ Label are hard coded, you don’t need to specify a path to the label file.</p>
 <dl class="py class">
 <dt id="n2d2.database.Cityscapes">
 <em class="property">class </em><code class="sig-prename descclassname">n2d2.database.</code><code class="sig-name descname">Cityscapes</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.Cityscapes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Cityscapes database <a class="bibtex reference internal" href="../z_ref.html#cordts2016cityscapes" id="id4">[COR+16]</a>.</p>
+<dd><p>Cityscapes database <span class="bibtex" id="id4">[Cordts2016Cityscapes]</span>.</p>
 <dl class="py method">
 <dt id="n2d2.database.Cityscapes.N2D2">
 <code class="sig-name descname">N2D2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.Cityscapes.N2D2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the N2D2 object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.database.Cityscapes.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.Cityscapes.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the database, default=”<code class="docutils literal notranslate"><span class="pre">$N2D2_DATA</span></code>/Cityscapes”</p></li>
+<li><p><strong>label_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the database annotations (deduced from <code class="docutils literal notranslate"><span class="pre">data_path</span></code> if left empty), default=””</p></li>
+<li><p><strong>inc_train_extra</strong> (<em>boolean</em><em>, </em><em>optional</em>) – If true, includes the left 8-bit images - trainextra set (19,998 images), default=False</p></li>
+<li><p><strong>use_coarse</strong> (<em>boolean</em><em>, </em><em>optional</em>) – If true, only use coarse annotations (which are the only annotations available for the trainextra set), default=False</p></li>
+<li><p><strong>single_instance_labels</strong> – If true, convert group labels to single instance labels (for example, cargroup becomes car), default=True</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -646,6 +720,12 @@ Label are hard coded, you don’t need to specify a path to the label file.</p>
 <dd><p>Return the N2D2 object.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.transform.Transformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.Transformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
 </dd></dl>
 
 <div class="section" id="composite">
@@ -658,6 +738,16 @@ Label are hard coded, you don’t need to specify a path to the label file.</p>
 <dt id="n2d2.transform.Composite.N2D2">
 <code class="sig-name descname">N2D2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.Composite.N2D2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the N2D2 object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.transform.Composite.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">transformations</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.Composite.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>transformations</strong> (<em>list</em>) – List of the transformations to use.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -681,6 +771,28 @@ Label are hard coded, you don’t need to specify a path to the label file.</p>
 <dd><p>Return the N2D2 object.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.transform.PadCrop.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">width</span></em>, <em class="sig-param"><span class="n">height</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.PadCrop.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Possible values for border_type parameter : 
+<code class="docutils literal notranslate"><span class="pre">ConstantBorder</span></code>: pad with <code class="docutils literal notranslate"><span class="pre">BorderValue</span></code>, 
+<code class="docutils literal notranslate"><span class="pre">ReplicateBorder</span></code>: last element is replicated throughout, like aaaaaa|abcdefgh|hhhhhhh, 
+<code class="docutils literal notranslate"><span class="pre">ReflectBorder</span></code>: border will be mirror reflection of the border elements, like fedcba|abcdefgh|hgfedcb,
+<code class="docutils literal notranslate"><span class="pre">WrapBorder</span></code>: it will look like cdefgh|abcdefgh|abcdefg, 
+<code class="docutils literal notranslate"><span class="pre">MinusOneReflectBorder</span></code>: same as <code class="docutils literal notranslate"><span class="pre">ReflectBorder</span></code> but with a slight change, like gfedcb|abcdefgh|gfedcba, 
+<code class="docutils literal notranslate"><span class="pre">MeanBorder</span></code>: pad with the mean color of the image</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> (<em>int</em>) – Width of the padded/cropped image</p></li>
+<li><p><strong>height</strong> (<em>int</em>) – height of the padded/cropped image</p></li>
+<li><p><strong>border_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Border type used when padding, default=”MinusOneReflectBorder”</p></li>
+<li><p><strong>border_value</strong> (<em>list</em><em>, </em><em>optional</em>) – Background color used when padding with <code class="docutils literal notranslate"><span class="pre">BorderType</span></code> is <code class="docutils literal notranslate"><span class="pre">ConstantBorder</span></code>,default=[0.0, 0.0, 0.0]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -698,6 +810,22 @@ This transformation is generally used on-the-fly
 <dd><p>Return the N2D2 object.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.transform.Distortion.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.Distortion.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>elastic_gaussian_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Size of the gaussian for elastic distortion (in pixels), default=15</p></li>
+<li><p><strong>elastic_sigma</strong> (<em>float</em><em>, </em><em>optional</em>) – Sigma of the gaussian for elastic distortion, default=6.0</p></li>
+<li><p><strong>elastic_scaling</strong> (<em>float</em><em>, </em><em>optional</em>) – Scaling of the gaussian for elastic distortion, default=0.0</p></li>
+<li><p><strong>scaling</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum random scaling amplitude (+/-, in percentage), default=0.0</p></li>
+<li><p><strong>rotation</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum random rotation amplitude (+/-, in °), default=0.0</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -713,6 +841,21 @@ This transformation is generally used on-the-fly
 <dd><p>Return the N2D2 object.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.transform.Rescale.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">width</span></em>, <em class="sig-param"><span class="n">height</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.Rescale.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> (<em>int</em>) – Width of the rescaled image</p></li>
+<li><p><strong>height</strong> (<em>int</em>) – Height of the rescaled image</p></li>
+<li><p><strong>keep_aspect_ratio</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, keeps the aspect ratio of the image, default=False</p></li>
+<li><p><strong>resize_to_fit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, resize along the longest dimension when <code class="docutils literal notranslate"><span class="pre">KeepAspectRatio</span></code> is true, default=True</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -725,6 +868,40 @@ This transformation is generally used on-the-fly
 <dt id="n2d2.transform.ColorSpace.N2D2">
 <code class="sig-name descname">N2D2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.ColorSpace.N2D2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the N2D2 object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.transform.ColorSpace.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">color_space</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.ColorSpace.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Possible values for color_space parameter :
+<code class="docutils literal notranslate"><span class="pre">BGR</span></code>: convert any gray, BGR or BGRA image to BGR,
+<code class="docutils literal notranslate"><span class="pre">RGB</span></code>: convert any gray, BGR or BGRA image to RGB,
+<code class="docutils literal notranslate"><span class="pre">HSV</span></code>: convert BGR image to HSV,
+<code class="docutils literal notranslate"><span class="pre">HLS</span></code>: convert BGR image to HLS,
+<code class="docutils literal notranslate"><span class="pre">YCrCb</span></code>: convert BGR image to YCrCb,
+<code class="docutils literal notranslate"><span class="pre">CIELab</span></code>: convert BGR image to CIELab,
+<code class="docutils literal notranslate"><span class="pre">CIELuv</span></code>: convert BGR image to CIELuv,
+<code class="docutils literal notranslate"><span class="pre">RGB_to_BGR</span></code>: convert RGB image to BGR,
+<code class="docutils literal notranslate"><span class="pre">RGB_to_HSV</span></code>: convert RGB image to HSV,
+<code class="docutils literal notranslate"><span class="pre">RGB_to_HLS</span></code>: convert RGB image to HLS,
+<code class="docutils literal notranslate"><span class="pre">RGB_to_YCrCb</span></code>: convert RGB image to YCrCb,
+<code class="docutils literal notranslate"><span class="pre">RGB_to_CIELab</span></code>: convert RGB image to CIELab,
+<code class="docutils literal notranslate"><span class="pre">RGB_to_CIELuv</span></code>: convert RGB image to CIELuv,
+<code class="docutils literal notranslate"><span class="pre">HSV_to_BGR</span></code>: convert HSV image to BGR,
+<code class="docutils literal notranslate"><span class="pre">HSV_to_RGB</span></code>: convert HSV image to RGB,
+<code class="docutils literal notranslate"><span class="pre">HLS_to_BGR</span></code>: convert HLS image to BGR,
+<code class="docutils literal notranslate"><span class="pre">HLS_to_RGB</span></code>: convert HLS image to RGB,
+<code class="docutils literal notranslate"><span class="pre">YCrCb_to_BGR</span></code>: convert YCrCb image to BGR,
+<code class="docutils literal notranslate"><span class="pre">YCrCb_to_RGB</span></code>: convert YCrCb image to RGB,
+<code class="docutils literal notranslate"><span class="pre">CIELab_to_BGR</span></code>: convert CIELab image to BGR,
+<code class="docutils literal notranslate"><span class="pre">CIELab_to_RGB</span></code>: convert CIELab image to RGB,
+<code class="docutils literal notranslate"><span class="pre">CIELuv_to_BGR</span></code>: convert CIELuv image to BGR,
+<code class="docutils literal notranslate"><span class="pre">CIELuv_to_RGB</span></code>: convert CIELuv image to RGB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>color_space</strong> (<em>str</em>) – Convert image color.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -742,6 +919,21 @@ This transformation is generally used on-the-fly
 <dd><p>Return the N2D2 object.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.transform.RangeAffine.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">first_operator</span></em>, <em class="sig-param"><span class="n">first_value</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.RangeAffine.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>first_operator</strong> (<em>str</em>) – First operator, can be <code class="docutils literal notranslate"><span class="pre">Plus</span></code>, <code class="docutils literal notranslate"><span class="pre">Minus</span></code>, <code class="docutils literal notranslate"><span class="pre">Multiplies</span></code>, <code class="docutils literal notranslate"><span class="pre">Divides</span></code></p></li>
+<li><p><strong>first_value</strong> (<em>float</em>) – First value</p></li>
+<li><p><strong>second_operator</strong> (<em>str</em><em>, </em><em>optional</em>) – Second operator, can be <code class="docutils literal notranslate"><span class="pre">Plus</span></code>, <code class="docutils literal notranslate"><span class="pre">Minus</span></code>, <code class="docutils literal notranslate"><span class="pre">Multiplies</span></code>, <code class="docutils literal notranslate"><span class="pre">Divides</span></code>, default=”Plus”</p></li>
+<li><p><strong>second_value</strong> (<em>float</em><em>, </em><em>optional</em>) – Second value, default=0.0</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -757,6 +949,36 @@ This transformation is generally used on-the-fly
 <dd><p>Return the N2D2 object.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.transform.SliceExtraction.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">width</span></em>, <em class="sig-param"><span class="n">height</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.SliceExtraction.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Possible values for border_type parameter
+<code class="docutils literal notranslate"><span class="pre">ConstantBorder</span></code>: pad with <code class="docutils literal notranslate"><span class="pre">BorderValue</span></code>, 
+<code class="docutils literal notranslate"><span class="pre">ReplicateBorder</span></code>: last element is replicated throughout, like aaaaaa|abcdefgh|hhhhhhh, 
+<code class="docutils literal notranslate"><span class="pre">ReflectBorder</span></code>: border will be mirror reflection of the border elements, like fedcba|abcdefgh|hgfedcb,
+<code class="docutils literal notranslate"><span class="pre">WrapBorder</span></code>: it will look like cdefgh|abcdefgh|abcdefg,
+<code class="docutils literal notranslate"><span class="pre">MinusOneReflectBorder</span></code>: same as <code class="docutils literal notranslate"><span class="pre">ReflectBorder</span></code> but with a slight change, like gfedcb|abcdefgh|gfedcba, 
+<code class="docutils literal notranslate"><span class="pre">MeanBorder</span></code>: pad with the mean color of the image</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> (<em>int</em>) – Width of the slice to extract</p></li>
+<li><p><strong>height</strong> (<em>int</em>) – Height of the slice to extract</p></li>
+<li><p><strong>offset_x</strong> (<em>int</em><em>, </em><em>optional</em>) – X offset of the slice to extract, default=0</p></li>
+<li><p><strong>offset_y</strong> (<em>int</em><em>, </em><em>optional</em>) – Y offset of the slice to extract, default=0</p></li>
+<li><p><strong>random_offset_x</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, the X offset is chosen randomly, default=False</p></li>
+<li><p><strong>random_offset_y</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, the Y offset is chosen randomly, default=False</p></li>
+<li><p><strong>random_rotation</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, extract randomly rotated slices, default=False</p></li>
+<li><p><strong>random_rotation_range</strong> (<em>list</em><em>, </em><em>optional</em>) – Range of the random rotations, in degrees, counterclockwise (if <code class="docutils literal notranslate"><span class="pre">RandomRotation</span></code> is enabled), default=[0.0, 360.0]</p></li>
+<li><p><strong>random_scaling</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, extract randomly scaled slices, default=False</p></li>
+<li><p><strong>random_scaling_range</strong> (<em>bool</em><em>, </em><em>optional</em>) – Range of the random scaling (if <code class="docutils literal notranslate"><span class="pre">RandomRotation</span></code> is enabled), default=[0.8, 1.2]</p></li>
+<li><p><strong>allow_padding</strong> – If true, zero-padding is allowed if the image is smaller than the slice to extract, default=False</p></li>
+<li><p><strong>border_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Border type used when padding, default=”MinusOneReflectBorder”</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -769,6 +991,21 @@ This transformation is generally used on-the-fly
 <dt id="n2d2.transform.RandomResizeCrop.N2D2">
 <code class="sig-name descname">N2D2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.RandomResizeCrop.N2D2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the N2D2 object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.transform.RandomResizeCrop.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">width</span></em>, <em class="sig-param"><span class="n">height</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.RandomResizeCrop.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> (<em>int</em>) – Width of the image to Crop.</p></li>
+<li><p><strong>height</strong> (<em>int</em>) – Height of the image to Crop.</p></li>
+<li><p><strong>offset_x</strong> (<em>int</em><em>, </em><em>optional</em>) – X offset, default=0</p></li>
+<li><p><strong>offset_y</strong> (<em>int</em><em>, </em><em>optional</em>) – Y offset, default=0</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -786,6 +1023,27 @@ This transformation is generally used on-the-fly
 <dd><p>Return the N2D2 object.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.transform.ChannelExtraction.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">channel</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.ChannelExtraction.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">channel</span></code> parameter can take the following values :
+<code class="docutils literal notranslate"><span class="pre">Blue</span></code>: blue channel in the BGR colorspace, or first channel of any colorspace, 
+<code class="docutils literal notranslate"><span class="pre">Green</span></code>: green channel in the BGR colorspace, or second channel of any colorspace,
+<code class="docutils literal notranslate"><span class="pre">Red</span></code>: red channel in the BGR colorspace, or third channel of any colorspace,
+<code class="docutils literal notranslate"><span class="pre">Hue</span></code>: hue channel in the HSV colorspace,
+<code class="docutils literal notranslate"><span class="pre">Saturation</span></code>: saturation channel in the HSV colorspace,
+<code class="docutils literal notranslate"><span class="pre">Value</span></code>: value channel in the HSV colorspace,
+<code class="docutils literal notranslate"><span class="pre">Gray</span></code>: gray conversion,
+<code class="docutils literal notranslate"><span class="pre">Y</span></code>: Y channel in the YCbCr colorspace,
+<code class="docutils literal notranslate"><span class="pre">Cb</span></code>: Cb channel in the YCbCr colorspace,
+<code class="docutils literal notranslate"><span class="pre">Cr</span></code>: Cr channel in the YCbCr colorspace</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>channel</strong> (<em>str</em>) – channel to extract</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -801,6 +1059,22 @@ This transformation is generally used on-the-fly
 <dt id="n2d2.provider.DataProvider.N2D2">
 <code class="sig-name descname">N2D2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.provider.DataProvider.N2D2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the N2D2 object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.provider.DataProvider.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">database</span></em>, <em class="sig-param"><span class="n">size</span></em>, <em class="sig-param"><span class="n">random_read</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.provider.DataProvider.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>database</strong> (<a class="reference internal" href="#n2d2.database.Database" title="n2d2.database.Database"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.database.Database</span></code></a>) – Database used to read data from</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Batch size, default=1</p></li>
+<li><p><strong>composite_stimuli</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, use pixel-wise stimuli labels, default=False</p></li>
+<li><p><strong>size</strong> (<em>list</em>) – Size of the data</p></li>
+<li><p><strong>random_read</strong> (<em>boolean</em><em>, </em><em>optional</em>) – if False we use get_batch when iterating other the provider, else we use get get_random_batch, default = False</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">

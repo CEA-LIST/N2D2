@@ -115,6 +115,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../ini/data_analysis.html">Stimuli data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ini/environment.html">Stimuli provider (Environment)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ini/layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/target.html">Targets (outputs &amp; losses)</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Python API:</span></p>
 <ul>
@@ -233,8 +234,33 @@
 
 <dl class="py method">
 <dt id="N2D2.StimuliProvider.getData">
-<code class="sig-name descname">getData</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="containers.html#N2D2.CudaTensor_float" title="N2D2.CudaTensor_float">N2D2.CudaTensor_float</a><a class="headerlink" href="#N2D2.StimuliProvider.getData" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getData</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em>, <em class="sig-param"><span class="n">dev</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="containers.html#N2D2.CudaTensor_float" title="N2D2.CudaTensor_float">N2D2.CudaTensor_float</a><a class="headerlink" href="#N2D2.StimuliProvider.getData" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.StimuliProvider.getDataChannel">
+<code class="sig-name descname">getDataChannel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em>, <em class="sig-param"><span class="n">channel</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">batchPos</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">dev</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="containers.html#N2D2.CudaTensor_float" title="N2D2.CudaTensor_float">N2D2.CudaTensor_float</a><a class="headerlink" href="#N2D2.StimuliProvider.getDataChannel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.StimuliProvider.getLabelsData">
+<code class="sig-name descname">getLabelsData</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em>, <em class="sig-param"><span class="n">dev</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em><span class="sig-paren">)</span> &#x2192; N2D2.Tensor_int<a class="headerlink" href="#N2D2.StimuliProvider.getLabelsData" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.StimuliProvider.getLabelsDataChannel">
+<code class="sig-name descname">getLabelsDataChannel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em>, <em class="sig-param"><span class="n">channel</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">batchPos</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; N2D2.Tensor_int<a class="headerlink" href="#N2D2.StimuliProvider.getLabelsDataChannel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.StimuliProvider.getLabelsROIs">
+<code class="sig-name descname">getLabelsROIs</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.getLabelsROIs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>getLabelsROIs(self: N2D2.StimuliProvider) -&gt; List[List[N2D2::ROI]]</p></li>
+<li><p>getLabelsROIs(self: N2D2.StimuliProvider, batchPos: int = 0) -&gt; List[N2D2::ROI]</p></li>
+</ol>
+</dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.StimuliProvider.getNbChannels">
@@ -248,8 +274,12 @@
 
 <dl class="py method">
 <dt id="N2D2.StimuliProvider.readBatch">
-<code class="sig-name descname">readBatch</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2::Database::StimuliSet</em>, <em class="sig-param">startIndex: int = 0</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.readBatch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read a whole batch from the StimuliSet, apply all the transformations and set the targets</p>
+<code class="sig-name descname">readBatch</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.StimuliProvider.readBatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>readBatch(self: N2D2.StimuliProvider, set: N2D2::Database::StimuliSet, startIndex: int) -&gt; None</p></li>
+<li><p>readBatch(self: N2D2.StimuliProvider, set: N2D2::Database::StimuliSet) -&gt; None</p></li>
+</ol>
 </dd></dl>
 
 <dl class="py method">
@@ -259,16 +289,15 @@
 </dd></dl>
 
 <dl class="py method">
-<dt id="N2D2.StimuliProvider.readRandomStimulus">
-<code class="sig-name descname">readRandomStimulus</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">set: N2D2::Database::StimuliSet</em>, <em class="sig-param">batchPos: int = 0</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.StimuliProvider.readRandomStimulus" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read a single random stimulus from the StimuliSet, apply all the transformations and setthe targets. Return StimulusID of the randomly chosen stimulus</p>
-</dd></dl>
-
-<dl class="py method">
 <dt id="N2D2.StimuliProvider.setStreamedTensor">
 <code class="sig-name descname">setStreamedTensor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em>, <em class="sig-param"><span class="n">streamedTensor</span><span class="p">:</span> <span class="n"><a class="reference internal" href="containers.html#N2D2.CudaTensor_float" title="N2D2.CudaTensor_float">N2D2.CudaTensor_float</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.setStreamedTensor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set Tensor that is streamed directly to connected Deepnet</p>
 </dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.StimuliProvider.streamBatch">
+<code class="sig-name descname">streamBatch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em>, <em class="sig-param"><span class="n">startIndex</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">dev</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.streamBatch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 

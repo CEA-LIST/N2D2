@@ -115,6 +115,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../ini/data_analysis.html">Stimuli data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ini/environment.html">Stimuli provider (Environment)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ini/layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/target.html">Targets (outputs &amp; losses)</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Python API:</span></p>
 <ul>
@@ -252,14 +253,14 @@ The computation of the loss and other tools to compute score such as the confusi
 <code class="sig-name descname">getEstimatedLabels</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.Target.getEstimatedLabels" title="Permalink to this definition">¶</a></dt>
 <dd><p>Overloaded function.</p>
 <ol class="arabic simple">
-<li><p>getEstimatedLabels(self: N2D2.Target) -&gt; N2D2.CudaTensor_int</p></li>
+<li><p>getEstimatedLabels(self: N2D2.Target, dev: int = -1) -&gt; N2D2.CudaTensor_int</p></li>
 <li><p>getEstimatedLabels(self: N2D2.Target, roi: N2D2::ROI, batchPos: int = 0, values: float = 0) -&gt; N2D2.CudaTensor_float</p></li>
 </ol>
 </dd></dl>
 
 <dl class="py method">
 <dt id="N2D2.Target.getEstimatedLabelsValue">
-<code class="sig-name descname">getEstimatedLabelsValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="containers.html#N2D2.CudaTensor_float" title="N2D2.CudaTensor_float">N2D2.CudaTensor_float</a><a class="headerlink" href="#N2D2.Target.getEstimatedLabelsValue" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getEstimatedLabelsValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.Target" title="N2D2.Target">N2D2.Target</a></span></em>, <em class="sig-param"><span class="n">dev</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="containers.html#N2D2.CudaTensor_float" title="N2D2.CudaTensor_float">N2D2.CudaTensor_float</a><a class="headerlink" href="#N2D2.Target.getEstimatedLabelsValue" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">

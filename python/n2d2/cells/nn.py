@@ -21,6 +21,7 @@
 import N2D2
 import n2d2.activation
 import n2d2.solver
+import n2d2.filler
 from n2d2.n2d2_interface import N2D2_Interface
 from n2d2.cells.cell import Cell
 
@@ -250,13 +251,17 @@ class Fc(NeuralNetworkCell):
 
     def __init__(self, nb_inputs, nb_outputs, from_arguments=True, **config_parameters):
         """
+        :param nb_inputs: Number of inputs of the cells.
+        :type nb_inputs: int
         :param nb_outputs: Number of outputs of the cells.
         :type nb_outputs: int
+        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=True
+        :type  from_arguments: bool, optional
         :param name: Name fo the cells.
-        :type name: str
+        :type name: str, optional
         :param activation_function: Activation function, default= :py:class:`n2d2.activation.Tanh`
         :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
-        :param weights_solver: Solver for weights
+        :param weights_solver: Solver for weights, default=:py:class:`n2d2.solver.SGD`
         :type weights_solver: :py:class:`n2d2.solver.Solver`, optional
         :param bias_solver: Solver for biases, default= :py:class:`n2d2.filler.Normal`
         :type bias_solver: :py:class:`n2d2.solver.Solver`, optional
@@ -268,8 +273,6 @@ class Fc(NeuralNetworkCell):
         :type mapping: :py:class:`n2d2.tensor.Tensor`
         :param no_bias: If True, don’t use bias, default=False
         :type no_bias: bool, optional
-        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
-        :type  from_arguments: bool, optional
         """
 
         if not from_arguments and (nb_inputs is not None or nb_outputs is not None or len(config_parameters) > 0):
@@ -493,12 +496,16 @@ class Conv(NeuralNetworkCell):
                  from_arguments=True,
                  **config_parameters):
         """
+        :param nb_inputs: Number of inputs of the cells.
+        :type nb_inputs: int
         :param nb_outputs: Number of output channels
         :type nb_outputs: int
-        :param name: Name for the cells.
-        :type name: str
         :param kernel_dims: Kernel dimension.
         :type kernel_dims: list
+        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
+        :type  from_arguments: bool, optional
+        :param name: Name for the cells.
+        :type name: str
         :param sub_sample_dims: Dimension of the subsampling factor of the output feature maps
         :type sub_sample_dims: list, optional
         :param stride_dims: Dimension of the stride of the kernel.
@@ -525,8 +532,7 @@ class Conv(NeuralNetworkCell):
         :type weights_export_flip: bool, optional
         :param back_propagate: If true, enable backpropagation, default=True
         :type back_propagate: bool, optional
-        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
-        :type  from_arguments: bool, optional
+        
         """
 
         if not from_arguments and (nb_inputs is not None or nb_outputs is not None or kernel_dims is not None or len(config_parameters) > 0):
@@ -763,6 +769,8 @@ class Softmax(NeuralNetworkCell):
 
     def __init__(self, from_arguments=True, **config_parameters):
         r"""
+        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
+        :type  from_arguments: bool, optional
         :param nb_outputs: Number of output channels
         :type nb_outputs: int
         :param name: Name for the cells.
@@ -771,8 +779,7 @@ class Softmax(NeuralNetworkCell):
         :type with_loss: bool, optional
         :param group_size: Softmax is applied on groups of outputs. The group size must be a divisor of ``nb_outputs`` parameter, default=0
         :type group_size: int, optional
-        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
-        :type  from_arguments: bool, optional
+        
         """
         if not from_arguments and len(config_parameters) > 0:
             raise RuntimeError(
@@ -860,6 +867,10 @@ class Pool(NeuralNetworkCell):
         """
         :param pool_dims: Pooling area dimensions
         :type pool_dims: list
+        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
+        :type  from_arguments: bool, optional
+        :param name: Name for the cells.
+        :type name: str
         :param pooling: Type of pooling (``Max`` or ``Average``), default="Max" 
         :type pooling: str, optional
         :param stride_dims: Dimension of the stride of the kernel.
@@ -868,8 +879,6 @@ class Pool(NeuralNetworkCell):
         :type padding_dims: list, optional
         :param activation_function: Activation function, default= :py:class:`n2d2.activation.Linear`
         :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
-        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
-        :type  from_arguments: bool, optional
         """
 
         if not from_arguments and (pool_dims is not None or len(config_parameters) > 0):
@@ -1154,12 +1163,16 @@ class Deconv(NeuralNetworkCell):
                  from_arguments=True,
                  **config_parameters):
         """
+        :param nb_inputs: Number of inputs of the cells.
+        :type nb_inputs: int
         :param nb_outputs: Number of output channels
         :type nb_outputs: int
-        :param name: Name for the cells.
-        :type name: str
         :param kernel_dims: Kernel dimension.
         :type kernel_dims: list
+        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
+        :type  from_arguments: bool, optional
+        :param name: Name for the cells.
+        :type name: str
         :param sub_sample_dims: Dimension of the subsampling factor of the output feature maps
         :type sub_sample_dims: list, optional
         :param stride_dims: Dimension of the stride of the kernel.
@@ -1184,8 +1197,7 @@ class Deconv(NeuralNetworkCell):
         :type back_propagate: bool, optional
         :param weights_export_flip: If true, import/export flipped kernels, default=False
         :type weights_export_flip: bool, optional
-        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
-        :type  from_arguments: bool, optional
+        
         """
 
         if not from_arguments and (nb_inputs is not None or nb_outputs is not None or kernel_dims is not None or len(config_parameters) > 0):
@@ -1346,10 +1358,8 @@ class ElemWise(NeuralNetworkCell):
 
     def __init__(self, from_arguments=True, **config_parameters):
         """
-        :param nb_outputs: Number of output channels
-        :type nb_outputs: int
-        :param name: Name for the cells.
-        :type name: str
+        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
+        :type  from_arguments: bool, optional
         :param operation: Type of operation (``Sum``, ``AbsSum``, ``EuclideanSum``, ``Prod``, or ``Max``), default="Sum"
         :type operation: str, optional
         :param weights: Weights for the ``Sum``, ``AbsSum``, and ``EuclideanSum`` operation, in the same order as the inputs, default=1.0
@@ -1358,8 +1368,6 @@ class ElemWise(NeuralNetworkCell):
         :type shifts: float, optional
         :param activation_function: Activation function, default= :py:class:`n2d2.activation.Linear`
         :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
-        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
-        :type  from_arguments: bool, optional
         """
         if not from_arguments and (len(config_parameters) > 0):
             raise RuntimeError(
@@ -1458,14 +1466,12 @@ class Dropout(NeuralNetworkCell):
 
     def __init__(self, from_arguments=True, **config_parameters):
         """
-        :param nb_outputs: Number of output channels
-        :type nb_outputs: int
+        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
+        :type  from_arguments: bool, optional
         :param name: Name for the cells.
         :type name: str
         :param dropout: The probability with which the value from input would be dropped, default=0.5
         :type dropout: float, optional
-        :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
-        :type  from_arguments: bool, optional
         """
 
         if not from_arguments and  len(config_parameters) > 0:
