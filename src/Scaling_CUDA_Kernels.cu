@@ -39,6 +39,26 @@ __device__ T saturate(T value, std::size_t quantizedNbBits, bool isOutputUnsigne
 }
 
 template<typename T>
+__device__ T Clip(T value, Float_T clip) {
+    T res = T(0.0);
+
+    if(clip > 0.0) {
+        res = (value < T(0.0)) ? T(0.0) : (value > T(clip)) ? T(clip) : value;
+    }
+    if(clip <= 0.0) {
+        res = (value > T(0.0)) ? T(0.0) : (value < T(clip)) ? T(clip) : value;
+    }
+
+    return res;
+}
+
+template<typename T>
+__device__ T Scale(T value, Float_T scale) {
+    T res = value*T(scale);
+    return res;
+}
+
+template<typename T>
 __global__ void cudaFloatingPointScaling_kernel(const T* input, T* output,
                                                 std::size_t batchSize, std::size_t nbChannels,
                                                 std::size_t heigth, std::size_t width,
@@ -61,23 +81,10 @@ __global__ void cudaFloatingPointScaling_kernel(const T* input, T* output,
                                           ch*heigth*width +
                                           i;
 
-                //T res = input[index]*scalingFactorPerChannel[ch];
                 //clipping before scaling
-                T res = input[index];
-                if(isClipped){
-                    if(clippingFactorPerChannel[ch]>0){
-                        res = (res < T(0.0)) ? T(0.0)
-                        : (res > T(clippingFactorPerChannel[ch])) ? T(clippingFactorPerChannel[ch]) 
-                        : res;
-                    }
-                    else{
-                        res = (res > T(0.0)) ? T(0.0)
-                        : (res < T(clippingFactorPerChannel[ch])) ? T(clippingFactorPerChannel[ch])
-                        : res;
-                    }
-
-                }
-                res *= scalingFactorPerChannel[ch];
+                T res = isClipped ? Clip(input[index], clippingFactorPerChannel[ch]) 
+                                    : input[index];
+                res = Scale(res, scalingFactorPerChannel[ch]);
                 if(quantizedNbBits > 0) {
                     res = saturate(round(res), quantizedNbBits, isOutputUnsigned);
                 }
@@ -111,13 +118,8 @@ __global__ void cudaFixedPointScaling_kernel(const T* input, T* output,
                                           ch*heigth*width +
                                           i;
                 
-                //adding the clipping
-                T realInput = input[index];
-                if(isClipped){
-                    realInput = (realInput < T(0.0)) ? T(0.0) 
-                        : (realInput > T(clippingFactorPerChannel[ch])) ? T(clippingFactorPerChannel[ch]) 
-                        : realInput;
-                }
+                T realInput = isClipped ? Clip(input[index], clippingFactorPerChannel[ch]) 
+                                    : input[index]; 
 
                 const long long half = (nbFractionalBits > 0)
                     ? (1ll << (nbFractionalBits - 1))

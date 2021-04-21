@@ -104,10 +104,11 @@ class Block(Cell):
 class Sequence(Block):
     def __init__(self, cells, name=None):
         Block.__init__(self, cells, name)
+        self._seq = cells
 
     def __call__(self, x):
         x.get_deepnet().begin_group(name=self._name)
-        for cell in self._cells.values():
+        for cell in self._seq:
             x = cell(x)
         x.get_deepnet().end_group()
         return x
@@ -117,6 +118,32 @@ class Sequence(Block):
             return list(self._cells.values())[item]
         else:
             return self._cells[item]
+
+    def get_index(self, item):
+        for i, cell in enumerate(self._seq):
+            if item.get_name() == cell.get_name():
+                return i
+        raise RuntimeError("Element with name '" + item.get_name() + "' not found in sequence")
+
+
+    def __len__(self):
+        return len(self._seq)
+
+    def insert(self, index, cell):
+        self._seq.insert(index, cell)
+        self._cells[cell.get_name()] = cell
+
+    def _generate_str(self, indent_level):
+        output = "\'" + self.get_name() + "\' " + self.get_type() + "("
+
+        for idx, value in enumerate(self._seq):
+            output += "\n" + (indent_level * "\t") + "(" + str(idx) + ")"
+            if isinstance(value, n2d2.cells.Block):
+                output += ": " + value._generate_str(indent_level + 1)
+            else:
+                output += ": " + value.__str__()
+        output += "\n" + ((indent_level - 1) * "\t") + ")"
+        return output
 
 
 class DeepNetCell(Block):

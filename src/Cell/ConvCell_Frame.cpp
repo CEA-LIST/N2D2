@@ -259,6 +259,15 @@ void N2D2::ConvCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsig
 
         mDiffSharedSynapses.push_back(new Tensor<T>(kernelDims), 0);
     }
+
+    initializeWeightQuantizer();
+}
+
+
+
+template <class T>
+void N2D2::ConvCell_Frame<T>::initializeWeightQuantizer()
+{
     if (mQuantizer) {
         for (unsigned int k = 0, size = mSharedSynapses.size(); k < size; ++k) {
             mQuantizer->addWeights(mSharedSynapses[k], mDiffSharedSynapses[k]);

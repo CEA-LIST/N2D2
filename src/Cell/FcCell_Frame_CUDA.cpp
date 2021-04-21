@@ -179,7 +179,14 @@ void N2D2::FcCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, un
 
     if (mNormalize)
         mSynapsesNorm.resize({getNbOutputs()});
+    
+    initializeWeightQuantizer();
+}
 
+
+template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::initializeWeightQuantizer()
+{
     if (mQuantizer) {
         for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
             mQuantizer->addWeights(mSynapses[k], mDiffSynapses[k]);
@@ -190,7 +197,6 @@ void N2D2::FcCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, un
         mQuantizer->initialize();
     }
 }
-
 
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::initializeDataDependent()

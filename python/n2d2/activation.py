@@ -51,6 +51,13 @@ class ActivationFunction(N2D2_Interface):
     def get_quantizer(self):
         return self._config_parameters['quantizer']
 
+    def set_quantizer(self, quantizer):
+        if 'quantizer' in self._config_parameters:
+            raise RuntimeError("Quantizer already exists in activation")
+        else:
+            self._config_parameters['quantizer'] = quantizer
+            self._N2D2_object.setQuantizer(self._config_parameters['quantizer'].N2D2())
+
     def get_type(self):
         return type(self).__name__
 

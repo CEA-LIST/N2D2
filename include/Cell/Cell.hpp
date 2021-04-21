@@ -293,6 +293,11 @@ public:
             mMapping.append(mapping);
         }
     };
+    virtual void initializeWeightQuantizer()
+    {
+        throw std::runtime_error("Error: initializeWeightQuantizer not implemented for this cell type!");
+    };
+
     // TODO: Replace by abstract method once implemented for all relevant cells
     virtual void initializeDataDependent() 
     {

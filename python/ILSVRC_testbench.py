@@ -23,6 +23,7 @@
 
 
 import n2d2
+import n2d2_ip
 
 import math
 import argparse
@@ -43,13 +44,15 @@ args = parser.parse_args()
 
 n2d2.global_variables.set_cuda_device(args.dev)
 n2d2.global_variables.default_model = "Frame_CUDA"
-n2d2.global_variables.verbosity = n2d2.global_variables.Verbosity.graph_only
+n2d2.global_variables.verbosity = n2d2.global_variables.Verbosity.detailed
 
 size = 224
 
 if args.arch == 'MobileNetv1':
     batch_size = 256
-elif args.arch == 'MobileNetv1_batchnorm':
+elif args.arch == 'MobileNetv1Bn':
+    batch_size = 64
+elif args.arch == 'MobileNetv1SAT':
     batch_size = 64
 elif args.arch == 'MobileNetv2':
     size = 224
@@ -92,6 +95,24 @@ if args.arch == 'MobileNetv1':
     model = n2d2.models.MobileNetv1(alpha=0.5)
     # 55.87% test Top1
     # "/local/is154584/jt251134/ILSVRC_testbench/MobileNetv1/weights_validation/"
+    trans, otf_trans = n2d2.models.ILSVRC_preprocessing(size=size)
+    provider.add_transformation(trans)
+    provider.add_on_the_fly_transformation(otf_trans)
+elif args.arch == 'MobileNetv1Bn':
+    nb_epochs = 120 if args.epochs == -1 else args.epochs
+    model = n2d2.models.MobileNetv1(alpha=0.5, with_bn=True)
+    print(model)
+    trans, otf_trans = n2d2.models.ILSVRC_preprocessing(size=size)
+    provider.add_transformation(trans)
+    provider.add_on_the_fly_transformation(otf_trans)
+elif args.arch == 'MobileNetv1SAT':
+    nb_epochs = 120 if args.epochs == -1 else args.epochs
+    model = n2d2_ip.models.MobileNetv1SAT(alpha=1.0)
+    print(model)
+    trans, otf_trans = n2d2_ip.models.ILSVRC_preprocessing(size=size)
+    provider.add_transformation(trans)
+    provider.add_on_the_fly_transformation(otf_trans)
+    print(trans)
 elif args.arch == 'MobileNetv2-onnx':
     nb_epochs = 0 if args.epochs == -1 else args.epochs
     provider.add_transformation(n2d2.models.mobilenetv2.ONNX_preprocessing(size=size))
