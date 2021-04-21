@@ -38,6 +38,7 @@ public:
     }
 
     TanhActivation_Frame_CUDA();
+
     virtual void propagate(const Cell& cell,
                            const BaseTensor& input,
                            BaseTensor& output,
@@ -83,8 +84,11 @@ void N2D2::TanhActivation_Frame_CUDA<T>::propagate(
 {
     const CudaTensor<T>& input = dynamic_cast<const CudaTensor<T>&>(baseInput);
     CudaTensor<T>& output = dynamic_cast<CudaTensor<T>&>(baseOutput);
-
-    mScaling.propagate(cell, input, output);
+    //If activations is quantized : use Q Level of activations for saturate    
+    //Else : Use Q Level of weights parameters 
+    const std::size_t nbbits = mQuantizedNbBits > 0 ? 
+                                mQuantizedNbBits : cell.getQuantizedNbBits();
+    mScaling.propagate(cell, input, output, nbbits);
 
     const typename Cuda::cudnn_scaling_type<T>::type alpha = mAlpha;
     const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;

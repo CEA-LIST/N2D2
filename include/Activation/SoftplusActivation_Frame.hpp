@@ -64,8 +64,11 @@ void N2D2::SoftplusActivation_Frame<T>::propagate(
 {
     const Tensor<T>& input = dynamic_cast<const Tensor<T>&>(baseInput);
     Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
-
-    mScaling.propagate(cell, input, output);
+    //If activations is quantized : use Q Level of activations for saturate    
+    //Else : Use Q Level of weights parameters 
+    const std::size_t nbbits = mQuantizedNbBits > 0 ? 
+                                mQuantizedNbBits : cell.getQuantizedNbBits();
+    mScaling.propagate(cell, input, output, nbbits);
 
 #pragma omp parallel for if (output.size() > 1024)
     for (int index = 0; index < (int)output.size(); ++index) {

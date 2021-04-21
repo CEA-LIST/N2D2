@@ -85,12 +85,15 @@ void N2D2::RectifierActivation_Frame_CUDA<T>::propagate(
     const CudaTensor<T>& input = dynamic_cast<const CudaTensor<T>&>(baseInput);
     CudaTensor<T>& output = dynamic_cast<CudaTensor<T>&>(baseOutput);
 
-    mScaling.propagate(cell, input, output);
+    //If activations is quantized : use Q Level of activations for saturate    
+    //Else : Use Q Level of weights parameters 
+    const std::size_t nbbits = mQuantizedNbBits > 0 ? 
+                                mQuantizedNbBits : cell.getQuantizedNbBits();
+    mScaling.propagate(cell, input, output, nbbits);
 
     if (mLeakSlope == 0.0 && mClipping == 0.0) {
         const float alpha = 1.0f;
         const float beta = 0.0f;
-
         CHECK_CUDNN_STATUS(
             cudnnActivationForward(CudaContext::cudnnHandle(),
                                    mActivationDesc,

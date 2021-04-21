@@ -88,7 +88,11 @@ void N2D2::LogisticActivation_Frame_CUDA<T>::propagate(
     CudaTensor<T>& output = dynamic_cast<CudaTensor<T>&>(baseOutput);
 
     if (!LogisticActivationDisabled) {
-        mScaling.propagate(cell, input, output);
+        //If activations is quantized : use Q Level of activations for saturate    
+        //Else : Use Q Level of weights parameters 
+        const std::size_t nbbits = mQuantizedNbBits > 0 ? 
+                                    mQuantizedNbBits : cell.getQuantizedNbBits();
+        mScaling.propagate(cell, input, output, nbbits);
 
         const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
         const typename Cuda::cudnn_scaling_type<T>::type beta = 0.0f;

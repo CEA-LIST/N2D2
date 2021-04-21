@@ -69,7 +69,7 @@ void N2D2::ScalingCell_Frame_CUDA<T>::propagate(bool inference) {
     mInputs.synchronizeHBasedToD();
     
     const CudaTensor<T>& input = cuda_tensor_cast<T>(mInputs[0]);
-    mScaling.propagate(*this, input, mOutputs);
+    mScaling.propagate(*this, input, mOutputs, mQuantizedNbBits);
     
     Cell_Frame_CUDA<T>::propagate(inference);
     mDiffInputs.clearValid();
