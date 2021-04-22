@@ -38,6 +38,7 @@ class test_params(unittest.TestCase):
 
         if self.object: # We don't do test if it's the dummy class
             parameters = self.object.N2D2().getParameters()
+            print(parameters)
             for param in self.parameters.keys():
                 if N2D2_Interface.python_to_n2d2_convention(param) in parameters:
                     param_name = N2D2_Interface.python_to_n2d2_convention(param)
@@ -63,6 +64,9 @@ class test_Fc(test_params):
             "weights_filler": n2d2.filler.Normal(),
             "bias_filler": n2d2.filler.Normal(),
             'no_bias': True,
+            "mapping": n2d2.Tensor([5, 5],  datatype=bool),
+            # "quantizer": n2d2.quantizer.CellQuantizer(), # TODO 
+
         }
         self.object = n2d2.cells.Fc(10, 5, **self.parameters)
 
@@ -73,6 +77,8 @@ class test_Fc(test_params):
         self.assertIs(self.parameters["bias_solver"].N2D2(), self.object.N2D2().getBiasSolver())
         self.assertIs(self.parameters["weights_filler"].N2D2(), self.object.N2D2().getWeightsFiller())
         self.assertIs(self.parameters["bias_filler"].N2D2(), self.object.N2D2().getBiasFiller())
+        self.assertEqual(n2d2.Tensor.from_N2D2(self.parameters["mapping"].N2D2()), 
+                         n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping()))
         super().test_parameters()
 
 
@@ -92,6 +98,8 @@ class test_Conv(test_params):
             "no_bias": True,
             # "quantizer": n2d2.quantizer.CellQuantizer(), # TODO 
             "back_propagate": True,
+            "weights_export_flip": True,
+            "mapping": n2d2.Tensor([5, 5],  datatype=bool),
         }
         self.object = n2d2.cells.Conv(10, 5, [2, 2], **self.parameters)
 
@@ -103,6 +111,86 @@ class test_Conv(test_params):
         self.assertIs(self.parameters["weights_filler"].N2D2(), self.object.N2D2().getWeightsFiller())
         self.assertIs(self.parameters["bias_filler"].N2D2(), self.object.N2D2().getBiasFiller())
         self.assertEqual(self.parameters["sub_sample_dims"], [self.object.N2D2().getSubSampleX(), self.object.N2D2().getSubSampleY()])
+        self.assertEqual(self.parameters["stride_dims"], [self.object.N2D2().getStrideX(), self.object.N2D2().getStrideY()])
+        self.assertEqual(self.parameters["padding_dims"], [self.object.N2D2().getPaddingX(), self.object.N2D2().getPaddingY()])
+        self.assertEqual(self.parameters["dilation_dims"], [self.object.N2D2().getDilationX(), self.object.N2D2().getDilationY()])
+        self.assertEqual(n2d2.Tensor.from_N2D2(self.parameters["mapping"].N2D2()), 
+                         n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping()))
+        super().test_parameters()
+
+class test_Softmax(test_params):
+    def setUp(self):
+        self.parameters = {
+            "name": "test",
+            "with_loss": True,
+            "group_size": 1,
+            "mapping": n2d2.Tensor([5, 5],  datatype=bool),
+        }
+        self.object = n2d2.cells.Softmax(**self.parameters)
+
+    def test_parameters(self):
+        # Need to instantiate the object (doing so by passing him dummy input)
+        tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
+        self.object(tensor)
+
+        self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
+        self.assertEqual(self.parameters["with_loss"], self.object.N2D2().getWithLoss())
+        self.assertEqual(self.parameters["group_size"], self.object.N2D2().getGroupSize())
+        super().test_parameters()
+
+class test_Pool(test_params):
+    def setUp(self):
+        self.parameters = {
+            "name": "test",
+            "pooling": "Average",
+            "stride_dims": [2, 2],
+            "padding_dims": [1, 1],
+            "activation_function": n2d2.activation.Linear(),
+            "mapping": n2d2.Tensor([5, 5],  datatype=bool),
+        }
+        self.object = n2d2.cells.Pool([1, 1], **self.parameters)
+
+    def test_parameters(self):
+        # Need to instantiate the object (doing so by passing him dummy input)
+        tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
+        self.object(tensor)
+
+        self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
+        self.assertEqual(N2D2.PoolCell.Pooling.__members__[self.parameters["pooling"]], self.object.N2D2().getPooling())
+        self.assertEqual(self.parameters["stride_dims"], [self.object.N2D2().getStrideX(), self.object.N2D2().getStrideY()])
+        self.assertEqual(self.parameters["padding_dims"], [self.object.N2D2().getPaddingX(), self.object.N2D2().getPaddingY()])
+        self.assertIs(self.parameters["activation_function"].N2D2(), self.object.N2D2().getActivation())
+        self.assertEqual(n2d2.Tensor.from_N2D2(self.parameters["mapping"].N2D2()), 
+                         n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping()))
+        super().test_parameters()
+
+class test_Deconv(test_params):
+    def setUp(self):
+        self.parameters = {
+            "name": "test",
+            "activation_function": n2d2.activation.Tanh(),
+            "weights_solver": n2d2.solver.SGD(),
+            "stride_dims": [2, 2],
+            "dilation_dims": [1, 1],
+            "padding_dims": [2, 2],
+            "bias_solver": n2d2.solver.SGD(),
+            "weights_filler": n2d2.filler.Normal(),
+            "bias_filler": n2d2.filler.Normal(),
+            "no_bias": True,
+            # "quantizer": n2d2.quantizer.CellQuantizer(), # TODO 
+            "back_propagate": True,
+            "weights_export_flip": True,
+            "mapping": n2d2.Tensor([5, 5],  datatype=bool),
+        }
+        self.object = n2d2.cells.Deconv(10, 5, [2, 2], **self.parameters)
+
+    def test_parameters(self):
+        self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
+        self.assertIs(self.parameters["activation_function"].N2D2(), self.object.N2D2().getActivation())
+        self.assertIs(self.parameters["weights_solver"].N2D2(), self.object.N2D2().getWeightsSolver())
+        self.assertIs(self.parameters["bias_solver"].N2D2(), self.object.N2D2().getBiasSolver())
+        self.assertIs(self.parameters["weights_filler"].N2D2(), self.object.N2D2().getWeightsFiller())
+        self.assertIs(self.parameters["bias_filler"].N2D2(), self.object.N2D2().getBiasFiller())
         self.assertEqual(self.parameters["stride_dims"], [self.object.N2D2().getStrideX(), self.object.N2D2().getStrideY()])
         self.assertEqual(self.parameters["padding_dims"], [self.object.N2D2().getPaddingX(), self.object.N2D2().getPaddingY()])
         self.assertEqual(self.parameters["dilation_dims"], [self.object.N2D2().getDilationX(), self.object.N2D2().getDilationY()])

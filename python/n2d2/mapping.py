@@ -33,7 +33,7 @@ class Mapping:
         self._nb_channels_per_group = nb_channels_per_group
 
 
-    def create_N2D2_mapping(self, nb_channels, nb_outputs):
+    def create_mapping(self, nb_channels, nb_outputs):
         if self._nb_groups:
             nb_channels_per_group = nb_channels / self._nb_groups
             nb_groups = self._nb_groups

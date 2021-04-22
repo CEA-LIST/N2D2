@@ -216,6 +216,11 @@
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">StimuliProvider</code><a class="headerlink" href="#N2D2.StimuliProvider" title="Permalink to this definition">¶</a></dt>
 <dd><p>StimuliProvider is a class that acts as a data loader for the neural network.</p>
 <dl class="py method">
+<dt id="N2D2.StimuliProvider.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider, database: N2D2::Database, size: List[int], batchSize: int = 1, compositeStimuli: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="N2D2.StimuliProvider.addOnTheFlyTransformation">
 <code class="sig-name descname">addOnTheFlyTransformation</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.StimuliProvider</em>, <em class="sig-param">transformation: N2D2::CompositeTransformation</em>, <em class="sig-param">setMask: N2D2::Database::StimuliSetMask</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.StimuliProvider.addOnTheFlyTransformation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add global ON-THE-FLY transformations, before applying any channel transformation. The order of transformations is: global CACHEABLE, then global ON-THE-FLY</p>

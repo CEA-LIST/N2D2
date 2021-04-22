@@ -132,20 +132,21 @@ class N2D2_Interface:
         """
     @staticmethod
     def python_to_n2d2_convention(key, first_upper=True):
-        new_key = ""
-        set_upper = first_upper
-        for c in key:
-            if c.isupper():
-                raise ValueError("Illegal upper case letter '" + c + "' in python parameter '" + key + "' detected.")
-            if set_upper:
-                if c == "_":
-                    raise ValueError("Leading or double '_' in python parameter '" + key + "' detected.")
-                c = c.upper()
-                set_upper = False
-            if not c == "_":
-                new_key += c
-            else:
-                set_upper = True
+        # new_key = ""
+        # set_upper = first_upper
+        # for c in key:
+        #     if c.isupper():
+        #         raise ValueError("Illegal upper case letter '" + c + "' in python parameter '" + key + "' detected.")
+        #     if set_upper:
+        #         if c == "_":
+        #             raise ValueError("Leading or double '_' in python parameter '" + key + "' detected.")
+        #         c = c.upper()
+        #         set_upper = False
+        #     if not c == "_":
+        #         new_key += c
+        #     else:
+        #         set_upper = True
+        new_key = n2d2.global_variables.convention_converter.p_to_n(key)
         return new_key
 
     """
@@ -153,15 +154,16 @@ class N2D2_Interface:
        """
     @staticmethod
     def n2d2_to_python_convention(key):
-        new_key = key[0].lower()
-        for c in key[1:]:
-            if c.isupper():
-                new_key += "_"
-            new_key += c.lower()
-        if not key == N2D2_Interface.python_to_n2d2_convention(new_key):
-            raise RuntimeWarning("Warning: Incoherent parameter conversion detected: " +
-                                 key + " vs. " + N2D2_Interface.python_to_n2d2_convention(new_key) +
-                                 ". Please check consistence of parameter convention in for N2D2 parameter")
+        # new_key = key[0].lower()
+        # for c in key[1:]:
+        #     if c.isupper():
+        #         new_key += "_"
+        #     new_key += c.lower()
+        # if not key == N2D2_Interface.python_to_n2d2_convention(new_key):
+        #     raise RuntimeWarning("Warning: Incoherent parameter conversion detected: " +
+        #                          key + " vs. " + N2D2_Interface.python_to_n2d2_convention(new_key) +
+        #                          ". Please check consistence of parameter convention in for N2D2 parameter")
+        new_key = n2d2.global_variables.convention_converter.n_to_p(key)
         return new_key
 
     @staticmethod

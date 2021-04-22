@@ -273,7 +273,13 @@
 <dl class="py class">
 <dt id="N2D2.Transformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">Transformation</code><a class="headerlink" href="#N2D2.Transformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt id="N2D2.Transformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.Transformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="distortiontransformation">
@@ -281,7 +287,17 @@
 <dl class="py class">
 <dt id="N2D2.DistortionTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">DistortionTransformation</code><a class="headerlink" href="#N2D2.DistortionTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt id="N2D2.DistortionTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.DistortionTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.DistortionTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.DistortionTransformation, trans: N2D2.DistortionTransformation) -&gt; None</p></li>
+</ol>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="padcroptransformation">
@@ -300,11 +316,21 @@
 <p>MinusOneReflectBorder</p>
 <p>MeanBorder</p>
 <dl class="py method">
+<dt id="N2D2.PadCropTransformation.BorderType.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.PadCropTransformation.BorderType" title="N2D2.PadCropTransformation.BorderType">N2D2.PadCropTransformation.BorderType</a></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.PadCropTransformation.BorderType.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="N2D2.PadCropTransformation.BorderType.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.PadCropTransformation.BorderType.name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.PadCropTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.PadCropTransformation" title="N2D2.PadCropTransformation">N2D2.PadCropTransformation</a></span></em>, <em class="sig-param"><span class="n">width</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">height</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.PadCropTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -315,6 +341,45 @@
 <dt id="N2D2.CompositeTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">CompositeTransformation</code><a class="headerlink" href="#N2D2.CompositeTransformation" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py method">
+<dt id="N2D2.CompositeTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.CompositeTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.CompositeTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.DistortionTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.PadCropTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.AffineTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.ChannelExtractionTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.ColorSpaceTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.CompressionNoiseTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.DCTTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.DFTTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.EqualizeTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.ExpandLabelTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.FlipTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.WallisFilterTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.ThresholdTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.SliceExtractionTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.ReshapeTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.RescaleTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.RangeClippingTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.RangeAffineTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.RandomAffineTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.NormalizeTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.MorphologyTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.MorphologicalReconstructionTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.MagnitudePhaseTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.LabelSliceExtractionTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.LabelExtractionTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.GradientFilterTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.ApodizationTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.FilterTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.RandomResizeCropTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompositeTransformation, transformation: N2D2.CustomTransformation) -&gt; None</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py method">
 <dt id="N2D2.CompositeTransformation.push_back">
 <code class="sig-name descname">push_back</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.CompositeTransformation.push_back" title="Permalink to this definition">¶</a></dt>
 <dd><p>Overloaded function.</p>
@@ -461,11 +526,21 @@
 <p>Multiplies</p>
 <p>Divides</p>
 <dl class="py method">
+<dt id="N2D2.AffineTransformation.Operator.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.AffineTransformation.Operator" title="N2D2.AffineTransformation.Operator">N2D2.AffineTransformation.Operator</a></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.AffineTransformation.Operator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="N2D2.AffineTransformation.Operator.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.AffineTransformation.Operator.name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.AffineTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">self: N2D2.AffineTransformation</em>, <em class="sig-param">firstOperator: N2D2.AffineTransformation.Operator</em>, <em class="sig-param">firstValue: str</em>, <em class="sig-param">secondOperator: N2D2.AffineTransformation.Operator = &lt;Operator.Plus: 0&gt;</em>, <em class="sig-param">secondValue: str = ''</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.AffineTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -490,11 +565,21 @@
 <p>Cb</p>
 <p>Cr</p>
 <dl class="py method">
+<dt id="N2D2.ChannelExtractionTransformation.Channel.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.ChannelExtractionTransformation.Channel" title="N2D2.ChannelExtractionTransformation.Channel">N2D2.ChannelExtractionTransformation.Channel</a></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.ChannelExtractionTransformation.Channel.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="N2D2.ChannelExtractionTransformation.Channel.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.ChannelExtractionTransformation.Channel.name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.ChannelExtractionTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.ChannelExtractionTransformation" title="N2D2.ChannelExtractionTransformation">N2D2.ChannelExtractionTransformation</a></span></em>, <em class="sig-param"><span class="n">channel</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.ChannelExtractionTransformation.Channel" title="N2D2.ChannelExtractionTransformation.Channel">N2D2.ChannelExtractionTransformation.Channel</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.ChannelExtractionTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -532,11 +617,21 @@
 <p>CIELuv_to_BGR</p>
 <p>CIELuv_to_RGB</p>
 <dl class="py method">
+<dt id="N2D2.ColorSpaceTransformation.ColorSpace.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.ColorSpaceTransformation.ColorSpace" title="N2D2.ColorSpaceTransformation.ColorSpace">N2D2.ColorSpaceTransformation.ColorSpace</a></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.ColorSpaceTransformation.ColorSpace.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="N2D2.ColorSpaceTransformation.ColorSpace.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.ColorSpaceTransformation.ColorSpace.name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.ColorSpaceTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.ColorSpaceTransformation" title="N2D2.ColorSpaceTransformation">N2D2.ColorSpaceTransformation</a></span></em>, <em class="sig-param"><span class="n">colorSpace</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.ColorSpaceTransformation.ColorSpace" title="N2D2.ColorSpaceTransformation.ColorSpace">N2D2.ColorSpaceTransformation.ColorSpace</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.ColorSpaceTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -546,7 +641,17 @@
 <dl class="py class">
 <dt id="N2D2.CompressionNoiseTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">CompressionNoiseTransformation</code><a class="headerlink" href="#N2D2.CompressionNoiseTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt id="N2D2.CompressionNoiseTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.CompressionNoiseTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.CompressionNoiseTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.CompressionNoiseTransformation, trans: N2D2.CompressionNoiseTransformation) -&gt; None</p></li>
+</ol>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="dcttransformation">
@@ -554,7 +659,12 @@
 <dl class="py class">
 <dt id="N2D2.DCTTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">DCTTransformation</code><a class="headerlink" href="#N2D2.DCTTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.DCTTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DCTTransformation" title="N2D2.DCTTransformation">N2D2.DCTTransformation</a></span></em>, <em class="sig-param"><span class="n">twoDimensional</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DCTTransformation.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="dfttransformation">
@@ -562,7 +672,12 @@
 <dl class="py class">
 <dt id="N2D2.DFTTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">DFTTransformation</code><a class="headerlink" href="#N2D2.DFTTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.DFTTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DFTTransformation" title="N2D2.DFTTransformation">N2D2.DFTTransformation</a></span></em>, <em class="sig-param"><span class="n">twoDimensional</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.DFTTransformation.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="equalizetransformation">
@@ -570,7 +685,17 @@
 <dl class="py class">
 <dt id="N2D2.EqualizeTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">EqualizeTransformation</code><a class="headerlink" href="#N2D2.EqualizeTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt id="N2D2.EqualizeTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.EqualizeTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.EqualizeTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.EqualizeTransformation, trans: N2D2.EqualizeTransformation) -&gt; None</p></li>
+</ol>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="expandlabeltransformation">
@@ -578,7 +703,12 @@
 <dl class="py class">
 <dt id="N2D2.ExpandLabelTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">ExpandLabelTransformation</code><a class="headerlink" href="#N2D2.ExpandLabelTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.ExpandLabelTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.ExpandLabelTransformation" title="N2D2.ExpandLabelTransformation">N2D2.ExpandLabelTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.ExpandLabelTransformation.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="wallisfiltertransformation">
@@ -586,7 +716,17 @@
 <dl class="py class">
 <dt id="N2D2.WallisFilterTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">WallisFilterTransformation</code><a class="headerlink" href="#N2D2.WallisFilterTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt id="N2D2.WallisFilterTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.WallisFilterTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.WallisFilterTransformation, size: int, mean: float = 0.0, stdDev: float = 1.0) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.WallisFilterTransformation, trans: N2D2.WallisFilterTransformation) -&gt; None</p></li>
+</ol>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="thresholdtransformation">
@@ -594,7 +734,17 @@
 <dl class="py class">
 <dt id="N2D2.ThresholdTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">ThresholdTransformation</code><a class="headerlink" href="#N2D2.ThresholdTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt id="N2D2.ThresholdTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.ThresholdTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.ThresholdTransformation, threshold: float, otsuMethod: bool = False) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.ThresholdTransformation, trans: N2D2.ThresholdTransformation) -&gt; None</p></li>
+</ol>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="sliceextractiontransformation">
@@ -602,7 +752,17 @@
 <dl class="py class">
 <dt id="N2D2.SliceExtractionTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">SliceExtractionTransformation</code><a class="headerlink" href="#N2D2.SliceExtractionTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.SliceExtractionTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.SliceExtractionTransformation, width: int, height: int, offsetX: int = 0, offsetY: int = 0) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.SliceExtractionTransformation, trans: N2D2.SliceExtractionTransformation) -&gt; None</p></li>
+</ol>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="reshapetransformation">
@@ -610,7 +770,12 @@
 <dl class="py class">
 <dt id="N2D2.ReshapeTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">ReshapeTransformation</code><a class="headerlink" href="#N2D2.ReshapeTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.ReshapeTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.ReshapeTransformation" title="N2D2.ReshapeTransformation">N2D2.ReshapeTransformation</a></span></em>, <em class="sig-param"><span class="n">nbRows</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">nbCols</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">nbChannels</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.ReshapeTransformation.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="rescaletransformation">
@@ -618,7 +783,17 @@
 <dl class="py class">
 <dt id="N2D2.RescaleTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">RescaleTransformation</code><a class="headerlink" href="#N2D2.RescaleTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt id="N2D2.RescaleTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.RescaleTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.RescaleTransformation, width: int, height: int) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.RescaleTransformation, trans: N2D2.RescaleTransformation) -&gt; None</p></li>
+</ol>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="rangeclippingtransformation">
@@ -626,7 +801,17 @@
 <dl class="py class">
 <dt id="N2D2.RangeClippingTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">RangeClippingTransformation</code><a class="headerlink" href="#N2D2.RangeClippingTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt id="N2D2.RangeClippingTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.RangeClippingTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.RangeClippingTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.RangeClippingTransformation, trans: N2D2.RangeClippingTransformation) -&gt; None</p></li>
+</ol>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="rangeaffinetransformation">
@@ -643,10 +828,26 @@
 <p>Multiplies</p>
 <p>Divides</p>
 <dl class="py method">
+<dt id="N2D2.RangeAffineTransformation.Operator.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.RangeAffineTransformation.Operator" title="N2D2.RangeAffineTransformation.Operator">N2D2.RangeAffineTransformation.Operator</a></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.RangeAffineTransformation.Operator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="N2D2.RangeAffineTransformation.Operator.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.RangeAffineTransformation.Operator.name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.RangeAffineTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.RangeAffineTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.RangeAffineTransformation, firstOperator: N2D2.RangeAffineTransformation.Operator, firstValue: List[float], secondOperator: N2D2.RangeAffineTransformation.Operator = &lt;Operator.Plus: 0&gt;, secondValue: List[float] = []) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.RangeAffineTransformation, firstOperator: N2D2.RangeAffineTransformation.Operator, firstValue: float, secondOperator: N2D2.RangeAffineTransformation.Operator = &lt;Operator.Plus: 0&gt;, secondValue: float = 0.0) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.RangeAffineTransformation, trans: N2D2.RangeAffineTransformation) -&gt; None</p></li>
+</ol>
 </dd></dl>
 
 </dd></dl>
@@ -657,7 +858,17 @@
 <dl class="py class">
 <dt id="N2D2.RandomAffineTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">RandomAffineTransformation</code><a class="headerlink" href="#N2D2.RandomAffineTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt id="N2D2.RandomAffineTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.RandomAffineTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.RandomAffineTransformation, gainRange: List[Tuple[float, float]], biasRange: List[Tuple[float, float]] = [], gammaRange: List[Tuple[float, float]] = [], gainVarProb: List[float] = [], biasVarProb: List[float] = [], gammaVarProb: List[float] = []) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.RandomAffineTransformation, trans: N2D2.RandomAffineTransformation) -&gt; None</p></li>
+</ol>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="normalizetransformation">
@@ -665,7 +876,17 @@
 <dl class="py class">
 <dt id="N2D2.NormalizeTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">NormalizeTransformation</code><a class="headerlink" href="#N2D2.NormalizeTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt id="N2D2.NormalizeTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.NormalizeTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.NormalizeTransformation) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.NormalizeTransformation, trans: N2D2.NormalizeTransformation) -&gt; None</p></li>
+</ol>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="morphologytransformation">
@@ -685,10 +906,25 @@
 <p>TopHat</p>
 <p>BlackHat</p>
 <dl class="py method">
+<dt id="N2D2.MorphologyTransformation.Operation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.MorphologyTransformation.Operation" title="N2D2.MorphologyTransformation.Operation">N2D2.MorphologyTransformation.Operation</a></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.MorphologyTransformation.Operation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="N2D2.MorphologyTransformation.Operation.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.MorphologyTransformation.Operation.name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.MorphologyTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.MorphologyTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.MorphologyTransformation, operation: N2D2.MorphologyTransformation.Operation, size: int, applyToLabels: bool = False) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.MorphologyTransformation, trans: N2D2.MorphologyTransformation) -&gt; None</p></li>
+</ol>
 </dd></dl>
 
 </dd></dl>
@@ -708,10 +944,25 @@
 <p>OpeningByReconstruction</p>
 <p>ClosingByReconstruction</p>
 <dl class="py method">
+<dt id="N2D2.MorphologicalReconstructionTransformation.Operation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.MorphologicalReconstructionTransformation.Operation" title="N2D2.MorphologicalReconstructionTransformation.Operation">N2D2.MorphologicalReconstructionTransformation.Operation</a></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.MorphologicalReconstructionTransformation.Operation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="N2D2.MorphologicalReconstructionTransformation.Operation.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.MorphologicalReconstructionTransformation.Operation.name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.MorphologicalReconstructionTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.MorphologicalReconstructionTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.MorphologicalReconstructionTransformation, operation: N2D2.MorphologicalReconstructionTransformation.Operation, size: int, applyToLabels: bool = False) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.MorphologicalReconstructionTransformation, trans: N2D2.MorphologicalReconstructionTransformation) -&gt; None</p></li>
+</ol>
 </dd></dl>
 
 </dd></dl>
@@ -722,7 +973,12 @@
 <dl class="py class">
 <dt id="N2D2.MagnitudePhaseTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">MagnitudePhaseTransformation</code><a class="headerlink" href="#N2D2.MagnitudePhaseTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.MagnitudePhaseTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.MagnitudePhaseTransformation" title="N2D2.MagnitudePhaseTransformation">N2D2.MagnitudePhaseTransformation</a></span></em>, <em class="sig-param"><span class="n">logScale</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.MagnitudePhaseTransformation.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="labelsliceextractiontransformation">
@@ -730,7 +986,17 @@
 <dl class="py class">
 <dt id="N2D2.LabelSliceExtractionTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">LabelSliceExtractionTransformation</code><a class="headerlink" href="#N2D2.LabelSliceExtractionTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt id="N2D2.LabelSliceExtractionTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.LabelSliceExtractionTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.LabelSliceExtractionTransformation, width: int, height: int, label: int = -1) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.LabelSliceExtractionTransformation, trans: N2D2.LabelSliceExtractionTransformation) -&gt; None</p></li>
+</ol>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="labelextractiontransformation">
@@ -738,7 +1004,12 @@
 <dl class="py class">
 <dt id="N2D2.LabelExtractionTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">LabelExtractionTransformation</code><a class="headerlink" href="#N2D2.LabelExtractionTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.LabelExtractionTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.LabelExtractionTransformation" title="N2D2.LabelExtractionTransformation">N2D2.LabelExtractionTransformation</a></span></em>, <em class="sig-param"><span class="n">widths</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">heights</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">label</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">distributions</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'Auto'</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.LabelExtractionTransformation.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="gradientfiltertransformation">
@@ -746,7 +1017,17 @@
 <dl class="py class">
 <dt id="N2D2.GradientFilterTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">GradientFilterTransformation</code><a class="headerlink" href="#N2D2.GradientFilterTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt id="N2D2.GradientFilterTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.GradientFilterTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.GradientFilterTransformation, scsale: float = 1.0, delta: float = 0.0, applyToLabels: bool = False) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.GradientFilterTransformation, trans: N2D2.GradientFilterTransformation) -&gt; None</p></li>
+</ol>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="apodizationtransformation">
@@ -754,7 +1035,12 @@
 <dl class="py class">
 <dt id="N2D2.ApodizationTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">ApodizationTransformation</code><a class="headerlink" href="#N2D2.ApodizationTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.ApodizationTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.ApodizationTransformation" title="N2D2.ApodizationTransformation">N2D2.ApodizationTransformation</a></span></em>, <em class="sig-param"><span class="n">func</span><span class="p">:</span> <span class="n">N2D2.WindowFunction_double</span></em>, <em class="sig-param"><span class="n">size</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.ApodizationTransformation.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="filtertransformation">
@@ -762,7 +1048,12 @@
 <dl class="py class">
 <dt id="N2D2.FilterTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">FilterTransformation</code><a class="headerlink" href="#N2D2.FilterTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="N2D2.FilterTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.FilterTransformation" title="N2D2.FilterTransformation">N2D2.FilterTransformation</a></span></em>, <em class="sig-param"><span class="n">kernel</span><span class="p">:</span> <span class="n">N2D2.Kernel_double</span></em>, <em class="sig-param"><span class="n">orientation</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.0</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.FilterTransformation.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="fliptransformation">
@@ -770,7 +1061,17 @@
 <dl class="py class">
 <dt id="N2D2.FlipTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">FlipTransformation</code><a class="headerlink" href="#N2D2.FlipTransformation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><dl class="py method">
+<dt id="N2D2.FlipTransformation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.FlipTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: N2D2.FlipTransformation, horizontalFlip: bool = False, verticalFlip: bool = False) -&gt; None</p></li>
+<li><p>__init__(self: N2D2.FlipTransformation, trans: N2D2.FlipTransformation) -&gt; None</p></li>
+</ol>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 </div>
