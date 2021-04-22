@@ -44,6 +44,7 @@ void init_FcCell(py::module &m) {
     .def("getWeight", &FcCell::getWeight, py::arg("output"), py::arg("channel"), py::arg("value"))
     .def("setWeight", &FcCell::setWeight, py::arg("output"), py::arg("channel"), py::arg("value"))
     .def("setBias", &FcCell::setBias, py::arg("output"), py::arg("value"))
+    .def("getBias", &FcCell::getBias, py::arg("output"), py::arg("value"))
     .def("setWeightsSolver", &FcCell::setWeightsSolver, py::arg("solver"))
     .def("getWeightsSolver", &FcCell::getWeightsSolver)
     .def("setWeightsFiller", &FcCell::setWeightsFiller, py::arg("filler"))

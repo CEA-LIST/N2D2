@@ -42,6 +42,9 @@ void init_ConvCell(py::module &m) {
     .def("getWeight", &ConvCell::getWeight, py::arg("output"), py::arg("channel"), py::arg("value"))
     .def("setWeight", &ConvCell::setWeight, py::arg("output"), py::arg("channel"), py::arg("value"))
     .def("setBias", &ConvCell::setBias, py::arg("output"), py::arg("value"))
+    .def("getBias", &ConvCell::getBias, py::arg("output"), py::arg("value"))
+    .def("getBiases", &ConvCell::getBiases)
+
     .def("setWeightsSolver", &ConvCell::setWeightsSolver, py::arg("solver"))
     .def("getWeightsSolver", &ConvCell::getWeightsSolver)
     .def("setWeightsFiller", &ConvCell::setWeightsFiller, py::arg("filler"))

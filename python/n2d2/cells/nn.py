@@ -442,7 +442,7 @@ class Fc(NeuralNetworkCell):
 
     def get_weights(self):
         """
-        :return: list of weight
+        :return: list of weights
         :rtype: list
         """
         weights = []
@@ -455,6 +455,39 @@ class Fc(NeuralNetworkCell):
             weights.append(chan)
         return weights
 
+    def set_bias(self, output_index, value):
+        """
+        :param output_index: 
+        :type output_index: int
+        :param value: 
+        :type value: :py:class:`n2d2.Tensor`
+        """
+        if output_index >= self.N2D2().getNbOutputs():
+            raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
+        self.N2D2().setBias(output_index, value.N2D2())
+
+    def get_bias(self, output_index):
+        """
+        :param output_index: 
+        :type output_index: int
+        """
+        if output_index >= self.N2D2().getNbOutputs():
+            raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
+        tensor = N2D2.Tensor_float([])
+        self.N2D2().getBias(output_index, tensor)
+        return n2d2.Tensor.from_N2D2(tensor)
+        
+    def get_biases(self):
+        """
+        :return: list of biases
+        :rtype: list
+        """
+        biases = []
+        for output_index in range(self.N2D2().getNbOutputs()):
+            tensor = N2D2.Tensor_float([])
+            self.N2D2().getBias(output_index, tensor)
+            biases.append(n2d2.Tensor.from_N2D2(tensor))
+        return biases
 
     def set_bias_solver(self, solver):
         self._config_parameters['bias_solver'] = solver
@@ -705,7 +738,6 @@ class Conv(NeuralNetworkCell):
             raise ValueError("Channel index : " + str(channel_index) + " must be < " + str(self.N2D2().getNbChannels()) +")")
         if output_index >= self.N2D2().getNbOutputs():
             raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
-
         self.N2D2().setWeight(output_index, channel_index, value.N2D2())
 
     def get_weight(self, output_index, channel_index):
@@ -725,7 +757,7 @@ class Conv(NeuralNetworkCell):
 
     def get_weights(self):
         """
-        :return: list of weight
+        :return: list of weights
         :rtype: list
         """
         weights = []
@@ -737,6 +769,42 @@ class Conv(NeuralNetworkCell):
                 chan.append(n2d2.Tensor.from_N2D2(tensor))
             weights.append(chan)
         return weights
+
+    def set_bias(self, output_index, value):
+        """
+        :param output_index: 
+        :type output_index: int
+        :param value: 
+        :type value: :py:class:`n2d2.Tensor`
+        """
+        if output_index >= self.N2D2().getNbOutputs():
+            raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
+        self.N2D2().setBias(output_index, value.N2D2())
+
+    def get_bias(self, output_index):
+        """
+        :param output_index: 
+        :type output_index: int
+        :return: list of biases
+        :rtype: list
+        """
+        if output_index >= self.N2D2().getNbOutputs():
+            raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
+        tensor = N2D2.Tensor_float([])
+        self.N2D2().getBias(output_index, tensor)
+        return n2d2.Tensor.from_N2D2(tensor)
+        
+    def get_biases(self):
+        """
+        :return: list of biases
+        :rtype: list
+        """
+        biases = []
+        for output_index in range(self.N2D2().getNbOutputs()):
+            tensor = N2D2.Tensor_float([])
+            self.N2D2().getBias(output_index, tensor)
+            biases.append(n2d2.Tensor.from_N2D2(tensor))
+        return biases
 
 class ConvDepthWise(Conv):
 
@@ -1352,7 +1420,84 @@ class Deconv(NeuralNetworkCell):
         self._config_parameters['bias_solver'] = solver
         self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
 
+    def set_weight(self, output_index, channel_index, value):
+        """
+        :param output_index: 
+        :type output_index:
+        :param channel_index:
+        :type channel_index:
+        :param value:
+        :type value: :py:class:`n2d2.tensor.Tensor`
+        """
+        if channel_index >= self.N2D2().getNbChannels():
+            raise ValueError("Channel index : " + str(channel_index) + " must be < " + str(self.N2D2().getNbChannels()) +")")
+        if output_index >= self.N2D2().getNbOutputs():
+            raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
+        self.N2D2().setWeight(output_index, channel_index, value.N2D2())
 
+    def get_weight(self, output_index, channel_index):
+        """
+        :param output_index: 
+        :type output_index: int
+        :param channel_index:
+        :type channel_index: int
+        """
+        if channel_index >= self.N2D2().getNbChannels():
+            raise ValueError("Channel index : " + str(channel_index) + " must be < " + str(self.N2D2().getNbChannels()) +")")
+        if output_index >= self.N2D2().getNbOutputs():
+            raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
+        tensor = N2D2.Tensor_float([])
+        self.N2D2().getWeight(output_index, channel_index, tensor)
+        return n2d2.Tensor.from_N2D2(tensor)
+
+    def get_weights(self):
+        """
+        :return: list of weights
+        :rtype: list
+        """
+        weights = []
+        tensor = N2D2.Tensor_float([])
+        for o in range(self.N2D2().getNbOutputs()):
+            chan = []
+            for c in range(self.N2D2().getNbChannels()):
+                self.N2D2().getWeight(o, c, tensor)
+                chan.append(n2d2.Tensor.from_N2D2(tensor))
+            weights.append(chan)
+        return weights
+
+    def set_bias(self, output_index, value):
+        """
+        :param output_index: 
+        :type output_index: int
+        :param value: 
+        :type value: :py:class:`n2d2.Tensor`
+        """
+        if output_index >= self.N2D2().getNbOutputs():
+            raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
+        self.N2D2().setBias(output_index, value.N2D2())
+
+    def get_bias(self, output_index):
+        """
+        :param output_index: 
+        :type output_index: int
+        """
+        if output_index >= self.N2D2().getNbOutputs():
+            raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
+        tensor = N2D2.Tensor_float([])
+        self.N2D2().getBias(output_index, tensor)
+        return n2d2.Tensor.from_N2D2(tensor)
+        
+    def get_biases(self):
+        """
+        :return: list of biases
+        :rtype: list
+        """
+        biases = []
+        for output_index in range(self.N2D2().getNbOutputs()):
+            tensor = N2D2.Tensor_float([])
+            self.N2D2().getBias(output_index, tensor)
+            biases.append(n2d2.Tensor.from_N2D2(tensor))
+        return biases
 
 class ElemWise(NeuralNetworkCell):
     """

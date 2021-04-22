@@ -32,6 +32,12 @@ namespace N2D2 {
 void init_DeconvCell(py::module &m) {
 
     py::class_<DeconvCell, std::shared_ptr<DeconvCell>, Cell> (m, "DeconvCell", py::multiple_inheritance())
+    .def("getWeight", &DeconvCell::getWeight, py::arg("output"), py::arg("channel"), py::arg("value"))
+    .def("setWeight", &DeconvCell::setWeight, py::arg("output"), py::arg("channel"), py::arg("value"))
+    .def("setBias", &DeconvCell::setBias, py::arg("output"), py::arg("value"))
+    .def("getBias", &DeconvCell::getBias, py::arg("output"), py::arg("value"))
+    .def("getBiases", &DeconvCell::getBiases)
+
     .def("setWeightsSolver", &DeconvCell::setWeightsSolver, py::arg("solver"))
     .def("getWeightsSolver", &DeconvCell::getWeightsSolver)
     .def("setWeightsFiller", &DeconvCell::setWeightsFiller, py::arg("filler"))
