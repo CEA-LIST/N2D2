@@ -23,6 +23,7 @@
 
 
 import n2d2
+import n2d2_ip
 
 import math
 import argparse
@@ -44,16 +45,16 @@ args = parser.parse_args()
 n2d2.global_variables.set_cuda_device(args.dev)
 n2d2.global_variables.default_model = "Frame_CUDA"
 
-batch_size = 1
+batch_size = 16
 avg_window = 10000//batch_size
 size = 224
 nb_outputs = 100
 
 print("Create database")
-database = n2d2.database.CIFAR100(validation=0.0)
+database = n2d2.database.CIFAR100(validation=0.05)
 database.load("/nvme0/DATABASE/cifar-100-binary")
-#database = n2d2.database.ILSVRC2012(learn=1.0, randomPartitioning=False)
-#database.load("/nvme0/DATABASE/ILSVRC2012", labelPath="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
+#database = n2d2.database.ILSVRC2012(learn=1.0, random_partitioning=False)
+#database.load("/nvme0/DATABASE/ILSVRC2012", label_path="/nvme0/DATABASE/ILSVRC2012/synsets.txt")
 print(database)
 
 print("Create provider")
@@ -65,81 +66,105 @@ if args.arch == 'MobileNetv1':
     trans, otf_trans = n2d2.models.mobilenetv1.ILSVRC_preprocessing(size=size)
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
-    extractor = n2d2.models.mobilenetv1.MobileNetv1(alpha=0.5).extractor
-    if not args.weights == "":
-        extractor.import_free_parameters(args.weights)
-    head = n2d2.models.mobilenetv1.MobileNetv1(alpha=0.5).head
-elif args.arch == 'MobileNetv1_SAT':
-    margin = 32
+    model = n2d2.models.mobilenetv1.MobileNetv1(alpha=0.5)
+    extractor = model.extractor
+    head = model.head
+elif args.arch == 'MobileNetv1SAT':
+    # No ILSVRC normalization
     trans = n2d2.transform.Composite([
-        n2d2.transform.Rescale(width=size, height=size),
-        #n2d2.transform.Rescale(width=size + margin, height=size + margin, keep_aspect_ratio=True, resize_to_fit=False),
-        #n2d2.transform.PadCrop(width=size+margin, height=size+margin),
         n2d2.transform.ColorSpace(color_space='RGB'),
+        n2d2.transform.Rescale(width=size, height=size),
         n2d2.transform.RangeAffine(first_operator='Divides', first_value=[255.0]),
-        #n2d2.transform.SliceExtraction(width=size, height=size, offset_x=margin // 2, offset_y=margin // 2, apply_to='NoLearn')
     ])
-    #otf_trans = n2d2.transform.Composite([
-    #    n2d2.transform.SliceExtraction(width=size, height=size, random_offset_x=True, random_offset_y=True, apply_to='LearnOnly'),
-    #    n2d2.transform.Flip(random_horizontal_flip=True, apply_to='LearnOnly')
-    #])
-    #otf_trans = n2d2.transform.Composite([
-    #    n2d2.transform.Flip(apply_to='LearnOnly', random_horizontal_flip=True),
-    #    n2d2.transform.Distortion(apply_to='LearnOnly', elasticGaussianSize=21, elasticSigma=6.0,
-    #                              elasticScaling=36.0, scaling=10.0, rotation=10.0),
-    #])
-    print(trans)
-    #print(otf_trans)
     provider.add_transformation(trans)
-    #provider.add_on_the_fly_transformation(otf_trans)
-    extractor = n2d2.cells.DeepNetCell.load_from_ONNX("/home/jt251134/N2D2-IP/models/Quantization/SAT/model_mobilenet-v1-32b-clamp.onnx",
-                                            dims=[size, size, 3], batch_size=batch_size, ini_file="ignore_onnx.ini")
-    extractor.add_input(provider)
-    print(extractor)
-
-    if not args.weights == "":
-        extractor.import_free_parameters(args.weights)
+    model = n2d2_ip.models.MobileNetv1SAT(nb_outputs=100, alpha=1.0)
+    extractor = model.extractor
+    #extractor = n2d2.cells.Sequence([
+    #    model.extractor.div2,
+    #    model.extractor.div4,
+    #    model.extractor.div8,
+    #    model.extractor.div16,
+    #    model.extractor.div32
+    #])
+    #print(extractor[-1][-1].get_nb_outputs())
+    #head = n2d2.cells.Sequence([
+        #n2d2.models.mobilenetv1.MobileNetv1Extractor(alpha=1.0, with_bn=True).div32,
+    #    n2d2.models.mobilenetv1.MobileNetv1Head(nb_outputs=nb_outputs, alpha=1.0)
+    #])
+    head = n2d2.cells.Sequence([
+        n2d2.cells.GlobalPool2d(pooling='Average', name="pool1"),
+        n2d2.cells.Fc(1024, nb_outputs, activation_function=n2d2.activation.Linear(),
+                      weights_filler=n2d2.filler.He(),
+                    weights_solver=n2d2.solver.SGD(learning_rate=0.01),
+                      bias_solver=n2d2.solver.SGD(learning_rate=0.01),
+                         name="fc")
+        ])
+    #head = model.head
 elif args.arch == 'MobileNetv2-onnx':
+    trans = n2d2.transform.Composite([
+        n2d2.transform.ColorSpace(color_space='RGB'),
+        n2d2.transform.Rescale(width=size, height=size),
+        n2d2.transform.RangeAffine(first_operator='Divides', first_value=[255.0]),
+        n2d2.transform.RangeAffine(first_operator='Minus', first_value=[0.485, 0.456, 0.406], second_operator='Divides',
+                    second_value=[0.229, 0.224, 0.225]),
+    ])
     provider.add_transformation(n2d2.models.mobilenetv2.ONNX_preprocessing(size=size))
     extractor = n2d2.models.mobilenetv2.load_from_ONNX(provider, download=True, batch_size=batch_size)
-    print(extractor.get_core_deepnet())
     extractor.remove("mobilenetv20_output_pred_fwd")
     extractor.remove("mobilenetv20_output_flatten0_reshape0")
-    print(extractor.get_core_deepnet())
     head = n2d2.cells.Fc(1280, nb_outputs, activation_function=n2d2.activation.Linear(),
-                              weights_filler=n2d2.filler.Xavier(), name="fc")
+                         weights_filler=n2d2.filler.He(),
+                         weights_solver=n2d2.solver.SGD(learning_rate=0.01),
+                         bias_solver=n2d2.solver.SGD(learning_rate=0.01),
+                         name="fc")
 elif args.arch == 'ResNet50Bn':
     model = n2d2.models.ResNet50Bn(output_size=100, alpha=1.0, l=0)
     extractor = model.extractor
-    if not args.weights == "":
-        extractor.import_free_parameters(args.weights)
     head = model.head
     trans, otf_trans = n2d2.models.ILSVRC_preprocessing(size=size)
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
-elif args.arch == 'ResNet-onnx':
-    provider.add_transformation(n2d2.models.resnet.ONNX_preprocessing(size))
-    extractor = n2d2.models.resnet.load_from_ONNX(provider, '18', 'post_act', download=True, batch_size=batch_size)
+elif args.arch == 'ResNet-onnx': # 64% After 20 epochs
+    trans = n2d2.transform.Composite([
+        n2d2.transform.ColorSpace(color_space='RGB'),
+        n2d2.transform.Rescale(width=size, height=size),
+        n2d2.transform.RangeAffine(first_operator='Divides', first_value=[255.0]),
+        n2d2.transform.RangeAffine(first_operator='Minus', first_value=[0.485, 0.456, 0.406], second_operator='Divides',
+                    second_value=[0.229, 0.224, 0.225]),
+    ])
+    provider.add_transformation(trans)
+    extractor = n2d2.models.resnet.load_from_ONNX(provider, '34', 'post_act', download=True, batch_size=batch_size)
     print(extractor)
-    extractor.remove("resnetv22_flatten0_reshape0")
-    extractor.remove("resnetv22_dense0_fwd")
+    extractor.remove("resnetv23_flatten0_reshape0")
+    extractor.remove("resnetv23_dense0_fwd")
     head = n2d2.cells.Fc(512, nb_outputs, activation_function=n2d2.activation.Linear(),
-                              weights_filler=n2d2.filler.Xavier(), name="fc")
+                              weights_filler=n2d2.filler.He(),
+                         weights_solver=n2d2.solver.SGD(learning_rate=0.01),
+                         bias_solver=n2d2.solver.SGD(learning_rate=0.01),
+                         name="fc")
+
 
 else:
     raise ValueError("Invalid architecture: " + args.arch)
 
+if not args.weights == "":
+    extractor.import_free_parameters(args.weights)
+    #head.import_free_parameters(args.weights)
+
+print(extractor)
+print(head)
+
 print("Create classifier")
 loss_function = n2d2.application.CrossEntropyClassifier(provider, top_n=1)
 
+# To prevent batchnorm updates in frozen extractor
+extractor.test()
 
 print("\n### Training ###")
 for epoch in range(args.epochs):
 
     provider.set_partition("Learn")
 
-    extractor.test() # To prevent batchnorm updates
-    #extractor.learn()
     head.learn()
 
     print("\n# Train Epoch: " + str(epoch) + " #")
@@ -147,15 +172,18 @@ for epoch in range(args.epochs):
     for i in range(math.ceil(database.get_nb_stimuli('Learn') / batch_size)):
         x = provider.read_random_batch()
         x = extractor(x)
-        #x.detach_cell()
+        # Detach graph to prevent gradient propagation
+        x.detach_cell()
         x = head(x)
         x = loss_function(x)
 
         x.back_propagate()
+
         x.update()
 
         print("Example: " + str(i * batch_size) + ", loss: "
               + "{0:.3f}".format(x[0]), end='\r')
+
 
     print("\n### Validation ###")
 

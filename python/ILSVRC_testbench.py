@@ -108,11 +108,9 @@ elif args.arch == 'MobileNetv1Bn':
 elif args.arch == 'MobileNetv1SAT':
     nb_epochs = 120 if args.epochs == -1 else args.epochs
     model = n2d2_ip.models.MobileNetv1SAT(alpha=1.0)
-    print(model)
     trans, otf_trans = n2d2_ip.models.ILSVRC_preprocessing(size=size)
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
-    print(trans)
 elif args.arch == 'MobileNetv2-onnx':
     nb_epochs = 0 if args.epochs == -1 else args.epochs
     provider.add_transformation(n2d2.models.mobilenetv2.ONNX_preprocessing(size=size))

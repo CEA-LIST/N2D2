@@ -23,6 +23,7 @@
 
 
 import n2d2
+import n2d2_ip
 
 import math
 import argparse
@@ -100,13 +101,14 @@ elif args.arch == 'MobileNetv1_SAT':
     provider.add_transformation(trans)
     provider.add_on_the_fly_transformation(otf_trans)
 
-    extractor = n2d2.deepnet.load_from_ONNX("/home/jt251134/N2D2-IP/models/Quantization/SAT/model_mobilenet-v1-32b-clamp.onnx",
-                                            dims=size, batch_size=batch_size, ini_file="ignore_onnx.ini")
-    extractor.add_input(provider)
-    scales.append(extractor['184'])
-    scales.append(extractor['196'])
-    scales.append(extractor['232'])
-    scales.append(extractor['244'])
+    provider.add_transformation(trans)
+    model = n2d2_ip.models.MobileNetv1SAT(nb_outputs=100, alpha=1.0)
+    extractor = model.extractor
+
+    scales.append(extractor.div4[-1])
+    scales.append(extractor.div8[-1])
+    scales.append(extractor.div16[-1])
+    scales.append(extractor.div32[-1])
 
 elif args.arch == 'MobileNetv2-onnx':
     trans = n2d2.transform.Composite([

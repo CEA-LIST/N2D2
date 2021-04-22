@@ -47,7 +47,7 @@ class Filler(N2D2_Interface):
 
 class He(Filler):
     """
-    Fill with an normal distribution with normalized variance taking into account the rectifier nonlinearity :cite:`He2015`. This filler is sometimes referred as MSRA filler.
+    Fill with an normal distribution with normalized variance taking into account the rectifier nonlinearity :cite:`He2015`. This filler is sometimes referred as MSRA filler or Kaiming initialization.
     """
     _filler_generators = {
         '<float>': N2D2.HeFiller_float,
