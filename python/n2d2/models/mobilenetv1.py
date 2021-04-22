@@ -112,7 +112,9 @@ class MobileNetv1Head(Sequence):
 
         pool = GlobalPool2d(pooling='Average', name="pool1")
         fc = Fc(32 * int(32 * alpha), nb_outputs, activation_function=Linear(), weights_filler=Xavier(),
-                bias_filler=Constant(value=0.0), name="fc")
+                bias_filler=Constant(value=0.0),
+                weights_solver=SGD(**weights_solver_config), bias_solver=SGD(**bias_solver_config),
+                name="fc")
 
         Sequence.__init__(self, [pool, fc], "head")
 
