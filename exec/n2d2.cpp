@@ -828,6 +828,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         StimuliProviderExport::generate(*deepNet, *sp, exportDir + "/stimuli", opt.genExport, Database::Test, 
                                         DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision,
                                         opt.exportNbStimuliMax);
+        dnQAT.exportOutputsLayers(*sp, exportDir + "/stimuli", Database::Test, opt.exportNbStimuliMax);
     }
 
     DeepNetExport::generate(*deepNet, exportDir, opt.genExport);
