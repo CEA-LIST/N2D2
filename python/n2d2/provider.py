@@ -69,12 +69,12 @@ class DataProvider(Provider):
         """
         :param database: Database used to read data from
         :type database: :py:class:`n2d2.database.Database` 
+        :param size: Size of the data
+        :type size: list
         :param batch_size: Batch size, default=1
         :type batch_size: int, optional
         :param composite_stimuli: If true, use pixel-wise stimuli labels, default=False
         :type composite_stimuli: bool, optional
-        :param size: Size of the data
-        :type size: list
         :param random_read: if False we use get_batch when iterating other the provider, else we use get get_random_batch, default = False
         :type random_read: boolean, optional
         """
@@ -84,7 +84,6 @@ class DataProvider(Provider):
             'database': database,
             'size': size
         })
-
 
         self._parse_optional_arguments(['batch_size', 'composite_stimuli'])
 

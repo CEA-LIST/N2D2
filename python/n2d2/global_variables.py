@@ -184,4 +184,5 @@ convention_converter = ConventionConverter({
     "warm_up_l_r_frac": "WarmUpLRFrac",
     "random_partitioning": "RandomPartitioning",
     "load_data_in_memory": "loadDataInMemory",
+    "composite_sitmuli": "compositeStimuli",
 })

@@ -43,7 +43,10 @@ class test_params(unittest.TestCase):
                     param_name = N2D2_Interface.python_to_n2d2_convention(param)
                     N2D2_param, N2D2_type = self.object.N2D2().getParameterAndType(param_name)
                     N2D2_param = N2D2_Interface._N2D2_type_map[N2D2_type](N2D2_param)
-                    self.assertEqual(self.parameters[param], N2D2_param)
+                    if isinstance(self.parameters[param], bool):
+                        self.assertEqual(self.parameters[param], bool(int(N2D2_param)))
+                    else:
+                        self.assertEqual(self.parameters[param], N2D2_param)
             #         self.parameters.pop(param)
             
             # TODO : check if we have tested every parameters !
@@ -494,6 +497,82 @@ class test_Constant(test_params):
     def test_parameters(self):
         # TODO Check if the parameters are well initialized 
         super().test_parameters()
+
+
+### Solver ###
+
+class test_SGD(test_params):
+    def setUp(self):
+        self.parameters = {
+            "datatype": "float",
+            "model": "Frame",
+            "learning_rate": 0.001,
+            "momentum": 0.0,
+            "decay": 0.0,
+            "learning_rate_policy": "None",
+            "learning_rate_step_size": 1,
+            "learning_rate_decay": 0.1,
+            "clamping": False,
+        }
+        self.object = n2d2.solver.SGD(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+### Activation ###
+
+class Linear(test_params):
+    def setUp(self):
+        self.parameters = {
+            # TODO : "quantizer" 
+        }
+        self.object = n2d2.activation.Linear(**self.parameters)
+
+    def test_parameters(self):
+        super().test_parameters()
+
+class Rectifier(test_params):
+    def setUp(self):
+        self.parameters = {
+            "leak_slope": 0.0,
+            "clipping": 0.0,
+            # TODO : "quantizer" 
+        }
+        self.object = n2d2.activation.Rectifier(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+class Tanh(test_params):
+    def setUp(self):
+        self.parameters = {
+            "alpha": 0.0,
+        }
+        self.object = n2d2.activation.Tanh(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+### Provider ###
+
+class DataProvider(test_params):
+    def setUp(self):
+        self.parameters = {
+            "database": n2d2.database.Database(),
+            "batch_size": 1,
+            "size": [10, 10],
+            "composite_stimuli": False,
+            "random_read":True,
+        }
+        self.object = n2d2.provider.DataProvider(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
 
 # print(self.object.N2D2().getParameters())
 if __name__ == '__main__':

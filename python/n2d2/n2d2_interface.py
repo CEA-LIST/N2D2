@@ -92,9 +92,9 @@ class N2D2_Interface:
         returned_parameter, returned_type = self._N2D2_object.getParameterAndType(key)
         returned_parameter = self._N2D2_type_map[returned_type](returned_parameter)
         #print(key + " " + str(returned_parameter) + " " + str(value))
-        if not value == returned_parameter: # TODO : remove ?
-            raise RuntimeWarning("Parameter incoherence detected. Injected value is \'" + str(value) +
-                               "\', while returned value is \'" + str(returned_parameter) + "\'.")
+        # if not value == returned_parameter: # TODO : remove ?
+        #     raise RuntimeWarning("Parameter incoherence detected. Injected value is \'" + str(value) +
+        #                        "\', while returned value is \'" + str(returned_parameter) + "\'.")
 
     # TODO: This method is currently a safety check because the convention conversions are potentially not unique.
     @staticmethod
