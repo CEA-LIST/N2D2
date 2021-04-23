@@ -60,20 +60,20 @@ class ConventionConverter():
     def p_to_n(self, key):
         if key not in self.python_to_N2D2:
             # TODO : remove this later ...
-            import param_generator
-            print("This line should be added to the translator !")
-            input('"' + key + '": ' + '"' +param_generator.python_to_n2d2(key) +'",')
-            return param_generator.python_to_n2d2(key)
-            # raise ValueError("Invalid parameter : " + key + " isn't registered as a valid parameter")
+            # import param_generator
+            # print("This line should be added to the translator !")
+            # input('"' + key + '": ' + '"' +param_generator.python_to_n2d2(key) +'",')
+            # return param_generator.python_to_n2d2(key)
+            raise ValueError("Invalid parameter : " + key + " isn't registered as a valid parameter")
         return self.python_to_N2D2[key]
     def n_to_p(self, key):
         if key not in self.N2D2_to_python:
             # TODO : remove this later ...
-            import param_generator
-            print("This line should be added to the translator !")
-            input('"' + param_generator.n2d2_to_python(key) + '": ' + '"' + key +'",')
-            return param_generator.n2d2_to_python(key)
-            # raise ValueError("Invalid parameter : " + key + " isn't registered as a valid parameter")
+            # import param_generator
+            # print("This line should be added to the translator !")
+            # input('"' + param_generator.n2d2_to_python(key) + '": ' + '"' + key +'",')
+            # return param_generator.n2d2_to_python(key)
+            raise ValueError("Invalid parameter : " + key + " isn't registered as a valid parameter")
         return self.N2D2_to_python[key]
 
 convention_converter = ConventionConverter({
