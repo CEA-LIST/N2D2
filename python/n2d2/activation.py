@@ -49,7 +49,10 @@ class ActivationFunction(N2D2_Interface):
         return activation
 
     def get_quantizer(self):
-        return self._config_parameters['quantizer']
+        if 'quantizer' in self._config_parameters:
+            return self._config_parameters['quantizer']
+        else:
+            raise RuntimeError("No Quantizer in activation")
 
     def set_quantizer(self, quantizer):
         if 'quantizer' in self._config_parameters:

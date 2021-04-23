@@ -23,7 +23,7 @@ void init_QuantizerActivation(py::module &m) {
     q.doc() = "QuantizerActivation is the abstract base object for any kind of activation quantizer";
     q.def("setSolver", &QuantizerActivation::setSolver, py::arg("solver"));
     q.def("getType", &QuantizerActivation::getType);
-    //.def("getQuantizedActivations", &QuantizerActivation::getQuantizedActivations) // Not in cpp object at the moment
+    q.def("getFullPrecisionActivations", &QuantizerActivation::getFullPrecisionActivations, py::return_value_policy::reference);
     q.def("setRange", &QuantizerActivation::setRange, py::arg("integerRange"));
 }
 }

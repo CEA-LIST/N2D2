@@ -511,6 +511,13 @@ class Fc(NeuralNetworkCell):
             self._N2D2_object.setQuantizer(self._config_parameters['quantizer'].N2D2())
             self._N2D2_object.initializeWeightQuantizer()
 
+    def get_quantizer(self):
+        if 'quantizer' in self._config_parameters:
+            return self._config_parameters['quantizer']
+        else:
+            raise RuntimeError("No Quantizer in cell '" + self.get_name() + "'")
+
+
     def get_bias_solver(self):
         return self._config_parameters['bias_solver']
 
@@ -734,6 +741,13 @@ class Conv(NeuralNetworkCell):
             self._config_parameters['quantizer'] = quantizer
             self._N2D2_object.setQuantizer(self._config_parameters['quantizer'].N2D2())
             self._N2D2_object.initializeWeightQuantizer()
+
+    def get_quantizer(self):
+        if 'quantizer' in self._config_parameters:
+            return self._config_parameters['quantizer']
+
+        else:
+            raise RuntimeError("No Quantizer in cell '" + self.get_name() + "'")
 
     def set_weight(self, output_index, channel_index, value):
         """

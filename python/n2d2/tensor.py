@@ -401,11 +401,33 @@ class Tensor:
         return is_equal
 
     def __str__(self):
-        return str(self._tensor)
+        output = "n2d2.Tensor(["
+        output += str(self._tensor)
+        output += "], device=" + ("cuda" if self.is_cuda else "cpu")
+        if self.cell:
+            output += ", cell='" + str(self.cell.get_name()) + "')"
+        else:
+            output += ")"
+        return output
 
-    def detach_cell(self): # TODO : May become useless, check if we se it for transfer learning !  
+    def dtoh(self):
+        if self.is_cuda:
+            self._tensor.synchronizeDToH()
+        else:
+            RuntimeError("Trying to synchronize a non-cuda Tensor to device")
+        return self
+
+    def htod(self):
+        if self.is_cuda:
+            self._tensor.synchronizeHToD()
+        else:
+            RuntimeError("Trying to synchronize a non-cuda Tensor to host")
+        return self
+
+    def detach_cell(self):
         """
-        Detach the cells from the tensor, this allow you to pass the output of a deepnet to another one.
+        Detach the cells from the tensor, thereby removing all information about the computation graph/deepnet object.
+        Therefore no gradients pass this tensor after this operation has been performed.
         """
         self.cell = None
         return self
