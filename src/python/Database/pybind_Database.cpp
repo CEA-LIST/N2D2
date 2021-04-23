@@ -136,7 +136,10 @@ void init_Database(py::module &m) {
      :type index: int
      :return: Label of stimuli
      :rtype: int
-    )mydelimiter");
+    )mydelimiter")
+    .def("getLoadDataInMemory", (bool (Database::*)())(&Database::getLoadDataInMemory))
+    // .def("getLoadDataInMemory", Database::getLoadDataInMemory)
+    ;
 
 }
 }

@@ -111,6 +111,10 @@ class DIR(Database):
     """
     _type = "DIR"
     def __init__(self, **config_parameters):
+        """
+        :param load_data_in_memory: Load the whole database into memory, default=False
+        :type: boolean, optional
+        """
         N2D2_Interface.__init__(self, **config_parameters)
         self._parse_optional_arguments(['load_data_in_memory'])
         self._N2D2_object = N2D2.DIR_Database(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
@@ -192,12 +196,6 @@ class ILSVRC2012(Database):
         """
         :param learn: Fraction of images used for the learning
         :type learn: float
-        :param data_path: Path to the database, default="``$N2D2_DATA``/ILSVRC2012"
-        :type data_path: str, optional
-        :param label_path: Path to the label, default="``$N2D2_DATA``/ILSVRC2012/synsets.txt"
-        :type label_path: str, optional
-        :param validation: Fraction of the learning set used for validation, default=0.0
-        :type validation: float, optional
         :param use_validation_for_test: If True, use the validation partition for test, default=False
         :type use_validation_for_test: bool, optional
         """
@@ -221,16 +219,12 @@ class Cityscapes(Database):
 
     def __init__(self, **config_parameters):
         """
-        :param data_path: Path to the database, default="``$N2D2_DATA``/Cityscapes"
-        :type data_path: str, optional
-        :param label_path: Path to the database annotations (deduced from ``data_path`` if left empty), default=""
-        :type label_path: str, optional
         :param inc_train_extra: If true, includes the left 8-bit images - trainextra set (19,998 images), default=False
         :type inc_train_extra: boolean, optional
         :param use_coarse: If true, only use coarse annotations (which are the only annotations available for the trainextra set), default=False
         :type use_coarse: boolean, optional 
         :param single_instance_labels: If true, convert group labels to single instance labels (for example, cargroup becomes car), default=True
-        :type use_coarse: boolean, optional 
+        :type single_instance_labels: boolean, optional 
         """
         N2D2_Interface.__init__(self, **config_parameters)
 
@@ -249,8 +243,6 @@ class GTSRB(Database):
         """
         :param validation: Fraction of the learning set used for validation
         :type validation: float
-        :param extract_ROIs: Set if we extract region of interest, default=False
-        :type extract_ROIs: boolean, optional
         """
         N2D2_Interface.__init__(self, **config_parameters)
 

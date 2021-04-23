@@ -236,12 +236,88 @@ class test_Dropout(test_params):
 
         super().test_parameters()
 
+# The following classes have not been tested because of a lack of documentation
 # TODO: Padding
+# TODO: Activation
+# TODO: Reshape
 
 ### TEST DATABASE ###
 
+class test_DIR(test_params):
+    def setUp(self):
+        self.parameters = {
+            "load_data_in_memory": True,
+        }
+        self.object = n2d2.database.DIR(**self.parameters)
+
+    def test_parameters(self):
+        # Need to instantiate the object (doing so by passing a dummy input)
+        self.assertEqual(self.parameters["load_data_in_memory"], self.object.N2D2().getLoadDataInMemory())
+        
+        super().test_parameters()
+
+class test_MNIST(test_params):
+    def setUp(self):
+        self.parameters = {
+            "label_path": "",
+            "extract_ROIs": True,
+            "validation": 0.2
+        }
+        self.object = n2d2.database.MNIST("/nvme0/DATABASE/MNIST/raw/", **self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
 
 
+class test_CIFAR100(test_params):
+    def setUp(self):
+        self.parameters = {
+            "use_coarse": True,
+            "validation": 0.2
+        }
+        self.object = n2d2.database.CIFAR100(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+class test_ILSVRC2012(test_params):
+    def setUp(self):
+        self.parameters = {
+            "learn": 0.2,
+            "use_validation_for_test": True,
+        }
+        self.object = n2d2.database.ILSVRC2012(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+class test_Cityscapes(test_params):
+    def setUp(self):
+        self.parameters = {
+            "inc_train_extra": False,
+            "use_coarse": True,
+            "single_instance_labels": False,
+        }
+        self.object = n2d2.database.Cityscapes(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+class test_GTSRB(test_params):
+    def setUp(self):
+        self.parameters = {
+            "validation": 0.2,
+        }
+        self.object = n2d2.database.GTSRB(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+    
 
 # print(self.object.N2D2().getParameters())
 if __name__ == '__main__':
