@@ -78,6 +78,18 @@ class SATCell(CellQuantizer):
             self._set_N2D2_object(self._quantizer_generators[self._model_key]())
             self._set_N2D2_parameters(self._config_parameters)
 
+    """
+    Access the quantized weights of the cell the quantizer is attached to.
+    """
+    def get_quantized_weights(self, input_idx):
+        return n2d2.Tensor.from_N2D2(self.N2D2().getQuantizedWeights(input_idx))
+
+    """
+    Access the quantized weights of the cell the quantizer is attached to.
+    """
+    def get_quantized_biases(self):
+        return n2d2.Tensor.from_N2D2(self.N2D2().getQuantizedBiases())
+
 
 class SATAct(ActivationQuantizer):
     """
@@ -109,3 +121,10 @@ class SATAct(ActivationQuantizer):
         self._config_parameters['solver'] = solver
         self._N2D2_object.setSolver(self._config_parameters['solver'].N2D2())
     """
+
+    """
+    Access the full precision activations of the activation function.
+    Note: This may be empty for some Quantizers if they are run exclusively in inference mode
+    """
+    def get_full_precision_activations(self):
+        return n2d2.Tensor.from_N2D2(self.N2D2().getFullPrecisionActivations())

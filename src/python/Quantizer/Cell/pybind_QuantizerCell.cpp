@@ -25,8 +25,8 @@ void init_QuantizerCell(py::module &m) {
     q.def("addBiases", &QuantizerCell::addWeights, py::arg("biases"), py::arg("diffBiases"));
     q.def("setSolver", &QuantizerCell::setSolver, py::arg("solver"));
     q.def("getType", &QuantizerCell::getType);
-    q.def("getQuantizedWeights", &QuantizerCell::getQuantizedWeights);
-    q.def("getQuantizedBiases", &QuantizerCell::getQuantizedBiases);
+    q.def("getQuantizedWeights", &QuantizerCell::getQuantizedWeights, py::arg("k"), py::return_value_policy::reference);
+    q.def("getQuantizedBiases", &QuantizerCell::getQuantizedBiases, py::return_value_policy::reference);
     q.def("setRange", &QuantizerCell::setRange, py::arg("integerRange"));
 }
 }
