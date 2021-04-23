@@ -38,7 +38,6 @@ class test_params(unittest.TestCase):
 
         if self.object: # We don't do test if it's the dummy class
             parameters = self.object.N2D2().getParameters()
-            print(parameters)
             for param in self.parameters.keys():
                 if N2D2_Interface.python_to_n2d2_convention(param) in parameters:
                     param_name = N2D2_Interface.python_to_n2d2_convention(param)
@@ -47,7 +46,7 @@ class test_params(unittest.TestCase):
                     self.assertEqual(self.parameters[param], N2D2_param)
             #         self.parameters.pop(param)
             
-            # # We check if we have tested every parameters !
+            # TODO : check if we have tested every parameters !
             # self.assertTrue(self.parameters.keys() == [])
 
 
@@ -124,12 +123,11 @@ class test_Softmax(test_params):
             "name": "test",
             "with_loss": True,
             "group_size": 1,
-            "mapping": n2d2.Tensor([5, 5],  datatype=bool),
         }
         self.object = n2d2.cells.Softmax(**self.parameters)
 
     def test_parameters(self):
-        # Need to instantiate the object (doing so by passing him dummy input)
+        # Need to instantiate the object (doing so by passing a dummy input)
         tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
         self.object(tensor)
 
@@ -151,7 +149,7 @@ class test_Pool(test_params):
         self.object = n2d2.cells.Pool([1, 1], **self.parameters)
 
     def test_parameters(self):
-        # Need to instantiate the object (doing so by passing him dummy input)
+        # Need to instantiate the object (doing so by passing a dummy input)
         tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
         self.object(tensor)
 
@@ -168,7 +166,7 @@ class test_Deconv(test_params):
     def setUp(self):
         self.parameters = {
             "name": "test",
-            "activation_function": n2d2.activation.Tanh(),
+            "activation_function": n2d2.activation.Linear(),
             "weights_solver": n2d2.solver.SGD(),
             "stride_dims": [2, 2],
             "dilation_dims": [1, 1],
@@ -194,8 +192,57 @@ class test_Deconv(test_params):
         self.assertEqual(self.parameters["stride_dims"], [self.object.N2D2().getStrideX(), self.object.N2D2().getStrideY()])
         self.assertEqual(self.parameters["padding_dims"], [self.object.N2D2().getPaddingX(), self.object.N2D2().getPaddingY()])
         self.assertEqual(self.parameters["dilation_dims"], [self.object.N2D2().getDilationX(), self.object.N2D2().getDilationY()])
-  
+        self.assertEqual(n2d2.Tensor.from_N2D2(self.parameters["mapping"].N2D2()), 
+                         n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping()))
         super().test_parameters()
 
+class test_ElemWise(test_params):
+    def setUp(self):
+        self.parameters = {
+            "name": "test",
+            "operation": "Max",
+            "weights": [0.5],
+            "shifts": [0.5],
+            "activation_function": n2d2.activation.Linear(),
+        }
+        self.object = n2d2.cells.ElemWise(**self.parameters)
+
+    def test_parameters(self):
+        # Need to instantiate the object (doing so by passing a dummy input)
+        tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
+        self.object(tensor)
+
+        self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
+        self.assertEqual(N2D2.ElemWiseCell.Operation.__members__[self.parameters["operation"]], 
+                        self.object.N2D2().getOperation())
+        self.assertEqual(self.parameters["weights"], self.object.N2D2().getWeights())
+        self.assertEqual(self.parameters["shifts"], self.object.N2D2().getShifts())
+        self.assertIs(self.parameters["activation_function"].N2D2(), self.object.N2D2().getActivation())
+        super().test_parameters()
+
+class test_Dropout(test_params):
+    def setUp(self):
+        self.parameters = {
+            "name": "test",
+            "dropout": 0.3,
+        }
+        self.object = n2d2.cells.Dropout(**self.parameters)
+
+    def test_parameters(self):
+        # Need to instantiate the object (doing so by passing a dummy input)
+        tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
+        self.object(tensor)
+        self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
+
+        super().test_parameters()
+
+# TODO: Padding
+
+### TEST DATABASE ###
+
+
+
+
+# print(self.object.N2D2().getParameters())
 if __name__ == '__main__':
     unittest.main()

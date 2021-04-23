@@ -48,7 +48,7 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
         else:
             self.datatype = n2d2.global_variables.default_datatype
         self._connection_parameters = {}
-        if 'mapping' in config_parameters:
+        if 'mapping' in config_parameters: # TODO : Some cells doesn't support mapping 
             mapping = config_parameters.pop('mapping')
             if isinstance(mapping, n2d2.Tensor):
                 if mapping.data_type() != bool:
@@ -1282,7 +1282,6 @@ class Deconv(NeuralNetworkCell):
         :type weights_export_flip: bool, optional
         :param mapping: Mapping
         :type mapping: :py:class:`n2d2.tensor.Tensor`, optional
-        
         """
 
         if not from_arguments and (nb_inputs is not None or nb_outputs is not None or kernel_dims is not None or len(config_parameters) > 0):
@@ -1530,8 +1529,6 @@ class ElemWise(NeuralNetworkCell):
         :type shifts: float, optional
         :param activation_function: Activation function, default= :py:class:`n2d2.activation.Linear`
         :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
-        :param mapping: Mapping
-        :type mapping: :py:class:`n2d2.tensor.Tensor`, optional
         """
         if not from_arguments and (len(config_parameters) > 0):
             raise RuntimeError(
@@ -1606,7 +1603,6 @@ class ElemWise(NeuralNetworkCell):
                 raise n2d2.wrong_input_type("inputs", inputs, [str(type(list)), str(type(n2d2.Tensor))])
             self._deepnet = self._infer_deepnet(inputs)
 
-            print(mapping_row)
 
             self._set_N2D2_object(self._cell_constructors[self._model](self._deepnet.N2D2(),
                                                                      self.get_name(),

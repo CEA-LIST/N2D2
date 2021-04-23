@@ -60,20 +60,20 @@ class ConventionConverter():
     def p_to_n(self, key):
         if key not in self.python_to_N2D2:
             # TODO : remove this later ...
-            # import param_generator
-            # print("This line should be added to the translator !")
-            # input('"' + key + '": ' + '"' +param_generator.python_to_n2d2(key) +'",')
-            # return param_generator.python_to_n2d2(key)
-            raise ValueError("Invalid parameter : " + key + " isn't registered as a valid parameter")
+            import param_generator
+            print("This line should be added to the translator !")
+            input('"' + key + '": ' + '"' +param_generator.python_to_n2d2(key) +'",')
+            return param_generator.python_to_n2d2(key)
+            # raise ValueError("Invalid parameter : " + key + " isn't registered as a valid parameter")
         return self.python_to_N2D2[key]
     def n_to_p(self, key):
         if key not in self.N2D2_to_python:
             # TODO : remove this later ...
-            # import param_generator
-            # print("This line should be added to the translator !")
-            # input('"' + param_generator.n2d2_to_python(key) + '": ' + '"' + key +'",')
-            # return param_generator.n2d2_to_python(key)
-            raise ValueError("Invalid parameter : " + key + " isn't registered as a valid parameter")
+            import param_generator
+            print("This line should be added to the translator !")
+            input('"' + param_generator.n2d2_to_python(key) + '": ' + '"' + key +'",')
+            return param_generator.n2d2_to_python(key)
+            # raise ValueError("Invalid parameter : " + key + " isn't registered as a valid parameter")
         return self.N2D2_to_python[key]
 
 convention_converter = ConventionConverter({
@@ -110,14 +110,14 @@ convention_converter = ConventionConverter({
     "validation": "validation",
     "mapping": "mapping",
     "channel": "Channel",
-    "operation": "Operation",
+    "operation": "operation",
     "depth": "Depth",
     "padding_dims": "paddingDims",
     "pool_dims": "PoolDims",
     "momentum": "Momentum",
     "quantizer": "Quantizer",
     "database": "Database",
-    "weights": "Weights",
+    "weights": "weights",
     "leak_slope": "LeakSlope",
     "datatype": "Datatype",
     "data_path": "DataPath",
@@ -139,7 +139,7 @@ convention_converter = ConventionConverter({
     "clipping": "Clipping",
     "random_offset_x": "RandomOffsetX",
     "keep_aspect_ratio": "KeepAspectRatio",
-    "shifts": "Shifts",
+    "shifts": "shifts",
     "alpha": "Alpha",
     "with_loss": "withLoss",
     "learn": "Learn",
@@ -179,28 +179,6 @@ convention_converter = ConventionConverter({
     "max_iterations" : "MaxIterations",
     "polyak_momentum" : "PolyakMomentum",
     "power" : "Power",
-    "warm_up_duration": "WarmUpDuration",
-    "warm_up_l_r_frac": "WarmUpLRFrac",
-    "warm_up_duration": "WarmUpDuration",
-    "warm_up_l_r_frac": "WarmUpLRFrac",
-    "warm_up_duration": "WarmUpDuration",
-    "warm_up_l_r_frac": "WarmUpLRFrac",
-    "warm_up_duration": "WarmUpDuration",
-    "warm_up_l_r_frac": "WarmUpLRFrac",
-    "warm_up_duration": "WarmUpDuration",
-    "warm_up_l_r_frac": "WarmUpLRFrac",
-    "warm_up_duration": "WarmUpDuration",
-    "warm_up_l_r_frac": "WarmUpLRFrac",
-    "warm_up_duration": "WarmUpDuration",
-    "warm_up_l_r_frac": "WarmUpLRFrac",
-    "warm_up_duration": "WarmUpDuration",
-    "warm_up_l_r_frac": "WarmUpLRFrac",
-    "warm_up_duration": "WarmUpDuration",
-    "warm_up_l_r_frac": "WarmUpLRFrac",
-    "warm_up_duration": "WarmUpDuration",
-    "warm_up_l_r_frac": "WarmUpLRFrac",
-    "warm_up_duration": "WarmUpDuration",
-    "warm_up_l_r_frac": "WarmUpLRFrac",
     "warm_up_duration": "WarmUpDuration",
     "warm_up_l_r_frac": "WarmUpLRFrac",
     "random_partitioning": "RandomPartitioning",
