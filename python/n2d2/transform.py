@@ -338,7 +338,7 @@ class SliceExtraction(Transformation):
         :param random_scaling_range: Range of the random scaling (if ``RandomRotation`` is enabled), default=[0.8, 1.2]
         :type random_scaling_range: list, optional
         :param allow_padding: If true, zero-padding is allowed if the image is smaller than the slice to extract, default=False
-        :type random_scaling_range: bool, optional
+        :type allow_padding: bool, optional
         :param border_type: Border type used when padding, default="MinusOneReflectBorder"
         :type border_type: str, optional
         """

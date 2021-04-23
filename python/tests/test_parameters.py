@@ -318,6 +318,131 @@ class test_GTSRB(test_params):
         # TODO Check if the parameters are well initialized 
         super().test_parameters()
     
+### Transformation ###
+
+class test_PadCrop(test_params):
+    def setUp(self):
+        self.parameters = {
+            "border_type": "WrapBorder",
+            # "border_value": [0.0, 0.0, 0.0] # TODO : make it work
+        }
+        self.object = n2d2.transform.PadCrop(10, 10, **self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+class test_Distortion(test_params):
+    def setUp(self):
+        self.parameters = {
+            "elastic_gaussian_size": 10,
+            "elastic_sigma": 5.0,
+            "elastic_scaling": 0.0,
+            "scaling": 0.0,
+            "rotation": 0.0,
+        }
+        self.object = n2d2.transform.Distortion(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+class test_Rescale(test_params):
+    def setUp(self):
+        self.parameters = {
+            "keep_aspect_ratio": True,
+            "resize_to_fit": False,
+        }
+        self.object = n2d2.transform.Rescale(10, 10, **self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+class test_ColorSpace(test_params):
+    def setUp(self):
+        self.parameters = {
+            "color_space": "CIELab",
+        }
+        self.object = n2d2.transform.ColorSpace(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+class test_RangeAffine(test_params):
+    def setUp(self):
+        self.parameters = {
+            "first_operator": "Plus",
+            "first_value": 1.0,
+            "second_operator": "Plus",
+            "second_value": 1.0,
+        }
+        self.object = n2d2.transform.RangeAffine(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+class test_SliceExtraction(test_params):
+    def setUp(self):
+        self.parameters = {
+            "width": 4,
+            "height": 2,
+            "offset_x": 0,
+            "offset_y": 0,
+            "random_offset_x":False,
+            "random_offset_y":False,
+            "random_rotation":True,
+            "random_scaling": True,
+            "allow_padding": True,
+            "border_type": "WrapBorder",
+        }
+        self.object = n2d2.transform.SliceExtraction(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+class test_Flip(test_params):
+    def setUp(self):
+        self.parameters = {
+            "horizontal_flip": True,
+            "vertical_flip": True,
+            "random_horizontal_flip": True,
+            "random_vertical_flip": True,
+        }
+        self.object = n2d2.transform.Flip(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+class test_RandomResizeCrop(test_params):
+    def setUp(self):
+        self.parameters = {
+            "width": 10,
+            "height": 10,
+            "offset_x": 0,
+            "offset_y": 0,
+        }
+        self.object = n2d2.transform.RandomResizeCrop(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+class test_ChannelExtraction(test_params):
+    def setUp(self):
+        self.parameters = {
+            "channel": "Green",
+        }
+        self.object = n2d2.transform.ChannelExtraction(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+
 
 # print(self.object.N2D2().getParameters())
 if __name__ == '__main__':
