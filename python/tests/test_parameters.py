@@ -442,7 +442,58 @@ class test_ChannelExtraction(test_params):
         # TODO Check if the parameters are well initialized 
         super().test_parameters()
 
+### Filler ###
+class test_He(test_params):
+    def setUp(self):
+        self.parameters = {
+            "datatype": "float",
+            "variance_norm": 'Average',
+            "scaling": 1.0,  
+        }
+        self.object = n2d2.filler.He(**self.parameters)
 
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+class test_Normal(test_params):
+    def setUp(self):
+        self.parameters = {
+            "datatype": "float",
+            "mean": 0.0,
+            "std_dev": 1.0,
+        }
+        self.object = n2d2.filler.Normal(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+class test_Xavier(test_params):
+    def setUp(self):
+        self.parameters = {
+            "datatype": "float",
+            "variance_norm": "FanOut",
+            "distribution": "Normal",
+            "scaling": 1.0, 
+        }
+        self.object = n2d2.filler.Xavier(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
+
+class test_Constant(test_params):
+    def setUp(self):
+        self.parameters = {
+            "datatype": "float",
+            "value": 1.0,
+        }
+        self.object = n2d2.filler.Constant(**self.parameters)
+
+    def test_parameters(self):
+        # TODO Check if the parameters are well initialized 
+        super().test_parameters()
 
 # print(self.object.N2D2().getParameters())
 if __name__ == '__main__':

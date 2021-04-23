@@ -182,6 +182,12 @@ class Distortion(Transformation):
         Transformation.__init__(self, **config_parameters)
 
         self._N2D2_object = N2D2.DistortionTransformation()
+
+        # Scaling parameter is written with an upper case here but with a lower case in other classes
+        # Treating this as an exception
+        if "scaling" in self._config_parameters: 
+            self._N2D2_object.setParameter("Scaling", str(self._config_parameters.pop('scaling')))
+
         self._set_N2D2_parameters(self._config_parameters)
 
 

@@ -61,10 +61,18 @@ class He(Filler):
         :type variance_norm: str, optional
         :param scaling: Scaling factor, default=1.0
         :type scaling: float, optional
+        :param mean_norm: 
         """
         Filler.__init__(self, **config_parameters)
 
         if from_arguments:
+            if "variance_norm" in self._config_parameters:
+                variance_norm = self._config_parameters["variance_norm"]
+                if variance_norm not in self._filler_generators[self._model_key].VarianceNorm.__members__.keys():
+                    raise n2d2.error_handler.WrongValue("variance_norm", variance_norm,
+                                                        " ".join(self._filler_generators[self._model_key].VarianceNorm.__members__.keys()))
+                self._config_parameters["variance_norm"] = self._filler_generators[self._model_key].VarianceNorm.__members__[variance_norm]
+
             self._parse_optional_arguments(['variance_norm', 'mean_norm', 'scaling'])
             self._set_N2D2_object(self._filler_generators[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
             self._set_N2D2_parameters(self._config_parameters)
@@ -141,10 +149,10 @@ class Xavier(Filler):
             self._parse_optional_arguments(['variance_norm', 'distribution', 'scaling'])
             if 'variance_norm' in self._optional_constructor_arguments:
                 self._optional_constructor_arguments['variance_norm'] = \
-                    N2D2.XavierFiller_float.VarianceNorm.__members__[self._optional_constructor_arguments['variance_norm']]
+                    self._filler_generators[self._model_key].VarianceNorm.__members__[self._optional_constructor_arguments['variance_norm']]
             if 'distribution' in self._optional_constructor_arguments:
                 self._optional_constructor_arguments['distribution'] = \
-                    N2D2.XavierFiller_float.Distribution.__members__[self._optional_constructor_arguments['distribution']]
+                    self._filler_generators[self._model_key].Distribution.__members__[self._optional_constructor_arguments['distribution']]
             self._set_N2D2_object(self._filler_generators[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
             self._set_N2D2_parameters(self._config_parameters)
 

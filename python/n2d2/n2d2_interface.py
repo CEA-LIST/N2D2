@@ -131,7 +131,7 @@ class N2D2_Interface:
         lower case, while N2D2::Parameter objects are first letter upper case.
         """
     @staticmethod
-    def python_to_n2d2_convention(key, first_upper=True):
+    def python_to_n2d2_convention(key, first_upper=False):
         # new_key = ""
         # set_upper = first_upper
         # for c in key:
@@ -147,6 +147,8 @@ class N2D2_Interface:
         #     else:
         #         set_upper = True
         new_key = n2d2.global_variables.convention_converter.p_to_n(key)
+        if first_upper:
+            new_key = new_key[0].upper() + new_key[1:]
         return new_key
 
     """
