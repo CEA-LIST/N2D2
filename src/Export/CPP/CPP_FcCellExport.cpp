@@ -275,13 +275,14 @@ void N2D2::CPP_FcCellExport::generateCallCode(
                 << prefix << "_MEM_CONT_SIZE, "
                 << prefix << "_MEM_WRAP_OFFSET, "
                 << prefix << "_MEM_WRAP_SIZE, "
-                << prefix << "_MEM_STRIDE"
+                << prefix << "_MEM_STRIDE, "
+                << CPP_CellExport::getLabelActivationRange(cell)
             << ">("
                 << inputBuffer << " , "
                 << outputBuffer << ", "
                 << identifier << "_biases, "
                 << identifier << "_weights, "
-                << prefix << "_SCALING"
+                << CPP_CellExport::getLabelScaling(cell)
             << ");\n\n";
 
     generateBenchmarkEnd(deepNet, cell, functionCalls);

@@ -154,6 +154,7 @@ private:
             int OUTPUT_MEM_WRAP_OFFSET,
             int OUTPUT_MEM_WRAP_SIZE,
             int OUTPUT_MEM_STRIDE,
+            int ACTIVATION_OUTPUT_RANGE,
             typename Input_T, typename Output_T,
             typename Rescaling_T>
     N2D2_ALWAYS_INLINE void convcellPropagate(
@@ -189,6 +190,7 @@ private:
             int OUTPUT_MEM_WRAP_OFFSET,
             int OUTPUT_MEM_WRAP_SIZE,
             int OUTPUT_MEM_STRIDE,
+            int ACTIVATION_OUTPUT_RANGE,
             typename Input_T, typename Output_T,
             typename Rescaling_T>
     N2D2_ALWAYS_INLINE void convcellDWPropagate(
@@ -245,6 +247,7 @@ private:
             int OUTPUT_MEM_WRAP_OFFSET,
             int OUTPUT_MEM_WRAP_SIZE,
             int OUTPUT_MEM_STRIDE,
+            int ACTIVATION_OUTPUT_RANGE,
             typename Input_T, typename Output_T,
             typename Rescaling_T>
     N2D2_ALWAYS_INLINE void fccellPropagate(
@@ -417,7 +420,8 @@ private:
     template<typename Output_T, typename Rescaling_T>
     N2D2_ALWAYS_INLINE static Output_T sat(SUM_T weightedSum, int output, 
                                            ActivationFunction_T func, 
-                                           const Rescaling_T& __restrict rescaling) 
+                                           const Rescaling_T& __restrict rescaling,
+                                           int ACTIVATION_OUTPUT_RANGE) 
     {
         switch(func) {
             case Linear:
@@ -432,7 +436,7 @@ private:
                 N2D2_THROW_OR_ABORT(std::runtime_error, "Unsupported activation function.");
         }
 
-        return saturate<Output_T>(rescaling(weightedSum, output), NB_BITS);
+        return saturate<Output_T>(rescaling(weightedSum, output), ACTIVATION_OUTPUT_RANGE);
     }
 
     template<typename Output_T, typename T,  
@@ -662,7 +666,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::elemWisePropagate(
                                         ARGS...>(pos, ch, firstInputs, inputs...);
 
                 outputs[oOffset + ch]
-                    = sat<Output_T>(val, ch, ACTIVATION, rescaling);
+                    = sat<Output_T>(val, ch, ACTIVATION, rescaling, NB_BITS);
             }
         }
     }
@@ -688,6 +692,7 @@ template<int NB_CHANNELS,
          int OUTPUT_MEM_WRAP_OFFSET,
          int OUTPUT_MEM_WRAP_SIZE,
          int OUTPUT_MEM_STRIDE,
+         int ACTIVATION_OUTPUT_RANGE,
          typename Input_T, typename Output_T,
          typename Rescaling_T>
 N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
@@ -808,7 +813,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
                 }
 
                 outputs[oOffset + output]
-                    = sat<Output_T>(weightedSum, output, ACTIVATION, rescaling);
+                    = sat<Output_T>(weightedSum, output, ACTIVATION, rescaling, ACTIVATION_OUTPUT_RANGE);
             }
         }
     }
@@ -834,6 +839,7 @@ template<int NB_CHANNELS,
          int OUTPUT_MEM_WRAP_OFFSET,
          int OUTPUT_MEM_WRAP_SIZE,
          int OUTPUT_MEM_STRIDE,
+         int ACTIVATION_OUTPUT_RANGE,
          typename Input_T, typename Output_T,
          typename Rescaling_T>
 N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
@@ -955,7 +961,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                 }
 
                 outputs[oOffset + output]
-                    = sat<Output_T>(weightedSum, output, ACTIVATION, rescaling);
+                    = sat<Output_T>(weightedSum, output, ACTIVATION, rescaling, ACTIVATION_OUTPUT_RANGE);
             }
         }
     }
@@ -1137,6 +1143,7 @@ template<int NB_CHANNELS,
          int OUTPUT_MEM_WRAP_OFFSET,
          int OUTPUT_MEM_WRAP_SIZE,
          int OUTPUT_MEM_STRIDE,
+         int ACTIVATION_OUTPUT_RANGE,
          typename Input_T, typename Output_T,
          typename Rescaling_T>
 N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
@@ -1203,7 +1210,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
             }
         }
 
-        outputs[och] = sat<Output_T>(weightedSum, och, ACTIVATION, rescaling);
+        outputs[och] = sat<Output_T>(weightedSum, och, ACTIVATION, rescaling, ACTIVATION_OUTPUT_RANGE);
     }
 }
 
@@ -1256,12 +1263,12 @@ inline void N2D2::Network::saveOutputs(
         fprintf(pFile, ")\n");
     }
     else if (format == Format::CHW) {
-        fprintf(pFile, "(");
+        fprintf(pFile, "");
         for(int output = 0; output < NB_OUTPUTS; output++) {
-            fprintf(pFile, "(");
+            fprintf(pFile, "");
 
             for(int oy = 0; oy < OUTPUTS_HEIGHT; oy++) {
-                fprintf(pFile, "(");
+                fprintf(pFile, "");
 
                 for(int ox = 0; ox < OUTPUTS_WIDTH; ox++) {
                     const int oPos = (ox + OUTPUTS_WIDTH * oy);
@@ -1279,16 +1286,16 @@ inline void N2D2::Network::saveOutputs(
                     else
                         fprintf(pFile, "%d", outputs[oOffset + output]);
 
-                    fprintf(pFile, ", ");
+                    fprintf(pFile, " ");
                 }
 
-                fprintf(pFile, "), \n");
+                fprintf(pFile, "\n");
             }
 
-            fprintf(pFile, "), \n");
+            fprintf(pFile, "\n");
         }
 
-        fprintf(pFile, ")\n");
+        fprintf(pFile, "\n");
     }
     else {
         N2D2_THROW_OR_ABORT(std::runtime_error, "Unknown format.");
@@ -1443,7 +1450,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::scalingPropagate(
 
             for (int ch = 0; ch < NB_OUTPUTS; ++ch) {
                 outputs[oOffset + ch]
-                    = sat<Output_T>(inputs[iOffset + ch], ch, Linear, rescaling);
+                    = sat<Output_T>(inputs[iOffset + ch], ch, Linear, rescaling, NB_BITS);
             }
         }
     }
