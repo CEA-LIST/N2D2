@@ -26,7 +26,7 @@ from n2d2.activation import Rectifier, Linear
 from n2d2.solver import SGD
 from n2d2.filler import Normal, Xavier
 
-solver_config = ConfigSection(learningRate=0.05, momentum=0.0, decay=0.0)
+solver_config = ConfigSection(learning_rate=0.05, momentum=0.0, decay=0.0)
 
 """
 def quant_conv_def():

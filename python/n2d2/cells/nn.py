@@ -48,7 +48,7 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
         else:
             self.datatype = n2d2.global_variables.default_datatype
         self._connection_parameters = {}
-        if 'mapping' in config_parameters: # TODO : Some cells doesn't support mapping 
+        if 'mapping' in config_parameters: # TODO : Some cells don't support mapping
             mapping = config_parameters.pop('mapping')
             if isinstance(mapping, n2d2.Tensor):
                 if mapping.data_type() != bool:
@@ -61,8 +61,6 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
         self._model_key = self._model + '<' + self.datatype + '>'
 
         N2D2_Interface.__init__(self, **config_parameters)
-
-        
 
         self._deepnet = None
         self._inference = False
@@ -624,6 +622,7 @@ class Conv(NeuralNetworkCell):
         #     else:
         #         raise WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor)), str(type(n2d2.mapping.Mapping))])
 
+
         # TODO: Add Kernel section of generator
 
         if 'activation_function' not in self._config_parameters:
@@ -836,11 +835,11 @@ class ConvDepthWise(Conv):
                  nbChannels,
                  kernel_dims,
                  **config_parameters):
-
         if 'mapping' in config_parameters:
-            raise RuntimeError('ConvDepthWise does not support custom mappings')
+            raise RuntimeError('Pool2d does not support custom mappings')
         else:
-            config_parameters['mapping'] = n2d2.mapping.Mapping(nb_channels_per_group=1)
+            config_parameters['mapping'] = n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(
+                nbChannels, nbChannels)
         Conv.__init__(self, nbChannels, nbChannels, kernel_dims, **config_parameters)
 
 
@@ -990,6 +989,7 @@ class Pool(NeuralNetworkCell):
         if from_arguments:
             self._create_from_arguments(pool_dims, **config_parameters)
 
+
     def _create_from_arguments(self, pool_dims, **config_parameters):
         NeuralNetworkCell.__init__(self, **config_parameters)
 
@@ -1087,7 +1087,6 @@ class Pool(NeuralNetworkCell):
                 if mapping.dimX() != mapping.dimY():
                     raise ValueError("Pool Cell supports only unit maps")
                 self._N2D2_object.initializeParameters(0, 1, mapping)
-
             else:
                 # input(inputs.dims()[2])
                 self._N2D2_object.initializeParameters(0, 1, n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(mapping_row, mapping_row).N2D2())
@@ -1118,12 +1117,6 @@ class Pool2d(NeuralNetworkCell):
             self._create_from_arguments(pool_dims, **config_parameters)
 
     def _create_from_arguments(self, pool_dims, **config_parameters):
-
-        if 'mapping' in config_parameters:
-            raise RuntimeError('Pool2d does not support custom mappings')
-        else:
-            self._connection_parameters['mapping'] = n2d2.mapping.Mapping(nb_channels_per_group=1)
-
         NeuralNetworkCell.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
@@ -1134,6 +1127,7 @@ class Pool2d(NeuralNetworkCell):
 
         self._optional_constructor_arguments['pooling'] = \
             N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
+
 
         
 
@@ -1163,7 +1157,12 @@ class Pool2d(NeuralNetworkCell):
                 else:
                     self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
-            self._N2D2_object.initializeParameters(0, 1, self._connection_parameters['mapping'].create_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2())
+            if 'mapping' in self._connection_parameters['mapping']:
+                raise RuntimeError('Pool2d does not support custom mappings')
+            else:
+                self._connection_parameters['mapping'] = n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2()
+
+            self._N2D2_object.initializeParameters(0, 1, **self._connection_parameters)
 
         self._add_to_graph(inputs)
 
@@ -1188,11 +1187,8 @@ class GlobalPool2d(NeuralNetworkCell):
         if from_arguments:
             self._create_from_arguments(**config_parameters)
 
+
     def _create_from_arguments(self, **config_parameters):
-        if 'mapping' in config_parameters:
-            raise RuntimeError('GlobalPool2d does not support custom mappings')
-        else:
-            self._connection_parameters['mapping'] = n2d2.mapping.Mapping(nb_channels_per_group=1)
         NeuralNetworkCell.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['pooling'])
@@ -1200,7 +1196,6 @@ class GlobalPool2d(NeuralNetworkCell):
         self._optional_constructor_arguments['pooling'] = \
             N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
 
-        
 
 
     #@classmethod
@@ -1234,7 +1229,13 @@ class GlobalPool2d(NeuralNetworkCell):
                 else:
                     self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
-            self._N2D2_object.initializeParameters(0, 1, self._connection_parameters['mapping'].create_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2())
+
+            if 'mapping' in self._connection_parameters['mapping']:
+                raise RuntimeError('Pool2d does not support custom mappings')
+            else:
+                self._connection_parameters['mapping'] = n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2()
+
+            self._N2D2_object.initializeParameters(0, 1, **self._connection_parameters)
 
 
         self._add_to_graph(inputs)

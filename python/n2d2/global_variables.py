@@ -88,7 +88,7 @@ convention_converter = ConventionConverter({
     "idx": "Idx",
     "decay": "Decay",
     "clamping": "Clamping",
-    
+    "scale_solver": "ScaleSolver",
     "random_rotation": "RandomRotation",
     "activation_function": "ActivationFunction",
     "composite_stimuli": "compositeStimuli",
@@ -185,4 +185,13 @@ convention_converter = ConventionConverter({
     "random_partitioning": "RandomPartitioning",
     "load_data_in_memory": "loadDataInMemory",
     "composite_sitmuli": "compositeStimuli",
+
+    "range": "Range",
+    "apply_scaling": "ApplyScaling",
+    "apply_quantization": "ApplyQuantization",
+    "quant_mode": "QuantMode",
+    "scale_min": "scaleMin",
+    "scale_max": "scaleMax",
+    "ratio_min": "ratioMin",
+    "ratio_max": "ratioMax"
 })

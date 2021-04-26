@@ -23,5 +23,6 @@ from n2d2.models.resnet import ResNet50Bn, load_from_ONNX
 from n2d2.models.mobilenetv1 import MobileNetv1
 from n2d2.models.mobilenetv2 import Mobilenetv2, load_from_ONNX, ONNX_preprocessing
 from n2d2.models.lenet import *
+from n2d2.models.lenet_bn import *
 from n2d2.models.segmentation_decoder import *
 from n2d2.models.ILSVRC_outils import *
