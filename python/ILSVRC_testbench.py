@@ -115,7 +115,7 @@ elif args.arch == 'MobileNetv2-onnx':
     nb_epochs = 0 if args.epochs == -1 else args.epochs
     provider.add_transformation(n2d2.models.mobilenetv2.ONNX_preprocessing(size=size))
     model = n2d2.models.mobilenetv2.load_from_ONNX(provider, download=True, batch_size=batch_size)
-    model.remove("mobilenetv20_output_flatten0_reshape0", False)
+    model.remove("mobilenetv20_output_flatten0_reshape0")
 elif args.arch == 'MobileNetv2':
     nb_epochs = 0 if args.epochs == -1 else args.epochs
     trans, otf_trans = n2d2.models.ILSVRC_preprocessing(size=size)

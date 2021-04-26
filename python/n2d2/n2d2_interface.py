@@ -87,7 +87,7 @@ class N2D2_Interface:
             self._N2D2_object.setParameter(key, parsed_parameter)
         except RuntimeError:
             raise RuntimeError("Parameter does not exist: " + 
-                                self.n2d2_to_python_convention(key))
+                                key)
         # Tests
         returned_parameter, returned_type = self._N2D2_object.getParameterAndType(key)
         returned_parameter = self._N2D2_type_map[returned_type](returned_parameter)
@@ -131,24 +131,26 @@ class N2D2_Interface:
         lower case, while N2D2::Parameter objects are first letter upper case.
         """
     @staticmethod
-    def python_to_n2d2_convention(key, first_upper=False):
-        # new_key = ""
-        # set_upper = first_upper
-        # for c in key:
-        #     if c.isupper():
-        #         raise ValueError("Illegal upper case letter '" + c + "' in python parameter '" + key + "' detected.")
-        #     if set_upper:
-        #         if c == "_":
-        #             raise ValueError("Leading or double '_' in python parameter '" + key + "' detected.")
-        #         c = c.upper()
-        #         set_upper = False
-        #     if not c == "_":
-        #         new_key += c
-        #     else:
-        #         set_upper = True
-        new_key = n2d2.global_variables.convention_converter.p_to_n(key)
-        if first_upper:
-            new_key = new_key[0].upper() + new_key[1:]
+    def python_to_n2d2_convention(key, first_upper=True):
+        new_key = ""
+        set_upper = first_upper
+        for c in key:
+            if c.isupper():
+                raise ValueError("Illegal upper case letter '" + c + "' in python parameter '" + key + "' detected.")
+            if set_upper:
+                if c == "_":
+                    raise ValueError("Leading or double '_' in python parameter '" + key + "' detected.")
+                c = c.upper()
+                set_upper = False
+            if not c == "_":
+                new_key += c
+            else:
+                set_upper = True
+        
+        # DICTIONNARY
+        # new_key = n2d2.global_variables.convention_converter.p_to_n(key)
+        # if first_upper:
+        #     new_key = new_key[0].upper() + new_key[1:]
         return new_key
 
     """
@@ -156,16 +158,18 @@ class N2D2_Interface:
        """
     @staticmethod
     def n2d2_to_python_convention(key):
-        # new_key = key[0].lower()
-        # for c in key[1:]:
-        #     if c.isupper():
-        #         new_key += "_"
-        #     new_key += c.lower()
-        # if not key == N2D2_Interface.python_to_n2d2_convention(new_key):
-        #     raise RuntimeWarning("Warning: Incoherent parameter conversion detected: " +
-        #                          key + " vs. " + N2D2_Interface.python_to_n2d2_convention(new_key) +
-        #                          ". Please check consistence of parameter convention in for N2D2 parameter")
-        new_key = n2d2.global_variables.convention_converter.n_to_p(key)
+        new_key = key[0].lower()
+        for c in key[1:]:
+            if c.isupper():
+                new_key += "_"
+            new_key += c.lower()
+        if not key == N2D2_Interface.python_to_n2d2_convention(new_key):
+            raise RuntimeWarning("Warning: Incoherent parameter conversion detected: " +
+                                 key + " vs. " + N2D2_Interface.python_to_n2d2_convention(new_key) +
+                                 ". Please check consistence of parameter convention in for N2D2 parameter")
+        
+        # DICTIONNARY
+        #new_key = n2d2.global_variables.convention_converter.n_to_p(key)
         return new_key
 
     @staticmethod

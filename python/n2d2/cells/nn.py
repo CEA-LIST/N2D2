@@ -1230,7 +1230,7 @@ class GlobalPool2d(NeuralNetworkCell):
                     self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
 
-            if 'mapping' in self._connection_parameters['mapping']:
+            if 'mapping' in self._connection_parameters:
                 raise RuntimeError('Pool2d does not support custom mappings')
             else:
                 self._connection_parameters['mapping'] = n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2()
