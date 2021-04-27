@@ -49,7 +49,12 @@ class Tensor:
         # bool: N2D2.CudaTensor_bool, # Not defined
     }
     
-    def __init__(self, dims, value=None, cuda=False, datatype=float, cell=None):
+    _dim_format = {
+        "N2D2": lambda x: x,
+        "Numpy": lambda x: [i for i in reversed(x)],
+    }
+
+    def __init__(self, dims, value=None, cuda=False, datatype=float, cell=None, dim_format='Numpy'):
         """
         :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (Numpy convention)
         :type dims: list
@@ -59,6 +64,7 @@ class Tensor:
         :type datatype: type, optional
         :param cell: A reference to the object that created this tensor, default=None
         :type cell: :py:class:`n2d2.cells.NeuralNetworkCell`, optional
+        :param format
         """
         self.cell = cell
         self._datatype = datatype
@@ -69,7 +75,10 @@ class Tensor:
             generators = self._tensor_generators
         # Dimensions convention on N2D2 are reversed from python. 
         if isinstance(dims, list):
-            dims = [d for d in reversed(dims)]
+            if dim_format in self._dim_format:
+                dims = self._dim_format[dim_format](dims)
+            else:
+                raise error_handler.WrongValue('dim_format', dim_format, " ".join(self._dim_format.keys()))
         else:
             raise error_handler.WrongInputType("dims", type(dims), [str(list)])
 
@@ -401,7 +410,7 @@ class Tensor:
         return is_equal
 
     def __str__(self):
-        output = "n2d2.Tensor(["
+        output = "n2d2.Tensor([\n"
         output += str(self._tensor)
         output += "], device=" + ("cuda" if self.is_cuda else "cpu")
         if self.cell:

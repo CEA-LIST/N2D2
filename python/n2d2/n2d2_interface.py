@@ -62,7 +62,7 @@ class N2D2_Interface:
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object):
-        interface = cls(**N2D2_Interface.load_N2D2_parameters(N2D2_object), from_arguments=False)
+        interface = cls(**cls.load_N2D2_parameters(N2D2_object), from_arguments=False)
         interface._set_N2D2_object(N2D2_object)
         return interface
 

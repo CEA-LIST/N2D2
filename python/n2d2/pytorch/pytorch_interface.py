@@ -23,12 +23,18 @@ import n2d2
 from n2d2 import tensor
 import N2D2
 
+def _switching_convention(dims):
+    return [dims[1], dims[0], dims[2], dims[3]]
+
+
 def _to_n2d2(torch_tensor):
     """
     Convert torch.Tensor -> n2d2.Tensor
     """
     numpy_tensor = torch_tensor.cpu().detach().numpy()
     n2d2_tensor = tensor.Tensor.from_numpy(numpy_tensor)
+    if n2d2_tensor.nb_dims() ==4:
+        n2d2_tensor.reshape(_switching_convention(n2d2_tensor.shape())) 
     return n2d2_tensor
 
 def _to_torch(N2D2_tensor):
@@ -40,7 +46,11 @@ def _to_torch(N2D2_tensor):
     torch_tensor = torch.from_numpy(numpy_tensor)
     if torch_tensor.is_cuda:
         torch_tensor = torch_tensor.cuda()
-    torch_tensor.resize_(n2d2_tensor.shape())
+    if n2d2_tensor.nb_dims() ==4:
+        torch_tensor.resize_(_switching_convention(n2d2_tensor.shape())) 
+    else:
+        torch_tensor.resize_(n2d2_tensor.shape())
+
     return torch_tensor
 
 class LayerN2D2(torch.nn.Module):
