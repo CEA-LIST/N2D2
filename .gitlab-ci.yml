@@ -1,5 +1,6 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+  OMP_NUM_THREADS: 4
 
 stages:
   - build
@@ -13,7 +14,7 @@ build:ubuntu:
     - mkdir build
     - cd build
     - cmake -DCMAKE_BUILD_TYPE=Debug ..
-    - make -j6
+    - make -j4
 #  artifacts:
 #    expire_in: 2 hrs
 #    paths:
@@ -28,5 +29,5 @@ test:ubuntu:
     - mkdir build
     - cd build
     - cmake -DCMAKE_BUILD_TYPE=Debug ..
-    - make tests -j6
+    - make tests -j4
     - make test
