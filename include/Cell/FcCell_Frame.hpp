@@ -63,10 +63,15 @@ public:
         value.resize(std::initializer_list<size_t>({1}));
         value = Tensor<T>({1}, mSynapses(0, 0, channel, output));
     };
-    inline void getQuantWeight(unsigned int /*output*/, unsigned int /*channel*/,
-                          BaseTensor& /*value*/) const
+    inline void getQuantWeight(unsigned int output, unsigned int channel,
+                          BaseTensor& value) const
     {
-        //nothing here for now
+        if (!mQuantizer)
+            return;
+
+        const Tensor<T>& synapses = tensor_cast<T>(mQuantizer->getQuantizedWeights(0));
+        value.resize(std::initializer_list<size_t>({1}));
+        value = Tensor<T>({1}, synapses(0, 0, channel, output));
     };
     inline void getBias(unsigned int output, BaseTensor& value) const
     {

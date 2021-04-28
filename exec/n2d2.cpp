@@ -303,7 +303,7 @@ public:
         wtRoundMode = weightsScalingMode(
                            opts.parse("-wt-round-mode", std::string("NONE"), 
                                           "weights clipping mode on export, "
-                                          "can be 'NONE','RINTF','RINTA'"));
+                                          "can be 'NONE','RINTF'"));
         wtClippingMode = parseClippingMode(
                            opts.parse("-wt-clipping-mode", std::string("None"), 
                                           "weights clipping mode on export, "
@@ -436,8 +436,9 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
     const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
 
     if(opt.qatSAT) {
-        //needed when load network from ini, and not onnx
         deepNet->initialize();
+        //deepNet->exportNetworkFreeParameters("weights_init");
+
         if (opt.logKernels)
             deepNet->logFreeParameters("kernels_fake_quantized");
 
@@ -449,9 +450,7 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
             deepNet->logFreeParameters("kernels_quantized");
             
         //deepNet->exportNetworkFreeParameters("weights_quantized");
-
     }
-
 
     startTimeSp = std::chrono::high_resolution_clock::now();
     if (opt.testId >= 0)
@@ -576,7 +575,9 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
                     targetBBox->logSuccess(testName, Database::Test);
             }
         }
+
     }
+
 
     if (nbTest > 0) {
         deepNet->log(testName, Database::Test);
@@ -2492,17 +2493,27 @@ int main(int argc, char* argv[]) try
     }
 
     if (!afterCalibration) {
-        if (opt.learn > 0 || opt.learnEpoch > 0) {
+        if (opt.learn > 0) {
             // Reload best state after learning
             if (database.getNbStimuli(Database::Validation) > 0)
                 deepNet->load("net_state_validation");
             else
                 deepNet->load("net_state");
         }
+        else if (opt.learnEpoch > 0)
+        {
+            if (database.getNbStimuli(Database::Validation) > 0){
+                deepNet->importNetworkFreeParameters("weights_validation", opt.ignoreNoExist);
+                std::cout << "Loading weights_validation for testing" << std::endl;
+            }
+            else
+                deepNet->importNetworkFreeParameters("weights", opt.ignoreNoExist);
+        }
         else if (opt.learnStdp == 0 && opt.load.empty() && opt.weights.empty())
         {
-            if (database.getNbStimuli(Database::Validation) > 0)
+            if (database.getNbStimuli(Database::Validation) > 0){
                 deepNet->importNetworkFreeParameters("weights_validation", opt.ignoreNoExist);
+            }
             else
                 deepNet->importNetworkFreeParameters("weights", opt.ignoreNoExist);
         }
@@ -2589,7 +2600,7 @@ int main(int argc, char* argv[]) try
     }
 
 
-    testStdp(opt, deepNet, env, net, monitorEnv, monitorOut);
+    //testStdp(opt, deepNet, env, net, monitorEnv, monitorOut);
 
     return 0;
 }

@@ -314,9 +314,6 @@ void N2D2::ConvCell::exportFreeParameters(const std::string& fileName) const
 
     std::ofstream weights(weightsFile.c_str());
 
-    const std::string binaryWeightsFile = fileBase + "_weights.bin";
-    std::ofstream binaryWeight(binaryWeightsFile.c_str(),std::fstream::binary);
-
     if (!weights.good())
         throw std::runtime_error("Could not create synaptic file: "
                                  + weightsFile);
