@@ -37,7 +37,9 @@ class Database(N2D2_Interface):
     """
 
     _type = ""
-
+    _convention_converter = n2d2.ConventionConverter({
+        "load_data_in_memory": "loadDataInMemory",
+    })
     # This constructor is not called by children, because not abstract class
     def __init__(self, **config_parameters):
         N2D2_Interface.__init__(self, **config_parameters)
@@ -110,6 +112,12 @@ class DIR(Database):
     Allow you to load your own database.
     """
     _type = "DIR"
+
+    _convention_converter = n2d2.ConventionConverter({
+        "load_data_in_memory": "loadDataInMemory",
+        "ignore_masks": "IgnoreMasks",
+        "valid_extensions": "ValidExtensions"
+    })
     def __init__(self, **config_parameters):
         """
         :param load_data_in_memory: Load the whole database into memory, default=False
@@ -139,6 +147,13 @@ class MNIST(Database):
     Label are hard coded, you don't need to specify a path to the label file.
     """
     _type = "MNIST"
+    _convention_converter= n2d2.ConventionConverter({
+        "extract_roi": "extractROIs",
+        "validation": "validation",
+        "label_path": "labelPath",
+        "stimuli_per_label_train": "StimuliPerLabelTrain",
+        "stimuli_per_label_test": "StimuliPerLabelTest",
+    })
 
     def __init__(self, data_path, **config_parameters):
         """
@@ -146,17 +161,20 @@ class MNIST(Database):
         :type data_path: str
         :param label_path: Path to the label, default=""
         :type label_path: str, optional
-        :param extract_ROIs: Set if we extract region of interest, default=False
-        :type extract_ROIs: boolean, optional
+        :param extract_roi: Set if we extract region of interest, default=False
+        :type extract_roi: boolean, optional
         :param validation: Fraction of the learning set used for validation, default=0.0
         :type validation: float, optional
         """
+        
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
             'data_path': data_path,
         })
-        self._parse_optional_arguments(['label_path', 'extract_ROIs', 'validation'])
+        self._parse_optional_arguments(['label_path', 'extract_roi', 'validation'])
+        
+
         self._N2D2_object = N2D2.MNIST_IDX_Database(self._constructor_arguments['data_path'],
                                                     **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
@@ -168,6 +186,12 @@ class CIFAR100(Database):
     """
 
     _type = "CIFAR100"
+
+    _convention_converter= n2d2.ConventionConverter({
+        "use_coarse": "useCoarse",
+        "validation": "validation",
+        "use_test_for_validation": "UseTestForValidation",
+    })
 
     def __init__(self, **config_parameters):
         """
@@ -191,7 +215,12 @@ class ILSVRC2012(Database):
     """
 
     _type = "ILSVRC2012"
-
+    _convention_converter= n2d2.ConventionConverter({
+        "use_validation_for_test": "useValidationForTest",
+        "learn": "Learn",
+        "random_partitioning": "RandomPartitioning",
+        "background_class": "BackgroundClass"
+    })
     def __init__(self, learn, **config_parameters):
         """
         :param learn: Fraction of images used for the learning
@@ -216,7 +245,13 @@ class Cityscapes(Database):
     """
 
     _type = "Cityscapes"
+    _convention_converter= n2d2.ConventionConverter({
+        "inc_train_extra": "incTrainExtra",
+        "use_coarse": "useCoarse",
+        "single_instance_labels": "singleInstanceLabels",
+        "labels": "Labels"
 
+    })
     def __init__(self, **config_parameters):
         """
         :param inc_train_extra: If true, includes the left 8-bit images - trainextra set (19,998 images), default=False
@@ -238,6 +273,9 @@ class GTSRB(Database):
     """
 
     _type = "GTSRB"
+    _convention_converter= n2d2.ConventionConverter({
+        "validation": "validation",
+    })
 
     def __init__(self, validation, **config_parameters):
         """
@@ -246,6 +284,7 @@ class GTSRB(Database):
         """
         N2D2_Interface.__init__(self, **config_parameters)
 
-        self._parse_optional_arguments(['extract_ROIs'])
+        # No optional args
+        self._parse_optional_arguments([])
         self._N2D2_object = N2D2.GTSRB_DIR_Database(validation, **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)

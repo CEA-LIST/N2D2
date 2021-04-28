@@ -35,6 +35,7 @@ class Solver(N2D2_Interface):
         else:
             self._datatype = n2d2.global_variables.default_datatype
 
+        
         N2D2_Interface.__init__(self, **config_parameters)
         self._model_key = self._model + '<' + self._datatype + '>'
 
@@ -54,6 +55,23 @@ class SGD(Solver):
         'Frame_CUDA<float>': N2D2.SGDSolver_Frame_CUDA_float
     }
 
+    _convention_converter= n2d2.ConventionConverter({
+        "learning_rate": "LearningRate",
+        "momentum": "Momentum",
+        "decay": "Decay",
+        "learning_rate_policy": "LearningRatePolicy",
+        "learning_rate_step_size": "LearningRateStepSize",
+        "learning_rate_decay": "LearningRateDecay",
+        "clamping": "Clamping",
+        "datatype": "Datatype",
+        "model": "Model",
+        "iteration_size": "IterationSize",
+        "max_iterations": "MaxIterations",
+        "polyak_momentum": "PolyakMomentum",
+        "power": "Power",
+        "warm_up_duration": "WarmUpDuration",
+        "warm_up_lr_frac": "WarmUpLRFrac",
+    })
     def __init__(self, from_arguments=True, **config_parameters):
         """
         :param from_arguments: If False, N2D2_object is not created based on config_parameters

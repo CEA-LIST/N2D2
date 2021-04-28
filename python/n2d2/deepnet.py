@@ -29,8 +29,13 @@ from n2d2.n2d2_interface import N2D2_Interface
 """
 """
 class DeepNet(N2D2_Interface):
-
+    
+    _convention_converter= n2d2.ConventionConverter({
+        "name": "Name",
+        "from_parameters": "", # Pure n2d2
+    })
     def __init__(self, from_parameters=True, **config_parameters):
+        
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._config_parameters['name'] = "DeepNet(id=" + str(id(self)) + ")"

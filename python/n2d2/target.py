@@ -25,6 +25,9 @@ from n2d2.n2d2_interface import N2D2_Interface
 
 class Target(N2D2_Interface):
 
+    _convention_converter= n2d2.ConventionConverter({
+        "top_n": "topN",
+    })
     """Provider is not a parameter in the INI file in the case of Target class,
     but usually inferred from the deepnet in N2D2. Name and NeuralNetworkCell are parts of the section name"""
     def __init__(self, **config_parameters):
@@ -34,6 +37,7 @@ class Target(N2D2_Interface):
         else:
             name = n2d2.global_variables.generate_name(self)
             
+        
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._constructor_parameters = {

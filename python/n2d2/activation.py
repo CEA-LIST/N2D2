@@ -35,12 +35,12 @@ class ActivationFunction(N2D2_Interface):
             self._datatype = n2d2.global_variables.default_datatype
 
         self._model_key = self._model + '<' + self._datatype + '>'
-
+        
         N2D2_Interface.__init__(self, **config_parameters)
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object):
-        activation = cls(**N2D2_Interface.load_N2D2_parameters(N2D2_object), from_arguments=False)
+        activation = cls(**cls.load_N2D2_parameters(N2D2_object), from_arguments=False)
         activation._N2D2_object = N2D2_object
         quantizer = activation._N2D2_object.getQuantizer()
         if quantizer:
@@ -78,6 +78,10 @@ class Linear(ActivationFunction):
         'Frame<float>': N2D2.LinearActivation_Frame_float,
         'Frame_CUDA<float>': N2D2.LinearActivation_Frame_CUDA_float
     }
+    _convention_converter= n2d2.ConventionConverter({
+        "clipping": "Clipping",
+        "quantizer": "Quantizer",
+    })
 
     def __init__(self, from_arguments=True, **config_parameters):
         """
@@ -104,6 +108,11 @@ class Rectifier(ActivationFunction):
         'Frame<float>': N2D2.RectifierActivation_Frame_float,
         'Frame_CUDA<float>': N2D2.RectifierActivation_Frame_CUDA_float,
     }
+    _convention_converter= n2d2.ConventionConverter({
+        "leak_slope": "LeakSlope",
+        "clipping": "Clipping",
+        "quantizer": "Quantizer",
+    })
 
     def __init__(self, from_arguments=True, **config_parameters):
         """
@@ -136,6 +145,10 @@ class Tanh(ActivationFunction):
         'Frame<float>': N2D2.TanhActivation_Frame_float,
         'Frame_CUDA<float>': N2D2.TanhActivation_Frame_CUDA_float,
     }
+    _convention_converter= n2d2.ConventionConverter({
+        "alpha": "Alpha",
+        "quantizer": "Quantizer",
+    })
 
     def __init__(self, from_arguments=True, **config_parameters):
         r"""

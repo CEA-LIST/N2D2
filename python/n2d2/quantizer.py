@@ -24,6 +24,14 @@ import n2d2.global_variables
 
 
 class Quantizer(N2D2_Interface):
+    _convention_converter= n2d2.ConventionConverter({
+        "range": "Range",
+        "apply_scaling": "ApplyScaling",
+        "apply_quantization": "ApplyQuantization",
+        "quant_mode": "QuantMode",
+        "alpha": "Alpha",
+    })
+    
     def __init__(self, **config_parameters):
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')
@@ -36,6 +44,7 @@ class Quantizer(N2D2_Interface):
 
         self._model_key = self._model + '<' + self._datatype + '>'
 
+        
         N2D2_Interface.__init__(self, **config_parameters)
 
     def set_range(self, integer_range):

@@ -25,7 +25,16 @@ from n2d2.n2d2_interface import N2D2_Interface
 
 
 class Provider(N2D2_Interface):
+    _convention_converter= n2d2.ConventionConverter({
+            "name": "Name",
+            "batch_size": "batchSize",
+            "composite_stimuli": "compositeStimuli",
+            "database": "Database",
+            "size": "Size",
+            "random_read": "RandomRead",
+    })
     def __init__(self, **config_parameters):
+        
         N2D2_Interface.__init__(self, **config_parameters)
 
         if 'name' in config_parameters:

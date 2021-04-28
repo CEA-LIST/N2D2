@@ -39,8 +39,8 @@ class test_params(unittest.TestCase):
         if self.object: # We don't do test if it's the dummy class
             parameters = self.object.N2D2().getParameters()
             for param in self.parameters.keys():
-                if N2D2_Interface.python_to_n2d2_convention(param) in parameters:
-                    param_name = N2D2_Interface.python_to_n2d2_convention(param)
+                if self.object.python_to_n2d2_convention(param) in parameters:
+                    param_name = self.object.python_to_n2d2_convention(param)
                     N2D2_param, N2D2_type = self.object.N2D2().getParameterAndType(param_name)
                     N2D2_param = N2D2_Interface._N2D2_type_map[N2D2_type](N2D2_param)
                     if isinstance(self.parameters[param], bool):
@@ -241,8 +241,75 @@ class test_Dropout(test_params):
 
 # The following classes have not been tested because of a lack of documentation
 # TODO: Padding
+class test_Padding(test_params):
+    def setUp(self):
+        self.parameters = {
+            "name": "test",
+            "top_pad": 1,
+            "bot_pad":0,
+            "left_pad": 0,
+            "right_pad": 1,
+        }
+        self.object = n2d2.cells.Padding(**self.parameters)
+
+    def test_parameters(self):
+        # Need to instantiate the object (doing so by passing a dummy input)
+        tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
+        self.object(tensor)
+        self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
+
+        super().test_parameters()
+# TODO: BatchNorm2d
+class test_BatchNorm2d(test_params):
+    def setUp(self):
+        self.parameters = {
+            "name": "test",
+            "nb_inputs": 5, 
+            "scale_solver": n2d2.solver.SGD(),
+            "bias_solver": n2d2.solver.SGD(),
+            "moving_average_momentum":0,
+            "epsilon": 1,
+        }
+        self.object = n2d2.cells.BatchNorm2d(**self.parameters)
+
+    def test_parameters(self):
+        # Need to instantiate the object (doing so by passing a dummy input)
+        tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
+        self.object(tensor)
+        self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
+
+        super().test_parameters()
 # TODO: Activation
+class test_Activation(test_params):
+    def setUp(self):
+        self.parameters = {
+            "name": "test",
+            "activation_function": n2d2.activation.Tanh(),
+        }
+        self.object = n2d2.cells.Activation(**self.parameters)
+
+    def test_parameters(self):
+        # Need to instantiate the object (doing so by passing a dummy input)
+        tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
+        self.object(tensor)
+        self.assertIs(self.parameters["activation_function"].N2D2(), self.object.N2D2().getActivation())
+        self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
+        super().test_parameters()
 # TODO: Reshape
+class test_Reshape(test_params):
+    def setUp(self):
+        self.parameters = {
+            "name": "test",
+            "dims": [4, 4, 5],
+        }
+        self.object = n2d2.cells.Reshape(**self.parameters)
+
+    def test_parameters(self):
+        # Need to instantiate the object (doing so by passing a dummy input)
+        tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
+        self.object(tensor)
+        self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
+        super().test_parameters()
 
 ### TEST DATABASE ###
 
@@ -263,7 +330,7 @@ class test_MNIST(test_params):
     def setUp(self):
         self.parameters = {
             "label_path": "",
-            "extract_ROIs": True,
+            "extract_roi": True,
             "validation": 0.2
         }
         self.object = n2d2.database.MNIST("/nvme0/DATABASE/MNIST/raw/", **self.parameters)
@@ -445,7 +512,7 @@ class test_ChannelExtraction(test_params):
         # TODO Check if the parameters are well initialized 
         super().test_parameters()
 
-### Filler ###
+# ### Filler ###
 class test_He(test_params):
     def setUp(self):
         self.parameters = {
@@ -499,7 +566,7 @@ class test_Constant(test_params):
         super().test_parameters()
 
 
-### Solver ###
+# # # ### Solver ###
 
 class test_SGD(test_params):
     def setUp(self):

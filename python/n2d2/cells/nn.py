@@ -25,10 +25,40 @@ import n2d2.filler
 from n2d2.n2d2_interface import N2D2_Interface
 from n2d2.cells.cell import Cell
 
+_cell_parameters = {
+    "deep_net": "DeepNet", 
+    "name": "Name", 
+    "inputs_dims": "InputsDims", 
+    "outputs_dims": "OutputsDims", 
+    "mapping": "Mapping",
+    "quantized_nb_bits": "QuantizedNbits", 
+    "id_cnt": "IdCnt", 
+    "group_map": "GroupMap", 
+    "group_map_initialized": "GroupMapInitialized",
+    "from_arguments": "", # Pure n2d2
+    
+}
+_cell_frame_parameters = {
+    "inputs": "Inputs",
+    "outputs": "Outputs",
+    "diff_inputs": "DiffInputs",
+    "diff_outputs": "DiffOutputs",
+    "targets": "Targets",
+    "nb_target_outputs": "NbTargetOutputs",
+    "loss_mem": "LossMem",
+    "activation_desc": "ActivationDesc",
+    "keep_in_sync": "KeepInSync",
+    "activation_function": "activation",
+    "devices": "Devices",
+}
+# Cell_frame_parameter contains the parameters from cell_parameter
+_cell_frame_parameters.update(_cell_parameters) 
 
 class NeuralNetworkCell(N2D2_Interface, Cell):
 
+
     def __init__(self,  **config_parameters):
+        
 
         if 'name' in config_parameters:
             name = config_parameters.pop('name')
@@ -59,11 +89,12 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
 
 
         self._model_key = self._model + '<' + self.datatype + '>'
-
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._deepnet = None
         self._inference = False
+
+        
 
     def learn(self):
         self._inference = False
@@ -257,6 +288,23 @@ class Fc(NeuralNetworkCell):
             'Frame_CUDA<float>': N2D2.FcCell_Frame_CUDA_float,
     }
 
+    _parameters = {
+        "no_bias":"NoBias", 
+        "normalize": "Normalize",
+        "back_propagate":"BackPropagate",
+        "weights_export_format":"WeightsExportFormat",
+        "outputs_remap":"OutputsRemap",
+        "weights_filler":"WeightsFiller",  
+        "bias_filler":"BiasFiller",  
+        "weights_solver":"WeightsSolver",
+        "bias_solver":"BiasSolver",
+        "quantizer":"Quantizer",
+    }  
+    _parameters.update(_cell_frame_parameters)
+
+    _convention_converter= n2d2.ConventionConverter(_parameters)
+
+
     def __init__(self, nb_inputs, nb_outputs, from_arguments=True, **config_parameters):
         """
         :param nb_inputs: Number of inputs of the cells.
@@ -364,7 +412,7 @@ class Fc(NeuralNetworkCell):
 
         NeuralNetworkCell.__init__(n2d2_cell,
                                    name=N2D2_object.getName(),
-                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+                                   **cls.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._constructor_arguments.update({
             'nb_inputs': N2D2_object.getInputsSize(),
@@ -540,6 +588,31 @@ class Conv(NeuralNetworkCell):
         'Frame<double>': N2D2.ConvCell_Frame_double,
         'Frame_CUDA<double>': N2D2.ConvCell_Frame_CUDA_double,
     }
+    
+    _parameters = {
+        "no_bias":"NoBias", 
+        "back_propagate":"BackPropagate",
+        "weights_export_format":"WeightsExportFormat",
+        "weights_export_flip":"WeightsExportFlip",
+        "outputs_remap":"OutputsRemap",
+        "kernel_dims":"kernelDims",
+        "sub_sample_dims":"subSampleDims",
+        "stride_dims":"strideDims",
+        "padding_dims":"paddingDims",
+        "dilation_dims":"dilationDims",  
+        "ext_padding_dims":"ExtPaddingDims",   
+        "dilation_dims":"dilationDims",
+        "ext_padding_dims":"ExtPaddingDims", 
+        "weights_filler":"WeightsFiller",  
+        "bias_filler":"BiasFiller",  
+        "weights_solver":"WeightsSolver",
+        "bias_solver":"BiasSolver",
+        "quantizer":"Quantizer",
+    }  
+    _parameters.update(_cell_frame_parameters)
+
+    _convention_converter= n2d2.ConventionConverter(_parameters)
+
 
     def __init__(self,
                  nb_inputs,
@@ -670,7 +743,7 @@ class Conv(NeuralNetworkCell):
 
         NeuralNetworkCell.__init__(n2d2_cell,
                                    name=N2D2_object.getName(),
-                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+                                   **cls.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._set_N2D2_object(N2D2_object)
 
@@ -866,6 +939,14 @@ class Softmax(NeuralNetworkCell):
         'Frame_CUDA<double>': N2D2.SoftmaxCell_Frame_CUDA_double,
     }
 
+    _parameters = {
+        "with_loss": "withLoss",
+        "group_size": "groupSize",
+    }  
+    _parameters.update(_cell_frame_parameters)
+
+    _convention_converter= n2d2.ConventionConverter(_parameters)
+
     def __init__(self, from_arguments=True, **config_parameters):
         r"""
         :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
@@ -898,7 +979,7 @@ class Softmax(NeuralNetworkCell):
 
         NeuralNetworkCell.__init__(n2d2_cell,
                                    name=N2D2_object.getName(),
-                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+                                   **cls.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._set_N2D2_object(N2D2_object)
 
@@ -960,6 +1041,17 @@ class Pool(NeuralNetworkCell):
         'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
     }
 
+    _parameters = {
+        "pool_dims": "poolDims",
+        "stride_dims": "strideDims",
+        "padding_dims": "paddingDims",
+        "pooling": "pooling",
+        "ext_padding_dims": "ExtPaddingDims",
+    }  
+    _parameters.update(_cell_frame_parameters)
+
+    _convention_converter= n2d2.ConventionConverter(_parameters)
+
     def __init__(self,
                  pool_dims,
                  from_arguments=True,
@@ -1019,7 +1111,7 @@ class Pool(NeuralNetworkCell):
 
         NeuralNetworkCell.__init__(n2d2_cell,
                                    name=N2D2_object.getName(),
-                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+                                   **cls.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._set_N2D2_object(N2D2_object)
 
@@ -1097,13 +1189,22 @@ class Pool(NeuralNetworkCell):
 
         return self.get_outputs()
 
-class Pool2d(NeuralNetworkCell):
+class Pool2d(NeuralNetworkCell): # Should inherit Pool ?
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
         'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
     }
+    _parameters = {
+        "pool_dims": "poolDims",
+        "stride_dims": "strideDims",
+        "padding_dims": "paddingDims",
+        "pooling": "pooling",
+        "ext_padding_dims": "ExtPaddingDims",
+    }  
+    _parameters.update(_cell_frame_parameters)
 
+    _convention_converter= n2d2.ConventionConverter(_parameters)
     def __init__(self,
                  pool_dims,
                  from_arguments=True,
@@ -1170,13 +1271,22 @@ class Pool2d(NeuralNetworkCell):
 
         return self.get_outputs()
 
-class GlobalPool2d(NeuralNetworkCell):
+class GlobalPool2d(NeuralNetworkCell): # Should inherit Pool ?
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
         'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
     }
+    _parameters = {
+        "pool_dims": "poolDims",
+        "stride_dims": "strideDims",
+        "padding_dims": "paddingDims",
+        "pooling": "pooling",
+        "ext_padding_dims": "ExtPaddingDims",
+    }  
+    _parameters.update(_cell_frame_parameters)
 
+    _convention_converter= n2d2.ConventionConverter(_parameters)
     def __init__(self,
                  from_arguments=True,
                  **config_parameters):
@@ -1255,6 +1365,28 @@ class Deconv(NeuralNetworkCell):
         'Frame<double>': N2D2.DeconvCell_Frame_double,
         'Frame_CUDA<double>': N2D2.DeconvCell_Frame_CUDA_double,
     }
+    _parameters = {
+        "no_bias":"NoBias", 
+        "back_propagate":"BackPropagate",
+        "weights_export_format":"WeightsExportFormat",
+        "weights_export_flip":"WeightsExportFlip",
+        "outputs_remap":"OutputsRemap",
+        "kernel_dims":"kernelDims",
+        "sub_sample_dims":"subSampleDims",
+        "stride_dims":"strideDims",
+        "padding_dims":"paddingDims",
+        "dilation_dims":"dilationDims",  
+        "ext_padding_dims":"ExtPaddingDims",   
+        "dilation_dims":"dilationDims",
+        "weights_filler":"WeightsFiller",  
+        "bias_filler":"BiasFiller",  
+        "weights_solver":"WeightsSolver",
+        "bias_solver":"BiasSolver",
+        # No quantizer ?
+    }  
+    _parameters.update(_cell_frame_parameters)
+
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self,
                  nb_inputs,
@@ -1379,7 +1511,7 @@ class Deconv(NeuralNetworkCell):
 
         NeuralNetworkCell.__init__(n2d2_cell,
                                    name=N2D2_object.getName(),
-                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+                                   **cls.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._set_N2D2_object(N2D2_object)
 
@@ -1531,6 +1663,14 @@ class ElemWise(NeuralNetworkCell):
         'Frame': N2D2.ElemWiseCell_Frame,
         'Frame_CUDA': N2D2.ElemWiseCell_Frame_CUDA,
     }
+    _parameters = {
+        "operation":"operation",
+        "weights": "weights",
+        "shifts": "shifts"
+    }  
+    _parameters.update(_cell_frame_parameters)
+
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, from_arguments=True, **config_parameters):
         """
@@ -1570,7 +1710,7 @@ class ElemWise(NeuralNetworkCell):
 
         NeuralNetworkCell.__init__(n2d2_cell,
                                    name=N2D2_object.getName(),
-                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+                                   **cls.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._set_N2D2_object(N2D2_object)
 
@@ -1657,6 +1797,13 @@ class Dropout(NeuralNetworkCell):
         'Frame_CUDA<double>': N2D2.DropoutCell_Frame_CUDA_double,
     }
 
+    _parameters = {
+        "dropout": "Dropout",
+    }  
+    _parameters.update(_cell_frame_parameters)
+
+    _convention_converter= n2d2.ConventionConverter(_parameters)
+
     def __init__(self, from_arguments=True, **config_parameters):
         """
         :param from_arguments: If False, allow you to create cells with mandatory arguments set as None, default=False
@@ -1685,7 +1832,7 @@ class Dropout(NeuralNetworkCell):
 
         NeuralNetworkCell.__init__(n2d2_cell,
                                    name=N2D2_object.getName(),
-                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+                                   **cls.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._set_N2D2_object(N2D2_object)
 
@@ -1742,6 +1889,16 @@ class Padding(NeuralNetworkCell):
         'Frame_CUDA': N2D2.PaddingCell_Frame_CUDA,
     }
 
+    _parameters = {
+        "top_pad":"top_pad",
+        "bot_pad":"bot_pad",
+        "left_pad":"left_pad",
+        "right_pad":"right_pad",
+    }
+    _parameters.update(_cell_frame_parameters)
+
+    _convention_converter= n2d2.ConventionConverter(_parameters)
+
     def __init__(self,
                  top_pad,
                  bot_pad,
@@ -1781,7 +1938,7 @@ class Padding(NeuralNetworkCell):
 
         NeuralNetworkCell.__init__(n2d2_cell,
                                    name=N2D2_object.getName(),
-                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+                                   **cls.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._set_N2D2_object(N2D2_object)
 
@@ -1845,6 +2002,18 @@ class BatchNorm2d(NeuralNetworkCell):
         'Frame<float>': N2D2.BatchNormCell_Frame_float,
         'Frame_CUDA<float>': N2D2.BatchNormCell_Frame_CUDA_float,
     }
+
+    _parameters = {
+        "nb_inputs": "NbInputs",
+        "scale_solver":"ScaleSolver",
+        "bias_solver":"BiasSolver",
+        "moving_average_momentum":"MovingAverageMomentum",
+        "epsilon":"Epsilon",
+    }
+    _parameters.update(_cell_frame_parameters)
+
+    _convention_converter= n2d2.ConventionConverter(_parameters)
+
     def __init__(self, nb_inputs, from_arguments=True, **config_parameters):
         if not from_arguments and len(config_parameters) > 0:
             raise RuntimeError(
@@ -1894,7 +2063,7 @@ class BatchNorm2d(NeuralNetworkCell):
 
         NeuralNetworkCell.__init__(n2d2_cell,
                                    name=N2D2_object.getName(),
-                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+                                   **cls.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._set_N2D2_object(N2D2_object)
 
@@ -1947,7 +2116,11 @@ class Activation(NeuralNetworkCell):
         'Frame_CUDA<float>': N2D2.ActivationCell_Frame_CUDA_float,
     }
 
-
+    _parameters = {
+    }
+    _parameters.update(_cell_frame_parameters)
+    
+    _convention_converter= n2d2.ConventionConverter(_parameters)
     def __init__(self, from_arguments=True, **config_parameters):
 
         if not from_arguments and len(config_parameters) > 0:
@@ -1971,7 +2144,7 @@ class Activation(NeuralNetworkCell):
 
         NeuralNetworkCell.__init__(n2d2_cell,
                                    name=N2D2_object.getName(),
-                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+                                   **cls.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._set_N2D2_object(N2D2_object)
 
@@ -2027,6 +2200,12 @@ class Reshape(NeuralNetworkCell):
         'Frame<float>': N2D2.ReshapeCell_Frame_float,
         'Frame_CUDA<float>': N2D2.ReshapeCell_Frame_CUDA_float,
     }
+    _parameters = {
+        "dims": "Dims",
+    }
+    _parameters.update(_cell_frame_parameters)
+
+    _convention_converter= n2d2.ConventionConverter(_parameters)
     def __init__(self, dims, from_arguments=True, **config_parameters):
 
         if not from_arguments and (dims is not None or len(config_parameters) > 0):
@@ -2055,7 +2234,7 @@ class Reshape(NeuralNetworkCell):
 
         NeuralNetworkCell.__init__(n2d2_cell,
                                    name=N2D2_object.getName(),
-                                   **N2D2_Interface.load_N2D2_parameters(N2D2_object))
+                                   **cls.load_N2D2_parameters(N2D2_object))
 
         n2d2_cell._set_N2D2_object(N2D2_object)
 

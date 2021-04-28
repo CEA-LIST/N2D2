@@ -33,6 +33,7 @@ class Filler(N2D2_Interface):
 
         self._model_key = '<' + self._datatype + '>'
 
+        
         N2D2_Interface.__init__(self, **config_parameters)
 
 
@@ -53,6 +54,13 @@ class He(Filler):
         '<float>': N2D2.HeFiller_float,
     }
 
+    _convention_converter= n2d2.ConventionConverter({
+        "variance_norm": "varianceNorm",
+        "mean_norm": "meanNorm",
+        "scaling": "scaling",
+        "datatype": "Datatype",
+    })
+
     def __init__(self, from_arguments=True, **config_parameters):
         """
         :param datatype: datatype, default='float'
@@ -62,6 +70,7 @@ class He(Filler):
         :param scaling: Scaling factor, default=1.0
         :type scaling: float, optional
         :param mean_norm: 
+        :type mean_norm: float, optional
         """
         Filler.__init__(self, **config_parameters)
 
@@ -79,7 +88,7 @@ class He(Filler):
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object):
-        filler = cls(**N2D2_Interface.load_N2D2_parameters(N2D2_object), from_arguments=False)
+        filler = cls(**cls.load_N2D2_parameters(N2D2_object), from_arguments=False)
         filler._set_N2D2_object(N2D2_object)
         filler._optional_constructor_arguments['variance_norm'] = filler._N2D2_object.getVarianceNorm()
         filler._optional_constructor_arguments['mean_norm'] = filler._N2D2_object.getMeanNorm()
@@ -96,6 +105,11 @@ class Normal(Filler):
     _filler_generators = {
         '<float>': N2D2.NormalFiller_float,
     }
+    _convention_converter= n2d2.ConventionConverter({
+        "mean": "mean",
+        "std_dev": "stdDev",
+        "datatype": "Datatype",
+    })
 
     def __init__(self, from_arguments=True, **config_parameters):
         """
@@ -115,7 +129,7 @@ class Normal(Filler):
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object):
-        filler = cls(**N2D2_Interface.load_N2D2_parameters(N2D2_object), from_arguments=False)
+        filler = cls(**cls.load_N2D2_parameters(N2D2_object), from_arguments=False)
         filler._set_N2D2_object(N2D2_object)
         filler._optional_constructor_arguments['mean'] = filler._N2D2_object.getMean()
         filler._optional_constructor_arguments['std_dev'] = filler._N2D2_object.getStdDev()
@@ -131,6 +145,13 @@ class Xavier(Filler):
     _filler_generators = {
         '<float>': N2D2.XavierFiller_float
     }
+
+    _convention_converter= n2d2.ConventionConverter({
+        "variance_norm": "varianceNorm",
+        "distribution": "distribution",
+        "scaling": "scaling",
+        "datatype": "Datatype",
+    })
 
     def __init__(self, from_arguments=True, **config_parameters):
         """
@@ -158,7 +179,7 @@ class Xavier(Filler):
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object):
-        filler = cls(**N2D2_Interface.load_N2D2_parameters(N2D2_object), from_arguments=False)
+        filler = cls(**cls.load_N2D2_parameters(N2D2_object), from_arguments=False)
         filler._set_N2D2_object(N2D2_object)
         filler._optional_constructor_arguments['variance_norm'] = filler._N2D2_object.getVarianceNorm()
         filler._optional_constructor_arguments['distribution'] = filler._N2D2_object.getDistribution()
@@ -175,6 +196,10 @@ class Constant(Filler):
     _filler_generators = {
         '<float>': N2D2.ConstantFiller_float
     }
+    _convention_converter= n2d2.ConventionConverter({
+        "value": "value",
+        "datatype": "Datatype",
+    })
 
     def __init__(self, from_arguments=True, **config_parameters):
         """
@@ -192,7 +217,7 @@ class Constant(Filler):
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object):
-        filler = cls(**N2D2_Interface.load_N2D2_parameters(N2D2_object), from_arguments=False)
+        filler = cls(**cls.load_N2D2_parameters(N2D2_object), from_arguments=False)
         filler._set_N2D2_object(N2D2_object)
         filler._optional_constructor_arguments['value'] = filler._N2D2_object.getValue()
         return filler

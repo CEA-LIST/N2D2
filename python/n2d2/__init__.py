@@ -25,12 +25,16 @@ try:
     import numpy
 except:
     pass
-# It's better to access these variable without mentioning global_variable in the path
-from n2d2.global_variables import * 
-from n2d2.tensor import *
 
-# It's better to access these variable without mentioning global_variable in the path
+# It's better to access these variables without mentioning global_variable in the path
+from n2d2.global_variables import * 
+
+# It's better to access these methods without mentioning utils in the path
 from n2d2.utils import *
+
+from n2d2.n2d2_interface import ConventionConverter
+
+from n2d2.tensor import *
 import n2d2.database 
 import n2d2.cells
 import n2d2.provider
@@ -46,6 +50,5 @@ import n2d2.error_handler
 import n2d2.models
 # IP functions
 import n2d2.quantizer
-
 import n2d2.converter
 
