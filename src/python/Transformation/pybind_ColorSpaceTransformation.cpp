@@ -57,7 +57,8 @@ void init_ColorSpaceTransformation(py::module &m) {
     .value("CIELuv_to_RGB", ColorSpaceTransformation::ColorSpace::CIELuv_to_RGB)
     .export_values();
 
-    cst.def(py::init<ColorSpaceTransformation::ColorSpace>(), py::arg("colorSpace"));
+    cst.def(py::init<ColorSpaceTransformation::ColorSpace>(), py::arg("colorSpace"))
+    .def("getColorSpace", &ColorSpaceTransformation::getColorSpace);
 
 
 }

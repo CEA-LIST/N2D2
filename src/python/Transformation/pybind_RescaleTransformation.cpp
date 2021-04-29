@@ -31,7 +31,12 @@ namespace N2D2 {
 void init_RescaleTransformation(py::module &m) {
     py::class_<RescaleTransformation, std::shared_ptr<RescaleTransformation>, Transformation> (m, "RescaleTransformation", py::multiple_inheritance())
     .def(py::init<unsigned int, unsigned int>(), py::arg("width"), py::arg("height"))
-    .def(py::init<const RescaleTransformation&>(), py::arg("trans"));
+    .def(py::init<const RescaleTransformation&>(), py::arg("trans"))
+    .def("getWidth", &RescaleTransformation::getWidth)
+    .def("getHeight", &RescaleTransformation::getHeight)
+    .def("getKeepAspectRatio", &RescaleTransformation::getKeepAspectRatio)
+    .def("getResizeToFit", &RescaleTransformation::getResizeToFit)
+    ;
 }
 }
 #endif

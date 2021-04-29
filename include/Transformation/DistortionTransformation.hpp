@@ -58,6 +58,25 @@ public:
         return depth;
     };
     virtual ~DistortionTransformation();
+    
+    unsigned int getElasticGaussianSize(){
+        return mElasticGaussianSize;
+    };
+    double getElasticSigma(){
+        return mElasticSigma;
+    };
+    double getElasticScaling(){
+        return mElasticScaling;
+    };
+    double getScaling(){
+        return mScaling;
+    };
+    double getRotation(){
+        return mRotation;
+    };
+    bool getIgnoreMissingData(){
+        return mIgnoreMissingData;
+    };
 
 private:
     virtual DistortionTransformation* doClone() const

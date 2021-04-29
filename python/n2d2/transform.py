@@ -308,7 +308,7 @@ class RangeAffine(Transformation):
         "first_value": "FirstValue",
         "second_operator": "secondOperator",
         "second_value": "secondValue",
-        "truncate": "truncate"
+        "truncate": "Truncate"
     })
 
     def __init__(self, first_operator, first_value, **config_parameters):
@@ -357,6 +357,7 @@ class SliceExtraction(Transformation):
         "random_rotation": "RandomRotation",
         "random_rotation_range": "RandomRotationRange",
         "random_scaling": "RandomScaling",
+        "random_scaling_range": "RandomScalingRange",
         "allow_padding": "AllowPadding",
         "border_type": "BorderType",
         "border_value": "BorderValue",

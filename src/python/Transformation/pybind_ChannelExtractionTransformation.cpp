@@ -44,7 +44,8 @@ void init_ChannelExtractionTransformation(py::module &m) {
     .value("Cr", ChannelExtractionTransformation::Channel::Cr)
     .export_values();
 
-    cet.def(py::init<ChannelExtractionTransformation::Channel>(), py::arg("channel"));
+    cet.def(py::init<ChannelExtractionTransformation::Channel>(), py::arg("channel"))
+    .def("getChannel", &ChannelExtractionTransformation::getChannel);
 
 
 }

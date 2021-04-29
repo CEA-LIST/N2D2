@@ -31,7 +31,32 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_SGDSolver(py::module &m) {
-    py::class_<SGDSolver, std::shared_ptr<SGDSolver>, Solver> (m, "SGDSolver", py::multiple_inheritance());
+    py::class_<SGDSolver, std::shared_ptr<SGDSolver>, Solver> sdg (m, "SGDSolver", py::multiple_inheritance());
+    
+    py::enum_<SGDSolver::LearningRatePolicy>(sdg, "LearningRatePolicy")
+    .value("None", SGDSolver::LearningRatePolicy::None)
+    .value("StepDecay", SGDSolver::LearningRatePolicy::StepDecay)
+    .value("ExponentialDecay", SGDSolver::LearningRatePolicy::ExponentialDecay)
+    .value("InvTDecay", SGDSolver::LearningRatePolicy::InvTDecay)
+    .value("PolyDecay", SGDSolver::LearningRatePolicy::PolyDecay)
+    .value("InvDecay", SGDSolver::LearningRatePolicy::InvDecay)
+    .value("CosineDecay", SGDSolver::LearningRatePolicy::CosineDecay)
+    .export_values();
+    
+    sdg.def("getmLearningRate", &SGDSolver::getmLearningRate)
+    .def("getMomentum", &SGDSolver::getMomentum)
+    .def("getDecay", &SGDSolver::getDecay)
+    .def("getPower", &SGDSolver::getPower)
+    .def("getIterationSize", &SGDSolver::getIterationSize)
+    .def("getMaxIterations", &SGDSolver::getMaxIterations)
+    .def("getWarmUpDuration", &SGDSolver::getWarmUpDuration)
+    .def("getWarmUpLRFrac", &SGDSolver::getWarmUpLRFrac)
+    .def("getLearningRatePolicy", &SGDSolver::getLearningRatePolicy)
+    .def("getLearningRateStepSize", &SGDSolver::getLearningRateStepSize)
+    .def("getLearningRateDecay", &SGDSolver::getLearningRateDecay)
+    .def("getmClamping", &SGDSolver::getmClamping)
+    .def("getPolyakMomentum", &SGDSolver::getPolyakMomentum)
+    ;
 
 }
 }

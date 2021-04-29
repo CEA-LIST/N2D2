@@ -190,7 +190,7 @@ class CIFAR100(Database):
     _convention_converter= n2d2.ConventionConverter({
         "use_coarse": "useCoarse",
         "validation": "validation",
-        "use_test_for_validation": "UseTestForValidation",
+        "use_test_for_validation": "useTestForVal",
     })
 
     def __init__(self, **config_parameters):
@@ -204,7 +204,7 @@ class CIFAR100(Database):
         """
         N2D2_Interface.__init__(self, **config_parameters)
 
-        self._parse_optional_arguments(['validation', 'use_coarse'])
+        self._parse_optional_arguments(['validation', 'use_coarse', "use_test_for_validation"])
         self._N2D2_object = N2D2.CIFAR100_Database(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
 
@@ -219,7 +219,7 @@ class ILSVRC2012(Database):
         "use_validation_for_test": "useValidationForTest",
         "learn": "Learn",
         "random_partitioning": "RandomPartitioning",
-        "background_class": "BackgroundClass"
+        "background_class": "backgroundClass"
     })
     def __init__(self, learn, **config_parameters):
         """

@@ -47,6 +47,9 @@ public:
                       const std::string& labelPath = "",
                       bool /*extractROIs*/ = false);
     virtual ~CIFAR10_Database() {};
+    bool getUseTestForValidation(){
+        return mUseTestForValidation;
+    };
 protected:
     bool mUseTestForValidation;
 };
@@ -58,6 +61,12 @@ public:
                       const std::string& labelPath = "",
                       bool /*extractROIs*/ = false);
     virtual ~CIFAR100_Database() {};
+    double getUseCoarse(){
+        return mUseCoarse;
+    };
+    bool getUseTestForValidation(){
+        return mUseTestForValidation;
+    };
 
 protected:
     double mUseCoarse;

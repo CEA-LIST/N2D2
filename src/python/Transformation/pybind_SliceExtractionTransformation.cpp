@@ -23,14 +23,40 @@
 
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
 void init_SliceExtractionTransformation(py::module &m) {
-    py::class_<SliceExtractionTransformation, std::shared_ptr<SliceExtractionTransformation>, Transformation> (m, "SliceExtractionTransformation", py::multiple_inheritance())
-    .def(py::init<unsigned int, unsigned int, unsigned int, unsigned int>(), py::arg("width"), py::arg("height"), py::arg("offsetX") = 0,  py::arg("offsetY") = 0)
-    .def(py::init<SliceExtractionTransformation&>(), py::arg("trans"));
+    py::class_<SliceExtractionTransformation, std::shared_ptr<SliceExtractionTransformation>, Transformation> set (m, "SliceExtractionTransformation", py::multiple_inheritance());
+    
+    
+    py::enum_<SliceExtractionTransformation::BorderType>(set, "BorderType")
+    .value("ConstantBorder", SliceExtractionTransformation::BorderType::ConstantBorder)
+    .value("ReplicateBorder", SliceExtractionTransformation::BorderType::ReplicateBorder)
+    .value("ReflectBorder", SliceExtractionTransformation::BorderType::ReflectBorder)
+    .value("WrapBorder", SliceExtractionTransformation::BorderType::WrapBorder)
+    .value("MinusOneReflectBorder", SliceExtractionTransformation::BorderType::MinusOneReflectBorder)
+    .value("MeanBorder", SliceExtractionTransformation::BorderType::MeanBorder)
+    .export_values();
+
+    set.def(py::init<unsigned int, unsigned int, unsigned int, unsigned int>(), py::arg("width"), py::arg("height"), py::arg("offsetX") = 0,  py::arg("offsetY") = 0)
+    .def(py::init<SliceExtractionTransformation&>(), py::arg("trans"))
+    .def("getWidth", &SliceExtractionTransformation::getWidth)
+    .def("getHeight", &SliceExtractionTransformation::getHeight)
+    .def("getOffsetX", &SliceExtractionTransformation::getOffsetX)
+    .def("getOffsetY", &SliceExtractionTransformation::getOffsetY)
+    .def("getRandomOffsetX", &SliceExtractionTransformation::getRandomOffsetX)
+    .def("getRandomOffsetY", &SliceExtractionTransformation::getRandomOffsetY)
+    .def("getRandomRotation", &SliceExtractionTransformation::getRandomRotation)
+    .def("getRandomRotationRange", &SliceExtractionTransformation::getRandomRotationRange)
+    .def("getRandomScaling", &SliceExtractionTransformation::getRandomScaling)
+    .def("getRandomScalingRange", &SliceExtractionTransformation::getRandomScalingRange)
+    .def("getAllowPadding", &SliceExtractionTransformation::getAllowPadding)
+    .def("getBorderType", &SliceExtractionTransformation::getBorderType)
+    .def("getBorderValue", &SliceExtractionTransformation::getBorderValue)
+    ;
 }
 }
 #endif

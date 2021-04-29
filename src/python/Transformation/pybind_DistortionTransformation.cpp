@@ -32,7 +32,14 @@ namespace N2D2 {
 void init_DistortionTransformation(py::module &m) {
     py::class_<DistortionTransformation, std::shared_ptr<DistortionTransformation>, Transformation> (m, "DistortionTransformation", py::multiple_inheritance())
     .def(py::init<>())
-    .def(py::init<const DistortionTransformation&>(), py::arg("trans"));
+    .def(py::init<const DistortionTransformation&>(), py::arg("trans"))
+    .def("getElasticGaussianSize", &DistortionTransformation::getElasticGaussianSize)
+    .def("getElasticSigma", &DistortionTransformation::getElasticSigma)
+    .def("getElasticScaling", &DistortionTransformation::getElasticScaling)
+    .def("getScaling", &DistortionTransformation::getScaling)
+    .def("getRotation", &DistortionTransformation::getRotation)
+    .def("getIgnoreMissingData", &DistortionTransformation::getIgnoreMissingData)
+    ;
     //.def("apply", &DistortionTransformation::apply, py::arg("frame"), py::arg("labels"), py::arg("labelsROI"), py::arg("id"));
 
 }

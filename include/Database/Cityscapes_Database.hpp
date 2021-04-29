@@ -75,7 +75,16 @@ public:
                       const std::string& labelPath = "",
                       bool /*extractROIs*/ = false);
     virtual ~Cityscapes_Database() {};
-
+    
+    bool getIncTrainExtra(){
+        return mIncTrainExtra;
+    };
+    bool getUseCoarse(){
+        return mUseCoarse;
+    };
+    bool getSingleInstanceLabels(){
+        return mSingleInstanceLabels;
+    };
 protected:
     void loadLabels(const std::string& labelPath);
 

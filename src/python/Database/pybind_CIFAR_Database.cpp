@@ -33,9 +33,13 @@ void init_CIFAR_Database(py::module &m) {
     py::class_<CIFAR_Database, std::shared_ptr<CIFAR_Database>, Database>(m, "CIFAR_Database");
     
     py::class_<CIFAR10_Database, std::shared_ptr<CIFAR10_Database>, CIFAR_Database>(m, "CIFAR10_Database")
-    .def(py::init< double>(), py::arg("validation") = 0.0);
+    .def(py::init< double, bool>(), py::arg("validation") = 0.0, py::arg("useTestForVal")=false)
+    .def("getUseTestForValidation", &CIFAR10_Database::getUseTestForValidation);
     py::class_<CIFAR100_Database, std::shared_ptr<CIFAR100_Database>, CIFAR_Database>(m, "CIFAR100_Database")
-    .def(py::init<double, bool>(), py::arg("validation") = 0.0, py::arg("useCoarse") = false);
+    .def(py::init<double, bool, bool>(), py::arg("validation") = 0.0, py::arg("useCoarse") = false, py::arg("useTestForVal")=false)
+    .def("getUseTestForValidation", &CIFAR100_Database::getUseTestForValidation)
+    .def("getUseCoarse", &CIFAR100_Database::getUseCoarse)
+    ;
 }
 }
 #endif

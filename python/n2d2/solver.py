@@ -59,18 +59,24 @@ class SGD(Solver):
         "learning_rate": "LearningRate",
         "momentum": "Momentum",
         "decay": "Decay",
+        "power": "Power",
+        "iteration_size": "IterationSize",
+        "max_iterations": "MaxIterations",
+        "warm_up_duration": "WarmUpDuration",
+        "warm_up_lr_frac": "WarmUpLRFrac",
         "learning_rate_policy": "LearningRatePolicy",
         "learning_rate_step_size": "LearningRateStepSize",
         "learning_rate_decay": "LearningRateDecay",
         "clamping": "Clamping",
-        "datatype": "Datatype",
-        "model": "Model",
-        "iteration_size": "IterationSize",
-        "max_iterations": "MaxIterations",
         "polyak_momentum": "PolyakMomentum",
-        "power": "Power",
-        "warm_up_duration": "WarmUpDuration",
-        "warm_up_lr_frac": "WarmUpLRFrac",
+        "iteration_pass": "IterationPass",
+        "nb_iteration": "NbIteration",
+        "datatype": "Datatype",# Pure n2d2
+        "model": "Model",# Pure n2d2
+        "from_argument": "FromArgument", # Pure n2d2
+        
+        
+        
     })
     def __init__(self, from_arguments=True, **config_parameters):
         """

@@ -45,6 +45,11 @@ class test_params(unittest.TestCase):
                     N2D2_param = N2D2_Interface._N2D2_type_map[N2D2_type](N2D2_param)
                     if isinstance(self.parameters[param], bool):
                         self.assertEqual(self.parameters[param], bool(int(N2D2_param)))
+                    elif isinstance(self.parameters[param], list):
+                        dtype = type(self.parameters[param][0])
+                        N2D2_param = N2D2_param.split(" ")[:-1]
+                        N2D2_param = [dtype(p) for p in N2D2_param]
+                        self.assertEqual(self.parameters[param], N2D2_param)
                     else:
                         self.assertEqual(self.parameters[param], N2D2_param)
             #         self.parameters.pop(param)
@@ -221,6 +226,7 @@ class test_ElemWise(test_params):
         self.assertEqual(self.parameters["weights"], self.object.N2D2().getWeights())
         self.assertEqual(self.parameters["shifts"], self.object.N2D2().getShifts())
         self.assertIs(self.parameters["activation_function"].N2D2(), self.object.N2D2().getActivation())
+
         super().test_parameters()
 
 class test_Dropout(test_params):
@@ -235,8 +241,9 @@ class test_Dropout(test_params):
         # Need to instantiate the object (doing so by passing a dummy input)
         tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
         self.object(tensor)
+        # TODO Check if the parameters are well initialized 
         self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
-
+        self.assertEqual(self.parameters["dropout"], self.object.N2D2().getDropout())
         super().test_parameters()
 
 # The following classes have not been tested because of a lack of documentation
@@ -256,9 +263,13 @@ class test_Padding(test_params):
         # Need to instantiate the object (doing so by passing a dummy input)
         tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
         self.object(tensor)
+        self.assertEqual(self.parameters["top_pad"], self.object.N2D2().getTopPad())
+        self.assertEqual(self.parameters["bot_pad"], self.object.N2D2().getBotPad())
+        self.assertEqual(self.parameters["left_pad"], self.object.N2D2().getLeftPad())
+        self.assertEqual(self.parameters["right_pad"], self.object.N2D2().getRightPad())
         self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
-
         super().test_parameters()
+
 # TODO: BatchNorm2d
 class test_BatchNorm2d(test_params):
     def setUp(self):
@@ -275,8 +286,13 @@ class test_BatchNorm2d(test_params):
     def test_parameters(self):
         # Need to instantiate the object (doing so by passing a dummy input)
         tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
+        # TODO Check if the parameters are well initialized 
         self.object(tensor)
         self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
+        self.assertEqual(self.parameters["scale_solver"].N2D2(), self.object.N2D2().getScaleSolver())
+        self.assertEqual(self.parameters["bias_solver"].N2D2(), self.object.N2D2().getBiasSolver())
+        self.assertEqual(self.parameters["moving_average_momentum"], self.object.N2D2().getMovingAverageMomentum())
+        self.assertEqual(self.parameters["epsilon"], self.object.N2D2().getEpsilon())
 
         super().test_parameters()
 # TODO: Activation
@@ -309,6 +325,7 @@ class test_Reshape(test_params):
         tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
         self.object(tensor)
         self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
+        self.assertEqual(self.parameters["dims"], self.object.N2D2().getDims())
         super().test_parameters()
 
 ### TEST DATABASE ###
@@ -323,7 +340,6 @@ class test_DIR(test_params):
     def test_parameters(self):
         # Need to instantiate the object (doing so by passing a dummy input)
         self.assertEqual(self.parameters["load_data_in_memory"], self.object.N2D2().getLoadDataInMemory())
-        
         super().test_parameters()
 
 class test_MNIST(test_params):
@@ -336,7 +352,7 @@ class test_MNIST(test_params):
         self.object = n2d2.database.MNIST("/nvme0/DATABASE/MNIST/raw/", **self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        # TODO Check if the parameters are well initialized
         super().test_parameters()
 
 
@@ -344,12 +360,14 @@ class test_CIFAR100(test_params):
     def setUp(self):
         self.parameters = {
             "use_coarse": True,
-            "validation": 0.2
+            "validation": 0.2,
+            "use_test_for_validation": False,
         }
         self.object = n2d2.database.CIFAR100(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.parameters["use_coarse"], self.object.N2D2().getUseCoarse())
+        self.assertEqual(self.parameters["use_test_for_validation"], self.object.N2D2().getUseTestForValidation())
         super().test_parameters()
 
 class test_ILSVRC2012(test_params):
@@ -357,11 +375,14 @@ class test_ILSVRC2012(test_params):
         self.parameters = {
             "learn": 0.2,
             "use_validation_for_test": True,
+            "background_class": False,
         }
         self.object = n2d2.database.ILSVRC2012(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.parameters["learn"], self.object.N2D2().getLearn())
+        self.assertEqual(self.parameters["background_class"], self.object.N2D2().getBackgroundClass())
+        self.assertEqual(self.parameters["use_validation_for_test"], self.object.N2D2().getUseValidationForTest())
         super().test_parameters()
 
 class test_Cityscapes(test_params):
@@ -374,7 +395,9 @@ class test_Cityscapes(test_params):
         self.object = n2d2.database.Cityscapes(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.parameters["inc_train_extra"], self.object.N2D2().getIncTrainExtra())
+        self.assertEqual(self.parameters["use_coarse"], self.object.N2D2().getUseCoarse())
+        self.assertEqual(self.parameters["single_instance_labels"], self.object.N2D2().getSingleInstanceLabels())
         super().test_parameters()
 
 class test_GTSRB(test_params):
@@ -385,7 +408,7 @@ class test_GTSRB(test_params):
         self.object = n2d2.database.GTSRB(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.parameters["validation"], self.object.N2D2().getValidation())
         super().test_parameters()
     
 ### Transformation ###
@@ -393,13 +416,22 @@ class test_GTSRB(test_params):
 class test_PadCrop(test_params):
     def setUp(self):
         self.parameters = {
+            "width": 10,
+            "height":10,
+            "additive_wh": False,
             "border_type": "WrapBorder",
-            # "border_value": [0.0, 0.0, 0.0] # TODO : make it work
+            "border_value": [0.0, 0.0, 0.0],
         }
-        self.object = n2d2.transform.PadCrop(10, 10, **self.parameters)
+        self.object = n2d2.transform.PadCrop(**self.parameters)
 
     def test_parameters(self):
         # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.parameters["width"], self.object.N2D2().getWidth())
+        self.assertEqual(self.parameters["height"], self.object.N2D2().getHeight())
+        self.assertEqual(self.parameters["additive_wh"], self.object.N2D2().getAdditiveWH())
+        self.assertEqual(self.object.N2D2().BorderType.__members__[self.parameters["border_type"]],
+                        self.object.N2D2().getBorderType())
+        self.assertEqual(self.parameters["border_value"], self.object.N2D2().getBorderValue())
         super().test_parameters()
 
 class test_Distortion(test_params):
@@ -410,23 +442,36 @@ class test_Distortion(test_params):
             "elastic_scaling": 0.0,
             "scaling": 0.0,
             "rotation": 0.0,
+            "ignore_missing_data": False,
         }
         self.object = n2d2.transform.Distortion(**self.parameters)
 
     def test_parameters(self):
+        self.assertEqual(self.parameters["elastic_gaussian_size"], self.object.N2D2().getElasticGaussianSize())
+        self.assertEqual(self.parameters["elastic_sigma"], self.object.N2D2().getElasticSigma())
+        self.assertEqual(self.parameters["elastic_scaling"], self.object.N2D2().getElasticScaling())
+        self.assertEqual(self.parameters["scaling"], self.object.N2D2().getScaling())
+        self.assertEqual(self.parameters["rotation"], self.object.N2D2().getRotation())
+        self.assertEqual(self.parameters["ignore_missing_data"], self.object.N2D2().getIgnoreMissingData())
         # TODO Check if the parameters are well initialized 
         super().test_parameters()
 
 class test_Rescale(test_params):
     def setUp(self):
         self.parameters = {
+            "height": 10,
+            "width": 10,
             "keep_aspect_ratio": True,
             "resize_to_fit": False,
         }
-        self.object = n2d2.transform.Rescale(10, 10, **self.parameters)
+        self.object = n2d2.transform.Rescale(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        # TODO Check if the parameters are well initialized *
+        self.assertEqual(self.parameters["height"], self.object.N2D2().getHeight())
+        self.assertEqual(self.parameters["width"], self.object.N2D2().getWidth())
+        self.assertEqual(self.parameters["keep_aspect_ratio"], self.object.N2D2().getKeepAspectRatio())
+        self.assertEqual(self.parameters["resize_to_fit"], self.object.N2D2().getResizeToFit())
         super().test_parameters()
 
 class test_ColorSpace(test_params):
@@ -438,20 +483,30 @@ class test_ColorSpace(test_params):
 
     def test_parameters(self):
         # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.object.N2D2().ColorSpace.__members__[self.parameters["color_space"]],
+                        self.object.N2D2().getColorSpace())
         super().test_parameters()
 
 class test_RangeAffine(test_params):
     def setUp(self):
         self.parameters = {
             "first_operator": "Plus",
-            "first_value": 1.0,
+            "first_value": [1.0],
             "second_operator": "Plus",
-            "second_value": 1.0,
+            "second_value": [1.0],
+            "truncate": False,
         }
         self.object = n2d2.transform.RangeAffine(**self.parameters)
 
     def test_parameters(self):
         # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.object.N2D2().Operator.__members__[self.parameters["first_operator"]],
+                        self.object.N2D2().getFirstOperator())
+        self.assertEqual(self.parameters["first_value"], self.object.N2D2().getFirstValue())
+        self.assertEqual(self.object.N2D2().Operator.__members__[self.parameters["second_operator"]],  
+                        self.object.N2D2().getSecondOperator())
+        self.assertEqual(self.parameters["second_value"], self.object.N2D2().getSecondValue())
+        self.assertEqual(self.parameters["truncate"], self.object.N2D2().getTruncate())
         super().test_parameters()
 class test_SliceExtraction(test_params):
     def setUp(self):
@@ -464,13 +519,29 @@ class test_SliceExtraction(test_params):
             "random_offset_y":False,
             "random_rotation":True,
             "random_scaling": True,
+            "random_rotation_range": [0.0, 1.0],
+            "random_scaling_range": [0.0, 1.0],
             "allow_padding": True,
             "border_type": "WrapBorder",
+            "border_value": [1.0],
         }
         self.object = n2d2.transform.SliceExtraction(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.parameters["width"], self.object.N2D2().getWidth())
+        self.assertEqual(self.parameters["height"], self.object.N2D2().getHeight())
+        self.assertEqual(self.parameters["offset_x"], self.object.N2D2().getOffsetX())
+        self.assertEqual(self.parameters["offset_y"], self.object.N2D2().getOffsetY())
+        self.assertEqual(self.parameters["random_offset_x"], self.object.N2D2().getRandomOffsetX())
+        self.assertEqual(self.parameters["random_offset_y"], self.object.N2D2().getRandomOffsetY())
+        self.assertEqual(self.parameters["random_rotation"], self.object.N2D2().getRandomRotation())
+        self.assertEqual(self.parameters["random_rotation_range"], self.object.N2D2().getRandomRotationRange())
+        self.assertEqual(self.parameters["random_scaling"], self.object.N2D2().getRandomScaling())
+        self.assertEqual(self.parameters["random_scaling_range"], self.object.N2D2().getRandomScalingRange())
+        self.assertEqual(self.parameters["allow_padding"], self.object.N2D2().getAllowPadding())
+        self.assertEqual(self.object.N2D2().BorderType.__members__[self.parameters["border_type"]],  
+                        self.object.N2D2().getBorderType())
+        self.assertEqual(self.parameters["border_value"], self.object.N2D2().getBorderValue())
         super().test_parameters()
 
 class test_Flip(test_params):
@@ -484,7 +555,11 @@ class test_Flip(test_params):
         self.object = n2d2.transform.Flip(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.parameters["horizontal_flip"], self.object.N2D2().getHorizontalFlip())
+        self.assertEqual(self.parameters["vertical_flip"], self.object.N2D2().getVerticalFlip())
+        self.assertEqual(self.parameters["random_horizontal_flip"], self.object.N2D2().getRandomHorizontalFlip())
+        self.assertEqual(self.parameters["random_vertical_flip"], self.object.N2D2().getRandomVerticalFlip())
+
         super().test_parameters()
 
 class test_RandomResizeCrop(test_params):
@@ -494,11 +569,22 @@ class test_RandomResizeCrop(test_params):
             "height": 10,
             "offset_x": 0,
             "offset_y": 0,
+            "scale_min": 0.0,
+            "scale_max": 0.0,
+            "ratio_min": 0.0,
+            "ratio_max": 0.0,
         }
         self.object = n2d2.transform.RandomResizeCrop(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.parameters["width"], self.object.N2D2().getWidth())
+        self.assertEqual(self.parameters["height"], self.object.N2D2().getHeight())
+        self.assertEqual(self.parameters["offset_x"], self.object.N2D2().getOffsetX())
+        self.assertEqual(self.parameters["offset_y"], self.object.N2D2().getOffsetY())
+        self.assertEqual(self.parameters["scale_min"], self.object.N2D2().getScaleMin())
+        self.assertEqual(self.parameters["scale_max"], self.object.N2D2().getScaleMax())
+        self.assertEqual(self.parameters["ratio_min"], self.object.N2D2().getRatioMin())
+        self.assertEqual(self.parameters["ratio_max"], self.object.N2D2().getRatioMax())
         super().test_parameters()
 
 class test_ChannelExtraction(test_params):
@@ -509,21 +595,26 @@ class test_ChannelExtraction(test_params):
         self.object = n2d2.transform.ChannelExtraction(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.object.N2D2().Channel.__members__[self.parameters["channel"]],  
+                        self.object.N2D2().getChannel())
         super().test_parameters()
 
-# ### Filler ###
+### Filler ###
 class test_He(test_params):
     def setUp(self):
         self.parameters = {
             "datatype": "float",
             "variance_norm": 'Average',
-            "scaling": 1.0,  
+            "scaling": 1.0,
+            "mean_norm": 1.0,
         }
         self.object = n2d2.filler.He(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.parameters["mean_norm"], self.object.N2D2().getMeanNorm())
+        self.assertEqual(self.parameters["scaling"], self.object.N2D2().getScaling())
+        self.assertEqual(self.object.N2D2().VarianceNorm.__members__[self.parameters["variance_norm"]],  
+                        self.object.N2D2().getVarianceNorm())
         super().test_parameters()
 
 class test_Normal(test_params):
@@ -536,7 +627,8 @@ class test_Normal(test_params):
         self.object = n2d2.filler.Normal(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.parameters["mean"], self.object.N2D2().getMean())
+        self.assertEqual(self.parameters["std_dev"], self.object.N2D2().getStdDev())
         super().test_parameters()
 
 class test_Xavier(test_params):
@@ -550,7 +642,11 @@ class test_Xavier(test_params):
         self.object = n2d2.filler.Xavier(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.object.N2D2().VarianceNorm.__members__[self.parameters["variance_norm"]],
+                        self.object.N2D2().getVarianceNorm())
+        self.assertEqual(self.object.N2D2().Distribution.__members__[self.parameters["distribution"]],  
+                        self.object.N2D2().getDistribution())
+        self.assertEqual(self.parameters["scaling"], self.object.N2D2().getScaling())
         super().test_parameters()
 
 class test_Constant(test_params):
@@ -562,11 +658,11 @@ class test_Constant(test_params):
         self.object = n2d2.filler.Constant(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.parameters["value"], self.object.N2D2().getValue())
         super().test_parameters()
 
 
-# # # ### Solver ###
+### Solver ###
 
 class test_SGD(test_params):
     def setUp(self):
@@ -576,15 +672,35 @@ class test_SGD(test_params):
             "learning_rate": 0.001,
             "momentum": 0.0,
             "decay": 0.0,
+            "power": 1.0,
+            "iteration_size": 1,
+            "max_iterations": 1,
+            "warm_up_duration": 0,
+            "warm_up_lr_frac": 1.0,
             "learning_rate_policy": "None",
             "learning_rate_step_size": 1,
             "learning_rate_decay": 0.1,
             "clamping": False,
+            "polyak_momentum": False,
         }
         self.object = n2d2.solver.SGD(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.parameters["learning_rate"], self.object.N2D2().getmLearningRate())
+        self.assertEqual(self.parameters["momentum"], self.object.N2D2().getMomentum())
+        self.assertEqual(self.parameters["decay"], self.object.N2D2().getDecay())
+        self.assertEqual(self.parameters["power"], self.object.N2D2().getPower())
+        self.assertEqual(self.parameters["iteration_size"], self.object.N2D2().getIterationSize())
+        self.assertEqual(self.parameters["max_iterations"], self.object.N2D2().getMaxIterations())
+        self.assertEqual(self.parameters["warm_up_duration"], self.object.N2D2().getWarmUpDuration())
+        self.assertEqual(self.parameters["warm_up_lr_frac"], self.object.N2D2().getWarmUpLRFrac())
+        self.assertEqual(self.object.N2D2().LearningRatePolicy.__members__[self.parameters["learning_rate_policy"]],  
+                        self.object.N2D2().getLearningRatePolicy())
+        self.assertEqual(self.parameters["learning_rate_step_size"], self.object.N2D2().getLearningRateStepSize())
+        self.assertEqual(self.parameters["learning_rate_decay"], self.object.N2D2().getLearningRateDecay())
+        self.assertEqual(self.parameters["clamping"], bool(int(self.object.N2D2().getmClamping())))
+        self.assertEqual(self.parameters["polyak_momentum"], bool(int(self.object.N2D2().getPolyakMomentum())))
+
         super().test_parameters()
 
 ### Activation ###

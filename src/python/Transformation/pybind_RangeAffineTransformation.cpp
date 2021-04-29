@@ -42,7 +42,13 @@ void init_RangeAffineTransformation(py::module &m) {
     rat
     .def(py::init<RangeAffineTransformation::Operator, const std::vector<double>&, RangeAffineTransformation::Operator, const std::vector<double>&>(), py::arg("firstOperator"), py::arg("firstValue"), py::arg("secondOperator") = RangeAffineTransformation::Operator::Plus, py::arg("secondValue") = std::vector<double>())
     .def(py::init<RangeAffineTransformation::Operator, double, RangeAffineTransformation::Operator, double>(), py::arg("firstOperator"), py::arg("firstValue"), py::arg("secondOperator") = RangeAffineTransformation::Operator::Plus, py::arg("secondValue") = 0.0)
-    .def(py::init<const RangeAffineTransformation&>(), py::arg("trans"));
+    .def(py::init<const RangeAffineTransformation&>(), py::arg("trans"))
+    .def("getFirstOperator", &RangeAffineTransformation::getFirstOperator)
+    .def("getFirstValue", &RangeAffineTransformation::getFirstValue)
+    .def("getSecondOperator", &RangeAffineTransformation::getSecondOperator)
+    .def("getSecondValue", &RangeAffineTransformation::getSecondValue)
+    .def("getTruncate", &RangeAffineTransformation::getTruncate)
+    ;
 }
 }
 #endif

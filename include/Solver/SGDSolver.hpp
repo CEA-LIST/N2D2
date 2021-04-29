@@ -67,6 +67,49 @@ public:
                      unsigned int batchSize,
                      unsigned int epochSize = 0,
                      unsigned int maxSteps = 0);
+    double getmLearningRate(){
+        return mLearningRate;
+    };
+    double getMomentum(){
+        return mMomentum;
+    };
+    double getDecay(){
+        return mDecay;
+    };
+    double getPower(){
+        return mPower;
+    };
+    unsigned int getIterationSize(){
+        return mIterationSize;
+    };
+    unsigned long long int getMaxIterations(){
+        return mMaxIterations;
+    };
+    unsigned int getWarmUpDuration(){
+        return mWarmUpDuration;
+    };
+    double getWarmUpLRFrac(){
+        return mWarmUpLRFrac;
+    };
+    LearningRatePolicy getLearningRatePolicy(){
+        return mLearningRatePolicy;
+    };
+    unsigned int getLearningRateStepSize(){
+        return mLearningRateStepSize;
+    };
+    double getLearningRateDecay(){
+        return mLearningRateDecay;
+    };
+    std::string getmClamping(){
+        return mClamping;
+    };
+    bool getPolyakMomentum(){
+        return mPolyakMomentum;
+    };
+
+    unsigned int getNbIterations(){
+        return mNbIterations;
+    };
 
     virtual ~SGDSolver() {};
 

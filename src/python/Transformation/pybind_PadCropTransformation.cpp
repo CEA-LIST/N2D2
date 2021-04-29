@@ -24,7 +24,7 @@
 
 
 #include <pybind11/pybind11.h>
-
+#include <pybind11/stl.h>
 namespace py = pybind11;
 
 namespace N2D2 {
@@ -41,7 +41,13 @@ void init_PadCropTransformation(py::module &m) {
     .export_values();
 
     trans
-    .def(py::init<int, int>(), py::arg("width"), py::arg("height"));
+    .def(py::init<int, int>(), py::arg("width"), py::arg("height"))
+    .def("getWidth", &PadCropTransformation::getWidth)
+    .def("getHeight", &PadCropTransformation::getHeight)
+    .def("getAdditiveWH", &PadCropTransformation::getAdditiveWH)
+    .def("getBorderType", &PadCropTransformation::getBorderType)
+    .def("getBorderValue", &PadCropTransformation::getBorderValue)
+    ;
 
     // .def("apply", &PadCropTransformation::apply, py::arg("frame"), py::arg("labels"), py::arg("labelsROI"), py::arg("id"));
 

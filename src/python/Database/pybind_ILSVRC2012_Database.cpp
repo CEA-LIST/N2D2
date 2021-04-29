@@ -1,4 +1,5 @@
 
+
 /*
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
@@ -30,7 +31,11 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_ILSVRC2012_Database(py::module &m) {
     py::class_<ILSVRC2012_Database, std::shared_ptr<ILSVRC2012_Database>, DIR_Database>(m, "ILSVRC2012_Database")
-        .def(py::init<double, bool, bool>(), py::arg("learn"), py::arg("useValidationForTest") = true, py::arg("backgroundClass") = false);
+    .def(py::init<double, bool, bool>(), py::arg("learn"), py::arg("useValidationForTest") = true, py::arg("backgroundClass") = false)
+    .def("getBackgroundClass", &ILSVRC2012_Database::getBackgroundClass)
+    .def("getLearn", &ILSVRC2012_Database::getLearn)
+    .def("getUseValidationForTest", &ILSVRC2012_Database::getUseValidationForTest)
+    ;
 }
 }
 #endif

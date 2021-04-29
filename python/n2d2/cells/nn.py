@@ -958,9 +958,7 @@ class Softmax(NeuralNetworkCell):
         :param with_loss: Softmax followed with a multinomial logistic layer, default=False
         :type with_loss: bool, optional
         :param group_size: Softmax is applied on groups of outputs. The group size must be a divisor of ``nb_outputs`` parameter, default=0
-        :type group_size: int, optional
-        :param mapping: Mapping
-        :type mapping: :py:class:`n2d2.tensor.Tensor`, optional        
+        :type group_size: int, optional    
         """
         if not from_arguments and len(config_parameters) > 0:
             raise RuntimeError(
@@ -2015,6 +2013,10 @@ class BatchNorm2d(NeuralNetworkCell):
     _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, nb_inputs, from_arguments=True, **config_parameters):
+        """
+        :param moving_average_momentum: Moving average rate: used for the moving average of batch-wise means and standard deviations during training.The closer to 1.0, the more it will depend on the last batch
+        :type moving_average_momentum: float, optional
+        """
         if not from_arguments and len(config_parameters) > 0:
             raise RuntimeError(
                 "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'config parameters' not None")

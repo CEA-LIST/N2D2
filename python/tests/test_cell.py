@@ -39,9 +39,6 @@ import n2d2
 import N2D2
 
 class test_ConvCell(unittest.TestCase):
-    """
-    The class needs to inherite unittest.TestCase, the name doesn't matter and the class doesn't need to be instanciated.
-    """
 
     def setUp(self):
         self.cell = n2d2.cells.Conv(1, 10, kernel_dims=[2, 2], no_bias=True)
@@ -74,9 +71,6 @@ class test_ConvCell(unittest.TestCase):
         self.assertTrue(last_cell is new_cell.N2D2())
 
 class test_FcCell(unittest.TestCase):
-    """
-    The class needs to inherit unittest.TestCase, the name doesn't matter and the class doesn't need to be instanciated.
-    """
 
     def setUp(self):
         self.cell = n2d2.cells.Fc(1, 10, no_bias=True)
@@ -109,9 +103,6 @@ class test_FcCell(unittest.TestCase):
 
 
 class test_SoftmaxCell(unittest.TestCase):
-    """
-    The class needs to inherit unittest.TestCase, the name doesn't matter and the class doesn't need to be instanciated.
-    """
 
     def setUp(self):
         self.cell = n2d2.cells.Softmax()
@@ -130,9 +121,6 @@ class test_SoftmaxCell(unittest.TestCase):
         self.assertTrue(last_cell is self.cell.N2D2())
 
 class test_PoolCell(unittest.TestCase):
-    """
-    The class needs to inherit unittest.TestCase, the name doesn't matter and the class doesn't need to be instanciated.
-    """
 
     def setUp(self):
         self.cell = n2d2.cells.Pool([1, 1])

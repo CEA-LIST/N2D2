@@ -30,7 +30,8 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_DropoutCell(py::module &m) {
 
-    py::class_<DropoutCell, std::shared_ptr<DropoutCell>, Cell> (m, "DropoutCell", py::multiple_inheritance());
+    py::class_<DropoutCell, std::shared_ptr<DropoutCell>, Cell> (m, "DropoutCell", py::multiple_inheritance())
+    .def("getDropout", &DropoutCell::getDropout);
 
 }
 }

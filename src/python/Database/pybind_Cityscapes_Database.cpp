@@ -32,7 +32,11 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_Cityscapes_Database(py::module &m) {
      py::class_<Cityscapes_Database, std::shared_ptr<Cityscapes_Database>, DIR_Database>(m, "Cityscapes_Database")
-         .def(py::init<bool, bool, bool>(), py::arg("incTrainExtra") = false, py::arg("useCoarse") = false, py::arg("singleInstanceLabels") = true);
+    .def(py::init<bool, bool, bool>(), py::arg("incTrainExtra") = false, py::arg("useCoarse") = false, py::arg("singleInstanceLabels") = true)
+    .def("getIncTrainExtra", &Cityscapes_Database::getIncTrainExtra)
+    .def("getSingleInstanceLabels", &Cityscapes_Database::getSingleInstanceLabels)
+    .def("getUseCoarse", &Cityscapes_Database::getUseCoarse)
+    ;
 }
 }
 #endif

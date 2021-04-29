@@ -34,6 +34,15 @@ public:
                       const std::string& labelPath = "",
                       bool /*extractROIs*/ = false);
     virtual ~ILSVRC2012_Database() {};
+    bool getUseValidationForTest(){
+        return mUseValidationForTest;
+    };
+    double getLearn(){
+        return mLearn;
+    };
+    bool getBackgroundClass(){
+        return mBackgroundClass;
+    };
 
 protected:
     void loadImageNetValidationStimuli(const std::string& dirPath,

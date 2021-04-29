@@ -72,6 +72,21 @@ public:
         return depth;
     };
     virtual ~PadCropTransformation() {};
+    int getWidth(){
+        return mWidth;
+    };
+    int getHeight(){
+        return mHeight;
+    };
+    bool getAdditiveWH(){
+        return mAdditiveWH;
+    };
+    BorderType getBorderType(){
+        return mBorderType;
+    };
+    std::vector<double> getBorderValue(){
+        return mBorderValue;
+    };
 
 private:
     virtual PadCropTransformation* doClone() const

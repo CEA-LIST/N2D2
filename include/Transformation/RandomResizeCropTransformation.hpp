@@ -82,6 +82,30 @@ public:
                             std::vector
                             <std::shared_ptr<ROI> >& labelsROI,
                             int id = 1);
+    unsigned int getWidth(){
+        return mWidth;
+    };
+    unsigned int getHeight(){
+        return mHeight;
+    };
+    unsigned int getOffsetX(){
+        return mOffsetX;
+    };
+    unsigned int getOffsetY(){
+        return mOffsetY;
+    };
+    float getScaleMin(){
+        return mScaleMin;
+    };
+    float getScaleMax(){
+        return mScaleMax;
+    };
+    float getRatioMin(){
+        return mRatioMin;
+    };
+    float getRatioMax(){
+        return mRatioMax;
+    };
 
 private:
     virtual RandomResizeCropTransformation* doClone() const

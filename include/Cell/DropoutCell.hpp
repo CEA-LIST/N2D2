@@ -49,6 +49,9 @@ public:
     {
         return Type;
     };
+    double getDropout(){
+        return mDropout;
+    };
     void getStats(Stats& stats) const;
     std::vector<unsigned int> getReceptiveField(
                                 const std::vector<unsigned int>& outputField

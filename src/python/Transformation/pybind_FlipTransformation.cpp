@@ -31,7 +31,11 @@ namespace N2D2 {
 void init_FlipTransformation(py::module &m) {
     py::class_<FlipTransformation, std::shared_ptr<FlipTransformation>, Transformation> (m, "FlipTransformation", py::multiple_inheritance())
     .def(py::init<bool, bool>(), py::arg("horizontalFlip") = false, py::arg("verticalFlip") = false)
-    .def(py::init<FlipTransformation&>(), py::arg("trans"));
+    .def(py::init<FlipTransformation&>(), py::arg("trans"))
+    .def("getHorizontalFlip", &FlipTransformation::getHorizontalFlip)
+    .def("getVerticalFlip", &FlipTransformation::getVerticalFlip)
+    .def("getRandomHorizontalFlip", &FlipTransformation::getRandomHorizontalFlip)
+    .def("getRandomVerticalFlip", &FlipTransformation::getRandomVerticalFlip);
 }
 }
 #endif
