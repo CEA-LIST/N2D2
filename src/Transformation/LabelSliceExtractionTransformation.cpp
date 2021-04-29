@@ -36,6 +36,7 @@ N2D2::LabelSliceExtractionTransformation::LabelSliceExtractionTransformation(
                            std::vector<double>({0.0, 360.0}))
 {
     // ctor
+    Utils::createDirectories("_cache");
 }
 
 N2D2::LabelSliceExtractionTransformation::LabelSliceExtractionTransformation(
