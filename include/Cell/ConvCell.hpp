@@ -210,11 +210,11 @@ public:
     std::vector<unsigned int> getReceptiveField(
                                 const std::vector<unsigned int>& outputField
                                         = std::vector<unsigned int>()) const;
+    std::map<unsigned int, unsigned int> outputsRemap() const;
     virtual ~ConvCell() {};
 
 protected:
     virtual void setOutputsDims();
-    std::map<unsigned int, unsigned int> outputsRemap() const;
 
     /// If true, the output neurons don't have bias
     Parameter<bool> mNoBias;
