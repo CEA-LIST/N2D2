@@ -94,6 +94,7 @@ class Tensor:
                     # TODO a bug cause the "value" argument to be ignored for CUDA tensor :
                     # example : N2D2.CudaTensor_int([2, 2], value=int(5)
                     self[0:] = value
+                    self.htod() # Need to synchronize the host to the device
         else:
             raise TypeError("Unrecognized Tensor datatype " + str(datatype))
 
@@ -372,6 +373,8 @@ class Tensor:
             self._tensor[index] = value
         else:
             raise error_handler.WrongInputType("index", type(index), [str(list), str(tuple), str(float), str(int), str(slice)])
+        if self.cuda:
+            self.htod()
 
     def __getitem__(self, index):
         """
@@ -380,6 +383,8 @@ class Tensor:
             - the coordinate of the element;
             - the index of the flatten tensor.
         """
+        if self.cuda:
+            self.dtoh()
         value = None
         if isinstance(index, tuple) or isinstance(index, list):
             value = self._tensor[self._get_index(index)]
@@ -420,6 +425,12 @@ class Tensor:
         return output
 
     def dtoh(self):
+        """
+        Synchronize Device to Host.
+        CUDA tensor are stored and computed in the GPU (Device).
+        You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
+        The synchronizations are handled by the library and regular users don't need use this method.  
+        """
         if self.is_cuda:
             self._tensor.synchronizeDToH()
         else:
@@ -427,6 +438,12 @@ class Tensor:
         return self
 
     def htod(self):
+        """
+        Synchronize Host to Device.
+        CUDA tensor are stored and computed in the GPU (Device).
+        You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
+        The synchronizations are handled by the library and regular users don't need use this method.  
+        """
         if self.is_cuda:
             self._tensor.synchronizeHToD()
         else:
@@ -474,8 +491,7 @@ class Tensor:
 
 class Interface(n2d2.provider.Provider):
     """
-    Interface is  class used to feed multiple tensors to a cell.
-    It can be used 
+    Interface is the class used to feed multiple tensors to a cell.
     """
     def __init__(self, tensors):
         self._name = n2d2.global_variables.generate_name(self)

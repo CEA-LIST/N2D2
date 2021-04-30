@@ -27,6 +27,9 @@ class test_tensor(unittest.TestCase):
         self.cuda = False
         self.x, self.y, self.z = (2,3,4)
         self.tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], datatype=int, value=0, cuda=self.cuda)
+    
+    def tearDown(self):
+        self.setUp()
     def test_set_index(self):
         self.tensor[0] = 1
         self.assertEqual(self.tensor[0], 1)
@@ -121,6 +124,11 @@ class test_cudatensor(test_tensor):
         self.x, self.y, self.z = (2,3,4)
         self.tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], datatype=int, value=0, cuda=self.cuda)
     
+    def test_synchronize(self):
+        copy_tensor = self.tensor.copy()
+        self.tensor[0, 0, 0] = 1
+        self.tensor.dtoh() # Synchronizing the host with the device
+        self.assertNotEqual(self.tensor, copy_tensor)
 
     
 if __name__ == '__main__':
