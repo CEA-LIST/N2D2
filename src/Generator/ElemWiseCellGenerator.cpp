@@ -59,7 +59,7 @@ N2D2::ElemWiseCellGenerator::generate(Network& network, const DeepNet& deepNet,
         = ActivationGenerator::generate(
             iniConfig, section, model, dataType, "ActivationFunction");
     const ElemWiseCell::CoeffMode mode = iniConfig.getProperty
-                                            <ElemWiseCell::CoeffMode>("CoeffMode");
+                                            <ElemWiseCell::CoeffMode>("CoeffMode", ElemWiseCell::PerInput);
 
     // Cell construction
     std::shared_ptr<ElemWiseCell> cell = Registrar
