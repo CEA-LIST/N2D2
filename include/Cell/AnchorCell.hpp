@@ -85,6 +85,7 @@ public:
         return flipStatus;
     };
     unsigned int getScoreCls() { return mScoresCls; };
+    bool getIsCoordinateAnchors() { return (mInputFormat == AnchorCell_Frame_Kernels::Format::CA); };
     unsigned int getFeatureMapWidth() { return mFeatureMapWidth; };
     unsigned int getFeatureMapHeight() { return mFeatureMapHeight; };
     //std::map<int, int> getLabelMapping() { return mLabelsMapping; };
@@ -105,11 +106,11 @@ protected:
     Parameter<unsigned int> mFeatureMapWidth;
     Parameter<unsigned int> mFeatureMapHeight;
     Parameter<bool> mFlip;
-    Parameter<bool> mSingleShotMode;
     Parameter<unsigned int> mNegativeRatioSSD;
     Parameter<unsigned int> mMaxLabelGT;
     Parameter<int> mNbClass;
-
+    Parameter<AnchorCell_Frame_Kernels::DetectorType> mDetectorType;
+    Parameter<AnchorCell_Frame_Kernels::Format> mInputFormat;
     StimuliProvider& mStimuliProvider;
     unsigned int mScoresCls;
     //std::map<int, int> mLabelsMapping;
@@ -124,6 +125,20 @@ template <>
 const char* const EnumStrings<N2D2::AnchorCell_Frame_Kernels::Anchor::Anchoring>
 ::data[]
     = {"TopLeft", "Centered", "Original", "OriginalFlipped"};
+}
+
+namespace {
+template <>
+const char* const EnumStrings<N2D2::AnchorCell_Frame_Kernels::DetectorType>
+::data[]
+    = {"LapNet", "SSD", "YOLO"};
+}
+
+namespace {
+template <>
+const char* const EnumStrings<N2D2::AnchorCell_Frame_Kernels::Format>
+::data[]
+    = {"CA", "AC"};
 }
 
 #endif // N2D2_ANCHORCELL_H

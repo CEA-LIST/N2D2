@@ -141,6 +141,11 @@ N2D2::AnchorCell_Frame::getAnchorArgMaxIoU(const Tensor<int>::Index& index)
 
 void N2D2::AnchorCell_Frame::initialize()
 {
+    if (mNbClass < 1) {
+        throw std::domain_error("AnchorCell_Frame::initialize():"
+                                " the number of classes must be superior to 0");
+    }
+
     const unsigned int nbAnchors = mAnchors.size();
     if(mFeatureMapWidth == 0)
         mFeatureMapWidth = mStimuliProvider.getSizeX();
@@ -180,9 +185,8 @@ void N2D2::AnchorCell_Frame::initialize()
                       mOutputsDims[1],
                       mAnchors.size(),
                       mOutputs.dimB()});
-    if(mSingleShotMode)
+    if(mDetectorType == AnchorCell_Frame_Kernels::DetectorType::LapNet)
     {
-
         mGTClass.resize(mOutputs.dimB());
         for(unsigned int b = 0; b <mOutputs.dimB(); ++b )
             mGTClass[b].resize(mNbClass);
@@ -209,7 +213,7 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                                     / (float) mFeatureMapWidth;
     const float yOutputRatio = mStimuliProvider.getSizeY()
                                     / (float) mFeatureMapHeight;
-    if(mSingleShotMode)
+    if(mDetectorType == AnchorCell_Frame_Kernels::DetectorType::LapNet)
     {
 
 #pragma omp parallel for if (mOutputs.dimB() > 4)
@@ -336,33 +340,31 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                             const Float_T cls = inputsCls(xa, ya, k, batchPos);
 
                             // Parameterized coordinates
-                            /*std::cout
-                                << inputsCoords(xa, ya,
-                                       k + coordsOffset * nbAnchors, batchPos)
-                                << ", "
-                                << inputsCoords(xa, ya,
-                                       k + (coordsOffset + 1) * nbAnchors,
-                                       batchPos)
-                                << ","
-                                << inputsCoords(xa, ya,
-                                       k + (coordsOffset + 2) * nbAnchors,
-                                       batchPos)
-                                << ","
-                                << inputsCoords(xa, ya,
-                                       k + (coordsOffset + 3) * nbAnchors,
-                                       batchPos)
-                                << std::endl;*/
+                            const std::size_t txOffset = (mInputFormat == AnchorCell_Frame_Kernels::Format::CA) ?
+                                                        k + coordsOffset * nbAnchors :
+                                                        k*4;
+                            const std::size_t tyOffset = (mInputFormat == AnchorCell_Frame_Kernels::Format::CA) ?
+                                                        k + (coordsOffset + 1) * nbAnchors :
+                                                        k*4 + 1;
+                            const std::size_t twOffset = (mInputFormat == AnchorCell_Frame_Kernels::Format::CA) ?
+                                                        k + (coordsOffset + 2) * nbAnchors :
+                                                        k*4 + 2;
+                            const std::size_t thOffset = (mInputFormat == AnchorCell_Frame_Kernels::Format::CA) ?
+                                                        k + (coordsOffset + 3) * nbAnchors :
+                                                        k*4 + 3;
+
+
                             const Float_T txbb = std::max(std::min(inputsCoords(xa, ya,
-                                k + coordsOffset * nbAnchors, batchPos), 70.0f), -70.0f);
+                                                                                txOffset, batchPos), 70.0f), -70.0f);
 
                             const Float_T tybb = std::max(std::min(inputsCoords(xa, ya,
-                                k + (coordsOffset + 1) * nbAnchors, batchPos), 70.0f), -70.0f);
+                                                                                tyOffset, batchPos), 70.0f), -70.0f);
 
                             const Float_T twbb = std::max(std::min(inputsCoords(xa, ya,
-                                k + (coordsOffset + 2) * nbAnchors, batchPos), 70.0f), -70.0f);
+                                                                                twOffset, batchPos), 70.0f), -70.0f);
 
                             const Float_T thbb = std::max(std::min(inputsCoords(xa, ya,
-                                k + (coordsOffset + 3) * nbAnchors, batchPos), 70.0f), -70.0f);
+                                                                                thOffset, batchPos), 70.0f), -70.0f);
 
                             // Predicted box center coordinates
                             const Float_T xbbc = ((mFlip) ? -txbb : txbb) * wa
@@ -452,7 +454,6 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                             mOutputs(xa, ya, k + 5 * nbAnchors, batchPos) = maxIoU;
                             mArgMaxIoU(xa, ya, k, batchPos) = argMaxIoU;
                             mMaxIoUClass[batchPos][classIdx] = std::max(mMaxIoUClass[batchPos][classIdx], maxIoU);
-
 /*
                         //}
                         else {
@@ -822,7 +823,7 @@ void N2D2::AnchorCell_Frame::backPropagate()
         ? 0 : mScoresCls;
     const unsigned int nbLocations = mOutputsDims[1] * mOutputsDims[0];
 
-    if(!mSingleShotMode)
+    if(mDetectorType == AnchorCell_Frame_Kernels::DetectorType::SSD)
     {
         const unsigned int miniBatchSize = mLossPositiveSample
                                             + mLossNegativeSample;
@@ -980,7 +981,7 @@ void N2D2::AnchorCell_Frame::backPropagate()
             }
         }
     }
-    else
+    else if(mDetectorType == AnchorCell_Frame_Kernels::DetectorType::LapNet)
     {
         std::vector < std::vector < Float_T > > AvgIOU;
         std::vector < std::vector < Float_T > > AvgConf;
