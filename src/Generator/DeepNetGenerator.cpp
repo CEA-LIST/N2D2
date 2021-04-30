@@ -1696,6 +1696,8 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 
             deepNet->addCell(convCell, parentCells);
             convCell->initialize();
+            const std::map<unsigned int, unsigned int> outputsMap 
+                                                = convCell->outputsRemap();
             cell = convCell;
 
             std::cout << "  # Shared synapses: "
@@ -1725,10 +1727,12 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 for (unsigned int output = 0;
                     output < convCell->getNbOutputs(); ++output)
                 {
+                    const unsigned int outputRemap = (!outputsMap.empty())
+                        ? outputsMap.find(output)->second : output;
                     for (unsigned int channel = 0;
                         channel < convCell->getNbChannels(); ++channel)
                     {
-                        if (!convCell->isConnection(channel, output))
+                        if (!convCell->isConnection(channel, outputRemap))
                             continue;
 
                         if (globTranspose) {
@@ -1751,10 +1755,10 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                                 }
                             }
 
-                            convCell->setWeight(output, channel, transKernel);
+                            convCell->setWeight(outputRemap, channel, transKernel);
                         }
                         else {
-                            convCell->setWeight(output, channel,
+                            convCell->setWeight(outputRemap, channel,
                                         kernels[output][channel / group]);
                         }
                     }
@@ -1778,7 +1782,9 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     for (unsigned int output = 0;
                         output < convCell->getNbOutputs(); ++output)
                     {
-                        convCell->setBias(output, biases[output]);
+                        const unsigned int outputRemap = (!outputsMap.empty())
+                            ? outputsMap.find(output)->second : output;
+                        convCell->setBias(outputRemap, biases[output]);
                     }
                 }
                 else if (node.input_size() > 2) {
@@ -3071,6 +3077,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 weights.push_back(1.0);
                 weights.push_back(-1.0);
             }
+            const ElemWiseCell::CoeffMode coeffMode = ElemWiseCell::PerLayer;
 
             std::shared_ptr<Activation> activation
                 = std::shared_ptr<Activation>();
@@ -3081,6 +3088,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                                                             node.output(0),
                                                             inputDataCell->getNbOutputs(),
                                                             operation,
+                                                            coeffMode,
                                                             weights,
                                                             shifts,
                                                             activation);
