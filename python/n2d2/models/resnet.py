@@ -34,15 +34,15 @@ from n2d2.models.ILSVRC_outils import ILSVRC_preprocessing
 """
 def conv_def(nb_outputs, **config_parameters):
 
-    if 'activation_function' in config_parameters:
-        act = config_parameters.pop('activation_function')
+    if 'activation' in config_parameters:
+        act = config_parameters.pop('activation')
     else:
         act = Rectifier()
     if 'weights_filler' in config_parameters:
         filler = config_parameters.pop('weights_filler')
     else:
         filler = He()
-    net = Conv(nb_outputs, activation_function=act, weights_filler=filler, no_bias=True, **config_parameters)
+    net = Conv(nb_outputs, activation=act, weights_filler=filler, no_bias=True, **config_parameters)
     return net
 
 # Residual block generator
@@ -51,7 +51,7 @@ def residual_block(nb_outputs, stride, L, projection_shortcut=True, residual_inp
     seq = Group([
         conv_def(nb_outputs, kernel_dims=[3, 3], stride_dims=[stride, stride],
                  weights_filler=He(scaling=(L**(-1.0/(2*2-2)) if L > 0 else 1.0)), padding_dims=[1, 1]),
-        conv_def(nb_outputs,  kernel_dims=[3, 3], activation_function=Linear(),
+        conv_def(nb_outputs,  kernel_dims=[3, 3], activation=Linear(),
                  weights_filler=He(scaling=(0.0 if L > 0 else 1.0)), stride_dims=[1, 1], padding_dims=[1, 1]),
     ])
 
@@ -59,12 +59,12 @@ def residual_block(nb_outputs, stride, L, projection_shortcut=True, residual_inp
         projection = conv_def(nb_outputs, kernel_dims=[1, 1], stride_dims=[stride, stride], padding_dims=[0, 0])
         net = Group([
             Layer([seq, projection]),
-            ElemWise(nb_outputs, operation='Sum', activation_function=Rectifier()),
+            ElemWise(nb_outputs, operation='Sum', activation=Rectifier()),
         ])
     elif residual_input is not None:
         net = Group([
             seq,
-            ElemWise(nb_outputs, operation='Sum', activation_function=Rectifier(), inputs=residual_input),
+            ElemWise(nb_outputs, operation='Sum', activation=Rectifier(), inputs=residual_input),
         ])
     else:
         raise RuntimeError("No residual input")
@@ -100,7 +100,7 @@ def resnet18(output_size=1000):
     # TODO: Automatic PoolDims setting dependent on input size
     head = Group([
         Pool2d(int(512 * alpha), pool_dims=[7, 7], stride_dims=[1, 1], pooling='Average'),
-        Fc(output_size, activation_function=Linear(), weights_filler=Xavier(scaling=(0.0 if L > 0 else 1.0)), bias_filler=Constant(value=0.0))
+        Fc(output_size, activation=Linear(), weights_filler=Xavier(scaling=(0.0 if L > 0 else 1.0)), bias_filler=Constant(value=0.0))
     ])
     print("Head")
 
@@ -137,24 +137,24 @@ class ResNetBottleneckBlock(Block):
 
         self._main_branch = Sequence([
             Conv(inputs_size, bottleneck_size, kernel_dims=[1, 1], stride_dims=[1, 1], no_bias=True,
-                         activation_function=Rectifier(),
+                         activation=Rectifier(),
                          weights_filler=He(scaling=l ** (-1.0 / (2 * 3 - 2)) if l > 0 else 1.0),
                          name=block_name + "_1x1"),
             Conv(bottleneck_size, bottleneck_size, kernel_dims=[3, 3], padding_dims=[1, 1],
                          stride_dims=[stride, stride], no_bias=True,
-                         activation_function=Rectifier(),
+                         activation=Rectifier(),
                          weights_filler=He(scaling=l ** (-1.0 / (2 * 3 - 2)) if l > 0 else 1.0),
                          name=block_name + "_3x3"),
             Conv(bottleneck_size, 4 * bottleneck_size, kernel_dims=[1, 1], stride_dims=[1, 1],
                          no_bias=True,
-                         activation_function=Linear(), weights_filler=He(scaling=0.0 if l > 0 else 1.0),
+                         activation=Linear(), weights_filler=He(scaling=0.0 if l > 0 else 1.0),
                          name=block_name + "_1x1_x4"),
         ], name=block_name+"main_branch")
        
 
         if projection_shortcut:
             self._projection_shortcut = Conv(inputs_size, 4 * bottleneck_size, kernel_dims=[1, 1], stride_dims=[stride, stride], no_bias=True,
-                              activation_function=Linear(),
+                              activation=Linear(),
                               name=block_name+"_1x1_proj")
         else:
             self._projection_shortcut = None
@@ -162,7 +162,7 @@ class ResNetBottleneckBlock(Block):
         if no_relu:
             self._elem_wise = ElemWise(operation='Sum', name=block_name + "_sum")
         else:
-            self._elem_wise = ElemWise(operation='Sum', activation_function=Rectifier(), name=block_name + "_sum")
+            self._elem_wise = ElemWise(operation='Sum', activation=Rectifier(), name=block_name + "_sum")
 
         if self._projection_shortcut:
             Block.__init__(self, [self._main_branch, self._projection_shortcut, self._elem_wise], block_name)
@@ -192,7 +192,7 @@ class ResNet50BnExtractor(Sequence):
 
         self.stem = Sequence([
             Conv(3, bottleneck_size, kernel_dims=[7, 7], stride_dims=[2, 2], padding_dims=[3, 3], no_bias=True,
-                 activation_function=Rectifier(), weights_filler=He(), name="conv1"),
+                 activation=Rectifier(), weights_filler=He(), name="conv1"),
             Pool2d(pool_dims=[3, 3], stride_dims=[2, 2], pooling='Max', name="pool1")
         ], name="stem")
 
@@ -200,7 +200,7 @@ class ResNet50BnExtractor(Sequence):
             ResNetBottleneckBlock(bottleneck_size, bottleneck_size, 1, l, True, False, "conv2.1"),
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, False, "conv2.2"),
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, True, "conv2.3"),
-            BatchNorm2d(4 * bottleneck_size, activation_function=Rectifier(), name="bn2")
+            BatchNorm2d(4 * bottleneck_size, activation=Rectifier(), name="bn2")
         ], name="div4")
 
         bottleneck_size = 2 * bottleneck_size
@@ -209,7 +209,7 @@ class ResNet50BnExtractor(Sequence):
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, False, "conv3.2"),
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, False, "conv3.3"),
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, True, "conv3.4"),
-            BatchNorm2d(4 * bottleneck_size, activation_function=Rectifier(), name="bn3")
+            BatchNorm2d(4 * bottleneck_size, activation=Rectifier(), name="bn3")
         ], name="div8")
 
         bottleneck_size = 2 * bottleneck_size
@@ -220,7 +220,7 @@ class ResNet50BnExtractor(Sequence):
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, False, "conv4.4"),
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, False, "conv4.5"),
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, True, "conv4.6"),
-            BatchNorm2d(4 * bottleneck_size, activation_function=Rectifier(), name="bn4")
+            BatchNorm2d(4 * bottleneck_size, activation=Rectifier(), name="bn4")
         ], name="div16")
 
         bottleneck_size = 2 * bottleneck_size
@@ -228,7 +228,7 @@ class ResNet50BnExtractor(Sequence):
             ResNetBottleneckBlock(2 * bottleneck_size, bottleneck_size, 2, l, True, False, "conv5.1"),
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, False, "conv5.2"),
             ResNetBottleneckBlock(4 * bottleneck_size, bottleneck_size, 1, l, False, True, "conv5.3"),
-            BatchNorm2d(4 * bottleneck_size, activation_function=Rectifier(), name="bn5")
+            BatchNorm2d(4 * bottleneck_size, activation=Rectifier(), name="bn5")
         ], name="div32")
 
 
@@ -254,7 +254,7 @@ class ResNetHead(Sequence):
         input_size = 4 * int(alpha*512)
         Sequence.__init__(self, [
             GlobalPool2d(pooling='Average', name="pool"),
-            Fc(input_size, output_size, activation_function=Linear(),
+            Fc(input_size, output_size, activation=Linear(),
                weights_filler=Xavier(scaling=(0.0 if l > 0 else 1.0)), bias_filler=Constant(value=0.0), name="fc")
         ], name="head")
 

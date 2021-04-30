@@ -93,7 +93,7 @@ elif args.arch == 'MobileNetv1SAT':
     #])
     head = n2d2.cells.Sequence([
         n2d2.cells.GlobalPool2d(pooling='Average', name="pool1"),
-        n2d2.cells.Fc(1024, nb_outputs, activation_function=n2d2.activation.Linear(),
+        n2d2.cells.Fc(1024, nb_outputs, activation=n2d2.activation.Linear(),
                       weights_filler=n2d2.filler.He(),
                     weights_solver=n2d2.solver.SGD(learning_rate=0.01),
                       bias_solver=n2d2.solver.SGD(learning_rate=0.01),
@@ -112,7 +112,7 @@ elif args.arch == 'MobileNetv2-onnx':
     extractor = n2d2.models.mobilenetv2.load_from_ONNX(provider, download=True, batch_size=batch_size)
     extractor.remove("mobilenetv20_output_pred_fwd")
     extractor.remove("mobilenetv20_output_flatten0_reshape0")
-    head = n2d2.cells.Fc(1280, nb_outputs, activation_function=n2d2.activation.Linear(),
+    head = n2d2.cells.Fc(1280, nb_outputs, activation=n2d2.activation.Linear(),
                          weights_filler=n2d2.filler.He(),
                          weights_solver=n2d2.solver.SGD(learning_rate=0.01),
                          bias_solver=n2d2.solver.SGD(learning_rate=0.01),
@@ -137,7 +137,7 @@ elif args.arch == 'ResNet-onnx': # 64% After 20 epochs
     print(extractor)
     extractor.remove("resnetv23_flatten0_reshape0")
     extractor.remove("resnetv23_dense0_fwd")
-    head = n2d2.cells.Fc(512, nb_outputs, activation_function=n2d2.activation.Linear(),
+    head = n2d2.cells.Fc(512, nb_outputs, activation=n2d2.activation.Linear(),
                               weights_filler=n2d2.filler.He(),
                          weights_solver=n2d2.solver.SGD(learning_rate=0.01),
                          bias_solver=n2d2.solver.SGD(learning_rate=0.01),

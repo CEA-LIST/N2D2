@@ -90,7 +90,7 @@ def set_cuda_device(id):
 #     "clamping": "Clamping",
 #     "scale_solver": "ScaleSolver",
 #     "random_rotation": "RandomRotation",
-#     "activation_function": "ActivationFunction",
+#     "activation": "ActivationFunction",
 #     "composite_stimuli": "compositeStimuli",
 #     "learning_rate_policy": "LearningRatePolicy",
 #     "elastic_scaling": "ElasticScaling",

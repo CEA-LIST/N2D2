@@ -33,7 +33,7 @@ def conv_def():
     weights_filler = He()
     weights_solver = SGD(**solver_config)
     bias_solver = SGD(**solver_config)
-    return ConfigSection(activation_function=Rectifier(), weights_solver=weights_solver, bias_solver=bias_solver,
+    return ConfigSection(activation=Rectifier(), weights_solver=weights_solver, bias_solver=bias_solver,
                            no_bias=True, weights_filler=weights_filler)
 
 def fc_def():
@@ -46,7 +46,7 @@ def fc_def():
 def bn_def():
     scale_solver = SGD(**solver_config)
     bias_solver = SGD(**solver_config)
-    return ConfigSection(activation_function=Rectifier(), scale_solver=scale_solver, bias_solver=bias_solver)
+    return ConfigSection(activation=Rectifier(), scale_solver=scale_solver, bias_solver=bias_solver)
 
 class LeNet(Sequence):
     def __init__(self, nb_outputs=10):

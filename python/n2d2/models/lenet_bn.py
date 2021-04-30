@@ -34,7 +34,7 @@ def quant_conv_def():
     weights_filler = Xavier(variance_norm='FanOut', scaling=1.0)
     weights_solver = SGD(**solver_config)
     bias_solver = SGD(**solver_config)
-    return ConfigSection(activation_function=Linear(),
+    return ConfigSection(activation=Linear(),
                 no_bias=True, weights_solver=weights_solver, bias_solver=bias_solver,
                 weights_filler=weights_filler, quantizer=weights_quantizer)
 
@@ -46,7 +46,7 @@ def quant_fc_def():
     bias_filler = Constant(value=0.0) # Usually not used because of disactivated bias
     weights_solver = SGD(**solver_config)
     bias_solver = SGD(**solver_config)
-    return ConfigSection(activation_function=Linear(quantizer=act_quantizer),
+    return ConfigSection(activation=Linear(quantizer=act_quantizer),
                         no_bias=True, weights_solver=weights_solver, bias_solver=bias_solver,
                         weights_filler=weights_filler, biasFiller=bias_filler,
                         quantizer=weights_quantizer)
@@ -56,7 +56,7 @@ def quant_bn_def():
     act_quantizer = SATAct(alpha=6.0, range=15, solver=sat_solver)
     scale_solver = SGD(**solver_config)
     bias_solver = SGD(**solver_config)
-    return ConfigSection(activation_function=Linear(quantizer=act_quantizer), scale_solver=scale_solver, bias_solver=bias_solver)
+    return ConfigSection(activation=Linear(quantizer=act_quantizer), scale_solver=scale_solver, bias_solver=bias_solver)
 
 
 
@@ -85,7 +85,7 @@ class QuantLeNet(Group):
 
         last_layer_config = quant_fc_def()
         last_layer_config['quantizer'].set_range(255)
-        last_layer_config['activation_function'].get_quantizer().set_range(255)
+        last_layer_config['activation'].get_quantizer().set_range(255)
         self.classifier.add(Fc(self.extractor, nbOutputs=nb_outputs, **last_layer_config,  name="fc2"))
         self.classifier.add(Softmax(self.classifier, withLoss=True, name="softmax"))
 
@@ -98,7 +98,7 @@ def conv_def():
     weights_filler = Xavier(variance_norm='FanOut', scaling=1.0)
     weights_solver = SGD(**solver_config)
     bias_solver = SGD(**solver_config)
-    return ConfigSection(activation_function=Linear(), weights_solver=weights_solver, bias_solver=bias_solver,
+    return ConfigSection(activation=Linear(), weights_solver=weights_solver, bias_solver=bias_solver,
                            no_bias=True, weights_filler=weights_filler)
 
 def fc_def():
@@ -111,7 +111,7 @@ def fc_def():
 def bn_def():
     scale_solver = SGD(**solver_config)
     bias_solver = SGD(**solver_config)
-    return ConfigSection(activation_function=Rectifier(), scale_solver=scale_solver, bias_solver=bias_solver)
+    return ConfigSection(activation=Rectifier(), scale_solver=scale_solver, bias_solver=bias_solver)
 
 
 def generate(inputs, nb_outputs=10):
@@ -142,9 +142,9 @@ class LeNet(Sequence):
             Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling='Max'),
             Conv(16, 120, kernel_dims=[5, 5], **conv_def()),
             BatchNorm2d(120, **bn_def()),
-            Fc(120, 84, activation_function=Rectifier(), **fc_def()),
+            Fc(120, 84, activation=Rectifier(), **fc_def()),
             #Dropout(name="fc1.drop"),
-            Fc(84, nb_outputs, activation_function=Linear(), **fc_def()),
+            Fc(84, nb_outputs, activation=Linear(), **fc_def()),
         ])
 
 

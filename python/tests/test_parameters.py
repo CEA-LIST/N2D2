@@ -65,7 +65,7 @@ class test_Fc(test_params):
     def setUp(self):
         self.parameters = {
             "name": "test",
-            "activation_function": n2d2.activation.Tanh(),
+            "activation": n2d2.activation.Tanh(),
             "weights_solver": n2d2.solver.SGD(),
             "bias_solver": n2d2.solver.SGD(),
             "weights_filler": n2d2.filler.Normal(),
@@ -79,7 +79,7 @@ class test_Fc(test_params):
 
     def test_parameters(self):
         self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
-        self.assertIs(self.parameters["activation_function"].N2D2(), self.object.N2D2().getActivation())
+        self.assertIs(self.parameters["activation"].N2D2(), self.object.N2D2().getActivation())
         self.assertIs(self.parameters["weights_solver"].N2D2(), self.object.N2D2().getWeightsSolver())
         self.assertIs(self.parameters["bias_solver"].N2D2(), self.object.N2D2().getBiasSolver())
         self.assertIs(self.parameters["weights_filler"].N2D2(), self.object.N2D2().getWeightsFiller())
@@ -93,7 +93,7 @@ class test_Conv(test_params):
     def setUp(self):
         self.parameters = {
             "name": "test",
-            "activation_function": n2d2.activation.Tanh(),
+            "activation": n2d2.activation.Tanh(),
             "weights_solver": n2d2.solver.SGD(),
             "sub_sample_dims": [2, 2],
             "stride_dims": [2, 2],
@@ -112,7 +112,7 @@ class test_Conv(test_params):
 
     def test_parameters(self):
         self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
-        self.assertIs(self.parameters["activation_function"].N2D2(), self.object.N2D2().getActivation())
+        self.assertIs(self.parameters["activation"].N2D2(), self.object.N2D2().getActivation())
         self.assertIs(self.parameters["weights_solver"].N2D2(), self.object.N2D2().getWeightsSolver())
         self.assertIs(self.parameters["bias_solver"].N2D2(), self.object.N2D2().getBiasSolver())
         self.assertIs(self.parameters["weights_filler"].N2D2(), self.object.N2D2().getWeightsFiller())
@@ -151,7 +151,7 @@ class test_Pool(test_params):
             "pooling": "Average",
             "stride_dims": [2, 2],
             "padding_dims": [1, 1],
-            "activation_function": n2d2.activation.Linear(),
+            "activation": n2d2.activation.Linear(),
             "mapping": n2d2.Tensor([5, 5],  datatype=bool),
         }
         self.object = n2d2.cells.Pool([1, 1], **self.parameters)
@@ -165,7 +165,7 @@ class test_Pool(test_params):
         self.assertEqual(N2D2.PoolCell.Pooling.__members__[self.parameters["pooling"]], self.object.N2D2().getPooling())
         self.assertEqual(self.parameters["stride_dims"], [self.object.N2D2().getStrideX(), self.object.N2D2().getStrideY()])
         self.assertEqual(self.parameters["padding_dims"], [self.object.N2D2().getPaddingX(), self.object.N2D2().getPaddingY()])
-        self.assertIs(self.parameters["activation_function"].N2D2(), self.object.N2D2().getActivation())
+        self.assertIs(self.parameters["activation"].N2D2(), self.object.N2D2().getActivation())
         self.assertEqual(n2d2.Tensor.from_N2D2(self.parameters["mapping"].N2D2()), 
                          n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping()))
         super().test_parameters()
@@ -174,7 +174,7 @@ class test_Deconv(test_params):
     def setUp(self):
         self.parameters = {
             "name": "test",
-            "activation_function": n2d2.activation.Linear(),
+            "activation": n2d2.activation.Linear(),
             "weights_solver": n2d2.solver.SGD(),
             "stride_dims": [2, 2],
             "dilation_dims": [1, 1],
@@ -192,7 +192,7 @@ class test_Deconv(test_params):
 
     def test_parameters(self):
         self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
-        self.assertIs(self.parameters["activation_function"].N2D2(), self.object.N2D2().getActivation())
+        self.assertIs(self.parameters["activation"].N2D2(), self.object.N2D2().getActivation())
         self.assertIs(self.parameters["weights_solver"].N2D2(), self.object.N2D2().getWeightsSolver())
         self.assertIs(self.parameters["bias_solver"].N2D2(), self.object.N2D2().getBiasSolver())
         self.assertIs(self.parameters["weights_filler"].N2D2(), self.object.N2D2().getWeightsFiller())
@@ -211,7 +211,7 @@ class test_ElemWise(test_params):
             "operation": "Max",
             "weights": [0.5],
             "shifts": [0.5],
-            "activation_function": n2d2.activation.Linear(),
+            "activation": n2d2.activation.Linear(),
         }
         self.object = n2d2.cells.ElemWise(**self.parameters)
 
@@ -225,7 +225,7 @@ class test_ElemWise(test_params):
                         self.object.N2D2().getOperation())
         self.assertEqual(self.parameters["weights"], self.object.N2D2().getWeights())
         self.assertEqual(self.parameters["shifts"], self.object.N2D2().getShifts())
-        self.assertIs(self.parameters["activation_function"].N2D2(), self.object.N2D2().getActivation())
+        self.assertIs(self.parameters["activation"].N2D2(), self.object.N2D2().getActivation())
 
         super().test_parameters()
 
@@ -300,7 +300,7 @@ class test_Activation(test_params):
     def setUp(self):
         self.parameters = {
             "name": "test",
-            "activation_function": n2d2.activation.Tanh(),
+            "activation": n2d2.activation.Tanh(),
         }
         self.object = n2d2.cells.Activation(**self.parameters)
 
@@ -308,7 +308,7 @@ class test_Activation(test_params):
         # Need to instantiate the object (doing so by passing a dummy input)
         tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
         self.object(tensor)
-        self.assertIs(self.parameters["activation_function"].N2D2(), self.object.N2D2().getActivation())
+        self.assertIs(self.parameters["activation"].N2D2(), self.object.N2D2().getActivation())
         self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
         super().test_parameters()
 # TODO: Reshape

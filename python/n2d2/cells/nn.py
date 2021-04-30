@@ -48,7 +48,7 @@ _cell_frame_parameters = {
     "loss_mem": "LossMem",
     "activation_desc": "ActivationDesc",
     "keep_in_sync": "KeepInSync",
-    "activation_function": "activation",
+    "activation": "activation",
     "devices": "Devices",
 }
 # Cell_frame_parameter contains the parameters from cell_parameter
@@ -218,11 +218,11 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
 
     def set_activation(self, activation):
         print("Note: Replacing potentially existing activation in cells: " + self.get_name())
-        self._config_parameters['activation_function'] = activation
-        self._N2D2_object.setActivation(self._config_parameters['activation_function'].N2D2())
+        self._config_parameters['activation'] = activation
+        self._N2D2_object.setActivation(self._config_parameters['activation'].N2D2())
 
     def get_activation(self):
-        return self._config_parameters['activation_function']
+        return self._config_parameters['activation']
 
     def get_inputs(self):
         return self._inputs
@@ -315,8 +315,8 @@ class Fc(NeuralNetworkCell):
         :type  from_arguments: bool, optional
         :param name: Name fo the cells.
         :type name: str, optional
-        :param activation_function: Activation function, default= :py:class:`n2d2.activation.Tanh`
-        :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
+        :param activation: Activation function, default= :py:class:`n2d2.activation.Tanh`
+        :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param weights_solver: Solver for weights, default=:py:class:`n2d2.solver.SGD`
         :type weights_solver: :py:class:`n2d2.solver.Solver`, optional
         :param bias_solver: Solver for biases, default= :py:class:`n2d2.filler.Normal`
@@ -367,8 +367,8 @@ class Fc(NeuralNetworkCell):
             #     else:
             #         raise WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor)), str(type(n2d2.mapping.Mapping))])
 
-        if 'activation_function' not in self._config_parameters:
-            self._config_parameters['activation_function'] = \
+        if 'activation' not in self._config_parameters:
+            self._config_parameters['activation'] = \
                 n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
         if 'weights_solver' not in self._config_parameters:
             self._config_parameters['weights_solver'] = \
@@ -385,7 +385,7 @@ class Fc(NeuralNetworkCell):
 
         # Set and initialize here all complex cells members
         for key, value in self._config_parameters.items():
-            if key is 'activation_function':
+            if key is 'activation':
                     if value:
                         self._N2D2_object.setActivation(value.N2D2())
             elif key is 'weights_solver':
@@ -421,7 +421,7 @@ class Fc(NeuralNetworkCell):
 
         n2d2_cell._set_N2D2_object(N2D2_object)
 
-        n2d2_cell._config_parameters['activation_function'] = \
+        n2d2_cell._config_parameters['activation'] = \
             n2d2.converter.from_N2D2_object(n2d2_cell._N2D2_object.getActivation())
         n2d2_cell._config_parameters['weights_solver'] = \
             n2d2.converter.from_N2D2_object(n2d2_cell._N2D2_object.getWeightsSolver())
@@ -639,8 +639,8 @@ class Conv(NeuralNetworkCell):
         :type padding_dims: list, optional
         :param dilation_dims: Dimensions of the dilation of the kernels 
         :type dilation_dims: list, optional
-        :param activation_function: Activation function, default= :py:class:`n2d2.activation.Tanh`
-        :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
+        :param activation: Activation function, default= :py:class:`n2d2.activation.Tanh`
+        :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param mapping: Mapping
         :type mapping: :py:class:`n2d2.tensor.Tensor`
         :param weights_filler: Weights initial values filler, default= :py:class:`n2d2.filler.Normal`
@@ -698,8 +698,8 @@ class Conv(NeuralNetworkCell):
 
         # TODO: Add Kernel section of generator
 
-        if 'activation_function' not in self._config_parameters:
-            self._config_parameters['activation_function'] = \
+        if 'activation' not in self._config_parameters:
+            self._config_parameters['activation'] = \
                 n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
         if 'weights_solver' not in self._config_parameters:
             self._config_parameters['weights_solver'] = \
@@ -716,7 +716,7 @@ class Conv(NeuralNetworkCell):
 
         """Set and initialize here all complex cells members"""
         for key, value in self._config_parameters.items():
-            if key is 'activation_function':
+            if key is 'activation':
                     if value:
                         self._N2D2_object.setActivation(value.N2D2())
             elif key is 'weights_solver':
@@ -758,7 +758,7 @@ class Conv(NeuralNetworkCell):
         n2d2_cell._optional_constructor_arguments['padding_dims'] = [n2d2_cell._N2D2_object.getPaddingX(), n2d2_cell._N2D2_object.getPaddingY()]
         n2d2_cell._optional_constructor_arguments['dilation_dims'] = [n2d2_cell._N2D2_object.getDilationX(), n2d2_cell._N2D2_object.getDilationY()]
 
-        n2d2_cell._config_parameters['activation_function'] = \
+        n2d2_cell._config_parameters['activation'] = \
             n2d2.converter.from_N2D2_object(n2d2_cell._N2D2_object.getActivation())
         n2d2_cell._config_parameters['weights_solver'] = \
             n2d2.converter.from_N2D2_object(n2d2_cell._N2D2_object.getWeightsSolver())
@@ -984,7 +984,7 @@ class Softmax(NeuralNetworkCell):
         n2d2_cell._optional_constructor_arguments['with_loss'] = n2d2_cell._N2D2_object.getWithLoss()
         n2d2_cell._optional_constructor_arguments['group_size'] = n2d2_cell._N2D2_object.getGroupSize()
 
-        n2d2_cell._config_parameters['activation_function'] = \
+        n2d2_cell._config_parameters['activation'] = \
             n2d2.converter.from_N2D2_object(n2d2_cell._N2D2_object.getActivation())
 
         if n2d2_deepnet is not None:
@@ -1009,13 +1009,13 @@ class Softmax(NeuralNetworkCell):
                                                                          self.get_name(),
                                                                          nb_outputs,
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
-            if 'activation_function' not in self._config_parameters:
-                self._config_parameters['activation_function'] = \
+            if 'activation' not in self._config_parameters:
+                self._config_parameters['activation'] = \
                     n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
 
             """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
-                if key is 'activation_function':
+                if key is 'activation':
                     if value:
                         self._N2D2_object.setActivation(value.N2D2())
                 else:
@@ -1067,8 +1067,8 @@ class Pool(NeuralNetworkCell):
         :type stride_dims: list, optional
         :param padding_dims: Dimensions of the padding.
         :type padding_dims: list, optional
-        :param activation_function: Activation function, default= :py:class:`n2d2.activation.Linear`
-        :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
+        :param activation: Activation function, default= :py:class:`n2d2.activation.Linear`
+        :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param mapping: Mapping
         :type mapping: :py:class:`n2d2.tensor.Tensor`, optional
         """
@@ -1121,7 +1121,7 @@ class Pool(NeuralNetworkCell):
                                                                     n2d2_cell._N2D2_object.getPaddingY()]
         n2d2_cell._optional_constructor_arguments['pooling'] = n2d2_cell._N2D2_object.getPooling()
 
-        n2d2_cell._config_parameters['activation_function'] = \
+        n2d2_cell._config_parameters['activation'] = \
             n2d2.converter.from_N2D2_object(n2d2_cell._N2D2_object.getActivation())
 
         if n2d2_deepnet is not None:
@@ -1161,13 +1161,13 @@ class Pool(NeuralNetworkCell):
                                                                          mapping_row,
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
 
-            if 'activation_function' not in self._config_parameters:
-                self._config_parameters['activation_function'] = \
+            if 'activation' not in self._config_parameters:
+                self._config_parameters['activation'] = \
                     n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
 
             """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
-                if key is 'activation_function':
+                if key is 'activation':
                     if value:
                         self._N2D2_object.setActivation(value.N2D2())
                 else:
@@ -1244,13 +1244,13 @@ class Pool2d(NeuralNetworkCell): # Should inherit Pool ?
                                                                          inputs.dims()[2],
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
 
-            if 'activation_function' not in self._config_parameters:
-                self._config_parameters['activation_function'] = \
+            if 'activation' not in self._config_parameters:
+                self._config_parameters['activation'] = \
                     n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
 
             """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
-                if key is 'activation_function':
+                if key is 'activation':
                     if value:
                         self._N2D2_object.setActivation(value.N2D2())
                 else:
@@ -1325,13 +1325,13 @@ class GlobalPool2d(NeuralNetworkCell): # Should inherit Pool ?
                                                                          strideDims=[1, 1],
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
 
-            if 'activation_function' not in self._config_parameters:
-                self._config_parameters['activation_function'] = \
+            if 'activation' not in self._config_parameters:
+                self._config_parameters['activation'] = \
                     n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
 
             """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
-                if key is 'activation_function':
+                if key is 'activation':
                     if value:
                         self._N2D2_object.setActivation(value.N2D2())
                 else:
@@ -1409,8 +1409,8 @@ class Deconv(NeuralNetworkCell):
         :type padding_dims: list, optional
         :param dilation_dims: Dimensions of the dilation of the kernels 
         :type dilation_dims: list, optional
-        :param activation_function: Activation function, default= :py:class:`n2d2.activation.Tanh`
-        :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
+        :param activation: Activation function, default= :py:class:`n2d2.activation.Tanh`
+        :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param weights_filler: Weights initial values filler, default=NormalFiller
         :type weights_filler: :py:class:`n2d2.filler.Filler`, optional
         :param bias_filler: Biases initial values filler, default=NormalFiller
@@ -1467,8 +1467,8 @@ class Deconv(NeuralNetworkCell):
 
         # TODO: Add Kernel section of generator
 
-        if 'activation_function' not in self._config_parameters:
-            self._config_parameters['activation_function'] = \
+        if 'activation' not in self._config_parameters:
+            self._config_parameters['activation'] = \
                 n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
         if 'weights_solver' not in self._config_parameters:
             self._config_parameters['weights_solver'] = \
@@ -1485,7 +1485,7 @@ class Deconv(NeuralNetworkCell):
 
         """Set and initialize here all complex cells members"""
         for key, value in self._config_parameters.items():
-            if key is 'activation_function':
+            if key is 'activation':
                     if value:
                         self._N2D2_object.setActivation(value.N2D2())
             elif key is 'weights_solver':
@@ -1525,7 +1525,7 @@ class Deconv(NeuralNetworkCell):
                                                                      n2d2_cell._N2D2_object.getPaddingY()]
         n2d2_cell._optional_constructor_arguments['dilation_dims'] = [n2d2_cell._N2D2_object.getDilationX(),
                                                                       n2d2_cell._N2D2_object.getDilationY()]
-        n2d2_cell._config_parameters['activation_function'] = \
+        n2d2_cell._config_parameters['activation'] = \
             n2d2.converter.from_N2D2_object(n2d2_cell._N2D2_object.getActivation())
         n2d2_cell._config_parameters['weights_solver'] = \
             n2d2.converter.from_N2D2_object(n2d2_cell._N2D2_object.getWeightsSolver())
@@ -1680,8 +1680,8 @@ class ElemWise(NeuralNetworkCell):
         :type weights: float, optional
         :param shifts: Shifts for the ``Sum`` and ``EuclideanSum`` operation, in the same order as the inputs, default=0.0
         :type shifts: float, optional
-        :param activation_function: Activation function, default= :py:class:`n2d2.activation.Linear`
-        :type activation_function: :py:class:`n2d2.activation.ActivationFunction`, optional
+        :param activation: Activation function, default= :py:class:`n2d2.activation.Linear`
+        :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
         """
         if not from_arguments and (len(config_parameters) > 0):
             raise RuntimeError(
@@ -1716,7 +1716,7 @@ class ElemWise(NeuralNetworkCell):
         n2d2_cell._optional_constructor_arguments['weights'] = n2d2_cell._N2D2_object.getWeights()
         n2d2_cell._optional_constructor_arguments['shifts'] = n2d2_cell._N2D2_object.getShifts()
 
-        n2d2_cell._config_parameters['activation_function'] = \
+        n2d2_cell._config_parameters['activation'] = \
             n2d2.converter.from_N2D2_object(n2d2_cell._N2D2_object.getActivation())
 
         if n2d2_deepnet is not None:
@@ -1763,13 +1763,13 @@ class ElemWise(NeuralNetworkCell):
                                                                      **self.n2d2_function_argument_parser(
                                                                          self._optional_constructor_arguments)))
 
-            if 'activation_function' not in self._config_parameters:
-                self._config_parameters['activation_function'] = \
+            if 'activation' not in self._config_parameters:
+                self._config_parameters['activation'] = \
                     n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
 
             """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
-                if key is 'activation_function':
+                if key is 'activation':
                     if value:
                         self._N2D2_object.setActivation(value.N2D2())
                 else:
@@ -1834,7 +1834,7 @@ class Dropout(NeuralNetworkCell):
 
         n2d2_cell._set_N2D2_object(N2D2_object)
 
-        n2d2_cell._config_parameters['activation_function'] = \
+        n2d2_cell._config_parameters['activation'] = \
             n2d2.converter.from_N2D2_object(n2d2_cell._N2D2_object.getActivation())
 
         if n2d2_deepnet is not None:
@@ -1859,13 +1859,13 @@ class Dropout(NeuralNetworkCell):
                                                                          nb_outputs,
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
 
-            if 'activation_function' not in self._config_parameters:
-                self._config_parameters['activation_function'] = \
+            if 'activation' not in self._config_parameters:
+                self._config_parameters['activation'] = \
                     n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
 
             """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
-                if key is 'activation_function':
+                if key is 'activation':
                     if value:
                         self._N2D2_object.setActivation(value.N2D2())
                 else:
@@ -1945,7 +1945,7 @@ class Padding(NeuralNetworkCell):
         n2d2_cell._constructor_arguments['left_pad'] = n2d2_cell._N2D2_object.getLeftPad()
         n2d2_cell._constructor_arguments['right_pad'] = n2d2_cell._N2D2_object.getRightPad()
 
-        n2d2_cell._config_parameters['activation_function'] = \
+        n2d2_cell._config_parameters['activation'] = \
             n2d2.converter.from_N2D2_object(n2d2_cell._N2D2_object.getActivation())
 
         if n2d2_deepnet is not None:
@@ -1975,13 +1975,13 @@ class Padding(NeuralNetworkCell):
                                                                      self._constructor_arguments['right_pad'],
                                                                      **self.n2d2_function_argument_parser(
                                                                          self._optional_constructor_arguments)))
-            if 'activation_function' not in self._config_parameters:
-                self._config_parameters['activation_function'] = \
+            if 'activation' not in self._config_parameters:
+                self._config_parameters['activation'] = \
                     n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
 
             """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
-                if key is 'activation_function':
+                if key is 'activation':
                     if value:
                         self._N2D2_object.setActivation(value.N2D2())
                 else:
@@ -2033,8 +2033,8 @@ class BatchNorm2d(NeuralNetworkCell):
                                                 nb_inputs,
                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
 
-        if 'activation_function' not in self._config_parameters:
-            self._config_parameters['activation_function'] = \
+        if 'activation' not in self._config_parameters:
+            self._config_parameters['activation'] = \
                 n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
         if 'scale_solver' not in self._config_parameters:
             self._config_parameters['scale_solver'] = \
@@ -2045,7 +2045,7 @@ class BatchNorm2d(NeuralNetworkCell):
 
         """Set and initialize here all complex cells members"""
         for key, value in self._config_parameters.items():
-            if key is 'activation_function':
+            if key is 'activation':
                     if value:
                         self._N2D2_object.setActivation(value.N2D2())
             elif key is 'scale_solver':
@@ -2073,7 +2073,7 @@ class BatchNorm2d(NeuralNetworkCell):
             'nb_inputs': n2d2_cell._N2D2_object.getNbChannels(),
         })
 
-        n2d2_cell._config_parameters['activation_function'] = \
+        n2d2_cell._config_parameters['activation'] = \
             n2d2.converter.from_N2D2_object(n2d2_cell._N2D2_object.getActivation())
         n2d2_cell._config_parameters['scale_solver'] = \
             n2d2.converter.from_N2D2_object(n2d2_cell._N2D2_object.getScaleSolver())
@@ -2150,7 +2150,7 @@ class Activation(NeuralNetworkCell):
 
         n2d2_cell._set_N2D2_object(N2D2_object)
 
-        n2d2_cell._config_parameters['activation_function'] = \
+        n2d2_cell._config_parameters['activation'] = \
             n2d2.converter.from_N2D2_object(n2d2_cell._N2D2_object.getActivation())
 
         if n2d2_deepnet is not None:
@@ -2176,13 +2176,13 @@ class Activation(NeuralNetworkCell):
                                                                          nb_outputs,
                                                                          **self._optional_constructor_arguments))
 
-            if 'activation_function' not in self._config_parameters:
-                self._config_parameters['activation_function'] = \
+            if 'activation' not in self._config_parameters:
+                self._config_parameters['activation'] = \
                     n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
 
             """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
-                if key is 'activation_function':
+                if key is 'activation':
                     self._N2D2_object.setActivation(value.N2D2())
                 else:
                     self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
@@ -2242,7 +2242,7 @@ class Reshape(NeuralNetworkCell):
 
         n2d2_cell._constructor_arguments['dims'] = n2d2_cell._N2D2_object.getDims()
 
-        n2d2_cell._config_parameters['activation_function'] = \
+        n2d2_cell._config_parameters['activation'] = \
             n2d2.converter.from_N2D2_object(n2d2_cell._N2D2_object.getActivation())
 
         if n2d2_deepnet is not None:
@@ -2271,13 +2271,13 @@ class Reshape(NeuralNetworkCell):
                                                                          **self.n2d2_function_argument_parser(
                                                                              self._optional_constructor_arguments)))
 
-            if 'activation_function' not in self._config_parameters:
-                self._config_parameters['activation_function'] = \
+            if 'activation' not in self._config_parameters:
+                self._config_parameters['activation'] = \
                     n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
 
             """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
-                if key is 'activation_function':
+                if key is 'activation':
                     if value:
                         self._N2D2_object.setActivation(value.N2D2())
                 else:

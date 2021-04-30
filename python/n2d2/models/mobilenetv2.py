@@ -45,14 +45,14 @@ class MobileNetBottleneckBlock(Block):
         expansion_size = input_size*expansion
 
         self._main_branch = Sequence([
-            ConvPointWise(input_size, expansion_size, activation_function=ReLU6(), no_bias=True,
+            ConvPointWise(input_size, expansion_size, activation=ReLU6(), no_bias=True,
                 weights_filler=He(scaling=l**(-1.0/(2*3-2)) if l > 0 else 1.0) if residual else He(),
                 name=block_name+"_1x1"),
             ConvDepthWise(expansion_size, kernel_dims=[3, 3], padding_dims=[1, 1],
-                          stride_dims=[stride, stride], no_bias=True, activation_function=ReLU6(),
+                          stride_dims=[stride, stride], no_bias=True, activation=ReLU6(),
                           weights_filler=He(scaling=l**(-1.0/(2*3-2)) if l > 0 else 1.0) if residual else He(),
                           name=block_name+"_3x3"),
-            ConvPointWise(expansion_size, output_size, activation_function=Linear(), no_bias=True,
+            ConvPointWise(expansion_size, output_size, activation=Linear(), no_bias=True,
                  weights_filler=He(scaling=0.0 if l > 0 else 1.0) if residual else He(),
                  name=block_name+"_1x1_linear")
         ], name=block_name+"_main_branch")
@@ -111,9 +111,9 @@ class Mobilenetv2(Sequence):
 
         self.head = Sequence([
             ConvPointWise(int(320 * alpha), max(1280, int(1280 * alpha)),
-                          activation_function=ReLU6(), weights_filler=He(), no_bias=True, name="conv9"),
+                          activation=ReLU6(), weights_filler=He(), no_bias=True, name="conv9"),
             GlobalPool2d(pooling='Average', name="pool"),
-            Fc(max(1280, int(1280 * alpha)), output_size, activation_function=Linear(),
+            Fc(max(1280, int(1280 * alpha)), output_size, activation=Linear(),
                weights_filler=Xavier(scaling=0.0 if l > 0 else 1.0), bias_filler=Constant(value=0.0), name="fc"),
         ], name="head")
 

@@ -34,11 +34,11 @@ bn_solver_config = ConfigSection(learning_rate=0.1, decay=0.0001, **solver_confi
 
 
 def conv_config(with_bn):
-    return ConfigSection(activation_function=Linear() if with_bn else Rectifier(), weights_filler=He(),
+    return ConfigSection(activation=Linear() if with_bn else Rectifier(), weights_filler=He(),
                          weights_solver=SGD(**weights_solver_config), bias_solver=SGD(**bias_solver_config),
                          no_bias=True)
 def bn_config():
-    return ConfigSection(activation_function=Rectifier(), scale_solver=SGD(**bn_solver_config), bias_solver=SGD(**bn_solver_config))
+    return ConfigSection(activation=Rectifier(), scale_solver=SGD(**bn_solver_config), bias_solver=SGD(**bn_solver_config))
 
 
 class MobileNetv1Extractor(Sequence):
@@ -111,7 +111,7 @@ class MobileNetv1Head(Sequence):
     def __init__(self, nb_outputs, alpha):
 
         pool = GlobalPool2d(pooling='Average', name="pool1")
-        fc = Fc(32 * int(32 * alpha), nb_outputs, activation_function=Linear(), weights_filler=Xavier(),
+        fc = Fc(32 * int(32 * alpha), nb_outputs, activation=Linear(), weights_filler=Xavier(),
                 bias_filler=Constant(value=0.0),
                 weights_solver=SGD(**weights_solver_config), bias_solver=SGD(**bias_solver_config),
                 name="fc")

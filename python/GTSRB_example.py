@@ -57,7 +57,7 @@ solver_config = ConfigSection(
 fc_config   = ConfigSection(weights_filler=Xavier(), 
                             no_bias=True, 
                             weights_solver=SGD(**solver_config))
-conv_config = ConfigSection(activation_function=Rectifier(), 
+conv_config = ConfigSection(activation=Rectifier(), 
                             weights_filler=Xavier(), 
                             weights_solver=SGD(**solver_config), 
                             no_bias=True)
@@ -105,9 +105,9 @@ model = n2d2.cells.Sequence([
     Pool([2, 2], stride_dims=[2, 2], pooling='Max'),
     Conv(32, 48, [5, 5], mapping=conv2_mapping, **conv_config),
     Pool([3, 3], stride_dims=[3, 3], pooling='Max'),
-    Fc(48*3*3, 200, activation_function=Rectifier(), **fc_config),
+    Fc(48*3*3, 200, activation=Rectifier(), **fc_config),
     Dropout(name="fc1.drop"),
-    Fc(200, 43, activation_function=Linear(), **fc_config)
+    Fc(200, 43, activation=Linear(), **fc_config)
     # We don't add a Softmax layer because it's already in the CrossEntropyClassifier.
 ])
 print("\n### Model ###\n")

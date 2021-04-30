@@ -34,7 +34,7 @@ decoder_solver_config = ConfigSection(learning_rate_policy='CosineDecay', learni
 
 class DecoderConv(Conv):
     def __init__(self, nb_inputs, nb_outputs, **config_parameters):
-        Conv.__init__(self, nb_inputs, nb_outputs, kernel_dims=[1, 1], stride_dims=[1, 1], activation_function=Tanh(), back_propagate=False,
+        Conv.__init__(self, nb_inputs, nb_outputs, kernel_dims=[1, 1], stride_dims=[1, 1], activation=Tanh(), back_propagate=False,
                     weights_filler=Normal(std_dev=0.1), bias_filler=Constant(value=0.2),
                     weights_solver=SGD(**decoder_solver_config), bias_solver=SGD(**decoder_solver_config),
                     **config_parameters)
@@ -42,7 +42,7 @@ class DecoderConv(Conv):
 
 class DecoderDeconv(Deconv):
     def __init__(self, nb_inputs, nb_outputs, **config_parameters):
-        Deconv.__init__(self, nb_inputs, nb_outputs, activation_function=Linear(), kernel_dims=[4, 4], stride_dims=[2, 2],
+        Deconv.__init__(self, nb_inputs, nb_outputs, activation=Linear(), kernel_dims=[4, 4], stride_dims=[2, 2],
                     weights_filler=Normal(std_dev=0.1), bias_filler=Constant(value=0.2),
                     weights_solver=SGD(**decoder_solver_config), bias_solver=SGD(**decoder_solver_config),
                     **config_parameters)
@@ -82,7 +82,7 @@ class SegmentationDecoder(Block):
             DecoderPadding(name="deconv_fuse2_pad"),
             DecoderFuse(name="fuse3"),
 
-            Deconv(5, 5, kernel_dims=[8, 8], stride_dims=[4, 4], activation_function=Linear(),
+            Deconv(5, 5, kernel_dims=[8, 8], stride_dims=[4, 4], activation=Linear(),
                   weights_filler=Normal(std_dev=0.1), bias_filler=Constant(value=0.2),
                   weights_solver=SGD(**decoder_solver_config), bias_solver=SGD(**decoder_solver_config),
                   name="deconv_fuse3"),
