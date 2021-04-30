@@ -80,7 +80,9 @@ void N2D2::CPP_AnchorCellExport::generateHeaderConstants(AnchorCell& cell,
 
     header << "#define " << prefix << "_FLIP " << cell.isFlip() << "\n"
            << "#define " << prefix << "_SCORE_CLS "
-                         << cell.getScoreCls() << "\n";
+                         << cell.getScoreCls() << "\n"
+           << "#define " << prefix << "_IS_COORD_ANCHORS "
+                         << cell.getIsCoordinateAnchors() << "\n" ;
 
 }
 
