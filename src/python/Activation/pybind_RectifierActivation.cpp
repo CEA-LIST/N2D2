@@ -30,7 +30,10 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_RectifierActivation(py::module &m) {
-    py::class_<RectifierActivation, std::shared_ptr<RectifierActivation>, Activation> (m, "RectifierActivation", py::multiple_inheritance());
+    py::class_<RectifierActivation, std::shared_ptr<RectifierActivation>, Activation> (m, "RectifierActivation", py::multiple_inheritance())
+    .def("getLeakSlope", &RectifierActivation::getLeakSlope) 
+    .def("getClipping", &RectifierActivation::getClipping) 
+    ;
 
 }
 }

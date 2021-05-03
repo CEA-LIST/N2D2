@@ -22,8 +22,12 @@ import N2D2
 import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
 
+_activation_parameters = {
+        "quantizer": "Quantizer"
+}
 class ActivationFunction(N2D2_Interface):
-
+    
+    # Cell_frame_parameter contains the parameters from cell_parameter
     def __init__(self, **config_parameters):
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')
@@ -78,10 +82,11 @@ class Linear(ActivationFunction):
         'Frame<float>': N2D2.LinearActivation_Frame_float,
         'Frame_CUDA<float>': N2D2.LinearActivation_Frame_CUDA_float
     }
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters = {
         "clipping": "Clipping",
-        "quantizer": "Quantizer",
-    })
+    }
+    _parameters.update(_activation_parameters)
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, from_arguments=True, **config_parameters):
         """
@@ -108,11 +113,12 @@ class Rectifier(ActivationFunction):
         'Frame<float>': N2D2.RectifierActivation_Frame_float,
         'Frame_CUDA<float>': N2D2.RectifierActivation_Frame_CUDA_float,
     }
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters = {
         "leak_slope": "LeakSlope",
         "clipping": "Clipping",
-        "quantizer": "Quantizer",
-    })
+    }
+    _parameters.update(_activation_parameters)
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, from_arguments=True, **config_parameters):
         """
@@ -145,10 +151,11 @@ class Tanh(ActivationFunction):
         'Frame<float>': N2D2.TanhActivation_Frame_float,
         'Frame_CUDA<float>': N2D2.TanhActivation_Frame_CUDA_float,
     }
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters = {
         "alpha": "Alpha",
-        "quantizer": "Quantizer",
-    })
+    }
+    _parameters.update(_activation_parameters)
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, from_arguments=True, **config_parameters):
         r"""

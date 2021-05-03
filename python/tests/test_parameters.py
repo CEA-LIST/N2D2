@@ -72,8 +72,7 @@ class test_Fc(test_params):
             "bias_filler": n2d2.filler.Normal(),
             'no_bias': True,
             "mapping": n2d2.Tensor([5, 5],  datatype=bool),
-            # "quantizer": n2d2.quantizer.CellQuantizer(), # TODO 
-
+            "quantizer": n2d2.quantizer.SATCell(),
         }
         self.object = n2d2.cells.Fc(10, 5, **self.parameters)
 
@@ -86,6 +85,7 @@ class test_Fc(test_params):
         self.assertIs(self.parameters["bias_filler"].N2D2(), self.object.N2D2().getBiasFiller())
         self.assertEqual(n2d2.Tensor.from_N2D2(self.parameters["mapping"].N2D2()), 
                          n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping()))
+        self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
         super().test_parameters()
 
 
@@ -107,6 +107,7 @@ class test_Conv(test_params):
             "back_propagate": True,
             "weights_export_flip": True,
             "mapping": n2d2.Tensor([5, 5],  datatype=bool),
+            "quantizer": n2d2.quantizer.SATCell(),
         }
         self.object = n2d2.cells.Conv(10, 5, [2, 2], **self.parameters)
 
@@ -123,6 +124,8 @@ class test_Conv(test_params):
         self.assertEqual(self.parameters["dilation_dims"], [self.object.N2D2().getDilationX(), self.object.N2D2().getDilationY()])
         self.assertEqual(n2d2.Tensor.from_N2D2(self.parameters["mapping"].N2D2()), 
                          n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping()))
+        self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
+
         super().test_parameters()
 
 class test_Softmax(test_params):
@@ -295,7 +298,7 @@ class test_BatchNorm2d(test_params):
         self.assertEqual(self.parameters["epsilon"], self.object.N2D2().getEpsilon())
 
         super().test_parameters()
-# TODO: Activation
+
 class test_Activation(test_params):
     def setUp(self):
         self.parameters = {
@@ -311,7 +314,7 @@ class test_Activation(test_params):
         self.assertIs(self.parameters["activation"].N2D2(), self.object.N2D2().getActivation())
         self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
         super().test_parameters()
-# TODO: Reshape
+
 class test_Reshape(test_params):
     def setUp(self):
         self.parameters = {
@@ -708,11 +711,12 @@ class test_SGD(test_params):
 class Linear(test_params):
     def setUp(self):
         self.parameters = {
-            # TODO : "quantizer" 
+            "quantizer": n2d2.quantizer.SATAct(),
         }
         self.object = n2d2.activation.Linear(**self.parameters)
 
     def test_parameters(self):
+        self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
         super().test_parameters()
 
 class Rectifier(test_params):
@@ -720,23 +724,27 @@ class Rectifier(test_params):
         self.parameters = {
             "leak_slope": 0.0,
             "clipping": 0.0,
-            # TODO : "quantizer" 
+            "quantizer": n2d2.quantizer.SATAct(),
         }
         self.object = n2d2.activation.Rectifier(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.parameters["leak_slope"], self.object.N2D2().getLeakSlope())
+        self.assertEqual(self.parameters["clipping"], self.object.N2D2().getClipping())
+        self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
         super().test_parameters()
 
 class Tanh(test_params):
     def setUp(self):
         self.parameters = {
             "alpha": 0.0,
+            "quantizer": n2d2.quantizer.SATAct(),
         }
         self.object = n2d2.activation.Tanh(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertEqual(self.parameters["alpha"], self.object.N2D2().getAlpha())
+        self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
         super().test_parameters()
 
 ### Provider ###
@@ -753,10 +761,13 @@ class DataProvider(test_params):
         self.object = n2d2.provider.DataProvider(**self.parameters)
 
     def test_parameters(self):
-        # TODO Check if the parameters are well initialized 
+        self.assertIs(self.parameters["database"].N2D2(), self.object.N2D2().getDatabase())
+        self.assertEqual(self.parameters["batch_size"], self.object.N2D2().getBatchSize())
+        self.assertEqual(self.parameters["size"], self.object.N2D2().getSize())
+        self.assertEqual(self.parameters["composite_stimuli"], self.object.N2D2().isCompositeStimuli())
         super().test_parameters()
 
 
-# print(self.object.N2D2().getParameters())
+# print(self.object.N2D2().getParameters()) 
 if __name__ == '__main__':
     unittest.main()

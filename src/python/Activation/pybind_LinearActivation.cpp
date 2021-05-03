@@ -30,7 +30,8 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_LinearActivation(py::module &m) {
-    py::class_<LinearActivation, std::shared_ptr<LinearActivation>, Activation> (m, "LinearActivation", py::multiple_inheritance());
+    py::class_<LinearActivation, std::shared_ptr<LinearActivation>, Activation> (m, "LinearActivation", py::multiple_inheritance())
+    .def("getClipping", &LinearActivation::getClipping);
 
 }
 }

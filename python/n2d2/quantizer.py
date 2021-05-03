@@ -73,7 +73,7 @@ class ActivationQuantizer(Quantizer):
 
 class SATCell(CellQuantizer):
     """
-    SAT weight quantizer.
+    Scale Adjust Training (SAT) weight quantizer.
     """
     _quantizer_generators = {
         'Frame<float>': N2D2.SATQuantizerCell_Frame_float,
@@ -102,7 +102,7 @@ class SATCell(CellQuantizer):
 
 class SATAct(ActivationQuantizer):
     """
-    SAT activation quantizer.
+    Scale Adjust Training (SAT) activation quantizer.
     """
     _quantizer_generators = {
         'Frame<float>': N2D2.SATQuantizerActivation_Frame_float,

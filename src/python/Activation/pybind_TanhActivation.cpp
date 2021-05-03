@@ -29,7 +29,8 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_TanhActivation(py::module &m) {
-    py::class_<TanhActivation, std::shared_ptr<TanhActivation>, Activation> (m, "TanhActivation", py::multiple_inheritance());
+    py::class_<TanhActivation, std::shared_ptr<TanhActivation>, Activation> (m, "TanhActivation", py::multiple_inheritance())
+    .def("getAlpha", &TanhActivation::getAlpha);
 
 }
 }
