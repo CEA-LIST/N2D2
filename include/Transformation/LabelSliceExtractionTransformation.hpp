@@ -29,6 +29,15 @@ class LabelSliceExtractionTransformation : public Transformation {
 public:
     using Transformation::apply;
 
+    enum BorderType {
+        ConstantBorder = cv::BORDER_CONSTANT,
+        ReplicateBorder = cv::BORDER_REPLICATE,
+        ReflectBorder = cv::BORDER_REFLECT,
+        WrapBorder = cv::BORDER_WRAP,
+        MinusOneReflectBorder = cv::BORDER_REFLECT_101,
+        MeanBorder
+    };
+
     static const char* Type;
 
     LabelSliceExtractionTransformation(unsigned int width,
@@ -103,7 +112,20 @@ private:
     /// Range of the random rotation (in deg, counterclockwise),
     /// default is [0.0 360.0] (any rotation)
     Parameter<std::vector<double> > mRandomRotationRange;
+    /// Allow padding (if false and padding should occur, triggers an exception)
+    Parameter<bool> mAllowPadding;
+    Parameter<BorderType> mBorderType;
+    Parameter<std::vector<double> > mBorderValue;
+    Parameter<bool> mIgnoreNoValid;
 };
+}
+
+namespace {
+template <>
+const char* const EnumStrings
+    <N2D2::LabelSliceExtractionTransformation::BorderType>::data[]
+    = {"ConstantBorder", "ReplicateBorder", "ReflectBorder", "WrapBorder",
+        "MinusOneReflectBorder", "MeanBorder"};
 }
 
 #endif // N2D2_LABELSLICEEXTRACTIONTRANSFORMATION_H

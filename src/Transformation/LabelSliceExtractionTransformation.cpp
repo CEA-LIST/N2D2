@@ -33,7 +33,11 @@ N2D2::LabelSliceExtractionTransformation::LabelSliceExtractionTransformation(
       mKeepComposite(this, "KeepComposite", false),
       mRandomRotation(this, "RandomRotation", false),
       mRandomRotationRange(this, "RandomRotationRange",
-                           std::vector<double>({0.0, 360.0}))
+                           std::vector<double>({0.0, 360.0})),
+      mAllowPadding(this, "AllowPadding", false),
+      mBorderType(this, "BorderType", MinusOneReflectBorder),
+      mBorderValue(this, "BorderValue", std::vector<double>()),
+      mIgnoreNoValid(this, "IgnoreNoValid", true)
 {
     // ctor
     Utils::createDirectories("_cache");
@@ -49,7 +53,11 @@ N2D2::LabelSliceExtractionTransformation::LabelSliceExtractionTransformation(
       mKeepComposite(this, "KeepComposite", trans.mKeepComposite),
       mRandomRotation(this, "RandomRotation", trans.mRandomRotation),
       mRandomRotationRange(this, "RandomRotationRange",
-                           trans.mRandomRotationRange)
+                           trans.mRandomRotationRange),
+      mAllowPadding(this, "AllowPadding", trans.mAllowPadding),
+      mBorderType(this, "BorderType", trans.mBorderType),
+      mBorderValue(this, "BorderValue", trans.mBorderValue),
+      mIgnoreNoValid(this, "IgnoreNoValid", trans.mIgnoreNoValid)
 {
     // copy-ctor
 }
@@ -111,6 +119,7 @@ void N2D2::LabelSliceExtractionTransformation::apply(
 
         // Mask with the chosen label
         const cv::Mat matLabel = (labels == lastLabel);
+        assert(matLabel.type() == CV_8U);
 
         // cv::Mat debug = matLabel.clone()/4;
 
@@ -151,18 +160,46 @@ void N2D2::LabelSliceExtractionTransformation::apply(
             matLabelErode = matLabelDilate;
 
         // debug+= matLabelErode/4;
+        const int iMin = mHeight / 2;
+        const int iMax = matLabel.rows - (int)std::ceil(mHeight / 2.0) + 1;
+        const int jMin = mWidth / 2;
+        const int jMax = matLabel.cols - (int)std::ceil(mWidth / 2.0) + 1;
 
-        for (int i = mHeight / 2,
-                 iMax = matLabel.rows - (int)std::ceil(mHeight / 2.0) + 1;
-             i < iMax;
-             ++i) {
-            for (int j = mWidth / 2,
-                     jMax = matLabel.cols - (int)std::ceil(mWidth / 2.0) + 1;
-                 j < jMax;
-                 ++j) {
+        // First, find positions that don't required padding
+        for (int i = iMin; i < iMax; ++i) {
+            for (int j = jMin; j < jMax; ++j) {
                 if (matLabelErode.at<unsigned char>(i, j)) {
                     labelPos.push_back(Pos_T(j, i));
                     // debug.at<unsigned char>(i,j)+= 64;
+                }
+            }
+        }
+
+        if (labelPos.empty() && mAllowPadding) {
+            // If padding is allowed and no position was found,
+            // look for positions that require padding
+            for (int i = 0; i < iMin; ++i) {
+                for (int j = 0; j < jMin; ++j) {
+                    if (matLabelErode.at<unsigned char>(i, j))
+                        labelPos.push_back(Pos_T(j, i));
+                }
+
+                for (int j = jMax; j < matLabel.cols; ++j) {
+                    if (matLabelErode.at<unsigned char>(i, j))
+                        labelPos.push_back(Pos_T(j, i));
+                }
+            }
+
+            for (int i = iMax; i < matLabel.rows; ++i)
+            {
+                for (int j = 0; j < jMin; ++j) {
+                    if (matLabelErode.at<unsigned char>(i, j))
+                        labelPos.push_back(Pos_T(j, i));
+                }
+
+                for (int j = jMax; j < matLabel.cols; ++j) {
+                    if (matLabelErode.at<unsigned char>(i, j))
+                        labelPos.push_back(Pos_T(j, i));
                 }
             }
         }
@@ -183,13 +220,15 @@ void N2D2::LabelSliceExtractionTransformation::apply(
                   << lastLabel << " in label slice extraction (stimulus "
                   << id << ")" << Utils::cdef << std::endl;
 
-        // No valid pos, ignore this frame
-        pos.x = mWidth / 2;
-        pos.y = mHeight / 2;
-        lastLabel = -1;
+        // No valid pos, take a random pos to pass-through
+        const unsigned int frameOffsetX = (frame.cols > (int)mWidth)
+            ? Random::randUniform(0, frame.cols - mWidth) : 0;
+        const unsigned int frameOffsetY = (frame.rows > (int)mHeight)
+            ? Random::randUniform(0, frame.rows - mHeight) : 0;
 
-        if (frame.rows < (int)mHeight || frame.cols < (int)mWidth)
-            cv::resize(frame, frame, cv::Size(mWidth, mHeight));
+        pos.x = frameOffsetX + mWidth / 2;
+        pos.y = frameOffsetY + mHeight / 2;
+        lastLabel = -1;
     }
 
     // Extract the label slice
@@ -198,14 +237,25 @@ void N2D2::LabelSliceExtractionTransformation::apply(
                               *(mRandomRotationRange->begin() + 1))
         : 0.0;
 
+    const int borderType = (mBorderType == MeanBorder)
+                                ? cv::BORDER_CONSTANT
+                                : (int)mBorderType;
+
+    std::vector<double> bgColorValue = mBorderValue;
+    bgColorValue.resize(4, 0.0);
+    const cv::Scalar bgColor = (mBorderType == MeanBorder)
+        ? cv::mean(frame)
+        : cv::Scalar(bgColorValue[0], bgColorValue[1],
+                    bgColorValue[2], bgColorValue[3]);
+
     const cv::Rect lastSlice
         = SliceExtractionTransformation::extract(pos.x - mWidth / 2,
                                                  pos.y - mHeight / 2,
                                                  mWidth,
                                                  mHeight,
                                                  rotation,
-                                                 cv::BORDER_CONSTANT,
-                                                 cv::Scalar::all(0),
+                                                 borderType,
+                                                 bgColor,
                                                  frame,
                                                  labels,
                                                  labelsROI,
@@ -222,7 +272,7 @@ void N2D2::LabelSliceExtractionTransformation::apply(
 
     if (!mKeepComposite)
         labels = cv::Mat(1, 1, CV_32S, cv::Scalar(lastLabel));
-    else if (!validPos)
+    else if (!validPos && mIgnoreNoValid)
         labels = cv::Mat(cv::Size(mWidth, mHeight), CV_32S, cv::Scalar(-1));
 
 #pragma omp critical(LabelSliceExtractionTransformation__apply)
