@@ -60,6 +60,69 @@ function(add_n2d2_executable file_path target linked_libs)
     add_dependencies(${target} ${file_name})
 endfunction()
 
+function(add_n2d2_doc source target deps)
+    find_package(Doxygen)
+    if(Doxygen_FOUND)
+        file(RELATIVE_PATH relname ${PROJECT_SOURCE_DIR} ${source})
+
+        # Find all the public headers
+        set(ALL_PUBLIC_HEADERS "")
+        foreach(dep IN LISTS deps ARGN)
+            get_target_property(PUBLIC_HEADER_DIRS ${dep} INTERFACE_INCLUDE_DIRECTORIES)
+            list(GET PUBLIC_HEADER_DIRS 0 PUBLIC_HEADER_DIR)
+            file(GLOB_RECURSE PUBLIC_HEADERS ${PUBLIC_HEADER_DIR}/*.hpp)
+            list(APPEND ALL_PUBLIC_HEADERS ${PUBLIC_HEADERS})
+        endforeach()
+
+        set(DOXYGEN_INPUT_DIR ${source})
+        set(DOXYGEN_OUTPUT_DIR ${source}/docs/doxygen)
+        set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/html/index.html)
+        set(DOXYFILE_IN ${source}/Doxyfile.in)
+        set(DOXYFILE_OUT ${source}/Doxyfile)
+
+        #Replace variables inside @@ with the current values
+        configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
+
+        file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR}) #Doxygen won't create this for us
+        add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
+                        DEPENDS ${ALL_PUBLIC_HEADERS}
+                        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT}
+                        MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN}
+                        COMMENT "Generating docs")
+
+        add_custom_target(doxygen-${relname} DEPENDS "${DOXYGEN_INDEX_FILE}")
+        add_dependencies(${target} doxygen-${relname})
+
+        find_package(Sphinx)
+        if(Sphinx_FOUND)
+            set(SPHINX_SOURCE ${source}/docs/)
+            set(SPHINX_BUILD ${source}/docs/_build/html)
+            set(SPHINX_INDEX_FILE ${SPHINX_BUILD}/index.html)
+
+            # Only regenerate Sphinx when:
+            # - Doxygen has rerun
+            # - Our doc files have been updated
+            # - The Sphinx config has been updated
+            add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
+                            COMMAND 
+                                ${SPHINX_EXECUTABLE} -b html
+                                # Tell Breathe where to find the Doxygen output
+                                -Dbreathe_projects.N2D2=${DOXYGEN_OUTPUT_DIR}/xml
+                            ${SPHINX_SOURCE} ${SPHINX_BUILD}
+                            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                            DEPENDS
+                            # Other docs files you want to track should go here (or in some variable)
+                            ${SPHINX_SOURCE}/*
+                            ${DOXYGEN_INDEX_FILE}
+                            MAIN_DEPENDENCY ${SPHINX_SOURCE}/conf.py
+                            COMMENT "Generating documentation with Sphinx")
+
+            add_custom_target(sphinx-${relname} DEPENDS "${SPHINX_INDEX_FILE}")
+            add_dependencies(${target} sphinx-${relname})
+        endif()
+    endif()
+endfunction()
+
 # Must be called after find_package(CUDA) as the find_package call resets CUDA_NVCC_FLAGS
 macro(set_nvcc_flags)
     set(CUDA_PROPAGATE_HOST_FLAGS OFF)
@@ -283,6 +346,11 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     endforeach()
 
 
+    # docs target
+    add_custom_target(docs)
+    add_n2d2_doc(${CMAKE_CURRENT_SOURCE_DIR} docs n2d2_lib)
+    
+
     # tests target
     enable_testing()
     add_custom_target(tests)
@@ -293,57 +361,4 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     foreach(file ${src_tests})
         add_n2d2_test(${file} tests n2d2_lib)
     endforeach()
-endif()
-
-find_package(Doxygen)
-if(Doxygen_FOUND)
-    # Find all the public headers
-    get_target_property(N2D2_PUBLIC_HEADER_DIR n2d2_lib INTERFACE_INCLUDE_DIRECTORIES)
-    file(GLOB_RECURSE N2D2_PUBLIC_HEADERS ${N2D2_PUBLIC_HEADER_DIR}/*.hpp)
-
-    set(DOXYGEN_INPUT_DIR ${PROJECT_SOURCE_DIR})
-    set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/docs/doxygen)
-    set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/html/index.html)
-    set(DOXYFILE_IN ${CMAKE_CURRENT_LIST_DIR}/Doxyfile.in)
-    set(DOXYFILE_OUT ${CMAKE_CURRENT_LIST_DIR}/Doxyfile)
-    
-    #Replace variables inside @@ with the current values
-    configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
-
-    file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR}) #Doxygen won't create this for us
-    add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
-                       DEPENDS ${CAT_CUTIFIER_PUBLIC_HEADERS}
-                       COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT}
-                       MAIN_DEPENDENCY ${DOXYFILE_OUT} ${DOXYFILE_IN}
-                       COMMENT "Generating docs")
-
-    add_custom_target(doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE})
-
-    find_package(Sphinx)
-    if(Sphinx_FOUND)
-        set(SPHINX_SOURCE ${CMAKE_CURRENT_LIST_DIR}/docs/)
-        set(SPHINX_BUILD ${CMAKE_CURRENT_LIST_DIR}/docs/_build/html)
-        set(SPHINX_INDEX_FILE ${SPHINX_BUILD}/index.html)
-
-        # Only regenerate Sphinx when:
-        # - Doxygen has rerun
-        # - Our doc files have been updated
-        # - The Sphinx config has been updated
-        add_custom_command(OUTPUT ${SPHINX_INDEX_FILE}
-                           COMMAND 
-                             ${SPHINX_EXECUTABLE} -b html
-                             # Tell Breathe where to find the Doxygen output
-                             -Dbreathe_projects.N2D2=${DOXYGEN_OUTPUT_DIR}/xml
-                           ${SPHINX_SOURCE} ${SPHINX_BUILD}
-                           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                           DEPENDS
-                           # Other docs files you want to track should go here (or in some variable)
-                           ${SPHINX_SOURCE}/*
-                           ${DOXYGEN_INDEX_FILE}
-                           MAIN_DEPENDENCY ${SPHINX_SOURCE}/conf.py
-                           COMMENT "Generating documentation with Sphinx")
-        
-        # Nice named target so we can run the job easily
-        add_custom_target(sphinx ALL DEPENDS ${SPHINX_INDEX_FILE})
-    endif()
 endif()
