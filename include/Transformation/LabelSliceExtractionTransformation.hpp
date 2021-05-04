@@ -65,6 +65,11 @@ public:
     {
         return mLastSlice;
     };
+    void setCachePath(const std::string& path = "");
+    const std::string& getCachePath() const
+    {
+        return mCachePath;
+    };
     std::pair<unsigned int, unsigned int>
     getOutputsSize(unsigned int /*width*/, unsigned int /*height*/) const
     {
@@ -104,6 +109,7 @@ private:
     cv::Mat mElementDilate;
     cv::Mat mElementErode;
     std::map<int, std::vector<int> > mUniqueLabels;
+    std::string mCachePath;
 
     Parameter<int> mSlicesMargin;
     Parameter<bool> mKeepComposite;

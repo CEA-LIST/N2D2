@@ -29,6 +29,7 @@ N2D2::LabelSliceExtractionTransformation::LabelSliceExtractionTransformation(
       mHeight(height),
       mLabel(label),
       mLastLabel(label),
+      mCachePath(""),
       mSlicesMargin(this, "SlicesMargin", 0),
       mKeepComposite(this, "KeepComposite", false),
       mRandomRotation(this, "RandomRotation", false),
@@ -40,7 +41,6 @@ N2D2::LabelSliceExtractionTransformation::LabelSliceExtractionTransformation(
       mIgnoreNoValid(this, "IgnoreNoValid", true)
 {
     // ctor
-    Utils::createDirectories("_cache");
 }
 
 N2D2::LabelSliceExtractionTransformation::LabelSliceExtractionTransformation(
@@ -49,6 +49,7 @@ N2D2::LabelSliceExtractionTransformation::LabelSliceExtractionTransformation(
       mHeight(trans.mHeight),
       mLabel(trans.mLabel),
       mLastLabel(trans.mLastLabel),
+      mCachePath(trans.mCachePath),
       mSlicesMargin(this, "SlicesMargin", trans.mSlicesMargin),
       mKeepComposite(this, "KeepComposite", trans.mKeepComposite),
       mRandomRotation(this, "RandomRotation", trans.mRandomRotation),
@@ -109,9 +110,11 @@ void N2D2::LabelSliceExtractionTransformation::apply(
     bool validPos = false;
 
     std::stringstream cacheFile;
-    cacheFile << "_cache/lseTrans_id" << id << "_label" << lastLabel << ".bin";
+    cacheFile << mCachePath << "/lseTrans_id" << id << "_label" << lastLabel << ".bin";
 
-    if (id >= 0 && std::ifstream(cacheFile.str().c_str()).good()) {
+    if (id >= 0 && !mCachePath.empty()
+        && std::ifstream(cacheFile.str().c_str()).good())
+    {
         // loadLabelPosCache(cacheFile.str(), labelPos);
         validPos = loadLabelRandomPos(cacheFile.str(), pos);
     } else {
@@ -204,7 +207,7 @@ void N2D2::LabelSliceExtractionTransformation::apply(
             }
         }
 
-        if (id >= 0)
+        if (id >= 0 && !mCachePath.empty())
             saveLabelPosCache(cacheFile.str(), labelPos);
 
         if (!labelPos.empty()) {
@@ -299,6 +302,18 @@ std::vector<int> N2D2::LabelSliceExtractionTransformation::unique(const cv::Mat
     }
 
     return uniqueValues;
+}
+
+void N2D2::LabelSliceExtractionTransformation::setCachePath(const std::string& path)
+{
+    if (!path.empty()) {
+        if (!Utils::createDirectories(path)) {
+            throw std::runtime_error("LabelSliceExtractionTransformation::setCachePath(): "
+                                     "Could not create directory: " + path);
+        }
+    }
+
+    mCachePath = path;
 }
 
 bool N2D2::LabelSliceExtractionTransformation::loadLabelRandomPos(

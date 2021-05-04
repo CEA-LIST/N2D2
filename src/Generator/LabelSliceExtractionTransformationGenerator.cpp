@@ -37,9 +37,12 @@ N2D2::LabelSliceExtractionTransformationGenerator::generate(IniParser
     const unsigned int width = iniConfig.getProperty<unsigned int>("Width");
     const unsigned int height = iniConfig.getProperty<unsigned int>("Height");
     const int label = iniConfig.getProperty<int>("Label", -1);
+    const std::string cachePath = Utils::expandEnvVars(iniConfig.getProperty
+                                  <std::string>("CachePath", ""));
 
     std::shared_ptr<LabelSliceExtractionTransformation> trans = std::make_shared
         <LabelSliceExtractionTransformation>(width, height, label);
     trans->setParameters(iniConfig.getSection(section, true));
+    trans->setCachePath(cachePath);
     return trans;
 }
