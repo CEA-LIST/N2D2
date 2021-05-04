@@ -995,6 +995,8 @@ Extract a slice from an image belonging to a given label.
 +----------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
 | ``IgnoreNoValid`` [1]                        | If true (1), if no valid slice is found, a random slice is extracted and marked as ignored (-1)                 |
 +----------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
+| ``ExcludeLabels`` []                         | Space-separated list of label ID to exclude from the random extraction (when ``Label`` is -1)                   |
++----------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
 
 
 This transformation is useful to learn sparse object occurrences in a

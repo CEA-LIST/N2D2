@@ -38,7 +38,8 @@ N2D2::LabelSliceExtractionTransformation::LabelSliceExtractionTransformation(
       mAllowPadding(this, "AllowPadding", false),
       mBorderType(this, "BorderType", MinusOneReflectBorder),
       mBorderValue(this, "BorderValue", std::vector<double>()),
-      mIgnoreNoValid(this, "IgnoreNoValid", true)
+      mIgnoreNoValid(this, "IgnoreNoValid", true),
+      mExcludeLabels(this, "ExcludeLabels", std::vector<int>())
 {
     // ctor
 }
@@ -58,7 +59,8 @@ N2D2::LabelSliceExtractionTransformation::LabelSliceExtractionTransformation(
       mAllowPadding(this, "AllowPadding", trans.mAllowPadding),
       mBorderType(this, "BorderType", trans.mBorderType),
       mBorderValue(this, "BorderValue", trans.mBorderValue),
-      mIgnoreNoValid(this, "IgnoreNoValid", trans.mIgnoreNoValid)
+      mIgnoreNoValid(this, "IgnoreNoValid", trans.mIgnoreNoValid),
+      mExcludeLabels(this, "ExcludeLabels", trans.mExcludeLabels)
 {
     // copy-ctor
 }
@@ -299,6 +301,17 @@ std::vector<int> N2D2::LabelSliceExtractionTransformation::unique(const cv::Mat
                                             rowPtr[j]) == uniqueValues.end())
                 uniqueValues.push_back(rowPtr[j]);
         }
+    }
+
+    const std::vector<int>& excludeLabels
+        = mExcludeLabels.get<std::vector<int> >();
+
+    for (std::vector<int>::const_iterator it = excludeLabels.begin(),
+        itEnd = excludeLabels.end(); it != itEnd; ++it)
+    {
+        uniqueValues.erase(std::remove(uniqueValues.begin(),
+                                       uniqueValues.end(), (*it)),
+                            uniqueValues.end());
     }
 
     return uniqueValues;

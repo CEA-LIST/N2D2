@@ -123,6 +123,7 @@ private:
     Parameter<BorderType> mBorderType;
     Parameter<std::vector<double> > mBorderValue;
     Parameter<bool> mIgnoreNoValid;
+    Parameter<std::vector<int> > mExcludeLabels;
 };
 }
 
