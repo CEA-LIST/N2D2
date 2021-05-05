@@ -301,6 +301,7 @@ public:
                                     unsigned int featureMapWidth,
                                     unsigned int featureMapHeight,
                                     unsigned int scoreCls,
+                                    bool isCoordinatesAnchors,
                                     bool isFlip,
                                     unsigned int nbAnchors,
                                     const float* anchors)
@@ -332,6 +333,7 @@ public:
                                  featureMapWidth,
                                  featureMapHeight,
                                  scoreCls,
+                                 isCoordinatesAnchors,
                                  isFlip,
                                  nbAnchors,
                                  anchors);

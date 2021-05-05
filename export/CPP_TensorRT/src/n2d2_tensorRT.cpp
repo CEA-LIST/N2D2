@@ -428,6 +428,22 @@ std::vector<nvinfer1::ITensor *>
 
 }
 std::vector<nvinfer1::ITensor *>
+        N2D2::Network::add_activation_cell(std::string layerName,
+                                            LayerActivation activation,
+                                            std::vector<nvinfer1::ITensor *> inputs_tensor)
+{
+        if(activation.status)
+            return(add_activation(layerName,
+                                  activation.type,
+                                  activation.alpha,
+                                  activation.beta,
+                                  inputs_tensor));
+        else
+            return inputs_tensor;
+
+}
+
+std::vector<nvinfer1::ITensor *>
         N2D2::Network::add_convolution(std::string layerName,
                         LayerActivation activation,
                         unsigned int nbOutputs,
@@ -1785,6 +1801,7 @@ std::vector<nvinfer1::ITensor *>
                         unsigned int featureMapWidth,
                         unsigned int featureMapHeight,
                         unsigned int scoreCls,
+                        bool isCoordinatesAnchors,
                         bool isFlip,
                         unsigned int nbAnchors,
                         const float* anchor)
@@ -1806,6 +1823,7 @@ std::vector<nvinfer1::ITensor *>
                                                                 featureMapWidth,
                                                                 featureMapHeight,
                                                                 scoreCls,
+                                                                isCoordinatesAnchors,
                                                                 isFlip,
                                                                 nbAnchors,
                                                                 anchor);

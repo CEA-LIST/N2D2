@@ -60,6 +60,7 @@
 #include "Cell/LRNCell.hpp"
 #include "Cell/PaddingCell.hpp"
 #include "Cell/PoolCell.hpp"
+#include "Cell/ResizeCell.hpp"
 #include "Cell/ReshapeCell.hpp"
 #include "Cell/ScalingCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
@@ -70,6 +71,7 @@
 #include "Generator/ConvCellGenerator.hpp"
 #include "Generator/DropoutCellGenerator.hpp"
 #include "Generator/FcCellGenerator.hpp"
+#include "Generator/ResizeCellGenerator.hpp"
 #include "Generator/LRNCellGenerator.hpp"
 #include "Generator/PoolCellGenerator.hpp"
 #include "Target/TargetCompare.hpp"
@@ -912,10 +914,31 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             std::reverse(paddingDimsEnd.begin(), paddingDimsEnd.end());
 
             if ((itAttr = attribute.find("ceil_mode")) != attribute.end()) {
-                if ((*itAttr).second->i() != 0) {
-                    std::cout << Utils::cwarning << "Unsupported operation: "
-                        << node.op_type() << " with ceil_mode != 0"
-                        << Utils::cdef << std::endl;
+                if ((*itAttr).second->i() == 1) {
+                    const int inputX = inputsDims[0];
+                    const int inputY = inputsDims[1];
+                    const int kX = kernelDims[0];
+                    const int kY = kernelDims[1];
+                    const int pX = paddingDimsBegin[0];
+                    const int pY = paddingDimsBegin[1];
+                    const int sX = strideDims[0];
+                    const int sY = strideDims[1];
+
+                    const int outputXCeil 
+                        = std::ceil( (float)(inputX - kX + 2 * pX) / (float) sX ) + 1;
+                    const int outputYCeil 
+                        = std::ceil( (float)(inputY - kY + 2 * pY) / (float)sY ) + 1;
+                    const int outputXFloor 
+                        = std::floor( (float)(inputX - kX + 2 * pX) / (float) sX ) + 1;
+                    const int outputYFloor  
+                        = std::floor( (float)(inputY - kY + 2 * pY) / (float)sY ) + 1;
+
+                    if(outputXCeil > outputXFloor) {
+                        paddingDimsEnd[0] += (outputXCeil - outputXFloor);
+                    }
+                    if(outputYCeil > outputYFloor) {
+                        paddingDimsEnd[1] += (outputYCeil - outputYFloor);
+                    }
                 }
             }
 
@@ -1684,6 +1707,8 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 
             deepNet->addCell(convCell, parentCells);
             convCell->initialize();
+            const std::map<unsigned int, unsigned int> outputsMap 
+                                                = convCell->outputsRemap();
             cell = convCell;
 
             std::cout << "  # Shared synapses: "
@@ -1886,6 +1911,15 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //Floor
         //GRU
         //Gather
+        else if (node.op_type() == "Gather") {
+            std::cout << Utils::cnotice << "  Ignore Gather operation"
+                << Utils::cdef << std::endl;
+
+            std::cout << "  " << node.output(0) << " -> "
+                << redirectName(node.input(0)) << std::endl;
+            redirect[node.output(0)] = redirectName(node.input(0));
+            continue;
+        }
         //GatherElements
         //GatherND
         else if (node.op_type() == "Gemm" || node.op_type() == "MatMul") {
@@ -2553,7 +2587,159 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 cell = reshapeCell;
             }
         }
-        //else if (node.op_type() == "Resize") {
+        else if (node.op_type() == "Resize") {
+            //Default mode set to NearestNeighbor
+            ResizeCell::ResizeMode resizeMode 
+                = ResizeCell::ResizeMode::NearestNeighbor;
+            //Default mode is aligned corner set to false
+            bool alignCorners = false;
+            std::vector<size_t>  inputsDims;       
+
+            if ((itAttr = attribute.find("coordinate_transformation_mode")) 
+                    != attribute.end()) {
+
+                if((*itAttr).second->s() == "asymmetric") {
+                    alignCorners = false;
+                    std::cout << Utils::cnotice << ""
+                        << "   Resize Mode for Coordinate: [Asymmetric]" 
+                        << Utils::cdef << std::endl;
+
+                }
+                else if((*itAttr).second->s() == "align_corners") {
+                    alignCorners = true;
+                    std::cout << Utils::cnotice 
+                        << "   Resize Mode for Coordinate: [Aligned Corner]" 
+                        << Utils::cdef << std::endl;
+                }
+                else {
+                        std::cout << Utils::cwarning  
+                                << (*itAttr).second->s()
+                                << "   Resize Mode for Coordinate: [" << (*itAttr).second->s() 
+                                << "] not yet supported by N2D2, back to default mode"
+                            << Utils::cdef << std::endl;
+                        std::cout << Utils::cnotice << ""
+                            << "   Resize Mode for Coordinate: [Asymmetric]" 
+                            << Utils::cdef << std::endl;
+                }
+            }
+
+            if ((itAttr = attribute.find("cubic_coeff_a")) != attribute.end()) {
+                std::cout << Utils::cwarning  
+                        << "   Resize Parameter: [cubic_coeff_a]"  
+                        << " not yet supported by N2D2"
+                    << Utils::cdef << std::endl;
+            }
+
+            if ((itAttr = attribute.find("mode")) != attribute.end()) {
+                if((*itAttr).second->s() == "nearest") {
+                    std::cout << Utils::cnotice << ""
+                        << "   Resize Mode for Interpolation: [NearestNeighbor]" 
+                        << Utils::cdef << std::endl;
+                }
+                else if((*itAttr).second->s()  == "linear") {
+                    resizeMode 
+                        = ResizeCell::ResizeMode::BilinearTF;
+                    std::cout << Utils::cnotice << ""
+                        << "   Resize Mode for Interpolation: [BilinearTF]" 
+                        << Utils::cdef << std::endl;
+                }
+                else {
+                    std::cout << Utils::cwarning  
+                            << "   Resize Mode for Coordinate: [" << (*itAttr).second->s() 
+                            << "] not yet supported by N2D2, back to default mode"
+                        << Utils::cdef << std::endl;
+                    std::cout << Utils::cwarning  
+                            << (*itAttr).second->s()
+                            << "  is not yet supported by N2D2, "
+                            << " back to default interpolation resize mode => Nearest Neighbor"
+                        << Utils::cdef << std::endl;
+                }
+            }
+
+            const std::string inputX = redirectName(node.input(0));
+            std::shared_ptr<Cell> inputXCell = getCell(inputX);
+
+            std::map<std::string, std::vector<std::string> >
+                ::const_iterator itConcat;
+            std::vector<std::shared_ptr<Cell> > parentCells;
+            if ((itInit = initializer.find(redirectName(node.input(1)))) != initializer.end()) {
+                const Tensor<float> roiTensor
+                            = ONNX_unpackTensor<float>((*itInit).second);
+                if(!roiTensor.empty()) {
+                    throw std::runtime_error("Resize from ROI maps is not yet"
+                        " supported by N2D2.");
+                }
+            }
+            if ((itInit = initializer.find(redirectName(node.input(2)))) != initializer.end()) {
+                const Tensor<float> scalesTensor
+                            = ONNX_unpackTensor<float>((*itInit).second);
+                if(!scalesTensor.empty()) {
+                    throw std::runtime_error("Resize from Scales ratio per map is not yet"
+                        " supported by N2D2.");
+                }
+            }
+            const std::string inputSizes 
+                = redirectName(node.input(3));
+
+            //std::vector<size_t>  inputsDims;       
+            std:: size_t nbOutputs  = 0;
+
+            //Todo : Improve the minigraph handling for sizes from input
+            if ((itConcat = concat.find(inputSizes)) != concat.end()) {
+                for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
+                    const std::string input = redirectName((*itConcat).second[i]);
+                    std::map<std::string, std::vector<std::string> >
+                        ::const_iterator itConcat2ndDim;
+                    if ((itConcat2ndDim = concat.find(input)) != concat.end()) {
+                        for (unsigned int i = 0; i < (*itConcat2ndDim).second.size(); ++i) {
+                            const std::string input2nd = redirectName((*itConcat2ndDim).second[i]);
+                            std::map<std::string, std::vector<std::string> >
+                                ::const_iterator itConcat3rddDim;
+                            if ((itConcat3rddDim = concat.find(input2nd)) != concat.end()) {
+                                for (unsigned int i = 0; i < (*itConcat3rddDim).second.size(); ++i) {
+                                    const std::string input3rd 
+                                        = redirectName((*itConcat3rddDim).second[i]);
+                                    std::shared_ptr<Cell> inputCell3rd = getCell(input3rd);
+                                    nbOutputs += inputCell3rd->getNbOutputs();
+                                    inputsDims = inputCell3rd->getOutputsDims();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            std::size_t resizeDimX = inputsDims[0];
+            std::size_t resizeDimY = inputsDims[1];
+
+            std::shared_ptr<ResizeCell> resizeCell
+                = Registrar<ResizeCell>::create(model)(*deepNet, 
+                                                                node.output(0),
+                                                                resizeDimX,
+                                                                resizeDimY,
+                                                                inputXCell->getNbOutputs(),
+                                                                resizeMode);
+
+            resizeCell->setParameter<bool>("AlignCorners", alignCorners);
+
+            parentCells.push_back(inputXCell);
+
+            if ((itConcat = concat.find(inputX)) != concat.end()) {
+                throw std::runtime_error("Unsupported operation: Concat before "
+                    "ResizeCell");
+            }
+            else {
+                if (inputXCell)
+                    resizeCell->addInput(inputXCell.get());
+                else {
+                    resizeCell->addInput(*sp, 0, 0,
+                                        sp->getSizeX(), sp->getSizeY());
+                }
+            }
+            deepNet->addCell(resizeCell, parentCells);
+
+            resizeCell->initialize();
+            cell = resizeCell;
+        }
 
         //}
         //ReverseSequence
@@ -2567,6 +2753,15 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //SequenceAt
         //SequenceConstruct
         //SequenceEmpty
+        else if (node.op_type() == "SequenceEmpty") {
+            std::cout << Utils::cnotice << "  Ignore SequenceEmpty operation"
+                << Utils::cdef << std::endl;
+
+            std::cout << "  " << node.output(0) << " -> "
+                << redirectName(node.input(0)) << std::endl;
+            redirect[node.output(0)] = redirectName(node.input(0));
+            continue;
+        }
         //SequenceErase
         //SequenceInsert
         //SequenceLength
@@ -2605,6 +2800,15 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //Sinh
         //Size
         //Slice
+        else if (node.op_type() == "Slice") {
+            std::cout << Utils::cnotice << "  Ignore Slice operation"
+                << Utils::cdef << std::endl;
+
+            std::cout << "  " << node.output(0) << " -> "
+                << redirectName(node.input(0)) << std::endl;
+            redirect[node.output(0)] = redirectName(node.input(0));
+            continue;
+        }
         else if (node.op_type() == "Softmax") {
             int axis = (opsetVersion >= 13) ? -1 : 1;
 
@@ -2973,6 +3177,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 weights.push_back(1.0);
                 weights.push_back(-1.0);
             }
+            const ElemWiseCell::CoeffMode coeffMode = ElemWiseCell::PerLayer;
 
             std::shared_ptr<Activation> activation
                 = std::shared_ptr<Activation>();
@@ -2983,6 +3188,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                                                             node.output(0),
                                                             inputDataCell->getNbOutputs(),
                                                             operation,
+                                                            coeffMode,
                                                             weights,
                                                             shifts,
                                                             activation);

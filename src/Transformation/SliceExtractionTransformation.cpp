@@ -215,8 +215,8 @@ N2D2::SliceExtractionTransformation::reverse(cv::Mat& frame,
 }
 
 cv::Rect
-N2D2::SliceExtractionTransformation::extract(unsigned int x,
-                                             unsigned int y,
+N2D2::SliceExtractionTransformation::extract(int x,
+                                             int y,
                                              unsigned int width,
                                              unsigned int height,
                                              double rotation,
@@ -228,57 +228,74 @@ N2D2::SliceExtractionTransformation::extract(unsigned int x,
                                              <std::shared_ptr<ROI> >& labelsROI,
                                              int /*id*/)
 {
+    cv::Rect rect;
+
     if (rotation != 0.0) {
         const cv::RotatedRect rotatedRect(cv::Point(x + width / 2.0,
                                                   y + height / 2.0),
                                           cv::Size(width, height),
                                           -rotation);
-        cv::Rect rect = rotatedRect.boundingRect();
+        rect = rotatedRect.boundingRect();
+    }
+    else {
+        rect = cv::Rect(x, y, width, height);
+    }
 
-        // Debug: plot center of rotation
-        //cv::circle(frame, cv::Point(x + width / 2.0,
-        //                            y + height / 2.0), 2,
-        //            cv::Scalar(255, 0, 0));
+    const unsigned int padH = std::max((int)width - rect.width, 0);
+    const unsigned int padV = std::max((int)height - rect.height, 0);
 
-        const unsigned int padH = std::max((int)width - rect.width, 0);
-        const unsigned int padV = std::max((int)height - rect.height, 0);
+    const unsigned int padLeft = (rect.x < 0) ? -rect.x : 0;
+    const unsigned int padTop = (rect.y < 0) ? -rect.y : 0;
+    const unsigned int padRight = (rect.x + rect.width > frame.cols)
+                                    ? rect.x + rect.width - frame.cols : 0;
+    const unsigned int padBottom = (rect.y + rect.height > frame.rows)
+                                    ? rect.y + rect.height - frame.rows : 0;
 
-        const unsigned int padLeft = (rect.x < 0) ? -rect.x : 0;
-        const unsigned int padTop = (rect.y < 0) ? -rect.y : 0;
-        const unsigned int padRight = (rect.x + rect.width > frame.cols)
-                                        ? rect.x + rect.width - frame.cols : 0;
-        const unsigned int padBottom = (rect.y + rect.height > frame.rows)
-                                        ? rect.y + rect.height - frame.rows : 0;
+    if (padLeft > 0) {
+        rect.x += padLeft;
+        rect.width -= padLeft;
+    }
 
-        if (padLeft > 0) {
-            rect.x += padLeft;
-            rect.width -= padLeft;
-        }
+    if (padTop > 0) {
+        rect.y += padTop;
+        rect.height -= padTop;
+    }
 
-        if (padTop > 0) {
-            rect.y += padTop;
-            rect.height -= padTop;
-        }
+    if (padRight > 0)
+        rect.width -= padRight;
 
-        if (padRight > 0)
-            rect.width -= padRight;
+    if (padBottom > 0)
+        rect.height -= padBottom;
 
-        if (padBottom > 0)
-            rect.height -= padBottom;
+    frame = frame(rect);
 
-        frame = frame(rect);
+    cv::Mat frameBorder;
+    cv::copyMakeBorder(frame,
+                        frameBorder,
+                        padTop + padV / 2,
+                        padBottom + padV - padV / 2,
+                        padLeft + padH / 2,
+                        padRight + padH - padH / 2,
+                        borderType,
+                        bgColor);
+    frame = frameBorder;
 
-        cv::Mat frameBorder;
-        cv::copyMakeBorder(frame,
-                           frameBorder,
-                           padTop + padV / 2,
-                           padBottom + padV - padV / 2,
-                           padLeft + padH / 2,
-                           padRight + padH - padH / 2,
-                           borderType,
-                           bgColor);
-        frame = frameBorder;
+    if (labels.rows > 1 || labels.cols > 1) {
+        labels = labels(rect);
 
+        cv::Mat labelsBorder;
+        cv::copyMakeBorder(labels,
+                            labelsBorder,
+                            padTop + padV / 2,
+                            padBottom + padV - padV / 2,
+                            padLeft + padH / 2,
+                            padRight + padH - padH / 2,
+                            cv::BORDER_CONSTANT,
+                            cv::Scalar::all(-1));
+        labels = labelsBorder;
+    }
+
+    if (rotation != 0.0) {
         // Debug: plot rectangle to extract
         //cv::Point2f vertices[4];
         //rotatedRect.center.x = frame.cols / 2.0;
@@ -306,19 +323,6 @@ N2D2::SliceExtractionTransformation::extract(unsigned int x,
         frame = rotated(subRect);
 
         if (labels.rows > 1 || labels.cols > 1) {
-            labels = labels(rect);
-
-            cv::Mat labelsBorder;
-            cv::copyMakeBorder(labels,
-                               labelsBorder,
-                               padTop + padV / 2,
-                               padBottom + padV - padV / 2,
-                               padLeft + padH / 2,
-                               padRight + padH - padH / 2,
-                               cv::BORDER_CONSTANT,
-                               cv::Scalar::all(-1));
-            labels = labelsBorder;
-
             cv::Mat labelsRotated;
             cv::warpAffine(labels, labelsRotated, rotMat, labels.size(),
                            cv::INTER_NEAREST, cv::BORDER_CONSTANT,
@@ -343,56 +347,12 @@ N2D2::SliceExtractionTransformation::extract(unsigned int x,
         padCropLabelsROI(labelsROI, (rect.width - (int)width) / 2.0,
                                     (rect.height - (int)height) / 2.0,
                          width, height);
-
-        return rect;
     }
     else {
-        cv::Rect rect(x, y, width, height);
-
-        const int padWidth = (int)x + rect.width - frame.cols;
-        const int padHeight = (int)y + rect.height - frame.rows;
-
-        if (padWidth > 0)
-            rect.width = frame.cols - (int)x;
-        if (padHeight > 0)
-            rect.height = frame.rows - (int)y;
-
-        frame = frame(rect);
-
-        if (padWidth > 0 || padHeight > 0) {
-            cv::Mat frameBorder;
-            cv::copyMakeBorder(frame,
-                               frameBorder,
-                               0,
-                               std::max(0, padHeight),
-                               0,
-                               std::max(0, padWidth),
-                               borderType,
-                               bgColor);
-            frame = frameBorder;
-        }
-
-        if (labels.rows > 1 || labels.cols > 1) {
-            labels = labels(rect);
-
-            if (padWidth > 0 || padHeight > 0) {
-                cv::Mat labelsBorder;
-                cv::copyMakeBorder(labels,
-                                   labelsBorder,
-                                   0,
-                                   std::max(0, padHeight),
-                                   0,
-                                   std::max(0, padWidth),
-                                   cv::BORDER_CONSTANT,
-                                   cv::Scalar::all(-1));
-                labels = labelsBorder;
-            }
-        }
-
         padCropLabelsROI(labelsROI, x, y, width, height);
-
-        return rect;
     }
+
+    return rect;
 }
 
 N2D2::SliceExtractionTransformation::~SliceExtractionTransformation() {

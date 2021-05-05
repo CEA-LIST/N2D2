@@ -210,6 +210,7 @@ class test_ElemWise(test_params):
         self.parameters = {
             "name": "test",
             "operation": "Max",
+            "mode": "PerInput",
             "weights": [0.5],
             "shifts": [0.5],
             "activation": n2d2.activation.Linear(),

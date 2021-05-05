@@ -156,11 +156,13 @@ N2D2::Tensor<T> N2D2::DeepNetGenerator::ONNX_unpackTensor(
                 tensor.size() * sizeof(T));
     }
     else {
-        std::ostringstream errorStr;
+        /*std::ostringstream errorStr;
         errorStr << "Missing data for ONNX tensor \""
             << onnxTensor->name() << "\"" << std::endl;
 
-        throw std::runtime_error(errorStr.str());
+        throw std::runtime_error(errorStr.str());*/
+        std::cout << "  No data for ONNX tensor \"" << onnxTensor->name() 
+            << "\"" << std::endl;
     }
 
     return tensor;

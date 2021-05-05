@@ -19,6 +19,7 @@
 */
 
 #include "DataFile/ImageDataFile.hpp"
+#include "utils/Utils.hpp"
 
 N2D2::Registrar<N2D2::DataFile>
 N2D2::ImageDataFile::mRegistrar({// Windows bitmaps
@@ -46,11 +47,23 @@ N2D2::ImageDataFile::mRegistrar({// Windows bitmaps
 
 cv::Mat N2D2::ImageDataFile::read(const std::string& fileName)
 {
+    cv::Mat data;
+
+    try {
 #if CV_MAJOR_VERSION >= 3
-    cv::Mat data = cv::imread(fileName, cv::IMREAD_UNCHANGED);
+        data = cv::imread(fileName, cv::IMREAD_UNCHANGED);
 #else
-    cv::Mat data = cv::imread(fileName, CV_LOAD_IMAGE_UNCHANGED);
+        data = cv::imread(fileName, CV_LOAD_IMAGE_UNCHANGED);
 #endif
+    }
+    catch (...) {
+        std::cout << Utils::cwarning
+            << "ImageDataFile::read(): unable to read possibly corrupted file: "
+            << fileName << std::endl;
+        std::cout << "The following exception occurred in OpenCV:"
+            << Utils::cdef << std::endl;
+        throw;
+    }
 
     if (!data.data)
         throw std::runtime_error("ImageDataFile::read(): unable to read image: "

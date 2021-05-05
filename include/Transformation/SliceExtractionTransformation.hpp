@@ -109,8 +109,9 @@ public:
     std::vector<double> getBorderValue(){
         return mBorderValue;
     };
-    static cv::Rect extract(unsigned int x,
-                            unsigned int y,
+
+    static cv::Rect extract(int x,
+                            int y,
                             unsigned int width,
                             unsigned int height,
                             double rotation,

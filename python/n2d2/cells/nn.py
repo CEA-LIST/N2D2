@@ -1640,7 +1640,7 @@ class Deconv(NeuralNetworkCell):
             biases.append(n2d2.Tensor.from_N2D2(tensor))
         return biases
 
-class ElemWise(NeuralNetworkCell):
+class ElemWise(NeuralNetworkCell): 
     """
     Element-wise operation layer.
     """
@@ -1651,6 +1651,7 @@ class ElemWise(NeuralNetworkCell):
     }
     _parameters = {
         "operation":"operation",
+        "mode":"mode",
         "weights": "weights",
         "shifts": "shifts"
     }  
@@ -1664,6 +1665,8 @@ class ElemWise(NeuralNetworkCell):
         :type  from_arguments: bool, optional
         :param operation: Type of operation (``Sum``, ``AbsSum``, ``EuclideanSum``, ``Prod``, or ``Max``), default="Sum"
         :type operation: str, optional
+        :param coeff_mode: (``PerLayer``, ``PerInput``, ``PerChannel``), default="PerLayer"
+        :type coeff_mode: str, optional
         :param weights: Weights for the ``Sum``, ``AbsSum``, and ``EuclideanSum`` operation, in the same order as the inputs, default=1.0
         :type weights: float, optional
         :param shifts: Shifts for the ``Sum`` and ``EuclideanSum`` operation, in the same order as the inputs, default=0.0
@@ -1682,10 +1685,12 @@ class ElemWise(NeuralNetworkCell):
     def _create_from_arguments(self, **config_parameters):
         NeuralNetworkCell.__init__(self, **config_parameters)
 
-        self._parse_optional_arguments(['operation', 'weights', 'shifts'])
+        self._parse_optional_arguments(['operation', 'mode', 'weights', 'shifts'])
 
         self._optional_constructor_arguments['operation'] = \
             N2D2.ElemWiseCell.Operation.__members__[self._optional_constructor_arguments['operation']]
+        self._optional_constructor_arguments['mode'] = \
+            N2D2.ElemWiseCell.CoeffMode.__members__[self._optional_constructor_arguments['mode']]
 
 
 

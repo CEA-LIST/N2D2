@@ -34,6 +34,7 @@ N2D2::ElemWiseCell_Frame_CUDA::ElemWiseCell_Frame_CUDA(
     const std::string& name,
     unsigned int nbOutputs,
     Operation operation,
+   CoeffMode mode,
     const std::vector<Float_T>& weights,
     const std::vector<Float_T>& shifts,
     const std::shared_ptr<Activation>& activation)
@@ -41,6 +42,7 @@ N2D2::ElemWiseCell_Frame_CUDA::ElemWiseCell_Frame_CUDA(
       ElemWiseCell(deepNet, name,
                nbOutputs,
                operation,
+               mode,
                weights,
                shifts),
       Cell_Frame_CUDA<Float_T>(deepNet, name, nbOutputs, activation)

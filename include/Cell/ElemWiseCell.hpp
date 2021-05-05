@@ -45,12 +45,18 @@ public:
         Prod,
         Max
     };
+    enum CoeffMode {
+        PerLayer,
+        PerInput,
+        PerChannel
+    };
 
     typedef std::function
         <std::shared_ptr<ElemWiseCell>(Network&, const DeepNet&, 
                                    const std::string&,
                                    unsigned int,
                                    Operation,
+                                   CoeffMode,
                                    const std::vector<Float_T>&,
                                    const std::vector<Float_T>&,
                                    const std::shared_ptr<Activation>&
@@ -66,6 +72,7 @@ public:
     ElemWiseCell(const DeepNet& deepNet, const std::string& name,
              unsigned int nbOutputs,
              Operation operation = Sum,
+             CoeffMode mode = PerLayer,
              const std::vector<Float_T>& weights = std::vector<Float_T>(),
              const std::vector<Float_T>& shifts = std::vector<Float_T>());
     const char* getType() const
@@ -75,6 +82,10 @@ public:
     Operation getOperation() const
     {
         return mOperation;
+    };
+    CoeffMode getCoeffMode() const 
+    {
+        return mCoeffMode;
     };
     std::vector<Float_T> getWeights() const
     {
@@ -98,6 +109,8 @@ protected:
 protected:
     // Operation type
     const Operation mOperation;
+    // Coeff Mode type
+    const CoeffMode mCoeffMode;
     // Block coefficients
     std::vector<Float_T> mWeights;
     // Block shifts
@@ -110,6 +123,11 @@ namespace {
 template <>
 const char* const EnumStrings<N2D2::ElemWiseCell::Operation>::data[]
     = {"Sum", "AbsSum", "EuclideanSum", "Prod", "Max"};
+}
+namespace {
+template <>
+const char* const EnumStrings<N2D2::ElemWiseCell::CoeffMode>::data[]
+    = {"PerLayer", "PerInput", "PerChannel"};
 }
 
 #endif // N2D2_ELEMWISECELL_H

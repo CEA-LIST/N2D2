@@ -155,40 +155,11 @@ N2D2::AnchorCell_Frame_CUDA::getAnchorArgMaxIoU(const Tensor<int>::Index& index)
 
 void N2D2::AnchorCell_Frame_CUDA::initialize()
 {
-    if(mFeatureMapWidth == 0)
-        mFeatureMapWidth = mStimuliProvider.getSizeX();
-
-    if(mFeatureMapHeight == 0)
-        mFeatureMapHeight = mStimuliProvider.getSizeY();
-
-    const unsigned int nbAnchors = mAnchors.size();
-
-    if (mInputs.dimZ() != (mScoresCls + 5) * nbAnchors) {
+    if (mNbClass < 1) {
         throw std::domain_error("AnchorCell_Frame_CUDA::initialize():"
-                                " the number of input channels must be equal to"
-                                " (scoresCls + 4) times the number of"
-                                " anchors.");
+                                " the number of classes must be superior to 0");
     }
-
-    if (mFlip) {
-        const double xRatio = std::ceil(mFeatureMapWidth
-                                        / (double)mOutputsDims[0]);
-        const double yRatio = std::ceil(mFeatureMapHeight
-                                        / (double)mOutputsDims[1]);
-        const double xOffset = mFeatureMapWidth - 1
-                                - (mOutputsDims[0] - 1) * xRatio;
-        const double yOffset = mFeatureMapHeight - 1
-                                - (mOutputsDims[1] - 1) * yRatio;
-
-        for (unsigned int k = 0; k < nbAnchors; ++k) {
-            AnchorCell_Frame_Kernels::Anchor& anchor = mAnchors(k);
-            anchor.x0 += xOffset;
-            anchor.y0 += yOffset;
-            anchor.x1 += xOffset;
-            anchor.y1 += yOffset;
-        }
-    }
-
+    const unsigned int nbAnchors = mAnchors.size();
     mGT.resize(mOutputs.dimB());
 /*
     CHECK_CUDA_STATUS(
@@ -199,11 +170,41 @@ void N2D2::AnchorCell_Frame_CUDA::initialize()
             cudaMalloc(&mCudaGT + batchPos, mNbLabelsMax * sizeof(**mCudaGT)));
     }
 */
-
     mNbLabels.resize({mOutputs.dimB(), 1, 1, 1}, 0);
 
-    if(mSingleShotMode)
-    {
+    if(mDetectorType == AnchorCell_Frame_Kernels::DetectorType::LapNet) {
+        if(mFeatureMapWidth == 0)
+            mFeatureMapWidth = mStimuliProvider.getSizeX();
+
+        if(mFeatureMapHeight == 0)
+            mFeatureMapHeight = mStimuliProvider.getSizeY();
+        std::cout << "mAnchors.size() " << mAnchors.size() << std::endl;
+
+        if (mInputs.dimZ() != (mScoresCls + 5) * nbAnchors) {
+            throw std::domain_error("AnchorCell_Frame_CUDA::initialize():"
+                                    " the number of input channels must be equal to"
+                                    " (scoresCls + 4) times the number of"
+                                    " anchors.");
+        }
+
+        if (mFlip) {
+            const double xRatio = std::ceil(mFeatureMapWidth
+                                            / (double)mOutputsDims[0]);
+            const double yRatio = std::ceil(mFeatureMapHeight
+                                            / (double)mOutputsDims[1]);
+            const double xOffset = mFeatureMapWidth - 1
+                                    - (mOutputsDims[0] - 1) * xRatio;
+            const double yOffset = mFeatureMapHeight - 1
+                                    - (mOutputsDims[1] - 1) * yRatio;
+            for (unsigned int k = 0; k < nbAnchors; ++k) {
+                AnchorCell_Frame_Kernels::Anchor& anchor = mAnchors(k);
+                anchor.x0 += xOffset;
+                anchor.y0 += yOffset;
+                anchor.x1 += xOffset;
+                anchor.y1 += yOffset;
+            }
+        }
+
         mMaxIoUClass.resize({mOutputs.dimB(), 1, 1, 1});
 
         mHostGTClass.resize(mOutputs.dimB());
@@ -266,9 +267,16 @@ void N2D2::AnchorCell_Frame_CUDA::initialize()
         mKeyPosSamplesSorted.synchronizeHToD();
         mConfNegSamplesFiltered.synchronizeHToD();
         mConfPosSamplesFiltered.synchronizeHToD();
+    }
+    else if (mDetectorType == AnchorCell_Frame_Kernels::DetectorType::SSD){
+        throw std::runtime_error(
+                        "N2D2 doesn't fully support yet SSD detector familly");
 
     }
-
+    else if (mDetectorType == AnchorCell_Frame_Kernels::DetectorType::YOLO){
+        throw std::runtime_error(
+                        "N2D2 doesn't fully support yet YOLO detector familly");
+    }
 
     //std::vector<std::vector<AnchorCell_Frame_Kernels::BBox_T> > mGTClass;
     //CudaTensor<Float_T> mMaxIoUClass;
@@ -306,7 +314,7 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
-    if(mSingleShotMode)
+    if(mDetectorType == AnchorCell_Frame_Kernels::DetectorType::LapNet)
     {
         mGTClass.fill(AnchorCell_Frame_Kernels::BBox_T(0.0, 0.0, 0.0, 0.0));
         mNbLabelsClass.fill(0);
@@ -368,37 +376,36 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
         std::shared_ptr<CudaDeviceTensor<Float_T> > inputCoords = (mInputs.size() > 1) 
                                                                     ? cuda_device_tensor_cast<Float_T>(mInputs[1])
                                                                     : inputCls;
-
-        cudaSAnchorPropagateSSD(mStimuliProvider.getSizeX(),
-                                mStimuliProvider.getSizeY(),
-                                mFeatureMapWidth,
-                                mFeatureMapHeight,
-                                mFlip,
-                                inference,
-                                inputCls->getDevicePtr(),
-                                inputCoords->getDevicePtr(),
-                                (mInputs.size() > 1) ? 0 : mScoresCls,
-                                mAnchors.getDevicePtr(),
-                                mGTClass.getDevicePtr(),
-                                mNbLabelsClass.getDevicePtr(),
-                                mOutputs.getDevicePtr(),
-                                mArgMaxIoU.getDevicePtr(),
-                                mMaxIoU.getDevicePtr(),
-                                mAnchors.size(),
-                                mOutputsDims[1],
-                                mOutputsDims[0],
-                                mInputs.dimB(),
-                                mScoresCls + 1,
-                                mNbClass,
-                                mInputs.size(),
-                                mMaxLabelGT,
-                                GPU_BLOCK_GRID[0],
-                                GPU_THREAD_GRID[0]);
+        cudaSAnchorPropagate_LapNet(mStimuliProvider.getSizeX(),
+                                    mStimuliProvider.getSizeY(),
+                                    mFeatureMapWidth,
+                                    mFeatureMapHeight,
+                                    mFlip,
+                                    inference,
+                                    inputCls->getDevicePtr(),
+                                    inputCoords->getDevicePtr(),
+                                    (mInputFormat == AnchorCell_Frame_Kernels::Format::CA) ? true : false,
+                                    (mInputs.size() > 1) ? 0 : mScoresCls,
+                                    mAnchors.getDevicePtr(),
+                                    mGTClass.getDevicePtr(),
+                                    mNbLabelsClass.getDevicePtr(),
+                                    mOutputs.getDevicePtr(),
+                                    mArgMaxIoU.getDevicePtr(),
+                                    mMaxIoU.getDevicePtr(),
+                                    mAnchors.size(),
+                                    mOutputsDims[1],
+                                    mOutputsDims[0],
+                                    mInputs.dimB(),
+                                    mScoresCls + 1,
+                                    mNbClass,
+                                    mInputs.size(),
+                                    mMaxLabelGT,
+                                    GPU_BLOCK_GRID[0],
+                                    GPU_THREAD_GRID[0]);
 
 
     }
-    else
-        {
+    else if (mDetectorType == AnchorCell_Frame_Kernels::DetectorType::SSD) {
 #pragma omp parallel for if (mOutputs.dimB() > 4)
         for (int batchPos = 0; batchPos < (int)mOutputs.dimB(); ++batchPos) {
             std::vector<AnchorCell_Frame_Kernels::BBox_T>& GT = mGT[batchPos];
@@ -489,6 +496,10 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
                             GPU_BLOCK_GRID[0],
                             GPU_THREAD_GRID[0]);
     }
+    else if (mDetectorType == AnchorCell_Frame_Kernels::DetectorType::YOLO){
+        throw std::runtime_error(
+                        "N2D2 doesn't fully support yet YOLO detector familly");
+    }
 
     Cell_Frame_CUDA<Float_T>::propagate(inference);
     mDiffInputs.clearValid();
@@ -503,24 +514,24 @@ void N2D2::AnchorCell_Frame_CUDA::backPropagate()
     Cell_Frame_CUDA<Float_T>::backPropagate();
     //mInputs.synchronizeDToHBased();
     //mOutputs.synchronizeDToH();
-    std::shared_ptr<CudaDeviceTensor<Float_T> > inputCls = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[0]);
-    std::shared_ptr<CudaDeviceTensor<Float_T> > inputCoords = (mInputs.size() > 1) 
-                                                                ? cuda_device_tensor_cast_nocopy<Float_T>(mInputs[1])
-                                                                : inputCls;
-
-    std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutputsCls = cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
-    std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutputsCoords = (mDiffOutputs.size() > 1)  ? 
-                                                                        cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[1])
-                                                                        : diffOutputsCls;
-
-
-    const unsigned int nbAnchors = mAnchors.size();
-    const double xRatio = std::ceil(mStimuliProvider.getSizeX() / (double)mOutputsDims[0]);
-    const double yRatio = std::ceil(mStimuliProvider.getSizeY() / (double)mOutputsDims[1]);
-
-    if(mSingleShotMode)
+    if(mDetectorType == AnchorCell_Frame_Kernels::DetectorType::LapNet)
     {
         /***Full efficient GPU implementation of the BackPropagation step of the SingleShot Detector**/
+        std::shared_ptr<CudaDeviceTensor<Float_T> > inputCls = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[0]);
+        std::shared_ptr<CudaDeviceTensor<Float_T> > inputCoords = (mInputs.size() > 1) 
+                                                                    ? cuda_device_tensor_cast_nocopy<Float_T>(mInputs[1])
+                                                                    : inputCls;
+
+        std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutputsCls = cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
+        std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutputsCoords = (mDiffOutputs.size() > 1)  ? 
+                                                                            cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[1])
+                                                                            : diffOutputsCls;
+
+
+        const unsigned int nbAnchors = mAnchors.size();
+        const double xRatio = std::ceil(mStimuliProvider.getSizeX() / (double)mOutputsDims[0]);
+        const double yRatio = std::ceil(mStimuliProvider.getSizeY() / (double)mOutputsDims[1]);
+
 
         /**First Step: Determine positives and negatives samples **/
 
@@ -681,9 +692,13 @@ void N2D2::AnchorCell_Frame_CUDA::backPropagate()
         mDiffOutputs.synchronizeDToHBased();
 
     }
-    else
-    {
-        throw std::runtime_error( "AnchorCell_Frame_CUDA::backPropagate() Only SingleShot mode is supported.");
+    else if (mDetectorType == AnchorCell_Frame_Kernels::DetectorType::SSD){
+        throw std::runtime_error(
+                        "N2D2 doesn't fully support yet SSD detector familly");
+    }
+    else if (mDetectorType == AnchorCell_Frame_Kernels::DetectorType::YOLO){
+        throw std::runtime_error(
+                        "N2D2 doesn't fully support yet YOLO detector familly");
     }
 
 

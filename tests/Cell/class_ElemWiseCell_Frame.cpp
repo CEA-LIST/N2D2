@@ -33,13 +33,14 @@ public:
                             const std::string& name,
                             unsigned int nbOutputs,
                             Operation operation,
+                            CoeffMode mode = ElemWiseCell::PerLayer,
                    const std::vector<Float_T>& weights = std::vector<Float_T>(),
                    const std::vector<Float_T>& shifts = std::vector<Float_T>(),
                    const std::shared_ptr<Activation>& activation
                    = std::shared_ptr<Activation>())
         : Cell(deepNet, name, nbOutputs),
-          ElemWiseCell(deepNet, name, nbOutputs, operation, weights, shifts),
-          ElemWiseCell_Frame(deepNet, name, nbOutputs, operation, weights, shifts, activation)
+          ElemWiseCell(deepNet, name, nbOutputs, operation, mode, weights, shifts),
+          ElemWiseCell_Frame(deepNet, name, nbOutputs, operation, mode, weights, shifts, activation)
     {}
 };
 
@@ -161,6 +162,7 @@ TEST_DATASET(ElemWiseCell_Frame,
     ElemWiseCell_Frame_Test elemWise(dn, "elemwise",
                                      nbOutputs,
                                      ElemWiseCell::Sum,
+                                     ElemWiseCell::PerInput,
                                      weights);
 
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
@@ -227,6 +229,7 @@ TEST_DATASET(ElemWiseCell_Frame,
     ElemWiseCell_Frame_Test elemWise(dn, "elemwise",
                                      nbOutputs,
                                      ElemWiseCell::Sum,
+                                     ElemWiseCell::PerInput,
                                      weights,
                                      shifts);
 
@@ -394,6 +397,7 @@ TEST_DATASET(ElemWiseCell_Frame,
     ElemWiseCell_Frame_Test elemWise(dn, "elemwise",
                                      nbOutputs,
                                      ElemWiseCell::AbsSum,
+                                     ElemWiseCell::PerInput,
                                      weights);
 
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
@@ -560,6 +564,7 @@ TEST_DATASET(ElemWiseCell_Frame,
     ElemWiseCell_Frame_Test elemWise(dn, "elemwise",
                                      nbOutputs,
                                      ElemWiseCell::EuclideanSum,
+                                     ElemWiseCell::PerInput,
                                      weights);
 
     ASSERT_EQUALS(elemWise.getName(), "elemwise");
@@ -629,6 +634,7 @@ TEST_DATASET(ElemWiseCell_Frame,
     ElemWiseCell_Frame_Test elemWise(dn, "elemwise",
                                      nbOutputs,
                                      ElemWiseCell::EuclideanSum,
+                                     ElemWiseCell::PerInput,
                                      weights,
                                      shifts);
 

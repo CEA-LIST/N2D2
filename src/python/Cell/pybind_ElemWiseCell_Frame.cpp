@@ -34,6 +34,7 @@ void init_ElemWiseCell_Frame(py::module &m) {
     const std::string&, 
     unsigned int, 
     ElemWiseCell::Operation,
+    ElemWiseCell::CoeffMode,
     const std::vector<Float_T>&,
     const std::vector<Float_T>&,
     const std::shared_ptr<Activation>&>(),
@@ -41,6 +42,7 @@ void init_ElemWiseCell_Frame(py::module &m) {
         py::arg("name"), 
         py::arg("nbOutputs"), 
         py::arg("operation") = ElemWiseCell::Operation::Sum,
+        py::arg("mode") = ElemWiseCell::CoeffMode::PerLayer,
         py::arg("weights") = std::vector<Float_T>(),
         py::arg("shifts") = std::vector<Float_T>(),
         py::arg("activation") = std::shared_ptr<Activation>());

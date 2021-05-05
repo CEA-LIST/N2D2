@@ -38,6 +38,13 @@ void init_ElemWiseCell(py::module &m) {
     .value("Prod", ElemWiseCell::Operation::Prod)
     .value("Max", ElemWiseCell::Operation::Max)
     .export_values();
+
+    py::enum_<ElemWiseCell::CoeffMode>(ewc, "CoeffMode")
+    .value("PerLayer", ElemWiseCell::CoeffMode::PerLayer)
+    .value("PerInput", ElemWiseCell::CoeffMode::PerInput)
+    .value("PerChannel", ElemWiseCell::CoeffMode::PerChannel)
+    .export_values();
+
     ewc
     .def("getOperation", &ElemWiseCell::getOperation)
     .def("getWeights", &ElemWiseCell::getWeights)

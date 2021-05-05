@@ -605,13 +605,6 @@ void N2D2::Target::process(Database::StimuliSet set)
     TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
     TensorLabelsValue_T& estimatedLabelsValue = mTargetData[dev].estimatedLabelsValue;
 
-    if (estimatedLabels.empty()) {
-        estimatedLabels.resize({mCell->getOutputsWidth(),
-            mCell->getOutputsHeight(), mTargetTopN, labels.dimB()});
-        estimatedLabelsValue.resize({mCell->getOutputsWidth(),
-            mCell->getOutputsHeight(), mTargetTopN, labels.dimB()});
-    }
-
     std::shared_ptr<Cell_CSpike_Top> targetCellCSpike
         = std::dynamic_pointer_cast<Cell_CSpike_Top>(mCell);
 
@@ -694,8 +687,16 @@ void N2D2::Target::process_Frame_CUDA(Float_T* values,
     int dev;
     CHECK_CUDA_STATUS(cudaGetDevice(&dev));
 
+    const Tensor<int>& labels = mStimuliProvider->getLabelsData();
     TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
     TensorLabelsValue_T& estimatedLabelsValue = mTargetData[dev].estimatedLabelsValue;
+
+    if (estimatedLabels.empty()) {
+        estimatedLabels.resize({mCell->getOutputsWidth(),
+            mCell->getOutputsHeight(), mTargetTopN, labels.dimB()});
+        estimatedLabelsValue.resize({mCell->getOutputsWidth(),
+            mCell->getOutputsHeight(), mTargetTopN, labels.dimB()});
+    }
 
     cudaGetEstimatedTarget( mTargetTopN,
                             mCell->getNbOutputs(),
@@ -728,8 +729,16 @@ void N2D2::Target::process_Frame(BaseTensor& values,
     if (nbOutputs > 1 && mTargetTopN > 1)
         std::iota(outputsIdx.begin(), outputsIdx.end(), 0);
 
+    const Tensor<int>& labels = mStimuliProvider->getLabelsData();
     TensorLabels_T& estimatedLabels = mTargetData[0].estimatedLabels;
     TensorLabelsValue_T& estimatedLabelsValue = mTargetData[0].estimatedLabelsValue;
+
+    if (estimatedLabels.empty()) {
+        estimatedLabels.resize({mCell->getOutputsWidth(),
+            mCell->getOutputsHeight(), mTargetTopN, labels.dimB()});
+        estimatedLabelsValue.resize({mCell->getOutputsWidth(),
+            mCell->getOutputsHeight(), mTargetTopN, labels.dimB()});
+    }
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (size > 16) schedule(dynamic)

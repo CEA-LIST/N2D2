@@ -303,6 +303,10 @@ public:
                             double alpha,
                             double beta,
                             std::vector<nvinfer1::ITensor *> inputs_tensor);
+    std::vector<nvinfer1::ITensor *>
+        add_activation_cell(std::string layerName,
+                            LayerActivation activation,
+                            std::vector<nvinfer1::ITensor *> inputs_tensor);
 
     std::vector<nvinfer1::ITensor *>
             add_convolution(std::string layerName,
@@ -441,6 +445,7 @@ public:
                             unsigned int featureMapWidth,
                             unsigned int featureMapHeight,
                             unsigned int scoreCls,
+                            bool isCoordinatesAnchors,
                             bool isFlip,
                             unsigned int nbAnchors,
                             const float* anchor);

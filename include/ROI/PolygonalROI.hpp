@@ -112,6 +112,7 @@ void N2D2::PolygonalROI<T>::append(cv::Mat& labels,
     if (width <= 0 || height <= 0) {
         std::cout << Utils::cwarning << "PolygonalROI::append(): ROI bounding "
             "rect outside image area: " << bb << Utils::cdef << std::endl;
+        return;
     }
 
     cv::Rect workArea(x0, y0, width, height);

@@ -38,10 +38,11 @@ N2D2::AnchorCell::AnchorCell(const DeepNet& deepNet,
       mFeatureMapWidth(this, "FeatureMapWidth", 0U),
       mFeatureMapHeight(this, "FeatureMapHeight", 0U),
       mFlip(this, "Flip", false),
-      mSingleShotMode(this, "SingleShot", false),
       mNegativeRatioSSD(this, "NegativeRatio", 3U),
       mMaxLabelGT(this, "MaxLabelPerFrame", 1000U),
       mNbClass(this, "NbClass", -1),
+      mDetectorType(this, "DetectorType", AnchorCell_Frame_Kernels::DetectorType::LapNet),
+      mInputFormat(this, "InputFormat", AnchorCell_Frame_Kernels::Format::CA),
       mStimuliProvider(sp),
       mScoresCls(scoresCls)
 {

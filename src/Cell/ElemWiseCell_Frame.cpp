@@ -28,6 +28,7 @@ N2D2::ElemWiseCell_Frame::mRegistrar("Frame", N2D2::ElemWiseCell_Frame::create);
 N2D2::ElemWiseCell_Frame::ElemWiseCell_Frame(const DeepNet& deepNet, const std::string& name,
                                      unsigned int nbOutputs,
                                      Operation operation,
+                                     CoeffMode mode,
                                      const std::vector<Float_T>& weights,
                                      const std::vector<Float_T>& shifts,
                                      const std::shared_ptr
@@ -36,6 +37,7 @@ N2D2::ElemWiseCell_Frame::ElemWiseCell_Frame(const DeepNet& deepNet, const std::
       ElemWiseCell(deepNet, name,
                nbOutputs,
                operation,
+               mode,
                weights,
                shifts),
       Cell_Frame<Float_T>(deepNet, name, nbOutputs, activation)

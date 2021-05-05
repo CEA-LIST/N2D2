@@ -127,6 +127,36 @@ section can be arbitrary.
 +--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
+``Transpose`` option usage
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``Transpose`` option allows to transpose the first two dimensions of a whole
+graph. This can be used in practice to used transposed inputs (like a transposed
+image, or a transposed vector for 1D signal inputs), like shown below:
+
+.. code-block:: ini
+
+    [sp]
+    Size=8000 1 1
+    BatchSize=${BATCH_SIZE}
+
+    ; Transpose the input:
+    [trans]
+    Input=sp
+    Type=Transpose
+    NbOutputs=1
+    Perm=1 0 2 3
+    ; Output dimensions are now "1 8000 1 ${BATCH_SIZE}"
+
+    [onnx]
+    Input=trans
+    Type=ONNX
+    Transpose=1
+    ; The graph originally expects an input dimension of "8000"
+    ; After "Transpose=1", the expected input dimension becomes "1 8000"
+    File=sound_processing_graph.onnx
+
+
 With the Python API
 -------------------
 
