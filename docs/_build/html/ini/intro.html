@@ -30,16 +30,17 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-    <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Databases" href="databases.html" />
-    <link rel="prev" title="Export: other / legacy" href="../export_legacy.html" /> 
+    <link rel="prev" title="Export: other / legacy" href="../export/legacy.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -86,27 +87,27 @@
             
               <p class="caption"><span class="caption-text">Introduction:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../intro.html">Presentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../about.html">About N2D2-IP</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../simus.html">Performing simulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../perfs_tools.html">Performance evaluation tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tuto.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/tuto.html">Tutorials</a></li>
 </ul>
 <p class="caption"><span class="caption-text">ONNX Import:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_convert.html">Obtain ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_import.html">Import ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_transfer.html">Train from ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/transfer.html">Train from ONNX models</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Quantization and Export:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../quant_post.html">Post-training quantization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../quant_qat.html">Quantization aware training</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_CPP.html">Export: C++</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_CPP_STM32.html">Export: C++/STM32</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_TensorRT.html">Export: TensorRT</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_DNeuro.html">Export: DNeuro</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_legacy.html">Export: other / legacy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant/post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant/qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
 <ul class="current">
@@ -139,6 +140,7 @@
 <li class="toctree-l1"><a class="reference internal" href="data_analysis.html">Stimuli data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="environment.html">Stimuli provider (Environment)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="target.html">Targets (outputs &amp; losses)</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Python API:</span></p>
 <ul>
@@ -148,6 +150,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../python_api/tensor.html">Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python_api/deepnet.html">DeepNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python_api/interoperability.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/example.html">Example</a></li>
 </ul>
 <p class="caption"><span class="caption-text">C++/Python core:</span></p>
 <ul>
@@ -232,7 +235,31 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="introduction">
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
 <p>The INI file interface is the primary way of using N2D2. It is a simple,
 lightweight and user-friendly format for specifying a complete DNN-based
@@ -421,7 +448,7 @@ when not already present</p></td>
         <a href="databases.html" class="btn btn-neutral float-right" title="Databases" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../export_legacy.html" class="btn btn-neutral float-left" title="Export: other / legacy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../export/legacy.html" class="btn btn-neutral float-left" title="Export: other / legacy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

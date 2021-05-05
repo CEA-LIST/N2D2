@@ -30,12 +30,13 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-    <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Transformation" href="transformation.html" />
@@ -86,27 +87,27 @@
             
               <p class="caption"><span class="caption-text">Introduction:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../intro.html">Presentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../about.html">About N2D2-IP</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../simus.html">Performing simulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../perfs_tools.html">Performance evaluation tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tuto.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/tuto.html">Tutorials</a></li>
 </ul>
 <p class="caption"><span class="caption-text">ONNX Import:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_convert.html">Obtain ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_import.html">Import ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_transfer.html">Train from ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/transfer.html">Train from ONNX models</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Quantization and Export:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../quant_post.html">Post-training quantization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../quant_qat.html">Quantization aware training</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_CPP.html">Export: C++</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_CPP_STM32.html">Export: C++/STM32</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_TensorRT.html">Export: TensorRT</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_DNeuro.html">Export: DNeuro</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_legacy.html">Export: other / legacy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant/post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant/qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
 <ul>
@@ -125,6 +126,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../python_api/tensor.html">Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python_api/deepnet.html">DeepNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python_api/interoperability.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/example.html">Example</a></li>
 </ul>
 <p class="caption"><span class="caption-text">C++/Python core:</span></p>
 <ul class="current">
@@ -209,7 +211,31 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="stimuliprovider">
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="stimuliprovider">
 <h1>StimuliProvider<a class="headerlink" href="#stimuliprovider" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="N2D2.StimuliProvider">
@@ -248,6 +274,11 @@
 <dd></dd></dl>
 
 <dl class="py method">
+<dt id="N2D2.StimuliProvider.getDatabase">
+<code class="sig-name descname">getDatabase</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em><span class="sig-paren">)</span> &#x2192; N2D2::Database<a class="headerlink" href="#N2D2.StimuliProvider.getDatabase" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="N2D2.StimuliProvider.getLabelsData">
 <code class="sig-name descname">getLabelsData</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em>, <em class="sig-param"><span class="n">dev</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em><span class="sig-paren">)</span> &#x2192; N2D2.Tensor_int<a class="headerlink" href="#N2D2.StimuliProvider.getLabelsData" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -275,6 +306,11 @@
 <dl class="py method">
 <dt id="N2D2.StimuliProvider.getSize">
 <code class="sig-name descname">getSize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>int<span class="p">]</span><a class="headerlink" href="#N2D2.StimuliProvider.getSize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.StimuliProvider.isCompositeStimuli">
+<code class="sig-name descname">isCompositeStimuli</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.StimuliProvider" title="N2D2.StimuliProvider">N2D2.StimuliProvider</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.StimuliProvider.isCompositeStimuli" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">

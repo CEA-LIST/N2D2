@@ -10,31 +10,31 @@ N2D2
    :maxdepth: 1
    :caption: Introduction:
 
-   intro
-   about
-   simus
-   perfs_tools
-   tuto
+   intro/intro
+   intro/about
+   intro/simus
+   intro/perfs_tools
+   intro/tuto
 
 .. toctree::
    :maxdepth: 1
    :caption: ONNX Import:
 
-   onnx_convert
-   onnx_import
-   onnx_transfer
+   onnx/convert
+   onnx/import
+   onnx/transfer
 
 .. toctree::
    :maxdepth: 1
    :caption: Quantization and Export:
 
-   quant_post
-   quant_qat
-   export_CPP
-   export_CPP_STM32
-   export_TensorRT
-   export_DNeuro
-   export_legacy
+   quant/post
+   quant/qat
+   export/CPP
+   export/CPP_STM32
+   export/TensorRT
+   export/DNeuro
+   export/legacy
 
 .. toctree::
    :maxdepth: 1
@@ -57,7 +57,7 @@ N2D2
    python_api/tensor
    python_api/deepnet
    python_api/interoperability
-
+   python_api/example
 
 .. toctree::
    :maxdepth: 1

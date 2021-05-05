@@ -30,12 +30,13 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-    <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" /> 
 </head>
@@ -84,27 +85,27 @@
             
               <p class="caption"><span class="caption-text">Introduction:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="intro.html">Presentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="about.html">About N2D2-IP</a></li>
-<li class="toctree-l1"><a class="reference internal" href="simus.html">Performing simulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="perfs_tools.html">Performance evaluation tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tuto.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro/intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro/about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro/simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro/perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="intro/tuto.html">Tutorials</a></li>
 </ul>
 <p class="caption"><span class="caption-text">ONNX Import:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="onnx_convert.html">Obtain ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="onnx_import.html">Import ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="onnx_transfer.html">Train from ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx/convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx/import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="onnx/transfer.html">Train from ONNX models</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Quantization and Export:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="quant_post.html">Post-training quantization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quant_qat.html">Quantization aware training</a></li>
-<li class="toctree-l1"><a class="reference internal" href="export_CPP.html">Export: C++</a></li>
-<li class="toctree-l1"><a class="reference internal" href="export_CPP_STM32.html">Export: C++/STM32</a></li>
-<li class="toctree-l1"><a class="reference internal" href="export_TensorRT.html">Export: TensorRT</a></li>
-<li class="toctree-l1"><a class="reference internal" href="export_DNeuro.html">Export: DNeuro</a></li>
-<li class="toctree-l1"><a class="reference internal" href="export_legacy.html">Export: other / legacy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quant/post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quant/qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export/CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export/CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export/TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export/DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export/legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
 <ul>
@@ -123,6 +124,7 @@
 <li class="toctree-l1"><a class="reference internal" href="python_api/tensor.html">Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_api/deepnet.html">DeepNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_api/interoperability.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python_api/example.html">Example</a></li>
 </ul>
 <p class="caption"><span class="caption-text">C++/Python core:</span></p>
 <ul>
@@ -229,6 +231,7 @@
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  
 </div>
@@ -370,8 +373,6 @@
 </li>
         <li><a href="python_api/cells.html#n2d2.cells.BatchNorm2d.__init__">(n2d2.cells.BatchNorm2d method)</a>
 </li>
-        <li><a href="python_api/cells.html#n2d2.cells.Cell.__init__">(n2d2.cells.Cell method)</a>
-</li>
         <li><a href="python_api/cells.html#n2d2.cells.Conv.__init__">(n2d2.cells.Conv method)</a>
 </li>
         <li><a href="python_api/cells.html#n2d2.cells.Deconv.__init__">(n2d2.cells.Deconv method)</a>
@@ -381,6 +382,8 @@
         <li><a href="python_api/cells.html#n2d2.cells.ElemWise.__init__">(n2d2.cells.ElemWise method)</a>
 </li>
         <li><a href="python_api/cells.html#n2d2.cells.Fc.__init__">(n2d2.cells.Fc method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.cells.NeuralNetworkCell.__init__">(n2d2.cells.NeuralNetworkCell method)</a>
 </li>
         <li><a href="python_api/cells.html#n2d2.cells.Padding.__init__">(n2d2.cells.Padding method)</a>
 </li>
@@ -411,6 +414,8 @@
         <li><a href="core/transformation.html#N2D2.CompositeTransformation.__init__">(N2D2.CompositeTransformation method)</a>
 </li>
         <li><a href="core/transformation.html#N2D2.CompressionNoiseTransformation.__init__">(N2D2.CompressionNoiseTransformation method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.ConfigSection.__init__">(n2d2.ConfigSection method)</a>
 </li>
         <li><a href="core/cells.html#N2D2.ConvCell.__init__">(N2D2.ConvCell method)</a>
 </li>
@@ -1004,6 +1009,10 @@
 </li>
         <li><a href="python_api/databases.html#n2d2.provider.DataProvider.__init__">(n2d2.provider.DataProvider method)</a>
 </li>
+        <li><a href="python_api/interoperability.html#n2d2.pytorch.DeepNetN2D2.__init__">(n2d2.pytorch.DeepNetN2D2 method)</a>
+</li>
+        <li><a href="python_api/interoperability.html#n2d2.pytorch.LayerN2D2.__init__">(n2d2.pytorch.LayerN2D2 method)</a>
+</li>
         <li><a href="core/transformation.html#N2D2.RandomAffineTransformation.__init__">(N2D2.RandomAffineTransformation method)</a>
 </li>
         <li><a href="core/transformation.html#N2D2.RangeAffineTransformation.__init__">(N2D2.RangeAffineTransformation method)</a>
@@ -1118,6 +1127,8 @@
 </li>
         <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.__init__">(N2D2.SliceExtractionTransformation method)</a>
 </li>
+        <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.BorderType.__init__">(N2D2.SliceExtractionTransformation.BorderType method)</a>
+</li>
         <li><a href="core/cells.html#N2D2.SoftmaxCell.__init__">(N2D2.SoftmaxCell method)</a>
 </li>
         <li><a href="core/cells.html#N2D2.SoftmaxCell.FreeParametersType.__init__">(N2D2.SoftmaxCell.FreeParametersType method)</a>
@@ -1203,6 +1214,8 @@
         <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_float.FreeParametersType.__init__">(N2D2.TargetBiasCell_Frame_float.FreeParametersType method)</a>
 </li>
         <li><a href="core/cells.html#N2D2.TargetBiasCell_Frame_float.Signals.__init__">(N2D2.TargetBiasCell_Frame_float.Signals method)</a>
+</li>
+        <li><a href="python_api/tensor.html#n2d2.Tensor.__init__">(n2d2.Tensor method)</a>
 </li>
         <li><a href="core/containers.html#N2D2.Tensor_bool.__init__">(N2D2.Tensor_bool method)</a>
 </li>
@@ -2268,11 +2281,7 @@
       <li><a href="core/databases.html#N2D2.CelebA_Database.StimuliSetMask">CelebA_Database.StimuliSetMask (class in N2D2)</a>
 </li>
       <li><a href="core/cells.html#N2D2.Cell">Cell (class in N2D2)</a>
-
-      <ul>
-        <li><a href="python_api/cells.html#n2d2.cells.Cell">(class in n2d2.cells)</a>
 </li>
-      </ul></li>
       <li><a href="core/cells.html#N2D2.Cell.FreeParametersType">Cell.FreeParametersType (class in N2D2)</a>
 </li>
       <li><a href="core/cells.html#N2D2.Cell_Frame_CUDA_double">Cell_Frame_CUDA_double (class in N2D2)</a>
@@ -2488,6 +2497,8 @@
       <li><a href="core/containers.html#N2D2.BaseTensor.clear">clear() (N2D2.BaseTensor method)</a>
 
       <ul>
+        <li><a href="python_api/cells.html#n2d2.ConfigSection.clear">(n2d2.ConfigSection method)</a>
+</li>
         <li><a href="core/target.html#N2D2.Target.clear">(N2D2.Target method)</a>
 </li>
       </ul></li>
@@ -3037,6 +3048,8 @@
 </li>
       <li><a href="core/transformation.html#N2D2.CompressionNoiseTransformation">CompressionNoiseTransformation (class in N2D2)</a>
 </li>
+      <li><a href="python_api/cells.html#n2d2.ConfigSection">ConfigSection (class in n2d2)</a>
+</li>
       <li><a href="python_api/cells.html#n2d2.filler.Constant">Constant (class in n2d2.filler)</a>
 </li>
       <li><a href="python_api/cells.html#n2d2.cells.Conv">Conv (class in n2d2.cells)</a>
@@ -3191,10 +3204,10 @@
 </li>
       <li><a href="core/transformation.html#N2D2.DFTTransformation">DFTTransformation (class in N2D2)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="core/containers.html#N2D2.BaseTensor.dimB">dimB() (N2D2.BaseTensor method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="core/containers.html#N2D2.BaseTensor.dimD">dimD() (N2D2.BaseTensor method)</a>
 </li>
       <li><a href="core/containers.html#N2D2.BaseTensor.dims">dims() (N2D2.BaseTensor method)</a>
@@ -3256,6 +3269,8 @@
       <li><a href="core/cells.html#N2D2.DropoutCell_Frame_float.FreeParametersType">DropoutCell_Frame_float.FreeParametersType (class in N2D2)</a>
 </li>
       <li><a href="core/cells.html#N2D2.DropoutCell_Frame_float.Signals">DropoutCell_Frame_float.Signals (class in N2D2)</a>
+</li>
+      <li><a href="python_api/tensor.html#n2d2.Tensor.dtoh">dtoh() (n2d2.Tensor method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -3655,6 +3670,8 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="python_api/cells.html#n2d2.ConfigSection.get">get() (n2d2.ConfigSection method)</a>
+</li>
       <li><a href="python_api/databases.html#n2d2.provider.DataProvider.get_batch_size">get_batch_size() (n2d2.provider.DataProvider method)</a>
 </li>
       <li><a href="python_api/cells.html#n2d2.cells.Conv.get_bias">get_bias() (n2d2.cells.Conv method)</a>
@@ -3903,6 +3920,12 @@
         <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.getActivation">(N2D2.UnpoolCell_Frame_CUDA method)</a>
 </li>
       </ul></li>
+      <li><a href="core/transformation.html#N2D2.PadCropTransformation.getAdditiveWH">getAdditiveWH() (N2D2.PadCropTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.getAllowPadding">getAllowPadding() (N2D2.SliceExtractionTransformation method)</a>
+</li>
+      <li><a href="core/activations.html#N2D2.TanhActivation.getAlpha">getAlpha() (N2D2.TanhActivation method)</a>
+</li>
       <li><a href="core/cells.html#N2D2.AnchorCell.getAssociatedDeepNet">getAssociatedDeepNet() (N2D2.AnchorCell method)</a>
 
       <ul>
@@ -4127,6 +4150,8 @@
         <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.getAssociatedDeepNet">(N2D2.UnpoolCell_Frame_CUDA method)</a>
 </li>
       </ul></li>
+      <li><a href="core/databases.html#N2D2.ILSVRC2012_Database.getBackgroundClass">getBackgroundClass() (N2D2.ILSVRC2012_Database method)</a>
+</li>
       <li><a href="core/stimuliprovider.html#N2D2.StimuliProvider.getBatchSize">getBatchSize() (N2D2.StimuliProvider method)</a>
 </li>
       <li><a href="core/cells.html#N2D2.ConvCell.getBias">getBias() (N2D2.ConvCell method)</a>
@@ -4313,6 +4338,18 @@
         <li><a href="core/cells.html#N2D2.FcCell_Spike_RRAM.getBiasSolver">(N2D2.FcCell_Spike_RRAM method)</a>
 </li>
       </ul></li>
+      <li><a href="core/transformation.html#N2D2.PadCropTransformation.getBorderType">getBorderType() (N2D2.PadCropTransformation method)</a>
+
+      <ul>
+        <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.getBorderType">(N2D2.SliceExtractionTransformation method)</a>
+</li>
+      </ul></li>
+      <li><a href="core/transformation.html#N2D2.PadCropTransformation.getBorderValue">getBorderValue() (N2D2.PadCropTransformation method)</a>
+
+      <ul>
+        <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.getBorderValue">(N2D2.SliceExtractionTransformation method)</a>
+</li>
+      </ul></li>
       <li><a href="core/cells.html#N2D2.PaddingCell.getBotPad">getBotPad() (N2D2.PaddingCell method)</a>
 
       <ul>
@@ -4330,6 +4367,8 @@
       <li><a href="core/deepnet.html#N2D2.DeepNet.getCell_Frame_Top">getCell_Frame_Top() (N2D2.DeepNet method)</a>
 </li>
       <li><a href="core/deepnet.html#N2D2.DeepNet.getCells">getCells() (N2D2.DeepNet method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.ChannelExtractionTransformation.getChannel">getChannel() (N2D2.ChannelExtractionTransformation method)</a>
 </li>
       <li><a href="core/deepnet.html#N2D2.DeepNet.getChildCells">getChildCells() (N2D2.DeepNet method)</a>
 </li>
@@ -4557,11 +4596,21 @@
         <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.getChildrenCells">(N2D2.UnpoolCell_Frame_CUDA method)</a>
 </li>
       </ul></li>
+      <li><a href="core/activations.html#N2D2.LinearActivation.getClipping">getClipping() (N2D2.LinearActivation method)</a>
+
+      <ul>
+        <li><a href="core/activations.html#N2D2.RectifierActivation.getClipping">(N2D2.RectifierActivation method)</a>
+</li>
+      </ul></li>
       <li><a href="core/deepnet.html#N2D2.DeepNet.getCMonitor">getCMonitor() (N2D2.DeepNet method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.ColorSpaceTransformation.getColorSpace">getColorSpace() (N2D2.ColorSpaceTransformation method)</a>
 </li>
       <li><a href="core/containers.html#N2D2.CudaBaseDeviceTensor.getCudaTensor">getCudaTensor() (N2D2.CudaBaseDeviceTensor method)</a>
 </li>
       <li><a href="core/stimuliprovider.html#N2D2.StimuliProvider.getData">getData() (N2D2.StimuliProvider method)</a>
+</li>
+      <li><a href="core/stimuliprovider.html#N2D2.StimuliProvider.getDatabase">getDatabase() (N2D2.StimuliProvider method)</a>
 </li>
       <li><a href="core/stimuliprovider.html#N2D2.StimuliProvider.getDataChannel">getDataChannel() (N2D2.StimuliProvider method)</a>
 </li>
@@ -4941,11 +4990,45 @@
         <li><a href="core/cells.html#N2D2.DeconvCell_Frame_float.getDilationY">(N2D2.DeconvCell_Frame_float method)</a>
 </li>
       </ul></li>
+      <li><a href="core/cells.html#N2D2.DropoutCell.getDropout">getDropout() (N2D2.DropoutCell method)</a>
+
+      <ul>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_CUDA_double.getDropout">(N2D2.DropoutCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_CUDA_float.getDropout">(N2D2.DropoutCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_double.getDropout">(N2D2.DropoutCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.DropoutCell_Frame_float.getDropout">(N2D2.DropoutCell_Frame_float method)</a>
+</li>
+      </ul></li>
+      <li><a href="core/transformation.html#N2D2.DistortionTransformation.getElasticGaussianSize">getElasticGaussianSize() (N2D2.DistortionTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.DistortionTransformation.getElasticScaling">getElasticScaling() (N2D2.DistortionTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.DistortionTransformation.getElasticSigma">getElasticSigma() (N2D2.DistortionTransformation method)</a>
+</li>
+      <li><a href="core/cells.html#N2D2.BatchNormCell.getEpsilon">getEpsilon() (N2D2.BatchNormCell method)</a>
+
+      <ul>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_double.getEpsilon">(N2D2.BatchNormCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_float.getEpsilon">(N2D2.BatchNormCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_double.getEpsilon">(N2D2.BatchNormCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_float.getEpsilon">(N2D2.BatchNormCell_Frame_float method)</a>
+</li>
+      </ul></li>
       <li><a href="core/target.html#N2D2.Target.getEstimatedLabel">getEstimatedLabel() (N2D2.Target method)</a>
 </li>
       <li><a href="core/target.html#N2D2.Target.getEstimatedLabels">getEstimatedLabels() (N2D2.Target method)</a>
 </li>
       <li><a href="core/target.html#N2D2.Target.getEstimatedLabelsValue">getEstimatedLabelsValue() (N2D2.Target method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.RangeAffineTransformation.getFirstOperator">getFirstOperator() (N2D2.RangeAffineTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.RangeAffineTransformation.getFirstValue">getFirstValue() (N2D2.RangeAffineTransformation method)</a>
 </li>
       <li><a href="core/cells.html#N2D2.SoftmaxCell.getGroupSize">getGroupSize() (N2D2.SoftmaxCell method)</a>
 
@@ -4959,6 +5042,18 @@
         <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_float.getGroupSize">(N2D2.SoftmaxCell_Frame_float method)</a>
 </li>
       </ul></li>
+      <li><a href="core/transformation.html#N2D2.PadCropTransformation.getHeight">getHeight() (N2D2.PadCropTransformation method)</a>
+
+      <ul>
+        <li><a href="core/transformation.html#N2D2.RescaleTransformation.getHeight">(N2D2.RescaleTransformation method)</a>
+</li>
+        <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.getHeight">(N2D2.SliceExtractionTransformation method)</a>
+</li>
+      </ul></li>
+      <li><a href="core/transformation.html#N2D2.FlipTransformation.getHorizontalFlip">getHorizontalFlip() (N2D2.FlipTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.DistortionTransformation.getIgnoreMissingData">getIgnoreMissingData() (N2D2.DistortionTransformation method)</a>
+</li>
       <li><a href="core/cells.html#N2D2.AnchorCell_Frame.getInputs">getInputs() (N2D2.AnchorCell_Frame method)</a>
 
       <ul>
@@ -5563,6 +5658,8 @@
         <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.getInputsSize">(N2D2.UnpoolCell_Frame_CUDA method)</a>
 </li>
       </ul></li>
+      <li><a href="core/transformation.html#N2D2.RescaleTransformation.getKeepAspectRatio">getKeepAspectRatio() (N2D2.RescaleTransformation method)</a>
+</li>
       <li><a href="core/cells.html#N2D2.ConvCell.getKernelHeight">getKernelHeight() (N2D2.ConvCell method)</a>
 
       <ul>
@@ -5684,6 +5781,10 @@
       <li><a href="core/target.html#N2D2.Target.getLabelTarget">getLabelTarget() (N2D2.Target method)</a>
 </li>
       <li><a href="core/deepnet.html#N2D2.DeepNet.getLayers">getLayers() (N2D2.DeepNet method)</a>
+</li>
+      <li><a href="core/activations.html#N2D2.RectifierActivation.getLeakSlope">getLeakSlope() (N2D2.RectifierActivation method)</a>
+</li>
+      <li><a href="core/databases.html#N2D2.ILSVRC2012_Database.getLearn">getLearn() (N2D2.ILSVRC2012_Database method)</a>
 </li>
       <li><a href="core/cells.html#N2D2.PaddingCell.getLeftPad">getLeftPad() (N2D2.PaddingCell method)</a>
 
@@ -6077,6 +6178,18 @@
       </ul></li>
       <li><a href="core/deepnet.html#N2D2.DeepNet.getMonitor">getMonitor() (N2D2.DeepNet method)</a>
 </li>
+      <li><a href="core/cells.html#N2D2.BatchNormCell.getMovingAverageMomentum">getMovingAverageMomentum() (N2D2.BatchNormCell method)</a>
+
+      <ul>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_double.getMovingAverageMomentum">(N2D2.BatchNormCell_Frame_CUDA_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_CUDA_float.getMovingAverageMomentum">(N2D2.BatchNormCell_Frame_CUDA_float method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_double.getMovingAverageMomentum">(N2D2.BatchNormCell_Frame_double method)</a>
+</li>
+        <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_float.getMovingAverageMomentum">(N2D2.BatchNormCell_Frame_float method)</a>
+</li>
+      </ul></li>
       <li><a href="core/cells.html#N2D2.AnchorCell.getName">getName() (N2D2.AnchorCell method)</a>
 
       <ul>
@@ -6812,6 +6925,10 @@
       <li><a href="core/target.html#N2D2.Target.getNbTargets">getNbTargets() (N2D2.Target method)</a>
 </li>
       <li><a href="core/deepnet.html#N2D2.DeepNet.getNetwork">getNetwork() (N2D2.DeepNet method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.getOffsetX">getOffsetX() (N2D2.SliceExtractionTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.getOffsetY">getOffsetY() (N2D2.SliceExtractionTransformation method)</a>
 </li>
       <li><a href="core/cells.html#N2D2.ElemWiseCell.getOperation">getOperation() (N2D2.ElemWiseCell method)</a>
 
@@ -8385,6 +8502,24 @@
         <li><a href="core/cells.html#N2D2.FcCell_Spike_RRAM.getQuantizer">(N2D2.FcCell_Spike_RRAM method)</a>
 </li>
       </ul></li>
+      <li><a href="core/transformation.html#N2D2.FlipTransformation.getRandomHorizontalFlip">getRandomHorizontalFlip() (N2D2.FlipTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.getRandomOffsetX">getRandomOffsetX() (N2D2.SliceExtractionTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.getRandomOffsetY">getRandomOffsetY() (N2D2.SliceExtractionTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.getRandomRotation">getRandomRotation() (N2D2.SliceExtractionTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.getRandomRotationRange">getRandomRotationRange() (N2D2.SliceExtractionTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.getRandomScaling">getRandomScaling() (N2D2.SliceExtractionTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.getRandomScalingRange">getRandomScalingRange() (N2D2.SliceExtractionTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.FlipTransformation.getRandomVerticalFlip">getRandomVerticalFlip() (N2D2.FlipTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.RescaleTransformation.getResizeToFit">getResizeToFit() (N2D2.RescaleTransformation method)</a>
+</li>
       <li><a href="core/cells.html#N2D2.PaddingCell.getRightPad">getRightPad() (N2D2.PaddingCell method)</a>
 
       <ul>
@@ -8393,6 +8528,8 @@
         <li><a href="core/cells.html#N2D2.PaddingCell_Frame_CUDA.getRightPad">(N2D2.PaddingCell_Frame_CUDA method)</a>
 </li>
       </ul></li>
+      <li><a href="core/transformation.html#N2D2.DistortionTransformation.getRotation">getRotation() (N2D2.DistortionTransformation method)</a>
+</li>
       <li><a href="core/cells.html#N2D2.BatchNormCell.getScaleSolver">getScaleSolver() (N2D2.BatchNormCell method)</a>
 
       <ul>
@@ -8405,6 +8542,12 @@
         <li><a href="core/cells.html#N2D2.BatchNormCell_Frame_float.getScaleSolver">(N2D2.BatchNormCell_Frame_float method)</a>
 </li>
       </ul></li>
+      <li><a href="core/transformation.html#N2D2.DistortionTransformation.getScaling">getScaling() (N2D2.DistortionTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.RangeAffineTransformation.getSecondOperator">getSecondOperator() (N2D2.RangeAffineTransformation method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.RangeAffineTransformation.getSecondValue">getSecondValue() (N2D2.RangeAffineTransformation method)</a>
+</li>
       <li><a href="core/cells.html#N2D2.ElemWiseCell.getShifts">getShifts() (N2D2.ElemWiseCell method)</a>
 
       <ul>
@@ -8623,6 +8766,8 @@
         <li><a href="core/cells.html#N2D2.PaddingCell_Frame_CUDA.getTopPad">(N2D2.PaddingCell_Frame_CUDA method)</a>
 </li>
       </ul></li>
+      <li><a href="core/transformation.html#N2D2.RangeAffineTransformation.getTruncate">getTruncate() (N2D2.RangeAffineTransformation method)</a>
+</li>
       <li><a href="core/activations.html#N2D2.Activation.getType">getType() (N2D2.Activation method)</a>
 
       <ul>
@@ -8861,6 +9006,12 @@
       </ul></li>
       <li><a href="core/containers.html#N2D2.BaseTensor.getTypeName">getTypeName() (N2D2.BaseTensor method)</a>
 </li>
+      <li><a href="core/databases.html#N2D2.ILSVRC2012_Database.getUseValidationForTest">getUseValidationForTest() (N2D2.ILSVRC2012_Database method)</a>
+</li>
+      <li><a href="core/databases.html#N2D2.GTSRB_DIR_Database.getValidation">getValidation() (N2D2.GTSRB_DIR_Database method)</a>
+</li>
+      <li><a href="core/transformation.html#N2D2.FlipTransformation.getVerticalFlip">getVerticalFlip() (N2D2.FlipTransformation method)</a>
+</li>
       <li><a href="core/cells.html#N2D2.ConvCell.getWeight">getWeight() (N2D2.ConvCell method)</a>
 
       <ul>
@@ -9013,6 +9164,14 @@
         <li><a href="core/cells.html#N2D2.FcCell_Spike_RRAM.getWeightsSolver">(N2D2.FcCell_Spike_RRAM method)</a>
 </li>
       </ul></li>
+      <li><a href="core/transformation.html#N2D2.PadCropTransformation.getWidth">getWidth() (N2D2.PadCropTransformation method)</a>
+
+      <ul>
+        <li><a href="core/transformation.html#N2D2.RescaleTransformation.getWidth">(N2D2.RescaleTransformation method)</a>
+</li>
+        <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.getWidth">(N2D2.SliceExtractionTransformation method)</a>
+</li>
+      </ul></li>
       <li><a href="core/cells.html#N2D2.SoftmaxCell.getWithLoss">getWithLoss() (N2D2.SoftmaxCell method)</a>
 
       <ul>
@@ -9050,6 +9209,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="core/containers.html#N2D2.CudaBaseTensor.hostBased">hostBased() (N2D2.CudaBaseTensor method)</a>
+</li>
+      <li><a href="python_api/tensor.html#n2d2.Tensor.htod">htod() (n2d2.Tensor method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -10429,7 +10590,11 @@
         <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.initializeWeightQuantizer">(N2D2.UnpoolCell_Frame_CUDA method)</a>
 </li>
       </ul></li>
+      <li><a href="core/stimuliprovider.html#N2D2.StimuliProvider.isCompositeStimuli">isCompositeStimuli() (N2D2.StimuliProvider method)</a>
+</li>
       <li><a href="core/containers.html#N2D2.BaseTensor.isValid">isValid() (N2D2.BaseTensor method)</a>
+</li>
+      <li><a href="python_api/cells.html#n2d2.ConfigSection.items">items() (n2d2.ConfigSection method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -10437,6 +10602,8 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="python_api/cells.html#n2d2.ConfigSection.keys">keys() (n2d2.ConfigSection method)</a>
+</li>
       <li><a href="core/databases.html#N2D2.KITTI_Database">KITTI_Database (class in N2D2)</a>
 </li>
       <li><a href="core/databases.html#N2D2.KITTI_Database.StimuliSet">KITTI_Database.StimuliSet (class in N2D2)</a>
@@ -11086,6 +11253,8 @@
 </li>
         <li><a href="python_api/cells.html#n2d2.cells.Fc.N2D2">(n2d2.cells.Fc method)</a>
 </li>
+        <li><a href="python_api/cells.html#n2d2.cells.NeuralNetworkCell.N2D2">(n2d2.cells.NeuralNetworkCell method)</a>
+</li>
         <li><a href="python_api/cells.html#n2d2.cells.Padding.N2D2">(n2d2.cells.Padding method)</a>
 </li>
         <li><a href="python_api/cells.html#n2d2.cells.Pool.N2D2">(n2d2.cells.Pool method)</a>
@@ -11648,6 +11817,8 @@
 </li>
         <li><a href="core/cells.html#N2D2.ScalingCell_Frame_float.Signals.name">(N2D2.ScalingCell_Frame_float.Signals property)</a>
 </li>
+        <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.BorderType.name">(N2D2.SliceExtractionTransformation.BorderType property)</a>
+</li>
         <li><a href="core/cells.html#N2D2.SoftmaxCell.FreeParametersType.name">(N2D2.SoftmaxCell.FreeParametersType property)</a>
 </li>
         <li><a href="core/cells.html#N2D2.SoftmaxCell_Frame_CUDA_double.FreeParametersType.name">(N2D2.SoftmaxCell_Frame_CUDA_double.FreeParametersType property)</a>
@@ -11726,6 +11897,8 @@
       <li><a href="python_api/tensor.html#n2d2.Tensor.nb_dims">nb_dims() (n2d2.Tensor method)</a>
 </li>
       <li><a href="core/containers.html#N2D2.BaseTensor.nbDims">nbDims() (N2D2.BaseTensor method)</a>
+</li>
+      <li><a href="python_api/cells.html#n2d2.cells.NeuralNetworkCell">NeuralNetworkCell (class in n2d2.cells)</a>
 </li>
       <li><a href="core/containers.html#N2D2.Tensor_bool.newCuda">newCuda() (N2D2.Tensor_bool method)</a>
 
@@ -11908,6 +12081,10 @@
       <li><a href="core/cells.html#N2D2.PoolCell_Spike.FreeParametersType">PoolCell_Spike.FreeParametersType (class in N2D2)</a>
 </li>
       <li><a href="core/cells.html#N2D2.PoolCell_Spike.Pooling">PoolCell_Spike.Pooling (class in N2D2)</a>
+</li>
+      <li><a href="python_api/cells.html#n2d2.ConfigSection.pop">pop() (n2d2.ConfigSection method)</a>
+</li>
+      <li><a href="python_api/cells.html#n2d2.ConfigSection.popitem">popitem() (n2d2.ConfigSection method)</a>
 </li>
       <li><a href="core/target.html#N2D2.Target.process">process() (N2D2.Target method)</a>
 </li>
@@ -13040,6 +13217,8 @@
 </li>
       </ul></li>
       <li><a href="core/deepnet.html#N2D2.DeepNet.setDatabase">setDatabase() (N2D2.DeepNet method)</a>
+</li>
+      <li><a href="python_api/cells.html#n2d2.ConfigSection.setdefault">setdefault() (n2d2.ConfigSection method)</a>
 </li>
       <li><a href="core/target.html#N2D2.Target.setDefaultTarget">setDefaultTarget() (N2D2.Target method)</a>
 </li>
@@ -14311,6 +14490,8 @@
 </li>
       <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation">SliceExtractionTransformation (class in N2D2)</a>
 </li>
+      <li><a href="core/transformation.html#N2D2.SliceExtractionTransformation.BorderType">SliceExtractionTransformation.BorderType (class in N2D2)</a>
+</li>
       <li><a href="python_api/cells.html#n2d2.cells.Softmax">Softmax (class in n2d2.cells)</a>
 </li>
       <li><a href="core/cells.html#N2D2.SoftmaxCell">SoftmaxCell (class in N2D2)</a>
@@ -14534,6 +14715,8 @@
 </li>
         <li><a href="core/cells.html#N2D2.Cell_Frame_Top.update">(N2D2.Cell_Frame_Top method)</a>
 </li>
+        <li><a href="python_api/cells.html#n2d2.ConfigSection.update">(n2d2.ConfigSection method)</a>
+</li>
         <li><a href="core/cells.html#N2D2.ConvCell_Frame_CUDA_double.update">(N2D2.ConvCell_Frame_CUDA_double method)</a>
 </li>
         <li><a href="core/cells.html#N2D2.ConvCell_Frame_CUDA_float.update">(N2D2.ConvCell_Frame_CUDA_float method)</a>
@@ -14671,6 +14854,14 @@
         <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.update">(N2D2.UnpoolCell_Frame_CUDA method)</a>
 </li>
       </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="python_api/cells.html#n2d2.ConfigSection.values">values() (n2d2.ConfigSection method)</a>
+</li>
   </ul></td>
 </tr></table>
 

@@ -30,7 +30,7 @@ from n2d2.filler import He, Xavier
 from n2d2.solver import SGD
 from n2d2 import ConfigSection
 
-nb_epoch = 1
+nb_epoch = 10
 batch_size = 24
 n2d2.global_variables.default_model = "Frame_CUDA"
 n2d2.global_variables.set_cuda_device(0)
@@ -40,8 +40,6 @@ db.load("/nvme0/DATABASE/GTSRB")
 
 print("\n### Data imported ###\n")
 db.get_partition_summary()
-
-# provider = n2d2.provider.DataProvider(db, [29, 29, 3], batch_size=batch_size)
 
 provider = n2d2.provider.DataProvider(db, [29, 29, 1], batch_size=batch_size)
 provider.add_transformation(n2d2.transform.ChannelExtraction('Gray'))
@@ -62,7 +60,6 @@ conv_config = ConfigSection(activation=Rectifier(),
                             weights_solver=SGD(**solver_config), 
                             no_bias=True)
 
-# TODO :  look to support Pool mapping with tensor 
 conv2_mapping=n2d2.Tensor([32, 48], datatype=bool)
 conv2_mapping.set_values([
 [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
@@ -101,12 +98,11 @@ conv2_mapping.set_values([
 
 model = n2d2.cells.Sequence([
     Conv(1, 32, [4, 4], **conv_config),
-    # Conv(3, 32, [4, 4], **conv_config),
     Pool([2, 2], stride_dims=[2, 2], pooling='Max'),
     Conv(32, 48, [5, 5], mapping=conv2_mapping, **conv_config),
     Pool([3, 3], stride_dims=[3, 3], pooling='Max'),
     Fc(48*3*3, 200, activation=Rectifier(), **fc_config),
-    Dropout(name="fc1.drop"),
+    Dropout(),
     Fc(200, 43, activation=Linear(), **fc_config)
     # We don't add a Softmax layer because it's already in the CrossEntropyClassifier.
 ])
@@ -156,9 +152,8 @@ for stimuli in provider:
 print("\n")
 
 # save computational stats on the network 
-# TODO : Implement it in the library !
 loss_function.log_stats("vis_GTSRB")
-# TODO : save freeeParameters cause segfault
+# TODO : save freeParameters cause segfault
 # x.get_deepnet().N2D2().logFreeParameters("test_freeparam")
 # save a confusion matrix
 loss_function.log_confusion_matrix("vis_GTSRB")

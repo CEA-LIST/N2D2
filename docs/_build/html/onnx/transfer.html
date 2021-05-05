@@ -1,0 +1,427 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Train from ONNX models &mdash; N2D2  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Post-training quantization" href="../quant/post.html" />
+    <link rel="prev" title="Import ONNX models" href="import.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> N2D2
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro/intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/tuto.html">Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">ONNX Import:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="import.html">Import ONNX models</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Train from ONNX models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#with-an-ini-file">With an INI file</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#remove-the-original-classifier">1) Remove the original classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#add-a-new-classifier-to-the-onnx-model">2) Add a new classifier to the ONNX model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fine-tuning-optional">3) Fine tuning (optional)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#with-the-python-api">With the Python API</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Quantization and Export:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quant/post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant/qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/legacy.html">Export: other / legacy</a></li>
+</ul>
+<p class="caption"><span class="caption-text">INI File Interface:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ini/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/data_analysis.html">Stimuli data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/environment.html">Stimuli provider (Environment)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/target.html">Targets (outputs &amp; losses)</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/tensor.html">Tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/deepnet.html">DeepNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/interoperability.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/example.html">Example</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++/Python core:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../core/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/activations.html">Activation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/cells.html">Cells</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/databases.html">Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/deepnet.html">DeepNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/filler.html">Filler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/solver.html">Solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/stimuliprovider.html">StimuliProvider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/transformation.html">Transformation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/target.html">Target</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/example.html">Example</a></li>
+</ul>
+<p class="caption"><span class="caption-text">C++ API / Developer:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev_intro.html">Introduction</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">N2D2</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Train from ONNX models</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/onnx/transfer.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="train-from-onnx-models">
+<h1>Train from ONNX models<a class="headerlink" href="#train-from-onnx-models" title="Permalink to this headline">¶</a></h1>
+<p>The ONNX specification does not include any training parameter. To perform a
+training on an imported ONNX model, it is possible to add the training elements
+(solvers, learning rate scheduler…) on top of an ONNX model in N2D2, in the
+INI file directly or using the Python API.</p>
+<p>This is particularly useful to perform transfer learning from an existing ONNX
+model trained on ImageNet for example.</p>
+<div class="section" id="with-an-ini-file">
+<h2>With an INI file<a class="headerlink" href="#with-an-ini-file" title="Permalink to this headline">¶</a></h2>
+<p>We propose in this section to apply transfer learning to a MobileNet v1 ONNX
+model. We assume that this model is obtained by converting the reference
+pre-trained model from Google using the <code class="docutils literal notranslate"><span class="pre">tools/mobilenet_v1_to_onnx.sh</span></code> tool
+provided in N2D2. The resulting model file name is therefore assumed to be
+<code class="docutils literal notranslate"><span class="pre">mobilenet_v1_1.0_224.onnx</span></code>.</p>
+<div class="section" id="remove-the-original-classifier">
+<h3>1) Remove the original classifier<a class="headerlink" href="#remove-the-original-classifier" title="Permalink to this headline">¶</a></h3>
+<p>The first step to perform transfer learning is to remove the existing classifier
+from the ONNX model. To do so, one can simply use the <code class="docutils literal notranslate"><span class="pre">Ignore</span></code> parameter in
+the ONNX INI section.</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[onnx]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">sp</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">ONNX</span>
+<span class="na">File</span><span class="o">=</span><span class="s">mobilenet_v1_1.0_224.onnx</span>
+<span class="c1">; Remove the last layer and the softmax for transfer learning</span>
+<span class="na">Ignore</span><span class="o">=</span><span class="s">Conv__252:0 MobilenetV1/Predictions/Softmax:0</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="add-a-new-classifier-to-the-onnx-model">
+<h3>2) Add a new classifier to the ONNX model<a class="headerlink" href="#add-a-new-classifier-to-the-onnx-model" title="Permalink to this headline">¶</a></h3>
+<p>The next step is to add a new classifier (fully connected layer with a softmax)
+and connect it to the last layer in the ONNX model.</p>
+<p>In order to properly handle graph dependencies, all the N2D2 layers connected
+to a layer embedded in an ONNX model, must take the ONNX section name
+(here <code class="docutils literal notranslate"><span class="pre">onnx</span></code>) as first input in the <code class="docutils literal notranslate"><span class="pre">Input</span></code> parameter. The actual inputs
+are then added in the comma-separated list, which can mix ONNX and N2D2 layers.
+In the example below, the average pooling layer from the ONNX model is connected
+to the <code class="docutils literal notranslate"><span class="pre">Fc</span></code> cell:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="c1">; Here, we add our new layers for transfer learning</span>
+<span class="k">[fc]</span>
+<span class="c1">; first input MUST BE &quot;onnx&quot;</span>
+<span class="c1">; for proper dependency handling</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">onnx,MobilenetV1/Logits/AvgPool_1a/AvgPool:0</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Fc</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">100</span>
+<span class="na">ActivationFunction</span><span class="o">=</span><span class="s">Linear</span>
+<span class="na">WeightsFiller</span><span class="o">=</span><span class="s">XavierFiller</span>
+<span class="na">ConfigSection</span><span class="o">=</span><span class="s">common.config</span>
+
+<span class="k">[softmax]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">fc</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Softmax</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">[fc]NbOutputs</span>
+<span class="na">WithLoss</span><span class="o">=</span><span class="s">1</span>
+<span class="k">[softmax.Target]</span>
+
+<span class="c1">; Common config for static model</span>
+<span class="k">[common.config]</span>
+<span class="na">WeightsSolver.LearningRate</span><span class="o">=</span><span class="s">0.01</span>
+<span class="na">WeightsSolver.Momentum</span><span class="o">=</span><span class="s">0.9</span>
+<span class="na">WeightsSolver.Decay</span><span class="o">=</span><span class="s">0.0005</span>
+<span class="na">Solvers.LearningRatePolicy</span><span class="o">=</span><span class="s">StepDecay</span>
+<span class="na">Solvers.LearningRateStepSize</span><span class="o">=</span><span class="s">[sp]_EpochSize</span>
+<span class="na">Solvers.LearningRateDecay</span><span class="o">=</span><span class="s">0.993</span>
+</pre></div>
+</div>
+<p>As this new classifier must be trained, all the training parameter must be
+specified as usual for this layer.</p>
+</div>
+<div class="section" id="fine-tuning-optional">
+<h3>3) Fine tuning (optional)<a class="headerlink" href="#fine-tuning-optional" title="Permalink to this headline">¶</a></h3>
+<p>If one wants to also fine-tune the existing ONNX layers, one must set the
+solver configuration for the ONNX layers, using default configuration sections.</p>
+<p>Default configuration sections applies to all the layers of the same type in the
+ONNX model. For example, to add default parameters to all convolution layers
+in the ONNX model loaded in a section of type ONNX named <code class="docutils literal notranslate"><span class="pre">onnx</span></code>,
+just add a section named <code class="docutils literal notranslate"><span class="pre">[onnx:Conv_def]</span></code> in the INI file. The name of the
+default section follows the convention <code class="docutils literal notranslate"><span class="pre">[ONNXSection:N2D2CellType_def]</span></code>.</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="c1">; Default section for ONNX Conv from section &quot;onnx&quot;</span>
+<span class="c1">; &quot;ConfigSection&quot;, solvers and fillers can be specified here...</span>
+<span class="k">[onnx:Conv_def]</span>
+<span class="na">ConfigSection</span><span class="o">=</span><span class="s">common.config</span>
+
+<span class="c1">; Default section for ONNX Fc from section &quot;onnx&quot;</span>
+<span class="k">[onnx:Fc_def]</span>
+<span class="na">ConfigSection</span><span class="o">=</span><span class="s">common.config</span>
+
+<span class="c1">; For BatchNorm, make sure the stats won&#39;t change if there is no fine-tuning</span>
+<span class="k">[onnx:BatchNorm_def]</span>
+<span class="na">ConfigSection</span><span class="o">=</span><span class="s">bn_notrain.config</span>
+<span class="k">[bn_notrain.config]</span>
+<span class="na">MovingAverageMomentum</span><span class="o">=</span><span class="s">0.0</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Important: make sure that the BatchNorm stats does not change if the
+BatchNorm layer are not fine-tuned! This can be done by setting the
+parameter <code class="docutils literal notranslate"><span class="pre">MovingAverageMomentum</span></code> to 0.0 for the layer than must not be
+fine-tuned.</p>
+</div>
+<p>It is possible to add parameters for a specific ONNX layer by adding a section
+with the ONNX layer named.</p>
+<p>You can fine-tune the whole network or only some of its layers, usually the last
+ones. To stop the fine-tuning at a specific layer, one can simply prevent the
+gradient from back-propagating further. This can be achieved with the
+<code class="docutils literal notranslate"><span class="pre">BackPropagate=0</span></code> configuration parameter.</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[Conv__250]</span>
+<span class="na">ConfigSection</span><span class="o">=</span><span class="s">common.config,notrain.config</span>
+<span class="k">[notrain.config]</span>
+<span class="na">BackPropagate</span><span class="o">=</span><span class="s">0</span>
+</pre></div>
+</div>
+<p>For the full configuration related to this example and more information, have a
+look in <code class="docutils literal notranslate"><span class="pre">models/MobileNet_v1_ONNX_transfer.ini</span></code>.</p>
+</div>
+</div>
+<div class="section" id="with-the-python-api">
+<h2>With the Python API<a class="headerlink" href="#with-the-python-api" title="Permalink to this headline">¶</a></h2>
+<p>Coming soon.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../quant/post.html" class="btn btn-neutral float-right" title="Post-training quantization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="import.html" class="btn btn-neutral float-left" title="Import ONNX models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, CEA LIST
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

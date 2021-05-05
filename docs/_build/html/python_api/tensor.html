@@ -30,12 +30,13 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-    <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="DeepNet" href="deepnet.html" />
@@ -86,27 +87,27 @@
             
               <p class="caption"><span class="caption-text">Introduction:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../intro.html">Presentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../about.html">About N2D2-IP</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../simus.html">Performing simulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../perfs_tools.html">Performance evaluation tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tuto.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/tuto.html">Tutorials</a></li>
 </ul>
 <p class="caption"><span class="caption-text">ONNX Import:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_convert.html">Obtain ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_import.html">Import ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_transfer.html">Train from ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/transfer.html">Train from ONNX models</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Quantization and Export:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../quant_post.html">Post-training quantization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../quant_qat.html">Quantization aware training</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_CPP.html">Export: C++</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_CPP_STM32.html">Export: C++/STM32</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_TensorRT.html">Export: TensorRT</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_DNeuro.html">Export: DNeuro</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_legacy.html">Export: other / legacy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant/post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant/qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
 <ul>
@@ -115,6 +116,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../ini/data_analysis.html">Stimuli data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ini/environment.html">Stimuli provider (Environment)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ini/layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/target.html">Targets (outputs &amp; losses)</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Python API:</span></p>
 <ul class="current">
@@ -123,11 +125,21 @@
 <li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Tensor</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction :</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#setting-and-getting-values">Setting and getting values :</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-and-getting-values">Setting and getting values :</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coordinates">Coordinates :</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#index">Index :</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#slice">Slice :</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#set-values-method">Set values method :</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fom-numpy">Fom Numpy :</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#cuda-tensor">CUDA Tensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Tensor</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interoperability.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example</a></li>
 </ul>
 <p class="caption"><span class="caption-text">C++/Python core:</span></p>
 <ul>
@@ -212,50 +224,133 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="tensor">
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="tensor">
 <h1>Tensor<a class="headerlink" href="#tensor" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="introduction">
 <h2>Introduction :<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>The n2d2 library propose a tensor implementation with the <a class="reference internal" href="#n2d2.Tensor" title="n2d2.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.Tensor</span></code></a> class.</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>You can store your tensor with CPU or GPU (using CUDA). By default, n2d2 creates a CPU tensor.</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span> <span class="c1"># Converting to a CUDA tensor</span>
-<span class="n">tensor</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>  <span class="c1"># Converting back the tensor to a regular one.</span>
-</pre></div>
-</div>
+<p><a class="reference internal" href="#n2d2.Tensor" title="n2d2.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.Tensor</span></code></a> is a wrapper of the <code class="docutils literal notranslate"><span class="pre">Tensor</span></code> object available in N2D2.</p>
 </div>
 <div class="section" id="setting-and-getting-values">
 <h2>Setting and getting values :<a class="headerlink" href="#setting-and-getting-values" title="Permalink to this headline">¶</a></h2>
-<p>When setting values, n2d2 tries to perform an auto cast to fit the datatype if there is a discrepancy.
-You can set and get values using :</p>
-<p><strong>Coordinates :</strong></p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># Using coordinates</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">tensor</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<p>For setting and getting value we will be using the following tensor as an example :</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
 </pre></div>
 </div>
-<p><strong>Index :</strong></p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">tensor</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0 0 0
+0 0 0
 </pre></div>
 </div>
-<p><strong>Slice :</strong></p>
-<p>(Slice are supported only for assignment.)</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">tensor</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">tensor</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<p>You can set and get values using :</p>
+<div class="section" id="coordinates">
+<h3>Coordinates :<a class="headerlink" href="#coordinates" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># Using coordinates</span>
+<span class="n">value</span> <span class="o">=</span> <span class="n">tensor</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
 </pre></div>
 </div>
-<p><strong>Set values method :</strong></p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="o">.</span><span class="n">set_values</span><span class="p">([[[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
-                    <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]],</span>
-                    <span class="p">[[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
-                    <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">]]]])</span>
+<p>If you print the tensor you will see :</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0 0 0
+1 0 0
 </pre></div>
 </div>
+</div>
+<div class="section" id="index">
+<h3>Index :<a class="headerlink" href="#index" title="Permalink to this headline">¶</a></h3>
+<p>You can use an index to get or set elements of a tensor.
+The index correspond to the flatten representation of your tensor.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">value</span> <span class="o">=</span> <span class="n">tensor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>If you print the tensor you will see :</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>2 0 0
+0 0 0
+</pre></div>
+</div>
+</div>
+<div class="section" id="slice">
+<h3>Slice :<a class="headerlink" href="#slice" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Slice are supported only for assignment !</p>
+</div>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+</pre></div>
+</div>
+<p>If you print the tensor you will see :</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0 3 3
+0 0 0
+</pre></div>
+</div>
+</div>
+<div class="section" id="set-values-method">
+<h3>Set values method :<a class="headerlink" href="#set-values-method" title="Permalink to this headline">¶</a></h3>
+<p>If you want to set multiple values easily, you can use the method <a class="reference internal" href="#n2d2.Tensor.set_values" title="n2d2.Tensor.set_values"><code class="xref py py-meth docutils literal notranslate"><span class="pre">n2d2.Tensor.set_values()</span></code></a></p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="o">.</span><span class="n">set_values</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>If you print the tensor you will see :</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1 2 3
+4 5 6
+</pre></div>
+</div>
+</div>
+<div class="section" id="fom-numpy">
+<h3>Fom Numpy :<a class="headerlink" href="#fom-numpy" title="Permalink to this headline">¶</a></h3>
+<p>You can create a tensor using a <code class="docutils literal notranslate"><span class="pre">numpy.array</span></code> with the class method : <a class="reference internal" href="#n2d2.Tensor.from_numpy" title="n2d2.Tensor.from_numpy"><code class="xref py py-meth docutils literal notranslate"><span class="pre">n2d2.Tensor.from_numpy()</span></code></a></p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">np_array</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">]])</span>
+<span class="n">tensor</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">Tensor</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">np_array</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will create the following tensor :</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1 2 3
+4 5 6
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="cuda-tensor">
+<h2>CUDA Tensor<a class="headerlink" href="#cuda-tensor" title="Permalink to this headline">¶</a></h2>
+<p>You can store your tensor with CPU or GPU (using CUDA). By default, n2d2 creates a CPU tensor.</p>
+<p>If you want to create a CUDA Tensor you can do so by setting the parameter <code class="docutils literal notranslate"><span class="pre">cuda</span></code> to True in the constructor</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="n">cuda</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can switch from CPU to GPU at anytime :</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>  <span class="c1"># Converting to a CPU tensor</span>
+<span class="n">tensor</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span> <span class="c1"># Converting to a CUDA tensor</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id1">
+<h2>Tensor<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="n2d2.Tensor">
-<em class="property">class </em><code class="sig-prename descclassname">n2d2.</code><code class="sig-name descname">Tensor</code><span class="sig-paren">(</span><em class="sig-param">dims</em>, <em class="sig-param">value=None</em>, <em class="sig-param">cuda=False</em>, <em class="sig-param">datatype=&lt;class 'float'&gt;</em>, <em class="sig-param">cell=None</em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">n2d2.</code><code class="sig-name descname">Tensor</code><span class="sig-paren">(</span><em class="sig-param">dims</em>, <em class="sig-param">value=None</em>, <em class="sig-param">cuda=False</em>, <em class="sig-param">datatype=&lt;class 'float'&gt;</em>, <em class="sig-param">cell=None</em>, <em class="sig-param">dim_format='Numpy'</em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py method">
 <dt id="n2d2.Tensor.N2D2">
 <code class="sig-name descname">N2D2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.N2D2" title="Permalink to this definition">¶</a></dt>
@@ -265,6 +360,22 @@ You can set and get values using :</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference internal" href="../core/containers.html#N2D2.BaseTensor" title="N2D2.BaseTensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">N2D2.BaseTensor</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">dims</em>, <em class="sig-param">value=None</em>, <em class="sig-param">cuda=False</em>, <em class="sig-param">datatype=&lt;class 'float'&gt;</em>, <em class="sig-param">cell=None</em>, <em class="sig-param">dim_format='Numpy'</em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dims</strong> (<em>list</em>) – Dimensions of the <a class="reference internal" href="#n2d2.Tensor" title="n2d2.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.Tensor</span></code></a> object. (the convention used depends of the <code class="docutils literal notranslate"><span class="pre">dim_format</span></code> argument)</p></li>
+<li><p><strong>value</strong> (Must be coherent with <strong>datatype</strong>) – A value to fill the <a class="reference internal" href="#n2d2.Tensor" title="n2d2.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.Tensor</span></code></a> object.</p></li>
+<li><p><strong>datatype</strong> (<em>type</em><em>, </em><em>optional</em>) – Type of the data stocked by the tensor, default=float</p></li>
+<li><p><strong>cell</strong> (<a class="reference internal" href="cells.html#n2d2.cells.NeuralNetworkCell" title="n2d2.cells.NeuralNetworkCell"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.cells.NeuralNetworkCell</span></code></a>, optional) – A reference to the object that created this tensor, default=None</p></li>
+<li><p><strong>dim_format</strong> (<em>str</em><em>, </em><em>optional</em>) – Define the format used when you declare the dimensions of the tensor. The <code class="docutils literal notranslate"><span class="pre">N2D2</span></code> convention is the reversed of the <code class="docutils literal notranslate"><span class="pre">Numpy</span></code> the numpy one (e.g. a [2, 3] numpy array is equivalent to a [3, 2] N2D2 Tensor), default=”Numpy”</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -302,13 +413,23 @@ You can set and get values using :</p>
 <dl class="py method">
 <dt id="n2d2.Tensor.detach_cell">
 <code class="sig-name descname">detach_cell</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.detach_cell" title="Permalink to this definition">¶</a></dt>
-<dd><p>Detach the cells from the tensor, this allow you to pass the output of a deepnet to another one.</p>
+<dd><p>Detach the cells from the tensor, thereby removing all information about the computation graph/deepnet object.
+Therefore no gradients pass this tensor after this operation has been performed.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="n2d2.Tensor.dims">
 <code class="sig-name descname">dims</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.dims" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return dimensions with N2D2 convention</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.dtoh">
+<code class="sig-name descname">dtoh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.dtoh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Synchronize Device to Host.
+CUDA tensor are stored and computed in the GPU (Device).
+You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
+The synchronizations are handled by the library and regular users don’t need use this method.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -351,6 +472,15 @@ TODO : fix /!Known issues /!
 <dt id="n2d2.Tensor.get_deepnet">
 <code class="sig-name descname">get_deepnet</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.get_deepnet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method called by the cells, if the tensor is not part of a graph, it will be linked to an <code class="xref py py-class docutils literal notranslate"><span class="pre">n22d.provider.Provider</span></code> object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.Tensor.htod">
+<code class="sig-name descname">htod</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.Tensor.htod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Synchronize Host to Device.
+CUDA tensor are stored and computed in the GPU (Device).
+You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
+The synchronizations are handled by the library and regular users don’t need use this method.</p>
 </dd></dl>
 
 <dl class="py method">

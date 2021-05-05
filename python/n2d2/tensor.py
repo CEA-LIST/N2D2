@@ -56,7 +56,7 @@ class Tensor:
 
     def __init__(self, dims, value=None, cuda=False, datatype=float, cell=None, dim_format='Numpy'):
         """
-        :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (Numpy convention)
+        :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (the convention used depends of the ``dim_format`` argument)
         :type dims: list
         :param value: A value to fill the :py:class:`n2d2.Tensor` object.
         :type value: Must be coherent with **datatype**
@@ -64,7 +64,8 @@ class Tensor:
         :type datatype: type, optional
         :param cell: A reference to the object that created this tensor, default=None
         :type cell: :py:class:`n2d2.cells.NeuralNetworkCell`, optional
-        :param format
+        :param dim_format: Define the format used when you declare the dimensions of the tensor. The ``N2D2`` convention is the reversed of the ``Numpy`` the numpy one (e.g. a [2, 3] numpy array is equivalent to a [3, 2] N2D2 Tensor), default="Numpy"
+        :type dim_format: str, optional
         """
         self.cell = cell
         self._datatype = datatype

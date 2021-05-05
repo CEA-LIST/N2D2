@@ -30,16 +30,17 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-    <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Databases" href="databases.html" />
-    <link rel="prev" title="Network Layers" href="../ini/layers.html" /> 
+    <link rel="prev" title="Targets (outputs &amp; losses)" href="../ini/target.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -86,27 +87,27 @@
             
               <p class="caption"><span class="caption-text">Introduction:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../intro.html">Presentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../about.html">About N2D2-IP</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../simus.html">Performing simulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../perfs_tools.html">Performance evaluation tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tuto.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/tuto.html">Tutorials</a></li>
 </ul>
 <p class="caption"><span class="caption-text">ONNX Import:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_convert.html">Obtain ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_import.html">Import ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_transfer.html">Train from ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/transfer.html">Train from ONNX models</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Quantization and Export:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../quant_post.html">Post-training quantization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../quant_qat.html">Quantization aware training</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_CPP.html">Export: C++</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_CPP_STM32.html">Export: C++/STM32</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_TensorRT.html">Export: TensorRT</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_DNeuro.html">Export: DNeuro</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_legacy.html">Export: other / legacy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant/post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant/qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
 <ul>
@@ -115,15 +116,24 @@
 <li class="toctree-l1"><a class="reference internal" href="../ini/data_analysis.html">Stimuli data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ini/environment.html">Stimuli provider (Environment)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ini/layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ini/target.html">Targets (outputs &amp; losses)</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Python API:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#default-values">Default values</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#default-model">Default Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#default-data-type">Default Data Type</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tensor.html">Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interoperability.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example</a></li>
 </ul>
 <p class="caption"><span class="caption-text">C++/Python core:</span></p>
 <ul>
@@ -208,12 +218,67 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="introduction">
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
 <p>For notation purposes, we will refer to the python library of N2D2 as n2d2.
 This library uses the core function of N2D2 and add an extra layer of abstraction to make the experience more user friendly.
 With the library you can import data, pre-process them, create a deep neural network model, train it and realize inference with it.
 You can also import a network using the <a class="reference internal" href="../ini/intro.html"><span class="doc">ini file configuration</span></a> or the ONNX library.</p>
+<div class="section" id="default-values">
+<h2>Default values<a class="headerlink" href="#default-values" title="Permalink to this headline">¶</a></h2>
+<p>The python API used default values that you can modify at any time in your scripts.
+You can modify the following values :</p>
+<div class="section" id="default-model">
+<h3>Default Model<a class="headerlink" href="#default-model" title="Permalink to this headline">¶</a></h3>
+<p>The default model used is <code class="docutils literal notranslate"><span class="pre">Frame</span></code> which correspond to a pure CPU based computation.
+If you have compiled N2D2 with <strong>CUDA</strong>, you can accelerate your neural networks by using a <code class="docutils literal notranslate"><span class="pre">Frame_CUDA</span></code> model.
+To do so, use the following line :</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">n2d2</span><span class="o">.</span><span class="n">global_variables</span><span class="o">.</span><span class="n">default_model</span> <span class="o">=</span> <span class="s2">&quot;Frame_CUDA&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="default-data-type">
+<h3>Default Data Type<a class="headerlink" href="#default-data-type" title="Permalink to this headline">¶</a></h3>
+<p>The default data type used is <code class="docutils literal notranslate"><span class="pre">float</span></code>, but you can change it at any time.</p>
+<p>The available default data type available are :</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></li>
+</ul>
+<p>To change the default data type use the following line :</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">n2d2</span><span class="o">.</span><span class="n">global_variables</span><span class="o">.</span><span class="n">default_model</span> <span class="o">=</span> <span class="s2">&quot;int&quot;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <a class="reference internal" href="tensor.html#n2d2.Tensor" title="n2d2.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.Tensor</span></code></a> class is not affected by this variable.</p>
+</div>
+</div>
+</div>
 </div>
 
 
@@ -227,7 +292,7 @@ You can also import a network using the <a class="reference internal" href="../i
         <a href="databases.html" class="btn btn-neutral float-right" title="Databases" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../ini/layers.html" class="btn btn-neutral float-left" title="Network Layers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../ini/target.html" class="btn btn-neutral float-left" title="Targets (outputs &amp; losses)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -30,15 +30,16 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-    <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Introduction" href="../python_api/intro.html" />
+    <link rel="next" title="Targets (outputs &amp; losses)" href="target.html" />
     <link rel="prev" title="Stimuli provider (Environment)" href="environment.html" /> 
 </head>
 
@@ -86,27 +87,27 @@
             
               <p class="caption"><span class="caption-text">Introduction:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../intro.html">Presentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../about.html">About N2D2-IP</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../simus.html">Performing simulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../perfs_tools.html">Performance evaluation tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tuto.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/tuto.html">Tutorials</a></li>
 </ul>
 <p class="caption"><span class="caption-text">ONNX Import:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_convert.html">Obtain ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_import.html">Import ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_transfer.html">Train from ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/transfer.html">Train from ONNX models</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Quantization and Export:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../quant_post.html">Post-training quantization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../quant_qat.html">Quantization aware training</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_CPP.html">Export: C++</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_CPP_STM32.html">Export: C++/STM32</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_TensorRT.html">Export: TensorRT</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_DNeuro.html">Export: DNeuro</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_legacy.html">Export: other / legacy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant/post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant/qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
 <ul class="current">
@@ -217,6 +218,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#unpool">Unpool</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="target.html">Targets (outputs &amp; losses)</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Python API:</span></p>
 <ul>
@@ -226,6 +228,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../python_api/tensor.html">Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python_api/deepnet.html">DeepNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python_api/interoperability.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/example.html">Example</a></li>
 </ul>
 <p class="caption"><span class="caption-text">C++/Python core:</span></p>
 <ul>
@@ -310,7 +313,31 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="network-layers">
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="network-layers">
 <h1>Network Layers<a class="headerlink" href="#network-layers" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="layer-definition">
 <h2>Layer definition<a class="headerlink" href="#layer-definition" title="Permalink to this headline">¶</a></h2>
@@ -387,7 +414,7 @@
 <div class="section" id="hefiller">
 <h3>HeFiller<a class="headerlink" href="#hefiller" title="Permalink to this headline">¶</a></h3>
 <p>Fill with an normal distribution with normalized variance taking into
-account the rectifier nonlinearity <a class="bibtex reference internal" href="../z_ref.html#he2015" id="id1">[HZRS15]</a>. This
+account the rectifier nonlinearity <span class="bibtex" id="id1">[He2015]</span>. This
 filler is sometimes referred as MSRA filler.</p>
 <table class="docutils align-default">
 <colgroup>
@@ -469,7 +496,7 @@ with <code class="docutils literal notranslate"><span class="pre">Average</span>
 <div class="section" id="xavierfiller">
 <h3>XavierFiller<a class="headerlink" href="#xavierfiller" title="Permalink to this headline">¶</a></h3>
 <p>Fill with an uniform distribution with normalized variance
-<a class="bibtex reference internal" href="../z_ref.html#glorot2010" id="id2">[GB10]</a>.</p>
+<span class="bibtex" id="id2">[Glorot2010]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 44%" />
@@ -624,7 +651,7 @@ current iteration and <span class="math notranslate nohighlight">\(n\)</span> th
 </div>
 <div class="section" id="adamsolver-frame">
 <h3>AdamSolver_Frame<a class="headerlink" href="#adamsolver-frame" title="Permalink to this headline">¶</a></h3>
-<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame</span></code> models <a class="bibtex reference internal" href="../z_ref.html#kingmab14" id="id3">[KB14]</a>.</p>
+<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame</span></code> models <span class="bibtex" id="id3">[KingmaB14]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 38%" />
@@ -653,7 +680,7 @@ current iteration and <span class="math notranslate nohighlight">\(n\)</span> th
 </div>
 <div class="section" id="adamsolver-frame-cuda">
 <h3>AdamSolver_Frame_CUDA<a class="headerlink" href="#adamsolver-frame-cuda" title="Permalink to this headline">¶</a></h3>
-<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame_CUDA</span></code> models <a class="bibtex reference internal" href="../z_ref.html#kingmab14" id="id4">[KB14]</a>.</p>
+<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame_CUDA</span></code> models <span class="bibtex" id="id4">[KingmaB14]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 38%" />
@@ -934,7 +961,7 @@ following output feature maps ordering:</p>
 </div>
 <div class="section" id="batchnorm">
 <h2>BatchNorm<a class="headerlink" href="#batchnorm" title="Permalink to this headline">¶</a></h2>
-<p>Batch Normalization layer <a class="bibtex reference internal" href="../z_ref.html#ioffe2015" id="id5">[IS15]</a>.</p>
+<p>Batch Normalization layer <span class="bibtex" id="id5">[Ioffe2015]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 19%" />
@@ -1637,7 +1664,7 @@ limit)</p></td>
 </div>
 <div class="section" id="dropout">
 <h2>Dropout<a class="headerlink" href="#dropout" title="Permalink to this headline">¶</a></h2>
-<p>Dropout layer <a class="bibtex reference internal" href="../z_ref.html#srivastava2014" id="id9">[SHK+12]</a>.</p>
+<p>Dropout layer <span class="bibtex" id="id9">[Srivastava2014]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 48%" />
@@ -1773,7 +1800,7 @@ operation:</p>
 </div>
 <div class="section" id="fmp">
 <h2>FMP<a class="headerlink" href="#fmp" title="Permalink to this headline">¶</a></h2>
-<p>Fractional max pooling layer <a class="bibtex reference internal" href="../z_ref.html#graham2014" id="id11">[Gra14]</a>.</p>
+<p>Fractional max pooling layer <span class="bibtex" id="id11">[Graham2014]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 20%" />
@@ -2078,7 +2105,7 @@ expression:</p>
 </div>
 <div class="section" id="lstm">
 <h2>LSTM<a class="headerlink" href="#lstm" title="Permalink to this headline">¶</a></h2>
-<p>Long Short Term Memory Layer <a class="bibtex reference internal" href="../z_ref.html#lstm1997" id="id16">[HS97]</a>.</p>
+<p>Long Short Term Memory Layer <span class="bibtex" id="id16">[LSTM1997]</span>.</p>
 <div class="section" id="global-layer-parameters-frame-cuda-models">
 <h3>Global layer parameters (<em>Frame_CUDA</em> models)<a class="headerlink" href="#global-layer-parameters-frame-cuda-models" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
@@ -3088,7 +3115,7 @@ limit)</p></td>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../python_api/intro.html" class="btn btn-neutral float-right" title="Introduction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="target.html" class="btn btn-neutral float-right" title="Targets (outputs &amp; losses)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="environment.html" class="btn btn-neutral float-left" title="Stimuli provider (Environment)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

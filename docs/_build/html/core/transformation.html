@@ -30,12 +30,13 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-    <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Target" href="target.html" />
@@ -86,27 +87,27 @@
             
               <p class="caption"><span class="caption-text">Introduction:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../intro.html">Presentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../about.html">About N2D2-IP</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../simus.html">Performing simulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../perfs_tools.html">Performance evaluation tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tuto.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/tuto.html">Tutorials</a></li>
 </ul>
 <p class="caption"><span class="caption-text">ONNX Import:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_convert.html">Obtain ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_import.html">Import ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_transfer.html">Train from ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/transfer.html">Train from ONNX models</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Quantization and Export:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../quant_post.html">Post-training quantization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../quant_qat.html">Quantization aware training</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_CPP.html">Export: C++</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_CPP_STM32.html">Export: C++/STM32</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_TensorRT.html">Export: TensorRT</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_DNeuro.html">Export: DNeuro</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_legacy.html">Export: other / legacy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant/post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant/qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
 <ul>
@@ -125,6 +126,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../python_api/tensor.html">Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python_api/deepnet.html">DeepNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python_api/interoperability.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/example.html">Example</a></li>
 </ul>
 <p class="caption"><span class="caption-text">C++/Python core:</span></p>
 <ul class="current">
@@ -245,7 +247,31 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="transformation">
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="transformation">
 <h1>Transformation<a class="headerlink" href="#transformation" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
@@ -297,6 +323,36 @@
 </ol>
 </dd></dl>
 
+<dl class="py method">
+<dt id="N2D2.DistortionTransformation.getElasticGaussianSize">
+<code class="sig-name descname">getElasticGaussianSize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DistortionTransformation" title="N2D2.DistortionTransformation">N2D2.DistortionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.DistortionTransformation.getElasticGaussianSize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.DistortionTransformation.getElasticScaling">
+<code class="sig-name descname">getElasticScaling</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DistortionTransformation" title="N2D2.DistortionTransformation">N2D2.DistortionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#N2D2.DistortionTransformation.getElasticScaling" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.DistortionTransformation.getElasticSigma">
+<code class="sig-name descname">getElasticSigma</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DistortionTransformation" title="N2D2.DistortionTransformation">N2D2.DistortionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#N2D2.DistortionTransformation.getElasticSigma" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.DistortionTransformation.getIgnoreMissingData">
+<code class="sig-name descname">getIgnoreMissingData</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DistortionTransformation" title="N2D2.DistortionTransformation">N2D2.DistortionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.DistortionTransformation.getIgnoreMissingData" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.DistortionTransformation.getRotation">
+<code class="sig-name descname">getRotation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DistortionTransformation" title="N2D2.DistortionTransformation">N2D2.DistortionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#N2D2.DistortionTransformation.getRotation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.DistortionTransformation.getScaling">
+<code class="sig-name descname">getScaling</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.DistortionTransformation" title="N2D2.DistortionTransformation">N2D2.DistortionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#N2D2.DistortionTransformation.getScaling" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 </div>
@@ -330,6 +386,31 @@
 <dl class="py method">
 <dt id="N2D2.PadCropTransformation.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.PadCropTransformation" title="N2D2.PadCropTransformation">N2D2.PadCropTransformation</a></span></em>, <em class="sig-param"><span class="n">width</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">height</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.PadCropTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.PadCropTransformation.getAdditiveWH">
+<code class="sig-name descname">getAdditiveWH</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.PadCropTransformation" title="N2D2.PadCropTransformation">N2D2.PadCropTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.PadCropTransformation.getAdditiveWH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.PadCropTransformation.getBorderType">
+<code class="sig-name descname">getBorderType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.PadCropTransformation" title="N2D2.PadCropTransformation">N2D2.PadCropTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#N2D2.PadCropTransformation.BorderType" title="N2D2.PadCropTransformation.BorderType">N2D2.PadCropTransformation.BorderType</a><a class="headerlink" href="#N2D2.PadCropTransformation.getBorderType" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.PadCropTransformation.getBorderValue">
+<code class="sig-name descname">getBorderValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.PadCropTransformation" title="N2D2.PadCropTransformation">N2D2.PadCropTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>float<span class="p">]</span><a class="headerlink" href="#N2D2.PadCropTransformation.getBorderValue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.PadCropTransformation.getHeight">
+<code class="sig-name descname">getHeight</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.PadCropTransformation" title="N2D2.PadCropTransformation">N2D2.PadCropTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.PadCropTransformation.getHeight" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.PadCropTransformation.getWidth">
+<code class="sig-name descname">getWidth</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.PadCropTransformation" title="N2D2.PadCropTransformation">N2D2.PadCropTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.PadCropTransformation.getWidth" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -581,6 +662,11 @@
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.ChannelExtractionTransformation" title="N2D2.ChannelExtractionTransformation">N2D2.ChannelExtractionTransformation</a></span></em>, <em class="sig-param"><span class="n">channel</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.ChannelExtractionTransformation.Channel" title="N2D2.ChannelExtractionTransformation.Channel">N2D2.ChannelExtractionTransformation.Channel</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.ChannelExtractionTransformation.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt id="N2D2.ChannelExtractionTransformation.getChannel">
+<code class="sig-name descname">getChannel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.ChannelExtractionTransformation" title="N2D2.ChannelExtractionTransformation">N2D2.ChannelExtractionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#N2D2.ChannelExtractionTransformation.Channel" title="N2D2.ChannelExtractionTransformation.Channel">N2D2.ChannelExtractionTransformation.Channel</a><a class="headerlink" href="#N2D2.ChannelExtractionTransformation.getChannel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 </div>
@@ -631,6 +717,11 @@
 <dl class="py method">
 <dt id="N2D2.ColorSpaceTransformation.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.ColorSpaceTransformation" title="N2D2.ColorSpaceTransformation">N2D2.ColorSpaceTransformation</a></span></em>, <em class="sig-param"><span class="n">colorSpace</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.ColorSpaceTransformation.ColorSpace" title="N2D2.ColorSpaceTransformation.ColorSpace">N2D2.ColorSpaceTransformation.ColorSpace</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.ColorSpaceTransformation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.ColorSpaceTransformation.getColorSpace">
+<code class="sig-name descname">getColorSpace</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.ColorSpaceTransformation" title="N2D2.ColorSpaceTransformation">N2D2.ColorSpaceTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#N2D2.ColorSpaceTransformation.ColorSpace" title="N2D2.ColorSpaceTransformation.ColorSpace">N2D2.ColorSpaceTransformation.ColorSpace</a><a class="headerlink" href="#N2D2.ColorSpaceTransformation.getColorSpace" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -752,7 +843,29 @@
 <dl class="py class">
 <dt id="N2D2.SliceExtractionTransformation">
 <em class="property">class </em><code class="sig-prename descclassname">N2D2.</code><code class="sig-name descname">SliceExtractionTransformation</code><a class="headerlink" href="#N2D2.SliceExtractionTransformation" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
+<dd><dl class="py class">
+<dt id="N2D2.SliceExtractionTransformation.BorderType">
+<em class="property">class </em><code class="sig-name descname">BorderType</code><a class="headerlink" href="#N2D2.SliceExtractionTransformation.BorderType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Members:</p>
+<p>ConstantBorder</p>
+<p>ReplicateBorder</p>
+<p>ReflectBorder</p>
+<p>WrapBorder</p>
+<p>MinusOneReflectBorder</p>
+<p>MeanBorder</p>
+<dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.BorderType.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.SliceExtractionTransformation.BorderType" title="N2D2.SliceExtractionTransformation.BorderType">N2D2.SliceExtractionTransformation.BorderType</a></span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#N2D2.SliceExtractionTransformation.BorderType.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.BorderType.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#N2D2.SliceExtractionTransformation.BorderType.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
 <dt id="N2D2.SliceExtractionTransformation.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.SliceExtractionTransformation.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Overloaded function.</p>
@@ -761,6 +874,71 @@
 <li><p>__init__(self: N2D2.SliceExtractionTransformation, trans: N2D2.SliceExtractionTransformation) -&gt; None</p></li>
 </ol>
 </dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.getAllowPadding">
+<code class="sig-name descname">getAllowPadding</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.SliceExtractionTransformation" title="N2D2.SliceExtractionTransformation">N2D2.SliceExtractionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.SliceExtractionTransformation.getAllowPadding" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.getBorderType">
+<code class="sig-name descname">getBorderType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.SliceExtractionTransformation" title="N2D2.SliceExtractionTransformation">N2D2.SliceExtractionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#N2D2.SliceExtractionTransformation.BorderType" title="N2D2.SliceExtractionTransformation.BorderType">N2D2.SliceExtractionTransformation.BorderType</a><a class="headerlink" href="#N2D2.SliceExtractionTransformation.getBorderType" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.getBorderValue">
+<code class="sig-name descname">getBorderValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.SliceExtractionTransformation" title="N2D2.SliceExtractionTransformation">N2D2.SliceExtractionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>float<span class="p">]</span><a class="headerlink" href="#N2D2.SliceExtractionTransformation.getBorderValue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.getHeight">
+<code class="sig-name descname">getHeight</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.SliceExtractionTransformation" title="N2D2.SliceExtractionTransformation">N2D2.SliceExtractionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.SliceExtractionTransformation.getHeight" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.getOffsetX">
+<code class="sig-name descname">getOffsetX</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.SliceExtractionTransformation" title="N2D2.SliceExtractionTransformation">N2D2.SliceExtractionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.SliceExtractionTransformation.getOffsetX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.getOffsetY">
+<code class="sig-name descname">getOffsetY</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.SliceExtractionTransformation" title="N2D2.SliceExtractionTransformation">N2D2.SliceExtractionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.SliceExtractionTransformation.getOffsetY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.getRandomOffsetX">
+<code class="sig-name descname">getRandomOffsetX</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.SliceExtractionTransformation" title="N2D2.SliceExtractionTransformation">N2D2.SliceExtractionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.SliceExtractionTransformation.getRandomOffsetX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.getRandomOffsetY">
+<code class="sig-name descname">getRandomOffsetY</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.SliceExtractionTransformation" title="N2D2.SliceExtractionTransformation">N2D2.SliceExtractionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.SliceExtractionTransformation.getRandomOffsetY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.getRandomRotation">
+<code class="sig-name descname">getRandomRotation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.SliceExtractionTransformation" title="N2D2.SliceExtractionTransformation">N2D2.SliceExtractionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.SliceExtractionTransformation.getRandomRotation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.getRandomRotationRange">
+<code class="sig-name descname">getRandomRotationRange</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.SliceExtractionTransformation" title="N2D2.SliceExtractionTransformation">N2D2.SliceExtractionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>float<span class="p">]</span><a class="headerlink" href="#N2D2.SliceExtractionTransformation.getRandomRotationRange" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.getRandomScaling">
+<code class="sig-name descname">getRandomScaling</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.SliceExtractionTransformation" title="N2D2.SliceExtractionTransformation">N2D2.SliceExtractionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.SliceExtractionTransformation.getRandomScaling" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.getRandomScalingRange">
+<code class="sig-name descname">getRandomScalingRange</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.SliceExtractionTransformation" title="N2D2.SliceExtractionTransformation">N2D2.SliceExtractionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>float<span class="p">]</span><a class="headerlink" href="#N2D2.SliceExtractionTransformation.getRandomScalingRange" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.SliceExtractionTransformation.getWidth">
+<code class="sig-name descname">getWidth</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.SliceExtractionTransformation" title="N2D2.SliceExtractionTransformation">N2D2.SliceExtractionTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.SliceExtractionTransformation.getWidth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -792,6 +970,26 @@
 <li><p>__init__(self: N2D2.RescaleTransformation, trans: N2D2.RescaleTransformation) -&gt; None</p></li>
 </ol>
 </dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.RescaleTransformation.getHeight">
+<code class="sig-name descname">getHeight</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.RescaleTransformation" title="N2D2.RescaleTransformation">N2D2.RescaleTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.RescaleTransformation.getHeight" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.RescaleTransformation.getKeepAspectRatio">
+<code class="sig-name descname">getKeepAspectRatio</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.RescaleTransformation" title="N2D2.RescaleTransformation">N2D2.RescaleTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.RescaleTransformation.getKeepAspectRatio" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.RescaleTransformation.getResizeToFit">
+<code class="sig-name descname">getResizeToFit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.RescaleTransformation" title="N2D2.RescaleTransformation">N2D2.RescaleTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.RescaleTransformation.getResizeToFit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.RescaleTransformation.getWidth">
+<code class="sig-name descname">getWidth</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.RescaleTransformation" title="N2D2.RescaleTransformation">N2D2.RescaleTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#N2D2.RescaleTransformation.getWidth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -849,6 +1047,31 @@
 <li><p>__init__(self: N2D2.RangeAffineTransformation, trans: N2D2.RangeAffineTransformation) -&gt; None</p></li>
 </ol>
 </dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.RangeAffineTransformation.getFirstOperator">
+<code class="sig-name descname">getFirstOperator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.RangeAffineTransformation" title="N2D2.RangeAffineTransformation">N2D2.RangeAffineTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#N2D2.RangeAffineTransformation.Operator" title="N2D2.RangeAffineTransformation.Operator">N2D2.RangeAffineTransformation.Operator</a><a class="headerlink" href="#N2D2.RangeAffineTransformation.getFirstOperator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.RangeAffineTransformation.getFirstValue">
+<code class="sig-name descname">getFirstValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.RangeAffineTransformation" title="N2D2.RangeAffineTransformation">N2D2.RangeAffineTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>float<span class="p">]</span><a class="headerlink" href="#N2D2.RangeAffineTransformation.getFirstValue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.RangeAffineTransformation.getSecondOperator">
+<code class="sig-name descname">getSecondOperator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.RangeAffineTransformation" title="N2D2.RangeAffineTransformation">N2D2.RangeAffineTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#N2D2.RangeAffineTransformation.Operator" title="N2D2.RangeAffineTransformation.Operator">N2D2.RangeAffineTransformation.Operator</a><a class="headerlink" href="#N2D2.RangeAffineTransformation.getSecondOperator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.RangeAffineTransformation.getSecondValue">
+<code class="sig-name descname">getSecondValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.RangeAffineTransformation" title="N2D2.RangeAffineTransformation">N2D2.RangeAffineTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>float<span class="p">]</span><a class="headerlink" href="#N2D2.RangeAffineTransformation.getSecondValue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.RangeAffineTransformation.getTruncate">
+<code class="sig-name descname">getTruncate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.RangeAffineTransformation" title="N2D2.RangeAffineTransformation">N2D2.RangeAffineTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.RangeAffineTransformation.getTruncate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -1070,6 +1293,26 @@
 <li><p>__init__(self: N2D2.FlipTransformation, trans: N2D2.FlipTransformation) -&gt; None</p></li>
 </ol>
 </dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.FlipTransformation.getHorizontalFlip">
+<code class="sig-name descname">getHorizontalFlip</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.FlipTransformation" title="N2D2.FlipTransformation">N2D2.FlipTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.FlipTransformation.getHorizontalFlip" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.FlipTransformation.getRandomHorizontalFlip">
+<code class="sig-name descname">getRandomHorizontalFlip</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.FlipTransformation" title="N2D2.FlipTransformation">N2D2.FlipTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.FlipTransformation.getRandomHorizontalFlip" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.FlipTransformation.getRandomVerticalFlip">
+<code class="sig-name descname">getRandomVerticalFlip</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.FlipTransformation" title="N2D2.FlipTransformation">N2D2.FlipTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.FlipTransformation.getRandomVerticalFlip" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="N2D2.FlipTransformation.getVerticalFlip">
+<code class="sig-name descname">getVerticalFlip</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#N2D2.FlipTransformation" title="N2D2.FlipTransformation">N2D2.FlipTransformation</a></span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#N2D2.FlipTransformation.getVerticalFlip" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 

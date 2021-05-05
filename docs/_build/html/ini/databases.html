@@ -30,12 +30,13 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-    <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Stimuli data analysis" href="data_analysis.html" />
@@ -86,27 +87,27 @@
             
               <p class="caption"><span class="caption-text">Introduction:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../intro.html">Presentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../about.html">About N2D2-IP</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../simus.html">Performing simulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../perfs_tools.html">Performance evaluation tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tuto.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/intro.html">Presentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/about.html">About N2D2-IP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/simus.html">Performing simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/perfs_tools.html">Performance evaluation tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../intro/tuto.html">Tutorials</a></li>
 </ul>
 <p class="caption"><span class="caption-text">ONNX Import:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_convert.html">Obtain ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_import.html">Import ONNX models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../onnx_transfer.html">Train from ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/convert.html">Obtain ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/import.html">Import ONNX models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../onnx/transfer.html">Train from ONNX models</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Quantization and Export:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../quant_post.html">Post-training quantization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../quant_qat.html">Quantization aware training</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_CPP.html">Export: C++</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_CPP_STM32.html">Export: C++/STM32</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_TensorRT.html">Export: TensorRT</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_DNeuro.html">Export: DNeuro</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../export_legacy.html">Export: other / legacy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant/post.html">Post-training quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quant/qat.html">Quantization aware training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP.html">Export: C++</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/CPP_STM32.html">Export: C++/STM32</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/TensorRT.html">Export: TensorRT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/DNeuro.html">Export: DNeuro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export/legacy.html">Export: other / legacy</a></li>
 </ul>
 <p class="caption"><span class="caption-text">INI File Interface:</span></p>
 <ul class="current">
@@ -153,6 +154,7 @@
 <li class="toctree-l1"><a class="reference internal" href="data_analysis.html">Stimuli data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="environment.html">Stimuli provider (Environment)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="layers.html">Network Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="target.html">Targets (outputs &amp; losses)</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Python API:</span></p>
 <ul>
@@ -162,6 +164,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../python_api/tensor.html">Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python_api/deepnet.html">DeepNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../python_api/interoperability.html">Interoperability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api/example.html">Example</a></li>
 </ul>
 <p class="caption"><span class="caption-text">C++/Python core:</span></p>
 <ul>
@@ -246,7 +249,31 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="databases">
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="databases">
 <h1>Databases<a class="headerlink" href="#databases" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
@@ -362,7 +389,7 @@ with the <code class="docutils literal notranslate"><span class="pre">DIR_Databa
 </div>
 <div class="section" id="mnist">
 <h2>MNIST<a class="headerlink" href="#mnist" title="Permalink to this headline">¶</a></h2>
-<p>MNIST <a class="bibtex reference internal" href="../z_ref.html#lecun1998" id="id1">[LBBH98]</a> is already fractionned into a
+<p>MNIST <span class="bibtex" id="id1">[LeCun1998]</span> is already fractionned into a
 learning set and a testing set, with:</p>
 <ul class="simple">
 <li><p>60,000 digits in the learning set;</p></li>
@@ -399,7 +426,7 @@ learning set and a testing set, with:</p>
 </div>
 <div class="section" id="gtsrb">
 <h2>GTSRB<a class="headerlink" href="#gtsrb" title="Permalink to this headline">¶</a></h2>
-<p>GTSRB <a class="bibtex reference internal" href="../z_ref.html#stallkamp2012" id="id2">[SSSI12]</a> is already fractionned into a
+<p>GTSRB <span class="bibtex" id="id2">[Stallkamp2012]</span> is already fractionned into a
 learning set and a testing set, with:</p>
 <ul class="simple">
 <li><p>39,209 digits in the learning set;</p></li>
@@ -618,7 +645,7 @@ correspond to the number of stimuli from the label with the fewest stimuli.</p>
 <div class="section" id="speech-commands-dataset">
 <h3><em>Speech Commands Dataset</em><a class="headerlink" href="#speech-commands-dataset" title="Permalink to this headline">¶</a></h3>
 <p>Use with Speech Commands Data Set, released by the Google
-<a class="bibtex reference internal" href="../z_ref.html#speechcommandsv2" id="id3">[Warden18]</a>.</p>
+<span class="bibtex" id="id3">[speechcommandsv2]</span>.</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[database]</span>
 <span class="na">Type</span><span class="o">=</span><span class="s">DIR_Database</span>
 <span class="na">DataPath</span><span class="o">=</span><span class="s">${N2D2_DATA}/speech_commands_v0.02</span>
@@ -727,7 +754,7 @@ validation set with a 0.7/0.3 ratio in the INI file with the following section:<
 <div class="section" id="actitracker-database">
 <h3>Actitracker_Database<a class="headerlink" href="#actitracker-database" title="Permalink to this headline">¶</a></h3>
 <p>Actitracker database, released by the WISDM Lab
-<a class="bibtex reference internal" href="../z_ref.html#lockhart2011" id="id4">[LWX+11]</a>.</p>
+<span class="bibtex" id="id4">[Lockhart2011]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 41%" />
@@ -759,7 +786,7 @@ validation set with a 0.7/0.3 ratio in the INI file with the following section:<
 </div>
 <div class="section" id="cifar10-database">
 <h3>CIFAR10_Database<a class="headerlink" href="#cifar10-database" title="Permalink to this headline">¶</a></h3>
-<p>CIFAR10 database <a class="bibtex reference internal" href="../z_ref.html#krizhevsky2009" id="id5">[Kri09]</a>.</p>
+<p>CIFAR10 database <span class="bibtex" id="id5">[Krizhevsky2009]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 44%" />
@@ -785,7 +812,7 @@ validation set with a 0.7/0.3 ratio in the INI file with the following section:<
 </div>
 <div class="section" id="cifar100-database">
 <h3>CIFAR100_Database<a class="headerlink" href="#cifar100-database" title="Permalink to this headline">¶</a></h3>
-<p>CIFAR100 database <a class="bibtex reference internal" href="../z_ref.html#krizhevsky2009" id="id6">[Kri09]</a>.</p>
+<p>CIFAR100 database <span class="bibtex" id="id6">[Krizhevsky2009]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 37%" />
@@ -815,7 +842,7 @@ validation set with a 0.7/0.3 ratio in the INI file with the following section:<
 <div class="section" id="ckp-database">
 <h3>CKP_Database<a class="headerlink" href="#ckp-database" title="Permalink to this headline">¶</a></h3>
 <p>The Extended Cohn-Kanade (CK+) database for expression recognition
-<a class="bibtex reference internal" href="../z_ref.html#lucey2010" id="id7">[LuceyCohnKanade+10]</a>.</p>
+<span class="bibtex" id="id7">[Lucey2010]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 46%" />
@@ -844,7 +871,7 @@ validation set with a 0.7/0.3 ratio in the INI file with the following section:<
 </div>
 <div class="section" id="caltech101-dir-database">
 <h3>Caltech101_DIR_Database<a class="headerlink" href="#caltech101-dir-database" title="Permalink to this headline">¶</a></h3>
-<p>Caltech 101 database <a class="bibtex reference internal" href="../z_ref.html#feifei2004" id="id8">[FFFP04]</a>.</p>
+<p>Caltech 101 database <span class="bibtex" id="id8">[FeiFei2004]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 27%" />
@@ -879,7 +906,7 @@ validation set with a 0.7/0.3 ratio in the INI file with the following section:<
 </div>
 <div class="section" id="caltech256-dir-database">
 <h3>Caltech256_DIR_Database<a class="headerlink" href="#caltech256-dir-database" title="Permalink to this headline">¶</a></h3>
-<p>Caltech 256 database <a class="bibtex reference internal" href="../z_ref.html#griffin2007" id="id9">[GHP07]</a>.</p>
+<p>Caltech 256 database <span class="bibtex" id="id9">[Griffin2007]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 27%" />
@@ -914,7 +941,7 @@ validation set with a 0.7/0.3 ratio in the INI file with the following section:<
 </div>
 <div class="section" id="caltechpedestrian-database">
 <h3>CaltechPedestrian_Database<a class="headerlink" href="#caltechpedestrian-database" title="Permalink to this headline">¶</a></h3>
-<p>Caltech Pedestrian database <a class="bibtex reference internal" href="../z_ref.html#dollar2009" id="id10">[DollarWSP09]</a>.</p>
+<p>Caltech Pedestrian database <span class="bibtex" id="id10">[Dollar2009]</span>.</p>
 <p>Note that the images and annotations must first be extracted from the
 seq video data located in the <em>videos</em> directory using the
 <code class="docutils literal notranslate"><span class="pre">dbExtract.m</span></code> Matlab tool provided in the “Matlab evaluation/labeling
@@ -981,7 +1008,7 @@ annotations:</p>
 </div>
 <div class="section" id="cityscapes-database">
 <h3>Cityscapes_Database<a class="headerlink" href="#cityscapes-database" title="Permalink to this headline">¶</a></h3>
-<p>Cityscapes database <a class="bibtex reference internal" href="../z_ref.html#cordts2016cityscapes" id="id11">[COR+16]</a>.</p>
+<p>Cityscapes database <span class="bibtex" id="id11">[Cordts2016Cityscapes]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 27%" />
@@ -1051,7 +1078,7 @@ annotations:</p>
 </div>
 <div class="section" id="dota-database">
 <h3>DOTA_Database<a class="headerlink" href="#dota-database" title="Permalink to this headline">¶</a></h3>
-<p>DOTA database <a class="bibtex reference internal" href="../z_ref.html#dota" id="id12">[XBD+17]</a>.</p>
+<p>DOTA database <span class="bibtex" id="id12">[DOTA]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 37%" />
@@ -1084,7 +1111,7 @@ annotations:</p>
 <div class="section" id="fddb-database">
 <h3>FDDB_Database<a class="headerlink" href="#fddb-database" title="Permalink to this headline">¶</a></h3>
 <p>Face Detection Data Set and Benchmark (FDDB)
-<a class="bibtex reference internal" href="../z_ref.html#jain2010" id="id13">[JLM10]</a>.</p>
+<span class="bibtex" id="id13">[Jain2010]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 31%" />
@@ -1119,7 +1146,7 @@ annotations:</p>
 </div>
 <div class="section" id="gtsdb-dir-database">
 <h3>GTSDB_DIR_Database<a class="headerlink" href="#gtsdb-dir-database" title="Permalink to this headline">¶</a></h3>
-<p>GTSDB database <a class="bibtex reference internal" href="../z_ref.html#houben2013" id="id14">[HSS+13]</a>.</p>
+<p>GTSDB database <span class="bibtex" id="id14">[Houben2013]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 43%" />
@@ -1148,7 +1175,7 @@ annotations:</p>
 </div>
 <div class="section" id="ilsvrc2012-database">
 <h3>ILSVRC2012_Database<a class="headerlink" href="#ilsvrc2012-database" title="Permalink to this headline">¶</a></h3>
-<p>ILSVRC2012 database <a class="bibtex reference internal" href="../z_ref.html#ilsvrc15" id="id15">[RDS+15]</a>.</p>
+<p>ILSVRC2012 database <span class="bibtex" id="id15">[ILSVRC15]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 49%" />
@@ -1273,7 +1300,7 @@ object data set (5 MB). Extract the downloaded archives in your
 </div>
 <div class="section" id="litisrouen-database">
 <h3>LITISRouen_Database<a class="headerlink" href="#litisrouen-database" title="Permalink to this headline">¶</a></h3>
-<p>LITIS Rouen audio scene dataset <a class="bibtex reference internal" href="../z_ref.html#rakotomamonjy2014" id="id16">[RG14]</a>.</p>
+<p>LITIS Rouen audio scene dataset <span class="bibtex" id="id16">[Rakotomamonjy2014]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 41%" />
