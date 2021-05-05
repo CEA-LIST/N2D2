@@ -206,7 +206,7 @@ class DeepNetCell(Block):
     def __call__(self, inputs):
 
         # TODO: Not tested for other inputs that provider yet
-        if not isinstance(inputs.cell, n2d2.provider.Provider):
+        if not isinstance(inputs, n2d2.Tensor):
             raise ValueError("Needs tensor with provider as input")
 
         #self._deepnet = self._infer_deepnet(inputs)

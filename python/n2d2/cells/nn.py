@@ -170,7 +170,7 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
 
 
     def add_input(self, inputs):
-        # Some cells like Pool don't have a defined number of channels so I try this to catch them
+        # TODO : Some cells like Pool don't have a defined number of channels so I try this to catch them
         # Is it good to keep it this way ?
         have_a_defined_input_size = (self.N2D2().getInputsDims() != [0] and self.N2D2().getInputsDims() != [])
         initialized = self.dims() == True 
@@ -276,6 +276,13 @@ class NeuralNetworkCell(N2D2_Interface, Cell):
             output += ""
         return output
 
+    def __call__(self, inputs):
+        """
+        Do the common check on the inputs and infer the deepNet from the inputs.
+        """
+        if not (isinstance(inputs, n2d2.Tensor) or isinstance(inputs, n2d2.Interface)):
+            raise TypeError(self.get_name() + " received an inputs of type " + str(type(inputs)) + ", inputs should be of type n2d2.Tensor instead.")
+        self._deepnet = self._infer_deepnet(inputs)
 
 
 class Fc(NeuralNetworkCell):
@@ -447,10 +454,7 @@ class Fc(NeuralNetworkCell):
 
 
     def __call__(self, inputs):
-        if inputs.nb_dims() != 4:
-            raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-        # print("\n", self.get_name(), " input dims :", inputs.shape())
-        self._deepnet = self._infer_deepnet(inputs)
+        super().__call__(inputs)
 
         self._add_to_graph(inputs)
 
@@ -783,9 +787,7 @@ class Conv(NeuralNetworkCell):
         return n2d2_cell
 
     def __call__(self, inputs):
-        if inputs.nb_dims() != 4:
-            raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-        self._deepnet = self._infer_deepnet(inputs)
+        super().__call__(inputs)
 
         self._add_to_graph(inputs)
 
@@ -890,7 +892,7 @@ class Conv(NeuralNetworkCell):
         self.N2D2().getBias(output_index, tensor)
         return n2d2.Tensor.from_N2D2(tensor)
         
-    def get_biases(self): # TODO : We can return a list of float instead of a list of Tensor ?
+    def get_biases(self): # TODO : Is it better to return a list of float instead of a list of Tensor ?
         """
         :return: list of biases
         :rtype: list
@@ -997,10 +999,7 @@ class Softmax(NeuralNetworkCell):
         return n2d2_cell
 
     def __call__(self, inputs):
-        if inputs.nb_dims() != 4:
-            raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-
-        self._deepnet = self._infer_deepnet(inputs)
+        super().__call__(inputs)
 
         if self._N2D2_object is None:
             nb_outputs = inputs.dims()[2]
@@ -1134,12 +1133,11 @@ class Pool(NeuralNetworkCell):
         return n2d2_cell
 
     def __call__(self, inputs):
-        # TODO : not good for multi inputs
-        # if inputs.nb_dims() != 4:
-        #     raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
+        super().__call__(inputs)
+
         mapping_row = 0
 
-        if isinstance(inputs, n2d2.tensor.Interface): # This may change in the future ! (Becoming an Interface instead of a list)
+        if isinstance(inputs, n2d2.tensor.Interface): # Here we try to support multi input
             for tensor in inputs.get_tensors():
                 if tensor.nb_dims() != 4:
                     raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
@@ -1148,10 +1146,8 @@ class Pool(NeuralNetworkCell):
             if inputs.nb_dims() != 4:
                 raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
             mapping_row += inputs.dimZ()
-
         else:
             raise n2d2.wrong_input_type("inputs", inputs, [str(type(list)), str(type(n2d2.Tensor))])
-        self._deepnet = self._infer_deepnet(inputs)
 
         if self._N2D2_object is None:
 
@@ -1231,10 +1227,7 @@ class Pool2d(NeuralNetworkCell): # Should inherit Pool ?
         
 
     def __call__(self, inputs):
-        if inputs.nb_dims() != 4:
-            raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-
-        self._deepnet = self._infer_deepnet(inputs)
+        super().__call__(inputs)
 
         if self._N2D2_object is None:
 
@@ -1311,10 +1304,7 @@ class GlobalPool2d(NeuralNetworkCell): # Should inherit Pool ?
     #    return n2d2_cell
 
     def __call__(self, inputs):
-        if inputs.nb_dims() != 4:
-            raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-
-        self._deepnet = self._infer_deepnet(inputs)
+        super().__call__(inputs)
 
         if self._N2D2_object is None:
 
@@ -1550,9 +1540,7 @@ class Deconv(NeuralNetworkCell):
         return n2d2_cell
 
     def __call__(self, inputs):
-        if inputs.nb_dims() != 4:
-            raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-        self._deepnet = self._infer_deepnet(inputs)
+        super().__call__(inputs)
 
         self._add_to_graph(inputs)
 
@@ -1730,22 +1718,18 @@ class ElemWise(NeuralNetworkCell):
 
     def __call__(self, inputs):
 
-        self._deepnet = self._infer_deepnet(inputs)
+        super().__call__(inputs)
 
         if self._N2D2_object is None:
 
-            # TODO : not good for multi inputs
-            # if inputs.nb_dims() != 4:
-            #     raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
             mapping_row = 0
 
             if isinstance(inputs,
-                          n2d2.tensor.Interface):  # This may change in the future ! (Becoming an Interface instead of a list)
+                          n2d2.tensor.Interface):
                 for tensor in inputs.get_tensors():
                     if tensor.nb_dims() != 4:
                         raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()),
                                          " were given.")
-                    # TODO: Add check that all Z are the same
                     mapping_row = tensor.dimZ()
             elif isinstance(inputs, n2d2.Tensor):
                 if inputs.nb_dims() != 4:
@@ -1754,7 +1738,6 @@ class ElemWise(NeuralNetworkCell):
 
             else:
                 raise n2d2.wrong_input_type("inputs", inputs, [str(type(list)), str(type(n2d2.Tensor))])
-            self._deepnet = self._infer_deepnet(inputs)
 
 
             self._set_N2D2_object(self._cell_constructors[self._model](self._deepnet.N2D2(),
@@ -1847,9 +1830,7 @@ class Dropout(NeuralNetworkCell):
         return n2d2_cell
         
     def __call__(self, inputs):
-        if inputs.nb_dims() != 4:
-            raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-        self._deepnet = self._infer_deepnet(inputs)
+        super().__call__(inputs)
 
         if self._N2D2_object is None:
             nb_outputs = inputs.dims()[2]
@@ -1959,9 +1940,7 @@ class Padding(NeuralNetworkCell):
 
 
     def __call__(self, inputs):
-        if inputs.nb_dims() != 4:
-            raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-        self._deepnet = self._infer_deepnet(inputs)
+        super().__call__(inputs)
 
         if self._N2D2_object is None:
             nb_outputs = inputs.dims()[2]
@@ -2090,10 +2069,7 @@ class BatchNorm2d(NeuralNetworkCell):
         return n2d2_cell
 
     def __call__(self, inputs):
-        if inputs.nb_dims() != 4:
-            raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-
-        self._deepnet = self._infer_deepnet(inputs)
+        super().__call__(inputs)
 
         self._add_to_graph(inputs)
 
@@ -2163,10 +2139,7 @@ class Activation(NeuralNetworkCell):
         return n2d2_cell
 
     def __call__(self, inputs):
-        if inputs.nb_dims() != 4:
-            raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-
-        self._deepnet = self._infer_deepnet(inputs)
+        super().__call__(inputs)
 
         if self._N2D2_object is None:
             nb_outputs = inputs.dims()[2]
@@ -2256,10 +2229,7 @@ class Reshape(NeuralNetworkCell):
 
 
     def __call__(self, inputs):
-        if inputs.nb_dims() != 4:
-            raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-
-        self._deepnet = self._infer_deepnet(inputs)
+        super().__call__(inputs)
 
         if self._N2D2_object is None:
             nb_outputs = inputs.dims()[2]

@@ -93,7 +93,7 @@ class Tensor:
                 self._tensor = generators[datatype](dims, value)
                 if cuda:
                     # TODO a bug cause the "value" argument to be ignored for CUDA tensor :
-                    # example : N2D2.CudaTensor_int([2, 2], value=int(5)
+                    # example : N2D2.CudaTensor_int([2, 2], value=int(5))
                     self[0:] = value
                     self.htod() # Need to synchronize the host to the device
         else:
@@ -341,7 +341,7 @@ class Tensor:
         n2d2_tensor = cls([])
         n2d2_tensor._tensor = N2D2_Tensor
         n2d2_tensor._datatype = hard_coded_type[N2D2_Tensor.getTypeName()]
-        n2d2_tensor.is_cuda = "CudaTensor" in str(type(N2D2_Tensor)) # TODO : add gettype to the Tensor class in cpp
+        n2d2_tensor.is_cuda = "CudaTensor" in str(type(N2D2_Tensor)) 
         return n2d2_tensor
 
     def __setitem__(self, index, value):
@@ -358,8 +358,6 @@ class Tensor:
         :type value: same type as self._datatype
         """
         if not isinstance(value, self._datatype):
-            # TODO : Set a warning here ?
-            # print("Warning : Autocasting : " + str(type(value)) + " to " + str(self._datatype))
             try:
                 value = self._datatype(value)
             except:

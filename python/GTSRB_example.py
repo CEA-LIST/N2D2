@@ -153,8 +153,6 @@ print("\n")
 
 # save computational stats on the network 
 loss_function.log_stats("vis_GTSRB")
-# TODO : save freeParameters cause segfault
-# x.get_deepnet().N2D2().logFreeParameters("test_freeparam")
 # save a confusion matrix
 loss_function.log_confusion_matrix("vis_GTSRB")
 # save a graph of the loss and the validation score as a function of the number of steps

@@ -72,7 +72,7 @@ class IniReader():
         return n2d2.Tensor.from_N2D2(outputs)
     
     def backward(self):
-        # TODO 
+        # TODO test if the weight and biases are well initialized
         pass
 
 def set_weights(sequence):
