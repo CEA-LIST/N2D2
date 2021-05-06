@@ -668,7 +668,7 @@ __global__ void cudaSAnchorBackPropagateSSD_kernel(
     }
 }
 
-void N2D2::cudaSAnchorBackPropagatePropagateSSD(const float* inputsCls,
+void N2D2::cudaSAnchorBackPropagateSSD(const float* inputsCls,
                                                 const float* outputs,
                                                 const int* argMaxIoU,
                                                 float* diffOutputsCoords,
@@ -790,6 +790,24 @@ float sign = 1.0f;
     return return_value;
 }
 
+__device__ static float huberLoss(float tx, float x, float sigma= 1.0f)
+{
+    float return_value = 0.0f;
+
+    const float diff = tx - x;
+    const float sigma2 = sigma*sigma;
+    const float posCas = (diff*diff) * 0.5*sigma2;
+    const float negCas = abs(diff) - (0.5 / sigma2) ;
+
+    if(abs(diff) < (1.0/sigma2)) {
+        return_value = posCas;
+    } 
+    else {
+        return_value = negCas;
+    }
+
+    return return_value;
+}
 
 __global__ void cudaSAnchorBackPropagateSSD_PosSamples_kernel(  const unsigned int stimuliSizeX,
                                                                 const unsigned int stimuliSizeY,
@@ -880,19 +898,19 @@ __global__ void cudaSAnchorBackPropagateSSD_PosSamples_kernel(  const unsigned i
 
 
         // Smooth L1 loss
-        const float lossTx = lossLambda * smoothL1(txgt, tx) / (nbPositive); //(nbPositive * batchSize);
-        const float lossTy = lossLambda * smoothL1(tygt, ty) / (nbPositive); //(nbPositive * batchSize);
-        const float lossTw = lossLambda * smoothL1(twgt, tw) / (nbPositive); //(nbPositive * batchSize);
-        const float lossTh = lossLambda * smoothL1(thgt, th) / (nbPositive); //(nbPositive * batchSize);
-        const float lossCls = (1.0f - inputCls[indexSamples]) / (nbPositive); //(nbPositive * batchSize);
+        const float lossTx = lossLambda * huberLoss(txgt, tx) / (nbPositive); 
+        const float lossTy = lossLambda * huberLoss(tygt, ty) / (nbPositive); 
+        const float lossTw = lossLambda * huberLoss(twgt, tw) / (nbPositive); 
+        const float lossTh = lossLambda * huberLoss(thgt, th) / (nbPositive); 
+        const float lossCls = (1.0f - inputCls[indexSamples]) / (nbPositive); 
         //printf("Coord[%d]: {%f, %f, %f, %f}(%f)\n", indexSamples, lossTx,
         //    lossTy, lossTw, lossTh, inputCls[indexSamples]);
 
-        diffOutputsCoord[indexSamples] = lossTx;// / batchSize;
-        diffOutputsCoord[indexSamples + 1 * outputsHeight * outputsWidth * nbAnchors] = lossTy;//  / batchSize;
-        diffOutputsCoord[indexSamples + 2 * outputsHeight * outputsWidth * nbAnchors] = lossTw;//  / batchSize;
-        diffOutputsCoord[indexSamples + 3 * outputsHeight * outputsWidth * nbAnchors] = lossTh;// / batchSize;
-        diffOutputsCls[indexSamples] = lossCls; // / batchSize;
+        diffOutputsCoord[indexSamples] = lossTx;
+        diffOutputsCoord[indexSamples + 1 * outputsHeight * outputsWidth * nbAnchors] = lossTy;
+        diffOutputsCoord[indexSamples + 2 * outputsHeight * outputsWidth * nbAnchors] = lossTw;
+        diffOutputsCoord[indexSamples + 3 * outputsHeight * outputsWidth * nbAnchors] = lossTh;
+        diffOutputsCls[indexSamples] = lossCls; 
     }
     
 }

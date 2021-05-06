@@ -43,6 +43,10 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
 
     std::cout << "Layer: " << section << " [Anchor(" << model << ")]"
               << std::endl;
+              
+    const AnchorCell_Frame_Kernels::DetectorType detectorType 
+        = iniConfig.getProperty<AnchorCell_Frame_Kernels::DetectorType>
+            ("DetectorType");         
 
     std::vector<AnchorCell_Frame_Kernels::Anchor> anchors;
 
@@ -78,7 +82,7 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
         nextProperty.str(std::string());
         nextProperty << "Anchor[" << nextAnchor << "]";
     }
-    
+    // Second method: specify handmade anchors with X, y, Width & Height
     nextProperty.str(std::string());
     nextProperty << "AnchorBBOX[" << nextAnchor << "]";
 
@@ -109,6 +113,7 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
         nextProperty << "AnchorBBOX[" << nextAnchor << "]";
     }
 
+    // Third method: specify handmade anchors with X0 & Y0
     nextProperty.str(std::string());
     nextProperty << "AnchorXY[" << nextAnchor << "]";
 
@@ -140,7 +145,7 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
         nextProperty << "AnchorXY[" << nextAnchor << "]";
     }
 
-    // Second method: specify a base root area and a list of ratios and scales
+    // Fourth method: specify a base root area and a list of ratios and scales
     // Both methods can be used simultaneously
     const double rootArea = iniConfig.getProperty<double>("RootArea", 16);
     const std::vector<double> ratios = iniConfig.getProperty
@@ -167,7 +172,7 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
 
     // Cell construction
     std::shared_ptr<AnchorCell> cell = Registrar
-        <AnchorCell>::create(model)(deepNet, section, sp, anchors, scoresCls);
+        <AnchorCell>::create(model)(deepNet, section, sp, detectorType, anchors, scoresCls);
 
     if (!cell) {
         throw std::runtime_error(
