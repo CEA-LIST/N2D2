@@ -43,6 +43,8 @@ N2D2::ObjectDetCell::ObjectDetCell(const DeepNet& deepNet, const std::string& na
       mBackgroundMinIoU(this, "BackgroundMinIoU", 0.1f),
       mFeatureMapWidth(this, "FeatureMapWidth", 0U),
       mFeatureMapHeight(this, "FeatureMapHeight", 0U),
+      mInputFormat(this, "InputFormat", AnchorCell_Frame_Kernels::Format::CA),
+      mPixelFormat(this, "PixelFormat", AnchorCell_Frame_Kernels::PixelFormat::XY),
       mNbAnchors(nbAnchors),     
       mNbProposals(nbProposals),
       mNbClass(nbClass),
