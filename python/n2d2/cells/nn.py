@@ -306,6 +306,7 @@ class Fc(NeuralNetworkCell):
         "weights_solver":"WeightsSolver",
         "bias_solver":"BiasSolver",
         "quantizer":"Quantizer",
+        "drop_connect": "DropConnect"
     }  
     _parameters.update(_cell_frame_parameters)
 

@@ -330,14 +330,13 @@ class Tensor:
     @classmethod
     def from_N2D2(cls, N2D2_Tensor):
         """Convert an N2D2 tensor into a Tensor.
-
-        :param N2D2_Tensor: A numpy array to convert to a tensor.
+        :param N2D2_Tensor: An N2D2 Tensor to convert to a n2d2 Tensor.
         :type N2D2_Tensor: :py:class:`N2D2.BaseTensor` or :py:class:`N2D2.CudaBaseTensor`
         :return: Converted tensor
         :rtype: :py:class:`n2d2.Tensor`
         """
         if not isinstance(N2D2_Tensor, N2D2.BaseTensor):
-            raise error_handler.WrongInputType("N2D2_Tensor", str(type(N2D2_Tensor), [str(N2D2.BaseTensor)]))
+            raise error_handler.WrongInputType("N2D2_Tensor", str(type(N2D2_Tensor)), [str(N2D2.BaseTensor)])
         n2d2_tensor = cls([])
         n2d2_tensor._tensor = N2D2_Tensor
         n2d2_tensor._datatype = hard_coded_type[N2D2_Tensor.getTypeName()]

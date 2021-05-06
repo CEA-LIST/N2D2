@@ -1528,8 +1528,8 @@ assumed to be square.</p>
 <p>Extract a slice from an image belonging to a given label.</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 11%" />
-<col style="width: 89%" />
+<col style="width: 29%" />
+<col style="width: 71%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Option [default value]</p></th>
@@ -1556,7 +1556,42 @@ assumed to be square.</p>
 <td><p>Positive or negative, indicates the margin around objects that can be extracted in the slice</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KeepComposite</span></code> [0]</p></td>
-<td><p>If false, the 2D label image is reduced to a single value corresponding to the extracted object label (useful for patches classification tasks). Note that if <code class="docutils literal notranslate"><span class="pre">SlicesMargin</span></code> is &gt; 0, the 2D label image may contain other labels before reduction. For pixel-wise segmentation tasks, set <code class="docutils literal notranslate"><span class="pre">KeepComposite</span></code> to true.</p></td>
+<td><p>If false, the 2D label image is reduced to a single value corresponding to the extracted object label (useful
+for patches classification tasks). Note that if <code class="docutils literal notranslate"><span class="pre">SlicesMargin</span></code> is &gt; 0, the 2D label image may contain other
+labels before reduction. For pixel-wise segmentation tasks, set <code class="docutils literal notranslate"><span class="pre">KeepComposite</span></code> to true.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">AllowPadding</span></code> [0]</p></td>
+<td><p>If true, zero-padding is allowed if the image is smaller than the slice to extract</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BorderType</span></code> [<code class="docutils literal notranslate"><span class="pre">MinusOneReflectBorder</span></code>]</p></td>
+<td><p>Border type used when padding. Possible values:</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ConstantBorder</span></code>: pad with <code class="docutils literal notranslate"><span class="pre">BorderValue</span></code></p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ReplicateBorder</span></code>: last element is replicated throughout, like aaaaaa|abcdefgh|hhhhhhh</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ReflectBorder</span></code>: border will be mirror reflection of the border elements, like fedcba|abcdefgh|hgfedcb</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">WrapBorder</span></code>: it will look like cdefgh|abcdefgh|abcdefg</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MinusOneReflectBorder</span></code>: same as <code class="docutils literal notranslate"><span class="pre">ReflectBorder</span></code> but with a slight change, like gfedcb|abcdefgh|gfedcba</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MeanBorder</span></code>: pad with the mean color of the image</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BorderValue</span></code> [0.0 0.0 0.0]</p></td>
+<td><p>Background color used when padding with <code class="docutils literal notranslate"><span class="pre">BorderType</span></code> is <code class="docutils literal notranslate"><span class="pre">ConstantBorder</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IgnoreNoValid</span></code> [1]</p></td>
+<td><p>If true (1), if no valid slice is found, a random slice is extracted and marked as ignored (-1)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ExcludeLabels</span></code> []</p></td>
+<td><p>Space-separated list of label ID to exclude from the random extraction (when <code class="docutils literal notranslate"><span class="pre">Label</span></code> is -1)</p></td>
 </tr>
 </tbody>
 </table>

@@ -160,20 +160,19 @@ class DeepNetCell(Block):
         #self._cells = self._embedded_deepnet.get_cells()
         Block.__init__(self, list(self._embedded_deepnet.get_cells().values()), name=name)
 
-        self._deepnet = None
+        self._deepnet = None # TODO : @Johannes : shouldn't this be equal to _embedded_deepnet ? 
         self._inference = False
 
 
     @classmethod
     def load_from_ONNX(cls, provider, model_path, ini_file=None):
-        """
+        """Load a deepnet from an ONNX file given a provider object.
         :param provider: Provider object to base deepnet upon
         :type provider: n2d2.provider.Provider
         :param model_path: Path to the model.
         :type model_path: str
         :param ini_file: Path to an optional .ini file with additional onnx import instructions
         :type model_path: str
-        Load a deepnet from an ONNX file given a provider object.
         """
         if not isinstance(provider, n2d2.provider.Provider):
             raise ValueError("Input needs to be of type 'provider'")
@@ -194,10 +193,9 @@ class DeepNetCell(Block):
 
     @classmethod
     def load_from_INI(cls, path):
-        """
+        """Load a deepnet from an INI file.
         :param model_path: Path to the ini file.
         :type model_path: str
-        Load a deepnet from an INI file.
         """
         n2d2_deepnet = DeepNet.create_from_N2D2_object(
             N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path))

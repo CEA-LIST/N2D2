@@ -23,18 +23,21 @@ import n2d2
 from n2d2 import tensor
 import N2D2
 
-def _switching_convention(dims):
-    return [dims[1], dims[0], dims[2], dims[3]]
+def _switching_convention_t_n(dims):
+    return [dims[3], dims[2], dims[0], dims[1]]
 
+def _switching_convention_n_t(dims):
+    return [dims[3], dims[2], dims[0], dims[1]]
 
 def _to_n2d2(torch_tensor):
     """
     Convert torch.Tensor -> n2d2.Tensor
     """
     numpy_tensor = torch_tensor.cpu().detach().numpy()
-    n2d2_tensor = tensor.Tensor.from_numpy(numpy_tensor)
+    n2d2_tensor = n2d2.Tensor.from_numpy(numpy_tensor)
     if n2d2_tensor.nb_dims() ==4:
-        n2d2_tensor.reshape(_switching_convention(n2d2_tensor.shape())) 
+        # TODO : change this to torch.shape or unify swith_convention method
+        n2d2_tensor.reshape(_switching_convention_t_n(n2d2_tensor.dims())) 
     return n2d2_tensor
 
 def _to_torch(N2D2_tensor):
@@ -47,9 +50,7 @@ def _to_torch(N2D2_tensor):
     if torch_tensor.is_cuda:
         torch_tensor = torch_tensor.cuda()
     if n2d2_tensor.nb_dims() ==4:
-        torch_tensor.resize_(_switching_convention(n2d2_tensor.shape())) 
-    else:
-        torch_tensor.resize_(n2d2_tensor.shape())
+        torch_tensor.resize_(_switching_convention_n_t(n2d2_tensor.dims())) 
 
     return torch_tensor
 
@@ -67,7 +68,7 @@ class LayerN2D2(torch.nn.Module):
         elif isinstance(n2d2_cell, N2D2.Cell):
             self._N2D2 = n2d2_cell
         else:
-            raise n2d2.error_handler.WrongInputType('n2d2_cell', str(type(n2d2_cell)), ["N2D2.NeuralNetworkCell", "n2d2.cells.NeuralNetworkCell"])
+            raise n2d2.error_handler.WrongInputType('n2d2_cell', str(type(n2d2_cell)), ["N2D2.Cell", "n2d2.cells.NeuralNetworkCell"])
     
         # We need to add a random parameter to the module else pytorch refuse to compute gradient
         self.register_parameter(name='random_parameter', param=torch.nn.Parameter(torch.randn(1)))
@@ -171,10 +172,12 @@ class DeepNetN2D2(torch.nn.Module):
                 # The first cells of the N2D2 Network is not linked to another cells.
                 # Thus mDiffOutputs is empty. 
                 # In order to send a gradient in the backward method we add an Input to force the cells to compute a gradient.
-                shape = [i for i in reversed(n2d2_tensor.dims())]
-                diffOutputs = tensor.Tensor(shape, value=0)
-                self.first_cell.clearInputs()
-                self.first_cell.addInputBis(n2d2_tensor.N2D2(), diffOutputs.N2D2())
+                shape = n2d2_tensor.dims()
+                # Note : It's import to set diffOutputs as an attribute else when exiting this method
+                # Python will erase this variable but Cpp will still use it resulting in a SegFault
+                self.diffOutputs = tensor.Tensor(shape, value=0, dim_format="N2D2")
+                self.first_cell.clearInputs() 
+                self.first_cell.addInputBis(n2d2_tensor.N2D2(), self.diffOutputs.N2D2())
 
                 N2D2_inputs = self._N2D2.getCell_Frame_Top(self.first_cell.getName()).getInputs(0)
                 N2D2_inputs.op_assign(n2d2_tensor.N2D2())
@@ -190,15 +193,15 @@ class DeepNetN2D2(torch.nn.Module):
                 return outputs.clone()
 
             @staticmethod
-            def backward(ctx, grad_output):
+            def backward(ctx, grad_output): 
                 grad_output = torch.mul(grad_output, -self.batch_size)
                 t_grad_output = _to_n2d2(grad_output).N2D2()
-
                 diffInputs = self._N2D2.getCell_Frame_Top(self.last_cell.getName()).getDiffInputs()
                 diffInputs.op_assign(t_grad_output)
                 diffInputs.synchronizeHToD()
                 self._N2D2.backPropagate([])
                 self._N2D2.update([])
+                
                 # input(self.diffout)
                 diffOutput = self._N2D2.getCell_Frame_Top(self.first_cell.getName()).getDiffOutputs()
                 outputs = _to_torch(diffOutput)
