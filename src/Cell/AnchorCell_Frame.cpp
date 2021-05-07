@@ -30,10 +30,11 @@ N2D2::AnchorCell_Frame::AnchorCell_Frame(
     const DeepNet& deepNet,
     const std::string& name,
     StimuliProvider& sp,
+    const AnchorCell_Frame_Kernels::DetectorType detectorType,
     const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
     unsigned int scoresCls)
     : Cell(deepNet, name, 6*anchors.size()),
-      AnchorCell(deepNet, name, sp, anchors, scoresCls),
+      AnchorCell(deepNet, name, sp, detectorType, anchors, scoresCls),
       Cell_Frame<Float_T>(deepNet, name, 6*anchors.size()),
       mAnchors(anchors)
 {
@@ -210,9 +211,9 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                                     / (double)mOutputsDims[1]);
 
     const float xOutputRatio = mStimuliProvider.getSizeX()
-                                    / (float) mFeatureMapWidth;
+                                    / (float) (mFeatureMapWidth);
     const float yOutputRatio = mStimuliProvider.getSizeY()
-                                    / (float) mFeatureMapHeight;
+                                    / (float) (mFeatureMapHeight);
     if(mDetectorType == AnchorCell_Frame_Kernels::DetectorType::LapNet)
     {
 

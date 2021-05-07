@@ -27,6 +27,7 @@ const char* N2D2::AnchorCell::Type = "Anchor";
 N2D2::AnchorCell::AnchorCell(const DeepNet& deepNet, 
     const std::string& name,
     StimuliProvider& sp,
+    const AnchorCell_Frame_Kernels::DetectorType detectorType,
     const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
     unsigned int scoresCls)
     : Cell(deepNet, name, 6*anchors.size()),
@@ -41,9 +42,9 @@ N2D2::AnchorCell::AnchorCell(const DeepNet& deepNet,
       mNegativeRatioSSD(this, "NegativeRatio", 3U),
       mMaxLabelGT(this, "MaxLabelPerFrame", 1000U),
       mNbClass(this, "NbClass", -1),
-      mDetectorType(this, "DetectorType", AnchorCell_Frame_Kernels::DetectorType::LapNet),
       mInputFormat(this, "InputFormat", AnchorCell_Frame_Kernels::Format::CA),
       mStimuliProvider(sp),
+      mDetectorType(detectorType),
       mScoresCls(scoresCls)
 {
     // ctor
@@ -62,8 +63,12 @@ void N2D2::AnchorCell::setAnchors(const std::vector<AnchorCell_Frame_Kernels::An
 
 void N2D2::AnchorCell::setOutputsDims()
 {
-    mOutputsDims[0] = mInputsDims[0];
-    mOutputsDims[1] = mInputsDims[1];
+    if(mDetectorType == AnchorCell_Frame_Kernels::DetectorType::LapNet) { 
+        mOutputsDims[0] = mInputsDims[0];
+        mOutputsDims[1] = mInputsDims[1];
+    } else {
+        
+    }
 }
 
 void N2D2::AnchorCell::labelsMapping(const std::string& fileName)

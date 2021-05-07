@@ -1057,6 +1057,7 @@ std::vector<nvinfer1::ITensor *>
                         unsigned int outputWidth,
                         std::vector<std::vector<nvinfer1::ITensor *> > inputs_tensor,
                         nvinfer1::ElementWiseOperation op,
+                        CoeffMode_T coeffMode,
                         float* scales,
                         float* shift,
                         float* power)
@@ -1065,8 +1066,11 @@ std::vector<nvinfer1::ITensor *>
         std::vector<std::vector<nvinfer1::ITensor *>> scale_tensor;
 
         std::cout << "Add elementwize layer: " << layerName << std::endl;
-        nvinfer1::ScaleMode modeScale = nvinfer1::ScaleMode::kUNIFORM;
-
+        nvinfer1::ScaleMode modeScale = (coeffMode == PerChannel) ? 
+                                            nvinfer1::ScaleMode::kCHANNEL 
+                                            : nvinfer1::ScaleMode::kUNIFORM;
+        const std::size_t coeffSize =  coeffMode == PerChannel ? 
+                                        nbOutputs : inputs_tensor.size();
         /**
             This layer applies a per-elements tensor computation to its inputA and B:
                 output = (input* scale + shift)^ power
@@ -1077,17 +1081,15 @@ std::vector<nvinfer1::ITensor *>
 
         if(mDataType == nvinfer1::DataType::kHALF)
         {
-            scale_half = new __half[inputs_tensor.size()];
-            shift_half = new __half[inputs_tensor.size()];
-            power_half = new __half[inputs_tensor.size()];
+            scale_half = new __half[coeffSize];
+            shift_half = new __half[coeffSize];
+            power_half = new __half[coeffSize];
 
-            for(unsigned int input = 0;
-                    input < inputs_tensor.size();
-                    ++input)
+            for(unsigned int c = 0; c < coeffSize;  ++c)
             {
-                scale_half[input] = fp16::__float2half(scales[input]);
-                shift_half[input] = fp16::__float2half(shift[input]);
-                power_half[input] = fp16::__float2half(power[input]);
+                scale_half[c] = fp16::__float2half(scales[c]);
+                shift_half[c] = fp16::__float2half(shift[c]);
+                power_half[c] = fp16::__float2half(power[c]);
             }
         }
 
@@ -1097,18 +1099,22 @@ std::vector<nvinfer1::ITensor *>
             nvinfer1::Weights scale_trt;
             nvinfer1::Weights shift_trt;
             nvinfer1::Weights power_trt;
+            const std::size_t coeffIdx =  coeffMode == PerChannel ? 
+                                            0 : input;
+            const std::size_t coeffLength =  coeffMode == PerChannel ? 
+                                            nbOutputs : 1;
 
             if(mDataType != nvinfer1::DataType::kHALF)
             {
-                scale_trt  = {mDataType, scales + input, 1};
-                shift_trt  = {mDataType, shift + input, 1};
-                power_trt  = {mDataType, power + input, 1};
+                scale_trt  = {mDataType, scales + coeffIdx, coeffLength};
+                shift_trt  = {mDataType, shift + coeffIdx, coeffLength};
+                power_trt  = {mDataType, power + coeffIdx, coeffLength};
             }
             else
             {
-                scale_trt  = {mDataType, scale_half + input, 1};
-                shift_trt  = {mDataType, shift_half + input, 1};
-                power_trt  = {mDataType, power_half + input, 1};
+                scale_trt  = {mDataType, scale_half + coeffIdx, coeffLength};
+                shift_trt  = {mDataType, shift_half + coeffIdx, coeffLength};
+                power_trt  = {mDataType, power_half + coeffIdx, coeffLength};
             }
 
 
@@ -1961,6 +1967,8 @@ std::vector<nvinfer1::ITensor *>
                             unsigned int nbAnchors,
                             //std::vector<nvinfer1::ITensor *> inputs_tensor,
                             std::vector<std::vector<nvinfer1::ITensor *> *> inputs_tensor,
+                            bool isCoordinatesAnchors,
+                            bool isPixelFormatXY,
                             double nmsIoU,
                             const float* scoreThreshold,
                             unsigned int maxParts,
@@ -2003,6 +2011,8 @@ std::vector<nvinfer1::ITensor *>
                                                                 nbProposals,
                                                                 nbCls,
                                                                 nbAnchors,
+                                                                isCoordinatesAnchors,
+                                                                isPixelFormatXY,
                                                                 useInternalNMS ? mDetectorNMS : nmsIoU,
                                                                 useInternalThresholds ? mDetectorThresholds : scoreThreshold,
                                                                 maxParts,
