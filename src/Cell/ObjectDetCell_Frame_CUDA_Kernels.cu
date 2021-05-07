@@ -143,6 +143,7 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                 const unsigned int k    = roi_anchors[2 + 5*proposal + batchPos*nbProposals*5];
                 const unsigned int addBase = xa 
                                              + ya*channelWidth
+                                             + cumulParts*channelHeight*channelWidth
                                              + batchPos*channelHeight*channelWidth*nbAnchorPerCls*2*totalParts;
 
                 unsigned int xIdx = pixelFormatXY ? addBase + ptIdx*2 * channelHeight*channelWidth
@@ -151,11 +152,11 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                                             : addBase + ptIdx*2 * channelHeight*channelWidth;
 
                 if(isCoordinatesAnchors) {
-                    xIdx += (cumulParts + k*nbParts*2)*channelHeight*channelWidth;
-                    yIdx += (cumulParts + k*nbParts*2)*channelHeight*channelWidth;
+                    xIdx += k*nbParts*2*channelHeight*channelWidth;
+                    yIdx += k*nbParts*2*channelHeight*channelWidth;
                 } else {
-                    xIdx += (cumulParts*2 + k*totalParts*2)*channelHeight*channelWidth;
-                    yIdx += (cumulParts*2 + k*totalParts*2)*channelHeight*channelWidth;
+                    xIdx += k*totalParts*2*channelHeight*channelWidth;
+                    yIdx += k*totalParts*2*channelHeight*channelWidth;
                 }
 
                 const float partY = inputs_parts[yIdx];
@@ -197,6 +198,7 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
 
                 const unsigned int addBase = xa 
                                              + ya*channelWidth
+                                             + cumulTemplates*channelHeight*channelWidth
                                              + batchPos*channelHeight*channelWidth*nbAnchorPerCls*3*totalTemplates;
 
                 unsigned int xIdx = pixelFormatXY ? addBase + ptIdx*3 * channelHeight*channelWidth
@@ -206,14 +208,14 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                 unsigned int zIdx =  addBase + (ptIdx*3 + 2) * channelHeight*channelWidth;
 
                 if(isCoordinatesAnchors) {
-                    xIdx += (cumulTemplates + k*nbTemplates*3)*channelHeight*channelWidth;
-                    yIdx += (cumulTemplates + k*nbTemplates*3)*channelHeight*channelWidth;
-                    zIdx += (cumulTemplates + k*nbTemplates*3)*channelHeight*channelWidth;
+                    xIdx += k*nbTemplates*3*channelHeight*channelWidth;
+                    yIdx += k*nbTemplates*3*channelHeight*channelWidth;
+                    zIdx += k*nbTemplates*3*channelHeight*channelWidth;
 
                 } else {
-                    xIdx += (cumulTemplates*3 + k*totalTemplates*3)*channelHeight*channelWidth;
-                    yIdx += (cumulTemplates*3 + k*totalTemplates*3)*channelHeight*channelWidth;
-                    zIdx += (cumulTemplates*3 + k*totalTemplates*3)*channelHeight*channelWidth;
+                    xIdx += k*totalTemplates*3*channelHeight*channelWidth;
+                    yIdx += k*totalTemplates*3*channelHeight*channelWidth;
+                    zIdx += k*totalTemplates*3*channelHeight*channelWidth;
                 }
 
                 const float templateY = expf(inputs_templates[yIdx]);
