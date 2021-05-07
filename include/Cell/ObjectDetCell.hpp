@@ -52,6 +52,8 @@ public:
                                         StimuliProvider&,
                                         const unsigned int,
                                         unsigned int,
+                                        const AnchorCell_Frame_Kernels::Format ,
+                                        const AnchorCell_Frame_Kernels::PixelFormat ,
                                         unsigned int,
                                         unsigned int,
                                         Float_T,
@@ -72,6 +74,8 @@ public:
                  StimuliProvider& sp,
                  const unsigned int nbOutputs,
                  unsigned int nbAnchors,
+                const AnchorCell_Frame_Kernels::Format inputFormat,
+                const AnchorCell_Frame_Kernels::PixelFormat pixelFormat,
                  unsigned int nbProposals,
                  unsigned int nbClass,
                  Float_T nmsThreshold,
@@ -127,10 +131,10 @@ protected:
     Parameter<Float_T> mBackgroundMinIoU;
     Parameter<unsigned int> mFeatureMapWidth;
     Parameter<unsigned int> mFeatureMapHeight;
-    Parameter<AnchorCell_Frame_Kernels::Format> mInputFormat;
-    Parameter<AnchorCell_Frame_Kernels::PixelFormat> mPixelFormat;
 
     unsigned int mNbAnchors;
+    AnchorCell_Frame_Kernels::Format mInputFormat;
+    AnchorCell_Frame_Kernels::PixelFormat mPixelFormat;
     unsigned int mNbProposals;
     unsigned int mNbClass;
     unsigned int mMaxParts;

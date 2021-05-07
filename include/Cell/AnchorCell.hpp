@@ -46,6 +46,7 @@ public:
         const std::string&,
         StimuliProvider&,
         const AnchorCell_Frame_Kernels::DetectorType detectorType,
+        const AnchorCell_Frame_Kernels::Format inputFormat,
         const std::vector<AnchorCell_Frame_Kernels::Anchor>&,
         unsigned int)>
     RegistryCreate_T;
@@ -60,6 +61,7 @@ public:
     AnchorCell(const DeepNet& deepNet, const std::string& name,
                StimuliProvider& sp,
                const AnchorCell_Frame_Kernels::DetectorType detectorType,
+               const AnchorCell_Frame_Kernels::Format inputFormat,
                const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
                unsigned int scoresCls = 1);
 
@@ -111,10 +113,10 @@ protected:
     Parameter<unsigned int> mNegativeRatioSSD;
     Parameter<unsigned int> mMaxLabelGT;
     Parameter<int> mNbClass;
-    Parameter<AnchorCell_Frame_Kernels::Format> mInputFormat;
 
     StimuliProvider& mStimuliProvider;
     AnchorCell_Frame_Kernels::DetectorType mDetectorType;
+    AnchorCell_Frame_Kernels::Format mInputFormat;
     unsigned int mScoresCls;
     //std::map<int, int> mLabelsMapping;
     std::vector<int> mLabelsMapping;

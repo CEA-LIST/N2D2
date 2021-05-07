@@ -41,6 +41,13 @@ N2D2::ObjectDetCellGenerator::generate(Network& /*network*/, const DeepNet& deep
 
     const unsigned int nbAnchors = iniConfig.getProperty
                                    <unsigned int>("NbAnchors");
+    const AnchorCell_Frame_Kernels::Format inputFormat 
+        = iniConfig.getProperty<AnchorCell_Frame_Kernels::Format>
+            ("InputFormat", AnchorCell_Frame_Kernels::Format::CA);         
+    const AnchorCell_Frame_Kernels::PixelFormat pixelFormat 
+        = iniConfig.getProperty<AnchorCell_Frame_Kernels::PixelFormat>
+            ("PixelFormat", AnchorCell_Frame_Kernels::PixelFormat::XY);         
+
     const unsigned int nbProposals = iniConfig.getProperty
                                    <unsigned int>("NbProposals");
     const unsigned int nbCls = iniConfig.getProperty
@@ -212,6 +219,8 @@ N2D2::ObjectDetCellGenerator::generate(Network& /*network*/, const DeepNet& deep
                                 sp,
                                 nbOutputs,
                                 nbAnchors,
+                                inputFormat,
+                                pixelFormat,
                                 nbProposals,
                                 nbCls,
                                 nmsThreshold,

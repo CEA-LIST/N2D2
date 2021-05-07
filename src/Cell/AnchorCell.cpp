@@ -28,6 +28,7 @@ N2D2::AnchorCell::AnchorCell(const DeepNet& deepNet,
     const std::string& name,
     StimuliProvider& sp,
     const AnchorCell_Frame_Kernels::DetectorType detectorType,
+    const AnchorCell_Frame_Kernels::Format inputFormat,
     const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
     unsigned int scoresCls)
     : Cell(deepNet, name, 6*anchors.size()),
@@ -42,9 +43,9 @@ N2D2::AnchorCell::AnchorCell(const DeepNet& deepNet,
       mNegativeRatioSSD(this, "NegativeRatio", 3U),
       mMaxLabelGT(this, "MaxLabelPerFrame", 1000U),
       mNbClass(this, "NbClass", -1),
-      mInputFormat(this, "InputFormat", AnchorCell_Frame_Kernels::Format::CA),
       mStimuliProvider(sp),
       mDetectorType(detectorType),
+      mInputFormat(inputFormat),
       mScoresCls(scoresCls)
 {
     // ctor

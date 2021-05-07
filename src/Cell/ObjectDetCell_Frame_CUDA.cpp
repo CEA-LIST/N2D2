@@ -32,6 +32,8 @@ N2D2::ObjectDetCell_Frame_CUDA::ObjectDetCell_Frame_CUDA(const DeepNet& deepNet,
                                                 StimuliProvider& sp,
                                                 const unsigned int nbOutputs,
                                                 unsigned int nbAnchors,
+                                                const AnchorCell_Frame_Kernels::Format inputFormat,
+                                                const AnchorCell_Frame_Kernels::PixelFormat pixelFormat,
                                                 unsigned int nbProposals,
                                                 unsigned int nbClass,
                                                 Float_T nmsThreshold,
@@ -41,7 +43,7 @@ N2D2::ObjectDetCell_Frame_CUDA::ObjectDetCell_Frame_CUDA(const DeepNet& deepNet,
                                                 const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors)
 
     : Cell(deepNet, name, nbOutputs),
-      ObjectDetCell(deepNet, name, sp, nbOutputs, nbAnchors, nbProposals, nbClass, nmsThreshold, scoreThreshold, numParts, numTemplates),
+      ObjectDetCell(deepNet, name, sp, nbOutputs, nbAnchors, inputFormat, pixelFormat, nbProposals, nbClass, nmsThreshold, scoreThreshold, numParts, numTemplates),
       Cell_Frame_CUDA<Float_T>(deepNet, name, nbOutputs),
       mAnchors(anchors)
 {

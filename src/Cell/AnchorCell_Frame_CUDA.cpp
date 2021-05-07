@@ -34,10 +34,11 @@ N2D2::AnchorCell_Frame_CUDA::AnchorCell_Frame_CUDA(
     const std::string& name,
     StimuliProvider& sp,
     const AnchorCell_Frame_Kernels::DetectorType detectorType,
+    const AnchorCell_Frame_Kernels::Format inputFormat,
     const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
     unsigned int scoresCls)
     : Cell(deepNet, name, 6*anchors.size()),
-      AnchorCell(deepNet, name, sp, detectorType, anchors, scoresCls),
+      AnchorCell(deepNet, name, sp, detectorType, inputFormat, anchors, scoresCls),
       Cell_Frame_CUDA<Float_T>(deepNet, name, 6*anchors.size()),
       mNbLabelsMax(16),
       mCudaGT(NULL)

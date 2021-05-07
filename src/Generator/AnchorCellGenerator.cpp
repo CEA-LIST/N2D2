@@ -47,6 +47,9 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
     const AnchorCell_Frame_Kernels::DetectorType detectorType 
         = iniConfig.getProperty<AnchorCell_Frame_Kernels::DetectorType>
             ("DetectorType");         
+    const AnchorCell_Frame_Kernels::Format inputFormat 
+        = iniConfig.getProperty<AnchorCell_Frame_Kernels::Format>
+            ("InputFormat", AnchorCell_Frame_Kernels::Format::CA);         
 
     std::vector<AnchorCell_Frame_Kernels::Anchor> anchors;
 
@@ -172,7 +175,7 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
 
     // Cell construction
     std::shared_ptr<AnchorCell> cell = Registrar
-        <AnchorCell>::create(model)(deepNet, section, sp, detectorType, anchors, scoresCls);
+        <AnchorCell>::create(model)(deepNet, section, sp, detectorType, inputFormat, anchors, scoresCls);
 
     if (!cell) {
         throw std::runtime_error(

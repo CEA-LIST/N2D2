@@ -39,15 +39,17 @@ public:
     AnchorCell_Frame(const DeepNet& deepNet, const std::string& name,
                  StimuliProvider& sp,
                  const AnchorCell_Frame_Kernels::DetectorType detectorType,
+                 const AnchorCell_Frame_Kernels::Format inputFormat,
                  const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
                  unsigned int scoresCls = 1);
     static std::shared_ptr<AnchorCell> create(const DeepNet& deepNet, const std::string& name,
                   StimuliProvider& sp,
                   const AnchorCell_Frame_Kernels::DetectorType detectorType,
+                  const AnchorCell_Frame_Kernels::Format inputFormat,
                   const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
                   unsigned int scoresCls)
     {
-        return std::make_shared<AnchorCell_Frame>(deepNet, name, sp, detectorType, anchors, scoresCls);
+        return std::make_shared<AnchorCell_Frame>(deepNet, name, sp, detectorType, inputFormat, anchors, scoresCls);
     }
 
 
