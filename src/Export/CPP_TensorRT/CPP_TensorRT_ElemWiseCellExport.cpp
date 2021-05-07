@@ -205,6 +205,7 @@ void N2D2::CPP_TensorRT_ElemWiseCellExport
          << "       " << input_name.str()
                         << identifier << adderTreeStr << "_tensor_agregate,\n"
          << "         " << prefix << "_ELEM_OP_TENSORRT,\n"
+         << "         " << prefix << "_ELEM_COEFF_MODE,\n"
          << "       " << prefix << "_WEIGHTS,\n"
          << "       " << prefix << "_SHIFTS,\n"
          << "         " << prefix << "_POWER);\n";

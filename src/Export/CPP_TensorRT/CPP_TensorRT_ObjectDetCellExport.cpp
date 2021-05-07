@@ -104,6 +104,8 @@ void N2D2::CPP_TensorRT_ObjectDetCellExport
          << "         " << prefix << "_NB_CLASS,\n"
          << "         " << prefix << "_NB_ANCHORS,\n"
          << "       " << input_name.str() << "tensor_packed,\n"
+         << "         " << prefix << "_IS_COORD_ANCHORS,\n"
+         << "         " << prefix << "_IS_PIXEL_FORMAT_XY,\n"
          << "         " << prefix << "_NMS_IUO_THRESHOLD,\n"
          << "         " << identifier << "_score_threshold,\n"
          << "         " << prefix << "_MAX_PARTS,\n"

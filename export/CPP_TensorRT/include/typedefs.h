@@ -46,6 +46,13 @@ typedef enum {
     EuclideanSum,
     Prod
 } Operation_T;
+
+typedef enum {
+    PerLayer,
+    PerInput,
+    PerChannel
+} CoeffMode_T;
+
 typedef float WDATA_T;
 typedef float BDATA_T;
 typedef float SUM_T;

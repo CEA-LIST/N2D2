@@ -390,6 +390,7 @@ public:
                             unsigned int outputWidth,
                             std::vector<std::vector<nvinfer1::ITensor *> > inputs_tensor,
                             nvinfer1::ElementWiseOperation op,
+                            CoeffMode_T coeffMode,
                             float* scales,
                             float* shift,
                             float* power);
@@ -483,6 +484,8 @@ public:
                                 unsigned int nbAnchors,
                                 //std::vector<nvinfer1::ITensor *> inputs_tensor,
                                 std::vector<std::vector<nvinfer1::ITensor *> *> inputs_tensor,
+                                bool isCoordinatesAnchors,
+                                bool isPixelFormatXY,
                                 double nmsIoU,
                                 const float* scoreThreshold,
                                 unsigned int maxParts,
