@@ -1135,22 +1135,20 @@ class Pool(NeuralNetworkCell):
 
     def __call__(self, inputs):
         super().__call__(inputs)
-
-        mapping_row = 0
-
-        if isinstance(inputs, n2d2.tensor.Interface): # Here we try to support multi input
-            for tensor in inputs.get_tensors():
-                if tensor.nb_dims() != 4:
-                    raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-                mapping_row += tensor.dimZ()
-        elif isinstance(inputs, n2d2.Tensor):
-            if inputs.nb_dims() != 4:
-                raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-            mapping_row += inputs.dimZ()
-        else:
-            raise n2d2.wrong_input_type("inputs", inputs, [str(type(list)), str(type(n2d2.Tensor))])
-
+        
         if self._N2D2_object is None:
+            mapping_row = 0
+            if isinstance(inputs, n2d2.tensor.Interface): # Here we try to support multi input
+                for tensor in inputs.get_tensors():
+                    if tensor.nb_dims() != 4:
+                        raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
+                    mapping_row += tensor.dimZ()
+            elif isinstance(inputs, n2d2.Tensor):
+                if inputs.nb_dims() != 4:
+                    raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
+                mapping_row += inputs.dimZ()
+            else:
+                raise n2d2.wrong_input_type("inputs", inputs, [str(type(list)), str(type(n2d2.Tensor))])
 
             self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
                                                                          self.get_name(),

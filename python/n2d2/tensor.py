@@ -371,8 +371,8 @@ class Tensor:
             self._tensor[index] = value
         else:
             raise error_handler.WrongInputType("index", type(index), [str(list), str(tuple), str(float), str(int), str(slice)])
-        if self.cuda:
-            self.htod()
+        # if self.cuda:
+        #     self.htod()
 
     def __getitem__(self, index):
         """
@@ -381,8 +381,8 @@ class Tensor:
             - the coordinate of the element;
             - the index of the flatten tensor.
         """
-        if self.cuda:
-            self.dtoh()
+        # if self.cuda:
+        #     self.dtoh()
         value = None
         if isinstance(index, tuple) or isinstance(index, list):
             value = self._tensor[self._get_index(index)]

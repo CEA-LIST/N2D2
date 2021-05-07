@@ -134,6 +134,71 @@ You can switch from CPU to GPU at anytime :
     tensor.cpu()  # Converting to a CPU tensor
     tensor.cuda() # Converting to a CUDA tensor
 
+When working on a CUDA tensor you have to understand that they are stored in two different places.
+The host and the device. The device is the GPU. The host correspond to your interface with the tensor that exists in the GPU. 
+You cannot access the device directly, the GPU don't have input/output functions.
+
+This is why you have two methods to synchronized these two versions.
+
+Synchronization example :
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Let's consider the following CUDA Tensor :
+
+.. testcode::
+
+    t = n2d2.Tensor([2, 2], cuda=True)
+
+.. testoutput::
+
+    0 0
+    0 0
+
+We will set the following values :
+
+.. testcode::
+
+    t.set_values([[1, 2], [3, 4]])
+
+.. testoutput::
+
+    1 2
+    3 4
+
+Then we will synchronized the device with the host
+
+.. testcode::
+
+    t.htod()
+
+.. testoutput::
+
+    1 2
+    3 4
+
+As you can see nothing change when you print the tensor.
+Now let's change the values stored in the tensor :
+
+.. testcode::
+
+    t.set_values([[2, 3], [4, 5]])
+
+.. testoutput::
+
+    2 3
+    4 5
+
+Synchronizing the device with the host :
+
+.. testcode::
+
+    t.dtoh()
+
+.. testoutput::
+
+    1 2
+    3 4
+
 
 Tensor 
 ------

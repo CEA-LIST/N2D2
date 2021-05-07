@@ -133,7 +133,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#fom-numpy">Fom Numpy :</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#cuda-tensor">CUDA Tensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cuda-tensor">CUDA Tensor</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#exemple">Exemple :</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#id1">Tensor</a></li>
 </ul>
 </li>
@@ -344,6 +347,53 @@ The index correspond to the flatten representation of your tensor.</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tensor</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>  <span class="c1"># Converting to a CPU tensor</span>
 <span class="n">tensor</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span> <span class="c1"># Converting to a CUDA tensor</span>
 </pre></div>
+</div>
+<p>When working on a CUDA tensor you have to understand that they are stored in two different places.
+The host and the device. The device is the GPU. The host correspond to your interface with the tensor that exists in the GPU.
+You cannot access the device directly, the GPU don’t have input/output functions.</p>
+<p>This is why you have two methods to synchronized these two versions.</p>
+<div class="section" id="exemple">
+<h3>Exemple :<a class="headerlink" href="#exemple" title="Permalink to this headline">¶</a></h3>
+<p>Let’s consider the following CUDA Tensor :</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">cuda</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0 0
+0 0
+</pre></div>
+</div>
+<p>We will set some values :</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span><span class="o">.</span><span class="n">set_values</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]])</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1 2
+3 4
+</pre></div>
+</div>
+<p>Then we will synchronized the device with the host</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span><span class="o">.</span><span class="n">htod</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1 2
+3 4
+</pre></div>
+</div>
+<p>As you can see nothing change when you print the tensor.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span><span class="o">.</span><span class="n">set_values</span><span class="p">([[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>2 3
+4 5
+</pre></div>
+</div>
+<p>Synchronizing the device with the host :</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span><span class="o">.</span><span class="n">dtoh</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1 2
+3 4
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="id1">
