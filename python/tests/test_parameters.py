@@ -34,8 +34,6 @@ class test_params(unittest.TestCase):
         self.object = None
 
     def test_parameters(self):
-        # /!\ You want to always put this at the end of the test /!\
-
         if self.object: # We don't do test if it's the dummy class
             parameters = self.object.N2D2().getParameters()
             for param in self.parameters.keys():
@@ -52,15 +50,10 @@ class test_params(unittest.TestCase):
                         self.assertEqual(self.parameters[param], N2D2_param)
                     else:
                         self.assertEqual(self.parameters[param], N2D2_param)
-            #         self.parameters.pop(param)
-            
-            # TODO : It can be nice to check if we have tested every parameters
-            # self.assertTrue(self.parameters.keys() == [])
+
 
 
 ### TEST CELLS ###
-
-
 class test_Fc(test_params):
     def setUp(self):
         self.parameters = {

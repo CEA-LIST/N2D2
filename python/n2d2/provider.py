@@ -22,9 +22,10 @@
 import N2D2
 import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
+from abc import ABC, abstractmethod
 
 
-class Provider(N2D2_Interface):
+class Provider(N2D2_Interface,ABC):
     _convention_converter= n2d2.ConventionConverter({
             "name": "Name",
             "batch_size": "batchSize",
@@ -33,6 +34,7 @@ class Provider(N2D2_Interface):
             "size": "Size",
             "random_read": "RandomRead",
     })
+    @abstractmethod
     def __init__(self, **config_parameters):
         
         N2D2_Interface.__init__(self, **config_parameters)
@@ -40,7 +42,7 @@ class Provider(N2D2_Interface):
         if 'name' in config_parameters:
             self._name = config_parameters.pop['name']
         else:
-            self._name = n2d2.global_variables.generate_name(self)
+            self._name = n2d2.generate_name(self)
         self._deepnet = None
 
     def get_deepnet(self):
@@ -270,7 +272,7 @@ class TensorPlaceholder(Provider):
         self._deepnet.set_provider(self)
 
 
-    def _set_streamed_tensor(self): # TODO : only used in the constructor at the moment, remove the method ?
+    def _set_streamed_tensor(self): 
         """
         Streamed a tensor in a data provider to simulate the output of a database.
         The model of the tensor is defined by the compilation of the library.
@@ -303,65 +305,4 @@ class MultipleOutputsProvider(Provider):
                                                  batchSize=batch_size)
         self._deepnet = n2d2.deepnet.DeepNet()
         self._deepnet.set_provider(self)
-        self._name = n2d2.global_variables.generate_name(self)
-
-"""
-TODO : Not up to date to keep ?
-"""
-
-# class Input(Provider):
-#     
-#     def __init__(self, dims, model=None, **config_parameters):
-#         Provider.__init__(self, **config_parameters)
-
-#         if model is None:
-#             model = n2d2.global_variables.default_model
-
-#         if model == "Frame":
-#             self._tensor = n2d2.Tensor(dims)
-#         elif model == "Frame_CUDA":
-#             self._tensor = n2d2.CudaTensor(dims)
-#         else:
-#             ValueError("Invalid model '" + model + "'")
-
-#         # n2d2.error_handler.wrong_input_type("inputs", type(inputs), [type(list), 'n2d2.tensor.Tensor', 'N2D2.BaseTensor'])
-#         provider_dims = [self._tensor.N2D2().dimX(), self._tensor.N2D2().dimY(), self._tensor.N2D2().dimZ()]
-#         self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
-#                                                  size=provider_dims,
-#                                                  batchSize=self._tensor.N2D2().dimB())
-#         self._set_N2D2_parameter('StreamTensor', True)
-#         self._N2D2_object.setStreamedTensor(self._tensor.N2D2())
-
-#         self._deepnet = n2d2.deepnet.DeepNet()
-#         self._deepnet.set_provider(self)
-
-
-#     def set_streamed_tensor(self, tensor):
-#         self._N2D2_object.setStreamedTensor(tensor)
-
-#     def __call__(self, inputs):
-
-#         if not self.dims() == inputs.dims():
-#             raise RuntimeError("Received input tensor with dims " + str(inputs.dims()) +
-#                                " but object dims are " + str(self.dims()) +
-#                                ". Input dimensions cannot change after initialization")
-
-#         if "Cuda" in str(type(self._tensor)):
-#             if not "Cuda" in str(type(inputs)):
-#                 raise RuntimeError("'inputs' argument is not a cuda tensor, but internal tensor is.")
-#             self._tensor.N2D2().synchronizeHToD()
-#         else:
-#             if "Cuda" in str(type(inputs)):
-#                 raise RuntimeError("inputs is a cuda tensor, but internal tensor is not.")
-
-#         self._N2D2_object.setStreamedTensor(inputs.N2D2())
-
-
-#         return n2d2.tensor.GraphTensor(self._tensor, self)
-
-#     def get_name(self):
-#         return self._name
-
-#     def __str__(self):
-#         return "'" + self.get_name() + "' Input"
-
+        self._name = n2d2.generate_name(self)

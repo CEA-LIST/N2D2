@@ -24,6 +24,7 @@ import n2d2.solver
 import n2d2.filler
 from n2d2.n2d2_interface import N2D2_Interface
 from n2d2.cells.cell import Cell
+from abc import ABC, abstractmethod
 
 _cell_parameters = {
     "deep_net": "DeepNet", 
@@ -54,9 +55,9 @@ _cell_frame_parameters = {
 # Cell_frame_parameter contains the parameters from cell_parameter
 _cell_frame_parameters.update(_cell_parameters) 
 
-class NeuralNetworkCell(N2D2_Interface, Cell):
+class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
 
-
+    @abstractmethod
     def __init__(self,  **config_parameters):
         
 
@@ -564,8 +565,6 @@ class Fc(NeuralNetworkCell):
     def get_weights_solver(self):
         return self._config_parameters['weights_solver']
 
-    # TODO: This is not working as expected because solvers are copied in a vector at cells initialization.
-    #  setWeightsSolver sets only the solver to be copied but does not modify after cells initialization
     def set_weights_solver(self, solver):
         self._config_parameters['weights_solver'] = solver
         self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())

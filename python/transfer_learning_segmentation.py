@@ -230,7 +230,7 @@ for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test') / batch_
     x = provider.read_batch(batch_idx)
     extractor(x)
     x = []
-    # TODO: There is currenly a problem if multiple detached tensors are fed to a network, since by default for each one a new deepnet is created
+    # TODO: There is currently a problem if multiple detached tensors are fed to a network, since by default for each one a new deepnet is created
     for scale in scales:
         x.append(scale.get_outputs())
     x = decoder(x)

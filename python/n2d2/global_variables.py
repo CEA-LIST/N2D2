@@ -32,15 +32,6 @@ default_net = N2D2.Network(default_seed)
 
 objects_counter = {}
 
-# TODO : Move this function to utils ?
-def generate_name(obj):
-    name = obj.__class__.__name__
-    if name in objects_counter:
-        objects_counter[name] += 1
-    else:
-        objects_counter[name] = 0
-    name += "_"+str(objects_counter[name])
-    return name
 
 class Verbosity:
     graph_only = 0  # Only names, cell types and inputs
@@ -53,3 +44,15 @@ verbosity = Verbosity.detailed
 def set_cuda_device(id):
     N2D2.CudaContext.setDevice(id)
 
+# TODO : Move this function to utils ?
+def generate_name(obj):
+    """
+    Function used to generate name of an object
+    """
+    name = obj.__class__.__name__
+    if name in objects_counter:
+        objects_counter[name] += 1
+    else:
+        objects_counter[name] = 0
+    name += "_"+str(objects_counter[name])
+    return name

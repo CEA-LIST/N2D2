@@ -21,9 +21,10 @@
 import N2D2
 import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
+from abc import ABC, abstractmethod
 
-class Solver(N2D2_Interface):
-
+class Solver(N2D2_Interface, ABC):
+    @abstractmethod
     def __init__(self, **config_parameters):
 
         if 'model' in config_parameters:

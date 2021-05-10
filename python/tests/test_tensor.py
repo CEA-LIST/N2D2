@@ -128,8 +128,10 @@ class test_cudatensor(test_tensor):
         copy_tensor = self.tensor.copy()
         self.tensor[0, 0, 0] = 1
         self.tensor.dtoh() # Synchronizing the host with the device
+        self.assertEqual(self.tensor, copy_tensor)
+        self.tensor[0, 0, 0] = 1
+        self.tensor.htod() # Synchronizing the device with the host
         self.assertNotEqual(self.tensor, copy_tensor)
-
     
 if __name__ == '__main__':
     unittest.main()

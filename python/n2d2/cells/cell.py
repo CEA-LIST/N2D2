@@ -22,12 +22,13 @@
 import N2D2
 import n2d2.global_variables
 from n2d2.deepnet import DeepNet
+from abc import ABC, abstractmethod
 
-# TODO: Make abstract class
-class Cell:
+class Cell(ABC):
+    @abstractmethod
     def __init__(self, name):
         if not name:
-            name = n2d2.global_variables.generate_name(self)
+            name = n2d2.generate_name(self)
         self._name = name
 
     def __call__(self, x):
@@ -185,7 +186,6 @@ class DeepNetCell(Block):
         if ini_file is not None:
             ini_parser.load(ini_file)
         ini_parser.currentSection("onnx", True)
-        # TODO : do it with generate method
         N2D2_deepnet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, ini_parser,
                                             N2D2_deepnet, [None])
         n2d2_deepnet = cls(N2D2_deepnet)

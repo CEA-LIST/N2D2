@@ -23,10 +23,7 @@ import n2d2
 from n2d2 import tensor
 import N2D2
 
-def _switching_convention_t_n(dims):
-    return [dims[3], dims[2], dims[0], dims[1]]
-
-def _switching_convention_n_t(dims):
+def _switching_convention(dims):
     return [dims[3], dims[2], dims[0], dims[1]]
 
 # TODO : It may be possible for CUDA tensor to just pass the device adress to the CUDA kernel
@@ -40,8 +37,7 @@ def _to_n2d2(torch_tensor):
     numpy_tensor = torch_tensor.cpu().detach().numpy()
     n2d2_tensor = n2d2.Tensor.from_numpy(numpy_tensor)
     if n2d2_tensor.nb_dims() ==4:
-        # TODO : change this to torch.shape or unify swith_convention method
-        n2d2_tensor.reshape(_switching_convention_t_n(n2d2_tensor.dims())) 
+        n2d2_tensor.reshape(_switching_convention(n2d2_tensor.dims())) 
     return n2d2_tensor
 
 def _to_torch(N2D2_tensor):
@@ -54,7 +50,7 @@ def _to_torch(N2D2_tensor):
     if torch_tensor.is_cuda:
         torch_tensor = torch_tensor.cuda()
     if n2d2_tensor.nb_dims() ==4:
-        torch_tensor.resize_(_switching_convention_n_t(n2d2_tensor.dims())) 
+        torch_tensor.resize_(_switching_convention(n2d2_tensor.dims())) 
 
     return torch_tensor
 

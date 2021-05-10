@@ -22,6 +22,7 @@
 import N2D2
 import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
+from abc import ABC, abstractmethod
 
 """
 For the tranformations, it is relatively important to be able to write custom 
@@ -55,9 +56,9 @@ class PadCropTransformation():
         return self.trans.apply(x)
 """
 
-class Transformation(N2D2_Interface):
+class Transformation(N2D2_Interface, ABC):
 
-    # TODO: Is there any way to check that no abstract Transformation object is generated?
+    @abstractmethod
     def __init__(self, **config_parameters):
 
         self._apply_to = N2D2.Database.StimuliSetMask.All

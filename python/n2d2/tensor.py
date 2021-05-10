@@ -492,7 +492,7 @@ class Interface(n2d2.provider.Provider):
     Interface is the class used to feed multiple tensors to a cell.
     """
     def __init__(self, tensors):
-        self._name = n2d2.global_variables.generate_name(self)
+        self._name = n2d2.generate_name(self)
         self.tensors = []
         if not isinstance(tensors, list):
             raise ValueError("'tensors' should be a list !")

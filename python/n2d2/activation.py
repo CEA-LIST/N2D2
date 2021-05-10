@@ -21,13 +21,16 @@
 import N2D2
 import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
+from abc import ABC, abstractmethod
+
 
 _activation_parameters = {
         "quantizer": "Quantizer"
 }
-class ActivationFunction(N2D2_Interface):
+class ActivationFunction(N2D2_Interface, ABC):
     
     # Cell_frame_parameter contains the parameters from cell_parameter
+    @abstractmethod
     def __init__(self, **config_parameters):
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')

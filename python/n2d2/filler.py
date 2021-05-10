@@ -21,9 +21,10 @@
 import N2D2
 import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
+from abc import ABC, abstractmethod
 
-class Filler(N2D2_Interface):
-
+class Filler(N2D2_Interface, ABC):
+    @abstractmethod
     def __init__(self, **config_parameters):
 
         if 'datatype' in config_parameters:
