@@ -463,13 +463,6 @@ class Fc(NeuralNetworkCell):
 
         return self.get_outputs()
 
-    # TODO: This is not working as expected because solvers are copied in a vector at cells initialization.
-    #  setWeightsSolver sets only the solver to be copied but does not modify after cells initialization
-    """
-    def set_weights_solver(self, solver):
-        self._config_parameters['weights_solver'] = solver
-        self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
-    """
 
     def set_weight(self, output_index, channel_index, value):
         """
@@ -550,10 +543,6 @@ class Fc(NeuralNetworkCell):
             biases.append(n2d2.Tensor.from_N2D2(tensor))
         return biases
 
-    def set_bias_solver(self, solver):
-        self._config_parameters['bias_solver'] = solver
-        self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
-
     def set_quantizer(self, quantizer):
         if 'quantizer' in self._config_parameters:
             raise RuntimeError("Quantizer already exists in cell '" + self.get_name() + "'")
@@ -575,8 +564,21 @@ class Fc(NeuralNetworkCell):
     def get_weights_solver(self):
         return self._config_parameters['weights_solver']
 
-    # TODO: General set_solver that copies solver and does both
+    # TODO: This is not working as expected because solvers are copied in a vector at cells initialization.
+    #  setWeightsSolver sets only the solver to be copied but does not modify after cells initialization
+    def set_weights_solver(self, solver):
+        self._config_parameters['weights_solver'] = solver
+        self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
+    
+    def set_bias_solver(self, solver):
+        self._config_parameters['bias_solver'] = solver
+        self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
 
+    def set_solver(self, solver):
+        self._config_parameters['bias_solver'] = solver
+        self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
+        self._config_parameters['weights_solver'] = solver.copy()
+        self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
 
 
 
@@ -797,17 +799,20 @@ class Conv(NeuralNetworkCell):
         return self.get_outputs()
 
 
-    # TODO: This is not working as expected because solvers are copied in a vector at cells initialization.
-    #  setWeightsSolver sets only the solver to be copied but does not modify after cells initialization
-    """
     def set_weights_solver(self, solver):
         self._config_parameters['weights_solver'] = solver
         self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
-    """
 
     def set_bias_solver(self, solver):
         self._config_parameters['bias_solver'] = solver
         self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
+
+    def set_solver(self, solver):
+        self._config_parameters['bias_solver'] = solver
+        self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
+        self._config_parameters['weights_solver'] = solver.copy()
+        self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
+
 
     def set_quantizer(self, quantizer):
         if 'quantizer' in self._config_parameters:
@@ -1547,18 +1552,20 @@ class Deconv(NeuralNetworkCell):
 
         return self.get_outputs()
 
-
-    # TODO: This is not working as expected because solvers are copied in a vector at cells initialization.
-    #  setWeightsSolver sets only the solver to be copied but does not modify after cells initialization
-    """
     def set_weights_solver(self, solver):
         self._config_parameters['weights_solver'] = solver
         self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
-    """
+
 
     def set_bias_solver(self, solver):
         self._config_parameters['bias_solver'] = solver
         self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
+
+    def set_solver(self, solver):
+        self._config_parameters['bias_solver'] = solver
+        self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
+        self._config_parameters['weights_solver'] = solver.copy()
+        self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
 
     def set_weight(self, output_index, channel_index, value):
         """

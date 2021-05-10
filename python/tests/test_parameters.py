@@ -694,6 +694,27 @@ class test_SGD(test_params):
 
         super().test_parameters()
 
+class test_Adam(test_params):
+    def setUp(self):
+        self.parameters = {
+            "datatype": "float",
+            "model": "Frame",
+            "learning_rate": 0.001,
+            "clamping": False,
+            "beta1": 0.1,
+            "beta2": 0.1,
+            "epsilon": 0.1,
+        }
+        self.object = n2d2.solver.Adam(**self.parameters)
+
+    def test_parameters(self):
+        self.assertEqual(self.parameters["learning_rate"], self.object.N2D2().getmLearningRate())
+        self.assertEqual(self.parameters["clamping"], bool(int(self.object.N2D2().getmClamping())))
+        self.assertEqual(self.parameters["beta1"], self.object.N2D2().getBeta1())
+        self.assertEqual(self.parameters["beta2"], self.object.N2D2().getBeta2())
+        self.assertEqual(self.parameters["epsilon"], self.object.N2D2().getEpsilon())
+        super().test_parameters()
+
 ### Activation ###
 
 class Linear(test_params):

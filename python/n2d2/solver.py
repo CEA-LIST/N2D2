@@ -42,6 +42,9 @@ class Solver(N2D2_Interface):
     def get_type(self):
         return type(self).__name__
 
+    def copy(self):
+        return self.create_from_N2D2_object(self._solver_generators[self._model_key](self.N2D2()))
+
     def __str__(self):
         output = self.get_type()
         output += N2D2_Interface.__str__(self)
@@ -108,4 +111,46 @@ class SGD(Solver):
             self._set_N2D2_parameters(self._config_parameters)
 
 
+class Adam(Solver):
 
+    _solver_generators = {
+        'Frame<float>': N2D2.AdamSolver_Frame_float,
+        'Frame_CUDA<float>': N2D2.AdamSolver_Frame_CUDA_float
+    }
+
+    _convention_converter= n2d2.ConventionConverter({
+        "learning_rate": "LearningRate",
+        "beta1": "Beta1",
+        "beta2": "Beta2",
+        "epsilon": "Epsilon",
+        "clamping": "Clamping",
+        "datatype": "Datatype",# Pure n2d2
+        "model": "Model",# Pure n2d2
+        "from_argument": "FromArgument", # Pure n2d2
+        
+        
+        
+    })
+    def __init__(self, from_arguments=True, **config_parameters):
+        """
+        :param from_arguments: If False, N2D2_object is not created based on config_parameters
+        :type  from_arguments: bool, optional
+        :param datatype: Datatype of the weights, default=float
+        :type datatype: str, optional
+        :param model: Can be either ``Frame`` or ``Frame_CUDA``, default='Frame'
+        :type model: str, optional 
+        :param learning_rate: Learning rate, default=0.01
+        :type learning_rate: float, optional
+        :param beta1: Exponential decay rate of these moving average of the first moment, default=0.9
+        :type beta1: float, optional
+        :param beta2: Exponential decay rate of these moving average of the second moment, default=0.999
+        :type beta2: float, optional
+        :param epsilon: Epsilon, default=1.0e-8
+        :type epsilon: float, optional
+        :param clamping: If true, clamp the weights and bias between -1 and 1, default=False
+        :type clamping: boolean, optional
+        """
+        Solver.__init__(self, **config_parameters)
+        if from_arguments:
+            self._set_N2D2_object(self._solver_generators[self._model_key]())
+            self._set_N2D2_parameters(self._config_parameters)

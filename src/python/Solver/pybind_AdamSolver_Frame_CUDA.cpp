@@ -39,7 +39,9 @@ void declare_AdamSolver_Frame_CUDA(py::module &m, const std::string& typeStr) {
         AdamSolver_Frame_CUDA<T>, 
         std::shared_ptr<AdamSolver_Frame_CUDA<T>>, 
         AdamSolver> (m, pyClassName.c_str(), py::multiple_inheritance()) 
-    .def(py::init());
+    .def(py::init())
+    .def(py::init<AdamSolver_Frame_CUDA<T>>(), py::arg("solver"))
+;
 }
 
 void init_AdamSolver_Frame_CUDA(py::module &m) {

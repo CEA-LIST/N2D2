@@ -39,7 +39,9 @@ void declare_SGDSolver_Frame_CUDA(py::module &m, const std::string& typeStr) {
         SGDSolver_Frame_CUDA<T>, 
         std::shared_ptr<SGDSolver_Frame_CUDA<T>>, 
         SGDSolver> (m, pyClassName.c_str(), py::multiple_inheritance()) 
-    .def(py::init());
+    .def(py::init())
+    .def(py::init<SGDSolver_Frame_CUDA<T>>(), py::arg("solver"))
+;
 }
 
 void init_SGDSolver_Frame_CUDA(py::module &m) {

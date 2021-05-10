@@ -31,7 +31,12 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_AdamSolver(py::module &m) {
-    py::class_<AdamSolver, std::shared_ptr<AdamSolver>, Solver> (m, "AdamSolver", py::multiple_inheritance());
+    py::class_<AdamSolver, std::shared_ptr<AdamSolver>, Solver> (m, "AdamSolver", py::multiple_inheritance())
+    .def("getmLearningRate", &AdamSolver::getmLearningRate)
+    .def("getBeta1", &AdamSolver::getBeta1)
+    .def("getBeta2", &AdamSolver::getBeta2)
+    .def("getEpsilon", &AdamSolver::getEpsilon)
+    .def("getmClamping", &AdamSolver::getmClamping);
 
 }
 }

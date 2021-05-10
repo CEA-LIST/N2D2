@@ -37,7 +37,9 @@ void declare_AdamSolver_Frame(py::module &m, const std::string& typeStr) {
         AdamSolver_Frame<T>, 
         std::shared_ptr<AdamSolver_Frame<T>>, 
         AdamSolver> (m, pyClassName.c_str(), py::multiple_inheritance()) 
-    .def(py::init());
+    .def(py::init())
+    .def(py::init<AdamSolver_Frame<T>>(), py::arg("solver"))
+;
 }
 
 void init_AdamSolver_Frame(py::module &m) {

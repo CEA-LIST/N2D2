@@ -29,6 +29,10 @@ def _switching_convention_t_n(dims):
 def _switching_convention_n_t(dims):
     return [dims[3], dims[2], dims[0], dims[1]]
 
+# TODO : It may be possible for CUDA tensor to just pass the device adress to the CUDA kernel
+# cf: https://github.com/pytorch/pytorch/issues/1649
+# Getting the ownership of the address may be difficult ...
+
 def _to_n2d2(torch_tensor):
     """
     Convert torch.Tensor -> n2d2.Tensor

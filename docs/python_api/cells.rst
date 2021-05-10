@@ -179,6 +179,14 @@ SGD
         :members:
         :inherited-members:
 
+Adam
+~~~~
+
+.. autoclass:: n2d2.solver.Adam
+        :members:
+        :inherited-members:
+
+
 Filler
 ------
 
