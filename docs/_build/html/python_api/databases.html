@@ -149,7 +149,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tensor.html">Tensor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interoperability.html">Interoperability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="example.html">Example</a></li>
 </ul>
@@ -329,6 +328,16 @@ The library allow you to add pre-process data with built in Transformation.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="n2d2.database.Database.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.Database.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="n2d2.database.Database.get_partition_summary">
 <code class="sig-name descname">get_partition_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.Database.get_partition_summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print the number of stimuli for each partition.</p>
@@ -398,6 +407,16 @@ The library allow you to add pre-process data with built in Transformation.</p>
 <dd><p>Return the number fo stimuli  available for this partition
 :param partition: The partition can be  <code class="docutils literal notranslate"><span class="pre">`Test</span></code>, <code class="docutils literal notranslate"><span class="pre">Validation</span></code>, <code class="docutils literal notranslate"><span class="pre">Test</span></code>,  <code class="docutils literal notranslate"><span class="pre">Unpartitioned</span></code>
 :type partition: str</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.database.DIR.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.DIR.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -492,6 +511,16 @@ Label are hard coded, you don’t need to specify a path to the label file.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="n2d2.database.MNIST.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.MNIST.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="n2d2.database.MNIST.get_partition_summary">
 <code class="sig-name descname">get_partition_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.MNIST.get_partition_summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print the number of stimuli for each partition.</p>
@@ -562,6 +591,16 @@ Label are hard coded, you don’t need to specify a path to the label file.</p>
 <dd><p>Return the number fo stimuli  available for this partition
 :param partition: The partition can be  <code class="docutils literal notranslate"><span class="pre">`Test</span></code>, <code class="docutils literal notranslate"><span class="pre">Validation</span></code>, <code class="docutils literal notranslate"><span class="pre">Test</span></code>,  <code class="docutils literal notranslate"><span class="pre">Unpartitioned</span></code>
 :type partition: str</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.database.ILSVRC2012.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.ILSVRC2012.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -639,6 +678,16 @@ Label are hard coded, you don’t need to specify a path to the label file.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="n2d2.database.CIFAR100.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.CIFAR100.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="n2d2.database.CIFAR100.get_partition_summary">
 <code class="sig-name descname">get_partition_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.CIFAR100.get_partition_summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print the number of stimuli for each partition.</p>
@@ -713,6 +762,16 @@ Label are hard coded, you don’t need to specify a path to the label file.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="n2d2.database.Cityscapes.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.Cityscapes.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="n2d2.database.Cityscapes.get_partition_summary">
 <code class="sig-name descname">get_partition_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.database.Cityscapes.get_partition_summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print the number of stimuli for each partition.</p>
@@ -754,6 +813,16 @@ Label are hard coded, you don’t need to specify a path to the label file.</p>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.transform.Transformation.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.Transformation.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <div class="section" id="composite">
@@ -774,6 +843,16 @@ Label are hard coded, you don’t need to specify a path to the label file.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>transformations</strong> (<em>list</em>) – List of the transformations to use.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.transform.Composite.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.Composite.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
 </dd></dl>
@@ -821,6 +900,16 @@ Label are hard coded, you don’t need to specify a path to the label file.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.transform.PadCrop.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.PadCrop.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -854,6 +943,16 @@ This transformation is generally used on-the-fly
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.transform.Distortion.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.Distortion.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -880,6 +979,16 @@ This transformation is generally used on-the-fly
 <li><p><strong>keep_aspect_ratio</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, keeps the aspect ratio of the image, default=False</p></li>
 <li><p><strong>resize_to_fit</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, resize along the longest dimension when <code class="docutils literal notranslate"><span class="pre">KeepAspectRatio</span></code> is true, default=True</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.transform.Rescale.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.Rescale.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
 </dd></dl>
@@ -932,6 +1041,16 @@ This transformation is generally used on-the-fly
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.transform.ColorSpace.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.ColorSpace.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -958,6 +1077,16 @@ This transformation is generally used on-the-fly
 <li><p><strong>second_operator</strong> (<em>str</em><em>, </em><em>optional</em>) – Second operator, can be <code class="docutils literal notranslate"><span class="pre">Plus</span></code>, <code class="docutils literal notranslate"><span class="pre">Minus</span></code>, <code class="docutils literal notranslate"><span class="pre">Multiplies</span></code>, <code class="docutils literal notranslate"><span class="pre">Divides</span></code>, default=”Plus”</p></li>
 <li><p><strong>second_value</strong> (<em>float</em><em>, </em><em>optional</em>) – Second value, default=0.0</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.transform.RangeAffine.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.RangeAffine.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1007,6 +1136,16 @@ This transformation is generally used on-the-fly
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.transform.SliceExtraction.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.SliceExtraction.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -1032,6 +1171,16 @@ This transformation is generally used on-the-fly
 <li><p><strong>offset_x</strong> (<em>int</em><em>, </em><em>optional</em>) – X offset, default=0</p></li>
 <li><p><strong>offset_y</strong> (<em>int</em><em>, </em><em>optional</em>) – Y offset, default=0</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.transform.RandomResizeCrop.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.RandomResizeCrop.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1068,6 +1217,16 @@ This transformation is generally used on-the-fly
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>channel</strong> (<em>str</em>) – channel to extract</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.transform.ChannelExtraction.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.transform.ChannelExtraction.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1188,6 +1347,16 @@ This transformation is generally used on-the-fly
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.provider.DataProvider.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.provider.DataProvider.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
 </dd></dl>

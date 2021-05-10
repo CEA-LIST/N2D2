@@ -216,7 +216,7 @@ Activations
  
  You can associate to some cell an activation function.
 
-..autoclass:: n2d2.activation.ActivationFunction
+.. autoclass:: n2d2.activation.ActivationFunction
         :members:
         :inherited-members:
 

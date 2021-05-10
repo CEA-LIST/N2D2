@@ -157,7 +157,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tensor.html">Tensor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interoperability.html">Interoperability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="example.html">Example</a></li>
 </ul>
@@ -291,6 +290,16 @@
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.cells.NeuralNetworkCell.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.cells.NeuralNetworkCell.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <div class="section" id="conv">
@@ -320,7 +329,7 @@
 <li><p><strong>stride_dims</strong> (<em>list</em><em>, </em><em>optional</em>) – Dimension of the stride of the kernel.</p></li>
 <li><p><strong>padding_dims</strong> (<em>list</em><em>, </em><em>optional</em>) – Dimensions of the padding.</p></li>
 <li><p><strong>dilation_dims</strong> (<em>list</em><em>, </em><em>optional</em>) – Dimensions of the dilation of the kernels</p></li>
-<li><p><strong>activation</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.ActivationFunction</span></code>, optional) – Activation function, default= <a class="reference internal" href="#n2d2.activation.Tanh" title="n2d2.activation.Tanh"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.Tanh</span></code></a></p></li>
+<li><p><strong>activation</strong> (<a class="reference internal" href="#n2d2.activation.ActivationFunction" title="n2d2.activation.ActivationFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.ActivationFunction</span></code></a>, optional) – Activation function, default= <a class="reference internal" href="#n2d2.activation.Tanh" title="n2d2.activation.Tanh"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.Tanh</span></code></a></p></li>
 <li><p><strong>mapping</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.tensor.Tensor</span></code>) – Mapping</p></li>
 <li><p><strong>weights_filler</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code>, optional) – Weights initial values filler, default= <a class="reference internal" href="#n2d2.filler.Normal" title="n2d2.filler.Normal"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Normal</span></code></a></p></li>
 <li><p><strong>bias_filler</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code>, optional) – Biases initial values filler, default= <a class="reference internal" href="#n2d2.filler.Normal" title="n2d2.filler.Normal"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Normal</span></code></a></p></li>
@@ -359,6 +368,16 @@
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.cells.Conv.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.cells.Conv.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
 </dd></dl>
@@ -445,7 +464,7 @@
 <li><p><strong>stride_dims</strong> (<em>list</em><em>, </em><em>optional</em>) – Dimension of the stride of the kernel.</p></li>
 <li><p><strong>padding_dims</strong> (<em>list</em><em>, </em><em>optional</em>) – Dimensions of the padding.</p></li>
 <li><p><strong>dilation_dims</strong> (<em>list</em><em>, </em><em>optional</em>) – Dimensions of the dilation of the kernels</p></li>
-<li><p><strong>activation</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.ActivationFunction</span></code>, optional) – Activation function, default= <a class="reference internal" href="#n2d2.activation.Tanh" title="n2d2.activation.Tanh"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.Tanh</span></code></a></p></li>
+<li><p><strong>activation</strong> (<a class="reference internal" href="#n2d2.activation.ActivationFunction" title="n2d2.activation.ActivationFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.ActivationFunction</span></code></a>, optional) – Activation function, default= <a class="reference internal" href="#n2d2.activation.Tanh" title="n2d2.activation.Tanh"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.Tanh</span></code></a></p></li>
 <li><p><strong>weights_filler</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code>, optional) – Weights initial values filler, default=NormalFiller</p></li>
 <li><p><strong>bias_filler</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code>, optional) – Biases initial values filler, default=NormalFiller</p></li>
 <li><p><strong>weights_solver</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.solver.Solver</span></code>, optional) – Solver for weights</p></li>
@@ -478,6 +497,16 @@
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.cells.Deconv.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.cells.Deconv.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
 </dd></dl>
@@ -560,7 +589,7 @@
 <li><p><strong>nb_outputs</strong> (<em>int</em>) – Number of outputs of the cells.</p></li>
 <li><p><strong>from_arguments</strong> (<em>bool</em><em>, </em><em>optional</em>) – If False, allow you to create cells with mandatory arguments set as None, default=True</p></li>
 <li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name fo the cells.</p></li>
-<li><p><strong>activation</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.ActivationFunction</span></code>, optional) – Activation function, default= <a class="reference internal" href="#n2d2.activation.Tanh" title="n2d2.activation.Tanh"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.Tanh</span></code></a></p></li>
+<li><p><strong>activation</strong> (<a class="reference internal" href="#n2d2.activation.ActivationFunction" title="n2d2.activation.ActivationFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.ActivationFunction</span></code></a>, optional) – Activation function, default= <a class="reference internal" href="#n2d2.activation.Tanh" title="n2d2.activation.Tanh"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.Tanh</span></code></a></p></li>
 <li><p><strong>weights_solver</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.solver.Solver</span></code>, optional) – Solver for weights, default=:py:class:<cite>n2d2.solver.SGD</cite></p></li>
 <li><p><strong>bias_solver</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.solver.Solver</span></code>, optional) – Solver for biases, default= <a class="reference internal" href="#n2d2.filler.Normal" title="n2d2.filler.Normal"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Normal</span></code></a></p></li>
 <li><p><strong>weights_filler</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code>, optional) – Weights initial values filler, default= <a class="reference internal" href="#n2d2.filler.Normal" title="n2d2.filler.Normal"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Normal</span></code></a></p></li>
@@ -591,6 +620,16 @@
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.cells.Fc.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.cells.Fc.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
 </dd></dl>
@@ -677,6 +716,16 @@
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.cells.Dropout.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.cells.Dropout.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -703,8 +752,18 @@
 <li><p><strong>coeff_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – (<code class="docutils literal notranslate"><span class="pre">PerLayer</span></code>, <code class="docutils literal notranslate"><span class="pre">PerInput</span></code>, <code class="docutils literal notranslate"><span class="pre">PerChannel</span></code>), default=”PerLayer”</p></li>
 <li><p><strong>weights</strong> (<em>float</em><em>, </em><em>optional</em>) – Weights for the <code class="docutils literal notranslate"><span class="pre">Sum</span></code>, <code class="docutils literal notranslate"><span class="pre">AbsSum</span></code>, and <code class="docutils literal notranslate"><span class="pre">EuclideanSum</span></code> operation, in the same order as the inputs, default=1.0</p></li>
 <li><p><strong>shifts</strong> (<em>float</em><em>, </em><em>optional</em>) – Shifts for the <code class="docutils literal notranslate"><span class="pre">Sum</span></code> and <code class="docutils literal notranslate"><span class="pre">EuclideanSum</span></code> operation, in the same order as the inputs, default=0.0</p></li>
-<li><p><strong>activation</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.ActivationFunction</span></code>, optional) – Activation function, default= <a class="reference internal" href="#n2d2.activation.Linear" title="n2d2.activation.Linear"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.Linear</span></code></a></p></li>
+<li><p><strong>activation</strong> (<a class="reference internal" href="#n2d2.activation.ActivationFunction" title="n2d2.activation.ActivationFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.ActivationFunction</span></code></a>, optional) – Activation function, default= <a class="reference internal" href="#n2d2.activation.Linear" title="n2d2.activation.Linear"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.Linear</span></code></a></p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.cells.ElemWise.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.cells.ElemWise.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
 </dd></dl>
@@ -727,6 +786,16 @@
 <dt id="n2d2.cells.Padding.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">top_pad</span></em>, <em class="sig-param"><span class="n">bot_pad</span></em>, <em class="sig-param"><span class="n">left_pad</span></em>, <em class="sig-param"><span class="n">right_pad</span></em>, <em class="sig-param"><span class="n">from_arguments</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.cells.Padding.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.cells.Padding.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.cells.Padding.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -760,6 +829,16 @@
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.cells.Softmax.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.cells.Softmax.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -780,6 +859,16 @@
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>moving_average_momentum</strong> (<em>float</em><em>, </em><em>optional</em>) – Moving average rate: used for the moving average of batch-wise means and standard deviations during training.The closer to 1.0, the more it will depend on the last batch</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.cells.BatchNorm2d.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.cells.BatchNorm2d.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
 </dd></dl>
@@ -811,9 +900,19 @@
 <li><p><strong>pooling</strong> (<em>str</em><em>, </em><em>optional</em>) – Type of pooling (<code class="docutils literal notranslate"><span class="pre">Max</span></code> or <code class="docutils literal notranslate"><span class="pre">Average</span></code>), default=”Max”</p></li>
 <li><p><strong>stride_dims</strong> (<em>list</em><em>, </em><em>optional</em>) – Dimension of the stride of the kernel.</p></li>
 <li><p><strong>padding_dims</strong> (<em>list</em><em>, </em><em>optional</em>) – Dimensions of the padding.</p></li>
-<li><p><strong>activation</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.ActivationFunction</span></code>, optional) – Activation function, default= <a class="reference internal" href="#n2d2.activation.Linear" title="n2d2.activation.Linear"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.Linear</span></code></a></p></li>
+<li><p><strong>activation</strong> (<a class="reference internal" href="#n2d2.activation.ActivationFunction" title="n2d2.activation.ActivationFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.ActivationFunction</span></code></a>, optional) – Activation function, default= <a class="reference internal" href="#n2d2.activation.Linear" title="n2d2.activation.Linear"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.Linear</span></code></a></p></li>
 <li><p><strong>mapping</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.tensor.Tensor</span></code>, optional) – Mapping</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.cells.Pool.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.cells.Pool.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
 </dd></dl>
@@ -997,6 +1096,16 @@ This functionality allow you to write more concise code.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.solver.SGD.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.solver.SGD.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -1040,6 +1149,16 @@ This functionality allow you to write more concise code.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.filler.He.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.filler.He.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -1065,6 +1184,16 @@ This functionality allow you to write more concise code.</p>
 <li><p><strong>mean</strong> (<em>float</em><em>, </em><em>optional</em>) – Mean value of the distribution, default=0.0</p></li>
 <li><p><strong>std_dev</strong> (<em>float</em><em>, </em><em>optional</em>) – Standard deviation of the distribution, default=1.0</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.filler.Normal.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.filler.Normal.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1097,6 +1226,16 @@ This functionality allow you to write more concise code.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.filler.Constant.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.filler.Constant.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -1106,15 +1245,33 @@ This functionality allow you to write more concise code.</p>
 <blockquote>
 <div><p>You can associate to some cell an activation function.</p>
 </div></blockquote>
-<dl class="simple">
-<dt>..autoclass:: n2d2.activation.ActivationFunction</dt><dd><dl class="field-list simple">
-<dt class="field-odd">members</dt>
-<dd class="field-odd"><p></p></dd>
-<dt class="field-even">inherited-members</dt>
-<dd class="field-even"><p></p></dd>
-</dl>
+<dl class="py class">
+<dt id="n2d2.activation.ActivationFunction">
+<em class="property">class </em><code class="sig-prename descclassname">n2d2.activation.</code><code class="sig-name descname">ActivationFunction</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.activation.ActivationFunction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="n2d2.activation.ActivationFunction.N2D2">
+<code class="sig-name descname">N2D2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.activation.ActivationFunction.N2D2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the N2D2 object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.activation.ActivationFunction.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.activation.ActivationFunction.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.activation.ActivationFunction.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.activation.ActivationFunction.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
+</dd></dl>
+
+</dd></dl>
+
 <div class="section" id="linear">
 <h3>Linear<a class="headerlink" href="#linear" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
@@ -1133,6 +1290,16 @@ This functionality allow you to write more concise code.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>quantizer</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.quantizer.ActivationQuantizer</span></code>, optional) – Quantizer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.activation.Linear.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.activation.Linear.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1166,6 +1333,16 @@ This functionality allow you to write more concise code.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="n2d2.activation.Rectifier.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.activation.Rectifier.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -1191,6 +1368,16 @@ This functionality allow you to write more concise code.</p>
 <li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) – <span class="math notranslate nohighlight">\(\alpha\)</span> parameter, default=1.0</p></li>
 <li><p><strong>quantizer</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.quantizer.ActivationQuantizer</span></code>, optional) – Quantizer</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.activation.Tanh.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.activation.Tanh.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
 </dd></dl>

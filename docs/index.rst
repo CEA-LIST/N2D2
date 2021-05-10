@@ -55,7 +55,6 @@ N2D2
    python_api/databases
    python_api/cells
    python_api/tensor
-   python_api/deepnet
    python_api/interoperability
    python_api/example
 

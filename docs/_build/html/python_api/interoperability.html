@@ -40,7 +40,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Example" href="example.html" />
-    <link rel="prev" title="DeepNet" href="deepnet.html" /> 
+    <link rel="prev" title="Tensor" href="tensor.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -124,7 +124,6 @@
 <li class="toctree-l1"><a class="reference internal" href="databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cells.html">Cells</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tensor.html">Tensor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Interoperability</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#pytorch">Pytorch</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#integration-of-a-cell">Integration of a Cell</a></li>
@@ -331,50 +330,52 @@ registered hooks while the latter silently ignores them.</p>
 </dd></dl>
 
 <p><strong>Example :</strong></p>
-<p>In this example, we will define a Pytorch network. Export a layer with ONNX, import it to N2D2 and then replace the Pytorch layer with the N2D2 one.</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MNIST_CNN</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<p>In this example we wrap the default <code class="docutils literal notranslate"><span class="pre">LeNet</span></code> model proposed by the python API and run it with pytorch.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">N2D2</span>
+<span class="kn">import</span> <span class="nn">n2d2</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="c1"># Importing default LeNet from n2d2 API</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">lenet</span><span class="o">.</span><span class="n">LeNet</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># Dummy input to init the deepNet</span>
+<span class="n">inputs</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">],</span> <span class="n">cuda</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dim_format</span><span class="o">=</span><span class="s2">&quot;N2D2&quot;</span><span class="p">)</span>
+
+<span class="c1"># Generating deepNet and wrapping it !</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+<span class="n">pytorch_cell</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">pytorch</span><span class="o">.</span><span class="n">DeepNetN2D2</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get_deepnet</span><span class="p">()</span><span class="o">.</span><span class="n">N2D2</span><span class="p">())</span>
+
+<span class="c1"># creating a Pytorch network with our LeNet !</span>
+<span class="k">class</span> <span class="nc">torch_test</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
         <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-                <span class="nb">super</span><span class="p">(</span><span class="n">MNIST_CNN</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-                <span class="c1"># Defining the cnn layer that we will extract and export to ONNX</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">cnn_layers</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span> <span class="c1"># This is the layer we will replace</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()</span>
-                <span class="p">)</span>
-                <span class="c1"># linear layer</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">linear_layers</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">(),</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">576</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">(),</span>
+                <span class="nb">super</span><span class="p">(</span><span class="n">torch_test</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">layer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span> <span class="c1"># This is the layer we will replace</span>
+                        <span class="n">pytorch_cell</span><span class="p">,</span>
                 <span class="p">)</span>
 
-                <span class="c1"># Defining the forward pass</span>
-                <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-                        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cnn_layers</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-                        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_layers</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-                        <span class="k">return</span> <span class="n">x</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">MNIST_CNN</span><span class="p">()</span>
-<span class="n">model_path</span> <span class="o">=</span> <span class="s1">&#39;./tmp.onnx&#39;</span>
-<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="c1"># Exporting to ONNX</span>
-<span class="n">dummy_in</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
-<span class="n">torch</span><span class="o">.</span><span class="n">onnx</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dummy_in</span><span class="p">,</span> <span class="n">model_path</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Defining the forward pass</span>
+        <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">x</span>
 
-<span class="c1"># Importing the ONNX to N2D2</span>
-<span class="n">net</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">Network</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">deepNet</span> <span class="o">=</span> <span class="n">N2D2</span><span class="o">.</span><span class="n">DeepNetGenerator</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">model_path</span><span class="p">)</span>
-<span class="n">deepNet</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
-<span class="c1"># Deleting temporary onnx file !</span>
-<span class="n">remove</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+<span class="c1"># Instantiating the network</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">torch_test</span><span class="p">()</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="n">criterion</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">()</span>
 
-<span class="c1"># Wrapping the N2D2 deepNet</span>
-<span class="n">n2d2_deepNet</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">pytorch</span><span class="o">.</span><span class="n">DeepNetN2D2</span><span class="p">(</span><span class="n">deepNet</span><span class="p">)</span>
-<span class="c1"># Replacing the pytorch layer</span>
-<span class="n">model</span><span class="o">.</span><span class="n">cnn_layers</span> <span class="o">=</span> <span class="n">n2d2_deepNet</span>
+<span class="c1"># Dummy input and label</span>
+<span class="n">input_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+<span class="n">label</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Feeding dummy input to the Torch network</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">)</span>
+
+<span class="c1"># Computing loss and propagating the error through the network</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+<span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+<span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span> <span class="c1"># this is not mandatory if you only use n2d2 cell (the weights update is done in the backward method)</span>
 </pre></div>
 </div>
 </div>
@@ -392,7 +393,7 @@ registered hooks while the latter silently ignores them.</p>
         <a href="example.html" class="btn btn-neutral float-right" title="Example" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="deepnet.html" class="btn btn-neutral float-left" title="DeepNet" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="tensor.html" class="btn btn-neutral float-left" title="Tensor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

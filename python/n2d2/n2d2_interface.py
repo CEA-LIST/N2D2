@@ -148,6 +148,19 @@ class N2D2_Interface:
         self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
         self._check_parameter_uniqueness(self._config_parameters)
 
+    def get_parameter(self, key):
+        """
+        :param key: Parameter name
+        :type key: str
+        """
+        if key in self._constructor_arguments:
+            return self._constructor_arguments[key]
+        elif key in self._optional_constructor_arguments:
+            return self._optional_constructor_arguments[key]
+        elif key in self._config_parameters:
+            return self._config_parameters[key]
+        else:
+            raise ValueError(key + " is not a parameter of " + self.get_name()) 
 
     def _parse_optional_arguments(self, optional_argument_keys):
         for key in optional_argument_keys:

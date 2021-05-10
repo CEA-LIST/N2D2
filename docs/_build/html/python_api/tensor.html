@@ -39,7 +39,7 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="DeepNet" href="deepnet.html" />
+    <link rel="next" title="Interoperability" href="interoperability.html" />
     <link rel="prev" title="Cells" href="cells.html" /> 
 </head>
 
@@ -134,13 +134,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#cuda-tensor">CUDA Tensor</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#exemple">Exemple :</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#synchronization-example">Synchronization example :</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#id1">Tensor</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="deepnet.html">DeepNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interoperability.html">Interoperability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="example.html">Example</a></li>
 </ul>
@@ -352,17 +351,17 @@ The index correspond to the flatten representation of your tensor.</p>
 The host and the device. The device is the GPU. The host correspond to your interface with the tensor that exists in the GPU.
 You cannot access the device directly, the GPU don’t have input/output functions.</p>
 <p>This is why you have two methods to synchronized these two versions.</p>
-<div class="section" id="exemple">
-<h3>Exemple :<a class="headerlink" href="#exemple" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="synchronization-example">
+<h3>Synchronization example :<a class="headerlink" href="#synchronization-example" title="Permalink to this headline">¶</a></h3>
 <p>Let’s consider the following CUDA Tensor :</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">cuda</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">cuda</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>0 0
 0 0
 </pre></div>
 </div>
-<p>We will set some values :</p>
+<p>We will set the following values :</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span><span class="o">.</span><span class="n">set_values</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]])</span>
 </pre></div>
 </div>
@@ -378,7 +377,8 @@ You cannot access the device directly, the GPU don’t have input/output functio
 3 4
 </pre></div>
 </div>
-<p>As you can see nothing change when you print the tensor.</p>
+<p>As you can see nothing change when you print the tensor.
+Now let’s change the values stored in the tensor :</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span><span class="o">.</span><span class="n">set_values</span><span class="p">([[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
 </pre></div>
 </div>
@@ -587,7 +587,7 @@ The synchronizations are handled by the library and regular users don’t need u
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="deepnet.html" class="btn btn-neutral float-right" title="DeepNet" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="interoperability.html" class="btn btn-neutral float-right" title="Interoperability" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="cells.html" class="btn btn-neutral float-left" title="Cells" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

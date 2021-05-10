@@ -122,7 +122,6 @@
 <li class="toctree-l1"><a class="reference internal" href="python_api/databases.html">Databases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_api/cells.html">Cells</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_api/tensor.html">Tensor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="python_api/deepnet.html">DeepNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_api/interoperability.html">Interoperability</a></li>
 <li class="toctree-l1"><a class="reference internal" href="python_api/example.html">Example</a></li>
 </ul>
@@ -246,6 +245,8 @@
         <li><a href="core/databases.html#N2D2.Actitracker_Database.StimuliSetMask.__init__">(N2D2.Actitracker_Database.StimuliSetMask method)</a>
 </li>
         <li><a href="core/activations.html#N2D2.Activation.__init__">(N2D2.Activation method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.activation.ActivationFunction.__init__">(n2d2.activation.ActivationFunction method)</a>
 </li>
         <li><a href="python_api/cells.html#n2d2.activation.Linear.__init__">(n2d2.activation.Linear method)</a>
 </li>
@@ -1323,6 +1324,8 @@
       <li><a href="core/databases.html#N2D2.Actitracker_Database.StimuliSetMask">Actitracker_Database.StimuliSetMask (class in N2D2)</a>
 </li>
       <li><a href="core/activations.html#N2D2.Activation">Activation (class in N2D2)</a>
+</li>
+      <li><a href="python_api/cells.html#n2d2.activation.ActivationFunction">ActivationFunction (class in n2d2.activation)</a>
 </li>
       <li><a href="python_api/databases.html#n2d2.provider.DataProvider.add_on_the_fly_transformation">add_on_the_fly_transformation() (n2d2.provider.DataProvider method)</a>
 </li>
@@ -3740,6 +3743,78 @@
         <li><a href="python_api/databases.html#n2d2.database.ILSVRC2012.get_nb_stimuli">(n2d2.database.ILSVRC2012 method)</a>
 </li>
         <li><a href="python_api/databases.html#n2d2.database.MNIST.get_nb_stimuli">(n2d2.database.MNIST method)</a>
+</li>
+      </ul></li>
+      <li><a href="python_api/cells.html#n2d2.activation.ActivationFunction.get_parameter">get_parameter() (n2d2.activation.ActivationFunction method)</a>
+
+      <ul>
+        <li><a href="python_api/cells.html#n2d2.activation.Linear.get_parameter">(n2d2.activation.Linear method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.activation.Rectifier.get_parameter">(n2d2.activation.Rectifier method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.activation.Tanh.get_parameter">(n2d2.activation.Tanh method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.cells.BatchNorm2d.get_parameter">(n2d2.cells.BatchNorm2d method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.cells.Conv.get_parameter">(n2d2.cells.Conv method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.cells.Deconv.get_parameter">(n2d2.cells.Deconv method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.cells.Dropout.get_parameter">(n2d2.cells.Dropout method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.cells.ElemWise.get_parameter">(n2d2.cells.ElemWise method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.cells.Fc.get_parameter">(n2d2.cells.Fc method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.cells.NeuralNetworkCell.get_parameter">(n2d2.cells.NeuralNetworkCell method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.cells.Padding.get_parameter">(n2d2.cells.Padding method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.cells.Pool.get_parameter">(n2d2.cells.Pool method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.cells.Softmax.get_parameter">(n2d2.cells.Softmax method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.database.CIFAR100.get_parameter">(n2d2.database.CIFAR100 method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.database.Cityscapes.get_parameter">(n2d2.database.Cityscapes method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.database.Database.get_parameter">(n2d2.database.Database method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.database.DIR.get_parameter">(n2d2.database.DIR method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.database.ILSVRC2012.get_parameter">(n2d2.database.ILSVRC2012 method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.database.MNIST.get_parameter">(n2d2.database.MNIST method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.filler.Constant.get_parameter">(n2d2.filler.Constant method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.filler.He.get_parameter">(n2d2.filler.He method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.filler.Normal.get_parameter">(n2d2.filler.Normal method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.provider.DataProvider.get_parameter">(n2d2.provider.DataProvider method)</a>
+</li>
+        <li><a href="python_api/cells.html#n2d2.solver.SGD.get_parameter">(n2d2.solver.SGD method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.transform.ChannelExtraction.get_parameter">(n2d2.transform.ChannelExtraction method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.transform.ColorSpace.get_parameter">(n2d2.transform.ColorSpace method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.transform.Composite.get_parameter">(n2d2.transform.Composite method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.transform.Distortion.get_parameter">(n2d2.transform.Distortion method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.transform.PadCrop.get_parameter">(n2d2.transform.PadCrop method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.transform.RandomResizeCrop.get_parameter">(n2d2.transform.RandomResizeCrop method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.transform.RangeAffine.get_parameter">(n2d2.transform.RangeAffine method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.transform.Rescale.get_parameter">(n2d2.transform.Rescale method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.transform.SliceExtraction.get_parameter">(n2d2.transform.SliceExtraction method)</a>
+</li>
+        <li><a href="python_api/databases.html#n2d2.transform.Transformation.get_parameter">(n2d2.transform.Transformation method)</a>
 </li>
       </ul></li>
       <li><a href="python_api/databases.html#n2d2.provider.DataProvider.get_partition">get_partition() (n2d2.provider.DataProvider method)</a>
@@ -6430,6 +6505,8 @@
         <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.getName">(N2D2.UnpoolCell_Frame_CUDA method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="core/cells.html#N2D2.AnchorCell.getNbChannels">getNbChannels() (N2D2.AnchorCell method)</a>
 
       <ul>
@@ -6656,8 +6733,6 @@
         <li><a href="core/cells.html#N2D2.UnpoolCell_Frame_CUDA.getNbChannels">(N2D2.UnpoolCell_Frame_CUDA method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="core/cells.html#N2D2.AnchorCell.getNbOutputs">getNbOutputs() (N2D2.AnchorCell method)</a>
 
       <ul>
@@ -11246,9 +11321,11 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="python_api/cells.html#n2d2.activation.Linear.N2D2">N2D2() (n2d2.activation.Linear method)</a>
+      <li><a href="python_api/cells.html#n2d2.activation.ActivationFunction.N2D2">N2D2() (n2d2.activation.ActivationFunction method)</a>
 
       <ul>
+        <li><a href="python_api/cells.html#n2d2.activation.Linear.N2D2">(n2d2.activation.Linear method)</a>
+</li>
         <li><a href="python_api/cells.html#n2d2.activation.Rectifier.N2D2">(n2d2.activation.Rectifier method)</a>
 </li>
         <li><a href="python_api/cells.html#n2d2.activation.Tanh.N2D2">(n2d2.activation.Tanh method)</a>

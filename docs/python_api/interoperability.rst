@@ -67,51 +67,53 @@ You can use the :py:class:`n2d2.pytorch.LayerN2D2` to wrap an :py:class:`N2D2.De
 
 **Example :**
 
-In this example, we will define a Pytorch network. Export a layer with ONNX, import it to N2D2 and then replace the Pytorch layer with the N2D2 one.
+In this example we wrap the default ``LeNet`` model proposed by the python API and run it with pytorch. 
 
 .. testcode::
 
-        class MNIST_CNN(torch.nn.Module):   
+        import N2D2
+        import n2d2
+        import torch
+
+        batch_size = 2
+
+        # Importing default LeNet from n2d2 API
+        model = n2d2.models.lenet.LeNet(10)
+
+        # Dummy input to init the deepNet
+        inputs = n2d2.Tensor([32, 32, 1, batch_size], cuda=True, dim_format="N2D2")
+
+        # Generating deepNet and wrapping it !
+        x = model(inputs)
+        pytorch_cell = n2d2.pytorch.DeepNetN2D2(x.get_deepnet().N2D2())
+
+        # creating a Pytorch network with our LeNet !
+        class torch_test(torch.nn.Module):   
                 def __init__(self):
-                        super(MNIST_CNN, self).__init__()
-                        # Defining the cnn layer that we will extract and export to ONNX
-                        self.cnn_layers = torch.nn.Sequential( # This is the layer we will replace
-                        torch.nn.Conv2d(1, 4, 3, 1),
-                        torch.nn.ReLU(),
-                        torch.nn.Conv2d(4, 4, 3),
-                        torch.nn.ReLU()
-                        )
-                        # linear layer
-                        self.linear_layers = torch.nn.Sequential(
-                        torch.nn.MaxPool2d(2),
-                        torch.nn.Flatten(), 
-                        torch.nn.Linear(576, 128),
-                        torch.nn.ReLU(), 
-                        torch.nn.Linear(128, 10),
-                        torch.nn.Softmax(),   
+                        super(torch_test, self).__init__()
+                        self.layer = torch.nn.Sequential( # This is the layer we will replace
+                                pytorch_cell,
                         )
 
-                        # Defining the forward pass    
-                        def forward(self, x):
-                                x = self.cnn_layers(x)
-                                x = self.linear_layers(x)
-                                return x
-        model = MNIST_CNN()
-        model_path = './tmp.onnx'
-        batch_size = 10
-        # Exporting to ONNX
-        dummy_in = torch.randn(batch_size, 1, 28, 28)
-        torch.onnx.export(model, dummy_in, model_path, verbose=True)
+                # Defining the forward pass    
+                def forward(self, x):
+                        x = self.layer(x)
+                        return x
 
-        # Importing the ONNX to N2D2
-        net = N2D2.Network(1)
-        deepNet = N2D2.DeepNetGenerator.generate(net, model_path)
-        deepNet.initialize() 
-        # Deleting temporary onnx file !
-        remove(model_path)
+        # Instantiating the network
+        model = torch_test()
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+        criterion = torch.nn.MSELoss()
 
-        # Wrapping the N2D2 deepNet
-        n2d2_deepNet = n2d2.pytorch.DeepNetN2D2(deepNet)
-        # Replacing the pytorch layer
-        model.cnn_layers = n2d2_deepNet
+        # Dummy input and label
+        input_tensor = torch.ones(batch_size, 1, 32, 32)
+        label = torch.ones(batch_size, 10, 1, 1)
+
+        # Feeding dummy input to the Torch network
+        output = model(input_tensor)
+
+        # Computing loss and propagating the error through the network
+        loss = criterion(output, label)
+        loss.backward()
+        optimizer.step() # this is not mandatory if you only use n2d2 cell (the weights update is done in the backward method)
 
