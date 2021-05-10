@@ -1,37 +1,43 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Import ONNX models &mdash; N2D2  documentation</title>
   
 
   
-  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
   
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -73,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -94,6 +101,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Import ONNX models</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#with-an-ini-file">With an INI file</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#onnx-ini-section-type">ONNX INI section type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#transpose-option-usage"><code class="docutils literal notranslate"><span class="pre">Transpose</span></code> option usage</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#with-the-python-api">With the Python API</a></li>
@@ -137,6 +145,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -171,18 +180,20 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Import ONNX models</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/onnx_import.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -318,8 +329,38 @@ section can be arbitrary.</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IgnoreInputSize</span></code> [0]</p></td>
 <td><p>If true (1), the input size specified in the ONNX model is ignored and the N2D2 <code class="docutils literal notranslate"><span class="pre">StimuliProvider</span></code> size is used</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Transpose</span></code> [0]</p></td>
+<td><p>If true (1), the first 2 dimensions are transposed in the whole ONNX graph (1D graph are first interpreted as 2D with the second dimension equal to 1)</p></td>
+</tr>
 </tbody>
 </table>
+</div>
+<div class="section" id="transpose-option-usage">
+<h3><code class="docutils literal notranslate"><span class="pre">Transpose</span></code> option usage<a class="headerlink" href="#transpose-option-usage" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">Transpose</span></code> option allows to transpose the first two dimensions of a whole
+graph. This can be used in practice to used transposed inputs (like a transposed
+image, or a transposed vector for 1D signal inputs), like shown below:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[sp]</span>
+<span class="na">Size</span><span class="o">=</span><span class="s">8000 1 1</span>
+<span class="na">BatchSize</span><span class="o">=</span><span class="s">${BATCH_SIZE}</span>
+
+<span class="c1">; Transpose the input:</span>
+<span class="k">[trans]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">sp</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">Transpose</span>
+<span class="na">NbOutputs</span><span class="o">=</span><span class="s">1</span>
+<span class="na">Perm</span><span class="o">=</span><span class="s">1 0 2 3</span>
+<span class="c1">; Output dimensions are now &quot;1 8000 1 ${BATCH_SIZE}&quot;</span>
+
+<span class="k">[onnx]</span>
+<span class="na">Input</span><span class="o">=</span><span class="s">trans</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">ONNX</span>
+<span class="na">Transpose</span><span class="o">=</span><span class="s">1</span>
+<span class="c1">; The graph originally expects an input dimension of &quot;8000&quot;</span>
+<span class="c1">; After &quot;Transpose=1&quot;, the expected input dimension becomes &quot;1 8000&quot;</span>
+<span class="na">File</span><span class="o">=</span><span class="s">sound_processing_graph.onnx</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="with-the-python-api">
@@ -494,29 +535,29 @@ attributes</p></td>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="onnx_transfer.html" class="btn btn-neutral float-right" title="Train from ONNX models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="onnx_convert.html" class="btn btn-neutral float-left" title="Obtain ONNX models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="onnx_transfer.html" class="btn btn-neutral float-right" title="Train from ONNX models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="onnx_convert.html" class="btn btn-neutral float-left" title="Obtain ONNX models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, CEA LIST
+        &#169; Copyright 2019, CEA LIST.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -524,7 +565,6 @@ attributes</p></td>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

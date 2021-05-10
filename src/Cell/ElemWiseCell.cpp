@@ -26,10 +26,12 @@ const char* N2D2::ElemWiseCell::Type = "ElemWise";
 N2D2::ElemWiseCell::ElemWiseCell(const DeepNet& deepNet, const std::string& name,
                          unsigned int nbOutputs,
                          Operation operation,
+                         CoeffMode mode,
                          const std::vector<Float_T>& weights,
                          const std::vector<Float_T>& shifts)
     : Cell(deepNet, name, nbOutputs),
       mOperation(operation),
+      mCoeffMode(mode),
       mWeights(weights),
       mShifts(shifts)
 {

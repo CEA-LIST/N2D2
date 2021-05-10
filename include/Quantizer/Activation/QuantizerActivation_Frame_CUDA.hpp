@@ -19,8 +19,7 @@ namespace N2D2 {
 template <class T> 
 class QuantizerActivation_Frame_CUDA: virtual public QuantizerActivation {
 public:
-    virtual void initialize(){};
-    virtual void update(unsigned int /*batchSize = 1*/){};
+    virtual void update(unsigned int /*batchSize = 1*/) = 0;
     virtual void propagate(BaseTensor& baseInOut,
                             bool inference= false) = 0;
     virtual void back_propagate(const BaseTensor& input,

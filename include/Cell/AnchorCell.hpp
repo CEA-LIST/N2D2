@@ -45,6 +45,8 @@ public:
         const DeepNet&, 
         const std::string&,
         StimuliProvider&,
+        const AnchorCell_Frame_Kernels::DetectorType detectorType,
+        const AnchorCell_Frame_Kernels::Format inputFormat,
         const std::vector<AnchorCell_Frame_Kernels::Anchor>&,
         unsigned int)>
     RegistryCreate_T;
@@ -58,6 +60,8 @@ public:
 
     AnchorCell(const DeepNet& deepNet, const std::string& name,
                StimuliProvider& sp,
+               const AnchorCell_Frame_Kernels::DetectorType detectorType,
+               const AnchorCell_Frame_Kernels::Format inputFormat,
                const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
                unsigned int scoresCls = 1);
 
@@ -85,6 +89,7 @@ public:
         return flipStatus;
     };
     unsigned int getScoreCls() { return mScoresCls; };
+    bool getIsCoordinateAnchors() { return (mInputFormat == AnchorCell_Frame_Kernels::Format::CA); };
     unsigned int getFeatureMapWidth() { return mFeatureMapWidth; };
     unsigned int getFeatureMapHeight() { return mFeatureMapHeight; };
     //std::map<int, int> getLabelMapping() { return mLabelsMapping; };
@@ -105,12 +110,13 @@ protected:
     Parameter<unsigned int> mFeatureMapWidth;
     Parameter<unsigned int> mFeatureMapHeight;
     Parameter<bool> mFlip;
-    Parameter<bool> mSingleShotMode;
     Parameter<unsigned int> mNegativeRatioSSD;
     Parameter<unsigned int> mMaxLabelGT;
     Parameter<int> mNbClass;
 
     StimuliProvider& mStimuliProvider;
+    AnchorCell_Frame_Kernels::DetectorType mDetectorType;
+    AnchorCell_Frame_Kernels::Format mInputFormat;
     unsigned int mScoresCls;
     //std::map<int, int> mLabelsMapping;
     std::vector<int> mLabelsMapping;
@@ -124,6 +130,20 @@ template <>
 const char* const EnumStrings<N2D2::AnchorCell_Frame_Kernels::Anchor::Anchoring>
 ::data[]
     = {"TopLeft", "Centered", "Original", "OriginalFlipped"};
+}
+
+namespace {
+template <>
+const char* const EnumStrings<N2D2::AnchorCell_Frame_Kernels::DetectorType>
+::data[]
+    = {"LapNet", "SSD", "YOLO"};
+}
+
+namespace {
+template <>
+const char* const EnumStrings<N2D2::AnchorCell_Frame_Kernels::Format>
+::data[]
+    = {"CA", "AC"};
 }
 
 #endif // N2D2_ANCHORCELL_H

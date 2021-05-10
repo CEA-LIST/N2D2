@@ -29,6 +29,15 @@ class LabelSliceExtractionTransformation : public Transformation {
 public:
     using Transformation::apply;
 
+    enum BorderType {
+        ConstantBorder = cv::BORDER_CONSTANT,
+        ReplicateBorder = cv::BORDER_REPLICATE,
+        ReflectBorder = cv::BORDER_REFLECT,
+        WrapBorder = cv::BORDER_WRAP,
+        MinusOneReflectBorder = cv::BORDER_REFLECT_101,
+        MeanBorder
+    };
+
     static const char* Type;
 
     LabelSliceExtractionTransformation(unsigned int width,
@@ -55,6 +64,11 @@ public:
     cv::Rect getLastSlice() const
     {
         return mLastSlice;
+    };
+    void setCachePath(const std::string& path = "");
+    const std::string& getCachePath() const
+    {
+        return mCachePath;
     };
     std::pair<unsigned int, unsigned int>
     getOutputsSize(unsigned int /*width*/, unsigned int /*height*/) const
@@ -95,6 +109,7 @@ private:
     cv::Mat mElementDilate;
     cv::Mat mElementErode;
     std::map<int, std::vector<int> > mUniqueLabels;
+    std::string mCachePath;
 
     Parameter<int> mSlicesMargin;
     Parameter<bool> mKeepComposite;
@@ -103,7 +118,21 @@ private:
     /// Range of the random rotation (in deg, counterclockwise),
     /// default is [0.0 360.0] (any rotation)
     Parameter<std::vector<double> > mRandomRotationRange;
+    /// Allow padding (if false and padding should occur, triggers an exception)
+    Parameter<bool> mAllowPadding;
+    Parameter<BorderType> mBorderType;
+    Parameter<std::vector<double> > mBorderValue;
+    Parameter<bool> mIgnoreNoValid;
+    Parameter<std::vector<int> > mExcludeLabels;
 };
+}
+
+namespace {
+template <>
+const char* const EnumStrings
+    <N2D2::LabelSliceExtractionTransformation::BorderType>::data[]
+    = {"ConstantBorder", "ReplicateBorder", "ReflectBorder", "WrapBorder",
+        "MinusOneReflectBorder", "MeanBorder"};
 }
 
 #endif // N2D2_LABELSLICEEXTRACTIONTRANSFORMATION_H

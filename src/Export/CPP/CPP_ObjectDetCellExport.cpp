@@ -76,7 +76,11 @@ void N2D2::CPP_ObjectDetCellExport::generateHeaderConstants(ObjectDetCell& cell,
 
     header << "#define " << prefix << "_FM_WIDTH "
                          << cell.getFeatureMapWidth() << "\n"
-             << "#define " << prefix << "_FM_HEIGHT " << cell.getFeatureMapHeight() << "\n";
+             << "#define " << prefix << "_FM_HEIGHT " << cell.getFeatureMapHeight() << "\n"
+             << "#define " << prefix << "_IS_COORD_ANCHORS "
+                                << cell.getIsCoordinateAnchors() << "\n" 
+             << "#define " << prefix << "_IS_PIXEL_FORMAT_XY "
+                                << cell.getIsPixelFormatXY() << "\n" ;
 
 }
 

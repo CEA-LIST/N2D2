@@ -94,6 +94,7 @@ void N2D2::CPP_TensorRT_AnchorCellExport
          << "         " << prefix << "_FM_WIDTH,\n"
          << "         " << prefix << "_FM_HEIGHT,\n"
          << "         " << prefix << "_SCORE_CLS,\n"
+         << "         " << prefix << "_IS_COORD_ANCHORS,\n"
          << "         " << prefix << "_FLIP,\n"
          << "         " << prefix << "_NB_ANCHORS,\n"
          << "         " << identifier << "_anchors[0]);\n";

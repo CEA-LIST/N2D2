@@ -310,29 +310,30 @@ void N2D2::cudaSAnchorPropagate(
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-__global__ void cudaSAnchorPropagateSSD_kernel( unsigned int stimuliSizeX,
-                                                unsigned int stimuliSizeY,
-                                                unsigned int featureMapX,
-                                                unsigned int featureMapY,
-                                                bool flip,
-                                                bool inference,
-                                                float* inputsCls,
-                                                float* inputsCoord,
-                                                unsigned int scoresCls,
-                                                N2D2::AnchorCell_Frame_Kernels::Anchor* anchors,
-                                                N2D2::AnchorCell_Frame_Kernels::BBox_T* gtsWithClass,
-                                                unsigned int* nbLabelsWithClass,
-                                                float* outputs,
-                                                int* argMaxIoU,
-                                                float* maxIoU,
-                                                unsigned int nbAnchors,
-                                                unsigned int outputsHeight,
-                                                unsigned int outputsWidth,
-                                                unsigned int batchSize,
-                                                unsigned int nbTotalCls,
-                                                unsigned int nbClass,
-                                                unsigned int nbInputs,
-                                                unsigned int maxGTLabels)
+__global__ void cudaSAnchorPropagate_LapNet_kernel( unsigned int stimuliSizeX,
+                                                    unsigned int stimuliSizeY,
+                                                    unsigned int featureMapX,
+                                                    unsigned int featureMapY,
+                                                    bool flip,
+                                                    bool inference,
+                                                    float* inputsCls,
+                                                    float* inputsCoord,
+                                                    bool isCoordinateAnchor,
+                                                    unsigned int scoresCls,
+                                                    N2D2::AnchorCell_Frame_Kernels::Anchor* anchors,
+                                                    N2D2::AnchorCell_Frame_Kernels::BBox_T* gtsWithClass,
+                                                    unsigned int* nbLabelsWithClass,
+                                                    float* outputs,
+                                                    int* argMaxIoU,
+                                                    float* maxIoU,
+                                                    unsigned int nbAnchors,
+                                                    unsigned int outputsHeight,
+                                                    unsigned int outputsWidth,
+                                                    unsigned int batchSize,
+                                                    unsigned int nbTotalCls,
+                                                    unsigned int nbClass,
+                                                    unsigned int nbInputs,
+                                                    unsigned int maxGTLabels)
 {
     const unsigned int batchOffset = blockIdx.z * 6 * nbAnchors
                                         * outputsHeight * outputsWidth;
@@ -391,23 +392,40 @@ __global__ void cudaSAnchorPropagateSSD_kernel( unsigned int stimuliSizeX,
 
                 const unsigned int addrBase = batchOffset + xa + (ya + k * outputsHeight) * outputsWidth;
 
-                const unsigned int addrCoordBase = batchCoordOffset 
-                                                    + k * addrStep
-                                                    + ya * outputsWidth 
-                                                    + xa;
+                const unsigned int addrCoordBase = isCoordinateAnchor ? batchCoordOffset 
+                                                                        + k * addrStep
+                                                                        + ya * outputsWidth 
+                                                                        + xa :
+                                                                        batchCoordOffset 
+                                                                        + k * addrStep * 4
+                                                                        + ya * outputsWidth 
+                                                                        + xa ;
+
 
                 const unsigned int addrClsBase = batchClsOffset 
-                                                    + k * addrStep 
-                                                    + ya * outputsWidth 
-                                                    + xa;
-                     
+                                                + k * addrStep 
+                                                + ya * outputsWidth 
+                                                + xa;
+                const unsigned int index_xbb = isCoordinateAnchor ? 
+                                              addrCoordBase + scoresCls * nbAnchors * addrStep 
+                                              : addrCoordBase + 0 * addrStep;
+                const unsigned int index_ybb = isCoordinateAnchor ? 
+                                              addrCoordBase + (scoresCls + 1) * nbAnchors * addrStep 
+                                              : addrCoordBase + 1 * addrStep;
+                const unsigned int index_wbb = isCoordinateAnchor ? 
+                                              addrCoordBase + (scoresCls + 2) * nbAnchors * addrStep
+                                              : addrCoordBase + 2 * addrStep;
+                const unsigned int index_hbb =  isCoordinateAnchor ? 
+                                                addrCoordBase + (scoresCls + 3) * nbAnchors * addrStep 
+                                                : addrCoordBase + 3 * addrStep;
+
                 // Score
                 const float cls = inputsCls[addrClsBase];
                 // Parameterized coordinates
-                const float txbb = fmaxf(fminf(inputsCoord[addrCoordBase + scoresCls * nbAnchors * addrStep], 70.0f), -70.0f);
-                const float tybb = fmaxf(fminf(inputsCoord[addrCoordBase + (scoresCls + 1) * nbAnchors * addrStep], 70.0f), -70.0f);
-                const float twbb = fmaxf(fminf(inputsCoord[addrCoordBase + (scoresCls + 2) * nbAnchors * addrStep], 70.0f), -70.0f);
-                const float thbb = fmaxf(fminf(inputsCoord[addrCoordBase + (scoresCls + 3) * nbAnchors * addrStep], 70.0f), -70.0f);
+                const float txbb = fmaxf(fminf(inputsCoord[index_xbb], 70.0f), -70.0f);
+                const float tybb = fmaxf(fminf(inputsCoord[index_ybb], 70.0f), -70.0f);
+                const float twbb = fmaxf(fminf(inputsCoord[index_wbb], 70.0f), -70.0f);
+                const float thbb = fmaxf(fminf(inputsCoord[index_hbb], 70.0f), -70.0f);
 
                 // Predicted box center coordinates
                 const float xbbc = ((flip) ? -txbb : txbb) * wa
@@ -502,55 +520,57 @@ __global__ void cudaSAnchorPropagateSSD_kernel( unsigned int stimuliSizeX,
 }
 
 
-void N2D2::cudaSAnchorPropagateSSD( unsigned int stimuliSizeX,
-                                    unsigned int stimuliSizeY,
-                                    unsigned int featureMapX,
-                                    unsigned int featureMapY,
-                                    bool flip,
-                                    bool inference,
-                                    float* inputsCls,
-                                    float* inputsCoord,
-                                    unsigned int scoresCls,
-                                    AnchorCell_Frame_Kernels::Anchor* anchors,
-                                    AnchorCell_Frame_Kernels::BBox_T* gtsWithClass,
-                                    unsigned int* nbLabelsWithClass,
-                                    float* outputs,
-                                    int* argMaxIoU,
-                                    float* maxIoU,
-                                    unsigned int nbAnchors,
-                                    unsigned int outputsHeight,
-                                    unsigned int outputsWidth,
-                                    unsigned int batchSize,
-                                    unsigned int nbTotalCls,
-                                    unsigned int nbClass,
-                                    unsigned int nbInputs,
-                                    unsigned int maxLabelGT,
-                                    const dim3 blocksPerGrid,
-                                    const dim3 threadsPerBlock)
+void N2D2::cudaSAnchorPropagate_LapNet( unsigned int stimuliSizeX,
+                                        unsigned int stimuliSizeY,
+                                        unsigned int featureMapX,
+                                        unsigned int featureMapY,
+                                        bool flip,
+                                        bool inference,
+                                        float* inputsCls,
+                                        float* inputsCoord,
+                                        bool isCoordinateAnchor,
+                                        unsigned int scoresCls,
+                                        AnchorCell_Frame_Kernels::Anchor* anchors,
+                                        AnchorCell_Frame_Kernels::BBox_T* gtsWithClass,
+                                        unsigned int* nbLabelsWithClass,
+                                        float* outputs,
+                                        int* argMaxIoU,
+                                        float* maxIoU,
+                                        unsigned int nbAnchors,
+                                        unsigned int outputsHeight,
+                                        unsigned int outputsWidth,
+                                        unsigned int batchSize,
+                                        unsigned int nbTotalCls,
+                                        unsigned int nbClass,
+                                        unsigned int nbInputs,
+                                        unsigned int maxLabelGT,
+                                        const dim3 blocksPerGrid,
+                                        const dim3 threadsPerBlock)
 {
-    cudaSAnchorPropagateSSD_kernel<<<blocksPerGrid, threadsPerBlock>>> (stimuliSizeX,
-                                                                        stimuliSizeY,
-                                                                        featureMapX,
-                                                                        featureMapY,
-                                                                        flip,
-                                                                        inference,
-                                                                        inputsCls,
-                                                                        inputsCoord,
-                                                                        scoresCls,
-                                                                        anchors,
-                                                                        gtsWithClass,
-                                                                        nbLabelsWithClass,
-                                                                        outputs,
-                                                                        argMaxIoU,
-                                                                        maxIoU,
-                                                                        nbAnchors,
-                                                                        outputsHeight,
-                                                                        outputsWidth,
-                                                                        batchSize,
-                                                                        nbTotalCls,
-                                                                        nbClass,
-                                                                        nbInputs,
-                                                                        maxLabelGT);
+    cudaSAnchorPropagate_LapNet_kernel<<<blocksPerGrid, threadsPerBlock>>> (stimuliSizeX,
+                                                                            stimuliSizeY,
+                                                                            featureMapX,
+                                                                            featureMapY,
+                                                                            flip,
+                                                                            inference,
+                                                                            inputsCls,
+                                                                            inputsCoord,
+                                                                            isCoordinateAnchor,
+                                                                            scoresCls,
+                                                                            anchors,
+                                                                            gtsWithClass,
+                                                                            nbLabelsWithClass,
+                                                                            outputs,
+                                                                            argMaxIoU,
+                                                                            maxIoU,
+                                                                            nbAnchors,
+                                                                            outputsHeight,
+                                                                            outputsWidth,
+                                                                            batchSize,
+                                                                            nbTotalCls,
+                                                                            nbClass,
+                                                                            nbInputs,
+                                                                            maxLabelGT);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
@@ -648,7 +668,7 @@ __global__ void cudaSAnchorBackPropagateSSD_kernel(
     }
 }
 
-void N2D2::cudaSAnchorBackPropagatePropagateSSD(const float* inputsCls,
+void N2D2::cudaSAnchorBackPropagateSSD(const float* inputsCls,
                                                 const float* outputs,
                                                 const int* argMaxIoU,
                                                 float* diffOutputsCoords,
@@ -770,6 +790,24 @@ float sign = 1.0f;
     return return_value;
 }
 
+__device__ static float huberLoss(float tx, float x, float sigma= 1.0f)
+{
+    float return_value = 0.0f;
+
+    const float diff = tx - x;
+    const float sigma2 = sigma*sigma;
+    const float posCas = (diff*diff) * 0.5*sigma2;
+    const float negCas = abs(diff) - (0.5 / sigma2) ;
+
+    if(abs(diff) < (1.0/sigma2)) {
+        return_value = posCas;
+    } 
+    else {
+        return_value = negCas;
+    }
+
+    return return_value;
+}
 
 __global__ void cudaSAnchorBackPropagateSSD_PosSamples_kernel(  const unsigned int stimuliSizeX,
                                                                 const unsigned int stimuliSizeY,
@@ -860,19 +898,19 @@ __global__ void cudaSAnchorBackPropagateSSD_PosSamples_kernel(  const unsigned i
 
 
         // Smooth L1 loss
-        const float lossTx = lossLambda * smoothL1(txgt, tx) / (nbPositive); //(nbPositive * batchSize);
-        const float lossTy = lossLambda * smoothL1(tygt, ty) / (nbPositive); //(nbPositive * batchSize);
-        const float lossTw = lossLambda * smoothL1(twgt, tw) / (nbPositive); //(nbPositive * batchSize);
-        const float lossTh = lossLambda * smoothL1(thgt, th) / (nbPositive); //(nbPositive * batchSize);
-        const float lossCls = (1.0f - inputCls[indexSamples]) / (nbPositive); //(nbPositive * batchSize);
+        const float lossTx = lossLambda * huberLoss(txgt, tx) / (nbPositive); 
+        const float lossTy = lossLambda * huberLoss(tygt, ty) / (nbPositive); 
+        const float lossTw = lossLambda * huberLoss(twgt, tw) / (nbPositive); 
+        const float lossTh = lossLambda * huberLoss(thgt, th) / (nbPositive); 
+        const float lossCls = (1.0f - inputCls[indexSamples]) / (nbPositive); 
         //printf("Coord[%d]: {%f, %f, %f, %f}(%f)\n", indexSamples, lossTx,
         //    lossTy, lossTw, lossTh, inputCls[indexSamples]);
 
-        diffOutputsCoord[indexSamples] = lossTx;// / batchSize;
-        diffOutputsCoord[indexSamples + 1 * outputsHeight * outputsWidth * nbAnchors] = lossTy;//  / batchSize;
-        diffOutputsCoord[indexSamples + 2 * outputsHeight * outputsWidth * nbAnchors] = lossTw;//  / batchSize;
-        diffOutputsCoord[indexSamples + 3 * outputsHeight * outputsWidth * nbAnchors] = lossTh;// / batchSize;
-        diffOutputsCls[indexSamples] = lossCls; // / batchSize;
+        diffOutputsCoord[indexSamples] = lossTx;
+        diffOutputsCoord[indexSamples + 1 * outputsHeight * outputsWidth * nbAnchors] = lossTy;
+        diffOutputsCoord[indexSamples + 2 * outputsHeight * outputsWidth * nbAnchors] = lossTw;
+        diffOutputsCoord[indexSamples + 3 * outputsHeight * outputsWidth * nbAnchors] = lossTh;
+        diffOutputsCls[indexSamples] = lossCls; 
     }
     
 }

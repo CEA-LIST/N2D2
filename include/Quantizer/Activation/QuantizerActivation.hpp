@@ -24,9 +24,7 @@ public:
     QuantizerActivation()
       : mRange(this, "Range", 255)
     {};
-
-    virtual void initialize(){};
-    virtual void update(unsigned int /*batchSize = 1*/) {};
+    virtual void update(unsigned int /*batchSize = 1*/) = 0;
     virtual void propagate(BaseTensor& baseInOut,
                             bool inference= false) = 0;
     virtual void back_propagate(const BaseTensor& input,

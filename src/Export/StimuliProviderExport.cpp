@@ -65,6 +65,11 @@ void N2D2::StimuliProviderExport::generate(const DeepNet& deepNet, StimuliProvid
     if (!stimuliList.good()) {
         throw std::runtime_error("Could not create stimuli list file: " + stimuliListName + ".");
     }
+    const std::string stimuliLinkName = dirName + "/../stimuli.link";
+    std::ofstream stimuliLink(stimuliLinkName);
+    if (!stimuliLink.good()) {
+        throw std::runtime_error("Could not create stimuli link file: " + stimuliLinkName + ".");
+    }
 
     std::cout << "Exporting " << set << " dataset to \"" << dirName << "\"" << std::flush;
 
@@ -82,6 +87,11 @@ void N2D2::StimuliProviderExport::generate(const DeepNet& deepNet, StimuliProvid
 
         stimuliList << Utils::baseName(dirName) << "/"
                     << Utils::baseName(stimuliName.str()) << "\n";
+        stimuliLink << Utils::baseName(dirName) << "/"
+                    << Utils::baseName(stimuliName.str()) 
+                    << " "
+                    << Utils::baseName(sp.getDatabase().getStimulusName(set, i))
+                    <<"\n";
 
         std::ofstream envStimuli(stimuliName.str().c_str(),
                                  std::fstream::binary);
@@ -102,7 +112,6 @@ void N2D2::StimuliProviderExport::generate(const DeepNet& deepNet, StimuliProvid
         envStimuli << envSizeX << " " << envSizeY << "\n" << maxValue << "\n";
 
         sp.readStimulusBatch(set, i);
-
         // TODO Optimize loop to avoid checking 'precision' and 'unsignedData' constantly.
         if(exportFormat == CHW) {
             for (std::size_t channel = 0; channel < nbChannels; channel++) {

@@ -303,6 +303,10 @@ public:
                             double alpha,
                             double beta,
                             std::vector<nvinfer1::ITensor *> inputs_tensor);
+    std::vector<nvinfer1::ITensor *>
+        add_activation_cell(std::string layerName,
+                            LayerActivation activation,
+                            std::vector<nvinfer1::ITensor *> inputs_tensor);
 
     std::vector<nvinfer1::ITensor *>
             add_convolution(std::string layerName,
@@ -386,6 +390,7 @@ public:
                             unsigned int outputWidth,
                             std::vector<std::vector<nvinfer1::ITensor *> > inputs_tensor,
                             nvinfer1::ElementWiseOperation op,
+                            CoeffMode_T coeffMode,
                             float* scales,
                             float* shift,
                             float* power);
@@ -441,6 +446,7 @@ public:
                             unsigned int featureMapWidth,
                             unsigned int featureMapHeight,
                             unsigned int scoreCls,
+                            bool isCoordinatesAnchors,
                             bool isFlip,
                             unsigned int nbAnchors,
                             const float* anchor);
@@ -478,6 +484,8 @@ public:
                                 unsigned int nbAnchors,
                                 //std::vector<nvinfer1::ITensor *> inputs_tensor,
                                 std::vector<std::vector<nvinfer1::ITensor *> *> inputs_tensor,
+                                bool isCoordinatesAnchors,
+                                bool isPixelFormatXY,
                                 double nmsIoU,
                                 const float* scoreThreshold,
                                 unsigned int maxParts,

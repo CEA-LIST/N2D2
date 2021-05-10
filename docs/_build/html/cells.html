@@ -1,37 +1,43 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Cells &mdash; N2D2  documentation</title>
   
 
   
-  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
   
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -73,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -133,6 +140,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -167,18 +175,20 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Cells</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/cells.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -196,344 +206,9 @@
 <h1>Cells<a class="headerlink" href="#cells" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="cell">
 <h2>Cell<a class="headerlink" href="#cell" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
-<dt id="N2D2.Cell">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">N2D2.</span></code><code class="sig-name descname"><span class="pre">Cell</span></code><a class="headerlink" href="#N2D2.Cell" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py class">
-<dt id="N2D2.Cell.FreeParametersType">
-<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">FreeParametersType</span></code><a class="headerlink" href="#N2D2.Cell.FreeParametersType" title="Permalink to this definition">¶</a></dt>
-<dd><p>Members:</p>
-<p>Additive</p>
-<p>Multiplicative</p>
-<p>All</p>
-<dl class="py method">
-<dt id="N2D2.Cell.FreeParametersType.name">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">name</span></code><a class="headerlink" href="#N2D2.Cell.FreeParametersType.name" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.addInput">
-<code class="sig-name descname"><span class="pre">addInput</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#N2D2.Cell.addInput" title="Permalink to this definition">¶</a></dt>
-<dd><p>Overloaded function.</p>
-<ol class="arabic simple">
-<li><p>addInput(self: N2D2.Cell, sp: N2D2.StimuliProvider, channel: int, x0: int, y0: int, width: int, height: int, mapping: N2D2.Tensor_bool = &lt;N2D2.Tensor_bool object at 0x7fd7bdd716b0&gt;) -&gt; None</p></li>
-<li><p>addInput(self: N2D2.Cell, sp: N2D2.StimuliProvider, x0: int = 0, y0: int = 0, width: int = 0, height: int = 0, mapping: N2D2.Tensor_bool = &lt;N2D2.Tensor_bool object at 0x7fd7bdd717b0&gt;) -&gt; None</p></li>
-<li><p>addInput(self: N2D2.Cell, cell: N2D2.Cell, mapping: N2D2.Tensor_bool = &lt;N2D2.Tensor_bool object at 0x7fd7bdd718b0&gt;) -&gt; None</p></li>
-<li><p>addInput(self: N2D2.Cell, cell: N2D2.Cell, x0: int, y0: int, width: int = 0, height: int = 0) -&gt; None</p></li>
-</ol>
-</dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.addMultiscaleInput">
-<code class="sig-name descname"><span class="pre">addMultiscaleInput</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self:</span> <span class="pre">N2D2.Cell</span></em>, <em class="sig-param"><span class="pre">sp:</span> <span class="pre">N2D2::HeteroStimuliProvider</span></em>, <em class="sig-param"><span class="pre">x0:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></em>, <em class="sig-param"><span class="pre">y0:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></em>, <em class="sig-param"><span class="pre">width:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></em>, <em class="sig-param"><span class="pre">height:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0</span></em>, <em class="sig-param"><span class="pre">mapping:</span> <span class="pre">N2D2.Tensor_bool</span> <span class="pre">=</span> <span class="pre">&lt;N2D2.Tensor_bool</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x7fd7bdd71830&gt;</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell.addMultiscaleInput" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.exportFreeParameters">
-<code class="sig-name descname"><span class="pre">exportFreeParameters</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell.exportFreeParameters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getAssociatedDeepNet">
-<code class="sig-name descname"><span class="pre">getAssociatedDeepNet</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">N2D2::DeepNet</span><a class="headerlink" href="#N2D2.Cell.getAssociatedDeepNet" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getChannelsHeight">
-<code class="sig-name descname"><span class="pre">getChannelsHeight</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.Cell.getChannelsHeight" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getChannelsWidth">
-<code class="sig-name descname"><span class="pre">getChannelsWidth</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.Cell.getChannelsWidth" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getFreeParametersRange">
-<code class="sig-name descname"><span class="pre">getFreeParametersRange</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell.FreeParametersType" title="N2D2.Cell.FreeParametersType"><span class="pre">N2D2.Cell.FreeParametersType</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#N2D2.Cell.getFreeParametersRange" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getFreeParametersRangePerOutput">
-<code class="sig-name descname"><span class="pre">getFreeParametersRangePerOutput</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell.FreeParametersType" title="N2D2.Cell.FreeParametersType"><span class="pre">N2D2.Cell.FreeParametersType</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#N2D2.Cell.getFreeParametersRangePerOutput" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getId">
-<code class="sig-name descname"><span class="pre">getId</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.Cell.getId" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getInputsDim">
-<code class="sig-name descname"><span class="pre">getInputsDim</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.Cell.getInputsDim" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getInputsDims">
-<code class="sig-name descname"><span class="pre">getInputsDims</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#N2D2.Cell.getInputsDims" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getInputsSize">
-<code class="sig-name descname"><span class="pre">getInputsSize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.Cell.getInputsSize" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getName">
-<code class="sig-name descname"><span class="pre">getName</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">str</span><a class="headerlink" href="#N2D2.Cell.getName" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getNbChannels">
-<code class="sig-name descname"><span class="pre">getNbChannels</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.Cell.getNbChannels" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getNbOutputs">
-<code class="sig-name descname"><span class="pre">getNbOutputs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.Cell.getNbOutputs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getOutputsDim">
-<code class="sig-name descname"><span class="pre">getOutputsDim</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.Cell.getOutputsDim" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getOutputsDims">
-<code class="sig-name descname"><span class="pre">getOutputsDims</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#N2D2.Cell.getOutputsDims" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getOutputsHeight">
-<code class="sig-name descname"><span class="pre">getOutputsHeight</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.Cell.getOutputsHeight" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getOutputsSize">
-<code class="sig-name descname"><span class="pre">getOutputsSize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.Cell.getOutputsSize" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getOutputsWidth">
-<code class="sig-name descname"><span class="pre">getOutputsWidth</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.Cell.getOutputsWidth" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getReceptiveField">
-<code class="sig-name descname"><span class="pre">getReceptiveField</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputField</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#N2D2.Cell.getReceptiveField" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getStats">
-<code class="sig-name descname"><span class="pre">getStats</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self:</span> <span class="pre">N2D2.Cell</span></em>, <em class="sig-param"><span class="pre">arg0:</span> <span class="pre">N2D2::Cell::Stats</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell.getStats" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.getType">
-<code class="sig-name descname"><span class="pre">getType</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">str</span><a class="headerlink" href="#N2D2.Cell.getType" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.groupMap">
-<code class="sig-name descname"><span class="pre">groupMap</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.Cell.groupMap" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.importFreeParameters">
-<code class="sig-name descname"><span class="pre">importFreeParameters</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignoreNotExists</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell.importFreeParameters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.initialize">
-<code class="sig-name descname"><span class="pre">initialize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell.initialize" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.isConnection">
-<code class="sig-name descname"><span class="pre">isConnection</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">bool</span><a class="headerlink" href="#N2D2.Cell.isConnection" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.isFullMap">
-<code class="sig-name descname"><span class="pre">isFullMap</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">bool</span><a class="headerlink" href="#N2D2.Cell.isFullMap" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.isUnitMap">
-<code class="sig-name descname"><span class="pre">isUnitMap</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">bool</span><a class="headerlink" href="#N2D2.Cell.isUnitMap" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.load">
-<code class="sig-name descname"><span class="pre">load</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell.load" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.loadFreeParameters">
-<code class="sig-name descname"><span class="pre">loadFreeParameters</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignoreNotExists</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell.loadFreeParameters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.logFreeParameters">
-<code class="sig-name descname"><span class="pre">logFreeParameters</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell.logFreeParameters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.logFreeParametersDistrib">
-<code class="sig-name descname"><span class="pre">logFreeParametersDistrib</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell.FreeParametersType" title="N2D2.Cell.FreeParametersType"><span class="pre">N2D2.Cell.FreeParametersType</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell.logFreeParametersDistrib" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.processFreeParameters">
-<code class="sig-name descname"><span class="pre">processFreeParameters</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self:</span> <span class="pre">N2D2.Cell</span></em>, <em class="sig-param"><span class="pre">func:</span> <span class="pre">std::function&lt;float</span> <span class="pre">(float)&gt;</span></em>, <em class="sig-param"><span class="pre">type:</span> <span class="pre">N2D2.Cell.FreeParametersType</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell.processFreeParameters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.processFreeParametersPerOutput">
-<code class="sig-name descname"><span class="pre">processFreeParametersPerOutput</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self:</span> <span class="pre">N2D2.Cell</span></em>, <em class="sig-param"><span class="pre">func:</span> <span class="pre">std::function&lt;float</span> <span class="pre">(float)&gt;</span></em>, <em class="sig-param"><span class="pre">output:</span> <span class="pre">int</span></em>, <em class="sig-param"><span class="pre">type:</span> <span class="pre">N2D2.Cell.FreeParametersType</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell.processFreeParametersPerOutput" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.save">
-<code class="sig-name descname"><span class="pre">save</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell.save" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell.saveFreeParameters">
-<code class="sig-name descname"><span class="pre">saveFreeParameters</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell" title="N2D2.Cell"><span class="pre">N2D2.Cell</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell.saveFreeParameters" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
 </div>
 <div class="section" id="cell-frame">
 <h2>Cell_Frame<a class="headerlink" href="#cell-frame" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
-<dt id="N2D2.Cell_Frame_Top">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">N2D2.</span></code><code class="sig-name descname"><span class="pre">Cell_Frame_Top</span></code><a class="headerlink" href="#N2D2.Cell_Frame_Top" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py class">
-<dt id="N2D2.Cell_Frame_Top.Signals">
-<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">Signals</span></code><a class="headerlink" href="#N2D2.Cell_Frame_Top.Signals" title="Permalink to this definition">¶</a></dt>
-<dd><p>Members:</p>
-<p>In</p>
-<p>Out</p>
-<p>InOut</p>
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.Signals.name">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">name</span></code><a class="headerlink" href="#N2D2.Cell_Frame_Top.Signals.name" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.addInput">
-<code class="sig-name descname"><span class="pre">addInput</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="containers.html#N2D2.BaseTensor" title="N2D2.BaseTensor"><span class="pre">N2D2.BaseTensor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">diffOutputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="containers.html#N2D2.BaseTensor" title="N2D2.BaseTensor"><span class="pre">N2D2.BaseTensor</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.addInput" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.backPropagate">
-<code class="sig-name descname"><span class="pre">backPropagate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.backPropagate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.checkGradient">
-<code class="sig-name descname"><span class="pre">checkGradient</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxError</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.checkGradient" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.getActivation">
-<code class="sig-name descname"><span class="pre">getActivation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">N2D2::Activation</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.getActivation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.getDiffInputs">
-<code class="sig-name descname"><span class="pre">getDiffInputs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="containers.html#N2D2.BaseTensor" title="N2D2.BaseTensor"><span class="pre">N2D2.BaseTensor</span></a><a class="headerlink" href="#N2D2.Cell_Frame_Top.getDiffInputs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.getDiffOutputs">
-<code class="sig-name descname"><span class="pre">getDiffOutputs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="containers.html#N2D2.BaseTensor" title="N2D2.BaseTensor"><span class="pre">N2D2.BaseTensor</span></a><a class="headerlink" href="#N2D2.Cell_Frame_Top.getDiffOutputs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.getInputs">
-<code class="sig-name descname"><span class="pre">getInputs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="containers.html#N2D2.BaseTensor" title="N2D2.BaseTensor"><span class="pre">N2D2.BaseTensor</span></a><a class="headerlink" href="#N2D2.Cell_Frame_Top.getInputs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.getMaxOutput">
-<code class="sig-name descname"><span class="pre">getMaxOutput</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">batchPos</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.getMaxOutput" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.getOutputs">
-<code class="sig-name descname"><span class="pre">getOutputs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="containers.html#N2D2.BaseTensor" title="N2D2.BaseTensor"><span class="pre">N2D2.BaseTensor</span></a><a class="headerlink" href="#N2D2.Cell_Frame_Top.getOutputs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.isCuda">
-<code class="sig-name descname"><span class="pre">isCuda</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">bool</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.isCuda" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.load">
-<code class="sig-name descname"><span class="pre">load</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.load" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.propagate">
-<code class="sig-name descname"><span class="pre">propagate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">inference</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.propagate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.replaceInput">
-<code class="sig-name descname"><span class="pre">replaceInput</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">oldInputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="containers.html#N2D2.BaseTensor" title="N2D2.BaseTensor"><span class="pre">N2D2.BaseTensor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">newInputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="containers.html#N2D2.BaseTensor" title="N2D2.BaseTensor"><span class="pre">N2D2.BaseTensor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">newDiffOutputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="containers.html#N2D2.BaseTensor" title="N2D2.BaseTensor"><span class="pre">N2D2.BaseTensor</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.replaceInput" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.save">
-<code class="sig-name descname"><span class="pre">save</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirName</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.save" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.setActivation">
-<code class="sig-name descname"><span class="pre">setActivation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self:</span> <span class="pre">N2D2.Cell_Frame_Top</span></em>, <em class="sig-param"><span class="pre">activation:</span> <span class="pre">N2D2::Activation</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.setActivation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.setOutputErrors">
-<code class="sig-name descname"><span class="pre">setOutputErrors</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="containers.html#N2D2.BaseTensor" title="N2D2.BaseTensor"><span class="pre">N2D2.BaseTensor</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.setOutputErrors" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.setOutputTarget">
-<code class="sig-name descname"><span class="pre">setOutputTarget</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">N2D2.Tensor_int</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.setOutputTarget" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.setOutputTargets">
-<code class="sig-name descname"><span class="pre">setOutputTargets</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="containers.html#N2D2.BaseTensor" title="N2D2.BaseTensor"><span class="pre">N2D2.BaseTensor</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.setOutputTargets" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="N2D2.Cell_Frame_Top.update">
-<code class="sig-name descname"><span class="pre">update</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#N2D2.Cell_Frame_Top" title="N2D2.Cell_Frame_Top"><span class="pre">N2D2.Cell_Frame_Top</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#N2D2.Cell_Frame_Top.update" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="N2D2.Cell_Frame_float">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">N2D2.</span></code><code class="sig-name descname"><span class="pre">Cell_Frame_float</span></code><a class="headerlink" href="#N2D2.Cell_Frame_float" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py class">
-<dt id="N2D2.Cell_Frame_CUDA_float">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">N2D2.</span></code><code class="sig-name descname"><span class="pre">Cell_Frame_CUDA_float</span></code><a class="headerlink" href="#N2D2.Cell_Frame_CUDA_float" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </div>
 </div>
 
@@ -542,29 +217,29 @@
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="databases.html" class="btn btn-neutral float-right" title="Databases" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="containers.html" class="btn btn-neutral float-left" title="Containers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="databases.html" class="btn btn-neutral float-right" title="Databases" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="containers.html" class="btn btn-neutral float-left" title="Containers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, CEA LIST
+        &#169; Copyright 2019, CEA LIST.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -572,7 +247,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

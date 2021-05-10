@@ -40,15 +40,7 @@ __device__ T saturate(T value, std::size_t quantizedNbBits, bool isOutputUnsigne
 
 template<typename T>
 __device__ T Clip(T value, Float_T clip) {
-    T res = T(0.0);
-
-    if(clip > 0.0) {
-        res = (value < T(0.0)) ? T(0.0) : (value > T(clip)) ? T(clip) : value;
-    }
-    if(clip <= 0.0) {
-        res = (value > T(0.0)) ? T(0.0) : (value < T(clip)) ? T(clip) : value;
-    }
-
+    T res = (value < T(0.0)) ? T(0.0) : (value > T(clip)) ? T(clip) : value;
     return res;
 }
 

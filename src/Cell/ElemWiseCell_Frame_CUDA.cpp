@@ -34,6 +34,7 @@ N2D2::ElemWiseCell_Frame_CUDA::ElemWiseCell_Frame_CUDA(
     const std::string& name,
     unsigned int nbOutputs,
     Operation operation,
+   CoeffMode mode,
     const std::vector<Float_T>& weights,
     const std::vector<Float_T>& shifts,
     const std::shared_ptr<Activation>& activation)
@@ -41,6 +42,7 @@ N2D2::ElemWiseCell_Frame_CUDA::ElemWiseCell_Frame_CUDA(
       ElemWiseCell(deepNet, name,
                nbOutputs,
                operation,
+               mode,
                weights,
                shifts),
       Cell_Frame_CUDA<Float_T>(deepNet, name, nbOutputs, activation)
@@ -63,9 +65,30 @@ void N2D2::ElemWiseCell_Frame_CUDA::initialize()
             throw std::runtime_error(errorMsg.str());
         }
     }
+    if(mWeights.empty()) {
+        std::cout << Utils::cwarning << "ElemWiseCell_Frame::initialize(): Empty weights for cell " 
+                    << mName << ": Initialize weights to default value(1.0)" 
+                    << Utils::cdef << std::endl;
+    }
+    if(mShifts.empty()) {
+        std::cout << Utils::cwarning << "ElemWiseCell_Frame::initialize(): Empty shifts for cell " 
+                    << mName << ": Initialize shifts to default value(0.0)" 
+                    << Utils::cdef << std::endl;
+    }
 
-    mWeights.resize(mInputs.size(), 1.0);
-    mShifts.resize(mInputs.size(), 0.0);
+    if(mCoeffMode == ElemWiseCell::PerChannel) {
+        std::size_t nbChannels = 0;
+        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+            nbChannels += mInputs[k].dimZ();
+        }
+
+        mWeights.resize(nbChannels, 1.0);
+        mShifts.resize(nbChannels, 0.0);
+    } 
+    else {
+        mWeights.resize(mInputs.size(), 1.0);
+        mShifts.resize(mInputs.size(), 0.0);
+    }
 
     if (mOperation == Max)
         mArgMax.resize(mOutputs.dims());
@@ -86,115 +109,191 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
 
     if (mOperation == Sum) {
         // mOutputs <- mWeights[0] * mInputs[0] + mShifts[0]
-        cudaScale(nbElems,
-                   input0->getDevicePtr(),
-                   mWeights[0],
-                   mShifts[0],
-                   0.0f,
-                   mOutputs.getDevicePtr());
+        if(mCoeffMode == ElemWiseCell::PerInput 
+                || mCoeffMode == ElemWiseCell::PerLayer) {
+            cudaScale(nbElems,
+                    input0->getDevicePtr(),
+                    mWeights[0],
+                    mShifts[0],
+                    0.0f,
+                    mOutputs.getDevicePtr());
 
-        for (unsigned int k = 1; k < nbInputs; ++k) {
-            // mOutputs <- mWeights[k] * mInputs[k] + mOutputs
-            std::shared_ptr<CudaDeviceTensor<Float_T> > input
-                = cuda_device_tensor_cast<Float_T>(mInputs[k]);
+            for (unsigned int k = 1; k < nbInputs; ++k) {
+                // mOutputs <- mWeights[k] * mInputs[k] + mOutputs
+                std::shared_ptr<CudaDeviceTensor<Float_T> > input
+                    = cuda_device_tensor_cast<Float_T>(mInputs[k]);
+                CHECK_CUBLAS_STATUS(cublasSaxpy(CudaContext::cublasHandle(),
+                                                nbElems,
+                                                &(mWeights[k]),
+                                                input->getDevicePtr(),
+                                                1,
+                                                mOutputs.getDevicePtr(),
+                                                1));
 
-            CHECK_CUBLAS_STATUS(cublasSaxpy(CudaContext::cublasHandle(),
-                                            nbElems,
-                                            &(mWeights[k]),
-                                            input->getDevicePtr(),
-                                            1,
-                                            mOutputs.getDevicePtr(),
-                                            1));
+                // mOutputs <- mOutputs + mShifts[k]
+                if(mShifts[k] != 0.0)
+                    cudaScale(nbElems,
+                                mOutputs.getDevicePtr(),
+                                1.0f,
+                                mShifts[k],
+                                0.0f,
+                                mOutputs.getDevicePtr());
+            }
+        }
+        else if(mCoeffMode == ElemWiseCell::PerChannel){
+            const unsigned int nbChElems = mInputs.dimY()*mInputs.dimX();
 
-            // mOutputs <- mOutputs + mShifts[k]
-            if(mShifts[k] != 0.0)
-                cudaScale(nbElems,
-                            mOutputs.getDevicePtr(),
-                            1.0f,
-                            mShifts[k],
-                            0.0f,
-                            mOutputs.getDevicePtr());
+            for(unsigned int b = 0; b < mInputs.dimB(); ++b) {
+                const unsigned int batchoffset 
+                            = b*mInputs[0].dimZ()*nbChElems;
+                unsigned int chOffset = batchoffset;
+                for(unsigned int ch = 0; ch < mInputs[0].dimZ(); ++ch) {
+                    cudaScale(  nbChElems,
+                                input0->getDevicePtr() + chOffset,
+                                mWeights[ch],
+                                mShifts[ch],
+                                0.0f,
+                                mOutputs.getDevicePtr() + chOffset);
 
+                    chOffset += nbChElems;
+                }
+                for (unsigned int k = 1; k < nbInputs; ++k) {
+                    std::shared_ptr<CudaDeviceTensor<Float_T> > input
+                        = cuda_device_tensor_cast<Float_T>(mInputs[k]);
+                    chOffset = batchoffset;
+                    for(unsigned int ch = 0; ch < mInputs[k].dimZ(); ++ch) {
+                        cudaScale(  nbChElems,
+                                    input->getDevicePtr() + chOffset,
+                                    mWeights[ch],
+                                    mShifts[ch],
+                                    1.0f,
+                                    mOutputs.getDevicePtr() + chOffset);
+                        chOffset += nbChElems;
+                    }
+                }
+            }
         }
     }
     else if (mOperation == AbsSum) {
-        // mOutputs <- mWeights[0] * |mInputs[0]|
-        cudaScaleAbs(nbElems,
-                   input0->getDevicePtr(),
-                   mWeights[0],
-                   0.0f,
-                   mOutputs.getDevicePtr());
-
-        for (unsigned int k = 1; k < nbInputs; ++k) {
-            // mOutputs <- mWeights[k] * |mInputs[k]| + mOutputs
-            std::shared_ptr<CudaDeviceTensor<Float_T> > input
-                = cuda_device_tensor_cast<Float_T>(mInputs[k]);
-
+        if(mCoeffMode == ElemWiseCell::PerInput 
+                || mCoeffMode == ElemWiseCell::PerLayer) {
+            // mOutputs <- mWeights[0] * |mInputs[0]|
             cudaScaleAbs(nbElems,
-                          input->getDevicePtr(),
-                          mWeights[k],
-                          1.0f,
-                          mOutputs.getDevicePtr());
-        }
-    }
-    else if (mOperation == EuclideanSum) {
-        // mInterTerm <- (mWeights[0] * mInputs[0])^2
-        cudaScaleSquare(nbElems,
-                         input0->getDevicePtr(),
-                         mWeights[0] * mWeights[0],
-                         mShifts[0] * mShifts[0],
-                         0.0f,
-                         mInterTerm.getDevicePtr());
+                    input0->getDevicePtr(),
+                    mWeights[0],
+                    0.0f,
+                    mOutputs.getDevicePtr());
 
-        for (unsigned int k = 1; k < nbInputs; ++k) {
-            // mInterTerm <- (mWeights[k] * mInputs[k])^2 + mInterTerm
-            std::shared_ptr<CudaDeviceTensor<Float_T> > input
-                = cuda_device_tensor_cast<Float_T>(mInputs[k]);
-
-            cudaScaleSquare(nbElems,
-                             input->getDevicePtr(),
-                             mWeights[k] * mWeights[k],
-                             mShifts[k] * mShifts[k],
-                             1.0f,
-                             mInterTerm.getDevicePtr());
-        }
-
-        // mInterTerm <- sqrt(mInterTerm)
-        cudaSqrt(nbElems, mInterTerm.getDevicePtr());
-
-        // mOutputs <- mInterTerm
-        CHECK_CUBLAS_STATUS(cublasScopy(CudaContext::cublasHandle(),
-                                        nbElems,
-                                        mInterTerm.getDevicePtr(),
-                                        1,
-                                        mOutputs.getDevicePtr(),
-                                        1));
-    }
-    else if (mOperation == Prod) {
-        if (nbInputs > 1) {
-            // mOutputs <- mInputs[0] * mInputs[1]
-            std::shared_ptr<CudaDeviceTensor<Float_T> > input1
-                = cuda_device_tensor_cast<Float_T>(mInputs[1]);
-
-            cudaMult(nbElems,
-                      input0->getDevicePtr(),
-                      input1->getDevicePtr(),
-                      0.0f,
-                      mOutputs.getDevicePtr());
-
-            for (unsigned int k = 2; k < nbInputs; ++k) {
-                // mOutputs <- mInputs[k] * mOutputs
+            for (unsigned int k = 1; k < nbInputs; ++k) {
+                // mOutputs <- mWeights[k] * |mInputs[k]| + mOutputs
                 std::shared_ptr<CudaDeviceTensor<Float_T> > input
                     = cuda_device_tensor_cast<Float_T>(mInputs[k]);
 
-                cudaMult(nbElems,
-                          mOutputs.getDevicePtr(),
-                          input->getDevicePtr(),
-                          0.0f,
-                          mOutputs.getDevicePtr());
+                cudaScaleAbs(nbElems,
+                            input->getDevicePtr(),
+                            mWeights[k],
+                            1.0f,
+                            mOutputs.getDevicePtr());
             }
         }
-        else {
+        else if (mCoeffMode == ElemWiseCell::PerChannel) {
+            std::stringstream errorMsg;
+            errorMsg << "ElemWiseCell_Frame_CUDA::propagate(): for cell "
+                << mName << ": the PerChannel AbsoluteSum operation is not yet supported"
+                << " by N2D2";
+            throw std::runtime_error(errorMsg.str());
+        }
+    }
+    else if (mOperation == EuclideanSum) {
+        if(mCoeffMode == ElemWiseCell::PerInput 
+                || mCoeffMode == ElemWiseCell::PerLayer) {
+            // mInterTerm <- (mWeights[0] * mInputs[0])^2
+            cudaScaleSquare(nbElems,
+                            input0->getDevicePtr(),
+                            mWeights[0] * mWeights[0],
+                            mShifts[0] * mShifts[0],
+                            0.0f,
+                            mInterTerm.getDevicePtr());
+
+            for (unsigned int k = 1; k < nbInputs; ++k) {
+                // mInterTerm <- (mWeights[k] * mInputs[k])^2 + mInterTerm
+                std::shared_ptr<CudaDeviceTensor<Float_T> > input
+                    = cuda_device_tensor_cast<Float_T>(mInputs[k]);
+
+                cudaScaleSquare(nbElems,
+                                input->getDevicePtr(),
+                                mWeights[k] * mWeights[k],
+                                mShifts[k] * mShifts[k],
+                                1.0f,
+                                mInterTerm.getDevicePtr());
+            }
+
+            // mInterTerm <- sqrt(mInterTerm)
+            cudaSqrt(nbElems, mInterTerm.getDevicePtr());
+
+            // mOutputs <- mInterTerm
+            CHECK_CUBLAS_STATUS(cublasScopy(CudaContext::cublasHandle(),
+                                            nbElems,
+                                            mInterTerm.getDevicePtr(),
+                                            1,
+                                            mOutputs.getDevicePtr(),
+                                            1));
+        }
+        else if (mCoeffMode == ElemWiseCell::PerChannel) {
+            std::stringstream errorMsg;
+            errorMsg << "ElemWiseCell_Frame_CUDA::propagate(): for cell "
+                << mName << ": the PerChannel EuclideanSum operation is not yet supported"
+                << " by N2D2";
+            throw std::runtime_error(errorMsg.str());
+        }
+    }
+    else if (mOperation == Prod) {
+        if(mCoeffMode == ElemWiseCell::PerInput 
+                || mCoeffMode == ElemWiseCell::PerLayer) {
+            if (nbInputs > 1) {
+                // mOutputs <- mInputs[0] * mInputs[1]
+                std::shared_ptr<CudaDeviceTensor<Float_T> > input1
+                    = cuda_device_tensor_cast<Float_T>(mInputs[1]);
+
+                cudaMult(nbElems,
+                        input0->getDevicePtr(),
+                        input1->getDevicePtr(),
+                        0.0f,
+                        mOutputs.getDevicePtr());
+
+                for (unsigned int k = 2; k < nbInputs; ++k) {
+                    // mOutputs <- mInputs[k] * mOutputs
+                    std::shared_ptr<CudaDeviceTensor<Float_T> > input
+                        = cuda_device_tensor_cast<Float_T>(mInputs[k]);
+
+                    cudaMult(nbElems,
+                            mOutputs.getDevicePtr(),
+                            input->getDevicePtr(),
+                            0.0f,
+                            mOutputs.getDevicePtr());
+                }
+            }
+            else {
+                // mOutputs <- mInputs[0]
+                CHECK_CUBLAS_STATUS(cublasScopy(CudaContext::cublasHandle(),
+                                                nbElems,
+                                                input0->getDevicePtr(),
+                                                1,
+                                                mOutputs.getDevicePtr(),
+                                                1));
+            }
+        }
+        else if (mCoeffMode == ElemWiseCell::PerChannel) {
+            std::stringstream errorMsg;
+            errorMsg << "ElemWiseCell_Frame_CUDA::propagate(): for cell "
+                << mName << ": the PerChannel Prod operation is not yet supported"
+                << " by N2D2";
+            throw std::runtime_error(errorMsg.str());
+        }
+    }
+    else if (mOperation == Max) {
+        if(mCoeffMode == ElemWiseCell::PerInput 
+                || mCoeffMode == ElemWiseCell::PerLayer) {
             // mOutputs <- mInputs[0]
             CHECK_CUBLAS_STATUS(cublasScopy(CudaContext::cublasHandle(),
                                             nbElems,
@@ -202,28 +301,26 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
                                             1,
                                             mOutputs.getDevicePtr(),
                                             1));
+            // mArgMax <- 0
+            cudaZeroInit(nbElems, mArgMax.getDevicePtr());
+
+            for (unsigned int k = 1; k < nbInputs; ++k) {
+                std::shared_ptr<CudaDeviceTensor<Float_T> > input
+                    = cuda_device_tensor_cast<Float_T>(mInputs[k]);
+
+                cudaMaxForward(nbElems,
+                                input->getDevicePtr(),
+                                mOutputs.getDevicePtr(),
+                                k,
+                                mArgMax.getDevicePtr());
+            }
         }
-    }
-    else if (mOperation == Max) {
-        // mOutputs <- mInputs[0]
-        CHECK_CUBLAS_STATUS(cublasScopy(CudaContext::cublasHandle(),
-                                        nbElems,
-                                        input0->getDevicePtr(),
-                                        1,
-                                        mOutputs.getDevicePtr(),
-                                        1));
-        // mArgMax <- 0
-        cudaZeroInit(nbElems, mArgMax.getDevicePtr());
-
-        for (unsigned int k = 1; k < nbInputs; ++k) {
-            std::shared_ptr<CudaDeviceTensor<Float_T> > input
-                = cuda_device_tensor_cast<Float_T>(mInputs[k]);
-
-            cudaMaxForward(nbElems,
-                            input->getDevicePtr(),
-                            mOutputs.getDevicePtr(),
-                            k,
-                            mArgMax.getDevicePtr());
+        else if (mCoeffMode == ElemWiseCell::PerChannel) {
+            std::stringstream errorMsg;
+            errorMsg << "ElemWiseCell_Frame_CUDA::propagate(): for cell "
+                << mName << ": the PerChannel Max operation is not yet supported"
+                << " by N2D2";
+            throw std::runtime_error(errorMsg.str());
         }
     }
     else {
@@ -266,23 +363,48 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
                                                 diffOutput->getDevicePtr(),
                                                 1));
             }
-            else if (mWeights[k] == 1.0) {
-                // mDiffOutputs[k] <- mDiffInputs
-                CHECK_CUBLAS_STATUS(cublasScopy(CudaContext::cublasHandle(),
-                                                nbElems,
-                                                mDiffInputs.getDevicePtr(),
-                                                1,
-                                                diffOutput->getDevicePtr(),
-                                                1));
-            }
             else {
-                // mDiffOutputs[k] <- mWeights[k] * mDiffInputs
-                cudaScale(nbElems,
-                           mDiffInputs.getDevicePtr(),
-                           mWeights[k],
-                           0.0f,
-                           0.0f,
-                           diffOutput->getDevicePtr());
+                if(mCoeffMode == ElemWiseCell::PerInput 
+                        || mCoeffMode == ElemWiseCell::PerLayer) {
+
+                    if (mWeights[k] == 1.0) {
+                        // mDiffOutputs[k] <- mDiffInputs
+                        CHECK_CUBLAS_STATUS(cublasScopy(CudaContext::cublasHandle(),
+                                                        nbElems,
+                                                        mDiffInputs.getDevicePtr(),
+                                                        1,
+                                                        diffOutput->getDevicePtr(),
+                                                        1));
+                    }
+                    else {
+                        // mDiffOutputs[k] <- mWeights[k] * mDiffInputs
+                        cudaScale(nbElems,
+                                mDiffInputs.getDevicePtr(),
+                                mWeights[k],
+                                0.0f,
+                                0.0f,
+                                diffOutput->getDevicePtr());
+                    }
+                }
+                else if (mCoeffMode == ElemWiseCell::PerChannel) {
+                    const unsigned int nbChElems = mDiffInputs.dimY()*mDiffInputs.dimX();
+
+                    for(unsigned int b = 0; b < mDiffInputs.dimB(); ++b) {
+                        const unsigned int batchoffset 
+                                    = b*mDiffInputs.dimZ()*nbChElems;
+                        unsigned int chOffset = batchoffset;
+                        for(unsigned int ch = 0; ch < mDiffInputs.dimZ(); ++ch) {
+                            cudaScale(  nbChElems,
+                                        mDiffInputs.getDevicePtr() + chOffset,
+                                        mWeights[ch],
+                                        0.0f,
+                                        0.0f,
+                                        diffOutput->getDevicePtr() + chOffset);
+
+                            chOffset += nbChElems;
+                        }
+                    }
+                }
             }
         }
         else if (mOperation == AbsSum) {

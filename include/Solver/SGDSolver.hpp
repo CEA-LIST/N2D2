@@ -100,6 +100,7 @@ protected:
     Parameter<std::string> mClamping;
     // Polyak Momentum method use for param update: true by default 
     Parameter<bool> mPolyakMomentum;
+    Parameter<double> mMinDecay;
     unsigned int mIterationPass;
     unsigned int mNbIterations;
 

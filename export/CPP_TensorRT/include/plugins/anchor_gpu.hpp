@@ -39,6 +39,7 @@ public:
                     unsigned int featureMapWidth,
                     unsigned int featureMapHeight,
                     unsigned int scoreCls,
+                    bool isCoordinatesAnchors,
                     bool isFlip,
                     unsigned int nbAnchors,
                     const float*  anchors)
@@ -56,6 +57,7 @@ public:
         mRatioX = std::ceil(mFeatureMapWidth / (double) outputWidth);
         mRatioY = std::ceil(featureMapHeight / (double) outputHeight);
         mScoreCls = scoreCls;
+        mIsCoordinateAnchors = isCoordinatesAnchors;
         mIsFlip = isFlip;
         mNbAnchors = nbAnchors;
         mAnchorsPrecompute = new float [outputWidth*outputHeight*mNbAnchors*4];
@@ -106,6 +108,7 @@ public:
         mStimuliHeight = (unsigned int) read<int>(d);
         mStimuliWidth = (unsigned int) read<int>(d);
         mScoreCls = (unsigned int) read<int>(d);
+        mIsCoordinateAnchors = read<bool>(d);
         mIsFlip = read<bool>(d);
         mNbAnchors = (unsigned int) read<int>(d);
 		mAnchorsGPU = deserializeToDevice(d, mNbAnchors*4*mOutputDims.d[2]*mOutputDims.d[3]);
@@ -177,22 +180,22 @@ public:
         const dim3 blockGrid = {(unsigned int) mBlockX,
                                 (unsigned int) mBlockY,
                                 (unsigned int) mBlockZ};
-
         cuda_anchor_propagate(mOutputDims.d[0],
-                            mOutputDims.d[1],
-                            mOutputDims.d[2],
-                            mOutputDims.d[3],
-                            mStimuliHeight,
-                            mStimuliWidth,
-                            mScoreCls,
-                            mIsFlip,
-                            mNbAnchors,
-                            reinterpret_cast<const float *>(mAnchorsGPU),
-                            reinterpret_cast<const float *>(inputs[0]),
-                            reinterpret_cast<float *>(outputs[0]),
-                            threadGrid,
-                            blockGrid,
-                            stream);
+                                mOutputDims.d[1],
+                                mOutputDims.d[2],
+                                mOutputDims.d[3],
+                                mStimuliHeight,
+                                mStimuliWidth,
+                                mScoreCls,
+                                mIsCoordinateAnchors,
+                                mIsFlip,
+                                mNbAnchors,
+                                reinterpret_cast<const float *>(mAnchorsGPU),
+                                reinterpret_cast<const float *>(inputs[0]),
+                                reinterpret_cast<float *>(outputs[0]),
+                                threadGrid,
+                                blockGrid,
+                                stream);
 
        return 0;
 	}
@@ -202,9 +205,10 @@ public:
         size_t inputDimParamSize = 4*sizeof(int); //nbOutputs, nbOutputsHeight, nbOutputWidth = 3
         size_t stimuliParamSize = 4*sizeof(int); //Stimuliheight and StimuliWidth
         size_t anchorsSize = 4*mNbAnchors*mOutputDims.d[2]*mOutputDims.d[3]*sizeof(float) + sizeof(bool); // mNbAnchors and (x0 y0 x1 y1) * mNbAnchors + mScoreCls
+        size_t paramSize = sizeof(bool);
         size_t threadSize = 3*2*sizeof(int);
         mSerializationSize = inputDimParamSize + stimuliParamSize
-                                + anchorsSize + threadSize;
+                                + anchorsSize + threadSize + paramSize;
 
         return mSerializationSize;
 	}
@@ -220,6 +224,7 @@ public:
         write<int>(d, (int)mStimuliHeight);
         write<int>(d, (int)mStimuliWidth);
         write<int>(d, (int)mScoreCls);
+        write<bool>(d, mIsCoordinateAnchors);
         write<bool>(d, mIsFlip);
         write<int>(d, (int)mNbAnchors);
         serializeFromDevice(d, mAnchorsGPU, mNbAnchors*4*mOutputDims.d[2]*mOutputDims.d[3]);
@@ -324,6 +329,7 @@ private:
     double mRatioX;
     double mRatioY;
     unsigned int mScoreCls;
+    bool mIsCoordinateAnchors;
     bool mIsFlip;
     unsigned int mNbAnchors;
     int mThreadX;
@@ -350,6 +356,7 @@ struct pluginAnchor_GPU{
             unsigned int featureMapWidth,
             unsigned int featureMapHeight,
             unsigned int scoreCls,
+            bool isCoordinatesAnchors,
             bool isFlip,
             unsigned int nbAnchors,
             const float* anchors)
@@ -365,6 +372,7 @@ struct pluginAnchor_GPU{
                                                            featureMapWidth,
                                                            featureMapHeight,
                                                            scoreCls,
+                                                           isCoordinatesAnchors,
                                                            isFlip,
                                                            nbAnchors,
                                                            anchors)));

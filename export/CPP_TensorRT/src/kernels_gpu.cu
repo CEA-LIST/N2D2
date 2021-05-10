@@ -34,18 +34,18 @@ __device__ __inline__ float fclampf(float x, float min, float max)
 
 // Forward
 __global__
-void anchor_kernel(unsigned int batchSize,
-                    unsigned int nbOutputs,
-                    unsigned int outputHeight,
-                    unsigned int outputWidth,
-                    unsigned int stimuliHeight,
-                    unsigned int stimuliWidth,
-                    unsigned int scoresCls,
-                    bool isFlip,
-                    unsigned int nbAnchors,
-                    const float* anchors,
-                    const float* inputs,
-                    float* outputs)
+void anchor_ca_kernel(unsigned int batchSize,
+                        unsigned int nbOutputs,
+                        unsigned int outputHeight,
+                        unsigned int outputWidth,
+                        unsigned int stimuliHeight,
+                        unsigned int stimuliWidth,
+                        unsigned int scoresCls,
+                        bool isFlip,
+                        unsigned int nbAnchors,
+                        const float* anchors,
+                        const float* inputs,
+                        float* outputs)
 {
     const unsigned int batchInputOffset = blockIdx.z * (5 + scoresCls) * nbAnchors
                                         * outputHeight * outputWidth;
@@ -93,6 +93,109 @@ void anchor_kernel(unsigned int batchSize,
                 const float tybb = inputs[addrCoordBase + (scoresCls + 1) * nbAnchors * addrStep];
                 const float twbb = inputs[addrCoordBase + (scoresCls + 2) * nbAnchors * addrStep];
                 const float thbb = inputs[addrCoordBase + (scoresCls + 3) * nbAnchors * addrStep];
+
+                // Predicted box center coordinates
+                const float xbbc = ((isFlip) ? -txbb : txbb) * wa + xac;
+                const float ybbc = ((isFlip) ? -tybb : tybb) * ha + yac;
+                float wbb = wa * exp(twbb);
+                float hbb = ha * exp(thbb);
+
+                // Predicted box top-left coordinates
+                float xbb = xbbc - wbb * 0.5;
+                float ybb = ybbc - hbb * 0.5;
+
+                /// During testing: "This  may  generate
+                /// cross-boundary proposal boxes, which we clip to
+                /// the image boundary."
+                // Clip coordinates
+                if (xbb < 0.0) {
+                    wbb+= xbb;
+                    xbb = 0.0;
+                }
+                if (ybb < 0.0) {
+                    hbb+= ybb;
+                    ybb = 0.0;
+                }
+                if (xbb + wbb > 1.0)
+                    wbb = 1.0 - xbb;
+                if (ybb + hbb > 1.0)
+                    hbb = 1.0 - ybb;
+
+                xbb *=  xOutputRatio;
+                wbb *=  xOutputRatio;
+                ybb *=  yOutputRatio;
+                hbb *=  yOutputRatio;
+
+                outputs[addrBase] = cls;
+                outputs[addrBase + 1 * nbAnchors * addrStep] = xbb;
+                outputs[addrBase + 2 * nbAnchors * addrStep] = ybb;
+                outputs[addrBase + 3 * nbAnchors * addrStep] = wbb;
+                outputs[addrBase + 4 * nbAnchors * addrStep] = hbb;
+                outputs[addrBase + 5 * nbAnchors * addrStep] = 0.0;
+            }
+        }
+    }
+}
+__global__
+void anchor_ac_kernel(unsigned int batchSize,
+                        unsigned int nbOutputs,
+                        unsigned int outputHeight,
+                        unsigned int outputWidth,
+                        unsigned int stimuliHeight,
+                        unsigned int stimuliWidth,
+                        unsigned int scoresCls,
+                        bool isFlip,
+                        unsigned int nbAnchors,
+                        const float* anchors,
+                        const float* inputs,
+                        float* outputs)
+{
+    const unsigned int batchInputOffset = blockIdx.z * (5 + scoresCls) * nbAnchors
+                                        * outputHeight * outputWidth;
+    const unsigned int batchOffset = blockIdx.z * 6 * nbAnchors
+                                        * outputHeight * outputWidth;
+    const float xOutputRatio = stimuliWidth;
+    const float yOutputRatio = stimuliHeight;
+
+    for (unsigned int k = blockIdx.x; k < nbAnchors;
+         k += gridDim.x)
+    {
+        for (unsigned int ya = threadIdx.y; ya < outputHeight;
+             ya += blockDim.y)
+        {
+            for (unsigned int xa = threadIdx.x; xa < outputWidth;
+                 xa += blockDim.x)
+            {
+                const size_t anchorsPrecomputeIdx = xa*4 + ya*outputWidth*4 
+                                                    + k*outputWidth*outputHeight*4;
+                //Pre-computed anchors for each coordinates
+                const float xac = anchors[anchorsPrecomputeIdx + 0];
+                const float yac = anchors[anchorsPrecomputeIdx + 1];
+                const float wa = anchors[anchorsPrecomputeIdx + 2];
+                const float ha = anchors[anchorsPrecomputeIdx + 3];
+
+                const unsigned int addrBase = batchOffset + xa + (ya + k * outputHeight) * outputWidth;
+                const unsigned int addrStep = outputHeight * outputWidth;
+
+                const unsigned int addrCoordBase = batchInputOffset 
+                                                    + nbAnchors * addrStep
+                                                    + k * outputWidth * outputHeight *4
+                                                    + ya * outputWidth 
+                                                    + xa;
+
+                const unsigned int addrClsBase = batchInputOffset 
+                                                + k * outputWidth * outputHeight 
+                                                + ya * outputWidth 
+                                                + xa;
+
+                // Score
+                const float cls = inputs[addrClsBase];
+
+                // Parameterized coordinates
+                const float txbb = inputs[addrCoordBase + 0 * addrStep];
+                const float tybb = inputs[addrCoordBase + 1 * addrStep];
+                const float twbb = inputs[addrCoordBase + 2 * addrStep];
+                const float thbb = inputs[addrCoordBase + 3 * addrStep];
 
                 // Predicted box center coordinates
                 const float xbbc = ((isFlip) ? -txbb : txbb) * wa + xac;
@@ -1064,6 +1167,8 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                                             unsigned int cumulTemplates,
                                             unsigned int nbParts,
                                             unsigned int nbTemplates,
+                                            bool isCoordinatesAnchors,
+                                            bool isPixelFormatXY,
                                             float xRatio,
                                             float yRatio,
                                             float xOutputRatio,
@@ -1104,15 +1209,23 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                 const unsigned int xa   = roi_anchors[0 + 5*proposal + batchPos*nbProposals*5];
                 const unsigned int ya   = roi_anchors[1 + 5*proposal + batchPos*nbProposals*5];
                 const unsigned int k    = roi_anchors[2 + 5*proposal + batchPos*nbProposals*5];
+                const unsigned int addBase = xa 
+                                             + ya*channelWidth
+                                             + cumulParts*channelHeight*channelWidth
+                                             + batchPos*channelHeight*channelWidth*nbAnchors*2*totalParts;
 
-                const int yIdx = xa 
-                                + ya*channelWidth 
-                                + (k*nbParts*2 + cumulParts + ptIdx*2)*channelHeight*channelWidth
-                                + batchPos*channelHeight*channelWidth*nbAnchors*2*totalParts;
-                const int xIdx = xa 
-                                + ya*channelWidth 
-                                + (k*nbParts*2 + cumulParts + ptIdx*2 + 1)*channelHeight*channelWidth
-                                + batchPos*channelHeight*channelWidth*nbAnchors*2*totalParts;
+                unsigned int xIdx = isPixelFormatXY ? addBase + ptIdx*2 * channelHeight*channelWidth
+                                            : addBase + (ptIdx*2 + 1) * channelHeight*channelWidth;
+                unsigned int yIdx = isPixelFormatXY ? addBase + (ptIdx*2 + 1) * channelHeight*channelWidth
+                                            : addBase + ptIdx*2 * channelHeight*channelWidth;
+
+                if(isCoordinatesAnchors) {
+                    xIdx += k*nbParts*2*channelHeight*channelWidth;
+                    yIdx += k*nbParts*2*channelHeight*channelWidth;
+                } else {
+                    xIdx += k*totalParts*2*channelHeight*channelWidth;
+                    yIdx += k*totalParts*2*channelHeight*channelWidth;
+                }
 
 
                 const float partY = inputs_parts[yIdx];
@@ -1133,8 +1246,10 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                 const float predPartY = ((partY) * ha + yac)*yOutputRatio ;
                 const float predPartX = ((partX) * wa + xac)*xOutputRatio ;
 
-                outputs[ptIdx*2 + 0 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = predPartY;
-                outputs[ptIdx*2 + 1 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = predPartX;
+                outputs[ptIdx*2 + 0 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] 
+                                                    = isPixelFormatXY ? predPartX : predPartY;
+                outputs[ptIdx*2 + 1 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] 
+                                                    = isPixelFormatXY ? predPartY : predPartX;
 
             }
             else if(ptIdx < maxParts && maxParts > 0)
@@ -1149,27 +1264,36 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                 const unsigned int xa   = roi_anchors[0 + 5*proposal + batchPos*nbProposals*5];
                 const unsigned int ya   = roi_anchors[1 + 5*proposal + batchPos*nbProposals*5];
                 const unsigned int k    = roi_anchors[2 + 5*proposal + batchPos*nbProposals*5];
+                const unsigned int addBase = xa 
+                                             + ya*channelWidth
+                                             + cumulTemplates*channelHeight*channelWidth
+                                             + batchPos*channelHeight*channelWidth*nbAnchors*3*totalTemplates;
 
-                const int yIdx = xa 
-                                + ya*channelWidth 
-                                + (k*nbTemplates*3 + cumulTemplates + ptIdx*3)*channelHeight*channelWidth
-                                + batchPos*channelHeight*channelWidth*nbAnchors*3*totalTemplates;
-                const int xIdx = xa 
-                                + ya*channelWidth 
-                                + (k*nbTemplates*3 + cumulTemplates + ptIdx*3 + 1)*channelHeight*channelWidth
-                                + batchPos*channelHeight*channelWidth*nbAnchors*3*totalTemplates;
-                const int zIdx = xa 
-                                + ya*channelWidth 
-                                + (k*nbTemplates*3 + cumulTemplates + ptIdx*3 + 2)*channelHeight*channelWidth
-                                + batchPos*channelHeight*channelWidth*nbAnchors*3*totalTemplates;
+                unsigned int xIdx = isPixelFormatXY ? addBase + ptIdx*3 * channelHeight*channelWidth
+                                            : addBase + (ptIdx*3 + 1) * channelHeight*channelWidth;
+                unsigned int yIdx = isPixelFormatXY ? addBase + (ptIdx*3 + 1) * channelHeight*channelWidth
+                                            : addBase + ptIdx*3 * channelHeight*channelWidth;
+                unsigned int zIdx =  addBase + (ptIdx*3 + 2) * channelHeight*channelWidth;
 
+                if(isCoordinatesAnchors) {
+                    xIdx += k*nbTemplates*3*channelHeight*channelWidth;
+                    yIdx += k*nbTemplates*3*channelHeight*channelWidth;
+                    zIdx += k*nbTemplates*3*channelHeight*channelWidth;
+
+                } else {
+                    xIdx += k*totalTemplates*3*channelHeight*channelWidth;
+                    yIdx += k*totalTemplates*3*channelHeight*channelWidth;
+                    zIdx += k*totalTemplates*3*channelHeight*channelWidth;
+                }
 
                 const float templateY = expf(inputs_templates[yIdx]);
                 const float templateX = expf(inputs_templates[xIdx]);
                 const float templateZ = expf(inputs_templates[zIdx]);
 
-                outputs[ptIdx*3 + maxParts*2 + 0 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = templateY;
-                outputs[ptIdx*3 + maxParts*2 + 1 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = templateX;
+                outputs[ptIdx*3 + maxParts*2 + 0 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] 
+                                                    = isPixelFormatXY ? templateX : templateY;
+                outputs[ptIdx*3 + maxParts*2 + 1 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] 
+                                                    = isPixelFormatXY ? templateY : templateX;
                 outputs[ptIdx*3 + maxParts*2 + 2 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = templateZ;
 
             }
@@ -1224,6 +1348,8 @@ extern "C" void cudaS_SSD_output_gathering( unsigned int batchSize,
                                             unsigned int cumulTemplates,
                                             unsigned int nbParts,
                                             unsigned int nbTemplates,
+                                            bool isCoordinatesAnchors,
+                                            bool isPixelFormatXY,
                                             float xRatio,
                                             float yRatio,
                                             float xOutputRatio,
@@ -1254,6 +1380,8 @@ extern "C" void cudaS_SSD_output_gathering( unsigned int batchSize,
                                                                 cumulTemplates,
                                                                 nbParts,
                                                                 nbTemplates,
+                                                                isCoordinatesAnchors,
+                                                                isPixelFormatXY,
                                                                 xRatio,
                                                                 yRatio,
                                                                 xOutputRatio,
@@ -1750,6 +1878,7 @@ extern "C" void cuda_anchor_propagate(  unsigned int batchSize,
                                         unsigned int stimuliHeight,
                                         unsigned int stimuliWidth,
                                         unsigned int scoreCls,
+                                        bool isCoordinatesAnchors,
                                         bool isFlip,
                                         unsigned int nbAnchors,
                                         const float* anchors,
@@ -1759,19 +1888,36 @@ extern "C" void cuda_anchor_propagate(  unsigned int batchSize,
                                         dim3 blocksPerGrid,
                                         cudaStream_t stream)
 {
-    anchor_kernel <<<blocksPerGrid, threadsPerBlocks, 0, stream>>>
-                        (batchSize,
-                          nbOutputs,
-                          outputHeight,
-                          outputWidth,
-                          stimuliHeight,
-                          stimuliWidth,
-                          scoreCls,
-                          isFlip,
-                          nbAnchors,
-                          anchors,
-                          inputs,
-                          outputs);
+    if(isCoordinatesAnchors) {
+        anchor_ca_kernel <<<blocksPerGrid, threadsPerBlocks, 0, stream>>>
+                            (batchSize,
+                            nbOutputs,
+                            outputHeight,
+                            outputWidth,
+                            stimuliHeight,
+                            stimuliWidth,
+                            scoreCls,
+                            isFlip,
+                            nbAnchors,
+                            anchors,
+                            inputs,
+                            outputs);
+    }
+    else {
+        anchor_ac_kernel <<<blocksPerGrid, threadsPerBlocks, 0, stream>>>
+                            (batchSize,
+                            nbOutputs,
+                            outputHeight,
+                            outputWidth,
+                            stimuliHeight,
+                            stimuliWidth,
+                            scoreCls,
+                            isFlip,
+                            nbAnchors,
+                            anchors,
+                            inputs,
+                            outputs);
+    }
 
 }
 

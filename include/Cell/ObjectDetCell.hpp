@@ -52,6 +52,8 @@ public:
                                         StimuliProvider&,
                                         const unsigned int,
                                         unsigned int,
+                                        const AnchorCell_Frame_Kernels::Format ,
+                                        const AnchorCell_Frame_Kernels::PixelFormat ,
                                         unsigned int,
                                         unsigned int,
                                         Float_T,
@@ -72,6 +74,8 @@ public:
                  StimuliProvider& sp,
                  const unsigned int nbOutputs,
                  unsigned int nbAnchors,
+                const AnchorCell_Frame_Kernels::Format inputFormat,
+                const AnchorCell_Frame_Kernels::PixelFormat pixelFormat,
                  unsigned int nbProposals,
                  unsigned int nbClass,
                  Float_T nmsThreshold,
@@ -110,6 +114,8 @@ public:
     unsigned int getFeatureMapHeight() { return mFeatureMapHeight; };
     std::vector<unsigned int> getPartsPerClass() const { return mNumParts; };
     std::vector<unsigned int> getTemplatesPerClass() const { return mNumTemplates; };
+    bool getIsCoordinateAnchors() { return (mInputFormat == AnchorCell_Frame_Kernels::Format::CA); };
+    bool getIsPixelFormatXY() { return (mPixelFormat == AnchorCell_Frame_Kernels::PixelFormat::XY); };
 
     void getStats(Stats& stats) const;
     virtual std::vector<Float_T> getAnchor(const unsigned int idx) const = 0;
@@ -127,6 +133,8 @@ protected:
     Parameter<unsigned int> mFeatureMapHeight;
 
     unsigned int mNbAnchors;
+    AnchorCell_Frame_Kernels::Format mInputFormat;
+    AnchorCell_Frame_Kernels::PixelFormat mPixelFormat;
     unsigned int mNbProposals;
     unsigned int mNbClass;
     unsigned int mMaxParts;
@@ -139,6 +147,20 @@ protected:
     std::vector<unsigned int> mNumTemplates;
 
 };
+}
+
+namespace {
+template <>
+const char* const EnumStrings<N2D2::AnchorCell_Frame_Kernels::Format>
+::data[]
+    = {"CA", "AC"};
+}
+
+namespace {
+template <>
+const char* const EnumStrings<N2D2::AnchorCell_Frame_Kernels::PixelFormat>
+::data[]
+    = {"XY", "YX"};
 }
 
 #endif // N2D2_OBJECTDETCELL_H

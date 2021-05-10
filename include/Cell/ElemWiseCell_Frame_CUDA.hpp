@@ -37,6 +37,7 @@ public:
     ElemWiseCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                         unsigned int nbOutputs,
                         Operation operation = Sum,
+                        CoeffMode mode = PerLayer,
                         const std::vector<Float_T>& weights
                         = std::vector<Float_T>(),
                         const std::vector<Float_T>& shifts
@@ -47,6 +48,7 @@ public:
                                             const std::string& name,
                                             unsigned int nbOutputs,
                                             Operation operation = Sum,
+                                            CoeffMode mode = PerLayer,
                                             const std::vector<Float_T>& weights
                                             = std::vector<Float_T>(),
                                             const std::vector<Float_T>& shifts
@@ -59,6 +61,7 @@ public:
         return std::make_shared<ElemWiseCell_Frame_CUDA>(deepNet, name,
                                                      nbOutputs,
                                                      operation,
+                                                     mode,
                                                      weights,
                                                      shifts,
                                                      activation);

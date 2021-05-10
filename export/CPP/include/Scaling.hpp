@@ -44,17 +44,9 @@ template<std::size_t SIZE>
 struct FloatingPointClippingAndScalingPerChannel {
     SUM_T operator()(SUM_T weightedSum, std::size_t output) const {
         SUM_T clipValue = weightedSum;
-        //if(SUM_T(mClipping[output]) > SUM_T(0)) {
         clipValue = (clipValue < SUM_T(0)) ? 
                     SUM_T(0) : (clipValue > SUM_T(mClipping[output])) ? 
                     SUM_T(mClipping[output]) : clipValue;
-        //}
-        //if(SUM_T(mClipping[output]) <= SUM_T(0)) {
-        //    clipValue = (clipValue > SUM_T(0)) ? 
-        //                SUM_T(0) : (clipValue < SUM_T(mClipping[output])) ? 
-        //                SUM_T(mClipping[output]) : clipValue;
-        //}
-
         return round(clipValue * mScaling[output]);
     }
 
@@ -96,16 +88,9 @@ struct FixedPointClippingAndScalingPerChannel {
         //     HALF--; 
         // }
         SUM_T clipValue = weightedSum;
-        //if(SUM_T(mClipping[output]) > SUM_T(0)) {
         clipValue = (clipValue < SUM_T(0)) ? 
                     SUM_T(0) : (clipValue > SUM_T(mClipping[output])) ? 
                     SUM_T(mClipping[output]) : clipValue;
-        //}
-        //if(SUM_T(mClipping[output]) <= SUM_T(0)) {
-        //    clipValue = (clipValue > SUM_T(0)) ? 
-        //                SUM_T(0) : (clipValue < SUM_T(mClipping[output])) ? 
-        //                SUM_T(mClipping[output]) : clipValue;
-        //}
 
         return smlal(clipValue, mScaling[output], HALF_LO, HALF_HI) >> FRACTIONAL_BITS; 
     }

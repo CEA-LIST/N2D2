@@ -82,6 +82,21 @@ namespace AnchorCell_Frame_Kernels {
     private:
         float round(float x);
     };
+    
+    enum DetectorType {
+        LapNet,
+        SSD,
+        YOLO
+    };
+    enum Format {
+        CA,
+        AC
+    };
+    enum PixelFormat {
+        XY,
+        YX
+    };
+
 }
 }
 

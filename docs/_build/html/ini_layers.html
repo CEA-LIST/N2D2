@@ -1,38 +1,43 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Network Layers &mdash; N2D2  documentation</title>
   
 
   
-  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
   
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -74,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -208,7 +214,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#softmax">Softmax</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#transformation">Transformation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#threshold">Threshold</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id19">Configuration parameters (<em>Frame</em> models)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id47">Configuration parameters (<em>Frame</em> models)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#unpool">Unpool</a></li>
@@ -232,6 +238,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -266,18 +273,20 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Network Layers</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/ini_layers.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -340,10 +349,10 @@
 <p>The initial weights distribution for each layer can be checked in the
 <em>weights_init</em> folder, with an example shown in figure
 [fig:weightsInitDistrib].</p>
-<div class="figure align-default" id="id20">
+<div class="figure align-default" id="id48">
 <img alt="Initial weights distribution of a layer using a normal distribution (``NormalFiller``) with a 0 mean and a 0.05 standard deviation." src="_images/weightsInitDistrib.png" />
 <p class="caption"><span class="caption-text">Initial weights distribution of a layer using a normal distribution
-(<code class="docutils literal notranslate"><span class="pre">NormalFiller</span></code>) with a 0 mean and a 0.05 standard deviation.</span><a class="headerlink" href="#id20" title="Permalink to this image">¶</a></p>
+(<code class="docutils literal notranslate"><span class="pre">NormalFiller</span></code>) with a 0 mean and a 0.05 standard deviation.</span><a class="headerlink" href="#id48" title="Permalink to this image">¶</a></p>
 </div>
 <div class="section" id="constantfiller">
 <h3>ConstantFiller<a class="headerlink" href="#constantfiller" title="Permalink to this headline">¶</a></h3>
@@ -368,7 +377,7 @@
 <div class="section" id="hefiller">
 <h3>HeFiller<a class="headerlink" href="#hefiller" title="Permalink to this headline">¶</a></h3>
 <p>Fill with an normal distribution with normalized variance taking into
-account the rectifier nonlinearity <a class="bibtex reference internal" href="tuto.html#he2015" id="id1">[HZRS15]</a>. This
+account the rectifier nonlinearity <span id="id1">[<a class="reference internal" href="tuto.html#id21">HZRS15</a>]</span>. This
 filler is sometimes referred as MSRA filler.</p>
 <table class="docutils align-default">
 <colgroup>
@@ -450,7 +459,7 @@ with <code class="docutils literal notranslate"><span class="pre">Average</span>
 <div class="section" id="xavierfiller">
 <h3>XavierFiller<a class="headerlink" href="#xavierfiller" title="Permalink to this headline">¶</a></h3>
 <p>Fill with an uniform distribution with normalized variance
-<a class="bibtex reference internal" href="tuto.html#glorot2010" id="id2">[GB10]</a>.</p>
+<span id="id2">[<a class="reference internal" href="tuto.html#id13">GB10</a>]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 44%" />
@@ -605,7 +614,7 @@ current iteration and <span class="math notranslate nohighlight">\(n\)</span> th
 </div>
 <div class="section" id="adamsolver-frame">
 <h3>AdamSolver_Frame<a class="headerlink" href="#adamsolver-frame" title="Permalink to this headline">¶</a></h3>
-<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame</span></code> models <a class="bibtex reference internal" href="tuto.html#kingmab14" id="id3">[KB14]</a>.</p>
+<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame</span></code> models <span id="id3">[<a class="reference internal" href="tuto.html#id23">KB14</a>]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 38%" />
@@ -634,7 +643,7 @@ current iteration and <span class="math notranslate nohighlight">\(n\)</span> th
 </div>
 <div class="section" id="adamsolver-frame-cuda">
 <h3>AdamSolver_Frame_CUDA<a class="headerlink" href="#adamsolver-frame-cuda" title="Permalink to this headline">¶</a></h3>
-<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame_CUDA</span></code> models <a class="bibtex reference internal" href="tuto.html#kingmab14" id="id4">[KB14]</a>.</p>
+<p>Adam Solver for <code class="docutils literal notranslate"><span class="pre">Frame_CUDA</span></code> models <span id="id4">[<a class="reference internal" href="tuto.html#id23">KB14</a>]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 38%" />
@@ -915,7 +924,7 @@ following output feature maps ordering:</p>
 </div>
 <div class="section" id="batchnorm">
 <h2>BatchNorm<a class="headerlink" href="#batchnorm" title="Permalink to this headline">¶</a></h2>
-<p>Batch Normalization layer <a class="bibtex reference internal" href="tuto.html#ioffe2015" id="id5">[IS15]</a>.</p>
+<p>Batch Normalization layer <span id="id5">[<a class="reference internal" href="tuto.html#id18">IS15</a>]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 19%" />
@@ -1618,7 +1627,7 @@ limit)</p></td>
 </div>
 <div class="section" id="dropout">
 <h2>Dropout<a class="headerlink" href="#dropout" title="Permalink to this headline">¶</a></h2>
-<p>Dropout layer <a class="bibtex reference internal" href="tuto.html#srivastava2014" id="id9">[SHK+12]</a>.</p>
+<p>Dropout layer <span id="id9">[<a class="reference internal" href="tuto.html#id14">SHK+12</a>]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 48%" />
@@ -1754,7 +1763,7 @@ operation:</p>
 </div>
 <div class="section" id="fmp">
 <h2>FMP<a class="headerlink" href="#fmp" title="Permalink to this headline">¶</a></h2>
-<p>Fractional max pooling layer <a class="bibtex reference internal" href="tuto.html#graham2014" id="id11">[Gra14]</a>.</p>
+<p>Fractional max pooling layer <span id="id11">[<a class="reference internal" href="tuto.html#id19">Gra14</a>]</span>.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 20%" />
@@ -2059,7 +2068,7 @@ expression:</p>
 </div>
 <div class="section" id="lstm">
 <h2>LSTM<a class="headerlink" href="#lstm" title="Permalink to this headline">¶</a></h2>
-<p>Long Short Term Memory Layer <a class="bibtex reference internal" href="tuto.html#lstm1997" id="id16">[HS97]</a>.</p>
+<p>Long Short Term Memory Layer <span id="id16">[<a class="reference internal" href="tuto.html#id22">HS97</a>]</span>.</p>
 <div class="section" id="global-layer-parameters-frame-cuda-models">
 <h3>Global layer parameters (<em>Frame_CUDA</em> models)<a class="headerlink" href="#global-layer-parameters-frame-cuda-models" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
@@ -2214,10 +2223,10 @@ the input sequence.</p>
 element of the sequence or scaled at the sequence itself:</p>
 <ol class="arabic">
 <li><p>The sequence itself has only one label :</p>
-<div class="figure align-default" id="id21">
+<div class="figure align-default" id="id49">
 <img alt="RNN model : variable sequence length and labeling scaled at the sequence" src="_images/Tvar_P1.png" />
 <p class="caption"><span class="caption-text">RNN model : variable sequence length and labeling scaled at the
-sequence</span><a class="headerlink" href="#id21" title="Permalink to this image">¶</a></p>
+sequence</span><a class="headerlink" href="#id49" title="Permalink to this image">¶</a></p>
 </div>
 <div class="line-block">
 <div class="line">The model has a fixed size with one fully connected mapped to the
@@ -2226,10 +2235,10 @@ sequence.</div>
 </div>
 </li>
 <li><p>Every elements of a sequence is labelled :</p>
-<div class="figure align-default" id="id22">
+<div class="figure align-default" id="id50">
 <img alt="RNN model : variable sequence length and labeling scaled at each element of the sequence" src="_images/Tvar_Pi.png" />
 <p class="caption"><span class="caption-text">RNN model : variable sequence length and labeling scaled at each
-element of the sequence</span><a class="headerlink" href="#id22" title="Permalink to this image">¶</a></p>
+element of the sequence</span><a class="headerlink" href="#id50" title="Permalink to this image">¶</a></p>
 </div>
 </li>
 </ol>
@@ -2815,72 +2824,87 @@ in respect of the cross-entropy loss:</p>
 <span class="na">Size</span><span class="o">=</span><span class="s">3</span>
 </pre></div>
 </div>
-<p id="bibtex-bibliography-ini_layers-0"><dl class="citation">
-<dt class="bibtex label" id="cordts2016cityscapes"><span class="brackets">COR+16</span></dt>
+<p id="id19"><dl class="citation">
+<dt class="label" id="id46"><span class="brackets">BLN+20</span></dt>
+<dd><p>Yash Bhalgat, Jinwon Lee, Markus Nagel, Tijmen Blankevoort, and Nojun Kwak. Lsq+: improving low-bit quantization through learnable offsets and better initialization. 2020. <a class="reference external" href="https://arxiv.org/abs/2004.09576">arXiv:2004.09576</a>.</p>
+</dd>
+<dt class="label" id="id35"><span class="brackets">COR+16</span></dt>
 <dd><p>Marius Cordts, Mohamed Omran, Sebastian Ramos, Timo Rehfeld, Markus Enzweiler, Rodrigo Benenson, Uwe Franke, Stefan Roth, and Bernt Schiele. The cityscapes dataset for semantic urban scene understanding. In <em>Proc. of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)</em>. 2016.</p>
 </dd>
-<dt class="bibtex label" id="dollar2009"><span class="brackets">DollarWSP09</span></dt>
+<dt class="label" id="id27"><span class="brackets">DollarWSP09</span></dt>
 <dd><p>P. Dollár, C. Wojek, B. Schiele, and P. Perona. Pedestrian detection: a benchmark. In <em>CVPR</em>. 2009.</p>
 </dd>
-<dt class="bibtex label" id="feifei2004"><span class="brackets">FFFP04</span></dt>
+<dt class="label" id="id25"><span class="brackets">FFFP04</span></dt>
 <dd><p>L. Fei-Fei, R. Fergus, and P. Perona. Learning generative visual models from few training examples: an incremental bayesian approach tested on 101 object categories. In <em>IEEE. CVPR 2004, Workshop on Generative-Model Based Vision</em>. 2004.</p>
 </dd>
-<dt class="bibtex label" id="glorot2010"><span class="brackets"><a class="fn-backref" href="#id2">GB10</a></span></dt>
+<dt class="label" id="id28"><span class="brackets"><a class="fn-backref" href="#id2">GB10</a></span></dt>
 <dd><p>X. Glorot and Y. Bengio. Understanding the difficulty of training deep feedforward neural networks. In <em>International conference on artificial intelligence and statistics</em>, 249–256. 2010.</p>
 </dd>
-<dt class="bibtex label" id="graham2014"><span class="brackets"><a class="fn-backref" href="#id11">Gra14</a></span></dt>
+<dt class="label" id="id42"><span class="brackets">GDollarG+17</span></dt>
+<dd><p>Priya Goyal, Piotr Dollár, Ross B. Girshick, Pieter Noordhuis, Lukasz Wesolowski, Aapo Kyrola, Andrew Tulloch, Yangqing Jia, and Kaiming He. Accurate, large minibatch SGD: training imagenet in 1 hour. <em>CoRR</em>, 2017. URL: <a class="reference external" href="http://arxiv.org/abs/1706.02677">http://arxiv.org/abs/1706.02677</a>, <a class="reference external" href="https://arxiv.org/abs/1706.02677">arXiv:1706.02677</a>.</p>
+</dd>
+<dt class="label" id="id34"><span class="brackets"><a class="fn-backref" href="#id11">Gra14</a></span></dt>
 <dd><p>Benjamin Graham. Fractional max-pooling. <em>CoRR</em>, 2014.</p>
 </dd>
-<dt class="bibtex label" id="griffin2007"><span class="brackets">GHP07</span></dt>
+<dt class="label" id="id26"><span class="brackets">GHP07</span></dt>
 <dd><p>Gregory Griffin, Alex Holub, and Pietro Perona. Caltech-256 object category dataset. Technical Report, 2007.</p>
 </dd>
-<dt class="bibtex label" id="he2015"><span class="brackets"><a class="fn-backref" href="#id1">HZRS15</a></span></dt>
-<dd><p>Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Delving deep into rectifiers: surpassing human-level performance on imagenet classification. In <em>Proceedings of the 2015 IEEE International Conference on Computer Vision (ICCV)</em>, ICCV ‘15, 1026–1034. 2015. <a class="reference external" href="https://doi.org/10.1109/ICCV.2015.123">doi:10.1109/ICCV.2015.123</a>.</p>
+<dt class="label" id="id36"><span class="brackets"><a class="fn-backref" href="#id1">HZRS15</a></span></dt>
+<dd><p>Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Delving deep into rectifiers: surpassing human-level performance on imagenet classification. In <em>Proceedings of the 2015 IEEE International Conference on Computer Vision (ICCV)</em>, ICCV '15, 1026–1034. 2015. <a class="reference external" href="https://doi.org/10.1109/ICCV.2015.123">doi:10.1109/ICCV.2015.123</a>.</p>
 </dd>
-<dt class="bibtex label" id="lstm1997"><span class="brackets"><a class="fn-backref" href="#id16">HS97</a></span></dt>
+<dt class="label" id="id37"><span class="brackets"><a class="fn-backref" href="#id16">HS97</a></span></dt>
 <dd><p>Sepp Hochreiter and Jürgen Schmidhuber. Long short-term memory. <em>Neural Computation</em>, 9(8):1735–1780, 1997. <a class="reference external" href="https://doi.org/10.1162/neco.1997.9.8.1735">doi:10.1162/neco.1997.9.8.1735</a>.</p>
 </dd>
-<dt class="bibtex label" id="houben2013"><span class="brackets">HSS+13</span></dt>
+<dt class="label" id="id24"><span class="brackets">HSS+13</span></dt>
 <dd><p>Sebastian Houben, Johannes Stallkamp, Jan Salmen, Marc Schlipsing, and Christian Igel. Detection of traffic signs in real-world images: the German Traffic Sign Detection Benchmark. In <em>International Joint Conference on Neural Networks</em>, number 1288. 2013.</p>
 </dd>
-<dt class="bibtex label" id="ioffe2015"><span class="brackets"><a class="fn-backref" href="#id5">IS15</a></span></dt>
+<dt class="label" id="id33"><span class="brackets"><a class="fn-backref" href="#id5">IS15</a></span></dt>
 <dd><p>Sergey Ioffe and Christian Szegedy. Batch normalization: accelerating deep network training by reducing internal covariate shift. <em>CoRR</em>, 2015.</p>
 </dd>
-<dt class="bibtex label" id="jain2010"><span class="brackets">JLM10</span></dt>
+<dt class="label" id="id32"><span class="brackets">JLM10</span></dt>
 <dd><p>Vidit Jain and Erik Learned-Miller. FDDB: a benchmark for face detection in unconstrained settings. Technical Report UM-CS-2010-009, University of Massachusetts, Amherst, 2010.</p>
 </dd>
-<dt class="bibtex label" id="kingmab14"><span class="brackets">KB14</span><span class="fn-backref">(<a href="#id3">1</a>,<a href="#id4">2</a>)</span></dt>
+<dt class="label" id="id45"><span class="brackets">JYL19</span></dt>
+<dd><p>Qing Jin, Linjie Yang, and Zhenyu Liao. Towards efficient training for neural network quantization. 2019. <a class="reference external" href="https://arxiv.org/abs/1912.10207">arXiv:1912.10207</a>.</p>
+</dd>
+<dt class="label" id="id38"><span class="brackets">KB14</span><span class="fn-backref">(<a href="#id3">1</a>,<a href="#id4">2</a>)</span></dt>
 <dd><p>Diederik P. Kingma and Jimmy Ba. Adam: A method for stochastic optimization. <em>CoRR</em>, 2014. URL: <a class="reference external" href="http://arxiv.org/abs/1412.6980">http://arxiv.org/abs/1412.6980</a>, <a class="reference external" href="https://arxiv.org/abs/1412.6980">arXiv:1412.6980</a>.</p>
 </dd>
-<dt class="bibtex label" id="krizhevsky2009"><span class="brackets">Kri09</span></dt>
+<dt class="label" id="id21"><span class="brackets">Kri09</span></dt>
 <dd><p>Alex Krizhevsky. Learning multiple layers of features from tiny images. Technical Report, 2009.</p>
 </dd>
-<dt class="bibtex label" id="lecun1998"><span class="brackets">LBBH98</span></dt>
+<dt class="label" id="id22"><span class="brackets">LBBH98</span></dt>
 <dd><p>Y. LeCun, L. Bottou, Y. Bengio, and P. Haffner. Gradient-based learning applied to document recognition. In <em>Proceedings of the IEEE</em>, volume 86, 2278–2324. 1998.</p>
 </dd>
-<dt class="bibtex label" id="lockhart2011"><span class="brackets">LWX+11</span></dt>
-<dd><p>Jeffrey W. Lockhart, Gary M. Weiss, Jack C. Xue, Shaun T. Gallagher, Andrew B. Grosner, and Tony T. Pulickal. Design considerations for the wisdm smart phone-based sensor mining architecture. In <em>Proceedings of the Fifth International Workshop on Knowledge Discovery from Sensor Data</em>, SensorKDD ‘11, 25–33. New York, NY, USA, 2011. ACM. URL: <a class="reference external" href="http://doi.acm.org/10.1145/2003653.2003656">http://doi.acm.org/10.1145/2003653.2003656</a>, <a class="reference external" href="https://doi.org/10.1145/2003653.2003656">doi:10.1145/2003653.2003656</a>.</p>
+<dt class="label" id="id43"><span class="brackets">LWX+11</span></dt>
+<dd><p>Jeffrey W. Lockhart, Gary M. Weiss, Jack C. Xue, Shaun T. Gallagher, Andrew B. Grosner, and Tony T. Pulickal. Design considerations for the wisdm smart phone-based sensor mining architecture. In <em>Proceedings of the Fifth International Workshop on Knowledge Discovery from Sensor Data</em>, SensorKDD '11, 25–33. New York, NY, USA, 2011. ACM. URL: <a class="reference external" href="http://doi.acm.org/10.1145/2003653.2003656">http://doi.acm.org/10.1145/2003653.2003656</a>, <a class="reference external" href="https://doi.org/10.1145/2003653.2003656">doi:10.1145/2003653.2003656</a>.</p>
 </dd>
-<dt class="bibtex label" id="rakotomamonjy2014"><span class="brackets">RG14</span></dt>
+<dt class="label" id="id31"><span class="brackets">RG14</span></dt>
 <dd><p>A. Rakotomamonjy and G. Gasso. Histogram of gradients of time-frequency representations for audio scene detection. Technical Report, 2014.</p>
 </dd>
-<dt class="bibtex label" id="ilsvrc15"><span class="brackets">RDS+15</span></dt>
+<dt class="label" id="id30"><span class="brackets">RDS+15</span></dt>
 <dd><p>Olga Russakovsky, Jia Deng, Hao Su, Jonathan Krause, Sanjeev Satheesh, Sean Ma, Zhiheng Huang, Andrej Karpathy, Aditya Khosla, Michael Bernstein, Alexander C. Berg, and Li Fei-Fei. ImageNet Large Scale Visual Recognition Challenge. <em>International Journal of Computer Vision (IJCV)</em>, 115(3):211–252, 2015. <a class="reference external" href="https://doi.org/10.1007/s11263-015-0816-y">doi:10.1007/s11263-015-0816-y</a>.</p>
 </dd>
-<dt class="bibtex label" id="srivastava2014"><span class="brackets"><a class="fn-backref" href="#id9">SHK+12</a></span></dt>
+<dt class="label" id="id29"><span class="brackets"><a class="fn-backref" href="#id9">SHK+12</a></span></dt>
 <dd><p>Nitish Srivastava, Geoffrey Hinton, Alex Krizhevsky, Ilya Sutskever, and Ruslan Salakhutdinov. Dropout: a simple way to prevent neural networks from voverfitting. <em>Journal of Machine Learning Research</em>, 15:1929–1958, 2012.</p>
 </dd>
-<dt class="bibtex label" id="stallkamp2012"><span class="brackets">SSSI12</span></dt>
+<dt class="label" id="id23"><span class="brackets">SSSI12</span></dt>
 <dd><p>J. Stallkamp, M. Schlipsing, J. Salmen, and C. Igel. Man vs. computer: benchmarking machine learning algorithms for traffic sign recognition. <em>Neural Networks</em>, 2012. <a class="reference external" href="https://doi.org/10.1016/j.neunet.2012.02.016">doi:10.1016/j.neunet.2012.02.016</a>.</p>
 </dd>
-<dt class="bibtex label" id="dota"><span class="brackets">XBD+17</span></dt>
+<dt class="label" id="id39"><span class="brackets">XBD+17</span></dt>
 <dd><p>Gui-Song Xia, Xiang Bai, Jian Ding, Zhen Zhu, Serge J. Belongie, Jiebo Luo, Mihai Datcu, Marcello Pelillo, and Liangpei Zhang. DOTA: A large-scale dataset for object detection in aerial images. <em>CoRR</em>, 2017. URL: <a class="reference external" href="http://arxiv.org/abs/1711.10398">http://arxiv.org/abs/1711.10398</a>, <a class="reference external" href="https://arxiv.org/abs/1711.10398">arXiv:1711.10398</a>.</p>
 </dd>
-<dt class="bibtex label" id="lucey2010"><span class="brackets">LuceyCohnKanade+10</span></dt>
+<dt class="label" id="id41"><span class="brackets">ZDM19</span></dt>
+<dd><p>Hongyi Zhang, Yann N. Dauphin, and Tengyu Ma. Residual learning without normalization via better initialization. In <em>International Conference on Learning Representations</em>. 2019. URL: <a class="reference external" href="https://openreview.net/forum?id=H1gsz30cKX">https://openreview.net/forum?id=H1gsz30cKX</a>.</p>
+</dd>
+<dt class="label" id="id20"><span class="brackets">LuceyCohnKanade+10</span></dt>
 <dd><p>P. Lucey, J. F. Cohn, T. Kanade, J. Saragih, Z. Ambadar, and I. Matthews. The extended cohn-kanade dataset (ck+): a complete dataset for action unit and emotion-specified expression. In <em>2010 IEEE Computer Society Conference on Computer Vision and Pattern Recognition - Workshops</em>, volume, 94–101. June 2010. <a class="reference external" href="https://doi.org/10.1109/CVPRW.2010.5543262">doi:10.1109/CVPRW.2010.5543262</a>.</p>
 </dd>
-<dt class="bibtex label" id="speechcommandsv2"><span class="brackets">Warden18</span></dt>
+<dt class="label" id="id44"><span class="brackets">Warden18</span></dt>
 <dd><p>P. Warden. Speech Commands: A Dataset for Limited-Vocabulary Speech Recognition. <em>ArXiv e-prints</em>, April 2018. URL: <a class="reference external" href="https://arxiv.org/abs/1804.03209">https://arxiv.org/abs/1804.03209</a>, <a class="reference external" href="https://arxiv.org/abs/1804.03209">arXiv:1804.03209</a>.</p>
+</dd>
+<dt class="label" id="id40"><span class="brackets">WilsonRoelofsStern+17</span></dt>
+<dd><p>Ashia C. Wilson, Rebecca Roelofs, Mitchell Stern, Nathan Srebro, and Benjamin Recht. The Marginal Value of Adaptive Gradient Methods in Machine Learning. <em>arXiv e-prints</em>, pages arXiv:1705.08292, May 2017. <a class="reference external" href="https://arxiv.org/abs/1705.08292">arXiv:1705.08292</a>.</p>
 </dd>
 </dl>
 </p>
@@ -2907,8 +2931,8 @@ in respect of the cross-entropy loss:</p>
 </tr>
 </tbody>
 </table>
-<div class="section" id="id19">
-<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id47">
+<h3>Configuration parameters (<em>Frame</em> models)<a class="headerlink" href="#id47" title="Permalink to this headline">¶</a></h3>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 23%" />
@@ -3135,29 +3159,29 @@ limit)</p></td>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="ini_target.html" class="btn btn-neutral float-right" title="Targets (outputs &amp; losses)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="ini_environment.html" class="btn btn-neutral float-left" title="Stimuli provider (Environment)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="ini_target.html" class="btn btn-neutral float-right" title="Targets (outputs &amp; losses)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="ini_environment.html" class="btn btn-neutral float-left" title="Stimuli provider (Environment)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, CEA LIST
+        &#169; Copyright 2019, CEA LIST.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -3165,7 +3189,6 @@ limit)</p></td>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {
