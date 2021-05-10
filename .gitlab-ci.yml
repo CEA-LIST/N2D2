@@ -3,8 +3,8 @@ variables:
   OMP_NUM_THREADS: 4
 
 stages:
-  - build
   - test
+  - build
 
 build:ubuntu:
   stage: build
