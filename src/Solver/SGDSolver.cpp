@@ -36,6 +36,7 @@ N2D2::SGDSolver::SGDSolver()
       mLearningRateDecay(this, "LearningRateDecay", 0.1),
       mClamping(this, "Clamping", ""),
       mPolyakMomentum(this, "PolyakMomentum", true),
+      mMinDecay(this, "MinDecay", 0.0),
       mIterationPass(0),
       mNbIterations(0)
 {
@@ -58,6 +59,7 @@ N2D2::SGDSolver::SGDSolver(const SGDSolver& solver)
       mLearningRateDecay(this, "LearningRateDecay", solver.mLearningRateDecay),
       mClamping(this, "Clamping", solver.mClamping),
       mPolyakMomentum(this, "PolyakMomentum", solver.mPolyakMomentum),
+      mMinDecay(this, "MinDecay", solver.mMinDecay),
       mIterationPass(solver.mIterationPass),
       mNbIterations(solver.mNbIterations)
 {
@@ -115,7 +117,8 @@ double N2D2::SGDSolver::getLearningRate(unsigned int batchSize, bool silent)
                 double cosine_decay = 0.5 * (1.0 
                                     + (double) std::cos(M_PI * (double) step / 
                                      (double) (mMaxIterations - mWarmUpDuration)));
-                rate *=  std::max(0.0, cosine_decay) ;
+                const double cosine_decay_min = (1.0 - mMinDecay) * cosine_decay + mMinDecay;
+                rate *=  std::max(0.0, cosine_decay_min) ;
             }
         }
         if (mNbIterations > 0) {
