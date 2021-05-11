@@ -56,10 +56,10 @@ class Tensor:
 
     def __init__(self, dims, value=None, cuda=False, datatype=float, cell=None, dim_format='Numpy'):
         """
-        :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (the convention used depends of the ``dim_format`` argument)
+        :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (the convention used depends of the ``dim_format`` argument, by default it's the same as ``Numpy``)
         :type dims: list
         :param value: A value to fill the :py:class:`n2d2.Tensor` object.
-        :type value: Must be coherent with **datatype**
+        :type value: Must be coherent with ``datatype``
         :param datatype: Type of the data stocked by the tensor, default=float
         :type datatype: type, optional
         :param cell: A reference to the object that created this tensor, default=None
@@ -67,15 +67,20 @@ class Tensor:
         :param dim_format: Define the format used when you declare the dimensions of the tensor. The ``N2D2`` convention is the reversed of the ``Numpy`` the numpy one (e.g. a [2, 3] numpy array is equivalent to a [3, 2] N2D2 Tensor), default="Numpy"
         :type dim_format: str, optional
         """
+        self._leaf=False
         self.cell = cell
         self._datatype = datatype
+        if not isinstance(cuda, bool):
+            raise error_handler.WrongInputType("cuda", type(cuda), [str(bool)])
         self.is_cuda = cuda
         if cuda:
             generators = self._cuda_tensor_generators
         else:
             generators = self._tensor_generators
-        # Dimensions convention on N2D2 are reversed from python. 
+
         if isinstance(dims, list):
+            if not isinstance(dim_format, str):
+                raise error_handler.WrongInputType("dim_format", type(dim_format), [str(str)])
             if dim_format in self._dim_format:
                 dims = self._dim_format[dim_format](dims)
             else:
@@ -269,8 +274,6 @@ class Tensor:
         Create a numpy array equivalent to the tensor.
         """
         try:
-            # TODO : Create a dependance to numpy in the library ?
-            # Import like this can cause performance issue
             from numpy import array 
         except ImportError:
             raise ImportError("Numpy is not installed")
@@ -279,8 +282,6 @@ class Tensor:
     @classmethod
     def from_numpy(cls, np_array):
         """Convert a numpy array into a tensor.
-        TODO : fix /!\ Known issues /!\  
-        - Using a 1D numpy array have unintended behavior 
 
         :param np_array: A numpy array to convert to a tensor.
         :type np_array: :py:class:`numpy.array`
@@ -288,15 +289,13 @@ class Tensor:
         :rtype: :py:class:`n2d2.Tensor`
         """
         try: 
-            # TODO : Create a dependance to numpy in the library ?
-            # Import like this can cause performance issue
             from numpy import ndarray 
         except ImportError:
             raise ImportError("Numpy is not installed !")
         if not isinstance(np_array, ndarray):
             raise error_handler.WrongInputType("np_array", type(np_array), ["numpy.array"])
 
-        np_array = np_array.reshape([d for d in reversed(np_array.shape)]) 
+        # np_array = np_array.reshape([d for d in reversed(np_array.shape)]) 
         n2d2_tensor = cls([])
 
         # Retrieving the first element of the numpy array to get dataType.
@@ -324,7 +323,7 @@ class Tensor:
         else:
             n2d2_tensor._datatype = data_type
             n2d2_tensor._tensor = n2d2_tensor._tensor_generators[data_type](np_array)
-
+        n2d2_tensor.reshape(np_array.shape)
         return n2d2_tensor
 
     @classmethod
@@ -472,7 +471,8 @@ class Tensor:
         """
         Compute the backpropagation on the deepnet.
         """
-        # TODO: Add leaf node check
+        if not self.is_leaf():
+            raise RuntimeError('This tensor is not the leaf of a graph')
         if self.cell is None:
             raise RuntimeError('This tensor is not part of a graph')
         self.cell.get_deepnet().back_propagate()
@@ -481,10 +481,14 @@ class Tensor:
         """
         Update weights and biases of the cells.
         """
-        # TODO: Add leaf node check
+        if not self.is_leaf():
+            raise RuntimeError('This tensor is not the leaf of a graph')
         if self.cell is None:
             raise RuntimeError('This tensor is not part of a graph')
         self.cell.get_deepnet().update()
+
+    def is_leaf(self):
+        return self._leaf
 
 
 class Interface(n2d2.provider.Provider):
@@ -537,8 +541,9 @@ class Interface(n2d2.provider.Provider):
         return self.tensors[0].dimY()
     def dimX(self):
         return self.tensors[0].dimX()
-    # TODO: better to do general dims() method
     def dimZ(self):
         return self.dimZ
+    def dims(self):
+        return [self.dimZ(), self.dimY(), self.dimX(), self.dimY(),]
     def get_tensors(self):
         return self.tensors
