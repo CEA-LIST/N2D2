@@ -49,7 +49,9 @@
 #include "N2D2.hpp"
 #include "DeepNet.hpp"
 #include "DeepNetQuantization.hpp"
+#ifdef N2D2_IP
 #include "Quantizer/DeepNetQAT.hpp"
+#endif
 #include "DrawNet.hpp"
 #include "CEnvironment.hpp"
 #include "Xnet/Environment.hpp"
@@ -438,7 +440,7 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
     if(opt.qatSAT) {
         deepNet->initialize();
         //deepNet->exportNetworkFreeParameters("weights_init");
-
+#ifdef N2D2_IP
         if (opt.logKernels)
             deepNet->logFreeParameters("kernels_fake_quantized");
 
@@ -448,7 +450,7 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
 
         if (opt.logKernels)
             deepNet->logFreeParameters("kernels_quantized");
-            
+#endif            
         //deepNet->exportNetworkFreeParameters("weights_quantized");
     }
 
@@ -818,7 +820,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
     if(opt.qatSAT) {
         deepNet->initialize();
-
+#ifdef N2D2_IP
         if (opt.logKernels)
             deepNet->logFreeParameters("kernels_fake_quantized");
 
@@ -830,6 +832,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                         DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision,
                                         opt.exportNbStimuliMax);
         dnQAT.exportOutputsLayers(*sp, exportDir + "/stimuli", Database::Test, opt.exportNbStimuliMax);
+#endif
     }
 
     DeepNetExport::generate(*deepNet, exportDir, opt.genExport);
