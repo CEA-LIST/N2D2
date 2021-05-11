@@ -88,6 +88,16 @@ void N2D2::SoftmaxCell_Frame_CUDA<T>::initialize()
     }
 }
 
+
+template <class T>
+void N2D2::SoftmaxCell_Frame_CUDA<T>::initializeDataDependent()
+{
+    // NOTE: this is addition to initialize()
+    Cell_Frame_CUDA<T>::initializeDataDependent();
+
+    initialize();
+}
+
 template <class T>
 void N2D2::SoftmaxCell_Frame_CUDA<T>::propagate(bool /*inference*/)
 {
@@ -190,6 +200,7 @@ void N2D2::SoftmaxCell_Frame_CUDA<T>::backPropagate()
 
     mDiffOutputs[0].setValid();
     mDiffOutputs.synchronizeDToHBased();
+
 }
 
 template <class T>
@@ -202,6 +213,7 @@ void N2D2::SoftmaxCell_Frame_CUDA<T>::backPropagateWithLoss() {
             : cuda_device_tensor_cast_nocopy<T>(mDiffOutputs[0]);
 
     if (mDiffOutputs[0].isValid()) {
+
         CHECK_CUBLAS_STATUS(
             cublasAxpy(CudaContext::cublasHandle(),
                         mDiffOutputs[0].size(), // size of data
@@ -211,11 +223,14 @@ void N2D2::SoftmaxCell_Frame_CUDA<T>::backPropagateWithLoss() {
                         diffOutput0->getDevicePtr(),
                         1));
     } else {
+    
         CHECK_CUDA_STATUS(
             cudaMemcpy(diffOutput0->getDevicePtr(),
                        mDiffInputs.getDevicePtr(),
                        mDiffOutputs[0].size() * sizeof(T),
                        cudaMemcpyDeviceToDevice));
+
+      
     }
     /*
                 if (mInputs.dimB() > 1) {

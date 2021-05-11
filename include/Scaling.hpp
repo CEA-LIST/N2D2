@@ -434,7 +434,7 @@ private:
 
 private:
     ScalingMode mMode;
-    std::unique_ptr<AbstractScaling> mScaling;
+    std::shared_ptr<AbstractScaling> mScaling;
 };
 
 template<class T>

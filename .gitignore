@@ -1,6 +1,7 @@
 *.obj/
 bin*/
 doc/
+docs/_build/*
 *.jpg
 *.gif
 *.png

@@ -51,6 +51,7 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
       mQuantizationLevels(this, "QuantizationLevels", 0U),
       mQuantizationMin(this, "QuantizationMin", 0.0),
       mQuantizationMax(this, "QuantizationMax", 1.0),
+      mStreamTensor(this, "StreamTensor", false),
       mDatabase(database),
       mSize(size),
       mBatchSize(batchSize),
@@ -138,6 +139,7 @@ N2D2::StimuliProvider::StimuliProvider(StimuliProvider&& other)
       mQuantizationLevels(this, "QuantizationLevels", other.mQuantizationLevels),
       mQuantizationMin(this, "QuantizationMin", other.mQuantizationMin),
       mQuantizationMax(this, "QuantizationMax", other.mQuantizationMax),
+      mStreamTensor(this, "StreamTensor", false),
       mDatabase(other.mDatabase),
       mSize(std::move(other.mSize)),
       mBatchSize(other.mBatchSize),
@@ -1516,6 +1518,20 @@ void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
     }
 
     dataRef[batchPos] = data;
+}
+
+
+void N2D2::StimuliProvider::setStreamedTensor(TensorData_T& streamedTensor) 
+{
+    // if (!mStreamedTensor) {
+        mStreamedTensor = &streamedTensor;
+    // }
+    // else {
+    //     // TODO: Do this with = operator?
+    //     std::cout << "mstreamedTensor :" << *mStreamedTensor << std::endl;
+    //     // std::copy(streamedTensor.begin(), streamedTensor.end(),
+    //     //           (*mStreamedTensor).begin());
+    // }
 }
 
 void N2D2::StimuliProvider::synchronizeToDevices() {

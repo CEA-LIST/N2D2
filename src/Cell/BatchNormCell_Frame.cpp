@@ -152,6 +152,114 @@ void N2D2::BatchNormCell_Frame<T>::initialize()
 
 }
 
+
+
+
+template <class T>
+void N2D2::BatchNormCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
+{
+    // NOTE: this is addition to initialize()
+    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
+
+    //std::vector<size_t> requiredDims(mInputs[0].nbDims(), 1);
+    //requiredDims[mInputs[0].nbDims() - 2] = mInputs.dimZ();
+
+    // NOTE: In contrast to normal initialize, this works only for 4D Tensors at the moment!
+    std::vector<size_t> requiredDims(4, 1);
+    requiredDims[2] = inputDimZ;
+
+    if (mScale->empty())
+        mScale->resize(requiredDims, ParamT(1.0));
+    else {
+        if (mScale->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared scale, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mScale->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    if (mBias->empty())
+        mBias->resize(requiredDims, ParamT(0.0));
+    else {
+        if (mBias->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared bias, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mBias->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    if (mMean->empty())
+        mMean->resize(requiredDims, ParamT(0.0));
+    else {
+        if (mMean->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared mean, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mMean->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    if (mVariance->empty())
+        mVariance->resize(requiredDims, ParamT(0.0));
+    else {
+        if (mVariance->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared variance, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mVariance->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    mSavedMean.resize(requiredDims);
+    mSavedVariance.resize(requiredDims);
+
+    mDiffScale.resize(requiredDims);
+    mDiffBias.resize(requiredDims);
+    mDiffSavedMean.resize(requiredDims);
+    mDiffSavedVariance.resize(requiredDims);
+    if(mMovingAverageMomentum < 0.0 || mMovingAverageMomentum >= 1.0)
+    {
+        std::stringstream msgStr;
+        msgStr << "BatchNormCell_Frame<T>::initialize():"
+            " in cell " + mName + ", wrong value for MovingAverageMomentum. "
+            "Expected value range [0.0, 1.0[ whereas actual value is "
+            << mMovingAverageMomentum << std::endl;
+
+        throw std::runtime_error(msgStr.str());
+
+    }
+}
+
+
+template <class T>
+void N2D2::BatchNormCell_Frame<T>::initializeDataDependent(){
+    Cell_Frame<T>::initializeDataDependent();
+
+    if (mInputs.dimZ() != mOutputs.dimZ()) {
+    throw std::domain_error("BatchNormCell_Frame<T>::initialize():"
+                            " the number of output channels must be equal "
+                            "to the sum of inputs channels.");
+    }
+
+    mNbPropagate = 0;
+}
+
+
+
 template <class T>
 void N2D2::BatchNormCell_Frame<T>::propagate(bool inference)
 {

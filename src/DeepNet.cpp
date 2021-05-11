@@ -68,6 +68,7 @@ N2D2::DeepNet::DeepNet(Network& net)
 void N2D2::DeepNet::addCell(const std::shared_ptr<Cell>& cell,
                             const std::vector<std::shared_ptr<Cell>>& parents)
 {
+    // Check which parent has the largest order in mLayers 
     unsigned int cellOrder = 0;
     for (auto it = mLayers.begin(); it != mLayers.end(); ++it) {
         for (auto itParent = parents.begin(); itParent != parents.end(); ++itParent) {
@@ -81,12 +82,14 @@ void N2D2::DeepNet::addCell(const std::shared_ptr<Cell>& cell,
         }
     }
 
+    // Add additional layer for new cell if highest order parent is in final layer
     if (cellOrder + 1 >= mLayers.size()) {
         mLayers.resize(cellOrder + 2);
     }
 
     mLayers[cellOrder + 1].push_back(cell->getName());
 
+    // Add link information to mParentLayers s
     for (auto itParent = parents.begin(); itParent != parents.end(); ++itParent) {
         if (*itParent) {
             mParentLayers.insert(std::make_pair(cell->getName(), (*itParent)->getName()));
@@ -2418,7 +2421,6 @@ void N2D2::DeepNet::propagate(
          itTargets != itTargetsEnd;
          ++itTargets)
     {
-        //std::cout << "process " << (*itTargets)->getName() << std::endl;
         time1 = std::chrono::high_resolution_clock::now();
         (*itTargets)->provideTargets(set);
 
@@ -2449,8 +2451,6 @@ void N2D2::DeepNet::propagate(
                 throw std::runtime_error(
                     "DeepNet::learn(): learning requires Cell_Frame_Top cells");
 
-            //std::cout << "propagate " << mCells[(*itCell)]->getName()
-            //    << std::endl;
             time1 = std::chrono::high_resolution_clock::now();
             cellFrame->propagate(inference);
 
@@ -2474,7 +2474,6 @@ void N2D2::DeepNet::propagate(
          itTargets != itTargetsEnd;
          ++itTargets)
     {
-        //std::cout << "process " << (*itTargets)->getName() << std::endl;
         time1 = std::chrono::high_resolution_clock::now();
         (*itTargets)->process(set);
 
@@ -2488,6 +2487,31 @@ void N2D2::DeepNet::propagate(
                 + (*itTargets)->getType() + "[process]",
                 std::chrono::duration_cast
                 <std::chrono::duration<double> >(time2 - time1).count()));
+        }
+    }
+}
+
+
+void N2D2::DeepNet::propagate(bool inference)
+{
+    const unsigned int nbLayers = mLayers.size();
+
+    // Signal propagation
+    for (unsigned int l = 1; l < nbLayers; ++l) {
+        for (std::vector<std::string>::const_iterator itCell
+             = mLayers[l].begin(),
+             itCellEnd = mLayers[l].end();
+             itCell != itCellEnd;
+             ++itCell) {
+            std::shared_ptr<Cell_Frame_Top> cellFrame
+                = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells[(*itCell)]);
+
+            if (!cellFrame)
+                throw std::runtime_error(
+                    "DeepNet::learn(): learning requires Cell_Frame_Top cells");
+
+            cellFrame->propagate(inference);
+    
         }
     }
 }
@@ -2506,8 +2530,7 @@ void N2D2::DeepNet::backPropagate(
              itCell != itCellEnd;
              ++itCell)
         {
-            //std::cout << "back-propagate " << mCells[(*itCell)]->getName()
-            //    << std::endl;
+
             time1 = std::chrono::high_resolution_clock::now();
             std::dynamic_pointer_cast
                 <Cell_Frame_Top>(mCells[(*itCell)])->backPropagate();
@@ -2545,8 +2568,7 @@ void N2D2::DeepNet::update(
              itCell != itCellEnd;
              ++itCell)
         {
-            //std::cout << "update " << mCells[(*itCell)]->getName()
-            //    << std::endl;
+      
             time1 = std::chrono::high_resolution_clock::now();
 #ifdef CUDA
             //update states
@@ -2638,7 +2660,6 @@ void N2D2::DeepNet::cTicks(Time_T start,
                 if (!cellCSpike)
                     throw std::runtime_error(
                         "DeepNet::cTicks(): requires Cell_CSpike cells");
-                //std::cout << mCells[(*itCell)]->getName() << std::endl;
                 if (cellCSpike->tick(t))
                     return;
             }

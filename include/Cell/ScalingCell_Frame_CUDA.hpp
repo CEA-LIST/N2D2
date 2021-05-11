@@ -48,7 +48,7 @@ public:
     static std::shared_ptr<ScalingCell> create(const DeepNet& deepNet, const std::string& name,
                                                unsigned int nbOutputs, Scaling scaling)
     {
-        return std::make_shared<ScalingCell_Frame_CUDA>(deepNet, name, nbOutputs, std::move(scaling));
+        return std::make_shared<ScalingCell_Frame_CUDA>(deepNet, name, nbOutputs, scaling);
     }
 
     virtual void initialize();

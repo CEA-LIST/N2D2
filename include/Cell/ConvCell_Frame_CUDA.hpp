@@ -87,6 +87,9 @@ public:
 
     virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     virtual void initialize();
+    virtual void initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping = Tensor<bool>());
+    virtual void initializeWeightQuantizer();
+    virtual void initializeDataDependent();
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);
     virtual void propagate(bool inference = false);
@@ -208,7 +211,12 @@ void N2D2::ConvCell_Frame_CUDA<T>::setWeight(unsigned int output,
 
     if (mNbGroups[k] > 1) {
         const size_t outputGroupSize = getNbOutputs() / mNbGroups[k];
-        const size_t channelGroupSize = mSharedSynapses[k].dimZ();
+
+        //const size_t channelGroupSize = mInputs[k].dimZ() / mNbGroups[k];
+
+        const size_t channelGroupSize = getNbChannels() / mNbGroups[k];
+        // const size_t channelGroupSize = mSharedSynapses[k].dimZ();
+
         const size_t outputGroup = output / outputGroupSize;
         const size_t channelGroup = channel / channelGroupSize;
 
@@ -239,7 +247,9 @@ void N2D2::ConvCell_Frame_CUDA<T>::setWeight(unsigned int output,
 
     if (mKeepInSync)
         sharedSynapses[output][channel].synchronizeHToD();
+
 }
+
 
 template <class T>
 void
@@ -266,7 +276,11 @@ N2D2::ConvCell_Frame_CUDA<T>::getWeight(unsigned int output,
 
     if (mNbGroups[k] > 1) {
         const size_t outputGroupSize = getNbOutputs() / mNbGroups[k];
-        const size_t channelGroupSize = mSharedSynapses[k].dimZ();
+        
+        //const size_t channelGroupSize = mInputs[k].dimZ() / mNbGroups[k];
+        const size_t channelGroupSize = getNbChannels() / mNbGroups[k];
+        // const size_t channelGroupSize = mSharedSynapses[k].dimZ();
+
         const size_t outputGroup = output / outputGroupSize;
         const size_t channelGroup = channel / channelGroupSize;
 
@@ -285,6 +299,8 @@ N2D2::ConvCell_Frame_CUDA<T>::getWeight(unsigned int output,
     const unsigned int k = mSharedSynapses.getTensorIndex(channel);
     channel -= mSharedSynapses.getTensorDataOffset(channel);
 #endif
+
+
 /*
     const CudaTensor<T>& sharedSynapses = mSharedSynapses[k];
 

@@ -44,7 +44,9 @@ public:
     };
 
     std::pair<double, double> getOutputRange() const;
-    
+    double getClipping(){
+        return mClipping;
+    };
     virtual ~LinearActivation() {};
 
 protected:

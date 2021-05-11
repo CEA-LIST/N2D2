@@ -654,7 +654,7 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
     
 }
 
-void importFreeParemeters(const Options& opt, DeepNet& deepNet) {
+void importFreeParameters(const Options& opt, DeepNet& deepNet) {
     if (!opt.weights.empty()) {
         if (opt.weights != "/dev/null")
             deepNet.importNetworkFreeParameters(opt.weights, opt.ignoreNoExist);
@@ -674,7 +674,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     const std::shared_ptr<Database>& database = deepNet->getDatabase();
     const std::shared_ptr<StimuliProvider>& sp = deepNet->getStimuliProvider();
 
-    importFreeParemeters(opt, *deepNet);
+    importFreeParameters(opt, *deepNet);
 
     deepNet->removeDropout();
     if(!opt.qatSAT) {
@@ -2456,7 +2456,6 @@ int main(int argc, char* argv[]) try
                       << Utils::cdef << std::endl;
         }
     }
-
 
     if (!opt.saveTestSet.empty()) {
         StimuliProvider& sp = *deepNet->getStimuliProvider();

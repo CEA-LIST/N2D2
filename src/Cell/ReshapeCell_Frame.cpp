@@ -61,6 +61,16 @@ void N2D2::ReshapeCell_Frame<T>::initialize()
     }
 }
 
+
+
+template <class T>
+void N2D2::ReshapeCell_Frame<T>::initializeDataDependent()
+{
+    Cell_Frame<T>::initializeDataDependent();
+    initialize();
+}
+
+
 template <class T>
 void N2D2::ReshapeCell_Frame<T>::propagate(bool inference)
 {

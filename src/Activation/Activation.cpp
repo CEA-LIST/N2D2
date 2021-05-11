@@ -46,7 +46,7 @@ const N2D2::Scaling& N2D2::Activation::getActivationScaling() const {
 }
 
 void N2D2::Activation::setActivationScaling(Scaling scaling) {
-    mScaling = std::move(scaling);
+    mScaling = scaling;
 }
 void N2D2::Activation::exportParameters(const std::string& dirName,
                                         const std::string& cellName) const

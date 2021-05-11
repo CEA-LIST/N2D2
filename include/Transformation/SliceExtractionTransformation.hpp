@@ -70,6 +70,45 @@ public:
         return depth;
     };
     virtual ~SliceExtractionTransformation();
+    unsigned int getWidth(){
+        return mWidth;
+    };
+    unsigned int getHeight(){
+        return mHeight;
+    };
+    unsigned int getOffsetX(){
+        return mOffsetX;
+    };
+    unsigned int getOffsetY(){
+        return mOffsetY;
+    };
+    bool getRandomOffsetX(){
+        return mRandomOffsetX;
+    };
+    bool getRandomOffsetY(){
+        return mRandomOffsetY;
+    };
+    bool getRandomRotation(){
+        return mRandomRotation;
+    };
+    std::vector<double> getRandomRotationRange(){
+        return mRandomRotationRange;
+    };
+    bool getRandomScaling(){
+        return mRandomScaling;
+    };
+    std::vector<double> getRandomScalingRange(){
+        return mRandomScalingRange;
+    };
+    bool getAllowPadding(){
+        return mAllowPadding;
+    };
+    BorderType getBorderType(){
+        return mBorderType;
+    };
+    std::vector<double> getBorderValue(){
+        return mBorderValue;
+    };
 
     static cv::Rect extract(int x,
                             int y,

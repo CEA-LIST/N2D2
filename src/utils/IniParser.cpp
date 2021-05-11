@@ -214,6 +214,7 @@ void N2D2::IniParser::load(std::istream& data, const std::string& parentSection)
         // \"" << value << "\"" << std::endl;
         const bool defaultIgnore = (!property.empty()
                                     && *(property.begin()) == '$');
+                                    
         mIniData[mCurrentSection][property] = std::make_pair(value,
                                                              defaultIgnore);
 

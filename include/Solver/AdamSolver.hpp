@@ -53,6 +53,24 @@ public:
     }
     virtual ~AdamSolver() {};
 
+    double getmLearningRate(){
+        return mLearningRate;
+    };
+    double getBeta1(){
+        return mBeta1;
+    };
+    double getBeta2(){
+        return mBeta2;
+    };
+    double getEpsilon(){
+        return mEpsilon;
+    };
+    std::string getmClamping(){
+        return mClamping;
+    };
+
+    
+
 protected:
     template <class T> std::pair<T, T> getClamping() const;
 

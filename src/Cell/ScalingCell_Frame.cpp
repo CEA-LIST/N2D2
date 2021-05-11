@@ -47,7 +47,7 @@ template<class T>
 N2D2::ScalingCell_Frame<T>::ScalingCell_Frame(const DeepNet& deepNet, const std::string& name,
                                               unsigned int nbOutputs, Scaling scaling)
     : Cell(deepNet, name, nbOutputs),
-      ScalingCell(deepNet, name, nbOutputs, std::move(scaling)),
+      ScalingCell(deepNet, name, nbOutputs, scaling),
       Cell_Frame<T>(deepNet, name, nbOutputs)
 {
 }

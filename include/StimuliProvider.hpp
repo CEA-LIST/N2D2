@@ -348,6 +348,9 @@ public:
                         Database::StimuliSet set,
                         unsigned int batchPos = 0,
                         int dev = -1);
+
+    void setStreamedTensor(TensorData_T& streamedTensor);
+                        
     void synchronizeToDevices();
 
     void reverseLabels(const cv::Mat& mat,
@@ -475,7 +478,16 @@ public:
     };
     TensorData_T& getData(int dev = -1)
     {
-        return mProvidedData[getDevice(dev)].data;
+        // TODO : mStreamTensor may need to be reworked, if we want to have multiGPU for python ! 
+        if (mStreamTensor) {
+            if (!mStreamedTensor) {
+                throw std::runtime_error("Error: StreamTensor==true but StreamedTensor is not initialized");
+            }
+            return *mStreamedTensor;
+        }
+        else {
+            return mProvidedData[getDevice(dev)].data;
+        }
     };
     TensorData_T& getTargetData(int dev = -1)
     {
@@ -559,6 +571,8 @@ protected:
     Parameter<Float_T> mQuantizationMin;
     /// Max. value for quantization
     Parameter<Float_T> mQuantizationMax;
+    /// Set to deepnet interface mode
+    Parameter<bool> mStreamTensor;
 
     // Internal variables
     Database& mDatabase;
@@ -580,6 +594,8 @@ protected:
     DevicesInfo mDevicesInfo;
     bool mFuture;
 
+    TensorData_T* mStreamedTensor;
+    
     //Deprecated vector
     std::vector<std::vector<unsigned int >> mDatabaseLearnIndexes;
     std::vector<std::vector<unsigned int >> mDatabaseValIndexes;

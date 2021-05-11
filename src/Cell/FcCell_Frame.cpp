@@ -101,6 +101,63 @@ void N2D2::FcCell_Frame<T>::initialize()
 
 }
 
+
+template <class T>
+void N2D2::FcCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
+{
+
+     // NOTE: this is addition to initialize()
+    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
+
+    if (!mNoBias && mBias.empty()) {
+        mBias.resize({getNbOutputs(), 1, 1, 1});
+        mDiffBias.resize({getNbOutputs(), 1, 1, 1});
+        mBiasFiller->apply(mBias);
+    }
+
+    for (unsigned int k = 0, size = nbInputs; k < size; ++k) {
+        if (k < mWeightsSolvers.size())
+            continue;  // already initialized, skip!
+
+        mWeightsSolvers.push_back(mWeightsSolver->clone());
+        mSynapses.push_back(new Tensor<T>(
+            {1, 1, inputDimZ, getNbOutputs()}), 0);
+        mDiffSynapses.push_back(new Tensor<T>(
+            {1, 1, inputDimZ, getNbOutputs()}), 0);
+        mDropConnectMask.push_back(new Tensor<bool>(
+            {1, 1, inputDimZ, getNbOutputs()}, true), 0);
+        mWeightsFiller->apply(mSynapses.back());
+    }
+
+    initializeWeightQuantizer();
+}
+
+
+
+template <class T>
+void N2D2::FcCell_Frame<T>::initializeWeightQuantizer()
+{
+    if (mQuantizer) {
+        for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
+            mQuantizer->addWeights(mSynapses[k], mDiffSynapses[k]);
+        }
+        if (!mNoBias) {
+            mQuantizer->addBiases(mBias, mDiffBias);
+        }
+        mQuantizer->initialize();
+    }
+}
+
+
+template <class T>
+void N2D2::FcCell_Frame<T>::initializeDataDependent(){
+    Cell_Frame<T>::initializeDataDependent();
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].size() == 0)
+            throw std::runtime_error("Zero-sized input for FcCell " + mName);
+    }
+}
+
 template <class T>
 void N2D2::FcCell_Frame<T>::save(const std::string& dirName) const
 {
@@ -132,6 +189,7 @@ void N2D2::FcCell_Frame<T>::load(const std::string& dirName)
     if (!mNoBias)
         mBiasSolver->load(dirName + "/BiasSolver");
 }
+
 
 template <class T>
 void N2D2::FcCell_Frame<T>::propagate(bool inference)

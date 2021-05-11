@@ -1,0 +1,68 @@
+/*
+    (C) Copyright 2020 CEA LIST. All Rights Reserved.
+    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                    Cyril MOINEAU (cyril.moineau@cea.fr)
+                    Johannes THIELE (johannes.thiele@cea.fr)
+
+    This software is governed by the CeCILL-C license under French law and
+    abiding by the rules of distribution of free software.  You can  use,
+    modify and/ or redistribute the software under the terms of the CeCILL-C
+    license as circulated by CEA, CNRS and INRIA at the following URL
+    "http://www.cecill.info".
+
+    As a counterpart to the access to the source code and  rights to copy,
+    modify and redistribute granted by the license, users are provided only
+    with a limited warranty  and the software's author,  the holder of the
+    economic rights,  and the successive licensors  have only  limited
+    liability.
+
+    The fact that you are presently reading this means that you have had
+    knowledge of the CeCILL-C license and that you accept its terms.
+*/
+
+#ifdef PYBIND
+#include "Cell/Cell.hpp"
+#include "StimuliProvider.hpp"
+#include "Target/Target.hpp"
+#include "Target/TargetScore.hpp"
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+namespace py = pybind11;
+
+
+namespace N2D2 {
+void init_TargetScore(py::module &m) {
+    py::class_<TargetScore, std::shared_ptr<TargetScore>, Target>(m, "TargetScore", py::multiple_inheritance())
+    .def(py::init<
+        const std::string&, 
+        const std::shared_ptr<Cell>&, 
+        const std::shared_ptr<StimuliProvider>&,
+        double,
+        double,
+        unsigned int,
+        const std::string&,
+        bool>(),
+        py::arg("name"), 
+        py::arg("cell"), 
+        py::arg("sp"), 
+        py::arg("targetValue") = 1.0,
+        py::arg("defaultValue") = 0.0, 
+        py::arg("topN") = 1, /* NOTE: this name is incoherent with the normal convention in the C++ class constructor ('targetTopN' vs. 'topN'). We choose the INI convention*/
+        py::arg("labelsMapping") = "", 
+        py::arg("createMissingLabels") = false)
+    .def("getAverageSuccess", &TargetScore::getAverageSuccess, py::arg("set"), py::arg("avgWindow")=0)
+    .def("getAverageScore", &TargetScore::getAverageScore, py::arg("set"), py::arg("metric"))
+    .def("getAverageTopNSuccess", &TargetScore::getAverageTopNSuccess, py::arg("set"), py::arg("avgWindow")=0)
+    .def("getAverageTopNScore", &TargetScore::getAverageScore, py::arg("set"), py::arg("metric"))
+    .def("clearSuccess", &TargetScore::clearSuccess, py::arg("set"))
+    .def("clearScore", &TargetScore::clearScore, py::arg("set"))
+    .def("clear", &TargetScore::clearScore, py::arg("set"))
+    .def("process", &TargetScore::process, py::arg("set"))
+    .def("logSuccess", &TargetScore::logSuccess, py::arg("fileName"), py::arg("set"), py::arg("avgWindow") = 0)
+    .def("logConfusionMatrix", &TargetScore::logConfusionMatrix, py::arg("fileName"), py::arg("set"));
+}
+}
+#endif
+

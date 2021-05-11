@@ -75,6 +75,7 @@ public:
 
     virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     virtual void initialize();
+    virtual void initializeDataDependent();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();

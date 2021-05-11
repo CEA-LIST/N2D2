@@ -53,7 +53,9 @@ public:
     };
 
     std::pair<double, double> getOutputRange() const;
-
+    double getAlpha(){
+        return mAlpha;
+    };
     virtual ~TanhActivation() {};
 
 protected:

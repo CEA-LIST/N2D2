@@ -162,6 +162,14 @@ public:
     {
         return mDilationDims[1];
     };
+    std::shared_ptr<Filler> getWeightsFiller()
+    {
+        return mWeightsFiller;
+    };
+    std::shared_ptr<Filler> getBiasFiller()
+    {
+        return mBiasFiller;
+    };
     std::shared_ptr<Solver> getWeightsSolver()
     {
         return mWeightsSolver;

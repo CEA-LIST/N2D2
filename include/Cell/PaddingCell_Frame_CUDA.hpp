@@ -41,10 +41,10 @@ class PaddingCell_Frame_CUDA : public virtual PaddingCell, public Cell_Frame_CUD
 public:
     PaddingCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                            unsigned int nbOutputs,
-                           int topPad,
-                           int botPad,
-                           int leftPad,
-                           int rightPad);
+                           int topPad = 0,
+                           int botPad = 0,
+                           int leftPad = 0,
+                           int rightPad = 0);
     static std::shared_ptr<PaddingCell> create(const DeepNet& deepNet, const std::string& name,
                                                 unsigned int nbOutputs,
                                                 int topPad = 0,
@@ -61,6 +61,7 @@ public:
     }
 
     virtual void initialize();
+    virtual void initializeDataDependent();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();

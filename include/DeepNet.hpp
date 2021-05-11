@@ -115,6 +115,7 @@ public:
 #endif
     void test(Database::StimuliSet set = Database::Test,
               std::vector<std::pair<std::string, double> >* timings = NULL);
+    void propagate(bool inference);
     void propagate(Database::StimuliSet set,
                    bool inference,
                 std::vector<std::pair<std::string, double> >* timings = NULL);
@@ -193,6 +194,9 @@ public:
 
     bool hasCell(const std::string& name) const;
 
+    std::string getName() const {
+        return mName;
+    };
 
     std::shared_ptr<Monitor> getMonitor(const std::string& name) const;
     std::shared_ptr<CMonitor> getCMonitor(const std::string& name) const;

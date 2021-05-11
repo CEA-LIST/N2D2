@@ -64,6 +64,12 @@ public:
     {
         return mScaleSolver;
     };
+    double getEpsilon(){
+        return mEpsilon;
+    };
+    double getMovingAverageMomentum(){
+        return mMovingAverageMomentum;
+    };
     std::shared_ptr<Solver> getBiasSolver()
     {
         return mBiasSolver;

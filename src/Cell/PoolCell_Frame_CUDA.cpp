@@ -219,6 +219,17 @@ namespace N2D2 {
     }
 }
 
+
+
+
+template <class T>
+void N2D2::PoolCell_Frame_CUDA<T>::initializeDataDependent()
+{
+    Cell_Frame_CUDA<T>::initializeDataDependent();
+    initialize();
+}
+
+
 template <class T>
 void N2D2::PoolCell_Frame_CUDA<T>::propagate(bool inference)
 {

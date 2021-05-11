@@ -58,6 +58,18 @@ public:
         return depth;
     };
     virtual ~FlipTransformation() {};
+    bool getHorizontalFlip(){
+        return mHorizontalFlip;
+    };
+    bool getVerticalFlip(){
+        return mVerticalFlip;
+    };
+    bool getRandomHorizontalFlip(){
+        return mRandomHorizontalFlip;
+    };
+    bool getRandomVerticalFlip(){
+        return mRandomVerticalFlip;
+    };
 
 private:
     virtual FlipTransformation* doClone() const

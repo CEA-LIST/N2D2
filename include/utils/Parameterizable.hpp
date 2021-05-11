@@ -46,18 +46,24 @@ public:
     template <class T> void copy(const Parameter_T& value);
     template <class T> std::ostream& print(std::ostream& os) const;
     template <class T> std::istream& read(std::istream& is) const;
+    
+    virtual std::string getPyType() {
+        return std::string("other");
+    }
+
     virtual ~Parameter_T() {};
 
     friend std::ostream& operator<<(std::ostream&, const Parameter_T&);
     friend std::istream& operator>>(std::istream&, const Parameter_T&);
+    void* mValue;
+    const std::type_info* mType;
 
 private:
     typedef void (Parameter_T::*Copy_PT)(const Parameter_T&);
     typedef std::ostream& (Parameter_T::*Print_PT)(std::ostream&) const;
     typedef std::istream& (Parameter_T::*Read_PT)(std::istream&) const;
 
-    void* mValue;
-    const std::type_info* mType;
+    
     Copy_PT mCopy;
     Print_PT mPrint;
     Read_PT mRead;
@@ -225,6 +231,7 @@ public:
                                        bool ignoreUnknown = false);
     template <class T> T getParameter(const std::string& name) const;
     std::string getParameter(const std::string& name) const;
+    std::pair<std::string, std::string> getParameterAndType(const std::string& name) const;
     std::map<std::string, std::string> getParameters() const;
 
     /**
@@ -257,7 +264,6 @@ public:
     template <class T> friend class Parameter;
     template <class T> friend class ParameterWithSpread;
 
-private:
     std::map<std::string, Parameter_T*> mParameters;
 };
 
@@ -275,7 +281,15 @@ public:
             throw std::runtime_error("Parameter already exists: " + name);
 
         (*p).mParameters[name] = this;
+
+        //mPyType = getPyType();
     }
+
+    // Default is string (notably most complex arguments, like class specific enums)
+    virtual std::string getPyType() {
+        return std::string("string");
+    }
+
 
     Parameter& operator=(const T& value)
     {
@@ -334,6 +348,7 @@ private:
 
     Parameter(const Parameter&); // non construction-copyable
 };
+
 
 template <class T> class ParameterWithSpread : public Parameter_T {
 public:
@@ -463,6 +478,7 @@ private:
     Spread<T> mValue;
 };
 }
+
 
 template <class T>
 N2D2::Parameter_T::Parameter_T(T& value)

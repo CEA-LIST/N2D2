@@ -89,6 +89,17 @@ public:
     virtual void replaceInput(BaseTensor& oldInputs,
                               BaseTensor& newInputs,
                               BaseTensor& newDiffOutputs);
+
+    virtual void clearInputTensors();
+    virtual void clearOutputTensors();
+    virtual void initializeDataDependent();
+    virtual void linkInput(Cell* cell);
+    virtual void linkInput(StimuliProvider& sp,  
+                    unsigned int x0,
+                    unsigned int y0,
+                    unsigned int width,
+                    unsigned int height);
+
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
@@ -107,6 +118,8 @@ public:
     virtual const BaseTensor& getInputs(unsigned int index = 0) const;
     virtual BaseTensor& getOutputs();
     virtual const BaseTensor& getOutputs() const;
+    virtual void setDiffInputs(BaseTensor&);
+    virtual void setDiffInputsValid();
     virtual BaseTensor& getDiffInputs();
     virtual const BaseTensor& getDiffInputs() const;
     virtual BaseTensor& getDiffOutputs(unsigned int index = 0);

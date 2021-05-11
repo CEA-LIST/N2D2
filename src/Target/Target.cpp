@@ -643,7 +643,7 @@ void N2D2::Target::process(Database::StimuliSet set)
         }
         std::shared_ptr<CudaDeviceTensor<Float_T> > value
             = cuda_device_tensor_cast<Float_T>(*outputsCudaBaseTensor);
-            
+        
         process_Frame_CUDA(value->getDevicePtr(), batchSize);
     }
     else {
@@ -665,7 +665,7 @@ void N2D2::Target::process(Database::StimuliSet set)
             estimatedLabels.synchronizeDBasedToH();
             estimatedLabelsValue.synchronizeDBasedToH();
 
-            std::cout << "[";
+            /*std::cout << "[";
 
             for (int i = 0; i < (int)estimatedLabelsValue.dimZ(); ++i) {
                 std::cout << estimatedLabels(0, 0, i, 0) << ":"
@@ -674,7 +674,7 @@ void N2D2::Target::process(Database::StimuliSet set)
                     << estimatedLabelsValue(0, 0, i, 0) << " ";
             }
 
-            std::cout << "]" << std::endl;
+            std::cout << "]" << std::endl;*/
             display = false;
         }
     }
@@ -1330,6 +1330,7 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
                         : std::string("jpg");
 
                 jsonName = dirPath + "/" + imgFile.str() + "." + fileExtension;
+
             }
         }
 /*

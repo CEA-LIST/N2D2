@@ -277,6 +277,10 @@ public:
                                 <ROI*>());
 
     // Getters
+    bool getLoadDataInMemory(){
+        return mLoadDataInMemory;
+    };
+    
     inline StimulusID getStimulusID(StimuliSet set, unsigned int index) const;
     std::string getStimulusName(StimulusID id, bool appendSlice = true) const;
     inline std::string getStimulusName(StimuliSet set,

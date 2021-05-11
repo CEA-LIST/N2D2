@@ -97,6 +97,15 @@ void N2D2::ElemWiseCell_Frame_CUDA::initialize()
         mInterTerm.resize(mOutputs.dims());
 }
 
+
+void N2D2::ElemWiseCell_Frame_CUDA::initializeDataDependent()
+{
+    // NOTE: this is addition to initialize()
+    Cell_Frame_CUDA<Float_T>::initializeDataDependent();
+
+    initialize();
+}
+
 void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
 {
     const unsigned int nbInputs = mInputs.size();
