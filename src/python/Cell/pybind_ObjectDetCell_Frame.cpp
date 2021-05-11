@@ -22,6 +22,7 @@
 
 #ifdef PYBIND
 #include "Cell/ObjectDetCell_Frame.hpp"
+#include "Cell/AnchorCell_Frame_Kernels_struct.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -37,6 +38,8 @@ void init_ObjectDetCell_Frame(py::module &m) {
     StimuliProvider&,
     const unsigned int,
     unsigned int,
+    const AnchorCell_Frame_Kernels::Format,
+    const AnchorCell_Frame_Kernels::PixelFormat,
     unsigned int,
     unsigned int,
     Float_T,
@@ -49,6 +52,8 @@ void init_ObjectDetCell_Frame(py::module &m) {
     py::arg("sp"),
     py::arg("nbOutputs"),
     py::arg("nbAnchors"),
+    py::arg("inputFormat"),
+    py::arg("pixelFormat"),
     py::arg("nbProposals"),
     py::arg("nbClass"),
     py::arg("nmsThreshold") = 0.5,

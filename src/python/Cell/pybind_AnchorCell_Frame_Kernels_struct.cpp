@@ -46,7 +46,21 @@ void init_AnchorCell_Frame_Kernels_struct(py::module &m) {
     .def(py::init<float, float, AnchorCell_Frame_Kernels::Anchor::Anchoring>(), py::arg("width"), py::arg("height"), py::arg("anchoring") = AnchorCell_Frame_Kernels::Anchor::Anchoring::TopLeft)
     .def(py::init<unsigned int, double, double, AnchorCell_Frame_Kernels::Anchor::Anchoring>(), py::arg("area"), py::arg("ratio"), py::arg("scale") = 1.0, py::arg("anchoring") = AnchorCell_Frame_Kernels::Anchor::Anchoring::TopLeft)
     ;
-}
+    py::enum_<AnchorCell_Frame_Kernels::DetectorType>(m, "DetectorType")
+    .value("LapNet", AnchorCell_Frame_Kernels::DetectorType::LapNet)
+    .value("SSD", AnchorCell_Frame_Kernels::DetectorType::SSD)
+    .value("YOLO", AnchorCell_Frame_Kernels::DetectorType::YOLO)
+    .export_values();
+    py::enum_<AnchorCell_Frame_Kernels::Format>(m, "Format")
+    .value("CA", AnchorCell_Frame_Kernels::Format::CA)
+    .value("AC", AnchorCell_Frame_Kernels::Format::AC)
+    .export_values();
+    py::enum_<AnchorCell_Frame_Kernels::PixelFormat>(m, "PixelFormat")
+    .value("XY", AnchorCell_Frame_Kernels::PixelFormat::XY)
+    .value("YX", AnchorCell_Frame_Kernels::PixelFormat::YX)
+    .export_values();
+
+}    
 
 }
 #endif
