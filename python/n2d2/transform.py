@@ -56,6 +56,15 @@ class PadCropTransformation():
         return self.trans.apply(x)
 """
 
+# TODO : Change binding to expose apply method 
+# class CustomTransformation(Transformation):
+#     def __init__(self, custom_transformation):
+#         super().__init__()
+#         self._transformation = custom_transformation
+
+# https://pybind11.readthedocs.io/en/stable/reference.html#c.PYBIND11_OVERRIDE
+# https://pybind11.readthedocs.io/en/stable/advanced/classes.html#overriding-virtuals
+
 class Transformation(N2D2_Interface, ABC):
 
     @abstractmethod
@@ -529,8 +538,3 @@ class ChannelExtraction(Transformation):
                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
 
-# TODO : Change binding to expose apply method 
-# class CustomTransformation(Transformation):
-#     def __init__(self, custom_transformation):
-#         super().__init__()
-#         self._transformation = custom_transformation

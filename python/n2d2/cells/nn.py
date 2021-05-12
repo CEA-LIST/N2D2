@@ -79,14 +79,14 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
         else:
             self.datatype = n2d2.global_variables.default_datatype
         self._connection_parameters = {}
-        if 'mapping' in config_parameters: # TODO : Some cells don't support mapping
-            mapping = config_parameters.pop('mapping')
-            if isinstance(mapping, n2d2.Tensor):
-                if mapping.data_type() != bool:
-                    raise ValueError("Mapping Tensor datatype should be boolean !")
-                self._connection_parameters['mapping'] = mapping.N2D2()
-            else:
-                raise WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor))])
+        # if 'mapping' in config_parameters: # Some cells don't support mapping ...
+        #     mapping = config_parameters.pop('mapping')
+        #     if isinstance(mapping, n2d2.Tensor):
+        #         if mapping.data_type() != bool:
+        #             raise ValueError("Mapping Tensor datatype should be boolean !")
+        #         self._connection_parameters['mapping'] = mapping.N2D2()
+        #     else:
+        #         raise WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor))])
 
 
         self._model_key = self._model + '<' + self.datatype + '>'
@@ -106,24 +106,6 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
     def _infer_deepnet(self, inputs):
         if isinstance(inputs, n2d2.tensor.Interface) or isinstance(inputs, n2d2.tensor.Tensor):
             deepnet = inputs.get_deepnet()
-        # if isinstance(inputs, n2d2.tensor.Tensor):
-        #     deepnet = inputs.get_deepnet()
-        #     if deepnet is None:
-        #         deepnet = n2d2.deepnet.DeepNet()
-        
-        # elif isinstance(inputs, list):
-        #     if len(inputs) == 0:
-        #         raise RuntimeError("List with 0 elements cannot provide a deepNet")
-        #     else:
-        #         last_deepnet = None
-        #         for ipt in inputs:
-        #             deepnet = self._infer_deepnet(ipt)
-        #             if last_deepnet is not None:
-        #                 if not id(deepnet) == id(last_deepnet):
-        #                     raise RuntimeError("Elements of cells input have different deepnets. "
-        #                                        "Cannot infer implicit deepnet")
-        #             last_deepnet = deepnet
-        #         deepnet = last_deepnet
         else:
             raise TypeError("Object of type " + str(type(inputs)) + " cannot implicitly provide a deepNet to cells.")
         return deepnet
@@ -358,23 +340,30 @@ class Fc(NeuralNetworkCell):
                                                                      self.get_name(),
                                                                      self._constructor_arguments['nb_outputs']))
         # Set connection and mapping parameters
-        for key in self._config_parameters:
-            if key is 'inputOffsetX':
-                self._connection_parameters['x0'] = self._config_parameters.pop('inputOffsetX')
-            elif key is 'inputOffsetY':
-                self._connection_parameters['y0'] = self._config_parameters.pop('inputOffsetY')
-            elif key is 'inputWidth':
-                self._connection_parameters['width'] = self._config_parameters.pop('inputWidth')
-            elif key is 'inputHeight':
-                self._connection_parameters['height'] = self._config_parameters.pop('inputHeight')
-            # elif key is 'mapping':
-            #     mapping = self._config_parameters.pop('mapping')
-            #     if isinstance(mapping, n2d2.mapping.Mapping):
-            #         self._connection_parameters['mapping'] = mapping.create_mapping(nb_inputs, nb_outputs).N2D2()
-            #     elif isinstance(mapping, n2d2.Tensor):
-            #         self._connection_parameters['mapping'] = mapping.N2D2()
-            #     else:
-            #         raise WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor)), str(type(n2d2.mapping.Mapping))])
+        """Set connection and mapping parameters"""
+        if 'mapping' in self._config_parameters:
+            mapping = self._config_parameters.pop('mapping')
+            if isinstance(mapping, n2d2.Tensor):
+                self._connection_parameters['mapping'] = mapping.N2D2()
+            else:
+                raise n2d2.error_handler.WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor))])
+        # for key in self._config_parameters:
+        #     if key is 'inputOffsetX':
+        #         self._connection_parameters['x0'] = self._config_parameters.pop('inputOffsetX')
+        #     elif key is 'inputOffsetY':
+        #         self._connection_parameters['y0'] = self._config_parameters.pop('inputOffsetY')
+        #     elif key is 'inputWidth':
+        #         self._connection_parameters['width'] = self._config_parameters.pop('inputWidth')
+        #     elif key is 'inputHeight':
+        #         self._connection_parameters['height'] = self._config_parameters.pop('inputHeight')
+        #     elif key is 'mapping':
+        #         mapping = self._config_parameters.pop('mapping')
+        #         if isinstance(mapping, n2d2.mapping.Mapping):
+        #             self._connection_parameters['mapping'] = mapping.create_mapping(nb_inputs, nb_outputs).N2D2()
+        #         elif isinstance(mapping, n2d2.Tensor):
+        #             self._connection_parameters['mapping'] = mapping.N2D2()
+        #         else:
+        #             raise WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor)), str(type(n2d2.mapping.Mapping))])
 
         if 'activation' not in self._config_parameters:
             self._config_parameters['activation'] = \
@@ -691,15 +680,15 @@ class Conv(NeuralNetworkCell):
                                                                      **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
 
 
-        # """Set connection and mapping parameters"""
-        # if 'mapping' in self._config_parameters:
-        #     mapping = self._config_parameters.pop('mapping')
-        #     if isinstance(mapping, n2d2.mapping.Mapping):
-        #         self._connection_parameters['mapping'] = mapping.create_mapping(nb_inputs, nb_outputs).N2D2()
-        #     elif isinstance(mapping, n2d2.Tensor):
-        #         self._connection_parameters['mapping'] = mapping.N2D2()
-        #     else:
-        #         raise WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor)), str(type(n2d2.mapping.Mapping))])
+        """Set connection and mapping parameters"""
+        if 'mapping' in self._config_parameters:
+            mapping = self._config_parameters.pop('mapping')
+            # if isinstance(mapping, n2d2.mapping.Mapping):
+            #     self._connection_parameters['mapping'] = mapping.create_mapping(nb_inputs, nb_outputs).N2D2()
+            if isinstance(mapping, n2d2.Tensor):
+                self._connection_parameters['mapping'] = mapping.N2D2()
+            else:
+                raise n2d2.error_handler.WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor))])
 
 
         # TODO: Add Kernel section of generator
@@ -1097,13 +1086,13 @@ class Pool(NeuralNetworkCell):
             self._optional_constructor_arguments['pooling'] = \
                 N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
 
-        # """Set connection and mapping parameters"""
-        # if 'mapping' in self._config_parameters: 
-        #     mapping = self._config_parameters.pop('mapping')
-        #     if isinstance(mapping, n2d2.mapping.Mapping) or isinstance(mapping, n2d2.Tensor):
-        #         self._connection_parameters['mapping'] = mapping
-        #     else:
-        #         raise WrongInputType('mapping', type(mapping), [str(type(n2d2.mapping.Mapping)), str(type(n2d2.Tensor))])
+        """Set connection and mapping parameters"""
+        if 'mapping' in self._config_parameters: 
+            mapping = self._config_parameters.pop('mapping')
+            if isinstance(mapping, n2d2.Tensor):
+                self._connection_parameters['mapping'] = mapping
+            else:
+                raise n2d2.error_handler.WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor))])
 
 
     @classmethod
@@ -1175,7 +1164,7 @@ class Pool(NeuralNetworkCell):
                 mapping = self._connection_parameters['mapping']
                 if mapping.dimX() != mapping.dimY():
                     raise ValueError("Pool Cell supports only unit maps")
-                self._N2D2_object.initializeParameters(0, 1, mapping)
+                self._N2D2_object.initializeParameters(0, 1, mapping.N2D2())
             else:
                 # input(inputs.dims()[2])
                 self._N2D2_object.initializeParameters(0, 1, n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(mapping_row, mapping_row).N2D2())
@@ -1447,16 +1436,15 @@ class Deconv(NeuralNetworkCell):
                                                                      self._constructor_arguments['nb_outputs'],
                                                                      **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
 
-        # """Set connection and mapping parameters"""
-        # if 'mapping' in self._config_parameters:
-        #     mapping = self._config_parameters.pop('mapping')
-        #     if isinstance(mapping, n2d2.mapping.Mapping):
-        #         self._connection_parameters['mapping'] = mapping.create_mapping(nb_inputs, nb_outputs).N2D2()
-        #     elif isinstance(mapping, n2d2.Tensor):
-        #         self._connection_parameters['mapping'] = mapping.N2D2()
-        #     else:
-        #         raise WrongInputType('mapping', type(mapping),
-        #                              [str(type(n2d2.Tensor)), str(type(n2d2.mapping.Mapping))])
+        """Set connection and mapping parameters"""
+        if 'mapping' in self._config_parameters:
+            mapping = self._config_parameters.pop('mapping')
+            # if isinstance(mapping, n2d2.mapping.Mapping):
+            #     self._connection_parameters['mapping'] = mapping.create_mapping(nb_inputs, nb_outputs).N2D2()
+            if isinstance(mapping, n2d2.Tensor):
+                self._connection_parameters['mapping'] = mapping.N2D2()
+            else:
+                raise n2d2.error_handler.WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor))])
 
         # TODO: Add Kernel section of generator
 
