@@ -31,3 +31,13 @@ test:ubuntu:
     - cmake -DCMAKE_BUILD_TYPE=Debug ..
     - make tests -j4
     - make test
+
+test:python_api:
+  stage: test
+  tags:
+    - python_api
+  image: "python:3.7"
+  before_script:
+    - pip install -r python/requirements.txt
+  script:
+    - python -m unittest discover -s python/tests
