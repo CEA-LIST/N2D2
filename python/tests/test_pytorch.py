@@ -165,9 +165,9 @@ class NIT(torch.nn.Module):
 
                 numpy_tensor = x.cpu().detach().numpy()
                 if x.is_cuda:
-                    n2d2_tensor = tensor.CUDA_Tensor([3, 3], datatype=float)
+                    n2d2_tensor = tensor.CUDA_Tensor([3, 3], datatype="float")
                 else:
-                    n2d2_tensor = tensor.Tensor([3, 3], datatype=float)        
+                    n2d2_tensor = tensor.Tensor([3, 3], datatype="float")        
                 n2d2_tensor.from_numpy(numpy_tensor)
 
                 if x.is_cuda:

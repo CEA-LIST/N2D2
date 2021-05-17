@@ -111,7 +111,7 @@ You can create a mapping manually with a :py:class:`n2d2.Tensor` object :
 
 .. testcode::
 
-        mapping=n2d2.Tensor([15, 24], datatype=bool)
+        mapping=n2d2.Tensor([15, 24], datatype="bool")
         mapping.set_values([
         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1],
         [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1],

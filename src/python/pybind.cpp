@@ -45,6 +45,7 @@ void init_Target(py::module&);
 void init_TargetScore(py::module&);
 
 void init_DeepNet(py::module&);
+void init_DeepNetExport(py::module&);
 void init_DrawNet(py::module&);
 //Database
 void init_Database(py::module&);
@@ -325,6 +326,8 @@ void init_N2D2(py::module& m) {
 
 
     init_DeepNet(m);
+    init_DeepNetExport(m);
+
     init_DrawNet(m);
 
     //Activation

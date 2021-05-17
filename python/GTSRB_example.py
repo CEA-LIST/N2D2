@@ -60,7 +60,7 @@ conv_config = ConfigSection(activation=Rectifier(),
                             weights_solver=SGD(**solver_config), 
                             no_bias=True)
 
-conv2_mapping=n2d2.Tensor([32, 48], datatype=bool)
+conv2_mapping=n2d2.Tensor([32, 48], datatype="bool")
 conv2_mapping.set_values([
 [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
 [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],

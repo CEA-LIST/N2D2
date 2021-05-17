@@ -50,7 +50,7 @@ def bn_def():
 
 class LeNet(Sequence):
     def __init__(self, nb_outputs=10):
-        conv2_mapping = n2d2.Tensor([6, 16], datatype=bool)
+        conv2_mapping = n2d2.Tensor([6, 16], datatype="bool")
         conv2_mapping.set_values([
             [1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1],
             [1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1],

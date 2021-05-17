@@ -274,8 +274,9 @@ class Fc(NeuralNetworkCell):
     """
 
     _cell_constructors = {
-            'Frame<float>': N2D2.FcCell_Frame_float,
-            'Frame_CUDA<float>': N2D2.FcCell_Frame_CUDA_float,
+        'Frame<double>': N2D2.FcCell_Frame_double,
+        'Frame<float>': N2D2.FcCell_Frame_float,
+        'Frame_CUDA<float>': N2D2.FcCell_Frame_CUDA_float,
     }
 
     _parameters = {

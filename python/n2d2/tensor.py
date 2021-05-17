@@ -33,20 +33,32 @@ hard_coded_type = {
     "int": int,
     "b": bool,
     "bool": bool,
+    "d": float,
+    "double": float,
+
 }
 
 
 class Tensor:
     
     _tensor_generators = {
-        float: N2D2.Tensor_float,
-        int: N2D2.Tensor_int,
-        bool: N2D2.Tensor_bool,
+        "f": N2D2.Tensor_float,
+        "float": N2D2.Tensor_float,
+        "i": N2D2.Tensor_int,
+        "int": N2D2.Tensor_int,
+        "b": N2D2.Tensor_bool,
+        "bool": N2D2.Tensor_bool,
+        "d": N2D2.Tensor_double,
+        "double": N2D2.Tensor_double,
     }
     _cuda_tensor_generators = {
-        float: N2D2.CudaTensor_float,
-        int: N2D2.CudaTensor_int,
+        "f": N2D2.CudaTensor_float,
+        "float": N2D2.CudaTensor_float,
+        "i": N2D2.CudaTensor_int,
+        "int": N2D2.CudaTensor_int,
         # bool: N2D2.CudaTensor_bool, # Not defined
+        "d": N2D2.CudaTensor_double,
+        "double": N2D2.CudaTensor_double,
     }
     
     _dim_format = {
@@ -54,14 +66,14 @@ class Tensor:
         "Numpy": lambda x: [i for i in reversed(x)],
     }
 
-    def __init__(self, dims, value=None, cuda=False, datatype=float, cell=None, dim_format='Numpy'):
+    def __init__(self, dims, value=None, cuda=False, datatype="float", cell=None, dim_format='Numpy'):
         """
         :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (the convention used depends of the ``dim_format`` argument, by default it's the same as ``Numpy``)
         :type dims: list
         :param value: A value to fill the :py:class:`n2d2.Tensor` object.
         :type value: Must be coherent with ``datatype``
-        :param datatype: Type of the data stocked by the tensor, default=float
-        :type datatype: type, optional
+        :param datatype: Type of the data stocked by the tensor, default=``float``
+        :type datatype: str, optional
         :param cell: A reference to the object that created this tensor, default=None
         :type cell: :py:class:`n2d2.cells.NeuralNetworkCell`, optional
         :param dim_format: Define the format used when you declare the dimensions of the tensor. The ``N2D2`` convention is the reversed of the ``Numpy`` the numpy one (e.g. a [2, 3] numpy array is equivalent to a [3, 2] N2D2 Tensor), default="Numpy"
@@ -88,7 +100,7 @@ class Tensor:
         else:
             raise error_handler.WrongInputType("dims", type(dims), [str(list)])
 
-        if value and not isinstance(value, datatype): # TODO : We may want to try an auto-cast ! 
+        if value and not isinstance(value, hard_coded_type[datatype]): # TODO : We may want to try an auto-cast ! 
             raise TypeError("You want to fill the tensor with " + str(type(value)) + " but " + str(datatype) + " is the datatype.")
 
         if datatype in generators:
@@ -310,11 +322,14 @@ class Tensor:
             except:
                 is_first_element = True
         data_type = type(first_element.item())
+        
+        # convert datatype to string
+        data_type = str(data_type).split("'")[1]
 
-        if data_type == bool:
+        if data_type == "bool":
             # Numpy -> N2D2 doesn't work for bool because there is no buffer protocol for it.
             n2d2_tensor._datatype = data_type
-            tmp_tensor = n2d2_tensor._tensor_generators[int](np_array)
+            tmp_tensor = n2d2_tensor._tensor_generators["int"](np_array)
             shape = [d for d in reversed(tmp_tensor.dims())]
             n2d2_tensor._tensor = n2d2_tensor._tensor_generators[data_type](shape)
             for i, value in enumerate(tmp_tensor):
@@ -338,7 +353,8 @@ class Tensor:
             raise error_handler.WrongInputType("N2D2_Tensor", str(type(N2D2_Tensor)), [str(N2D2.BaseTensor)])
         n2d2_tensor = cls([])
         n2d2_tensor._tensor = N2D2_Tensor
-        n2d2_tensor._datatype = hard_coded_type[N2D2_Tensor.getTypeName()]
+        print(N2D2_Tensor.getTypeName())
+        n2d2_tensor._datatype = N2D2_Tensor.getTypeName()
         n2d2_tensor.is_cuda = "CudaTensor" in str(type(N2D2_Tensor)) 
         return n2d2_tensor
 
@@ -355,11 +371,11 @@ class Tensor:
         :param value: The value the item will take
         :type value: same type as self._datatype
         """
-        if not isinstance(value, self._datatype):
+        if not isinstance(value, hard_coded_type[self._datatype]):
             try:
-                value = self._datatype(value)
+                value = hard_coded_type[self._datatype](value)
             except:
-                raise RuntimeError("Autocast failed, tried to cast : " + str(type(value)) + " to " + str(self._datatype))
+                raise RuntimeError("Autocast failed, tried to cast : " + str(type(value)) + " to " + self._datatype)
 
         if isinstance(index, tuple) or isinstance(index, list):
             self._tensor[self._get_index(index)] = value

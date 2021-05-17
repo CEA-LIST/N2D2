@@ -64,7 +64,7 @@ class test_Fc(test_params):
             "weights_filler": n2d2.filler.Normal(),
             "bias_filler": n2d2.filler.Normal(),
             'no_bias': True,
-            "mapping": n2d2.Tensor([5, 5],  datatype=bool),
+            "mapping": n2d2.Tensor([5, 5],  datatype="bool"),
             "quantizer": n2d2.quantizer.SATCell(),
         }
         self.object = n2d2.cells.Fc(10, 5, **self.parameters)
@@ -98,7 +98,7 @@ class test_Conv(test_params):
             "no_bias": True,
             "back_propagate": True,
             "weights_export_flip": True,
-            "mapping": n2d2.Tensor([5, 5],  datatype=bool),
+            "mapping": n2d2.Tensor([5, 5],  datatype="bool"),
             "quantizer": n2d2.quantizer.SATCell(),
         }
         self.object = n2d2.cells.Conv(10, 5, [2, 2], **self.parameters)
@@ -147,7 +147,7 @@ class test_Pool(test_params):
             "stride_dims": [2, 2],
             "padding_dims": [1, 1],
             "activation": n2d2.activation.Linear(),
-            "mapping": n2d2.Tensor([5, 5],  datatype=bool),
+            "mapping": n2d2.Tensor([5, 5],  datatype="bool"),
         }
         self.object = n2d2.cells.Pool([1, 1], **self.parameters)
 
@@ -180,7 +180,7 @@ class test_Deconv(test_params):
             "no_bias": True,
             "back_propagate": True,
             "weights_export_flip": True,
-            "mapping": n2d2.Tensor([5, 5],  datatype=bool),
+            "mapping": n2d2.Tensor([5, 5],  datatype="bool"),
         }
         self.object = n2d2.cells.Deconv(10, 5, [2, 2], **self.parameters)
 
