@@ -30,7 +30,7 @@ from n2d2.filler import He, Xavier
 from n2d2.solver import SGD
 from n2d2 import ConfigSection
 
-nb_epoch = 10
+nb_epoch = 1
 batch_size = 24
 n2d2.global_variables.default_model = "Frame_CUDA"
 n2d2.global_variables.set_cuda_device(0)

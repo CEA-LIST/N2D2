@@ -136,7 +136,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#pool">Pool</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#configuration-section">Configuration section</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-section">Configuration section</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#example">Example :</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#mapping">Mapping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#solver">Solver</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#sgd">SGD</a></li>
@@ -153,6 +156,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#linear">Linear</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#rectifier">Rectifier</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tanh">Tanh</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#loss-function">Loss function</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#crossentropyclassifier">CrossEntropyClassifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#meansquareerrorregression">MeanSquareErrorRegression</a></li>
 </ul>
 </li>
 </ul>
@@ -332,10 +340,10 @@
 <li><p><strong>dilation_dims</strong> (<em>list</em><em>, </em><em>optional</em>) – Dimensions of the dilation of the kernels</p></li>
 <li><p><strong>activation</strong> (<a class="reference internal" href="#n2d2.activation.ActivationFunction" title="n2d2.activation.ActivationFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.ActivationFunction</span></code></a>, optional) – Activation function, default= <a class="reference internal" href="#n2d2.activation.Tanh" title="n2d2.activation.Tanh"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.Tanh</span></code></a></p></li>
 <li><p><strong>mapping</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.tensor.Tensor</span></code>) – Mapping</p></li>
-<li><p><strong>weights_filler</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code>, optional) – Weights initial values filler, default= <a class="reference internal" href="#n2d2.filler.Normal" title="n2d2.filler.Normal"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Normal</span></code></a></p></li>
-<li><p><strong>bias_filler</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code>, optional) – Biases initial values filler, default= <a class="reference internal" href="#n2d2.filler.Normal" title="n2d2.filler.Normal"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Normal</span></code></a></p></li>
-<li><p><strong>weights_solver</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.solver.Solver</span></code>, optional) – Solver for weights</p></li>
-<li><p><strong>bias_solver</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.solver.Solver</span></code>, optional) – Solver for biases</p></li>
+<li><p><strong>weights_filler</strong> (<a class="reference internal" href="#n2d2.filler.Filler" title="n2d2.filler.Filler"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code></a>, optional) – Weights initial values filler, default= <a class="reference internal" href="#n2d2.filler.Normal" title="n2d2.filler.Normal"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Normal</span></code></a></p></li>
+<li><p><strong>bias_filler</strong> (<a class="reference internal" href="#n2d2.filler.Filler" title="n2d2.filler.Filler"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code></a>, optional) – Biases initial values filler, default= <a class="reference internal" href="#n2d2.filler.Normal" title="n2d2.filler.Normal"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Normal</span></code></a></p></li>
+<li><p><strong>weights_solver</strong> (<a class="reference internal" href="#n2d2.solver.Solver" title="n2d2.solver.Solver"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.solver.Solver</span></code></a>, optional) – Solver for weights</p></li>
+<li><p><strong>bias_solver</strong> (<a class="reference internal" href="#n2d2.solver.Solver" title="n2d2.solver.Solver"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.solver.Solver</span></code></a>, optional) – Solver for biases</p></li>
 <li><p><strong>no_bias</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, don’t use bias, default=False</p></li>
 <li><p><strong>weights_export_flip</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, import/export flipped kernels, default=False</p></li>
 <li><p><strong>back_propagate</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, enable backpropagation, default=True</p></li>
@@ -466,10 +474,10 @@
 <li><p><strong>padding_dims</strong> (<em>list</em><em>, </em><em>optional</em>) – Dimensions of the padding.</p></li>
 <li><p><strong>dilation_dims</strong> (<em>list</em><em>, </em><em>optional</em>) – Dimensions of the dilation of the kernels</p></li>
 <li><p><strong>activation</strong> (<a class="reference internal" href="#n2d2.activation.ActivationFunction" title="n2d2.activation.ActivationFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.ActivationFunction</span></code></a>, optional) – Activation function, default= <a class="reference internal" href="#n2d2.activation.Tanh" title="n2d2.activation.Tanh"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.Tanh</span></code></a></p></li>
-<li><p><strong>weights_filler</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code>, optional) – Weights initial values filler, default=NormalFiller</p></li>
-<li><p><strong>bias_filler</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code>, optional) – Biases initial values filler, default=NormalFiller</p></li>
-<li><p><strong>weights_solver</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.solver.Solver</span></code>, optional) – Solver for weights</p></li>
-<li><p><strong>bias_solver</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.solver.Solver</span></code>, optional) – Solver for biases</p></li>
+<li><p><strong>weights_filler</strong> (<a class="reference internal" href="#n2d2.filler.Filler" title="n2d2.filler.Filler"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code></a>, optional) – Weights initial values filler, default=NormalFiller</p></li>
+<li><p><strong>bias_filler</strong> (<a class="reference internal" href="#n2d2.filler.Filler" title="n2d2.filler.Filler"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code></a>, optional) – Biases initial values filler, default=NormalFiller</p></li>
+<li><p><strong>weights_solver</strong> (<a class="reference internal" href="#n2d2.solver.Solver" title="n2d2.solver.Solver"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.solver.Solver</span></code></a>, optional) – Solver for weights</p></li>
+<li><p><strong>bias_solver</strong> (<a class="reference internal" href="#n2d2.solver.Solver" title="n2d2.solver.Solver"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.solver.Solver</span></code></a>, optional) – Solver for biases</p></li>
 <li><p><strong>no_bias</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, don’t use bias, default=False</p></li>
 <li><p><strong>back_propagate</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, enable backpropagation, default=True</p></li>
 <li><p><strong>weights_export_flip</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, import/export flipped kernels, default=False</p></li>
@@ -591,10 +599,10 @@
 <li><p><strong>from_arguments</strong> (<em>bool</em><em>, </em><em>optional</em>) – If False, allow you to create cells with mandatory arguments set as None, default=True</p></li>
 <li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name fo the cells.</p></li>
 <li><p><strong>activation</strong> (<a class="reference internal" href="#n2d2.activation.ActivationFunction" title="n2d2.activation.ActivationFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.ActivationFunction</span></code></a>, optional) – Activation function, default= <a class="reference internal" href="#n2d2.activation.Tanh" title="n2d2.activation.Tanh"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.activation.Tanh</span></code></a></p></li>
-<li><p><strong>weights_solver</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.solver.Solver</span></code>, optional) – Solver for weights, default=:py:class:<cite>n2d2.solver.SGD</cite></p></li>
-<li><p><strong>bias_solver</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.solver.Solver</span></code>, optional) – Solver for biases, default= <a class="reference internal" href="#n2d2.filler.Normal" title="n2d2.filler.Normal"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Normal</span></code></a></p></li>
-<li><p><strong>weights_filler</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code>, optional) – Weights initial values filler, default= <a class="reference internal" href="#n2d2.filler.Normal" title="n2d2.filler.Normal"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Normal</span></code></a></p></li>
-<li><p><strong>bias_filler</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code>, optional) – Biases initial values filler, default= <a class="reference internal" href="#n2d2.filler.Normal" title="n2d2.filler.Normal"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Normal</span></code></a></p></li>
+<li><p><strong>weights_solver</strong> (<a class="reference internal" href="#n2d2.solver.Solver" title="n2d2.solver.Solver"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.solver.Solver</span></code></a>, optional) – Solver for weights, default=:py:class:<cite>n2d2.solver.SGD</cite></p></li>
+<li><p><strong>bias_solver</strong> (<a class="reference internal" href="#n2d2.solver.Solver" title="n2d2.solver.Solver"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.solver.Solver</span></code></a>, optional) – Solver for biases, default= <a class="reference internal" href="#n2d2.filler.Normal" title="n2d2.filler.Normal"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Normal</span></code></a></p></li>
+<li><p><strong>weights_filler</strong> (<a class="reference internal" href="#n2d2.filler.Filler" title="n2d2.filler.Filler"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code></a>, optional) – Weights initial values filler, default= <a class="reference internal" href="#n2d2.filler.Normal" title="n2d2.filler.Normal"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Normal</span></code></a></p></li>
+<li><p><strong>bias_filler</strong> (<a class="reference internal" href="#n2d2.filler.Filler" title="n2d2.filler.Filler"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Filler</span></code></a>, optional) – Biases initial values filler, default= <a class="reference internal" href="#n2d2.filler.Normal" title="n2d2.filler.Normal"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.filler.Normal</span></code></a></p></li>
 <li><p><strong>mapping</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.tensor.Tensor</span></code>, optional) – Mapping</p></li>
 <li><p><strong>no_bias</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, don’t use bias, default=False</p></li>
 </ul>
@@ -987,19 +995,21 @@ In either case, this is followed by: for k, v in F.items(): D[k] = v</p>
 </dd></dl>
 
 <p><a class="reference internal" href="#n2d2.ConfigSection" title="n2d2.ConfigSection"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.ConfigSection</span></code></a> are used like dictionaries and passes to the constructor of classes like kwargs.</p>
-<p>For example :</p>
+<div class="section" id="example">
+<h3>Example :<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">conv_config</span> <span class="o">=</span> <span class="n">n2d2</span><span class="o">.</span><span class="n">ConfigSection</span><span class="p">(</span><span class="n">no_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">n2d2</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">Conv</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="o">**</span><span class="n">conv_config</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Creates a <a class="reference internal" href="#n2d2.cells.Conv" title="n2d2.cells.Conv"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.cells.Conv</span></code></a> with the parameter <cite>no_bias=True</cite>.
-This functionality allow you to write more concise code.</p>
+<p>This creates a <a class="reference internal" href="#n2d2.cells.Conv" title="n2d2.cells.Conv"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.cells.Conv</span></code></a> with the parameter <cite>no_bias=True</cite>.
+This functionality allow you to write more concise code, when multiple cells share the same parameters.</p>
+</div>
 </div>
 <div class="section" id="mapping">
 <h2>Mapping<a class="headerlink" href="#mapping" title="Permalink to this headline">¶</a></h2>
-<p>You can change the mapping of the input for some cells.</p>
+<p>You can change the mapping of the input for some cells (see if they have <code class="docutils literal notranslate"><span class="pre">mapping</span></code> parameter available).</p>
 <p>You can create a mapping manually with a <a class="reference internal" href="tensor.html#n2d2.Tensor" title="n2d2.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">n2d2.Tensor</span></code></a> object :</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">mapping</span><span class="o">=</span><span class="n">n2d2</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="mi">15</span><span class="p">,</span> <span class="mi">24</span><span class="p">],</span> <span class="n">datatype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">mapping</span><span class="o">=</span><span class="n">n2d2</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="mi">15</span><span class="p">,</span> <span class="mi">24</span><span class="p">],</span> <span class="n">datatype</span><span class="o">=</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span>
 <span class="n">mapping</span><span class="o">.</span><span class="n">set_values</span><span class="p">([</span>
 <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
 <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
@@ -1056,15 +1066,33 @@ This functionality allow you to write more concise code.</p>
 <div class="section" id="solver">
 <h2>Solver<a class="headerlink" href="#solver" title="Permalink to this headline">¶</a></h2>
 <p>You can associate to some cell a specific weight solver.</p>
-<dl class="simple">
-<dt>..autoclass:: n2d2.solver.Solver</dt><dd><dl class="field-list simple">
-<dt class="field-odd">members</dt>
-<dd class="field-odd"><p></p></dd>
-<dt class="field-even">inherited-members</dt>
-<dd class="field-even"><p></p></dd>
-</dl>
+<dl class="py class">
+<dt id="n2d2.solver.Solver">
+<em class="property">class </em><code class="sig-prename descclassname">n2d2.solver.</code><code class="sig-name descname">Solver</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.solver.Solver" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="n2d2.solver.Solver.N2D2">
+<code class="sig-name descname">N2D2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.solver.Solver.N2D2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the N2D2 object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.solver.Solver.__init__">
+<em class="property">abstract </em><code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.solver.Solver.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.solver.Solver.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.solver.Solver.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
+</dd></dl>
+
+</dd></dl>
+
 <div class="section" id="sgd">
 <h3>SGD<a class="headerlink" href="#sgd" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
@@ -1157,15 +1185,33 @@ This functionality allow you to write more concise code.</p>
 <div class="section" id="filler">
 <h2>Filler<a class="headerlink" href="#filler" title="Permalink to this headline">¶</a></h2>
 <p>You can associate to some cell a specific weights and/or biases filler.</p>
-<dl class="simple">
-<dt>..autoclass:: n2d2.filler.Filler</dt><dd><dl class="field-list simple">
-<dt class="field-odd">members</dt>
-<dd class="field-odd"><p></p></dd>
-<dt class="field-even">inherited-members</dt>
-<dd class="field-even"><p></p></dd>
-</dl>
+<dl class="py class">
+<dt id="n2d2.filler.Filler">
+<em class="property">class </em><code class="sig-prename descclassname">n2d2.filler.</code><code class="sig-name descname">Filler</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.filler.Filler" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="n2d2.filler.Filler.N2D2">
+<code class="sig-name descname">N2D2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.filler.Filler.N2D2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the N2D2 object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.filler.Filler.__init__">
+<em class="property">abstract </em><code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.filler.Filler.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.filler.Filler.get_parameter">
+<code class="sig-name descname">get_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.filler.Filler.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
+</dd></dl>
+
+</dd></dl>
+
 <div class="section" id="he">
 <h3>He<a class="headerlink" href="#he" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
@@ -1424,6 +1470,120 @@ This functionality allow you to write more concise code.</p>
 <dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Parameter name</p>
 </dd>
 </dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="loss-function">
+<h2>Loss function<a class="headerlink" href="#loss-function" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="n2d2.application.LossFunction">
+<em class="property">class </em><code class="sig-prename descclassname">n2d2.application.</code><code class="sig-name descname">LossFunction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">provider</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">target_config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.LossFunction" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="n2d2.application.LossFunction.__init__">
+<em class="property">abstract </em><code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">provider</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">target_config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.LossFunction.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.application.LossFunction.get_loss">
+<code class="sig-name descname">get_loss</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">saveFile</span><span class="o">=</span><span class="default_value">''</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.LossFunction.get_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the list of loss.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.application.LossFunction.log_stats">
+<code class="sig-name descname">log_stats</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.LossFunction.log_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save computational stats on the cells.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.application.LossFunction.log_success">
+<code class="sig-name descname">log_success</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.LossFunction.log_success" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a graph of the loss and the validation score as a function of the step number.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.application.LossFunction.recognition_rate">
+<code class="sig-name descname">recognition_rate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.LossFunction.recognition_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the recognition rate</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="crossentropyclassifier">
+<h3>CrossEntropyClassifier<a class="headerlink" href="#crossentropyclassifier" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="n2d2.application.CrossEntropyClassifier">
+<em class="property">class </em><code class="sig-prename descclassname">n2d2.application.</code><code class="sig-name descname">CrossEntropyClassifier</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">provider</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">target_config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.CrossEntropyClassifier" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="n2d2.application.CrossEntropyClassifier.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">provider</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">target_config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.CrossEntropyClassifier.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.application.CrossEntropyClassifier.get_loss">
+<code class="sig-name descname">get_loss</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">saveFile</span><span class="o">=</span><span class="default_value">''</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.CrossEntropyClassifier.get_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the list of loss.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.application.CrossEntropyClassifier.log_stats">
+<code class="sig-name descname">log_stats</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.CrossEntropyClassifier.log_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save computational stats on the cells.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.application.CrossEntropyClassifier.log_success">
+<code class="sig-name descname">log_success</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.CrossEntropyClassifier.log_success" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a graph of the loss and the validation score as a function of the step number.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.application.CrossEntropyClassifier.recognition_rate">
+<code class="sig-name descname">recognition_rate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.CrossEntropyClassifier.recognition_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the recognition rate</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="meansquareerrorregression">
+<h3>MeanSquareErrorRegression<a class="headerlink" href="#meansquareerrorregression" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="n2d2.application.MeanSquareErrorRegression">
+<em class="property">class </em><code class="sig-prename descclassname">n2d2.application.</code><code class="sig-name descname">MeanSquareErrorRegression</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">provider</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">target_config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.MeanSquareErrorRegression" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="n2d2.application.MeanSquareErrorRegression.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">provider</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">target_config_parameters</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.MeanSquareErrorRegression.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.application.MeanSquareErrorRegression.get_loss">
+<code class="sig-name descname">get_loss</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">saveFile</span><span class="o">=</span><span class="default_value">''</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.MeanSquareErrorRegression.get_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the list of loss.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.application.MeanSquareErrorRegression.log_stats">
+<code class="sig-name descname">log_stats</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.MeanSquareErrorRegression.log_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save computational stats on the cells.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.application.MeanSquareErrorRegression.log_success">
+<code class="sig-name descname">log_success</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.MeanSquareErrorRegression.log_success" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a graph of the loss and the validation score as a function of the step number.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="n2d2.application.MeanSquareErrorRegression.recognition_rate">
+<code class="sig-name descname">recognition_rate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#n2d2.application.MeanSquareErrorRegression.recognition_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the recognition rate</p>
 </dd></dl>
 
 </dd></dl>

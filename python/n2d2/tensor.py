@@ -72,11 +72,11 @@ class Tensor:
         :type dims: list
         :param value: A value to fill the :py:class:`n2d2.Tensor` object.
         :type value: Must be coherent with ``datatype``
-        :param datatype: Type of the data stocked by the tensor, default=``float``
+        :param datatype: Type of the data stored in the tensor, default=``float``
         :type datatype: str, optional
         :param cell: A reference to the object that created this tensor, default=None
         :type cell: :py:class:`n2d2.cells.NeuralNetworkCell`, optional
-        :param dim_format: Define the format used when you declare the dimensions of the tensor. The ``N2D2`` convention is the reversed of the ``Numpy`` the numpy one (e.g. a [2, 3] numpy array is equivalent to a [3, 2] N2D2 Tensor), default="Numpy"
+        :param dim_format: Define the format used when you declare the dimensions of the tensor. The ``N2D2`` convention is the reversed of the ``Numpy`` the numpy one (e.g. a [2, 3] numpy array is equivalent to a [3, 2] N2D2 Tensor), default=``Numpy``
         :type dim_format: str, optional
         """
         self._leaf=False
@@ -353,7 +353,6 @@ class Tensor:
             raise error_handler.WrongInputType("N2D2_Tensor", str(type(N2D2_Tensor)), [str(N2D2.BaseTensor)])
         n2d2_tensor = cls([])
         n2d2_tensor._tensor = N2D2_Tensor
-        print(N2D2_Tensor.getTypeName())
         n2d2_tensor._datatype = N2D2_Tensor.getTypeName()
         n2d2_tensor.is_cuda = "CudaTensor" in str(type(N2D2_Tensor)) 
         return n2d2_tensor
@@ -517,7 +516,7 @@ class Interface(n2d2.provider.Provider):
         if not isinstance(tensors, list):
             raise ValueError("'tensors' should be a list !")
         if not tensors:
-            raise n2d2d.error_handler.IsEmptyError('Tensors')
+            raise n2d2.error_handler.IsEmptyError('Tensors')
 
         if not tensors[0].cell: # Check if the first tensor is linked to a deepnet
             self._deepnet = None
