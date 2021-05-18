@@ -831,7 +831,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
         BaseTensor& valuesBaseTensor = (targetCell)
             ? targetCell->getOutputs() : targetCellCSpike->getOutputsActivity();
-        Tensor<Float_T> values;
+        Tensor<Float_T> values(valuesBaseTensor.dims());
         valuesBaseTensor.synchronizeToH(values);
 
         const unsigned int nbOutputs = values.dimZ();
@@ -893,7 +893,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
         BaseTensor& valuesBaseTensor = (targetCell)
             ? targetCell->getOutputs() : targetCellCSpike->getOutputsActivity();
-        Tensor<Float_T> values;
+        Tensor<Float_T> values(valuesBaseTensor.dims());
         valuesBaseTensor.synchronizeToH(values);
 
         const int size = mStimuliProvider->getBatch().size();
