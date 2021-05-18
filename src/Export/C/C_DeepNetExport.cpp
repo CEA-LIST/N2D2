@@ -215,7 +215,7 @@ void N2D2::C_DeepNetExport::generateHeaderConstants(DeepNet& deepNet,
                     std::string opPlus = " + ";
 
                     outputDepth << "(" << prefix << "_NB_OUTPUTS ";
-                    outputName << prefix ;
+                    outputName << Utils::upperCase((*parentCells[0]).getName()) << "_";
 
                     header << "#define " << prefix << "_OUTPUT_OFFSET 0\n";
 
@@ -223,16 +223,15 @@ void N2D2::C_DeepNetExport::generateHeaderConstants(DeepNet& deepNet,
                         const std::string prefix_i
                             = Utils::upperCase(Utils::CIdentifier(
                                                 (*parentCells[i]).getName()));
-
                         header << "#define " << prefix_i << "_OUTPUT_OFFSET ";
                         header << outputDepth.str() << ")\n";
 
-                        outputName << prefix_i << "_";
+                        outputName << Utils::upperCase((*parentCells[i]).getName()) << "_";
                         outputDepth << opPlus << prefix_i << "_NB_OUTPUTS";
                         (i == parentCells.size() - 1) ? opPlus = " " : opPlus
                             = "+ ";
                     }
-                    header << "#define " << outputName.str() << "NB_OUTPUTS ";
+                    header << "#define " << Utils::CIdentifier(outputName.str()) << "NB_OUTPUTS ";
                     header << outputDepth.str() << ")\n";
                 } else {
                     header << "#define " << prefix << "_OUTPUT_OFFSET 0\n";
@@ -330,9 +329,6 @@ void N2D2::C_DeepNetExport::generateProgramData(DeepNet& deepNet,
                                std::distance(itBegin, it))) {
                 const std::vector<std::shared_ptr<Cell> > parentCells
                     = deepNet.getParentCells(*it);
-                // const std::shared_ptr<Cell> cell =
-                // deepNet.getCell((*itLayer).at(std::distance((*itLayer).begin(),
-                // it)));
                 std::stringstream outputName;
                 outputName << (*parentCells[0]).getName() << "_";
 
