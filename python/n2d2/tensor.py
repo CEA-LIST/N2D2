@@ -479,7 +479,8 @@ class Tensor:
         Method called by the cells, if the tensor is not part of a graph, it will be linked to an :py:class:`n22d.provider.Provider` object.
         """
         if self.cell is None:
-            self.cell = TensorPlaceholder(self)
+            # TensorPlaceholder will set the cell attribute to it self.
+            TensorPlaceholder(self) 
         return self.cell.get_deepnet()
 
     def back_propagate(self):

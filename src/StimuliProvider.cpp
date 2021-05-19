@@ -52,6 +52,7 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
       mQuantizationMin(this, "QuantizationMin", 0.0),
       mQuantizationMax(this, "QuantizationMax", 1.0),
       mStreamTensor(this, "StreamTensor", false),
+      mStreamLabel(this, "StreamLabel", false),
       mDatabase(database),
       mSize(size),
       mBatchSize(batchSize),
@@ -140,6 +141,7 @@ N2D2::StimuliProvider::StimuliProvider(StimuliProvider&& other)
       mQuantizationMin(this, "QuantizationMin", other.mQuantizationMin),
       mQuantizationMax(this, "QuantizationMax", other.mQuantizationMax),
       mStreamTensor(this, "StreamTensor", false),
+      mStreamLabel(this, "StreamLabel", false),
       mDatabase(other.mDatabase),
       mSize(std::move(other.mSize)),
       mBatchSize(other.mBatchSize),
@@ -1523,15 +1525,19 @@ void N2D2::StimuliProvider::streamStimulus(const cv::Mat& mat,
 
 void N2D2::StimuliProvider::setStreamedTensor(TensorData_T& streamedTensor) 
 {
-    // if (!mStreamedTensor) {
+    if (mStreamTensor){
         mStreamedTensor = &streamedTensor;
-    // }
-    // else {
-    //     // TODO: Do this with = operator?
-    //     std::cout << "mstreamedTensor :" << *mStreamedTensor << std::endl;
-    //     // std::copy(streamedTensor.begin(), streamedTensor.end(),
-    //     //           (*mStreamedTensor).begin());
-    // }
+    }else{
+        throw std::runtime_error("Error: StreamTensor is False but you try to set a StreamedTensor.");
+    }
+}
+void N2D2::StimuliProvider::setStreamedLabel(Tensor<int>& streamedLabel) 
+{
+    if (mStreamLabel){
+        mStreamedLabel = &streamedLabel;
+    }else{
+        throw std::runtime_error("Error: StreamLabel is False but you try to set a StreamedLabel.");
+    }
 }
 
 void N2D2::StimuliProvider::synchronizeToDevices() {
