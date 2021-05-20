@@ -106,6 +106,8 @@ private:
     static void approximateActivationScaling(Cell& cell, Activation& activation,
                                              ScalingMode actScalingMode);
     
+    static bool checkActivationScalingWithPowerOf2Divs(Cell& cell, 
+                                                       const std::vector<Float_T>& scalingPerOutput);
     static std::vector<std::vector<unsigned char>> approximateActivationScalingWithPowerOf2Divs(Cell& cell, 
                                                 const std::vector<Float_T>& scalingPerOutput, 
                                                 std::size_t nbDivisions);
