@@ -978,6 +978,14 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
 
     dev = getDevice(dev);
 #ifdef CUDA
+
+    // Necessary to save the current device id before calling
+    // cudaSetDevice(dev) in order to avoid Multi-GPU malfunction
+    int currentDev = 0;
+    const cudaError_t status = cudaGetDevice(&currentDev);
+    if (status != cudaSuccess)
+        currentDev = 0;
+
     // readStimulus() is typically  called in an OpenMP thread.
     // The current CUDA device therefore will not necessarily match dev.
     // However, some transformations may need the correct device, such as
@@ -1194,6 +1202,10 @@ void N2D2::StimuliProvider::readStimulus(Database::StimulusID id,
             targetDataRef.push_back(targetData);
         }
     }
+#ifdef CUDA
+    cudaSetDevice(currentDev);
+#endif
+
 }
 
 N2D2::Database::StimulusID N2D2::StimuliProvider::readStimulusBatch(
