@@ -266,13 +266,14 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
     const typename Cuda::cudnn_scaling_type<T>::type beta
         = (mScaleSolver->isNewIteration()) ? 0.0f : 1.0f;
     const typename Cuda::cudnn_scaling_type<T>::type betaData
-        = (!mDiffOutputs.empty() && mDiffOutputs[0].isValid()) ? 1.0f : 0.0f;
+        = (!mDiffOutputs.empty() && mBackPropagate && mDiffOutputs[0].isValid())
+            ? 1.0f : 0.0f;
 
     std::shared_ptr<CudaDeviceTensor<T> > input0
         = cuda_device_tensor_cast_nocopy<T>(mInputs[0]);
     std::shared_ptr<CudaDeviceTensor<T> > diffOutput0;
 
-    if (!mDiffOutputs.empty()) {
+    if (!mDiffOutputs.empty() && mBackPropagate) {
         diffOutput0 = (mDiffOutputs[0].isValid())
                 ? cuda_device_tensor_cast<T>(mDiffOutputs[0])
                 : cuda_device_tensor_cast_nocopy<T>(mDiffOutputs[0]);
@@ -312,7 +313,7 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
     mDiffScale.setValid();
     mDiffBias.setValid();
 
-    if (!mDiffOutputs.empty()) {
+    if (!mDiffOutputs.empty() && mBackPropagate) {
         mDiffOutputs[0].deviceTensor() = *diffOutput0;
         mDiffOutputs[0].setValid();
         mDiffOutputs.synchronizeDToHBased();
