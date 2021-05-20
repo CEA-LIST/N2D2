@@ -185,6 +185,17 @@ void N2D2::C_PoolCellExport::generateCellFunction(
         "    time_analysis(\"" << identifier << "\", start, end, &"
         << identifier << "_timing);\n"
         "#endif\n";
+
+    // Save outputs
+    prog << "#ifdef SAVE_OUTPUTS\n"
+         << "    poolcell_outputs_save("
+            << "\"" << identifier << ".txt\", "
+            << prefix << "_NB_OUTPUTS, "
+            << prefix << "_OUTPUTS_HEIGHT, "
+            << prefix << "_OUTPUTS_WIDTH, "
+            << outputName
+         << ");\n"
+         << "#endif\n";
 }
 
 void N2D2::C_PoolCellExport::generateOutputFunction(Cell& cell,
