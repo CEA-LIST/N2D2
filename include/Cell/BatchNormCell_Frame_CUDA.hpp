@@ -122,6 +122,7 @@ protected:
     std::shared_ptr<CudaTensor<ParamT> > mVariance;
     CudaTensor<ParamT> mSavedMean;
     CudaTensor<ParamT> mSavedVariance;
+    CudaTensor<T> mDummyDiffOutput;
 
 private:
     static Registrar<BatchNormCell> mRegistrar;
