@@ -99,6 +99,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderConstants(const ConvCell& cell, std
            << "#define " << prefix << "_NO_BIAS " << (int) cell.getParameter<bool>("NoBias") << "\n\n";
 
     CPP_CellExport::generateActivation(cell, header);
+    CPP_CellExport::generateWeightPrecision(cell, header);
     CPP_CellExport::generateActivationScaling(cell, header);
 
     header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix << "_NB_OUTPUTS*" 

@@ -84,6 +84,15 @@ void N2D2::CPP_CellExport::generateActivation(const Cell& cell, std::ofstream& h
     }
 }
 
+void N2D2::CPP_CellExport::generateWeightPrecision(const Cell& cell, std::ofstream& header) {
+    const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
+    if(cell.getQuantizedNbBits() > 0) {
+        header << "#define " << prefix
+                << "_NB_BITS_W " << (int) cell.getQuantizedNbBits()
+                << "\n";
+    }
+}
+
 void N2D2::CPP_CellExport::generateActivationScaling(const Cell& cell, std::ofstream& header) {
     // TODO: needed for legacy code in CPP_Cuda and CPP_OpenCL
     // To be removed in the future --->
@@ -127,7 +136,6 @@ void N2D2::CPP_CellExport::generateScaling(
         }
         else {
             if(!scaling.getFloatingPointScaling().getIsClipped()) {
-
             header << "static const N2D2::FloatingPointScalingPerChannel<" << scalingPerOutput.size() << "> " 
                                                                            << prefix << "_SCALING = {";
             header << Utils::join(scalingPerOutput.begin(), scalingPerOutput.end(), ',');

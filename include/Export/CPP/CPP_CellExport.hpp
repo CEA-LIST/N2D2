@@ -52,6 +52,7 @@ public:
 
     static void generateActivation(const Cell& cell, std::ofstream& header);
     static void generateActivationScaling(const Cell& cell, std::ofstream& header);
+    static void generateWeightPrecision(const Cell& cell, std::ofstream& header);
     static void generateScaling(const std::string& prefix,
                                 const Scaling& scaling,
                                 bool outputUnsigned,
