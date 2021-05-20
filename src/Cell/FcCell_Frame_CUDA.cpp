@@ -159,9 +159,6 @@ void N2D2::FcCell_Frame_CUDA<T>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
-    int dev;
-    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
-
     if (mNormalize) {
         mSynapsesNorm.deviceTensor().fill(T(0.0f));
 
@@ -218,6 +215,9 @@ void N2D2::FcCell_Frame_CUDA<T>::propagate(bool inference)
     }
 
     if (!mNoBias) {
+        int dev;
+        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
         // Computes mOutputs = alpha*mBias*mOnesVector + alpha*mOutputs
         CHECK_CUBLAS_STATUS(cublasGemm(
             CudaContext::cublasHandle(),
@@ -249,9 +249,6 @@ void N2D2::FcCell_Frame_CUDA<T>::backPropagate()
         return;
 
     Cell_Frame_CUDA<T>::backPropagate();
-
-    int dev;
-    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
 
     //  1   <-->    batch   <-->    mInputs.b()
 
@@ -287,6 +284,9 @@ void N2D2::FcCell_Frame_CUDA<T>::backPropagate()
     }
 
     if (!mNoBias) {
+        int dev;
+        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+
         const T beta((mBiasSolver->isNewIteration()) ? 0.0f : 1.0f);
 
         // mDiffBias.getDevicePtr() = mDiffInputs.getDevicePtr * mOnesVector

@@ -77,7 +77,8 @@ TEST_DATASET(ResizeCell_Frame_CUDA,
             std::make_tuple(32, 32, 96, 96, 4, 3),
             std::make_tuple(49, 31, 73, 85, 9, 5))
 {
-    REQUIRED(UnitTest::CudaDeviceExists(3));
+    if (!UnitTest::CudaDeviceExists(5, 3))
+        return;     // REQUIRED() not enough (Cublas failure)
 
     Network net;
     DeepNet dn(net);
