@@ -1148,6 +1148,8 @@ void N2D2::DeepNetQuantization::approximateActivationScaling(Cell& cell, Activat
             "not supported with Single/Double-shift scaling. "
             "Falling back to Fixed-point scaling for this layer."
             << Utils::cdef << std::endl;
+
+        actScalingMode = ScalingMode::FIXED_MULT;
     }
 
     if(actScalingMode == ScalingMode::FLOAT_MULT) {
