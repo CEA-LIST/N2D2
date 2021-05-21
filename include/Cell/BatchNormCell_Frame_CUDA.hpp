@@ -52,13 +52,12 @@ public:
                              unsigned int nbOutputs,
                              const std::shared_ptr
                              <Activation>& activation
-                             = std::make_shared
-                             <TanhActivation_Frame_CUDA<T> >());
+                             = std::shared_ptr<Activation>());
     static std::shared_ptr<BatchNormCell>
     create(const DeepNet& deepNet, const std::string& name,
            unsigned int nbOutputs,
            const std::shared_ptr<Activation>& activation
-           = std::make_shared<TanhActivation_Frame_CUDA<T> >())
+           = std::shared_ptr<Activation>())
     {
         return std::make_shared
             <BatchNormCell_Frame_CUDA>(deepNet, name, nbOutputs, activation);
