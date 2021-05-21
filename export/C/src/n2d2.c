@@ -1418,6 +1418,7 @@ elemwise_propagate(unsigned int channelsHeight,
                    DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
                    DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
                    ActivationFunction_T func,
+                   const int32_t rescaleFactorPerOutput[nbOutputs_],
                    int shift)
 {
     /*
@@ -1435,11 +1436,17 @@ elemwise_propagate(unsigned int channelsHeight,
     for (unsigned int output = 0; output < nbOutputs_; ++output) {
         for (unsigned int oy = 0; oy < channelsHeight; ++oy) {
             for (unsigned int ox = 0; ox < channelsWidth; ++ox) {
-                    SUM_T opValue = ADD_SAT(inputs_a[output][oy][ox],
+                SUM_T opValue = ADD_SAT(inputs_a[output][oy][ox],
                                             inputs_b[nbOutputs_ + output][oy][ox]);
 
-                    outputs[output][oy][ox]
-                        = sat(opValue, func, shift);
+                if (rescaleFactorPerOutput[0] != 0) { //Fixed-point
+                    const size_t half = (1u << (shift -1));
+                    opValue = (opValue*rescaleFactorPerOutput[output] 
+                        + half) >> shift;
+                    outputs[output][oy][ox] = sat(opValue, func, 0);
+                } else { //Single-shift
+                    outputs[output][oy][ox] = sat(opValue, func, shift);
+                }
             }
         }
     }
@@ -1453,6 +1460,7 @@ elemwise_upropagate(unsigned int channelsHeight,
                    DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
                    DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
                    ActivationFunction_T func,
+                   const int32_t rescaleFactorPerOutput[nbOutputs_],
                    int shift)
 {
     /*if (operation != Sum) {
@@ -1469,11 +1477,17 @@ elemwise_upropagate(unsigned int channelsHeight,
     for (unsigned int output = 0; output < nbOutputs_; ++output) {
         for (unsigned int oy = 0; oy < channelsHeight; ++oy) {
             for (unsigned int ox = 0; ox < channelsWidth; ++ox) {
-                    SUM_T opValue = ADD_SAT(inputs_a[output][oy][ox],
+                SUM_T opValue = ADD_SAT(inputs_a[output][oy][ox],
                                             inputs_b[nbOutputs_ + output][oy][ox]);
 
-                    outputs[output][oy][ox]
-                        = usat(opValue, func, shift);
+                if (rescaleFactorPerOutput[0] != 0) { //Fixed-point
+                    const size_t half = (1u << (shift -1));
+                    opValue = (opValue*rescaleFactorPerOutput[output] 
+                        + half) >> shift;
+                    outputs[output][oy][ox] = usat(opValue, func, 0);
+                }else{ //Single-shift
+                    outputs[output][oy][ox] = usat(opValue, func, shift);
+                }
             }
         }
     }
@@ -2501,3 +2515,150 @@ void time_analysis(const char* name,
 
     printf("%s timing = %f us\n", name, (*timing).mean);
 }
+
+void poolcell_output_out(FILE* file, unsigned int nbOutputs,
+                         unsigned int outputsHeight, unsigned int outputsWidth,
+                         DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+{
+    for (unsigned int output = 0; output < nbOutputs; ++output) {
+        fprintf(file, "%d:\n", output);
+
+        for (unsigned int oy = 0; oy < outputsHeight; ++oy) {
+            for (unsigned int ox = 0; ox < outputsWidth; ++ox) {
+#if NB_BITS < 0
+                fprintf(file, "%f ", outputs[output][oy][ox]);
+#else
+                fprintf(file, "%d ", outputs[output][oy][ox]);
+#endif
+            }
+
+            fprintf(file, "\n");
+        }
+
+        fprintf(file, "\n");
+    }
+
+}
+
+void poolcell_outputs_save(const char* fileName, unsigned int nbOutputs,
+                           unsigned int outputsHeight, unsigned int outputsWidth,
+                           DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+{
+    FILE* file = fopen(fileName, "w");
+    if(!file) {
+        fprintf(stderr, "Couldn't open file %s.", fileName);
+        return;
+    }
+
+    poolcell_output_out(file, nbOutputs, outputsHeight, outputsWidth, outputs);
+    if(fclose(file) != 0) {
+        fprintf(stderr, "Couldn't close file %s.", fileName);
+    }
+}
+
+void poolcell_outputs_print(const char* name, unsigned int nbOutputs,
+                            unsigned int outputsHeight, unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+{
+    printf("%s outputs:\n", name);
+    poolcell_output_out(stdout, nbOutputs, outputsHeight, outputsWidth, outputs);
+}
+
+
+void elemwisecell_output_out(FILE* file, unsigned int nbOutputs,
+                         unsigned int outputsHeight, unsigned int outputsWidth,
+                         DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+{
+    for (unsigned int output = 0; output < nbOutputs; ++output) {
+        fprintf(file, "%d:\n", output);
+
+        for (unsigned int oy = 0; oy < outputsHeight; ++oy) {
+            for (unsigned int ox = 0; ox < outputsWidth; ++ox) {
+#if NB_BITS < 0
+                fprintf(file, "%f ", outputs[output][oy][ox]);
+#else
+                fprintf(file, "%d ", outputs[output][oy][ox]);
+#endif
+            }
+
+            fprintf(file, "\n");
+        }
+
+        fprintf(file, "\n");
+    }
+
+}
+
+void elemwisecell_outputs_save(const char* fileName, unsigned int nbOutputs,
+                           unsigned int outputsHeight, unsigned int outputsWidth,
+                           DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+{
+    FILE* file = fopen(fileName, "w");
+    if(!file) {
+        fprintf(stderr, "Couldn't open file %s.", fileName);
+        return;
+    }
+
+    elemwisecell_output_out(file, nbOutputs, outputsHeight, outputsWidth, outputs);
+    if(fclose(file) != 0) {
+        fprintf(stderr, "Couldn't close file %s.", fileName);
+    }
+}
+
+void elemwisecell_outputs_print(const char* name, unsigned int nbOutputs,
+                            unsigned int outputsHeight, unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+{
+    printf("%s outputs:\n", name);
+    elemwisecell_output_out(stdout, nbOutputs, outputsHeight, outputsWidth, outputs);
+}
+
+void scalingcell_output_out(FILE* file, unsigned int nbOutputs, unsigned int outputOffset,
+                         unsigned int outputsHeight, unsigned int outputsWidth,
+                         DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+{
+    for (unsigned int output = 0; output < nbOutputs; ++output) {
+        fprintf(file, "%d:\n", output);
+
+        for (unsigned int oy = 0; oy < outputsHeight; ++oy) {
+            for (unsigned int ox = 0; ox < outputsWidth; ++ox) {
+#if NB_BITS < 0
+                fprintf(file, "%f ", outputs[outputOffset + output][oy][ox]);
+#else
+                fprintf(file, "%d ", outputs[outputOffset + output][oy][ox]);
+#endif
+            }
+
+            fprintf(file, "\n");
+        }
+
+        fprintf(file, "\n");
+    }
+
+}
+
+void scalingcell_outputs_save(const char* fileName, unsigned int nbOutputs, unsigned int outputOffset,
+                           unsigned int outputsHeight, unsigned int outputsWidth,
+                           DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+{
+    FILE* file = fopen(fileName, "w");
+    if(!file) {
+        fprintf(stderr, "Couldn't open file %s.", fileName);
+        return;
+    }
+
+    scalingcell_output_out(file, nbOutputs, outputOffset, outputsHeight, outputsWidth, outputs);
+    if(fclose(file) != 0) {
+        fprintf(stderr, "Couldn't close file %s.", fileName);
+    }
+}
+
+void scalingcell_outputs_print(const char* name, unsigned int nbOutputs, unsigned int outputOffset,
+                            unsigned int outputsHeight, unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+{
+    printf("%s outputs:\n", name);
+    scalingcell_output_out(stdout, nbOutputs, outputOffset, outputsHeight, outputsWidth, outputs);
+}
+
+

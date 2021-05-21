@@ -80,12 +80,14 @@ void N2D2::C_CellExport::generateActivationScaling(const Cell& cell, std::ofstre
 
     if (cellFrame.getActivation() == nullptr) {
         header << "#define " << prefix << "_SHIFT 0\n";
+        header << "static const int32_t " << prefix << "_SCALING_FACTOR_PER_OUTPUT[] = {0};\n";
         return;
     }
     
     const Activation& activation = *cellFrame.getActivation();
     if(activation.getActivationScaling().getMode() == ScalingMode::NONE) {
         header << "#define " << prefix << "_SHIFT 0\n";
+        header << "static const int32_t " << prefix << "_SCALING_FACTOR_PER_OUTPUT[] = {0};\n";
     }
     else if(activation.getActivationScaling().getMode() == ScalingMode::SINGLE_SHIFT) {
         const std::vector<unsigned char>& scaling = activation.getActivationScaling()
@@ -97,11 +99,12 @@ void N2D2::C_CellExport::generateActivationScaling(const Cell& cell, std::ofstre
         }
 
         header << "#define " << prefix << "_SHIFT " << +scaling.front() << "\n";
+        header << "static const int32_t " << prefix << "_SCALING_FACTOR_PER_OUTPUT[] = {0};\n";
     }
     else if(activation.getActivationScaling().getMode() == ScalingMode::FIXED_MULT) {
         const FixedPointScaling& fpScaling = activation.getActivationScaling().getFixedPointScaling();
 
-        header << "#define " << prefix << "_NB_FRACTIONAL_BITS " << fpScaling.getFractionalBits() << "\n";
+        header << "#define " << prefix << "_SHIFT " << fpScaling.getFractionalBits() << "\n";
         header << "static const int32_t " << prefix << "_SCALING_FACTOR_PER_OUTPUT[] = {"
                << Utils::join(fpScaling.getScalingPerOutput().begin(), 
                               fpScaling.getScalingPerOutput().end(), ',') 

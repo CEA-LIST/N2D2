@@ -100,40 +100,31 @@ void N2D2::C_ElemWiseCellExport::generateCellFunction(Cell& cell,
         throw std::runtime_error("ElemWiseCell C Export only support 2 inputs parents");
     }
 
-    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+    const std::string identifier = Utils::CIdentifier(cell.getName());
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
-    const Activation& activation = *cellFrame.getActivation();
 
-    if(activation.getActivationScaling().getMode() == ScalingMode::SINGLE_SHIFT) {
-        prog << "    " << "elemwise_" << ((isUnsigned) ? "u" : "") 
-                << "propagate_with_scaling("
-                << prefix << "_CHANNELS_HEIGHT, "
-                << prefix << "_CHANNELS_WIDTH, "
-                << prefix << "_NB_OUTPUTS, "
-                << inputName << ", "
-                << inputName << ", "
-                << outputName << ", "
-                << prefix << "_ACTIVATION, "
-                << prefix << "_SHIFT);\n";
-    }
-    else if(activation.getActivationScaling().getMode() == ScalingMode::FIXED_MULT) {
-        prog << "    " << "elemwise_" << ((isUnsigned) ? "u" : "") 
-                << "propagate_fixed_point("
-                << prefix << "_CHANNELS_HEIGHT, "
-                << prefix << "_CHANNELS_WIDTH, "
-                << prefix << "_NB_OUTPUTS, "
-                << inputName << ", "
-                << inputName << ", "
-                << outputName << ", "
-                << prefix << "_ACTIVATION, "
-                << prefix << "_SCALING_FACTOR_PER_OUTPUT, "
-                << prefix << "_NB_FRACTIONAL_BITS);\n ";
-    }
-    else {
-        throw std::runtime_error("Single-shift and Fixedpoint are the only activations "
-                                 "scaling mode supported by the export in the layer elemwise.");
-    }
-
+     prog << "    " << "elemwise_" << ((isUnsigned) ? "u" : "") 
+             << "propagate("
+             << prefix << "_CHANNELS_HEIGHT, "
+             << prefix << "_CHANNELS_WIDTH, "
+             << prefix << "_NB_OUTPUTS, "
+             << inputName << ", "
+             << inputName << ", "
+             << outputName << ", "
+             << prefix << "_ACTIVATION, "
+             << prefix << "_SCALING_FACTOR_PER_OUTPUT, "
+             << prefix << "_SHIFT);\n";
+ 
+    // Save outputs
+    prog << "#ifdef SAVE_OUTPUTS\n"
+         << "    elemwisecell_outputs_save("
+            << "\"" << identifier << ".txt\", "
+            << prefix << "_NB_OUTPUTS, "
+            << prefix << "_OUTPUTS_HEIGHT, "
+            << prefix << "_OUTPUTS_WIDTH, "
+            << outputName
+         << ");\n"
+         << "#endif\n";
 }
 
 void N2D2::C_ElemWiseCellExport::generateOutputFunction(Cell& cell,

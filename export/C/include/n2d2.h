@@ -511,6 +511,7 @@ elemwise_propagate(unsigned int channelsHeight,
                    DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
                    DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
                    ActivationFunction_T func,
+                   const int32_t rescaleFactorPerOutput[nbOutputs_],
                    int shift);
 void
 elemwise_upropagate(unsigned int channelsHeight,
@@ -520,28 +521,8 @@ elemwise_upropagate(unsigned int channelsHeight,
                    DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
                    DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
                    ActivationFunction_T func,
+                   const int32_t rescaleFactorPerOutput[nbOutputs_],
                    int shift);
-
-void
-elemwise_propagate_fixed_point(unsigned int channelsHeight,
-                   unsigned int channelsWidth,
-                   unsigned int nbOutputs_,
-                   DATA_T inputs_a[nbOutputs_][channelsHeight][channelsWidth],
-                   DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
-                   DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
-                   ActivationFunction_T func,
-                   const int32_t rescaleFactorPerOutput[nbOutputs_],
-                   unsigned int nbFractionalBits);
-void
-elemwise_upropagate_fixed_point(unsigned int channelsHeight,
-                   unsigned int channelsWidth,
-                   unsigned int nbOutputs_,
-                   DATA_T inputs_a[nbOutputs_][channelsHeight][channelsWidth],
-                   DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
-                   DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
-                   ActivationFunction_T func,
-                   const int32_t rescaleFactorPerOutput[nbOutputs_],
-                   unsigned int nbFractionalBits);
 
 void
 scalingcell_propagate( unsigned int nbChannels,
@@ -737,6 +718,44 @@ void convcell_outputs_print(const char* name,
 
 void convcell_outputs_save(const char* fileName,
                            unsigned int nbOutputs,
+                           unsigned int outputsHeight,
+                           unsigned int outputsWidth,
+                           DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+
+void poolcell_outputs_print(const char* name,
+                            unsigned int nbOutputs,
+                            unsigned int outputsHeight,
+                            unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+
+void poolcell_outputs_save(const char* fileName,
+                           unsigned int nbOutputs,
+                           unsigned int outputsHeight,
+                           unsigned int outputsWidth,
+                           DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+
+void elemwisecell_outputs_print(const char* name,
+                            unsigned int nbOutputs,
+                            unsigned int outputsHeight,
+                            unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+
+void elemwisecell_outputs_save(const char* fileName,
+                           unsigned int nbOutputs,
+                           unsigned int outputsHeight,
+                           unsigned int outputsWidth,
+                           DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+
+void scalingcell_outputs_print(const char* name,
+                            unsigned int nbOutputs,
+                            unsigned int outputOffset,
+                            unsigned int outputsHeight,
+                            unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+
+void scalingcell_outputs_save(const char* fileName,
+                           unsigned int nbOutputs,
+                           unsigned int outputOffset,
                            unsigned int outputsHeight,
                            unsigned int outputsWidth,
                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
