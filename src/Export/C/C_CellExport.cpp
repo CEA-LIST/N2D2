@@ -98,6 +98,15 @@ void N2D2::C_CellExport::generateActivationScaling(const Cell& cell, std::ofstre
 
         header << "#define " << prefix << "_SHIFT " << +scaling.front() << "\n";
     }
+    else if(activation.getActivationScaling().getMode() == ScalingMode::FIXED_MULT) {
+        const FixedPointScaling& fpScaling = activation.getActivationScaling().getFixedPointScaling();
+
+        header << "#define " << prefix << "_NB_FRACTIONAL_BITS " << fpScaling.getFractionalBits() << "\n";
+        header << "static const int32_t " << prefix << "_SCALING_FACTOR_PER_OUTPUT[] = {"
+               << Utils::join(fpScaling.getScalingPerOutput().begin(), 
+                              fpScaling.getScalingPerOutput().end(), ',') 
+               << "};\n";
+    }
     else {
         throw std::runtime_error("Single-shift with a global scaling per layer is the only activation "
                                  "scaling mode supported by the export.");

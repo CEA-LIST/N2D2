@@ -27,6 +27,7 @@
 #include "Export/ElemWiseCellExport.hpp"
 #include "Export/C/C_ElemWiseCellExport.hpp"
 #include "utils/Registrar.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
 
 
 
@@ -99,17 +100,39 @@ void N2D2::C_ElemWiseCellExport::generateCellFunction(Cell& cell,
         throw std::runtime_error("ElemWiseCell C Export only support 2 inputs parents");
     }
 
+    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
-    prog << "    " << "elemwise_" << ((isUnsigned) ? "u" : "") 
-            << "propagate("
-            << prefix << "_CHANNELS_HEIGHT, "
-            << prefix << "_CHANNELS_WIDTH, "
-            << prefix << "_NB_OUTPUTS, "
-            << inputName << ", "
-            << inputName << ", "
-            << outputName << ", "
-            << prefix << "_ACTIVATION, "
-            << prefix << "_SHIFT);\n";
+    const Activation& activation = *cellFrame.getActivation();
+
+    if(activation.getActivationScaling().getMode() == ScalingMode::SINGLE_SHIFT) {
+        prog << "    " << "elemwise_" << ((isUnsigned) ? "u" : "") 
+                << "propagate_with_scaling("
+                << prefix << "_CHANNELS_HEIGHT, "
+                << prefix << "_CHANNELS_WIDTH, "
+                << prefix << "_NB_OUTPUTS, "
+                << inputName << ", "
+                << inputName << ", "
+                << outputName << ", "
+                << prefix << "_ACTIVATION, "
+                << prefix << "_SHIFT);\n";
+    }
+    else if(activation.getActivationScaling().getMode() == ScalingMode::FIXED_MULT) {
+        prog << "    " << "elemwise_" << ((isUnsigned) ? "u" : "") 
+                << "propagate_fixed_point("
+                << prefix << "_CHANNELS_HEIGHT, "
+                << prefix << "_CHANNELS_WIDTH, "
+                << prefix << "_NB_OUTPUTS, "
+                << inputName << ", "
+                << inputName << ", "
+                << outputName << ", "
+                << prefix << "_ACTIVATION, "
+                << prefix << "_SCALING_FACTOR_PER_OUTPUT, "
+                << prefix << "_NB_FRACTIONAL_BITS);\n ";
+    }
+    else {
+        throw std::runtime_error("Single-shift and Fixedpoint are the only activations "
+                                 "scaling mode supported by the export in the layer elemwise.");
+    }
 
 }
 

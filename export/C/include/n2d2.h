@@ -523,6 +523,27 @@ elemwise_upropagate(unsigned int channelsHeight,
                    int shift);
 
 void
+elemwise_propagate_fixed_point(unsigned int channelsHeight,
+                   unsigned int channelsWidth,
+                   unsigned int nbOutputs_,
+                   DATA_T inputs_a[nbOutputs_][channelsHeight][channelsWidth],
+                   DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
+                   DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
+                   ActivationFunction_T func,
+                   const int32_t rescaleFactorPerOutput[nbOutputs_],
+                   unsigned int nbFractionalBits);
+void
+elemwise_upropagate_fixed_point(unsigned int channelsHeight,
+                   unsigned int channelsWidth,
+                   unsigned int nbOutputs_,
+                   DATA_T inputs_a[nbOutputs_][channelsHeight][channelsWidth],
+                   DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
+                   DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
+                   ActivationFunction_T func,
+                   const int32_t rescaleFactorPerOutput[nbOutputs_],
+                   unsigned int nbFractionalBits);
+
+void
 scalingcell_propagate( unsigned int nbChannels,
                    unsigned int channelsHeight,
                    unsigned int channelsWidth,
