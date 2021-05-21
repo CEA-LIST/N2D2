@@ -29,6 +29,9 @@ class Cell(ABC):
     def __init__(self, name):
         if not name:
             name = n2d2.generate_name(self)
+        else:
+            if not isinstance(name, str):
+                raise n2d2.error_handler.WrongInputType("name", str(type(name)), ["str"])
         self._name = name
 
     def __call__(self, x):

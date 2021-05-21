@@ -153,7 +153,7 @@ Sending data to the Neural Network
 ---------------------------------
 
 With a DataProvider
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 Once a database loaded, n2d2 use :py:class:`n2d2.provider.DataProvider` to provide data to the neural network.
 

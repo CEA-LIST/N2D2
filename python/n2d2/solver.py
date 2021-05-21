@@ -102,8 +102,8 @@ class SGD(Solver):
         :type learning_rate_step_size: int, optional
         :param learning_rate_decay: Learning rate decay, default=0.1
         :type learning_rate_decay: float, optional
-        :param clamping: If true, clamp the weights and bias between -1 and 1, default=False
-        :type clamping: boolean, optional
+        :param clamping: Weights clamping, format: ``min:max``, or ``:max``, or ``min:``, or empty, default=""
+        :type clamping: str, optional
 
         """
         Solver.__init__(self, **config_parameters)
@@ -148,8 +148,8 @@ class Adam(Solver):
         :type beta2: float, optional
         :param epsilon: Epsilon, default=1.0e-8
         :type epsilon: float, optional
-        :param clamping: If true, clamp the weights and bias between -1 and 1, default=False
-        :type clamping: boolean, optional
+        :param clamping: Weights clamping, format: ``min:max``, or ``:max``, or ``min:``, or empty, default=""
+        :type clamping: str, optional
         """
         Solver.__init__(self, **config_parameters)
         if from_arguments:

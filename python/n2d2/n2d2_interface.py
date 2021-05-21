@@ -29,7 +29,7 @@ class ConventionConverter():
     def __init__(self, dic):
         self.python_to_N2D2 = dic
         self.N2D2_to_python = {values: keys for keys, values in dic.items()}
-    def fill(self, dic):
+    def update(self, dic):
         for key, value, in dic.items():
             self.python_to_N2D2[key] = value
             self.N2D2_to_python[value] = key
@@ -55,8 +55,10 @@ class N2D2_Interface:
     _N2D2_type_map = {
         "integer": int,
         "float": float,
-        "bool": lambda x: False if x == '0' else True,
-        "string": str
+        # "bool": lambda x: False if x == '0' else True,
+        "bool": bool,
+        "string": str,
+        "list": list,
     }
     _convention_converter= ConventionConverter({
     })
@@ -101,15 +103,13 @@ class N2D2_Interface:
 
     def _set_N2D2_parameter(self, key, value):
         parsed_parameter = self.parse_py_to_ini_(value)
-        try:
-            self._N2D2_object.setParameter(key, parsed_parameter)
-        except RuntimeError:
-            raise RuntimeError("Parameter does not exist: " + 
-                                key)
-        # Tests
         returned_parameter, returned_type = self._N2D2_object.getParameterAndType(key)
-        returned_parameter = self._N2D2_type_map[returned_type](returned_parameter)
-
+        # TODO : This test trigger an error if we send an int instead of a float for example
+        # Maybe allowing an auto cast for this kind of situations can be a good idea ?
+        if not isinstance(value, self._N2D2_type_map[returned_type]):
+            raise n2d2.error_handler.WrongInputType(self.n2d2_to_python_convention(key), str(type(value)), [str(self._N2D2_type_map[returned_type])])
+        else:
+            self._N2D2_object.setParameter(key, parsed_parameter)
 
     def _set_N2D2_parameters(self, parameters):
         for key, value in parameters.items():
@@ -141,8 +141,12 @@ class N2D2_Interface:
 
 
     @classmethod
-    def python_to_n2d2_convention(cls, key): 
-        # DICTIONNARY
+    def python_to_n2d2_convention(cls, key):
+        """
+        Convert the name of a python parameter to the n2d2 convention using a dictionnary.
+        :param key: Parameter name
+        :type key: str
+        """
         try:
             new_key = cls._convention_converter.p_to_n(key)
         except ValueError:
@@ -151,7 +155,11 @@ class N2D2_Interface:
 
     @classmethod
     def n2d2_to_python_convention(cls, key):
-        # DICTIONNARY
+        """
+        Convert the name of a n2d2 parameter to the python convention using a dictionnary.
+        :param key: Parameter name
+        :type key: str
+        """
         try:
             new_key = cls._convention_converter.n_to_p(key)
         except ValueError:
@@ -179,8 +187,6 @@ class N2D2_Interface:
             return str(value)
 
 
-    # @staticmethod
-    # def load_N2D2_parameters(N2D2_object):
     @classmethod
     def load_N2D2_parameters(cls, N2D2_object):
         str_params = N2D2_object.getParameters()
@@ -188,10 +194,6 @@ class N2D2_Interface:
         for param in str_params:
             parameters[cls.n2d2_to_python_convention(param)] = cls._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](
                 N2D2_object.getParameterAndType(param)[0])
-            # parameters[N2D2_Interface.n2d2_to_python_convention(param)] = N2D2_Interface._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](
-            #     N2D2_object.getParameterAndType(param)[0])
-            #print(param, ":",
-            #      N2D2_Interface._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](N2D2_object.getParameterAndType(param)[0]))
         return parameters
 
     def __str__(self):
