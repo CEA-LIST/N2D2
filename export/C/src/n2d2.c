@@ -1418,6 +1418,7 @@ elemwise_propagate(unsigned int channelsHeight,
                    DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
                    DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
                    ActivationFunction_T func,
+                   const int32_t rescaleFactorPerOutput[nbOutputs_],
                    int shift)
 {
     /*
@@ -1435,11 +1436,17 @@ elemwise_propagate(unsigned int channelsHeight,
     for (unsigned int output = 0; output < nbOutputs_; ++output) {
         for (unsigned int oy = 0; oy < channelsHeight; ++oy) {
             for (unsigned int ox = 0; ox < channelsWidth; ++ox) {
-                    SUM_T opValue = ADD_SAT(inputs_a[output][oy][ox],
+                SUM_T opValue = ADD_SAT(inputs_a[output][oy][ox],
                                             inputs_b[nbOutputs_ + output][oy][ox]);
 
-                    outputs[output][oy][ox]
-                        = sat(opValue, func, shift);
+                if (rescaleFactorPerOutput[0] != 0) { //Fixed-point
+                    const size_t half = (1u << (shift -1));
+                    opValue = (opValue*rescaleFactorPerOutput[output] 
+                        + half) >> shift;
+                    outputs[output][oy][ox] = sat(opValue, func, 0);
+                } else { //Single-shift
+                    outputs[output][oy][ox] = sat(opValue, func, shift);
+                }
             }
         }
     }
@@ -1453,6 +1460,7 @@ elemwise_upropagate(unsigned int channelsHeight,
                    DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
                    DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
                    ActivationFunction_T func,
+                   const int32_t rescaleFactorPerOutput[nbOutputs_],
                    int shift)
 {
     /*if (operation != Sum) {
@@ -1469,11 +1477,17 @@ elemwise_upropagate(unsigned int channelsHeight,
     for (unsigned int output = 0; output < nbOutputs_; ++output) {
         for (unsigned int oy = 0; oy < channelsHeight; ++oy) {
             for (unsigned int ox = 0; ox < channelsWidth; ++ox) {
-                    SUM_T opValue = ADD_SAT(inputs_a[output][oy][ox],
+                SUM_T opValue = ADD_SAT(inputs_a[output][oy][ox],
                                             inputs_b[nbOutputs_ + output][oy][ox]);
 
-                    outputs[output][oy][ox]
-                        = usat(opValue, func, shift);
+                if (rescaleFactorPerOutput[0] != 0) { //Fixed-point
+                    const size_t half = (1u << (shift -1));
+                    opValue = (opValue*rescaleFactorPerOutput[output] 
+                        + half) >> shift;
+                    outputs[output][oy][ox] = usat(opValue, func, 0);
+                }else{ //Single-shift
+                    outputs[output][oy][ox] = usat(opValue, func, shift);
+                }
             }
         }
     }

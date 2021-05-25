@@ -1028,16 +1028,7 @@ std::pair<std::vector<unsigned char>, double> N2D2::DeepNetQuantization::approxi
     static const double ROUNDING_THRESHOLD = 0.98;
 
     assert(nbDivisions > 0);
-
-    if (scaling > 1.0) {
-        std::ostringstream msgStr;
-        msgStr << "Scaling (" << scaling << ") > 1 is "
-            "not supported with Single/Double-shift scaling. "
-            "Use Floating-point or Fixed-point scaling instead for this "
-            "network.";
-
-        throw std::runtime_error(msgStr.str());
-    }
+    assert(scaling <= 1.0);
 
     double precision = 0.0;
 
@@ -1070,6 +1061,18 @@ std::pair<std::vector<unsigned char>, double> N2D2::DeepNetQuantization::approxi
     assert(precision >= 1.0);
 
     return std::make_pair(powerOf2Divs, precision);
+}
+
+bool N2D2::DeepNetQuantization::checkActivationScalingWithPowerOf2Divs(
+    Cell& cell, 
+    const std::vector<Float_T>& scalingPerOutput)
+{
+    for(std::size_t output = 0; output < cell.getNbOutputs(); output++) {
+        if (scalingPerOutput[output] > 1.0)
+            return false;
+    }
+
+    return true;
 }
 
 std::vector<std::vector<unsigned char>> N2D2::DeepNetQuantization::approximateActivationScalingWithPowerOf2Divs(Cell& cell, 
@@ -1135,6 +1138,19 @@ void N2D2::DeepNetQuantization::approximateActivationScaling(Cell& cell, Activat
     std::cout << "  - " << cell.getName() << ": " << scalingPerOutput[0]
         << std::endl;
 #endif
+
+    if ((actScalingMode == ScalingMode::SINGLE_SHIFT
+        || actScalingMode == ScalingMode::DOUBLE_SHIFT)
+            && !checkActivationScalingWithPowerOf2Divs(cell, scalingPerOutput))
+    {
+        std::cout << Utils::cwarning << "Scaling (" << scalingPerOutput[0]
+            << ") > 1 for layer \"" << cell.getName() << "\" is "
+            "not supported with Single/Double-shift scaling. "
+            "Falling back to Fixed-point scaling for this layer."
+            << Utils::cdef << std::endl;
+
+        actScalingMode = ScalingMode::FIXED_MULT;
+    }
 
     if(actScalingMode == ScalingMode::FLOAT_MULT) {
         // Nothing to do.

@@ -511,6 +511,7 @@ elemwise_propagate(unsigned int channelsHeight,
                    DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
                    DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
                    ActivationFunction_T func,
+                   const int32_t rescaleFactorPerOutput[nbOutputs_],
                    int shift);
 void
 elemwise_upropagate(unsigned int channelsHeight,
@@ -520,6 +521,7 @@ elemwise_upropagate(unsigned int channelsHeight,
                    DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
                    DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
                    ActivationFunction_T func,
+                   const int32_t rescaleFactorPerOutput[nbOutputs_],
                    int shift);
 
 void

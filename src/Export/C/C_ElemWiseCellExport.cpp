@@ -27,6 +27,7 @@
 #include "Export/ElemWiseCellExport.hpp"
 #include "Export/C/C_ElemWiseCellExport.hpp"
 #include "utils/Registrar.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
 
 
 
@@ -101,17 +102,19 @@ void N2D2::C_ElemWiseCellExport::generateCellFunction(Cell& cell,
 
     const std::string identifier = Utils::CIdentifier(cell.getName());
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
-    prog << "    " << "elemwise_" << ((isUnsigned) ? "u" : "") 
-            << "propagate("
-            << prefix << "_CHANNELS_HEIGHT, "
-            << prefix << "_CHANNELS_WIDTH, "
-            << prefix << "_NB_OUTPUTS, "
-            << inputName << ", "
-            << inputName << ", "
-            << outputName << ", "
-            << prefix << "_ACTIVATION, "
-            << prefix << "_SHIFT);\n";
 
+     prog << "    " << "elemwise_" << ((isUnsigned) ? "u" : "") 
+             << "propagate("
+             << prefix << "_CHANNELS_HEIGHT, "
+             << prefix << "_CHANNELS_WIDTH, "
+             << prefix << "_NB_OUTPUTS, "
+             << inputName << ", "
+             << inputName << ", "
+             << outputName << ", "
+             << prefix << "_ACTIVATION, "
+             << prefix << "_SCALING_FACTOR_PER_OUTPUT, "
+             << prefix << "_SHIFT);\n";
+ 
     // Save outputs
     prog << "#ifdef SAVE_OUTPUTS\n"
          << "    elemwisecell_outputs_save("
