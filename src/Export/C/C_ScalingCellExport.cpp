@@ -146,6 +146,7 @@ void N2D2::C_ScalingCellExport::generateCellFunction(
     prog << "#ifdef SAVE_OUTPUTS\n"
          << "    scalingcell_outputs_save("
             << "\"" << identifier << ".txt\", "
+            << DeepNetExport::isCellOutputUnsigned(cell) << ","
             << prefix << "_NB_OUTPUTS, "
             << prefix << "_OUTPUT_OFFSET, "
             << prefix << "_OUTPUTS_HEIGHT, "

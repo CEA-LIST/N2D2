@@ -119,6 +119,7 @@ void N2D2::C_ElemWiseCellExport::generateCellFunction(Cell& cell,
     prog << "#ifdef SAVE_OUTPUTS\n"
          << "    elemwisecell_outputs_save("
             << "\"" << identifier << ".txt\", "
+            << DeepNetExport::isCellOutputUnsigned(cell) << ","
             << prefix << "_NB_OUTPUTS, "
             << prefix << "_OUTPUTS_HEIGHT, "
             << prefix << "_OUTPUTS_WIDTH, "

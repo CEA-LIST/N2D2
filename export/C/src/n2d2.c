@@ -2157,7 +2157,7 @@ void resize_nearest_neighbor_propagete(unsigned int nbChannels,
     }    
 }
 
-void convcell_output_out(FILE* file, unsigned int nbOutputs,
+void convcell_output_out(FILE* file, bool isOutputUnsigned, unsigned int nbOutputs,
                          unsigned int outputsHeight, unsigned int outputsWidth,
                          DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
 {
@@ -2169,7 +2169,11 @@ void convcell_output_out(FILE* file, unsigned int nbOutputs,
 #if NB_BITS < 0
                 fprintf(file, "%f ", outputs[output][oy][ox]);
 #else
-                fprintf(file, "%d ", outputs[output][oy][ox]);
+                if (isOutputUnsigned) {
+                   fprintf(file, "%d ", (UDATA_T)outputs[output][oy][ox]);
+                } else {
+                   fprintf(file, "%d ", outputs[output][oy][ox]);
+                }
 #endif
             }
 
@@ -2181,7 +2185,7 @@ void convcell_output_out(FILE* file, unsigned int nbOutputs,
 
 }
 
-void convcell_outputs_save(const char* fileName, unsigned int nbOutputs,
+void convcell_outputs_save(const char* fileName, bool isOutputUnsigned, unsigned int nbOutputs,
                            unsigned int outputsHeight, unsigned int outputsWidth,
                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
 {
@@ -2191,18 +2195,18 @@ void convcell_outputs_save(const char* fileName, unsigned int nbOutputs,
         return;
     }
 
-    convcell_output_out(file, nbOutputs, outputsHeight, outputsWidth, outputs);
+    convcell_output_out(file, isOutputUnsigned, nbOutputs, outputsHeight, outputsWidth, outputs);
     if(fclose(file) != 0) {
         fprintf(stderr, "Couldn't close file %s.", fileName);
     }
 }
 
-void convcell_outputs_print(const char* name, unsigned int nbOutputs,
+void convcell_outputs_print(const char* name, bool isOutputUnsigned, unsigned int nbOutputs,
                             unsigned int outputsHeight, unsigned int outputsWidth,
                             DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
 {
     printf("%s outputs:\n", name);
-    convcell_output_out(stdout, nbOutputs, outputsHeight, outputsWidth, outputs);
+    convcell_output_out(stdout, isOutputUnsigned, nbOutputs, outputsHeight, outputsWidth, outputs);
 }
 
 void convcell_outputs_dynamic_print(
@@ -2250,7 +2254,8 @@ void convcell_outputs_dynamic_print(
 #endif
 }
 
-void fccell_outputs_out(FILE* file, 
+void fccell_outputs_out(FILE* file,
+                        bool isOutputUnsigned,
                         unsigned int nbOutputs,
                         DATA_T outputs[nbOutputs])
 {
@@ -2258,12 +2263,17 @@ void fccell_outputs_out(FILE* file,
 #if NB_BITS < 0
         fprintf(file, "%d: %f\n", output, outputs[output]);
 #else
-        fprintf(file, "%d: %d\n", output, outputs[output]);
+        if (isOutputUnsigned) {
+           fprintf(file, "%d: %d\n", output, (UDATA_T)outputs[output]);
+        } else {
+           fprintf(file, "%d: %d\n", output, outputs[output]);
+        }
 #endif
     }
 }
 
 void fccell_outputs_save(const char* fileName,
+                         bool isOutputUnsigned,
                          unsigned int nbOutputs,
                          DATA_T outputs[nbOutputs])
 {
@@ -2273,18 +2283,19 @@ void fccell_outputs_save(const char* fileName,
         return;
     }
 
-    fccell_outputs_out(file, nbOutputs, outputs);
+    fccell_outputs_out(file, isOutputUnsigned, nbOutputs, outputs);
     if(fclose(file) != 0) {
         fprintf(stderr, "Couldn't close file %s.", fileName);
     }
 }
 
 void fccell_outputs_print(const char* name,
+                          bool isOutputUnsigned,
                           unsigned int nbOutputs,
                           DATA_T outputs[nbOutputs])
 {
     printf("%s outputs:\n", name);
-    fccell_outputs_out(stdout, nbOutputs, outputs);
+    fccell_outputs_out(stdout, isOutputUnsigned, nbOutputs, outputs);
 }
 
 void fccell_outputs_dynamic_print(const char* name,
@@ -2439,7 +2450,7 @@ void time_analysis(const char* name,
     printf("%s timing = %f us\n", name, (*timing).mean);
 }
 
-void poolcell_output_out(FILE* file, unsigned int nbOutputs,
+void poolcell_output_out(FILE* file, bool isOutputUnsigned, unsigned int nbOutputs,
                          unsigned int outputsHeight, unsigned int outputsWidth,
                          DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
 {
@@ -2451,7 +2462,11 @@ void poolcell_output_out(FILE* file, unsigned int nbOutputs,
 #if NB_BITS < 0
                 fprintf(file, "%f ", outputs[output][oy][ox]);
 #else
-                fprintf(file, "%d ", outputs[output][oy][ox]);
+                if (isOutputUnsigned) {
+                   fprintf(file, "%d ", (UDATA_T)outputs[output][oy][ox]);
+                } else {
+                   fprintf(file, "%d ", outputs[output][oy][ox]);
+                }
 #endif
             }
 
@@ -2463,7 +2478,7 @@ void poolcell_output_out(FILE* file, unsigned int nbOutputs,
 
 }
 
-void poolcell_outputs_save(const char* fileName, unsigned int nbOutputs,
+void poolcell_outputs_save(const char* fileName, bool isOutputUnsigned, unsigned int nbOutputs,
                            unsigned int outputsHeight, unsigned int outputsWidth,
                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
 {
@@ -2473,22 +2488,22 @@ void poolcell_outputs_save(const char* fileName, unsigned int nbOutputs,
         return;
     }
 
-    poolcell_output_out(file, nbOutputs, outputsHeight, outputsWidth, outputs);
+    poolcell_output_out(file, isOutputUnsigned, nbOutputs, outputsHeight, outputsWidth, outputs);
     if(fclose(file) != 0) {
         fprintf(stderr, "Couldn't close file %s.", fileName);
     }
 }
 
-void poolcell_outputs_print(const char* name, unsigned int nbOutputs,
+void poolcell_outputs_print(const char* name, bool isOutputUnsigned, unsigned int nbOutputs,
                             unsigned int outputsHeight, unsigned int outputsWidth,
                             DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
 {
     printf("%s outputs:\n", name);
-    poolcell_output_out(stdout, nbOutputs, outputsHeight, outputsWidth, outputs);
+    poolcell_output_out(stdout, isOutputUnsigned,  nbOutputs, outputsHeight, outputsWidth, outputs);
 }
 
 
-void elemwisecell_output_out(FILE* file, unsigned int nbOutputs,
+void elemwisecell_output_out(FILE* file, bool isOutputUnsigned, unsigned int nbOutputs,
                          unsigned int outputsHeight, unsigned int outputsWidth,
                          DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
 {
@@ -2500,7 +2515,11 @@ void elemwisecell_output_out(FILE* file, unsigned int nbOutputs,
 #if NB_BITS < 0
                 fprintf(file, "%f ", outputs[output][oy][ox]);
 #else
-                fprintf(file, "%d ", outputs[output][oy][ox]);
+                if (isOutputUnsigned) {
+                   fprintf(file, "%d ", (UDATA_T)outputs[output][oy][ox]);
+                } else {
+                   fprintf(file, "%d ", outputs[output][oy][ox]);
+                }
 #endif
             }
 
@@ -2512,7 +2531,7 @@ void elemwisecell_output_out(FILE* file, unsigned int nbOutputs,
 
 }
 
-void elemwisecell_outputs_save(const char* fileName, unsigned int nbOutputs,
+void elemwisecell_outputs_save(const char* fileName, bool isOutputUnsigned, unsigned int nbOutputs,
                            unsigned int outputsHeight, unsigned int outputsWidth,
                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
 {
@@ -2522,21 +2541,21 @@ void elemwisecell_outputs_save(const char* fileName, unsigned int nbOutputs,
         return;
     }
 
-    elemwisecell_output_out(file, nbOutputs, outputsHeight, outputsWidth, outputs);
+    elemwisecell_output_out(file, isOutputUnsigned, nbOutputs, outputsHeight, outputsWidth, outputs);
     if(fclose(file) != 0) {
         fprintf(stderr, "Couldn't close file %s.", fileName);
     }
 }
 
-void elemwisecell_outputs_print(const char* name, unsigned int nbOutputs,
+void elemwisecell_outputs_print(const char* name, bool isOutputUnsigned,unsigned int nbOutputs,
                             unsigned int outputsHeight, unsigned int outputsWidth,
                             DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
 {
     printf("%s outputs:\n", name);
-    elemwisecell_output_out(stdout, nbOutputs, outputsHeight, outputsWidth, outputs);
+    elemwisecell_output_out(stdout, isOutputUnsigned, nbOutputs, outputsHeight, outputsWidth, outputs);
 }
 
-void scalingcell_output_out(FILE* file, unsigned int nbOutputs, unsigned int outputOffset,
+void scalingcell_output_out(FILE* file, bool isOutputUnsigned, unsigned int nbOutputs, unsigned int outputOffset,
                          unsigned int outputsHeight, unsigned int outputsWidth,
                          DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
 {
@@ -2548,7 +2567,11 @@ void scalingcell_output_out(FILE* file, unsigned int nbOutputs, unsigned int out
 #if NB_BITS < 0
                 fprintf(file, "%f ", outputs[outputOffset + output][oy][ox]);
 #else
-                fprintf(file, "%d ", outputs[outputOffset + output][oy][ox]);
+                if (isOutputUnsigned) {
+                   fprintf(file, "%d ", (UDATA_T)outputs[outputOffset + output][oy][ox]);
+                } else {
+                   fprintf(file, "%d ", outputs[outputOffset + output][oy][ox]);
+                }
 #endif
             }
 
@@ -2560,7 +2583,7 @@ void scalingcell_output_out(FILE* file, unsigned int nbOutputs, unsigned int out
 
 }
 
-void scalingcell_outputs_save(const char* fileName, unsigned int nbOutputs, unsigned int outputOffset,
+void scalingcell_outputs_save(const char* fileName, bool isOutputUnsigned, unsigned int nbOutputs, unsigned int outputOffset,
                            unsigned int outputsHeight, unsigned int outputsWidth,
                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
 {
@@ -2570,18 +2593,18 @@ void scalingcell_outputs_save(const char* fileName, unsigned int nbOutputs, unsi
         return;
     }
 
-    scalingcell_output_out(file, nbOutputs, outputOffset, outputsHeight, outputsWidth, outputs);
+    scalingcell_output_out(file, isOutputUnsigned, nbOutputs, outputOffset, outputsHeight, outputsWidth, outputs);
     if(fclose(file) != 0) {
         fprintf(stderr, "Couldn't close file %s.", fileName);
     }
 }
 
-void scalingcell_outputs_print(const char* name, unsigned int nbOutputs, unsigned int outputOffset,
+void scalingcell_outputs_print(const char* name, bool isOutputUnsigned, unsigned int nbOutputs, unsigned int outputOffset,
                             unsigned int outputsHeight, unsigned int outputsWidth,
                             DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
 {
     printf("%s outputs:\n", name);
-    scalingcell_output_out(stdout, nbOutputs, outputOffset, outputsHeight, outputsWidth, outputs);
+    scalingcell_output_out(stdout, isOutputUnsigned, nbOutputs, outputOffset, outputsHeight, outputsWidth, outputs);
 }
 
 
