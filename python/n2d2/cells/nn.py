@@ -1141,7 +1141,7 @@ class Pool(NeuralNetworkCell):
                 raise n2d2.error_handler.WrongInputType("pooling", str(type(pooling)), ["str"])
             if pooling not in N2D2.PoolCell.Pooling.__members__.keys():
                 raise n2d2.error_handler.WrongValue("pooling", pooling,
-                                                    " ".join(N2D2.PoolCell.Pooling.__members__.keys()))
+                                                    ", ".join(N2D2.PoolCell.Pooling.__members__.keys()))
             self._optional_constructor_arguments['pooling'] = \
                 N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
 
@@ -1278,7 +1278,7 @@ class Pool2d(NeuralNetworkCell): # Should inherit Pool ?
                 raise n2d2.error_handler.WrongInputType("pooling", str(type(pooling)), ["str"])
             if pooling not in N2D2.PoolCell.Pooling.__members__.keys():
                 raise n2d2.error_handler.WrongValue("pooling", pooling,
-                                                    " ".join(N2D2.PoolCell.Pooling.__members__.keys()))
+                                                    ", ".join(N2D2.PoolCell.Pooling.__members__.keys()))
             self._optional_constructor_arguments['pooling'] = \
                 N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
 
@@ -1359,7 +1359,7 @@ class GlobalPool2d(NeuralNetworkCell): # Should inherit Pool ?
                 raise n2d2.error_handler.WrongInputType("pooling", str(type(pooling)), ["str"])
             if pooling not in self._cell_constructors[self._model_key].Pooling.__members__.keys():
                 raise n2d2.error_handler.WrongValue("pooling", pooling,
-                                                    " ".join(self._cell_constructors[self._model_key].Pooling.__members__.keys()))
+                                                    ", ".join(self._cell_constructors[self._model_key].Pooling.__members__.keys()))
             self._optional_constructor_arguments['pooling'] = \
                 N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
 
@@ -1782,7 +1782,7 @@ class ElemWise(NeuralNetworkCell):
                 raise n2d2.error_handler.WrongInputType("operation", str(type(operation)), ["str"])
             if operation not in N2D2.ElemWiseCell.Operation.__members__.keys():
                 raise n2d2.error_handler.WrongValue("operation", operation,
-                                                    " ".join(N2D2.ElemWiseCell.Operation.__members__.keys()))
+                                                    ", ".join(N2D2.ElemWiseCell.Operation.__members__.keys()))
             self._optional_constructor_arguments['operation'] = \
                 N2D2.ElemWiseCell.Operation.__members__[self._optional_constructor_arguments['operation']]
         if "mode" in self._optional_constructor_arguments:
@@ -1791,7 +1791,7 @@ class ElemWise(NeuralNetworkCell):
                 raise n2d2.error_handler.WrongInputType("mode", str(type(mode)), ["str"])
             if mode not in N2D2.ElemWiseCell.CoeffMode.__members__.keys():
                 raise n2d2.error_handler.WrongValue("operation", operation,
-                                                    " ".join(N2D2.ElemWiseCell.CoeffMode.__members__.keys()))
+                                                    ", ".join(N2D2.ElemWiseCell.CoeffMode.__members__.keys()))
             self._optional_constructor_arguments['mode'] = \
                 N2D2.ElemWiseCell.CoeffMode.__members__[self._optional_constructor_arguments['mode']]
         if "weights" in self._optional_constructor_arguments:

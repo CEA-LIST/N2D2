@@ -96,7 +96,7 @@ class Tensor:
             if dim_format in self._dim_format:
                 dims = self._dim_format[dim_format](dims)
             else:
-                raise error_handler.WrongValue('dim_format', dim_format, " ".join(self._dim_format.keys()))
+                raise error_handler.WrongValue('dim_format', dim_format, ", ".join(self._dim_format.keys()))
         else:
             raise error_handler.WrongInputType("dims", type(dims), [str(list)])
 

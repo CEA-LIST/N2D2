@@ -92,10 +92,10 @@ class test_Conv(test_params):
             "name": "test",
             "activation": n2d2.activation.Tanh(),
             "weights_solver": n2d2.solver.SGD(),
-            "sub_sample_dims": [2, 2],
+            "sub_sample_dims": [0, 0],
             "stride_dims": [2, 2],
             "dilation_dims": [1, 1],
-            "padding_dims": [2, 2],
+            "padding_dims": [3, 3],
             "bias_solver": n2d2.solver.SGD(),
             "weights_filler": n2d2.filler.Normal(),
             "bias_filler": n2d2.filler.Normal(),
@@ -175,7 +175,7 @@ class test_Deconv(test_params):
             "name": "test",
             "activation": n2d2.activation.Linear(),
             "weights_solver": n2d2.solver.SGD(),
-            "stride_dims": [2, 2],
+            "stride_dims": [0, 0],
             "dilation_dims": [1, 1],
             "padding_dims": [2, 2],
             "bias_solver": n2d2.solver.SGD(),
@@ -209,7 +209,7 @@ class test_ElemWise(test_params):
             "operation": "Max",
             "mode": "PerInput",
             "weights": [0.5],
-            "shifts": [0.5],
+            "shifts": [0.0],
             "activation": n2d2.activation.Linear(),
         }
         self.object = n2d2.cells.ElemWise(**self.parameters)
@@ -250,10 +250,10 @@ class test_Padding(test_params):
     def setUp(self):
         self.parameters = {
             "name": "test",
-            "top_pad": 1,
-            "bot_pad":0,
-            "left_pad": 0,
-            "right_pad": 1,
+            "top_pad": 0,
+            "bot_pad":1,
+            "left_pad": 2,
+            "right_pad": 3,
         }
         self.object = n2d2.cells.Padding(**self.parameters)
 
@@ -412,7 +412,7 @@ class test_PadCrop(test_params):
     def setUp(self):
         self.parameters = {
             "width": 10,
-            "height":10,
+            "height":9,
             "additive_wh": False,
             "border_type": "WrapBorder",
             "border_value": [0.0, 0.0, 0.0],
@@ -433,9 +433,9 @@ class test_Distortion(test_params):
         self.parameters = {
             "elastic_gaussian_size": 10,
             "elastic_sigma": 5.0,
-            "elastic_scaling": 0.0,
+            "elastic_scaling": 0.5,
             "scaling": 0.0,
-            "rotation": 0.0,
+            "rotation": 0.2,
             "ignore_missing_data": False,
         }
         self.object = n2d2.transform.Distortion(**self.parameters)
@@ -453,7 +453,7 @@ class test_Rescale(test_params):
     def setUp(self):
         self.parameters = {
             "height": 10,
-            "width": 10,
+            "width": 8,
             "keep_aspect_ratio": True,
             "resize_to_fit": False,
         }
@@ -483,8 +483,8 @@ class test_RangeAffine(test_params):
         self.parameters = {
             "first_operator": "Plus",
             "first_value": [1.0],
-            "second_operator": "Plus",
-            "second_value": [1.0],
+            "second_operator": "Minus",
+            "second_value": [0.0],
             "truncate": False,
         }
         self.object = n2d2.transform.RangeAffine(**self.parameters)
@@ -504,13 +504,13 @@ class test_SliceExtraction(test_params):
             "width": 4,
             "height": 2,
             "offset_x": 0,
-            "offset_y": 0,
+            "offset_y": 1,
             "random_offset_x":False,
             "random_offset_y":False,
             "random_rotation":True,
             "random_scaling": True,
             "random_rotation_range": [0.0, 1.0],
-            "random_scaling_range": [0.0, 1.0],
+            "random_scaling_range": [0.5, 1.0],
             "allow_padding": True,
             "border_type": "WrapBorder",
             "border_value": [1.0],
@@ -556,13 +556,13 @@ class test_RandomResizeCrop(test_params):
     def setUp(self):
         self.parameters = {
             "width": 10,
-            "height": 10,
+            "height": 9,
             "offset_x": 0,
-            "offset_y": 0,
-            "scale_min": 0.0,
-            "scale_max": 0.0,
+            "offset_y": 1,
+            "scale_min": 0.3,
+            "scale_max": 0.5,
             "ratio_min": 0.0,
-            "ratio_max": 0.0,
+            "ratio_max": 1.0,
         }
         self.object = n2d2.transform.RandomResizeCrop(**self.parameters)
 
@@ -571,7 +571,7 @@ class test_RandomResizeCrop(test_params):
         self.assertEqual(self.parameters["height"], self.object.N2D2().getHeight())
         self.assertEqual(self.parameters["offset_x"], self.object.N2D2().getOffsetX())
         self.assertEqual(self.parameters["offset_y"], self.object.N2D2().getOffsetY())
-        self.assertEqual(self.parameters["scale_min"], self.object.N2D2().getScaleMin())
+        self.assertEqual(self.parameters["scale_min"], round(self.object.N2D2().getScaleMin(), 5))
         self.assertEqual(self.parameters["scale_max"], self.object.N2D2().getScaleMax())
         self.assertEqual(self.parameters["ratio_min"], self.object.N2D2().getRatioMin())
         self.assertEqual(self.parameters["ratio_max"], self.object.N2D2().getRatioMax())
@@ -596,7 +596,7 @@ class test_He(test_params):
             "datatype": "float",
             "variance_norm": 'Average',
             "scaling": 1.0,
-            "mean_norm": 1.0,
+            "mean_norm": 0.0,
         }
         self.object = n2d2.filler.He(**self.parameters)
 
@@ -660,16 +660,16 @@ class test_SGD(test_params):
             "datatype": "float",
             "model": "Frame",
             "learning_rate": 0.001,
-            "momentum": 0.0,
+            "momentum": 0.1,
             "decay": 0.0,
             "power": 1.0,
-            "iteration_size": 1,
-            "max_iterations": 1,
-            "warm_up_duration": 0,
-            "warm_up_lr_frac": 1.0,
+            "iteration_size": 2,
+            "max_iterations": 5,
+            "warm_up_duration": 4,
+            "warm_up_lr_frac": 1.1,
             "learning_rate_policy": "None",
-            "learning_rate_step_size": 1,
-            "learning_rate_decay": 0.1,
+            "learning_rate_step_size": 3,
+            "learning_rate_decay": 0.001,
             "clamping": "min:max",
             "polyak_momentum": False,
         }
@@ -701,8 +701,8 @@ class test_Adam(test_params):
             "learning_rate": 0.001,
             "clamping": "min:max",
             "beta1": 0.1,
-            "beta2": 0.1,
-            "epsilon": 0.1,
+            "beta2": 0.2,
+            "epsilon": 0.3,
         }
         self.object = n2d2.solver.Adam(**self.parameters)
 
@@ -731,7 +731,7 @@ class Rectifier(test_params):
     def setUp(self):
         self.parameters = {
             "leak_slope": 0.0,
-            "clipping": 0.0,
+            "clipping": 0.5,
             "quantizer": n2d2.quantizer.SATAct(),
         }
         self.object = n2d2.activation.Rectifier(**self.parameters)

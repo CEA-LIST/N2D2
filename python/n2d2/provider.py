@@ -128,7 +128,7 @@ class DataProvider(Provider):
         """
         if partition not in N2D2.Database.StimuliSet.__members__.keys():
             raise n2d2.error_handler.WrongValue("partition", partition,
-                                                " ".join(N2D2.Database.StimuliSet.__members__.keys()))
+                                                ", ".join(N2D2.Database.StimuliSet.__members__.keys()))
         self._partition = partition
 
     def get_partition(self):
@@ -294,7 +294,7 @@ class TensorPlaceholder(Provider):
         """
         if partition not in N2D2.Database.StimuliSet.__members__.keys():
             raise n2d2.error_handler.WrongValue("partition", partition,
-                                                " ".join(N2D2.Database.StimuliSet.__members__.keys()))
+                                                ", ".join(N2D2.Database.StimuliSet.__members__.keys()))
         self._partition = partition
 
     def get_partition(self):

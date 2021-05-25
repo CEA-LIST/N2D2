@@ -176,6 +176,94 @@ class test_cells(unittest.TestCase):
         with self.assertRaises(n2d2.error_handler.WrongInputType):
             n2d2.cells.BatchNorm2d(1, activation=1)
 
+class test_activation(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_Linear(self):
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.activation.Linear(quantizer=1)
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.activation.Linear(clipping="a")
+            
+    def test_Rectifier(self):
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.activation.Rectifier(quantizer=1)
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.activation.Rectifier(leak_slope="a")
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.activation.Rectifier(clipping="a")
+
+class test_filler(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_He(self):
+        with self.assertRaises(n2d2.error_handler.WrongValue):
+            n2d2.filler.He(variance_norm=1)
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.filler.He(mean_norm="a")
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.filler.He(scaling="a")
+
+    def test_Normal(self):
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.filler.Normal(mean="a")
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.filler.Normal(std_dev="a")      
+
+    def test_Xavier(self):
+        with self.assertRaises(n2d2.error_handler.WrongValue):
+            n2d2.filler.Xavier(distribution=1)
+        with self.assertRaises(n2d2.error_handler.WrongValue):
+            n2d2.filler.Xavier(distribution=1)
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.filler.Xavier(scaling="a")  
+    
+    def test_Constant(self):
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.filler.Constant(value="a")  
+
+class test_solver(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_SGD(self):
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.solver.SGD(learning_rate='a')
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.solver.SGD(momentum="a")
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.solver.SGD(decay="a")
+        with self.assertRaises(n2d2.error_handler.WrongValue):
+            n2d2.solver.SGD(learning_rate_policy=1)
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.solver.SGD(learning_rate_decay='a')
+        with self.assertRaises(n2d2.error_handler.WrongValue):
+            n2d2.solver.SGD(clamping=1)
+
+    def test_Adam(self):
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.solver.Adam(learning_rate='a')
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.solver.Adam(beta1="a")
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.solver.Adam(beta2="a")
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.solver.Adam(epsilon='a')
+        with self.assertRaises(n2d2.error_handler.WrongValue):
+            n2d2.solver.Adam(clamping=1)
+
+
 if __name__ == '__main__':
     """
     You need to add this line for the tests to be run.

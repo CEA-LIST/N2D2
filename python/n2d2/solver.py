@@ -23,6 +23,8 @@ import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
 from abc import ABC, abstractmethod
 
+clamping_values = ["'min:max'", "':max'", "'min:'", "''"]
+
 class Solver(N2D2_Interface, ABC):
     @abstractmethod
     def __init__(self, **config_parameters):
@@ -108,6 +110,16 @@ class SGD(Solver):
         """
         Solver.__init__(self, **config_parameters)
         if from_arguments:
+            if "learning_rate_policy" in config_parameters:
+                learning_rate_policy = config_parameters["learning_rate_policy"]
+                if learning_rate_policy not in self._solver_generators[self._model_key].LearningRatePolicy.__members__.keys():
+                    raise n2d2.error_handler.WrongValue("learning_rate_policy", learning_rate_policy,
+                            ", ".join(self._solver_generators[self._model_key].LearningRatePolicy.__members__.keys()))
+            if "clamping" in config_parameters:
+               clamping = config_parameters['clamping']
+               if clamping not in clamping_values:
+                   raise n2d2.error_handler.WrongValue("clamping", clamping,
+                            ", ".join(clamping_values))
             self._set_N2D2_object(self._solver_generators[self._model_key]())
             self._set_N2D2_parameters(self._config_parameters)
 
@@ -153,5 +165,10 @@ class Adam(Solver):
         """
         Solver.__init__(self, **config_parameters)
         if from_arguments:
+            if "clamping" in config_parameters:
+               clamping = config_parameters['clamping']
+               if clamping not in clamping_values:
+                   raise n2d2.error_handler.WrongValue("clamping", clamping,
+                            ", ".join(clamping_values))
             self._set_N2D2_object(self._solver_generators[self._model_key]())
             self._set_N2D2_parameters(self._config_parameters)
