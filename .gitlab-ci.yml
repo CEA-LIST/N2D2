@@ -7,12 +7,14 @@ stages:
   - test
   - deploy
 
-before_script:
-  - mkdir build
-  - cd build
-  - cmake -DCMAKE_BUILD_TYPE=Debug ..
+.before_script_template:
+  before_script:
+    - mkdir build
+    - cd build
+    - cmake -DCMAKE_BUILD_TYPE=Debug ..
 
 build:ubuntu:
+  extends: .before_script_template
   stage: build
   tags:
     - ubuntu
@@ -24,6 +26,7 @@ build:ubuntu:
 #      - build/
 
 build-docs:
+  extends: .before_script_template
   stage: build
   script:
     - make docs -j4
@@ -34,6 +37,7 @@ build-docs:
     - master
 
 test:ubuntu:
+  extends: .before_script_template
   stage: test
   tags:
     - ubuntu
@@ -48,7 +52,6 @@ test:ubuntu:
 # service restart: systemctl restart simplehttp.service
 docs:
   stage: deploy
-  before_script:
   script:
     - cp -r docs/_build/html/* /local/is154584/www/N2D2/
   dependencies:
@@ -62,7 +65,6 @@ docs:
 # Github deployment
 github:
   stage: deploy
-  before_script:
   script:
     - git remote add github git@github.com:CEA-LIST/N2D2.git
     - git push github HEAD:master
@@ -76,7 +78,6 @@ github:
 # Github.io deployment
 github.io:
   stage: deploy
-  before_script:
   script:
     - git clone git@github.com:CEA-LIST/N2D2-docs.git github.io
     - cp -r docs/_build/html/* github.io/
