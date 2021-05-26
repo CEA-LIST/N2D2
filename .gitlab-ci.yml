@@ -23,7 +23,7 @@ build:ubuntu:
 #    paths:
 #      - build/
 
-docs-build:
+build-docs:
   stage: build
   script:
     - make docs -j4
@@ -52,7 +52,7 @@ docs:
   script:
     - cp -r docs/_build/html/* /local/is154584/www/N2D2/
   dependencies:
-    - docs-build
+    - build-docs
   environment:
     name: Documentation
     url: http://is154584.intra.cea.fr:8081/N2D2/
@@ -74,7 +74,7 @@ github:
     - master
 
 # Github.io deployment
-github:
+github.io:
   stage: deploy
   before_script:
   script:
@@ -85,7 +85,7 @@ github:
     - git commit -m "${CI_COMMIT_MESSAGE}"
     - git push
   dependencies:
-    - docs-build
+    - build-docs
   environment:
     name: Github.io
     url: https://cea-list.github.io/N2D2-docs
