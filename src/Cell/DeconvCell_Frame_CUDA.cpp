@@ -544,13 +544,16 @@ the API cudnnGetConvolutionForwardMaxCount().
 
 
 template <class T>
-void N2D2::DeconvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
+void N2D2::DeconvCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
 {
-     // NOTE: this is addition to initialize()
-    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
-    if (mapping.empty()) {
-        mMapping.append(Tensor<bool>({getNbOutputs(), inputDimZ}, true));
+    // BEGIN: addition to initialize()
+    if (mMapping.empty()) {
+        mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
     }
+    // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
+    // However, this requires a reinitialization of the input dims which is unsafe
+    setInputsDims({nbInputChannels});
+    // END: addition to initialize()
     
     if (!mNoBias) {
         if (mBias->empty()) {
@@ -587,12 +590,12 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ
     for (unsigned int k = 0, size = nbInputs; k < size; ++k) {
 
         if (k < mNbGroups.size()) {
-            nbChannels += inputDimZ;
+            nbChannels += nbInputChannels;
             continue;  // already initialized, skip!
         }
 
         mNbGroups.push_back(getNbGroups(mMapping.rows(nbChannels,
-                                                   inputDimZ)));
+                                                   nbInputChannels)));
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
 
@@ -609,7 +612,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ
             kernelDims.push_back(getNbOutputs());
 #endif
 
-        kernelDims.push_back(inputDimZ);
+        kernelDims.push_back(nbInputChannels);
 
         if (it != mExtSharedSynapses.end()) {
             CudaTensor<T>* extWeights
@@ -650,7 +653,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ
             if (mNbGroups[k] == 0) {
                 // Set the non-connected kernels coefficients to 0
                 for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-                    for (unsigned int channel = 0; channel < inputDimZ;
+                    for (unsigned int channel = 0; channel < nbInputChannels;
                          ++channel) {
                         if (!isConnection(nbChannels + channel, output))
                             mSharedSynapses.back()[channel][output]
@@ -683,7 +686,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ
                                                       &cudaKernelDims[0]));
 #endif
 
-        nbChannels += inputDimZ;
+        nbChannels += nbInputChannels;
 
     }
 

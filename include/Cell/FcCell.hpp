@@ -64,6 +64,10 @@ public:
         CO
     };
     FcCell(const DeepNet& deepNet, const std::string& name, unsigned int nbOutputs);
+    virtual void initializeDataDependent() 
+    {
+        throw std::runtime_error("Error: initializeDataDependent not implemented for this cell type!");
+    };
     const char* getType() const
     {
         return Type;

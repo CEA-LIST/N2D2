@@ -218,7 +218,10 @@ class N2D2_Interface:
         if n2d2.global_variables.verbosity == n2d2.global_variables.Verbosity.detailed:
             output += add_delimiter(config_param_len > 0 and (constructor_arg_len > 0 or opt_constructor_arg_len > 0), " |")
             for idx, (key, value) in enumerate(self._config_parameters.items()):
-                output += key + "=" + str(value) + add_delimiter(not idx == config_param_len-1, ",")
+                if key is 'mapping':
+                    output += key + "=n2d2.Tensor(dims=" + str(value.dims()) + ")" + add_delimiter(not idx == config_param_len - 1, ",")
+                else:
+                    output += key + "=" + str(value) + add_delimiter(not idx == config_param_len-1, ",")
         if constructor_arg_len + opt_constructor_arg_len + config_param_len > 0:
             output += ")"
         return output

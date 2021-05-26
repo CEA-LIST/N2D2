@@ -20,6 +20,7 @@
 """
 
 from n2d2.utils import ConfigSection
+from n2d2.tensor import Interface
 from n2d2.cells.nn import Fc, Conv, ConvDepthWise, ConvPointWise, GlobalPool2d, ElemWise
 from n2d2.cells import Sequence, Block
 from n2d2.activation import Rectifier, Linear
@@ -69,7 +70,7 @@ class MobileNetBottleneckBlock(Block):
         inputs.get_deepnet().begin_group(self.get_name())
         x = self._main_branch(inputs)
         if self._elem_wise:
-            x = self._elem_wise([x, inputs])
+            x = self._elem_wise(Interface([x, inputs]))
         inputs.get_deepnet().end_group()
         return x
 

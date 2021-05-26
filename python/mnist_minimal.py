@@ -37,6 +37,11 @@ provider2 = n2d2.provider.DataProvider(database2, [28, 28, 1], batch_size=batch_
 
 print("Create Conv")
 cell1 = n2d2.cells.nn.Conv(1, 10, kernel_dims=[5, 5])
+
+print(cell1.get_weights()[0])
+
+exit()
+
 #cell1 = n2d2.cells.Fc(28*28, 50)
 #fc1 = n2d2.cells.Fc(50, 50)
 #TODO: Fc input dimension check before call

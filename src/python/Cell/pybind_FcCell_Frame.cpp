@@ -34,7 +34,9 @@ void declare_FcCell_Frame(py::module &m, const std::string& typeStr) {
 
     .def(py::init<const DeepNet&, const std::string&, unsigned int, const std::shared_ptr<Activation>&>(),
          py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation") = std::make_shared<TanhActivation_Frame<Float_T> >())
+    .def("initializeWeightQuantizer", &FcCell_Frame<T>::initializeWeightQuantizer)
     ;
+    
 
 }
 

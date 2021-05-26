@@ -193,11 +193,17 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initialize()
 
 
 template <class T>
-void N2D2::BatchNormCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
+void N2D2::BatchNormCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
 {
-    // NOTE: this is addition to initialize()
-    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
-
+    // BEGIN: addition to initialize()
+    if (mMapping.empty()) {
+        mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
+    }
+    // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
+    // However, this requires a reinitialization of the input dims which is unsafe
+    setInputsDims({nbInputChannels});
+    // END: addition to initialize()
+    
     /*
     cudnnTensorDescriptor_t derivedBnDesc;
     CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&derivedBnDesc));
@@ -226,7 +232,7 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initializeParameters(unsigned int inputD
     */
 
     std::vector<size_t> requiredDims(4, 1);
-    requiredDims[2] = inputDimZ;
+    requiredDims[2] = nbInputChannels;
 
     if (mScale->empty())
         mScale->resize(requiredDims, ParamT(1.0));
