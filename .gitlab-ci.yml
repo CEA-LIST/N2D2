@@ -45,3 +45,16 @@ docs:
     url: http://is154584.intra.cea.fr:8081/N2D2/
   only:
     - master
+
+# Github deployment
+github:
+  stage: deploy
+  script:
+    - cd ..
+    - git remote add github git@github.com:CEA-LIST/N2D2.git
+    - git push github HEAD:master
+  environment:
+    name: Github
+    url: https://github.com/CEA-LIST/N2D2
+  only:
+    - master
