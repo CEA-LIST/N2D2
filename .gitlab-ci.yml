@@ -23,6 +23,16 @@ build:ubuntu:
 #    paths:
 #      - build/
 
+docs-build:
+  stage: build
+  script:
+    - make docs -j4
+  artifacts:
+    paths:
+      - docs/_build/html
+  only:
+    - master
+
 test:ubuntu:
   stage: test
   tags:
@@ -31,15 +41,18 @@ test:ubuntu:
 #    - cd build
     - make tests -j4
     - make test
+  dependencies: []
 
 # HTTP server setup on is154584 (using python simplehttp):
 # systemctl config file: /etc/systemd/system/simplehttp.service
 # service restart: systemctl restart simplehttp.service
 docs:
   stage: deploy
+  before_script:
   script:
-    - make docs -j4
-    - cp -r ../docs/_build/html/* /local/is154584/www/N2D2/
+    - cp -r docs/_build/html/* /local/is154584/www/N2D2/
+  dependencies:
+    - docs-build
   environment:
     name: Documentation
     url: http://is154584.intra.cea.fr:8081/N2D2/
@@ -49,12 +62,32 @@ docs:
 # Github deployment
 github:
   stage: deploy
+  before_script:
   script:
-    - cd ..
     - git remote add github git@github.com:CEA-LIST/N2D2.git
     - git push github HEAD:master
+  dependencies: []
   environment:
     name: Github
     url: https://github.com/CEA-LIST/N2D2
+  only:
+    - master
+
+# Github.io deployment
+github:
+  stage: deploy
+  before_script:
+  script:
+    - git clone git@github.com:CEA-LIST/N2D2-docs.git github.io
+    - cp -r docs/_build/html/* github.io/
+    - cd github.io
+    - git add --all
+    - git commit -m "${CI_COMMIT_MESSAGE}"
+    - git push
+  dependencies:
+    - docs-build
+  environment:
+    name: Github.io
+    url: https://cea-list.github.io/N2D2-docs
   only:
     - master
