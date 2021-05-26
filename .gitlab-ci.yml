@@ -38,8 +38,8 @@ test:ubuntu:
 docs:
   stage: deploy
   script:
-    - make docs
-    - cp -r docs/_build/html/* /local/is154584/www/N2D2/
+    - make docs -j4
+    - cp -r ../docs/_build/html/* /local/is154584/www/N2D2/
   environment:
     name: Documentation
     url: http://is154584.intra.cea.fr:8081/N2D2/
