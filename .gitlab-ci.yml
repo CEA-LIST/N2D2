@@ -5,15 +5,18 @@ variables:
 stages:
   - build
   - test
+  - deploy
+
+before_script:
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Debug ..
 
 build:ubuntu:
   stage: build
   tags:
     - ubuntu
   script:
-    - mkdir build
-    - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
     - make -j4
 #  artifacts:
 #    expire_in: 2 hrs
@@ -26,8 +29,19 @@ test:ubuntu:
     - ubuntu
   script:
 #    - cd build
-    - mkdir build
-    - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
     - make tests -j4
     - make test
+
+# HTTP server setup on is154584 (using python simplehttp):
+# systemctl config file: /etc/systemd/system/simplehttp.service
+# service restart: systemctl restart simplehttp.service
+docs:
+  stage: deploy
+  script:
+    - make docs
+    - cp -r docs/_build/html/* /local/is154584/www/N2D2/
+  environment:
+    name: Documentation
+    url: http://is154584.intra.cea.fr:8081/N2D2/
+  only:
+    - master
