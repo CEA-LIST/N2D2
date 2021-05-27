@@ -66,7 +66,7 @@ docs:
 github:
   stage: deploy
   script:
-    - git remote add github git@github.com:CEA-LIST/N2D2.git
+    - git remote show github || git remote add github git@github.com:CEA-LIST/N2D2.git
     - git push github HEAD:master
   dependencies: []
   environment:
@@ -79,10 +79,12 @@ github:
 github.io:
   stage: deploy
   script:
-    - git clone git@github.com:CEA-LIST/N2D2-docs.git github.io
-    - cp -r docs/_build/html/* github.io/
-    - cd github.io
+    - git -C ../github.io/ pull || git clone git@github.com:CEA-LIST/N2D2-docs.git ../github.io
+    - cp -r docs/_build/html/* ../github.io/
+    - cd ../github.io
     - git add --all
+    - git config user.email "olivier.bichler@cea.fr"
+    - git config user.name "gitlab-runner"
     - git commit -m "${CI_COMMIT_MESSAGE}"
     - git push
   dependencies:
