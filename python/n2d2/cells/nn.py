@@ -55,6 +55,17 @@ _cell_frame_parameters = {
 # Cell_frame_parameter contains the parameters from cell_parameter
 _cell_frame_parameters.update(_cell_parameters) 
 
+
+class Datatyped(ABC):
+
+    @abstractmethod
+    def __init__(self, datatype=None):
+        if datatype:
+            self._datatype = datatype
+        else:
+            self._datatype = n2d2.global_variables.default_datatype
+
+
 class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
 
     @abstractmethod
@@ -79,12 +90,19 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
             self._model = config_parameters.pop('model')
         else:
             self._model = n2d2.global_variables.default_model
-        if 'datatype' in config_parameters:
-            self.datatype = config_parameters.pop('datatype')
-        else:
-            self.datatype = n2d2.global_variables.default_datatype
 
-        self._model_key = self._model + '<' + self.datatype + '>'
+        self._model_key = self._model
+
+        if isinstance(self, Datatyped):
+            if 'datatype' in config_parameters:
+                Datatyped.__init__(self, config_parameters.pop('datatype'))
+            else:
+                Datatyped.__init__(self)
+            self._model_key += '<' + self._datatype + '>'
+        else:
+            if 'datatype' in config_parameters:
+                raise RuntimeError("'datatype' argument received in un-datatyped cell of type " + str(type(self)))
+
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._deepnet = None
@@ -264,7 +282,7 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
         self._deepnet = self._infer_deepnet(inputs)
 
 
-class Fc(NeuralNetworkCell):
+class Fc(NeuralNetworkCell, Datatyped):
     """
     Fully connected layer.
     """
@@ -318,7 +336,7 @@ class Fc(NeuralNetworkCell):
         :param no_bias: If True, don’t use bias, default=False
         :type no_bias: bool, optional
         """
-        
+
         if not from_arguments and (nb_inputs is not None or nb_outputs is not None or len(config_parameters) > 0):
             raise RuntimeError("from_arguments = True but not None constructor arguments")
         if from_arguments:
@@ -575,7 +593,7 @@ class Fc(NeuralNetworkCell):
 
 
 
-class Conv(NeuralNetworkCell):
+class Conv(NeuralNetworkCell, Datatyped):
     """
     Convolutional layer.
     """
@@ -945,7 +963,7 @@ class ConvPointWise(Conv):
 
 
 
-class Softmax(NeuralNetworkCell):
+class Softmax(NeuralNetworkCell, Datatyped):
     """
     Softmax layer.
     """
@@ -1044,7 +1062,7 @@ class Softmax(NeuralNetworkCell):
 
 
 
-class Pool(NeuralNetworkCell):
+class Pool(NeuralNetworkCell, Datatyped):
     '''
     Pooling layer.
     '''
@@ -1194,7 +1212,7 @@ class Pool(NeuralNetworkCell):
 
         return self.get_outputs()
 
-class Pool2d(NeuralNetworkCell): # Should inherit Pool ?
+class Pool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
@@ -1280,7 +1298,7 @@ class Pool2d(NeuralNetworkCell): # Should inherit Pool ?
         return self.get_outputs()
 
 
-class GlobalPool2d(NeuralNetworkCell): # Should inherit Pool ?
+class GlobalPool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
@@ -1363,7 +1381,7 @@ class GlobalPool2d(NeuralNetworkCell): # Should inherit Pool ?
         return self.get_outputs()
 
 
-class Deconv(NeuralNetworkCell):
+class Deconv(NeuralNetworkCell, Datatyped):
     """
     Deconvolution layer.
     """
@@ -1682,7 +1700,7 @@ class Deconv(NeuralNetworkCell):
             biases.append(n2d2.Tensor.from_N2D2(tensor))
         return biases
 
-class ElemWise(NeuralNetworkCell): 
+class ElemWise(NeuralNetworkCell):
     """
     Element-wise operation layer.
     """
@@ -1807,7 +1825,7 @@ class ElemWise(NeuralNetworkCell):
                 raise n2d2.wrong_input_type("inputs", inputs, [str(type(list)), str(type(n2d2.Tensor))])
 
 
-            self._set_N2D2_object(self._cell_constructors[self._model](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
                                                                      self.get_name(),
                                                                      mapping_row,
                                                                      **self.n2d2_function_argument_parser(
@@ -1832,7 +1850,7 @@ class ElemWise(NeuralNetworkCell):
         return self.get_outputs()
 
 
-class Dropout(NeuralNetworkCell):
+class Dropout(NeuralNetworkCell, Datatyped):
     """
     Dropout layer :cite:`Srivastava2014`.
     """
@@ -2029,7 +2047,7 @@ class Padding(NeuralNetworkCell):
         if self._N2D2_object is None:
             nb_outputs = inputs.dims()[2]
 
-            self._set_N2D2_object(self._cell_constructors[self._model](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
                                                                      self.get_name(),
                                                                      nb_outputs,
                                                                      self._constructor_arguments['top_pad'],
@@ -2057,7 +2075,7 @@ class Padding(NeuralNetworkCell):
         return self.get_outputs()
 
 
-class BatchNorm2d(NeuralNetworkCell):
+class BatchNorm2d(NeuralNetworkCell, Datatyped):
 
     _cell_constructors = {
         'Frame<float>': N2D2.BatchNormCell_Frame_float,
@@ -2179,7 +2197,7 @@ class BatchNorm2d(NeuralNetworkCell):
 
 
 
-class Activation(NeuralNetworkCell):
+class Activation(NeuralNetworkCell, Datatyped):
 
     _cell_constructors = {
         'Frame<float>': N2D2.ActivationCell_Frame_float,
@@ -2259,7 +2277,7 @@ class Activation(NeuralNetworkCell):
 
 
 
-class Reshape(NeuralNetworkCell):
+class Reshape(NeuralNetworkCell, Datatyped):
 
     _cell_constructors = {
         'Frame<float>': N2D2.ReshapeCell_Frame_float,
@@ -2335,6 +2353,105 @@ class Reshape(NeuralNetworkCell):
                                                                          self._constructor_arguments['dims'],
                                                                          **self.n2d2_function_argument_parser(
                                                                              self._optional_constructor_arguments)))
+
+            if 'activation' not in self._config_parameters:
+                self._config_parameters['activation'] = \
+                    n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
+
+            """Set and initialize here all complex cells members"""
+            for key, value in self._config_parameters.items():
+                if key is 'activation':
+                    if value:
+                        self._N2D2_object.setActivation(value.N2D2())
+                else:
+                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+
+        self._add_to_graph(inputs)
+
+        self._N2D2_object.propagate(self._inference)
+
+        return self.get_outputs()
+
+
+class Resize(NeuralNetworkCell):
+    _cell_constructors = {
+        'Frame': N2D2.ResizeCell_Frame,
+        'Frame_CUDA': N2D2.ResizeCell_Frame_CUDA,
+    }
+    _parameters = {
+        "align_corners": "AlignCorners",
+    }
+    _parameters.update(_cell_frame_parameters)
+
+    _convention_converter = n2d2.ConventionConverter(_parameters)
+
+    def __init__(self, outputs_width, outputs_height, resize_mode, from_arguments=True, **config_parameters):
+        """
+        :param dims: dims of the new shape of the layer
+        :type dims: list
+        """
+
+        if not from_arguments and (outputs_width is not None or outputs_height is not None or
+                                resize_mode is not None or len(config_parameters) > 0):
+            raise RuntimeError("from_arguments = True but not None constructor arguments")
+        if from_arguments:
+            self._create_from_arguments(outputs_width, outputs_height, resize_mode, **config_parameters)
+
+    def _create_from_arguments(self, outputs_width, outputs_height, resize_mode, **config_parameters):
+        if not isinstance(outputs_width, int):
+            raise n2d2.error_handler.WrongInputType("outputs_width", type(outputs_width), ["int"])
+        if not isinstance(outputs_height, int):
+            raise n2d2.error_handler.WrongInputType("outputs_height", type(outputs_height), ["int"])
+
+        NeuralNetworkCell.__init__(self, **config_parameters)
+
+        self._constructor_arguments.update({
+            'outputs_width': outputs_width,
+            'outputs_height': outputs_height,
+            'resize_mode': N2D2.ResizeCell.ResizeMode.__members__[resize_mode],
+        })
+
+        # No optional parameter
+        self._parse_optional_arguments([])
+
+    @classmethod
+    def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
+
+        n2d2_cell = cls(None, None, None, from_arguments=False)
+
+        NeuralNetworkCell.__init__(n2d2_cell,
+                                   name=N2D2_object.getName(),
+                                   **cls.load_N2D2_parameters(N2D2_object))
+
+        n2d2_cell._set_N2D2_object(N2D2_object)
+
+        n2d2_cell._constructor_arguments['outputs_width'] = n2d2_cell._N2D2_object.getResizeOutputWidth()
+        n2d2_cell._constructor_arguments['outputs_height'] = n2d2_cell._N2D2_object.getResizeOutputHeight()
+        n2d2_cell._constructor_arguments['resize_mode'] = n2d2_cell._N2D2_object.getMode()
+
+        if n2d2_deepnet is not None:
+            n2d2_cell._deepnet = n2d2_deepnet
+            n2d2_cell._sync_inputs_and_parents()
+        else:
+            n2d2_cell._deepnet = None
+            n2d2_cell._N2D2_object.clearInputs()
+
+        return n2d2_cell
+
+    def __call__(self, inputs):
+        super().__call__(inputs)
+
+        if self._N2D2_object is None:
+            nb_outputs = inputs.dims()[2]
+
+            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+                                                                           self.get_name(),
+                                                                           self._constructor_arguments['outputs_width'],
+                                                                           self._constructor_arguments['outputs_height'],
+                                                                           nb_outputs,
+                                                                           self._constructor_arguments['resize_mode'],
+                                                                           **self.n2d2_function_argument_parser(
+                                                                               self._optional_constructor_arguments)))
 
             if 'activation' not in self._config_parameters:
                 self._config_parameters['activation'] = \
