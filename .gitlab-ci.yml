@@ -33,8 +33,6 @@ build-docs:
   artifacts:
     paths:
       - docs/_build/html
-  only:
-    - master
 
 test:ubuntu:
   extends: .before_script_template
@@ -53,6 +51,7 @@ test:ubuntu:
 docs:
   stage: deploy
   script:
+    - mkdir -p /local/is154584/www/N2D2/${CI_COMMIT_REF_NAME}
     - cp -r docs/_build/html/* /local/is154584/www/N2D2/${CI_COMMIT_REF_NAME}
   dependencies:
     - build-docs
