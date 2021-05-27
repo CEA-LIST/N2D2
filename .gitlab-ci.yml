@@ -82,7 +82,7 @@ github.io:
     - git add --all
     - git config user.email "olivier.bichler@cea.fr"
     - git config user.name "gitlab-runner"
-    - git commit -m "${CI_COMMIT_MESSAGE}"
+    - git diff --quiet && git diff --staged --quiet || git commit -m "${CI_COMMIT_MESSAGE}"
     - git push
   dependencies:
     - build-docs
