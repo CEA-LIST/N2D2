@@ -53,14 +53,12 @@ test:ubuntu:
 docs:
   stage: deploy
   script:
-    - cp -r docs/_build/html/* /local/is154584/www/N2D2/
+    - cp -r docs/_build/html/* /local/is154584/www/N2D2/${CI_COMMIT_REF_NAME}
   dependencies:
     - build-docs
   environment:
     name: Documentation
-    url: http://is154584.intra.cea.fr:8081/N2D2/
-  only:
-    - master
+    url: http://is154584.intra.cea.fr:8081/N2D2/${CI_COMMIT_REF_NAME}
 
 # Github deployment
 github:
