@@ -23,7 +23,7 @@ import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
 from abc import ABC, abstractmethod
 
-clamping_values = ["'min:max'", "':max'", "'min:'", "''"]
+clamping_values = ["min:max", ":max", "min:", ""]
 
 class Solver(N2D2_Interface, ABC):
     @abstractmethod
@@ -119,7 +119,7 @@ class SGD(Solver):
                clamping = config_parameters['clamping']
                if clamping not in clamping_values:
                    raise n2d2.error_handler.WrongValue("clamping", clamping,
-                            ", ".join(clamping_values))
+                            "'" + "', '".join(clamping_values) +"'")
             self._set_N2D2_object(self._solver_generators[self._model_key]())
             self._set_N2D2_parameters(self._config_parameters)
 
@@ -169,6 +169,6 @@ class Adam(Solver):
                clamping = config_parameters['clamping']
                if clamping not in clamping_values:
                    raise n2d2.error_handler.WrongValue("clamping", clamping,
-                            ", ".join(clamping_values))
+                            "'" + "', '".join(clamping_values) +"'")
             self._set_N2D2_object(self._solver_generators[self._model_key]())
             self._set_N2D2_parameters(self._config_parameters)

@@ -92,6 +92,10 @@ namespace AnchorCell_Frame_Kernels {
         CA,
         AC
     };
+    enum PixelFormat {
+        XY,
+        YX
+    };
 
 }
 }

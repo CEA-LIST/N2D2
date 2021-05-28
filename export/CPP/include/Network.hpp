@@ -1047,11 +1047,22 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
                                             + CHANNELS_WIDTH * (iy + syMin + sy));
                         int iOffset = INPUT_MEM_STRIDE * iPos;
 
+                        // Wrapping cannot occur in the middle of a line, except if
+                        // there is only one line (1D)!
+                        bool wrapInRange = false;
+
                         if (INPUT_MEM_WRAP_SIZE > 0
                             && iOffset >= INPUT_MEM_CONT_SIZE)
                         {
-                            iOffset += INPUT_MEM_WRAP_OFFSET
-                                - INPUT_MEM_CONT_OFFSET - INPUT_MEM_CONT_SIZE;
+                            iOffset += INPUT_MEM_WRAP_OFFSET - INPUT_MEM_CONT_OFFSET
+                                        - INPUT_MEM_CONT_SIZE;
+                        }
+                        else if (INPUT_MEM_WRAP_SIZE > 0 && POOL_WIDTH > 1
+                            && CHANNELS_HEIGHT == 1 // single line (1D)!
+                            && iOffset + POOL_WIDTH * INPUT_MEM_STRIDE
+                                > INPUT_MEM_CONT_SIZE)
+                        {
+                            wrapInRange = true;
                         }
 
                         for (int sx = 0; sx < POOL_WIDTH; ++sx) {
@@ -1062,12 +1073,19 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
                                 break;
                             }
 
-                            if (inputs[iOffset + output + sx * INPUT_MEM_STRIDE]
-                                > maxVal)
+                            int iOffsetInRange = iOffset + output
+                                + sx * INPUT_MEM_STRIDE;
+
+                            if (wrapInRange &&
+                                iOffsetInRange >= INPUT_MEM_CONT_SIZE)
                             {
-                                maxVal = inputs[iOffset + output
-                                            + sx * INPUT_MEM_STRIDE];
+                                iOffsetInRange += INPUT_MEM_WRAP_OFFSET
+                                            - INPUT_MEM_CONT_OFFSET
+                                            - INPUT_MEM_CONT_SIZE;
                             }
+
+                            if (inputs[iOffsetInRange] > maxVal)
+                                maxVal = inputs[iOffsetInRange];
                         }
                     }
 
@@ -1088,11 +1106,22 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
                                             + CHANNELS_WIDTH * (iy + syMin + sy));
                         int iOffset = INPUT_MEM_STRIDE * iPos;
 
+                        // Wrapping cannot occur in the middle of a line, except if
+                        // there is only one line (1D)!
+                        bool wrapInRange = false;
+
                         if (INPUT_MEM_WRAP_SIZE > 0
                             && iOffset >= INPUT_MEM_CONT_SIZE)
                         {
-                            iOffset += INPUT_MEM_WRAP_OFFSET
-                                - INPUT_MEM_CONT_OFFSET - INPUT_MEM_CONT_SIZE;
+                            iOffset += INPUT_MEM_WRAP_OFFSET - INPUT_MEM_CONT_OFFSET
+                                        - INPUT_MEM_CONT_SIZE;
+                        }
+                        else if (INPUT_MEM_WRAP_SIZE > 0 && POOL_WIDTH > 1
+                            && CHANNELS_HEIGHT == 1 // single line (1D)!
+                            && iOffset + POOL_WIDTH * INPUT_MEM_STRIDE
+                                > INPUT_MEM_CONT_SIZE)
+                        {
+                            wrapInRange = true;
                         }
 
                         for (int sx = 0; sx < POOL_WIDTH; ++sx) {
@@ -1103,8 +1132,18 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
                                 break;
                             }
 
-                            sum += inputs[iOffset + output
-                                    + sx * INPUT_MEM_STRIDE];
+                            int iOffsetInRange = iOffset + output
+                                + sx * INPUT_MEM_STRIDE;
+
+                            if (wrapInRange &&
+                                iOffsetInRange >= INPUT_MEM_CONT_SIZE)
+                            {
+                                iOffsetInRange += INPUT_MEM_WRAP_OFFSET
+                                            - INPUT_MEM_CONT_OFFSET
+                                            - INPUT_MEM_CONT_SIZE;
+                            }
+
+                            sum += inputs[iOffsetInRange];
                         }
                     }
 

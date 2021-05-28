@@ -320,11 +320,11 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
              ++it)
         {
             // Set up the layer
+            std::vector<std::shared_ptr<Cell> > parentCells;
+
 #ifdef ONNX
             iniConfig.currentSection((*it), false);
             const std::string type = iniConfig.getProperty<std::string>("Type");
-
-            std::vector<std::shared_ptr<Cell> > parentCells;
 
             for (std::vector<std::string>::const_iterator itParent
                 = parentLayers[(*it)].begin();

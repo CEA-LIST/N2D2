@@ -84,7 +84,7 @@ void cudaSAnchorPropagate_LapNet(   unsigned int stimuliSizeX,
                                     const dim3 blocksPerGrid,
                                     const dim3 threadsPerBlock);
 
-void cudaSAnchorBackPropagatePropagateSSD(  const float* inputsCls,
+void cudaSAnchorBackPropagateSSD(  const float* inputsCls,
                                             const float* outputs,
                                             const int* argMaxIoU,
                                             float* diffOutputsCoords,

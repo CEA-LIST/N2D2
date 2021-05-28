@@ -100,6 +100,8 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                                             unsigned int cumulTemplates,
                                             unsigned int nbParts,
                                             unsigned int nbTemplates,
+                                            bool isCoordinatesAnchors,
+                                            bool pixelFormatXY,
                                             float xRatio,
                                             float yRatio,
                                             float xOutputRatio,
@@ -139,17 +141,23 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                 const unsigned int xa   = roi_anchors[0 + 5*proposal + batchPos*nbProposals*5];
                 const unsigned int ya   = roi_anchors[1 + 5*proposal + batchPos*nbProposals*5];
                 const unsigned int k    = roi_anchors[2 + 5*proposal + batchPos*nbProposals*5];
-           
+                const unsigned int addBase = xa 
+                                             + ya*channelWidth
+                                             + cumulParts*channelHeight*channelWidth
+                                             + batchPos*channelHeight*channelWidth*nbAnchorPerCls*2*totalParts;
 
-                const int yIdx = xa 
-                                + ya*channelWidth 
-                                + (k*nbParts*2 + cumulParts + ptIdx*2)*channelHeight*channelWidth
-                                + batchPos*channelHeight*channelWidth*nbAnchorPerCls*2*totalParts;
-                const int xIdx = xa 
-                                + ya*channelWidth 
-                                + (k*nbParts*2 + cumulParts + ptIdx*2 + 1)*channelHeight*channelWidth
-                                + batchPos*channelHeight*channelWidth*nbAnchorPerCls*2*totalParts;
+                unsigned int xIdx = pixelFormatXY ? addBase + ptIdx*2 * channelHeight*channelWidth
+                                            : addBase + (ptIdx*2 + 1) * channelHeight*channelWidth;
+                unsigned int yIdx = pixelFormatXY ? addBase + (ptIdx*2 + 1) * channelHeight*channelWidth
+                                            : addBase + ptIdx*2 * channelHeight*channelWidth;
 
+                if(isCoordinatesAnchors) {
+                    xIdx += k*nbParts*2*channelHeight*channelWidth;
+                    yIdx += k*nbParts*2*channelHeight*channelWidth;
+                } else {
+                    xIdx += k*totalParts*2*channelHeight*channelWidth;
+                    yIdx += k*totalParts*2*channelHeight*channelWidth;
+                }
 
                 const float partY = inputs_parts[yIdx];
                 const float partX = inputs_parts[xIdx];
@@ -169,8 +177,10 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                 const float predPartY = ((partY) * ha + yac)*yOutputRatio ;
                 const float predPartX = ((partX) * wa + xac)*xOutputRatio ;
 
-                outputs[ptIdx*2 + 0 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = predPartY;
-                outputs[ptIdx*2 + 1 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = predPartX;
+                outputs[ptIdx*2 + 0 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] 
+                                                            = pixelFormatXY ? predPartX : predPartY;
+                outputs[ptIdx*2 + 1 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] 
+                                                            = pixelFormatXY ? predPartY : predPartX;
 
             }
             else if(ptIdx < maxParts && totalParts > 0)
@@ -186,26 +196,36 @@ __global__ void cudaS_ssdToOutput_kernels(  unsigned int batchSize,
                 const unsigned int ya   = roi_anchors[1 + 5*proposal + batchPos*nbProposals*5];
                 const unsigned int k    = roi_anchors[2 + 5*proposal + batchPos*nbProposals*5];
 
-                const int yIdx = xa 
-                                + ya*channelWidth 
-                                + (k*nbTemplates*3 + cumulTemplates + ptIdx*3)*channelHeight*channelWidth
-                                + batchPos*channelHeight*channelWidth*nbAnchorPerCls*3*totalTemplates;
-                const int xIdx = xa 
-                                + ya*channelWidth 
-                                + (k*nbTemplates*3 + cumulTemplates + ptIdx*3 + 1)*channelHeight*channelWidth
-                                + batchPos*channelHeight*channelWidth*nbAnchorPerCls*3*totalTemplates;
-                const int zIdx = xa 
-                                + ya*channelWidth 
-                                + (k*nbTemplates*3 + cumulTemplates + ptIdx*3 + 2)*channelHeight*channelWidth
-                                + batchPos*channelHeight*channelWidth*nbAnchorPerCls*3*totalTemplates;
+                const unsigned int addBase = xa 
+                                             + ya*channelWidth
+                                             + cumulTemplates*channelHeight*channelWidth
+                                             + batchPos*channelHeight*channelWidth*nbAnchorPerCls*3*totalTemplates;
 
+                unsigned int xIdx = pixelFormatXY ? addBase + ptIdx*3 * channelHeight*channelWidth
+                                            : addBase + (ptIdx*3 + 1) * channelHeight*channelWidth;
+                unsigned int yIdx = pixelFormatXY ? addBase + (ptIdx*3 + 1) * channelHeight*channelWidth
+                                            : addBase + ptIdx*3 * channelHeight*channelWidth;
+                unsigned int zIdx =  addBase + (ptIdx*3 + 2) * channelHeight*channelWidth;
+
+                if(isCoordinatesAnchors) {
+                    xIdx += k*nbTemplates*3*channelHeight*channelWidth;
+                    yIdx += k*nbTemplates*3*channelHeight*channelWidth;
+                    zIdx += k*nbTemplates*3*channelHeight*channelWidth;
+
+                } else {
+                    xIdx += k*totalTemplates*3*channelHeight*channelWidth;
+                    yIdx += k*totalTemplates*3*channelHeight*channelWidth;
+                    zIdx += k*totalTemplates*3*channelHeight*channelWidth;
+                }
 
                 const float templateY = expf(inputs_templates[yIdx]);
                 const float templateX = expf(inputs_templates[xIdx]);
                 const float templateZ = expf(inputs_templates[zIdx]);
 
-                outputs[ptIdx*3 + maxParts*2 + 0 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = templateY;
-                outputs[ptIdx*3 + maxParts*2 + 1 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = templateX;
+                outputs[ptIdx*3 + maxParts*2 + 0 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] 
+                                                                        = pixelFormatXY ? templateX : templateY;
+                outputs[ptIdx*3 + maxParts*2 + 1 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] 
+                                                                        = pixelFormatXY ? templateY : templateX;
                 outputs[ptIdx*3 + maxParts*2 + 2 + nbIdx + n*(nbIdx + maxParts*2 + maxTemplates*3) ] = templateZ;
 
             }
@@ -262,6 +282,8 @@ void N2D2::cudaS_SSD_output_gathering( unsigned int batchSize,
                                         unsigned int cumulTemplates,
                                         unsigned int nbParts,
                                         unsigned int nbTemplates,
+                                        bool isCoordinatesAnchors,
+                                        bool pixelFormatXY,
                                         float xRatio,
                                         float yRatio,
                                         float xOutputRatio,
@@ -291,6 +313,8 @@ void N2D2::cudaS_SSD_output_gathering( unsigned int batchSize,
                                                                 cumulTemplates,
                                                                 nbParts,
                                                                 nbTemplates,
+                                                                isCoordinatesAnchors,
+                                                                pixelFormatXY,
                                                                 xRatio,
                                                                 yRatio,
                                                                 xOutputRatio,

@@ -139,6 +139,11 @@ void N2D2::CPP_ElemWiseCellExport::generateHeaderConstants(ElemWiseCell& cell,
 
     header << "#define " << prefix << "_ELEM_OP " << elemOp << "\n"
            << std::endl;
+    const ElemWiseCell::CoeffMode elemCoeffMode = cell.getCoeffMode();
+
+    header << "#define " << prefix << "_ELEM_COEFF_MODE " << elemCoeffMode << "\n"
+           << std::endl;
+
 
 
 }

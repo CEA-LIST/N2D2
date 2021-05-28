@@ -33,10 +33,12 @@ N2D2::AnchorCell_Frame_CUDA::AnchorCell_Frame_CUDA(
     const DeepNet& deepNet,
     const std::string& name,
     StimuliProvider& sp,
+    const AnchorCell_Frame_Kernels::DetectorType detectorType,
+    const AnchorCell_Frame_Kernels::Format inputFormat,
     const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors,
     unsigned int scoresCls)
     : Cell(deepNet, name, 6*anchors.size()),
-      AnchorCell(deepNet, name, sp, anchors, scoresCls),
+      AnchorCell(deepNet, name, sp, detectorType, inputFormat, anchors, scoresCls),
       Cell_Frame_CUDA<Float_T>(deepNet, name, 6*anchors.size()),
       mNbLabelsMax(16),
       mCudaGT(NULL)
@@ -172,13 +174,13 @@ void N2D2::AnchorCell_Frame_CUDA::initialize()
 */
     mNbLabels.resize({mOutputs.dimB(), 1, 1, 1}, 0);
 
-    if(mDetectorType == AnchorCell_Frame_Kernels::DetectorType::LapNet) {
+    if(mDetectorType == AnchorCell_Frame_Kernels::DetectorType::LapNet
+        || mDetectorType == AnchorCell_Frame_Kernels::DetectorType::SSD) {
         if(mFeatureMapWidth == 0)
             mFeatureMapWidth = mStimuliProvider.getSizeX();
 
         if(mFeatureMapHeight == 0)
             mFeatureMapHeight = mStimuliProvider.getSizeY();
-        std::cout << "mAnchors.size() " << mAnchors.size() << std::endl;
 
         if (mInputs.dimZ() != (mScoresCls + 5) * nbAnchors) {
             throw std::domain_error("AnchorCell_Frame_CUDA::initialize():"
@@ -268,11 +270,6 @@ void N2D2::AnchorCell_Frame_CUDA::initialize()
         mConfNegSamplesFiltered.synchronizeHToD();
         mConfPosSamplesFiltered.synchronizeHToD();
     }
-    else if (mDetectorType == AnchorCell_Frame_Kernels::DetectorType::SSD){
-        throw std::runtime_error(
-                        "N2D2 doesn't fully support yet SSD detector familly");
-
-    }
     else if (mDetectorType == AnchorCell_Frame_Kernels::DetectorType::YOLO){
         throw std::runtime_error(
                         "N2D2 doesn't fully support yet YOLO detector familly");
@@ -314,7 +311,8 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
 
-    if(mDetectorType == AnchorCell_Frame_Kernels::DetectorType::LapNet)
+    if(mDetectorType == AnchorCell_Frame_Kernels::DetectorType::LapNet ||
+        mDetectorType == AnchorCell_Frame_Kernels::DetectorType::SSD)
     {
         mGTClass.fill(AnchorCell_Frame_Kernels::BBox_T(0.0, 0.0, 0.0, 0.0));
         mNbLabelsClass.fill(0);
@@ -514,7 +512,8 @@ void N2D2::AnchorCell_Frame_CUDA::backPropagate()
     Cell_Frame_CUDA<Float_T>::backPropagate();
     //mInputs.synchronizeDToHBased();
     //mOutputs.synchronizeDToH();
-    if(mDetectorType == AnchorCell_Frame_Kernels::DetectorType::LapNet)
+    if(mDetectorType == AnchorCell_Frame_Kernels::DetectorType::LapNet 
+        || mDetectorType == AnchorCell_Frame_Kernels::DetectorType::SSD)
     {
         /***Full efficient GPU implementation of the BackPropagation step of the SingleShot Detector**/
         std::shared_ptr<CudaDeviceTensor<Float_T> > inputCls = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[0]);
@@ -535,25 +534,25 @@ void N2D2::AnchorCell_Frame_CUDA::backPropagate()
 
         /**First Step: Determine positives and negatives samples **/
 
-        cudaSAnchorBackPropagatePropagateSSD(inputCls->getDevicePtr(),
-                                            mOutputs.getDevicePtr(),
-                                            mArgMaxIoU.getDevicePtr(),
-                                            diffOutputsCoords->getDevicePtr(),
-                                            diffOutputsCls->getDevicePtr(),
-                                            mKeyNegSamples.getDevicePtr(),
-                                            mKeyPosSamples.getDevicePtr(),
-                                            mConfNegSamples.getDevicePtr(),
-                                            mConfPosSamples.getDevicePtr(),
-                                            mPositiveIoU,
-                                            nbAnchors,
-                                            mOutputsDims[1],
-                                            mOutputsDims[0],
-                                            mOutputs.dimB(),
-                                            mScoresCls + 1,
-                                            mNbClass,                                            
-                                            mInputs.size(),
-                                            GPU_BLOCK_GRID[0],
-                                            GPU_THREAD_GRID[0]);
+        cudaSAnchorBackPropagateSSD(inputCls->getDevicePtr(),
+                                    mOutputs.getDevicePtr(),
+                                    mArgMaxIoU.getDevicePtr(),
+                                    diffOutputsCoords->getDevicePtr(),
+                                    diffOutputsCls->getDevicePtr(),
+                                    mKeyNegSamples.getDevicePtr(),
+                                    mKeyPosSamples.getDevicePtr(),
+                                    mConfNegSamples.getDevicePtr(),
+                                    mConfPosSamples.getDevicePtr(),
+                                    mPositiveIoU,
+                                    nbAnchors,
+                                    mOutputsDims[1],
+                                    mOutputsDims[0],
+                                    mOutputs.dimB(),
+                                    mScoresCls + 1,
+                                    mNbClass,                                            
+                                    mInputs.size(),
+                                    GPU_BLOCK_GRID[0],
+                                    GPU_THREAD_GRID[0]);
         if(mAnchorsStats.empty())
             mAnchorsStats.resize(mNbClass, 0);
 
@@ -690,11 +689,6 @@ void N2D2::AnchorCell_Frame_CUDA::backPropagate()
             mDiffOutputs[1].setValid();
         }
         mDiffOutputs.synchronizeDToHBased();
-
-    }
-    else if (mDetectorType == AnchorCell_Frame_Kernels::DetectorType::SSD){
-        throw std::runtime_error(
-                        "N2D2 doesn't fully support yet SSD detector familly");
     }
     else if (mDetectorType == AnchorCell_Frame_Kernels::DetectorType::YOLO){
         throw std::runtime_error(

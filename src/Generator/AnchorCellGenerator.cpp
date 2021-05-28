@@ -23,6 +23,10 @@
 #include "Generator/AnchorCellGenerator.hpp"
 #include "StimuliProvider.hpp"
 
+#ifdef JSONCPP
+#include <jsoncpp/json/json.h>
+#endif
+
 N2D2::Registrar<N2D2::CellGenerator>
 N2D2::AnchorCellGenerator::mRegistrar(AnchorCell::Type,
                                        N2D2::AnchorCellGenerator::generate);
@@ -43,6 +47,13 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
 
     std::cout << "Layer: " << section << " [Anchor(" << model << ")]"
               << std::endl;
+              
+    const AnchorCell_Frame_Kernels::DetectorType detectorType 
+        = iniConfig.getProperty<AnchorCell_Frame_Kernels::DetectorType>
+            ("DetectorType");         
+    const AnchorCell_Frame_Kernels::Format inputFormat 
+        = iniConfig.getProperty<AnchorCell_Frame_Kernels::Format>
+            ("InputFormat", AnchorCell_Frame_Kernels::Format::CA);         
 
     std::vector<AnchorCell_Frame_Kernels::Anchor> anchors;
 
@@ -78,7 +89,7 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
         nextProperty.str(std::string());
         nextProperty << "Anchor[" << nextAnchor << "]";
     }
-    
+    // Second method: specify handmade anchors with X, y, Width & Height
     nextProperty.str(std::string());
     nextProperty << "AnchorBBOX[" << nextAnchor << "]";
 
@@ -109,6 +120,7 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
         nextProperty << "AnchorBBOX[" << nextAnchor << "]";
     }
 
+    // Third method: specify handmade anchors with X0 & Y0
     nextProperty.str(std::string());
     nextProperty << "AnchorXY[" << nextAnchor << "]";
 
@@ -139,8 +151,58 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
         nextProperty.str(std::string());
         nextProperty << "AnchorXY[" << nextAnchor << "]";
     }
+#ifdef JSONCPP
+    const std::string anchorsJSONpath = Utils::expandEnvVars(
+        iniConfig.getProperty<std::string>("AnchorJSON", ""));
+    std::ifstream jsonData(anchorsJSONpath);
 
-    // Second method: specify a base root area and a list of ratios and scales
+    if (!jsonData.good()) {
+        throw std::runtime_error("AnchorCellGenerator::generate: Could not open JSON Anchor file "
+                                    "(missing?): " + anchorsJSONpath);
+    }
+    Json::Reader reader;
+    Json::Value labels;
+    if (!reader.parse(jsonData, labels)) {
+        std::cerr << "AnchorCellGenerator::generate: Error parsing JSON file " 
+            << anchorsJSONpath<< " at line "
+            << reader.getFormattedErrorMessages() << std::endl;
+
+        throw std::runtime_error("JSON file parsing failed");
+    }
+    const Json::Value& jsonAnnotations = labels["ANCHORS"];
+    if(jsonAnnotations.size() < 1 ){
+        std::cerr << "Error parsing JSON file " << anchorsJSONpath << " at field "
+            << "annotations: Cannot have more than one"
+            << " annotations mask per file, here it is " 
+            << jsonAnnotations.size() << std::endl;
+
+        throw std::runtime_error(" file parsing failed");
+    }
+    for(unsigned int cls = 0; cls < jsonAnnotations.size(); ++cls ){
+        const Json::Value& clsAnchors = jsonAnnotations[cls];
+        for(unsigned int idx = 0; idx < clsAnchors.size(); ++idx ) {
+            const Json::Value& idxAnchors = clsAnchors[idx];
+            if(idxAnchors.size() != 4 ) {
+                std::cerr << "Error parsing JSON file " << anchorsJSONpath << " at field "
+                    << "annotations: Cannot have an anchor field values size different than 4 " 
+                    << idxAnchors.size() << std::endl;
+                throw std::runtime_error(" file parsing failed");
+            }
+            
+            const double x0 = idxAnchors[1].asDouble();
+            const double y0 = idxAnchors[0].asDouble();
+            const double w = std::abs(x0) + std::abs(idxAnchors[3].asDouble());
+            const double h = std::abs(y0) + std::abs(idxAnchors[2].asDouble());
+
+            anchors.push_back(AnchorCell_Frame_Kernels::Anchor(x0,
+                                                            y0,
+                                                            w,
+                                                            h));
+            
+        }
+    }
+#endif
+    // Fourth method: specify a base root area and a list of ratios and scales
     // Both methods can be used simultaneously
     const double rootArea = iniConfig.getProperty<double>("RootArea", 16);
     const std::vector<double> ratios = iniConfig.getProperty
@@ -167,7 +229,7 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
 
     // Cell construction
     std::shared_ptr<AnchorCell> cell = Registrar
-        <AnchorCell>::create(model)(deepNet, section, sp, anchors, scoresCls);
+        <AnchorCell>::create(model)(deepNet, section, sp, detectorType, inputFormat, anchors, scoresCls);
 
     if (!cell) {
         throw std::runtime_error(

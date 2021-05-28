@@ -141,6 +141,19 @@ void N2D2::C_ScalingCellExport::generateCellFunction(
         << outputName << ", "
         << prefix << "_SCALING_FACTOR_PER_OUTPUT, "
         << prefix << "_NB_FRACTIONAL_BITS);\n ";
+
+    // Save outputs
+    prog << "#ifdef SAVE_OUTPUTS\n"
+         << "    scalingcell_outputs_save("
+            << "\"" << identifier << ".txt\", "
+            << DeepNetExport::isCellOutputUnsigned(cell) << ","
+            << prefix << "_NB_OUTPUTS, "
+            << prefix << "_OUTPUT_OFFSET, "
+            << prefix << "_OUTPUTS_HEIGHT, "
+            << prefix << "_OUTPUTS_WIDTH, "
+            << outputName
+         << ");\n"
+         << "#endif\n";
 }
 
 void N2D2::C_ScalingCellExport::generateOutputFunction(Cell& cell,

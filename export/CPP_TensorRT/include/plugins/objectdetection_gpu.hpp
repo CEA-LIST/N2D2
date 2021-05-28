@@ -40,6 +40,8 @@ public:
                     unsigned int nbProposals,
                     unsigned int nbCls,
                     unsigned int nbAnchors,
+                    bool isCoordinatesAnchors,
+                    bool isPixelFormatXY,
                     double nmsIoU,
                     const float* scoreThreshold,
                     unsigned int maxParts,
@@ -62,6 +64,8 @@ public:
         mNbAnchors = nbAnchors;
         mNbClass= nbCls;
         mNbProposals = nbProposals;
+        mIsCoordinatesAnchors = isCoordinatesAnchors;
+        mIsPixelFormatXY = isPixelFormatXY;
         mNMS_IoU = nmsIoU;
 
         mMaxParts = maxParts;
@@ -208,6 +212,8 @@ public:
         mNbProposals = (unsigned int) read<int>(d);
         mMaxParts = (unsigned int) read<int>(d);
         mMaxTemplates = (unsigned int) read<int>(d);
+        mIsCoordinatesAnchors = read<bool>(d);;
+        mIsPixelFormatXY = read<bool>(d);;
         mNMS_IoU = read<double>(d);
         mThreadX = read<int>(d);
         mThreadY = read<int>(d);
@@ -663,13 +669,18 @@ public:
             {
                 valid_rois[i] = ROIs[cls][i].size();
             }
-            unsigned int cumulParts = 0;
-            unsigned int cumulTemplates = 0;
+            unsigned int keypointClsOffset = 0;
+            unsigned int templateClsOffset = 0;
 
             for(unsigned int c = 0; c < cls; ++c) 
             {
-                cumulParts += mPartsPerClass[c] * 2 * mNbAnchors;
-                cumulTemplates += mTemplatesPerClass[c] * 3 * mNbAnchors;
+                keypointClsOffset += mPartsPerClass[c] * 2;
+                templateClsOffset += mTemplatesPerClass[c] * 3;
+            }
+
+            if(mIsCoordinatesAnchors) {
+                keypointClsOffset *= mNbAnchors;
+                templateClsOffset *= mNbAnchors;
             }
 
             for(unsigned int b = 0; b < batchSize; ++b)
@@ -708,10 +719,12 @@ public:
                                         nbTotalTemplate,
                                         mMaxParts,
                                         mMaxTemplates,
-                                        cumulParts,
-                                        cumulTemplates,
+                                        keypointClsOffset,
+                                        templateClsOffset,
                                         mPartsPerClass[cls],
                                         mTemplatesPerClass[cls],
+                                        mIsCoordinatesAnchors,
+                                        mIsPixelFormatXY,
                                         xRatio,
                                         yRatio,
                                         xOutputRatio,
@@ -756,8 +769,8 @@ public:
         size_t anchorsSize = 4*mNbAnchors*mNbClass*sizeof(float) ; // mNbAnchors and (x0 y0 x1 y1) * mNbAnchors + mScoreCls
 
         size_t finalIdxSize = (mNbProposals*5*mOutputDims.d[0])*2*sizeof(float) + mOutputDims.d[0]*sizeof(unsigned int);
-
-        mSerializationSize = proposalParamI + proposalParamD + 3*PixelMapSize + 10*M_Index + anchorsSize + finalIdxSize;
+        size_t formatSize = (2)*sizeof(bool);
+        mSerializationSize = proposalParamI + proposalParamD + 3*PixelMapSize + 10*M_Index + anchorsSize + finalIdxSize + formatSize;
 
         return mSerializationSize;
 	}
@@ -781,6 +794,8 @@ public:
         write<int>(d, (int)mNbProposals);
         write<int>(d, (unsigned int)mMaxParts);
         write<int>(d, (unsigned int)mMaxTemplates);
+        write<bool>(d, mIsCoordinatesAnchors);
+        write<bool>(d, mIsPixelFormatXY);
         write<double>(d, mNMS_IoU);
         write<int>(d, mThreadX);
         write<int>(d, mThreadY);
@@ -915,6 +930,8 @@ private:
     unsigned int mNbProposals;
     unsigned int mNbAnchors;
     unsigned int mNbClass;
+    bool mIsCoordinatesAnchors;
+    bool mIsPixelFormatXY;
     double mNMS_IoU;
     float* mScoreThreshold;
     unsigned int mMaxParts;
@@ -971,6 +988,8 @@ struct pluginObjDet_GPU{
             unsigned int nbProposals,
             unsigned int nbCls,
             unsigned int nbAnchors,
+            bool isCoordinatesAnchors,
+            bool isPixelFormatXY,
             double nmsIoU,
             const float* scoreThreshold,
             unsigned int maxParts,
@@ -994,6 +1013,8 @@ struct pluginObjDet_GPU{
                                                              nbProposals,
                                                              nbCls,
                                                              nbAnchors,
+                                                             isCoordinatesAnchors,
+                                                             isPixelFormatXY,
                                                              nmsIoU,
                                                              scoreThreshold,
                                                              maxParts,

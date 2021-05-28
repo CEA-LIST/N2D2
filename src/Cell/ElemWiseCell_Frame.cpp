@@ -61,8 +61,30 @@ void N2D2::ElemWiseCell_Frame::initialize()
         }
     }
 
-    mWeights.resize(mInputs.size(), 1.0);
-    mShifts.resize(mInputs.size(), 0.0);
+    if(mWeights.empty()) {
+        std::cout << Utils::cwarning << "ElemWiseCell_Frame::initialize(): Empty weights for cell " 
+                    << mName << ": Initialize weights to default value(1.0)" 
+                    << Utils::cdef << std::endl;
+    }
+    if(mShifts.empty()) {
+        std::cout << Utils::cwarning << "ElemWiseCell_Frame::initialize(): Empty shifts for cell " 
+                    << mName << ": Initialize shifts to default value(0.0)" 
+                    << Utils::cdef << std::endl;
+    }
+
+    if(mCoeffMode == ElemWiseCell::PerChannel) {
+        std::size_t nbChannels = 0;
+        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+            nbChannels += mInputs[k].dimZ();
+        }
+
+        mWeights.resize(nbChannels, 1.0);
+        mShifts.resize(nbChannels, 0.0);
+    } 
+    else {
+        mWeights.resize(mInputs.size(), 1.0);
+        mShifts.resize(mInputs.size(), 0.0);
+    }
 
     if (mOperation == Max)
         mArgMax.resize(mOutputs.dims());
@@ -92,13 +114,23 @@ void N2D2::ElemWiseCell_Frame::propagate(bool inference)
         inputs.push_back(tensor_cast<Float_T>(mInputs[k]));
 
     if (mOperation == Sum) {
-        for (unsigned int n = 0; n < nbElems; ++n) {
-            mOutputs(n) = mWeights[0] * inputs[0](n)
-                            + mShifts[0];
-
-            for (unsigned int k = 1; k < nbInputs; ++k) {
-                mOutputs(n) += mWeights[k] * inputs[k](n)
-                                + mShifts[k];
+        for(unsigned int b = 0; b < inputs[0].dimB(); ++b) {
+            for(std::size_t ch = 0; ch < inputs[0].dimZ(); ++ch) {
+                for(std::size_t y = 0; y < inputs[0].dimY(); ++y) {
+                    for(std::size_t x = 0; x < inputs[0].dimX(); ++x) {
+                        std::size_t c0 = (mCoeffMode == ElemWiseCell::PerChannel) ? 
+                                                ch : 0;
+                        mOutputs(x,y,ch,b) = mWeights[c0] * inputs[0](x,y,ch,b)
+                                            + mShifts[c0];
+                        
+                        for (unsigned int k = 1; k < nbInputs; ++k) {
+                            std::size_t c1 = (mCoeffMode == ElemWiseCell::PerChannel) ? 
+                                                c0 : k;
+                            mOutputs(x,y,ch,b) += mWeights[c1] * inputs[k](x,y,ch,b)
+                                                + mShifts[c1];
+                        }
+                    }
+                }
             }
         }
     }
@@ -183,9 +215,17 @@ void N2D2::ElemWiseCell_Frame::backPropagate()
             : tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
 
         if (mOperation == Sum) {
-            for (unsigned int n = 0; n < nbElems; ++n) {
-                diffOutput(n) = mWeights[k] * mDiffInputs(n)
-                                    + beta * diffOutput(n);
+            for(unsigned int b = 0; b < inputs[k].dimB(); ++b) {
+                for(std::size_t ch = 0; ch < inputs[k].dimZ(); ++ch) {
+                    for(std::size_t y = 0; y < inputs[k].dimY(); ++y) {
+                        for(std::size_t x = 0; x < inputs[k].dimX(); ++x) {
+                            std::size_t coeffIdx = mCoeffMode == ElemWiseCell::PerChannel ? 
+                                                    ch : k;
+                            diffOutput(x,y,ch,b) = mWeights[coeffIdx] * mDiffInputs(x,y,ch,b)
+                                                + beta * diffOutput(x,y,ch,b);
+                        }
+                    }
+                }
             }
         }
         else if (mOperation == AbsSum) {

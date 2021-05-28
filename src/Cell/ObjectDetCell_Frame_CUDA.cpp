@@ -32,6 +32,8 @@ N2D2::ObjectDetCell_Frame_CUDA::ObjectDetCell_Frame_CUDA(const DeepNet& deepNet,
                                                 StimuliProvider& sp,
                                                 const unsigned int nbOutputs,
                                                 unsigned int nbAnchors,
+                                                const AnchorCell_Frame_Kernels::Format inputFormat,
+                                                const AnchorCell_Frame_Kernels::PixelFormat pixelFormat,
                                                 unsigned int nbProposals,
                                                 unsigned int nbClass,
                                                 Float_T nmsThreshold,
@@ -41,7 +43,7 @@ N2D2::ObjectDetCell_Frame_CUDA::ObjectDetCell_Frame_CUDA(const DeepNet& deepNet,
                                                 const std::vector<AnchorCell_Frame_Kernels::Anchor>& anchors)
 
     : Cell(deepNet, name, nbOutputs),
-      ObjectDetCell(deepNet, name, sp, nbOutputs, nbAnchors, nbProposals, nbClass, nmsThreshold, scoreThreshold, numParts, numTemplates),
+      ObjectDetCell(deepNet, name, sp, nbOutputs, nbAnchors, inputFormat, pixelFormat, nbProposals, nbClass, nmsThreshold, scoreThreshold, numParts, numTemplates),
       Cell_Frame_CUDA<Float_T>(deepNet, name, nbOutputs),
       mAnchors(anchors)
 {
@@ -480,6 +482,16 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool inference)
                                 (unsigned int) mInputs[0].dimB() } ;
 
         dim3 outputs_threads = {32, 1, 1};
+        std::size_t keypointClsOffset = mNumParts.size() > 0 ? 
+                                        std::accumulate(mNumParts.begin(), mNumParts.begin() + cls, 0) * 2 : 0;
+        std::size_t templateClsOffset = mNumTemplates.size() > 0 ? 
+                                        std::accumulate(mNumTemplates.begin(), mNumTemplates.begin() + cls, 0) * 3 : 0;
+
+        if(mInputFormat == AnchorCell_Frame_Kernels::Format::CA) {
+            keypointClsOffset *= mNbAnchors;
+            templateClsOffset *= mNbAnchors;
+        }
+
         cudaS_SSD_output_gathering( mInputs.dimB(),
                                     mNbClass,
                                     mNbAnchors,
@@ -492,10 +504,12 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool inference)
                                     mNumTemplates.size() > 0 ? std::accumulate(mNumTemplates.begin(), mNumTemplates.end(), 0) : 0,
                                     mNumParts.size() > 0 ? mMaxParts : 0,
                                     mNumTemplates.size() > 0 ? mMaxTemplates : 0,
-                                    mNumParts.size() > 0 ? std::accumulate(mNumParts.begin(), mNumParts.begin() + cls, 0) * 2 * mNbAnchors : 0,
-                                    mNumTemplates.size() > 0 ? std::accumulate(mNumTemplates.begin(), mNumTemplates.begin() + cls, 0) * 3 * mNbAnchors : 0,
+                                    keypointClsOffset,
+                                    templateClsOffset,
                                     mNumParts.size() > 0 ? mNumParts[cls] : 0,
                                     mNumTemplates.size() > 0 ? mNumTemplates[cls] : 0,
+                                    mInputFormat == AnchorCell_Frame_Kernels::Format::CA ? true : false,
+                                    mPixelFormat == AnchorCell_Frame_Kernels::PixelFormat::XY ? true : false,
                                     xRatio,
                                     yRatio,
                                     xOutputRatio,
@@ -509,7 +523,7 @@ void N2D2::ObjectDetCell_Frame_CUDA::propagate(bool inference)
                                     outputs_blocks,
                                     outputs_threads);
     }
-    Cell_Frame_CUDA<Float_T>::propagate();
+    //Cell_Frame_CUDA<Float_T>::propagate();
     mDiffInputs.clearValid();
 
 }

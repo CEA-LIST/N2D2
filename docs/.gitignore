@@ -1,7 +1,4 @@
 !*.*
 doxygen
-_build/doctrees
-_build/html/.buildinfo
-_build/html/_sources
-_build/html/_static
-_build/latex
+_build
+

@@ -1089,13 +1089,13 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     ASSERT_EQUALS(out.dimX(), 1U);
     ASSERT_EQUALS(out.dimY(), 1U);
 
-    const half_float::half sum
-        = std::accumulate(in.begin(),
-                          in.begin() + inputSize,
-                          half_float::half(0.0f));
+    float sum = 0.0f;
+
+    for (unsigned int i = 0; i < inputSize; ++i)
+        sum += ((half_float::half)in(i) * half_float::half(1.0f));
 
     for (unsigned int output = 0; output < out.dimZ(); ++output) {
-        ASSERT_EQUALS_DELTA(out(output, 0), sum, 1e-4);
+        ASSERT_EQUALS_DELTA(out(output, 0), sum, 0.5);
     }
 }
 /*
@@ -1238,7 +1238,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     ASSERT_EQUALS(fc1.mInputs[0].dimX(), fc1.getChannelsWidth());
     ASSERT_EQUALS(fc1.mInputs[0].dimY(), fc1.getChannelsHeight());
 
-    half_float::half sum(0.0f);
+    float sum(0.0f);
 
     for (unsigned int k = 0; k < fc1.mInputs.size(); ++k) {
         const Tensor<half_float::half>& input
@@ -1247,7 +1247,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
         for (unsigned int channel = 0; channel < input.dimZ(); ++channel) {
             for (unsigned int y = 0; y < fc1.getChannelsHeight(); ++y) {
                 for (unsigned int x = 0; x < fc1.getChannelsWidth(); ++x)
-                    sum += input(x, y, channel, 0);
+                    sum += ((half_float::half)input(x, y, channel, 0) * half_float::half(1.0f));
             }
         }
     }
@@ -1263,7 +1263,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     for (unsigned int ox = 0; ox < fc1.getOutputsWidth(); ++ox) {
         for (unsigned int oy = 0; oy < fc1.getOutputsHeight(); ++oy) {
             for (unsigned int output = 0; output < fc1.getNbOutputs(); ++output)
-                ASSERT_EQUALS_DELTA(out(ox, oy, output, 0), sum, 1e-3);
+                ASSERT_EQUALS_DELTA(out(ox, oy, output, 0), sum, 0.5);
         }
     }
 }
@@ -1320,16 +1320,16 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     ASSERT_EQUALS(out.dimY(), 1U);
 
     for (unsigned int output = 0; output < out.dimZ(); ++output) {
-        half_float::half sum(0.0f);
+        float sum(0.0f);
 
         for (unsigned int channel = 0; channel < inputSize; ++channel) {
             Tensor<half_float::half> weight;
             fc1.getWeight(output, channel, weight);
 
-            sum += weight(0);
+            sum += (weight(0) * half_float::half(1.0f));
         }
 
-        ASSERT_EQUALS_DELTA(out(output, 0), sum, 1e-4);
+        ASSERT_EQUALS_DELTA(out(output, 0), sum, 1e-2);
     }
 }
 

@@ -38,11 +38,15 @@ void init_AnchorCell_Frame(py::module &m) {
     const DeepNet&, 
     const std::string&,
     StimuliProvider&, 
+    const AnchorCell_Frame_Kernels::DetectorType,
+    const AnchorCell_Frame_Kernels::Format,
     const std::vector<AnchorCell_Frame_Kernels::Anchor>&, 
     unsigned int>(), 
     py::arg("deepNet"), 
     py::arg("name"), 
     py::arg("sp"), 
+    py::arg("detectorType"),
+    py::arg("inputFormat"),
     py::arg("anchors"), 
     py::arg("scoresCls"))
     ; 

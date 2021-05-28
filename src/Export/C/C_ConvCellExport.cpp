@@ -381,6 +381,7 @@ void N2D2::C_ConvCellExport::generateCellFunction(
     prog << "#ifdef SAVE_OUTPUTS\n"
          << "    convcell_outputs_save("
             << "\"" << identifier << ".txt\", "
+            << DeepNetExport::isCellOutputUnsigned(cell) << ","
             << prefix << "_NB_OUTPUTS, "
             << prefix << "_OUTPUTS_HEIGHT, "
             << prefix << "_OUTPUTS_WIDTH, "

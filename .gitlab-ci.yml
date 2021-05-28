@@ -5,32 +5,45 @@ variables:
 stages:
   - build
   - test
+  - deploy
+
+.before_script_template:
+  before_script:
+    - mkdir build
+    - cd build
+    - cmake -DCMAKE_BUILD_TYPE=Debug ..
 
 build:ubuntu:
+  extends: .before_script_template
   stage: build
   tags:
     - ubuntu
   script:
-    - mkdir build
-    - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
     - make -j4
 #  artifacts:
 #    expire_in: 2 hrs
 #    paths:
 #      - build/
 
+build-docs:
+  extends: .before_script_template
+  stage: build
+  script:
+    - make docs -j4
+  artifacts:
+    paths:
+      - docs/_build/html
+
 test:ubuntu:
+  extends: .before_script_template
   stage: test
   tags:
     - ubuntu
   script:
 #    - cd build
-    - mkdir build
-    - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
     - make tests -j4
     - make test
+  dependencies: []
 
 test:python_api:
   stage: test
@@ -41,3 +54,51 @@ test:python_api:
     - pip install -r python/requirements.txt
   script:
     - python -m unittest discover -s python/tests
+
+
+# HTTP server setup on is154584 (using python simplehttp):
+# systemctl config file: /etc/systemd/system/simplehttp.service
+# service restart: systemctl restart simplehttp.service
+docs:
+  stage: deploy
+  script:
+    - mkdir -p /local/is154584/www/N2D2/${CI_COMMIT_REF_NAME}
+    - cp -r docs/_build/html/* /local/is154584/www/N2D2/${CI_COMMIT_REF_NAME}
+  dependencies:
+    - build-docs
+  environment:
+    name: Documentation
+    url: http://is154584.intra.cea.fr:8081/N2D2/${CI_COMMIT_REF_NAME}
+
+# Github deployment
+github:
+  stage: deploy
+  script:
+    - git remote show github || git remote add github git@github.com:CEA-LIST/N2D2.git
+    - git push github HEAD:master
+  dependencies: []
+  environment:
+    name: Github
+    url: https://github.com/CEA-LIST/N2D2
+  only:
+    - master
+
+# Github.io deployment
+github.io:
+  stage: deploy
+  script:
+    - git -C ../github.io/ pull || git clone git@github.com:CEA-LIST/N2D2-docs.git ../github.io
+    - cp -r docs/_build/html/* ../github.io/
+    - cd ../github.io
+    - git add --all
+    - git config user.email "olivier.bichler@cea.fr"
+    - git config user.name "gitlab-runner"
+    - git diff --quiet && git diff --staged --quiet || git commit -m "${CI_COMMIT_MESSAGE}"
+    - git push
+  dependencies:
+    - build-docs
+  environment:
+    name: Github.io
+    url: https://cea-list.github.io/N2D2-docs
+  only:
+    - master
