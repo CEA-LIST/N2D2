@@ -50,6 +50,7 @@ object_dict = {
     "Pool": n2d2.cells.Pool,
     "BatchNorm": n2d2.cells.BatchNorm2d,
     "Reshape": n2d2.cells.Reshape,
+    "Resize": n2d2.cells.Resize,
 }
 
 

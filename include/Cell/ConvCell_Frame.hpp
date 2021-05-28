@@ -77,7 +77,7 @@ public:
 
     virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     virtual void initialize();
-    virtual void initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping = Tensor<bool>());
+    virtual void initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs);
     virtual void initializeWeightQuantizer();
     virtual void initializeDataDependent();
     virtual void save(const std::string& dirName) const;

@@ -156,17 +156,23 @@ void N2D2::BatchNormCell_Frame<T>::initialize()
 
 
 template <class T>
-void N2D2::BatchNormCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
+void N2D2::BatchNormCell_Frame<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
 {
-    // NOTE: this is addition to initialize()
-    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
+    // BEGIN: addition to initialize()
+    if (mMapping.empty()) {
+        mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
+    }
+    // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
+    // However, this requires a reinitialization of the input dims which is unsafe
+    setInputsDims({nbInputChannels});
+    // END: addition to initialize()
 
     //std::vector<size_t> requiredDims(mInputs[0].nbDims(), 1);
     //requiredDims[mInputs[0].nbDims() - 2] = mInputs.dimZ();
 
-    // NOTE: In contrast to normal initialize, this works only for 4D Tensors at the moment!
+    // NOTE/TODO: In contrast to normal initialize, this works only for 4D Tensors at the moment!
     std::vector<size_t> requiredDims(4, 1);
-    requiredDims[2] = inputDimZ;
+    requiredDims[2] = nbInputChannels;
 
     if (mScale->empty())
         mScale->resize(requiredDims, ParamT(1.0));

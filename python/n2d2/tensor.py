@@ -547,7 +547,7 @@ class Interface(n2d2.provider.Provider):
             for tensor in self.tensors:
                 tensor.cell = cell
         # The dimZ of the interface correspond to the sum of the dimZ of the tensor that composed it.
-        self.dimZ = nb_channels 
+        self.dim_z = nb_channels
 
     def get_deepnet(self):
         return self.tensors[0].get_deepnet()
@@ -558,8 +558,8 @@ class Interface(n2d2.provider.Provider):
     def dimX(self):
         return self.tensors[0].dimX()
     def dimZ(self):
-        return self.dimZ
+        return self.dim_z
     def dims(self):
-        return [self.dimZ(), self.dimY(), self.dimX(), self.dimY(),]
+        return [self.dimZ(), self.dimY(), self.dimX(), self.dimY()]
     def get_tensors(self):
         return self.tensors

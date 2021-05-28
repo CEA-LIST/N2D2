@@ -283,19 +283,15 @@ public:
     /// Initialize the state of the cell (e.g. weights random initialization)
     virtual void initialize() {};
 
-
-    virtual void initializeParameters(unsigned int inputDimZ, unsigned int /*nbInputs*/, const Tensor<bool>& mapping = Tensor<bool>())
+    virtual void setMapping(const Tensor<bool>& mapping = Tensor<bool>())
     {   
-        // TODO: This ins only required because of weight exports that needs nb input channels
-        setInputsDims({inputDimZ});
-
+        if (!mMapping.empty()){
+            throw std::runtime_error("Cell::initializeMapping(): in "
+                        "cell " + mName + ", mMapping is not empty");
+        }
         if (!mapping.empty()) {
             mMapping.append(mapping);
         }
-    };
-    virtual void initializeWeightQuantizer()
-    {
-        throw std::runtime_error("Error: initializeWeightQuantizer not implemented for this cell type!");
     };
 
     // TODO: Replace by abstract method once implemented for all relevant cells
