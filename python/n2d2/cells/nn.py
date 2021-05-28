@@ -1540,7 +1540,7 @@ class Deconv(NeuralNetworkCell, Datatyped):
                     raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
             elif key is 'mapping':
                 if isinstance(value, n2d2.Tensor):
-                    if value.data_type() != bool:
+                    if not (value.data_type() == "bool" or value.data_type() == "b"):
                         raise ValueError("Mapping Tensor datatype should be boolean !")
                     self._N2D2_object.setMapping(value.N2D2())
                 else:

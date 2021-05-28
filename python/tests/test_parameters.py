@@ -68,7 +68,7 @@ class test_Fc(test_params):
             "weights_filler": n2d2.filler.Normal(),
             "bias_filler": n2d2.filler.Normal(),
             'no_bias': True,
-            "mapping": n2d2.Tensor([5, 5],  datatype="bool"),
+            # "mapping": n2d2.Tensor([5, 5],  datatype="bool"), # TODO : Add back mapping to Fc ?
             "quantizer": n2d2.quantizer.SATCell(),
         }
         self.object = n2d2.cells.Fc(10, 5, **self.parameters)
@@ -80,8 +80,8 @@ class test_Fc(test_params):
         self.assertIs(self.parameters["bias_solver"].N2D2(), self.object.N2D2().getBiasSolver())
         self.assertIs(self.parameters["weights_filler"].N2D2(), self.object.N2D2().getWeightsFiller())
         self.assertIs(self.parameters["bias_filler"].N2D2(), self.object.N2D2().getBiasFiller())
-        self.assertEqual(n2d2.Tensor.from_N2D2(self.parameters["mapping"].N2D2()), 
-                         n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping()))
+        # self.assertEqual(n2d2.Tensor.from_N2D2(self.parameters["mapping"].N2D2()), 
+        #                  n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping())) # TODO : Add back mapping to Fc ?
         self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
         super().test_parameters()
 
