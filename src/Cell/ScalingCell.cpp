@@ -82,7 +82,7 @@ std::pair<double, double> N2D2::ScalingCell::getOutputsRange() const {
                                           [](std::int32_t v) { return v >= 0; });
     }
     else if(mScaling.getMode() == ScalingMode::SINGLE_SHIFT || 
-            mScaling.getMode() == ScalingMode::SINGLE_SHIFT) 
+            mScaling.getMode() == ScalingMode::DOUBLE_SHIFT) 
     {
         allScalingsPositive = true;
     }
