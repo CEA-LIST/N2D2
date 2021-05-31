@@ -362,7 +362,7 @@ void N2D2::C_DeepNetExport::generateProgramFunction(DeepNet& deepNet,
          << "(DATA_T in_data[ENV_NB_OUTPUTS][ENV_SIZE_Y][ENV_SIZE_X],"
             " uint32_t out_data[OUTPUTS_HEIGHT][OUTPUTS_WIDTH]) {\n"
             "#ifdef SAVE_OUTPUTS\n"
-            "    convcell_outputs_save(\"in_data.txt\", ENV_DATA_UNSIGNED, ENV_NB_OUTPUTS, ENV_SIZE_Y, ENV_SIZE_X, in_data);\n"
+            "    convcell_outputs_save(\"in_data.txt\", ENV_DATA_UNSIGNED, ENV_NB_OUTPUTS, ENV_SIZE_Y, ENV_SIZE_X, 0, in_data);\n"
             "#endif\n"
             "\n"
             "#ifdef TIME_ANALYSIS\n"
