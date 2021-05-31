@@ -104,7 +104,9 @@ void N2D2::C_CellExport::generateActivationScaling(const Cell& cell, std::ofstre
         header << "#define " << prefix << "_SHIFT " << +scaling.front() << "\n";
         header << "static const int32_t " << prefix << "_SCALING_FACTOR_PER_OUTPUT[] = {0};\n";
     }
-    else if(activation.getActivationScaling().getMode() == ScalingMode::FIXED_MULT) {
+    else if(activation.getActivationScaling().getMode() == ScalingMode::FIXED_MULT16
+        || activation.getActivationScaling().getMode() == ScalingMode::FIXED_MULT32)
+    {
         if (cell.getType() == ScalingCell::Type || cell.getType() == ElemWiseCell::Type) {
             const FixedPointScaling& fpScaling = activation.getActivationScaling().getFixedPointScaling();
 

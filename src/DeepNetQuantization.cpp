@@ -326,8 +326,10 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
             }
 
             if(cell->getType() == ScalingCell::Type) {
-                const ScalingMode scalingCellMode = (actScalingMode == ScalingMode::FLOAT_MULT)?
-                                                        ScalingMode::FLOAT_MULT:ScalingMode::FIXED_MULT;
+                const ScalingMode scalingCellMode
+                    = (actScalingMode == ScalingMode::SINGLE_SHIFT
+                        || actScalingMode == ScalingMode::DOUBLE_SHIFT)
+                            ? ScalingMode::FIXED_MULT16 : actScalingMode;
                 approximateScalingCell(dynamic_cast<ScalingCell&>(*cell), scalingCellMode, nbBits);
             }
 
@@ -987,14 +989,16 @@ void N2D2::DeepNetQuantization::moveScalingCellAboveParentElemWiseCell(
 }
 
 void N2D2::DeepNetQuantization::approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
-                                                       std::size_t nbBits) 
+                                                       std::size_t /*nbBits*/) 
 {
     assert(cell.getScaling().getMode() == ScalingMode::FLOAT_MULT);
     if(scalingCellMode == ScalingMode::FLOAT_MULT) {
         return;
     }
 
-    if(scalingCellMode != ScalingMode::FIXED_MULT) {
+    if(scalingCellMode != ScalingMode::FIXED_MULT16
+        && scalingCellMode != ScalingMode::FIXED_MULT32)
+    {
         throw std::runtime_error("The scaling cell can only be approximated by a fixed-point approximation.");
     }
 
@@ -1007,19 +1011,62 @@ void N2D2::DeepNetQuantization::approximateScalingCell(ScalingCell& cell, Scalin
         << std::endl;
 #endif
 
-    const std::size_t nbFractionalBits = std::min(nbBits*2, (std::size_t) 24);
+    auto scalingFixedPoint = approximateScalingWithFixedPoint(scalingCellMode,
+                                                        floatScalingPerOutput);
 
-    std::vector<std::int32_t> fixedScalingPerOutput(floatScalingPerOutput.size());
-    for(std::size_t o = 0; o < floatScalingPerOutput.size(); o++) {
-        fixedScalingPerOutput[o] = std::round(floatScalingPerOutput[o]*std::pow(2, nbFractionalBits));
-    }
-    
-    cell.setScaling(Scaling::fixedPointScaling(nbFractionalBits, fixedScalingPerOutput));
+    cell.setScaling(Scaling::fixedPointScaling(scalingCellMode,
+                                               scalingFixedPoint.first,
+                                               scalingFixedPoint.second));
 
 #ifdef VERBOSE_QUANT
-    std::cout << "    FIXED_MULT: " << fixedScalingPerOutput[0]
-        << " x 2 ^ [- " << nbFractionalBits << "]" << std::endl;
+    std::cout << "    FIXED_MULT"
+        << ((scalingCellMode == ScalingMode::FIXED_MULT32) ? 32 : 16)
+        << ": " << scalingFixedPoint.second[0]
+        << " x 2 ^ [- " << scalingFixedPoint.first << "]" << std::endl;
 #endif
+}
+
+std::pair<std::size_t, std::vector<std::int32_t>>
+N2D2::DeepNetQuantization::approximateScalingWithFixedPoint(
+    ScalingMode mode,
+    const std::vector<Float_T>& scalingPerOutput)
+{
+    /**
+     * Find the highest nbFractionalBits so that the scaling 
+     * 'std::round(sc * (1ull << nbFractionalBits)' of each output
+     * can be stored in an int32_t or int16_t an thus in scalingFixedPoint.
+     * 
+     * TODO With unsigned activation like ReLU we could use the maximum
+     * of an uint32_t to gain a bit more precision.
+     */
+    const std::uint64_t limit
+        = (mode == ScalingMode::FIXED_MULT16)
+            ? std::numeric_limits<std::int16_t>::max()
+            : std::numeric_limits<std::int32_t>::max();
+    const std::size_t maxNbFractionalBits = 50;
+
+    const double maxScaling = *std::max_element(scalingPerOutput.begin(), scalingPerOutput.end());
+    std::size_t nbFractionalBits
+        = ((mode == ScalingMode::FIXED_MULT16)
+            ? std::numeric_limits<std::int16_t>::digits
+            : std::numeric_limits<std::int32_t>::digits)
+                - std::ceil(maxScaling);
+
+    assert(std::round(maxScaling * (1ull << nbFractionalBits)) < limit);
+    while(std::round(maxScaling * (1ull << (nbFractionalBits + 1))) < limit && 
+            nbFractionalBits + 1 <= maxNbFractionalBits) 
+    {
+        nbFractionalBits++;
+    }
+    
+    
+
+    std::vector<std::int32_t> scalingFixedPoint;
+    for(auto sc: scalingPerOutput) {
+        scalingFixedPoint.push_back(std::round(sc * (1ull << nbFractionalBits)));
+    }
+
+    return std::make_pair(nbFractionalBits, scalingFixedPoint);
 }
 
 std::pair<std::vector<unsigned char>, double> N2D2::DeepNetQuantization::approximateScalingWithPowerOf2Divs(
@@ -1149,46 +1196,29 @@ void N2D2::DeepNetQuantization::approximateActivationScaling(Cell& cell, Activat
             "Falling back to Fixed-point scaling for this layer."
             << Utils::cdef << std::endl;
 
-        actScalingMode = ScalingMode::FIXED_MULT;
+        actScalingMode = ScalingMode::FIXED_MULT16;
     }
 
     if(actScalingMode == ScalingMode::FLOAT_MULT) {
         // Nothing to do.
     }
-    else if(actScalingMode == ScalingMode::FIXED_MULT) {
-        /**
-         * Find the highest nbFractionalBits so that the scaling 
-         * 'std::round(sc * (1ull << nbFractionalBits)' of each output
-         * can be stored in an int32_t an thus in scalingFixedPoint.
-         * 
-         * TODO With unsigned activation like ReLU we could use the maximum
-         * of an uint32_t to gain a bit more precision.
-         */
-        const std::uint64_t limit = std::numeric_limits<std::int32_t>::max();
-        const std::size_t maxNbFractionalBits = 50;
+    else if(actScalingMode == ScalingMode::FIXED_MULT32
+        || actScalingMode == ScalingMode::FIXED_MULT16)
+    {
+        auto scalingFixedPoint
+            = approximateScalingWithFixedPoint(actScalingMode,
+                                               scalingPerOutput);
 
-        const double maxScaling = *std::max_element(scalingPerOutput.begin(), scalingPerOutput.end());
-        std::size_t nbFractionalBits = 32 - 1 - std::ceil(maxScaling);
-
-        assert(std::round(maxScaling * (1ull << nbFractionalBits)) < limit);
-        while(std::round(maxScaling * (1ull << (nbFractionalBits + 1))) < limit && 
-              nbFractionalBits + 1 <= maxNbFractionalBits) 
-        {
-            nbFractionalBits++;
-        }
-        
-        
-
-        std::vector<std::int32_t> scalingFixedPoint;
-        for(auto sc: scalingPerOutput) {
-            scalingFixedPoint.push_back(std::round(sc * (1ull << nbFractionalBits)));
-        }
-
-        activation.setActivationScaling(Scaling::fixedPointScaling(nbFractionalBits, scalingFixedPoint));
+        activation.setActivationScaling(
+            Scaling::fixedPointScaling(actScalingMode,
+                                       scalingFixedPoint.first,
+                                       scalingFixedPoint.second));
 
 #ifdef VERBOSE_QUANT
-        std::cout << "    FIXED_MULT: " << scalingFixedPoint[0]
-            << " x 2 ^ [- " << nbFractionalBits << "]" << std::endl;
+        std::cout << "    FIXED_MULT"
+            << ((actScalingMode == ScalingMode::FIXED_MULT32) ? 32 : 16)
+            << ": " << scalingFixedPoint.second[0]
+            << " x 2 ^ [- " << scalingFixedPoint.first << "]" << std::endl;
 #endif
     }
     else if(actScalingMode == ScalingMode::SINGLE_SHIFT) {

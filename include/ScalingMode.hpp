@@ -27,7 +27,8 @@
 enum class ScalingMode {
     NONE,
     FLOAT_MULT,
-    FIXED_MULT,
+    FIXED_MULT16,
+    FIXED_MULT32,
     SINGLE_SHIFT,
     DOUBLE_SHIFT,
 };
@@ -38,7 +39,15 @@ inline ScalingMode parseScalingMode(const std::string& str) {
     }
 
     if(str == "Fixed-point") {
-        return ScalingMode::FIXED_MULT;
+        return ScalingMode::FIXED_MULT32;
+    }
+
+    if(str == "Fixed-point32") {
+        return ScalingMode::FIXED_MULT32;
+    }
+
+    if(str == "Fixed-point16") {
+        return ScalingMode::FIXED_MULT16;
     }
 
     if(str == "Single-shift") {
