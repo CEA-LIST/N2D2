@@ -74,7 +74,9 @@ std::pair<double, double> N2D2::ScalingCell::getOutputsRange() const {
         allScalingsPositive = std::all_of(scalingPerOutput.begin(), scalingPerOutput.end(), 
                                           [](Float_T v) { return v >= 0.0; });
     }
-    else if(mScaling.getMode() == ScalingMode::FIXED_MULT) {
+    else if(mScaling.getMode() == ScalingMode::FIXED_MULT16
+        || mScaling.getMode() == ScalingMode::FIXED_MULT32)
+    {
         const std::vector<std::int32_t>& scalingPerOutput = mScaling.getFixedPointScaling()
                                                                     .getScalingPerOutput();
 

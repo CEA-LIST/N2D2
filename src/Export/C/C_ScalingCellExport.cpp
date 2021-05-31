@@ -78,7 +78,9 @@ void N2D2::C_ScalingCellExport::generateScaling(const ScalingCell& cell, std::of
                << Utils::join(rescaleFactorPerOutput.begin(), rescaleFactorPerOutput.end(), ',') 
                << "};\n";
     }
-    else if(cell.getScaling().getMode() == ScalingMode::FIXED_MULT) {
+    else if(cell.getScaling().getMode() == ScalingMode::FIXED_MULT16
+        || cell.getScaling().getMode() == ScalingMode::FIXED_MULT32)
+    {
         const FixedPointScaling& fpScaling = cell.getScaling().getFixedPointScaling();
 
         header << "#define " << prefix << "_NB_FRACTIONAL_BITS " << fpScaling.getFractionalBits() << "\n";

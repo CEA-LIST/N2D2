@@ -108,6 +108,9 @@ private:
     
     static bool checkActivationScalingWithPowerOf2Divs(Cell& cell, 
                                                        const std::vector<Float_T>& scalingPerOutput);
+    static std::pair<std::size_t, std::vector<std::int32_t>>
+        approximateScalingWithFixedPoint(ScalingMode mode,
+                                         const std::vector<Float_T>& scalingPerOutput);
     static std::vector<std::vector<unsigned char>> approximateActivationScalingWithPowerOf2Divs(Cell& cell, 
                                                 const std::vector<Float_T>& scalingPerOutput, 
                                                 std::size_t nbDivisions);
