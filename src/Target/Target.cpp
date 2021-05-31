@@ -338,7 +338,7 @@ void N2D2::Target::logLabelsMapping(const std::string& fileName) const
     }
 }
 
-void N2D2::Target::provideTargets(Database::StimuliSet set) // TODO debug here 
+void N2D2::Target::provideTargets(Database::StimuliSet set) 
 {
     std::shared_ptr<Cell_Frame_Top> targetCell 
         = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
@@ -547,7 +547,7 @@ void N2D2::Target::provideTargets(Database::StimuliSet set) // TODO debug here
     }
 }
 
-void N2D2::Target::process(Database::StimuliSet set) // TODO debug here 
+void N2D2::Target::process(Database::StimuliSet set)
 {
     std::shared_ptr<Cell_Frame_Top> targetCell 
         = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);

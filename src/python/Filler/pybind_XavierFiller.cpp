@@ -38,13 +38,13 @@ void declare_XavierFiller(py::module &m, const std::string& typeStr) {
             m, pyClassName.c_str(), py::multiple_inheritance()
     );
 
-    py::enum_<class XavierFiller<T>::VarianceNorm>(filler, "VarianceNorm")
+    py::enum_<enum XavierFiller<T>::VarianceNorm>(filler, "VarianceNorm")
     .value("FanIn", XavierFiller<T>::VarianceNorm::FanIn)
     .value("Average", XavierFiller<T>::VarianceNorm::Average)
     .value("FanOut", XavierFiller<T>::VarianceNorm::FanOut)
     .export_values();
 
-    py::enum_<class XavierFiller<T>::Distribution>(filler, "Distribution")
+    py::enum_<enum XavierFiller<T>::Distribution>(filler, "Distribution")
     .value("Uniform", XavierFiller<T>::Distribution::Uniform)
     .value("Normal", XavierFiller<T>::Distribution::Normal)
     .export_values();

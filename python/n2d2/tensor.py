@@ -443,6 +443,8 @@ class Tensor:
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         The synchronizations are handled by the library and regular users don't need use this method.  
         """
+        if not N2D2.cuda_compiled:
+            RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeDToH()
         else:
@@ -456,6 +458,8 @@ class Tensor:
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         The synchronizations are handled by the library and regular users don't need use this method.  
         """
+        if not N2D2.cuda_compiled:
+            RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeHToD()
         else:

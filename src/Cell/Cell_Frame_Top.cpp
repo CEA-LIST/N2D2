@@ -28,7 +28,6 @@ double N2D2::Cell_Frame_Top::applyLoss(
     Tensor<T>& diffInputs,
     const Tensor<T>& outputs)
 {
-    std::cout << "applyLoss called !" << std::endl;
     double loss = 0.0;
 
     for (unsigned int index = 0; index < outputs.size(); ++index) {

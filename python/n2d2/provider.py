@@ -146,6 +146,14 @@ class DataProvider(Provider):
         """
         return n2d2.Tensor.from_N2D2(self._N2D2_object.getData()) 
 
+
+    def get_labels(self):
+        """
+        :returns: Labels associated with the current batch.
+        :rtype: :py:class:`n2d2.Tensor`
+        """
+        return n2d2.Tensor.from_N2D2(self._N2D2_object.getLabelsData())
+
     def get_batch_size(self):
         """
         :returns: Batch size
