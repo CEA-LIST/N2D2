@@ -130,7 +130,7 @@ must hold in at most 16-bits, whereas ``Fixed-point32`` allows 32-bits :math:`x`
 In the later case, beware that overflow can occur on 32-bits only architectures
 when computing the scaling multiplication before the right shift (:math:`p`).
 
-For the ``Single-shift` and ``Double-shift`` modes, only right shifts are allowed
+For the ``Single-shift`` and ``Double-shift`` modes, only right shifts are allowed
 (scaling factor < 1.0). In case of layers with scaling factor above 1.0, ``Fixed-point16``
 is used as fallback for these layers.
 
