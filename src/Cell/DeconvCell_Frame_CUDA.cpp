@@ -135,94 +135,102 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initialize()
 
     unsigned int nbChannels = 0;
 
+    mNbGroups.clear();
+    mWeightsSolvers.clear();
+    mDiffSharedSynapses.clear();
+
+    for (unsigned int k = 0, size = mFilterDesc.size(); k < size; ++k)
+        cudnnDestroyFilterDescriptor(mFilterDesc[k]);
+    mFilterDesc.clear();
+
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (mInputs[k].size() == 0) {
             throw std::runtime_error("Zero-sized input for DeconvCell "
                                      + mName);
         }
 
-        if (k < mNbGroups.size()) {
-            nbChannels += mInputs[k].dimZ();
-            continue;  // already initialized, skip!
-        }
-
         mNbGroups.push_back(getNbGroups(mMapping.rows(nbChannels,
-                                                   mInputs[k].dimZ())));
-
+                                                mInputs[k].dimZ())));
         mWeightsSolvers.push_back(mWeightsSolver->clone());
 
-        typename std::map<unsigned int,
-            std::pair<CudaInterface<T>*, unsigned int> >::iterator
-                it = mExtSharedSynapses.find(k);
+        if (k >= mSharedSynapses.size()) {
+            typename std::map<unsigned int,
+                std::pair<CudaInterface<T>*, unsigned int> >::iterator
+                    it = mExtSharedSynapses.find(k);
 
-        std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
-
-#if CUDNN_VERSION >= 7000
-        if (mNbGroups[k] > 1)
-            kernelDims.push_back(getNbOutputs() / mNbGroups[k]);
-        else
-            kernelDims.push_back(getNbOutputs());
-#endif
-
-        kernelDims.push_back(mInputs[k].dimZ());
-
-        if (it != mExtSharedSynapses.end()) {
-            CudaTensor<T>* extWeights
-                = &((*(*it).second.first)[(*it).second.second]);
-
-            if (!std::equal(kernelDims.begin(), kernelDims.end(),
-                            extWeights->dims().begin()))
-            {
-                std::stringstream errorStr;
-                errorStr << "DeconvCell_Frame_CUDA<T>::initialize(): in cell "
-                    << mName << ", mismatch between external weights dim. ("
-                    << extWeights->dims() << ") and expected dim. ("
-                    << kernelDims << ")";
-
-                throw std::runtime_error(errorStr.str());
-            }
-
-            mSharedSynapses.push_back(extWeights);
-        }
-        else {
-            // Weight filler expect dimZ as input and dimB as output
-            std::vector<size_t> fillerKernelDims(kernelDims);
-            std::swap(fillerKernelDims.back(),
-                      fillerKernelDims[kernelDims.size() - 2]);
-
-            CudaTensor<T>* sharedSynapses = new CudaTensor<T>(fillerKernelDims);
-            mWeightsFiller->apply(*sharedSynapses);
-            // Inverse dimZ and dimB for Deconv
-            sharedSynapses->reshape(kernelDims);
-
-            mSharedSynapses.push_back(sharedSynapses, 0);
+            std::vector<size_t> kernelDims(mKernelDims.begin(),
+                                           mKernelDims.end());
 
 #if CUDNN_VERSION >= 7000
             if (mNbGroups[k] > 1)
-                cudnnSetConvolutionGroupCount(mConvDesc, mNbGroups[k]);
+                kernelDims.push_back(getNbOutputs() / mNbGroups[k]);
             else
 #endif
-            if (mNbGroups[k] == 0) {
-                // Set the non-connected kernels coefficients to 0
-                for (unsigned int output = 0; output < getNbOutputs(); ++output) {
-                    for (unsigned int channel = 0; channel < mInputs[k].dimZ();
-                         ++channel) {
-                        if (!isConnection(nbChannels + channel, output))
-                            mSharedSynapses.back()[channel][output]
-                                                                .fill(T(0.0));
+                kernelDims.push_back(getNbOutputs());
+
+            kernelDims.push_back(mInputs[k].dimZ());
+
+            if (it != mExtSharedSynapses.end()) {
+                CudaTensor<T>* extWeights
+                    = &((*(*it).second.first)[(*it).second.second]);
+
+                if (!std::equal(kernelDims.begin(), kernelDims.end(),
+                                extWeights->dims().begin()))
+                {
+                    std::stringstream errorStr;
+                    errorStr << "DeconvCell_Frame_CUDA<T>::initialize(): in cell "
+                        << mName << ", mismatch between external weights dim. ("
+                        << extWeights->dims() << ") and expected dim. ("
+                        << kernelDims << ")";
+
+                    throw std::runtime_error(errorStr.str());
+                }
+
+                mSharedSynapses.push_back(extWeights);
+            }
+            else {
+                // Weight filler expect dimZ as input and dimB as output
+                std::vector<size_t> fillerKernelDims(kernelDims);
+                std::swap(fillerKernelDims.back(),
+                        fillerKernelDims[kernelDims.size() - 2]);
+
+                CudaTensor<T>* sharedSynapses = new CudaTensor<T>(fillerKernelDims);
+                mWeightsFiller->apply(*sharedSynapses);
+                // Inverse dimZ and dimB for Deconv
+                sharedSynapses->reshape(kernelDims);
+
+                mSharedSynapses.push_back(sharedSynapses, 0);
+
+#if CUDNN_VERSION >= 7000
+                if (mNbGroups[k] > 1)
+                    cudnnSetConvolutionGroupCount(mConvDesc, mNbGroups[k]);
+                else
+#endif
+                if (mNbGroups[k] == 0) {
+                    // Set the non-connected kernels coefficients to 0
+                    for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+                        for (unsigned int channel = 0; channel < mInputs[k].dimZ();
+                            ++channel) {
+                            if (!isConnection(nbChannels + channel, output))
+                                mSharedSynapses.back()[channel][output]
+                                                                    .fill(T(0.0));
+                        }
                     }
                 }
-            }
 
-            mSharedSynapses.back().synchronizeHToD();
+                mSharedSynapses.back().synchronizeHToD();
+            }
         }
 
-        mDiffSharedSynapses.push_back(new CudaTensor<T>(kernelDims), 0);
+        nbChannels += mInputs[k].dimZ();
+
+        mDiffSharedSynapses.push_back(
+            new CudaTensor<T>(mSharedSynapses[k].dims()), 0);
 
         mFilterDesc.push_back(cudnnFilterDescriptor_t());
 
-        const std::vector<int> cudaKernelDims(kernelDims.rbegin(),
-                                              kernelDims.rend());
+        const std::vector<int> cudaKernelDims(mSharedSynapses[k].dims().rbegin(),
+                                            mSharedSynapses[k].dims().rend());
 
         CHECK_CUDNN_STATUS(cudnnCreateFilterDescriptor(&mFilterDesc.back()));
 #if CUDNN_VERSION >= 5000
@@ -517,8 +525,6 @@ the API cudnnGetConvolutionForwardMaxCount().
 
         if (workspaceSize > mWorkspaceSize)
             mWorkspaceSize = workspaceSize;
-
-        nbChannels += mInputs[k].dimZ();
     }
 
     int dev;

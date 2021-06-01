@@ -99,6 +99,9 @@ void N2D2::CellExport::generateFreeParameter(double value, std::ostream& stream,
 void N2D2::CellExport::generateSingleShiftHalfAddition(const Cell_Frame_Top& cellFrame, std::size_t output, 
                                                        std::ostream& stream)
 {
+    if (!cellFrame.getActivation())
+        return;
+
     if(cellFrame.getActivation()->getActivationScaling().getMode() == ScalingMode::SINGLE_SHIFT) {
         const std::size_t shift = cellFrame.getActivation()->getActivationScaling()
                                                             .getSingleShiftScaling()

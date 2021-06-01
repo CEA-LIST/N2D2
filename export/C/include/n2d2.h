@@ -511,6 +511,7 @@ elemwise_propagate(unsigned int channelsHeight,
                    DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
                    DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
                    ActivationFunction_T func,
+                   const int32_t rescaleFactorPerOutput[nbOutputs_],
                    int shift);
 void
 elemwise_upropagate(unsigned int channelsHeight,
@@ -520,6 +521,7 @@ elemwise_upropagate(unsigned int channelsHeight,
                    DATA_T inputs_b[nbOutputs_][channelsHeight][channelsWidth],
                    DATA_T outputs[nbOutputs_][channelsHeight][channelsWidth],
                    ActivationFunction_T func,
+                   const int32_t rescaleFactorPerOutput[nbOutputs_],
                    int shift);
 
 void
@@ -709,13 +711,59 @@ void resize_nearest_neighbor_propagete(unsigned int nbChannels,
                                        DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
 
 void convcell_outputs_print(const char* name,
+                            bool isOutputUnsigned,
                             unsigned int nbOutputs,
                             unsigned int outputsHeight,
                             unsigned int outputsWidth,
                             DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
 
 void convcell_outputs_save(const char* fileName,
+                           bool isOutputUnsigned,
                            unsigned int nbOutputs,
+                           unsigned int outputsHeight,
+                           unsigned int outputsWidth,
+                           DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+
+void poolcell_outputs_print(const char* name,
+                            bool isOutputUnsigned,
+                            unsigned int nbOutputs,
+                            unsigned int outputsHeight,
+                            unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+
+void poolcell_outputs_save(const char* fileName,
+                           bool isOutputUnsigned,
+                           unsigned int nbOutputs,
+                           unsigned int outputsHeight,
+                           unsigned int outputsWidth,
+                           DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+
+void elemwisecell_outputs_print(const char* name,
+                            bool isOutputUnsigned,
+                            unsigned int nbOutputs,
+                            unsigned int outputsHeight,
+                            unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+
+void elemwisecell_outputs_save(const char* fileName,
+                           bool isOutputUnsigned,
+                           unsigned int nbOutputs,
+                           unsigned int outputsHeight,
+                           unsigned int outputsWidth,
+                           DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+
+void scalingcell_outputs_print(const char* name,
+                            bool isOutputUnsigned,
+                            unsigned int nbOutputs,
+                            unsigned int outputOffset,
+                            unsigned int outputsHeight,
+                            unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+
+void scalingcell_outputs_save(const char* fileName,
+                           bool isOutputUnsigned,
+                           unsigned int nbOutputs,
+                           unsigned int outputOffset,
                            unsigned int outputsHeight,
                            unsigned int outputsWidth,
                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
@@ -731,10 +779,12 @@ void convcell_outputs_dynamic_print(
     RUNNING_MEAN_T* pMeanVal);
 
 void fccell_outputs_print(const char* name,
+                          bool isOutputUnsigned,
                           unsigned int nbOutputs,
                           DATA_T outputs[nbOutputs]);
 
 void fccell_outputs_save(const char* fileName,
+                         bool isOutputUnsigned,
                          unsigned int nbOutputs,
                          DATA_T outputs[nbOutputs]);
 

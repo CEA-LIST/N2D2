@@ -429,7 +429,7 @@ void N2D2::BatchNormCell_Frame<T>::backPropagate()
             mDiffBias(output) = sumBias + betaBias * mDiffBias(output);
         }
 
-        if (!mDiffOutputs.empty()) {
+        if (!mDiffOutputs.empty() && mBackPropagate) {
             const unsigned int size = mInputs.dimB() * getNbOutputs();
             const bool isValid = mDiffOutputs[k].isValid();
             Tensor<T> diffOutput = (isValid)
@@ -476,7 +476,7 @@ void N2D2::BatchNormCell_Frame<T>::backPropagate()
     mDiffScale.setValid();
     mDiffBias.setValid();
 
-    if (!mDiffOutputs.empty()) {
+    if (!mDiffOutputs.empty() && mBackPropagate) {
         mDiffOutputs.setValid();
         mDiffOutputs.synchronizeHToD();
     }

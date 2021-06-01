@@ -358,11 +358,14 @@ public:
                        Utils::make_unique<FloatingPointScaling>(std::move(scalingPerOutput), isclipped, std::move(clippingPerOutput)));
     }
 
-    static Scaling fixedPointScaling(std::size_t nbFractionalBits, 
+    static Scaling fixedPointScaling(ScalingMode mode,
+                                     std::size_t nbFractionalBits, 
                                      std::vector<std::int32_t> scalingPerOutput,
                                      bool isclipped, std::vector<Float_T> clippingPerOutput) 
     {
-        return Scaling(ScalingMode::FIXED_MULT, 
+        assert(mode == ScalingMode::FIXED_MULT16
+                || mode == ScalingMode::FIXED_MULT32);
+        return Scaling(mode, 
                        Utils::make_unique<FixedPointScaling>(nbFractionalBits, 
                                                              std::move(scalingPerOutput), isclipped, std::move(clippingPerOutput)));
     }
@@ -394,7 +397,8 @@ public:
     }
 
     const FixedPointScaling& getFixedPointScaling() const {
-        assert(mMode == ScalingMode::FIXED_MULT);
+        assert(mMode == ScalingMode::FIXED_MULT16
+                || mMode == ScalingMode::FIXED_MULT32);
         return static_cast<const FixedPointScaling&>(*mScaling);
     }
 
@@ -454,7 +458,8 @@ inline void Scaling::propagate(const Cell& cell, const Tensor<T>& input, Tensor<
         case ScalingMode::FLOAT_MULT:
             static_cast<const FloatingPointScaling&>(*mScaling).propagate(cell, input, output, qBits);
             break;
-        case ScalingMode::FIXED_MULT:
+        case ScalingMode::FIXED_MULT16:
+        case ScalingMode::FIXED_MULT32:
             static_cast<const FixedPointScaling&>(*mScaling).propagate(cell, input, output, qBits);
             break;
         case ScalingMode::SINGLE_SHIFT:
@@ -499,7 +504,8 @@ inline void Scaling::propagate(const Cell& cell, const CudaTensor<T>& input, Cud
         case ScalingMode::FLOAT_MULT:
             static_cast<const FloatingPointScaling&>(*mScaling).propagate(cell, input, output, qBits);
             break;
-        case ScalingMode::FIXED_MULT:
+        case ScalingMode::FIXED_MULT16:
+        case ScalingMode::FIXED_MULT32:
             static_cast<const FixedPointScaling&>(*mScaling).propagate(cell, input, output, qBits);
             break;
         case ScalingMode::SINGLE_SHIFT:

@@ -44,14 +44,13 @@ public:
                      const std::string& name,
                      unsigned int nbOutputs,
                      const std::shared_ptr<Activation>& activation
-                     = std::make_shared<TanhActivation_Frame<Float_T> >());
+                     = std::shared_ptr<Activation>());
     static std::shared_ptr<FcCell> create(Network& net, const DeepNet& deepNet, 
                                           const std::string& name,
                                           unsigned int nbOutputs,
                                           const std::shared_ptr
                                           <Activation>& activation
-                                          = std::make_shared
-                                          <TanhActivation_Frame<Float_T> >())
+                                          = std::shared_ptr<Activation>())
     {
         return std::make_shared
             <FcCell_Transcode>(net, deepNet, name, nbOutputs, activation);

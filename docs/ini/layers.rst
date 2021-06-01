@@ -494,7 +494,8 @@ Batch Normalization layer :cite:`Ioffe2015`.
 +=====================================+=============================================================================================================================================================+
 | ``NbOutputs``                       | Number of output neurons                                                                                                                                    |
 +-------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``ActivationFunction`` [``Tanh``]   | Activation function. Can be any of ``Logistic``, ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, ``TanhLeCun``, ``Linear``, ``Saturation`` or ``Tanh``   |
+| ``ActivationFunction`` []           | Activation function. Can be any of ``Logistic``, ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, ``TanhLeCun``, ``Linear``, ``Saturation`` or ``Tanh``   |
+|                                     | (none by default)                                                                                                                                           |
 +-------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | ``ScalesSharing`` []                | Share the scales with an other layer                                                                                                                        |
 +-------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -590,9 +591,9 @@ Convolutional layer.
 |                               | N-D kernels                                        |
 +-------------------------------+----------------------------------------------------+
 | ``ActivationFunction``        | Activation function. Can be any of ``Logistic``,   |
-| [``Tanh``]                    | ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, |
+| []                            | ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, |
 |                               | ``TanhLeCun``, ``Linear``, ``Saturation`` or       |
-|                               | ``Tanh``                                           |
+|                               | ``Tanh`` (none by default)                         |
 +-------------------------------+----------------------------------------------------+
 | ``WeightsFiller``             | Weights initial values filler                      |
 | [``NormalFiller(0.0, 0.05)``] |                                                    |
@@ -816,9 +817,9 @@ Deconvolution layer.
 |                               | N-D kernels                                        |
 +-------------------------------+----------------------------------------------------+
 | ``ActivationFunction``        | Activation function. Can be any of ``Logistic``,   |
-| [``Tanh``]                    | ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, |
+| []                            | ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, |
 |                               | ``TanhLeCun``, ``Linear``, ``Saturation`` or       |
-|                               | ``Tanh``                                           |
+|                               | ``Tanh`` (none by default)                         |
 +-------------------------------+----------------------------------------------------+
 | ``WeightsFiller``             | Weights initial values filler                      |
 | [``NormalFiller(0.0, 0.05)``] |                                                    |
@@ -955,7 +956,8 @@ Element-wise operation layer.
 +---------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | ``Shifts`` [0.0]                      | Shifts for the ``Sum`` and ``EuclideanSum`` operation, in the same order as the inputs                                                                      |
 +---------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``ActivationFunction`` [``Linear``]   | Activation function. Can be any of ``Logistic``, ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, ``TanhLeCun``, ``Linear``, ``Saturation`` or ``Tanh``   |
+| ``ActivationFunction`` []             | Activation function. Can be any of ``Logistic``, ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, ``TanhLeCun``, ``Linear``, ``Saturation`` or ``Tanh``   |
+|                                       | (none by default)                                                                                                                                           |
 +---------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 Given :math:`N` input tensors :math:`T_{i}`, performs the following
@@ -1047,7 +1049,8 @@ Fractional max pooling layer :cite:`Graham2014`.
 +---------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | ``ScalingRatio``                      | Scaling ratio. The output size is :math:`round\left(\frac{\text{input size}}{\text{scaling ratio}}\right)`.                                                 |
 +---------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``ActivationFunction`` [``Linear``]   | Activation function. Can be any of ``Logistic``, ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, ``TanhLeCun``, ``Linear``, ``Saturation`` or ``Tanh``   |
+| ``ActivationFunction`` []             | Activation function. Can be any of ``Logistic``, ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, ``TanhLeCun``, ``Linear``, ``Saturation`` or ``Tanh``   |
+|                                       | (none by default)                                                                                                                                           |
 +---------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 Configuration parameters (*Frame* models)
@@ -1079,7 +1082,8 @@ Fully connected layer.
 +-------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | [``NormalFiller(0.0, 0.05)``]       |                                                                                                                                                             |
 +-------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``ActivationFunction`` [``Tanh``]   | Activation function. Can be any of ``Logistic``, ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, ``TanhLeCun``, ``Linear``, ``Saturation`` or ``Tanh``   |
+| ``ActivationFunction`` []           | Activation function. Can be any of ``Logistic``, ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, ``TanhLeCun``, ``Linear``, ``Saturation`` or ``Tanh``   |
+|                                     | (none by default)                                                                                                                                           |
 +-------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 Configuration parameters (*Frame* models)
@@ -1482,9 +1486,9 @@ The layer connectivity is the following:
 |                               | N-D pooling area                                   |
 +-------------------------------+----------------------------------------------------+
 | ``ActivationFunction``        | Activation function. Can be any of ``Logistic``,   |
-| [``Linear``]                  | ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, |
+| []                            | ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, |
 |                               | ``TanhLeCun``, ``Linear``, ``Saturation`` or       |
-|                               | ``Tanh``                                           |
+|                               | ``Tanh`` (none by default)                         |
 +-------------------------------+----------------------------------------------------+
 | ``Mapping.NbGroups`` []       | Mapping: number of groups (mutually exclusive      |
 |                               | with all other Mapping.\* options)                 |
@@ -1796,9 +1800,9 @@ Unpooling layer.
 |                               | N-D pooling area                                   |
 +-------------------------------+----------------------------------------------------+
 | ``ActivationFunction``        | Activation function. Can be any of ``Logistic``,   |
-| [``Linear``]                  | ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, |
+| []                            | ``LogisticWithLoss``, ``Rectifier``, ``Softplus``, |
 |                               | ``TanhLeCun``, ``Linear``, ``Saturation`` or       |
-|                               | ``Tanh``                                           |
+|                               | ``Tanh`` (none by default)                         |
 +-------------------------------+----------------------------------------------------+
 | ``Mapping.NbGroups`` []       | Mapping: number of groups (mutually exclusive      |
 |                               | with all other Mapping.\* options)                 |

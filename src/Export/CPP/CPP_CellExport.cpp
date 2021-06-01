@@ -158,7 +158,9 @@ void N2D2::CPP_CellExport::generateScaling(
             }
         }
     }
-    else if(scaling.getMode() == ScalingMode::FIXED_MULT) {
+    else if(scaling.getMode() == ScalingMode::FIXED_MULT16
+        || scaling.getMode() == ScalingMode::FIXED_MULT32)
+    {
         const auto& fpScaling = scaling.getFixedPointScaling();
         const auto& scalingPerOutput = fpScaling.getScalingPerOutput();
 
@@ -337,7 +339,8 @@ std::string N2D2::CPP_CellExport::getLabelScaling(const Cell& cell) const {
             label = prefix + "_CLIPPED_SCALING";
         }
     } 
-    else if(activationScaling.getMode() == ScalingMode::FIXED_MULT){
+    else if(activationScaling.getMode() == ScalingMode::FIXED_MULT16 ||
+            activationScaling.getMode() == ScalingMode::FIXED_MULT32){
         if(activationScaling.getFixedPointScaling().getIsClipped()) {
             label = prefix + "_CLIPPED_SCALING";
         }

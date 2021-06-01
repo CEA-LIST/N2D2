@@ -44,12 +44,12 @@ public:
     BatchNormCell_Frame(const DeepNet& deepNet, const std::string& name,
                         unsigned int nbOutputs,
                         const std::shared_ptr<Activation>& activation
-                        = std::make_shared<TanhActivation_Frame<T> >());
+                        = std::shared_ptr<Activation>());
     static std::shared_ptr<BatchNormCell>
     create(const DeepNet& deepNet, const std::string& name,
            unsigned int nbOutputs,
            const std::shared_ptr<Activation>& activation
-           = std::make_shared<TanhActivation_Frame<T> >())
+           = std::shared_ptr<Activation>())
     {
         return std::make_shared
             <BatchNormCell_Frame>(deepNet, name, nbOutputs, activation);
