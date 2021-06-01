@@ -143,9 +143,7 @@ private:
     static void approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
                                        std::size_t nbBits);
 
-private:
 };
 
 }
-
 #endif
