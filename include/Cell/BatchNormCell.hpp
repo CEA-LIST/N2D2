@@ -125,6 +125,8 @@ protected:
     // batch-wise means and standard deviations during training.
     // The closer to 1.0, the more it will depend on the last batch 
     Parameter<double> mMovingAverageMomentum;
+    /// If true, enable backpropogation
+    Parameter<bool> mBackPropagate;
     
     std::shared_ptr<Solver> mScaleSolver;
     std::shared_ptr<Solver> mBiasSolver;

@@ -158,7 +158,9 @@ void N2D2::CPP_CellExport::generateScaling(
             }
         }
     }
-    else if(scaling.getMode() == ScalingMode::FIXED_MULT) {
+    else if(scaling.getMode() == ScalingMode::FIXED_MULT16
+        || scaling.getMode() == ScalingMode::FIXED_MULT32)
+    {
         const auto& fpScaling = scaling.getFixedPointScaling();
         const auto& scalingPerOutput = fpScaling.getScalingPerOutput();
 

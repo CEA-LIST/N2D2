@@ -57,7 +57,7 @@ public:
                         const std::vector<unsigned int>& dilationDims
                             = std::vector<unsigned int>(2, 1U),
                         const std::shared_ptr<Activation>& activation
-                    = std::make_shared<TanhActivation_Frame_CUDA<T> >());
+                    = std::shared_ptr<Activation>());
     static std::shared_ptr<ConvCell>
     create(Network& /*net*/,
            const DeepNet& deepNet, 
@@ -72,7 +72,7 @@ public:
            const std::vector<unsigned int>& dilationDims
                 = std::vector<unsigned int>(2, 1U),
            const std::shared_ptr<Activation>& activation
-           = std::make_shared<TanhActivation_Frame_CUDA<T> >())
+           = std::shared_ptr<Activation>())
     {
         return std::make_shared<ConvCell_Frame_CUDA<T> >(deepNet,
                                                          name,

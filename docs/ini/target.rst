@@ -152,6 +152,49 @@ results to a cross entropy loss with regards to the input gradient of these
 functions, as per the mathematical simplification of the cross entropy loss 
 derivative multiplied by the functions gradient.
 
+.. admonition:: Demonstration
+
+  The cross entropy loss for a single image is:
+
+  .. math::
+
+    L = -\sum_{j=1}^{M}{y_{j}\log(p_{j})}
+
+  .. note::
+
+    - M - number of classes (dog, cat, fish)
+    - log - the natural log
+    - y - binary indicator (0 or 1) if class label :math:`j` is the correct classification for this image
+    - p - predicted probability that the image is of class :math:`j`
+
+
+  The softmax performs the following operation:
+
+
+  .. math::
+
+    p_{i} = \frac{\exp{x_{i}}}{\sum_{k}\exp{x_{k}}}
+
+  To perform the back-propagation, we need to compute the derivative of the loss 
+  :math:`L` with respect to the inputs :math:`x_{i}`:
+
+  .. math::
+
+    \frac{\partial L}{\partial x_i}=-\sum_ky_k\frac{\partial \log p_k}{\partial x_i}=-\sum_ky_k\frac{1}{p_k}\frac{\partial p_k}{\partial x_i}
+    
+    =-y_i(1-p_i)-\sum_{k\neq i}y_k\frac{1}{p_k}({-p_kp_i})
+    
+    =-y_i(1-p_i)+\sum_{k\neq i}y_k({p_i})
+    
+    =-y_i+y_ip_i+\sum_{k\neq i}y_k({p_i})
+    
+    =p_i\left(\sum_k{y_k}\right)-y_i
+    
+    =p_i-y_i
+
+  given that :math:`\sum_k{y_k}=1`, as :math:`y` is a vector with only one non-zero element, which is 1.
+
+
 
 Target types
 ------------

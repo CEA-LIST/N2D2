@@ -81,7 +81,8 @@ void N2D2::CPP_ScalingCellExport::generateHeaderConstants(const ScalingCell& cel
 
     // TODO: needed for DNeuro_V2 emulator. Use the CPP way in the future?
     if (cell.getScaling().getMode() == ScalingMode::FLOAT_MULT
-        || cell.getScaling().getMode() == ScalingMode::FIXED_MULT)
+        || cell.getScaling().getMode() == ScalingMode::FIXED_MULT16
+        || cell.getScaling().getMode() == ScalingMode::FIXED_MULT32)
     {
         C_ScalingCellExport::generateScaling(cell, header);
     }

@@ -31,7 +31,8 @@ N2D2::BatchNormCell::BatchNormCell(const DeepNet& deepNet, const std::string& na
                                    unsigned int nbOutputs)
     : Cell(deepNet, name, nbOutputs), 
       mEpsilon(this, "Epsilon", 1.0e-5),
-      mMovingAverageMomentum(this, "MovingAverageMomentum", 0.1)
+      mMovingAverageMomentum(this, "MovingAverageMomentum", 0.1),
+      mBackPropagate(this, "BackPropagate", true)
 {
     // ctor
 }

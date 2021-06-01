@@ -22,6 +22,8 @@
 #include "Activation/Activation.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Export/C/C_CellExport.hpp"
+#include "Cell/ScalingCell.hpp"
+#include "Cell/ElemWiseCell.hpp"
 
 void N2D2::C_CellExport::generateHeaderBegin(const Cell& cell, std::ofstream& header) {
     // Append date & time to the file.
@@ -78,14 +80,17 @@ void N2D2::C_CellExport::generateActivationScaling(const Cell& cell, std::ofstre
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
     const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
 
+
     if (cellFrame.getActivation() == nullptr) {
         header << "#define " << prefix << "_SHIFT 0\n";
+        header << "static const int32_t " << prefix << "_SCALING_FACTOR_PER_OUTPUT[] = {0};\n";
         return;
     }
     
     const Activation& activation = *cellFrame.getActivation();
     if(activation.getActivationScaling().getMode() == ScalingMode::NONE) {
         header << "#define " << prefix << "_SHIFT 0\n";
+        header << "static const int32_t " << prefix << "_SCALING_FACTOR_PER_OUTPUT[] = {0};\n";
     }
     else if(activation.getActivationScaling().getMode() == ScalingMode::SINGLE_SHIFT) {
         const std::vector<unsigned char>& scaling = activation.getActivationScaling()
@@ -97,6 +102,24 @@ void N2D2::C_CellExport::generateActivationScaling(const Cell& cell, std::ofstre
         }
 
         header << "#define " << prefix << "_SHIFT " << +scaling.front() << "\n";
+        header << "static const int32_t " << prefix << "_SCALING_FACTOR_PER_OUTPUT[] = {0};\n";
+    }
+    else if(activation.getActivationScaling().getMode() == ScalingMode::FIXED_MULT16
+        || activation.getActivationScaling().getMode() == ScalingMode::FIXED_MULT32)
+    {
+        if (cell.getType() == ScalingCell::Type || cell.getType() == ElemWiseCell::Type) {
+            const FixedPointScaling& fpScaling = activation.getActivationScaling().getFixedPointScaling();
+
+            header << "#define " << prefix << "_SHIFT " << fpScaling.getFractionalBits() << "\n";
+            header << "static const int32_t " << prefix << "_SCALING_FACTOR_PER_OUTPUT[] = {"
+                   << Utils::join(fpScaling.getScalingPerOutput().begin(), 
+                                  fpScaling.getScalingPerOutput().end(), ',') 
+                   << "};\n";
+        }
+        else {
+            throw std::runtime_error("Scaling and ElemWise are the only layers"
+                                     "supported in Fixed-point scaling mode.");
+        }
     }
     else {
         throw std::runtime_error("Single-shift with a global scaling per layer is the only activation "

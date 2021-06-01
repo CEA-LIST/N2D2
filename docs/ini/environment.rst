@@ -831,6 +831,12 @@ Custom kernel.
 If both ``Kernel.SizeX`` and ``Kernel.SizeY`` are 0, the kernel is
 assumed to be square.
 
+
+.. Note::
+
+  When providing a custom kernel, no normalization is applied on its coefficients.
+
+
 Gaussian kernel
 ^^^^^^^^^^^^^^^
 

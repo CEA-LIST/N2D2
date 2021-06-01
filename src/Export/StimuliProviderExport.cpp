@@ -90,7 +90,7 @@ void N2D2::StimuliProviderExport::generate(const DeepNet& deepNet, StimuliProvid
         stimuliLink << Utils::baseName(dirName) << "/"
                     << Utils::baseName(stimuliName.str()) 
                     << " "
-                    << Utils::baseName(sp.getDatabase().getStimulusName(set, i))
+                    << sp.getDatabase().getStimulusName(set, i)
                     <<"\n";
 
         std::ofstream envStimuli(stimuliName.str().c_str(),

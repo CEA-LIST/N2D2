@@ -344,6 +344,7 @@ void N2D2::C_FcCellExport::generateCellFunction(
     prog << "#ifdef SAVE_OUTPUTS\n"
          << "    fccell_outputs_save("
             << "\"" << identifier << ".txt\", "
+            << DeepNetExport::isCellOutputUnsigned(cell) << ","
             << prefix << "_NB_OUTPUTS, "
             << outputName
          << ");\n"
