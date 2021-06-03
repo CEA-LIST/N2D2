@@ -1028,7 +1028,7 @@ void N2D2::DeepNetQuantization::approximateScalingCell(ScalingCell& cell, Scalin
 
 std::pair<std::size_t, std::vector<std::int32_t>>
 N2D2::DeepNetQuantization::approximateScalingWithFixedPoint(
-    ScalingMode mode,
+    ScalingMode& mode,
     const std::vector<Float_T>& scalingPerOutput)
 {
     /**
@@ -1043,23 +1043,32 @@ N2D2::DeepNetQuantization::approximateScalingWithFixedPoint(
         = (mode == ScalingMode::FIXED_MULT16)
             ? std::numeric_limits<std::int16_t>::max()
             : std::numeric_limits<std::int32_t>::max();
-    const std::size_t maxNbFractionalBits = 50;
+    const double maxScaling = *std::max_element(scalingPerOutput.begin(),
+                                                scalingPerOutput.end());
 
-    const double maxScaling = *std::max_element(scalingPerOutput.begin(), scalingPerOutput.end());
-    std::size_t nbFractionalBits
-        = ((mode == ScalingMode::FIXED_MULT16)
-            ? std::numeric_limits<std::int16_t>::digits
-            : std::numeric_limits<std::int32_t>::digits)
-                - std::ceil(maxScaling);
+    if (maxScaling >= limit) {
+        if (mode == ScalingMode::FIXED_MULT16) {
+            std::cout << Utils::cwarning << "Max scaling (" << maxScaling
+                << ") doesn't fit in FIXED_MULT16. "
+                "Falling back to FIXED_MULT32." << Utils::cdef << std::endl;
 
-    assert(std::round(maxScaling * (1ull << nbFractionalBits)) < limit);
-    while(std::round(maxScaling * (1ull << (nbFractionalBits + 1))) < limit && 
-            nbFractionalBits + 1 <= maxNbFractionalBits) 
-    {
-        nbFractionalBits++;
+            mode = ScalingMode::FIXED_MULT32;
+            return approximateScalingWithFixedPoint(mode, scalingPerOutput);
+        }
+        else {
+            std::stringstream errorStr;
+            errorStr << "Max scaling (" << maxScaling
+                << ") doesn't fit in FIXED_MULT32." << std::endl;
+
+            throw std::runtime_error(errorStr.str());
+        }
     }
-    
-    
+
+    const std::size_t maxNbFractionalBits = 50;
+    const std::size_t nbFractionalBits
+        = std::min((std::size_t)std::floor(std::log(limit / maxScaling)
+                                            / std::log(2.0)),
+                   maxNbFractionalBits);
 
     std::vector<std::int32_t> scalingFixedPoint;
     for(auto sc: scalingPerOutput) {
