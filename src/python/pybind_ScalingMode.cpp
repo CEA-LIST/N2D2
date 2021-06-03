@@ -32,7 +32,8 @@ void init_ScalingMode(py::module &m) {
     py::enum_<ScalingMode>(m, "ScalingMode", py::arithmetic())
     .value("NONE", ScalingMode::NONE)
     .value("FLOAT_MULT", ScalingMode::FLOAT_MULT)
-    .value("FIXED_MULT", ScalingMode::FIXED_MULT)
+    .value("FIXED_MULT16", ScalingMode::FIXED_MULT16)
+    .value("FIXED_MULT32", ScalingMode::FIXED_MULT32)
     .value("SINGLE_SHIFT", ScalingMode::SINGLE_SHIFT)
     .value("DOUBLE_SHIFT", ScalingMode::DOUBLE_SHIFT);
 }
