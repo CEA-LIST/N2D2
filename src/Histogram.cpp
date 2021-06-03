@@ -203,8 +203,8 @@ double N2D2::Histogram::MSE(double threshold, std::size_t nbBits) const {
 
     const bool isUnsigned = mMinVal >= 0.0;
 
-    const double minVal = isUnsigned?0:-(1 << (nbBits - 1));
-    const double maxVal = isUnsigned?((1 << nbBits) - 1):((1 << (nbBits - 1)) - 1);
+    const double minVal = isUnsigned?0:-(1LL << (nbBits - 1));
+    const double maxVal = isUnsigned?((1ULL << nbBits) - 1):((1ULL << (nbBits - 1)) - 1);
     const double scaling = maxVal/threshold;
 
 
