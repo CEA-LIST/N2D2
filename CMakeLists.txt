@@ -84,6 +84,8 @@ function(add_n2d2_doc source target deps)
         configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
 
         file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR}) #Doxygen won't create this for us
+        file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR}/html) #Prevents intermittent error
+        file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR}/xml) #Prevents intermittent error
         add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
                         DEPENDS ${ALL_PUBLIC_HEADERS}
                         COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT}

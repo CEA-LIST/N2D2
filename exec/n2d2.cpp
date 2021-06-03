@@ -317,7 +317,7 @@ public:
         actScalingMode = parseScalingMode(
                            opts.parse("-act-rescaling-mode", std::string("Floating-point"), 
                                           "activation scaling mode on export, "
-                                          "can be 'Floating-point', 'Fixed-point', 'Single-shift' "
+                                          "can be 'Floating-point', 'Fixed-point16', 'Fixed-point32', 'Single-shift' "
                                           "or 'Double-shift'"));
         actRescalePerOutput = opts.parse("-act-rescale-per-output", false, 
                                               "rescale activation per output on export");

@@ -21,15 +21,7 @@ build:ubuntu:
     - ubuntu
   script:
     - make -j4
-#  artifacts:
-#    expire_in: 2 hrs
-#    paths:
-#      - build/
-
-build-docs:
-  extends: .before_script_template
-  stage: build
-  script:
+    - cp lib/*.so ../python/
     - make docs -j4
   artifacts:
     paths:
@@ -44,18 +36,15 @@ test:ubuntu:
 #    - cd build
     - make tests -j4
     - make test
-  dependencies: []
 
 # HTTP server setup on is154584 (using python simplehttp):
 # systemctl config file: /etc/systemd/system/simplehttp.service
 # service restart: systemctl restart simplehttp.service
 docs:
-  stage: deploy
+  stage: test
   script:
     - mkdir -p /local/is154584/www/N2D2/${CI_COMMIT_REF_NAME}
     - cp -r docs/_build/html/* /local/is154584/www/N2D2/${CI_COMMIT_REF_NAME}
-  dependencies:
-    - build-docs
   environment:
     name: Documentation
     url: http://is154584.intra.cea.fr:8081/N2D2/${CI_COMMIT_REF_NAME}
@@ -66,7 +55,6 @@ github:
   script:
     - git remote show github || git remote add github git@github.com:CEA-LIST/N2D2.git
     - git push github HEAD:master
-  dependencies: []
   environment:
     name: Github
     url: https://github.com/CEA-LIST/N2D2
@@ -85,8 +73,6 @@ github.io:
     - git config user.name "gitlab-runner"
     - git diff --quiet && git diff --staged --quiet || git commit -m "${CI_COMMIT_MESSAGE}"
     - git push
-  dependencies:
-    - build-docs
   environment:
     name: Github.io
     url: https://cea-list.github.io/N2D2-docs
