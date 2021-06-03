@@ -22,6 +22,27 @@
 
 const char* N2D2::RangeAffineTransformation::Type = "RangeAffine";
 
+namespace N2D2 {
+class ParallelTruncate : public cv::ParallelLoopBody {
+public:
+    ParallelTruncate(cv::Mat& frame_)
+        : frame(frame_) {}
+    virtual void operator ()(const cv::Range& range) const override {
+        for (int r = range.start; r < range.end; r++) {
+            int i = r / frame.cols;
+            int j = r % frame.cols;
+            Float_T& value = frame.ptr<Float_T>(i)[j];
+            value = std::trunc(value);
+        }
+    }
+    ParallelTruncate& operator=(const ParallelTruncate&) {
+        return *this;
+    };
+private:
+    cv::Mat& frame;
+};
+}
+
 N2D2::RangeAffineTransformation::RangeAffineTransformation(
     Operator firstOperator,
     const std::vector<double>& firstValue,
@@ -101,15 +122,16 @@ N2D2::RangeAffineTransformation::apply(cv::Mat& frame,
 
             applyOperator(channels[ch], mSecondOperator, secondValue);
         }
+
+        if (mTruncate) {
+            ParallelTruncate parallelTruncate(channels[ch]);
+            cv::parallel_for_(
+                cv::Range(0, channels[ch].rows * channels[ch].cols),
+                parallelTruncate);
+        }
     }
 
     cv::merge(channels, frame);
-
-    if (mTruncate) {
-        cv::Mat frameInt;
-        frame.convertTo(frameInt, CV_32S);
-        frameInt.convertTo(frame, opencv_data_type<Float_T>::value);
-    }
 }
 
 void N2D2::RangeAffineTransformation::applyOperator(
