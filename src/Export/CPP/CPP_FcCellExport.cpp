@@ -80,13 +80,20 @@ void N2D2::CPP_FcCellExport::generateHeaderConstants(const FcCell& cell, std::of
 }
 
 void N2D2::CPP_FcCellExport::generateHeaderFreeParameters(const FcCell & cell, std::ofstream& header) {
-    generateHeaderBias(cell, header);
 
-    if (mThreshold > 0.0) {
-        generateHeaderWeightsSparse(cell, header);
+    if(cell.getQuantizedNbBits() > 0){
+        generateHeaderBiasQAT(cell, header);
+        generateHeaderWeightsQAT(cell, header);
     }
-    else {
-        generateHeaderWeights(cell, header);
+    else{
+        generateHeaderBias(cell, header);
+
+        if (mThreshold > 0.0) {
+            generateHeaderWeightsSparse(cell, header);
+        }
+        else {
+            generateHeaderWeights(cell, header);
+        }
     }
 }
 
@@ -94,6 +101,33 @@ void N2D2::CPP_FcCellExport::generateHeaderBias(const FcCell & cell, std::ofstre
     const std::string identifier = Utils::CIdentifier(cell.getName());
 
     header << "static const BDATA_T " << identifier << "_biases[" 
+               << Utils::upperCase(identifier) << "_OUTPUTS_SIZE"
+           <<"] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_BIASSES) = {";
+
+    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+
+    Tensor<Float_T> bias;
+    for (std::size_t output = 0; output < cell.getNbOutputs(); ++output) {
+        if (cell.getParameter<bool>("NoBias")) {
+            header << "0";
+        }
+        else {
+            cell.getBias(output, bias);
+            CellExport::generateFreeParameter(bias(0), header);
+        }
+
+        CellExport::generateSingleShiftHalfAddition(cellFrame, output, header);
+        header << ", ";
+    }
+
+    header << "};\n";
+}
+
+void N2D2::CPP_FcCellExport::generateHeaderBiasQAT(const FcCell & cell, std::ofstream& header) {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+
+    //write explicit type
+    header << "static const int32_t " << identifier << "_biases["
                << Utils::upperCase(identifier) << "_OUTPUTS_SIZE"
            <<"] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_BIASSES) = {";
 
@@ -148,6 +182,66 @@ void N2D2::CPP_FcCellExport::generateHeaderWeights(const FcCell & cell, std::ofs
                     
                     cell.getWeight(output,  wch, weight);
 
+                    CellExport::generateFreeParameter( weight(0), header);
+                    header << ", ";
+
+                    iweight++;
+                    if(iweight % 30 == 0) {
+                        header << "\n";
+                    }
+                }
+            }
+        }
+    }
+
+    header << "};\n\n";
+}
+
+void N2D2::CPP_FcCellExport::generateHeaderWeightsQAT(const FcCell & cell, std::ofstream& header) {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
+
+    header << "#define " << prefix << "_WEIGHTS_SIZE ("
+               << prefix << "_OUTPUTS_SIZE*" << prefix << "_CHANNELS_SIZE"
+           << ")\n\n";
+
+    header << "// Flatten weights with the order[OUTPUTS_SIZE][CHANNELS_SIZE]. \n"
+           << "// If the previous cell was a 2D cell, CHANNELS_SIZE is flatten in "
+               << "the [CHANNELS_HEIGHT][CHANNELS_WIDTH][NB_CHANNELS] order.\n";
+
+    //write explicit type depending on #bits
+    int wPrecision = (int)cell.getQuantizedNbBits();
+    std::string wType = "";
+    if(wPrecision > 0 && wPrecision <= 8){
+        wType = "int8_t";
+    }
+    else if(wPrecision > 8 && wPrecision <= 16){
+        wType = "int16_t";
+    }
+    else if(wPrecision > 16){
+        wType = "int32_t";
+    }
+    header << "static const "<< wType << " " << identifier << "_weights["
+               << prefix << "_WEIGHTS_SIZE"
+           << "] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_WEIGHTS) = ";
+
+    header << "{\n";
+
+    Tensor<Float_T> weight;
+
+    // Need it in OHWC order, the order in the weights tensor is OCHW.
+    std::size_t iweight = 0;
+    for (std::size_t output = 0; output < cell.getNbOutputs(); output++) {
+        for (std::size_t h = 0; h < cell.getChannelsHeight(); h++) {
+            for (std::size_t w = 0; w < cell.getChannelsWidth(); w++) {
+                for (std::size_t ch = 0; ch < cell.getNbChannels(); ch++) {
+                    const std::size_t wch = ch*cell.getChannelsHeight()*cell.getChannelsWidth() +
+                                            h*cell.getChannelsWidth() +
+                                            w;
+
+                    cell.getWeight(output,  wch, weight);
+
+                    //change this when not 8bits : do an accumulator to store 2 int4 (4 int2, 8 int1) in 1 int8
                     CellExport::generateFreeParameter( weight(0), header);
                     header << ", ";
 
@@ -241,6 +335,9 @@ void N2D2::CPP_FcCellExport::generateCallCode(
 
     includes << "#include \"" << identifier << ".hpp\"\n";
 
+    //set output type
+    generateOutputType(deepNet, cell, functionCalls);
+
     generateBenchmarkStart(deepNet, cell, functionCalls);
 
     const auto& parents = deepNet.getParentCells(cell.getName());
@@ -271,6 +368,46 @@ void N2D2::CPP_FcCellExport::generateCallCode(
         << parentPrefix << "_MEM_WRAP_SIZE, "
         << parentPrefix << "_MEM_STRIDE, ";
 
+    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+    if (cellFrame.getActivation()
+        && (cellFrame.getActivation()->getType() == "Rectifier" || cellFrame.getActivation()->getType() == "Linear"))
+    {
+        const Activation& activation = *cellFrame.getActivation();
+        int actPrecision = (int) activation.getQuantizedNbBits();
+        //if this is the last FC in the network, its activation is not quantized
+        if(actPrecision > 8){
+            functionCalls << "0, "
+                    << prefix << "_MEM_CONT_SIZE, "
+                    << prefix << "_MEM_WRAP_OFFSET, "
+                    << prefix << "_MEM_WRAP_SIZE, "
+                    << prefix << "_MEM_STRIDE, "
+                    << CPP_CellExport::getLabelActivationRange(cell)
+                << ">("
+                    << inputBuffer << " , "
+                    << outputBuffer << ", "
+                    << identifier << "_biases, "
+                    << identifier << "_weights, "
+                    << CPP_CellExport::getLabelScaling(cell)
+                << ");\n\n";
+        }
+        //if this is FC with activation quantized
+        else{
+            functionCalls << prefix << "_MEM_CONT_OFFSET, "
+                        << prefix << "_MEM_CONT_SIZE, "
+                        << prefix << "_MEM_WRAP_OFFSET, "
+                        << prefix << "_MEM_WRAP_SIZE, "
+                        << prefix << "_MEM_STRIDE, "
+                        << CPP_CellExport::getLabelActivationRange(cell)
+                    << ">("
+                        << inputBuffer << " , "
+                        << outputBuffer << ", "
+                        << identifier << "_biases, "
+                        << identifier << "_weights, "
+                        << CPP_CellExport::getLabelScaling(cell)
+                    << ");\n\n";
+        }
+    }
+    else{
     // Memory mapping: output
     functionCalls << prefix << "_MEM_CONT_OFFSET, "
                 << prefix << "_MEM_CONT_SIZE, "
@@ -285,6 +422,7 @@ void N2D2::CPP_FcCellExport::generateCallCode(
                 << identifier << "_weights, "
                 << CPP_CellExport::getLabelScaling(cell)
             << ");\n\n";
+    }
 
     generateBenchmarkEnd(deepNet, cell, functionCalls);
     generateSaveOutputs(deepNet, cell, functionCalls);

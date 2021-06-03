@@ -239,6 +239,62 @@ void N2D2::CPP_CellExport::generateScaling(
     header << "\n";
 }
 
+void N2D2::CPP_CellExport::generateOutputType(const DeepNet& /*deepNet*/,
+                                                const Cell& cell,
+                                                std::stringstream& functionCalls)
+{
+    const std::string identifier = N2D2::Utils::CIdentifier(cell.getName());
+
+    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+
+    std::string dataType = DeepNetExport::isCellOutputUnsigned(cell)
+                ? "UDATA_T" : "DATA_T";
+
+    const std::string prefix = Utils::upperCase(identifier);
+
+    //adapt cell output type
+    if (cellFrame.getActivation()
+        && (cellFrame.getActivation()->getType() == "Rectifier" || cellFrame.getActivation()->getType() == "Linear"))
+    {
+        const Activation& activation = *cellFrame.getActivation();
+        int actPrecision = (int) activation.getQuantizedNbBits();
+
+        if(actPrecision > 0 && actPrecision <= 8){
+            dataType = DeepNetExport::isCellOutputUnsigned(cell) ? "uint8_t" : "int8_t";
+        }
+        else if(actPrecision > 8 && actPrecision <= 16){
+            dataType = DeepNetExport::isCellOutputUnsigned(cell) ? "uint16_t" : "int16_t";
+        }
+        else if(actPrecision > 16){
+            dataType = DeepNetExport::isCellOutputUnsigned(cell) ? "uint32_t" : "int32_t";
+        }
+
+        //functionCalls : cell output type
+        //for the last FC
+        if(actPrecision>8){
+            functionCalls << "    // " << cell.getName() << "\n";
+            functionCalls << "    " << dataType << " " << identifier
+                            << "_output["  << prefix << "_MEM_CONT_SIZE" << "] = " << "{0};\n\n";
+        }
+        //for all other preceding layers
+        else{
+            functionCalls << "    // " << cell.getName() << "\n";
+            functionCalls << "    " << dataType << "* " << identifier
+                << "_output = " << "(" << dataType << "*) mem + "
+                << prefix << "_MEM_CONT_OFFSET" <<";\n\n";
+        }
+
+    }
+    else{
+        //functionalCalls : cell output type by default
+        functionCalls << "    // " << cell.getName() << "\n";
+        functionCalls << "    " << dataType << "* " << identifier
+                << "_output = " << "(" << dataType << "*) mem + "
+                << prefix << "_MEM_CONT_OFFSET" <<";\n\n";
+    }
+
+}
+
 void N2D2::CPP_CellExport::generateBenchmarkStart(const DeepNet& /*deepNet*/,
                                                   const Cell& cell, 
                                                   std::stringstream& functionCalls)

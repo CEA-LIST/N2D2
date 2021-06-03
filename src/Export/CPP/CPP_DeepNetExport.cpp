@@ -815,7 +815,51 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
     std::stringstream functionCalls;
 
     // Fill in includes, buffers and functionCalls for each layer
+    /*
     buffers << "static DATA_T mem[MEMORY_SIZE]"
+        " N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_MEMORY);\n";
+    */
+
+    //find the max type for mem (excluding the very last output, which can be int32)
+    const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
+    int maxActPrecision = 0;
+    //the output of the last layer is in int32, do not take into account
+    for (std::vector<std::vector<std::string> >::const_iterator itLayer
+        = layers.begin() + 1,
+        itLayerEnd = layers.end() -1; itLayer != itLayerEnd; ++itLayer)
+    {
+        for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
+            itEnd = (*itLayer).end();
+            it != itEnd; ++it)
+        {
+            const std::shared_ptr<Cell> cell = deepNet.getCell(*it);
+
+            const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(*cell);
+
+            if (cellFrame.getActivation() && (cellFrame.getActivation()->getType() == "Rectifier" ||
+                                              cellFrame.getActivation()->getType() == "Linear"))
+            {
+                const Activation& activation = *cellFrame.getActivation();
+                int actPrecision = (int) activation.getQuantizedNbBits();
+                maxActPrecision = std::max(actPrecision,maxActPrecision);
+            }
+        }
+    }
+    //this is a default case
+    std::string dataType = "DATA_T";
+    //change the type according to the max
+    if(maxActPrecision > 0 && maxActPrecision <= 8){
+            dataType = "int8_t";
+    }
+    else if(maxActPrecision > 8 && maxActPrecision <= 16){
+            dataType = "int16_t";
+    }
+    else if(maxActPrecision > 16){
+            dataType = "int32_t";
+    }
+
+    // Fill in includes, buffers and functionCalls for each layer
+    buffers << "static "<< dataType << " mem[MEMORY_SIZE]"
         " N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_MEMORY);\n";
 
     functionCalls << "#ifdef SAVE_OUTPUTS\n"
@@ -836,7 +880,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                 << "    fclose(env_stream);\n"
                 << "#endif\n";
 
-    const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
+    //const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
 
     for (std::vector<std::vector<std::string> >::const_iterator itLayer
         = layers.begin() + 1,
@@ -860,10 +904,14 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
             }
 
             // functionCalls
+            //this is replaced by CPP_CellExport::generateOutputType
+            //called by each cell
+            /*
             functionCalls << "    // " << cell->getName() << "\n";
             functionCalls << "    " << dataType << "* " << identifier
                 << "_output = " << "(" << dataType << "*) mem + " 
                 << prefix << "_MEM_CONT_OFFSET" <<";\n\n";
+            */
 
             CPP_CellExport::getInstance(*cell)->generateCallCode(deepNet, *cell, 
                 includes, buffers, functionCalls);
@@ -883,19 +931,40 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
         const std::string targetCellPrefix = N2D2::Utils::upperCase(targetCellIdentifier);
 
         if (!outputTargets[targetIdx]->getParameter<bool>("DataAsTarget")) {
-            functionCalls << "    maxPropagate<"
-                        << targetCellPrefix << "_NB_OUTPUTS, "
-                        << targetCellPrefix << "_OUTPUTS_HEIGHT, " 
-                        << targetCellPrefix << "_OUTPUTS_WIDTH, "
-                        << targetCellPrefix << "_MEM_CONT_OFFSET, "
-                        << targetCellPrefix << "_MEM_CONT_SIZE, "
-                        << targetCellPrefix << "_MEM_WRAP_OFFSET, "
-                        << targetCellPrefix << "_MEM_WRAP_SIZE, "
-                        << targetCellPrefix << "_MEM_STRIDE"
-                    << ">("
-                        << targetCellIdentifier << "_output, "
-                        << "outputs"
-                    << ");\n\n";
+
+            //if this is QAT, maxActPrecision >0
+            //replace maxpropagate to take the output of the last layer into account
+            //the output of the last FC is int32
+            if(maxActPrecision > 0){
+                functionCalls << "    maxPropagate<"
+                            << targetCellPrefix << "_NB_OUTPUTS, "
+                            << targetCellPrefix << "_OUTPUTS_HEIGHT, "
+                            << targetCellPrefix << "_OUTPUTS_WIDTH, "
+                            << "0, "
+                            << targetCellPrefix << "_MEM_CONT_SIZE, "
+                            << targetCellPrefix << "_MEM_WRAP_OFFSET, "
+                            << targetCellPrefix << "_MEM_WRAP_SIZE, "
+                            << targetCellPrefix << "_MEM_STRIDE"
+                        << ">("
+                            << targetCellIdentifier << "_output, "
+                            << "outputs"
+                        << ");\n\n";
+            }
+            else{
+                functionCalls << "    maxPropagate<"
+                            << targetCellPrefix << "_NB_OUTPUTS, "
+                            << targetCellPrefix << "_OUTPUTS_HEIGHT, "
+                            << targetCellPrefix << "_OUTPUTS_WIDTH, "
+                            << targetCellPrefix << "_MEM_CONT_OFFSET, "
+                            << targetCellPrefix << "_MEM_CONT_SIZE, "
+                            << targetCellPrefix << "_MEM_WRAP_OFFSET, "
+                            << targetCellPrefix << "_MEM_WRAP_SIZE, "
+                            << targetCellPrefix << "_MEM_STRIDE"
+                        << ">("
+                            << targetCellIdentifier << "_output, "
+                            << "outputs"
+                        << ");\n\n";
+            }
 
             functionCalls << "#ifdef SAVE_OUTPUTS\n"
                         << "    FILE* max_stream = fopen(\"max_output.txt\", \"w\");\n"
@@ -931,28 +1000,57 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
     // Write source file with includes, buffers and functionCalls
     std::ofstream networkPropagateFile(filePath);
 
-    networkPropagateFile << "#include \"Network.hpp\"\n"
+    if(maxActPrecision > 0){
+        networkPropagateFile << "#include \"NetworkQAT.hpp\"\n"
                          << "#include \"Scaling.hpp\"\n"
                          << "#include \"env.hpp\"\n"
                          << "#include \"mem_info.hpp\"\n"
                          << "\n"
                          << includes.str()
                          << "\n\n";
+    }
+    else{
+        networkPropagateFile << "#include \"Network.hpp\"\n"
+                         << "#include \"Scaling.hpp\"\n"
+                         << "#include \"env.hpp\"\n"
+                         << "#include \"mem_info.hpp\"\n"
+                         << "\n"
+                         << includes.str()
+                         << "\n\n";
+    }
+
+
 
     networkPropagateFile << buffers.str()
                          << "\n\n";
 
     const std::string inputType = DeepNetExport::mEnvDataUnsigned?"UDATA_T":"DATA_T";
-    networkPropagateFile << "namespace N2D2 {\n"
-                         << "\n"
-                         << "template<>\n"
-                         << "void Network::propagate(const " << inputType << "* inputs, "
-                                                 << "Target_T* outputs) const \n"
-                         << "{\n"
-                         << functionCalls.str()
-                         << "\n"
-                         << "}\n"
-                         << "\n";
+
+    if(maxActPrecision > 0){
+        networkPropagateFile << "namespace N2D2 {\n"
+                            << "\n"
+                            << "template<>\n"
+                            << "void NetworkQAT::propagate(const " << inputType << "* inputs, "
+                                                    << "Target_T* outputs) const \n"
+                            << "{\n"
+                            << functionCalls.str()
+                            << "\n"
+                            << "}\n"
+                            << "\n";
+    }
+    else{
+        networkPropagateFile << "namespace N2D2 {\n"
+                            << "\n"
+                            << "template<>\n"
+                            << "void Network::propagate(const " << inputType << "* inputs, "
+                                                    << "Target_T* outputs) const \n"
+                            << "{\n"
+                            << functionCalls.str()
+                            << "\n"
+                            << "}\n"
+                            << "\n";
+    }
+
     networkPropagateFile << "/*template<>\n"
                          << "float Network::backpropagate(const DATA_T* input, const std::int32_t* labels){\n"
                          << "   const float loss = 0.0f;\n"

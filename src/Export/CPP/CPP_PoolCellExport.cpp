@@ -144,6 +144,9 @@ void N2D2::CPP_PoolCellExport::generateCallCode(
 
     includes << "#include \"" << identifier << ".hpp\"\n";
 
+    //set output type
+    generateOutputType(deepNet, cell, functionCalls);
+
     generateBenchmarkStart(deepNet, cell, functionCalls);
 
     const auto& parents = deepNet.getParentCells(cell.getName());

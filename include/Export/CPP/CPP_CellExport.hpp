@@ -81,6 +81,9 @@ public:
     virtual void generateSaveOutputs(const DeepNet& deepNet,
                                      const Cell& cell, 
                                      std::stringstream& functionCalls);
+    virtual void generateOutputType(const DeepNet& deepNet,
+                                                const Cell& cell,
+                                                std::stringstream& functionCalls);
 };
 }
 

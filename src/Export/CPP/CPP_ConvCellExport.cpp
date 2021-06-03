@@ -111,8 +111,14 @@ void N2D2::CPP_ConvCellExport::generateHeaderConstants(const ConvCell& cell, std
 }
 
 void N2D2::CPP_ConvCellExport::generateHeaderFreeParameters(const ConvCell& cell, std::ofstream & header) {
-    generateHeaderBias(cell, header);
-    generateHeaderWeights(cell, header);
+    if(cell.getQuantizedNbBits() > 0){
+        generateHeaderBiasQAT(cell, header);
+        generateHeaderWeightsQAT(cell, header);
+    }
+    else{
+        generateHeaderBias(cell, header);
+        generateHeaderWeights(cell, header);
+    }
 }
 
 void N2D2::CPP_ConvCellExport::generateHeaderBias(const ConvCell& cell, std::ofstream& header) {
@@ -122,6 +128,34 @@ void N2D2::CPP_ConvCellExport::generateHeaderBias(const ConvCell& cell, std::ofs
     const std::string prefix = Utils::upperCase(identifier);
     
     header << "static const BDATA_T " << identifier << "_biases[" 
+           << prefix << "_NB_OUTPUTS] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_BIASSES) = {";
+
+    Tensor<Float_T> bias;
+    for (std::size_t output = 0; output < cell.getNbOutputs(); output++) {
+        if (cell.getParameter<bool>("NoBias")) {
+            header << "0";
+        }
+        else {
+            cell.getBias(output, bias);
+
+            CellExport::generateFreeParameter(bias(0), header);
+        }
+
+        CellExport::generateSingleShiftHalfAddition(cellFrame, output, header);
+        header << ", ";
+    }
+
+    header << "};\n\n";
+}
+
+void N2D2::CPP_ConvCellExport::generateHeaderBiasQAT(const ConvCell& cell, std::ofstream& header) {
+    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
+
+    //write explicit type, int32 for now
+    header << "static const int32_t " << identifier << "_biases["
            << prefix << "_NB_OUTPUTS] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_BIASSES) = {";
 
     Tensor<Float_T> bias;
@@ -218,6 +252,95 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeights(const ConvCell& cell, std::
     header << "\n};\n\n";
 }
 
+void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, std::ofstream& header) {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
+
+    const bool isDWConv = isDWConvolution(cell);
+    if(isDWConv) {
+        header << "#define " << prefix << "_NB_GROUPS "
+                << cell.groupMap() << "\n"
+            "#define " << prefix << "_OUTPUT_GROUP_SIZE ("
+                << prefix << "_NB_OUTPUTS / " << prefix << "_NB_GROUPS)\n"
+            "#define " << prefix << "_CHANNEL_GROUP_SIZE ("
+                << prefix << "_NB_CHANNELS / " << prefix << "_NB_GROUPS)\n";
+
+        header << "#define " << prefix << "_WEIGHTS_SIZE ("
+                             << prefix << "_NB_OUTPUTS*"
+                             << prefix << "_KERNEL_WIDTH*"
+                             << prefix << "_KERNEL_HEIGHT*"
+                             << prefix << "_CHANNEL_GROUP_SIZE)\n\n";
+
+        header << "// Flatten weights with the order "
+            << "[NB_OUTPUTS][KERNEL_HEIGHT][KERNEL_WIDTH][CHANNEL_GROUP_SIZE]\n";
+    }
+    else {
+        header << "#define " << prefix << "_WEIGHTS_SIZE ("
+                             << prefix << "_NB_OUTPUTS*"
+                             << prefix << "_KERNEL_WIDTH*"
+                             << prefix << "_KERNEL_HEIGHT*"
+                             << prefix << "_NB_CHANNELS)\n\n";
+
+        header << "// Flatten weights with the order "
+            << "[NB_OUTPUTS][KERNEL_HEIGHT][KERNEL_WIDTH][NB_CHANNELS]\n";
+    }
+
+    //write explicit type depending on #bits
+    int wPrecision = (int)cell.getQuantizedNbBits();
+    std::string wType = "";
+    if(wPrecision > 0 && wPrecision <= 8){
+        wType = "int8_t";
+    }
+    else if(wPrecision > 8 && wPrecision <= 16){
+        wType = "int16_t";
+    }
+    else if(wPrecision > 16){
+        wType = "int32_t";
+    }
+    header << "static const " << wType << " " << identifier << "_weights["
+           << prefix << "_WEIGHTS_SIZE] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_WEIGHTS) = {";
+
+    Tensor<Float_T> kernel;
+
+    std::size_t i = 0;
+    for(std::size_t o = 0; o < cell.getNbOutputs(); ++o) {
+        for(std::size_t sy = 0; sy < cell.getKernelHeight(); ++sy) {
+            for(std::size_t sx = 0; sx < cell.getKernelWidth(); ++sx) {
+                for(std::size_t ch = 0; ch < cell.getNbChannels(); ++ch) {
+                    if(isDWConv) {
+                        const size_t outputGroupSize = cell.getNbOutputs() / cell.groupMap();
+                        const size_t channelGroupSize = cell.getNbChannels() / cell.groupMap();
+                        const size_t outputGroup = o / outputGroupSize;
+                        const size_t channelGroup = ch / channelGroupSize;
+
+                        if (outputGroup != channelGroup)
+                            continue;
+                    }
+
+                    if (!cell.isConnection(ch, o)) {
+                        header << "0";
+                    }
+                    else {
+                        cell.getWeight(o, ch, kernel);
+
+                        //change this when not 8bits : do an accumulator to store 2 int4 (4 int2, 8 int1) in 1 int8
+                        CellExport::generateFreeParameter(kernel(sx, sy), header);
+                    }
+
+                    header << ", ";
+
+                    i++;
+                    if(i % 24 == 0) {
+                        header << "\n";
+                    }
+                }
+            }
+        }
+    }
+
+    header << "\n};\n\n";
+}
+
 bool N2D2::CPP_ConvCellExport::isDWConvolution(const Cell& cell) {
     return cell.groupMap() > 1; //TODO 
 }
@@ -239,6 +362,9 @@ void N2D2::CPP_ConvCellExport::generateCallCode(
     const std::string prefix = N2D2::Utils::upperCase(identifier);
 
     includes << "#include \"" << identifier << ".hpp\"\n";
+
+    //set output type
+    generateOutputType(deepNet, cell, functionCalls);
 
     generateBenchmarkStart(deepNet, cell, functionCalls);
 
