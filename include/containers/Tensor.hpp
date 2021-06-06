@@ -404,6 +404,8 @@ public:
     const Tensor<T> rows(size_t j0, size_t nb, int towardsDim = -1) const;
     double sum() const;
     double mean() const;
+    Tensor<T> sign() const;
+    void clamp(const T& Min, const T& Max);
     virtual void synchronizeToH(BaseTensor& tensor) const;
     BaseTensor& operator=(const BaseTensor& base);
     Tensor<T>& operator=(const Tensor<T>& tensor);
