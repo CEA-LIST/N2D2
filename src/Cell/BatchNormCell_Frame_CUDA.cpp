@@ -217,6 +217,9 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
             mMean->getDevicePtr(),
             mVariance->getDevicePtr(),
             mEpsilon));
+
+        mValidCache = false;
+
     } else {
         // mSavedMean and mSavedVariance cache parameters 
         // must be reinitialized to 0.0 at each forward pass on training:
@@ -241,6 +244,8 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
             mEpsilon,
             mSavedMean.getDevicePtr(),
             mSavedVariance.getDevicePtr()));
+
+        mValidCache = true;
     }
 
     if (!inference)
@@ -307,8 +312,8 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
                                         mDiffScale.getDevicePtr(),
                                         mDiffBias.getDevicePtr(),
                                         mEpsilon,
-                                        mSavedMean.getDevicePtr(),
-                                        mSavedVariance.getDevicePtr()));
+                                        (mValidCache) ? mSavedMean.getDevicePtr() : NULL,
+                                        (mValidCache) ? mSavedVariance.getDevicePtr() : NULL));
 
     mDiffScale.setValid();
     mDiffBias.setValid();

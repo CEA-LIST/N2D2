@@ -123,6 +123,10 @@ protected:
     CudaTensor<ParamT> mSavedVariance;
     CudaTensor<T> mDummyDiffOutput;
 
+    // Necessary to use backpropagate 
+    // after propagate(inference = true)
+    bool mValidCache;
+
 private:
     static Registrar<BatchNormCell> mRegistrar;
 };
