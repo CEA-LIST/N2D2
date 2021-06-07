@@ -73,8 +73,17 @@ std::shared_ptr<N2D2::StimuliProvider> N2D2::StimuliProviderGenerator::generate(
         database, size, batchSize, compositeStimuli));
     sp->setCachePath(cachePath);
 
-    if (!attackName.empty())
-        sp->setAttack(attackName);
+    if (!attackName.empty()) {
+
+        unsigned int nbDevice = std::count(sp->getStates().begin(), 
+                                    sp->getStates().end(), 
+                                    N2D2::DeviceState::Connected);
+
+        if (nbDevice == 1)
+            sp->setAttack(attackName);
+        else
+            throw std::runtime_error("Impossible to launch an adversarial attack with Multi-GPU.");
+    }
 
     if (!targetSize.empty())
         sp->setTargetSize(targetSize);
