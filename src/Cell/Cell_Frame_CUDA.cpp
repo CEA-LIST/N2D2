@@ -87,6 +87,14 @@ void N2D2::Cell_Frame_CUDA<T>::addInput(StimuliProvider& sp,
     setInputsDims(sp.getSize());
     mInputs.push_back(&sp.getDataInput());
 
+    // For some adversarial attacks, it is required to backpropagate
+    // the gradiants to the inputs
+    if (!sp.getAttack().empty()) {
+        std::vector<size_t> inputsDims(mInputsDims);
+        inputsDims.push_back(sp.getBatchSize());
+        mDiffOutputs.push_back(new CudaTensor<T>(inputsDims), 0);
+    }
+
     setOutputsDims();
 
     if (mOutputs.empty()) {
