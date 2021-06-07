@@ -131,6 +131,28 @@ public:
     void fusePadding();
     void removeDropout();
 
+
+    // Adversarial attacks
+    // These attacks aim to modify the images provided by the StimuliProvider
+    // After calling the following functions, the images contained in 
+    void Vanilla_attack() {};
+    void GN_attack(const float eps);
+    void FGSM_attack(const float eps, 
+                     const bool targeted = false);
+    void FFGSM_attack(const float eps, 
+                      const float alpha,
+                      const bool targeted = false);
+    void PGD_attack(const float eps, 
+                    const unsigned int nbIter,
+                    const float alpha,
+                    const bool targeted = false,
+                    const bool random_start = false);
+    // Not implemented
+    // void CW_attack(const float c,
+    //                const float kappa,
+    //                const unsigned int nbIter,
+    //                const float lr);
+
 #ifdef CUDA
     void lastBatch() {
         mLastPass = true;

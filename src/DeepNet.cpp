@@ -1471,6 +1471,151 @@ void N2D2::DeepNet::removeDropout() {
     }
 }
 
+void N2D2::DeepNet::GN_attack(const float eps)
+{
+    Tensor<Float_T>& dataInput = mStimuliProvider->getData();
+
+    // Adding gaussian noise (mean = 0, standard deviation = 1)
+    for (unsigned int i = 0; i < dataInput.size(); ++i) {
+        dataInput(i) += eps * Random::randNormal(0.0, 1.0);
+    }
+    dataInput.clamp(0.0f, 1.0f);
+}
+
+void N2D2::DeepNet::FGSM_attack(const float eps, 
+                                const bool targeted)
+{
+    Tensor<Float_T>& dataInput = mStimuliProvider->getData();
+    int _targeted = targeted ? 1 : (-1);
+
+    // first layer after env cell
+    // used to retrieve diffOutputs from this layer
+    std::shared_ptr<Cell_Frame_Top> firstLayer 
+        = std::dynamic_pointer_cast<Cell_Frame_Top>(getCell(getLayers()[1][0]));
+
+    // Doesn't matter to use Database::Test here...
+    propagate(Database::Test, true, NULL);
+    backPropagate(NULL);
+
+    // Saving gradients in gradInputs
+    firstLayer->getDiffOutputs().synchronizeDToH();
+    Tensor<Float_T> gradInputs = tensor_cast<Float_T>(firstLayer->getDiffOutputs()).sign();
+
+    for (unsigned int i = 0; i < dataInput.size(); ++i) {
+        dataInput(i) -= _targeted * eps * gradInputs(i);
+    }
+    dataInput.clamp(0.0f, 1.0f);  
+}
+
+void N2D2::DeepNet::FFGSM_attack(const float eps, 
+                                const float alpha,
+                                const bool targeted)
+{
+    Tensor<Float_T>& dataInput = mStimuliProvider->getData();
+    const Tensor<Float_T> dataInputCopy = dataInput.clone();
+    int _targeted = targeted ? 1 : (-1);
+
+    // first layer after env cell
+    // used to retrieve diffOutputs from this layer
+    std::shared_ptr<Cell_Frame_Top> firstLayer 
+        = std::dynamic_pointer_cast<Cell_Frame_Top>(getCell(getLayers()[1][0]));
+    
+    for (unsigned int i = 0; i < dataInput.size(); ++i) {
+        dataInput(i) += eps * Random::randUniform(-1.0, 1.0);
+    }
+    dataInput.clamp(0.0f, 1.0f);
+
+    // Doesn't matter to use Database::Test here...
+    propagate(Database::Test, true, NULL);
+    backPropagate(NULL);
+
+    // Saving gradients in gradInputs
+    firstLayer->getDiffOutputs().synchronizeDToH();
+    Tensor<Float_T> gradInputs = tensor_cast<Float_T>(firstLayer->getDiffOutputs()).sign();
+
+    for (unsigned int i = 0; i < dataInput.size(); ++i) {
+        dataInput(i) -= _targeted * alpha * gradInputs(i);
+        dataInput(i) = std::max(dataInputCopy(i) - eps, std::min(dataInput(i), dataInputCopy(i) + eps));
+    }
+    dataInput.clamp(0.0f, 1.0f);
+}
+
+void N2D2::DeepNet::PGD_attack(const float eps, 
+                            const unsigned int nbIter, 
+                            const float alpha,
+                            const bool targeted,
+                            const bool random_start)
+{
+    Tensor<Float_T>& dataInput = mStimuliProvider->getData();
+    const Tensor<Float_T> dataInputCopy = dataInput.clone();
+    const Tensor<int>& labels = mStimuliProvider->getLabelsData();
+    // weird behaviour (should be this line but it only works with the opposite)
+    // int _targeted = targeted ? 1 : (-1);
+    int _targeted = targeted ? (-1) : 1;
+    unsigned int nbAttempts = 0;
+
+    // first layer after env cell
+    // used to retrieve diffOutputs from this layer
+    std::shared_ptr<Cell_Frame_Top> firstLayer 
+        = std::dynamic_pointer_cast<Cell_Frame_Top>(getCell(getLayers()[1][0]));
+
+    std::vector<int> successes;
+    successes.resize(dataInput.dimB(), -1);
+    unsigned int counterSuccess = 0;
+
+    if (random_start) {
+        for (unsigned int i = 0; i < dataInput.size(); ++i) {
+            dataInput(i) += eps * Random::randUniform(-1.0, 1.0);
+        }
+    }
+    dataInput.clamp(0.0f, 1.0f);
+
+    while (counterSuccess < successes.size() 
+            && nbAttempts < nbIter) {
+        
+        mStimuliProvider->synchronize();
+        
+        // Doesn't matter to use Database::Test here...
+        propagate(Database::Test, true, NULL);
+        backPropagate(NULL);
+
+        // Saving signed gradients in gradInputs
+        firstLayer->getDiffOutputs().synchronizeDToH();
+        Tensor<Float_T> gradInputs = tensor_cast<Float_T>(firstLayer->getDiffOutputs()).sign();
+        getTarget()->getEstimatedLabels().synchronizeDToH();
+        Tensor<int> top1Indexes = tensor_cast<int>(getTarget()->getEstimatedLabels());
+
+        for (unsigned int i = 0; i < dataInput.dimB(); ++i) {
+            if (successes[i] == -1) {
+                bool success = false;
+                if (targeted) {
+                    if (top1Indexes[i](0) == labels[i](0)) {
+                        success = true;
+                    }
+                } else {
+                    if (top1Indexes[i](0) != labels[i](0)) {
+                        success = true;
+                    }
+                }
+
+                if (!success) {
+                    if (nbAttempts != nbIter-1) {
+                        for (unsigned int j = 0; j < dataInput[i].size(); ++j) {
+                            dataInput[i](j) -= _targeted * alpha * gradInputs[i](j);
+                            dataInput[i](j) = std::max(dataInputCopy[i](j) - eps, std::min(dataInput[i](j), dataInputCopy[i](j) + eps));
+                            dataInput[i](j) = std::max(0.0f, std::min(dataInput[i](j), 1.0f));
+                        }
+                    }
+                } else {
+                    successes[i] = nbAttempts + 1;
+                    ++counterSuccess;
+                }
+            }
+        }
+        ++nbAttempts;
+    }
+}
+
 void N2D2::DeepNet::logOutputs(const std::string& dirName,
                                unsigned int batchPos) const
 {
