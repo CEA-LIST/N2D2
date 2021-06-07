@@ -338,13 +338,13 @@ void N2D2::Target::logLabelsMapping(const std::string& fileName) const
     }
 }
 
-void N2D2::Target::provideTargets(Database::StimuliSet set)
+void N2D2::Target::provideTargets(Database::StimuliSet /*set*/)
 {
     std::shared_ptr<Cell_Frame_Top> targetCell 
         = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
 
     if (mDataAsTarget) {
-        if (set == Database::Learn && targetCell) {
+        if (targetCell) {
             // Update target values from input data
             targetCell->setOutputTargets(mStimuliProvider->getTargetData());
         }
@@ -528,7 +528,7 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
     }
 
     //Set label associated to targets
-    if (set == Database::Learn && targetCell) {
+    if (targetCell) {
         // Set targets
         if (targets.dimX() == 1 && targets.dimY() == 1) {
             for (unsigned int batchPos = 0; batchPos < targets.dimB();
