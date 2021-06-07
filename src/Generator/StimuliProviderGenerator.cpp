@@ -64,10 +64,17 @@ std::shared_ptr<N2D2::StimuliProvider> N2D2::StimuliProviderGenerator::generate(
                                   <bool>("CompositeStimuli", false);
     const std::string cachePath = Utils::expandEnvVars(iniConfig.getProperty
                                   <std::string>("CachePath", ""));
+    
+    // Used for adversarial attacks
+    const std::string attackName = iniConfig.getProperty
+                                  <std::string>("Attack", "");
 
     std::shared_ptr<StimuliProvider> sp(new StimuliProvider(
         database, size, batchSize, compositeStimuli));
     sp->setCachePath(cachePath);
+
+    if (!attackName.empty())
+        sp->setAttack(attackName);
 
     if (!targetSize.empty())
         sp->setTargetSize(targetSize);

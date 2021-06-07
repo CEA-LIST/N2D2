@@ -384,6 +384,11 @@ public:
     };
 #endif
 
+    void setAttack(std::string attack)
+    {
+        mAttackAdv = attack;
+    };
+
     // Getters
     Database& getDatabase()
     {
@@ -482,6 +487,10 @@ public:
             ? mProvidedData[getDevice(dev)].targetData
             : mProvidedData[getDevice(dev)].data;
     };
+    const std::string getAttack()
+    {
+        return mAttackAdv;
+    };
 /*
     const std::vector<std::vector<std::shared_ptr<ROI> > >&
     getLabelsROIs(int dev = -1) const
@@ -559,6 +568,9 @@ protected:
     /// Devices information
     DevicesInfo mDevicesInfo;
     bool mFuture;
+
+    /// Adversarial attack name used against the deepNet
+    std::string mAttackAdv;
 
     /// Set of Device IDs used by the deepNet
     std::set<int> mDevices;

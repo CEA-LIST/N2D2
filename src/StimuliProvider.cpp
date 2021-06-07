@@ -56,7 +56,8 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
       mBatchSize(batchSize),
       mCompositeStimuli(compositeStimuli),
       mCachePath(""),
-      mFuture(false)
+      mFuture(false),
+      mAttackAdv("")
 {
     // ctor
     int count = 1;
