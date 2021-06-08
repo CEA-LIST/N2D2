@@ -105,8 +105,6 @@ protected:
     CudaTensor<T> mSigma;
     CudaTensor<T> mDist;
     CudaTensor<T> mLabels;
-
-    std::shared_ptr<Solver> mWeightsSolver;
 };
 }
 

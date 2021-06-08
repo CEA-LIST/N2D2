@@ -18,25 +18,16 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include <memory>
-#include <iostream>
-#include <stdexcept>
-#include <string>
-#include <vector>
-
-#include "DeepNet.hpp"
-#include "Xnet/Network.hpp"
-#include "StimuliProvider.hpp"
-#include "Cell/Cell.hpp"
-#include "Cell/DistanceCell.hpp"
-#include "Generator/CellGenerator.hpp"
 #include "Generator/DistanceCellGenerator.hpp"
-#include "utils/IniParser.hpp"
+#include "DeepNet.hpp"
+#include "StimuliProvider.hpp"
 
-
+N2D2::Registrar<N2D2::CellGenerator> N2D2::DistanceCellGenerator::mRegistrar(
+    DistanceCell::Type, N2D2::DistanceCellGenerator::generate);
+/*
 static const N2D2::Registrar<N2D2::CellGenerator> registrar(N2D2::DistanceCell::Type, 
                                                             N2D2::DistanceCellGenerator::generate);
-
+*/
 std::shared_ptr<N2D2::DistanceCell> N2D2::DistanceCellGenerator::generate(Network& /*network*/, 
                                         const DeepNet& deepNet, StimuliProvider& sp,
                                         const std::vector<std::shared_ptr<Cell>>& parents,
@@ -89,25 +80,34 @@ void N2D2::DistanceCellGenerator::generateParams(const std::shared_ptr<DistanceC
                                   const std::string& model,
                                   const DataType& dataType)
 {
-    std::cout << "generate solver" << std::endl;
-    std::shared_ptr<Solver> solver
-        = SolverGenerator::generate(iniConfig, section, model, dataType, "Solvers");
+    std::shared_ptr<Solver> solvers
+        = (dataType == Float16)
+            ? SolverGenerator::generate(iniConfig, section, model, Float32, "Solvers")
+            : SolverGenerator::generate(iniConfig, section, model, dataType, "Solvers");
 
-    std::cout << "solver generated " << std::endl;
-    if (solver) {
-        cell->setWeightsSolver(solver->clone());
-        std::cout << "solver generated " << std::endl;
+
+    if (solvers) {
+        cell->setWeightsSolver(solvers->clone());
     }
 
-    std::cout << "get params " << std::endl;
+    std::shared_ptr<Solver> centroidSolver
+        = (dataType == Float16)
+            ? SolverGenerator::generate(iniConfig, section, model, Float32, "CentroidSolver")
+            : SolverGenerator::generate(iniConfig, section, model, dataType, "CentroidSolver");
+
+    if (centroidSolver) {
+        cell->setWeightsSolver(centroidSolver);
+    }
+
     std::map<std::string, std::string> params = getConfig(model, iniConfig);
-
     if (cell->getWeightsSolver()) {
-        cell->getWeightsSolver()->setPrefixedParameters(params, "Solvers.");
+        cell->getWeightsSolver()->setPrefixedParameters(
+            params, "Solvers.", false);
+        cell->getWeightsSolver()->setPrefixedParameters(params, "CentroidSolver.");
     }
-    std::cout << "set params " << std::endl;
+
     // Set configuration parameters defined in the INI file
-    cell->setParameters(getConfig(model, iniConfig));
+    cell->setParameters(params);
 
     // Load configuration file (if exists)
     cell->loadParameters(section + ".cfg", true);

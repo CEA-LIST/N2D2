@@ -29,6 +29,7 @@
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/ConvCell.hpp"
 #include "Cell/DeconvCell.hpp"
+#include "Cell/DistanceCell.hpp"
 #include "Cell/ConvCell_Spike.hpp"
 #include "Cell/DropoutCell.hpp"
 #include "Cell/FcCell.hpp"
@@ -1515,6 +1516,7 @@ void N2D2::DeepNet::logOutputs(const std::string& dirName,
     }
 }
 
+
 void N2D2::DeepNet::logDiffInputs(const std::string& dirName,
                                   unsigned int batchPos) const
 {
@@ -1608,6 +1610,14 @@ void N2D2::DeepNet::logSchedule(const std::string& dirName) const
                                              cellFc->getBiasSolver()));
             solvers.push_back(std::make_pair((*it).first + "_weights",
                                              cellFc->getWeightsSolver()));
+        }
+        // Distance
+        const std::shared_ptr<DistanceCell> cellDistance
+            = std::dynamic_pointer_cast<DistanceCell>(cell);
+
+        if (cellDistance) {
+            solvers.push_back(std::make_pair((*it).first + "_centroid",
+                                             cellDistance->getWeightsSolver()));
         }
     }
 

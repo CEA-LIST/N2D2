@@ -21,31 +21,32 @@
 #ifndef N2D2_DISTANCE_CELL_GENERATOR_H
 #define N2D2_DISTANCE_CELL_GENERATOR_H
 
-#include <memory>
-#include <string>
-#include <vector>
-
-#include "Generator/FillerGenerator.hpp"
+#include "Cell/DistanceCell.hpp"
 #include "Generator/CellGenerator.hpp"
+#include "Generator/FillerGenerator.hpp"
+#include "utils/IniParser.hpp"
+
 
 namespace N2D2 {
 
 class DeepNet;
-class IniParser;
-class DistanceCell;
 
 class DistanceCellGenerator : public CellGenerator {
 public:
-    static std::shared_ptr<DistanceCell> generate(Network& network, 
-                                        const DeepNet& deepNet, StimuliProvider& sp,
-                                        const std::vector<std::shared_ptr<Cell>>& parents,
-                                        IniParser& iniConfig, const std::string& section);
+    static std::shared_ptr<DistanceCell> 
+    generate(Network& network, 
+        const DeepNet& deepNet, StimuliProvider& sp,
+        const std::vector<std::shared_ptr<Cell>>& parents,
+        IniParser& iniConfig, const std::string& section);
 
     static void generateParams(const std::shared_ptr<DistanceCell>& cell,
                                     IniParser& iniConfig,
                                     const std::string& section,
                                     const std::string& model,
                                     const DataType& dataType);
+private:
+    static Registrar<CellGenerator> mRegistrar;
+
 };
 }
 
