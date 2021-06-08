@@ -36,14 +36,27 @@ way in N2D2
 """
 Example for custom transformation
 """
-"""
-class CustomRescaleTransform():
-    def __init__(self, factor):
-        self.factor = factor
-        
-    def __call__(self, x):
-        return self.factor*x
-"""
+# class Test(N2D2.CustomTransformation):
+#     """
+#     Override this class to create your own Transformation.
+#     You need to override the following method : 
+#         - apply_unsigned_char(self, Tensor<unsigned char>& frame, Tensor<int>& /*labels*/, std::vector<std::shared_ptr<ROI> >& /*labelsROI*/, int /*id*/ = -1)
+#         - apply_int(self, Tensor<int>& frame, Tensor<int>& /*labels*/, std::vector<std::shared_ptr<ROI> >& /*labelsROI*/, int /*id*/ = -1)
+#         - etc ..
+#     """
+#     def __init__(self):
+#         print("init TEST")
+#         N2D2.CustomTransformation.__init__(self)
+#         print("DONE")
+
+#     def apply_unsigned_char(self, frame, labels, labelsROI, id):
+#          print("using python function !")
+
+# class CustomTransformation(Transformation):
+#     def __init__(self, **config_parameters):
+#         Transformation.__init__(self, **config_parameters)
+#         self._N2D2_object = Test()
+
 """
 Example for a Python wrapper around the binding
 """
@@ -114,7 +127,7 @@ class Composite(Transformation):
 
     def get_transformations(self):
         """
-        Retrun the list of transformations applied by the composite trnasformation
+        Return the list of transformations applied by the composite transformation
         """
         return self._transformations
 

@@ -50,6 +50,9 @@ class Tensor:
         "bool": N2D2.Tensor_bool,
         "d": N2D2.Tensor_double,
         "double": N2D2.Tensor_double,
+        "uchar": N2D2.Tensor_unsigned_char,
+        "char": N2D2.Tensor_char,
+
     }
     _cuda_tensor_generators = {
         "f": N2D2.CudaTensor_float,
