@@ -2050,12 +2050,12 @@ cv::Mat N2D2::Database::loadData(
 
         for (size_t ch = 0; ch < multiChannelReplace.size(); ++ch) {
             const std::regex regexp((std::string)mMultiChannelMatch);
+            std::string chFileName;
             cv::Mat chData;
 
             if (std::regex_match(fileName, regexp)) {
-                const std::string chFileName
-                    = std::regex_replace(fileName, regexp,
-                                         multiChannelReplace[ch]);
+                chFileName = std::regex_replace(fileName, regexp,
+                                                multiChannelReplace[ch]);
 
                 if (chFileName == fileName)
                     chData = data;
@@ -2075,6 +2075,19 @@ cv::Mat N2D2::Database::loadData(
 
                 chData = cv::Mat(data.rows, data.cols, data.type(),
                                  cv::Scalar(0));
+            }
+
+            if (chData.size() != data.size() || chData.depth() != data.depth())
+            {
+                std::stringstream errorStr;
+                errorStr << "Database::loadStimulusData():"
+                    " channel #" << ch << " \"" << chFileName << "\" size / depth ("
+                    << chData.size() << " / " << chData.depth() << ") does not"
+                    " match with channel \"" << fileName << "\" ("
+                    << data.size() << " / " << data.depth() << ")";
+
+#pragma omp critical(Database__loadData)
+                throw std::runtime_error(errorStr.str());
             }
 
             channels.push_back(chData);
