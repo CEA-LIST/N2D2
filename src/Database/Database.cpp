@@ -2041,7 +2041,7 @@ cv::Mat N2D2::Database::loadData(
                 //        << ch << " data for stimulus: " << fileName
                 //        << Utils::cdef << std::endl;
 
-                chData = cv::Mat(data.cols, data.rows, data.type(),
+                chData = cv::Mat(data.rows, data.cols, data.type(),
                                  cv::Scalar(0));
             }
 
