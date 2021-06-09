@@ -338,7 +338,7 @@ void N2D2::Target::logLabelsMapping(const std::string& fileName) const
     }
 }
 
-void N2D2::Target::provideTargets(Database::StimuliSet set) 
+void N2D2::Target::provideTargets(Database::StimuliSet set) // TODO debug here 
 {
     std::shared_ptr<Cell_Frame_Top> targetCell 
         = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
@@ -547,7 +547,7 @@ void N2D2::Target::provideTargets(Database::StimuliSet set)
     }
 }
 
-void N2D2::Target::process(Database::StimuliSet set)
+void N2D2::Target::process(Database::StimuliSet set) // TODO debug here 
 {
     std::shared_ptr<Cell_Frame_Top> targetCell 
         = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
@@ -831,7 +831,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
         BaseTensor& valuesBaseTensor = (targetCell)
             ? targetCell->getOutputs() : targetCellCSpike->getOutputsActivity();
-        Tensor<Float_T> values(valuesBaseTensor.dims());
+        Tensor<Float_T> values;
         valuesBaseTensor.synchronizeToH(values);
 
         const unsigned int nbOutputs = values.dimZ();
@@ -893,7 +893,7 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 
         BaseTensor& valuesBaseTensor = (targetCell)
             ? targetCell->getOutputs() : targetCellCSpike->getOutputsActivity();
-        Tensor<Float_T> values(valuesBaseTensor.dims());
+        Tensor<Float_T> values;
         valuesBaseTensor.synchronizeToH(values);
 
         const int size = mStimuliProvider->getBatch().size();

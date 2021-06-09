@@ -276,6 +276,11 @@ void N2D2::DeconvCell_Frame<T>::propagate(bool inference)
 {
     mInputs.synchronizeDBasedToH();
 
+    // Necessary if no previous call of initializeParameters 
+    if (mMapping.empty()) {
+        mMapping.append(Tensor<bool>({getNbOutputs(), mInputs.size()*mInputs.dimZ()}, true));
+    }
+
     const T alpha = T(1.0);
     T beta = T(0.0);
 

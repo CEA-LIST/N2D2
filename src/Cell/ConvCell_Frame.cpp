@@ -350,6 +350,11 @@ void N2D2::ConvCell_Frame<T>::propagate(bool inference)
         mQuantizer->propagate();
     }
 
+    // Necessary if no previous call of initializeParameters 
+    if (mMapping.empty()) {
+        mMapping.append(Tensor<bool>({getNbOutputs(), mInputs.size()*mInputs.dimZ()}, true));
+    }
+
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (k > 0)
             beta = 1.0;
@@ -367,7 +372,6 @@ void N2D2::ConvCell_Frame<T>::propagate(bool inference)
                                         &beta,
                                         mOutputs,
                                         mMapping.rows(offset, mInputs[k].dimZ()));
-
 
         offset += mInputs[k].dimZ();
     }

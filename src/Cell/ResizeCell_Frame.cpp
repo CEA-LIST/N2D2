@@ -97,6 +97,13 @@ void N2D2::ResizeCell_Frame::initialize()
     }
 }
 
+
+void N2D2::ResizeCell_Frame::initializeDataDependent()
+{
+    Cell_Frame::initializeDataDependent();
+    initialize();
+}
+
 void N2D2::ResizeCell_Frame::propagate(bool inference)
 {
     mInputs.synchronizeDBasedToH();

@@ -101,6 +101,9 @@ void init_Database(py::module &m) {
     db.def("partitionStimuli", (void (Database::*)(unsigned int, Database::StimuliSet))(&Database::partitionStimuli), py::arg("nbStimuli"), py::arg("set"));
     db.def("partitionStimuli", (void (Database::*)(double, double, double))(&Database::partitionStimuli), py::arg("learn"), py::arg("validation"), py::arg("test"));
 
+    db.def("partitionStimuliPerLabel", (void (Database::*)(unsigned int, Database::StimuliSet))(&Database::partitionStimuliPerLabel), py::arg("nbStimuliPerLabel"), py::arg("set"));
+    db.def("partitionStimuliPerLabel", (void (Database::*)(double, double, double, bool))(&Database::partitionStimuliPerLabel), py::arg("learnPerLabel"), py::arg("validationPerLabel"), py::arg("testPerLabel"),  py::arg("equiLabel") = false);
+
     db.def("getNbStimuli", (unsigned int (Database::*)() const)(&Database::getNbStimuli),
     R"mydelimiter(
     Returns the total number of loaded stimuli.
