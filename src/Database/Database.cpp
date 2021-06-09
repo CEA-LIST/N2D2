@@ -83,16 +83,48 @@ void N2D2::Database::loadROIs(const std::string& fileName,
         = labelFile->read(fileName,
                 std::bind(&Database::labelID, this, std::placeholders::_1));
 
+    const std::string& multiChannelMatch
+        = getParameter<std::string>("MultiChannelMatch");
+    std::map<std::string, std::string> matchChannel;
+
+    if (!multiChannelMatch.empty()) {
+        for (std::map<std::string, StimulusID>::const_iterator it
+            = stimuliName.begin(), itEnd = stimuliName.end(); it != itEnd; ++it)
+        {
+            const std::regex regexp(multiChannelMatch);
+
+            if (!std::regex_match((*it).first, regexp))
+                continue;
+
+            const std::vector<std::string>& multiChannelReplace
+                = getParameter<std::vector<std::string> >
+                    ("MultiChannelReplace");
+
+            for (size_t ch = 0; ch < multiChannelReplace.size(); ++ch) {
+                const std::string chFilePath
+                    = std::regex_replace((*it).first, regexp,
+                                        multiChannelReplace[ch]);
+
+                matchChannel[chFilePath] = (*it).first;
+            }
+        }
+    }
+
     for (std::map<std::string, std::vector<ROI*> >::const_iterator
         it = ROIs.begin(), itEnd = ROIs.end(); it != itEnd; ++it)
     {
+        const std::map<std::string, std::string>::const_iterator itMatchCh
+            = matchChannel.find((*it).first);
+        const std::string name = (itMatchCh != matchChannel.end())
+            ? (*itMatchCh).first : (*it).first;
+
         // Find corresponding stimulus
         std::map<std::string, StimulusID>::const_iterator itStimulus
-            = stimuliName.find((*it).first);
+            = stimuliName.find(name);
 
         // Support for "double extension" for label files, like .box.json
         if (itStimulus == stimuliName.end())
-            itStimulus = stimuliName.find(Utils::fileBaseName((*it).first));
+            itStimulus = stimuliName.find(Utils::fileBaseName(name));
 
         if (itStimulus != stimuliName.end()) {
             std::vector<ROI*>& stimulusROIs
