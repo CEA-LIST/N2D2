@@ -512,10 +512,10 @@ class Fc(NeuralNetworkCell, Datatyped):
         :rtype: list
         """
         weights = []
-        tensor = N2D2.Tensor_float([])
         for o in range(self.N2D2().getNbOutputs()):
             chan = []
             for c in range(self.N2D2().getNbChannels()):
+                tensor = N2D2.Tensor_float([])
                 self.N2D2().getWeight(o, c, tensor)
                 chan.append(n2d2.Tensor.from_N2D2(tensor))
             weights.append(chan)
@@ -893,10 +893,10 @@ class Conv(NeuralNetworkCell, Datatyped):
         :rtype: list
         """
         weights = []
-        tensor = N2D2.Tensor_float([])
         for o in range(self.N2D2().getNbOutputs()):
             chan = []
             for c in range(self.N2D2().getNbChannels()):
+                tensor = N2D2.Tensor_float([])
                 self.N2D2().getWeight(o, c, tensor)
                 chan.append(n2d2.Tensor.from_N2D2(tensor))
             weights.append(chan)
@@ -1657,10 +1657,10 @@ class Deconv(NeuralNetworkCell, Datatyped):
         :rtype: list
         """
         weights = []
-        tensor = N2D2.Tensor_float([])
         for o in range(self.N2D2().getNbOutputs()):
             chan = []
             for c in range(self.N2D2().getNbChannels()):
+                tensor = N2D2.Tensor_float([])
                 self.N2D2().getWeight(o, c, tensor)
                 chan.append(n2d2.Tensor.from_N2D2(tensor))
             weights.append(chan)
