@@ -31,6 +31,10 @@ namespace N2D2 {
 void init_ResizeCell(py::module &m) {
 
     py::class_<ResizeCell, std::shared_ptr<ResizeCell>, Cell> resize (m, "ResizeCell", py::multiple_inheritance());
+    resize.def("getType", &ResizeCell::getType);
+    resize.def("getMode", &ResizeCell::getMode);
+    resize.def("getResizeOutputWidth", &ResizeCell::getResizeOutputWidth);
+    resize.def("getResizeOutputHeight", &ResizeCell::getResizeOutputHeight);
     py::enum_<ResizeCell::ResizeMode>(resize, "ResizeMode")
     .value("Bilinear", ResizeCell::ResizeMode::Bilinear)
     .value("BilinearTF", ResizeCell::ResizeMode::BilinearTF)

@@ -42,7 +42,7 @@ class WrongValue(ValueError):
         :param input_name: Name of the empty list
         :type input_name: str
         """
-        super().__init__(input_name + " has value " + str(input_value) + " but only " + accepted_values + " are accepted.")
+        super().__init__(input_name + " has value '" + str(input_value) + "' but only [" + accepted_values + "] are accepted.")
 
 
 class IsEmptyError(ValueError):

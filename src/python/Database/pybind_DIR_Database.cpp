@@ -24,6 +24,7 @@
 #include "Database/DIR_Database.hpp"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
@@ -45,7 +46,10 @@ void init_DIR_Database(py::module &m) {
         :type labelName: str
         :param labelDepth: labelDepth = -1: no label for all stimuli (label ID = -1); labelDepth = 0: uses @p labelName string for all stimuli; labelDepth = 1: uses @p labelName string for stimuli in the current; directory (dirPath) and @p labelName + sub-directory name for stimuli in the sub-directories
         :type labelDepth: int
-        )mydelimiter");
+        )mydelimiter")
+    .def("setIgnoreMasks", &DIR_Database::setIgnoreMasks, py::arg("ignoreMasks"))
+    .def("setValidExtensions", &DIR_Database::setValidExtensions, py::arg("validExtensions"))
+    ;
 }
 }
 #endif

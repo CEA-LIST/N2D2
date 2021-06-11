@@ -26,13 +26,30 @@ from abc import ABC, abstractmethod
 
 class Target(N2D2_Interface, ABC):
 
-    _convention_converter= n2d2.ConventionConverter({
-        "top_n": "topN",
-    })
+    _target_parameters = {
+        'target_value': 'targetValue',
+        'default_value': 'defaultValue',
+        'top_n': "targetTopN",
+        'labels_mapping': 'labelsMapping',
+        'create_missing_labels': 'createMissingLabels',
+        'data_as_target': 'DataAsTarget',
+        'no_display_label': 'NoDisplayLabel',
+        'labels_hue_offset': 'LabelsHueOffset',
+        'estimated_labels_value_display': 'EstimatedLabelsValueDisplay',
+        'masked_label': "MaskedLabel",
+        "masked_label_value": 'MaskedLabelValue',
+        'binary_threshold': 'BinaryThreshold',
+        'value_threshold': 'ValueThreshold',
+        'image_log_format': 'ImageLogFormat',
+        'weak_target': 'WeakTarget'
+    }
+
+    _convention_converter = n2d2.ConventionConverter(_target_parameters)
+
     """Provider is not a parameter in the INI file in the case of Target class,
     but usually inferred from the deepnet in N2D2. Name and NeuralNetworkCell are parts of the section name"""
     @abstractmethod
-    def __init__(self, **config_parameters):
+    def __init__(self, provider, **config_parameters):
 
         if 'name' in config_parameters:
             name = config_parameters.pop('name')
@@ -46,6 +63,12 @@ class Target(N2D2_Interface, ABC):
             'name': name,
         }
 
+        self._parse_optional_arguments(['target_value', 'default_value', 'top_n',
+                                        'labels_mapping', 'create_missing_labels'])
+
+        self._provider = provider
+
+
     def get_name(self):
         return self._constructor_parameters['name']
 
@@ -58,15 +81,18 @@ class Target(N2D2_Interface, ABC):
 
 class Score(Target):
 
+    _parameters = {
+        'confusion_range_min': 'ConfusionRangeMin',
+        'confusion_range_max': 'ConfusionRangeMax',
+        'confusion_quant_steps': 'ConfusionQuantSteps'
+    }
+
+    _parameters.update(Target._target_parameters)
+
+    _convention_converter = n2d2.ConventionConverter(_parameters)
+
     def __init__(self, provider, **config_parameters):
-
-        Target.__init__(self, **config_parameters)
-
-        self._parse_optional_arguments(['target_value', 'default_value', 'top_n',
-                                        'labels_mapping', 'create_missing_labels'])
-
-        self._provider = provider
-
+        Target.__init__(self, provider, **config_parameters)
 
     def __call__(self, inputs):
 

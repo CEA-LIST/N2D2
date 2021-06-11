@@ -176,13 +176,16 @@ void N2D2::DeconvCell_Frame<T>::initialize()
 
 
 template <class T>
-void N2D2::DeconvCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
+void N2D2::DeconvCell_Frame<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
 {
-    // NOTE: this is addition to initialize()
-    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
-    if (mapping.empty()) {
-        mMapping.append(Tensor<bool>({getNbOutputs(), inputDimZ}, true));
+   // BEGIN: addition to initialize()
+    if (mMapping.empty()) {
+        mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
     }
+    // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
+    // However, this requires a reinitialization of the input dims which is unsafe
+    setInputsDims({nbInputChannels});
+    // END: addition to initialize()
 
    if (!mNoBias) {
         if (mBias->empty()) {
@@ -212,7 +215,7 @@ void N2D2::DeconvCell_Frame<T>::initializeParameters(unsigned int inputDimZ, uns
 
         std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
         kernelDims.push_back(getNbOutputs());
-        kernelDims.push_back(inputDimZ);
+        kernelDims.push_back(nbInputChannels);
 
         if (it != mExtSharedSynapses.end()) {
             Tensor<T>* extWeights
@@ -272,6 +275,11 @@ template <class T>
 void N2D2::DeconvCell_Frame<T>::propagate(bool inference)
 {
     mInputs.synchronizeDBasedToH();
+
+    // Necessary if no previous call of initializeParameters 
+    if (mMapping.empty()) {
+        mMapping.append(Tensor<bool>({getNbOutputs(), mInputs.size()*mInputs.dimZ()}, true));
+    }
 
     const T alpha = T(1.0);
     T beta = T(0.0);

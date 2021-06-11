@@ -90,28 +90,28 @@ If you want to add the same parameters to multiple cells, you can use a :py:clas
 
 :py:class:`n2d2.ConfigSection` are used like dictionaries and passes to the constructor of classes like kwargs. 
 
-For example :
+Example :
+~~~~~~~~~
 
 .. testcode::
 
         conv_config = n2d2.ConfigSection(no_bias=True)
         n2d2.cells.Conv(3, 32, [4, 4], **conv_config)
 
-Creates a :py:class:`n2d2.cells.Conv` with the parameter `no_bias=True`.
-This functionality allow you to write more concise code.
-
+This creates a :py:class:`n2d2.cells.Conv` with the parameter `no_bias=True`.
+This functionality allow you to write more concise code, when multiple cells share the same parameters.
 
 
 Mapping
 -------
 
-You can change the mapping of the input for some cells.
+You can change the mapping of the input for some cells (see if they have ``mapping`` parameter available).
 
 You can create a mapping manually with a :py:class:`n2d2.Tensor` object :
 
 .. testcode::
 
-        mapping=n2d2.Tensor([15, 24], datatype=bool)
+        mapping=n2d2.Tensor([15, 24], datatype="bool")
         mapping.set_values([
         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1],
         [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1],
@@ -168,7 +168,7 @@ Solver
 
 You can associate to some cell a specific weight solver.
 
-..autoclass:: n2d2.solver.Solver
+.. autoclass:: n2d2.solver.Solver
         :members:
         :inherited-members:
 
@@ -192,7 +192,7 @@ Filler
 
 You can associate to some cell a specific weights and/or biases filler.
 
-..autoclass:: n2d2.filler.Filler
+.. autoclass:: n2d2.filler.Filler
         :members:
         :inherited-members:
 
@@ -246,5 +246,26 @@ Tanh
 ~~~~
 
 .. autoclass:: n2d2.activation.Tanh
+        :members:
+        :inherited-members:
+
+Loss function
+-------------
+
+.. autoclass:: n2d2.application.LossFunction
+        :members:
+        :inherited-members:
+
+CrossEntropyClassifier
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: n2d2.application.CrossEntropyClassifier
+        :members:
+        :inherited-members:
+
+MeanSquareErrorRegression
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: n2d2.application.MeanSquareErrorRegression
         :members:
         :inherited-members:

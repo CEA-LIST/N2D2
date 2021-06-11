@@ -23,12 +23,16 @@ import N2D2
 import n2d2.global_variables
 from n2d2.deepnet import DeepNet
 from abc import ABC, abstractmethod
+from n2d2.tensor import Interface
 
 class Cell(ABC):
     @abstractmethod
     def __init__(self, name):
         if not name:
             name = n2d2.generate_name(self)
+        else:
+            if not isinstance(name, str):
+                raise n2d2.error_handler.WrongInputType("name", str(type(name)), ["str"])
         self._name = name
 
     def __call__(self, x):
@@ -101,18 +105,14 @@ class Block(Cell):
         return output
 
 
-
-class Sequence(Block):
+class Iterable(Block, ABC):
+    @abstractmethod
     def __init__(self, cells, name=None):
         Block.__init__(self, cells, name)
         self._seq = cells
 
     def __call__(self, x):
-        x.get_deepnet().begin_group(name=self._name)
-        for cell in self._seq:
-            x = cell(x)
-        x.get_deepnet().end_group()
-        return x
+        raise RuntimeError("Block requires custom __call__() method")
 
     def __getitem__(self, item):
         if isinstance(item, int):
@@ -125,7 +125,6 @@ class Sequence(Block):
             if item.get_name() == cell.get_name():
                 return i
         raise RuntimeError("Element with name '" + item.get_name() + "' not found in sequence")
-
 
     def __len__(self):
         return len(self._seq)
@@ -145,6 +144,46 @@ class Sequence(Block):
                 output += ": " + value.__str__()
         output += "\n" + ((indent_level - 1) * "\t") + ")"
         return output
+
+
+class Sequence(Iterable):
+    def __init__(self, cells, name=None):
+        Iterable.__init__(self, cells, name)
+
+    def __call__(self, x):
+        x.get_deepnet().begin_group(name=self._name)
+        for cell in self._seq:
+            x = cell(x)
+        x.get_deepnet().end_group()
+        return x
+
+# TODO: unit test
+class Layer(Iterable):
+
+    def __init__(self, cells, mapping=None, name=None):
+        Iterable.__init__(self, cells, name)
+        if mapping:
+            if isinstance(mapping, list):
+                self._mapping = mapping
+            else:
+                raise n2d2.error_handler.WrongInputType('mapping', type(mapping), [str(type(list))])
+
+    def __call__(self, x):
+        out = []
+        if isinstance(x, n2d2.tensor.Interface):
+            inputs = x.get_tensors()
+        else:
+            inputs = [x]
+        x.get_deepnet().begin_group(name=self._name)
+        for out_idx, cell in enumerate(self._seq):
+            cell_inputs = []
+            for in_idx, ipt in enumerate(inputs):
+                # Default is all-to-all
+                if self._mapping is None or self._mapping[in_idx][out_idx]:
+                    cell_inputs.append(ipt)
+            out.append(cell(Interface(cell_inputs)))
+        x.get_deepnet().end_group()
+        return Interface([out])
 
 
 class DeepNetCell(Block):

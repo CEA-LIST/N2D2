@@ -47,6 +47,7 @@ void init_ElemWiseCell(py::module &m) {
 
     ewc
     .def("getOperation", &ElemWiseCell::getOperation)
+    .def("getCoeffMode", &ElemWiseCell::getCoeffMode)
     .def("getWeights", &ElemWiseCell::getWeights)
     .def("getShifts", &ElemWiseCell::getShifts);
 }

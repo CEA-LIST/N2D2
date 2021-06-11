@@ -2814,92 +2814,24 @@ void N2D2::DeepNet::logLabelsMapping(const std::string& fileName) const
 
 void N2D2::DeepNet::logEstimatedLabels(const std::string& dirName) const
 {
-    const std::vector<int> devices(mStimuliProvider->getDevices().begin(),
-                                   mStimuliProvider->getDevices().end());
-
-#ifdef CUDA
-    int currentDev = 0;
-    const cudaError_t status = cudaGetDevice(&currentDev);
-    if (status != cudaSuccess)
-        currentDev = 0;
-#endif
-
-#pragma omp parallel for if (devices.size() > 1)
-    for (int dev = 0; dev < (int)devices.size(); ++dev) {
-#ifdef CUDA
-        if (mStates[devices[dev]] == N2D2::DeviceState::Connected) {
-            if (devices.size() > 1 || devices[dev] != currentDev) {
-                CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
-            }
-            for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-                = mTargets.begin(),
-                itTargetsEnd = mTargets.end();
-                itTargets != itTargetsEnd;
-                ++itTargets) {
-                (*itTargets)->logEstimatedLabels(dirName);
-            }
-        }
-#else
-        for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-            = mTargets.begin(),
-            itTargetsEnd = mTargets.end();
-            itTargets != itTargetsEnd;
-            ++itTargets) {
-            (*itTargets)->logEstimatedLabels(dirName);
-        }
-#endif
+    for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
+         = mTargets.begin(),
+         itTargetsEnd = mTargets.end();
+         itTargets != itTargetsEnd;
+         ++itTargets) {
+        (*itTargets)->logEstimatedLabels(dirName);
     }
-
-#ifdef CUDA
-    if (devices.size() > 1 || (devices.size() > 0 && devices[0] != currentDev)) {
-        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
-    }
-#endif
 }
 
 void N2D2::DeepNet::logEstimatedLabelsJSON(const std::string& dirName) const
 {
-    const std::vector<int> devices(mStimuliProvider->getDevices().begin(),
-                                   mStimuliProvider->getDevices().end());
-
-#ifdef CUDA
-    int currentDev = 0;
-    const cudaError_t status = cudaGetDevice(&currentDev);
-    if (status != cudaSuccess)
-        currentDev = 0;
-#endif
-
-#pragma omp parallel for if (devices.size() > 1)
-    for (int dev = 0; dev < (int)devices.size(); ++dev) {
-#ifdef CUDA
-        if (mStates[devices[dev]] == N2D2::DeviceState::Connected) {
-            if (devices.size() > 1 || devices[dev] != currentDev) {
-                CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
-            }
-            for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-                = mTargets.begin(),
-                itTargetsEnd = mTargets.end();
-                itTargets != itTargetsEnd;
-                ++itTargets) {
-                (*itTargets)->logEstimatedLabelsJSON(dirName);
-            }
-        }
-#else
-        for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-            = mTargets.begin(),
-            itTargetsEnd = mTargets.end();
-            itTargets != itTargetsEnd;
-            ++itTargets) {
-            (*itTargets)->logEstimatedLabelsJSON(dirName);
-        }
-#endif
+    for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
+         = mTargets.begin(),
+         itTargetsEnd = mTargets.end();
+         itTargets != itTargetsEnd;
+         ++itTargets) {
+        (*itTargets)->logEstimatedLabelsJSON(dirName);
     }
-
-#ifdef CUDA
-    if (devices.size() > 1 || (devices.size() > 0 && devices[0] != currentDev)) {
-        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
-    }
-#endif
 }
 
 void N2D2::DeepNet::logLabelsLegend(const std::string& dirName) const

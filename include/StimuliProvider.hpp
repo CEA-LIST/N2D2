@@ -350,7 +350,9 @@ public:
                         int dev = -1);
 
     void setStreamedTensor(TensorData_T& streamedTensor);
-                        
+
+    void setStreamedLabel(Tensor<int>& streamedLabel);
+
     void synchronizeToDevices();
 
     void reverseLabels(const cv::Mat& mat,
@@ -478,7 +480,7 @@ public:
     };
     TensorData_T& getData(int dev = -1)
     {
-        // TODO : mStreamTensor may need to be reworked, if we want to have multiGPU for python ! 
+        // TODO : mStreamedTensor may need to be reworked, if we want to have multiGPU for python ! 
         if (mStreamTensor) {
             if (!mStreamedTensor) {
                 throw std::runtime_error("Error: StreamTensor==true but StreamedTensor is not initialized");
@@ -497,7 +499,16 @@ public:
     };
     Tensor<int>& getLabelsData(int dev = -1)
     {
-        return mProvidedData[getDevice(dev)].labelsData;
+        if (mStreamLabel) {
+            if (!mStreamedLabel) {
+                throw std::runtime_error("Error: StreamLabel==true but StreamedLabel is not initialized");
+            }
+            return *mStreamedLabel;
+        }
+        else {
+            return mProvidedData[getDevice(dev)].labelsData;
+        }
+        
     };
     const TensorData_T& getData(int dev = -1) const
     {
@@ -573,6 +584,8 @@ protected:
     Parameter<Float_T> mQuantizationMax;
     /// Set to deepnet interface mode
     Parameter<bool> mStreamTensor;
+    /// Set to deepnet interface mode
+    Parameter<bool> mStreamLabel;
 
     // Internal variables
     Database& mDatabase;
@@ -595,7 +608,8 @@ protected:
     bool mFuture;
 
     TensorData_T* mStreamedTensor;
-    
+    Tensor<int>* mStreamedLabel;
+
     //Deprecated vector
     std::vector<std::vector<unsigned int >> mDatabaseLearnIndexes;
     std::vector<std::vector<unsigned int >> mDatabaseValIndexes;

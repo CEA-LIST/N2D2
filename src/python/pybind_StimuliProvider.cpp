@@ -71,6 +71,7 @@ void init_StimuliProvider(py::module &m) {
     .def("addTransformation", &StimuliProvider::addTransformation, py::arg("transformation"), py::arg("setMask"), "Add global CACHEABLE transformations, before applying any channel transformation")
     .def("addOnTheFlyTransformation", &StimuliProvider::addOnTheFlyTransformation, py::arg("transformation"), py::arg("setMask"), "Add global ON-THE-FLY transformations, before applying any channel transformation. The order of transformations is: global CACHEABLE, then global ON-THE-FLY")
     .def("setStreamedTensor", &StimuliProvider::setStreamedTensor, py::arg("streamedTensor"), "Set Tensor that is streamed directly to connected Deepnet")
+    .def("setStreamedLabel", &StimuliProvider::setStreamedLabel, py::arg("streamedLabel"), "Set Label that is streamed directly to connected Deepnet")
     .def("streamBatch", &StimuliProvider::streamBatch, py::arg("startIndex") = -1, py::arg("dev") = -1)
     .def("getLabelsData", (Tensor<int>& (StimuliProvider::*)(int)) &StimuliProvider::getLabelsData, py::arg("dev") = -1)
     .def("getLabelsROIs", (const std::vector<std::vector<std::shared_ptr<ROI> > >& (StimuliProvider::*)() const) &StimuliProvider::getLabelsROIs)

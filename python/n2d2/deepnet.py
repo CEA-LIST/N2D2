@@ -116,6 +116,18 @@ class DeepNet(N2D2_Interface):
     def get_cells(self):
         return self._groups.get_cells()
 
+    def get_first_cell(self):
+        """
+        Return the first N2D2 cell in the deepNet
+        """
+        return self.N2D2().getCells()[self.N2D2().getLayers()[1][0]] # The first layer is the env, so we get the second.]
+
+    def get_last_cell(self):
+        """
+        Return the last N2D2 cell in the deepNet
+        """
+        return self.N2D2().getCells()[self.N2D2().getLayers()[-1][-1]]
+
     def get_group(self, group_id):
         return self._groups.get_group(group_id)
 

@@ -165,9 +165,9 @@ class NIT(torch.nn.Module):
 
                 numpy_tensor = x.cpu().detach().numpy()
                 if x.is_cuda:
-                    n2d2_tensor = tensor.CUDA_Tensor([3, 3], datatype=float)
+                    n2d2_tensor = tensor.CUDA_Tensor([3, 3], datatype="float")
                 else:
-                    n2d2_tensor = tensor.Tensor([3, 3], datatype=float)        
+                    n2d2_tensor = tensor.Tensor([3, 3], datatype="float")        
                 n2d2_tensor.from_numpy(numpy_tensor)
 
                 if x.is_cuda:
@@ -391,14 +391,14 @@ class test_DeepNetN2D2(unittest.TestCase):
             j = round(j.item(), 4)
             self.assertEqual(i, j)
 
-        # weights = []
-        # cells = deepNet.getCells()
-        # for cell in cells:
-        #     cell = deepNet.getCell_Frame_Top(cell)
-        #     if "Conv" in str(type(cell)) or "Fc" in str(type(cell)):
-        #         v = N2D2.Tensor_float([3, 3], weight_value)
-        #         deepNet.getCell_Frame_Top(cell.getName()).getWeight(0, 0, v)
-        #         weights.append(v)
+        weights = []
+        cells = deepNet.getCells()
+        for cell in cells:
+            cell = deepNet.getCell_Frame_Top(cell)
+            if "Conv" in str(type(cell)) or "Fc" in str(type(cell)):
+                v = N2D2.Tensor_float([])
+                deepNet.getCell_Frame_Top(cell.getName()).getWeight(0, 0, v)
+                weights.append(v)
         
         label = torch.ones(batch_size, 10)
         opt = torch.optim.SGD(n2d2_deepNet.parameters(), lr=2)
@@ -408,21 +408,25 @@ class test_DeepNetN2D2(unittest.TestCase):
         opt.step()
         # TODO : Write a test to see if the weights are well updated
 
-        # new_weights = []
-        # cells = deepNet.getCells()
-        # for cell in cells:
-        #     cell = deepNet.getCell_Frame_Top(cell)
-        #     if "Conv" in str(type(cell)) or "Fc" in str(type(cell)):
-        #         v = N2D2.Tensor_float([3, 3], weight_value)
-        #         deepNet.getCell_Frame_Top(cell.getName()).getWeight(0, 0, v)
-        #         new_weights.append(v)
-
-        # all_weights_are_equals = True
-        # for w_before, w_after in zip(weights, new_weights):
-        #     if (n2d2.Tensor.from_N2D2(w_before) != n2d2.Tensor.from_N2D2(w_after)):
-        #         all_weights_are_equals = False
-        #         break
-        # self.assertFalse(all_weights_are_equals)
+        new_weights = []
+        cells = deepNet.getCells()
+        for cell in cells:
+            cell = deepNet.getCell_Frame_Top(cell)
+            if "Conv" in str(type(cell)) or "Fc" in str(type(cell)):
+                v = N2D2.Tensor_float([])
+                deepNet.getCell_Frame_Top(cell.getName()).getWeight(0, 0, v)
+                new_weights.append(v)
+        print("==== \nComparing weights after | before")
+        for i, j in zip(weights, new_weights):
+            for w0, w1 in zip(i,j):
+                print(w0, " | ", w1)
+        print('===')
+        all_weights_are_equals = True
+        for w_before, w_after in zip(weights, new_weights):
+            if (n2d2.Tensor.from_N2D2(w_before) != n2d2.Tensor.from_N2D2(w_after)):
+                all_weights_are_equals = False
+                break
+        self.assertFalse(all_weights_are_equals)
 
 if __name__ == '__main__':
     unittest.main()

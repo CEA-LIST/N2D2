@@ -33,20 +33,35 @@ hard_coded_type = {
     "int": int,
     "b": bool,
     "bool": bool,
+    "d": float,
+    "double": float,
+
 }
 
 
 class Tensor:
     
     _tensor_generators = {
-        float: N2D2.Tensor_float,
-        int: N2D2.Tensor_int,
-        bool: N2D2.Tensor_bool,
+        "f": N2D2.Tensor_float,
+        "float": N2D2.Tensor_float,
+        "i": N2D2.Tensor_int,
+        "int": N2D2.Tensor_int,
+        "b": N2D2.Tensor_bool,
+        "bool": N2D2.Tensor_bool,
+        "d": N2D2.Tensor_double,
+        "double": N2D2.Tensor_double,
+        "uchar": N2D2.Tensor_unsigned_char,
+        "char": N2D2.Tensor_char,
+
     }
     _cuda_tensor_generators = {
-        float: N2D2.CudaTensor_float,
-        int: N2D2.CudaTensor_int,
+        "f": N2D2.CudaTensor_float,
+        "float": N2D2.CudaTensor_float,
+        "i": N2D2.CudaTensor_int,
+        "int": N2D2.CudaTensor_int,
         # bool: N2D2.CudaTensor_bool, # Not defined
+        "d": N2D2.CudaTensor_double,
+        "double": N2D2.CudaTensor_double,
     }
     
     _dim_format = {
@@ -54,17 +69,17 @@ class Tensor:
         "Numpy": lambda x: [i for i in reversed(x)],
     }
 
-    def __init__(self, dims, value=None, cuda=False, datatype=float, cell=None, dim_format='Numpy'):
+    def __init__(self, dims, value=None, cuda=False, datatype="float", cell=None, dim_format='Numpy'):
         """
         :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (the convention used depends of the ``dim_format`` argument, by default it's the same as ``Numpy``)
         :type dims: list
         :param value: A value to fill the :py:class:`n2d2.Tensor` object.
         :type value: Must be coherent with ``datatype``
-        :param datatype: Type of the data stocked by the tensor, default=float
-        :type datatype: type, optional
+        :param datatype: Type of the data stored in the tensor, default=``float``
+        :type datatype: str, optional
         :param cell: A reference to the object that created this tensor, default=None
         :type cell: :py:class:`n2d2.cells.NeuralNetworkCell`, optional
-        :param dim_format: Define the format used when you declare the dimensions of the tensor. The ``N2D2`` convention is the reversed of the ``Numpy`` the numpy one (e.g. a [2, 3] numpy array is equivalent to a [3, 2] N2D2 Tensor), default="Numpy"
+        :param dim_format: Define the format used when you declare the dimensions of the tensor. The ``N2D2`` convention is the reversed of the ``Numpy`` the numpy one (e.g. a [2, 3] numpy array is equivalent to a [3, 2] N2D2 Tensor), default=``Numpy``
         :type dim_format: str, optional
         """
         self._leaf=False
@@ -84,11 +99,11 @@ class Tensor:
             if dim_format in self._dim_format:
                 dims = self._dim_format[dim_format](dims)
             else:
-                raise error_handler.WrongValue('dim_format', dim_format, " ".join(self._dim_format.keys()))
+                raise error_handler.WrongValue('dim_format', dim_format, ", ".join(self._dim_format.keys()))
         else:
             raise error_handler.WrongInputType("dims", type(dims), [str(list)])
 
-        if value and not isinstance(value, datatype): # TODO : We may want to try an auto-cast ! 
+        if value and not isinstance(value, hard_coded_type[datatype]): # TODO : We may want to try an auto-cast ! 
             raise TypeError("You want to fill the tensor with " + str(type(value)) + " but " + str(datatype) + " is the datatype.")
 
         if datatype in generators:
@@ -310,11 +325,14 @@ class Tensor:
             except:
                 is_first_element = True
         data_type = type(first_element.item())
+        
+        # convert datatype to string
+        data_type = str(data_type).split("'")[1]
 
-        if data_type == bool:
+        if data_type == "bool":
             # Numpy -> N2D2 doesn't work for bool because there is no buffer protocol for it.
             n2d2_tensor._datatype = data_type
-            tmp_tensor = n2d2_tensor._tensor_generators[int](np_array)
+            tmp_tensor = n2d2_tensor._tensor_generators["int"](np_array)
             shape = [d for d in reversed(tmp_tensor.dims())]
             n2d2_tensor._tensor = n2d2_tensor._tensor_generators[data_type](shape)
             for i, value in enumerate(tmp_tensor):
@@ -338,7 +356,7 @@ class Tensor:
             raise error_handler.WrongInputType("N2D2_Tensor", str(type(N2D2_Tensor)), [str(N2D2.BaseTensor)])
         n2d2_tensor = cls([])
         n2d2_tensor._tensor = N2D2_Tensor
-        n2d2_tensor._datatype = hard_coded_type[N2D2_Tensor.getTypeName()]
+        n2d2_tensor._datatype = N2D2_Tensor.getTypeName()
         n2d2_tensor.is_cuda = "CudaTensor" in str(type(N2D2_Tensor)) 
         return n2d2_tensor
 
@@ -355,11 +373,11 @@ class Tensor:
         :param value: The value the item will take
         :type value: same type as self._datatype
         """
-        if not isinstance(value, self._datatype):
+        if not isinstance(value, hard_coded_type[self._datatype]):
             try:
-                value = self._datatype(value)
+                value = hard_coded_type[self._datatype](value)
             except:
-                raise RuntimeError("Autocast failed, tried to cast : " + str(type(value)) + " to " + str(self._datatype))
+                raise RuntimeError("Autocast failed, tried to cast : " + str(type(value)) + " to " + self._datatype)
 
         if isinstance(index, tuple) or isinstance(index, list):
             self._tensor[self._get_index(index)] = value
@@ -428,10 +446,12 @@ class Tensor:
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         The synchronizations are handled by the library and regular users don't need use this method.  
         """
+        if not n2d2.cuda_compiled:
+            raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeDToH()
         else:
-            RuntimeError("Trying to synchronize a non-cuda Tensor to device")
+            raise RuntimeError("Trying to synchronize a non-cuda Tensor to device")
         return self
 
     def htod(self):
@@ -441,10 +461,12 @@ class Tensor:
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         The synchronizations are handled by the library and regular users don't need use this method.  
         """
+        if not n2d2.cuda_compiled:
+            raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeHToD()
         else:
-            RuntimeError("Trying to synchronize a non-cuda Tensor to host")
+            raise RuntimeError("Trying to synchronize a non-cuda Tensor to host")
         return self
 
     def detach_cell(self):
@@ -464,7 +486,8 @@ class Tensor:
         Method called by the cells, if the tensor is not part of a graph, it will be linked to an :py:class:`n22d.provider.Provider` object.
         """
         if self.cell is None:
-            self.cell = TensorPlaceholder(self)
+            # TensorPlaceholder will set the cell attribute to it self.
+            TensorPlaceholder(self) 
         return self.cell.get_deepnet()
 
     def back_propagate(self):
@@ -490,6 +513,8 @@ class Tensor:
     def is_leaf(self):
         return self._leaf
 
+    def mean(self):
+        return self.N2D2().mean()
 
 class Interface(n2d2.provider.Provider):
     """
@@ -501,7 +526,7 @@ class Interface(n2d2.provider.Provider):
         if not isinstance(tensors, list):
             raise ValueError("'tensors' should be a list !")
         if not tensors:
-            raise n2d2d.error_handler.IsEmptyError('Tensors')
+            raise n2d2.error_handler.IsEmptyError('Tensors')
 
         if not tensors[0].cell: # Check if the first tensor is linked to a deepnet
             self._deepnet = None
@@ -531,7 +556,7 @@ class Interface(n2d2.provider.Provider):
             for tensor in self.tensors:
                 tensor.cell = cell
         # The dimZ of the interface correspond to the sum of the dimZ of the tensor that composed it.
-        self.dimZ = nb_channels 
+        self.dim_z = nb_channels
 
     def get_deepnet(self):
         return self.tensors[0].get_deepnet()
@@ -542,8 +567,8 @@ class Interface(n2d2.provider.Provider):
     def dimX(self):
         return self.tensors[0].dimX()
     def dimZ(self):
-        return self.dimZ
+        return self.dim_z
     def dims(self):
-        return [self.dimZ(), self.dimY(), self.dimX(), self.dimY(),]
+        return [self.dimZ(), self.dimY(), self.dimX(), self.dimY()]
     def get_tensors(self):
         return self.tensors

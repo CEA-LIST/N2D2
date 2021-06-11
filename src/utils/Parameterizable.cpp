@@ -433,4 +433,19 @@ std::string N2D2::Parameter<bool>::getPyType() {
     return std::string("bool");
 }
 
+template<>
+std::string N2D2::Parameter<std::vector<double>>::getPyType() {
+    return std::string("list");
+}
+
+template<>
+std::string N2D2::Parameter<std::vector<float>>::getPyType() {
+    return std::string("list");
+}
+
+template<>
+std::string N2D2::Parameter<std::vector<int>>::getPyType() {
+    return std::string("list");
+}
+
 

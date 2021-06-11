@@ -45,6 +45,7 @@ void init_Target(py::module&);
 void init_TargetScore(py::module&);
 
 void init_DeepNet(py::module&);
+void init_DeepNetExport(py::module&);
 void init_DrawNet(py::module&);
 //Database
 void init_Database(py::module&);
@@ -249,6 +250,9 @@ void init_ThresholdCell_Frame_CUDA(py::module&);
 void init_TransformationCell(py::module&);
 void init_TransformationCell_Frame(py::module&);
 void init_TransformationCell_Frame_CUDA(py::module&);
+void init_TransposeCell(py::module&);
+void init_TransposeCell_Frame(py::module&);
+void init_TransposeCell_Frame_CUDA(py::module&);
 void init_UnpoolCell(py::module&);
 void init_UnpoolCell_Frame(py::module&);
 void init_UnpoolCell_Frame_CUDA(py::module&);
@@ -325,6 +329,8 @@ void init_N2D2(py::module& m) {
 
 
     init_DeepNet(m);
+    init_DeepNetExport(m);
+
     init_DrawNet(m);
 
     //Activation
@@ -495,6 +501,9 @@ void init_N2D2(py::module& m) {
     init_TransformationCell(m);
     init_TransformationCell_Frame(m);
     init_TransformationCell_Frame_CUDA(m);
+    init_TransposeCell(m);
+    init_TransposeCell_Frame(m);
+    init_TransposeCell_Frame_CUDA(m);
     init_UnpoolCell(m);
     init_UnpoolCell_Frame(m);
     init_UnpoolCell_Frame_CUDA(m);

@@ -149,12 +149,30 @@ ChannelExtraction
         :members:
         :inherited-members:
 
-Data provider
--------------
+Sending data to the Neural Network
+---------------------------------
 
-Once loaded, n2d2 use :py:class:`n2d2.provider.DataProvider` to feed the neural network with data.
+With a DataProvider
+~~~~~~~~~~~~~~~~~~~
+
+Once a database loaded, n2d2 use :py:class:`n2d2.provider.DataProvider` to provide data to the neural network.
 
 .. autoclass:: n2d2.provider.DataProvider
+        :members:
+        :inherited-members:
+
+Without a DataProvider
+~~~~~~~~~~~~~~~~~~~~~~
+
+You can send a :py:class:`n2d2.Tensor` that doesn't come from a :py:class:`n2d2.provider.DataProvider` to the network. 
+
+By doing so, you create a :py:class:`n2d2.provider.TensorPlaceholder` that will stream your tensor directly to the network.
+
+If you want to do a back propagation, you need to use a :py:class:`n2d2.application.LossFunction` that require a :py:class:`n2d2.provider.DataProvider`.
+
+You can create a :py:class:`n2d2.provider.TensorPlaceholder` and specify the labels associated with the data, this will act as a :py:class:`n2d2.provider.DataProvider`.
+
+.. autoclass:: n2d2.provider.TensorPlaceholder
         :members:
         :inherited-members:
 
@@ -164,15 +182,22 @@ Example
 
 In this example, we will show you how to create a :py:class:`n2d2.database.Database`, :py:class:`n2d2.provider.Provider` and apply :py:class:`n2d2.transformation.Transformation` to the data.
 
+We will use the :py:class:`n2d2.database.MNIST` database driver, rescale the images to a 32x32 pixels size and then print the data used for the learning.
+
 .. testcode::
 
-        database = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw/", validation=0.1)
+        # Loading data
+        database = n2d2.database.MNIST(data_path=path, validation=0.1)
 
+        # Initializing DataProvider
         provider = n2d2.provider.DataProvider(database, [32, 32, 1], batch_size=batch_size)
 
+        # Applying Transformation
         provider.add_transformation(n2d2.transform.Rescale(width=32, height=32))
 
+        # Setting the partition of data we will use
         provider.set_partition("Learn")
 
+        # Iterating other the inputs
         for inputs in provider:
-                outputs = sequence(inputs)
+                print(inputs)

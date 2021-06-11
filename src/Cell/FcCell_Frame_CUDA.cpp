@@ -136,10 +136,16 @@ void N2D2::FcCell_Frame_CUDA<T>::initialize()
 
 
 template <class T>
-void N2D2::FcCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
+void N2D2::FcCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
 {
-    // NOTE: this is addition to initialize()
-    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
+    // BEGIN: addition to initialize()
+    if (mMapping.empty()) {
+        mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
+    }
+    // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
+    // However, this requires a reinitialization of the input dims which is unsafe
+    setInputsDims({nbInputChannels});
+    // END: addition to initialize()
 
     int dev;
     CHECK_CUDA_STATUS(cudaGetDevice(&dev));
@@ -170,9 +176,9 @@ void N2D2::FcCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, un
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
         mSynapses.push_back(new CudaTensor<T>(
-            {1, 1, inputDimZ, getNbOutputs()}), 0);
+            {1, 1, nbInputChannels, getNbOutputs()}), 0);
         mDiffSynapses.push_back(new CudaTensor<T>(
-            {1, 1, inputDimZ, getNbOutputs()}), 0);
+            {1, 1, nbInputChannels, getNbOutputs()}), 0);
         mWeightsFiller->apply(mSynapses.back());
         mSynapses.back().synchronizeHToD();
     }

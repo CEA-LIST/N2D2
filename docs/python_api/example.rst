@@ -121,7 +121,7 @@ The connection of n-th output map to the inputs is defined by the n-th column of
 
 .. testcode::
 
-    conv2_mapping=n2d2.Tensor([32, 48], datatype=bool)
+    conv2_mapping=n2d2.Tensor([32, 48], datatype="bool")
     conv2_mapping.set_values([
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
     [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],

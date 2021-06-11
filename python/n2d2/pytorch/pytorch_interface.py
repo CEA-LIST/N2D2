@@ -173,8 +173,8 @@ class DeepNetN2D2(torch.nn.Module):
                 # Thus mDiffOutputs is empty. 
                 # In order to send a gradient in the backward method we add an Input to force the cells to compute a gradient.
                 shape = n2d2_tensor.dims()
-                # Note : It's import to set diffOutputs as an attribute else when exiting this method
-                # Python will erase this variable but Cpp will still use it resulting in a SegFault
+                # Note : It's important to set diffOutputs as an attribute else when exiting this method
+                # Python garbage collector will erase this variable while Cpp will still use it resulting in a SegFault
                 self.diffOutputs = tensor.Tensor(shape, value=0, dim_format="N2D2")
                 self.first_cell.clearInputs() 
                 self.first_cell.addInputBis(n2d2_tensor.N2D2(), self.diffOutputs.N2D2())

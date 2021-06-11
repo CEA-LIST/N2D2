@@ -55,12 +55,28 @@ _cell_frame_parameters = {
 # Cell_frame_parameter contains the parameters from cell_parameter
 _cell_frame_parameters.update(_cell_parameters) 
 
+
+class Datatyped(ABC):
+
+    @abstractmethod
+    def __init__(self, datatype=None):
+        if datatype:
+            self._datatype = datatype
+        else:
+            self._datatype = n2d2.global_variables.default_datatype
+
+
 class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
 
     @abstractmethod
     def __init__(self,  **config_parameters):
         
-
+        # TODO : We may want to check activation parameter type here since every cell_frame can have an activation ?
+        # else we need to add this check on every classes
+        if "activation" in config_parameters:
+            if not isinstance(config_parameters["activation"], n2d2.activation.ActivationFunction):
+                raise n2d2.error_handler.WrongInputType("activation", str(type(config_parameters["activation"])), [str(n2d2.activation.ActivationFunction)])
+        
         if 'name' in config_parameters:
             name = config_parameters.pop('name')
         else:
@@ -74,22 +90,19 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
             self._model = config_parameters.pop('model')
         else:
             self._model = n2d2.global_variables.default_model
-        if 'datatype' in config_parameters:
-            self.datatype = config_parameters.pop('datatype')
-        else:
-            self.datatype = n2d2.global_variables.default_datatype
-        self._connection_parameters = {}
-        if 'mapping' in config_parameters: # TODO : Some cells don't support mapping
-            mapping = config_parameters.pop('mapping')
-            if isinstance(mapping, n2d2.Tensor):
-                if mapping.data_type() != bool:
-                    raise ValueError("Mapping Tensor datatype should be boolean !")
-                self._connection_parameters['mapping'] = mapping.N2D2()
+
+        self._model_key = self._model
+
+        if isinstance(self, Datatyped):
+            if 'datatype' in config_parameters:
+                Datatyped.__init__(self, config_parameters.pop('datatype'))
             else:
-                raise WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor))])
+                Datatyped.__init__(self)
+            self._model_key += '<' + self._datatype + '>'
+        else:
+            if 'datatype' in config_parameters:
+                raise RuntimeError("'datatype' argument received in un-datatyped cell of type " + str(type(self)))
 
-
-        self._model_key = self._model + '<' + self.datatype + '>'
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._deepnet = None
@@ -106,24 +119,6 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
     def _infer_deepnet(self, inputs):
         if isinstance(inputs, n2d2.tensor.Interface) or isinstance(inputs, n2d2.tensor.Tensor):
             deepnet = inputs.get_deepnet()
-        # if isinstance(inputs, n2d2.tensor.Tensor):
-        #     deepnet = inputs.get_deepnet()
-        #     if deepnet is None:
-        #         deepnet = n2d2.deepnet.DeepNet()
-        
-        # elif isinstance(inputs, list):
-        #     if len(inputs) == 0:
-        #         raise RuntimeError("List with 0 elements cannot provide a deepNet")
-        #     else:
-        #         last_deepnet = None
-        #         for ipt in inputs:
-        #             deepnet = self._infer_deepnet(ipt)
-        #             if last_deepnet is not None:
-        #                 if not id(deepnet) == id(last_deepnet):
-        #                     raise RuntimeError("Elements of cells input have different deepnets. "
-        #                                        "Cannot infer implicit deepnet")
-        #             last_deepnet = deepnet
-        #         deepnet = last_deepnet
         else:
             raise TypeError("Object of type " + str(type(inputs)) + " cannot implicitly provide a deepNet to cells.")
         return deepnet
@@ -178,6 +173,7 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
         # TODO :this test doesn't pass for Fc cells if it is not initialized.
         # The get_nb_channels() returns dimX * dimY * dimZ if not initialized and then just dimZ.
         # Maybe we want to do an other test if the cell is not initialized (testing if the weights correspond to the inputs)
+        #print(initialized)
         if have_a_defined_input_size and inputs.dimZ() != self.get_nb_channels() and initialized:
             raise ValueError("NeuralNetworkCell '" + self.get_name() + "' received a tensor with " + str(inputs.dimZ()) +
             " channels, was expecting : " + str(self.get_nb_channels()))
@@ -208,7 +204,7 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
             self._N2D2_object.initializeDataDependent()
 
     """
-    Links N2D2 cells taking into account cells connection parameters
+    Links N2D2 cells 
     """
     def _link_N2D2_input(self, inputs):
         self._N2D2_object.linkInput(inputs.N2D2())
@@ -286,14 +282,15 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
         self._deepnet = self._infer_deepnet(inputs)
 
 
-class Fc(NeuralNetworkCell):
+class Fc(NeuralNetworkCell, Datatyped):
     """
     Fully connected layer.
     """
 
     _cell_constructors = {
-            'Frame<float>': N2D2.FcCell_Frame_float,
-            'Frame_CUDA<float>': N2D2.FcCell_Frame_CUDA_float,
+        'Frame<double>': N2D2.FcCell_Frame_double,
+        'Frame<float>': N2D2.FcCell_Frame_float,
+        'Frame_CUDA<float>': N2D2.FcCell_Frame_CUDA_float,
     }
 
     _parameters = {
@@ -314,7 +311,7 @@ class Fc(NeuralNetworkCell):
     _convention_converter= n2d2.ConventionConverter(_parameters)
 
 
-    def __init__(self, nb_inputs, nb_outputs, from_arguments=True, **config_parameters):
+    def __init__(self, nb_inputs, nb_outputs, nb_input_cells=1, from_arguments=True, **config_parameters):
         """
         :param nb_inputs: Number of inputs of the cells.
         :type nb_inputs: int
@@ -341,13 +338,18 @@ class Fc(NeuralNetworkCell):
         """
 
         if not from_arguments and (nb_inputs is not None or nb_outputs is not None or len(config_parameters) > 0):
-            raise RuntimeError("N2D2_object argument give to cells but 'nb_inputs' or 'nb_outputs' or 'config parameters' not None")
+            raise RuntimeError("from_arguments = True but not None constructor arguments")
         if from_arguments:
-            self._create_from_arguments(nb_inputs, nb_outputs, **config_parameters)
+            self._create_from_arguments(nb_inputs, nb_outputs, nb_input_cells, **config_parameters)
 
 
-    def _create_from_arguments(self, nb_inputs, nb_outputs, **config_parameters):
+    def _create_from_arguments(self, nb_inputs, nb_outputs, nb_input_cells, **config_parameters):
         NeuralNetworkCell.__init__(self, **config_parameters)
+
+        if not isinstance(nb_inputs, int):
+            raise n2d2.error_handler.WrongInputType("nb_inputs", str(type(nb_inputs)), ["int"])
+        if not isinstance(nb_outputs, int):
+            raise n2d2.error_handler.WrongInputType("nb_outputs", str(type(nb_outputs)), ["int"])
 
         self._constructor_arguments.update({
             'nb_inputs': nb_inputs,
@@ -358,23 +360,17 @@ class Fc(NeuralNetworkCell):
                                                                      self.get_name(),
                                                                      self._constructor_arguments['nb_outputs']))
         # Set connection and mapping parameters
-        for key in self._config_parameters:
-            if key is 'inputOffsetX':
-                self._connection_parameters['x0'] = self._config_parameters.pop('inputOffsetX')
-            elif key is 'inputOffsetY':
-                self._connection_parameters['y0'] = self._config_parameters.pop('inputOffsetY')
-            elif key is 'inputWidth':
-                self._connection_parameters['width'] = self._config_parameters.pop('inputWidth')
-            elif key is 'inputHeight':
-                self._connection_parameters['height'] = self._config_parameters.pop('inputHeight')
-            # elif key is 'mapping':
-            #     mapping = self._config_parameters.pop('mapping')
-            #     if isinstance(mapping, n2d2.mapping.Mapping):
-            #         self._connection_parameters['mapping'] = mapping.create_mapping(nb_inputs, nb_outputs).N2D2()
-            #     elif isinstance(mapping, n2d2.Tensor):
-            #         self._connection_parameters['mapping'] = mapping.N2D2()
-            #     else:
-            #         raise WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor)), str(type(n2d2.mapping.Mapping))])
+
+        # TODO: Are these parameters actually used outside of the generator?
+        #for key in self._config_parameters:
+        #    if key is 'inputOffsetX':
+        #        self._connection_parameters['x0'] = self._config_parameters.pop('inputOffsetX')
+        #    elif key is 'inputOffsetY':
+        #        self._connection_parameters['y0'] = self._config_parameters.pop('inputOffsetY')
+        #    elif key is 'inputWidth':
+        #        self._connection_parameters['width'] = self._config_parameters.pop('inputWidth')
+        #    elif key is 'inputHeight':
+        #        self._connection_parameters['height'] = self._config_parameters.pop('inputHeight')
 
         if 'activation' not in self._config_parameters:
             self._config_parameters['activation'] = \
@@ -395,23 +391,38 @@ class Fc(NeuralNetworkCell):
         # Set and initialize here all complex cells members
         for key, value in self._config_parameters.items():
             if key is 'activation':
-                    if value:
+                    if value: # TODO : @Johannes why is there a check here but not on the others 
                         self._N2D2_object.setActivation(value.N2D2())
             elif key is 'weights_solver':
-                self._N2D2_object.setWeightsSolver(value.N2D2())
+                if isinstance(value, n2d2.solver.Solver):
+                    self._N2D2_object.setWeightsSolver(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("weights_solver", str(type(value)), [str(n2d2.solver.Solver)])
             elif key is 'bias_solver':
-                self._N2D2_object.setBiasSolver(value.N2D2())
+                if isinstance(value, n2d2.solver.Solver):
+                    self._N2D2_object.setBiasSolver(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("bias_solver", str(type(value)), [str(n2d2.solver.Solver)])
             elif key is 'weights_filler':
-                self._N2D2_object.setWeightsFiller(value.N2D2())
+                if isinstance(value, n2d2.filler.Filler):
+                    self._N2D2_object.setWeightsFiller(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("weights_filler", str(type(value)), [str(n2d2.filler.Filler)])
             elif key is 'bias_filler':
-                self._N2D2_object.setBiasFiller(value.N2D2())
+                if isinstance(value, n2d2.filler.Filler):
+                    self._N2D2_object.setBiasFiller(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("bias_filler", str(type(value)), [str(n2d2.filler.Filler)])
             elif key is 'quantizer':
-                self._N2D2_object.setQuantizer(value.N2D2())
+                if isinstance(value, n2d2.quantizer.Quantizer):
+                    self._N2D2_object.setQuantizer(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
+                
             else:
                 self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
-        # TODO: Does only work for mapping at the moment. Adapt for other connection parameters
-        self._N2D2_object.initializeParameters(nb_inputs, 1, **self._connection_parameters)
+        self._N2D2_object.initializeParameters(nb_inputs, nb_input_cells)
 
 
     @classmethod
@@ -501,10 +512,10 @@ class Fc(NeuralNetworkCell):
         :rtype: list
         """
         weights = []
-        tensor = N2D2.Tensor_float([])
         for o in range(self.N2D2().getNbOutputs()):
             chan = []
             for c in range(self.N2D2().getNbChannels()):
+                tensor = N2D2.Tensor_float([])
                 self.N2D2().getWeight(o, c, tensor)
                 chan.append(n2d2.Tensor.from_N2D2(tensor))
             weights.append(chan)
@@ -582,7 +593,7 @@ class Fc(NeuralNetworkCell):
 
 
 
-class Conv(NeuralNetworkCell):
+class Conv(NeuralNetworkCell, Datatyped):
     """
     Convolutional layer.
     """
@@ -624,6 +635,7 @@ class Conv(NeuralNetworkCell):
                  nb_inputs,
                  nb_outputs,
                  kernel_dims,
+                 nb_input_cells=1,
                  from_arguments=True,
                  **config_parameters):
         """
@@ -667,14 +679,22 @@ class Conv(NeuralNetworkCell):
         """
 
         if not from_arguments and (nb_inputs is not None or nb_outputs is not None or kernel_dims is not None or len(config_parameters) > 0):
-            raise RuntimeError("N2D2_object argument give to cells but 'nb_inputs' or 'nb_outputs'  or 'kernel_dims' or 'config parameters' not None")
+            raise RuntimeError("from_arguments = True but not None constructor arguments")
         if from_arguments:
-            self._create_from_arguments(nb_inputs, nb_outputs, kernel_dims, **config_parameters)
+            self._create_from_arguments(nb_inputs, nb_outputs, kernel_dims, nb_input_cells, **config_parameters)
 
 
-    def _create_from_arguments(self, nb_inputs, nb_outputs, kernel_dims, **config_parameters):
+    def _create_from_arguments(self, nb_inputs, nb_outputs, kernel_dims, nb_input_cells, **config_parameters):
+        if not isinstance(nb_inputs, int):
+            raise n2d2.error_handler.WrongInputType("nb_inputs", str(type(nb_inputs)), ["int"])
+        if not isinstance(nb_outputs, int):
+            raise n2d2.error_handler.WrongInputType("nb_outputs", str(type(nb_outputs)), ["int"])
+        if not isinstance(kernel_dims, list): # TODO : check the type of the elements ?
+            raise n2d2.error_handler.WrongInputType("kernel_dims", str(type(kernel_dims)), ["list"])
 
         NeuralNetworkCell.__init__(self, **config_parameters)
+
+        
 
         self._constructor_arguments.update({
             'nb_inputs': nb_inputs,
@@ -689,18 +709,6 @@ class Conv(NeuralNetworkCell):
                                                                      self._constructor_arguments['kernel_dims'],
                                                                      self._constructor_arguments['nb_outputs'],
                                                                      **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
-
-
-        # """Set connection and mapping parameters"""
-        # if 'mapping' in self._config_parameters:
-        #     mapping = self._config_parameters.pop('mapping')
-        #     if isinstance(mapping, n2d2.mapping.Mapping):
-        #         self._connection_parameters['mapping'] = mapping.create_mapping(nb_inputs, nb_outputs).N2D2()
-        #     elif isinstance(mapping, n2d2.Tensor):
-        #         self._connection_parameters['mapping'] = mapping.N2D2()
-        #     else:
-        #         raise WrongInputType('mapping', type(mapping), [str(type(n2d2.Tensor)), str(type(n2d2.mapping.Mapping))])
-
 
         # TODO: Add Kernel section of generator
 
@@ -723,22 +731,43 @@ class Conv(NeuralNetworkCell):
         """Set and initialize here all complex cells members"""
         for key, value in self._config_parameters.items():
             if key is 'activation':
-                    if value:
-                        self._N2D2_object.setActivation(value.N2D2())
+                if value: # TODO : @Johannes why is there a check here but not on the others 
+                    self._N2D2_object.setActivation(value.N2D2())
             elif key is 'weights_solver':
-                self._N2D2_object.setWeightsSolver(value.N2D2())
+                if isinstance(value, n2d2.solver.Solver):
+                    self._N2D2_object.setWeightsSolver(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("weights_solver", str(type(value)), [str(n2d2.solver.Solver)])
             elif key is 'bias_solver':
-                self._N2D2_object.setBiasSolver(value.N2D2())
+                if isinstance(value, n2d2.solver.Solver):
+                    self._N2D2_object.setBiasSolver(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("bias_solver", str(type(value)), [str(n2d2.solver.Solver)])
             elif key is 'weights_filler':
-                self._N2D2_object.setWeightsFiller(value.N2D2())
+                if isinstance(value, n2d2.filler.Filler):
+                    self._N2D2_object.setWeightsFiller(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("weights_filler", str(type(value)), [str(n2d2.filler.Filler)])
             elif key is 'bias_filler':
-                self._N2D2_object.setBiasFiller(value.N2D2())
+                if isinstance(value, n2d2.filler.Filler):
+                    self._N2D2_object.setBiasFiller(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("bias_filler", str(type(value)), [str(n2d2.filler.Filler)])
             elif key is 'quantizer':
+                if isinstance(value, n2d2.quantizer.Quantizer):
+                    self._N2D2_object.setQuantizer(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
                 self._N2D2_object.setQuantizer(value.N2D2())
+            elif key is 'mapping':
+                if isinstance(value, n2d2.Tensor):
+                    self._N2D2_object.setMapping(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType('mapping', type(value), [str(type(n2d2.Tensor))])
             else:
                 self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
-        self._N2D2_object.initializeParameters(nb_inputs, 1, **self._connection_parameters)
+        self._N2D2_object.initializeParameters(nb_inputs, nb_input_cells)
 
 
 
@@ -864,10 +893,10 @@ class Conv(NeuralNetworkCell):
         :rtype: list
         """
         weights = []
-        tensor = N2D2.Tensor_float([])
         for o in range(self.N2D2().getNbOutputs()):
             chan = []
             for c in range(self.N2D2().getNbChannels()):
+                tensor = N2D2.Tensor_float([])
                 self.N2D2().getWeight(o, c, tensor)
                 chan.append(n2d2.Tensor.from_N2D2(tensor))
             weights.append(chan)
@@ -916,7 +945,7 @@ class ConvDepthWise(Conv):
                  kernel_dims,
                  **config_parameters):
         if 'mapping' in config_parameters:
-            raise RuntimeError('Pool2d does not support custom mappings')
+            raise RuntimeError('ConvDepthWise does not support custom mappings')
         else:
             config_parameters['mapping'] = n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(
                 nbChannels, nbChannels)
@@ -934,7 +963,7 @@ class ConvPointWise(Conv):
 
 
 
-class Softmax(NeuralNetworkCell):
+class Softmax(NeuralNetworkCell, Datatyped):
     """
     Softmax layer.
     """
@@ -1033,7 +1062,7 @@ class Softmax(NeuralNetworkCell):
 
 
 
-class Pool(NeuralNetworkCell):
+class Pool(NeuralNetworkCell, Datatyped):
     '''
     Pooling layer.
     '''
@@ -1078,13 +1107,14 @@ class Pool(NeuralNetworkCell):
         """
 
         if not from_arguments and (pool_dims is not None or len(config_parameters) > 0):
-            raise RuntimeError(
-                "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'config parameters' not None")
+            raise RuntimeError("from_arguments = True but not None constructor arguments")
         if from_arguments:
             self._create_from_arguments(pool_dims, **config_parameters)
 
 
     def _create_from_arguments(self, pool_dims, **config_parameters):
+        if not isinstance(pool_dims, list): # TODO : check the type of the elements ?
+            raise n2d2.error_handler.WrongInputType("pool_dims", str(type(pool_dims)), ["list"])
         NeuralNetworkCell.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
@@ -1094,17 +1124,14 @@ class Pool(NeuralNetworkCell):
         # Note: Removed Pooling
         self._parse_optional_arguments(['stride_dims', 'padding_dims', 'pooling'])
         if "pooling" in self._optional_constructor_arguments: 
+            pooling = self._optional_constructor_arguments["pooling"]
+            if not isinstance(pooling, str):
+                raise n2d2.error_handler.WrongInputType("pooling", str(type(pooling)), ["str"])
+            if pooling not in N2D2.PoolCell.Pooling.__members__.keys():
+                raise n2d2.error_handler.WrongValue("pooling", pooling,
+                                                    ", ".join(N2D2.PoolCell.Pooling.__members__.keys()))
             self._optional_constructor_arguments['pooling'] = \
                 N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
-
-        # """Set connection and mapping parameters"""
-        # if 'mapping' in self._config_parameters: 
-        #     mapping = self._config_parameters.pop('mapping')
-        #     if isinstance(mapping, n2d2.mapping.Mapping) or isinstance(mapping, n2d2.Tensor):
-        #         self._connection_parameters['mapping'] = mapping
-        #     else:
-        #         raise WrongInputType('mapping', type(mapping), [str(type(n2d2.mapping.Mapping)), str(type(n2d2.Tensor))])
-
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet):
@@ -1167,26 +1194,25 @@ class Pool(NeuralNetworkCell):
             """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
                 if key is 'activation':
-                    if value:
+                    if value: # TODO : @Johannes why is there a check here but not on the others 
                         self._N2D2_object.setActivation(value.N2D2())
+                elif key is 'mapping':
+                    if isinstance(value, n2d2.Tensor):
+                        if value.dimX() != value.dimY():
+                            raise ValueError("Pool Cell supports only unit maps")
+                        self._N2D2_object.setMapping(value.N2D2())
+                    else:
+                        raise n2d2.error_handler.WrongInputType('mapping', type(value), [str(type(n2d2.Tensor))])
                 else:
                     self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
-            if "mapping" in self._connection_parameters:
-                mapping = self._connection_parameters['mapping']
-                if mapping.dimX() != mapping.dimY():
-                    raise ValueError("Pool Cell supports only unit maps")
-                self._N2D2_object.initializeParameters(0, 1, mapping)
-            else:
-                # input(inputs.dims()[2])
-                self._N2D2_object.initializeParameters(0, 1, n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(mapping_row, mapping_row).N2D2())
-                
+
         self._add_to_graph(inputs)
         
         self._N2D2_object.propagate(self._inference)
 
         return self.get_outputs()
 
-class Pool2d(NeuralNetworkCell): # Should inherit Pool ?
+class Pool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
@@ -1209,12 +1235,13 @@ class Pool2d(NeuralNetworkCell): # Should inherit Pool ?
 
 
         if not from_arguments and (pool_dims is not None or len(config_parameters) > 0):
-            raise RuntimeError(
-                "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'config parameters' not None")
+            raise RuntimeError("from_arguments = True but not None constructor arguments")
         if from_arguments:
             self._create_from_arguments(pool_dims, **config_parameters)
 
     def _create_from_arguments(self, pool_dims, **config_parameters):
+        if not isinstance(pool_dims, list): # TODO : check the type of the elements ?
+            raise n2d2.error_handler.WrongInputType("pool_dims", str(type(pool_dims)), ["list"])
         NeuralNetworkCell.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
@@ -1223,11 +1250,19 @@ class Pool2d(NeuralNetworkCell): # Should inherit Pool ?
 
         self._parse_optional_arguments(['stride_dims', 'padding_dims', 'pooling'])
 
-        self._optional_constructor_arguments['pooling'] = \
-            N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
+        if "pooling" in self._optional_constructor_arguments: 
+            pooling = self._optional_constructor_arguments["pooling"]
+            if not isinstance(pooling, str):
+                raise n2d2.error_handler.WrongInputType("pooling", str(type(pooling)), ["str"])
+            if pooling not in N2D2.PoolCell.Pooling.__members__.keys():
+                raise n2d2.error_handler.WrongValue("pooling", pooling,
+                                                    ", ".join(N2D2.PoolCell.Pooling.__members__.keys()))
+            self._optional_constructor_arguments['pooling'] = \
+                N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
 
+        if 'mapping' in self._config_parameters:
+            raise RuntimeError('Pool2d does not support custom mappings')
 
-        
 
     def __call__(self, inputs):
         super().__call__(inputs)
@@ -1252,12 +1287,9 @@ class Pool2d(NeuralNetworkCell): # Should inherit Pool ?
                 else:
                     self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
-            if 'mapping' in self._connection_parameters['mapping']:
-                raise RuntimeError('Pool2d does not support custom mappings')
-            else:
-                self._connection_parameters['mapping'] = n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2()
-
-            self._N2D2_object.initializeParameters(0, 1, **self._connection_parameters)
+            self._N2D2_object.setMapping(
+                n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(inputs.dims()[2],
+                                                                             inputs.dims()[2]).N2D2())
 
         self._add_to_graph(inputs)
 
@@ -1265,7 +1297,8 @@ class Pool2d(NeuralNetworkCell): # Should inherit Pool ?
 
         return self.get_outputs()
 
-class GlobalPool2d(NeuralNetworkCell): # Should inherit Pool ?
+
+class GlobalPool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
@@ -1297,9 +1330,18 @@ class GlobalPool2d(NeuralNetworkCell): # Should inherit Pool ?
 
         self._parse_optional_arguments(['pooling'])
 
-        self._optional_constructor_arguments['pooling'] = \
-            N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
+        if "pooling" in self._optional_constructor_arguments: 
+            pooling = self._optional_constructor_arguments["pooling"]
+            if not isinstance(pooling, str):
+                raise n2d2.error_handler.WrongInputType("pooling", str(type(pooling)), ["str"])
+            if pooling not in self._cell_constructors[self._model_key].Pooling.__members__.keys():
+                raise n2d2.error_handler.WrongValue("pooling", pooling,
+                                                    ", ".join(self._cell_constructors[self._model_key].Pooling.__members__.keys()))
+            self._optional_constructor_arguments['pooling'] = \
+                N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
 
+        if 'mapping' in self._config_parameters:
+            raise RuntimeError('Pool2d does not support custom mappings')
 
 
     #@classmethod
@@ -1330,14 +1372,7 @@ class GlobalPool2d(NeuralNetworkCell): # Should inherit Pool ?
                 else:
                     self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
-
-            if 'mapping' in self._connection_parameters:
-                raise RuntimeError('Pool2d does not support custom mappings')
-            else:
-                self._connection_parameters['mapping'] = n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2()
-
-            self._N2D2_object.initializeParameters(0, 1, **self._connection_parameters)
-
+            self._N2D2_object.setMapping(n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2())
 
         self._add_to_graph(inputs)
 
@@ -1346,7 +1381,7 @@ class GlobalPool2d(NeuralNetworkCell): # Should inherit Pool ?
         return self.get_outputs()
 
 
-class Deconv(NeuralNetworkCell):
+class Deconv(NeuralNetworkCell, Datatyped):
     """
     Deconvolution layer.
     """
@@ -1373,7 +1408,7 @@ class Deconv(NeuralNetworkCell):
         "bias_filler":"BiasFiller",  
         "weights_solver":"WeightsSolver",
         "bias_solver":"BiasSolver",
-        # No quantizer ?
+        # TODO : @Johannes No quantizer ?
     }  
     _parameters.update(_cell_frame_parameters)
 
@@ -1383,6 +1418,7 @@ class Deconv(NeuralNetworkCell):
                  nb_inputs,
                  nb_outputs,
                  kernel_dims,
+                 nb_input_cells=1,
                  from_arguments=True,
                  **config_parameters):
         """
@@ -1423,13 +1459,19 @@ class Deconv(NeuralNetworkCell):
         """
 
         if not from_arguments and (nb_inputs is not None or nb_outputs is not None or kernel_dims is not None or len(config_parameters) > 0):
-            raise RuntimeError("N2D2_object argument give to cells but 'nb_inputs' or 'nb_outputs'  or 'kernel_dims' or 'config parameters' not None")
+            raise RuntimeError("from_arguments = True but not None constructor arguments")
         if from_arguments:
-            self._create_from_arguments(nb_inputs, nb_outputs, kernel_dims, **config_parameters)
+            self._create_from_arguments(nb_inputs, nb_outputs, kernel_dims, nb_input_cells, **config_parameters)
 
         
 
-    def _create_from_arguments(self, nb_inputs, nb_outputs, kernel_dims, **config_parameters):
+    def _create_from_arguments(self, nb_inputs, nb_outputs, kernel_dims, nb_input_cells, **config_parameters):
+        if not isinstance(nb_inputs, int):
+            raise n2d2.error_handler.WrongInputType("nb_inputs", str(type(nb_inputs)), ["int"])
+        if not isinstance(nb_outputs, int):
+            raise n2d2.error_handler.WrongInputType("nb_outputs", str(type(nb_outputs)), ["int"])
+        if not isinstance(kernel_dims, list): # TODO : check the type of the elements ?
+            raise n2d2.error_handler.WrongInputType("kernel_dims", str(type(kernel_dims)), ["list"])
 
         NeuralNetworkCell.__init__(self, **config_parameters)
 
@@ -1447,16 +1489,6 @@ class Deconv(NeuralNetworkCell):
                                                                      self._constructor_arguments['nb_outputs'],
                                                                      **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
 
-        # """Set connection and mapping parameters"""
-        # if 'mapping' in self._config_parameters:
-        #     mapping = self._config_parameters.pop('mapping')
-        #     if isinstance(mapping, n2d2.mapping.Mapping):
-        #         self._connection_parameters['mapping'] = mapping.create_mapping(nb_inputs, nb_outputs).N2D2()
-        #     elif isinstance(mapping, n2d2.Tensor):
-        #         self._connection_parameters['mapping'] = mapping.N2D2()
-        #     else:
-        #         raise WrongInputType('mapping', type(mapping),
-        #                              [str(type(n2d2.Tensor)), str(type(n2d2.mapping.Mapping))])
 
         # TODO: Add Kernel section of generator
 
@@ -1479,21 +1511,44 @@ class Deconv(NeuralNetworkCell):
         """Set and initialize here all complex cells members"""
         for key, value in self._config_parameters.items():
             if key is 'activation':
-                    if value:
+                if value: # TODO : @Johannes why is there a check here but not on the others 
                         self._N2D2_object.setActivation(value.N2D2())
             elif key is 'weights_solver':
-                self._N2D2_object.setWeightsSolver(value.N2D2())
+                if isinstance(value, n2d2.solver.Solver):
+                    self._N2D2_object.setWeightsSolver(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("weights_solver", str(type(value)), [str(n2d2.solver.Solver)])
             elif key is 'bias_solver':
-                self._N2D2_object.setBiasSolver(value.N2D2())
+                if isinstance(value, n2d2.solver.Solver):
+                    self._N2D2_object.setBiasSolver(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("bias_solver", str(type(value)), [str(n2d2.solver.Solver)])
             elif key is 'weights_filler':
-                self._N2D2_object.setWeightsFiller(value.N2D2())
+                if isinstance(value, n2d2.filler.Filler):
+                    self._N2D2_object.setWeightsFiller(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("weights_filler", str(type(value)), [str(n2d2.filler.Filler)])
             elif key is 'bias_filler':
-                self._N2D2_object.setBiasFiller(value.N2D2())
+                if isinstance(value, n2d2.filler.Filler):
+                    self._N2D2_object.setBiasFiller(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("bias_filler", str(type(value)), [str(n2d2.filler.Filler)])
+            elif key is 'quantizer':
+                if isinstance(value, n2d2.quantizer.Quantizer):
+                    self._N2D2_object.setQuantizer(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
+            elif key is 'mapping':
+                if isinstance(value, n2d2.Tensor):
+                    if not (value.data_type() == "bool" or value.data_type() == "b"):
+                        raise ValueError("Mapping Tensor datatype should be boolean !")
+                    self._N2D2_object.setMapping(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType('mapping', type(value), [str(type(n2d2.Tensor))])
             else:
                 self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
-        # TODO: Does only work for mapping at the moment. Adapt for other connection parameters
-        self._N2D2_object.initializeParameters(nb_inputs, 1, **self._connection_parameters)
+        self._N2D2_object.initializeParameters(nb_inputs, nb_input_cells)
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
@@ -1602,10 +1657,10 @@ class Deconv(NeuralNetworkCell):
         :rtype: list
         """
         weights = []
-        tensor = N2D2.Tensor_float([])
         for o in range(self.N2D2().getNbOutputs()):
             chan = []
             for c in range(self.N2D2().getNbChannels()):
+                tensor = N2D2.Tensor_float([])
                 self.N2D2().getWeight(o, c, tensor)
                 chan.append(n2d2.Tensor.from_N2D2(tensor))
             weights.append(chan)
@@ -1645,7 +1700,7 @@ class Deconv(NeuralNetworkCell):
             biases.append(n2d2.Tensor.from_N2D2(tensor))
         return biases
 
-class ElemWise(NeuralNetworkCell): 
+class ElemWise(NeuralNetworkCell):
     """
     Element-wise operation layer.
     """
@@ -1654,15 +1709,16 @@ class ElemWise(NeuralNetworkCell):
         'Frame': N2D2.ElemWiseCell_Frame,
         'Frame_CUDA': N2D2.ElemWiseCell_Frame_CUDA,
     }
+    # TODO: Incoherence coeff_mode/mode
     _parameters = {
-        "operation":"operation",
-        "mode":"mode",
+        "operation": "operation",
+        "coeff_mode": "mode",
         "weights": "weights",
         "shifts": "shifts"
     }  
     _parameters.update(_cell_frame_parameters)
 
-    _convention_converter= n2d2.ConventionConverter(_parameters)
+    _convention_converter = n2d2.ConventionConverter(_parameters)
 
     def __init__(self, from_arguments=True, **config_parameters):
         """
@@ -1670,18 +1726,17 @@ class ElemWise(NeuralNetworkCell):
         :type  from_arguments: bool, optional
         :param operation: Type of operation (``Sum``, ``AbsSum``, ``EuclideanSum``, ``Prod``, or ``Max``), default="Sum"
         :type operation: str, optional
-        :param coeff_mode: (``PerLayer``, ``PerInput``, ``PerChannel``), default="PerLayer"
-        :type coeff_mode: str, optional
-        :param weights: Weights for the ``Sum``, ``AbsSum``, and ``EuclideanSum`` operation, in the same order as the inputs, default=1.0
-        :type weights: float, optional
-        :param shifts: Shifts for the ``Sum`` and ``EuclideanSum`` operation, in the same order as the inputs, default=0.0
-        :type shifts: float, optional
+        :param mode: (``PerLayer``, ``PerInput``, ``PerChannel``), default="PerLayer"
+        :type mode: str, optional
+        :param weights: Weights for the ``Sum``, ``AbsSum``, and ``EuclideanSum`` operation, in the same order as the inputs, default=[1.0]
+        :type weights: list, optional
+        :param shifts: Shifts for the ``Sum`` and ``EuclideanSum`` operation, in the same order as the inputs, default=[0.0]
+        :type shifts: list, optional
         :param activation: Activation function, default= :py:class:`n2d2.activation.Linear`
         :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
         """
         if not from_arguments and (len(config_parameters) > 0):
-            raise RuntimeError(
-                "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'config parameters' not None")
+            raise RuntimeError("from_arguments = True but not None constructor arguments")
         if from_arguments:
             self._create_from_arguments(**config_parameters)
         
@@ -1690,12 +1745,32 @@ class ElemWise(NeuralNetworkCell):
     def _create_from_arguments(self, **config_parameters):
         NeuralNetworkCell.__init__(self, **config_parameters)
 
-        self._parse_optional_arguments(['operation', 'mode', 'weights', 'shifts'])
-
-        self._optional_constructor_arguments['operation'] = \
-            N2D2.ElemWiseCell.Operation.__members__[self._optional_constructor_arguments['operation']]
-        self._optional_constructor_arguments['mode'] = \
-            N2D2.ElemWiseCell.CoeffMode.__members__[self._optional_constructor_arguments['mode']]
+        self._parse_optional_arguments(['operation', 'coeff_mode', 'weights', 'shifts'])
+        
+        if "operation" in self._optional_constructor_arguments:
+            operation = self._optional_constructor_arguments["operation"]
+            if not isinstance(operation, str):
+                raise n2d2.error_handler.WrongInputType("operation", str(type(operation)), ["str"])
+            if operation not in N2D2.ElemWiseCell.Operation.__members__.keys():
+                raise n2d2.error_handler.WrongValue("operation", operation,
+                                                    ", ".join(N2D2.ElemWiseCell.Operation.__members__.keys()))
+            self._optional_constructor_arguments['operation'] = \
+                N2D2.ElemWiseCell.Operation.__members__[self._optional_constructor_arguments['operation']]
+        if "coeff_mode" in self._optional_constructor_arguments:
+            mode = self._optional_constructor_arguments["coeff_mode"]
+            if not isinstance(mode, str):
+                raise n2d2.error_handler.WrongInputType("coeff_mode", str(type(coeff_mode)), ["str"])
+            if mode not in N2D2.ElemWiseCell.CoeffMode.__members__.keys():
+                raise n2d2.error_handler.WrongValue("operation", operation,
+                                                    ", ".join(N2D2.ElemWiseCell.CoeffMode.__members__.keys()))
+            self._optional_constructor_arguments['coeff_mode'] = \
+                N2D2.ElemWiseCell.CoeffMode.__members__[self._optional_constructor_arguments['coeff_mode']]
+        if "weights" in self._optional_constructor_arguments:
+            if not isinstance(self._optional_constructor_arguments["weights"], list):
+                raise n2d2.error_handler.WrongInputType("weights", str(type(self._optional_constructor_arguments["weights"])), ["float"])
+        if "shifts" in self._optional_constructor_arguments:
+            if not isinstance(self._optional_constructor_arguments["shifts"], list):
+                raise n2d2.error_handler.WrongInputType("shifts", str(type(self._optional_constructor_arguments["shifts"])), ["float"])
 
 
 
@@ -1711,6 +1786,7 @@ class ElemWise(NeuralNetworkCell):
         n2d2_cell._set_N2D2_object(N2D2_object)
 
         n2d2_cell._optional_constructor_arguments['operation'] = n2d2_cell._N2D2_object.getOperation()
+        n2d2_cell._optional_constructor_arguments['coeff_mode'] = n2d2_cell._N2D2_object.getCoeffMode()
         n2d2_cell._optional_constructor_arguments['weights'] = n2d2_cell._N2D2_object.getWeights()
         n2d2_cell._optional_constructor_arguments['shifts'] = n2d2_cell._N2D2_object.getShifts()
 
@@ -1750,7 +1826,7 @@ class ElemWise(NeuralNetworkCell):
                 raise n2d2.wrong_input_type("inputs", inputs, [str(type(list)), str(type(n2d2.Tensor))])
 
 
-            self._set_N2D2_object(self._cell_constructors[self._model](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
                                                                      self.get_name(),
                                                                      mapping_row,
                                                                      **self.n2d2_function_argument_parser(
@@ -1775,7 +1851,7 @@ class ElemWise(NeuralNetworkCell):
         return self.get_outputs()
 
 
-class Dropout(NeuralNetworkCell):
+class Dropout(NeuralNetworkCell, Datatyped):
     """
     Dropout layer :cite:`Srivastava2014`.
     """
@@ -1806,15 +1882,17 @@ class Dropout(NeuralNetworkCell):
         """
 
         if not from_arguments and  len(config_parameters) > 0:
-            raise RuntimeError(
-                "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'config parameters' not None")
+            raise RuntimeError("from_arguments = True but not None constructor arguments")
         if from_arguments:
             self._create_from_arguments(**config_parameters)
 
     def _create_from_arguments(self,  **config_parameters):
         NeuralNetworkCell.__init__(self, **config_parameters)
-        # No optionnal args
+
         self._parse_optional_arguments([])
+        if "dropout" in config_parameters:
+            if not isinstance(config_parameters["dropout"], float):
+                raise n2d2.error_handler.WrongInputType("dropout", str(type(config_parameters["dropout"])), ["float"])
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
@@ -1895,20 +1973,35 @@ class Padding(NeuralNetworkCell):
                  right_pad,
                  from_arguments=True,
                  **config_parameters):
-
+        """
+        :param top_pad: Size of the top padding (positive or negative)
+        :type top_pad: int
+        :param bot_pad: Size of the bottom padding (positive or negative)
+        :type bot_pad: int
+        :param left_pad: Size of the left padding (positive or negative)
+        :type left_pad: int
+        :param right_pad: Size of the right padding (positive or negative)
+        :type right_pad: int
+        """
         if not from_arguments and (top_pad is not None
                                     or bot_pad is not None
                                     or left_pad is not None
                                     or right_pad is not None
                                     or len(config_parameters) > 0):
-            raise RuntimeError(
-                "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'config parameters' not None")
+            raise RuntimeError("from_arguments = True but not None constructor arguments")
         if from_arguments:
             self._create_from_arguments(top_pad, bot_pad, left_pad, right_pad, **config_parameters)
         
 
     def _create_from_arguments(self, top_pad, bot_pad, left_pad, right_pad, **config_parameters):
-
+        if not isinstance(top_pad, int):
+            raise n2d2.error_handler.WrongInputType("top_pad", str(type(top_pad)), ["int"])
+        if not isinstance(bot_pad, int):
+            raise n2d2.error_handler.WrongInputType("bot_pad", str(type(bot_pad)), ["int"])
+        if not isinstance(left_pad, int):
+            raise n2d2.error_handler.WrongInputType("left_pad", str(type(left_pad)), ["int"])
+        if not isinstance(right_pad, int):
+            raise n2d2.error_handler.WrongInputType("right_pad", str(type(right_pad)), ["int"])
         NeuralNetworkCell.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
@@ -1955,7 +2048,7 @@ class Padding(NeuralNetworkCell):
         if self._N2D2_object is None:
             nb_outputs = inputs.dims()[2]
 
-            self._set_N2D2_object(self._cell_constructors[self._model](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
                                                                      self.get_name(),
                                                                      nb_outputs,
                                                                      self._constructor_arguments['top_pad'],
@@ -1983,7 +2076,7 @@ class Padding(NeuralNetworkCell):
         return self.get_outputs()
 
 
-class BatchNorm2d(NeuralNetworkCell):
+class BatchNorm2d(NeuralNetworkCell, Datatyped):
 
     _cell_constructors = {
         'Frame<float>': N2D2.BatchNormCell_Frame_float,
@@ -1992,28 +2085,32 @@ class BatchNorm2d(NeuralNetworkCell):
 
     _parameters = {
         "nb_inputs": "NbInputs",
-        "scale_solver":"ScaleSolver",
-        "bias_solver":"BiasSolver",
-        "moving_average_momentum":"MovingAverageMomentum",
-        "epsilon":"Epsilon",
+        "scale_solver": "ScaleSolver",
+        "bias_solver": "BiasSolver",
+        "moving_average_momentum": "MovingAverageMomentum",
+        "epsilon": "Epsilon",
+        "backpropagate": "BackPropagate"
     }
     _parameters.update(_cell_frame_parameters)
 
     _convention_converter= n2d2.ConventionConverter(_parameters)
 
-    def __init__(self, nb_inputs, from_arguments=True, **config_parameters):
+    def __init__(self, nb_inputs, nb_input_cells=1, from_arguments=True, **config_parameters):
+        # TODO : Update doc string
+
         """
         :param moving_average_momentum: Moving average rate: used for the moving average of batch-wise means and standard deviations during training.The closer to 1.0, the more it will depend on the last batch
         :type moving_average_momentum: float, optional
         """
         if not from_arguments and len(config_parameters) > 0:
-            raise RuntimeError(
-                "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'config parameters' not None")
+            raise RuntimeError("from_arguments = True but not None constructor arguments")
         if from_arguments:
-            self._create_from_arguments(nb_inputs, **config_parameters)
-        
+            self._create_from_arguments(nb_inputs, nb_input_cells, **config_parameters)
 
-    def _create_from_arguments(self, nb_inputs, **config_parameters):
+    def _create_from_arguments(self, nb_inputs, nb_input_cells, **config_parameters):
+        if not isinstance(nb_inputs, int):
+            raise n2d2.error_handler.WrongInputType("nb_inputs", str(type(nb_inputs)), ["int"])
+
         NeuralNetworkCell.__init__(self, **config_parameters)
         # No optional parameter
         self._parse_optional_arguments([])
@@ -2038,13 +2135,18 @@ class BatchNorm2d(NeuralNetworkCell):
                     if value:
                         self._N2D2_object.setActivation(value.N2D2())
             elif key is 'scale_solver':
+                if not isinstance(value, n2d2.solver.Solver):
+                    raise n2d2.error_handler.WrongInputType("scale_solver", str(type(value)), [str(n2d2.solver.Solver)])
                 self._N2D2_object.setScaleSolver(value.N2D2())
             elif key is 'bias_solver':
+                if not isinstance(value, n2d2.solver.Solver):
+                    raise n2d2.error_handler.WrongInputType("bias_solver", str(type(value)), [str(n2d2.solver.Solver)])
                 self._N2D2_object.setBiasSolver(value.N2D2())
             else:
                 self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
-        self._N2D2_object.initializeParameters(nb_inputs, 1)
+        self._N2D2_object.initializeParameters(nb_inputs, nb_input_cells)
+
 
 
     @classmethod
@@ -2097,7 +2199,7 @@ class BatchNorm2d(NeuralNetworkCell):
 
 
 
-class Activation(NeuralNetworkCell):
+class Activation(NeuralNetworkCell, Datatyped):
 
     _cell_constructors = {
         'Frame<float>': N2D2.ActivationCell_Frame_float,
@@ -2112,9 +2214,7 @@ class Activation(NeuralNetworkCell):
     def __init__(self, from_arguments=True, **config_parameters):
 
         if not from_arguments and len(config_parameters) > 0:
-            raise RuntimeError(
-                "N2D2_object argument give to cells but 'config parameters' not None")
-
+            raise RuntimeError("from_arguments = True but not None constructor arguments")
         if from_arguments:
             self._create_from_arguments(**config_parameters)
         
@@ -2179,7 +2279,7 @@ class Activation(NeuralNetworkCell):
 
 
 
-class Reshape(NeuralNetworkCell):
+class Reshape(NeuralNetworkCell, Datatyped):
 
     _cell_constructors = {
         'Frame<float>': N2D2.ReshapeCell_Frame_float,
@@ -2192,15 +2292,20 @@ class Reshape(NeuralNetworkCell):
 
     _convention_converter= n2d2.ConventionConverter(_parameters)
     def __init__(self, dims, from_arguments=True, **config_parameters):
+        """
+        :param dims: dims of the new shape of the layer
+        :type dims: list
+        """
 
         if not from_arguments and (dims is not None or len(config_parameters) > 0):
-            raise RuntimeError(
-                "N2D2_object argument give to cells but 'inputs' or 'nb_outputs' or 'dims' or 'config parameters' not None")
+            raise RuntimeError("from_arguments = True but not None constructor arguments")
         if from_arguments:
             self._create_from_arguments(dims, **config_parameters)
         
 
     def _create_from_arguments(self, dims, **config_parameters):
+        if not isinstance(dims, list): # TODO : check the type of the elements ?
+            raise n2d2.error_handler.WrongInputType("dims", str(type(dims)), ["list"])
         NeuralNetworkCell.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
@@ -2250,6 +2355,196 @@ class Reshape(NeuralNetworkCell):
                                                                          self._constructor_arguments['dims'],
                                                                          **self.n2d2_function_argument_parser(
                                                                              self._optional_constructor_arguments)))
+
+            if 'activation' not in self._config_parameters:
+                self._config_parameters['activation'] = \
+                    n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
+
+            """Set and initialize here all complex cells members"""
+            for key, value in self._config_parameters.items():
+                if key is 'activation':
+                    if value:
+                        self._N2D2_object.setActivation(value.N2D2())
+                else:
+                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+
+        self._add_to_graph(inputs)
+
+        self._N2D2_object.propagate(self._inference)
+
+        return self.get_outputs()
+
+
+class Resize(NeuralNetworkCell):
+    _cell_constructors = {
+        'Frame': N2D2.ResizeCell_Frame,
+        'Frame_CUDA': N2D2.ResizeCell_Frame_CUDA,
+    }
+    _parameters = {
+        "align_corners": "AlignCorners",
+    }
+    _parameters.update(_cell_frame_parameters)
+
+    _convention_converter = n2d2.ConventionConverter(_parameters)
+
+    def __init__(self, outputs_width, outputs_height, resize_mode, from_arguments=True, **config_parameters):
+        """
+        :param dims: dims of the new shape of the layer
+        :type dims: list
+        """
+
+        if not from_arguments and (outputs_width is not None or outputs_height is not None or
+                                resize_mode is not None or len(config_parameters) > 0):
+            raise RuntimeError("from_arguments = True but not None constructor arguments")
+        if from_arguments:
+            self._create_from_arguments(outputs_width, outputs_height, resize_mode, **config_parameters)
+
+    def _create_from_arguments(self, outputs_width, outputs_height, resize_mode, **config_parameters):
+        if not isinstance(outputs_width, int):
+            raise n2d2.error_handler.WrongInputType("outputs_width", type(outputs_width), ["int"])
+        if not isinstance(outputs_height, int):
+            raise n2d2.error_handler.WrongInputType("outputs_height", type(outputs_height), ["int"])
+
+        NeuralNetworkCell.__init__(self, **config_parameters)
+
+        self._constructor_arguments.update({
+            'outputs_width': outputs_width,
+            'outputs_height': outputs_height,
+            'resize_mode': N2D2.ResizeCell.ResizeMode.__members__[resize_mode],
+        })
+
+        # No optional parameter
+        self._parse_optional_arguments([])
+
+    @classmethod
+    def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
+
+        n2d2_cell = cls(None, None, None, from_arguments=False)
+
+        NeuralNetworkCell.__init__(n2d2_cell,
+                                   name=N2D2_object.getName(),
+                                   **cls.load_N2D2_parameters(N2D2_object))
+
+        n2d2_cell._set_N2D2_object(N2D2_object)
+
+        n2d2_cell._constructor_arguments['outputs_width'] = n2d2_cell._N2D2_object.getResizeOutputWidth()
+        n2d2_cell._constructor_arguments['outputs_height'] = n2d2_cell._N2D2_object.getResizeOutputHeight()
+        n2d2_cell._constructor_arguments['resize_mode'] = n2d2_cell._N2D2_object.getMode()
+
+        if n2d2_deepnet is not None:
+            n2d2_cell._deepnet = n2d2_deepnet
+            n2d2_cell._sync_inputs_and_parents()
+        else:
+            n2d2_cell._deepnet = None
+            n2d2_cell._N2D2_object.clearInputs()
+
+        return n2d2_cell
+
+    def __call__(self, inputs):
+        super().__call__(inputs)
+
+        if self._N2D2_object is None:
+            nb_outputs = inputs.dims()[2]
+
+            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+                                                                           self.get_name(),
+                                                                           self._constructor_arguments['outputs_width'],
+                                                                           self._constructor_arguments['outputs_height'],
+                                                                           nb_outputs,
+                                                                           self._constructor_arguments['resize_mode'],
+                                                                           **self.n2d2_function_argument_parser(
+                                                                               self._optional_constructor_arguments)))
+
+            if 'activation' not in self._config_parameters:
+                self._config_parameters['activation'] = \
+                    n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
+
+            """Set and initialize here all complex cells members"""
+            for key, value in self._config_parameters.items():
+                if key is 'activation':
+                    if value:
+                        self._N2D2_object.setActivation(value.N2D2())
+                else:
+                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+
+        self._add_to_graph(inputs)
+
+        self._N2D2_object.propagate(self._inference)
+
+        return self.get_outputs()
+
+
+
+
+
+class Transpose(NeuralNetworkCell):
+    _cell_constructors = {
+        'Frame<float>': N2D2.TransposeCell_Frame_float,
+        'Frame_CUDA<float>': N2D2.TransposeCell_Frame_CUDA_float,
+    }
+    _parameters = {}
+    _parameters.update(_cell_frame_parameters)
+
+    _convention_converter = n2d2.ConventionConverter(_parameters)
+
+    def __init__(self, perm, from_arguments=True, **config_parameters):
+        """
+        :param dims: dims of the new shape of the layer
+        :type dims: list
+        """
+
+        if not from_arguments and (perm is not None or len(config_parameters) > 0):
+            raise RuntimeError("from_arguments = True but not None constructor arguments")
+        if from_arguments:
+            self._create_from_arguments(perm, **config_parameters)
+
+    def _create_from_arguments(self, perm, **config_parameters):
+        if not isinstance(perm, list):
+            raise n2d2.error_handler.WrongInputType("outputs_width", type(perm), ["list"])
+
+        NeuralNetworkCell.__init__(self, **config_parameters)
+
+        self._constructor_arguments.update({
+            'perm': perm,
+        })
+
+        # No optional parameter
+        self._parse_optional_arguments([])
+
+    @classmethod
+    def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
+
+        n2d2_cell = cls(None, from_arguments=False)
+
+        NeuralNetworkCell.__init__(n2d2_cell,
+                                   name=N2D2_object.getName(),
+                                   **cls.load_N2D2_parameters(N2D2_object))
+
+        n2d2_cell._set_N2D2_object(N2D2_object)
+
+        n2d2_cell._constructor_arguments['perm'] = n2d2_cell._N2D2_object.getPermutation()
+
+        if n2d2_deepnet is not None:
+            n2d2_cell._deepnet = n2d2_deepnet
+            n2d2_cell._sync_inputs_and_parents()
+        else:
+            n2d2_cell._deepnet = None
+            n2d2_cell._N2D2_object.clearInputs()
+
+        return n2d2_cell
+
+    def __call__(self, inputs):
+        super().__call__(inputs)
+
+        if self._N2D2_object is None:
+            nb_outputs = inputs.dims()[2]
+
+            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+                                                                           self.get_name(),
+                                                                           nb_outputs,
+                                                                           self._constructor_arguments['perm'],
+                                                                           **self.n2d2_function_argument_parser(
+                                                                               self._optional_constructor_arguments)))
 
             if 'activation' not in self._config_parameters:
                 self._config_parameters['activation'] = \

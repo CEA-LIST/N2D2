@@ -36,14 +36,27 @@ way in N2D2
 """
 Example for custom transformation
 """
-"""
-class CustomRescaleTransform():
-    def __init__(self, factor):
-        self.factor = factor
-        
-    def __call__(self, x):
-        return self.factor*x
-"""
+# class Test(N2D2.CustomTransformation):
+#     """
+#     Override this class to create your own Transformation.
+#     You need to override the following method : 
+#         - apply_unsigned_char(self, Tensor<unsigned char>& frame, Tensor<int>& /*labels*/, std::vector<std::shared_ptr<ROI> >& /*labelsROI*/, int /*id*/ = -1)
+#         - apply_int(self, Tensor<int>& frame, Tensor<int>& /*labels*/, std::vector<std::shared_ptr<ROI> >& /*labelsROI*/, int /*id*/ = -1)
+#         - etc ..
+#     """
+#     def __init__(self):
+#         print("init TEST")
+#         N2D2.CustomTransformation.__init__(self)
+#         print("DONE")
+
+#     def apply_unsigned_char(self, frame, labels, labelsROI, id):
+#          print("using python function !")
+
+# class CustomTransformation(Transformation):
+#     def __init__(self, **config_parameters):
+#         Transformation.__init__(self, **config_parameters)
+#         self._N2D2_object = Test()
+
 """
 Example for a Python wrapper around the binding
 """
@@ -55,6 +68,15 @@ class PadCropTransformation():
     def __call__(self, x):
         return self.trans.apply(x)
 """
+
+# TODO : Change binding to expose apply method 
+# class CustomTransformation(Transformation):
+#     def __init__(self, custom_transformation):
+#         super().__init__()
+#         self._transformation = custom_transformation
+
+# https://pybind11.readthedocs.io/en/stable/reference.html#c.PYBIND11_OVERRIDE
+# https://pybind11.readthedocs.io/en/stable/advanced/classes.html#overriding-virtuals
 
 class Transformation(N2D2_Interface, ABC):
 
@@ -105,7 +127,7 @@ class Composite(Transformation):
 
     def get_transformations(self):
         """
-        Retrun the list of transformations applied by the composite trnasformation
+        Return the list of transformations applied by the composite transformation
         """
         return self._transformations
 
@@ -517,7 +539,7 @@ class ChannelExtraction(Transformation):
         
         if channel not in N2D2.ChannelExtractionTransformation.Channel.__members__.keys():
             raise n2d2.error_handler.WrongValue("channel", channel,
-                                                " ".join(N2D2.ChannelExtractionTransformation.Channel.__members__.keys()))
+                                                ", ".join(N2D2.ChannelExtractionTransformation.Channel.__members__.keys()))
 
         self._constructor_arguments.update({
             'channel': N2D2.ChannelExtractionTransformation.Channel.__members__[channel],
@@ -529,8 +551,3 @@ class ChannelExtraction(Transformation):
                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
 
-# TODO : Change binding to expose apply method 
-# class CustomTransformation(Transformation):
-#     def __init__(self, custom_transformation):
-#         super().__init__()
-#         self._transformation = custom_transformation

@@ -581,13 +581,16 @@ the API cudnnGetConvolutionForwardMaxCount().
 
 
 template <class T>
-void N2D2::ConvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
+void N2D2::ConvCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
 {
-    // NOTE: this is addition to initialize()
-    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
-    if (mapping.empty()) {
-        mMapping.append(Tensor<bool>({getNbOutputs(), inputDimZ}, true));
+    // BEGIN: addition to initialize()
+    if (mMapping.empty()) {
+        mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
     }
+    // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
+    // However, this requires a reinitialization of the input dims which is unsafe
+    setInputsDims({nbInputChannels});
+    // END: addition to initialize
 
     if (!mNoBias) {
         if (mBias->empty()) {
@@ -625,12 +628,12 @@ void N2D2::ConvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, 
        
 
         if (k < mNbGroups.size()) {
-            nbChannels += inputDimZ;
+            nbChannels += nbInputChannels;
             continue;  // already initialized, skip!
         }
 
         mNbGroups.push_back(getNbGroups(mMapping.rows(nbChannels,
-                                                   inputDimZ)));
+                                                   nbInputChannels)));
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
 
@@ -642,10 +645,10 @@ void N2D2::ConvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, 
 
 #if CUDNN_VERSION >= 7000
         if (mNbGroups[k] > 1)
-            kernelDims.push_back(inputDimZ / mNbGroups[k]);
+            kernelDims.push_back(nbInputChannels / mNbGroups[k]);
         else
 #endif
-            kernelDims.push_back(inputDimZ);
+            kernelDims.push_back(nbInputChannels);
 
         kernelDims.push_back(getNbOutputs());
 
@@ -680,7 +683,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, 
                 // Set the non-connected kernels coefficients to 0
                 for (unsigned int output = 0; output < getNbOutputs(); ++output)
                 {
-                    for (unsigned int channel = 0; channel < inputDimZ;
+                    for (unsigned int channel = 0; channel < nbInputChannels;
                          ++channel) {
                         if (!isConnection(nbChannels + channel, output)) {
                             mSharedSynapses.back()[output][channel]
@@ -714,7 +717,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, 
                                                       &cudaKernelDims[0]));
 #endif
     
-        nbChannels += inputDimZ;
+        nbChannels += nbInputChannels;
 
     }
 

@@ -87,7 +87,7 @@ def set_weights(sequence):
         
 
 def test_output(ini_path, model, tensor_size):
-    inputs   = n2d2.Tensor(tensor_size, value=1.0, cuda=True) 
+    inputs = n2d2.Tensor(tensor_size, value=1.0, cuda=True)
     net = IniReader(ini_path)
     net.set_weights()
     ini_output = net.forward(inputs)

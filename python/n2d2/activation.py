@@ -103,7 +103,10 @@ class Linear(ActivationFunction):
             self._set_N2D2_object(self._linear_activation_generators[self._model_key]())
             for key, value in self._config_parameters.items():
                 if key is 'quantizer':
-                    self._N2D2_object.setQuantizer(value.N2D2())
+                    if isinstance(value, n2d2.quantizer.Quantizer):
+                        self._N2D2_object.setQuantizer(value.N2D2())
+                    else:
+                        raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
                 else:
                     self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
@@ -139,7 +142,10 @@ class Rectifier(ActivationFunction):
             self._set_N2D2_object(self._rectifier_activation_generators[self._model_key]())
             for key, value in self._config_parameters.items():
                 if key is 'quantizer':
-                    self._N2D2_object.setQuantizer(value.N2D2())
+                    if isinstance(value, n2d2.quantizer.Quantizer):
+                        self._N2D2_object.setQuantizer(value.N2D2())
+                    else:
+                        raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
                 else:
                     self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 
@@ -173,8 +179,12 @@ class Tanh(ActivationFunction):
             # No optional constructor arguments
             self._set_N2D2_object(self._tanh_activation_generators[self._model_key]())
             for key, value in self._config_parameters.items():
+                
                 if key is 'quantizer':
-                    self._N2D2_object.setQuantizer(value.N2D2())
+                    if isinstance(value, n2d2.quantizer.Quantizer):
+                        self._N2D2_object.setQuantizer(value.N2D2())
+                    else:
+                        raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
                 else:
                     self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 

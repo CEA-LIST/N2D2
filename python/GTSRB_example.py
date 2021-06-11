@@ -30,7 +30,7 @@ from n2d2.filler import He, Xavier
 from n2d2.solver import SGD
 from n2d2 import ConfigSection
 
-nb_epoch = 10
+nb_epoch = 1
 batch_size = 24
 n2d2.global_variables.default_model = "Frame_CUDA"
 n2d2.global_variables.set_cuda_device(0)
@@ -60,7 +60,7 @@ conv_config = ConfigSection(activation=Rectifier(),
                             weights_solver=SGD(**solver_config), 
                             no_bias=True)
 
-conv2_mapping=n2d2.Tensor([32, 48], datatype=bool)
+conv2_mapping=n2d2.Tensor([32, 48], datatype="bool")
 conv2_mapping.set_values([
 [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
 [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],

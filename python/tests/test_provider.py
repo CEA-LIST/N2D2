@@ -33,15 +33,7 @@ class test_provider(unittest.TestCase):
         
     def tearDown(self):
         pass
-
-    def test_get_batch_size(self):
-        self.assertEqual(self.batch_size, self.provider.get_batch_size())
-
-    def test_set_partition(self):
-        with self.assertRaises(ValueError):
-            self.provider.set_partition('Wrong string !')
-  
-
+    
     def test_read_random_batch(self):
         input_tensor = self.provider.get_data()
         self.provider.set_partition('Test')
