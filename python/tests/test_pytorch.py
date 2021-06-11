@@ -396,7 +396,7 @@ class test_DeepNetN2D2(unittest.TestCase):
         for cell in cells:
             cell = deepNet.getCell_Frame_Top(cell)
             if "Conv" in str(type(cell)) or "Fc" in str(type(cell)):
-                v = N2D2.Tensor_float([3, 3], weight_value)
+                v = N2D2.Tensor_float([])
                 deepNet.getCell_Frame_Top(cell.getName()).getWeight(0, 0, v)
                 weights.append(v)
         
@@ -413,7 +413,7 @@ class test_DeepNetN2D2(unittest.TestCase):
         for cell in cells:
             cell = deepNet.getCell_Frame_Top(cell)
             if "Conv" in str(type(cell)) or "Fc" in str(type(cell)):
-                v = N2D2.Tensor_float([3, 3], weight_value)
+                v = N2D2.Tensor_float([])
                 deepNet.getCell_Frame_Top(cell.getName()).getWeight(0, 0, v)
                 new_weights.append(v)
         print("==== \nComparing weights after | before")

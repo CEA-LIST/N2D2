@@ -67,7 +67,8 @@ class LeNet(Sequence):
             Conv(16, 120, kernel_dims=[5, 5], **conv_def()),
             Fc(120, 84, **fc_def()),
             Fc(84, nb_outputs, **fc_def()),
-            Softmax(with_loss=True),
+            # Softmax(with_loss=True),
+            Softmax(),
         ])
 
 

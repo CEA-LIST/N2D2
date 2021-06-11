@@ -446,12 +446,12 @@ class Tensor:
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         The synchronizations are handled by the library and regular users don't need use this method.  
         """
-        if not N2D2.cuda_compiled:
-            RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
+        if not n2d2.cuda_compiled:
+            raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeDToH()
         else:
-            RuntimeError("Trying to synchronize a non-cuda Tensor to device")
+            raise RuntimeError("Trying to synchronize a non-cuda Tensor to device")
         return self
 
     def htod(self):
@@ -461,12 +461,12 @@ class Tensor:
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         The synchronizations are handled by the library and regular users don't need use this method.  
         """
-        if not N2D2.cuda_compiled:
-            RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
+        if not n2d2.cuda_compiled:
+            raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeHToD()
         else:
-            RuntimeError("Trying to synchronize a non-cuda Tensor to host")
+            raise RuntimeError("Trying to synchronize a non-cuda Tensor to host")
         return self
 
     def detach_cell(self):
@@ -513,6 +513,8 @@ class Tensor:
     def is_leaf(self):
         return self._leaf
 
+    def mean(self):
+        return self.N2D2().mean()
 
 class Interface(n2d2.provider.Provider):
     """

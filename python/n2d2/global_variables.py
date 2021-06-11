@@ -28,7 +28,7 @@ default_seed = 1
 default_model = 'Frame'
 default_datatype = 'float'
 default_net = N2D2.Network(default_seed)
-
+cuda_compiled = N2D2.cuda_compiled
 
 objects_counter = {}
 

@@ -53,3 +53,4 @@ import n2d2.pytorch
 import n2d2.quantizer
 import n2d2.converter
 
+import n2d2.loss_function
