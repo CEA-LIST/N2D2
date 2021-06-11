@@ -31,6 +31,18 @@ Alternatively, this could simply be done by the corresponding Pytorch functions
 since there is no GPU model involved.
 """
 
+
+_database_parameters = {
+    "default_label": "DefaultLabel",
+    "rois_margin": "ROIsMargin",
+    "random_partitioning": "RandomPartitioning",
+    "data_file_label": "DataFileLabel",
+    "composite_label": "CompositeLabel",
+    "target_data_path": "TargetDataPath",
+    "multi_channel_match": "MultiChannelMatch",
+    "multi_channel_replace": "MultiChannelReplace"
+}
+
 class Database(N2D2_Interface):
     """
     Database loader object.
@@ -111,14 +123,42 @@ class DIR(Database):
     """
     Allow you to load your own database.
     """
+    """
+    :param data_path: Path to the dataset file.
+    :type data_path: str
+    :param depth: Number of sub-directory levels to include, defaults=0 
+    :type depth: int, optional
+    :param label_path: Path to the label file, defaults="" 
+    :type label_path: str, optional
+    :param label_depth: Number of sub-directory name levels used to form the data labels, defaults=0
+    :type label_depth: int, optional
+    """
     _type = "DIR"
 
     _convention_converter = n2d2.ConventionConverter({
         "load_data_in_memory": "loadDataInMemory",
         "ignore_masks": "IgnoreMasks",
-        "valid_extensions": "ValidExtensions"
+        "valid_extensions": "ValidExtensions",
     })
-    def __init__(self, **config_parameters):
+
+    _convention_converter.update(_database_parameters)
+
+    def __init__(self,
+                 data_path,
+                 learn,
+                 test=0.0,
+                 validation=0.0,
+                 depth=1,
+                 label_name="",
+                 label_depth=1,
+                 roi_file="",
+                 roi_dir="",
+                 roi_extension="json",
+                 per_label_partitioning=True,
+                 equiv_label_partitioning=True,
+                 ignore_mask=[""],
+                 valid_extensions=[""],
+                 **config_parameters):
         """
         :param load_data_in_memory: Load the whole database into memory, default=False
         :type: boolean, optional
@@ -126,19 +166,36 @@ class DIR(Database):
         N2D2_Interface.__init__(self, **config_parameters)
         self._parse_optional_arguments(['load_data_in_memory'])
         self._N2D2_object = N2D2.DIR_Database(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
+
+        if not ignore_mask == "":
+            self._N2D2_object.setIgnoreMasks(ignore_mask)
+
+        if not valid_extensions == "":
+            self._N2D2_object.setValidExtensions(valid_extensions)
+
         self._set_N2D2_parameters(self._config_parameters)
+        self._N2D2_object.loadDir(data_path, depth, label_name, label_depth)
+        if not roi_file == "":
+            self._N2D2_object.loadROIs(roi_file)
+        if not roi_dir == "":
+            self._N2D2_object.loadROIsDir(roi_dir, roi_extension, depth)
+        if per_label_partitioning:
+            if learn + validation > 1.0:
+                raise RuntimeError("DIR Databse: Learn (" + str(learn) + ") + "
+                    "Validation (" + str(validation) + ") cannot be > 1.0")
+            if test == 0.0:
+                test = 1.0 - learn - validation
+                self._N2D2_object.partitionStimuliPerLabel(learn, validation, test, equiv_label_partitioning)
+                self._N2D2_object.partitionStimuli(0.0, 0.0, 1.0)
+        else:
+            if test == 0.0:
+                test = self._N2D2_object.getNbStimuli() - learn - validation
+            self._N2D2_object.partitionStimuli(learn, "Learn")
+            self._N2D2_object.partitionStimuli(validation, "Validation")
+            self._N2D2_object.partitionStimuli(test, "Test")
 
     def load(self, data_path, depth=0, label_path="", label_depth=0):
-        """
-        :param data_path: Path to the dataset file.
-        :type data_path: str
-        :param depth: Number of sub-directory levels to include, defaults=0 
-        :type depth: int, optional
-        :param label_path: Path to the label file, defaults="" 
-        :type label_path: str, optional
-        :param label_depth: Number of sub-directory name levels used to form the data labels, defaults=0
-        :type label_depth: int, optional
-        """
+
         self._N2D2_object.loadDir(data_path, depth, label_path, label_depth)
 
 class MNIST(Database):

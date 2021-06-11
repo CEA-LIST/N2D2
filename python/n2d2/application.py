@@ -106,7 +106,7 @@ class LossFunction(ABC):
 
 class CrossEntropyClassifier(LossFunction):
     def __init__(self, provider, **target_config_parameters):
-        LossFunction.__init__(self, provider)
+        LossFunction.__init__(self, provider, **target_config_parameters)
         self._softmax = n2d2.cells.nn.Softmax(with_loss=True)
 
     def __call__(self, inputs):
@@ -119,8 +119,7 @@ class CrossEntropyClassifier(LossFunction):
 class MeanSquareErrorRegression(LossFunction):
     # TODO : This class have not been tested !
     def __init__(self, provider, **target_config_parameters):
-        LossFunction.__init__(self, provider)
-        self._target = n2d2.target.Score(provider, **target_config_parameters)
+        LossFunction.__init__(self, provider, **target_config_parameters)
 
     def __call__(self, inputs):
         self._target(inputs)

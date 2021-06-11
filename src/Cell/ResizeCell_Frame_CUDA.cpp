@@ -110,6 +110,13 @@ void N2D2::ResizeCell_Frame_CUDA::initialize()
     }
 }
 
+
+void N2D2::ResizeCell_Frame_CUDA::initializeDataDependent()
+{
+    Cell_Frame_CUDA::initializeDataDependent();
+    initialize();
+}
+
 void N2D2::ResizeCell_Frame_CUDA::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
