@@ -21,7 +21,7 @@ build:ubuntu:
     - ubuntu
   script:
     - make -j4
-    - cp lib/*.so ../python/
+    - export PYTHONPATH="$PYTHONPATH:/lib"
     - make docs -j4
   artifacts:
     paths:
