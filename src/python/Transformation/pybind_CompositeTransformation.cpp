@@ -64,7 +64,7 @@ namespace py = pybind11;
 
 namespace N2D2 {
 template<class T>
-void init(py::class_<CompositeTransformation, std::shared_ptr<CompositeTransformation>, Transformation> &m) {
+void make_compositable(py::class_<CompositeTransformation, std::shared_ptr<CompositeTransformation>, Transformation> &m) {
     m.def(py::init<const T&>(), py::arg("transformation"))
     .def("push_back", (void (CompositeTransformation::*)(const T&))(&CompositeTransformation::push_back), "Add a transformation to the list of transformation.");
     // Need an implicit conversion to be able to apply transformations with the StimuliProvider.
@@ -78,38 +78,38 @@ void init_CompositeTransformation(py::module &m) {
     
     ct.def(py::init<const CompositeTransformation&>(), py::arg("transformation"))
     .def("push_back", (void (CompositeTransformation::*)(const CompositeTransformation&))(&CompositeTransformation::push_back), "Add a transformation to the list of transformation.");
-    
-    init<DistortionTransformation>(ct);
-    init<PadCropTransformation>(ct);
-    init<AffineTransformation>(ct);
-    init<ChannelExtractionTransformation>(ct);
-    init<ColorSpaceTransformation>(ct);
-    init<CompressionNoiseTransformation>(ct);
-    init<DCTTransformation>(ct);
-    init<DFTTransformation>(ct);
-    init<EqualizeTransformation>(ct);
-    init<ExpandLabelTransformation>(ct);
-    init<FlipTransformation>(ct);
-    init<WallisFilterTransformation>(ct);
-    init<ThresholdTransformation>(ct);
-    init<SliceExtractionTransformation>(ct);
-    init<ReshapeTransformation>(ct);
-    init<RescaleTransformation>(ct);
-    init<RangeClippingTransformation>(ct);
-    init<RangeAffineTransformation>(ct);
-    init<RandomAffineTransformation>(ct);
-    init<NormalizeTransformation>(ct);
-    init<MorphologyTransformation>(ct);
-    init<MorphologicalReconstructionTransformation>(ct);
-    init<MagnitudePhaseTransformation>(ct);
-    init<LabelSliceExtractionTransformation>(ct);
-    init<LabelExtractionTransformation>(ct);
-    init<GradientFilterTransformation>(ct);
-    init<ApodizationTransformation>(ct);
-    // init<TrimTransformation>(ct);
-    init<FilterTransformation>(ct);
-    init<RandomResizeCropTransformation>(ct);
-    init<CustomTransformation>(ct);
+
+    make_compositable<DistortionTransformation>(ct);
+    make_compositable<PadCropTransformation>(ct);
+    make_compositable<AffineTransformation>(ct);
+    make_compositable<ChannelExtractionTransformation>(ct);
+    make_compositable<ColorSpaceTransformation>(ct);
+    make_compositable<CompressionNoiseTransformation>(ct);
+    make_compositable<DCTTransformation>(ct);
+    make_compositable<DFTTransformation>(ct);
+    make_compositable<EqualizeTransformation>(ct);
+    make_compositable<ExpandLabelTransformation>(ct);
+    make_compositable<FlipTransformation>(ct);
+    make_compositable<WallisFilterTransformation>(ct);
+    make_compositable<ThresholdTransformation>(ct);
+    make_compositable<SliceExtractionTransformation>(ct);
+    make_compositable<ReshapeTransformation>(ct);
+    make_compositable<RescaleTransformation>(ct);
+    make_compositable<RangeClippingTransformation>(ct);
+    make_compositable<RangeAffineTransformation>(ct);
+    make_compositable<RandomAffineTransformation>(ct);
+    make_compositable<NormalizeTransformation>(ct);
+    make_compositable<MorphologyTransformation>(ct);
+    make_compositable<MorphologicalReconstructionTransformation>(ct);
+    make_compositable<MagnitudePhaseTransformation>(ct);
+    make_compositable<LabelSliceExtractionTransformation>(ct);
+    make_compositable<LabelExtractionTransformation>(ct);
+    make_compositable<GradientFilterTransformation>(ct);
+    make_compositable<ApodizationTransformation>(ct);
+    // make_compositable<TrimTransformation>(ct);
+    make_compositable<FilterTransformation>(ct);
+    make_compositable<RandomResizeCropTransformation>(ct);
+    make_compositable<CustomTransformation>(ct);
 
 }
 }
