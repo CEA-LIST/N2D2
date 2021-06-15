@@ -60,7 +60,7 @@ void declare_Tensor_buffer_protocol(py::class_<Tensor<T>, BaseTensor>& tensor) {
             strides                                     /* Strides (in bytes) for each index */
         );
     })
-    .def("__init__", [](Tensor<T>& m, py::array_t<T, py::array::c_style | py::array::forcecast> b) {
+    .def(py::init([]( py::array_t<T, py::array::c_style | py::array::forcecast> b) {
         /* Request a buffer descriptor from Python */
         py::buffer_info info = b.request();
 /*
@@ -78,8 +78,8 @@ void declare_Tensor_buffer_protocol(py::class_<Tensor<T>, BaseTensor>& tensor) {
         }
 */
         const std::vector<size_t> dims(info.shape.begin(), info.shape.end());
-        new (&m) Tensor<T>(dims, static_cast<T*>(info.ptr));
-    });
+        return new Tensor<T>(dims, static_cast<T*>(info.ptr));
+    }));
 }
 
 template<typename T, typename std::enable_if<std::is_same<T, bool>::value>::type* = nullptr>

@@ -130,7 +130,7 @@ void declare_CudaTensor(py::module &m, const std::string& typeStr) {
             strides             /* Strides (in bytes) for each index */
         );
     })
-    .def("__init__", [](CudaTensor<T>& m, py::array_t<T, py::array::c_style | py::array::forcecast> b) {
+    .def(py::init([](py::array_t<T, py::array::c_style | py::array::forcecast> b) {
         /* Request a buffer descriptor from Python */
         py::buffer_info info = b.request();
 /*
@@ -148,8 +148,8 @@ void declare_CudaTensor(py::module &m, const std::string& typeStr) {
         }
 */
         const std::vector<size_t> dims(info.shape.begin(), info.shape.end());
-        new (&m) CudaTensor<T>(Tensor<T>(dims, static_cast<T*>(info.ptr)));
-    });
+        return new CudaTensor<T>(Tensor<T>(dims, static_cast<T*>(info.ptr)));
+    }));
 }
 
 void init_CudaTensor(py::module &m) {
