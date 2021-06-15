@@ -1000,24 +1000,14 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
     // Write source file with includes, buffers and functionCalls
     std::ofstream networkPropagateFile(filePath);
 
-    if(maxActPrecision > 0){
-        networkPropagateFile << "#include \"NetworkQAT.hpp\"\n"
+    networkPropagateFile << "#include \"Network.hpp\"\n"
                          << "#include \"Scaling.hpp\"\n"
                          << "#include \"env.hpp\"\n"
                          << "#include \"mem_info.hpp\"\n"
                          << "\n"
                          << includes.str()
                          << "\n\n";
-    }
-    else{
-        networkPropagateFile << "#include \"Network.hpp\"\n"
-                         << "#include \"Scaling.hpp\"\n"
-                         << "#include \"env.hpp\"\n"
-                         << "#include \"mem_info.hpp\"\n"
-                         << "\n"
-                         << includes.str()
-                         << "\n\n";
-    }
+
 
 
 
@@ -1026,20 +1016,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
 
     const std::string inputType = DeepNetExport::mEnvDataUnsigned?"UDATA_T":"DATA_T";
 
-    if(maxActPrecision > 0){
-        networkPropagateFile << "namespace N2D2 {\n"
-                            << "\n"
-                            << "template<>\n"
-                            << "void NetworkQAT::propagate(const " << inputType << "* inputs, "
-                                                    << "Target_T* outputs) const \n"
-                            << "{\n"
-                            << functionCalls.str()
-                            << "\n"
-                            << "}\n"
-                            << "\n";
-    }
-    else{
-        networkPropagateFile << "namespace N2D2 {\n"
+    networkPropagateFile << "namespace N2D2 {\n"
                             << "\n"
                             << "template<>\n"
                             << "void Network::propagate(const " << inputType << "* inputs, "
@@ -1049,7 +1026,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                             << "\n"
                             << "}\n"
                             << "\n";
-    }
+
 
     networkPropagateFile << "/*template<>\n"
                          << "float Network::backpropagate(const DATA_T* input, const std::int32_t* labels){\n"

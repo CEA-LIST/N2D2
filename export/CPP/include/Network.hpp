@@ -22,6 +22,9 @@
 #include <numeric>
 
 #include "typedefs.h"
+#include "typedef_union.h"
+
+#include <iostream>
 
 #define N2D2_THROW_OR_ABORT(ex, msg) throw ex(msg)
 #define N2D2_ALWAYS_INLINE __attribute__((always_inline))
@@ -154,14 +157,16 @@ private:
             int OUTPUT_MEM_WRAP_OFFSET,
             int OUTPUT_MEM_WRAP_SIZE,
             int OUTPUT_MEM_STRIDE,
+            int NB_BITS_W,
             int ACTIVATION_OUTPUT_RANGE,
             typename Input_T, typename Output_T,
+            typename Weight_T, typename Bias_T,
             typename Rescaling_T>
     N2D2_ALWAYS_INLINE void convcellPropagate(
         const Input_T* __restrict inputs,
         Output_T* __restrict outputs,
-        const BDATA_T* __restrict biasses,
-        const WDATA_T* __restrict weights,
+        const Bias_T* __restrict biasses,
+        const Weight_T* __restrict weights,
         const Rescaling_T& __restrict rescaling) const;
 
     /*
@@ -192,12 +197,13 @@ private:
             int OUTPUT_MEM_STRIDE,
             int ACTIVATION_OUTPUT_RANGE,
             typename Input_T, typename Output_T,
+            typename Weight_T, typename Bias_T,
             typename Rescaling_T>
     N2D2_ALWAYS_INLINE void convcellDWPropagate(
         const Input_T* __restrict inputs,
         Output_T* __restrict outputs,
-        const BDATA_T* __restrict biasses,
-        const WDATA_T* __restrict weights,
+        const Bias_T* __restrict biasses,
+        const Weight_T* __restrict weights,
         const Rescaling_T& __restrict rescaling) const;
 
     /**
@@ -249,12 +255,13 @@ private:
             int OUTPUT_MEM_STRIDE,
             int ACTIVATION_OUTPUT_RANGE,
             typename Input_T, typename Output_T,
+            typename Weight_T, typename Bias_T,
             typename Rescaling_T>
     N2D2_ALWAYS_INLINE void fccellPropagate(
         const Input_T* __restrict inputs,
         Output_T* __restrict outputs,
-        const BDATA_T* __restrict biasses,
-        const WDATA_T* __restrict weights,
+        const Bias_T* __restrict biasses,
+        const Weight_T* __restrict weights,
         const Rescaling_T& __restrict rescaling) const;
 
     template<int NB_CHANNELS, 
@@ -469,13 +476,52 @@ private:
     template<int NB_ITERATIONS,
              int INPUTS_INC = 1,
              int WEIGHTS_INC = 1,
+             typename Weight_T, typename Bias_T,
              class Input_T>
     N2D2_ALWAYS_INLINE static void macsOnRange(const Input_T* __restrict inputs, 
-                                               const WDATA_T* __restrict weights, 
-                                               SUM_T& __restrict weightedSum) 
+                                               const Weight_T* __restrict weights,
+                                               Bias_T& __restrict weightedSum)
     {
         for (int iter = 0; iter < NB_ITERATIONS; ++iter) {
             weightedSum += inputs[iter*INPUTS_INC] * weights[iter*WEIGHTS_INC];
+        }
+    }
+
+//4b with no extra 0 inserted
+template<int NB_ITERATIONS,
+             int NB_BITS_W,
+             int INPUTS_INC = 1,
+             int WEIGHTS_INC = 1,
+             typename Weight_T, typename Bias_T,
+             class Input_T,
+             typename std::enable_if<(NB_BITS_W == 4)>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static void macsOnRangeMixedPrecision(const Input_T* __restrict inputs,
+                                               const Weight_T* __restrict weights,
+                                               Bias_T& __restrict weightedSum,
+                                               bool verbose)
+    {
+        int iterInput = 0;
+        int8_t high_weight = 0;
+        int8_t low_weight = 0;
+        T4_8_Vector data;
+
+        int factor = 8/NB_BITS_W;
+
+        //NB_ITERATIONS = NB_ITERATIONS/factor;
+        if(verbose) std::cout << "NB_ITERATIONS = " << NB_ITERATIONS << std::endl;
+
+        for (int iter = 0; iter < NB_ITERATIONS/factor; ++iter) {
+            iterInput = iter*factor;
+            if(verbose) std::cout << "iter = " << iter << " , iterInput = " << iterInput << std::endl;
+            data.uvector = weights[iter*WEIGHTS_INC];
+            high_weight = data.sfields.op1;
+            low_weight = data.sfields.op0;
+
+            if(verbose) std::cout << "high_weight = " << +high_weight << std::endl;
+            if(verbose) std::cout << "low_weight = " << +low_weight << std::endl;
+
+            weightedSum += inputs[iterInput*INPUTS_INC] * high_weight;
+            weightedSum += inputs[(iterInput+1)*INPUTS_INC] * low_weight;
         }
     }
 
@@ -692,14 +738,16 @@ template<int NB_CHANNELS,
          int OUTPUT_MEM_WRAP_OFFSET,
          int OUTPUT_MEM_WRAP_SIZE,
          int OUTPUT_MEM_STRIDE,
+         int NB_BITS_W,
          int ACTIVATION_OUTPUT_RANGE,
          typename Input_T, typename Output_T,
+         typename Weight_T, typename Bias_T,
          typename Rescaling_T>
 N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
     const Input_T* __restrict inputs,
     Output_T* __restrict outputs,
-    const BDATA_T* __restrict biasses,
-    const WDATA_T* __restrict weights,
+    const Bias_T* __restrict biasses,
+    const Weight_T* __restrict weights,
     const Rescaling_T& __restrict rescaling) const
 {
     constexpr int OUTPUTS_HEIGHT_NOPAD
@@ -737,10 +785,10 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
                                 - OUTPUT_MEM_CONT_SIZE;
                 }
                 // <--
-
-                SUM_T weightedSum = biasses[output];
+                Bias_T weightedSum = biasses[output];
 
                 for (int sy = 0; sy < KERNEL_HEIGHT; ++sy) {
+
                     if ((PADDING_Y != 0
                             || OUTPUTS_HEIGHT != OUTPUTS_HEIGHT_NOPAD)
                         && sy >= syMax - syMin)
@@ -770,18 +818,44 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
                         wrapInRange = true;
                     }
 
-                    const int wOffset = NB_CHANNELS * (sxMin
+                    int wOffset = NB_CHANNELS * (sxMin
                         + KERNEL_WIDTH * (syMin + sy + KERNEL_HEIGHT * output));
+
+                    bool wAccumulated = true;
+                    if(NB_CHANNELS == 1 || NB_BITS_W == 8){
+                        wAccumulated = false;
+                    }
+
+                    bool verbose = true;
+
+                    // NB_CHANNELS -> ((NB_CHANNELS*precision)+(NB_CHANNELS*precision)%8)/8
+                    // e.g. (7*4 + (4))/8 -> 4
+                    if(wAccumulated){
+                        int nbCh_prec_align = ((NB_CHANNELS*NB_BITS_W)+(NB_CHANNELS*NB_BITS_W)%8)/8;
+                        if(verbose) std::cout << "nbCh_prec_align = " << nbCh_prec_align << std::endl;
+                        wOffset = nbCh_prec_align * (sxMin
+                            + KERNEL_WIDTH * (syMin + sy + KERNEL_HEIGHT * output));
+                        if(verbose) std::cout << "new wOffset = " << wOffset << std::endl;
+                    }
 
                     if (!wrapInRange && (NB_CHANNELS == INPUT_MEM_STRIDE
                         && ((PADDING_X == 0
                             && OUTPUTS_WIDTH == OUTPUTS_WIDTH_NOPAD)
                                 || sxMax - sxMin == KERNEL_WIDTH)))
                     {
-                        macsOnRange<KERNEL_WIDTH * NB_CHANNELS>(
-                            inputs + iOffset, 
-                            weights + wOffset, 
-                            weightedSum);
+                        if(wAccumulated){
+                            macsOnRangeMixedPrecision<KERNEL_WIDTH * NB_CHANNELS, NB_BITS_W>(
+                                inputs + iOffset,
+                                weights + wOffset,
+                                weightedSum,
+                                verbose);
+                        }
+                        else{
+                            macsOnRange<KERNEL_WIDTH * NB_CHANNELS>(
+                                inputs + iOffset,
+                                weights + wOffset,
+                                weightedSum);
+                        }
                     }
                     else {
                         for (int sx = 0; sx < KERNEL_WIDTH; ++sx) {
@@ -841,12 +915,13 @@ template<int NB_CHANNELS,
          int OUTPUT_MEM_STRIDE,
          int ACTIVATION_OUTPUT_RANGE,
          typename Input_T, typename Output_T,
+         typename Weight_T, typename Bias_T,
          typename Rescaling_T>
 N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
     const Input_T* __restrict inputs,
     Output_T* __restrict outputs,
-    const BDATA_T* __restrict biasses,
-    const WDATA_T* __restrict weights,
+    const Bias_T* __restrict biasses,
+    const Weight_T* __restrict weights,
     const Rescaling_T& __restrict rescaling) const
 {
     static_assert(NB_OUTPUTS % NB_CHANNELS == 0,
@@ -890,7 +965,9 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
 
                 const int channel = (output * NB_CHANNELS) / NB_OUTPUTS;
 
-                SUM_T weightedSum = biasses[output];
+                //SUM_T = Bias_T
+                //SUM_T weightedSum = biasses[output];
+                Bias_T weightedSum = biasses[output];
 
                 for (int sy = 0; sy < KERNEL_HEIGHT; ++sy) {
                     if ((PADDING_Y != 0
@@ -1184,12 +1261,13 @@ template<int NB_CHANNELS,
          int OUTPUT_MEM_STRIDE,
          int ACTIVATION_OUTPUT_RANGE,
          typename Input_T, typename Output_T,
+         typename Weight_T, typename Bias_T,
          typename Rescaling_T>
 N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
     const Input_T* __restrict inputs,
     Output_T* __restrict outputs,
-    const BDATA_T* __restrict biasses,
-    const WDATA_T* __restrict weights,
+    const Bias_T* __restrict biasses,
+    const Weight_T* __restrict weights,
     const Rescaling_T& __restrict rescaling) const
 {
     static_assert(OUTPUTS_HEIGHT == 1, "Outputs height should be 1");
@@ -1198,7 +1276,9 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
 
 #pragma omp parallel for
     for (int och = 0; och < NB_OUTPUTS; och++) {
-        SUM_T weightedSum = biasses[och];
+        //SUM_T -> Bias_T
+        //SUM_T weightedSum = biasses[och];
+        Bias_T weightedSum = biasses[och];
 
         for (int iy = 0; iy < CHANNELS_HEIGHT; ++iy) {
             const int iPos = (CHANNELS_WIDTH * iy);

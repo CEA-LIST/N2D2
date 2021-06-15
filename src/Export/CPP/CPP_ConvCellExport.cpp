@@ -32,6 +32,7 @@
 
 #include <fstream>
 #include <string>
+#include <cstdint>
 
 N2D2::Registrar<N2D2::ConvCellExport> N2D2::CPP_ConvCellExport::mRegistrar(
     {"CPP", "CPP_ASMP", "CPP_STM32", "CPP_HLS"},
@@ -234,7 +235,6 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeights(const ConvCell& cell, std::
                     }
                     else {
                         cell.getWeight(o, ch, kernel);
-
                         CellExport::generateFreeParameter(kernel(sx, sy), header);
                     }
 
@@ -285,53 +285,136 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
             << "[NB_OUTPUTS][KERNEL_HEIGHT][KERNEL_WIDTH][NB_CHANNELS]\n";
     }
 
-    //write explicit type depending on #bits
+    //write explicit type : int8_t is default type for weights in 8,4,2,1 bit precision
     int wPrecision = (int)cell.getQuantizedNbBits();
     std::string wType = "";
-    if(wPrecision > 0 && wPrecision <= 8){
+    bool accumulate = false;
+
+    if((cell.getNbChannels() == 1 && (wPrecision > 0 && wPrecision < 8)) || (wPrecision == 8)){
+        accumulate = false;
         wType = "int8_t";
+        std::cout << Utils::cwarning << "Cell with number of channels = " << cell.getNbChannels() << ", and weight precision = " << wPrecision << " :: weights will not be accumulated!";
     }
-    else if(wPrecision > 8 && wPrecision <= 16){
-        wType = "int16_t";
+    else if(cell.getNbChannels() > 1 && (wPrecision > 0 && wPrecision < 8)){
+        accumulate = true;
+        wType = "uint8_t";
     }
-    else if(wPrecision > 16){
+    else{
+        accumulate = false;
         wType = "int32_t";
+        std::cout << Utils::cwarning << "Weight precision (" << wPrecision << " in cell " << cell.getName() << ", is not supported !" << Utils::cdef << std::endl;
     }
+
     header << "static const " << wType << " " << identifier << "_weights["
            << prefix << "_WEIGHTS_SIZE] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_WEIGHTS) = {";
 
-    Tensor<Float_T> kernel;
 
+    Tensor<Float_T> kernel;
+    uint8_t accumulator = 0;
     std::size_t i = 0;
+
+    //channel-precision alignement
+    std::size_t nbCh_prec_align = 1;
+    //number of channels in accumulator
+    std::size_t nbCh_per_acc = 1;
+
+    if(accumulate){
+        nbCh_prec_align = ( (cell.getNbChannels()*wPrecision) + (cell.getNbChannels()*wPrecision) % 8 ) / 8;
+        nbCh_per_acc = cell.getNbChannels() / nbCh_prec_align + (cell.getNbChannels() % nbCh_prec_align);
+        //std::cout << "nb channel = " << cell.getNbChannels() << std::endl;
+        //std::cout << "nbCh_prec_align = " << nbCh_prec_align << std::endl;
+        //std::cout << "nbCh_per_acc = " << nbCh_per_acc << std::endl;
+        //number of weights per accumulator : 2, 4, 8 for 4b, 2b and 1b respectively
+        assert(nbCh_per_acc == 8/(size_t)wPrecision);
+    }
+    else{
+        nbCh_prec_align = cell.getNbChannels();
+    }
+
+    //int extraWeight = 0;
+
     for(std::size_t o = 0; o < cell.getNbOutputs(); ++o) {
         for(std::size_t sy = 0; sy < cell.getKernelHeight(); ++sy) {
             for(std::size_t sx = 0; sx < cell.getKernelWidth(); ++sx) {
-                for(std::size_t ch = 0; ch < cell.getNbChannels(); ++ch) {
+                for(std::size_t ch_pr = 0; ch_pr < nbCh_prec_align; ++ch_pr) {
+
+                    //std::cout << "nbCh_prec_align = " << nbCh_prec_align << std::endl;
+                    //std::cout << "ch_pr = " << ch_pr << std::endl;
+
                     if(isDWConv) {
                         const size_t outputGroupSize = cell.getNbOutputs() / cell.groupMap();
                         const size_t channelGroupSize = cell.getNbChannels() / cell.groupMap();
                         const size_t outputGroup = o / outputGroupSize;
-                        const size_t channelGroup = ch / channelGroupSize;
+                        const size_t channelGroup = ch_pr / channelGroupSize;
+                        //const size_t channelGroup = ch / channelGroupSize;
 
                         if (outputGroup != channelGroup)
                             continue;
                     }
 
-                    if (!cell.isConnection(ch, o)) {
-                        header << "0";
+                    //accumulate weights
+                    if(accumulate){
+                        if (!cell.isConnection(ch_pr, o)) {
+                            //TODO: adapt dw to accumulator
+                            header << "0";
+                        }
+                        else {
+                            //channels per accumulator
+                            for(std::size_t ch_in_acc = 0; ch_in_acc < nbCh_per_acc; ++ch_in_acc) {
+                                std::cout << "nbCh_per_acc = " << nbCh_per_acc << std::endl;
+                                std::cout << "ch_in_acc = " << ch_in_acc << std::endl;
+                                //channel number
+                                std::size_t ch = ch_pr*nbCh_per_acc+ch_in_acc;
+
+                                //std::cout << " o = " << o << " sy = " << sy << " sx = " << sx << "ch_pr = "<< ch_pr << " ch = " << ch << std::endl;
+
+                                //if this is an "extra" channel, fill it with 0
+                                //good place to do it? we insert 0th in the middle of "line"
+                                //insert all 0th at once at the end of the "line": sx = cell.getKernelWidth()-1 ?
+                                if(ch > cell.getNbChannels()-1){
+                                    //std::cout << "extra channel" << std::endl;
+                                    kernel.resize({cell.getKernelWidth(),cell.getKernelHeight()});
+                                    kernel.fill(0.0);
+                                }
+                                else{
+                                    cell.getWeight(o, ch, kernel);
+                                }
+
+                                accumulator |= (static_cast<uint8_t>(std::round(kernel(sx, sy))) & 0x0F);
+
+                                //shift if not the last weight in accumulator
+                                if(ch_in_acc < (nbCh_per_acc-1)){
+                                    accumulator <<= wPrecision;
+                                }
+                            }
+
+                            //write to header
+                            //std::cout << " accumulated value = " << +accumulator << std::endl;
+                            header << +accumulator << ", ";
+                            i++;
+                            accumulator = 0;
+                            if(i % 24 == 0) {
+                                header << "\n";
+                            }
+                        }
+
                     }
-                    else {
-                        cell.getWeight(o, ch, kernel);
+                    //do not accumulate weights
+                    else{
+                        if (!cell.isConnection(ch_pr, o)) {
+                            header << "0";
+                        }
+                        else {
+                            std::cout << " o = " << o << " sx = " << sx << " sy = " << sy << " ch = " << ch_pr << std::endl;
+                            cell.getWeight(o, ch_pr, kernel);
+                            CellExport::generateFreeParameter(kernel(sx, sy), header);
+                        }
+                        header << ", ";
+                        i++;
 
-                        //change this when not 8bits : do an accumulator to store 2 int4 (4 int2, 8 int1) in 1 int8
-                        CellExport::generateFreeParameter(kernel(sx, sy), header);
-                    }
-
-                    header << ", ";
-
-                    i++;
-                    if(i % 24 == 0) {
-                        header << "\n";
+                        if(i % 24 == 0) {
+                            header << "\n";
+                        }
                     }
                 }
             }
@@ -413,6 +496,7 @@ void N2D2::CPP_ConvCellExport::generateCallCode(
                 << prefix << "_MEM_WRAP_OFFSET, "
                 << prefix << "_MEM_WRAP_SIZE, "
                 << prefix << "_MEM_STRIDE,"
+                << prefix << "_NB_BITS_W,"
                 << CPP_CellExport::getLabelActivationRange(cell)
             << ">"
             <<"("
