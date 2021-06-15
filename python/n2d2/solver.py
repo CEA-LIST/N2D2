@@ -65,6 +65,7 @@ class SGD(Solver):
         "learning_rate": "LearningRate",
         "momentum": "Momentum",
         "decay": "Decay",
+        "min_decay": "MinDecay",
         "power": "Power",
         "iteration_size": "IterationSize",
         "max_iterations": "MaxIterations",
@@ -98,6 +99,8 @@ class SGD(Solver):
         :type momentum: float, optional
         :param decay: Decay, default=0.0
         :type decay: float, optional
+        :param min_decay: Min decay, default=0.0
+        :type min_decay: float, optional
         :param learning_rate_policy: Learning rate decay policy. Can be any of ``None``, ``StepDecay``, ``ExponentialDecay``, ``InvTDecay``, default='None'
         :type learning_rate_policy: str, optional
         :param learning_rate_step_size: Learning rate step size (in number of stimuli), default=1

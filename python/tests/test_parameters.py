@@ -329,12 +329,13 @@ class test_Reshape(test_params):
 class test_DIR(test_params):
     def setUp(self):
         self.parameters = {
+            "data_path": "/nvme0/DATABASE/MNIST/raw/",
+            "learn" : 0.0,
             "load_data_in_memory": True,
         }
         self.object = n2d2.database.DIR(**self.parameters)
 
     def test_parameters(self):
-        # Need to instantiate the object (doing so by passing a dummy input)
         self.assertEqual(self.parameters["load_data_in_memory"], self.object.N2D2().getLoadDataInMemory())
         super().test_parameters()
 
@@ -661,7 +662,8 @@ class test_SGD(test_params):
             "model": "Frame",
             "learning_rate": 0.001,
             "momentum": 0.1,
-            "decay": 0.0,
+            "decay": 0.1,
+            "min_decay": 0.2,
             "power": 1.0,
             "iteration_size": 2,
             "max_iterations": 5,
@@ -679,6 +681,7 @@ class test_SGD(test_params):
         self.assertEqual(self.parameters["learning_rate"], self.object.N2D2().getmLearningRate())
         self.assertEqual(self.parameters["momentum"], self.object.N2D2().getMomentum())
         self.assertEqual(self.parameters["decay"], self.object.N2D2().getDecay())
+        self.assertEqual(self.parameters["min_decay"], self.object.N2D2().getMinDecay())
         self.assertEqual(self.parameters["power"], self.object.N2D2().getPower())
         self.assertEqual(self.parameters["iteration_size"], self.object.N2D2().getIterationSize())
         self.assertEqual(self.parameters["max_iterations"], self.object.N2D2().getMaxIterations())

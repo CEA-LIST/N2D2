@@ -1709,10 +1709,9 @@ class ElemWise(NeuralNetworkCell):
         'Frame': N2D2.ElemWiseCell_Frame,
         'Frame_CUDA': N2D2.ElemWiseCell_Frame_CUDA,
     }
-    # TODO: Incoherence coeff_mode/mode
     _parameters = {
         "operation": "operation",
-        "coeff_mode": "mode",
+        "mode": "mode",
         "weights": "weights",
         "shifts": "shifts"
     }  
@@ -1745,7 +1744,7 @@ class ElemWise(NeuralNetworkCell):
     def _create_from_arguments(self, **config_parameters):
         NeuralNetworkCell.__init__(self, **config_parameters)
 
-        self._parse_optional_arguments(['operation', 'coeff_mode', 'weights', 'shifts'])
+        self._parse_optional_arguments(['operation', 'mode', 'weights', 'shifts'])
         
         if "operation" in self._optional_constructor_arguments:
             operation = self._optional_constructor_arguments["operation"]
@@ -1756,15 +1755,15 @@ class ElemWise(NeuralNetworkCell):
                                                     ", ".join(N2D2.ElemWiseCell.Operation.__members__.keys()))
             self._optional_constructor_arguments['operation'] = \
                 N2D2.ElemWiseCell.Operation.__members__[self._optional_constructor_arguments['operation']]
-        if "coeff_mode" in self._optional_constructor_arguments:
-            mode = self._optional_constructor_arguments["coeff_mode"]
+        if "mode" in self._optional_constructor_arguments:
+            mode = self._optional_constructor_arguments["mode"]
             if not isinstance(mode, str):
-                raise n2d2.error_handler.WrongInputType("coeff_mode", str(type(coeff_mode)), ["str"])
+                raise n2d2.error_handler.WrongInputType("mode", str(type(mode)), ["str"])
             if mode not in N2D2.ElemWiseCell.CoeffMode.__members__.keys():
-                raise n2d2.error_handler.WrongValue("operation", operation,
+                raise n2d2.error_handler.WrongValue("mode", mode,
                                                     ", ".join(N2D2.ElemWiseCell.CoeffMode.__members__.keys()))
-            self._optional_constructor_arguments['coeff_mode'] = \
-                N2D2.ElemWiseCell.CoeffMode.__members__[self._optional_constructor_arguments['coeff_mode']]
+            self._optional_constructor_arguments['mode'] = \
+                N2D2.ElemWiseCell.CoeffMode.__members__[self._optional_constructor_arguments['mode']]
         if "weights" in self._optional_constructor_arguments:
             if not isinstance(self._optional_constructor_arguments["weights"], list):
                 raise n2d2.error_handler.WrongInputType("weights", str(type(self._optional_constructor_arguments["weights"])), ["float"])
@@ -1786,7 +1785,7 @@ class ElemWise(NeuralNetworkCell):
         n2d2_cell._set_N2D2_object(N2D2_object)
 
         n2d2_cell._optional_constructor_arguments['operation'] = n2d2_cell._N2D2_object.getOperation()
-        n2d2_cell._optional_constructor_arguments['coeff_mode'] = n2d2_cell._N2D2_object.getCoeffMode()
+        n2d2_cell._optional_constructor_arguments['mode'] = n2d2_cell._N2D2_object.getCoeffMode()
         n2d2_cell._optional_constructor_arguments['weights'] = n2d2_cell._N2D2_object.getWeights()
         n2d2_cell._optional_constructor_arguments['shifts'] = n2d2_cell._N2D2_object.getShifts()
 

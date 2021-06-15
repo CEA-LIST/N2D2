@@ -137,6 +137,8 @@ class test_cells(unittest.TestCase):
             n2d2.cells.ElemWise(operation=1)
         with self.assertRaises(n2d2.error_handler.WrongInputType):
             n2d2.cells.ElemWise(mode=1)
+        with self.assertRaises(n2d2.error_handler.WrongValue):
+            n2d2.cells.ElemWise(mode='a')
         with self.assertRaises(n2d2.error_handler.WrongInputType):
             n2d2.cells.ElemWise(weights="aa") 
         with self.assertRaises(n2d2.error_handler.WrongInputType):
@@ -244,6 +246,8 @@ class test_solver(unittest.TestCase):
             n2d2.solver.SGD(momentum="a")
         with self.assertRaises(n2d2.error_handler.WrongInputType):
             n2d2.solver.SGD(decay="a")
+        with self.assertRaises(n2d2.error_handler.WrongInputType):
+            n2d2.solver.SGD(min_decay="a")
         with self.assertRaises(n2d2.error_handler.WrongValue):
             n2d2.solver.SGD(learning_rate_policy=1)
         with self.assertRaises(n2d2.error_handler.WrongInputType):
