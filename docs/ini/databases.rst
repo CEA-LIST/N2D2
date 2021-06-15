@@ -101,6 +101,21 @@ with the ``DIR_Database``:
     ; To disable the second channel, replace $1_1$2 by ""
     MultiChannelReplace=$1_0$2 $1_1$2
 
+Note that when ``MultiChannelMatch`` is not empty, only files matching this parameter
+regexp pattern (and the associated channels obtained with ``MultiChannelReplace``, 
+when they exist) will be loaded. Other files in the dataset not matching the 
+``MultiChannelMatch`` filter will be ignored.
+
+Stimuli are loaded even if some channels are missing (in which case, "Notice" 
+messages are issued for the missing channel(s) during database loading). Missing
+channel values are set to 0.
+
+Annotations are common to all channels. If annotations exist for a specific channel,
+they are fused with the annotations of the other channels (for geometric annotations).
+Pixel-wise annotations, obtained when ``DataFileLabel`` is 1 (true), through 
+the ``Database::readLabel()`` virtual method, are only read for the match 
+(``MultiChannelMatch``) channel.
+
 
 
 MNIST

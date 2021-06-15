@@ -1,4 +1,4 @@
-# <img src="manual/figs/N2D2_Logo.png" alt="N2D2" height="100"/>
+# <img src="docs/_static/N2D2_Logo.png" alt="N2D2" height="100"/>
 
 | **Docs** | **`Linux CPU`**<br/><sub>&ge; GCC 4.4.7</sub> | **`Linux GPU`**<br/><sub>&ge; CUDA 6.5 + CuDNN 1.0</sub> | **`Windows CPU`**<br/><sub>&ge; Visual Studio 2015.2</sub> | **`Windows GPU`**<br/><sub>&ge; CUDA 8.0 + CuDNN 5.1</sub>  | [![License](https://img.shields.io/badge/license-CeCILL--C-blue.svg)](LICENSE)  |
 | ---------- | --------------- | ------------------ | ------------------ | ------------------ | ------ |
