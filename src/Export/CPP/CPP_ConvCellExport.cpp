@@ -298,6 +298,10 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
     else if(cell.getNbChannels() > 1 && (wPrecision > 0 && wPrecision < 8)){
         accumulate = true;
         wType = "uint8_t";
+        /*
+        accumulate = false;
+        wType = "int8_t";
+        */
     }
     else{
         accumulate = false;
@@ -313,102 +317,132 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
     uint8_t accumulator = 0;
     std::size_t i = 0;
 
-    //channel-precision alignement
-    std::size_t nbCh_prec_align = 1;
-    //number of channels in accumulator
-    std::size_t nbCh_per_acc = 1;
+    //number of int8 necessary to store
+    //one weight of all channels
+    std::size_t nbInt8_nbCh = 1;
+
+    //total bit "slots"
+    std::size_t nbSlot_total = 1;
+    //taken = number of channels
+    std::size_t nbSlot_taken = 1;
+    //free = number of extra 0th added
+    std::size_t nbSlot_free = 1;
+    std::size_t nbSlot_per_Int8 = 1;
 
     if(accumulate){
-        nbCh_prec_align = ( (cell.getNbChannels()*wPrecision) + (cell.getNbChannels()*wPrecision) % 8 ) / 8;
-        nbCh_per_acc = cell.getNbChannels() / nbCh_prec_align + (cell.getNbChannels() % nbCh_prec_align);
-        //std::cout << "nb channel = " << cell.getNbChannels() << std::endl;
-        //std::cout << "nbCh_prec_align = " << nbCh_prec_align << std::endl;
-        //std::cout << "nbCh_per_acc = " << nbCh_per_acc << std::endl;
-        //number of weights per accumulator : 2, 4, 8 for 4b, 2b and 1b respectively
-        assert(nbCh_per_acc == 8/(size_t)wPrecision);
+        nbInt8_nbCh = ( (cell.getNbChannels()*wPrecision) + (cell.getNbChannels()*wPrecision) % 8 ) / 8;
+        nbSlot_per_Int8 = 8/(size_t)wPrecision;
+        std::cout << "nbSlot_per_Int8 = " << nbSlot_per_Int8 << std::endl;
+        nbSlot_total = nbInt8_nbCh*nbSlot_per_Int8;
+        nbSlot_taken = cell.getNbChannels();
+        nbSlot_free = nbSlot_total - nbSlot_taken;
     }
     else{
-        nbCh_prec_align = cell.getNbChannels();
+        nbSlot_total = cell.getNbChannels();
     }
 
-    //int extraWeight = 0;
+    int nbExtraZero = 0;
+    int wCounter = 0;
+
+    uint8_t mask = 0;
+    if(wPrecision==4){
+        mask = 0x0F;
+    }
+    else if(wPrecision==2){
+        mask = 0x3;
+    }
+    else if(wPrecision==1){
+        mask = 0x1;
+    }
 
     for(std::size_t o = 0; o < cell.getNbOutputs(); ++o) {
         for(std::size_t sy = 0; sy < cell.getKernelHeight(); ++sy) {
-            for(std::size_t sx = 0; sx < cell.getKernelWidth(); ++sx) {
-                for(std::size_t ch_pr = 0; ch_pr < nbCh_prec_align; ++ch_pr) {
 
-                    //std::cout << "nbCh_prec_align = " << nbCh_prec_align << std::endl;
-                    //std::cout << "ch_pr = " << ch_pr << std::endl;
+            //add extra 0 at the end of the "line" nbSlot_total*width
+            //and not at the end of each nbSlot_total
+            nbExtraZero = 0;
+            wCounter = 0;
+
+            for(std::size_t sx = 0; sx < cell.getKernelWidth(); ++sx) {
+                for(std::size_t sl = 0; sl < nbSlot_total; ++sl){
 
                     if(isDWConv) {
                         const size_t outputGroupSize = cell.getNbOutputs() / cell.groupMap();
                         const size_t channelGroupSize = cell.getNbChannels() / cell.groupMap();
                         const size_t outputGroup = o / outputGroupSize;
-                        const size_t channelGroup = ch_pr / channelGroupSize;
-                        //const size_t channelGroup = ch / channelGroupSize;
-
+                        const size_t channelGroup = sl / channelGroupSize;
                         if (outputGroup != channelGroup)
                             continue;
                     }
 
-                    //accumulate weights
                     if(accumulate){
-                        if (!cell.isConnection(ch_pr, o)) {
+                        if (!cell.isConnection(sl, o)) {
                             //TODO: adapt dw to accumulator
                             header << "0";
                         }
                         else {
-                            //channels per accumulator
-                            for(std::size_t ch_in_acc = 0; ch_in_acc < nbCh_per_acc; ++ch_in_acc) {
-                                std::cout << "nbCh_per_acc = " << nbCh_per_acc << std::endl;
-                                std::cout << "ch_in_acc = " << ch_in_acc << std::endl;
-                                //channel number
-                                std::size_t ch = ch_pr*nbCh_per_acc+ch_in_acc;
-
-                                //std::cout << " o = " << o << " sy = " << sy << " sx = " << sx << "ch_pr = "<< ch_pr << " ch = " << ch << std::endl;
-
-                                //if this is an "extra" channel, fill it with 0
-                                //good place to do it? we insert 0th in the middle of "line"
-                                //insert all 0th at once at the end of the "line": sx = cell.getKernelWidth()-1 ?
-                                if(ch > cell.getNbChannels()-1){
-                                    //std::cout << "extra channel" << std::endl;
-                                    kernel.resize({cell.getKernelWidth(),cell.getKernelHeight()});
-                                    kernel.fill(0.0);
+                            //if this is an "extra" slot
+                            if(sl > cell.getNbChannels()-1){
+                                //if not the last weight in "line"
+                                //std::cout << "extra channel!" << std::endl;
+                                if(sx < (cell.getKernelWidth()-1)){
+                                    nbExtraZero++;
                                 }
                                 else{
-                                    cell.getWeight(o, ch, kernel);
+                                    //write all extra 0 of the "line"
+                                    nbExtraZero++;
+                                    //std::cout << "nbExtraZero = " << nbExtraZero << std::endl;
+                                    assert(nbSlot_free*cell.getKernelWidth() == nbExtraZero);
+
+                                    for(std::size_t extraZero = 0; extraZero < nbExtraZero; ++extraZero){
+                                        accumulator |= (static_cast<uint8_t>(0) & mask);
+                                        if(wCounter == (nbSlot_per_Int8-1)){
+                                            header << +accumulator << ", ";
+                                            i++;
+                                            accumulator = 0;
+                                            wCounter = 0;
+                                            if(i % 24 == 0) {
+                                                header << "\n";
+                                            }
+                                        }
+                                        else{
+                                            accumulator <<= wPrecision;
+                                            ++wCounter;
+                                        }
+                                    }
                                 }
-
-                                accumulator |= (static_cast<uint8_t>(std::round(kernel(sx, sy))) & 0x0F);
-
-                                //shift if not the last weight in accumulator
-                                if(ch_in_acc < (nbCh_per_acc-1)){
+                            }
+                            else{
+                                cell.getWeight(o, sl, kernel);
+                                accumulator |= (static_cast<uint8_t>(std::round(kernel(sx, sy))) & mask);
+                                //write if the last weight in accumulator
+                                if(wCounter == (nbSlot_per_Int8-1)){
+                                    header << +accumulator << ", ";
+                                    i++;
+                                    accumulator = 0;
+                                    wCounter = 0;
+                                    if(i % 24 == 0) {
+                                        header << "\n";
+                                    }
+                                }
+                                else{
                                     accumulator <<= wPrecision;
+                                    ++wCounter;
                                 }
                             }
 
-                            //write to header
-                            //std::cout << " accumulated value = " << +accumulator << std::endl;
-                            header << +accumulator << ", ";
-                            i++;
-                            accumulator = 0;
-                            if(i % 24 == 0) {
-                                header << "\n";
-                            }
                         }
-
                     }
-                    //do not accumulate weights
+
                     else{
-                        if (!cell.isConnection(ch_pr, o)) {
+                        if (!cell.isConnection(sl, o)) {
                             header << "0";
                         }
                         else {
-                            std::cout << " o = " << o << " sx = " << sx << " sy = " << sy << " ch = " << ch_pr << std::endl;
-                            cell.getWeight(o, ch_pr, kernel);
+                            cell.getWeight(o, sl, kernel);
                             CellExport::generateFreeParameter(kernel(sx, sy), header);
                         }
+
                         header << ", ";
                         i++;
 
