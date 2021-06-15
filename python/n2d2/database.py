@@ -156,8 +156,8 @@ class DIR(Database):
                  roi_extension="json",
                  per_label_partitioning=True,
                  equiv_label_partitioning=True,
-                 ignore_mask=[""],
-                 valid_extensions=[""],
+                 ignore_mask=[],
+                 valid_extensions=[],
                  **config_parameters):
         """
         :param load_data_in_memory: Load the whole database into memory, default=False
@@ -167,10 +167,10 @@ class DIR(Database):
         self._parse_optional_arguments(['load_data_in_memory'])
         self._N2D2_object = N2D2.DIR_Database(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
 
-        if not ignore_mask == "":
+        if ignore_mask:
             self._N2D2_object.setIgnoreMasks(ignore_mask)
 
-        if not valid_extensions == "":
+        if valid_extensions:
             self._N2D2_object.setValidExtensions(valid_extensions)
 
         self._set_N2D2_parameters(self._config_parameters)

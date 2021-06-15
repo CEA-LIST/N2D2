@@ -28,8 +28,6 @@ import unittest
 
 class test_DIR(unittest.TestCase):
     def setUp(self):
-        self.db = n2d2.database.DIR()
-        self.provider = n2d2.provider.DataProvider(self.db, [1, 1, 1], batch_size=1)
         self.x = 10
         self.y = 3
         print("Creating data")
@@ -44,6 +42,11 @@ class test_DIR(unittest.TestCase):
             f.write(str(self.x)+'\n')
         with open(self.label_path + self.suffix, "w") as f:
             f.write(str(self.y)+'\n')
+        print("Init database object")
+        self.db = n2d2.database.DIR(self.data_path, 1.0)
+        self.provider = n2d2.provider.DataProvider(self.db, [1, 1, 1], batch_size=1)
+        
+        
         print("Set up done !")
 
     def tearDown(self):
@@ -55,8 +58,7 @@ class test_DIR(unittest.TestCase):
 
     def test_load(self):
         print('Loading data')
-        self.db.load(self.data_path, 0, self.label_path, 0)
-        self.db.partition_stimuli(1,0,0)
+
         self.provider.set_partition("Learn")
         self.provider.read_random_batch().htod()
         print(self.provider.read_random_batch()[0])
