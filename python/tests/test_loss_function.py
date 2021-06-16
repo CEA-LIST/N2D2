@@ -36,62 +36,49 @@ If you need more information please check : https://docs.python.org/3/library/un
 
 import unittest
 import n2d2
+import math
 
 class test_loss_function(unittest.TestCase):
     """
     The class needs to inherit unittest.TestCase, the name doesn't matter and the class doesn't need to be instantiated.
     """
+    database = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw", validation=0.1)
+
+    provider = n2d2.provider.DataProvider(database, [32, 32, 1], batch_size=256)
+    provider.add_transformation(n2d2.transform.Rescale(width=32, height=32))
+    provider.set_partition("Learn")
 
     def setUp(self):
         val = -1.0
         class test_loss(n2d2.loss_function.LossFunction):
             def __init__(self) -> None:
                 super().__init__()
-
             def compute_loss(self, inputs: n2d2.Tensor, target: n2d2.Tensor, **kwargs) -> n2d2.Tensor:
                 return n2d2.Tensor(inputs.shape(), value=val)
-        self.input = n2d2.Tensor([1, 1, 2, 2], cuda=n2d2.cuda_compiled)
-        self.fc = n2d2.cells.Fc(1, 5, weights_solver = n2d2.solver.SGD(learning_rate=0.05, momentum=0.9, decay=0.0005, learning_rate_decay=0.993))
-
-        shape = self.input.dims()
-        # Note : It's important to set diffOutputs as an attribute else when exiting this method
-        # Python garbage collector will erase this variable while Cpp will still use it resulting in a SegFault
-        self.diffOutputs = n2d2.Tensor(shape, value=0, dim_format="N2D2")
-
-        self.fc.N2D2().clearInputs() 
-        self.fc.N2D2().addInputBis(self.input.N2D2(), self.diffOutputs.N2D2())
-        
         self.loss_function = test_loss()
-        self.value = val
-
+        self.value = val       
+        self.model = n2d2.models.lenet.LeNet(10)
 
     def tearDown(self):
         pass
 
     def test_diffInputs_update(self):
-        x = self.input
-        fc = self.fc
-
-        x = fc(x)
-
-        self.loss_function(x, n2d2.Tensor([1, 5, 1, 1]))
-
-        diffInputs = n2d2.Tensor.from_N2D2(fc.N2D2().getDiffInputs())
+        x = self.provider.read_random_batch()
+        model = self.model
+        x = model(x)
+        self.loss_function(x, self.provider.get_labels())
+        diffInputs = n2d2.Tensor.from_N2D2(model[-1].N2D2().getDiffInputs())
         for i in diffInputs:
             self.assertEqual(i, self.value)
 
     def test_diffOutputs_update(self):
-        x = self.input
-        fc = self.fc
-        
-        x = fc(x)
-        fc.N2D2().clearInputs() 
-        fc.N2D2().addInputBis(self.input.N2D2(), self.diffOutputs.N2D2())
-
-        x = self.loss_function(x, n2d2.Tensor([1, 5, 1, 1]))
-        old = [i for i in n2d2.Tensor.from_N2D2(fc.N2D2().getDiffOutputs())]
+        x = self.provider.read_random_batch()
+        model = self.model
+        x = model(x)
+        x = self.loss_function(x, self.provider.get_labels())
+        old = [i for i in n2d2.Tensor.from_N2D2(model[-2].N2D2().getDiffOutputs())]
         x.back_propagate()
-        new = [i for i in n2d2.Tensor.from_N2D2(fc.N2D2().getDiffOutputs())]
+        new = [i for i in n2d2.Tensor.from_N2D2(model[-2].N2D2().getDiffOutputs())]
         flag = False
         for i,j in zip(old, new):
             if i != j :
@@ -100,17 +87,14 @@ class test_loss_function(unittest.TestCase):
         self.assertTrue(flag)
 
     def test_weights_update(self):
-        x = self.input
-        fc = self.fc
-        
-        x = fc(x)
-        fc.N2D2().clearInputs() 
-        fc.N2D2().addInputBis(self.input.N2D2(), self.diffOutputs.N2D2())
-        x = self.loss_function(x, n2d2.Tensor([1, 5, 1, 1]))
+        x = self.provider.read_random_batch()
+        model = self.model
+        x = model(x)
+        x = self.loss_function(x, self.provider.get_labels())
         x.back_propagate()
-        old_weights = [w for a in fc.get_weights()[0] for w in a]
+        old_weights = [w for a in model[-2].get_weights()[0] for w in a]
         x.update()
-        weights = [w for a in fc.get_weights()[0] for w in a]
+        weights = [w for a in model[-2].get_weights()[0] for w in a]
         flag = False
         for i, j in zip(weights, old_weights):
             if i != j:
