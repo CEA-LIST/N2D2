@@ -277,7 +277,7 @@ void N2D2::cudaSResizeFWNearestNeighbor(const cudaDeviceProp& deviceProp,
 
     const unsigned int groupWidth = min(prefMultiple, reqWidth);
 
-    const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
+    const dim3 blocksPerGrid = {(unsigned int)nbChannels, 1, (unsigned int)batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
     cudaSNearestNeighborKernel<<<blocksPerGrid, threadsPerBlocks>>>(input, inputSizeX, inputSizeY,
@@ -302,7 +302,7 @@ void N2D2::cudaSResizeBWNearestNeighbor(const cudaDeviceProp& deviceProp,
 
     const unsigned int groupWidth = min(prefMultiple, reqWidth);
 
-    const dim3 blocksPerGrid = {nbChannels, 1, batchSize};
+    const dim3 blocksPerGrid = {(unsigned int)nbChannels, 1, (unsigned int)batchSize};
     const dim3 threadsPerBlocks = {groupWidth, groupSize / groupWidth, 1};
 
     cudaSNearestNeighborKernel<<<blocksPerGrid, threadsPerBlocks>>>(input, inputSizeX, inputSizeY,
