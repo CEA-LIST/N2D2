@@ -118,6 +118,17 @@ class test_tensor(unittest.TestCase):
         self.assertTrue(np.array_equal(n2d2_tensor._tensor, N2D2_tensor))
         self.assertEqual(n2d2_tensor._datatype, "i")
 
+    def test_cuda_cpu_conversion(self):
+        self.tensor[0] = 1
+        copy = self.tensor.copy()
+        if self.cuda:
+            self.tensor.cpu()
+            self.assertFalse(self.tensor.is_cuda)
+        else:
+            self.tensor.cuda()
+            self.assertTrue(self.tensor.is_cuda)
+        self.assertEqual(self.tensor, copy)
+
 class test_cudatensor(test_tensor):
     def setUp(self):
         self.cuda = True

@@ -164,7 +164,6 @@ void declare_Tensor(py::module &m, const std::string& typeStr) {
     .def("mean", &Tensor<T>::mean, py::arg("valAbs")=false)
     .def("resize", (void (Tensor<T>::*)(const std::vector<size_t>&, const T& value)) &Tensor<T>::resize, py::arg("dims"), py::arg("value"))
     .def("fill", &Tensor<T>::fill, py::arg("value"))
-    .def("newCuda", &Tensor<T>::newCuda)
     ;
 
     declare_Tensor_buffer_protocol(tensor);

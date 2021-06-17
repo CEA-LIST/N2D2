@@ -261,38 +261,40 @@ class Tensor:
         Copy in memory the Tensor object.
         """
         copy = Tensor(self.shape(), datatype=self.data_type(), cuda=self.is_cuda, cell=self.cell)
-        for i in range(len(copy)):
-            copy[i] = self._tensor[i]
+        copy._tensor.op_assign(self._tensor)
         return copy
     
     def cpu(self):
+        """Convert the tensor to a cpu tensor
         """
-        Convert the tensor to a cpu tensor
-        """
+        # TODO : avoid to copy data
         if self.is_cuda:
             self.is_cuda = False
             new_tensor = self._tensor_generators[self._datatype](self.dims())
-            for index, value in enumerate(self):
-                new_tensor[index] = value
+            new_tensor.op_assign(self._tensor)
             self._tensor = new_tensor
 
     def cuda(self):
+        """Convert the tensor to a cuda tensor
         """
-        Convert the tensor to a cuda tensor
-        """
+        # TODO : avoid to copy data
         if not self.is_cuda:
             self.is_cuda = True
-            self._tensor = self._tensor.newCuda()
+            new_tensor = self._cuda_tensor_generators[self._datatype](self.dims())
+            new_tensor.op_assign(self._tensor)
+            self._tensor = new_tensor
 
-    def to_numpy(self):
-        """
-        Create a numpy array equivalent to the tensor.
+    def to_numpy(self, copy=False):
+        """Create a numpy array equivalent to the tensor.
+
+        :param copy: if false, memory is shared between :py:class:`n2d2.Tensor` and ``numpy.array``, else data are copied in memory, default=True
+        :type copy: Boolean, optional
         """
         try:
             from numpy import array 
         except ImportError:
             raise ImportError("Numpy is not installed")
-        return array(self.N2D2()) 
+        return array(self.N2D2(), copy=copy) 
 
     @classmethod
     def from_numpy(cls, np_array):
@@ -444,7 +446,6 @@ class Tensor:
         Synchronize Device to Host.
         CUDA tensor are stored and computed in the GPU (Device).
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
-        The synchronizations are handled by the library and regular users don't need use this method.  
         """
         if not n2d2.cuda_compiled:
             raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
@@ -459,7 +460,6 @@ class Tensor:
         Synchronize Host to Device.
         CUDA tensor are stored and computed in the GPU (Device).
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
-        The synchronizations are handled by the library and regular users don't need use this method.  
         """
         if not n2d2.cuda_compiled:
             raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
@@ -518,7 +518,7 @@ class Tensor:
 
 class Interface(n2d2.provider.Provider):
     """
-    Interface is the class used to feed multiple tensors to a cell.
+    An :py:class:`n2d2.Interface` is used to feed multiple tensors to a cell.
     """
     def __init__(self, tensors):
         self._name = n2d2.generate_name(self)
