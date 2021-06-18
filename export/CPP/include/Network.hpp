@@ -505,9 +505,8 @@ template<int NB_ITERATIONS,
         int8_t low_weight = 0;
         T4_8_Vector data;
 
-        int factor = 8/NB_BITS_W;
+        constexpr int factor = 8/NB_BITS_W;
 
-        //NB_ITERATIONS = NB_ITERATIONS/factor;
         if(verbose) std::cout << "NB_ITERATIONS = " << NB_ITERATIONS << std::endl;
 
         for (int iter = 0; iter < NB_ITERATIONS/factor; ++iter) {
@@ -522,6 +521,295 @@ template<int NB_ITERATIONS,
 
             weightedSum += inputs[iterInput*INPUTS_INC] * high_weight;
             weightedSum += inputs[(iterInput+1)*INPUTS_INC] * low_weight;
+        }
+    }
+
+
+
+template<int NB_ITERATIONS,
+             int NB_BITS_W,
+             int INPUTS_INC = 1,
+             int WEIGHTS_INC = 1,
+             typename Weight_T, typename Bias_T,
+             class Input_T,
+             typename std::enable_if<(NB_BITS_W == 2)>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static void macsOnRangeMixedPrecision(const Input_T* __restrict inputs,
+                                               const Weight_T* __restrict weights,
+                                               Bias_T& __restrict weightedSum,
+                                               bool verbose)
+    {
+        int iterInput = 0;
+        int8_t weight0 = 0;
+        int8_t weight1 = 0;
+        int8_t weight2 = 0;
+        int8_t weight3 = 0;
+        T2_8_Vector data;
+
+        constexpr int factor = 8/NB_BITS_W;
+        if(verbose) std::cout << "factor = " << factor << '\n' << std::flush;
+
+        if(verbose) std::cout << "NB_ITERATIONS = " << NB_ITERATIONS << '\n' << std::flush;
+
+        for (int iter = 0; iter < NB_ITERATIONS/factor; ++iter) {
+            iterInput = iter*factor;
+            if(verbose) std::cout << "iter = " << iter << " , iterInput = " << iterInput << '\n' << std::flush;
+            data.uvector = weights[iter*WEIGHTS_INC];
+
+            weight0 = data.sfields.op3;
+            weight1 = data.sfields.op2;
+            weight2 = data.sfields.op1;
+            weight3 = data.sfields.op0;
+
+            if(verbose) std::cout << "weight0 = " << +weight0 <<  std::flush;
+            if(verbose) std::cout << "weight1 = " << +weight1 <<  std::flush;
+            if(verbose) std::cout << "weight2 = " << +weight2 <<  std::flush;
+            if(verbose) std::cout << "weight3 = " << +weight3 <<  std::flush;
+
+            weightedSum += inputs[iterInput*INPUTS_INC] * weight0;
+            weightedSum += inputs[(iterInput+1)*INPUTS_INC] * weight1;
+            weightedSum += inputs[(iterInput+2)*INPUTS_INC] * weight2;
+            weightedSum += inputs[(iterInput+3)*INPUTS_INC] * weight3;
+        }
+    }
+
+
+    //refactored version
+    template<int NB_BITS_W,
+             int INPUTS_INC = 1,
+             int WEIGHTS_INC = 1,
+             typename Input_T,
+             typename Weight_T, typename Bias_T,
+             typename std::enable_if<(NB_BITS_W == 4)>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static Bias_T dualMac(const Input_T* __restrict inputs,
+                                            const Weight_T* __restrict weights,
+                                            Bias_T weightedSum, bool verbose)
+    {
+        T4_8_Vector data;
+        data.uvector = weights[0*WEIGHTS_INC];
+
+        if(verbose) std::cout << "dual" << std::flush;
+        if(verbose) std::cout << "weight0 = " << +data.sfields.op1 <<  std::flush;
+        if(verbose) std::cout << "weight1 = " << +data.sfields.op0 <<  std::flush;
+
+        weightedSum += inputs[0*INPUTS_INC] * data.sfields.op1
+         + inputs[1*INPUTS_INC] * data.sfields.op0;
+
+        return weightedSum;
+    }
+
+    template<int NB_BITS_W,
+             int INPUTS_INC = 1,
+             int WEIGHTS_INC = 1,
+             typename Input_T,
+             typename Weight_T, typename Bias_T,
+             typename std::enable_if<(NB_BITS_W == 2)>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static Bias_T dualMac(const Input_T* __restrict inputs,
+                                            const Weight_T* __restrict weights,
+                                            Bias_T weightedSum, bool verbose)
+    {
+        T2_8_Vector data;
+        data.uvector = weights[0*WEIGHTS_INC];
+
+        if(verbose) std::cout << "dual" << std::flush;
+
+        if(verbose) std::cout << "weight0 = " << +data.sfields.op3 <<  std::flush;
+        if(verbose) std::cout << "weight1 = " << +data.sfields.op2 <<  std::flush;
+
+        weightedSum += inputs[0*INPUTS_INC] * data.sfields.op3
+         + inputs[1*INPUTS_INC] * data.sfields.op2;
+
+        return weightedSum;
+    }
+
+    template<int NB_BITS_W,
+             int INPUTS_INC = 1,
+             int WEIGHTS_INC = 1,
+             typename Input_T,
+             typename Weight_T, typename Bias_T,
+             typename std::enable_if<(NB_BITS_W == 2)>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static Bias_T quadMac(const Input_T* __restrict inputs,
+                                            const Weight_T* __restrict weights,
+                                            Bias_T weightedSum,
+                                            bool verbose)
+    {
+        T2_8_Vector data;
+        data.uvector = weights[0*WEIGHTS_INC];
+
+        if(verbose) std::cout << "quad" << std::flush;
+        if(verbose) std::cout << "weight0 = " << +data.sfields.op3 << std::flush;
+        if(verbose) std::cout << "weight1 = " << +data.sfields.op2 << std::flush;
+        if(verbose) std::cout << "weight2 = " << +data.sfields.op1 << std::flush;
+        if(verbose) std::cout << "weight3 = " << +data.sfields.op0 << std::flush;
+
+        weightedSum += inputs[0*INPUTS_INC] * data.sfields.op3
+         + inputs[1*INPUTS_INC] * data.sfields.op2
+         + inputs[2*INPUTS_INC] * data.sfields.op1
+         + inputs[3*INPUTS_INC] * data.sfields.op0;
+
+        return weightedSum;
+    }
+
+    template<int NB_ITERATIONS,
+             int NB_BITS_W,
+             int INPUTS_INC = 1,
+             int WEIGHTS_INC = 1,
+             typename Weight_T, typename Bias_T,
+             class Input_T,
+             typename std::enable_if<((NB_BITS_W == 2 || NB_BITS_W == 4)  && NB_ITERATIONS == 0)>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static void macsOnRangeMixedPrecisionR(const Input_T* __restrict inputs,
+                                               const Weight_T* __restrict weights,
+                                               Bias_T& __restrict weightedSum,
+                                               bool verbose)
+    {
+        if(verbose) std::cout << "(NB_BITS_W == 2 || NB_BITS_W == 4)  && NB_ITERATIONS == 0" << std::flush;
+    }
+
+    template<int NB_ITERATIONS,
+             int NB_BITS_W,
+             int INPUTS_INC = 1,
+             int WEIGHTS_INC = 1,
+             typename Weight_T, typename Bias_T,
+             class Input_T,
+             typename std::enable_if<((NB_BITS_W == 2 || NB_BITS_W == 4) && NB_ITERATIONS == 1)>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static void macsOnRangeMixedPrecisionR(const Input_T* __restrict inputs,
+                                               const Weight_T* __restrict weights,
+                                               Bias_T& __restrict weightedSum,
+                                               bool verbose)
+    {
+        T2_8_Vector data;
+        data.uvector = weights[0*WEIGHTS_INC];
+        weightedSum += (*inputs)*data.sfields.op3;
+    }
+
+    template<int NB_ITERATIONS,
+             int NB_BITS_W,
+             int INPUTS_INC = 1,
+             int WEIGHTS_INC = 1,
+             typename Weight_T, typename Bias_T,
+             class Input_T,
+             typename std::enable_if<(NB_BITS_W == 2 && NB_ITERATIONS >=2 && NB_ITERATIONS < 4) ||
+             (NB_BITS_W == 4 && NB_ITERATIONS >=2)>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static void macsOnRangeMixedPrecisionR(const Input_T* __restrict inputs,
+                                               const Weight_T* __restrict weights,
+                                               Bias_T& __restrict weightedSum,
+                                               bool verbose)
+    {
+
+        if(verbose) std::cout << "NB_BITS_W == 2 && NB_ITERATIONS >=2 && NB_ITERATIONS < 4) || (NB_BITS_W == 4 && NB_ITERATIONS >=2" << std::flush;
+
+        weightedSum = dualMac<NB_BITS_W, INPUTS_INC, WEIGHTS_INC>(inputs, weights, weightedSum, verbose);
+        macsOnRangeMixedPrecisionR<NB_ITERATIONS-2, NB_BITS_W, INPUTS_INC, WEIGHTS_INC>(inputs + 2*INPUTS_INC, weights + WEIGHTS_INC, weightedSum, verbose);
+    }
+
+    template<int NB_ITERATIONS,
+             int NB_BITS_W,
+             int INPUTS_INC = 1,
+             int WEIGHTS_INC = 1,
+             typename Weight_T, typename Bias_T,
+             class Input_T,
+             typename std::enable_if<(NB_BITS_W == 2 && NB_ITERATIONS >=4)>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static void macsOnRangeMixedPrecisionR(const Input_T* __restrict inputs,
+                                               const Weight_T* __restrict weights,
+                                               Bias_T& __restrict weightedSum,
+                                               bool verbose)
+    {
+
+        if(verbose) std::cout << "NB_BITS_W == 2 && NB_ITERATIONS >=4" << std::flush;
+        weightedSum = quadMac<NB_BITS_W, INPUTS_INC, WEIGHTS_INC>(inputs, weights, weightedSum, verbose);
+        macsOnRangeMixedPrecisionR<NB_ITERATIONS-4, NB_BITS_W, INPUTS_INC, WEIGHTS_INC>(inputs + 4*INPUTS_INC, weights + WEIGHTS_INC, weightedSum, verbose);
+    }
+
+    //1b
+    //to test and add recursive template for octoMac!
+    /*
+    template<int NB_ITERATIONS,
+             int NB_BITS_W,
+             int INPUTS_INC = 1,
+             int WEIGHTS_INC = 1,
+             typename Weight_T, typename Bias_T,
+             class Input_T,
+             typename std::enable_if<(NB_BITS_W == 1)>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static void macsOnRangeMixedPrecision(const Input_T* __restrict inputs,
+                                               const Weight_T* __restrict weights,
+                                               Bias_T& __restrict weightedSum,
+                                               bool verbose)
+    {
+        int iterInput = 0;
+        int8_t weight0 = 0;
+        int8_t weight1 = 0;
+        int8_t weight2 = 0;
+        int8_t weight3 = 0;
+        int8_t weight4 = 0;
+        int8_t weight5 = 0;
+        int8_t weight6 = 0;
+        int8_t weight7 = 0;
+        T1_8_Vector data;
+
+        int factor = 8/NB_BITS_W;
+
+        //NB_ITERATIONS = NB_ITERATIONS/factor;
+        if(verbose) std::cout << "NB_ITERATIONS = " << NB_ITERATIONS << std::endl;
+
+        for (int iter = 0; iter < NB_ITERATIONS/factor; ++iter) {
+            iterInput = iter*factor;
+            if(verbose) std::cout << "iter = " << iter << " , iterInput = " << iterInput << std::endl;
+            data.uvector = weights[iter*WEIGHTS_INC];
+
+            weight0 = data.sfields.op7;
+            weight1 = data.sfields.op6;
+            weight2 = data.sfields.op5;
+            weight3 = data.sfields.op4;
+            weight4 = data.sfields.op3;
+            weight5 = data.sfields.op2;
+            weight6 = data.sfields.op1;
+            weight7 = data.sfields.op0;
+
+            weightedSum += inputs[iterInput*INPUTS_INC] * weight0;
+            weightedSum += inputs[(iterInput+1)*INPUTS_INC] * weight1;
+            weightedSum += inputs[(iterInput+2)*INPUTS_INC] * weight2;
+            weightedSum += inputs[(iterInput+3)*INPUTS_INC] * weight3;
+            weightedSum += inputs[(iterInput+4)*INPUTS_INC] * weight4;
+            weightedSum += inputs[(iterInput+5)*INPUTS_INC] * weight5;
+            weightedSum += inputs[(iterInput+6)*INPUTS_INC] * weight6;
+            weightedSum += inputs[(iterInput+7)*INPUTS_INC] * weight7;
+        }
+    }
+    */
+
+    //no accumulate for >=8 bits
+    /*
+    template<int NB_ITERATIONS,
+             int NB_BITS_W,
+             int INPUTS_INC = 1,
+             int WEIGHTS_INC = 1,
+             typename Weight_T, typename Bias_T,
+             class Input_T,
+             typename std::enable_if<(NB_BITS_W == 8)>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static void macsOnRangeMixedPrecision(const Input_T* __restrict inputs,
+                                               const Weight_T* __restrict weights,
+                                               Bias_T& __restrict weightedSum,
+                                               bool verbose)
+    {
+        for (int iter = 0; iter < NB_ITERATIONS; ++iter) {
+            weightedSum += inputs[iter*INPUTS_INC] * weights[iter*WEIGHTS_INC];
+        }
+    }
+    */
+
+    //no accumulated weights for >=8 bits
+    template<int NB_ITERATIONS,
+             int NB_BITS_W,
+             int INPUTS_INC = 1,
+             int WEIGHTS_INC = 1,
+             typename Weight_T, typename Bias_T,
+             class Input_T,
+             typename std::enable_if<(NB_BITS_W >= 8)>::type* = nullptr>
+    N2D2_ALWAYS_INLINE static void macsOnRangeMixedPrecisionR(const Input_T* __restrict inputs,
+                                               const Weight_T* __restrict weights,
+                                               Bias_T& __restrict weightedSum, bool verbose)
+    {
+        for (int iter = 0; iter < NB_ITERATIONS; ++iter) {
+            weightedSum += inputs[iter*INPUTS_INC] * weights[iter*WEIGHTS_INC];
         }
     }
 
@@ -821,41 +1109,28 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
                     int wOffset = NB_CHANNELS * (sxMin
                         + KERNEL_WIDTH * (syMin + sy + KERNEL_HEIGHT * output));
 
-                    bool wAccumulated = true;
-                    if(NB_CHANNELS == 1 || NB_BITS_W == 8){
-                        wAccumulated = false;
-                    }
-
-                    bool verbose = true;
+                    bool verbose = false;
 
                     // NB_CHANNELS -> ((NB_CHANNELS*precision)+(NB_CHANNELS*precision)%8)/8
                     // e.g. (7*4 + (4))/8 -> 4
-                    if(wAccumulated){
-                        int nbCh_prec_align = ((NB_CHANNELS*NB_BITS_W)+(NB_CHANNELS*NB_BITS_W)%8)/8;
-                        if(verbose) std::cout << "nbCh_prec_align = " << nbCh_prec_align << std::endl;
-                        wOffset = nbCh_prec_align * (sxMin
+                    constexpr int NB_INT8 = ((NB_CHANNELS*NB_BITS_W)+(NB_CHANNELS*NB_BITS_W)%8)/8;
+                    //constexpr int NB_SLOT_INT8 = 8/NB_BITS_W;
+                    //constexpr int NB_SLOT_TOTAL = NB_INT8*NB_SLOT_INT8;
+                    //constexpr int NB_SLOT_FREE = NB_SLOT_TOTAL-NB_CHANNELS;
+
+                    wOffset = NB_INT8 * (sxMin
                             + KERNEL_WIDTH * (syMin + sy + KERNEL_HEIGHT * output));
-                        if(verbose) std::cout << "new wOffset = " << wOffset << std::endl;
-                    }
 
                     if (!wrapInRange && (NB_CHANNELS == INPUT_MEM_STRIDE
                         && ((PADDING_X == 0
                             && OUTPUTS_WIDTH == OUTPUTS_WIDTH_NOPAD)
-                                || sxMax - sxMin == KERNEL_WIDTH)))
+                                || sxMax - sxMin == KERNEL_WIDTH)) && ((NB_CHANNELS*NB_BITS_W)%8 == 0))
                     {
-                        if(wAccumulated){
-                            macsOnRangeMixedPrecision<KERNEL_WIDTH * NB_CHANNELS, NB_BITS_W>(
+                            macsOnRangeMixedPrecisionR<KERNEL_WIDTH * NB_CHANNELS, NB_BITS_W>(
                                 inputs + iOffset,
                                 weights + wOffset,
                                 weightedSum,
                                 verbose);
-                        }
-                        else{
-                            macsOnRange<KERNEL_WIDTH * NB_CHANNELS>(
-                                inputs + iOffset,
-                                weights + wOffset,
-                                weightedSum);
-                        }
                     }
                     else {
                         for (int sx = 0; sx < KERNEL_WIDTH; ++sx) {
@@ -876,12 +1151,21 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
                                             - INPUT_MEM_CONT_OFFSET
                                             - INPUT_MEM_CONT_SIZE;
                             }
-
-                            macsOnRange<NB_CHANNELS>(
+                            /*
+                            if(output == 0){
+                                std::cout << "sx = " << sx << std::flush;
+                                std::cout << "wOffset = " << wOffset <<  std::flush;
+                                std::cout << "wOffset + sx * NB_INT8 = " << wOffset + sx * NB_INT8 <<  std::flush;
+                                std::cout << "NB_CHANNELS = " << NB_CHANNELS << std::flush;
+                                verbose = true;
+                            }
+                            */
+                            macsOnRangeMixedPrecisionR<NB_CHANNELS, NB_BITS_W>(
                                 // same input line so no wrapping can occur
                                 inputs + iOffsetInRange, 
-                                weights + wOffset + sx * NB_CHANNELS, 
-                                weightedSum);
+                                weights + wOffset + sx * NB_INT8,
+                                weightedSum,
+                                verbose);
                         }
                     }
                 }
