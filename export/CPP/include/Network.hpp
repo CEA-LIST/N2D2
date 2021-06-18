@@ -195,6 +195,7 @@ private:
             int OUTPUT_MEM_WRAP_OFFSET,
             int OUTPUT_MEM_WRAP_SIZE,
             int OUTPUT_MEM_STRIDE,
+            int NB_BITS_W,
             int ACTIVATION_OUTPUT_RANGE,
             typename Input_T, typename Output_T,
             typename Weight_T, typename Bias_T,
@@ -253,6 +254,7 @@ private:
             int OUTPUT_MEM_WRAP_OFFSET,
             int OUTPUT_MEM_WRAP_SIZE,
             int OUTPUT_MEM_STRIDE,
+            int NB_BITS_W,
             int ACTIVATION_OUTPUT_RANGE,
             typename Input_T, typename Output_T,
             typename Weight_T, typename Bias_T,
@@ -1197,6 +1199,7 @@ template<int NB_CHANNELS,
          int OUTPUT_MEM_WRAP_OFFSET,
          int OUTPUT_MEM_WRAP_SIZE,
          int OUTPUT_MEM_STRIDE,
+         int NB_BITS_W,
          int ACTIVATION_OUTPUT_RANGE,
          typename Input_T, typename Output_T,
          typename Weight_T, typename Bias_T,
@@ -1543,6 +1546,7 @@ template<int NB_CHANNELS,
          int OUTPUT_MEM_WRAP_OFFSET,
          int OUTPUT_MEM_WRAP_SIZE,
          int OUTPUT_MEM_STRIDE,
+         int NB_BITS_W,
          int ACTIVATION_OUTPUT_RANGE,
          typename Input_T, typename Output_T,
          typename Weight_T, typename Bias_T,
@@ -1584,14 +1588,31 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
                 wrapInRange = true;
             }
 
-            const int wOffset = NB_CHANNELS * CHANNELS_WIDTH
+            int wOffset = NB_CHANNELS * CHANNELS_WIDTH
                                     * (iy + CHANNELS_HEIGHT * och);
 
-            if (!wrapInRange && INPUT_MEM_STRIDE == NB_CHANNELS) {
+            constexpr int NB_INT8 = ((NB_CHANNELS*NB_BITS_W)+(NB_CHANNELS*NB_BITS_W)%8)/8;
+            //constexpr int NB_SLOT_INT8 = 8/NB_BITS_W;
+            //constexpr int NB_SLOT_TOTAL = NB_INT8*NB_SLOT_INT8;
+            //constexpr int NB_SLOT_FREE = NB_SLOT_TOTAL-NB_CHANNELS;
+            wOffset = NB_INT8 * CHANNELS_WIDTH
+                            * (iy + CHANNELS_HEIGHT * och);
+
+            bool verbose = false;
+
+            if (!wrapInRange && INPUT_MEM_STRIDE == NB_CHANNELS &&
+                ((NB_CHANNELS*NB_BITS_W)%8 == 0)) {
+                /*
                 macsOnRange<NB_CHANNELS * CHANNELS_WIDTH>(
                     inputs + iOffset, 
                     weights + wOffset, 
                     weightedSum);
+                */
+                macsOnRangeMixedPrecisionR<NB_CHANNELS * CHANNELS_WIDTH, NB_BITS_W>(
+                                inputs + iOffset,
+                                weights + wOffset,
+                                weightedSum,
+                                verbose);
             }
             else {
                 for (int ix = 0; ix < CHANNELS_WIDTH; ++ix) {
@@ -1604,11 +1625,17 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
                                     - INPUT_MEM_CONT_OFFSET
                                     - INPUT_MEM_CONT_SIZE;
                     }
-
+                    macsOnRangeMixedPrecisionR<NB_CHANNELS, NB_BITS_W>(
+                                inputs + iOffsetInRange,
+                                weights + wOffset + ix * NB_INT8,
+                                weightedSum,
+                                verbose);
+                    /*
                     macsOnRange<NB_CHANNELS>(
                         inputs + iOffsetInRange, 
                         weights + wOffset + ix * NB_CHANNELS, 
                         weightedSum);
+                    */
                 }
             }
         }

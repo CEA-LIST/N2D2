@@ -296,6 +296,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
         std::cout << Utils::cwarning << "Cell with number of channels = " << cell.getNbChannels() << ", and weight precision = " << wPrecision << " :: weights will not be accumulated!";
     }
     else if(cell.getNbChannels() > 1 && (wPrecision > 0 && wPrecision < 8)){
+
         accumulate = true;
         wType = "uint8_t";
 
@@ -358,6 +359,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
     }
     else{
         nbSlot_total = cell.getNbChannels();
+        nbSlot_taken = cell.getNbChannels();
         nbSlot_free = 0;
     }
 
@@ -442,7 +444,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
                 //fill with extra 0 if needed
                 for(std::size_t free_sl = 0; free_sl < nbSlot_free; ++free_sl){
 
-                    accumulator |= (static_cast<uint8_t>(0) & mask);
+                    accumulator |= (static_cast<uint32_t>(0) & mask);
 
                     //if the last weight in accumulator
                     if(wCounter == (nbSlot_per_Int8-1)){
