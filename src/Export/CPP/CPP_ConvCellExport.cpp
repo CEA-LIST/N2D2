@@ -33,6 +33,7 @@
 #include <fstream>
 #include <string>
 #include <cstdint>
+#include <cmath>
 
 N2D2::Registrar<N2D2::ConvCellExport> N2D2::CPP_ConvCellExport::mRegistrar(
     {"CPP", "CPP_ASMP", "CPP_STM32", "CPP_HLS"},
@@ -285,35 +286,20 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
             << "[NB_OUTPUTS][KERNEL_HEIGHT][KERNEL_WIDTH][NB_CHANNELS]\n";
     }
 
-    //write explicit type : int8_t is default type for weights in 8,4,2,1 bit precision
-    int wPrecision = (int)cell.getQuantizedNbBits();
+    int wPrecision = (int)pow(2,std::ceil(log2(cell.getQuantizedNbBits())));
     std::string wType = "";
     bool accumulate = false;
 
-    if((cell.getNbChannels() == 1 && (wPrecision > 0 && wPrecision < 8)) || (wPrecision == 8)){
+    // if nbChannels = 1, or precision = 8, or convDW - do not accumulate
+    // convDW : 1 channel per output, wOffset can be in the middle of the word
+    if((cell.getNbChannels() == 1 && (wPrecision > 0 && wPrecision < 8)) || (wPrecision == 8) || isDWConv){
         accumulate = false;
         wType = "int8_t";
         std::cout << Utils::cwarning << "Cell with number of channels = " << cell.getNbChannels() << ", and weight precision = " << wPrecision << " :: weights will not be accumulated!";
     }
-    else if(cell.getNbChannels() > 1 && (wPrecision > 0 && wPrecision < 8)){
-
+    else if(cell.getNbChannels() > 1 && (wPrecision > 0 && wPrecision < 8) && !isDWConv){
         accumulate = true;
         wType = "uint8_t";
-
-        switch (wPrecision) {
-            case 3:
-            wPrecision = 4;
-            break;
-            case 5:
-            wPrecision = 8;
-            break;
-            case 6:
-            wPrecision = 8;
-            break;
-            case 7:
-            wPrecision = 8;
-            break;
-        }
     }
     else if (wPrecision > 8 && wPrecision <= 16){
         accumulate = false;
@@ -393,9 +379,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
                     }
 
                     if(accumulate){
-
                         if (!cell.isConnection(real_sl, o)) {
-                            //header << "0";
                             accumulator |= (static_cast<uint32_t>(0) & mask);
                         }
                         else {

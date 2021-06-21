@@ -1293,6 +1293,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                             && OUTPUTS_WIDTH == OUTPUTS_WIDTH_NOPAD)
                         || sxMax - sxMin == KERNEL_WIDTH))
                     {
+                        //not accumulated weights for DW conv!
                         macsOnRange<KERNEL_WIDTH, INPUT_MEM_STRIDE>(
                             inputs + iOffset + channel, 
                             weights + wOffset, 
@@ -1318,6 +1319,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                                             - INPUT_MEM_CONT_SIZE;
                             }
 
+                            //not accumulated weights for DW conv!
                             weightedSum += inputs[iOffsetInRange + channel]
                                 * weights[wOffset + sx];
                         }

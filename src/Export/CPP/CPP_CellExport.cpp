@@ -23,6 +23,7 @@
 #include "Export/CPP/CPP_CellExport.hpp"
 #include "Export/DeepNetExport.hpp"
 #include "utils/Utils.hpp"
+#include <cmath>
 
 void N2D2::CPP_CellExport::generateHeaderBegin(const Cell& cell, std::ofstream& header) {
     // Append date & time to the file.
@@ -87,8 +88,13 @@ void N2D2::CPP_CellExport::generateActivation(const Cell& cell, std::ofstream& h
 void N2D2::CPP_CellExport::generateWeightPrecision(const Cell& cell, std::ofstream& header) {
     const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
     if(cell.getQuantizedNbBits() > 0) {
+        /*
         header << "#define " << prefix
                 << "_NB_BITS_W " << (int) cell.getQuantizedNbBits()
+                << "\n";
+        */
+        header << "#define " << prefix
+                << "_NB_BITS_W " << (int) pow(2,std::ceil(log2(cell.getQuantizedNbBits())))
                 << "\n";
     }
 }

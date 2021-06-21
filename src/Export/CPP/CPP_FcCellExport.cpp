@@ -211,22 +211,7 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsQAT(const FcCell & cell, std::
            << "// If the previous cell was a 2D cell, CHANNELS_SIZE is flatten in "
                << "the [CHANNELS_HEIGHT][CHANNELS_WIDTH][NB_CHANNELS] order.\n";
 
-    //write explicit type depending on #bits
-    /*
-    int wPrecision = (int)cell.getQuantizedNbBits();
-    std::string wType = "";
-    if(wPrecision > 0 && wPrecision <= 8){
-        wType = "int8_t";
-    }
-    else if(wPrecision > 8 && wPrecision <= 16){
-        wType = "int16_t";
-    }
-    else if(wPrecision > 16){
-        wType = "int32_t";
-    }
-    */
-
-    int wPrecision = (int)cell.getQuantizedNbBits();
+    int wPrecision = (int)pow(2,std::ceil(log2(cell.getQuantizedNbBits())));
     std::string wType = "";
     bool accumulate = false;
 
@@ -238,21 +223,6 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsQAT(const FcCell & cell, std::
     else if(cell.getNbChannels() > 1 && (wPrecision > 0 && wPrecision < 8)){
         accumulate = true;
         wType = "uint8_t";
-
-        switch (wPrecision) {
-            case 3:
-            wPrecision = 4;
-            break;
-            case 5:
-            wPrecision = 8;
-            break;
-            case 6:
-            wPrecision = 8;
-            break;
-            case 7:
-            wPrecision = 8;
-            break;
-        }
     }
     else if (wPrecision > 8 && wPrecision <= 16){
         accumulate = false;
@@ -329,7 +299,6 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsQAT(const FcCell & cell, std::
 
         for (std::size_t h = 0; h < cell.getChannelsHeight(); h++) {
             for (std::size_t w = 0; w < cell.getChannelsWidth(); w++) {
-                //for (std::size_t ch = 0; ch < cell.getNbChannels(); ch++) {
                 for (std::size_t ch = 0; ch < nbSlot_taken; ch++) {
                     const std::size_t wch = ch*cell.getChannelsHeight()*cell.getChannelsWidth() +
                                             h*cell.getChannelsWidth() +
