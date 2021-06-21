@@ -368,7 +368,9 @@ unsigned int N2D2::StimuliData::generate(Database::StimuliSetMask setMask,
                 count[loaded + index] = data.size();
 
                 // Size
-                const Size size(data.dimX(), data.dimY(), data.dimZ());
+                // Use dimD to get the true 3rd dimension, as dimZ has a special
+                // meaning!
+                const Size size(data.dimX(), data.dimY(), data.dimD());
 
                 // Value
                 const Value value(minVal, maxVal, dataMean, dataStdDev);
@@ -385,10 +387,10 @@ unsigned int N2D2::StimuliData::generate(Database::StimuliSetMask setMask,
                         minSizeY = data.dimY();
                 }
 
-                if (data.dimZ() < minSizeZ) {
+                if (data.dimD() < minSizeZ) {
 #pragma omp critical(StimuliData__generate_minSizeZ)
-                    if (data.dimZ() < minSizeZ)
-                        minSizeZ = data.dimZ();
+                    if (data.dimD() < minSizeZ)
+                        minSizeZ = data.dimD();
                 }
 
                 if (minVal < globalValueMin) {
@@ -409,10 +411,10 @@ unsigned int N2D2::StimuliData::generate(Database::StimuliSetMask setMask,
                         maxSizeY = data.dimY();
                 }
 
-                if (data.dimZ() > maxSizeZ) {
+                if (data.dimD() > maxSizeZ) {
 #pragma omp critical(StimuliData__generate_maxSizeZ)
-                    if (data.dimZ() > maxSizeZ)
-                        maxSizeZ = data.dimZ();
+                    if (data.dimD() > maxSizeZ)
+                        maxSizeZ = data.dimD();
                 }
 
                 if (maxVal > globalValueMax) {
