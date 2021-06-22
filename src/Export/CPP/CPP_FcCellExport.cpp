@@ -287,6 +287,7 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsQAT(const FcCell & cell, std::
     }
 
     Tensor<Float_T> weight;
+    Float_T value;
     uint32_t accumulator = 0;
     int wCounter = 0;
 
@@ -327,7 +328,11 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsQAT(const FcCell & cell, std::
                     else{
 
                         cell.getWeight(output,  wch, weight);
-                        CellExport::generateFreeParameter(weight(0), header);
+                        value = weight(0);
+                        if(wPrecision == 1 && value == -1){
+                            value = 0;
+                        }
+                        CellExport::generateFreeParameter(value, header);
 
                         header << ", ";
                         iweight++;

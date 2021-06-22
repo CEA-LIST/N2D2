@@ -361,6 +361,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
     }
 
     Tensor<Float_T> kernel;
+    Float_T value;
     uint32_t accumulator = 0;
     int wCounter = 0;
     std::size_t i = 0;
@@ -384,7 +385,11 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
                         }
                         else {
                             cell.getWeight(o, real_sl, kernel);
-                            accumulator |= (static_cast<uint32_t>(std::round(kernel(sx, sy))) & mask);
+                            value = kernel(sx, sy);
+                            if(wPrecision == 1 && value == -1){
+                                value = 0;
+                            }
+                            accumulator |= (static_cast<uint32_t>(std::round(value)) & mask);
                         }
 
                         //if the last weight in accumulator
