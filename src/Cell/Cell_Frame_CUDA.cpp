@@ -328,11 +328,12 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTarget(const Tensor<int>& targets)
             if (mTargets.empty() || mNbTargetOutputs.empty()) {
                 mTargets.resize(targets.dims());
                 mNbTargetOutputs.resize(
-                    {(getNbOutputs() > 1) ? getNbOutputs() : 2, mOutputs.dimB()}, 0U);
+                    {(getNbOutputs() > 1) ? getNbOutputs() : 2, mOutputs.dimB()});
             }
         }
 
         mTargets.synchronizeToD(targets);
+        mNbTargetOutputs.deviceTensor().fill(0U);
 
         cudaPopulateNbTargetOutputs(CudaContext::getDeviceProp(),
                                     mTargets.getDevicePtr(),
