@@ -113,6 +113,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderConstants(const ConvCell& cell, std
 }
 
 void N2D2::CPP_ConvCellExport::generateHeaderFreeParameters(const ConvCell& cell, std::ofstream & header) {
+
     if(cell.getQuantizedNbBits() > 0){
         generateHeaderBiasQAT(cell, header);
         generateHeaderWeightsQAT(cell, header);
@@ -121,6 +122,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderFreeParameters(const ConvCell& cell
         generateHeaderBias(cell, header);
         generateHeaderWeights(cell, header);
     }
+
 }
 
 void N2D2::CPP_ConvCellExport::generateHeaderBias(const ConvCell& cell, std::ofstream& header) {
@@ -156,8 +158,16 @@ void N2D2::CPP_ConvCellExport::generateHeaderBiasQAT(const ConvCell& cell, std::
     const std::string identifier = Utils::CIdentifier(cell.getName());
     const std::string prefix = Utils::upperCase(identifier);
 
-    //write explicit type, int32 for now
-    header << "static const int32_t " << identifier << "_biases["
+    int wPrecision = (int)pow(2,std::ceil(log2(cell.getQuantizedNbBits())));
+    std::string wType = "";
+    if(wPrecision > 0 && wPrecision <= 8){
+        wType = "int32_t";
+    }
+    else{
+        wType = "int64_t";
+    }
+
+    header << "static const " << wType << " " << identifier << "_biases["
            << prefix << "_NB_OUTPUTS] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_BIASSES) = {";
 
     Tensor<Float_T> bias;

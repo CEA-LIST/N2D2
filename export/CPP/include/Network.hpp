@@ -1031,7 +1031,7 @@ private:
              int WEIGHTS_INC = 1,
              typename Weight_T, typename Bias_T,
              class Input_T,
-             typename std::enable_if<(NB_BITS_W >= 8)>::type* = nullptr>
+             typename std::enable_if<(NB_BITS_W >= 8 || NB_BITS_W <= 0)>::type* = nullptr>
     N2D2_ALWAYS_INLINE static void macsOnRangeMixedPrecisionR(const Input_T* __restrict inputs,
                                                const Weight_T* __restrict weights,
                                                Bias_T& __restrict weightedSum, bool verbose)
@@ -1342,9 +1342,10 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
                     // NB_CHANNELS -> ((NB_CHANNELS*precision)+(NB_CHANNELS*precision)%8)/8
                     // e.g. (7*4 + (4))/8 -> 4
                     constexpr int NB_INT8 = ((NB_CHANNELS*NB_BITS_W)+(NB_CHANNELS*NB_BITS_W)%8)/8;
-
-                    wOffset = NB_INT8 * (sxMin
-                            + KERNEL_WIDTH * (syMin + sy + KERNEL_HEIGHT * output));
+                    if(NB_BITS_W > 0) {
+                        wOffset = NB_INT8 * (sxMin
+                                + KERNEL_WIDTH * (syMin + sy + KERNEL_HEIGHT * output));
+                    }
 
                     if (!wrapInRange && (NB_CHANNELS == INPUT_MEM_STRIDE
                         && ((PADDING_X == 0
@@ -1377,10 +1378,13 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
                                             - INPUT_MEM_CONT_SIZE;
                             }
 
+                            int factor = NB_CHANNELS;
+                            if(NB_BITS_W > 0) factor = NB_INT8;
+
                             macsOnRangeMixedPrecisionR<NB_CHANNELS, NB_BITS_W>(
                                 // same input line so no wrapping can occur
                                 inputs + iOffsetInRange, 
-                                weights + wOffset + sx * NB_INT8,
+                                weights + wOffset + sx * factor,
                                 weightedSum,
                                 verbose);
                         }
@@ -1389,6 +1393,8 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
 
                 outputs[oOffset + output]
                     = sat<Output_T>(weightedSum, output, ACTIVATION, rescaling, ACTIVATION_OUTPUT_RANGE);
+
+                //TODO: accumulate outputs here
             }
         }
     }
@@ -1809,11 +1815,11 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
                                     * (iy + CHANNELS_HEIGHT * och);
 
             constexpr int NB_INT8 = ((NB_CHANNELS*NB_BITS_W)+(NB_CHANNELS*NB_BITS_W)%8)/8;
-            //constexpr int NB_SLOT_INT8 = 8/NB_BITS_W;
-            //constexpr int NB_SLOT_TOTAL = NB_INT8*NB_SLOT_INT8;
-            //constexpr int NB_SLOT_FREE = NB_SLOT_TOTAL-NB_CHANNELS;
-            wOffset = NB_INT8 * CHANNELS_WIDTH
-                            * (iy + CHANNELS_HEIGHT * och);
+
+            if(NB_BITS_W > 0){
+                wOffset = NB_INT8 * CHANNELS_WIDTH
+                                        * (iy + CHANNELS_HEIGHT * och);
+            }
 
             bool verbose = false;
 
@@ -1836,9 +1842,13 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
                                     - INPUT_MEM_CONT_OFFSET
                                     - INPUT_MEM_CONT_SIZE;
                     }
+
+                    int factor = NB_CHANNELS;
+                    if(NB_BITS_W > 0) factor = NB_INT8;
+
                     macsOnRangeMixedPrecisionR<NB_CHANNELS, NB_BITS_W>(
                                 inputs + iOffsetInRange,
-                                weights + wOffset + ix * NB_INT8,
+                                weights + wOffset + ix * factor,
                                 weightedSum,
                                 verbose);
                 }

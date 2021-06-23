@@ -97,6 +97,11 @@ void N2D2::CPP_CellExport::generateWeightPrecision(const Cell& cell, std::ofstre
                 << "_NB_BITS_W " << (int) pow(2,std::ceil(log2(cell.getQuantizedNbBits())))
                 << "\n";
     }
+    else{
+        header << "#define " << prefix
+                << "_NB_BITS_W " << (int) cell.getQuantizedNbBits()
+                << "\n";
+    }
 }
 
 void N2D2::CPP_CellExport::generateActivationScaling(const Cell& cell, std::ofstream& header) {

@@ -128,8 +128,16 @@ void N2D2::CPP_FcCellExport::generateHeaderBias(const FcCell & cell, std::ofstre
 void N2D2::CPP_FcCellExport::generateHeaderBiasQAT(const FcCell & cell, std::ofstream& header) {
     const std::string identifier = Utils::CIdentifier(cell.getName());
 
-    //write explicit type
-    header << "static const int32_t " << identifier << "_biases["
+    int wPrecision = (int)pow(2,std::ceil(log2(cell.getQuantizedNbBits())));
+    std::string wType = "";
+    if(wPrecision > 0 && wPrecision <= 8){
+        wType = "int32_t";
+    }
+    else{
+        wType = "int64_t";
+    }
+
+    header << "static const " << wType << " " << identifier << "_biases["
                << Utils::upperCase(identifier) << "_OUTPUTS_SIZE"
            <<"] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_BIASSES) = {";
 
