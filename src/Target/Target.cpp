@@ -729,9 +729,14 @@ void N2D2::Target::process_Frame(BaseTensor& values,
     if (nbOutputs > 1 && mTargetTopN > 1)
         std::iota(outputsIdx.begin(), outputsIdx.end(), 0);
 
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
     const Tensor<int>& labels = mStimuliProvider->getLabelsData();
-    TensorLabels_T& estimatedLabels = mTargetData[0].estimatedLabels;
-    TensorLabelsValue_T& estimatedLabelsValue = mTargetData[0].estimatedLabelsValue;
+    TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
+    TensorLabelsValue_T& estimatedLabelsValue = mTargetData[dev].estimatedLabelsValue;
 
     if (estimatedLabels.empty()) {
         estimatedLabels.resize({mCell->getOutputsWidth(),
