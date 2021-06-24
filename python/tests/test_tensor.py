@@ -128,6 +128,8 @@ class test_tensor(unittest.TestCase):
             self.tensor.cuda()
             self.assertTrue(self.tensor.is_cuda)
         self.assertEqual(self.tensor, copy)
+        
+    # TODO : add test to see if N2D2 -> Numpy is well done without memory copies.
 
 class test_cudatensor(test_tensor):
     def setUp(self):

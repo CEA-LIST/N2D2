@@ -26,32 +26,69 @@ import N2D2
 def _switching_convention(dims):
     return [dims[3], dims[2], dims[0], dims[1]]
 
-# TODO : It may be possible for CUDA tensor to just pass the device adress to the CUDA kernel
-# cf: https://github.com/pytorch/pytorch/issues/1649
-# Getting the ownership of the address may be difficult ...
 
 def _to_n2d2(torch_tensor):
     """
-    Convert torch.Tensor -> n2d2.Tensor
+    Convert torch.Tensor -> n2d2.Tensor.
+    The conversion always creates a CPU memory copy but not a GPU one if the tensor is CUDA.
+    This method also convert the shape of the tensor to follow N2D2 convention.
     """
-    numpy_tensor = torch_tensor.cpu().detach().numpy()
-    n2d2_tensor = n2d2.Tensor.from_numpy(numpy_tensor)
-    if n2d2_tensor.nb_dims() ==4:
-        n2d2_tensor.reshape(_switching_convention(n2d2_tensor.dims())) 
+    n2d2_tensor = None
+
+    if torch_tensor.is_cuda:
+        dtype = torch_tensor.dtype
+
+        if dtype is torch.float32:
+            data_type = "float"
+        elif dtype is torch.float:
+            data_type = "float"
+        elif dtype is torch.float64:
+            data_type = "double"
+        elif dtype is torch.int16:
+            data_type = "short"
+        elif dtype is torch.short:
+            data_type = "short"
+        elif dtype is torch.int32:
+            data_type = "int"
+        elif dtype is torch.int:
+            data_type = "int"
+        # TODO : CudaTensor<long> cause ImportError when binded.
+        elif dtype is torch.int64:
+            data_type = "long"
+        elif dtype is torch.long:
+            data_type = "long"
+        else:
+            raise ValueError("Could not convert " + type(dtype) + " to a known n2d2.Tensor datatype !")
+
+        n2d2_tensor = n2d2.Tensor([], datatype=data_type, cuda=True)
+        n2d2_tensor.N2D2().update_ptr(torch_tensor.data_ptr(), torch_tensor.get_device(), torch_tensor.shape)
+        n2d2_tensor.dtoh()
+        dims = n2d2_tensor.dims()
+        if n2d2_tensor.nb_dims() == 4:
+            n2d2_tensor.reshape([dims[0], dims[1], dims[3], dims[2]])
+    else:
+        numpy_tensor = torch_tensor.cpu().detach().numpy() 
+        # This operation create a CPU memory copy.
+        # torch.Tensor can have a discontiguous memory while n2d2.Tensor need a contiguous memory space. 
+        # Making the conversion hard to do without copy.
+        n2d2_tensor = n2d2.Tensor.from_numpy(numpy_tensor) 
+        if n2d2_tensor.nb_dims() == 4:
+            n2d2_tensor.reshape(_switching_convention(n2d2_tensor.dims())) 
     return n2d2_tensor
 
 def _to_torch(N2D2_tensor):
     """
     Convert N2D2.Tensor -> torch.Tensor
+    The conversion creates a GPU memory copy if the tensor is CUDA.
+    This method also convert the shape of the tensor to follow torch convention.
     """
     n2d2_tensor = n2d2.Tensor.from_N2D2(N2D2_tensor)
     numpy_tensor = n2d2_tensor.to_numpy() 
     torch_tensor = torch.from_numpy(numpy_tensor)
-    if torch_tensor.is_cuda:
-        torch_tensor = torch_tensor.cuda()
+    if n2d2_tensor.is_cuda:
+        torch_tensor = torch_tensor.cuda() # Create GPU memory copy
     if n2d2_tensor.nb_dims() ==4:
         torch_tensor.resize_(_switching_convention(n2d2_tensor.dims())) 
-
     return torch_tensor
 
 class LayerN2D2(torch.nn.Module):

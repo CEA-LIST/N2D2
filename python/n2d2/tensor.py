@@ -34,8 +34,7 @@ hard_coded_type = {
     "b": bool,
     "bool": bool,
     "d": float,
-    "double": float,
-
+    "double": float,  
 }
 
 
@@ -44,6 +43,10 @@ class Tensor:
     _tensor_generators = {
         "f": N2D2.Tensor_float,
         "float": N2D2.Tensor_float,
+        "short": N2D2.Tensor_short,
+        "s": N2D2.Tensor_short,
+        "long": N2D2.Tensor_long,
+        "l": N2D2.Tensor_long,
         "i": N2D2.Tensor_int,
         "int": N2D2.Tensor_int,
         "b": N2D2.Tensor_bool,
@@ -57,9 +60,12 @@ class Tensor:
     _cuda_tensor_generators = {
         "f": N2D2.CudaTensor_float,
         "float": N2D2.CudaTensor_float,
+        "short": N2D2.CudaTensor_short,
+        "s": N2D2.CudaTensor_short,
+        "long": N2D2.CudaTensor_long,
+        "l": N2D2.CudaTensor_long,
         "i": N2D2.CudaTensor_int,
         "int": N2D2.CudaTensor_int,
-        # bool: N2D2.CudaTensor_bool, # Not defined
         "d": N2D2.CudaTensor_double,
         "double": N2D2.CudaTensor_double,
     }
@@ -435,6 +441,7 @@ class Tensor:
         output = "n2d2.Tensor([\n"
         output += str(self._tensor)
         output += "], device=" + ("cuda" if self.is_cuda else "cpu")
+        output += ", datatype=" + self.data_type()
         if self.cell:
             output += ", cell='" + str(self.cell.get_name()) + "')"
         else:

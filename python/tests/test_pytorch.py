@@ -24,7 +24,7 @@ import N2D2
 import n2d2
 from n2d2.cells.nn import Conv
 from n2d2 import tensor
-
+from time import sleep
 import n2d2.pytorch as pytorch
 
 # from n2d2.deepnet import Sequence, DeepNet
@@ -44,14 +44,52 @@ class test_tensor_conversion(unittest.TestCase):
     def test_torch_to_n2d2(self):
         torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y)
         n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
-        self.assertEqual([n2d2_tensor.dimX(), n2d2_tensor.dimY(), n2d2_tensor.dimZ(), n2d2_tensor.dimB()], self.n2d2_format)
+        self.assertEqual(n2d2_tensor.dims(), self.n2d2_format)
 
     def test_n2d2_to_torch(self):
-        n2d2_tensor = N2D2.Tensor_float([self.x, self.y, self.channel, self.batch_size])
+        n2d2_tensor = N2D2.Tensor_float(self.n2d2_format)
         torch_tensor = n2d2.pytorch.pytorch_interface._to_torch(n2d2_tensor)
         self.assertEqual(list(torch_tensor.shape), self.torch_format)
+    
+    def test_torch_to_n2d2_cuda_int(self):
+        a = torch.ones(self.batch_size, self.channel, self.x, self.y, 
+                        dtype=torch.int32, device=torch.device('cuda:0'))
+ 
+        b = n2d2.pytorch.pytorch_interface._to_n2d2(a)
+        self.assertTrue(b.is_cuda)
+        self.assertEqual(b.dims(), self.n2d2_format)
 
+        for i in b: 
+            self.assertEqual(i, 1)
+        
+        b[0] = 20
+        b.htod() 
+        self.assertEqual(b[0], a[0][0][0][0].data)
 
+    def test_torch_to_n2d2_float(self):
+        torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
+                        dtype=torch.float, device=torch.device('cuda:0'))
+        float_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
+        for i in float_n2d2_tensor: 
+            self.assertEqual(i, 1)
+    def test_torch_to_n2d2_double(self):
+        torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
+                        dtype=torch.double, device=torch.device('cuda:0'))
+        double_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
+        for i in double_n2d2_tensor: 
+            self.assertEqual(i, 1)
+    def test_torch_to_n2d2__short(self):
+        torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
+                        dtype=torch.short, device=torch.device('cuda:0'))
+        short_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
+        for i in short_n2d2_tensor: 
+            self.assertEqual(i, 1)
+    def test_torch_to_n2d2_long(self):
+        torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
+                        dtype=torch.long, device=torch.device('cuda:0'))
+        long_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
+        for i in long_n2d2_tensor: 
+            self.assertEqual(i, 1)
 weight_value = 0.1
 batch_size = 2
 device = torch.device('cpu')
@@ -426,7 +464,7 @@ class test_DeepNetN2D2(unittest.TestCase):
             if (n2d2.Tensor.from_N2D2(w_before) != n2d2.Tensor.from_N2D2(w_after)):
                 all_weights_are_equals = False
                 break
-        self.assertFalse(all_weights_are_equals)
+        self.assertFalse(all_weights_are_equals) # TODO : testing if weights are updated is not great sometimes this test fails.
 
 if __name__ == '__main__':
     unittest.main()

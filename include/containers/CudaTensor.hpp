@@ -119,7 +119,14 @@ public:
         assert(dev < (int)mDataDevice.size());
         mDataDevice[dev] = dataDevice;
     }
-    bool isOwner() const
+    void set_is_a_view(bool value){ 
+        /*
+        * This method was created for the python API.
+        * It set a boolean that control if mDataDevice is free by the destructor method.
+        */
+        is_a_view = value;
+    }
+    bool isOwner() const 
     {
         return (!mDataDeviceOwner);
     }
@@ -145,6 +152,7 @@ public:
     virtual ~CudaDeviceTensor();
 
 protected:
+    bool is_a_view; // If True the tensor doesn't own mDataDevice and thus shouldn't free it in destructor.
     mutable std::vector<T*> mDataDevice;
     mutable std::vector<T*> mForeignDataDevice;
     const std::shared_ptr<CudaDeviceTensor<T> > mDataDeviceOwner;
@@ -261,6 +269,7 @@ public:
     CudaTensor(const Tensor<T>& base, bool hostBased = true);
     CudaTensor(std::initializer_list<size_t> dims);
     CudaTensor(const std::vector<size_t>& dims);
+    inline void reserve_host(const std::vector<size_t>& dims);
     inline void reserve(const std::vector<size_t>& dims);
     inline void resize(const std::vector<size_t>& dims);
     inline void resize(std::initializer_list<size_t> dims,
@@ -533,6 +542,7 @@ N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
       mDataDeviceOffset(dataDeviceOffset),
       mTensor(NULL)
 {
+    is_a_view = false;
     // ctor
     int count = 1;
     const cudaError_t status = cudaGetDeviceCount(&count);
@@ -862,6 +872,9 @@ void N2D2::CudaDeviceTensor<T>::aggregateAllTo(int dstDev,
 
 template <typename T> N2D2::CudaDeviceTensor<T>::~CudaDeviceTensor()
 {
+    if (is_a_view){ // TODO : this skip maybe excessive.
+        return;
+    }
     for (size_t dev = 0; dev < mDataDevice.size(); ++dev) {
         if (mDataDevice[dev] != NULL) {
             cudaSetDevice(dev);
@@ -963,6 +976,17 @@ N2D2::CudaTensor<T>::CudaTensor(const Tensor<T>& base,
     mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this,
                                                            dataDeviceOwner,
                                                            dataDeviceOffset);
+}
+
+template <typename T>
+void N2D2::CudaTensor<T>::reserve_host(const std::vector<size_t>& dims)
+{
+    /* 
+    * This method has been created for the Python API.
+    * It's used when changing the pointer of the device to update the host tensor
+    * without re-writting the device memory.
+    */
+    Tensor<T>::reserve(dims);
 }
 
 template <typename T>

@@ -149,7 +149,21 @@ void declare_CudaTensor(py::module &m, const std::string& typeStr) {
 */
         const std::vector<size_t> dims(info.shape.begin(), info.shape.end());
         return new CudaTensor<T>(Tensor<T>(dims, static_cast<T*>(info.ptr)));
-    }));
+    }))
+
+    .def("update_ptr", [](CudaTensor<T>& b, long int_ptr, int dev, const std::vector<size_t>& dims){
+        /*
+        * This method update the host pointer with the given pointer.
+        * This allow to create a Tensor without copying data on the GPU.
+        * (Note : However a copy is necessary on the CPU for the host) 
+        */
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+        b.setDevicePtr((T*)int_ptr);
+        b.reserve_host(dims);
+        b.synchronizeDToH();
+        b.deviceTensor().set_is_a_view(true);
+    })
+    ;
 }
 
 void init_CudaTensor(py::module &m) {
@@ -161,7 +175,7 @@ void init_CudaTensor(py::module &m) {
     declare_CudaDeviceTensor<double>(m, "double");
 
     py::class_<CudaBaseTensor>(m, "CudaBaseTensor")
-    .def("deviceTensor", (CudaBaseDeviceTensor& (CudaBaseTensor::*)()) &CudaBaseTensor::deviceTensor)
+    .def("deviceTensor", (CudaBaseDeviceTensor& (CudaBaseTensor::*)()) &CudaBaseTensor::deviceTensor, py::return_value_policy::reference)
     .def("hostBased", &CudaBaseTensor::hostBased)
     ;
 
@@ -171,8 +185,9 @@ void init_CudaTensor(py::module &m) {
     declare_CudaTensor<unsigned char>(m, "unsigned_char");
     declare_CudaTensor<short>(m, "short");
     declare_CudaTensor<int>(m, "int");
+    declare_CudaTensor<long long>(m, "long"); // Correspond to long torch datatype
     declare_CudaTensor<unsigned int>(m, "unsigned_int");
-    declare_CudaTensor<unsigned long long>(m, "unsigned_long_long");
+    // declare_CudaTensor<unsigned long long>(m, "unsigned_long_long");
 }
 }
 #endif

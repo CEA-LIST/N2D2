@@ -162,7 +162,6 @@ void declare_Tensor(py::module &m, const std::string& typeStr) {
     })
     .def("sum", &Tensor<T>::sum, py::arg("valAbs")=false)
     .def("mean", &Tensor<T>::mean, py::arg("valAbs")=false)
-    .def("resize", (void (Tensor<T>::*)(const std::vector<size_t>&, const T& value)) &Tensor<T>::resize, py::arg("dims"), py::arg("value"))
     .def("fill", &Tensor<T>::fill, py::arg("value"))
     ;
 
