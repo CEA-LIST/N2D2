@@ -41,6 +41,20 @@ struct FloatingPointScaling {
 };
 
 template<std::size_t SIZE>
+struct FloatingPointClippingAndScaling {
+    SUM_T operator()(SUM_T weightedSum, std::size_t /*output*/) const {
+        SUM_T clipValue = weightedSum;
+        clipValue = (clipValue < SUM_T(0)) ?
+                    SUM_T(0) : (clipValue > SUM_T(mClipping)) ?
+                    SUM_T(mClipping) : clipValue;
+        return round(clipValue * mScaling);
+    }
+
+    double mScaling;
+    int32_t mClipping;
+};
+
+template<std::size_t SIZE>
 struct FloatingPointClippingAndScalingPerChannel {
     SUM_T operator()(SUM_T weightedSum, std::size_t output) const {
         SUM_T clipValue = weightedSum;

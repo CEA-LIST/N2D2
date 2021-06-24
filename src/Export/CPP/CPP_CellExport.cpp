@@ -141,9 +141,22 @@ void N2D2::CPP_CellExport::generateScaling(
     }
     else if(scaling.getMode() == ScalingMode::FLOAT_MULT) {
         const auto& scalingPerOutput = scaling.getFloatingPointScaling().getScalingPerOutput();
+
         if(Utils::all_same(scalingPerOutput.begin(), scalingPerOutput.end())) {
-            header << "static const N2D2::FloatingPointScaling " << prefix << "_SCALING = {" 
+            if(!scaling.getFloatingPointScaling().getIsClipped()){
+                header << "static const N2D2::FloatingPointScaling " << prefix << "_SCALING = {"
                                                                     << scalingPerOutput.front() << "};\n";
+            }
+            else{
+                const std::vector<Float_T>& clippingPerOutput
+                        = scaling.getFloatingPointScaling().getClippingPerOutput();
+                std::vector<int32_t> clippingPerOutput_INT32(  clippingPerOutput.begin(),
+                                                                clippingPerOutput.end());
+                assert(clippingPerOutput_INT32.size() == scalingPerOutput.size());
+                header << "static const N2D2::FloatingPointClippingAndScaling<1> "
+                                                                            << prefix << "_CLIPPED_SCALING = {";
+                header << scalingPerOutput.front() << ", " << clippingPerOutput_INT32.front() << "};\n";
+            }
         }
         else {
             if(!scaling.getFloatingPointScaling().getIsClipped()) {
