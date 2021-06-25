@@ -89,7 +89,7 @@ N2D2::StripeRemoveTransformation::getOutputsSize(unsigned int width,
     }
 
     return std::make_pair(newWidth, newHeight);
-};
+}
 
 void
 N2D2::StripeRemoveTransformation::stripeRemove(cv::Mat& mat,
@@ -104,7 +104,7 @@ N2D2::StripeRemoveTransformation::stripeRemove(cv::Mat& mat,
                 cv::Range(0, offset)).copyTo(before);
         }
 
-        if (offset + mLength < mat.cols) {
+        if (offset + mLength < (unsigned int) mat.cols) {
             mat(cv::Range(0, mat.rows),
                 cv::Range(offset + mLength, mat.cols)).copyTo(after);
         }
@@ -116,7 +116,7 @@ N2D2::StripeRemoveTransformation::stripeRemove(cv::Mat& mat,
                 cv::Range(0, mat.cols)).copyTo(before);
         }
 
-        if (offset + mLength < mat.cols) {
+        if (offset + mLength < (unsigned int) mat.cols) {
             mat(cv::Range(offset + mLength, mat.rows),
                 cv::Range(0, mat.cols)).copyTo(after);
         }

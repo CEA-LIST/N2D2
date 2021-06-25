@@ -68,7 +68,7 @@ protected:
     std::vector<std::vector<size_t> > mReserveSpaceSize;
     std::vector<std::vector<void*> > mReserveSpace;
 
-    std::vector<std::vector<cudnnTensorDescriptor_t> > mOutputDesc;
+    std::vector<cudnnTensorDescriptor_t> mOutputDesc;
     std::vector<cudnnDropoutDescriptor_t > mDropoutDesc;
 
 private:
