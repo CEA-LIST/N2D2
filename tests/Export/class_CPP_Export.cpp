@@ -10,7 +10,6 @@
 #include <cstdlib>
 
 #include "DeepNet.hpp"
-#include "Quantizer/DeepNetQAT.hpp"
 #include "DeepNetQuantization.hpp"
 #include "Histogram.hpp"
 #include "N2D2.hpp"
