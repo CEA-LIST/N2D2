@@ -114,6 +114,7 @@ endif
 
 ifdef PYBIND
   CPPFLAGS:=$(CPPFLAGS) -DPYBIND `$(PYBIND) -m pybind11 --includes`
+  LDFLAGS:=$(LDFLAGS) `$(PYBIND) -m pybind11 --ldflags`
 endif
 
 ifdef ONNX
