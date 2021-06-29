@@ -198,6 +198,9 @@ class DeepNetN2D2(torch.nn.Module):
                 t_grad_output = _to_n2d2(grad_output).N2D2()
                 diffInputs = self._N2D2.getCell_Frame_Top(self.last_cell.getName()).getDiffInputs()
                 diffInputs.op_assign(t_grad_output)
+                # TODO : -1 => CPU need to get the device number for GPU ! (create/find a method get_device ?)  
+                if not diffInputs.isValid(-1):
+                    diffInputs.setValid(-1) 
                 diffInputs.synchronizeHToD()
                 self._N2D2.backPropagate([])
                 self._N2D2.update([])
