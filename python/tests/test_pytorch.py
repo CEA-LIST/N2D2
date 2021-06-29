@@ -139,33 +139,33 @@ class NetTestWeightsUpdate(torch.nn.Module):
         return self.conv1.weight.data, self.conv2.weight.data 
 
 class MNIST_CNN(torch.nn.Module):   
-        def __init__(self):
-            super(MNIST_CNN, self).__init__()
-            # Defining the cnn layer that we will extract and export to ONNX
-            self.lin = torch.nn.Linear(128, 10)
-            self.cnn_layers = torch.nn.Sequential( # This is the layer we will replace
-                torch.nn.Conv2d(1, 4, 3, 1),
-                torch.nn.ReLU(),
-                torch.nn.Conv2d(4, 4, 3),
-                torch.nn.ReLU(),
-            )
-            self.linear_layers = torch.nn.Sequential(
-                torch.nn.MaxPool2d(2),
-                torch.nn.Flatten(), 
-                torch.nn.Linear(576, 128),
-                torch.nn.ReLU(), 
-                self.lin,
-                torch.nn.Softmax(),   
-            )
+    def __init__(self):
+        super(MNIST_CNN, self).__init__()
+        # Defining the cnn layer that we will extract and export to ONNX
+        self.lin = torch.nn.Linear(128, 10)
+        self.cnn_layers = torch.nn.Sequential( # This is the layer we will replace
+            torch.nn.Conv2d(1, 4, 3, 1),
+            torch.nn.ReLU(),
+            torch.nn.Conv2d(4, 4, 3),
+            torch.nn.ReLU(),
+        )
+        self.linear_layers = torch.nn.Sequential(
+            torch.nn.MaxPool2d(2),
+            torch.nn.Flatten(), 
+            torch.nn.Linear(576, 128),
+            torch.nn.ReLU(), 
+            self.lin,
+            torch.nn.Softmax(),   
+        )
 
-        # Defining the forward pass    
-        def forward(self, x):
-            x = self.cnn_layers(x)
-            x = self.linear_layers(x)
-            return x
+    # Defining the forward pass    
+    def forward(self, x):
+        x = self.cnn_layers(x)
+        x = self.linear_layers(x)
+        return x
 
-        def get_last_layer_weights(self):
-            return self.lin.weight.data
+    def get_last_layer_weights(self):
+        return self.lin.weight.data
 
 
 class test_LayerN2D2(unittest.TestCase):
@@ -235,7 +235,7 @@ class test_DeepNetN2D2(unittest.TestCase):
         deepNet = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "./tmp.onnx")._embedded_deepnet.N2D2()
 
         deepNet.initialize() 
-        # remove(model_path)
+        remove(model_path)
 
         # Creating the N2D2 equivalent
         n2d2_deepNet = n2d2.pytorch.DeepNetN2D2(deepNet)
@@ -271,6 +271,7 @@ class test_DeepNetN2D2(unittest.TestCase):
         print(deepNetCell)
         deepNet = deepNetCell._embedded_deepnet.N2D2()
         deepNet.initialize()
+        remove(model_path)
 
         n2d2_deepNet = n2d2.pytorch.DeepNetN2D2(deepNet)
 
@@ -381,6 +382,162 @@ class test_DeepNetN2D2(unittest.TestCase):
         for i,j in zip(torch.flatten(weight2), v2):
             self.assertEqual(round(i.item(), 4),round(j, 4))
 
+class test_Sequence(unittest.TestCase):
+
+    def test_sequence(self):
+        model = NetTestWeightsUpdate()
+
+        conv1 = n2d2.cells.Conv(name="3", nb_inputs=1, nb_outputs=1, kernel_dims=[3, 3], sub_sample_dims=[1, 1], stride_dims=[1, 1], padding_dims=[1, 1], dilation_dims=[1, 1], back_propagate=True, no_bias=True, weights_export_flip=True, weights_export_format="OCHW", activation=n2d2.activation.Tanh(alpha=1.0), weights_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), bias_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), weights_filler=n2d2.filler.Constant(value=0.1), bias_filler=n2d2.filler.Constant(value=0.1)) 
+        conv2 = n2d2.cells.Conv(name="5", nb_inputs=1, nb_outputs=1, kernel_dims=[3, 3], sub_sample_dims=[1, 1], stride_dims=[1, 1], padding_dims=[1, 1], dilation_dims=[1, 1], back_propagate=True, no_bias=True, weights_export_flip=True, weights_export_format="OCHW", activation=n2d2.activation.Tanh(alpha=1.0), weights_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), bias_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), weights_filler=n2d2.filler.Constant(value=0.1), bias_filler=n2d2.filler.Constant(value=0.1))
+        seq = n2d2.cells.Sequence([conv1, conv2])
+        n2d2_deepNet = n2d2.pytorch.Sequence(seq)
+
+        weight1, weight2 = model.get_weight()
+        conv_cell = seq[0]
+        v1 = N2D2.Tensor_float([])
+        conv_cell.N2D2().getWeight(0, 0, v1)
+        conv_cell = seq[1]
+        v2 = N2D2.Tensor_float([])
+        conv_cell.N2D2().getWeight(0, 0, v2)
+
+        for i,j in zip(torch.flatten(weight1), v1):
+            self.assertEqual(round(i.item(), 4),round(j, 4))
+        for i,j in zip(torch.flatten(weight2), v2):
+            self.assertEqual(round(i.item(), 4),round(j, 4))
+
+        input_tensor = torch.ones(batch_size, 1, 3, 3)
+        pytorch_output = model(input_tensor)
+        N2D2_output = n2d2_deepNet(input_tensor)
+        N2D2_output = N2D2_output.squeeze()
+
+        for i,j in zip(torch.flatten(pytorch_output), torch.flatten(N2D2_output)):
+            self.assertEqual(round(i.item(), 4),round(j.item(), 4))
+
+        label = torch.ones(batch_size, 1, 3, 3)
+        opt = torch.optim.SGD(n2d2_deepNet.parameters(), lr=0.01)
+        criterion = torch.nn.MSELoss()
+        loss = criterion(N2D2_output, label)
+        loss.backward()
+        opt.step()
+
+        label = torch.ones(batch_size, 1, 3, 3)
+        opt = torch.optim.SGD(model.parameters(), lr=0.01)
+        criterion = torch.nn.MSELoss()
+        loss = criterion(pytorch_output, label)
+        loss.backward()
+        opt.step()
+
+        weight1, weight2 = model.get_weight()
+        conv_cell = seq[0]
+        v1 = N2D2.Tensor_float([])
+        conv_cell.N2D2().getWeight(0, 0, v1)
+        conv_cell = seq[1]
+        v2 = N2D2.Tensor_float([])
+        conv_cell.N2D2().getWeight(0, 0, v2)
+        for i,j in zip(torch.flatten(weight1), v1):
+            self.assertEqual(round(i.item(), 4),round(j, 4))
+        for i,j in zip(torch.flatten(weight2), v2):
+            self.assertEqual(round(i.item(), 4),round(j, 4))
+
+
+class test_DeepNetCell(unittest.TestCase):
+
+    def test(self):
+        print("===========================================================")
+        print("Replacing Pytorch by N2D2")
+        model = MNIST_CNN()
+        model_path = './tmp.onnx'
+        # Exporting to ONNX
+        dummy_in = torch.randn(batch_size, 1, 28, 28)
+        torch.onnx.export(model, dummy_in, model_path, verbose=True)
+
+        # Importing the ONNX to N2D2
+        db = n2d2.database.Database()
+        provider = n2d2.provider.DataProvider(db,[28, 28, 1], batch_size=batch_size)
+        deepNet = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "./tmp.onnx")
+        remove(model_path)
+
+        # Creating the N2D2 equivalent
+        n2d2_deepNet = n2d2.pytorch.DeepNetCell(deepNet)
+        
+        input_tensor = torch.ones(batch_size, 1, 28, 28)
+        pytorch_output = model(input_tensor)
+        N2D2_output = n2d2_deepNet(input_tensor)
+        N2D2_output = N2D2_output.squeeze()
+        print("Pytorch output :")
+        print(pytorch_output)
+        print("N2D2 output :")
+        print(N2D2_output)
+        for i, j in zip(torch.flatten(pytorch_output), torch.flatten(N2D2_output)):
+            i = round(i.item(), 4)
+            j = round(j.item(), 4)
+            self.assertEqual(i, j)
+
+
+    def test_weights_updates_ONNX(self):
+        """
+        Testing if weights update is done in N2D2 by comparing with the pytorch weights update.
+        """
+        model = NetTestWeightsUpdate()
+        model_path = './tmp.onnx'
+        # Exporting to ONNX
+        dummy_in = torch.randn(batch_size, 1, 3, 3)
+        torch.onnx.export(model, dummy_in, model_path, verbose=True)
+
+        # Importing the ONNX to N2D2
+        db = n2d2.database.Database()
+        provider = n2d2.provider.DataProvider(db,[3, 3, 1], batch_size=batch_size)
+        deepNetCell = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "./tmp.onnx")
+        deepNet = deepNetCell._embedded_deepnet.N2D2()
+        deepNet.initialize()
+        remove(model_path)
+        n2d2_deepNet = n2d2.pytorch.DeepNetCell(deepNetCell)
+
+        weight1, weight2 = model.get_weight()
+        conv_cell = deepNet.getCells()['3']
+        v1 = N2D2.Tensor_float([])
+        conv_cell.getWeight(0, 0, v1)
+        conv_cell = deepNet.getCells()['5']
+        v2 = N2D2.Tensor_float([])
+        conv_cell.getWeight(0, 0, v2)
+
+        for i,j in zip(torch.flatten(weight1), v1):
+            self.assertEqual(round(i.item(), 4),round(j, 4))
+        for i,j in zip(torch.flatten(weight2), v2):
+            self.assertEqual(round(i.item(), 4),round(j, 4))
+
+        input_tensor = torch.ones(batch_size, 1, 3, 3)
+        pytorch_output = model(input_tensor)
+        N2D2_output = n2d2_deepNet(input_tensor)
+        N2D2_output = N2D2_output.squeeze()
+
+
+        label = torch.ones(batch_size, 1, 3, 3)
+        opt = torch.optim.SGD(n2d2_deepNet.parameters(), lr=0.01)
+        criterion = torch.nn.MSELoss()
+        loss = criterion(N2D2_output, label)
+        loss.backward()
+        opt.step()
+
+        label = torch.ones(batch_size, 1, 3, 3)
+        opt = torch.optim.SGD(model.parameters(), lr=0.01)
+        criterion = torch.nn.MSELoss()
+        loss = criterion(pytorch_output, label)
+        loss.backward()
+        opt.step()
+
+        weight1, weight2 = model.get_weight()
+        conv_cell = deepNet.getCells()['3']
+        v1 = N2D2.Tensor_float([])
+        conv_cell.getWeight(0, 0, v1)
+        conv_cell = deepNet.getCells()['5']
+        v2 = N2D2.Tensor_float([])
+        conv_cell.getWeight(0, 0, v2)
+
+        for i,j in zip(torch.flatten(weight1), v1):
+            self.assertEqual(round(i.item(), 4),round(j, 4))
+        for i,j in zip(torch.flatten(weight2), v2):
+            self.assertEqual(round(i.item(), 4),round(j, 4))
 
 if __name__ == '__main__':
     unittest.main()

@@ -218,3 +218,83 @@ class DeepNetN2D2(torch.nn.Module):
             inputs.requires_grad = True
         return N2D2_computation.apply(inputs)   
 
+class DeepNetCell(DeepNetN2D2):
+    """
+    PyTorch layer used to interface an :py:class:`n2d2.cells.DeepNetCell` with a PyTorch Network.
+    """
+    def __init__(self, deepNetCell):
+        deepNetCell._embedded_deepnet.N2D2().initialize()
+        DeepNetN2D2.__init__(self, deepNetCell._embedded_deepnet.N2D2())
+
+class Sequence(torch.nn.Module):
+    """
+    PyTorch layer used to interface an n2d2 cell object in a PyTorch Network.
+    """
+    _initialized = False
+    
+    def __init__(self, sequence):
+        """
+        :param sequence: n2d2 sequence object to interface with PyTorch
+        :type sequence: :py:class:`n2d2.cells.Sequence`
+        """
+        super().__init__()
+        if not isinstance(sequence, n2d2.cells.Sequence):
+            raise TypeError("sequence should be of type n2d2.cells.Sequence got " + str(type(sequence)) + " instead")
+        self._N2D2 = sequence
+        self.first_cell = self._N2D2[0]
+        self.last_cell = self._N2D2[-1]
+        # We need to add a random parameter to the module else pytorch refuse to compute gradient
+        self.register_parameter(name='random_parameter', param=torch.nn.Parameter(torch.ones(1)))
+
+
+    def forward(self, inputs):
+        class N2D2_computation(torch.autograd.Function):
+            """
+            We need to define a function to have access to backpropagation
+            """
+            @staticmethod
+            def forward(ctx, inputs):
+                self.batch_size = inputs.shape[0]
+                n2d2_tensor = _to_n2d2(inputs)
+                if n2d2.cuda_compiled:
+                    n2d2_tensor.cuda()
+                    n2d2_tensor.htod()
+
+                n2d2_outputs = self._N2D2(n2d2_tensor)
+                n2d2_outputs.N2D2().synchronizeDToH()
+                
+                self.output_tensor = n2d2_outputs
+                outputs = _to_torch(n2d2_outputs.N2D2())
+                # The conversion back to pytorch can alter the type so we need to set it back
+                outputs = outputs.to(dtype=inputs.dtype)
+                return outputs.clone()
+
+            @staticmethod
+            def backward(ctx, grad_output): 
+                grad_output = torch.mul(grad_output, -self.batch_size)
+                t_grad_output = _to_n2d2(grad_output).N2D2()
+
+
+                diffInputs = self.last_cell.N2D2().getDiffInputs()
+                diffInputs.op_assign(t_grad_output)
+                # TODO : -1 => CPU need to get the device number for GPU ! (create/find a method get_device ?)  
+                if not diffInputs.isValid(-1):
+                    diffInputs.setValid(-1) 
+                diffInputs.synchronizeHToD()
+
+                self.output_tensor._leaf = True
+                self.output_tensor.back_propagate()
+                self.output_tensor.update()
+                
+                diffOutput = self.last_cell.N2D2().getDiffOutputs()
+                outputs = _to_torch(diffOutput)
+                outputs = torch.mul(outputs, -1/self.batch_size)
+                if grad_output.is_cuda:
+                    outputs = outputs.cuda()
+                return outputs.clone()
+
+        # If the layer is at the beginning of the network requires grad is False.
+        if not inputs.requires_grad:
+            inputs.requires_grad = True
+        return N2D2_computation.apply(inputs)   
+
