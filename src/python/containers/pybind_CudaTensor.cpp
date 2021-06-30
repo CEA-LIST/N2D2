@@ -159,9 +159,9 @@ void declare_CudaTensor(py::module &m, const std::string& typeStr) {
         */
         CHECK_CUDA_STATUS(cudaSetDevice(dev));
         b.setDevicePtr((T*)int_ptr);
-        b.reserve_host(dims);
+        b.reserveHost(dims);
         b.synchronizeDToH();
-        b.deviceTensor().set_is_a_view(true);
+        b.deviceTensor().setIsAView(true);
     })
     ;
 }
