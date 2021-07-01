@@ -124,6 +124,20 @@ void N2D2::ConvCell_Frame<T>::setExtendedPadding(
 }
 
 template <class T>
+void N2D2::ConvCell_Frame<T>::resetWeights()
+{
+    for (unsigned int i = 0, size = mSharedSynapses.size(); i < size; i++){
+        mWeightsFiller->apply(mSharedSynapses[i]);
+    }
+}
+
+template <class T>
+void N2D2::ConvCell_Frame<T>::resetBias()
+{
+    mBiasFiller->apply(*mBias);
+}
+
+template <class T>
 void N2D2::ConvCell_Frame<T>::initialize()
 {
     if (!mNoBias) {

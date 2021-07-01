@@ -38,6 +38,8 @@ void declare_ConvCell_Frame(py::module &m, const std::string& typeStr) {
          py::arg("paddingDims") = std::vector<int>(2, 0), py::arg("dilationDims") = std::vector<unsigned int>(2, 1U),
          py::arg("activation") = std::make_shared<TanhActivation_Frame<Float_T> >())
     .def("initializeWeightQuantizer", &ConvCell_Frame<T>::initializeWeightQuantizer)
+    .def("resetWeights", &ConvCell_Frame<T>::resetWeights)
+    .def("resetBias", &ConvCell_Frame<T>::resetBias)
     ;
 
 }

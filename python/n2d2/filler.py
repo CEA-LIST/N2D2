@@ -37,7 +37,6 @@ class Filler(N2D2_Interface, ABC):
         
         N2D2_Interface.__init__(self, **config_parameters)
 
-
     def get_type(self):
         return type(self).__name__
 
@@ -230,8 +229,8 @@ class Constant(Filler):
         """
         :param datatype: datatype, default='float'
         :type datatype: str, optional
-        :param value: Value for the filling
-        :type value: float
+        :param value: Value for the filling, default=0.0
+        :type value: float, optional
         """
         Filler.__init__(self, **config_parameters)
 

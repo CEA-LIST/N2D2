@@ -84,7 +84,7 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
 
         Cell.__init__(self, name)
 
-        self._inputs = []
+        self._inputs = [] # TODO : @Johannes : shouldn't inputs be of type Tensor or Interface, since we no longer use a list of Tensor for multi-input ?
 
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')
@@ -220,6 +220,16 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
 
     def get_activation(self):
         return self._config_parameters['activation']
+
+    def set_activation(self, activation):
+        """Set an activation function to the N2D2 object and update config parameter of the n2d2 object. 
+        :param activation: The activation function to set.
+        :type activation: :py:class:`n2d2.activation.ActivationFunction`
+        """
+        if not isinstance(activation, n2d2.activation.ActivationFunction):
+            raise n2d2.error_handler.WrongInputType("activation", activation, ["n2d2.activation.ActivationFunction"])
+        self._N2D2_object.setActivation(activation.N2D2())
+        self._config_parameters['activation'] = activation
 
     def get_inputs(self):
         return self._inputs
@@ -569,6 +579,35 @@ class Fc(NeuralNetworkCell, Datatyped):
         else:
             raise RuntimeError("No Quantizer in cell '" + self.get_name() + "'")
 
+    def set_filler(self, filler):
+        if not isinstance(filler, n2d2.filler.Filler):
+            raise n2d2.error_handler.WrongInputType("filler", str(type(filler)), ["n2d2.filler.Filler"])
+        self._config_parameters['bias_filler'] = filler
+        self._config_parameters['weights_filler'] = filler # No need to copy filler ?
+        self._N2D2_object.setBiasFiller(self._config_parameters['bias_filler'].N2D2())
+        self._N2D2_object.setWeightsFiller(self._config_parameters['weights_filler'].N2D2())
+
+    def set_bias_filler(self, filler):
+        if not isinstance(filler, n2d2.filler.Filler):
+            raise n2d2.error_handler.WrongInputType("filler", str(type(filler)), ["n2d2.filler.Filler"])
+        self._config_parameters['bias_filler'] = filler
+        self._N2D2_object.setBiasFiller(self._config_parameters['bias_filler'].N2D2())
+
+    def set_weights_filler(self, filler):
+        if not isinstance(filler, n2d2.filler.Filler):
+            raise n2d2.error_handler.WrongInputType("filler", str(type(filler)), ["n2d2.filler.Filler"])
+        self._config_parameters['weights_filler'] = filler # No need to copy filler ?
+        self._N2D2_object.setWeightsFiller(self._config_parameters['weights_filler'].N2D2())
+
+    def refill_bias(self):
+        """Re-fill the bias using the associated bias filler
+        """
+        self._N2D2_object.resetBias()
+        
+    def refill_weights(self):
+        """Re-fill the weights using the associated weights filler
+        """
+        self._N2D2_object.resetWeights()
 
     def get_bias_solver(self):
         return self._config_parameters['bias_solver']
@@ -826,6 +865,53 @@ class Conv(NeuralNetworkCell, Datatyped):
 
         return self.get_outputs()
 
+    def set_filler(self, filler):
+        """Set a filler for the weights and bias.
+        :param filler: Filler object
+        :type filler: :py:class:`n2d2.filler.Filler`
+        """
+        if not isinstance(filler, n2d2.filler.Filler):
+            raise n2d2.error_handler.WrongInputType("filler", str(type(filler)), ["n2d2.filler.Filler"])
+        self._config_parameters['bias_filler'] = filler
+        self._config_parameters['weights_filler'] = filler # No need to copy filler ?
+        self._N2D2_object.setBiasFiller(self._config_parameters['bias_filler'].N2D2())
+        self._N2D2_object.setWeightsFiller(self._config_parameters['weights_filler'].N2D2())
+    
+    def set_bias_filler(self, filler):
+        """Set a filler for the bias.
+        :param filler: Filler object
+        :type filler: :py:class:`n2d2.filler.Filler`
+        """
+        if not isinstance(filler, n2d2.filler.Filler):
+            raise n2d2.error_handler.WrongInputType("filler", str(type(filler)), ["n2d2.filler.Filler"])
+        self._config_parameters['bias_filler'] = filler
+        self._N2D2_object.setBiasFiller(self._config_parameters['bias_filler'].N2D2())
+
+    def set_weights_filler(self, filler):
+        """Set a filler for the weights.
+        :param filler: Filler object
+        :type filler: :py:class:`n2d2.filler.Filler`
+        """
+        if not isinstance(filler, n2d2.filler.Filler):
+            raise n2d2.error_handler.WrongInputType("filler", str(type(filler)), ["n2d2.filler.Filler"])
+        self._config_parameters['weights_filler'] = filler # No need to copy filler ?
+        self._N2D2_object.setWeightsFiller(self._config_parameters['weights_filler'].N2D2())
+
+    def refill_bias(self):
+        """Re-fill the bias using the associated bias filler
+        """
+        self._N2D2_object.resetBias()
+
+    def refill_weights(self):
+        """Re-fill the weights using the associated weights filler
+        """
+        self._N2D2_object.resetWeights()
+
+    def get_weights_solver(self):
+        return self._config_parameters['weights_solver']
+
+    def get_bias_solver(self):
+        return self._config_parameters['bias_solver']
 
     def set_weights_solver(self, solver):
         self._config_parameters['weights_solver'] = solver
@@ -836,9 +922,15 @@ class Conv(NeuralNetworkCell, Datatyped):
         self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
 
     def set_solver(self, solver):
+        """"Set the weights and bias solver with the same solver.
+        :param solver: Solver object
+        :type solver: :py:class:`n2d2.solver.Solver`
+        """
+        if not isinstance(solver, n2d2.solver.Solver):
+            raise n2d2.error_handler.WrongInputType("solver", str(type(solver)), ["n2d2.solver.Solver"])
         self._config_parameters['bias_solver'] = solver
         self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
-        self._config_parameters['weights_solver'] = solver.copy()
+        self._config_parameters['weights_solver'] = solver.copy() # TODO : Warning copy method doesn't create a copy !
         self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
 
 
@@ -1609,7 +1701,30 @@ class Deconv(NeuralNetworkCell, Datatyped):
     def set_weights_solver(self, solver):
         self._config_parameters['weights_solver'] = solver
         self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
+    
+    def set_filler(self, filler):
+        if not isinstance(filler, n2d2.filler.Filler):
+            raise n2d2.error_handler.WrongInputType("filler", str(type(filler)), ["n2d2.filler.Filler"])
+        self._config_parameters['bias_filler'] = filler
+        self._config_parameters['weights_filler'] = filler # No need to copy filler ?
+        self._N2D2_object.setBiasFiller(self._config_parameters['bias_filler'].N2D2())
+        self._N2D2_object.setWeightsFiller(self._config_parameters['weights_filler'].N2D2())
+        
+    def get_weights_solver(self):
+        return self._config_parameters['weights_solver']
 
+    def get_bias_solver(self):
+        return self._config_parameters['bias_solver']
+
+    def refill_bias(self):
+        """Re-fill the bias using the associated bias filler
+        """
+        self._N2D2_object.resetBias()
+
+    def refill_weights(self):
+        """Re-fill the weights using the associated weights filler
+        """
+        self._N2D2_object.resetWeights()
 
     def set_bias_solver(self, solver):
         self._config_parameters['bias_solver'] = solver

@@ -157,7 +157,6 @@ class Sequence(Iterable):
         x.get_deepnet().end_group()
         return x
 
-# TODO: unit test
 class Layer(Iterable):
 
     def __init__(self, cells, mapping=None, name=None):

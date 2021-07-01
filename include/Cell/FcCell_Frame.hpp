@@ -58,6 +58,10 @@ public:
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
+
+    void resetWeights();
+    void resetBias();
+
     inline void getWeight(unsigned int output, unsigned int channel,
                           BaseTensor& value) const
     {

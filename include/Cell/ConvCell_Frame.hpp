@@ -75,6 +75,9 @@ public:
                                                     activation);
     }
 
+    void resetWeights();
+    void resetBias();
+
     virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     virtual void initialize();
     virtual void initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs);

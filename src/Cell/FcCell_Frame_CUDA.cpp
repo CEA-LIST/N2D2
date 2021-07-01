@@ -72,6 +72,22 @@ N2D2::FcCell_Frame_CUDA<T>::FcCell_Frame_CUDA(const DeepNet& deepNet, const std:
 }
 
 template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::resetWeights()
+{
+    for (unsigned int i = 0, size = mSynapses.size(); i < size; i++){
+        mWeightsFiller->apply(mSynapses[i]);
+    }
+    mSynapses.synchronizeHToD();
+}
+
+template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::resetBias()
+{
+    mBiasFiller->apply(mBias);
+    mBias.synchronizeHToD();
+}
+
+template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::initialize()
 {
     int dev;

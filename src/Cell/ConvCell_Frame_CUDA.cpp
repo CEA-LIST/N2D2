@@ -134,6 +134,22 @@ void N2D2::ConvCell_Frame_CUDA<T>::setExtendedPadding(
 }
 
 template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::resetWeights()
+{
+    for (unsigned int i = 0, size = mSharedSynapses.size(); i < size; i++){
+        mWeightsFiller->apply(mSharedSynapses[i]);
+    }
+    mSharedSynapses.synchronizeHToD();
+}
+
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::resetBias()
+{
+    mBiasFiller->apply(*mBias);
+    mBias->synchronizeHToD();
+}
+
+template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::initialize()
 {
     if (!mNoBias) {

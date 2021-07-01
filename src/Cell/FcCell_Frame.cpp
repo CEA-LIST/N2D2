@@ -64,6 +64,22 @@ N2D2::FcCell_Frame<T>::FcCell_Frame(const DeepNet& deepNet, const std::string& n
 }
 
 template <class T>
+void N2D2::FcCell_Frame<T>::resetWeights()
+{
+    for (unsigned int i = 0, size = mSynapses.size(); i < size; i++){
+        mWeightsFiller->apply(mSynapses[i]);
+    }
+    mSynapses.synchronizeDToH();
+}
+
+template <class T>
+void N2D2::FcCell_Frame<T>::resetBias()
+{
+    mBiasFiller->apply(mBias);
+    mBias.synchronizeDToH();
+}
+
+template <class T>
 void N2D2::FcCell_Frame<T>::initialize()
 {
     if (!mNoBias && mBias.empty()) {

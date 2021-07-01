@@ -58,6 +58,9 @@ public:
     {
         return std::make_shared<FcCell_Frame_CUDA>(deepNet, name, nbOutputs, activation);
     }
+    
+    void resetWeights();
+    void resetBias();
 
     virtual void initialize();
     virtual void initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs);

@@ -41,6 +41,8 @@ void declare_ConvCell_Frame_CUDA(py::module &m, const std::string& typeStr) {
          py::arg("paddingDims") = std::vector<int>(2, 0), py::arg("dilationDims") = std::vector<unsigned int>(2, 1U),
          py::arg("activation") = std::make_shared<TanhActivation_Frame_CUDA<Float_T> >())
     .def("initializeWeightQuantizer", &ConvCell_Frame_CUDA<T>::initializeWeightQuantizer)
+    .def("resetWeights", &ConvCell_Frame_CUDA<T>::resetWeights)
+    .def("resetBias", &ConvCell_Frame_CUDA<T>::resetBias)
     ;
 
 }
