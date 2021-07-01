@@ -241,13 +241,19 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
     def update(self):
         self._N2D2_object.update()
 
-    def import_free_parameters(self, dir_name, ignoreNotExists=False):
+    def import_free_parameters(self, dir_name, ignore_not_exists=False):
         if self._N2D2_object:
             filename = dir_name + "/" + self.get_name() + ".syntxt"
             print("import " + filename)
-            self._N2D2_object.importFreeParameters(filename, ignoreNotExists)
-            self._N2D2_object.importActivationParameters(dir_name, ignoreNotExists)
+            self._N2D2_object.importFreeParameters(filename, ignore_not_exists)
+            self._N2D2_object.importActivationParameters(dir_name, ignore_not_exists)
 
+    def export_free_parameters(self, dir_name):
+        if self._N2D2_object:
+            filename = dir_name + "/" + self.get_name() + ".syntxt"
+            print("Export to " + filename)
+            self._N2D2_object.exportFreeParameters(filename)
+            self._N2D2_object.exportActivationParameters(dir_name)
     """
     def import_activation_parameters(self, filename, **kwargs):
         print("import " + filename)
@@ -2256,6 +2262,12 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped):
                 if not isinstance(value, n2d2.solver.Solver):
                     raise n2d2.error_handler.WrongInputType("bias_solver", str(type(value)), [str(n2d2.solver.Solver)])
                 self._N2D2_object.setBiasSolver(value.N2D2())
+            elif key is 'quantizer':
+                if isinstance(value, n2d2.quantizer.Quantizer):
+                    self._N2D2_object.setQuantizer(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
+                
             else:
                 self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
 

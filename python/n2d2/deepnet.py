@@ -138,7 +138,18 @@ class DeepNet(N2D2_Interface):
         N2D2.DrawNet.draw(self._N2D2_object, filename)
 
     def draw_graph(self, filename):
+        """Plot a graphic representation of the neural network.
+        :param filename: path where you want to save the graph
+        :type filename: str
+        """
         N2D2.DrawNet.drawGraph(self._N2D2_object, filename)
+
+    def export_network_free_parameters(self, dirname):
+        """Export free parameters and create a plot of the distributions of these parameters
+        :param dirname: path to the directory where you want to save the data.
+        :type dirname: str
+        """
+        self.N2D2().exportNetworkFreeParameters(dirname)
 
     def __str__(self):
         return self._groups.__str__()

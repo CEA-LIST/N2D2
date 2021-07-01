@@ -259,10 +259,10 @@ class TensorPlaceholder(Provider):
     """
     def __init__(self, inputs, labels=None, **config_parameters):
         """
-        :param inputs: The tensor you want to stream
-        :type inputs: :py:class:`N2D2.tensor.Tensor`
+        :param inputs: The data tensor you want to stream, if N2D2 is compiled with CUDA it must be CUDA, the datatype used should be `float`.
+        :type inputs: :py:class:`n2d2.tensor.Tensor`
         :param labels: Labels associated with the tensor you want to stream, the datatype of labels must be integer, default= None
-        :type labels: :py:class:`N2D2.tensor.Tensor`, optional
+        :type labels: :py:class:`n2d2.tensor.Tensor`, optional
         """
         Provider.__init__(self, **config_parameters)
 
@@ -319,7 +319,8 @@ class TensorPlaceholder(Provider):
         """
         if N2D2.cuda_compiled and not self._tensor.is_cuda: 
             raise ValueError("You compiled N2D2 with CUDA this doesn't match the tensor model you are providing to the network.")
-        # TODO : Tensor may require to have float datatype test it and add error handling
+        if not (self._tensor.data_type() == "f" or self._tensor.data_type() == "float"):
+            raise TypeError("You try to stream a Tensor with the datatype '" + self._tensor.data_type() + "' you should provide a Tensor with a 'float' datatype.")
         self._set_N2D2_parameter('StreamTensor', True)
         self._N2D2_object.setStreamedTensor(self._tensor.N2D2())
 

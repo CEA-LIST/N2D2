@@ -112,7 +112,7 @@ class Tensor:
             else:
                 self._tensor = generators[datatype](dims, value)
                 if cuda:
-                    # TODO a bug cause the "value" argument to be ignored for CUDA tensor :
+                    # The "value" argument is ignored for CUDA tensor, so we need to fill the value manually.
                     # example : N2D2.CudaTensor_int([2, 2], value=int(5))
                     self[0:] = value
                     self.htod() # Need to synchronize the host to the device

@@ -73,7 +73,8 @@ class He(Filler):
         :type mean_norm: float, optional
         """
         Filler.__init__(self, **config_parameters)
-
+        if not isinstance(from_arguments, bool):
+            raise n2d2.error_handler.WrongInputType("from_arguments", str(type(from_arguments)), ["bool"])
         if from_arguments:
             if "variance_norm" in self._config_parameters:
                 variance_norm = self._config_parameters["variance_norm"]
@@ -128,7 +129,8 @@ class Normal(Filler):
         :type std_dev: float, optional
         """
         Filler.__init__(self, **config_parameters)
-
+        if not isinstance(from_arguments, bool):
+            raise n2d2.error_handler.WrongInputType("from_arguments", str(type(from_arguments)), ["bool"])
         if from_arguments:
             self._parse_optional_arguments(['mean', 'std_dev'])
             for k, v in self._optional_constructor_arguments.items():
@@ -177,7 +179,8 @@ class Xavier(Filler):
         :type scaling: float, optional
         """
         Filler.__init__(self, **config_parameters)
-
+        if not isinstance(from_arguments, bool):
+            raise n2d2.error_handler.WrongInputType("from_arguments", str(type(from_arguments)), ["bool"])
         if from_arguments:
             self._parse_optional_arguments(['variance_norm', 'distribution', 'scaling'])
             for k, v in self._optional_constructor_arguments.items():
@@ -233,7 +236,8 @@ class Constant(Filler):
         :type value: float, optional
         """
         Filler.__init__(self, **config_parameters)
-
+        if not isinstance(from_arguments, bool):
+            raise n2d2.error_handler.WrongInputType("from_arguments", str(type(from_arguments)), ["bool"])
         if from_arguments:
             self._parse_optional_arguments(['value'])
             for k, v in self._optional_constructor_arguments.items():

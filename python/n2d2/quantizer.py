@@ -22,6 +22,7 @@ import N2D2
 from n2d2.n2d2_interface import N2D2_Interface
 import n2d2.global_variables
 
+# TODO : write docstring for quantizer parameters (cf dev doc !)
 
 class Quantizer(N2D2_Interface):
     _convention_converter= n2d2.ConventionConverter({
@@ -29,7 +30,7 @@ class Quantizer(N2D2_Interface):
         "apply_scaling": "ApplyScaling",
         "apply_quantization": "ApplyQuantization",
         "quant_mode": "QuantMode",
-        "alpha": "Alpha",
+        "alpha": "Alpha", # TODO : alpha is only for SATAct ...
     })
     
     def __init__(self, **config_parameters):
@@ -64,6 +65,31 @@ class CellQuantizer(Quantizer):
     def __init__(self, **config_parameters):
         Quantizer.__init__(self, **config_parameters)
 
+    def add_weights(self, weights, diff_weights):
+        """
+        :arg weights: Biases
+        :param weights: :py:class:`n2d2.Tensor`
+        :arg diff_weights: Diff Biases
+        :param diff_weights: :py:class:`n2d2.Tensor`
+        """
+        if not isinstance(diff_weights, n2d2.Tensor):
+            raise n2d2.error_handler("diff_weights", str(type(diff_weights)), ["n2d2.Tensor"])
+        if not isinstance(weights, n2d2.Tensor):
+            raise n2d2.error_handler("weights", str(type(weights)), ["n2d2.Tensor"])
+        self.N2D2().addWeights(weights.N2D2(), diff_weights.N2D2())
+
+    def add_biases(self, biases, diff_biases):
+        """
+        :arg biases: Biases
+        :param biases: :py:class:`n2d2.Tensor`
+        :arg diff_biases: Diff Biases
+        :param diff_biases: :py:class:`n2d2.Tensor`
+        """
+        if not isinstance(diff_biases, n2d2.Tensor):
+            raise n2d2.error_handler("diff_biases", type(diff_biases) ["n2d2.Tensor"])
+        if not isinstance(biases, n2d2.Tensor):
+            raise n2d2.error_handler("biases", type(biases) ["n2d2.Tensor"])
+        self.N2D2().addBiases(biases.N2D2(), diff_biases.N2D2())
 
 class ActivationQuantizer(Quantizer):
 
@@ -99,6 +125,23 @@ class SATCell(CellQuantizer):
     def get_quantized_biases(self):
         return n2d2.Tensor.from_N2D2(self.N2D2().getQuantizedBiases())
 
+    def set_scaling(self, status):
+        """
+        :arg status: Status
+        :param status: boolean
+        """
+        if not isinstance(status, bool):
+            raise n2d2.error_handler("status", type(status) ["bool"])
+        self.N2D2().setScaling(status)
+
+    def set_quantization(self, status):
+        """
+        :arg status: Status
+        :param status: boolean
+        """
+        if not isinstance(status, bool):
+            raise n2d2.error_handler("status", type(status) ["bool"])
+        self.N2D2().setQuantization(status)
 
 class SATAct(ActivationQuantizer):
     """

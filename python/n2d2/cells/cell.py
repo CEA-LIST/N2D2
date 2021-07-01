@@ -44,8 +44,11 @@ class Cell(ABC):
     def learn(self):
         raise RuntimeError("Cell instance without learn() method")
 
-    def import_free_parameters(self, dir_name, ignoreNotExists=False):
+    def import_free_parameters(self, dir_name, ignore_not_exists=False):
         raise RuntimeError("Cell instance without import_free_parameters() method")
+
+    def export_free_parameters(self, dir_name):
+        raise RuntimeError("Cell instance without export_free_parameters() method")
 
     def get_name(self):
         return self._name
@@ -76,10 +79,13 @@ class Block(Cell):
         for cell in self._cells.values():
             cell.learn()
 
-    def import_free_parameters(self, dir_name, ignoreNotExists=False):
+    def import_free_parameters(self, dir_name, ignore_not_exists=False):
         for cell in self._cells.values():
-            cell.import_free_parameters(dir_name, ignoreNotExists=ignoreNotExists)
+            cell.import_free_parameters(dir_name, ignore_not_exists=ignore_not_exists)
 
+    def export_free_parameters(self, dir_name):
+        for cell in self._cells.values():
+            cell.export_free_parameters(dir_name)
     """
     def __str__(self):
         output = "\'" + self._name + "\' " + "[\n"
@@ -326,8 +332,8 @@ class DeepNetCell(Block):
     def learn(self):
         self._inference = False
 
-    def import_free_parameters(self, dir_name, ignoreNotExists=False):
-        self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignoreNotExists=ignoreNotExists)
+    def import_free_parameters(self, dir_name, ignore_not_exists=False):
+        self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignore_not_exists=ignore_not_exists)
 
     def remove(self, name):
         cell = self._embedded_deepnet.N2D2().getCells()[name]
