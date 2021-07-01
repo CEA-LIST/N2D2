@@ -423,6 +423,7 @@ TEST(CPP_Export_32f, generate) {
     // Export
     DeepNetExport::generate(*deepNet, exportDir, exportType);
 
+#ifndef WIN32
     ASSERT_EQUALS(system(("rm -f " + exportDir + "stimuli/*pgm").c_str()), 0);
     StimuliProviderExport::generate(*deepNet, *deepNet->getStimuliProvider(), 
                                     exportDir + "stimuli", exportType, Database::Test, 
@@ -434,6 +435,7 @@ TEST(CPP_Export_32f, generate) {
 
     // Check success rate
     ASSERT_EQUALS_DELTA(readSuccessRateFile(exportDir + "/success_rate.txt"), 96.00, 0.01);
+#endif
 }
 
 TEST(CPP_Export_8i, generate) {

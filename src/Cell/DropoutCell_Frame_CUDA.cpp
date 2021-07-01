@@ -50,24 +50,22 @@ N2D2::DropoutCell_Frame_CUDA<T>::DropoutCell_Frame_CUDA(const DeepNet& deepNet,
                                                         unsigned int nbOutputs)
     : Cell(deepNet, name, nbOutputs),
       DropoutCell(deepNet, name, nbOutputs),
-      Cell_Frame_CUDA<T>(deepNet, name, nbOutputs),
-      mStatesSize(0),
-      mStates(0)
+      Cell_Frame_CUDA<T>(deepNet, name, nbOutputs)
 {
+    // ctor
     int count;
     CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
-    // ctor
-    mDropoutDesc.resize(count);
-    for (int nb_drop=0; nb_drop<count; ++nb_drop){
-        CHECK_CUDNN_STATUS(cudnnCreateDropoutDescriptor(&mDropoutDesc[nb_drop]));
-    }
-    //CHECK_CUDNN_STATUS(cudnnCreateDropoutDescriptor(&mDropoutDesc));
 
+    mDropoutDesc.resize(count);
+
+    for (int dev = 0; dev < count; ++dev) {
+        CHECK_CUDNN_STATUS(cudnnCreateDropoutDescriptor(&mDropoutDesc[dev]));
+    }
+
+    mStatesSize.resize(count, 0);
+    mStates.resize(count, NULL);
     mReserveSpaceSize.resize(count);
     mReserveSpace.resize(count);
-    mOutputDesc.resize(count);
-    mStates.resize(count, NULL);
-    mStatesSize.resize(count);
 }
 
 template <class T>
@@ -88,36 +86,37 @@ void N2D2::DropoutCell_Frame_CUDA<T>::initialize()
                                      + mName);
         }
 
-        if (k < mOutputDesc[dev].size())
-            continue;  // already initialized, skip!
-            
-        mOutputDesc[dev].push_back(cudnnTensorDescriptor_t());
+        if (mOutputDesc.size() <= k) {
+            mOutputDesc.push_back(cudnnTensorDescriptor_t());
 
-        CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mOutputDesc[dev].back()));
-        CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptorEx(
-            mOutputDesc[dev].back(),
-            CudaContext::data_type<T>::value,
-            mOutputs.dimB(),
-            mInputs[k].dimZ(),
-            mOutputs.dimY(),
-            mOutputs.dimX(),
-            mOutputs.dimX() * mOutputs.dimY() * mInputs.dimZ(),
-            mOutputs.dimX() * mOutputs.dimY(),
-            mOutputs.dimX(),
-            1));
+            CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&mOutputDesc.back()));
+            CHECK_CUDNN_STATUS(cudnnSetTensor4dDescriptorEx(
+                mOutputDesc.back(),
+                CudaContext::data_type<T>::value,
+                mOutputs.dimB(),
+                mInputs[k].dimZ(),
+                mOutputs.dimY(),
+                mOutputs.dimX(),
+                mOutputs.dimX() * mOutputs.dimY() * mInputs.dimZ(),
+                mOutputs.dimX() * mOutputs.dimY(),
+                mOutputs.dimX(),
+                1));
+        }
 
-        mReserveSpaceSize[dev].push_back(0);
-        mReserveSpace[dev].push_back(NULL);
+        if (mReserveSpaceSize[dev].size() <= k) {
+            mReserveSpaceSize[dev].push_back(0);
+            mReserveSpace[dev].push_back(NULL);
 
-        std::shared_ptr<CudaDeviceTensor<T> > input
-            = cuda_device_tensor_cast_nocopy<T>(mInputs[k]);
+            std::shared_ptr<CudaDeviceTensor<T> > input
+                = cuda_device_tensor_cast_nocopy<T>(mInputs[k]);
 
-        CHECK_CUDNN_STATUS(cudnnDropoutGetReserveSpaceSize(
-            input->getCudnnTensorDesc(), &mReserveSpaceSize[dev].back()));
-        CHECK_CUDA_STATUS(
-            cudaMalloc(&mReserveSpace[dev].back(), mReserveSpaceSize[dev].back()));
+            CHECK_CUDNN_STATUS(cudnnDropoutGetReserveSpaceSize(
+                input->getCudnnTensorDesc(), &mReserveSpaceSize[dev].back()));
+            CHECK_CUDA_STATUS(
+                cudaMalloc(&mReserveSpace[dev].back(), mReserveSpaceSize[dev].back()));
+        }
     }
-    
+
     if (mStates[dev] == NULL) {
         CHECK_CUDNN_STATUS(
             cudnnDropoutGetStatesSize(CudaContext::cudnnHandle(), &mStatesSize[dev]));
@@ -197,7 +196,7 @@ void N2D2::DropoutCell_Frame_CUDA<T>::propagate(bool inference)
                                     mDropoutDesc[dev],
                                     input->getCudnnTensorDesc(),
                                     input->getDevicePtr(),
-                                    mOutputDesc[dev][k],
+                                    mOutputDesc[k],
                                     mOutputs.getDevicePtr() + offset,
                                     mReserveSpace[dev][k],
                                     mReserveSpaceSize[dev][k]));
@@ -230,7 +229,7 @@ void N2D2::DropoutCell_Frame_CUDA<T>::backPropagate()
         CHECK_CUDNN_STATUS(
             cudnnDropoutBackward(CudaContext::cudnnHandle(),
                                  mDropoutDesc[dev],
-                                 mOutputDesc[dev][k],
+                                 mOutputDesc[k],
                                  mDiffInputs.getDevicePtr() + offset,
                                  diffOutput->getCudnnTensorDesc(),
                                  diffOutput->getDevicePtr(),
@@ -255,19 +254,25 @@ void N2D2::DropoutCell_Frame_CUDA<T>::update()
 template <class T>
 N2D2::DropoutCell_Frame_CUDA<T>::~DropoutCell_Frame_CUDA()
 {
-    int dev;
-    cudaGetDevice(&dev);
+    for (unsigned int k = 0, size = mOutputDesc.size(); k < size; ++k)
+        cudnnDestroyTensorDescriptor(mOutputDesc[k]);
 
-    for (unsigned int k = 0, size = mOutputDesc[dev].size(); k < size; ++k)
-        cudnnDestroyTensorDescriptor(mOutputDesc[dev][k]);
+    int currentDev;
+    cudaGetDevice(&currentDev);
 
-    for (unsigned int k = 0, size = mReserveSpace[dev].size(); k < size; ++k)
-        cudaFree(mReserveSpace[dev][k]);
+    for (size_t dev = 0; dev < mReserveSpace.size(); ++dev) {
+        cudaSetDevice(dev);
 
-    if (mStatesSize[dev] > 0)
-        cudaFree(mStates[dev]);
+        for (unsigned int k = 0, size = mReserveSpace[dev].size(); k < size; ++k)
+            cudaFree(mReserveSpace[dev][k]);
 
-    cudnnDestroyDropoutDescriptor(mDropoutDesc[dev]);
+        if (mStatesSize[dev] > 0)
+            cudaFree(mStates[dev]);
+
+        cudnnDestroyDropoutDescriptor(mDropoutDesc[dev]);
+    }
+
+    cudaSetDevice(currentDev);
 }
 
 namespace N2D2 {
