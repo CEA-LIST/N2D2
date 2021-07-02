@@ -302,12 +302,23 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
 
     // if nbChannels = 1, or precision = 8, or convDW - do not accumulate
     // convDW : 1 channel per output, wOffset can be in the middle of the word
+    /*
     if((cell.getNbChannels() == 1 && (wPrecision > 0 && wPrecision < 8)) || (wPrecision == 8) || isDWConv){
         accumulate = false;
         wType = "int8_t";
         std::cout << Utils::cwarning << "Cell with number of channels = " << cell.getNbChannels() << ", and weight precision = " << wPrecision << " :: weights will not be accumulated!";
     }
     else if(cell.getNbChannels() > 1 && (wPrecision > 0 && wPrecision < 8) && !isDWConv){
+        accumulate = true;
+        wType = "uint8_t";
+    }
+    */
+    if((cell.getNbChannels() == 1 && (wPrecision > 0 && wPrecision < 8)) || (wPrecision == 8)){
+        accumulate = false;
+        wType = "int8_t";
+        std::cout << Utils::cwarning << "Cell with number of channels = " << cell.getNbChannels() << ", and weight precision = " << wPrecision << " :: weights will not be accumulated!";
+    }
+    else if(cell.getNbChannels() > 1 && (wPrecision > 0 && wPrecision < 8)){
         accumulate = true;
         wType = "uint8_t";
     }
@@ -332,31 +343,56 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
 
 
     //number of int8 necessary to store
-    //one weight of all channels
+    //one weight of all channels, when !isDWConv
     std::size_t nbInt8_nbCh = 1;
     //total bit "slots"
-    std::size_t nbSlot_total = 1;
+    std::size_t nbSlot_total_nbCh = 1;
     //number of channels
-    std::size_t nbSlot_taken = 1;
+    std::size_t nbSlot_taken_nbCh = 1;
     //number of extra 0
-    std::size_t nbSlot_free = 0;
+    std::size_t nbSlot_free_nbCh = 0;
+
+    //when isDWConv
+    std::size_t nbInt8_kWidth = 1;
+    //total bit "slots"
+    std::size_t nbSlot_total_kWidth = 1;
+    //number of channels
+    std::size_t nbSlot_taken_kWidth = 1;
+    //number of extra 0
+    std::size_t nbSlot_free_kWidth = 0;
+
     std::size_t nbSlot_per_Int8 = 1;
 
-    if(accumulate){
+    if(accumulate && !isDWConv){
         nbInt8_nbCh = ( (cell.getNbChannels()*wPrecision) + (cell.getNbChannels()*wPrecision) % 8 ) / 8;
         nbSlot_per_Int8 = 8/(size_t)wPrecision;
-        //std::cout << "nbSlot_per_Int8 = " << nbSlot_per_Int8 << std::endl;
-        nbSlot_total = nbInt8_nbCh*nbSlot_per_Int8;
-        //std::cout << " >>> nbSlot_total = " << nbSlot_total << std::endl;
-        nbSlot_taken = cell.getNbChannels();
-        //std::cout << " >>> nbSlot_taken = " << nbSlot_taken << std::endl;
-        nbSlot_free = nbSlot_total - nbSlot_taken;
-        //std::cout << " >>> nbSlot_free = " << nbSlot_free << std::endl;
+        nbSlot_total_nbCh = nbInt8_nbCh*nbSlot_per_Int8;
+        nbSlot_taken_nbCh = cell.getNbChannels();
+        nbSlot_free_nbCh = nbSlot_total_nbCh - nbSlot_taken_nbCh;
+
+        nbSlot_total_kWidth = cell.getKernelWidth();
+        nbSlot_taken_kWidth = cell.getKernelWidth();
+        nbSlot_free_kWidth = 0;
+    }
+    else if(accumulate && isDWConv){
+        nbInt8_kWidth = ( (cell.getKernelWidth()*wPrecision) + (cell.getKernelWidth()*wPrecision) % 8 ) / 8;
+        nbSlot_per_Int8 = 8/(size_t)wPrecision;
+        nbSlot_total_kWidth = nbInt8_kWidth*nbSlot_per_Int8;
+        nbSlot_taken_kWidth = cell.getKernelWidth();
+        nbSlot_free_kWidth = nbSlot_total_kWidth - nbSlot_taken_kWidth;
+
+        nbSlot_total_nbCh = cell.getNbChannels();
+        nbSlot_taken_nbCh = cell.getNbChannels();
+        nbSlot_free_nbCh = 0;
     }
     else{
-        nbSlot_total = cell.getNbChannels();
-        nbSlot_taken = cell.getNbChannels();
-        nbSlot_free = 0;
+        nbSlot_total_nbCh = cell.getNbChannels();
+        nbSlot_taken_nbCh = cell.getNbChannels();
+        nbSlot_free_nbCh = 0;
+
+        nbSlot_total_kWidth = cell.getKernelWidth();
+        nbSlot_taken_kWidth = cell.getKernelWidth();
+        nbSlot_free_kWidth = 0;
     }
 
     uint32_t mask = 0;
@@ -373,13 +409,14 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
     Tensor<Float_T> kernel;
     Float_T value;
     uint32_t accumulator = 0;
-    int wCounter = 0;
+    uint32_t accumulatorDW = 0;
+    std::size_t wCounter = 0;
     std::size_t i = 0;
 
     for(std::size_t o = 0; o < cell.getNbOutputs(); ++o) {
         for(std::size_t sy = 0; sy < cell.getKernelHeight(); ++sy) {
-            for(std::size_t sx = 0; sx < cell.getKernelWidth(); ++sx) {
-                for(std::size_t real_sl = 0; real_sl < nbSlot_taken; ++real_sl){
+            for(std::size_t sx = 0; sx < nbSlot_taken_kWidth; ++sx) {
+                for(std::size_t real_sl = 0; real_sl < nbSlot_taken_nbCh; ++real_sl){
                     if(isDWConv) {
                         const size_t outputGroupSize = cell.getNbOutputs() / cell.groupMap();
                         const size_t channelGroupSize = cell.getNbChannels() / cell.groupMap();
@@ -440,8 +477,8 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
 
                 }
 
-                //fill with extra 0 if needed
-                for(std::size_t free_sl = 0; free_sl < nbSlot_free; ++free_sl){
+                //conv :: fill with extra 0 if needed
+                for(std::size_t free_sl = 0; free_sl < nbSlot_free_nbCh; ++free_sl){
 
                     accumulator |= (static_cast<uint32_t>(0) & mask);
 
@@ -459,6 +496,27 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
                         accumulator <<= wPrecision;
                         ++wCounter;
                     }
+                }
+            }
+
+            //convDW :: fill with extra 0 if needed for
+            for(std::size_t free_sl = 0; free_sl < nbSlot_free_kWidth; ++free_sl) {
+
+                accumulator |= (static_cast<uint32_t>(0) & mask);
+
+                //if the last weight in accumulator
+                if(wCounter == (nbSlot_per_Int8-1)){
+                    header << "0x" << std::setfill('0') << std::setw(2) << std::hex << accumulator << std::dec << ", ";
+                    i++;
+                    accumulator = 0;
+                    wCounter = 0;
+                    if(i % 24 == 0) {
+                        header << "\n";
+                    }
+                }
+                else{
+                    accumulator <<= wPrecision;
+                    ++wCounter;
                 }
             }
         }

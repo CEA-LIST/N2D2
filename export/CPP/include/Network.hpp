@@ -1485,8 +1485,9 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                         break;
                     }
 
-                    const int iPos = ((sxMin + ix)
+                    const int iPos = (ix
                                         + CHANNELS_WIDTH * (iy + syMin + sy));
+
                     int iOffset = INPUT_MEM_STRIDE * iPos;
 
                     // Wrapping cannot occur in the middle of a line, except if
@@ -1494,59 +1495,117 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                     bool wrapInRange = false;
 
                     if (INPUT_MEM_WRAP_SIZE > 0
-                        && iOffset >= INPUT_MEM_CONT_SIZE)
+                        && (iOffset+INPUT_MEM_STRIDE*sxMin) >= INPUT_MEM_CONT_SIZE)
                     {
                         iOffset += INPUT_MEM_WRAP_OFFSET - INPUT_MEM_CONT_OFFSET
                                     - INPUT_MEM_CONT_SIZE;
                     }
                     else if (INPUT_MEM_WRAP_SIZE > 0 && KERNEL_WIDTH > 1
                         && CHANNELS_HEIGHT == 1 // single line (1D)!
-                        && iOffset + KERNEL_WIDTH * INPUT_MEM_STRIDE
+                        && (iOffset+INPUT_MEM_STRIDE*sxMin) + KERNEL_WIDTH * INPUT_MEM_STRIDE
                             > INPUT_MEM_CONT_SIZE)
                     {
                         wrapInRange = true;
                     }
 
-                    const int wOffset = (sxMin
+                    int wOffset = (sxMin
                         + KERNEL_WIDTH * (syMin + sy + KERNEL_HEIGHT * output));
+
+
+                    constexpr int NB_INT8 = ((KERNEL_WIDTH*NB_BITS_W)+(KERNEL_WIDTH*NB_BITS_W)%8)/8;
+
+                    int nbInt8 = KERNEL_WIDTH;
+                    int nbSlot_per_Int8 = 1;
+
+                    if(NB_BITS_W > 0) {
+                        wOffset = (NB_INT8 * (syMin + sy + KERNEL_HEIGHT * output));
+                        nbInt8 = NB_INT8;
+                        nbSlot_per_Int8 = 8/(size_t)NB_BITS_W;
+                    }
 
                     if (!wrapInRange && ((PADDING_X == 0
                             && OUTPUTS_WIDTH == OUTPUTS_WIDTH_NOPAD)
                         || sxMax - sxMin == KERNEL_WIDTH))
                     {
                         //not accumulated weights for DW conv!
+                        /*
                         macsOnRange<KERNEL_WIDTH, INPUT_MEM_STRIDE>(
                             inputs + iOffset + channel, 
                             weights + wOffset, 
                             weightedSum);
+                        */
+                       //accumulated weights
+                        macsOnRangeMixedPrecisionR<KERNEL_WIDTH,NB_BITS_W,INPUT_MEM_STRIDE>(
+                            inputs + iOffset + channel,
+                            weights + wOffset,
+                            weightedSum,
+                            false);
                     }
                     else {
-                        for (int sx = 0; sx < KERNEL_WIDTH; ++sx) {
-                            if ((PADDING_X != 0
-                                    || OUTPUTS_WIDTH != OUTPUTS_WIDTH_NOPAD)
-                                && sx >= sxMax - sxMin)
-                            {
-                                break;
+
+                        int iInt8_start = sxMin/nbSlot_per_Int8;
+                        int iSlot_start = (nbSlot_per_Int8 > 1)?(sxMin%nbSlot_per_Int8):0;
+
+                        for (int iInt8 = 0; iInt8 < nbInt8; ++iInt8) {
+                            for(int iSlot = 0; iSlot < nbSlot_per_Int8; ++iSlot){
+
+                                int trueISlot = (iInt8==0)?iSlot+iSlot_start:iSlot;
+
+                                if(trueISlot >= nbSlot_per_Int8){
+                                    break;
+                                }
+
+                                int sx = (iInt8_start+iInt8)*nbSlot_per_Int8 + trueISlot;
+
+                                if(sx >= KERNEL_WIDTH) {
+                                    break;
+                                }
+
+                                if ((PADDING_X != 0
+                                        || OUTPUTS_WIDTH != OUTPUTS_WIDTH_NOPAD)
+                                    //&& sx >= sxMax - sxMin)
+                                    && sx >= sxMax)
+                                {
+                                    break;
+                                }
+
+                                int iOffsetInRange = iOffset
+                                    + sx * INPUT_MEM_STRIDE;
+
+                                if (wrapInRange &&
+                                    iOffsetInRange >= INPUT_MEM_CONT_SIZE)
+                                {
+                                    iOffsetInRange += INPUT_MEM_WRAP_OFFSET
+                                                - INPUT_MEM_CONT_OFFSET
+                                                - INPUT_MEM_CONT_SIZE;
+                                }
+
+                                //not accumulated weights for DW conv!
+                                /*
+                                weightedSum += inputs[iOffsetInRange + channel]
+                                    * weights[wOffset + sx];
+                                */
+
+                                //test for 4b only
+                                if(NB_BITS_W == 4) {
+                                    T4_8_Vector data;
+                                    data.uvector = weights[wOffset + (iInt8+iInt8_start)];
+
+                                    if(trueISlot == 0) {
+                                        weightedSum += inputs[iOffsetInRange + channel]*data.sfields.op1;
+                                    }
+                                    else{
+                                        weightedSum += inputs[iOffsetInRange + channel]*data.sfields.op0;
+                                    }
+                                }
+                                else{
+                                    weightedSum += inputs[iOffsetInRange + channel]
+                                        * weights[wOffset + (iInt8+iInt8_start)];
+                                }
                             }
-
-                            int iOffsetInRange = iOffset
-                                + sx * INPUT_MEM_STRIDE;
-
-                            if (wrapInRange &&
-                                iOffsetInRange >= INPUT_MEM_CONT_SIZE)
-                            {
-                                iOffsetInRange += INPUT_MEM_WRAP_OFFSET
-                                            - INPUT_MEM_CONT_OFFSET
-                                            - INPUT_MEM_CONT_SIZE;
-                            }
-
-                            //not accumulated weights for DW conv!
-                            weightedSum += inputs[iOffsetInRange + channel]
-                                * weights[wOffset + sx];
                         }
                     }
                 }
-
                 outputs[oOffset + output]
                     = sat<Output_T>(weightedSum, output, ACTIVATION, rescaling, ACTIVATION_OUTPUT_RANGE);
             }
