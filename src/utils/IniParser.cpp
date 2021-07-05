@@ -656,8 +656,9 @@ std::string N2D2::IniParser::getPropertyValue(std::string value) const
         std::string cmdValue = Utils::exec(cmdNameStr.str(), &status);
 
         if (status != 0) {
-            throw std::runtime_error("IniParser::getPropertyValue(): Python "
-                "interpreter returned code: " + std::to_string(status) + ".");
+            throw std::runtime_error("IniParser::getPropertyValue(): command \""
+                + cmdName + "\": python interpreter returned code: "
+                + std::to_string(status) + ".");
         }
 
         // Left trim & right trim
