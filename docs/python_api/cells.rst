@@ -93,13 +93,23 @@ If you want to add the same parameters to multiple cells, you can use a :py:clas
 Example :
 ~~~~~~~~~
 
-.. testcode::
+.. code-block:: python
 
         conv_config = n2d2.ConfigSection(no_bias=True)
         n2d2.cells.Conv(3, 32, [4, 4], **conv_config)
 
 This creates a :py:class:`n2d2.cells.Conv` with the parameter `no_bias=True`.
 This functionality allow you to write more concise code, when multiple cells share the same parameters.
+
+.. warning::
+        If you want to pass an object as a parameter for multiple n2d2 object. You need to create a wrapping function to create your object.
+        Example :
+
+        .. code-block:: python
+
+                def conv_def():
+                        return n2d2.ConfigSection(weights_solver=n2d2.solver.SGD())
+                n2d2.cells.Conv(3, 32, [4, 4], **conv_def())
 
 
 Mapping

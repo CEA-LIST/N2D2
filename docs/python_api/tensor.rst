@@ -5,14 +5,18 @@ Introduction :
 --------------
 The n2d2 library propose a tensor implementation with the :py:class:`n2d2.Tensor` class.
 
-:py:class:`n2d2.Tensor` is a wrapper of the ``Tensor`` object available in N2D2.
+:py:class:`n2d2.Tensor` is a wrapper of the ``Tensor`` object available in N2D2 (see :ref:`Tensor<dev-tensor-t>`).
+
+The class :py:class:`n2d2.Tensor` also contain a reference to the element that produce it. (It is ``None`` if you create it manually)
+
+.. figure:: ../_static/n2d2-tensor.png
+  :alt: :py:class:`n2d2.Tensor` implementation
+
+  :py:class:`n2d2.Tensor` implementation.
 
 
-
-
-
-Setting and getting values :
-----------------------------
+Manipulating tensors :
+----------------------
 
 For setting and getting value we will be using the following tensor as an example :
 
@@ -99,10 +103,51 @@ If you print the tensor you will see :
     4 5 6
 
 
-Fom Numpy :
-~~~~~~~~~~~
+Numpy :
+-------
 
-You can create a tensor using a ``numpy.array`` with the class method : :py:meth:`n2d2.Tensor.from_numpy` 
+To Numpy :
+~~~~~~~~~~
+
+You can create a ``numpy.array`` using a :py:class:`n2d2.Tensor` with the class method : :py:meth:`n2d2.Tensor.to_numpy` 
+
+.. code-block:: python
+
+    tensor = n2d2.Tensor([2, 3])
+    np_array = tensor.to_numpy()
+
+This will create the following tensor :
+
+.. testoutput::
+
+    0 0 0
+    0 0 0
+
+By default the ``numpy.array`` doesn't create a memory copy meaning that if you want to manipulate a :py:class:`n2d2.Tensor` you can use the numpy library.
+
+.. code-block:: python
+
+    np_array[0] = 1
+    print(tensor)
+
+
+.. testoutput::
+
+    1 1 1
+    0 0 0
+
+.. note::
+    If you do not want to create a memory copy, you should set the parameter ``copy=True``.
+    
+    .. code-block:: python
+
+        np_array = tensor.to_numpy(copy=True)
+
+
+From Numpy :
+~~~~~~~~~~~~
+
+You can create a :py:class:`n2d2.Tensor` using a ``numpy.array`` with the class method : :py:meth:`n2d2.Tensor.from_numpy` 
 
 .. testcode::
 
@@ -115,6 +160,9 @@ This will create the following tensor :
 
     1 2 3
     4 5 6
+
+.. note::
+    You cannot create a :py:class:`n2d2.Tensor` from a ``numpy.array`` without a memory copy because Tensor require a contiguous memory space which is not required for an array. 
 
 CUDA Tensor 
 -----------
