@@ -205,7 +205,7 @@ class DeepNetCell(Block):
         #self._cells = self._embedded_deepnet.get_cells()
         Block.__init__(self, list(self._embedded_deepnet.get_cells().values()), name=name)
 
-        self._deepnet = None # TODO : @Johannes : shouldn't this be equal to _embedded_deepnet ? 
+        self._deepnet = None 
         self._inference = False
 
 

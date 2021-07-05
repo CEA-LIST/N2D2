@@ -22,7 +22,6 @@ import N2D2
 from n2d2.n2d2_interface import N2D2_Interface
 import n2d2.global_variables
 
-# TODO : write docstring for quantizer parameters (cf dev doc !)
 
 class Quantizer(N2D2_Interface):
     _convention_converter= n2d2.ConventionConverter({
@@ -63,6 +62,7 @@ class Quantizer(N2D2_Interface):
 class CellQuantizer(Quantizer):
 
     def __init__(self, **config_parameters):
+        # TODO : add a type check for parameters range, solver and mode. (for mode also add a value check)
         Quantizer.__init__(self, **config_parameters)
 
     def add_weights(self, weights, diff_weights):
@@ -107,6 +107,18 @@ class SATCell(CellQuantizer):
     }
 
     def __init__(self, from_arguments=True, **config_parameters):
+        """
+        :param range: Range of Quantization, can be ``1`` for binary, ``255`` for 8-bits etc.., default=255
+        :type range: int, optional
+        :param solver: Type of the Solver for learnable quantization parameters, default= :py:class:`n2d2.solver.SGD`
+        :type solver: :py:class:`n2d2.solver.Solver`, optional
+        :param mode: Type of quantization Mode, can be ``Default`` or ``Integer``, default=``Default``
+        :type mode: string, optional
+        :param apply_quantization: Use ``True`` to enable quantization, if ``False`` parameters will be clamped between [-1.0,1.0], default=``True``
+        :type apply_quantization: bool, optional
+        :param apply_scaling: Use true to scale the parameters as described in the SAT paper, default=``False``
+        :type apply_scaling: bool, optional
+        """
         CellQuantizer.__init__(self, **config_parameters)
         if from_arguments:
             # No optional constructor arguments
@@ -153,6 +165,14 @@ class SATAct(ActivationQuantizer):
     }
 
     def __init__(self, from_arguments=True, **config_parameters):
+        """
+        :param range: Range of Quantization, can be ``1`` for binary, ``255`` for 8-bits etc.., default=255
+        :type range: int, optional
+        :param solver: Type of the Solver for learnable quantization parameters, default= :py:class:`n2d2.solver.SGD`
+        :type solver: :py:class:`n2d2.solver.Solver`, optional
+        :param alpha: Initial value of the learnable alpha parameter, default=8.0
+        :type alpha: float, optional
+        """
         ActivationQuantizer.__init__(self, **config_parameters)
 
         if from_arguments:

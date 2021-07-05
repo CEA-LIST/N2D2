@@ -45,7 +45,8 @@ test:python_api:
   before_script:
     - pip install -r python/requirements.txt
   script:
-    - python -m unittest discover -s python/tests
+    # Run on discovery all tests located in python/tests and discard the stdout to only show the errors/warnings and the results of the tests
+    - python -m unittest discover -s python/tests -v 1> /dev/null
 
 
 # HTTP server setup on is154584 (using python simplehttp):

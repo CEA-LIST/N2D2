@@ -139,6 +139,12 @@ class Score(Target):
         return self._N2D2_object.getAverageTopNSuccess(self._provider.get_partition(), window)
 
     def get_average_score(self, metric):
+        """
+        :param metric: Can be any of : ``Sensitivity``, ``Specificity``, ``Precision``, ``NegativePredictive``, ``Value``, ``MissRate``, ``FallOut``, ``FalseDiscoveryRate``, ``FalseOmissionRate``, ``Accuracy``, ``F1Score``, ``Informedness``, ``Markedness``.
+        :type metric: string
+        """
+        if metric not in N2D2.ConfusionTableMetric.__members__.keys():
+            raise n2d2.error_handler.WrongValue("metric", metric, ", ".join(N2D2.ConfusionTableMetric.__members__.keys()))
         return self._N2D2_object.getAverageScore(
             self._provider.get_partition(),
             N2D2.ConfusionTableMetric.__members__[metric])

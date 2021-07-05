@@ -615,6 +615,16 @@ class Fc(NeuralNetworkCell, Datatyped):
         """
         self._N2D2_object.resetWeights()
 
+    def set_solver_parameter(self, key, value):
+        """Set the parameter ``key`` with the value ``value`` for the attribute weight and bias solver.
+        :param key: Parameter name
+        :type key: str
+        :param value: The value of the parameter
+        :type value: Any
+        """
+        self._config_parameters['weight_solver'].set_parameter(key, value)
+        self._config_parameters['bias_solver'].set_parameter(key, value)
+
     def get_bias_solver(self):
         return self._config_parameters['bias_solver']
 
@@ -912,6 +922,16 @@ class Conv(NeuralNetworkCell, Datatyped):
         """Re-fill the weights using the associated weights filler
         """
         self._N2D2_object.resetWeights()
+
+    def set_solver_parameter(self, key, value):
+        """Set the parameter ``key`` with the value ``value`` for the attribute weight and bias solver.
+        :param key: Parameter name
+        :type key: str
+        :param value: The value of the parameter
+        :type value: Any
+        """
+        self._config_parameters['weight_solver'].set_parameter(key, value)
+        self._config_parameters['bias_solver'].set_parameter(key, value)
 
     def get_weights_solver(self):
         return self._config_parameters['weights_solver']
@@ -2323,6 +2343,22 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped):
         self._config_parameters['bias_solver'] = solver
         self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
 
+    def set_solver_parameter(self, key, value):
+        """Set the parameter ``key`` with the value ``value`` for the attribute scale and bias solver.
+        :param key: Parameter name
+        :type key: str
+        :param value: The value of the parameter
+        :type value: Any
+        """
+        self._config_parameters['scale_solver'].set_parameter(key, value)
+        self._config_parameters['bias_solver'].set_parameter(key, value)
+
+
+    def get_scale_solver(self):
+        return self._config_parameters['scale_solver']
+
+    def get_bias_solver(self):
+        return self._config_parameters['bias_solver']
 
 
 class Activation(NeuralNetworkCell, Datatyped):
