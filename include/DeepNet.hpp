@@ -254,7 +254,8 @@ public:
     void logSpikeStats(const std::string& dirName,
                        unsigned int nbPatterns) const;
     void log(const std::string& baseName, Database::StimuliSet set) const;
-    void logLabelsMapping(const std::string& fileName) const;
+    void logLabelsMapping(const std::string& fileName,
+                          bool withStats = false) const;
     void logEstimatedLabels(const std::string& dirName) const;
     void logEstimatedLabelsJSON(const std::string& dirName) const;
     void logLabelsLegend(const std::string& fileName) const;

@@ -2176,7 +2176,7 @@ void logStats(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     deepNet->logReceptiveFields("receptive_fields.log");
     std::cout << "[LOG] Labels mapping (*.Target/labels_mapping.log)"
         << std::endl;
-    deepNet->logLabelsMapping("labels_mapping.log");
+    deepNet->logLabelsMapping("labels_mapping.log", true);
     std::cout << "[LOG] Labels legend (*.Target/labels_legend.png)"
         << std::endl;
     deepNet->logLabelsLegend("labels_legend.png");

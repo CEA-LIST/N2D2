@@ -245,9 +245,10 @@ public:
      * @return Number of stimuli in the set
     */
     inline unsigned int getNbStimuli(StimuliSet set) const;
-    inline unsigned int getNbStimuliWithLabel(int label) const;
-    inline unsigned int getNbStimuliWithLabel(const std::string
-                                              & labelName) const;
+    unsigned int getNbStimuliWithLabel(int label,
+                                       StimuliSetMask setMask = All) const;
+    inline unsigned int getNbStimuliWithLabel(const std::string& labelName,
+                                            StimuliSetMask setMask = All) const;
     inline unsigned int getNbLabels() const;
     void addStimulus(const std::string& name,
                      const std::string& labelName,
@@ -295,8 +296,10 @@ public:
     inline std::vector<std::shared_ptr<ROI> > getStimulusROIs(StimuliSet set,
         unsigned int index) const;
     unsigned int getNbROIs() const;
-    unsigned int getNbROIsWithLabel(int label) const;
-    inline unsigned int getNbROIsWithLabel(const std::string& labelName) const;
+    unsigned int getNbROIsWithLabel(int label,
+                                    StimuliSetMask setMask = All) const;
+    inline unsigned int getNbROIsWithLabel(const std::string& labelName,
+                                           StimuliSetMask setMask = All) const;
     bool isLabel(const std::string& labelName) const;
     bool isMatchingLabel(const std::string& labelMask) const;
     int getLabelID(const std::string& labelName) const;
@@ -483,20 +486,11 @@ unsigned int N2D2::Database::getNbStimuli(StimuliSet set) const
     return mStimuliSets(set).size();
 }
 
-unsigned int N2D2::Database::getNbStimuliWithLabel(int label) const
+unsigned int N2D2::Database::getNbStimuliWithLabel(
+    const std::string& labelName,
+    StimuliSetMask setMask) const
 {
-    return std::count_if(
-        mStimuli.begin(),
-        mStimuli.end(),
-        std::bind(std::equal_to<int>(),
-                  label,
-                  std::bind<int>(&Stimulus::label, std::placeholders::_1)));
-}
-
-unsigned int N2D2::Database::getNbStimuliWithLabel(const std::string
-                                                   & labelName) const
-{
-    return getNbStimuliWithLabel(getLabelID(labelName));
+    return getNbStimuliWithLabel(getLabelID(labelName), setMask);
 }
 
 unsigned int N2D2::Database::getNbLabels() const
@@ -583,10 +577,11 @@ N2D2::Database::getStimulusROIs(StimuliSet set, unsigned int index) const
     return getStimulusROIs(getStimulusID(set, index));
 }
 
-unsigned int N2D2::Database::getNbROIsWithLabel(const std::string
-                                                & labelName) const
+unsigned int N2D2::Database::getNbROIsWithLabel(
+    const std::string& labelName,
+    StimuliSetMask setMask) const
 {
-    return getNbROIsWithLabel(getLabelID(labelName));
+    return getNbROIsWithLabel(getLabelID(labelName), setMask);
 }
 
 std::vector<int> N2D2::Database::getLabelsIDs(const std::vector

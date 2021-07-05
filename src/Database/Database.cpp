@@ -1645,20 +1645,55 @@ unsigned int N2D2::Database::getNbROIs() const
     return nbROIs;
 }
 
-unsigned int N2D2::Database::getNbROIsWithLabel(int label) const
+unsigned int N2D2::Database::getNbStimuliWithLabel(
+    int label,
+    StimuliSetMask setMask) const
+{
+    size_t count = 0;
+    const std::vector<StimuliSet> stimuliSets = getStimuliSets(setMask);
+
+    for (std::vector<Database::StimuliSet>::const_iterator itSet
+        = stimuliSets.begin(),
+        itSetEnd = stimuliSets.end();
+        itSet != itSetEnd;
+        ++itSet)
+    {
+        count += std::count_if(
+            mStimuliSets(*itSet).begin(),
+            mStimuliSets(*itSet).end(),
+            std::bind(std::equal_to<int>(),
+                    label,
+                    std::bind<int>((int (Database::*)(StimulusID) const) &Database::getStimulusLabel, this, std::placeholders::_1)));
+    }
+
+    return count;
+}
+
+unsigned int N2D2::Database::getNbROIsWithLabel(int label,
+    StimuliSetMask setMask) const
 {
     unsigned int nbROIs = 0;
 
-    for (std::vector<Stimulus>::const_iterator it = mStimuli.begin(),
-                                               itEnd = mStimuli.end();
-         it != itEnd;
-         ++it) {
-        for (std::vector<ROI*>::const_iterator itROIs = (*it).ROIs.begin(),
-                                               itROIsEnd = (*it).ROIs.end();
-             itROIs != itROIsEnd;
-             ++itROIs) {
-            if ((*itROIs)->getLabel() == label)
-                ++nbROIs;
+    const std::vector<StimuliSet> stimuliSets = getStimuliSets(setMask);
+
+    for (std::vector<Database::StimuliSet>::const_iterator itSet
+        = stimuliSets.begin(),
+        itSetEnd = stimuliSets.end();
+        itSet != itSetEnd;
+        ++itSet)
+    {
+        for (std::vector<unsigned int>::const_iterator it = mStimuliSets(*itSet).begin(),
+                                                itEnd = mStimuliSets(*itSet).end();
+            it != itEnd;
+            ++it)
+        {
+            for (std::vector<ROI*>::const_iterator itROIs = mStimuli[(*it)].ROIs.begin(),
+                                                itROIsEnd = mStimuli[(*it)].ROIs.end();
+                itROIs != itROIsEnd;
+                ++itROIs) {
+                if ((*itROIs)->getLabel() == label)
+                    ++nbROIs;
+            }
         }
     }
 

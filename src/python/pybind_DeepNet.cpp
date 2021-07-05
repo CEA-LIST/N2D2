@@ -92,7 +92,7 @@ void init_DeepNet(py::module &m) {
     .def("logStats", &DeepNet::logStats, py::arg("dirName"))
     .def("logSpikeStats", &DeepNet::logSpikeStats, py::arg("dirName"), py::arg("nbPatterns"))
     .def("log", &DeepNet::log, py::arg("baseName"), py::arg("set"))
-    .def("logLabelsMapping", &DeepNet::logLabelsMapping, py::arg("fileName"))
+    .def("logLabelsMapping", &DeepNet::logLabelsMapping, py::arg("fileName"), py::arg("withStats") = false)
     .def("logEstimatedLabels", &DeepNet::logEstimatedLabels, py::arg("dirName"))
     .def("logEstimatedLabelsJSON", &DeepNet::logEstimatedLabelsJSON, py::arg("dirName"))
     .def("logLabelsLegend", &DeepNet::logLabelsLegend, py::arg("fileName"))
