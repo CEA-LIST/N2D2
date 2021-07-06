@@ -96,7 +96,7 @@ To change the default data type use the following line :
 
 .. testcode::
 
-        n2d2.global_variables.default_model = "int"
+        n2d2.global_variables.default_datatype = "int"
 
 .. note::
 

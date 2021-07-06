@@ -10,15 +10,15 @@ Pytorch
 Integrating a Cell
 ~~~~~~~~~~~~~~~~~~
 
-You can use the :py:class:`n2d2.pytorch.LayerN2D2` to wrap an :py:class:`n2d2.cell.Cell` or an :py:class:`N2D2.Cell` into a PyTorch Network.
+You can use the :py:class:`n2d2.pytorch.LayerN2D2` to wrap an :py:class:`n2d2.cells.Cell` or an :py:class:`N2D2.Cell` into a PyTorch Network.
 
-Documentation :
-^^^^^^^^^^^^^^^
+Documentation
+^^^^^^^^^^^^^
 .. autoclass:: n2d2.pytorch.LayerN2D2
         :members:
 
-Example :
-^^^^^^^^^
+Example
+^^^^^^^
 
 .. testsetup:: 
 
@@ -30,10 +30,9 @@ Example :
         import n2d2
         from n2d2.cell import Conv
         from n2d2 import tensor
-        import n2d2.pytorch as pytorch
         from n2d2.deepnet import Sequence, DeepNet
 
-.. testcode::
+.. code-block:: python
 
     class Custom_Net(torch.nn.Module): 
         """
@@ -61,17 +60,17 @@ You can use the :py:class:`n2d2.pytorch.Sequence` to wrap an :py:class:`n2d2.cel
 
 
 
-Documentation :
-^^^^^^^^^^^^^^^
+Documentation
+^^^^^^^^^^^^^
 .. autoclass:: n2d2.pytorch.Sequence
         :members:
 
-Example :
-^^^^^^^^^
+Example
+^^^^^^^
 
 In this example we wrap the default ``LeNet`` model proposed by the python API and run it with pytorch. 
 
-.. testcode::
+.. code-block:: python
 
         import N2D2
         import n2d2
@@ -118,8 +117,8 @@ Integration of a DeepNetCell
 You can use the :py:class:`n2d2.pytorch.DeepNetCell` to wrap an :py:class:`n2d2.cells.DeepNetCell` into a Pytorch network.
 A :py:class:`n2d2.cells.DeepNetCell` is used to import a Network with :doc:`INI file configuration<../ini/intro>` or with ONNX. If you want to 
 
-Documentation :
-^^^^^^^^^^^^^^^
+Documentation
+^^^^^^^^^^^^^
 .. autoclass:: n2d2.pytorch.DeepNetCell
         :members:
 
@@ -128,7 +127,7 @@ Example :
 
 In this example we wrap the default ``LeNet`` model proposed by the python API, generate the :py:class:`N2D2.DeepNet` and run it with pytorch. 
 
-.. testcode::
+.. code-block:: python
 
         import n2d2
         import torch

@@ -107,18 +107,18 @@ class N2D2_Interface:
         # TODO : This test trigger an error if we send an int instead of a float for example
         # Maybe allowing an auto cast for this kind of situations can be a good idea ?
         if not isinstance(value, self._N2D2_type_map[returned_type]):
-            raise n2d2.error_handler.WrongInputType(self.n2d2_to_python_convention(key), str(type(value)), [str(self._N2D2_type_map[returned_type])])
+            raise n2d2.error_handler.WrongInputType(self._n2d2_to_python_convention(key), str(type(value)), [str(self._N2D2_type_map[returned_type])])
         else:
             self._N2D2_object.setParameter(key, parsed_parameter)
 
     def _set_N2D2_parameters(self, parameters):
         for key, value in parameters.items():
-            self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+            self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
 
 
     def set_parameter(self, key, value):
         self._config_parameters[key] = value
-        self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+        self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
 
     def get_parameter(self, key):
         """
@@ -141,9 +141,8 @@ class N2D2_Interface:
 
 
     @classmethod
-    def python_to_n2d2_convention(cls, key):
-        """
-        Convert the name of a python parameter to the n2d2 convention using a dictionnary.
+    def _python_to_n2d2_convention(cls, key):
+        """Convert the name of a python parameter to the n2d2 convention using a dictionnary.
         :param key: Parameter name
         :type key: str
         """
@@ -154,9 +153,8 @@ class N2D2_Interface:
         return new_key
 
     @classmethod
-    def n2d2_to_python_convention(cls, key):
-        """
-        Convert the name of a n2d2 parameter to the python convention using a dictionnary.
+    def _n2d2_to_python_convention(cls, key):
+        """Convert the name of a n2d2 parameter to the python convention using a dictionnary.
         :param key: Parameter name
         :type key: str
         """
@@ -169,7 +167,7 @@ class N2D2_Interface:
     def n2d2_function_argument_parser(self, arguments):
         new_arguments = {}
         for key, value in arguments.items():
-            new_key = self.python_to_n2d2_convention(key)
+            new_key = self._python_to_n2d2_convention(key)
             new_arguments[new_key] = value
         return new_arguments
 
@@ -192,7 +190,7 @@ class N2D2_Interface:
         str_params = N2D2_object.getParameters()
         parameters = {}
         for param in str_params:
-            parameters[cls.n2d2_to_python_convention(param)] = cls._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](
+            parameters[cls._n2d2_to_python_convention(param)] = cls._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](
                 N2D2_object.getParameterAndType(param)[0])
         return parameters
 

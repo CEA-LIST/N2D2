@@ -87,7 +87,7 @@ class SGD(Solver):
     })
     def __init__(self, from_arguments=True, **config_parameters):
         """
-        :param from_arguments: If False, N2D2_object is not created based on config_parameters
+        :param from_arguments: If ``False``, N2D2_object is not created based on config_parameters
         :type  from_arguments: bool, optional
         :param datatype: Datatype of the weights, default=float
         :type datatype: str, optional
@@ -149,7 +149,7 @@ class Adam(Solver):
     })
     def __init__(self, from_arguments=True, **config_parameters):
         """
-        :param from_arguments: If False, N2D2_object is not created based on config_parameters
+        :param from_arguments: If ``False``, N2D2_object is not created based on config_parameters
         :type  from_arguments: bool, optional
         :param datatype: Datatype of the weights, default=float
         :type datatype: str, optional

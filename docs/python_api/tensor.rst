@@ -1,8 +1,8 @@
 Tensor
 ======
 
-Introduction :
---------------
+Introduction
+------------
 The n2d2 library propose a tensor implementation with the :py:class:`n2d2.Tensor` class.
 
 :py:class:`n2d2.Tensor` is a wrapper of the ``Tensor`` object available in N2D2 (see :ref:`Tensor<dev-tensor-t>`).
@@ -15,8 +15,8 @@ The class :py:class:`n2d2.Tensor` also contain a reference to the element that p
   :py:class:`n2d2.Tensor` implementation.
 
 
-Manipulating tensors :
-----------------------
+Manipulating tensors
+--------------------
 
 For setting and getting value we will be using the following tensor as an example :
 
@@ -33,8 +33,8 @@ For setting and getting value we will be using the following tensor as an exampl
 You can set and get values using :
 
 
-Coordinates :
-~~~~~~~~~~~~~
+Coordinates
+~~~~~~~~~~~
 
 .. testcode::
 
@@ -48,8 +48,8 @@ If you print the tensor you will see :
     0 0 0
     1 0 0
 
-Index :
-~~~~~~~
+Index
+~~~~~
 
 You can use an index to get or set elements of a tensor. 
 The index correspond to the flatten representation of your tensor.
@@ -67,8 +67,8 @@ If you print the tensor you will see :
     0 0 0
 
 
-Slice :
-~~~~~~~
+Slice
+~~~~~
 
 .. note::
 
@@ -86,8 +86,8 @@ If you print the tensor you will see :
     0 0 0
 
 
-Set values method :
-~~~~~~~~~~~~~~~~~~~
+Set values method
+~~~~~~~~~~~~~~~~~
 
 If you want to set multiple values easily, you can use the method :py:meth:`n2d2.Tensor.set_values` 
 
@@ -103,11 +103,11 @@ If you print the tensor you will see :
     4 5 6
 
 
-Numpy :
--------
+Numpy
+-----
 
-To Numpy :
-~~~~~~~~~~
+To Numpy
+~~~~~~~~
 
 You can create a ``numpy.array`` using a :py:class:`n2d2.Tensor` with the class method : :py:meth:`n2d2.Tensor.to_numpy` 
 
@@ -144,8 +144,8 @@ By default the ``numpy.array`` doesn't create a memory copy meaning that if you 
         np_array = tensor.to_numpy(copy=True)
 
 
-From Numpy :
-~~~~~~~~~~~~
+From Numpy
+~~~~~~~~~~
 
 You can create a :py:class:`n2d2.Tensor` using a ``numpy.array`` with the class method : :py:meth:`n2d2.Tensor.from_numpy` 
 
@@ -188,8 +188,8 @@ You cannot access the device directly, the GPU don't have input/output functions
 
 This is why you have two methods to synchronized these two versions.
 
-Synchronization example :
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Synchronization example
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Let's consider the following CUDA Tensor :
 

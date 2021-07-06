@@ -184,7 +184,7 @@ class SATAct(ActivationQuantizer):
                 if key is 'solver':
                     self._N2D2_object.setSolver(value.N2D2())
                 else:
-                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+                    self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
 
     """
     def set_solver(self, solver):

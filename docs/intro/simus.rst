@@ -2,13 +2,6 @@ Performing simulations
 ======================
 
 
-Obtaining the latest version of this manual
--------------------------------------------
-
-The latest version of this manual can be found at https://cea-list.github.io/N2D2/.
-
-
-
 Minimum system requirements
 ---------------------------
 

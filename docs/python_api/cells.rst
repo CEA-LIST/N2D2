@@ -7,6 +7,10 @@ Introduction
 Cell objects are the atomics elements that compose a deep neural network.
 
 
+Each cell embed an :py:class:`N2D2.Cell` which do the computation.
+:py:class:`n2d2.cells.Cell` are not dependant of a DeepNet this allow a dynamic management of the computation. 
+
+
 Cells
 -----
 
@@ -88,10 +92,10 @@ If you want to add the same parameters to multiple cells, you can use a :py:clas
         :members:
         :inherited-members:
 
-:py:class:`n2d2.ConfigSection` are used like dictionaries and passes to the constructor of classes like kwargs. 
+:py:class:`n2d2.ConfigSection` are used like dictionaries and passes to the constructor of classes like ``kwargs``. 
 
-Example :
-~~~~~~~~~
+Example
+~~~~~~~
 
 .. code-block:: python
 

@@ -108,7 +108,7 @@ class Linear(ActivationFunction):
                     else:
                         raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
                 else:
-                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+                    self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
 
 
 class Rectifier(ActivationFunction):
@@ -147,7 +147,7 @@ class Rectifier(ActivationFunction):
                     else:
                         raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
                 else:
-                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+                    self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
 
 
 class Tanh(ActivationFunction):
@@ -186,6 +186,6 @@ class Tanh(ActivationFunction):
                     else:
                         raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
                 else:
-                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+                    self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
 
 
