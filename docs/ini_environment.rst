@@ -497,6 +497,29 @@ Kaiser window.
 | *WindowName*\ ``.Beta`` [5.0]   | Beta                   |
 +---------------------------------+------------------------+
 
+CentroidCropTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Find the centroid of the image and crop the image so that the center of the image
+matches the centroid location. The cropping can be done on both axis, or just
+one axis with the ``Axis`` parameter. If ``Axis`` is 1, only the horizontal axis
+will be cropped so that the centroid x-location is at half the image width.
+
+
++------------------------------------+-------------------------------------------------------------+
+| Option [default value]             | Description                                                 |
++====================================+=============================================================+
+| ``Axis`` [-1]                      | Axis to consider for the centroid                           |
+|                                    | (-1 = both, 0 = cols, 1 = rows)                             |
++------------------------------------+-------------------------------------------------------------+
+
+In practice, this transformation can be used in conjunction with the 
+``PadCropTransformation``, in order to obtain cropped images of always of the same
+dimension (by cropping for example to the smallest image obtained after 
+``CentroidCropTransformation``), all centered on their respective centroid.
+
+
+
 BlendingTransformation
 ~~~~~~~~~~~~~~~~~~~~~~
 
