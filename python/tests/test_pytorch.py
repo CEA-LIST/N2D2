@@ -65,7 +65,7 @@ class Custom_Net(torch.nn.Module):
         super(Custom_Net, self).__init__()
         net = N2D2.Network()
         deepNet = N2D2.DeepNet(net)
-        N2D2Cell = N2D2.ConvCell_Frame_float(deepNet, "conv", [3, 3], 1, strideDims=[1, 1], paddingDims=[1, 1])
+        N2D2Cell = N2D2.ConvCell_Frame_float(deepNet, "conv", [3, 3], 1, strideDims=[1, 1], paddingDims=[1, 1]) # TODO : use a constant_filler
         self.conv = pytorch.LayerN2D2(N2D2Cell)
         self.cnn_layers = torch.nn.Sequential(
             self.conv)
@@ -91,12 +91,12 @@ class Custom_Net(torch.nn.Module):
                     print(v)
         return v
 
-class Net(torch.nn.Module): 
+class ConvTorch(torch.nn.Module): 
     """
     A Pytorch network compose of one Pytorch conv cells.
     """    
     def __init__(self):
-        super(Net, self).__init__()
+        super(ConvTorch, self).__init__()
         conv = torch.nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=1, bias=False)
         torch.nn.init.constant_(conv.weight, weight_value)
         self.conv = conv
@@ -111,12 +111,12 @@ class Net(torch.nn.Module):
         print(self.conv.weight.data)
         return self.conv.weight.data
 
-class NetTestWeightsUpdate(torch.nn.Module): 
+class DoubleConv(torch.nn.Module): 
     """
     A Pytorch network compose of one Pytorch conv cells.
     """    
     def __init__(self):
-        super(NetTestWeightsUpdate, self).__init__()
+        super(DoubleConv, self).__init__()
         conv1 = torch.nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=1, bias=False)
         torch.nn.init.constant_(conv1.weight, weight_value)
         self.conv1 = conv1
@@ -171,7 +171,7 @@ class MNIST_CNN(torch.nn.Module):
 class test_LayerN2D2(unittest.TestCase):
 
     def test(self):
-        model = Net()
+        model = ConvTorch()
         c_model = Custom_Net()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         c_optimizer = torch.optim.SGD(c_model.parameters(), lr=0.01)
@@ -258,7 +258,7 @@ class test_DeepNetN2D2(unittest.TestCase):
         """
         Testing if weights update is done in N2D2 by comparing with the pytorch weights update.
         """
-        model = NetTestWeightsUpdate()
+        model = DoubleConv()
         model_path = './tmp.onnx'
         # Exporting to ONNX
         dummy_in = torch.randn(batch_size, 1, 3, 3)
@@ -326,7 +326,7 @@ class test_DeepNetN2D2(unittest.TestCase):
         """
         Testing if weights update is done in N2D2 by comparing with the pytorch weights update.
         """
-        model = NetTestWeightsUpdate()
+        model = DoubleConv()
 
         conv1 = n2d2.cells.Conv(name="3", nb_inputs=1, nb_outputs=1, kernel_dims=[3, 3], sub_sample_dims=[1, 1], stride_dims=[1, 1], padding_dims=[1, 1], dilation_dims=[1, 1], back_propagate=True, no_bias=True, weights_export_flip=True, weights_export_format="OCHW", activation=n2d2.activation.Tanh(alpha=1.0), weights_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), bias_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), weights_filler=n2d2.filler.Constant(value=0.1), bias_filler=n2d2.filler.Constant(value=0.1)) 
         conv2 = n2d2.cells.Conv(name="5", nb_inputs=1, nb_outputs=1, kernel_dims=[3, 3], sub_sample_dims=[1, 1], stride_dims=[1, 1], padding_dims=[1, 1], dilation_dims=[1, 1], back_propagate=True, no_bias=True, weights_export_flip=True, weights_export_format="OCHW", activation=n2d2.activation.Tanh(alpha=1.0), weights_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), bias_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), weights_filler=n2d2.filler.Constant(value=0.1), bias_filler=n2d2.filler.Constant(value=0.1))
@@ -385,13 +385,13 @@ class test_DeepNetN2D2(unittest.TestCase):
 class test_Sequence(unittest.TestCase):
 
     def test_sequence(self):
-        model = NetTestWeightsUpdate()
+        model = DoubleConv()
 
         conv1 = n2d2.cells.Conv(name="3", nb_inputs=1, nb_outputs=1, kernel_dims=[3, 3], sub_sample_dims=[1, 1], stride_dims=[1, 1], padding_dims=[1, 1], dilation_dims=[1, 1], back_propagate=True, no_bias=True, weights_export_flip=True, weights_export_format="OCHW", activation=n2d2.activation.Tanh(alpha=1.0), weights_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), bias_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), weights_filler=n2d2.filler.Constant(value=0.1), bias_filler=n2d2.filler.Constant(value=0.1)) 
         conv2 = n2d2.cells.Conv(name="5", nb_inputs=1, nb_outputs=1, kernel_dims=[3, 3], sub_sample_dims=[1, 1], stride_dims=[1, 1], padding_dims=[1, 1], dilation_dims=[1, 1], back_propagate=True, no_bias=True, weights_export_flip=True, weights_export_format="OCHW", activation=n2d2.activation.Tanh(alpha=1.0), weights_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), bias_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), weights_filler=n2d2.filler.Constant(value=0.1), bias_filler=n2d2.filler.Constant(value=0.1))
         seq = n2d2.cells.Sequence([conv1, conv2])
         n2d2_deepNet = n2d2.pytorch.Sequence(seq)
-
+        n2d2_deepNet.eval()
         weight1, weight2 = model.get_weight()
         conv_cell = seq[0]
         v1 = N2D2.Tensor_float([])
@@ -478,7 +478,7 @@ class test_DeepNetCell(unittest.TestCase):
         """
         Testing if weights update is done in N2D2 by comparing with the pytorch weights update.
         """
-        model = NetTestWeightsUpdate()
+        model = DoubleConv()
         model_path = './tmp.onnx'
         # Exporting to ONNX
         dummy_in = torch.randn(batch_size, 1, 3, 3)

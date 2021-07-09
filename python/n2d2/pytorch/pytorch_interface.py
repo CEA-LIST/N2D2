@@ -20,7 +20,6 @@
 """
 import torch
 import n2d2
-from n2d2 import tensor
 import N2D2
 
 def _switching_convention(dims):
@@ -84,7 +83,7 @@ class LayerN2D2(torch.nn.Module):
         Intialize N2D2 cells and addInput.
         """
         # OutputDims init with an empty tensor of the same size as the input
-        diffOutputs = tensor.Tensor(n2d2_tensor.shape(), value=0, cuda=n2d2_tensor.is_cuda)
+        diffOutputs = n2d2.Tensor(n2d2_tensor.shape(), value=0, cuda=n2d2_tensor.is_cuda)
 
         self.diffOutput = diffOutputs # save this variable to get it back 
         self._N2D2.clearInputs()
@@ -105,7 +104,7 @@ class LayerN2D2(torch.nn.Module):
                 self.input = n2d2_tensor # Save the input in the object to avoid that python remove it 
 
                 self._add_input(n2d2_tensor)
-                self._N2D2.propagate()
+                self._N2D2.propagate(self.training)
                 N2D2_outputs = self._N2D2.getOutputs()
 
                 outputs = _to_torch(N2D2_outputs)
@@ -175,7 +174,7 @@ class DeepNetN2D2(torch.nn.Module):
                 shape = n2d2_tensor.dims()
                 # Note : It's important to set diffOutputs as an attribute else when exiting this method
                 # Python garbage collector will erase this variable while Cpp will still use it resulting in a SegFault
-                self.diffOutputs = tensor.Tensor(shape, value=0, dim_format="N2D2")
+                self.diffOutputs = n2d2.Tensor(shape, value=0, dim_format="N2D2")
                 self.first_cell.clearInputs() 
                 self.first_cell.addInputBis(n2d2_tensor.N2D2(), self.diffOutputs.N2D2())
 
@@ -183,8 +182,9 @@ class DeepNetN2D2(torch.nn.Module):
                 N2D2_inputs.op_assign(n2d2_tensor.N2D2())
                 N2D2_inputs.synchronizeHToD()
 
-                self._N2D2.propagate(N2D2.Database.Learn, False, [])
-
+                # self._N2D2.propagate(N2D2.Database.Learn, False, [])
+                # training is  a torch.nn.Module attribute (cf. https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module)
+                self._N2D2.propagate(self.training)
                 N2D2_outputs = self._N2D2.getCell_Frame_Top(self.last_cell.getName()).getOutputs() 
                 N2D2_outputs.synchronizeDToH()
                 outputs = _to_torch(N2D2_outputs)
@@ -255,12 +255,21 @@ class Sequence(torch.nn.Module):
             @staticmethod
             def forward(ctx, inputs):
                 self.batch_size = inputs.shape[0]
+                
                 n2d2_tensor = _to_n2d2(inputs)
+
                 if n2d2.cuda_compiled:
                     n2d2_tensor.cuda()
-                    n2d2_tensor.htod()
 
+                    n2d2_tensor.htod()
+                if self.training: # training is  a torch.nn.Module attribute (cf. https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module)
+                    self._N2D2.learn()
+                else:
+                    self._N2D2.test()
                 n2d2_outputs = self._N2D2(n2d2_tensor)
+                self.diffOutputs = n2d2.Tensor(n2d2_tensor.dims(), value=0, dim_format="N2D2")
+                self.first_cell.N2D2().clearInputs() 
+                self.first_cell.N2D2().addInputBis(n2d2_tensor.N2D2(), self.diffOutputs.N2D2())
                 n2d2_outputs.N2D2().synchronizeDToH()
                 
                 self.output_tensor = n2d2_outputs
@@ -286,7 +295,7 @@ class Sequence(torch.nn.Module):
                 self.output_tensor.back_propagate()
                 self.output_tensor.update()
                 
-                diffOutput = self.last_cell.N2D2().getDiffOutputs()
+                diffOutput = self.first_cell.N2D2().getDiffOutputs()
                 outputs = _to_torch(diffOutput)
                 outputs = torch.mul(outputs, -1/self.batch_size)
                 if grad_output.is_cuda:

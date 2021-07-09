@@ -38,8 +38,8 @@ class test_params(unittest.TestCase):
         # if self.object: # We don't do test if it's the dummy class
         #     parameters = self.object.N2D2().getParameters()
         #     for param in self.parameters.keys():
-        #         if self.object.python_to_n2d2_convention(param) in parameters:
-        #             param_name = self.object.python_to_n2d2_convention(param)
+        #         if self.object._python_to_n2d2_convention(param) in parameters:
+        #             param_name = self.object._python_to_n2d2_convention(param)
         #             N2D2_param, N2D2_type = self.object.N2D2().getParameterAndType(param_name)
         #             # TODO : need test for bool ?
         #             if N2D2_type == "bool":
