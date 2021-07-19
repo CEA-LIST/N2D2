@@ -69,6 +69,7 @@ class Tensor:
         "Numpy": lambda x: [i for i in reversed(x)],
     }
 
+    # TODO: Why is default not N2D2?
     def __init__(self, dims, value=None, cuda=False, datatype="float", cell=None, dim_format='Numpy'):
         """
         :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (the convention used depends of the ``dim_format`` argument, by default it's the same as ``Numpy``)
@@ -260,7 +261,7 @@ class Tensor:
         copy = Tensor(self.shape(), datatype=self.data_type(), cuda=self.is_cuda, cell=self.cell)
         copy._tensor.op_assign(self._tensor)
         return copy
-    
+
     def cpu(self):
         """Convert the tensor to a cpu tensor
         """
@@ -270,6 +271,7 @@ class Tensor:
             new_tensor = self._tensor_generators[self._datatype](self.dims())
             new_tensor.op_assign(self._tensor)
             self._tensor = new_tensor
+        return self
 
     def cuda(self):
         """Convert the tensor to a cuda tensor
@@ -280,6 +282,7 @@ class Tensor:
             new_tensor = self._cuda_tensor_generators[self._datatype](self.dims())
             new_tensor.op_assign(self._tensor)
             self._tensor = new_tensor
+        return self
 
     def to_numpy(self, copy=False):
         """Create a numpy array equivalent to the tensor.
@@ -568,6 +571,7 @@ class Interface(n2d2.provider.Provider):
     def dimZ(self):
         return self.dim_z
     def dims(self):
-        return [self.dimZ(), self.dimY(), self.dimX(), self.dimY()]
+        #return [self.dimB(), self.dimZ(), self.dimX(), self.dimY()]
+        return [self.dimX(), self.dimY(), self.dimZ(), self.dimB()]
     def get_tensors(self):
         return self.tensors
