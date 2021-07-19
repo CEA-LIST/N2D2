@@ -120,8 +120,7 @@ class ConvTorch(torch.nn.Module):
         torch.nn.init.constant_(conv.weight, weight_value)
         self.conv = conv
         self.cnn_layers = torch.nn.Sequential(
-            conv, 
-            torch.nn.Tanh())
+            conv)
     # Defining the forward pass    
     def forward(self, x):
         x = self.cnn_layers(x)
@@ -162,7 +161,7 @@ class MNIST_CNN(torch.nn.Module):
         super(MNIST_CNN, self).__init__()
         # Defining the cnn layer that we will extract and export to ONNX
         self.lin = torch.nn.Linear(128, 10)
-        self.cnn_layers = torch.nn.Sequential( # This is the layer we will replace
+        self.cnn_layers = torch.nn.Sequential( 
             torch.nn.Conv2d(1, 4, 3, 1),
             torch.nn.ReLU(),
             torch.nn.Conv2d(4, 4, 3),
@@ -401,21 +400,22 @@ class test_DeepNetN2D2(unittest.TestCase):
         for i,j in zip(torch.flatten(weight2), v2):
             self.assertEqual(round(i.item(), 4),round(j, 4))
 
-class test_Sequence(unittest.TestCase):
+class test_Block(unittest.TestCase):
 
     def test_sequence(self):
         model = DoubleConv()
 
         conv1 = n2d2.cells.Conv(name="3", nb_inputs=1, nb_outputs=1, kernel_dims=[3, 3], sub_sample_dims=[1, 1], stride_dims=[1, 1], padding_dims=[1, 1], dilation_dims=[1, 1], back_propagate=True, no_bias=True, weights_export_flip=True, weights_export_format="OCHW", activation=n2d2.activation.Tanh(alpha=1.0), weights_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), bias_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), weights_filler=n2d2.filler.Constant(value=0.1), bias_filler=n2d2.filler.Constant(value=0.1)) 
         conv2 = n2d2.cells.Conv(name="5", nb_inputs=1, nb_outputs=1, kernel_dims=[3, 3], sub_sample_dims=[1, 1], stride_dims=[1, 1], padding_dims=[1, 1], dilation_dims=[1, 1], back_propagate=True, no_bias=True, weights_export_flip=True, weights_export_format="OCHW", activation=n2d2.activation.Tanh(alpha=1.0), weights_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), bias_solver=n2d2.solver.SGD(decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0, momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25), weights_filler=n2d2.filler.Constant(value=0.1), bias_filler=n2d2.filler.Constant(value=0.1))
-        seq = n2d2.cells.Sequence([conv1, conv2])
-        n2d2_deepNet = n2d2.pytorch.Sequence(seq)
-        n2d2_deepNet.eval()
+
+        block = n2d2.cells.Sequence([conv1, conv2])
+        n2d2_deepNet = n2d2.pytorch.Block(block)
+
         weight1, weight2 = model.get_weight()
-        conv_cell = seq[0]
+        conv_cell = block['3']
         v1 = N2D2.Tensor_float([])
         conv_cell.N2D2().getWeight(0, 0, v1)
-        conv_cell = seq[1]
+        conv_cell = block['5']
         v2 = N2D2.Tensor_float([])
         conv_cell.N2D2().getWeight(0, 0, v2)
 
@@ -447,10 +447,10 @@ class test_Sequence(unittest.TestCase):
         opt.step()
 
         weight1, weight2 = model.get_weight()
-        conv_cell = seq[0]
+        conv_cell = block['3']
         v1 = N2D2.Tensor_float([])
         conv_cell.N2D2().getWeight(0, 0, v1)
-        conv_cell = seq[1]
+        conv_cell = block['5']
         v2 = N2D2.Tensor_float([])
         conv_cell.N2D2().getWeight(0, 0, v2)
         for i,j in zip(torch.flatten(weight1), v1):

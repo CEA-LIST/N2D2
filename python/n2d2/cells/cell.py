@@ -65,8 +65,23 @@ class Block(Cell):
             self._cells[cell.get_name()] = cell
         Cell.__init__(self, name)
 
-    def __getitem__(self, name):
-        return self._cells[name]
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return list(self._cells.values())[item]
+        else:
+            return self._cells[item]
+
+    def get_cells(self):
+        cells = {}
+        self._get_cells(cells)
+        return cells
+
+    def _get_cells(self, cells):
+        for elem in self._cells.values():
+            if isinstance(elem, Block):
+                elem._get_cells(cells)
+            else:
+                cells[elem.get_name()] = elem
 
     def __call__(self, x):
         raise RuntimeError("Block requires custom __call__() method")
@@ -74,10 +89,12 @@ class Block(Cell):
     def test(self):
         for cell in self._cells.values():
             cell.test()
+        return self
 
     def learn(self):
         for cell in self._cells.values():
             cell.learn()
+        return self
 
     def import_free_parameters(self, dir_name, ignore_not_exists=False):
         for cell in self._cells.values():
@@ -256,7 +273,7 @@ class DeepNetCell(Block):
         #print(self._embedded_deepnet)
 
         # Recreate graph with underlying N2D2 deepnet
-        self._deepnet = self.concat_to_deepnet(inputs.cell.get_deepnet())
+        self._deepnet = self.concat_to_deepnet(inputs.get_deepnet())
 
         #if not provider.dims() == N2D2_object.getStimuliProvider().getData().dims():
         #    raise RuntimeError(
@@ -328,9 +345,11 @@ class DeepNetCell(Block):
 
     def test(self):
         self._inference = True
+        return self
 
     def learn(self):
         self._inference = False
+        return self
 
     def import_free_parameters(self, dir_name, ignore_not_exists=False):
         self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignore_not_exists=ignore_not_exists)

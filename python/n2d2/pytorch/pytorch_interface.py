@@ -132,7 +132,9 @@ class LayerN2D2(torch.nn.Module):
                     outputs = torch.mul(outputs, -1/self.batch_size)
                     # copy the values of the output tensor to our input tensor to not lose the grad ! 
                     if grad_output.is_cuda:
-                        outputs = outputs.cuda()                    
+                        outputs = outputs.cuda()
+                    else:
+                        outputs = outputs.cpu()              
                     return outputs.clone()
                 return grad_output.clone()
         # If the layer is at the beginning of the network recquires grad will be turned off
@@ -153,6 +155,7 @@ class DeepNetN2D2(torch.nn.Module):
         :type N2D2_DeepNet: :py:class:`N2D2.DeepNet`
         """
         super().__init__()
+
         if not isinstance(N2D2_DeepNet, N2D2.DeepNet):
             raise TypeError("N2D2_DeepNet should be of type N2D2.DeepNet got " + str(type(N2D2_DeepNet)) + " instead")
         self._N2D2 = N2D2_DeepNet
@@ -199,24 +202,27 @@ class DeepNetN2D2(torch.nn.Module):
                 return outputs.clone()
 
             @staticmethod
-            def backward(ctx, grad_output): 
+            def backward(ctx, grad_output):
+                # grad_output = grad_output.cuda()
                 grad_output = torch.mul(grad_output, -self.batch_size)
                 t_grad_output = _to_n2d2(grad_output).N2D2()
                 diffInputs = self._N2D2.getCell_Frame_Top(self.last_cell.getName()).getDiffInputs()
                 diffInputs.op_assign(t_grad_output)
-                # TODO : -1 => CPU need to get the device number for GPU ! (create/find a method get_device ?)  
+                # TODO : -1 => CPU need to get the device number for GPU ! (create/find a method get_device ?)
                 if not diffInputs.isValid(-1):
-                    diffInputs.setValid(-1) 
+                    diffInputs.setValid(-1)
                 diffInputs.synchronizeHToD()
                 self._N2D2.backPropagate([])
                 self._N2D2.update([])
-                
+
                 # input(self.diffout)
                 diffOutput = self._N2D2.getCell_Frame_Top(self.first_cell.getName()).getDiffOutputs()
                 outputs = _to_torch(diffOutput)
                 outputs = torch.mul(outputs, -1/self.batch_size)
                 if grad_output.is_cuda:
                     outputs = outputs.cuda()
+                else:
+                    outputs = outputs.cpu()
                 return outputs.clone()
 
         # If the layer is at the beginning of the network requires grad is False.
@@ -232,23 +238,23 @@ class DeepNetCell(DeepNetN2D2):
         deepNetCell._embedded_deepnet.N2D2().initialize()
         DeepNetN2D2.__init__(self, deepNetCell._embedded_deepnet.N2D2())
 
-class Sequence(torch.nn.Module):
+class Block(torch.nn.Module):
     """
     PyTorch layer used to interface an n2d2 cell object in a PyTorch Network.
     """
     _initialized = False
     
-    def __init__(self, sequence):
+    def __init__(self, block):
         """
-        :param sequence: n2d2 sequence object to interface with PyTorch
-        :type sequence: :py:class:`n2d2.cells.Sequence`
+        :param block: n2d2 block object to interface with PyTorch
+        :type block: :py:class:`n2d2.cells.Block`
         """
         super().__init__()
-        if not isinstance(sequence, n2d2.cells.Sequence):
-            raise TypeError("sequence should be of type n2d2.cells.Sequence got " + str(type(sequence)) + " instead")
-        self._N2D2 = sequence
-        self.first_cell = self._N2D2[0]
-        self.last_cell = self._N2D2[-1]
+        if not isinstance(block, n2d2.cells.Block):
+            raise TypeError("sequence should be of type n2d2.cells.Block got " + str(type(block)) + " instead")
+        self._N2D2 = block
+        #self.first_cell = self._N2D2[0]
+        #self.last_cell = self._N2D2[-1]
         # We need to add a random parameter to the module else pytorch refuse to compute gradient
         self.register_parameter(name='random_parameter', param=torch.nn.Parameter(torch.ones(1)))
 
@@ -266,31 +272,43 @@ class Sequence(torch.nn.Module):
 
                 if n2d2.cuda_compiled:
                     n2d2_tensor.cuda()
-
                     n2d2_tensor.htod()
                 if self.training: # training is  a torch.nn.Module attribute (cf. https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module)
                     self._N2D2.learn()
                 else:
                     self._N2D2.test()
-                n2d2_outputs = self._N2D2(n2d2_tensor)
+                n2d2_outputs = self._N2D2(n2d2_tensor) # Propagation
                 self.diffOutputs = n2d2.Tensor(n2d2_tensor.dims(), value=0, dim_format="N2D2")
-                self.first_cell.N2D2().clearInputs() 
-                self.first_cell.N2D2().addInputBis(n2d2_tensor.N2D2(), self.diffOutputs.N2D2())
+
+                self.deepnet = n2d2_outputs.get_deepnet().N2D2()
+                self.first_cell = self.deepnet.getCell_Frame_Top(self.deepnet.getLayers()[-1][0])
+
+                self.first_cell.clearInputs()
+                self.first_cell.addInputBis(n2d2_tensor.N2D2(), self.diffOutputs.N2D2())
                 n2d2_outputs.N2D2().synchronizeDToH()
+
+                #n2d2_outputs.get_deepnet().draw_graph("ssd_graph")
                 
                 self.output_tensor = n2d2_outputs
                 outputs = _to_torch(n2d2_outputs.N2D2())
                 # The conversion back to pytorch can alter the type so we need to set it back
                 outputs = outputs.to(dtype=inputs.dtype)
+                if inputs.is_cuda: # If N2D2 is compiled with CUDA the output Tensor will always be CUDA
+                    outputs = outputs.cuda()
+                else:
+                    outputs = outputs.cpu() 
                 return outputs.clone()
 
             @staticmethod
-            def backward(ctx, grad_output): 
+            def backward(ctx, grad_output):
+                if grad_output.is_cuda:
+                    grad_output = grad_output.cuda()
                 grad_output = torch.mul(grad_output, -self.batch_size)
                 t_grad_output = _to_n2d2(grad_output).N2D2()
 
-
-                diffInputs = self.last_cell.N2D2().getDiffInputs()
+                if len(self.deepnet.getLayers()[-1]) > 1:
+                    raise RuntimeError("Deepnet has more than one output cell")
+                diffInputs = self.deepnet.getCell_Frame_Top(self.deepnet.getLayers()[-1][0]).getDiffInputs()
                 diffInputs.op_assign(t_grad_output)
                 # TODO : -1 => CPU need to get the device number for GPU ! (create/find a method get_device ?)  
                 if not diffInputs.isValid(-1):
@@ -300,16 +318,30 @@ class Sequence(torch.nn.Module):
                 self.output_tensor._leaf = True
                 self.output_tensor.back_propagate()
                 self.output_tensor.update()
-                
-                diffOutput = self.first_cell.N2D2().getDiffOutputs()
+
+                #diffOutput = self.first_cell.N2D2().getDiffOutputs()
+                diffOutput = self.deepnet.getCell_Frame_Top(self.deepnet.getLayers()[1][0]).getDiffOutputs()
+
+                # Begin debug
+                #return None
+
+                #if len(self.deepnet.getLayers()[1]) > 1:
+                #    raise RuntimeError("Deepnet has more than one input cell")
+
+                #diffOutput = self.deepnet.getCell_Frame_Top(self.deepnet.getLayers()[1][0]).getDiffOutputs()
+                #print(diffOutput.dims())
+                # End debug
+
                 outputs = _to_torch(diffOutput)
                 outputs = torch.mul(outputs, -1/self.batch_size)
                 if grad_output.is_cuda:
                     outputs = outputs.cuda()
+                else:
+                    outputs = outputs.cpu() 
                 return outputs.clone()
 
         # If the layer is at the beginning of the network requires grad is False.
         if not inputs.requires_grad:
             inputs.requires_grad = True
-        return N2D2_computation.apply(inputs)   
+        return N2D2_computation.apply(inputs)
 

@@ -511,7 +511,6 @@ void init_N2D2(py::module& m) {
     init_ActivationCell_Frame(m);
     init_ActivationCell_Frame_CUDA(m);
 
-
     // Mapping object
     init_MappingGenerator(m);
 

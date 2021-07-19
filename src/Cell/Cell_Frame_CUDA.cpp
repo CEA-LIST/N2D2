@@ -333,7 +333,7 @@ void N2D2::Cell_Frame_CUDA<T>::linkInput(Cell* cell)
     }
     else {
         throw std::runtime_error(
-            "Cell_Frame<T>::addInput(): cannot mix Spike and Frame models");
+            "Cell_Frame<T>::linkInput(): cannot mix Spike and Frame models");
     }
 
     // Define input-output connections
@@ -342,10 +342,10 @@ void N2D2::Cell_Frame_CUDA<T>::linkInput(Cell* cell)
     //if (mMapping.empty()){
     //      throw std::runtime_error("Cell_Frame<T>::linkInput(): Mapping is empty");
     //}
-    if (!mMapping.empty() && mMapping.dimY() != cellNbOutputs)
-        throw std::runtime_error("Cell_Frame_CUDA<T>::addInput(): number of mapping "
-                                 "rows must be equal to the number of input "
-                                 "channels");
+    //if (!mMapping.empty() && mMapping.dimY() != cellNbOutputs)
+    //    throw std::runtime_error("Cell_Frame_CUDA<T>::linkInput(): number of mapping "
+    //                             "rows must be equal to the number of input "
+    //                             "channels");
     if (mMapping.empty()){
         mMapping.append(Tensor<bool>({getNbOutputs(), cell->getNbOutputs()}, true));
     }
@@ -387,10 +387,11 @@ void N2D2::Cell_Frame_CUDA<T>::linkInput(StimuliProvider& sp,
     //}
 
 
-    if (!mMapping.empty() && mMapping.dimY() != sp.getNbChannels())
-        throw std::runtime_error("Cell_Frame_CUDA<T>::addInput(): number of mapping "
-                                 "rows must be equal to the number of input "
-                                 "channels");
+    //if (!mMapping.empty() && mMapping.dimY() != sp.getNbChannels())
+    //    throw std::runtime_error("Cell_Frame_CUDA<T>::linkInput(): number of mapping "
+    //                             "rows must be equal to the number of input "
+    //                             "channels");
+    
     if (mMapping.empty()){
         mMapping.append(Tensor<bool>({getNbOutputs(), sp.getNbChannels()}, true));
     }
