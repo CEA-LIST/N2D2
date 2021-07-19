@@ -33,10 +33,16 @@ def _to_n2d2(torch_tensor):
     """
     Convert torch.Tensor -> n2d2.Tensor
     """
+    if torch_tensor.is_cuda:
+        cuda=True
+    else:
+        cuda=False
     numpy_tensor = torch_tensor.cpu().detach().numpy()
     n2d2_tensor = n2d2.Tensor.from_numpy(numpy_tensor)
     if n2d2_tensor.nb_dims() ==4:
         n2d2_tensor.reshape(_switching_convention(n2d2_tensor.dims())) 
+    if cuda:
+        n2d2_tensor.cuda()
     return n2d2_tensor
 
 def _to_torch(N2D2_tensor):
@@ -46,7 +52,7 @@ def _to_torch(N2D2_tensor):
     n2d2_tensor = n2d2.Tensor.from_N2D2(N2D2_tensor)
     numpy_tensor = n2d2_tensor.to_numpy() 
     torch_tensor = torch.from_numpy(numpy_tensor)
-    if torch_tensor.is_cuda:
+    if n2d2_tensor.is_cuda:
         torch_tensor = torch_tensor.cuda()
     if n2d2_tensor.nb_dims() ==4:
         torch_tensor.resize_(_switching_convention(n2d2_tensor.dims())) 

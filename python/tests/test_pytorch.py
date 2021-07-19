@@ -50,6 +50,25 @@ class test_tensor_conversion(unittest.TestCase):
         n2d2_tensor = N2D2.Tensor_float([self.x, self.y, self.channel, self.batch_size])
         torch_tensor = n2d2.pytorch.pytorch_interface._to_torch(n2d2_tensor)
         self.assertEqual(list(torch_tensor.shape), self.torch_format)
+    
+    def test_cuda(self):
+        n2d2_tensor = N2D2.CudaTensor_float([self.x, self.y, self.channel, self.batch_size])
+        torch_tensor = n2d2.pytorch.pytorch_interface._to_torch(n2d2_tensor)
+        self.assertTrue(torch_tensor.is_cuda)
+
+        torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y)
+        torch_tensor = torch_tensor.cuda()
+        n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
+        self.assertTrue(n2d2_tensor.is_cuda)
+
+    def test_cpu(self):
+        n2d2_tensor = N2D2.Tensor_float([self.x, self.y, self.channel, self.batch_size])
+        torch_tensor = n2d2.pytorch.pytorch_interface._to_torch(n2d2_tensor)
+        self.assertFalse(torch_tensor.is_cuda)
+
+        torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y)
+        n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
+        self.assertFalse(n2d2_tensor.is_cuda)
 
 
 weight_value = 0.1
