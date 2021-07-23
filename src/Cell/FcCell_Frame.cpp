@@ -123,9 +123,9 @@ void N2D2::FcCell_Frame<T>::initializeParameters(unsigned int nbInputChannels, u
 {
 
     // BEGIN: addition to initialize()
-    if (mMapping.empty()) {
-        mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
-    }
+    //if (mMapping.empty()) {
+    //    mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
+    //}
     // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
     // However, this requires a reinitialization of the input dims which is unsafe
     setInputsDims({nbInputChannels});
@@ -170,14 +170,32 @@ void N2D2::FcCell_Frame<T>::initializeWeightQuantizer()
     }
 }
 
+template <class T>
+void N2D2::FcCell_Frame<T>::check_input()
+{
+    if (mInputs.size() != mSynapses.size()) {
+          throw std::runtime_error("mInputs.size() != mSynapses.size() for cell " + mName + 
+          ". Please verify that the number of input tensors given to the cell is"
+          " equal to the number of inputs defined for the cell.");
+    }
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].dimX()*mInputs[k].dimY()*mInputs[k].dimZ()
+        != mSynapses[k].dimX()*mSynapses[k].dimY()*mSynapses[k].dimZ()){
+            std::cout << "mInputs: " << mInputs[k].dims() << std::endl;
+            std::cout << "mSynapses: " << mSynapses[k].dims() << std::endl;
+            std::stringstream ss;
+            ss << "Unmatching dimensions X*Y*Z"
+            " between input and weight tensor " <<  k << " for cell " + mName;
+            throw std::runtime_error(ss.str());
+        }
+    }
+}
+
 
 template <class T>
 void N2D2::FcCell_Frame<T>::initializeDataDependent(){
     Cell_Frame<T>::initializeDataDependent();
-    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        if (mInputs[k].size() == 0)
-            throw std::runtime_error("Zero-sized input for FcCell " + mName);
-    }
+    check_input();
 }
 
 template <class T>
@@ -216,6 +234,8 @@ void N2D2::FcCell_Frame<T>::load(const std::string& dirName)
 template <class T>
 void N2D2::FcCell_Frame<T>::propagate(bool inference)
 {
+    check_input();
+
     if (mNormalize) {
         for (unsigned int n = 0, nbOutputs = mOutputs.dimZ(); n < nbOutputs;
             ++n)

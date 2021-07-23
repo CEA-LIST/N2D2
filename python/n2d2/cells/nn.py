@@ -65,6 +65,13 @@ class Datatyped(ABC):
         else:
             self._datatype = n2d2.global_variables.default_datatype
 
+# TODO: Empty at the moment. Check for mutualisation of code in Fc, Conv, Deconv, BatchNorm
+class Trainable(ABC):
+
+    @abstractmethod
+    def __init__(self):
+        pass
+
 
 class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
 
@@ -84,7 +91,7 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
 
         Cell.__init__(self, name)
 
-        self._inputs = [] # TODO : @Johannes : shouldn't inputs be of type Tensor or Interface, since we no longer use a list of Tensor for multi-input ?
+        self._input_cells = []
 
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')
@@ -107,6 +114,8 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
 
         self._deepnet = None
         self._inference = False
+
+        self.nb_input_cells = 0
 
         
 
@@ -142,70 +151,99 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
     #    self._N2D2_object.clearOutputTensors()
 
     def clear_input_tensors(self):
-        self._inputs = []
+        self._input_cells = []
         self._N2D2_object.clearInputTensors()
 
 
-    # TODO: What exactly should be checked? Input identity and/or input dimensions? At the moment we only check dimensions
-    # This means a new NeuralNetworkCell with same dimensions is will not be connected!
     def _check_tensor(self, inputs):
         if isinstance(inputs.cell, n2d2.cells.nn.NeuralNetworkCell) or isinstance(inputs.cell, n2d2.provider.Provider):
-            input_dims = inputs.cell.dims()
-            if not self.dims(): # If not initialized
-                return True
+            # Check x-y dimension consistency
+            if not isinstance(self, Fc):
+
+                if not inputs.dims()[0:2] == self.N2D2().getInputsDims()[0:2]:
+                    raise RuntimeError("Unmatching dims " + str(inputs.dims()[0:2])
+                                       + " " + str(self.N2D2().getInputsDims()[0:2]))
         else:
             raise TypeError("Invalid inputs object of type " + str(type(inputs.cell)))
 
+        # NOTE: This cannot really happen in current implementation
         if inputs.get_deepnet() is not self.get_deepnet():
             raise RuntimeError("The deepnet of the input doesn't match with the deepnet of the cell")
-        
 
-        # if self._N2D2_object.getInputsDims()+ [self.dims()[3]]: # If input dimesions changed
-        #     raise RuntimeError("NeuralNetworkCell '" + self.get_name() + "' was called with input of dim " + str(inputs.dims())
-        #                         + ", but cells input size is " + str(self._N2D2_object.getInputsDims()+ [self.dims()[3]]) +
-        #                         ". Inputs dimensions cannot change after first call.")
         return False 
 
 
     def add_input(self, inputs):
-        # TODO : Some cells like Pool don't have a defined number of channels so I try this to catch them
-        # Is it good to keep it this way ?
-        have_a_defined_input_size = (self.N2D2().getInputsDims() != [0] and self.N2D2().getInputsDims() != [])
-        initialized = self.dims() == True 
-        # TODO :this test doesn't pass for Fc cells if it is not initialized.
-        # The get_nb_channels() returns dimX * dimY * dimZ if not initialized and then just dimZ.
-        # The get_nb_channels() returns dimX * dimY * dimZ if not initialized and then just dimZ.
-        # Maybe we want to do an other test if the cell is not initialized (testing if the weights correspond to the inputs)
-        #print(initialized)
-        if have_a_defined_input_size and inputs.dimZ() != self.get_nb_channels() and initialized:
-            raise ValueError("NeuralNetworkCell '" + self.get_name() + "' received a tensor with " + str(inputs.dimZ()) +
-            " channels, was expecting : " + str(self.get_nb_channels()))
+
+        initialized = not (self.dims() == [])
+
+        """
+        if isinstance(self, Trainable):
+            # Check if number of tensors consistent with input elements of cell
+            if isinstance(inputs, n2d2.tensor.Interface):
+                if len(inputs.get_tensors()) != self.nb_input_cells:
+                    raise RuntimeError(
+                        "Total number of input tensors != number inputs in cell '" + self.get_name() + "': " +
+                        str(len(inputs.get_tensors())) + " vs. " + str(self.nb_input_cells))
+        
+            # Special case of Fc cell
+            
+            if isinstance(self, Fc):
+                if not inputs.dimX() * inputs.dimY() * inputs.dimZ() == self.get_nb_channels() * self.:
+                    raise RuntimeError(
+                        "Total number of input dims != number channels in cell '" + self.get_name() + "': " +
+                        str(inputs.dimX() * inputs.dimY() * inputs.dimZ()) + " vs. " + str(self.get_nb_channels()))
+            else:
+                if not inputs.dimZ() == self.get_nb_channels():
+                    raise RuntimeError(
+                        "Total number of input dimZ != number channels in cell '" + self.get_name() + "': " +
+                        str(inputs.dimZ()) + " vs. " + str(self.get_nb_channels()))
+        """
         
         if isinstance(inputs, n2d2.tensor.Interface):
-            inputs = inputs.get_tensors()
+            tensor_inputs = inputs.get_tensors()
         elif isinstance(inputs, n2d2.Tensor):
-            inputs = [inputs]
+            tensor_inputs = [inputs]
         else:
             raise TypeError("Cannot add object of type " + str(type(inputs)))
 
-        self.clear_input_tensors()
-        initialize = False
+        # Check input dimension consistency before connecting new inputs
+        if initialized:
+            # Check for input tensor element consistency
+            if isinstance(inputs, n2d2.tensor.Interface):
+                if len(inputs.get_tensors()) != self.nb_input_cells:
+                    raise RuntimeError(
+                        "Total number of input tensors != number inputs in cell '" + self.get_name() + "': " +
+                        str(len(inputs.get_tensors())) + " vs. " + str(self.nb_input_cells))
+            dim_z = 0
+            for ipt in tensor_inputs:
+                self._check_tensor(ipt)
+                dim_z += ipt.dimZ()
+            # Check for z dimension consistency
+            if not dim_z == self.get_nb_channels():
+                raise RuntimeError("Total number of input dimZ != cell '" + self.get_name() + "' number channels")
 
         parents = []
 
-        for ipt in inputs:
-            if self._check_tensor(ipt):
-                initialize = True
+        # Clear old input tensors of cell to connect new inputs
+        self.clear_input_tensors()
+        for ipt in tensor_inputs:
             cell = ipt.cell
             self._link_N2D2_input(cell)
 
+            if not initialized:
+                self.nb_input_cells += 1
+
             if not isinstance(cell, n2d2.provider.Provider):
                 parents.append(cell.N2D2())
-            self._inputs.append(cell.get_name())
+            self._input_cells.append(cell.get_name())
 
         self._deepnet.N2D2().addCell(self._N2D2_object, parents)
-        if initialize:
+        if not initialized: # If not initialized
             self._N2D2_object.initializeDataDependent()
+            if self._N2D2_object.getMapping().empty():
+                self._N2D2_object.setMapping(n2d2.Tensor([self.get_nb_outputs(), inputs.dimZ()],
+                                                         datatype="bool", dim_format="N2D2").N2D2())
 
     """
     Links N2D2 cells 
@@ -233,10 +271,10 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
         return self._config_parameters['activation']
 
     def get_inputs(self):
-        return self._inputs
+        return self._input_cells
 
     def clear_input(self):
-        self._inputs = []
+        self._input_cells = []
         self._N2D2_object.clearInputs()
 
     def update(self):
@@ -270,10 +308,10 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
     def _sync_inputs_and_parents(self):
         parents = self._deepnet.N2D2().getParentCells(self.get_name())
         # Necessary because N2D2 returns [None] if no parents
-        # TODO: Sometimes parents contains [None], sometimes []. Why?
+        # NOTE: Sometimes parents contains [None], sometimes [].
         for idx, ipt in enumerate(parents):
             if ipt is not None:
-                self._inputs.append(parents[idx].getName())
+                self._input_cells.append(parents[idx].getName())
         self._deepnet.add_to_current_group(self)
 
     def __str__(self):
@@ -299,7 +337,7 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
         self._deepnet = self._infer_deepnet(inputs)
 
 
-class Fc(NeuralNetworkCell, Datatyped):
+class Fc(NeuralNetworkCell, Datatyped, Trainable):
     """
     Fully connected layer.
     """
@@ -376,18 +414,6 @@ class Fc(NeuralNetworkCell, Datatyped):
         self._set_N2D2_object(self._cell_constructors[self._model_key](N2D2.DeepNet(n2d2.global_variables.default_net),
                                                                      self.get_name(),
                                                                      self._constructor_arguments['nb_outputs']))
-        # Set connection and mapping parameters
-
-        # TODO: Are these parameters actually used outside of the generator?
-        #for key in self._config_parameters:
-        #    if key is 'inputOffsetX':
-        #        self._connection_parameters['x0'] = self._config_parameters.pop('inputOffsetX')
-        #    elif key is 'inputOffsetY':
-        #        self._connection_parameters['y0'] = self._config_parameters.pop('inputOffsetY')
-        #    elif key is 'inputWidth':
-        #        self._connection_parameters['width'] = self._config_parameters.pop('inputWidth')
-        #    elif key is 'inputHeight':
-        #        self._connection_parameters['height'] = self._config_parameters.pop('inputHeight')
 
         if 'activation' not in self._config_parameters:
             self._config_parameters['activation'] = \
@@ -408,7 +434,7 @@ class Fc(NeuralNetworkCell, Datatyped):
         # Set and initialize here all complex cells members
         for key, value in self._config_parameters.items():
             if key is 'activation':
-                    if value: # TODO : @Johannes why is there a check here but not on the others 
+                    if value:
                         self._N2D2_object.setActivation(value.N2D2())
             elif key is 'weights_solver':
                 if isinstance(value, n2d2.solver.Solver):
@@ -650,7 +676,7 @@ class Fc(NeuralNetworkCell, Datatyped):
 
 
 
-class Conv(NeuralNetworkCell, Datatyped):
+class Conv(NeuralNetworkCell, Datatyped, Trainable):
     """
     Convolutional layer.
     """
@@ -766,8 +792,6 @@ class Conv(NeuralNetworkCell, Datatyped):
                                                                      self._constructor_arguments['nb_outputs'],
                                                                      **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
 
-        # TODO: Add Kernel section of generator
-
         if 'activation' not in self._config_parameters:
             self._config_parameters['activation'] = \
                 n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
@@ -787,7 +811,7 @@ class Conv(NeuralNetworkCell, Datatyped):
         """Set and initialize here all complex cells members"""
         for key, value in self._config_parameters.items():
             if key is 'activation':
-                if value: # TODO : @Johannes why is there a check here but not on the others 
+                if value:
                     self._N2D2_object.setActivation(value.N2D2())
             elif key is 'weights_solver':
                 if isinstance(value, n2d2.solver.Solver):
@@ -1505,7 +1529,7 @@ class GlobalPool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
         return self.get_outputs()
 
 
-class Deconv(NeuralNetworkCell, Datatyped):
+class Deconv(NeuralNetworkCell, Datatyped, Trainable):
     """
     Deconvolution layer.
     """
@@ -1516,24 +1540,23 @@ class Deconv(NeuralNetworkCell, Datatyped):
         'Frame_CUDA<double>': N2D2.DeconvCell_Frame_CUDA_double,
     }
     _parameters = {
-        "no_bias":"NoBias", 
-        "back_propagate":"BackPropagate",
-        "weights_export_format":"WeightsExportFormat",
-        "weights_export_flip":"WeightsExportFlip",
-        "outputs_remap":"OutputsRemap",
-        "kernel_dims":"kernelDims",
-        "sub_sample_dims":"subSampleDims",
-        "stride_dims":"strideDims",
-        "padding_dims":"paddingDims",
-        "dilation_dims":"dilationDims",  
-        "ext_padding_dims":"ExtPaddingDims",   
-        "dilation_dims":"dilationDims",
-        "weights_filler":"WeightsFiller",  
-        "bias_filler":"BiasFiller",  
-        "weights_solver":"WeightsSolver",
-        "bias_solver":"BiasSolver",
-        # TODO : @Johannes No quantizer ?
-    }  
+        "no_bias": "NoBias",
+        "back_propagate": "BackPropagate",
+        "weights_export_format": "WeightsExportFormat",
+        "weights_export_flip": "WeightsExportFlip",
+        "outputs_remap": "OutputsRemap",
+        "kernel_dims": "kernelDims",
+        "sub_sample_dims": "subSampleDims",
+        "stride_dims": "strideDims",
+        "padding_dims": "paddingDims",
+        "dilation_dims": "dilationDims",
+        "ext_padding_dims":" ExtPaddingDims",
+        "dilation_dims": "dilationDims",
+        "weights_filler": "WeightsFiller",
+        "bias_filler": "BiasFiller",
+        "weights_solver": "WeightsSolver",
+        "bias_solver": "BiasSolver",
+    }
     _parameters.update(_cell_frame_parameters)
 
     _convention_converter= n2d2.ConventionConverter(_parameters)
@@ -1612,9 +1635,6 @@ class Deconv(NeuralNetworkCell, Datatyped):
                                                                      self._constructor_arguments['kernel_dims'],
                                                                      self._constructor_arguments['nb_outputs'],
                                                                      **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
-
-
-        # TODO: Add Kernel section of generator
 
         if 'activation' not in self._config_parameters:
             self._config_parameters['activation'] = \
@@ -2222,7 +2242,7 @@ class Padding(NeuralNetworkCell):
         return self.get_outputs()
 
 
-class BatchNorm2d(NeuralNetworkCell, Datatyped):
+class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
 
     _cell_constructors = {
         'Frame<float>': N2D2.BatchNormCell_Frame_float,
@@ -2239,7 +2259,7 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped):
     }
     _parameters.update(_cell_frame_parameters)
 
-    _convention_converter= n2d2.ConventionConverter(_parameters)
+    _convention_converter = n2d2.ConventionConverter(_parameters)
 
     def __init__(self, nb_inputs, nb_input_cells=1, from_arguments=True, **config_parameters):
         # TODO : Update doc string

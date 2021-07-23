@@ -75,12 +75,12 @@ class DeepNet(N2D2_Interface):
             for cell in layer:
                 N2D2_cell = cells[cell]
                 n2d2_cell = n2d2.converter.from_N2D2_object(N2D2_cell, n2d2_deepnet=deepnet)
-                if idx == 0:
-                    n2d2_cell.clear_input()  # Remove old stimuli provider
+                #if idx == 0:
+                    #n2d2_cell.clear_input()  # Remove old stimuli provider
                     # n2d2_cell.add_input(n2d2.Tensor([], cells=provider))
+
             if len(layer) > 1:
                 deepnet.end_group()
-
 
         return deepnet
 
