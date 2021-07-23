@@ -584,7 +584,7 @@ And :math:`R` is the resulting image.
   | :math:`\alpha' = gaussian\_blur(\alpha)`
   | :math:`R=\alpha'.O + (1-\alpha').B`
 
-``SmoothEdgeByDistance``: combines ``SmoothEdge`` and ``LinearByDistance``.
+``SmoothEdgeLinearByDistance``: combines ``SmoothEdge`` and ``LinearByDistance``.
   | :math:`\alpha = \begin{cases}
       \Delta & \text{when } LABEL \neq 0\\
       0 & \text{otherwise}
