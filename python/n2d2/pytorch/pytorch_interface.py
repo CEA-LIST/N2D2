@@ -130,9 +130,8 @@ class Block(torch.nn.Module):
                     raise RuntimeError("Deepnet has more than one output cell")
                 diffInputs = self.deepnet.getCell_Frame_Top(self.deepnet.getLayers()[-1][0]).getDiffInputs()
                 diffInputs.op_assign(t_grad_output)
-                # TODO : -1 => CPU need to get the device number for GPU ! (create/find a method get_device ?)  
-                if not diffInputs.isValid(-1):
-                    diffInputs.setValid(-1) 
+                if not diffInputs.isValid():
+                    diffInputs.setValid() 
                 diffInputs.synchronizeHToD()
 
                 self.output_tensor._leaf = True
