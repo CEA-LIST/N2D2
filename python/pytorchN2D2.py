@@ -28,26 +28,32 @@ parser.add_argument('--cuda', '-c', action='store_true', help='Evaluation mode (
 parser.add_argument('-n', type=int, default=2, help='Number of propagation used for the test, with backpropagation if the layer support it. (default=2)')
 
 args = parser.parse_args()
-
-if args.cuda:
-    n2d2.global_variables.default_model = "Frame_CUDA"
+n2d2.global_variables.set_cuda_device(5)
+torch.cuda.device('cuda:3')
+torch.backends.cudnn.enabled = True
+torch.backends.cudnn.benchmark = True
 
 # Global variables
 weight_value = args.weights
 comparison_precision = args.precision
 batch_size = args.batch_size
 epochs = args.n
-learning_rate = 0.01 # Learning rate of N2D2 SGD default solver #args.lr
+learning_rate = 0.1 # Learning rate of N2D2 SGD default solver #args.lr
 eval_mode = args.eval
 number_fail = 0
-
-
+cuda=args.cuda
+if cuda:
+    n2d2.global_variables.default_model = "Frame_CUDA"
+else:
+    n2d2.global_variables.default_model = "Frame"
 class Test_Networks():
     """
     A custom class to automate the test of two networks
     """
 
-    def __init__(self, model1, model2, name="", test_backward=True):
+    def __init__(self, model1, model2, name="", test_backward=True, eval_mode=False, e=10):
+
+        self.epochs=e
         self.test_backward = test_backward
         self.model1 = model1
         self.model2 = model2
@@ -62,7 +68,6 @@ class Test_Networks():
         
         if self.test_backward:
             self.optimizer1 = torch.optim.SGD(self.model1.parameters(), lr=learning_rate)
-            # Note: Useless?
             self.optimizer2 = torch.optim.SGD(self.model2.parameters(), lr=learning_rate)
             self.criterion1 = torch.nn.MSELoss()
             self.criterion2 = torch.nn.MSELoss()
@@ -71,8 +76,12 @@ class Test_Networks():
         for i, j in zip(torch.flatten(t1), torch.flatten(t2)):
             i = i.item()
             j = j.item()
-            if abs(i-j)/abs(j) > comparison_precision:
-                return -1
+            if j != 0:
+                if abs(i-j)/abs(j) >= comparison_precision:
+                    return -1
+            else:
+                if abs(i) >= comparison_precision:
+                    return -1
         return 0
 
     def unit_test(self, input_tensor, label):
@@ -89,9 +98,7 @@ class Test_Networks():
             print(output1)
             print("Output 2")
             print(output2)
-            
             number_fail+=1
-            return -1
         
         if self.test_backward:
             loss1 = self.criterion1(output1, label1)
@@ -103,24 +110,25 @@ class Test_Networks():
             self.optimizer2.zero_grad()
             loss2.backward()
             self.optimizer2.step()
-            # if self.compare_tensor(loss1, loss2):
-            #     print("Different loss : ", loss1.item(), "|", loss2.item())
-            #     number_fail+=1
-            #     return -1
+
+            if self.compare_tensor(loss1, loss2):
+                print("\nDifferent loss : ", loss1.item(), "|", loss2.item())
+                number_fail+=1
         return 0
     
-    def test_multiple_step(self, input_size, label_size, nb_step=epochs):
-        for i in range(nb_step):
+    def test_multiple_step(self, input_size, label_size):
+        for i in range(self.epochs):
             input_tensor = torch.randn(input_size)
-            label_tensor = torch.ones(label_size)
-
+            label_tensor = torch.randint(0, 2, label_size)
+            label_tensor = label_tensor.to(dtype=input_tensor.dtype)
             if args.cuda:
                 input_tensor = input_tensor.cuda()
                 label_tensor = label_tensor.cuda()
-
             if self.unit_test(input_tensor, label_tensor):
+                
                 print("Difference occurred on Epoch :", i)
-                return -1
+                # return -1
+        return 0
 
                 
 
@@ -152,16 +160,20 @@ class N2D2Conv(torch.nn.Module):
     def __init__(self):
         super(N2D2Conv, self).__init__()
         self.n2d2_cell = n2d2.cells.Conv(1, 1, [3, 3], stride_dims=[1, 1], padding_dims=[1, 1],
-            no_bias=True, weights_filler=n2d2.filler.Constant(value=weight_value))
+            no_bias=True, weights_filler=n2d2.filler.Constant(value=weight_value), 
+            weights_solver=SGD(learning_rate=learning_rate, momentum=0.0, decay=0.0, learning_rate_decay=0.993)
+        )
         self.layer = pytorch.Block(n2d2.cells.Sequence([self.n2d2_cell]))
         self.sequence = torch.nn.Sequential(
             self.layer
         )
     def forward(self, x):
         x = self.sequence(x)
+        # print(x)
         return x
     def get_weight(self):
-        print(self.n2d2_cell.get_weights())
+        print(self.n2d2_cell.get_weights()[0][0])
+
 
 ### Defining Fc layer ###
 
@@ -179,6 +191,7 @@ class TorchFc(torch.nn.Module):
         )
     def forward(self, x):
         x = self.sequence(x)
+        # print("Torch :\n", x)
         return x
 
 
@@ -196,6 +209,7 @@ class N2D2Fc(torch.nn.Module):
     def forward(self, x):
         x = self.sequence(x)
         x = torch.squeeze(x)
+        # print("N2D2 :\n", x)
         return x
     def get_weight(self):
         print(self.n2d2_cell.get_weights())
@@ -214,6 +228,7 @@ class TorchPool(torch.nn.Module):
         )
     def forward(self, x):
         x = self.sequence(x)
+        # print("Torch :\n", x)
         return x
 
 
@@ -230,19 +245,18 @@ class N2D2Pool(torch.nn.Module):
         )
     def forward(self, x):
         x = self.sequence(x)
+        # print("N2D2 :\n", x)
         return x
-    def show(self):
-        return self.n2d2_cell
+
 
 ### Defining BatchNorm layer ###
 
 class TorchBN(torch.nn.Module): 
-    """
-    A Pytorch conv cell.
-    """    
+
     def __init__(self):
         super(TorchBN, self).__init__()
         self.layer = torch.nn.BatchNorm2d(1, momentum=0.1, eps=(10**-5))
+        self.layer.running_var = torch.zeros(1)
         self.sequence = torch.nn.Sequential(
             self.layer
         )
@@ -252,22 +266,21 @@ class TorchBN(torch.nn.Module):
 
 
 class N2D2BN(torch.nn.Module): 
-    """
-    A Pytorch network compose of one N2D2 conv cells interfaced with the LayerN2D2 object.
-    """  
+
     def __init__(self):
         super(N2D2BN, self).__init__()
-        self.n2d2_cell = n2d2.cells.BatchNorm2d(1, moving_average_momentum=0.1, epsilon=(10**-5), activation=n2d2.activation.Linear())
-        print(self.n2d2_cell)
+        self.n2d2_cell = n2d2.cells.BatchNorm2d(1, moving_average_momentum=0.1, epsilon=(10**-5), 
+        scale_solver=SGD(learning_rate=learning_rate), 
+        bias_solver=SGD(learning_rate=learning_rate))
         self.layer = pytorch.Block(n2d2.cells.Sequence([self.n2d2_cell]))
+        
         self.sequence = torch.nn.Sequential(
             self.layer
+            
         )
     def forward(self, x):
         x = self.sequence(x)
         return x
-    def show(self):
-        return self.n2d2_cell
 
 ### Defining LeNet ###
 class N2D2LeNet(torch.nn.Module): 
@@ -310,6 +323,7 @@ class N2D2LeNet(torch.nn.Module):
             self.layer
         )
     def forward(self, x):
+        
         x = self.sequence(x)
         x = torch.squeeze(x)
         return x
@@ -355,38 +369,64 @@ class TorchLeNet(torch.nn.Module):
         )
     def forward(self, x):
         x = self.sequence(x)
+        print("Torch :\n", x)
         return x
 
-#cell = n2d2.cells.BatchNorm2d(10, model="Frame_CUDA")
-#print(cell)
-
 print('=== Testing Conv layer ===')
-tester = Test_Networks(TorchConv(), N2D2Conv())
-tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 1, 3, 3), nb_step=10)
+torch_model = TorchConv()
+n2d2_model = N2D2Conv()
+print("Train ...")
+tester = Test_Networks(torch_model,n2d2_model, eval_mode=False, e=epochs)
+tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 1, 3, 3))
+if eval_mode:
+    print("Eval ...")
+    tester = Test_Networks(torch_model,n2d2_model, eval_mode=True, e=epochs,  test_backward=False)
+    tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 1, 3, 3))
 
 print('=== Testing Fc layer ===')
-tester = Test_Networks(TorchFc(), N2D2Fc())
-tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 9), nb_step=10)
-
-
+torch_model = TorchFc()
+n2d2_model = N2D2Fc()
+print("Train ...")
+tester = Test_Networks(torch_model,n2d2_model, eval_mode=False, e=epochs)
+tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 9))
+if eval_mode:
+    print("Eval ...")
+    tester = Test_Networks(torch_model,n2d2_model, eval_mode=True, e=epochs)
+    tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 9))
+    
 print('=== Testing Pool layer ===')
-tester = Test_Networks(TorchPool(), N2D2Pool(), test_backward=False) # No parameter to learn 
+torch_model = TorchPool()
+n2d2_model = N2D2Pool()
+print("Train ...")
+tester = Test_Networks(torch_model,n2d2_model, test_backward=False, eval_mode=False, e=epochs) # No parameter to learn 
 tester.test_multiple_step((batch_size, 1, 4, 4), (batch_size,  1, 2, 2))
+if eval_mode:
+    print("Eval ...")
+    tester = Test_Networks(torch_model, n2d2_model, test_backward=False, eval_mode=True, e=epochs) # No parameter to learn 
+    tester.test_multiple_step((batch_size, 1, 4, 4), (batch_size,  1, 2, 2))
 
-# Batch Norm N2D2 and torch give different results torch.var is weird
 
-exit()
 print('=== Testing BatchNorm layer ===')
-n2d2.cells.BatchNorm2d(10)
-#tester = Test_Networks(TorchBN(), N2D2BN(), test_backward=False)
-tester = Test_Networks(TorchBN(), TorchBN(), test_backward=False)
-tester.test_multiple_step((batch_size, 1, 2, 2), (batch_size,  1, 2, 2))
+torch_model = TorchBN()
+# torch_model = N2D2BN()
+# n2d2.global_variables.default_model = "Frame_CUDA"
+n2d2_model = N2D2BN()
+print("Train ... ")
+b = Test_Networks(torch_model, n2d2_model, eval_mode=False, e=epochs)
+b.test_multiple_step((batch_size, 1, 2, 2), (batch_size,  1, 2, 2))
+if eval_mode:
+    print("Eval ...")
+    b = Test_Networks(torch_model, n2d2_model, eval_mode=True, test_backward=False, e=epochs)
+    b.test_multiple_step((batch_size, 1, 2, 2), (batch_size,  1, 2, 2))
 
-exit()
 
 print('=== Testing LeNet ===')
-tester = Test_Networks(TorchLeNet(), N2D2LeNet()) 
-
+torch_model = TorchLeNet()
+n2d2_model = N2D2LeNet()
+tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, e=epochs)
 tester.test_multiple_step((batch_size, 1, 32, 32), (batch_size, 10))
+if eval_mode:
+    tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, e=epochs)
+    tester.test_multiple_step((batch_size, 1, 32, 32), (batch_size, 10))
 
-print("="*25 + "\nNumber of failed test : "+ str(number_fail))
+print("="*25 + "\nNumber of failed test : " + str(number_fail))

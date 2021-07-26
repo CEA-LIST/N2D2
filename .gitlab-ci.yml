@@ -13,7 +13,6 @@ stages:
     - cd build
     - cmake -DCMAKE_BUILD_TYPE=Debug ..
 
-
 build:ubuntu:
   extends: .before_script_template
   stage: build
@@ -38,15 +37,17 @@ test:ubuntu:
     - make test
 
 test:python_api:
+  extends: .before_script_template
   stage: test
   tags:
     - python_api
   image: "python:3.7"
   before_script:
-    - pip install -r python/requirements.txt
+    - cd ../python
+    - pip install -r requirements.txt
   script:
     # Run on discovery all tests located in python/tests and discard the stdout to only show the errors/warnings and the results of the tests
-    - python -m unittest discover -s python/tests -v 1> /dev/null
+    - python -m unittest discover -s tests -v 1> /dev/null
 
 
 # HTTP server setup on is154584 (using python simplehttp):

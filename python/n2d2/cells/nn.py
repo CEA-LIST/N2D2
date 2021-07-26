@@ -445,8 +445,8 @@ class Fc(NeuralNetworkCell, Datatyped):
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
 
-        n2d2_cell = cls(None, None, from_arguments=False)
-
+        # n2d2_cell = cls(None, None, from_arguments=False)
+        n2d2_cell = cls.__new__(cls)
         NeuralNetworkCell.__init__(n2d2_cell,
                                    name=N2D2_object.getName(),
                                    **cls.load_N2D2_parameters(N2D2_object))
@@ -1224,7 +1224,7 @@ class Pool(NeuralNetworkCell, Datatyped):
         :type stride_dims: list, optional
         :param padding_dims: Dimensions of the padding.
         :type padding_dims: list, optional
-        :param activation: Activation function, default= :py:class:`n2d2.activation.Linear`
+        :param activation: Activation function, default= None
         :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param mapping: Mapping
         :type mapping: :py:class:`n2d2.Tensor`, optional
