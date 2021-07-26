@@ -208,10 +208,17 @@ class Layer(Iterable):
         return Interface([out])
 
 
+"""
+n2d2 Cell wrapper for a N2D2 deepnet object. Allows chaining a N2D2 deepnet (for example loaded from a ONNX or INI file)
+into the dynamic computation graph of the n2d2 API. During each use of the  the __call__ method, 
+the N2D2 deepnet is converted to a n2d2 representation and the N2D2 deepnet is concatenated to the deepnet of the 
+incoming tensor object.
+"""
 class DeepNetCell(Block):
 
     def __init__(self, N2D2_object):
 
+        # Save
         self._embedded_deepnet = DeepNet.create_from_N2D2_object(N2D2_object)
 
         if not N2D2_object.getName() == "":

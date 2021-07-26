@@ -338,18 +338,6 @@ void N2D2::Cell_Frame_CUDA<T>::linkInput(Cell* cell)
 
     // Define input-output connections
     const unsigned int cellNbOutputs = cell->getNbOutputs();
-
-    //if (mMapping.empty()){
-    //      throw std::runtime_error("Cell_Frame<T>::linkInput(): Mapping is empty");
-    //}
-    //if (!mMapping.empty() && mMapping.dimY() != cellNbOutputs)
-    //    throw std::runtime_error("Cell_Frame_CUDA<T>::linkInput(): number of mapping "
-    //                             "rows must be equal to the number of input "
-    //                             "channels");
-    if (mMapping.empty()){
-        mMapping.append(Tensor<bool>({getNbOutputs(), cell->getNbOutputs()}, true));
-    }
-
 }
 
 /**
@@ -381,20 +369,6 @@ void N2D2::Cell_Frame_CUDA<T>::linkInput(StimuliProvider& sp,
      // Define input-output sizes
     setInputsDims(sp.getSize());
     mInputs.push_back(&sp.getData());
-
-    //if (mMapping.empty()){
-    //      throw std::runtime_error("Cell_Frame<T>::linkInput(): Mapping is empty");
-    //}
-
-
-    //if (!mMapping.empty() && mMapping.dimY() != sp.getNbChannels())
-    //    throw std::runtime_error("Cell_Frame_CUDA<T>::linkInput(): number of mapping "
-    //                             "rows must be equal to the number of input "
-    //                             "channels");
-    
-    if (mMapping.empty()){
-        mMapping.append(Tensor<bool>({getNbOutputs(), sp.getNbChannels()}, true));
-    }
 }
 // END code used exlusively in python API
 

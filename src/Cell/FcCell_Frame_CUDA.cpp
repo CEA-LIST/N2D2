@@ -155,9 +155,9 @@ template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
 {
     // BEGIN: addition to initialize()
-    if (mMapping.empty()) {
-        mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
-    }
+    //if (mMapping.empty()) {
+    //    mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
+    //}
     // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
     // However, this requires a reinitialization of the input dims which is unsafe
     setInputsDims({nbInputChannels});
@@ -220,11 +220,37 @@ void N2D2::FcCell_Frame_CUDA<T>::initializeWeightQuantizer()
     }
 }
 
+
+template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::check_input()
+{
+    if (mInputs.size() != mSynapses.size()) {
+          throw std::runtime_error("mInputs.size() != mSynapses.size() for cell " + mName + 
+          ". Please verify that the number of input tensors given to the cell is"
+          " equal to the number of inputs defined for the cell.");
+    }
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].dimX()*mInputs[k].dimY()*mInputs[k].dimZ()
+        != mSynapses[k].dimX()*mSynapses[k].dimY()*mSynapses[k].dimZ()){
+            std::cout << "mInputs: " << mInputs[k].dims() << std::endl;
+            std::cout << "mSynapses: " << mSynapses[k].dims() << std::endl;
+            std::stringstream ss;
+            ss << "Unmatching dimensions X*Y*Z"
+            " between input and weight tensor " <<  k << " for cell " + mName;
+            throw std::runtime_error(ss.str());
+        }
+    }
+}
+
+
+
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::initializeDataDependent()
 {
     // NOTE: this is addition to initialize()
     Cell_Frame_CUDA<T>::initializeDataDependent();
+
+    check_input();
 
     int dev;
     CHECK_CUDA_STATUS(cudaGetDevice(&dev));
@@ -242,10 +268,7 @@ void N2D2::FcCell_Frame_CUDA<T>::initializeDataDependent()
                                     mInputs.dimB() * sizeof(T),
                                     cudaMemcpyHostToDevice));
     }
-    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        if (mInputs[k].size() == 0)
-            throw std::runtime_error("Zero-sized input for FcCell " + mName);
-    }
+  
 }
 
 
@@ -285,6 +308,8 @@ void N2D2::FcCell_Frame_CUDA<T>::load(const std::string& dirName)
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::propagate(bool inference)
 {
+    check_input();
+
     mInputs.synchronizeHBasedToD();
 
     if (mNormalize) {
