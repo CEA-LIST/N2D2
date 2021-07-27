@@ -35,20 +35,24 @@ class Cell(ABC):
                 raise n2d2.error_handler.WrongInputType("name", str(type(name)), ["str"])
         self._name = name
 
+    @abstractmethod
     def __call__(self, x):
-        raise RuntimeError("Cell instance without __call__() method")
+        pass
 
+    @abstractmethod
     def test(self):
-        raise RuntimeError("Cell instance without test() method")
-
+        pass
+    @abstractmethod
     def learn(self):
-        raise RuntimeError("Cell instance without learn() method")
+        pass
 
+    @abstractmethod
     def import_free_parameters(self, dir_name, ignore_not_exists=False):
-        raise RuntimeError("Cell instance without import_free_parameters() method")
+        pass
 
+    @abstractmethod
     def export_free_parameters(self, dir_name):
-        raise RuntimeError("Cell instance without export_free_parameters() method")
+        pass
 
     def get_name(self):
         return self._name
@@ -83,9 +87,6 @@ class Block(Cell,ABC):
                 elem._get_cells(cells)
             else:
                 cells[elem.get_name()] = elem
-
-    def __call__(self, x):
-        raise RuntimeError("Block requires custom __call__() method")
 
     def test(self):
         for cell in self._cells.values():
@@ -134,9 +135,6 @@ class Iterable(Block, ABC):
     def __init__(self, cells, name=None):
         Block.__init__(self, cells, name)
         self._seq = cells
-
-    def __call__(self, x):
-        raise RuntimeError("Block requires custom __call__() method")
 
     def __getitem__(self, item):
         if isinstance(item, int):

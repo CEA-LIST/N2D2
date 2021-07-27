@@ -194,7 +194,6 @@ class N2D2_Interface:
     def load_N2D2_parameters(cls, N2D2_object):
         str_params = N2D2_object.getParameters()
         parameters = {}
-        print(str_params)
         for param in str_params:
             parameters[cls._n2d2_to_python_convention(param)] = cls._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](
                 N2D2_object.getParameterAndType(param)[0])
