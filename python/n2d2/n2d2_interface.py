@@ -55,8 +55,8 @@ class N2D2_Interface:
     _N2D2_type_map = {
         "integer": int,
         "float": float,
-        # "bool": lambda x: False if x == '0' else True,
-        "bool": bool,
+        "bool": lambda x: False if x == '0' else True,
+        # "bool": bool,
         "string": str,
         "list": list,
     }
@@ -106,7 +106,12 @@ class N2D2_Interface:
         returned_parameter, returned_type = self._N2D2_object.getParameterAndType(key)
         # TODO : This test trigger an error if we send an int instead of a float for example
         # Maybe allowing an auto cast for this kind of situations can be a good idea ?
-        if not isinstance(value, self._N2D2_type_map[returned_type]):
+        if returned_type == "bool":
+            if not isinstance(value, bool):
+                raise n2d2.error_handler.WrongInputType(self._n2d2_to_python_convention(key), str(type(value)), [str(bool)])
+            else:
+                self._N2D2_object.setParameter(key, parsed_parameter)
+        elif not isinstance(value, self._N2D2_type_map[returned_type]):
             raise n2d2.error_handler.WrongInputType(self._n2d2_to_python_convention(key), str(type(value)), [str(self._N2D2_type_map[returned_type])])
         else:
             self._N2D2_object.setParameter(key, parsed_parameter)
@@ -189,6 +194,7 @@ class N2D2_Interface:
     def load_N2D2_parameters(cls, N2D2_object):
         str_params = N2D2_object.getParameters()
         parameters = {}
+        print(str_params)
         for param in str_params:
             parameters[cls._n2d2_to_python_convention(param)] = cls._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](
                 N2D2_object.getParameterAndType(param)[0])
