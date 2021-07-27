@@ -57,7 +57,8 @@ class Cell(ABC):
         return type(self).__name__
 
 
-class Block(Cell):
+class Block(Cell,ABC):
+    @abstractmethod
     def __init__(self, cells, name=None):
         assert (isinstance(cells, list))
         self._cells = {}
