@@ -167,9 +167,9 @@ This will create the following tensor :
 CUDA Tensor 
 -----------
 
-You can store your tensor with CPU or GPU (using CUDA). By default, n2d2 creates a CPU tensor.
+You can store your tensor with CPU or GPU (using ``CUDA``). By default, n2d2 creates a CPU tensor.
 
-If you want to create a CUDA Tensor you can do so by setting the parameter ``cuda`` to True in the constructor
+If you want to create a ``CUDA`` Tensor you can do so by setting the parameter ``cuda`` to True in the constructor
 
 .. testcode::
 
@@ -182,7 +182,7 @@ You can switch from CPU to GPU at anytime :
     tensor.cpu()  # Converting to a CPU tensor
     tensor.cuda() # Converting to a CUDA tensor
 
-When working on a CUDA tensor you have to understand that they are stored in two different places.
+When working on a ``CUDA`` tensor you have to understand that they are stored in two different places.
 The host and the device. The device is the GPU. The host correspond to your interface with the tensor that exists in the GPU. 
 You cannot access the device directly, the GPU don't have input/output functions.
 
@@ -191,7 +191,7 @@ This is why you have two methods to synchronized these two versions.
 Synchronization example
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Let's consider the following CUDA Tensor :
+Let's consider the following ``CUDA`` Tensor :
 
 .. testcode::
 

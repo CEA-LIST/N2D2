@@ -4,128 +4,45 @@ Interoperability
 In this section, we will present how you can use n2d2 with other python framework. 
 
 
-Pytorch
+PyTorch
 -------
 
-Integrating a Cell
-~~~~~~~~~~~~~~~~~~
+Presentation
+~~~~~~~~~~~~
 
-You can use the :py:class:`n2d2.pytorch.LayerN2D2` to wrap an :py:class:`n2d2.cells.Cell` or an :py:class:`N2D2.Cell` into a PyTorch Network.
+The PyTorch interoperability allow you to run an n2d2 model by using the Torch functions.
 
-Documentation
-^^^^^^^^^^^^^
-.. autoclass:: n2d2.pytorch.LayerN2D2
-        :members:
+The interoperability consist of a wrapper around the N2D2 Network.
+We created an autograd function which on ``Forward`` call the n2d2 ``Propagate`` and on ``Backward`` call the n2d2 ``Back Propagate`` and ``Update``.
 
-Example
-^^^^^^^
+.. figure:: ../_static/torch_interop.png
+   :alt: schematic of the interoperability
 
-.. testsetup:: 
+.. warning::
+        Due to the implementation n2d2 parameters are not visible to ``Torch`` and thus cannot be trained with a torch ``Optimizer``.
 
-        from os import remove
-        import torch
-        from torchvision import datasets, transforms 
-        import numpy as np
-        import N2D2
-        import n2d2
-        from n2d2.cell import Conv
-        from n2d2 import tensor
-        from n2d2.deepnet import Sequence, DeepNet
+Tensor conversion
+~~~~~~~~~~~~~~~~~ 
 
-.. code-block:: python
+In order to achieve this interoperability, we need to convert Tensor from ``Torch`` to ``n2d2`` and vice versa.
 
-    class Custom_Net(torch.nn.Module): 
-        """
-        A Pytorch network composed of one N2D2 conv cell interfaced with the LayerN2D2 object. 
-        """  
-        def __init__(self):
-                super(Custom_Net, self).__init__()
-                # Defining empty 
-                empty_db = n2d2.database.Database()
-                provider = n2d2.provider.DataProvider(empty_db, [3, 3, 1], batchSize=batch_size)
-                deepnet = DeepNet()
-                n2d2_conv = n2d2.pytorch.LayerN2D2(n2d2.cell.Conv(provider, nbOutputs=1, kernelDims=[3, 3], deepNet=deepnet, name="conv1"))
-                self.sequential = torch.nn.Sequential(n2d2_conv)
-        def forward(self, x):
-                x = self.sequential(x)
-                return x
+:py:class:`n2d2.Tensor` require a contiguous memory space which is not the case for ``Torch``. Thus the conversion ``Torch`` to ``n2d2`` require a memory copy.
+The opposite conversion is done with no memory copy.
 
-
-
-
-Integration of a Sequence
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can use the :py:class:`n2d2.pytorch.Sequence` to wrap an :py:class:`n2d2.cells.Sequence` into a Pytorch network.
-
+If you work with ``CUDA`` tensor, the conversion ``Torch`` to ``n2d2`` is also done with no copy on the GPU (a copy on the host is however required).
 
 
 Documentation
-^^^^^^^^^^^^^
-.. autoclass:: n2d2.pytorch.Sequence
-        :members:
-
-Example
-^^^^^^^
-
-In this example we wrap the default ``LeNet`` model proposed by the python API and run it with pytorch. 
-
-.. code-block:: python
-
-        import N2D2
-        import n2d2
-        import torch
-
-        batch_size = 2
-
-        pytorch_cell = n2d2.pytorch.Sequence(n2d2.models.lenet.LeNet(10))
-
-        # creating a Pytorch network with our LeNet !
-        class torch_test(torch.nn.Module):   
-                def __init__(self):
-                        super(torch_test, self).__init__()
-                        self.layer = torch.nn.Sequential( 
-                                pytorch_cell,
-                        )
-
-                # Defining the forward pass    
-                def forward(self, x):
-                        x = self.layer(x)
-                        return x
-
-        # Instantiating the network
-        model = torch_test()
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
-        criterion = torch.nn.MSELoss()
-
-        # Dummy input and label
-        input_tensor = torch.ones(batch_size, 1, 32, 32)
-        label = torch.ones(batch_size, 10, 1, 1)
-
-        # Feeding dummy input to the Torch network
-        output = model(input_tensor)
-
-        # Computing loss and propagating the error through the network
-        loss = criterion(output, label)
-        loss.backward()
-        optimizer.step() # this is not mandatory if you only use n2d2 cell (the weights update is done in the backward method)
-
-
-Integration of a DeepNetCell
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can use the :py:class:`n2d2.pytorch.DeepNetCell` to wrap an :py:class:`n2d2.cells.DeepNetCell` into a Pytorch network.
-A :py:class:`n2d2.cells.DeepNetCell` is used to import a Network with :doc:`INI file configuration<../ini/intro>` or with ONNX. If you want to 
-
-Documentation
-^^^^^^^^^^^^^
-.. autoclass:: n2d2.pytorch.DeepNetCell
+~~~~~~~~~~~~~
+.. autoclass:: n2d2.pytorch.Block
         :members:
 
 Example :
-^^^^^^^^^
+~~~~~~~~~
 
-In this example we wrap the default ``LeNet`` model proposed by the python API, generate the :py:class:`N2D2.DeepNet` and run it with pytorch. 
+In this example, we will create with Torch a ``LeNet`` and export it with ``ONNX``.
+We will then use the n2d2 API to import the model using a :py:class:`n2d2.cells.DeepNetCell`.
+Finally we will run the newly created model with torch by using :py:class:`n2d2.pytorch.Block`.
 
 .. code-block:: python
 
@@ -161,6 +78,7 @@ In this example we wrap the default ``LeNet`` model proposed by the python API, 
         model = MNIST_CNN()
         model_path = './tmp.onnx'
         batch_size = 10
+        
         # Exporting to ONNX
         dummy_in = torch.ones(batch_size, 1, 28, 28)
         torch.onnx.export(model, dummy_in, model_path, verbose=True)
@@ -172,7 +90,7 @@ In this example we wrap the default ``LeNet`` model proposed by the python API, 
         remove(model_path) # Cleaning temporary onnx file
 
         # Wrapping the DeepNetCell
-        n2d2_deepNet = n2d2.pytorch.DeepNetCell(deepNetCell)
+        n2d2_deepNet = n2d2.pytorch.Block(deepNetCell)
 
         # Dummy imput and label for the example
         input_tensor = torch.ones(batch_size, 1, 28, 28)
@@ -185,4 +103,4 @@ In this example we wrap the default ``LeNet`` model proposed by the python API, 
 
         loss = criterion(output, label)
         loss.backward()
-        opt.step()
+        opt.step() # Not necessary here because we don't have torch parameters to update.

@@ -207,13 +207,13 @@ class Layer(Iterable):
         return Interface([out])
 
 
-"""
-n2d2 Cell wrapper for a N2D2 deepnet object. Allows chaining a N2D2 deepnet (for example loaded from a ONNX or INI file)
-into the dynamic computation graph of the n2d2 API. During each use of the  the __call__ method, 
-the N2D2 deepnet is converted to a n2d2 representation and the N2D2 deepnet is concatenated to the deepnet of the 
-incoming tensor object.
-"""
 class DeepNetCell(Block):
+    """
+    n2d2 Cell wrapper for a N2D2 deepnet object. Allows chaining a N2D2 deepnet (for example loaded from a ONNX or INI file)
+    into the dynamic computation graph of the n2d2 API. During each use of the  the __call__ method, 
+    the N2D2 deepnet is converted to a n2d2 representation and the N2D2 deepnet is concatenated to the deepnet of the 
+    incoming tensor object.
+    """
 
     def __init__(self, N2D2_object):
 
@@ -235,12 +235,13 @@ class DeepNetCell(Block):
     @classmethod
     def load_from_ONNX(cls, provider, model_path, ini_file=None):
         """Load a deepnet from an ONNX file given a provider object.
+
         :param provider: Provider object to base deepnet upon
-        :type provider: n2d2.provider.Provider
+        :type provider: :py:class:`n2d2.provider.DataProvider`
         :param model_path: Path to the model.
         :type model_path: str
         :param ini_file: Path to an optional .ini file with additional onnx import instructions
-        :type model_path: str
+        :type ini_file: str
         """
         if not isinstance(provider, n2d2.provider.Provider):
             raise ValueError("Input needs to be of type 'provider'")
@@ -261,6 +262,7 @@ class DeepNetCell(Block):
     @classmethod
     def load_from_INI(cls, path):
         """Load a deepnet from an INI file.
+        
         :param model_path: Path to the ini file.
         :type model_path: str
         """
@@ -347,17 +349,25 @@ class DeepNetCell(Block):
     #        cell.clear_data_tensors()
 
     def update(self):
+        """Update learnable parameters
+        """
         self.get_deepnet().update()
 
     def test(self):
+        """Set the network to ``test`` mode.
+        """
         self._inference = True
         return self
 
     def learn(self):
+        """Set the network to ``learn`` mode.
+        """
         self._inference = False
         return self
 
     def import_free_parameters(self, dir_name, ignore_not_exists=False):
+        """Import parameters.
+        """
         self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignore_not_exists=ignore_not_exists)
 
     def remove(self, name):
@@ -367,12 +377,18 @@ class DeepNetCell(Block):
         self._cells = self._embedded_deepnet.get_cells()
 
     def get_deepnet(self):
+        """Get the :py:class:`n2d2.deepnet.DeepNet` used for computation. 
+        """
         return self._deepnet
 
     def get_embedded_deepnet(self):
+        """Get the :py:class:`n2d2.deepnet.DeepNet` used to define this cell. 
+        """
         return self._embedded_deepnet
 
     def get_input_cells(self):
+        """Returns the cells located at the entry of the network.
+        """
         output = []
         cells = self._embedded_deepnet.get_groups().get_elements()[0]
         if isinstance(cells, n2d2.deepnet.Group):
@@ -383,6 +399,8 @@ class DeepNetCell(Block):
         return output
 
     def get_output_cells(self):
+        """Returns the cells located at the end of the network.
+        """
         output = []
         cells = self._embedded_deepnet.get_groups().get_elements()[-1]
         if isinstance(cells, n2d2.deepnet.Group):

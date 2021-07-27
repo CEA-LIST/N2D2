@@ -80,9 +80,13 @@ class Block(torch.nn.Module):
 
 
     def forward(self, inputs):
+        """
+        Use a custom ``torch.autograd.Function`` that use, on forward the ``Propagation`` of n2d2.
+        And on backward the ``BackPropagation`` and ``Update`` of n2d2.
+        """
         class N2D2_computation(torch.autograd.Function):
             """
-            We need to define a function to have access to backpropagation
+            An autograd function applied to a Torch tensor that will use the propagation/backpropagation/update of N2D2.
             """
             @staticmethod
             def forward(ctx, inputs):
