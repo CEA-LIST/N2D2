@@ -22,6 +22,9 @@ build:ubuntu:
     - make -j4
     - cp lib/*.so ../python/
     - make docs -j4
+
+  allow_failure: true
+
   artifacts:
     paths:
       - docs/_build/html
