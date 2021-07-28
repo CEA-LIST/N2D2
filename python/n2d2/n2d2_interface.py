@@ -112,6 +112,7 @@ class N2D2_Interface:
             else:
                 self._N2D2_object.setParameter(key, parsed_parameter)
         elif not isinstance(value, self._N2D2_type_map[returned_type]):
+
             raise n2d2.error_handler.WrongInputType(self._n2d2_to_python_convention(key), str(type(value)), [str(self._N2D2_type_map[returned_type])])
         else:
             self._N2D2_object.setParameter(key, parsed_parameter)

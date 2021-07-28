@@ -159,6 +159,9 @@ template <class T>
 void N2D2::BatchNormCell_Frame<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
 {
     // BEGIN: addition to initialize()
+    if (nbInputs != 1) {
+          throw std::runtime_error("nbInputs != 1 for cell " + mName);
+    }
     // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
     // However, this requires a reinitialization of the input dims which is unsafe
     setInputsDims({nbInputChannels});

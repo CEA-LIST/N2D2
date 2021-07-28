@@ -55,6 +55,12 @@ class ActivationFunction(N2D2_Interface, ABC):
                 n2d2.quantizer.ActivationQuantizer.create_from_N2D2_object(quantizer)
         return activation
 
+    def has_quantizer(self):
+        if 'quantizer' in self._config_parameters:
+            return True
+        else:
+            return False
+
     def get_quantizer(self):
         if 'quantizer' in self._config_parameters:
             return self._config_parameters['quantizer']

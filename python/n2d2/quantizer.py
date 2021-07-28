@@ -21,7 +21,7 @@
 import N2D2
 from n2d2.n2d2_interface import N2D2_Interface
 import n2d2.global_variables
-
+from n2d2.cells.nn import Trainable
 
 class Quantizer(N2D2_Interface):
     _convention_converter= n2d2.ConventionConverter({
@@ -155,7 +155,7 @@ class SATCell(CellQuantizer):
             raise n2d2.error_handler("status", type(status) ["bool"])
         self.N2D2().setQuantization(status)
 
-class SATAct(ActivationQuantizer):
+class SATAct(ActivationQuantizer, Trainable):
     """
     Scale Adjust Training (SAT) activation quantizer.
     """
@@ -179,20 +179,27 @@ class SATAct(ActivationQuantizer):
             # No optional constructor arguments
             self._N2D2_object = self._quantizer_generators[self._model_key]()
 
+            if 'weights_solver' not in self._config_parameters:
+                self._config_parameters['solver'] = \
+                    n2d2.converter.from_N2D2_object(self._N2D2_object.getSolver())
+
             """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
                 if key is 'solver':
-                    self._N2D2_object.setSolver(value.N2D2())
+                    if isinstance(value, n2d2.solver.Solver):
+                        self._N2D2_object.setSolver(value.N2D2())
+                    else:
+                        raise n2d2.error_handler.WrongInputType("solver", str(type(value)),
+                                                                [str(n2d2.solver.Solver)])
                 else:
                     self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
 
-    """
     def set_solver(self, solver):
-        if 'solver' in self._config_parameters:
-            print("Note: Replacing existing solver in SATAct quantizer")
         self._config_parameters['solver'] = solver
         self._N2D2_object.setSolver(self._config_parameters['solver'].N2D2())
-    """
+
+    def get_solver(self):
+        return self._config_parameters['solver']
 
     """
     Access the full precision activations of the activation function.

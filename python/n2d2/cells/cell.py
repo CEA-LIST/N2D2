@@ -25,6 +25,7 @@ from n2d2.deepnet import DeepNet
 from abc import ABC, abstractmethod
 from n2d2.tensor import Interface
 
+
 class Cell(ABC):
     @abstractmethod
     def __init__(self, name):
@@ -61,8 +62,34 @@ class Cell(ABC):
         return type(self).__name__
 
 
-class Block(Cell,ABC):
+# TODO: Empty at the moment. Check for mutualisation of code in Fc, Conv, Deconv, BatchNorm
+class Trainable(ABC):
+
     @abstractmethod
+    def __init__(self):
+        if "solver" in self._config_parameters:
+            solver = self._config_parameters.pop('solver')
+            self.set_solver(solver)
+        if "filler" in self._config_parameters:
+            filler = self._config_parameters.pop('filler')
+            self.set_filler(filler)
+
+    @abstractmethod
+    def set_solver(self, solver):
+        pass
+
+    @abstractmethod
+    def set_filler(self, solver):
+        pass
+
+    @abstractmethod
+    def has_quantizer(self):
+        pass
+
+
+class Block(Cell):
+    #@abstractmethod
+
     def __init__(self, cells, name=None):
         assert (isinstance(cells, list))
         self._cells = {}
@@ -97,6 +124,20 @@ class Block(Cell,ABC):
         for cell in self._cells.values():
             cell.learn()
         return self
+
+    def __call__(self, x):
+        raise RuntimeError("Block '" + self.get_name() + "' has no __call__ method implemented")
+
+    def set_solver(self, solver):
+        for cell in self.get_cells().values():
+            if isinstance(cell, Trainable):
+                cell.set_solver(solver.copy())
+                if cell.has_quantizer() and isinstance(cell.get_quantizer(), Trainable):
+                    cell.get_quantizer().set_solver(solver.copy())
+            if cell.get_activation() and cell.get_activation().has_quantizer() \
+                    and isinstance(cell.get_activation().get_quantizer(), Trainable):
+                cell.get_activation().get_quantizer().set_solver(solver.copy())
+
 
     def import_free_parameters(self, dir_name, ignore_not_exists=False):
         for cell in self._cells.values():

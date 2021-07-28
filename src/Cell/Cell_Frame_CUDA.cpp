@@ -335,9 +335,6 @@ void N2D2::Cell_Frame_CUDA<T>::linkInput(Cell* cell)
         throw std::runtime_error(
             "Cell_Frame<T>::linkInput(): cannot mix Spike and Frame models");
     }
-
-    // Define input-output connections
-    const unsigned int cellNbOutputs = cell->getNbOutputs();
 }
 
 /**

@@ -23,7 +23,7 @@ import n2d2.activation
 import n2d2.solver
 import n2d2.filler
 from n2d2.n2d2_interface import N2D2_Interface
-from n2d2.cells.cell import Cell
+from n2d2.cells.cell import Cell, Trainable
 from abc import ABC, abstractmethod
 
 _cell_parameters = {
@@ -65,24 +65,7 @@ class Datatyped(ABC):
         else:
             self._datatype = n2d2.global_variables.default_datatype
 
-# TODO: Empty at the moment. Check for mutualisation of code in Fc, Conv, Deconv, BatchNorm
-class Trainable(ABC):
 
-    @abstractmethod
-    def __init__(self):
-        if "solver" in self._config_parameters:
-            solver = self._config_parameters.pop('solver')
-            self.set_solver(solver)
-        if "filler" in self._config_parameters:
-            filler = self._config_parameters.pop('filler')
-            self.set_filler(filler)
-    
-    @abstractmethod
-    def set_solver(self, solver):
-        pass
-    @abstractmethod
-    def set_filler(self, solver):
-        pass
 
 class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
 
@@ -279,7 +262,10 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
         self._N2D2_object.setActivation(self._config_parameters['activation'].N2D2())
 
     def get_activation(self):
-        return self._config_parameters['activation']
+        if 'activation' in self._config_parameters:
+            return self._config_parameters['activation']
+        else:
+            return None
 
     def get_inputs(self):
         return self._input_cells
@@ -595,6 +581,9 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
             raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
         self.N2D2().setBias(output_index, value.N2D2())
 
+    def has_bias(self):
+        return not (self.load_N2D2_parameters(self.N2D2())['no_bias'])
+
     def get_bias(self, output_index):
         """
         :param output_index: 
@@ -636,6 +625,12 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
         else:
             raise RuntimeError("No Quantizer in cell '" + self.get_name() + "'")
 
+    def has_quantizer(self):
+        if 'quantizer' in self._config_parameters:
+            return True
+        else:
+            return False
+
     def set_filler(self, filler):
         """Set a filler for the weights and bias.
 
@@ -652,16 +647,16 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
 
     def set_bias_filler(self, filler):
         """Set a filler for the bias.
-
-        :param filler: Filler object
-        :type filler: :py:class:`n2d2.filler.Filler`
-        """
-        if "no_bias" in self._config_parameters and self._config_parameters["no_bias"]:
+       :param filler: Filler object
+       :type filler: :py:class:`n2d2.filler.Filler`
+       """
+        if self.has_bias():
+            if not isinstance(filler, n2d2.filler.Filler):
+                raise n2d2.error_handler.WrongInputType("filler", str(type(filler)), ["n2d2.filler.Filler"])
+            self._config_parameters['bias_filler'] = filler
+            self._N2D2_object.setBiasFiller(self._config_parameters['bias_filler'].N2D2())
+        else:
             raise RuntimeError("You try to set a bias filler on " + self.get_name() +" but no_bias=True")
-        if not isinstance(filler, n2d2.filler.Filler):
-            raise n2d2.error_handler.WrongInputType("filler", str(type(filler)), ["n2d2.filler.Filler"])
-        self._config_parameters['bias_filler'] = filler
-        self._N2D2_object.setBiasFiller(self._config_parameters['bias_filler'].N2D2())
 
     def set_weights_filler(self, filler):
         """Set a filler for the weights.
@@ -708,21 +703,23 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
     def set_weights_solver(self, solver):
         self._config_parameters['weights_solver'] = solver
         self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
-    
+
     def set_bias_solver(self, solver):
-        if "no_bias" in self._config_parameters and self._config_parameters["no_bias"]:
-            raise RuntimeError("You try to set the bias solver of " + self.get_name() +" but no_bias=True")
-        self._config_parameters['bias_solver'] = solver
-        self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
+        if self.has_bias():
+            self._config_parameters['bias_solver'] = solver
+            self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
+        else:
+            raise RuntimeError("You try to set the bias solver of " + self.get_name() + " but no_bias=True")
 
     def set_solver(self, solver):
-        self._config_parameters['weights_solver'] = solver
-        self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
-        self._config_parameters['bias_solver'] = solver.copy()
-        self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
-        
+        """"Set the weights and bias solver with the same solver.
 
-
+        :param solver: Solver object
+        :type solver: :py:class:`n2d2.solver.Solver`
+        """
+        if self.has_bias():
+            self.set_bias_solver(solver.copy())
+        self.set_weights_solver(solver.copy())
 
 
 class Conv(NeuralNetworkCell, Datatyped, Trainable):
@@ -981,12 +978,14 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
         :param filler: Filler object
         :type filler: :py:class:`n2d2.filler.Filler`
         """
-        if "no_bias" in self._config_parameters and self._config_parameters["no_bias"]:
+
+        if self.has_bias():
+            if not isinstance(filler, n2d2.filler.Filler):
+                raise n2d2.error_handler.WrongInputType("filler", str(type(filler)), ["n2d2.filler.Filler"])
+            self._config_parameters['bias_filler'] = filler
+            self._N2D2_object.setBiasFiller(self._config_parameters['bias_filler'].N2D2())
+        else:
             raise RuntimeError("You try to set a bias filler for " + self.get_name() +" but no_bias=True")
-        if not isinstance(filler, n2d2.filler.Filler):
-            raise n2d2.error_handler.WrongInputType("filler", str(type(filler)), ["n2d2.filler.Filler"])
-        self._config_parameters['bias_filler'] = filler
-        self._N2D2_object.setBiasFiller(self._config_parameters['bias_filler'].N2D2())
 
     def set_weights_filler(self, filler):
         """Set a filler for the weights.
@@ -1035,10 +1034,11 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
         self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
 
     def set_bias_solver(self, solver):
-        if "no_bias" in self._config_parameters and self._config_parameters["no_bias"]:
+        if self.has_bias():
+            self._config_parameters['bias_solver'] = solver
+            self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
+        else:
             raise RuntimeError("You try to set the bias solver of " + self.get_name() +" but no_bias=True")
-        self._config_parameters['bias_solver'] = solver
-        self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
 
     def set_solver(self, solver):
         """"Set the weights and bias solver with the same solver.
@@ -1046,13 +1046,9 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
         :param solver: Solver object
         :type solver: :py:class:`n2d2.solver.Solver`
         """
-        if not isinstance(solver, n2d2.solver.Solver):
-            raise n2d2.error_handler.WrongInputType("solver", str(type(solver)), ["n2d2.solver.Solver"])
-        self._config_parameters['weights_solver'] = solver
-        self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
-        self._config_parameters['bias_solver'] = solver.copy()
-        self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
-
+        if self.has_bias():
+            self.set_bias_solver(solver.copy())
+        self.set_weights_solver(solver.copy())
 
     def set_quantizer(self, quantizer):
         if 'quantizer' in self._config_parameters:
@@ -1068,6 +1064,12 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
 
         else:
             raise RuntimeError("No Quantizer in cell '" + self.get_name() + "'")
+
+    def has_quantizer(self):
+        if 'quantizer' in self._config_parameters:
+            return True
+        else:
+            return False
 
     def set_weight(self, output_index, channel_index, value):
         """
@@ -1113,6 +1115,9 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
                 chan.append(n2d2.Tensor.from_N2D2(tensor))
             weights.append(chan)
         return weights
+
+    def has_bias(self):
+        return not self.load_N2D2_parameters(self.N2D2())['no_bias']
 
     def set_bias(self, output_index, value):
         """
@@ -1865,16 +1870,22 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
         self._N2D2_object.resetWeights()
 
     def set_bias_solver(self, solver):
-        if "no_bias" in self._config_parameters and self._config_parameters["no_bias"]:
-            raise RuntimeError("You try to set a bias solver on " + self.get_name() +" but no_bias=True")
-        self._config_parameters['bias_solver'] = solver
-        self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
 
-    def set_solver(self, solver):       
-        self._config_parameters['weights_solver'] = solver
-        self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
-        self._config_parameters['bias_solver'] = solver.copy()
-        self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
+        if self.has_bias():
+            self._config_parameters['bias_solver'] = solver
+            self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
+        else:
+            raise RuntimeError("You try to set a bias solver on " + self.get_name() +" but no_bias=True")
+
+    def set_solver(self, solver):
+        """"Set the weights and bias solver with the same solver.
+
+        :param solver: Solver object
+        :type solver: :py:class:`n2d2.solver.Solver`
+        """
+        if self.has_bias():
+            self.set_bias_solver(solver.copy())
+        self.set_weights_solver(solver.copy())
 
     def set_weight(self, output_index, channel_index, value):
         """
@@ -1934,6 +1945,9 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
             raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
         self.N2D2().setBias(output_index, value.N2D2())
 
+    def has_bias(self):
+        return not self.load_N2D2_parameters(self.N2D2())['no_bias']
+
     def get_bias(self, output_index):
         """
         :param output_index: 
@@ -1960,6 +1974,9 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
             self.N2D2().getBias(output_index, tensor)
             biases.append(n2d2.Tensor.from_N2D2(tensor))
         return biases
+
+    def has_quantizer(self):
+        return False
 
 class ElemWise(NeuralNetworkCell):
     """
@@ -2467,6 +2484,9 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
 
         return self.get_outputs()
 
+    def has_bias(self):
+        return True
+
     def set_scale_solver(self, solver):
         self._config_parameters['scale_solver'] = solver
         self._N2D2_object.setScaleSolver(self._config_parameters['scale_solver'].N2D2())
@@ -2490,7 +2510,10 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
         return self._config_parameters['scale_solver']
 
     def get_bias_solver(self):
-        return self._config_parameters['bias_solver']
+        if self.has_bias():
+            return self._config_parameters['bias_solver']
+        else:
+            raise RuntimeError("Cell '" + self.get_name() + "' has no bias")
 
     def set_filler(self, filler):
         raise ValueError("Batchnorm doesn't support Filler")
@@ -2503,10 +2526,15 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
         """
         if not isinstance(solver, n2d2.solver.Solver):
             raise n2d2.error_handler.WrongInputType("solver", str(type(solver)), ["n2d2.solver.Solver"])
-        self._config_parameters['scale_solver'] = solver
-        self._N2D2_object.setScaleSolver(self._config_parameters['scale_solver'].N2D2())
-        self._config_parameters['bias_solver'] = solver.copy()
-        self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
+        if self.has_bias():
+            self.set_bias_solver(solver.copy())
+        self.set_scale_solver(solver.copy())
+
+    def has_quantizer(self):
+        if 'quantizer' in self._config_parameters:
+            return True
+        else:
+            return False
 
 class Activation(NeuralNetworkCell, Datatyped):
 
@@ -2788,7 +2816,7 @@ class Resize(NeuralNetworkCell):
 
 
 
-class Transpose(NeuralNetworkCell):
+class Transpose(NeuralNetworkCell, Datatyped):
     _cell_constructors = {
         'Frame<float>': N2D2.TransposeCell_Frame_float,
         'Frame_CUDA<float>': N2D2.TransposeCell_Frame_CUDA_float,
