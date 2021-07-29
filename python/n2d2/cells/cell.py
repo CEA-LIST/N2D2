@@ -100,7 +100,11 @@ class Block(Cell):
     def __getitem__(self, item):
         if isinstance(item, int):
             return list(self._cells.values())[item]
-        else:
+        else: 
+            # TODO : Change, bad practice
+            # this should be an elif and else should raise a typeError for two reasons
+            # 1. This doesn't test the type of item if it's not an int
+            # 2. This decrease the code readability as the type of item is not obvious
             return self._cells[item]
 
     def get_cells(self):
@@ -177,7 +181,7 @@ class Iterable(Block, ABC):
         Block.__init__(self, cells, name)
         self._seq = cells
 
-    def __getitem__(self, item):
+    def __getitem__(self, item): # Redondant with the definition given in Block
         if isinstance(item, int):
             return list(self._cells.values())[item]
         else:
@@ -209,13 +213,16 @@ class Iterable(Block, ABC):
         return output
 
 
+    def __iter__(self):
+        return self._seq.__iter__()
+
 class Sequence(Iterable):
     def __init__(self, cells, name=None):
         Iterable.__init__(self, cells, name)
 
     def __call__(self, x):
         x.get_deepnet().begin_group(name=self._name)
-        for cell in self._seq:
+        for cell in self:
             x = cell(x)
         x.get_deepnet().end_group()
         return x
@@ -237,7 +244,7 @@ class Layer(Iterable):
         else:
             inputs = [x]
         x.get_deepnet().begin_group(name=self._name)
-        for out_idx, cell in enumerate(self._seq):
+        for out_idx, cell in enumerate(self):
             cell_inputs = []
             for in_idx, ipt in enumerate(inputs):
                 # Default is all-to-all
