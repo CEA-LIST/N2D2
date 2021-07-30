@@ -69,9 +69,9 @@ class CellQuantizer(Quantizer, ABC):
 
     def add_weights(self, weights, diff_weights):
         """
-        :arg weights: Biases
+        :arg weights: Weights
         :param weights: :py:class:`n2d2.Tensor`
-        :arg diff_weights: Diff Biases
+        :arg diff_weights: Diff Weights
         :param diff_weights: :py:class:`n2d2.Tensor`
         """
         if not isinstance(diff_weights, n2d2.Tensor):

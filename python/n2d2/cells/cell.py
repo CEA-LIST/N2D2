@@ -255,7 +255,7 @@ class Layer(Iterable):
         return Interface([out])
 
 
-class DeepNetCell(Block):
+class DeepNetCell(Iterable):
     """
     n2d2 Cell wrapper for a N2D2 deepnet object. Allows chaining a N2D2 deepnet (for example loaded from a ONNX or INI file)
     into the dynamic computation graph of the n2d2 API. During each use of the  the __call__ method, 
@@ -274,7 +274,7 @@ class DeepNetCell(Block):
             name = None
 
         #self._cells = self._embedded_deepnet.get_cells()
-        Block.__init__(self, list(self._embedded_deepnet.get_cells().values()), name=name)
+        Iterable.__init__(self, list(self._embedded_deepnet.get_cells().values()), name=name)
 
         self._deepnet = None 
         self._inference = False
@@ -329,7 +329,7 @@ class DeepNetCell(Block):
         #print(self._embedded_deepnet)
 
         # Recreate graph with underlying N2D2 deepnet
-        self._deepnet = self.concat_to_deepnet(inputs.get_deepnet())
+        # self._deepnet = self.concat_to_deepnet(inputs.get_deepnet())
 
         #if not provider.dims() == N2D2_object.getStimuliProvider().getData().dims():
         #    raise RuntimeError(
@@ -344,7 +344,7 @@ class DeepNetCell(Block):
             cell.N2D2().clearInputTensors()
             cell._link_N2D2_input(inputs.cell)
 
-        self._deepnet.N2D2().propagate(self._inference)
+        self._embedded_deepnet.N2D2().propagate(self._inference)
 
         outputs = []
         for cell in self.get_output_cells():

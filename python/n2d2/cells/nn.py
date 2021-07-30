@@ -689,7 +689,7 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
         :param value: The value of the parameter
         :type value: Any
         """
-        self._config_parameters['weight_solver'].set_parameter(key, value)
+        self._config_parameters['weights_solver'].set_parameter(key, value)
         self._config_parameters['bias_solver'].set_parameter(key, value)
 
     def get_bias_solver(self):
@@ -1018,7 +1018,7 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
         :param value: The value of the parameter
         :type value: Any
         """
-        self._config_parameters['weight_solver'].set_parameter(key, value)
+        self._config_parameters['weights_solver'].set_parameter(key, value)
         self._config_parameters['bias_solver'].set_parameter(key, value)
 
     def get_weights_solver(self):
