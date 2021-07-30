@@ -329,7 +329,7 @@ class DeepNetCell(Iterable):
         #print(self._embedded_deepnet)
 
         # Recreate graph with underlying N2D2 deepnet
-        # self._deepnet = self.concat_to_deepnet(inputs.get_deepnet())
+        self._deepnet = self.concat_to_deepnet(inputs.get_deepnet())
 
         #if not provider.dims() == N2D2_object.getStimuliProvider().getData().dims():
         #    raise RuntimeError(
@@ -344,7 +344,7 @@ class DeepNetCell(Iterable):
             cell.N2D2().clearInputTensors()
             cell._link_N2D2_input(inputs.cell)
 
-        self._embedded_deepnet.N2D2().propagate(self._inference)
+        self._deepnet.N2D2().propagate(self._inference)
 
         outputs = []
         for cell in self.get_output_cells():
