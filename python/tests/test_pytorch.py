@@ -182,7 +182,7 @@ class MNIST_CNN(torch.nn.Module):
             torch.nn.Linear(576, 128),
             torch.nn.ReLU(), 
             self.lin,
-            torch.nn.Softmax(),   
+            torch.nn.Softmax(dim=1),   
         )
 
     # Defining the forward pass    

@@ -32,35 +32,37 @@ class DeepNet(N2D2_Interface):
     
     _convention_converter= n2d2.ConventionConverter({
         "name": "Name",
-        "from_parameters": "", # Pure n2d2
     })
-    def __init__(self, from_parameters=True, **config_parameters):
+    def __init__(self, **config_parameters):
         
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._config_parameters['name'] = "DeepNet(id=" + str(id(self)) + ")"
 
-        if from_parameters:
-            self._create_from_parameters()
+        self._set_N2D2_object(N2D2.DeepNet(n2d2.global_variables.default_net))
+        self._set_N2D2_parameters(self._config_parameters)
 
         self._groups = Group(self._config_parameters['name'])
         #self.set_provider(provider)
         self._current_group = self._groups
         self._group_dict = {self._config_parameters['name']: self._groups}
         self._group_counter = 1
-
-    def _create_from_parameters(self):
-        self._network = n2d2.global_variables.default_net
-        self._set_N2D2_object(N2D2.DeepNet(self._network))
-        self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object):
+        deepnet = super().create_from_N2D2_object(N2D2_object)
 
-        deepnet = cls(from_parameters=False, name=N2D2_object.getName())
+        deepnet._config_parameters['name'] = "DeepNet(id=" + str(id(deepnet)) + ")"
 
         deepnet._N2D2_object = N2D2_object
+        deepnet.load_N2D2_parameters(deepnet.N2D2())
 
+        deepnet._groups = Group(deepnet._config_parameters['name'])
+        deepnet._current_group = deepnet._groups
+        deepnet._group_dict = {deepnet._config_parameters['name']: deepnet._groups}
+        deepnet._group_counter = 1
+        
         cells = deepnet.N2D2().getCells()
         layers = deepnet.N2D2().getLayers()
         if not layers[0][0] == "env":

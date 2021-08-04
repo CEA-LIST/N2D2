@@ -61,7 +61,7 @@ class He(Filler):
         "datatype": "Datatype",
     })
 
-    def __init__(self, from_arguments=True, **config_parameters):
+    def __init__(self, **config_parameters):
         """
         :param datatype: datatype, default='float'
         :type datatype: str, optional
@@ -73,35 +73,30 @@ class He(Filler):
         :type mean_norm: float, optional
         """
         Filler.__init__(self, **config_parameters)
-        if not isinstance(from_arguments, bool):
-            raise n2d2.error_handler.WrongInputType("from_arguments", str(type(from_arguments)), ["bool"])
-        if from_arguments:
-            if "variance_norm" in self._config_parameters:
-                variance_norm = self._config_parameters["variance_norm"]
-                if variance_norm not in self._filler_generators[self._model_key].VarianceNorm.__members__.keys():
-                    raise n2d2.error_handler.WrongValue("variance_norm", variance_norm,
-                                                        ", ".join(self._filler_generators[self._model_key].VarianceNorm.__members__.keys()))
-                self._config_parameters["variance_norm"] = self._filler_generators[self._model_key].VarianceNorm.__members__[variance_norm]
 
-            self._parse_optional_arguments(['variance_norm', 'mean_norm', 'scaling'])
-            for k, v in self._optional_constructor_arguments.items():
-                if k is 'scaling' and not isinstance(v, float):
-                    raise n2d2.error_handler.WrongInputType("scaling", str(type(v)), ["float"])
-                if k is 'mean_norm' and not isinstance(v, float):
-                    raise n2d2.error_handler.WrongInputType("mean_norm", str(type(v)), ["float"])
+        if "variance_norm" in self._config_parameters:
+            variance_norm = self._config_parameters["variance_norm"]
+            if variance_norm not in self._filler_generators[self._model_key].VarianceNorm.__members__.keys():
+                raise n2d2.error_handler.WrongValue("variance_norm", variance_norm,
+                                                    ", ".join(self._filler_generators[self._model_key].VarianceNorm.__members__.keys()))
+            self._config_parameters["variance_norm"] = self._filler_generators[self._model_key].VarianceNorm.__members__[variance_norm]
+
+        self._parse_optional_arguments(['variance_norm', 'mean_norm', 'scaling'])
+        for k, v in self._optional_constructor_arguments.items():
+            if k is 'scaling' and not isinstance(v, float):
+                raise n2d2.error_handler.WrongInputType("scaling", str(type(v)), ["float"])
+            if k is 'mean_norm' and not isinstance(v, float):
+                raise n2d2.error_handler.WrongInputType("mean_norm", str(type(v)), ["float"])
+        
+        self._set_N2D2_object(self._filler_generators[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
+        self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
 
-            self._set_N2D2_object(self._filler_generators[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
-            self._set_N2D2_parameters(self._config_parameters)
-
-    @classmethod
-    def create_from_N2D2_object(cls, N2D2_object):
-        filler = cls(**cls.load_N2D2_parameters(N2D2_object), from_arguments=False)
-        filler._set_N2D2_object(N2D2_object)
-        filler._optional_constructor_arguments['variance_norm'] = filler._N2D2_object.getVarianceNorm()
-        filler._optional_constructor_arguments['mean_norm'] = filler._N2D2_object.getMeanNorm()
-        filler._optional_constructor_arguments['scaling'] = filler._N2D2_object.getScaling()
-        return filler
+    def _load_N2D2_optional_parameters(self, N2D2_object):
+        self._optional_constructor_arguments['variance_norm'] = N2D2_object.getVarianceNorm()
+        self._optional_constructor_arguments['mean_norm'] = N2D2_object.getMeanNorm()
+        self._optional_constructor_arguments['scaling'] = N2D2_object.getScaling()
 
 
 class Normal(Filler):
@@ -119,7 +114,7 @@ class Normal(Filler):
         "datatype": "Datatype",
     })
 
-    def __init__(self, from_arguments=True, **config_parameters):
+    def __init__(self, **config_parameters):
         """
         :param datatype: datatype, default='float'
         :type datatype: str, optional
@@ -129,25 +124,20 @@ class Normal(Filler):
         :type std_dev: float, optional
         """
         Filler.__init__(self, **config_parameters)
-        if not isinstance(from_arguments, bool):
-            raise n2d2.error_handler.WrongInputType("from_arguments", str(type(from_arguments)), ["bool"])
-        if from_arguments:
-            self._parse_optional_arguments(['mean', 'std_dev'])
-            for k, v in self._optional_constructor_arguments.items():
-                if k is 'mean' and not isinstance(v, float):
-                    raise n2d2.error_handler.WrongInputType("mean", str(type(v)), ["float"])
-                if k is 'std_dev' and not isinstance(v, float):
-                    raise n2d2.error_handler.WrongInputType("std_dev", str(type(v)), ["float"])
-            self._set_N2D2_object(self._filler_generators[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
-            self._set_N2D2_parameters(self._config_parameters)
 
-    @classmethod
-    def create_from_N2D2_object(cls, N2D2_object):
-        filler = cls(**cls.load_N2D2_parameters(N2D2_object), from_arguments=False)
-        filler._set_N2D2_object(N2D2_object)
-        filler._optional_constructor_arguments['mean'] = filler._N2D2_object.getMean()
-        filler._optional_constructor_arguments['std_dev'] = filler._N2D2_object.getStdDev()
-        return filler
+        self._parse_optional_arguments(['mean', 'std_dev'])
+        for k, v in self._optional_constructor_arguments.items():
+            if k is 'mean' and not isinstance(v, float):
+                raise n2d2.error_handler.WrongInputType("mean", str(type(v)), ["float"])
+            if k is 'std_dev' and not isinstance(v, float):
+                raise n2d2.error_handler.WrongInputType("std_dev", str(type(v)), ["float"])
+        self._set_N2D2_object(self._filler_generators[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
+        self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
+
+    def _load_N2D2_optional_parameters(self, N2D2_object):
+        self._optional_constructor_arguments['mean'] = N2D2_object.getMean()
+        self._optional_constructor_arguments['std_dev'] = N2D2_object.getStdDev()
 
 
 class Xavier(Filler):
@@ -167,7 +157,7 @@ class Xavier(Filler):
         "datatype": "Datatype",
     })
 
-    def __init__(self, from_arguments=True, **config_parameters):
+    def __init__(self,  **config_parameters):
         """
         :param datatype: datatype, default='float'
         :type datatype: str, optional
@@ -179,39 +169,34 @@ class Xavier(Filler):
         :type scaling: float, optional
         """
         Filler.__init__(self, **config_parameters)
-        if not isinstance(from_arguments, bool):
-            raise n2d2.error_handler.WrongInputType("from_arguments", str(type(from_arguments)), ["bool"])
-        if from_arguments:
-            self._parse_optional_arguments(['variance_norm', 'distribution', 'scaling'])
-            for k, v in self._optional_constructor_arguments.items():
-                if k is 'scaling' and not isinstance(v, float):
-                    raise n2d2.error_handler.WrongInputType("scaling", str(type(v)), ["float"])
-                if k is 'std_dev' and not isinstance(v, float):
-                    raise n2d2.error_handler.WrongInputType("std_dev", str(type(v)), ["float"])
-                if k is "variance_norm" and v not in self._filler_generators[self._model_key].VarianceNorm.__members__.keys():
-                    raise n2d2.error_handler.WrongValue("variance_norm", v,
-                            ", ".join(self._filler_generators[self._model_key].VarianceNorm.__members__.keys()))
-                if k is "distribution" and v not in self._filler_generators[self._model_key].Distribution.__members__.keys():
-                    raise n2d2.error_handler.WrongValue("distribution", v,
-                            ", ".join(self._filler_generators[self._model_key].Distribution.__members__.keys()))
 
-            if 'variance_norm' in self._optional_constructor_arguments:
-                self._optional_constructor_arguments['variance_norm'] = \
-                    self._filler_generators[self._model_key].VarianceNorm.__members__[self._optional_constructor_arguments['variance_norm']]
-            if 'distribution' in self._optional_constructor_arguments:
-                self._optional_constructor_arguments['distribution'] = \
-                    self._filler_generators[self._model_key].Distribution.__members__[self._optional_constructor_arguments['distribution']]
-            self._set_N2D2_object(self._filler_generators[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
-            self._set_N2D2_parameters(self._config_parameters)
+        self._parse_optional_arguments(['variance_norm', 'distribution', 'scaling'])
+        for k, v in self._optional_constructor_arguments.items():
+            if k is 'scaling' and not isinstance(v, float):
+                raise n2d2.error_handler.WrongInputType("scaling", str(type(v)), ["float"])
+            if k is 'std_dev' and not isinstance(v, float):
+                raise n2d2.error_handler.WrongInputType("std_dev", str(type(v)), ["float"])
+            if k is "variance_norm" and v not in self._filler_generators[self._model_key].VarianceNorm.__members__.keys():
+                raise n2d2.error_handler.WrongValue("variance_norm", v,
+                        ", ".join(self._filler_generators[self._model_key].VarianceNorm.__members__.keys()))
+            if k is "distribution" and v not in self._filler_generators[self._model_key].Distribution.__members__.keys():
+                raise n2d2.error_handler.WrongValue("distribution", v,
+                        ", ".join(self._filler_generators[self._model_key].Distribution.__members__.keys()))
 
-    @classmethod
-    def create_from_N2D2_object(cls, N2D2_object):
-        filler = cls(**cls.load_N2D2_parameters(N2D2_object), from_arguments=False)
-        filler._set_N2D2_object(N2D2_object)
-        filler._optional_constructor_arguments['variance_norm'] = filler._N2D2_object.getVarianceNorm()
-        filler._optional_constructor_arguments['distribution'] = filler._N2D2_object.getDistribution()
-        filler._optional_constructor_arguments['scaling'] = filler._N2D2_object.getScaling()
-        return filler
+        if 'variance_norm' in self._optional_constructor_arguments:
+            self._optional_constructor_arguments['variance_norm'] = \
+                self._filler_generators[self._model_key].VarianceNorm.__members__[self._optional_constructor_arguments['variance_norm']]
+        if 'distribution' in self._optional_constructor_arguments:
+            self._optional_constructor_arguments['distribution'] = \
+                self._filler_generators[self._model_key].Distribution.__members__[self._optional_constructor_arguments['distribution']]
+        self._set_N2D2_object(self._filler_generators[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
+        self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
+
+    def _load_N2D2_optional_parameters(self, N2D2_object):
+        self._optional_constructor_arguments['variance_norm'] = N2D2_object.getVarianceNorm()
+        self._optional_constructor_arguments['distribution'] = N2D2_object.getDistribution()
+        self._optional_constructor_arguments['scaling'] = N2D2_object.getScaling()
 
 
 class Constant(Filler):
@@ -245,10 +230,7 @@ class Constant(Filler):
                     raise n2d2.error_handler.WrongInputType("value", str(type(v)), ["float"])
             self._set_N2D2_object(self._filler_generators[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
             self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
-    @classmethod
-    def create_from_N2D2_object(cls, N2D2_object):
-        filler = cls(**cls.load_N2D2_parameters(N2D2_object), from_arguments=False)
-        filler._set_N2D2_object(N2D2_object)
-        filler._optional_constructor_arguments['value'] = filler._N2D2_object.getValue()
-        return filler
+    def _load_N2D2_optional_parameters(self, N2D2_object):
+        self._optional_constructor_arguments['value'] = N2D2_object.getValue()

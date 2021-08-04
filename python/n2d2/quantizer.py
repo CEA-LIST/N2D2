@@ -25,13 +25,17 @@ from n2d2.cells.nn import Trainable
 from abc import ABC, abstractmethod
 
 class Quantizer(N2D2_Interface, ABC): 
-    _convention_converter= n2d2.ConventionConverter({
+    _quantizer_parameter= {
         "range": "Range",
         "apply_scaling": "ApplyScaling",
         "apply_quantization": "ApplyQuantization",
         "quant_mode": "QuantMode",
         "alpha": "Alpha", # TODO : alpha is only for SATAct ...
-    })
+        "desc_rule": "DescRule",
+        "end_rand_IT": "EndRandIT",
+        "rand_range": "RandRange",
+        "start_rand_IT": "StartRandIT"
+    }
     
     @abstractmethod
     def __init__(self, **config_parameters):
@@ -94,7 +98,6 @@ class CellQuantizer(Quantizer, ABC):
         self.N2D2().addBiases(biases.N2D2(), diff_biases.N2D2())
 
 class ActivationQuantizer(Quantizer, ABC):
-
     @abstractmethod
     def __init__(self, **config_parameters):
         Quantizer.__init__(self, **config_parameters)
@@ -108,8 +111,13 @@ class SATCell(CellQuantizer):
         'Frame<float>': N2D2.SATQuantizerCell_Frame_float,
         'Frame_CUDA<float>': N2D2.SATQuantizerCell_Frame_CUDA_float
     }
-
-    def __init__(self, from_arguments=True, **config_parameters):
+    _convention_converter= n2d2.ConventionConverter({
+        "apply_scaling": "ApplyScaling",
+        "apply_quantization": "ApplyQuantization",
+        "quant_mode": "QuantMode",
+        "range": "Range",
+    })
+    def __init__(self, **config_parameters):
         """
         :param range: Range of Quantization, can be ``1`` for binary, ``255`` for 8-bits etc.., default=255
         :type range: int, optional
@@ -121,17 +129,17 @@ class SATCell(CellQuantizer):
         :type apply_scaling: bool, optional
         """
         CellQuantizer.__init__(self, **config_parameters)
-        if from_arguments:
-            if "quant_mode" in config_parameters:
-                print(", ".join(self._quantizer_generators[self._model_key].QuantMode.__members__.keys()))
-                quant_mode = config_parameters["quant_mode"]
-                if quant_mode not in self._quantizer_generators[self._model_key].QuantMode.__members__.keys():
-                    raise n2d2.error_handler.WrongValue("quant_mode", quant_mode,
-                            ", ".join(self._quantizer_generators[self._model_key].QuantMode.__members__.keys()))
+        if "quant_mode" in config_parameters:
+            print(", ".join(self._quantizer_generators[self._model_key].QuantMode.__members__.keys()))
+            quant_mode = config_parameters["quant_mode"]
+            if quant_mode not in self._quantizer_generators[self._model_key].QuantMode.__members__.keys():
+                raise n2d2.error_handler.WrongValue("quant_mode", quant_mode,
+                        ", ".join(self._quantizer_generators[self._model_key].QuantMode.__members__.keys()))
 
-            # No optional constructor arguments
-            self._set_N2D2_object(self._quantizer_generators[self._model_key]())
-            self._set_N2D2_parameters(self._config_parameters)
+        # No optional constructor arguments
+        self._set_N2D2_object(self._quantizer_generators[self._model_key]())
+        self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
     """
     Access the quantized weights of the cell the quantizer is attached to.
@@ -171,8 +179,16 @@ class SATAct(ActivationQuantizer, Trainable):
         'Frame<float>': N2D2.SATQuantizerActivation_Frame_float,
         'Frame_CUDA<float>': N2D2.SATQuantizerActivation_Frame_CUDA_float
     }
-
-    def __init__(self, from_arguments=True, **config_parameters):
+    _convention_converter= n2d2.ConventionConverter({
+        "range": "Range",
+        "alpha": "Alpha",
+        "desc_rule": "DescRule",
+        "end_rand_IT": "EndRandIT",
+        "rand_range": "RandRange",
+        "start_rand_IT": "StartRandIT"
+    })
+        
+    def __init__(self, **config_parameters):
         """
         :param range: Range of Quantization, can be ``1`` for binary, ``255`` for 8-bits etc.., default=255
         :type range: int, optional
@@ -183,24 +199,27 @@ class SATAct(ActivationQuantizer, Trainable):
         """
         ActivationQuantizer.__init__(self, **config_parameters)
 
-        if from_arguments:
-            # No optional constructor arguments
-            self._N2D2_object = self._quantizer_generators[self._model_key]()
+        # No optional constructor arguments
+        self._N2D2_object = self._quantizer_generators[self._model_key]()
 
-            if 'solver' not in self._config_parameters:
-                self._config_parameters['solver'] = \
-                    n2d2.converter.from_N2D2_object(self._N2D2_object.getSolver())
-
-            """Set and initialize here all complex cells members"""
-            for key, value in self._config_parameters.items():
-                if key is 'solver':
-                    if isinstance(value, n2d2.solver.Solver):
-                        self._N2D2_object.setSolver(value.N2D2())
-                    else:
-                        raise n2d2.error_handler.WrongInputType("solver", str(type(value)),
-                                                                [str(n2d2.solver.Solver)])
+        """Set and initialize here all complex cells members"""
+        for key, value in self._config_parameters.items():
+            if key is 'solver':
+                if isinstance(value, n2d2.solver.Solver):
+                    self._N2D2_object.setSolver(value.N2D2())
                 else:
-                    self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+                    raise n2d2.error_handler.WrongInputType("solver", str(type(value)),
+                                                            [str(n2d2.solver.Solver)])
+            else:
+                self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+        self.load_N2D2_parameters(self.N2D2())
+
+    @classmethod
+    def _get_N2D2_complex_parameters(cls, N2D2_object):
+        parameters = {}
+        parameters['solver'] = \
+            n2d2.converter.from_N2D2_object(N2D2_object.getSolver())
+        return parameters
 
     def set_solver(self, solver):
         self._config_parameters['solver'] = solver
@@ -209,7 +228,7 @@ class SATAct(ActivationQuantizer, Trainable):
     def get_solver(self):
         return self._config_parameters['solver']
     
-    def set_filler(self, solver):
+    def set_filler(self, filler):
         # This method override the virtual one in Trainable
         raise RuntimeError("Quantizer does not support Filler")
 

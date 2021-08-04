@@ -92,7 +92,7 @@ class test_Conv(test_params):
             "name": "test",
             "activation": n2d2.activation.Tanh(),
             "weights_solver": n2d2.solver.SGD(),
-            "sub_sample_dims": [0, 0],
+            "sub_sample_dims": [1, 1],
             "stride_dims": [2, 2],
             "dilation_dims": [1, 1],
             "padding_dims": [3, 3],
@@ -323,6 +323,28 @@ class test_Reshape(test_params):
         self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
         self.assertEqual(self.parameters["dims"], self.object.N2D2().getDims())
         super().test_parameters()
+
+class test_Resize(test_params):
+    def setUp(self):
+        self.parameters = {
+            "name": "test",
+            "outputs_width": 16,
+            "outputs_height":9,
+            "resize_mode":"BilinearTF",
+        }
+        self.object = n2d2.cells.Resize(**self.parameters)
+
+    def test_parameters(self):
+        # Need to instantiate the object (doing so by passing a dummy input)
+        tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
+        self.object(tensor)
+        self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
+        self.assertEqual(self.parameters["outputs_width"], self.object.N2D2().getResizeOutputWidth())
+        self.assertEqual(self.parameters["outputs_height"], self.object.N2D2().getResizeOutputHeight())
+        self.assertEqual(N2D2.ResizeCell.ResizeMode.__members__[self.parameters["resize_mode"]], 
+                self.object.N2D2().getMode())
+        super().test_parameters()
+
 
 ### TEST DATABASE ###
 

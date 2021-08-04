@@ -43,17 +43,15 @@ class test_ResetFiller(unittest.TestCase):
     """
     def setUp(self):
         self.value = 6.0
-
     def tearDown(self):
         n2d2.global_variables.default_model = "Frame"
-
     def test_Conv_CUDA(self):
         n2d2.global_variables.default_model = "Frame_CUDA"
         cell = n2d2.cells.Conv(1, 1, [1, 1])
         filler = n2d2.filler.Constant(value=self.value)
         cell.set_filler(filler)
-        cell.N2D2().resetBias()
-        cell.N2D2().resetWeights()
+        cell.refill_bias()
+        cell.refill_weights()
         self.assertEqual(cell.get_biases()[0][0], self.value)
         self.assertEqual(cell.get_weights()[0][0][0], self.value)
     def test_Fc_CUDA(self):
@@ -61,17 +59,17 @@ class test_ResetFiller(unittest.TestCase):
         cell = n2d2.cells.Fc(1, 1)
         filler = n2d2.filler.Constant(value=self.value)
         cell.set_filler(filler)
-        cell.N2D2().resetBias()
-        cell.N2D2().resetWeights()
-        self.assertEqual(cell.get_biases()[0][0], self.value)
+        cell.refill_bias()
+        cell.refill_weights()
         self.assertEqual(cell.get_weights()[0][0][0], self.value)
+        self.assertEqual(cell.get_biases()[0][0], self.value)
     def test_Conv(self):
         n2d2.global_variables.default_model = "Frame"
         cell = n2d2.cells.Conv(1, 1, [1, 1])
         filler = n2d2.filler.Constant(value=self.value)
         cell.set_filler(filler)
-        cell.N2D2().resetBias()
-        cell.N2D2().resetWeights()
+        cell.refill_bias()
+        cell.refill_weights()
         self.assertEqual(cell.get_biases()[0][0], self.value)
         self.assertEqual(cell.get_weights()[0][0][0], self.value)
     def test_Fc(self):
@@ -79,8 +77,8 @@ class test_ResetFiller(unittest.TestCase):
         cell = n2d2.cells.Fc(1, 1)
         filler = n2d2.filler.Constant(value=self.value)
         cell.set_filler(filler)
-        cell.N2D2().resetBias()
-        cell.N2D2().resetWeights()
+        cell.refill_bias()
+        cell.refill_weights()
         self.assertEqual(cell.get_biases()[0][0], self.value)
         self.assertEqual(cell.get_weights()[0][0][0], self.value) 
 if __name__ == '__main__':

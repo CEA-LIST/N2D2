@@ -76,14 +76,14 @@ class N2D2_Interface:
         """
         self._config_parameters = config_parameters
         self._N2D2_object = None
-        
-
-
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object):
-        interface = cls(**cls.load_N2D2_parameters(N2D2_object), from_arguments=False)
-        interface._set_N2D2_object(N2D2_object)
+        interface = cls.__new__(cls)
+        interface._constructor_arguments = {}
+        interface._optional_constructor_arguments = {}
+        interface.load_N2D2_parameters(N2D2_object)
+        interface._N2D2_object = N2D2_object
         return interface
 
     def _set_N2D2_object(self, N2D2_object):
@@ -141,6 +141,7 @@ class N2D2_Interface:
             raise ValueError(key + " is not a parameter of " + self.get_name()) 
 
     def _parse_optional_arguments(self, optional_argument_keys):
+        self.optional_argument_name = optional_argument_keys
         for key in optional_argument_keys:
             if key in self._config_parameters:
                 self._optional_constructor_arguments[key] = self._config_parameters.pop(key)
@@ -190,14 +191,37 @@ class N2D2_Interface:
         else:
             return str(value)
 
+    def load_N2D2_parameters(self, N2D2_object):
+        self._config_parameters = self._get_N2D2_parameters(N2D2_object)
+        self._load_N2D2_optional_parameters(N2D2_object)
+        self._load_N2D2_constructor_parameters(N2D2_object)
+
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        """Method to load constructor paramaters
+        """
+        pass
+
+    def _load_N2D2_optional_parameters(self, N2D2_object):
+        """Method to load optional paramaters
+        """
+        pass
 
     @classmethod
-    def load_N2D2_parameters(cls, N2D2_object):
+    def _get_N2D2_complex_parameters(cls, N2D2_object):
+        """Method to overwrite in order to get complex parameters (like filler or solver for a cell)
+        """
+        return {}
+
+    @classmethod
+    def _get_N2D2_parameters(cls, N2D2_object):
         str_params = N2D2_object.getParameters()
         parameters = {}
         for param in str_params:
             parameters[cls._n2d2_to_python_convention(param)] = cls._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](
                 N2D2_object.getParameterAndType(param)[0])
+
+        for key, value in cls._get_N2D2_complex_parameters(N2D2_object).items():
+            parameters[key] = value
         return parameters
 
     def __str__(self):
