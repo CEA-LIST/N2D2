@@ -662,6 +662,23 @@ unsigned int N2D2::Cell_Frame<T>::getMaxOutput(unsigned int batchPos) const
     return std::distance(output.begin(),
                          std::max_element(output.begin(), output.end()));
 }
+template<>
+std::string N2D2::Cell_Frame<double>::getPyDataType() {
+    return std::string("double");
+}
+
+template<>
+std::string N2D2::Cell_Frame<float>::getPyDataType() {
+    return std::string("float");
+}
+template<>
+std::string N2D2::Cell_Frame<half_float::half>::getPyDataType() {
+    return std::string("half_float");
+}
+template<class T>
+std::string N2D2::Cell_Frame<T>::getPyModel(){
+    return std::string("Frame");
+}
 
 namespace N2D2 {
     template class Cell_Frame<half_float::half>;

@@ -946,6 +946,24 @@ N2D2::Cell_Frame_CUDA<T>::~Cell_Frame_CUDA()
     // dtor
 }
 
+template<>
+std::string N2D2::Cell_Frame_CUDA<double>::getPyDataType() {
+    return std::string("double");
+}
+
+template<>
+std::string N2D2::Cell_Frame_CUDA<float>::getPyDataType() {
+    return std::string("float");
+}
+template<>
+std::string N2D2::Cell_Frame_CUDA<half_float::half>::getPyDataType() {
+    return std::string("half_float");
+}
+template<class T>
+std::string N2D2::Cell_Frame_CUDA<T>::getPyModel(){
+    return std::string("Frame_CUDA");
+}
+
 namespace N2D2 {
     template class Cell_Frame_CUDA<half_float::half>;
     template class Cell_Frame_CUDA<float>;

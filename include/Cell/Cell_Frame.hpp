@@ -138,7 +138,8 @@ public:
     {
         mDiffInputs = diffInputs;
     }
-
+    virtual std::string getPyDataType();
+    virtual std::string getPyModel();
     virtual BaseTensor& getDiffOutputs(unsigned int index = 0) {
         return mDiffOutputs[index];
     }
