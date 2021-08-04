@@ -1413,7 +1413,6 @@ class GlobalPool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
 
     _convention_converter= n2d2.ConventionConverter(_parameters)
     def __init__(self,
-                 from_arguments=True,
                  **config_parameters):
         # TODO : @ johannes : Why don't we use super().init(self, pool_dims, **config_parameters) ? instead of copy pasting code ?
 

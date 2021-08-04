@@ -213,7 +213,7 @@ class Constant(Filler):
         "datatype": "Datatype",
     })
 
-    def __init__(self, from_arguments=True, **config_parameters):
+    def __init__(self, **config_parameters):
         """
         :param datatype: datatype, default='float'
         :type datatype: str, optional
@@ -221,15 +221,13 @@ class Constant(Filler):
         :type value: float, optional
         """
         Filler.__init__(self, **config_parameters)
-        if not isinstance(from_arguments, bool):
-            raise n2d2.error_handler.WrongInputType("from_arguments", str(type(from_arguments)), ["bool"])
-        if from_arguments:
-            self._parse_optional_arguments(['value'])
-            for k, v in self._optional_constructor_arguments.items():
-                if k is 'value' and not isinstance(v, float):
-                    raise n2d2.error_handler.WrongInputType("value", str(type(v)), ["float"])
-            self._set_N2D2_object(self._filler_generators[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
-            self._set_N2D2_parameters(self._config_parameters)
+
+        self._parse_optional_arguments(['value'])
+        for k, v in self._optional_constructor_arguments.items():
+            if k is 'value' and not isinstance(v, float):
+                raise n2d2.error_handler.WrongInputType("value", str(type(v)), ["float"])
+        self._set_N2D2_object(self._filler_generators[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
+        self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
     def _load_N2D2_optional_parameters(self, N2D2_object):
