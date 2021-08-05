@@ -44,7 +44,13 @@ class Filler(N2D2_Interface, ABC):
         output = self.get_type()
         output += N2D2_Interface.__str__(self)
         return output
-
+    @classmethod
+    def create_from_N2D2_object(cls, N2D2_object):
+        n2d2_filler = super().create_from_N2D2_object(N2D2_object)
+        # TODO : retrieve model and datatype of filler
+        n2d2_filler._model_key = n2d2.global_variables.default_model + "<" \
+            + n2d2.global_variables.default_datatype + ">"
+        return n2d2_filler
 
 class He(Filler):
     """

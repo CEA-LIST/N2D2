@@ -42,6 +42,13 @@ class Solver(N2D2_Interface, ABC):
         N2D2_Interface.__init__(self, **config_parameters)
         self._model_key = self._model + '<' + self._datatype + '>'
 
+    @classmethod
+    def create_from_N2D2_object(cls, N2D2_object):
+        n2d2_solver = super().create_from_N2D2_object(N2D2_object)
+        # TODO : retrieve model and datatype of solver
+        n2d2_solver._model_key = n2d2.global_variables.default_model + "<" \
+            + n2d2.global_variables.default_datatype + ">"
+        return n2d2_solver
     def get_type(self):
         return type(self).__name__
 

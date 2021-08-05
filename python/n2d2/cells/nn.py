@@ -120,7 +120,6 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
         n2d2_cell = super().create_from_N2D2_object(N2D2_object)
 
         n2d2_cell._model = N2D2_object.getPyModel()
-        # TODO : infer the datatype of a cell (add a method in cpp ?) ! (maybe add a method for model to !)
         if isinstance(n2d2_cell, Datatyped):
             Datatyped.__init__(n2d2_cell, datatype=N2D2_object.getPyDataType())
             n2d2_cell._model_key = n2d2_cell._model + '<' + n2d2_cell._datatype + '>'

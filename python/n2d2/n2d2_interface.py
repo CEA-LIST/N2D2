@@ -123,9 +123,18 @@ class N2D2_Interface:
 
 
     def set_parameter(self, key, value):
-        self._config_parameters[key] = value
-        self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
-
+        if key in self._constructor_arguments:
+            self._constructor_arguments[key] = value
+            self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+        elif key in self._optional_constructor_arguments:
+            self._optional_constructor_arguments[key] = value
+            self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+        elif key in self._config_parameters:
+            self._config_parameters[key] = value
+            self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+        else:
+            raise ValueError(key + " is not a parameter of " + self.get_name()) 
+        
     def get_parameter(self, key):
         """
         :param key: Parameter name

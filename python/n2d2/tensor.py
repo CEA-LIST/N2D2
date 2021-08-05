@@ -44,6 +44,10 @@ class Tensor:
     _tensor_generators = {
         "f": N2D2.Tensor_float,
         "float": N2D2.Tensor_float,
+        # "short": N2D2.Tensor_short,
+        # "s": N2D2.Tensor_short,
+        # "long": N2D2.Tensor_long,
+        # "l": N2D2.Tensor_long,
         "i": N2D2.Tensor_int,
         "int": N2D2.Tensor_int,
         "b": N2D2.Tensor_bool,
@@ -57,6 +61,10 @@ class Tensor:
     _cuda_tensor_generators = {
         "f": N2D2.CudaTensor_float,
         "float": N2D2.CudaTensor_float,
+        # "short": N2D2.CudaTensor_short,
+        # "s": N2D2.CudaTensor_short,
+        # "long": N2D2.CudaTensor_long,
+        # "l": N2D2.CudaTensor_long,
         "i": N2D2.CudaTensor_int,
         "int": N2D2.CudaTensor_int,
         "d": N2D2.CudaTensor_double,
