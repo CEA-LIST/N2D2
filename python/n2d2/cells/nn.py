@@ -514,7 +514,7 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
         :param value:
         :type value: :py:class:`n2d2.Tensor`
         """
-        if channel_index >= self.N2D2().getNbChannels():
+        if channel_index >= self.N2D2().getInputsSize():
             raise ValueError("Channel index : " + str(channel_index) + " must be < " + str(self.N2D2().getNbChannels()) +")")
         if output_index >= self.N2D2().getNbOutputs():
             raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
@@ -527,7 +527,7 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
         :param channel_index:
         :type channel_index: int
         """
-        if channel_index >= self.N2D2().getNbChannels():
+        if channel_index >= self.N2D2().getInputsSize():
             raise ValueError("Channel index : " + str(channel_index) + " must be < " + str(self.N2D2().getNbChannels()) +")")
         if output_index >= self.N2D2().getNbOutputs():
             raise ValueError("Output index : " + str(output_index) + " must be < " + str(self.N2D2().getNbOutputs()) +")")
@@ -543,7 +543,7 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
         weights = []
         for o in range(self.N2D2().getNbOutputs()):
             chan = []
-            for c in range(self.N2D2().getNbChannels()):
+            for c in range(self.N2D2().getInputsSize()):
                 tensor = N2D2.Tensor_float([])
                 self.N2D2().getWeight(o, c, tensor)
                 chan.append(n2d2.Tensor.from_N2D2(tensor))
