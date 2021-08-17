@@ -125,6 +125,33 @@ function(add_n2d2_doc source target deps)
     endif()
 endfunction()
 
+function(add_n2d2_pybind name source linked_libs) # TODO : This function doesn't works 
+    # Python binding
+    # Requires PyBind >= 2.2, because previous versions had a bug with virtual 
+    # inherance: https://github.com/pybind/pybind11/issues/865
+
+    find_package(Python 3.7 COMPONENTS Interpreter Development)
+
+    find_package(pybind11 CONFIG 2.2)
+    if(NOT pybind11_FOUND)
+        find_package(pybind11 2.2)
+    endif()
+
+    if(pybind11_FOUND)
+        message(STATUS "System pybind11 found.")
+    else()
+        message(STATUS "Using third_party/pybind11.")
+        add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/pybind11)
+    endif()
+
+    pybind11_add_module(${name} MODULE ${source})
+    message(STATUS "pybind11 include dirs: " "${pybind11_INCLUDE_DIRS}")
+    target_include_directories(${name} PUBLIC ${pybind11_INCLUDE_DIRS})
+    target_compile_definitions(${name} PUBLIC PYBIND=1)
+    target_link_libraries_whole_archive(${name} ${linked_libs} ${ARGN})
+
+endfunction()
+
 # Must be called after find_package(CUDA) as the find_package call resets CUDA_NVCC_FLAGS
 macro(set_nvcc_flags)
     set(CUDA_PROPAGATE_HOST_FLAGS OFF)
@@ -148,10 +175,16 @@ project(N2D2)
 # n2d2_lib target
 file(GLOB_RECURSE src_files "src/*.cpp")
 file(GLOB_RECURSE src_files_python "src/python/*.cpp")
+
+list(REMOVE_ITEM src_files "${CMAKE_CURRENT_LIST_DIR}/src/python/pybind_N2D2.cpp")
+list(REMOVE_ITEM src_files_python "${CMAKE_CURRENT_LIST_DIR}/src/python/pybind_N2D2.cpp")
+
 foreach(item ${src_files_python})
     list(REMOVE_ITEM src_files ${item})
 endforeach()
+
 add_library(n2d2_lib STATIC ${src_files})
+set(src_files_python_os ${src_files_python} PARENT_SCOPE)
 
 target_include_directories(n2d2_lib PUBLIC "include")
 target_compile_definitions(n2d2_lib PUBLIC N2D2_COMPILE_PATH=\"${CMAKE_SOURCE_DIR}\")
@@ -246,27 +279,6 @@ if(MSVC)
     endif()
 endif()
 
-# Python binding
-# Requires PyBind >= 2.2, because previous versions had a bug with virtual 
-# inherance: https://github.com/pybind/pybind11/issues/865
-find_package(Python COMPONENTS Interpreter Development)
-find_package(pybind11 CONFIG 2.2)
-if(NOT pybind11_FOUND)
-    find_package(pybind11 2.2)
-endif()
-
-if(pybind11_FOUND)
-    message(STATUS "System pybind11 found.")
-else()
-    message(STATUS "Using third_party/pybind11.")
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/pybind11)
-endif()
-
-pybind11_add_module(N2D2 MODULE ${src_files_python})
-message(STATUS "pybind11 include dirs: " "${pybind11_INCLUDE_DIRS}")
-target_include_directories(N2D2 PUBLIC ${pybind11_INCLUDE_DIRS})
-target_compile_definitions(N2D2 PUBLIC PYBIND=1)
-target_link_libraries_whole_archive(N2D2 n2d2_lib)
 
 
 
@@ -346,6 +358,30 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     foreach(file ${src_exec})
         add_n2d2_executable(${file} exec n2d2_lib)
     endforeach()
+
+    # pybind
+    list(APPEND src_files_python "${CMAKE_CURRENT_LIST_DIR}/src/python/pybind_N2D2.cpp")
+    # add_n2d2_pybind(N2D2 ${src_files_python} n2d2_lib)
+
+    find_package(Python COMPONENTS Interpreter Development) # This module doesn't work if CMake < 3.12
+
+    find_package(pybind11 CONFIG 2.2)
+    if(NOT pybind11_FOUND)
+        find_package(pybind11 2.2)
+    endif()
+
+    if(pybind11_FOUND)
+        message(STATUS "System pybind11 found.")
+    else()
+        message(STATUS "Using third_party/pybind11.")
+        add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/pybind11)
+    endif()
+
+    pybind11_add_module(N2D2 MODULE ${src_files_python})
+    message(STATUS "pybind11 include dirs: " "${pybind11_INCLUDE_DIRS}")
+    target_include_directories(N2D2 PUBLIC ${pybind11_INCLUDE_DIRS})
+    target_compile_definitions(N2D2 PUBLIC PYBIND=1)
+    target_link_libraries_whole_archive(N2D2 n2d2_lib ${ARGN})
 
 
     # docs target
