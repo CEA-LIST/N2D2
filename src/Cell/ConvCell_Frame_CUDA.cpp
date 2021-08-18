@@ -134,6 +134,22 @@ void N2D2::ConvCell_Frame_CUDA<T>::setExtendedPadding(
 }
 
 template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::resetWeights()
+{
+    for (unsigned int i = 0, size = mSharedSynapses.size(); i < size; i++){
+        mWeightsFiller->apply(mSharedSynapses[i]);
+    }
+    mSharedSynapses.synchronizeHToD();
+}
+
+template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::resetBias()
+{
+    mBiasFiller->apply(*mBias);
+    mBias->synchronizeHToD();
+}
+
+template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::initialize()
 {
     if (!mNoBias) {
@@ -584,6 +600,8 @@ template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
 {
     // BEGIN: addition to initialize()
+    
+    // NOTE: Mapping has to be initialized here because required by cuDNN
     if (mMapping.empty()) {
         mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
     }
@@ -602,7 +620,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInputChan
             if (mBias->dimX() != 1 || mBias->dimY() != 1
                 || mBias->dimZ() != getNbOutputs() || mBias->dimB() != 1)
             {
-                throw std::runtime_error("ConvCell_Frame_CUDA<T>::initialize():"
+                throw std::runtime_error("ConvCell_Frame_CUDA<T>::initializeParameters():"
                     " in cell " + mName + ", wrong size for shared bias");
             }
         }
@@ -660,7 +678,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInputChan
                             extWeights->dims().begin()))
             {
                 std::stringstream errorStr;
-                errorStr << "ConvCell_Frame_CUDA<T>::initialize(): in cell "
+                errorStr << "ConvCell_Frame_CUDA<T>::initializeParameters(): in cell "
                     << mName << ", mismatch between external weights dim. ("
                     << extWeights->dims() << ") and expected dim. ("
                     << kernelDims << ")";
@@ -743,10 +761,35 @@ void N2D2::ConvCell_Frame_CUDA<T>::initializeWeightQuantizer()
 
 
 template <class T>
+void N2D2::ConvCell_Frame_CUDA<T>::check_input()
+{
+    if (mInputs.size() != mSharedSynapses.size()) {
+          throw std::runtime_error("mInputs.size() != mSharedSynapses.size() for cell " + mName + 
+          ". Please verify that the number of input tensors given to the cell is"
+          " equal to the number of inputs defined for the cell.");
+    }
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].dimZ() != mSharedSynapses[k].dimZ()*mNbGroups[k]){
+            std::cout << "mInputs.dimZ(): " << mInputs[k].dimZ() << std::endl;
+            std::cout << "mSharedSynapses.dimZ(): " << mSharedSynapses[k].dimZ() << std::endl;
+            std::cout << "mNbGroups: " << mNbGroups[k] << std::endl;
+            std::stringstream ss;
+            ss << "Unmatching dimension Z"
+            " between input and weight " << k << " for cell " + mName;
+            throw std::runtime_error(ss.str());
+        }
+        //std::cout << mName << " " << k << std::endl;
+    }
+}
+
+template <class T>
 void N2D2::ConvCell_Frame_CUDA<T>::initializeDataDependent() 
 {
     // NOTE: this is addition to initialize()
     Cell_Frame_CUDA<T>::initializeDataDependent();
+
+    check_input();
+
     int dev;
     CHECK_CUDA_STATUS(cudaGetDevice(&dev));
     unsigned int nbChannels = 0;
@@ -1133,6 +1176,9 @@ void N2D2::ConvCell_Frame_CUDA<T>::propagate(bool inference)
             << mName << Utils::cdef << std::endl;
         partitionSharedSynapses();
     }
+
+    check_input();
+
 
     /**
      * 1.0

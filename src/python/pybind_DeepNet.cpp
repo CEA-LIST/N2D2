@@ -102,6 +102,7 @@ void init_DeepNet(py::module &m) {
     // .def("logLabelsLegend", &DeepNet::logLabelsLegend, py::arg("fileName"))
     .def("logTimings", &DeepNet::logTimings, py::arg("fileName"), py::arg("timings"))
     .def("logReceptiveFields", &DeepNet::logReceptiveFields, py::arg("fileName"))
+    .def("exportNetworkFreeParameters", &DeepNet::exportNetworkFreeParameters, py::arg("dirName"))
     ;
 }
 }

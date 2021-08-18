@@ -68,6 +68,7 @@ class Tensor:
         "int": N2D2.CudaTensor_int,
         "d": N2D2.CudaTensor_double,
         "double": N2D2.CudaTensor_double,
+        # bool datatype cannot be defined for CudaTensor
     }
     
     _dim_format = {
@@ -75,17 +76,18 @@ class Tensor:
         "Numpy": lambda x: [i for i in reversed(x)],
     }
 
+    # TODO: Why is default not N2D2?
     def __init__(self, dims, value=None, cuda=False, datatype="float", cell=None, dim_format='Numpy'):
         """
         :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (the convention used depends of the ``dim_format`` argument, by default it's the same as ``Numpy``)
         :type dims: list
         :param value: A value to fill the :py:class:`n2d2.Tensor` object.
         :type value: Must be coherent with ``datatype``
-        :param datatype: Type of the data stored in the tensor, default=``float``
+        :param datatype: Type of the data stored in the tensor, default="float"
         :type datatype: str, optional
         :param cell: A reference to the object that created this tensor, default=None
         :type cell: :py:class:`n2d2.cells.NeuralNetworkCell`, optional
-        :param dim_format: Define the format used when you declare the dimensions of the tensor. The ``N2D2`` convention is the reversed of the ``Numpy`` the numpy one (e.g. a [2, 3] numpy array is equivalent to a [3, 2] N2D2 Tensor), default=``Numpy``
+        :param dim_format: Define the format used when you declare the dimensions of the tensor. The ``N2D2`` convention is the reversed of the ``Numpy`` the numpy one (e.g. a [2, 3] numpy array is equivalent to a [3, 2] N2D2 Tensor), default="Numpy"
         :type dim_format: str, optional
         """
         self._leaf=False
@@ -118,7 +120,7 @@ class Tensor:
             else:
                 self._tensor = generators[datatype](dims, value)
                 if cuda:
-                    # TODO a bug cause the "value" argument to be ignored for CUDA tensor :
+                    # The "value" argument is ignored for CUDA tensor, so we need to fill the value manually.
                     # example : N2D2.CudaTensor_int([2, 2], value=int(5))
                     self[0:] = value
                     self.htod() # Need to synchronize the host to the device
@@ -135,8 +137,7 @@ class Tensor:
         return self._tensor
 
     def set_values(self, values):
-        """
-        Fill the tensor with a list of values.
+        """Fill the tensor with a list of values.
 
         .. testcode::
 
@@ -181,14 +182,12 @@ class Tensor:
 
 
     def nb_dims(self):
-        """
-        Return the number of dimensions.
+        """Return the number of dimensions.
         """
         return len(self._tensor.dims())
 
     def dims(self):
-        """
-        Return dimensions with N2D2 convention 
+        """Return dimensions with N2D2 convention 
         """
         return self._tensor.dims()
 
@@ -205,19 +204,18 @@ class Tensor:
         return self._tensor.dimB()
 
     def shape(self):
-        """
-        Return dimensions with python convention 
+        """Return dimensions with python convention 
         """
         return [d for d in reversed(self._tensor.dims())]
     
     def data_type(self):
-        """
-        Return the data type of the object stored by the tensor.
+        """Return the data type of the object stored by the tensor.
         """
         return self._datatype
 
     def _get_index(self, coord):
         """From the coordinate returns the 1D index of an element in the tensor.
+
         :param coord: Tuple of the coordinate
         :type coord: tuple
         """
@@ -238,6 +236,7 @@ class Tensor:
         
     def _get_coord(self, index):
         """From the the 1D index, return the coordinate of an element in the tensor.
+
         :param index: index of an element
         :type index: int
         """ 
@@ -249,6 +248,7 @@ class Tensor:
 
     def reshape(self, new_dims):
         """Reshape the Tensor to the specified dims (defined by the Numpy convention). 
+
         :param new_dims: New dimensions
         :type new_dims: list
         """
@@ -263,13 +263,12 @@ class Tensor:
         self._tensor.reshape([int(d) for d in reversed(new_dims)])
 
     def copy(self):
-        """
-        Copy in memory the Tensor object.
+        """Copy in memory the Tensor object.
         """
         copy = Tensor(self.shape(), datatype=self.data_type(), cuda=self.is_cuda, cell=self.cell)
         copy._tensor.op_assign(self._tensor)
         return copy
-    
+
     def cpu(self):
         """Convert the tensor to a cpu tensor
         """
@@ -279,6 +278,7 @@ class Tensor:
             new_tensor = self._tensor_generators[self._datatype](self.dims())
             new_tensor.op_assign(self._tensor)
             self._tensor = new_tensor
+        return self
 
     def cuda(self):
         """Convert the tensor to a cuda tensor
@@ -289,6 +289,7 @@ class Tensor:
             new_tensor = self._cuda_tensor_generators[self._datatype](self.dims())
             new_tensor.op_assign(self._tensor)
             self._tensor = new_tensor
+        return self
 
     def to_numpy(self, copy=False):
         """Create a numpy array equivalent to the tensor.
@@ -355,6 +356,7 @@ class Tensor:
     @classmethod
     def from_N2D2(cls, N2D2_Tensor):
         """Convert an N2D2 tensor into a Tensor.
+
         :param N2D2_Tensor: An N2D2 Tensor to convert to a n2d2 Tensor.
         :type N2D2_Tensor: :py:class:`N2D2.BaseTensor` or :py:class:`N2D2.CudaBaseTensor`
         :return: Converted tensor
@@ -376,6 +378,7 @@ class Tensor:
             - the index of the flatten tensor;
             - a slice index of the flatten tensor. 
         If the ``value`` type doesn't match datatype, n2d2 tries an autocast. 
+
         :param index: Indicate the index of the item you want to set
         :type index: tuple, int, float, slice
         :param value: The value the item will take
@@ -543,7 +546,7 @@ class Interface(n2d2.provider.Provider):
         nb_channels = 0
         for tensor in tensors:
             if not isinstance(tensor, Tensor):
-                raise ValueError("The elements of 'tensors' should all be of type " + str(type(n2d2.tensor.Tensor)))
+                raise ValueError("The elements of 'tensors' should all be of type " + str(type(n2d2.Tensor)))
             else:
                 if tensor.dimX() != tensors[0].dimX():
                     raise ValueError("Tensors should have the same X dimension.")
@@ -576,6 +579,7 @@ class Interface(n2d2.provider.Provider):
     def dimZ(self):
         return self.dim_z
     def dims(self):
-        return [self.dimZ(), self.dimY(), self.dimX(), self.dimY()]
+        #return [self.dimB(), self.dimZ(), self.dimX(), self.dimY()]
+        return [self.dimX(), self.dimY(), self.dimZ(), self.dimB()]
     def get_tensors(self):
         return self.tensors

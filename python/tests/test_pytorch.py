@@ -22,14 +22,23 @@ from os import remove
 import torch
 import N2D2
 import n2d2
-from n2d2.cells.nn import Conv
-from n2d2 import tensor
 from time import sleep
+import unittest
 import n2d2.pytorch as pytorch
 
-# from n2d2.deepnet import Sequence, DeepNet
-import unittest
+from n2d2.utils import ConfigSection
+from n2d2.activation import Linear, Rectifier
+from n2d2.solver import SGD
+from n2d2.filler import Constant
+import n2d2.global_variables
 
+torch.backends.cudnn.enabled = True
+torch.backends.cudnn.benchmark = True
+weight_value = 0.05
+batch_size = 10
+learning_rate = 0.01 # Learning rate of N2D2 SGD default solver #args.lr
+comparison_precision = 0.001
+epochs = 10
 
 class test_tensor_conversion(unittest.TestCase):
 
@@ -90,313 +99,338 @@ class test_tensor_conversion(unittest.TestCase):
         long_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
         for i in long_n2d2_tensor: 
             self.assertEqual(i, 1)
+
 weight_value = 0.1
 batch_size = 2
 device = torch.device('cpu')
 
+
+# DEFINE A TESTER CLASS
+
+class Test_Networks():
+    """
+    A custom class to automate the test of two networks
+    """
+
+    def __init__(self, model1, model2, name="", test_backward=True, eval_mode=False, epochs=10, cuda=False):
+
+        self.epochs=epochs
+        self.test_backward = test_backward
+        self.model1 = model1
+        self.model2 = model2
+        self.cuda=cuda
+        if self.cuda:
+            self.model1 = self.model1.cuda()
+            self.model2 = self.model2.cuda()
+        if eval_mode:
+            self.model1.eval()
+            self.model2.eval()
+        
+        self.name = name
+        
+        if self.test_backward:
+            self.optimizer1 = torch.optim.SGD(self.model1.parameters(), lr=learning_rate)
+            self.optimizer2 = torch.optim.SGD(self.model2.parameters(), lr=learning_rate)
+            self.criterion1 = torch.nn.MSELoss()
+            self.criterion2 = torch.nn.MSELoss()
+
+    def compare_tensor(self, t1, t2):
+        for i, j in zip(torch.flatten(t1), torch.flatten(t2)):
+            i = i.item()
+            j = j.item()
+            if j != 0:
+                if abs(i-j)/abs(j) >= comparison_precision:
+                    return -1
+            else:
+                if abs(i) >= comparison_precision:
+                    return -1
+        return 0
+
+    def unit_test(self, input_tensor, label):
+        torch_tensor1 = input_tensor
+        torch_tensor2 = input_tensor.detach().clone()
+        label1 = label
+        label2 = label.detach().clone()
+        output1 = self.model1(torch_tensor1)
+        output2 = self.model2(torch_tensor2)
+
+        if self.compare_tensor(output1, output2) != 0:
+            print("The test " + self.name + " failed, the following output tensor are different :\nOutput1")
+            print(output1)
+            print("Output 2")
+            print(output2)
+            return -1
+        
+        if self.test_backward:
+            loss1 = self.criterion1(output1, label1)
+            self.optimizer1.zero_grad()
+            loss1.backward()
+            self.optimizer1.step()
+
+            loss2 = self.criterion2(output2, label2)
+            self.optimizer2.zero_grad()
+            loss2.backward()
+            self.optimizer2.step()
+            # if self.compare_tensor(loss1, loss2):
+            #     print("Different loss : ", loss1.item(), "|", loss2.item())
+            #     number_fail+=1
+            #     return -1
+        return 0
+    
+    def test_multiple_step(self, input_size, label_size):
+        for i in range(self.epochs):
+            input_tensor = torch.randn(input_size)
+            label_tensor = torch.ones(label_size)
+            if self.cuda:
+                input_tensor = input_tensor.cuda()
+                label_tensor = label_tensor.cuda()
+            if self.unit_test(input_tensor, label_tensor):
+                print("Difference occurred on Epoch :", i)
+                return -1
+        return 0
+
 # DEFINE NETWORKS ARCHITECTURE
-class Custom_Net(torch.nn.Module): 
-    """
-    A Pytorch network compose of one N2D2 conv cells interfaced with the LayerN2D2 object.
-    """  
-    def __init__(self):
-        super(Custom_Net, self).__init__()
-        net = N2D2.Network()
-        deepNet = N2D2.DeepNet(net)
-        N2D2Cell = N2D2.ConvCell_Frame_float(deepNet, "conv", [3, 3], 1, strideDims=[1, 1], paddingDims=[1, 1])
-        self.conv = pytorch.LayerN2D2(N2D2Cell)
-        self.cnn_layers = torch.nn.Sequential(
-            self.conv)
-        self.init = False
-
-    def forward(self, x):
-        if not self.init:
-            self.conv._add_input(pytorch.pytorch_interface._to_n2d2(x))
-            self.t_w = N2D2.Tensor_float([3, 3], weight_value)
-            for o in range(self.conv._N2D2.getNbOutputs()):
-                self.conv._N2D2.setBias(o, N2D2.Tensor_int([1], 0))
-                for c in range(self.conv._N2D2.getNbChannels()):
-                    self.conv._N2D2.setWeight(o, c,  self.t_w)
-            self.init = True
-        x = self.cnn_layers(x)
-        return x
-
-    def get_weight(self):
-        v = N2D2.Tensor_float([3, 3], weight_value)
-        for o in range(self.conv._N2D2.getNbOutputs()):
-                for c in range(self.conv._N2D2.getNbChannels()):
-                    self.conv._N2D2.getWeight(o, c,  v)
-                    print(v)
-        return v
-class Net(torch.nn.Module): 
-    """
-    A Pytorch network compose of one Pytorch conv cells.
-    """    
-    def __init__(self):
-        super(Net, self).__init__()
-        conv = torch.nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=1, bias=False)
-        torch.nn.init.constant_(conv.weight, weight_value)
-        self.conv = conv
-        self.cnn_layers = torch.nn.Sequential(
-            conv, 
-            torch.nn.Tanh())
-    # Defining the forward pass    
-    def forward(self, x):
-        x = self.cnn_layers(x)
-        return x
-    def get_weight(self):
-        print(self.conv.weight.data)
-        return self.conv.weight.data
-
-class Double(torch.nn.Module):  
-    """
-    A Pytorch network compose of two Pytorch conv cells.
-    """ 
-    def __init__(self):
-        super(Double, self).__init__()
-        self.conv = torch.nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=1, bias=False)
-        torch.nn.init.constant_(self.conv.weight, weight_value)
-        self.conv0 = torch.nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=1, bias=False)
-        torch.nn.init.constant_(self.conv0.weight, weight_value)
-        self.cnn_layers = torch.nn.Sequential(
-            self.conv, 
-            torch.nn.Tanh(),
-            self.conv0,
-            torch.nn.Tanh())
-    # Defining the forward pass    
-    def forward(self, x):
-        x = self.cnn_layers(x)
-        return x
-    def get_weight(self):
-        print("First layer weights :")
-        print(self.conv.weight.data)
-        print("Second layer weights :")
-        print(self.conv0.weight.data)
-        return self.conv.weight.data, self.conv0.weight.data
-
-
-class NIT(torch.nn.Module):
-    """
-    A Pytorch network compose of an n2d2 Sequence object composed of two N2D2 conv cells interfaced with the SequenceN2D2 object.
-    """ 
-    def __init__(self):
-        super(NIT, self).__init__()
-        empty_db = n2d2.database.Database()
-        provider = n2d2.provider.DataProvider(empty_db, [3, 3, 1], batchSize=batch_size)
-        self.deepnet = DeepNet()
-        self.test = Sequence([], name='test')
-        self.test.add(Conv(provider, nbOutputs=1, 
-        kernelDims=[3, 3], deepNet=self.deepnet, name="conv1", NoBias=True, strideDims=[1, 1], paddingDims=[1, 1]))
-        self.test.add(Conv(self.test.get_last(), nbOutputs=1, 
-        kernelDims=[3, 3], name="conv2", NoBias=True, strideDims=[1, 1], paddingDims=[1, 1]))
-
-        self.interface_deepnet = pytorch.SequenceN2D2(self.test)
-        self.e = torch.nn.Sequential(
-            self.interface_deepnet,
-        )
-        self.init=False
-    # Defining the forward pass    
-    def forward(self, x):
-        if not self.init:
-            for n_conv in self.test._sequence:
-                n_conv = n_conv.N2D2()
-
-                numpy_tensor = x.cpu().detach().numpy()
-                if x.is_cuda:
-                    n2d2_tensor = tensor.CUDA_Tensor([3, 3], datatype="float")
-                else:
-                    n2d2_tensor = tensor.Tensor([3, 3], datatype="float")        
-                n2d2_tensor.from_numpy(numpy_tensor)
-
-                if x.is_cuda:
-                    diffOutputs = tensor.CUDA_Tensor(n2d2_tensor.shape(), value=0)
-                else:
-                    diffOutputs = tensor.Tensor(n2d2_tensor.shape(), value=0)
-                n_conv.clearInputs()
-                n_conv.addInputBis(n2d2_tensor.N2D2(), diffOutputs.N2D2())
-
-                self.t_w = N2D2.Tensor_float([3, 3], weight_value)
-                for o in range(n_conv.getNbOutputs()):
-                    for c in range(n_conv.getNbChannels()):
-                        n_conv.setWeight(o, c,  self.t_w)
-            self.init = True
-        x = self.e(x)
-        return x
-    def get_weight(self):
-        print("First layer weights :")
-        v1 = N2D2.Tensor_float([3, 3], weight_value)
-        for o in range(self.test._sequence[0].N2D2().getNbOutputs()):
-            for c in range(self.test._sequence[0].N2D2().getNbChannels()):
-                self.test._sequence[0].N2D2().getWeight(o, c,  v1)
-                print(v1)
-        v2 = N2D2.Tensor_float([3, 3], weight_value)
-        print("Second layer weights :")
-        for o in range(self.test._sequence[1].N2D2().getNbOutputs()):
-            for c in range(self.test._sequence[1].N2D2().getNbChannels()):
-                self.test._sequence[1].N2D2().getWeight(o, c, v2)
-                print(v2)
-        return v1, v2
 
 class MNIST_CNN(torch.nn.Module):   
-        def __init__(self):
-            super(MNIST_CNN, self).__init__()
-            # Defining the cnn layer that we will extract and export to ONNX
+    def __init__(self):
+        super(MNIST_CNN, self).__init__()
+        # Defining the cnn layer that we will extract and export to ONNX
+        self.lin = torch.nn.Linear(128, 10)
+        self.cnn_layers = torch.nn.Sequential( 
+            torch.nn.Conv2d(1, 4, 3, 1),
+            torch.nn.ReLU(),
+            torch.nn.Conv2d(4, 4, 3),
+            torch.nn.ReLU(),
+        )
+        self.linear_layers = torch.nn.Sequential(
+            torch.nn.MaxPool2d(2),
+            torch.nn.Flatten(), 
+            torch.nn.Linear(576, 128),
+            torch.nn.ReLU(), 
+            self.lin,
+            torch.nn.Softmax(dim=1),   
+        )
 
-            self.cnn_layers = torch.nn.Sequential( # This is the layer we will replace
-                torch.nn.Conv2d(1, 4, 3, 1),
-                torch.nn.ReLU(),
-                torch.nn.Conv2d(4, 4, 3),
-                torch.nn.ReLU(),
-            )
-            self.linear_layers = torch.nn.Sequential(
-                torch.nn.MaxPool2d(2),
-                torch.nn.Flatten(), 
-                torch.nn.Linear(576, 128),
-                torch.nn.ReLU(), 
-                torch.nn.Linear(128, 10),
-                torch.nn.Softmax(),   
-            )
+    # Defining the forward pass    
+    def forward(self, x):
+        x = self.cnn_layers(x)
+        x = self.linear_layers(x)
+        return x
 
-        # Defining the forward pass    
-        def forward(self, x):
-            x = self.cnn_layers(x)
-            x = self.linear_layers(x)
-            return x
+    def get_last_layer_weights(self):
+        return self.lin.weight.data
+
+### Defining Conv layer ###
+
+class TorchConv(torch.nn.Module): 
+  
+    def __init__(self):
+        super(TorchConv, self).__init__()
+        layer = torch.nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=1, bias=False)
+        torch.nn.init.constant_(layer.weight, weight_value)
+        self.layer = layer
+        self.sequence = torch.nn.Sequential(
+            layer, 
+        )
+    def forward(self, x):
+        x = self.sequence(x)
+        return x
+
+class N2D2Conv(torch.nn.Module): 
+
+    def __init__(self):
+        super(N2D2Conv, self).__init__()
+        self.n2d2_cell = n2d2.cells.Conv(1, 1, [3, 3], stride_dims=[1, 1], padding_dims=[1, 1],
+            no_bias=True, weights_filler=n2d2.filler.Constant(value=weight_value))
+        self.layer = pytorch.Block(n2d2.cells.Sequence([self.n2d2_cell]))
+        self.sequence = torch.nn.Sequential(
+            self.layer
+        )
+    def forward(self, x):
+        x = self.sequence(x)
+        return x
+    def get_weight(self):
+        print(self.n2d2_cell.get_weights())
+
+### Defining Fc layer ###
+
+class TorchFc(torch.nn.Module): 
+ 
+    def __init__(self):
+        super(TorchFc, self).__init__()
+        layer = torch.nn.Linear(3*3, 3*3, bias=False)
+        torch.nn.init.constant_(layer.weight, weight_value)
+        self.sequence = torch.nn.Sequential(
+            torch.nn.Flatten(),
+            layer,
+        )
+    def forward(self, x):
+        x = self.sequence(x)
+        return x
 
 
-class test_LayerN2D2(unittest.TestCase):
+class N2D2Fc(torch.nn.Module): 
+ 
+    def __init__(self):
+        super(N2D2Fc, self).__init__()
+        self.n2d2_cell = n2d2.cells.Fc(3*3, 3*3, no_bias=True, weights_filler=n2d2.filler.Constant(value=weight_value))
+        self.layer = pytorch.Block(n2d2.cells.Sequence([self.n2d2_cell]))
+        self.sequence = torch.nn.Sequential(
+            self.layer
+        )
+    def forward(self, x):
+        x = self.sequence(x)
+        x = torch.squeeze(x)
+        return x
 
-    def test(self):
-        model = Net()
-        c_model = Custom_Net()
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
-        c_optimizer = torch.optim.SGD(c_model.parameters(), lr=0.01)
-        criterion = torch.nn.MSELoss()
-        input_tensor = torch.ones(batch_size, 1, 3, 3)
-        label = torch.ones(batch_size, 1, 3, 3)
-        print("===========================================================")
-        # Training pass
-        print("Testing the output of pytorch ConvCell and N2D2 ConvCell :")
-        print('Input :\n', input_tensor)
+### Defining Pool layer ###
+
+class TorchPool(torch.nn.Module): 
+  
+    def __init__(self):
+        super(TorchPool, self).__init__()
+        self.layer = torch.nn.MaxPool2d(2)
+        self.sequence = torch.nn.Sequential(
+            self.layer
+        )
+    def forward(self, x):
+        x = self.sequence(x)
+        return x
+
+
+class N2D2Pool(torch.nn.Module): 
+
+    def __init__(self):
+        super(N2D2Pool, self).__init__()
+        self.n2d2_cell = n2d2.cells.Pool([2, 2], stride_dims=[2, 2], pooling="Max", mapping=n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(1, 1))
+        self.layer = pytorch.Block(n2d2.cells.Sequence([self.n2d2_cell]))
+        self.sequence = torch.nn.Sequential(
+            self.layer
+        )
+    def forward(self, x):
+        x = self.sequence(x)
+        return x
+
+
+### Defining BatchNorm layer ###
+
+class TorchBN(torch.nn.Module): 
+
+    def __init__(self):
+        super(TorchBN, self).__init__()
+        self.layer = torch.nn.BatchNorm2d(1, momentum=0.1, eps=(10**-5))
+        self.layer.running_var = torch.zeros(1)
+        self.sequence = torch.nn.Sequential(
+            self.layer
+        )
+    def forward(self, x):
+        x = self.sequence(x)
+        return x
+
+class N2D2BN(torch.nn.Module): 
+
+    def __init__(self):
+        super(N2D2BN, self).__init__()
+        self.n2d2_cell = n2d2.cells.BatchNorm2d(1, moving_average_momentum=0.1, epsilon=(10**-5), 
+        scale_solver=SGD(learning_rate=learning_rate, momentum=0.0, decay=0.0, learning_rate_decay=0.993), 
+        bias_solver=SGD(learning_rate=learning_rate, momentum=0.0, decay=0.0, learning_rate_decay=0.993))
+        self.layer = pytorch.Block(n2d2.cells.Sequence([self.n2d2_cell]))
         
-        output = model(input_tensor)
+        self.sequence = torch.nn.Sequential(
+            self.layer
+        )
+    def forward(self, x):
+        x = self.sequence(x)
+        return x
 
-        c_output = c_model(input_tensor) # Warning this forward pass modify the values in the input_tensor !
+### Defining LeNet ###
+class N2D2LeNet(torch.nn.Module): 
+    def __init__(self):
+        super(N2D2LeNet, self).__init__()
+        solver_config = ConfigSection(learning_rate=learning_rate, momentum=0.0, decay=0.0, learning_rate_decay=0.993)
+        def conv_def():
+            weights_filler = Constant(value=weight_value)
+            weights_solver = SGD(**solver_config)
+            bias_solver = SGD(**solver_config)
+            return ConfigSection(activation=Rectifier(), weights_solver=weights_solver, bias_solver=bias_solver,
+                                no_bias=True, weights_filler=weights_filler)
+        def fc_def():
+            weights_filler = Constant(value=weight_value)
+            weights_solver = SGD(**solver_config)
+            bias_solver = SGD(**solver_config)
+            return ConfigSection(weights_solver=weights_solver, bias_solver=bias_solver,
+                                no_bias=True, weights_filler=weights_filler)
+        def bn_def():
+            scale_solver = SGD(**solver_config)
+            bias_solver = SGD(**solver_config)
+            return ConfigSection(activation=Rectifier(), scale_solver=scale_solver, bias_solver=bias_solver, moving_average_momentum=0.1, epsilon=(10**-5))
 
-        print("Pytorch Conv output\n", output)
-        print("N2D2 Conv output\n",c_output)
-        
-        assert output.shape == c_output.shape
+        self.model=n2d2.cells.Sequence([
+            n2d2.cells.Conv(1, 6, kernel_dims=[5, 5], **conv_def()),
+            n2d2.cells.BatchNorm2d(6, **bn_def()),
+            n2d2.cells.Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling='Max'),
+            n2d2.cells.Conv(6, 16, kernel_dims=[5, 5], **conv_def()),
+            n2d2.cells.BatchNorm2d(16, **bn_def()),
+            n2d2.cells.Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling='Max'),
+            n2d2.cells.Conv(16, 120, kernel_dims=[5, 5], **conv_def()),
+            n2d2.cells.Fc(120, 84, activation=Rectifier(), **fc_def()),
+            n2d2.cells.Fc(84, 10, activation=Linear(),**fc_def()),
+        ])
+        self.layer = pytorch.Block(self.model)
+        self.sequence = torch.nn.Sequential(
+            self.layer
+        )
+    def forward(self, x):
+        x = self.sequence(x)
+        x = torch.squeeze(x)
+        return x
 
-        for i, j in zip(torch.flatten(output), torch.flatten(c_output)):
-            i = round(i.item(), 4)
-            j = round(j.item(), 4)
-            self.assertEqual(i, j)
+class TorchLeNet(torch.nn.Module): 
 
-        print("===========================================================")
-        print("Calculating and applying loss :")
+    def __init__(self):
+        super(TorchLeNet, self).__init__()
+        c1 = torch.nn.Conv2d(1, 6, 5, bias=False)
+        c2 = torch.nn.Conv2d(6, 16, 5, bias=False)
+        c3 = torch.nn.Conv2d(16, 120, 5, bias=False)
+        l1 = torch.nn.Linear(120, 84, bias=False)
+        l2 = torch.nn.Linear(84, 10, bias=False)
 
-        loss = criterion(output, label)
-        loss.backward()
-        optimizer.step()
+        torch.nn.init.constant_(c1.weight, weight_value)
+        torch.nn.init.constant_(c2.weight, weight_value)
+        torch.nn.init.constant_(c3.weight, weight_value)
+        torch.nn.init.constant_(l1.weight, weight_value)
+        torch.nn.init.constant_(l2.weight, weight_value)
 
-        c_loss = criterion(c_output, label)
-        c_loss.backward()
-        c_optimizer.step()
+        self.layer=torch.nn.Sequential(
+            c1,
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(6),
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d(2),
+            c2,
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(16),
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d(2),
+            c3,
+            torch.nn.ReLU(),
+            torch.nn.Flatten(), 
+            l1,
+            torch.nn.ReLU(),
+            l2,
+        )
+        self.sequence = torch.nn.Sequential(
+            self.layer,
+        )
+    def forward(self, x):
+        x = self.sequence(x)
+        return x
 
-        print("Custom model weight :")
-        c_weight = c_model.get_weight()
 
-        print("Pytorch model weight :")
-        weight = model.get_weight()
-        for i, j in zip(c_weight, torch.flatten(weight)):
-            i = round(i, 4)
-            j = round(j.item(), 4)
-            self.assertEqual(i, j)
+class test_interop_DeepNetCell(unittest.TestCase):
 
-# @unittest.skip("Sequence is deprecated")
-# class test_Serquencen2d2(unittest.TestCase):
-
-#     def test(self):
-#         print("===========================================================")
-#         print("Testing forward when interfacing a Sequence")
-#         criterion = torch.nn.MSELoss()
-#         input_tensor = torch.ones(batch_size, 1, 3, 3)
-#         model_deep = NIT()
-#         output_deep = model_deep(input_tensor)
-#         print("Output deepNet N2D2 with 2 conv :")
-#         print(output_deep)
-#         model_ref = Double()
-#         output_ref = model_ref(input_tensor)
-#         print("Output Pytorch with 2 conv :")
-#         print(output_ref)
-
-#         for i, j in zip(torch.flatten(output_ref), torch.flatten(output_deep)):
-#             i = round(i.item(), 4)
-#             j = round(j.item(), 4)
-#             self.assertEqual(i, j)
-#         print("===========================================================")
-#         print("Testing backward when interfacing a Sequence")
-
-#         print("DeepNet model weight before backward:")
-#         conv1, conv2 = model_deep.get_weight()
-
-#         print("Pytorch model weight before backward:")
-#         ref_conv1, ref_conv2 = model_ref.get_weight()
-
-#         for i, j in zip(conv1, torch.flatten(ref_conv1)):
-#             i = round(i, 4)
-#             j = round(j.item(), 4)
-#             self.assertEqual(i, j)
-#         for i, j in zip(conv2, torch.flatten(ref_conv2)):
-#             i = round(i, 4)
-#             j = round(j.item(), 4)
-#             self.assertEqual(i, j)
-#         opt_test = torch.optim.SGD(model_deep.parameters(), lr=0.01)
-#         opt = torch.optim.SGD(model_ref.parameters(), lr=0.01)
-
-#         label = torch.ones(batch_size, 1, 3, 3)
-
-#         loss_test = criterion(output_deep, label)
-#         loss_test.backward()
-#         opt_test.step()
-
-#         loss = criterion(output_ref, label)
-#         loss.backward()
-#         opt.step()
-
-#         print("DeepNet model weight after backward:")
-#         conv1, conv2 = model_deep.get_weight()
-
-#         print("Pytorch model weight after backward:")
-#         ref_conv1, ref_conv2 = model_ref.get_weight()
-
-#         for i, j in zip(conv1, torch.flatten(ref_conv1)):
-#             i = round(i, 4)
-#             j = round(j.item(), 4)
-#             self.assertEqual(i, j)
-#         for i, j in zip(conv2, torch.flatten(ref_conv2)):
-#             i = round(i, 4)
-#             j = round(j.item(), 4)
-#             self.assertEqual(i, j)
-
-#         print("===========================================================")
-#         print("Testing output after backward when interfacing a Sequence")
-
-#         output_deep = model_deep(input_tensor)
-#         print("Output after the backward (deepNet N2D2 with 2 conv) :")
-#         print(output_deep)
-#         output_ref = model_ref(input_tensor)
-#         print("Output after the backward (Pytorch with 2 conv) :")
-#         print(output_ref)
-#         for i, j in zip(torch.flatten(output_deep), torch.flatten(output_ref)):
-#             i = round(i.item(), 4)
-#             j = round(j.item(), 4)
-#             self.assertEqual(i, j)
-
-class test_DeepNetN2D2(unittest.TestCase):
-
-    def test(self):
+    # TODO : use the tester class !
+    def test_ONNX(self):
         print("===========================================================")
         print("Replacing Pytorch by N2D2")
         model = MNIST_CNN()
@@ -408,13 +442,11 @@ class test_DeepNetN2D2(unittest.TestCase):
         # Importing the ONNX to N2D2
         db = n2d2.database.Database()
         provider = n2d2.provider.DataProvider(db,[28, 28, 1], batch_size=batch_size)
-        deepNet = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "./tmp.onnx")._embedded_deepnet.N2D2()
-
-        deepNet.initialize() 
-        # remove(model_path)
+        deepNet = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "./tmp.onnx")
+        remove(model_path)
 
         # Creating the N2D2 equivalent
-        n2d2_deepNet = n2d2.pytorch.DeepNetN2D2(deepNet)
+        n2d2_deepNet = n2d2.pytorch.Block(deepNet)
         
         input_tensor = torch.ones(batch_size, 1, 28, 28)
         pytorch_output = model(input_tensor)
@@ -429,42 +461,147 @@ class test_DeepNetN2D2(unittest.TestCase):
             j = round(j.item(), 4)
             self.assertEqual(i, j)
 
-        weights = []
-        cells = deepNet.getCells()
-        for cell in cells:
-            cell = deepNet.getCell_Frame_Top(cell)
-            if "Conv" in str(type(cell)) or "Fc" in str(type(cell)):
-                v = N2D2.Tensor_float([])
-                deepNet.getCell_Frame_Top(cell.getName()).getWeight(0, 0, v)
-                weights.append(v)
-        
-        label = torch.ones(batch_size, 10)
-        opt = torch.optim.SGD(n2d2_deepNet.parameters(), lr=2)
-        criterion = torch.nn.MSELoss()
-        loss = criterion(N2D2_output, label)
-        loss.backward()
-        opt.step()
-        # TODO : Write a test to see if the weights are well updated
+class test_interop(unittest.TestCase):
 
-        new_weights = []
-        cells = deepNet.getCells()
-        for cell in cells:
-            cell = deepNet.getCell_Frame_Top(cell)
-            if "Conv" in str(type(cell)) or "Fc" in str(type(cell)):
-                v = N2D2.Tensor_float([])
-                deepNet.getCell_Frame_Top(cell.getName()).getWeight(0, 0, v)
-                new_weights.append(v)
-        print("==== \nComparing weights after | before")
-        for i, j in zip(weights, new_weights):
-            for w0, w1 in zip(i,j):
-                print(w0, " | ", w1)
-        print('===')
-        all_weights_are_equals = True
-        for w_before, w_after in zip(weights, new_weights):
-            if (n2d2.Tensor.from_N2D2(w_before) != n2d2.Tensor.from_N2D2(w_after)):
-                all_weights_are_equals = False
-                break
-        self.assertFalse(all_weights_are_equals) # TODO : testing if weights are updated is not great sometimes this test fails.
+    def tearDown(self):
+        n2d2.global_variables.default_model = "Frame"
+
+    def test_conv_CPU(self):
+        print('=== Testing Conv layer CPU ===')
+        torch_model = TorchConv()
+        n2d2_model = N2D2Conv()
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs)
+        res = tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 1, 3, 3))
+        self.assertNotEqual(res, -1, msg="CPU train failed")
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 1, 3, 3))
+        self.assertNotEqual(res, -1, msg="CPU eval failed")
+    def test_conv_GPU(self):
+        print('=== Testing Conv layer GPU ===')
+        n2d2.global_variables.default_model = "Frame_CUDA"
+        torch_model = TorchConv()
+        n2d2_model = N2D2Conv()
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs, cuda=True)
+        res = tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 1, 3, 3))
+        self.assertNotEqual(res, -1, msg="CUDA train failed")
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, cuda=True, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 1, 3, 3))
+        self.assertNotEqual(res, -1, msg="CUDA eval failed")
+
+    def test_fc_CPU(self):
+        print('=== Testing Fc layer CPU ===')
+        # TODO : Fc fail : RuntimeError: Cell_Frame<T>::linkInput(): number of mapping rows must be equal to the number of input channels
+        torch_model = TorchFc()
+        n2d2_model = N2D2Fc()
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs)
+        res = tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 9))
+        self.assertNotEqual(res, -1)
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 9))
+        self.assertNotEqual(res, -1)
+
+    def test_fc_GPU(self):
+        print('=== Testing Fc layer GPU ===')
+        n2d2.global_variables.default_model = "Frame_CUDA"
+        torch_model = TorchFc()
+        n2d2_model = N2D2Fc()
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs, cuda=True)
+        res = tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 9))
+        self.assertNotEqual(res, -1, msg="CUDA train failed")
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, cuda=True, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 9))
+        self.assertNotEqual(res, -1, msg="CUDA eval failed")
+
+    def test_pool_CPU(self):
+        print('=== Testing Pool layer CPU ===')
+        torch_model = TorchPool()
+        n2d2_model = N2D2Pool()
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 4, 4), (batch_size,  1, 2, 2))
+        self.assertNotEqual(res, -1, msg="CPU train failed")
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 4, 4), (batch_size,  1, 2, 2))
+        self.assertNotEqual(res, -1, msg="CPU eval failed")
+
+    def test_pool_GPU(self):
+        print('=== Testing Pool layer GPU ===')    
+        n2d2.global_variables.default_model = "Frame_CUDA"
+        torch_model = TorchPool()
+        n2d2_model = N2D2Pool()
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs, cuda=True, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 4, 4), (batch_size,  1, 2, 2))
+        self.assertNotEqual(res, -1, msg="CUDA train failed")
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, cuda=True, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 4, 4), (batch_size,  1, 2, 2))
+        self.assertNotEqual(res, -1, msg="CUDA eval failed")
+
+    def test_BN_CPU(self):
+        print('=== Testing BatchNorm layer CPU ===')
+        torch_model = TorchBN()
+        n2d2_model = N2D2BN()
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs)
+        res = tester.test_multiple_step((batch_size, 1, 2, 2), (batch_size,  1, 2, 2))
+        self.assertNotEqual(res, -1, msg="CPU train failed")
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 2, 2), (batch_size,  1, 2, 2))
+        self.assertNotEqual(res, -1, msg="CPU eval failed")
+
+    def test_BN_GPU(self):
+        print('=== Testing BatchNorm layer GPU ===')
+        n2d2.global_variables.default_model = "Frame_CUDA"
+        torch_model = TorchBN() 
+        n2d2_model = N2D2BN()
+        
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs, cuda=True)
+        res =tester.test_multiple_step((batch_size, 1, 2, 2), (batch_size,  1, 2, 2))
+        self.assertNotEqual(res, -1, msg="CUDA train failed")
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, cuda=True, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 2, 2), (batch_size,  1, 2, 2))
+        self.assertNotEqual(res, -1, msg="CUDA eval failed")
+
+    def test_LeNet_CPU(self):
+        print('=== Testing LENET CPU ===')
+        torch_model = TorchLeNet()
+        n2d2_model = N2D2LeNet()
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs)
+        res = tester.test_multiple_step((batch_size, 1, 32, 32), (batch_size, 10))
+        self.assertNotEqual(res, -1, msg="CPU train failed")
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 32, 32), (batch_size, 10))
+        self.assertNotEqual(res, -1, msg="CPU eval failed")
+
+    def test_LeNet_GPU(self):
+        print('=== Testing LENET GPU ===')
+        n2d2.global_variables.default_model = "Frame_CUDA"
+        torch_model = TorchLeNet()
+        n2d2_model = N2D2LeNet()
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs, cuda=True)
+        res = tester.test_multiple_step((batch_size, 1, 32, 32), (batch_size, 10))
+        self.assertNotEqual(res, -1, msg="CUDA train failed")
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, cuda=True, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 32, 32), (batch_size, 10))
+        self.assertNotEqual(res, -1, msg="CUDA eval failed")
+
 
 if __name__ == '__main__':
     unittest.main()

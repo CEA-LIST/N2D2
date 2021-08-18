@@ -150,7 +150,7 @@ ChannelExtraction
         :inherited-members:
 
 Sending data to the Neural Network
----------------------------------
+----------------------------------
 
 With a DataProvider
 ~~~~~~~~~~~~~~~~~~~

@@ -38,8 +38,8 @@ class test_params(unittest.TestCase):
         # if self.object: # We don't do test if it's the dummy class
         #     parameters = self.object.N2D2().getParameters()
         #     for param in self.parameters.keys():
-        #         if self.object.python_to_n2d2_convention(param) in parameters:
-        #             param_name = self.object.python_to_n2d2_convention(param)
+        #         if self.object._python_to_n2d2_convention(param) in parameters:
+        #             param_name = self.object._python_to_n2d2_convention(param)
         #             N2D2_param, N2D2_type = self.object.N2D2().getParameterAndType(param_name)
         #             # TODO : need test for bool ?
         #             if N2D2_type == "bool":
@@ -92,7 +92,7 @@ class test_Conv(test_params):
             "name": "test",
             "activation": n2d2.activation.Tanh(),
             "weights_solver": n2d2.solver.SGD(),
-            "sub_sample_dims": [0, 0],
+            "sub_sample_dims": [1, 1],
             "stride_dims": [2, 2],
             "dilation_dims": [1, 1],
             "padding_dims": [3, 3],
@@ -323,6 +323,28 @@ class test_Reshape(test_params):
         self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
         self.assertEqual(self.parameters["dims"], self.object.N2D2().getDims())
         super().test_parameters()
+
+class test_Resize(test_params):
+    def setUp(self):
+        self.parameters = {
+            "name": "test",
+            "outputs_width": 16,
+            "outputs_height":9,
+            "resize_mode":"BilinearTF",
+        }
+        self.object = n2d2.cells.Resize(**self.parameters)
+
+    def test_parameters(self):
+        # Need to instantiate the object (doing so by passing a dummy input)
+        tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
+        self.object(tensor)
+        self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
+        self.assertEqual(self.parameters["outputs_width"], self.object.N2D2().getResizeOutputWidth())
+        self.assertEqual(self.parameters["outputs_height"], self.object.N2D2().getResizeOutputHeight())
+        self.assertEqual(N2D2.ResizeCell.ResizeMode.__members__[self.parameters["resize_mode"]], 
+                self.object.N2D2().getMode())
+        super().test_parameters()
+
 
 ### TEST DATABASE ###
 
@@ -778,6 +800,43 @@ class DataProvider(test_params):
         self.assertEqual(self.parameters["composite_stimuli"], self.object.N2D2().isCompositeStimuli())
         super().test_parameters()
 
+### Quantizer ###
+
+class SATAct(test_params):
+    def setUp(self):
+        self.parameters = {
+            "solver": n2d2.solver.SGD(),
+            "range": 1,
+            "alpha": 1.0,
+        }
+        self.object = n2d2.quantizer.SATAct(**self.parameters)
+
+    def test_parameters(self):
+        self.assertIs(self.parameters["solver"].N2D2(), self.object.N2D2().getSolver())
+        self.assertEqual(self.parameters["range"], self.object.N2D2().getRange())
+        self.assertEqual(self.parameters["alpha"], self.object.N2D2().getAlphaParameter())
+
+        # TODO : test getRange getAlpha
+        super().test_parameters()
+
+class SATCell(test_params):
+    def setUp(self):
+        self.parameters = {
+            "apply_scaling": True,
+            "apply_quantization": False,
+            "range": 1,
+            "quant_mode": "Symmetric",
+        }
+        self.object = n2d2.quantizer.SATCell(**self.parameters)
+
+    def test_parameters(self):
+        self.assertEqual(self.parameters["range"], self.object.N2D2().getRange())
+        self.assertEqual(self.object.N2D2().QuantMode.__members__[self.parameters["quant_mode"]],  
+                        self.object.N2D2().getQuantMode())
+        self.assertEqual(self.parameters["apply_quantization"], self.object.N2D2().getApplyQuantization())
+        self.assertEqual(self.parameters["apply_scaling"], self.object.N2D2().getApplyScaling())
+        
+        super().test_parameters()
 
 # print(self.object.N2D2().getParameters()) 
 if __name__ == '__main__':

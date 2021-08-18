@@ -159,8 +159,8 @@ template <class T>
 void N2D2::BatchNormCell_Frame<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
 {
     // BEGIN: addition to initialize()
-    if (mMapping.empty()) {
-        mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
+    if (nbInputs != 1) {
+          throw std::runtime_error("nbInputs != 1 for cell " + mName);
     }
     // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
     // However, this requires a reinitialization of the input dims which is unsafe
@@ -252,14 +252,31 @@ void N2D2::BatchNormCell_Frame<T>::initializeParameters(unsigned int nbInputChan
 
 
 template <class T>
-void N2D2::BatchNormCell_Frame<T>::initializeDataDependent(){
-    Cell_Frame<T>::initializeDataDependent();
+void N2D2::BatchNormCell_Frame<T>::check_input()
+{
+    if (mInputs.size() == 0) {
+          throw std::runtime_error("mInputs.size() = 0 for cell " + mName);
+    }
 
     if (mInputs.dimZ() != mOutputs.dimZ()) {
-    throw std::domain_error("BatchNormCell_Frame<T>::initialize():"
+        throw std::domain_error("BatchNormCell_Frame<T>::initializeDataDependent():"
                             " the number of output channels must be equal "
                             "to the sum of inputs channels.");
     }
+
+    if (mInputs.dimZ() != mOutputs.dimZ()) {
+        throw std::domain_error("BatchNormCell_Frame<T>::initializeDataDependent():"
+                            " the number of output channels must be equal "
+                            "to the sum of inputs channels.");
+    }
+}
+
+
+template <class T>
+void N2D2::BatchNormCell_Frame<T>::initializeDataDependent(){
+    Cell_Frame<T>::initializeDataDependent();
+
+    check_input();
 
     mNbPropagate = 0;
 }
@@ -269,6 +286,7 @@ void N2D2::BatchNormCell_Frame<T>::initializeDataDependent(){
 template <class T>
 void N2D2::BatchNormCell_Frame<T>::propagate(bool inference)
 {
+    check_input();
     mInputs.synchronizeDBasedToH();
     unsigned int outputOffset = 0;
 

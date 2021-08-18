@@ -553,6 +553,8 @@ template <class T>
 void N2D2::DeconvCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
 {
     // BEGIN: addition to initialize()
+    
+    // NOTE: Mapping has to be initialized here because required by cuDNN
     if (mMapping.empty()) {
         mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
     }
@@ -571,7 +573,7 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInputCh
             if (mBias->dimX() != 1 || mBias->dimY() != 1
                 || mBias->dimZ() != getNbOutputs() || mBias->dimB() != 1)
             {
-                throw std::runtime_error("DeconvCell_Frame_CUDA<T>::initialize():"
+                throw std::runtime_error("DeconvCell_Frame_CUDA<T>::initializeParameters():"
                     " in cell " + mName + ", wrong size for shared bias");
             }
         }
@@ -700,10 +702,33 @@ void N2D2::DeconvCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInputCh
 
 
 template <class T>
+void N2D2::DeconvCell_Frame_CUDA<T>::check_input()
+{
+    if (mInputs.size() != mSharedSynapses.size()) {
+          throw std::runtime_error("mInputs.size() != mSharedSynapses.size() for cell " + mName + 
+          ". Please verify that the number of input tensors given to the cell is"
+          " equal to the number of inputs defined for the cell.");
+    }
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].dimZ() != mSharedSynapses[k].dimZ()){
+            std::cout << "mInputs.dimZ(): " << mInputs[k].dimZ() << std::endl;
+            std::cout << "mSharedSynapses.dimZ(): " << mSharedSynapses[k].dimZ() << std::endl;
+            std::stringstream ss;
+            ss << "Unmatching dimension Z"
+            " between input and weight " << k << " for cell " + mName;
+            throw std::runtime_error(ss.str());
+        }
+    }
+}
+
+
+template <class T>
 void N2D2::DeconvCell_Frame_CUDA<T>::initializeDataDependent() 
 {
     // NOTE: this is addition to initialize()
     Cell_Frame_CUDA<T>::initializeDataDependent();
+    
+    check_input();
 
     unsigned int nbChannels = 0;
 
@@ -1012,6 +1037,8 @@ the API cudnnGetConvolutionForwardMaxCount().
 template <class T>
 void N2D2::DeconvCell_Frame_CUDA<T>::propagate(bool inference)
 {
+    check_input();
+
     mInputs.synchronizeHBasedToD();
 
     /**

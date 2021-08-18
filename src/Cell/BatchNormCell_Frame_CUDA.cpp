@@ -196,8 +196,8 @@ template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
 {
     // BEGIN: addition to initialize()
-    if (mMapping.empty()) {
-        mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
+    if (nbInputs != 1) {
+          throw std::runtime_error("nbInputs != 1 for cell " + mName);
     }
     // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
     // However, this requires a reinitialization of the input dims which is unsafe
@@ -312,13 +312,32 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInpu
 
 
 template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::check_input()
+{
+    if (mInputs.size() == 0) {
+          throw std::runtime_error("mInputs.size() = 0 for cell " + mName);
+    }
+
+    if (mInputs.dimZ() != mOutputs.dimZ()) {
+        throw std::domain_error("BatchNormCell_Frame<T>::initializeDataDependent():"
+                            " the number of output channels must be equal "
+                            "to the sum of inputs channels.");
+    }
+
+    if (mInputs.dimZ() != mOutputs.dimZ()) {
+        throw std::domain_error("BatchNormCell_Frame<T>::initializeDataDependent():"
+                            " the number of output channels must be equal "
+                            "to the sum of inputs channels.");
+    }
+}
+
+
+template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::initializeDataDependent(){
     // NOTE: this is addition to initialize()
     Cell_Frame_CUDA<T>::initializeDataDependent();
 
-    if (mInputs.size() > 1)
-        throw std::domain_error("BatchNormCell_Frame_CUDA<T>::initialize(): "
-                                "inputs concatenation is not supported.");
+    check_input();
 
     mMode = CUDNN_BATCHNORM_SPATIAL;
     mNbPropagate = 0;
@@ -336,6 +355,8 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initializeDataDependent(){
 template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
 {
+    check_input();
+
     mInputs.synchronizeHBasedToD();
 
     const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;

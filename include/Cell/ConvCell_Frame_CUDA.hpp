@@ -84,11 +84,15 @@ public:
                                                          dilationDims,
                                                          activation);
     }
+      
+    void resetWeights();
+    void resetBias();
 
     virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     virtual void initialize();
     virtual void initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs);
     virtual void initializeWeightQuantizer();
+    virtual void check_input();
     virtual void initializeDataDependent();
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);

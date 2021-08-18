@@ -265,7 +265,7 @@ void init_ActivationCell_Frame_CUDA(py::module&);
 void init_QuantizerCell(py::module&);
 void init_QuantizerCell_Frame(py::module&);
 void init_QuantizerCell_Frame_CUDA(py::module&);
-void init_QuantizerActivation(py::module&m);
+void init_QuantizerActivation(py::module&);
 void init_QuantizerActivation_Frame(py::module&);
 void init_QuantizerActivation_Frame_CUDA(py::module&);
 
@@ -275,10 +275,9 @@ void init_N2D2(py::module& m) {
     // Creating a variable to know if CUDA have been used for the compilation.
     #ifdef CUDA
     m.attr("cuda_compiled") = true;
-    #elif
+    #else
     m.attr("cuda_compiled") = false;
     #endif
-    
     //utils
     init_ConfusionMatrix(m);
     init_WindowFunction(m);
@@ -511,7 +510,6 @@ void init_N2D2(py::module& m) {
     init_ActivationCell_Frame(m);
     init_ActivationCell_Frame_CUDA(m);
 
-
     // Mapping object
     init_MappingGenerator(m);
 
@@ -526,11 +524,6 @@ void init_N2D2(py::module& m) {
 
 }
 
-/*
-PYBIND11_MODULE(N2D2, m) {
-    init_N2D2(m);
-}
-*/
 }
 
 

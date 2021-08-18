@@ -25,6 +25,7 @@ void init_QuantizerActivation(py::module &m) {
     q.def("getType", &QuantizerActivation::getType);
     q.def("getFullPrecisionActivations", &QuantizerActivation::getFullPrecisionActivations, py::return_value_policy::reference);
     q.def("setRange", &QuantizerActivation::setRange, py::arg("integerRange"));
+    q.def("getRange", &QuantizerActivation::getRange);
 }
 }
 

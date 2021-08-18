@@ -126,6 +126,8 @@ public:
     virtual BaseTensor& getDiffOutputs(unsigned int index = 0);
     virtual const BaseTensor& getDiffOutputs(unsigned int index = 0) const;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
+    virtual std::string getPyDataType();
+    virtual std::string getPyModel();
     void exportActivationParameters(const std::string& dirName) const;
     void importActivationParameters(const std::string& dirName, bool ignoreNotExists);
     bool isCuda() const

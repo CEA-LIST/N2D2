@@ -283,13 +283,17 @@ public:
     /// Initialize the state of the cell (e.g. weights random initialization)
     virtual void initialize() {};
 
-    virtual void setMapping(const Tensor<bool>& mapping = Tensor<bool>())
+    virtual void setMapping(const Tensor<bool>& mapping)
     {   
         if (!mMapping.empty()){
-            throw std::runtime_error("Cell::initializeMapping(): in "
+            throw std::runtime_error("Cell::setMapping(): in "
                         "cell " + mName + ", mMapping is not empty");
         }
-        if (!mapping.empty()) {
+        if (mapping.empty()) {
+            throw std::runtime_error("Cell::setMapping(): in "
+                        "cell " + mName + ", mapping is empty");
+        }
+        else {
             mMapping.append(mapping);
         }
     };

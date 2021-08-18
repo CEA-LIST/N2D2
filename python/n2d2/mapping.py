@@ -51,7 +51,7 @@ class Mapping:
         output_group_offset = 0
         channel_group_offset = 0
 
-        map = n2d2.tensor.Tensor([nb_outputs, nb_channels], datatype="bool", dim_format="N2D2")
+        map = n2d2.Tensor([nb_outputs, nb_channels], datatype="bool", dim_format="N2D2")
         for group in range(int(nb_groups)):
             outputGroupSize = (nb_outputs - output_group_offset) / (nb_groups - group)
             if outputGroupSize < 1:

@@ -142,7 +142,7 @@ void N2D2::ResizeCell_Frame_CUDA::propagate(bool inference)
             case NearestNeighbor:
                 cudaSResizeFWNearestNeighbor(CudaContext::getDeviceProp(), input->getDevicePtr(), mInputs[k].dimX(), mInputs[k].dimY(),
                                              mOutputs.getDevicePtr() + outputOffset, mOutputs.dimX(), mOutputs.dimY(), 
-                                             mOutputs.dimZ(), mOutputs.dimB());
+                                             mInputs[k].dimZ(), mOutputs.dimB());
                 break;
             default:
                 throw std::runtime_error("ResizeCell_Frame_CUDA: Unknown resize mode.");
@@ -177,7 +177,7 @@ void N2D2::ResizeCell_Frame_CUDA::backPropagate()
             case Bilinear:
                 throw std::runtime_error("ResizeCell_Frame_CUDA: Bilinear resize not supported yet.");
             case BilinearTF:
-                cudaSResizeBWBilinearTF(CudaContext::getDeviceProp(), mDiffInputs.dimX(), mDiffInputs.dimY(), mDiffInputs.dimZ(),
+                cudaSResizeBWBilinearTF(CudaContext::getDeviceProp(), mDiffInputs.dimX(), mDiffInputs.dimY(), mDiffOutputs[k].dimZ(),
                                         mDiffInputs.dimB(), mDiffOutputs[k].dimX(), mDiffOutputs[k].dimY(),
                                         mScaleX, mScaleY, mDiffInputs.getDevicePtr() + diffInputOffset,
                                         diffOutput->getDevicePtr());
@@ -185,7 +185,7 @@ void N2D2::ResizeCell_Frame_CUDA::backPropagate()
             case NearestNeighbor:
                 cudaSResizeBWNearestNeighbor(CudaContext::getDeviceProp(), mDiffInputs.getDevicePtr() + diffInputOffset, mDiffInputs.dimX(), mDiffInputs.dimY(), 
                                              diffOutput->getDevicePtr(), mDiffOutputs[k].dimX(), mDiffOutputs[k].dimY(),
-                                             mDiffInputs.dimZ(), mDiffInputs.dimB());
+                                             mDiffOutputs[k].dimZ(), mDiffInputs.dimB());
                 break;
             default:
                 throw std::runtime_error("ResizeCell_Frame_CUDA: Unknown resize mode.");

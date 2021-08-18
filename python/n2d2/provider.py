@@ -84,9 +84,9 @@ class DataProvider(Provider):
         :type size: list
         :param batch_size: Batch size, default=1
         :type batch_size: int, optional
-        :param composite_stimuli: If true, use pixel-wise stimuli labels, default=False
+        :param composite_stimuli: If ``True``, use pixel-wise stimuli labels, default=False
         :type composite_stimuli: bool, optional
-        :param random_read: if False we use get_batch when iterating other the provider, else we use get get_random_batch, default = False
+        :param random_read: if ``False`` we use get_batch when iterating other the provider, else we use get ``get_random_batch``, default = False
         :type random_read: boolean, optional
         """
         Provider.__init__(self, **config_parameters)
@@ -116,14 +116,14 @@ class DataProvider(Provider):
         """
         Set if we use get_batch or get_random_batch when iterating other the provider
 
-        :param random_read: If True, the provider will give stimuli in a random order.
+        :param random_read: If ``True``, the provider will give stimuli in a random order.
         :type random_read: bool
         """
         self._random_read = random_read
 
     def set_partition(self, partition):
         """
-        :param partition: The partition can be  ```Learn``, ``Validation``, ``Test``,  ``Unpartitioned``
+        :param partition: The partition can be  ``Learn``, ``Validation``, ``Test``,  ``Unpartitioned``
         :type partition: str 
         """
         if partition not in N2D2.Database.StimuliSet.__members__.keys():
@@ -133,7 +133,7 @@ class DataProvider(Provider):
 
     def get_partition(self):
         """
-        :returns: The partition can be  ```Learn``, ``Validation``, ``Test``,  ``Unpartitioned``
+        :returns: The partition can be  ``Learn``, ``Validation``, ``Test``,  ``Unpartitioned``
         :rtype: str
         """
         return N2D2.Database.StimuliSet.__members__[self._partition]
@@ -171,7 +171,7 @@ class DataProvider(Provider):
     def read_random_batch(self):
         """
         :return: Return a random batch 
-        :rtype: :py:class:`n2d2.tensor.Tensor`
+        :rtype: :py:class:`n2d2.Tensor`
         """
 
         self._deepnet = n2d2.deepnet.DeepNet()
@@ -184,7 +184,7 @@ class DataProvider(Provider):
         :param idx: Start index to begin reading the stimuli
         :type idx: int
         :return: Return a batch of data
-        :rtype: :py:class:`n2d2.tensor.Tensor`
+        :rtype: :py:class:`n2d2.Tensor`
         """
         self._deepnet = n2d2.deepnet.DeepNet()
         self._deepnet.set_provider(self)
@@ -259,18 +259,18 @@ class TensorPlaceholder(Provider):
     """
     def __init__(self, inputs, labels=None, **config_parameters):
         """
-        :param inputs: The tensor you want to stream
-        :type inputs: :py:class:`N2D2.tensor.Tensor`
+        :param inputs: The data tensor you want to stream, if N2D2 is compiled with CUDA it must be CUDA, the datatype used should be `float`.
+        :type inputs: :py:class:`n2d2.Tensor`
         :param labels: Labels associated with the tensor you want to stream, the datatype of labels must be integer, default= None
-        :type labels: :py:class:`N2D2.tensor.Tensor`, optional
+        :type labels: :py:class:`n2d2.Tensor`, optional
         """
         Provider.__init__(self, **config_parameters)
 
-        if isinstance(inputs, n2d2.tensor.Tensor):
+        if isinstance(inputs, n2d2.Tensor):
             self._tensor = inputs
         else:
             raise ValueError("Wrong input of type " + str(type(inputs)))
-            # n2d2.error_handler.wrong_input_type("inputs", type(inputs), [type(list), 'n2d2.tensor.Tensor', 'N2D2.BaseTensor'])
+            # n2d2.error_handler.wrong_input_type("inputs", type(inputs), [type(list), 'n2d2.Tensor', 'N2D2.BaseTensor'])
         dims = [self._tensor.N2D2().dimX(), self._tensor.N2D2().dimY(), self._tensor.N2D2().dimZ()]
         self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
                                                  size=dims,
@@ -297,7 +297,7 @@ class TensorPlaceholder(Provider):
 
     def set_partition(self, partition):
         """
-        :param partition: The partition can be  ```Learn``, ``Validation``, ``Test``,  ``Unpartitioned``
+        :param partition: The partition can be  ``Learn``, ``Validation``, ``Test``,  ``Unpartitioned``
         :type partition: str 
         """
         if partition not in N2D2.Database.StimuliSet.__members__.keys():
@@ -307,7 +307,7 @@ class TensorPlaceholder(Provider):
 
     def get_partition(self):
         """
-        :returns: The partition can be  ```Learn``, ``Validation``, ``Test``,  ``Unpartitioned``
+        :returns: The partition can be  ``Learn``, ``Validation``, ``Test``,  ``Unpartitioned``
         :rtype: str
         """
         return N2D2.Database.StimuliSet.__members__[self._partition]
@@ -319,7 +319,8 @@ class TensorPlaceholder(Provider):
         """
         if N2D2.cuda_compiled and not self._tensor.is_cuda: 
             raise ValueError("You compiled N2D2 with CUDA this doesn't match the tensor model you are providing to the network.")
-        # TODO : Tensor may require to have float datatype test it and add error handling
+        if not (self._tensor.data_type() == "f" or self._tensor.data_type() == "float"):
+            raise TypeError("You try to stream a Tensor with the datatype '" + self._tensor.data_type() + "' you should provide a Tensor with a 'float' datatype.")
         self._set_N2D2_parameter('StreamTensor', True)
         self._N2D2_object.setStreamedTensor(self._tensor.N2D2())
 
@@ -337,7 +338,7 @@ class MultipleOutputsProvider(Provider):
     """
     def __init__(self, size, batch_size=1):
         """
-        :param size: List of X, Y and Z dimensions
+        :param size: List of ``X``, ``Y`` and ``Z`` dimensions
         :type size: list
         :param batch_size: Batch size, default=1
         :type batch_size: int, optional

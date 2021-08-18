@@ -46,14 +46,18 @@ class ActivationFunction(N2D2_Interface, ABC):
         N2D2_Interface.__init__(self, **config_parameters)
 
     @classmethod
-    def create_from_N2D2_object(cls, N2D2_object):
-        activation = cls(**cls.load_N2D2_parameters(N2D2_object), from_arguments=False)
-        activation._N2D2_object = N2D2_object
-        quantizer = activation._N2D2_object.getQuantizer()
-        if quantizer:
-            activation._config_parameters['quantizer'] = \
-                n2d2.quantizer.ActivationQuantizer.create_from_N2D2_object(quantizer)
-        return activation
+    def _get_N2D2_complex_parameters(cls, N2D2_object):
+        parameters = {}
+        if N2D2_object.getQuantizer():
+            parameters['quantizer'] = \
+                n2d2.converter.from_N2D2_object(N2D2_object.getQuantizer())
+        return parameters
+
+    def has_quantizer(self):
+        if 'quantizer' in self._config_parameters:
+            return True
+        else:
+            return False
 
     def get_quantizer(self):
         if 'quantizer' in self._config_parameters:
@@ -91,24 +95,23 @@ class Linear(ActivationFunction):
     _parameters.update(_activation_parameters)
     _convention_converter= n2d2.ConventionConverter(_parameters)
 
-    def __init__(self, from_arguments=True, **config_parameters):
+    def __init__(self, **config_parameters):
         """
         :param quantizer: Quantizer
         :type quantizer: :py:class:`n2d2.quantizer.ActivationQuantizer`, optional
         """
         ActivationFunction.__init__(self, **config_parameters)
-
-        if from_arguments:
-            # No optional constructor arguments
-            self._set_N2D2_object(self._linear_activation_generators[self._model_key]())
-            for key, value in self._config_parameters.items():
-                if key is 'quantizer':
-                    if isinstance(value, n2d2.quantizer.Quantizer):
-                        self._N2D2_object.setQuantizer(value.N2D2())
-                    else:
-                        raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
+        # No optional constructor arguments
+        self._set_N2D2_object(self._linear_activation_generators[self._model_key]())
+        for key, value in self._config_parameters.items():
+            if key is 'quantizer':
+                if isinstance(value, n2d2.quantizer.Quantizer):
+                    self._N2D2_object.setQuantizer(value.N2D2())
                 else:
-                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+                    raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
+            else:
+                self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+        self.load_N2D2_parameters(self.N2D2())
 
 
 class Rectifier(ActivationFunction):
@@ -126,7 +129,7 @@ class Rectifier(ActivationFunction):
     _parameters.update(_activation_parameters)
     _convention_converter= n2d2.ConventionConverter(_parameters)
 
-    def __init__(self, from_arguments=True, **config_parameters):
+    def __init__(self, **config_parameters):
         """
         :param leak_slope: Leak slope for negative inputs, default=0.0
         :type leak_slope: float, optional
@@ -136,18 +139,17 @@ class Rectifier(ActivationFunction):
         :type quantizer: :py:class:`n2d2.quantizer.ActivationQuantizer`, optional
         """
         ActivationFunction.__init__(self, **config_parameters)
-
-        if from_arguments:
-            # No optional constructor arguments
-            self._set_N2D2_object(self._rectifier_activation_generators[self._model_key]())
-            for key, value in self._config_parameters.items():
-                if key is 'quantizer':
-                    if isinstance(value, n2d2.quantizer.Quantizer):
-                        self._N2D2_object.setQuantizer(value.N2D2())
-                    else:
-                        raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
+        # No optional constructor arguments
+        self._set_N2D2_object(self._rectifier_activation_generators[self._model_key]())
+        for key, value in self._config_parameters.items():
+            if key is 'quantizer':
+                if isinstance(value, n2d2.quantizer.Quantizer):
+                    self._N2D2_object.setQuantizer(value.N2D2())
                 else:
-                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+                    raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
+            else:
+                self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+        self.load_N2D2_parameters(self.N2D2())
 
 
 class Tanh(ActivationFunction):
@@ -166,7 +168,7 @@ class Tanh(ActivationFunction):
     _parameters.update(_activation_parameters)
     _convention_converter= n2d2.ConventionConverter(_parameters)
 
-    def __init__(self, from_arguments=True, **config_parameters):
+    def __init__(self, **config_parameters):
         r"""
         :param alpha: :math:`\alpha` parameter, default=1.0
         :type alpha: float, optional
@@ -175,17 +177,17 @@ class Tanh(ActivationFunction):
         """
         ActivationFunction.__init__(self, **config_parameters)
 
-        if from_arguments:
-            # No optional constructor arguments
-            self._set_N2D2_object(self._tanh_activation_generators[self._model_key]())
-            for key, value in self._config_parameters.items():
-                
-                if key is 'quantizer':
-                    if isinstance(value, n2d2.quantizer.Quantizer):
-                        self._N2D2_object.setQuantizer(value.N2D2())
-                    else:
-                        raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
+        # No optional constructor arguments
+        self._set_N2D2_object(self._tanh_activation_generators[self._model_key]())
+        for key, value in self._config_parameters.items():
+            
+            if key is 'quantizer':
+                if isinstance(value, n2d2.quantizer.Quantizer):
+                    self._N2D2_object.setQuantizer(value.N2D2())
                 else:
-                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+                    raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
+            else:
+                self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+        self.load_N2D2_parameters(self.N2D2())
 
 

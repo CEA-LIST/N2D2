@@ -55,8 +55,8 @@ class N2D2_Interface:
     _N2D2_type_map = {
         "integer": int,
         "float": float,
-        # "bool": lambda x: False if x == '0' else True,
-        "bool": bool,
+        "bool": lambda x: False if x == '0' else True,
+        # "bool": bool,
         "string": str,
         "list": list,
     }
@@ -76,14 +76,14 @@ class N2D2_Interface:
         """
         self._config_parameters = config_parameters
         self._N2D2_object = None
-        
-
-
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object):
-        interface = cls(**cls.load_N2D2_parameters(N2D2_object), from_arguments=False)
-        interface._set_N2D2_object(N2D2_object)
+        interface = cls.__new__(cls)
+        interface._constructor_arguments = {}
+        interface._optional_constructor_arguments = {}
+        interface.load_N2D2_parameters(N2D2_object)
+        interface._N2D2_object = N2D2_object
         return interface
 
     def _set_N2D2_object(self, N2D2_object):
@@ -106,20 +106,35 @@ class N2D2_Interface:
         returned_parameter, returned_type = self._N2D2_object.getParameterAndType(key)
         # TODO : This test trigger an error if we send an int instead of a float for example
         # Maybe allowing an auto cast for this kind of situations can be a good idea ?
-        if not isinstance(value, self._N2D2_type_map[returned_type]):
-            raise n2d2.error_handler.WrongInputType(self.n2d2_to_python_convention(key), str(type(value)), [str(self._N2D2_type_map[returned_type])])
+        if returned_type == "bool":
+            if not isinstance(value, bool):
+                raise n2d2.error_handler.WrongInputType(self._n2d2_to_python_convention(key), str(type(value)), [str(bool)])
+            else:
+                self._N2D2_object.setParameter(key, parsed_parameter)
+        elif not isinstance(value, self._N2D2_type_map[returned_type]):
+
+            raise n2d2.error_handler.WrongInputType(self._n2d2_to_python_convention(key), str(type(value)), [str(self._N2D2_type_map[returned_type])])
         else:
             self._N2D2_object.setParameter(key, parsed_parameter)
 
     def _set_N2D2_parameters(self, parameters):
         for key, value in parameters.items():
-            self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
+            self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
 
 
     def set_parameter(self, key, value):
-        self._config_parameters[key] = value
-        self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
-
+        if key in self._constructor_arguments:
+            self._constructor_arguments[key] = value
+            self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+        elif key in self._optional_constructor_arguments:
+            self._optional_constructor_arguments[key] = value
+            self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+        elif key in self._config_parameters:
+            self._config_parameters[key] = value
+            self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+        else:
+            raise ValueError(key + " is not a parameter of " + self.get_name()) 
+        
     def get_parameter(self, key):
         """
         :param key: Parameter name
@@ -135,15 +150,15 @@ class N2D2_Interface:
             raise ValueError(key + " is not a parameter of " + self.get_name()) 
 
     def _parse_optional_arguments(self, optional_argument_keys):
+        self.optional_argument_name = optional_argument_keys
         for key in optional_argument_keys:
             if key in self._config_parameters:
                 self._optional_constructor_arguments[key] = self._config_parameters.pop(key)
 
 
     @classmethod
-    def python_to_n2d2_convention(cls, key):
-        """
-        Convert the name of a python parameter to the n2d2 convention using a dictionnary.
+    def _python_to_n2d2_convention(cls, key):
+        """Convert the name of a python parameter to the n2d2 convention using a dictionnary.
         :param key: Parameter name
         :type key: str
         """
@@ -154,9 +169,8 @@ class N2D2_Interface:
         return new_key
 
     @classmethod
-    def n2d2_to_python_convention(cls, key):
-        """
-        Convert the name of a n2d2 parameter to the python convention using a dictionnary.
+    def _n2d2_to_python_convention(cls, key):
+        """Convert the name of a n2d2 parameter to the python convention using a dictionnary.
         :param key: Parameter name
         :type key: str
         """
@@ -169,7 +183,7 @@ class N2D2_Interface:
     def n2d2_function_argument_parser(self, arguments):
         new_arguments = {}
         for key, value in arguments.items():
-            new_key = self.python_to_n2d2_convention(key)
+            new_key = self._python_to_n2d2_convention(key)
             new_arguments[new_key] = value
         return new_arguments
 
@@ -186,14 +200,37 @@ class N2D2_Interface:
         else:
             return str(value)
 
+    def load_N2D2_parameters(self, N2D2_object):
+        self._config_parameters = self._get_N2D2_parameters(N2D2_object)
+        self._load_N2D2_optional_parameters(N2D2_object)
+        self._load_N2D2_constructor_parameters(N2D2_object)
+
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        """Method to load constructor paramaters
+        """
+        pass
+
+    def _load_N2D2_optional_parameters(self, N2D2_object):
+        """Method to load optional paramaters
+        """
+        pass
 
     @classmethod
-    def load_N2D2_parameters(cls, N2D2_object):
+    def _get_N2D2_complex_parameters(cls, N2D2_object):
+        """Method to overwrite in order to get complex parameters (like filler or solver for a cell)
+        """
+        return {}
+
+    @classmethod
+    def _get_N2D2_parameters(cls, N2D2_object):
         str_params = N2D2_object.getParameters()
         parameters = {}
         for param in str_params:
-            parameters[cls.n2d2_to_python_convention(param)] = cls._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](
+            parameters[cls._n2d2_to_python_convention(param)] = cls._N2D2_type_map[N2D2_object.getParameterAndType(param)[1]](
                 N2D2_object.getParameterAndType(param)[0])
+
+        for key, value in cls._get_N2D2_complex_parameters(N2D2_object).items():
+            parameters[key] = value
         return parameters
 
     def __str__(self):

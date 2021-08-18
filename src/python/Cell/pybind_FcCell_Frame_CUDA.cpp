@@ -34,8 +34,10 @@ void declare_FcCell_Frame_CUDA(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("FcCell_Frame_CUDA_" + typeStr);
     py::class_<FcCell_Frame_CUDA<T>, std::shared_ptr<FcCell_Frame_CUDA<T>>, FcCell, Cell_Frame_CUDA<T>> (m, pyClassName.c_str(), py::multiple_inheritance()) 
     .def(py::init<const DeepNet&, const std::string&, unsigned int, const std::shared_ptr<Activation>&>(),
-         py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation") = std::make_shared<TanhActivation_Frame_CUDA<Float_T> >())
+         py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation") = std::shared_ptr<Activation>())
     .def("initializeWeightQuantizer", &FcCell_Frame_CUDA<T>::initializeWeightQuantizer)
+    .def("resetWeights", &FcCell_Frame_CUDA<T>::resetWeights)
+    .def("resetBias", &FcCell_Frame_CUDA<T>::resetBias)
     ;
 
 }

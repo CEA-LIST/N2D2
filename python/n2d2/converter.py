@@ -31,6 +31,7 @@ object_dict = {
     "Tanh": n2d2.activation.Tanh,
 
     "SGD": n2d2.solver.SGD,
+    "Adam": n2d2.solver.Adam,
 
     "He": n2d2.filler.He,
     "Normal": n2d2.filler.Normal,
