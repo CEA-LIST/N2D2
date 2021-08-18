@@ -98,9 +98,13 @@ protected:
 
 template <typename T> class CudaDeviceTensor : public CudaBaseDeviceTensor {
 public:
-    inline CudaDeviceTensor(const CudaBaseTensor& base,
+    CudaDeviceTensor(const CudaBaseTensor& base,
         const std::shared_ptr<CudaDeviceTensor<T> >& dataDeviceOwner
             = std::shared_ptr<CudaDeviceTensor<T> >(),
+        size_t dataDeviceOffset = 0);
+    CudaDeviceTensor(const CudaBaseTensor& base,
+        long dataPtr, 
+        int dev,
         size_t dataDeviceOffset = 0);
     inline void fill(const T& value);
     T* getDevicePtr() const;
@@ -118,13 +122,6 @@ public:
 
         assert(dev < (int)mDataDevice.size());
         mDataDevice[dev] = dataDevice;
-    }
-    void setIsAView(bool value){ 
-        /*
-        * This method was created for the python API.
-        * It set a boolean that control if mDataDevice is free by the destructor method.
-        */
-        mIsAView = value;
     }
     bool isOwner() const 
     {
@@ -270,7 +267,7 @@ public:
     CudaTensor(const Tensor<T>& base, bool hostBased = true);
     CudaTensor(std::initializer_list<size_t> dims);
     CudaTensor(const std::vector<size_t>& dims);
-    inline void reserveHost(const std::vector<size_t>& dims);
+    CudaTensor(const std::vector<size_t>& dims, long dataPtr, int dev);
     inline void reserve(const std::vector<size_t>& dims);
     inline void resize(const std::vector<size_t>& dims);
     inline void resize(std::initializer_list<size_t> dims,
@@ -552,6 +549,33 @@ N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
 
     mDataDevice.resize(count, NULL);
     mForeignDataDevice.resize(count, NULL);
+}
+/**
+ * Constructor to build a CudaDeviceTensor from a data pointer.
+**/
+template <typename T>
+N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
+    long dataPtr, 
+    int dev,
+    size_t dataDeviceOffset)
+    : CudaBaseDeviceTensor(base),
+      mDataDeviceOffset(dataDeviceOffset),
+      mTensor(NULL),
+      mIsAView(true)
+{    
+    // ctor
+    CHECK_CUDA_STATUS(cudaSetDevice(dev));
+
+    assert(dev < (int)mDataDevice.size());
+    
+    int count = 1;
+    const cudaError_t status = cudaGetDeviceCount(&count);
+    if (status != cudaSuccess)
+        count = 1;
+
+    mDataDevice.resize(count, NULL);
+    mDataDevice[dev] = (T*)dataPtr;
+
 }
 
 template <typename T>
@@ -976,16 +1000,17 @@ N2D2::CudaTensor<T>::CudaTensor(const Tensor<T>& base,
                                                            dataDeviceOwner,
                                                            dataDeviceOffset);
 }
-
+/**
+ * Constructor to build a CudaTensor from a data pointer.
+**/
 template <typename T>
-void N2D2::CudaTensor<T>::reserveHost(const std::vector<size_t>& dims)
+N2D2::CudaTensor<T>::CudaTensor(const std::vector<size_t>& dims, long dataPtr, int dev)
+    : BaseTensor(dims),
+      Tensor<T>(dims),
+      CudaBaseTensor(false)
 {
-    /* 
-    * This method has been created for the Python API.
-    * It's used when changing the pointer of the device to update the host tensor
-    * without re-writting the device memory.
-    */
-    Tensor<T>::reserve(dims);
+    // ctor
+    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this, dataPtr, dev);
 }
 
 template <typename T>

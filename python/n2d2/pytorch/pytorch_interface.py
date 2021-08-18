@@ -59,9 +59,9 @@ def _to_n2d2(torch_tensor):
         else:
             raise ValueError("Could not convert " + type(dtype) + " to a known n2d2.Tensor datatype !")
 
-        n2d2_tensor = n2d2.Tensor([], datatype=data_type, cuda=True)
-        n2d2_tensor.N2D2().update_ptr(torch_tensor.data_ptr(), torch_tensor.get_device(), torch_tensor.shape)
-        n2d2_tensor.dtoh()
+        N2D2_tensor = n2d2.Tensor._cuda_tensor_generators[data_type]([2, 2], torch_tensor.data_ptr(), torch_tensor.get_device())
+        n2d2_tensor  = n2d2.Tensor.from_N2D2(N2D2_tensor)
+        
         dims = n2d2_tensor.dims()
         if n2d2_tensor.nb_dims() == 4:
             n2d2_tensor.reshape([dims[0], dims[1], dims[3], dims[2]])

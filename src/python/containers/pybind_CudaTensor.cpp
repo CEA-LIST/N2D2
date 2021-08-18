@@ -39,7 +39,6 @@ void declare_CudaDeviceTensor(py::module &m, const std::string& typeStr) {
     // .def("getDevicePtr", (T* (CudaDeviceTensor<T>::*)() const) &CudaDeviceTensor<T>::getDevicePtr)
     // .def("getDevicePtr", (T* (CudaDeviceTensor<T>::*)(int) const) &CudaDeviceTensor<T>::getDevicePtr, py::arg("dev") = -1)
     // .def("isDevicePtr", &CudaDeviceTensor<T>::isDevicePtr, py::arg("dev") = -1)
-    .def("setDevicePtr", (void (CudaDeviceTensor<T>::*)(T*)) &CudaDeviceTensor<T>::setDevicePtr, py::arg("dataDevice"))
     .def("isOwner", &CudaDeviceTensor<T>::isOwner);
 }
 
@@ -49,6 +48,8 @@ void declare_CudaTensor(py::module &m, const std::string& typeStr) {
     py::class_<CudaTensor<T>, Tensor<T>, CudaBaseTensor, BaseTensor>(m, pyClassName.c_str(), py::multiple_inheritance(), py::buffer_protocol())
     .def(py::init<>())
     .def(py::init<const std::vector<size_t>&, const T&>(), py::arg("dims"), py::arg("value") = T())
+    .def(py::init<const std::vector<size_t>&, long, int>(), py::arg("dims"), py::arg("data_ptr"), py::arg("dev"))
+
     /// Bare bones interface
     .def("__getitem__", [](const CudaTensor<T>& b, size_t i) {
         if (i >= b.size()) throw py::index_error();
@@ -150,19 +151,6 @@ void declare_CudaTensor(py::module &m, const std::string& typeStr) {
         const std::vector<size_t> dims(info.shape.begin(), info.shape.end());
         return new CudaTensor<T>(Tensor<T>(dims, static_cast<T*>(info.ptr)));
     }))
-
-    .def("update_ptr", [](CudaTensor<T>& b, long int_ptr, int dev, const std::vector<size_t>& dims){
-        /*
-        * This method update the host pointer with the given pointer.
-        * This allow to create a Tensor without copying data on the GPU.
-        * (Note : However a copy is necessary on the CPU for the host) 
-        */
-        CHECK_CUDA_STATUS(cudaSetDevice(dev));
-        b.setDevicePtr((T*)int_ptr);
-        b.reserveHost(dims);
-        b.synchronizeDToH();
-        b.deviceTensor().setIsAView(true);
-    })
     ;
 }
 
