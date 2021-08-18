@@ -33,6 +33,7 @@ void init_SoftmaxCell(py::module &m) {
 
     py::class_<SoftmaxCell, std::shared_ptr<SoftmaxCell>, Cell> (m, "SoftmaxCell", py::multiple_inheritance())
     .def("getWithLoss", &SoftmaxCell::getWithLoss)
+    .def("setWithLoss", &SoftmaxCell::setWithLoss)
     .def("getGroupSize", &SoftmaxCell::getGroupSize);
 
 }
