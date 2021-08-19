@@ -21,10 +21,6 @@
 import N2D2
 import n2d2
 import unittest
-from n2d2.n2d2_interface import N2D2_Interface as N2D2_Interface
-
-
-
 
 class test_params(unittest.TestCase):
     def setUp(self):
@@ -35,25 +31,6 @@ class test_params(unittest.TestCase):
 
     def test_parameters(self):
         pass
-        # if self.object: # We don't do test if it's the dummy class
-        #     parameters = self.object.N2D2().getParameters()
-        #     for param in self.parameters.keys():
-        #         if self.object._python_to_n2d2_convention(param) in parameters:
-        #             param_name = self.object._python_to_n2d2_convention(param)
-        #             N2D2_param, N2D2_type = self.object.N2D2().getParameterAndType(param_name)
-        #             # TODO : need test for bool ?
-        #             if N2D2_type == "bool":
-        #                 if self.parameters[param] != bool(N2D2_param):
-        #                     print("param : ", self.parameters[param], " | N2D2 : ", N2D2_param)
-        #                     input(self.__class__.__name__)
-        #             N2D2_param = N2D2_Interface._N2D2_type_map[N2D2_type](N2D2_param)
-        #             if isinstance(self.parameters[param], list):
-        #                 dtype = type(self.parameters[param][0])
-        #                 N2D2_param = N2D2_param.split(" ")[:-1]
-        #                 N2D2_param = [dtype(p) for p in N2D2_param]
-        #                 self.assertEqual(self.parameters[param], N2D2_param)
-        #             else:
-        #                 self.assertEqual(self.parameters[param], N2D2_param)
 
 
 
@@ -69,7 +46,6 @@ class test_Fc(test_params):
             "bias_filler": n2d2.filler.Normal(),
             'no_bias': True,
             # "mapping": n2d2.Tensor([5, 5],  datatype="bool"), # TODO : Add back mapping to Fc ?
-            "quantizer": n2d2.quantizer.SATCell(),
         }
         self.object = n2d2.cells.Fc(10, 5, **self.parameters)
 
@@ -82,7 +58,6 @@ class test_Fc(test_params):
         self.assertIs(self.parameters["bias_filler"].N2D2(), self.object.N2D2().getBiasFiller())
         # self.assertEqual(n2d2.Tensor.from_N2D2(self.parameters["mapping"].N2D2()), 
         #                  n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping())) # TODO : Add back mapping to Fc ?
-        self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
         super().test_parameters()
 
 
@@ -103,7 +78,6 @@ class test_Conv(test_params):
             "back_propagate": True,
             "weights_export_flip": True,
             "mapping": n2d2.Tensor([5, 5],  datatype="bool"),
-            "quantizer": n2d2.quantizer.SATCell(),
         }
         self.object = n2d2.cells.Conv(10, 5, [2, 2], **self.parameters)
 
@@ -120,7 +94,6 @@ class test_Conv(test_params):
         self.assertEqual(self.parameters["dilation_dims"], [self.object.N2D2().getDilationX(), self.object.N2D2().getDilationY()])
         self.assertEqual(n2d2.Tensor.from_N2D2(self.parameters["mapping"].N2D2()), 
                          n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping()))
-        self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
 
         super().test_parameters()
 
@@ -744,12 +717,10 @@ class test_Adam(test_params):
 class Linear(test_params):
     def setUp(self):
         self.parameters = {
-            "quantizer": n2d2.quantizer.SATAct(),
         }
         self.object = n2d2.activation.Linear(**self.parameters)
 
     def test_parameters(self):
-        self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
         super().test_parameters()
 
 class Rectifier(test_params):
@@ -757,27 +728,23 @@ class Rectifier(test_params):
         self.parameters = {
             "leak_slope": 0.0,
             "clipping": 0.5,
-            "quantizer": n2d2.quantizer.SATAct(),
         }
         self.object = n2d2.activation.Rectifier(**self.parameters)
 
     def test_parameters(self):
         self.assertEqual(self.parameters["leak_slope"], self.object.N2D2().getLeakSlope())
         self.assertEqual(self.parameters["clipping"], self.object.N2D2().getClipping())
-        self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
         super().test_parameters()
 
 class Tanh(test_params):
     def setUp(self):
         self.parameters = {
             "alpha": 0.0,
-            "quantizer": n2d2.quantizer.SATAct(),
         }
         self.object = n2d2.activation.Tanh(**self.parameters)
 
     def test_parameters(self):
         self.assertEqual(self.parameters["alpha"], self.object.N2D2().getAlpha())
-        self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
         super().test_parameters()
 
 ### Provider ###
@@ -800,43 +767,6 @@ class DataProvider(test_params):
         self.assertEqual(self.parameters["composite_stimuli"], self.object.N2D2().isCompositeStimuli())
         super().test_parameters()
 
-### Quantizer ###
-
-class SATAct(test_params):
-    def setUp(self):
-        self.parameters = {
-            "solver": n2d2.solver.SGD(),
-            "range": 1,
-            "alpha": 1.0,
-        }
-        self.object = n2d2.quantizer.SATAct(**self.parameters)
-
-    def test_parameters(self):
-        self.assertIs(self.parameters["solver"].N2D2(), self.object.N2D2().getSolver())
-        self.assertEqual(self.parameters["range"], self.object.N2D2().getRange())
-        self.assertEqual(self.parameters["alpha"], self.object.N2D2().getAlphaParameter())
-
-        # TODO : test getRange getAlpha
-        super().test_parameters()
-
-class SATCell(test_params):
-    def setUp(self):
-        self.parameters = {
-            "apply_scaling": True,
-            "apply_quantization": False,
-            "range": 1,
-            "quant_mode": "Symmetric",
-        }
-        self.object = n2d2.quantizer.SATCell(**self.parameters)
-
-    def test_parameters(self):
-        self.assertEqual(self.parameters["range"], self.object.N2D2().getRange())
-        self.assertEqual(self.object.N2D2().QuantMode.__members__[self.parameters["quant_mode"]],  
-                        self.object.N2D2().getQuantMode())
-        self.assertEqual(self.parameters["apply_quantization"], self.object.N2D2().getApplyQuantization())
-        self.assertEqual(self.parameters["apply_scaling"], self.object.N2D2().getApplyScaling())
-        
-        super().test_parameters()
 
 # print(self.object.N2D2().getParameters()) 
 if __name__ == '__main__':

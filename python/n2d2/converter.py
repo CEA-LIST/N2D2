@@ -38,9 +38,6 @@ object_dict = {
     "Xavier": n2d2.filler.Xavier,
     "Constant": n2d2.filler.Constant,
 
-    "SATCell": n2d2.quantizer.SATCell,
-    "SATActivation": n2d2.quantizer.SATAct,
-
     "Fc": n2d2.cells.Fc,
     "Conv": n2d2.cells.Conv,
     "Deconv": n2d2.cells.Deconv,

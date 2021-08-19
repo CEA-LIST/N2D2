@@ -68,3 +68,7 @@ class UndefinedModelError(RuntimeError):
 class UndefinedParameterError(RuntimeError):
    def __init__(self, value, obj):
       super().__init__("Parameter \'" + str(value) + "\' does not exist in object of type " + str(type(obj)))
+
+class IpOnly(NotImplementedError):
+    def __init__(self):
+      super().__init__("This feature is only available in n2d2-ip. (see : https://cea-list.github.io/N2D2-docs/about.html)")
