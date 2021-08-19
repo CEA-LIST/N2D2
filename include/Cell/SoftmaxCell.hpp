@@ -60,9 +60,9 @@ public:
     {
         return mWithLoss;
     };
-    void setWithLoss()
+    void setWithLoss(bool withLoss)
     {
-        mWithLoss = false;
+        mWithLoss = withLoss;
     };
     unsigned int getGroupSize() const
     {
