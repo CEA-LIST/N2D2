@@ -28,7 +28,29 @@ We highly recommend that you use a virtual environment, to set one up, you can f
 
 If everything went well, you should have the version ``3.7`` of python. 
 
-When you compile N2D2, the compiler creates a folder ``lib`` which contains the shared library of the binding between C++ and python (the file should be named ``N2D2-*.so``).
+With setup.py
+^^^^^^^^^^^^^
+
+To install n2d2, you can go to the root of the project and use the ``setup.py`` script (with you **virtual environment activated**).
+
+.. code-block:: bash
+
+        python setup.py install
+
+This should compile the n2d2 libraries and add it to your virtual environnement.
+
+You can test it by trying to import n2d2 in your python interpreter :
+
+.. code-block:: bash
+
+        python
+        >>> import n2d2
+        >>> exit()
+
+Manually
+^^^^^^^^
+If the ``setup.py`` script doesn't work, you can try to install manually the librarie.
+When you compile ``N2D2``, the compiler creates a folder ``lib`` which contains the shared library of the binding between C++ and python (the file should be named ``N2D2-*.so``).
 You need to move/copy this file at the root of the python folder ``N2D2-IP/N2D2/python``.
 
 You can check that the binding is working by moving to the python folder and typing :
@@ -39,7 +61,7 @@ You can check that the binding is working by moving to the python folder and typ
         >>> import N2D2
         >>> exit()
 
-If you have no error while importing ``N2D2``, the ``N2D2`` binding is working.
+If you have no error while importing ``N2D2``, the binding is working.
 
 If you don't want to always move/copy the library, you can add the path where the library is located to your ``pythonpath``.
 For this, you need to edit your ``.bashrc`` file. You can use any editor, for example : 
