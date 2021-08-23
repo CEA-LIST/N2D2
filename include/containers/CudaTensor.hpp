@@ -103,7 +103,7 @@ public:
             = std::shared_ptr<CudaDeviceTensor<T> >(),
         size_t dataDeviceOffset = 0);
     CudaDeviceTensor(const CudaBaseTensor& base,
-        long dataPtr, 
+        T* dataPtr, 
         int dev,
         size_t dataDeviceOffset = 0);
     inline void fill(const T& value);
@@ -555,7 +555,7 @@ N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
 **/
 template <typename T>
 N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
-    long dataPtr, 
+    T* dataPtr, 
     int dev,
     size_t dataDeviceOffset)
     : CudaBaseDeviceTensor(base),
@@ -564,15 +564,11 @@ N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
       mIsAView(true)
 {    
     // ctor
-    CHECK_CUDA_STATUS(cudaSetDevice(dev));
-
-    assert(dev < (int)mDataDevice.size());
-    
     int count = 1;
     const cudaError_t status = cudaGetDeviceCount(&count);
     if (status != cudaSuccess)
         count = 1;
-
+    assert(dev < (int)mDataDevice.size());
     mDataDevice.resize(count, NULL);
     mDataDevice[dev] = (T*)dataPtr;
 
@@ -1010,7 +1006,7 @@ N2D2::CudaTensor<T>::CudaTensor(const std::vector<size_t>& dims, long dataPtr, i
       CudaBaseTensor(false)
 {
     // ctor
-    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this, dataPtr, dev);
+    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this, (T*)dataPtr, dev);
 }
 
 template <typename T>

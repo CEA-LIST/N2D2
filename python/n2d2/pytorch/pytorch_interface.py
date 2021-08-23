@@ -58,8 +58,8 @@ def _to_n2d2(torch_tensor):
             data_type = "long"
         else:
             raise ValueError("Could not convert " + type(dtype) + " to a known n2d2.Tensor datatype !")
-
-        N2D2_tensor = n2d2.Tensor._cuda_tensor_generators[data_type]([2, 2], torch_tensor.data_ptr(), torch_tensor.get_device())
+        print("device : ",torch_tensor.get_device(), " pointer : ", torch_tensor.data_ptr(), " size : ", [i for i in torch_tensor.size()])
+        N2D2_tensor = n2d2.Tensor._cuda_tensor_generators[data_type]([i for i in torch_tensor.size()], torch_tensor.data_ptr(), torch_tensor.get_device())
         n2d2_tensor  = n2d2.Tensor.from_N2D2(N2D2_tensor)
         
         dims = n2d2_tensor.dims()
