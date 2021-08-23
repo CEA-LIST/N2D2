@@ -1,7 +1,8 @@
 /*
-    (C) Copyright 2020 CEA LIST. All Rights Reserved.
+    (C) Copyright 2021 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
                     Cyril MOINEAU (cyril.moineau@cea.fr)
+                    Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -20,26 +21,21 @@
 */
 
 #ifdef PYBIND
-#include "Scaling.hpp"
 
+#include "StimuliProvider.hpp"
+#include "DeepNet.hpp"
+#include "DeepNetQuantization.hpp"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
-void init_ScalingMode(py::module &m) {
-    py::enum_<ScalingMode>(m, "ScalingMode", py::arithmetic())
-    .value("NONE", ScalingMode::NONE)
-    .value("FLOAT_MULT", ScalingMode::FLOAT_MULT)
-    .value("FIXED_MULT16", ScalingMode::FIXED_MULT16)
-    .value("FIXED_MULT32", ScalingMode::FIXED_MULT32)
-    .value("SINGLE_SHIFT", ScalingMode::SINGLE_SHIFT)
-    .value("DOUBLE_SHIFT", ScalingMode::DOUBLE_SHIFT);
-    
-    py::enum_<WeightsApprox>(m, "WeightsApprox")
-    .value("NONE", WeightsApprox::NONE)
-    .value("RINTF", WeightsApprox::RINTF);
+void init_DeepNetQuantization(py::module &m) {
+    py::class_<DeepNetQuantization, std::shared_ptr<DeepNetQuantization>>(m, "DeepNetQuantization", py::multiple_inheritance())
+    .def(py::init<DeepNet&>(), py::arg("deepNet"))   
+    ;
 }
 }
 #endif
