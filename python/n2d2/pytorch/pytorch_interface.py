@@ -20,7 +20,6 @@
 """
 import torch
 import n2d2
-import N2D2
 
 def _switching_convention(dims):
     return [dims[3], dims[2], dims[0], dims[1]]
@@ -51,17 +50,15 @@ def _to_n2d2(torch_tensor):
             data_type = "int"
         elif dtype is torch.int:
             data_type = "int"
-        # TODO : CudaTensor<long> cause ImportError when binded.
         elif dtype is torch.int64:
             data_type = "long"
         elif dtype is torch.long:
             data_type = "long"
         else:
             raise ValueError("Could not convert " + type(dtype) + " to a known n2d2.Tensor datatype !")
-        print("device : ",torch_tensor.get_device(), " pointer : ", torch_tensor.data_ptr(), " size : ", [i for i in torch_tensor.size()])
         N2D2_tensor = n2d2.Tensor._cuda_tensor_generators[data_type]([i for i in torch_tensor.size()], torch_tensor.data_ptr(), torch_tensor.get_device())
         n2d2_tensor  = n2d2.Tensor.from_N2D2(N2D2_tensor)
-        
+        n2d2_tensor.dtoh()
         dims = n2d2_tensor.dims()
         if n2d2_tensor.nb_dims() == 4:
             n2d2_tensor.reshape([dims[0], dims[1], dims[3], dims[2]])

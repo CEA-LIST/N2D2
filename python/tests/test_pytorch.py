@@ -65,6 +65,7 @@ class test_tensor_conversion(unittest.TestCase):
                         dtype=torch.int32, device=torch.device('cuda:0'))
  
         b = n2d2.pytorch.pytorch_interface._to_n2d2(a)
+        b.dtoh()
         self.assertTrue(b.is_cuda)
         self.assertEqual(b.dims(), self.n2d2_format)
 
@@ -72,31 +73,35 @@ class test_tensor_conversion(unittest.TestCase):
             self.assertEqual(i, 1)
         
         b[0] = 20
-        b.htod() 
+        b.dtoh() 
         self.assertEqual(b[0], a[0][0][0][0].data)
 
     def test_torch_to_n2d2_float(self):
         torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
                         dtype=torch.float, device=torch.device('cuda:0'))
         float_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
+        float_n2d2_tensor.dtoh()
         for i in float_n2d2_tensor: 
             self.assertEqual(i, 1)
     def test_torch_to_n2d2_double(self):
         torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
                         dtype=torch.double, device=torch.device('cuda:0'))
         double_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
+        double_n2d2_tensor.dtoh()
         for i in double_n2d2_tensor: 
             self.assertEqual(i, 1)
     def test_torch_to_n2d2__short(self):
         torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
                         dtype=torch.short, device=torch.device('cuda:0'))
         short_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
+        short_n2d2_tensor.dtoh()
         for i in short_n2d2_tensor: 
             self.assertEqual(i, 1)
     def test_torch_to_n2d2_long(self):
         torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
                         dtype=torch.long, device=torch.device('cuda:0'))
         long_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
+        long_n2d2_tensor.dtoh()
         for i in long_n2d2_tensor: 
             self.assertEqual(i, 1)
 
@@ -139,10 +144,7 @@ class Test_Networks():
             i = i.item()
             j = j.item()
             if j != 0:
-                if abs(i-j)/abs(j) >= comparison_precision:
-                    return -1
-            else:
-                if abs(i) >= comparison_precision:
+                if abs(i-j) > comparison_precision * abs(j):
                     return -1
         return 0
 
@@ -429,10 +431,13 @@ class TorchLeNet(torch.nn.Module):
 
 class test_interop_DeepNetCell(unittest.TestCase):
 
-    # TODO : use the tester class !
-    def test_ONNX(self):
-        print("===========================================================")
-        print("Replacing Pytorch by N2D2")
+    def tearDown(self):
+        n2d2.global_variables.default_model = "Frame"
+
+    # TODO : make an equivalent test for CUDA
+    def test_ONNX_CPU(self):
+        print('=== Testing ONNX CPU ===')
+
         model = MNIST_CNN()
         model_path = './tmp.onnx'
         # Exporting to ONNX
@@ -444,23 +449,83 @@ class test_interop_DeepNetCell(unittest.TestCase):
         provider = n2d2.provider.DataProvider(db,[28, 28, 1], batch_size=batch_size)
         deepNet = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "./tmp.onnx")
         remove(model_path)
+        deepNet.set_solver(SGD(
+                decay=0.0, iteration_size=1, learning_rate=learning_rate, learning_rate_decay=0.1, 
+                learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0,
+                momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25))
+        deepNet[-1].N2D2().setWithLoss(False)
+        deepNet[-1].load_N2D2_parameters(deepNet[-1].N2D2())
+        print(deepNet)
+        
+        # Creating the N2D2 equivalent
+        class new_block(torch.nn.Module):   
+            def __init__(self):
+                super(new_block, self).__init__()
+                self.deepNet = n2d2.pytorch.Block(deepNet)
+
+            # Defining the forward pass    
+            def forward(self, x):
+                x = self.deepNet(x)
+                x = torch.squeeze(x)
+                return x
 
         # Creating the N2D2 equivalent
-        n2d2_deepNet = n2d2.pytorch.Block(deepNet)
-        
-        input_tensor = torch.ones(batch_size, 1, 28, 28)
-        pytorch_output = model(input_tensor)
-        N2D2_output = n2d2_deepNet(input_tensor)
-        N2D2_output = N2D2_output.squeeze()
-        print("Pytorch output :")
-        print(pytorch_output)
-        print("N2D2 output :")
-        print(N2D2_output)
-        for i, j in zip(torch.flatten(pytorch_output), torch.flatten(N2D2_output)):
-            i = round(i.item(), 4)
-            j = round(j.item(), 4)
-            self.assertEqual(i, j)
+        torch_model = model
+        n2d2_model = new_block()
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs)
+        res = tester.test_multiple_step((batch_size, 1, 28, 28), (batch_size, 10))
+        self.assertNotEqual(res, -1, msg="CPU train failed")
 
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 28, 28), (batch_size, 10))
+        self.assertNotEqual(res, -1, msg="CPU eval failed")
+
+    def test_ONNX_GPU(self):
+        print('=== Testing ONNX GPU ===')
+        n2d2.global_variables.default_model = "Frame_CUDA"
+
+        model = MNIST_CNN()
+        model_path = './tmp.onnx'
+        # Exporting to ONNX
+        dummy_in = torch.randn(batch_size, 1, 28, 28)
+        torch.onnx.export(model, dummy_in, model_path, verbose=True)
+
+        # Importing the ONNX to N2D2
+        db = n2d2.database.Database()
+        provider = n2d2.provider.DataProvider(db,[28, 28, 1], batch_size=batch_size)
+        deepNet = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "./tmp.onnx")
+        remove(model_path)
+        deepNet.set_solver(SGD(
+                decay=0.0, iteration_size=1, learning_rate=learning_rate, learning_rate_decay=0.1, 
+                learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0,
+                momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25))
+        deepNet[-1].N2D2().setWithLoss(False)
+        deepNet[-1].load_N2D2_parameters(deepNet[-1].N2D2())
+        print(deepNet)
+        
+        # Creating the N2D2 equivalent
+        class new_block(torch.nn.Module):   
+            def __init__(self):
+                super(new_block, self).__init__()
+                self.deepNet = n2d2.pytorch.Block(deepNet)
+
+            # Defining the forward pass    
+            def forward(self, x):
+                x = self.deepNet(x)
+                x = torch.squeeze(x)
+                return x
+
+        # Creating the N2D2 equivalent
+        torch_model = model
+        n2d2_model = new_block()
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs, cuda=True)
+        res = tester.test_multiple_step((batch_size, 1, 28, 28), (batch_size, 10))
+        self.assertNotEqual(res, -1, msg="GPU train failed")
+
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, test_backward=False, cuda=True)
+        res = tester.test_multiple_step((batch_size, 1, 28, 28), (batch_size, 10))
+        self.assertNotEqual(res, -1, msg="GPU eval failed")
+        
 class test_interop(unittest.TestCase):
 
     def tearDown(self):
@@ -468,6 +533,7 @@ class test_interop(unittest.TestCase):
 
     def test_conv_CPU(self):
         print('=== Testing Conv layer CPU ===')
+        n2d2.global_variables.default_model = "Frame"
         torch_model = TorchConv()
         n2d2_model = N2D2Conv()
         print("Train ...")
@@ -494,6 +560,7 @@ class test_interop(unittest.TestCase):
 
     def test_fc_CPU(self):
         print('=== Testing Fc layer CPU ===')
+        n2d2.global_variables.default_model = "Frame"
         # TODO : Fc fail : RuntimeError: Cell_Frame<T>::linkInput(): number of mapping rows must be equal to the number of input channels
         torch_model = TorchFc()
         n2d2_model = N2D2Fc()
@@ -522,6 +589,7 @@ class test_interop(unittest.TestCase):
 
     def test_pool_CPU(self):
         print('=== Testing Pool layer CPU ===')
+        n2d2.global_variables.default_model = "Frame"
         torch_model = TorchPool()
         n2d2_model = N2D2Pool()
         print("Train ...")
@@ -549,6 +617,7 @@ class test_interop(unittest.TestCase):
 
     def test_BN_CPU(self):
         print('=== Testing BatchNorm layer CPU ===')
+        n2d2.global_variables.default_model = "Frame"
         torch_model = TorchBN()
         n2d2_model = N2D2BN()
         print("Train ...")
@@ -577,6 +646,7 @@ class test_interop(unittest.TestCase):
 
     def test_LeNet_CPU(self):
         print('=== Testing LENET CPU ===')
+        n2d2.global_variables.default_model = "Frame"
         torch_model = TorchLeNet()
         n2d2_model = N2D2LeNet()
         print("Train ...")
