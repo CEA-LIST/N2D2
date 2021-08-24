@@ -98,9 +98,13 @@ protected:
 
 template <typename T> class CudaDeviceTensor : public CudaBaseDeviceTensor {
 public:
-    inline CudaDeviceTensor(const CudaBaseTensor& base,
+    CudaDeviceTensor(const CudaBaseTensor& base,
         const std::shared_ptr<CudaDeviceTensor<T> >& dataDeviceOwner
             = std::shared_ptr<CudaDeviceTensor<T> >(),
+        size_t dataDeviceOffset = 0);
+    CudaDeviceTensor(const CudaBaseTensor& base,
+        T* dataPtr, 
+        int dev,
         size_t dataDeviceOffset = 0);
     inline void fill(const T& value);
     T* getDevicePtr() const;
@@ -119,7 +123,7 @@ public:
         assert(dev < (int)mDataDevice.size());
         mDataDevice[dev] = dataDevice;
     }
-    bool isOwner() const
+    bool isOwner() const 
     {
         return (!mDataDeviceOwner);
     }
@@ -150,6 +154,8 @@ protected:
     const std::shared_ptr<CudaDeviceTensor<T> > mDataDeviceOwner;
     const size_t mDataDeviceOffset;
     mutable cudnnTensorDescriptor_t mTensor;
+    bool mIsAView; // If True the tensor doesn't own mDataDevice and thus shouldn't free it in destructor.
+
 };
 
 class CudaBaseTensor : public virtual BaseTensor {
@@ -261,6 +267,7 @@ public:
     CudaTensor(const Tensor<T>& base, bool hostBased = true);
     CudaTensor(std::initializer_list<size_t> dims);
     CudaTensor(const std::vector<size_t>& dims);
+    CudaTensor(const std::vector<size_t>& dims, T* dataPtr, int dev);
     inline void reserve(const std::vector<size_t>& dims);
     inline void resize(const std::vector<size_t>& dims);
     inline void resize(std::initializer_list<size_t> dims,
@@ -531,7 +538,8 @@ N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
     : CudaBaseDeviceTensor(base),
       mDataDeviceOwner(dataDeviceOwner),
       mDataDeviceOffset(dataDeviceOffset),
-      mTensor(NULL)
+      mTensor(NULL),
+      mIsAView(false)
 {
     // ctor
     int count = 1;
@@ -541,6 +549,29 @@ N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
 
     mDataDevice.resize(count, NULL);
     mForeignDataDevice.resize(count, NULL);
+}
+/**
+ * Constructor to build a CudaDeviceTensor from a data pointer.
+**/
+template <typename T>
+N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
+    T* dataPtr, 
+    int dev,
+    size_t dataDeviceOffset)
+    : CudaBaseDeviceTensor(base),
+      mDataDeviceOffset(dataDeviceOffset),
+      mTensor(NULL),
+      mIsAView(true)
+{    
+    // ctor
+    int count = 1;
+    const cudaError_t status = cudaGetDeviceCount(&count);
+    if (status != cudaSuccess)
+        count = 1;
+    mDataDevice.resize(count, NULL);
+    assert(dev < (int)mDataDevice.size());
+    mDataDevice[dev] = (T*)dataPtr;
+
 }
 
 template <typename T>
@@ -862,20 +893,21 @@ void N2D2::CudaDeviceTensor<T>::aggregateAllTo(int dstDev,
 
 template <typename T> N2D2::CudaDeviceTensor<T>::~CudaDeviceTensor()
 {
-    for (size_t dev = 0; dev < mDataDevice.size(); ++dev) {
-        if (mDataDevice[dev] != NULL) {
-            cudaSetDevice(dev);
-            cudaFree(mDataDevice[dev]);
-            mDataDevice[dev] = NULL;
-        }
+    if (!mIsAView){ 
+        for (size_t dev = 0; dev < mDataDevice.size(); ++dev) {
+            if (mDataDevice[dev] != NULL) {
+                cudaSetDevice(dev);
+                cudaFree(mDataDevice[dev]);
+                mDataDevice[dev] = NULL;
+            }
 
-        if (mForeignDataDevice[dev] != NULL) {
-            // BUG: current device may not be the one on which memory was allocated!
-            cudaFree(mForeignDataDevice[dev]);
-            mForeignDataDevice[dev] = NULL;
+            if (mForeignDataDevice[dev] != NULL) {
+                // BUG: current device may not be the one on which memory was allocated!
+                cudaFree(mForeignDataDevice[dev]);
+                mForeignDataDevice[dev] = NULL;
+            }
         }
     }
-
 
     if (mTensor != NULL)
         cudnnDestroyTensorDescriptor(mTensor);
@@ -963,6 +995,18 @@ N2D2::CudaTensor<T>::CudaTensor(const Tensor<T>& base,
     mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this,
                                                            dataDeviceOwner,
                                                            dataDeviceOffset);
+}
+/**
+ * Constructor to build a CudaTensor from a data pointer.
+**/
+template <typename T>
+N2D2::CudaTensor<T>::CudaTensor(const std::vector<size_t>& dims, T* dataPtr, int dev)
+    : BaseTensor(dims),
+      Tensor<T>(dims),
+      CudaBaseTensor(false)
+{
+    // ctor
+    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this, dataPtr, dev);
 }
 
 template <typename T>

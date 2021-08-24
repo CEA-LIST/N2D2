@@ -25,13 +25,12 @@ import N2D2
 def _switching_convention(dims):
     return [dims[3], dims[2], dims[0], dims[1]]
 
-# TODO : It may be possible for CUDA tensor to just pass the device adress to the CUDA kernel
-# cf: https://github.com/pytorch/pytorch/issues/1649
-# Getting the ownership of the address may be difficult ...
 
 def _to_n2d2(torch_tensor):
     """
-    Convert torch.Tensor -> n2d2.Tensor
+    Convert torch.Tensor -> n2d2.Tensor.
+    The conversion always creates a CPU memory copy but not a GPU one if the tensor is CUDA.
+    This method also convert the shape of the tensor to follow N2D2 convention.
     """
     n2d2_tensor = None
 
@@ -59,10 +58,10 @@ def _to_n2d2(torch_tensor):
             data_type = "long"
         else:
             raise ValueError("Could not convert " + type(dtype) + " to a known n2d2.Tensor datatype !")
-
-        n2d2_tensor = n2d2.Tensor([], datatype=data_type, cuda=True)
-        n2d2_tensor.N2D2().update_ptr(torch_tensor.data_ptr(), torch_tensor.get_device(), torch_tensor.shape)
-        n2d2_tensor.dtoh()
+        print("device : ",torch_tensor.get_device(), " pointer : ", torch_tensor.data_ptr(), " size : ", [i for i in torch_tensor.size()])
+        N2D2_tensor = n2d2.Tensor._cuda_tensor_generators[data_type]([i for i in torch_tensor.size()], torch_tensor.data_ptr(), torch_tensor.get_device())
+        n2d2_tensor  = n2d2.Tensor.from_N2D2(N2D2_tensor)
+        
         dims = n2d2_tensor.dims()
         if n2d2_tensor.nb_dims() == 4:
             n2d2_tensor.reshape([dims[0], dims[1], dims[3], dims[2]])
@@ -80,6 +79,8 @@ def _to_n2d2(torch_tensor):
 def _to_torch(N2D2_tensor):
     """
     Convert N2D2.Tensor -> torch.Tensor
+    The conversion creates a GPU memory copy if the tensor is CUDA.
+    This method also convert the shape of the tensor to follow torch convention.
     """
     n2d2_tensor = n2d2.Tensor.from_N2D2(N2D2_tensor)
     numpy_tensor = n2d2_tensor.to_numpy() 
