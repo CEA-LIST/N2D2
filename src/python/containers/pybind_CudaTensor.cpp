@@ -48,8 +48,14 @@ void declare_CudaTensor(py::module &m, const std::string& typeStr) {
     py::class_<CudaTensor<T>, Tensor<T>, CudaBaseTensor, BaseTensor>(m, pyClassName.c_str(), py::multiple_inheritance(), py::buffer_protocol())
     .def(py::init<>())
     .def(py::init<const std::vector<size_t>&, const T&>(), py::arg("dims"), py::arg("value") = T())
-    .def(py::init<const std::vector<size_t>&, long, int>(), py::arg("dims"), py::arg("data_ptr"), py::arg("dev"))
-
+    // .def(py::init<const std::vector<size_t>&, long, int>(), py::arg("dims"), py::arg("data_ptr"), py::arg("dev"))
+    .def(py::init([](const std::vector<size_t>& dims, long data_ptr, int dev){
+        /* We use a lambda function to bind this constructor.
+        *  If we don't add this lambda function, pybind will understand that the Cpp function wait for a pointer to the python variable data_ptr.
+        *  But in reality, data_ptr is already a pointer, this is why we need an explicit conversion.  
+        */ 
+        return new CudaTensor<T>(dims, (T*)data_ptr, dev);
+    }
     /// Bare bones interface
     .def("__getitem__", [](const CudaTensor<T>& b, size_t i) {
         if (i >= b.size()) throw py::index_error();

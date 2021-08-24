@@ -267,7 +267,7 @@ public:
     CudaTensor(const Tensor<T>& base, bool hostBased = true);
     CudaTensor(std::initializer_list<size_t> dims);
     CudaTensor(const std::vector<size_t>& dims);
-    CudaTensor(const std::vector<size_t>& dims, long dataPtr, int dev);
+    CudaTensor(const std::vector<size_t>& dims, T* dataPtr, int dev);
     inline void reserve(const std::vector<size_t>& dims);
     inline void resize(const std::vector<size_t>& dims);
     inline void resize(std::initializer_list<size_t> dims,
@@ -1000,13 +1000,13 @@ N2D2::CudaTensor<T>::CudaTensor(const Tensor<T>& base,
  * Constructor to build a CudaTensor from a data pointer.
 **/
 template <typename T>
-N2D2::CudaTensor<T>::CudaTensor(const std::vector<size_t>& dims, long dataPtr, int dev)
+N2D2::CudaTensor<T>::CudaTensor(const std::vector<size_t>& dims, T* dataPtr, int dev)
     : BaseTensor(dims),
       Tensor<T>(dims),
       CudaBaseTensor(false)
 {
     // ctor
-    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this, (T*)dataPtr, dev);
+    mDeviceTensor = std::make_shared<CudaDeviceTensor<T> >(*this, dataPtr, dev);
 }
 
 template <typename T>
