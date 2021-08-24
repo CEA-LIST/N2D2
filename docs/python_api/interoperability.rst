@@ -89,9 +89,11 @@ Finally we will run the newly created model with torch by using :py:class:`n2d2.
         deepNetCell = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "./tmp.onnx")
         remove(model_path) # Cleaning temporary onnx file
 
-        # Wrapping the DeepNetCell
-        n2d2_deepNet = n2d2.pytorch.Block(deepNetCell)
+        # Setting SoftMax layer with_loss=False
+        deepNetCell[-1].set_with_loss(False)
 
+        n2d2_deepNet = n2d2.pytorch.Block(deepNetCell)
+        
         # Dummy imput and label for the example
         input_tensor = torch.ones(batch_size, 1, 28, 28)
         label = torch.ones(batch_size, 10)
@@ -104,3 +106,32 @@ Finally we will run the newly created model with torch by using :py:class:`n2d2.
         loss = criterion(output, label)
         loss.backward()
         opt.step() # Not necessary here because we don't have torch parameters to update.
+
+Known issues :
+~~~~~~~~~~~~~~
+
+Gradient is badly computed when using import from ONNX
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When you import a network from ONNX, if the last layer imported is a :py:class:`n2d2.cells.Softmax`
+then there is a risk the loss is badly computed if you don't use a ``CrossEntropy`` loss.
+
+By default when imported the :py:class:`n2d2.cells.Softmax` set the argument ``withLoss=True``. 
+This argument skip the computation of the gradient for this cell.
+
+So you need to select the :py:class:`n2d2.cells.Softmax` object and use the method :py:meth:`n2d2.cells.Softmax.set_with_loss`.
+
+Output shape must be rigorously the same as the label shape
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 
+
+If you use a classification network, the output shape for N2D2 will be ``[nb_batch, nb_features, 1, 1]``. 
+Whereas Torch would wait for a shape like ``[nb_batch, nb_features]``.
+
+This represent the same data but the difference in shape can cause computation issues.
+This is why if you are in this case we recommend you to flatten the unit dimensions by using the Torch method ``squeeze``.
+
+.. Note::
+
+        If you don't have the same shape for your output and your label you will get a warning from Torch.
+
+

@@ -1201,6 +1201,14 @@ class Softmax(NeuralNetworkCell, Datatyped):
         self._N2D2_object.propagate(self._inference)
 
         return self.get_outputs()
+    
+    def set_with_loss(self, with_loss):
+        '''Set the `with_loss` parameter of this cell.
+        
+        :param with_loss: New value
+        :type with_loss: bool
+        '''
+        self.N2D2().setWithLoss(with_loss)
 
 
 
