@@ -568,8 +568,8 @@ N2D2::CudaDeviceTensor<T>::CudaDeviceTensor(const CudaBaseTensor& base,
     const cudaError_t status = cudaGetDeviceCount(&count);
     if (status != cudaSuccess)
         count = 1;
-    assert(dev < (int)mDataDevice.size());
     mDataDevice.resize(count, NULL);
+    assert(dev < (int)mDataDevice.size());
     mDataDevice[dev] = (T*)dataPtr;
 
 }
