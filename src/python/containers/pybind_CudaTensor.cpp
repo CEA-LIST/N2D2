@@ -55,7 +55,7 @@ void declare_CudaTensor(py::module &m, const std::string& typeStr) {
         *  But in reality, data_ptr is already a pointer, this is why we need an explicit conversion.  
         */ 
         return new CudaTensor<T>(dims, (T*)data_ptr, dev);
-    }
+    }))
     /// Bare bones interface
     .def("__getitem__", [](const CudaTensor<T>& b, size_t i) {
         if (i >= b.size()) throw py::index_error();
