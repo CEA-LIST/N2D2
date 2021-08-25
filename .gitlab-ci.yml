@@ -37,13 +37,14 @@ test:ubuntu:
     - make test
 
 test:python_api:
-  extends: .before_script_template
   stage: test
   tags:
     - ubuntu
   image: "python:3.7"
   before_script:
     - cd python
+    - ls 
+    - cp ../build/lib/*.so ./
     - pip install -r requirements.txt
   script:
     # Run on discovery all tests located in python/tests and discard the stdout to only show the errors/warnings and the results of the tests
