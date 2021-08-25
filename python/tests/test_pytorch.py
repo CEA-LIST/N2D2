@@ -453,8 +453,7 @@ class test_interop_DeepNetCell(unittest.TestCase):
                 decay=0.0, iteration_size=1, learning_rate=learning_rate, learning_rate_decay=0.1, 
                 learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0,
                 momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25))
-        deepNet[-1].N2D2().setWithLoss(False)
-        deepNet[-1].load_N2D2_parameters(deepNet[-1].N2D2())
+        deepNet[-1].set_with_loss(False)
         print(deepNet)
         
         # Creating the N2D2 equivalent
@@ -499,8 +498,7 @@ class test_interop_DeepNetCell(unittest.TestCase):
                 decay=0.0, iteration_size=1, learning_rate=learning_rate, learning_rate_decay=0.1, 
                 learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0,
                 momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25))
-        deepNet[-1].N2D2().setWithLoss(False)
-        deepNet[-1].load_N2D2_parameters(deepNet[-1].N2D2())
+        deepNet[-1].set_with_loss(False)
         print(deepNet)
         
         # Creating the N2D2 equivalent

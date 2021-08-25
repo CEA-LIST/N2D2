@@ -40,7 +40,7 @@ test:python_api:
   extends: .before_script_template
   stage: test
   tags:
-    - python_api
+    - ubuntu
   image: "python:3.7"
   before_script:
     - cd ../python
