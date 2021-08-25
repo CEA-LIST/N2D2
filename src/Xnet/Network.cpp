@@ -87,13 +87,14 @@ N2D2::NetworkObserver::~NetworkObserver()
     mNet.removeObserver(this);
 }
 
-N2D2::Network::Network(unsigned int seed)
+N2D2::Network::Network(unsigned int seed, bool saveSeed)
     : mInitialized(false),
       mFirstEvent(0),
       mLastEvent(0),
       mStop(0),
       mDiscard(false),
-      mStartTime(std::chrono::high_resolution_clock::now())
+      mStartTime(std::chrono::high_resolution_clock::now()),
+      mSaveSeed(saveSeed)
 {
 // ctor
 #if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
@@ -125,14 +126,16 @@ N2D2::Network::Network(unsigned int seed)
         seed = mStartTime.time_since_epoch().count();
 
     Random::mtSeed(seed);
+    if (mSaveSeed){
+        std::ofstream seedFile("seed.dat");
 
-    std::ofstream seedFile("seed.dat");
+        if (!seedFile.good())
+            throw std::runtime_error("Could not create seed file.");
 
-    if (!seedFile.good())
-        throw std::runtime_error("Could not create seed file.");
-
-    seedFile << seed;
-    seedFile.close();
+        seedFile << seed;
+        seedFile.close();
+    }
+    
 }
 
 bool N2D2::Network::run(Time_T stop, bool clearActivity)

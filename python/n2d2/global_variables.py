@@ -27,7 +27,7 @@ model_cache = expanduser("~") + "/MODELS"
 default_seed = 1
 default_model = 'Frame'
 default_datatype = 'float'
-default_net = N2D2.Network(default_seed)
+default_net = N2D2.Network(default_seed, saveSeed=False)
 cuda_compiled = N2D2.cuda_compiled
 n2d2_ip = N2D2.N2D2_IP # True if n2d2-ip is compiled
 
