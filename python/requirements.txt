@@ -6,6 +6,7 @@ attrs==20.3.0
 Babel==2.9.0
 bleach==3.3.0
 breathe==4.29.0
+build==0.6.0.post1
 cachetools==4.2.1
 certifi==2020.11.8
 chardet==3.0.4
@@ -50,6 +51,7 @@ opt-einsum==3.3.0
 oset==0.1.3
 packaging==20.7
 pandocfilters==1.4.3
+pep517==0.11.0
 Pillow==8.1.0
 protobuf==3.14.0
 pyasn1==0.4.8
@@ -85,10 +87,12 @@ tensorflow==2.4.1
 tensorflow-estimator==2.4.0
 termcolor==1.1.0
 testpath==0.4.4
+tomli==1.2.1
 torch==1.7.1
 torchvision==0.8.2
 tornado==6.1
 traitlets==5.0.5
+typeguard==2.12.0
 typing-extensions==3.7.4.3
 urllib3==1.26.2
 webencodings==0.5.1
