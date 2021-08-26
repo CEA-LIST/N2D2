@@ -91,35 +91,60 @@ Default values
 --------------
 
 The python API used default values that you can modify at any time in your scripts.
-You can modify the following values :
 
-Default Model
-~~~~~~~~~~~~~
+List of modifiable parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The default model used is ``Frame`` which correspond to a pure CPU based computation.
-If you have compiled N2D2 with **CUDA**, you can accelerate your neural networks by using a ``Frame_CUDA`` model. 
-To do so, use the following line :
+Here we will list parameters which can be directly modified in your script.
 
-.. testcode::
++--------------------------+-------------------------------------------------------------------+
+| Default parameters       | Description                                                       |
++==========================+===================================================================+
+| ``default_model``        | If you have compiled N2D2 with **CUDA**, you                      |
+|                          | can use ``Frame_CUDA``, default= ``Frame``                        |
++--------------------------+-------------------------------------------------------------------+
+| ``default_datatype``     | Datatype of the layer of the neural network. Can be ``int``or     |
+|                          | ``float``, default= ``float``                                     |
+|                          |                                                                   |
+|                          | **Important :** This variable doesn't affect the data type of     |
+|                          | :py:class:`n2d2.Tensor` objects.                                  |
++--------------------------+-------------------------------------------------------------------+
+| ``verbosity``            | Level of verbosity, can be                                        |
+|                          | ``n2d2.global_variables.Verbosity.graph_only``,                   |
+|                          | ``n2d2.global_variables.Verbosity.short`` or                      |
+|                          | ``n2d2.global_variables.Verbosity.detailed``,                     |
+|                          | default= ``n2d2.global_variables.Verbosity.detailed``             |
++--------------------------+-------------------------------------------------------------------+
+
+Example
+^^^^^^^
+
+.. code-block:: python
 
         n2d2.global_variables.default_model = "Frame_CUDA"
 
-Default Data Type
-~~~~~~~~~~~~~~~~~
-
-The default data type used is ``float``, but you can change it at any time. 
-
-The available default data type available are :
-
-- ``int``
-- ``float``
-
-To change the default data type use the following line :
-
-.. testcode::
-
         n2d2.global_variables.default_datatype = "int"
 
-.. note::
+        n2d2.global_variables.verbosity = n2d2.global_variables.Verbosity.graph_only
 
-    The :py:class:`n2d2.Tensor` class is not affected by this variable.
+
+Method to set default values
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some modifiable parameters require a method to be set.
+
++--------------------------+-------------------------------------------------------------------+
+| Default values           | Description                                                       |
++==========================+===================================================================+
+| ``set_random_seed``      | Seed used to generate random numbers, default = ``0``             |
++--------------------------+-------------------------------------------------------------------+
+| ``set_cuda_device``      | Device to use for GPU computation with CUDA, default = ``0``      |
++--------------------------+-------------------------------------------------------------------+
+
+Example
+^^^^^^^
+
+.. code-block:: python
+
+        n2d2.global_variables.set_random_seed(1)
+        n2d2.global_variables.set_cuda_device(1)

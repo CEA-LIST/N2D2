@@ -24,7 +24,7 @@ from os.path import expanduser
 
 model_cache = expanduser("~") + "/MODELS"
 
-default_seed = 1
+default_seed = 1 # TODO : I am not sure this should be a global variable as modifying it doesn't change the seed used !
 default_model = 'Frame'
 default_datatype = 'float'
 default_net = N2D2.Network(default_seed, saveSeed=False)
@@ -57,3 +57,7 @@ def generate_name(obj):
         objects_counter[name] = 0
     name += "_"+str(objects_counter[name])
     return name
+
+def set_random_seed(seed):
+    N2D2.mtSeed(seed)
+    default_seed = seed
