@@ -39,6 +39,8 @@ void declare_SGDSolver_Frame(py::module &m, const std::string& typeStr) {
         SGDSolver> (m, pyClassName.c_str(), py::multiple_inheritance()) 
     .def(py::init())
     .def(py::init<SGDSolver_Frame<T>>(), py::arg("solver"))
+    .def("getDataType", [typeStr](SGDSolver_Frame<T>){return typeStr;})
+    .def("getModel", [](SGDSolver_Frame<T>){return "Frame";})
 ;
 }
 

@@ -41,6 +41,8 @@ void declare_AdamSolver_Frame_CUDA(py::module &m, const std::string& typeStr) {
         AdamSolver> (m, pyClassName.c_str(), py::multiple_inheritance()) 
     .def(py::init())
     .def(py::init<AdamSolver_Frame_CUDA<T>>(), py::arg("solver"))
+    .def("getDataType", [typeStr](AdamSolver_Frame_CUDA<T>){return typeStr;})
+    .def("getModel", [](AdamSolver_Frame_CUDA<T>){return "Frame_CUDA";})
 ;
 }
 
