@@ -80,7 +80,7 @@ github.io:
   stage: deploy
   script:
     - git -C ../github.io/ pull || git clone git@github.com:CEA-LIST/N2D2-docs.git ../github.io
-    - cp -r docs/_build/html/* ../github.io/
+    - cp -r docs/_build/html/* docs/README.md ../github.io/
     - cd ../github.io
     - git add --all
     - git config user.email "olivier.bichler@cea.fr"

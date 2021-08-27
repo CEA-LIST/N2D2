@@ -1256,8 +1256,11 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
                 std::cout << std::endl;
 
+                bool bestValidationPrimary = false;
+
                 for (std::vector<std::shared_ptr<Target> >::const_iterator
                             itTargets = deepNet->getTargets().begin(),
+                            itTargetsBegin = deepNet->getTargets().begin(),
                             itTargetsEnd = deepNet->getTargets().end();
                         itTargets != itTargetsEnd;
                         ++itTargets)
@@ -1277,10 +1280,17 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                             * targetScore->getMaxValidationScore())
                                         << "% [" << opt.validMetric << "]\n";
 
-                            deepNet->log("validation", Database::Validation);
-                            deepNet->exportNetworkFreeParameters(
-                                "weights_validation");
-                            deepNet->save("net_state_validation");
+                            (*itTargets)->log("validation", Database::Validation);
+
+                            if (itTargets == itTargetsBegin) {
+                                bestValidationPrimary = true;
+                                deepNet->exportNetworkFreeParameters(
+                                    "weights_validation");
+                                deepNet->save("net_state_validation");
+
+                                std::cout << "    'weights_validation' saved!"
+                                    << std::endl;
+                            }
                         }
                         else {
                             std::cout << "\n--- LOWER validation score: "
@@ -1291,6 +1301,13 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                             * targetScore->getMaxValidationScore())
                                         << "%)\n" << std::endl;
 
+                        }
+
+                        if (itTargets != itTargetsBegin
+                            && bestValidationPrimary)
+                        {
+                            (*itTargets)->log("validation-best-primary",
+                                              Database::Validation);
                         }
 
                         std::cout << "    Sensitivity: " << (100.0
@@ -1355,10 +1372,17 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                             * targetBBox->getMaxValidationScore())
                                         << "% [" << opt.validMetric << "]\n";
 
-                            deepNet->log("validation", Database::Validation);
-                            deepNet->exportNetworkFreeParameters(
-                                "weights_validation");
-                            deepNet->save("net_state_validation");
+                            (*itTargets)->log("validation", Database::Validation);
+
+                            if (itTargets == itTargetsBegin) {
+                                bestValidationPrimary = true;
+                                deepNet->exportNetworkFreeParameters(
+                                    "weights_validation");
+                                deepNet->save("net_state_validation");
+
+                                std::cout << "    'weights_validation' saved!"
+                                    << std::endl;
+                            }
                         }
                         else {
                             std::cout << "\n--- LOWER validation score: "
@@ -1369,6 +1393,13 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                             * targetBBox->getMaxValidationScore())
                                         << "%)\n" << std::endl;
 
+                        }
+
+                        if (itTargets != itTargetsBegin
+                            && bestValidationPrimary)
+                        {
+                            (*itTargets)->log("validation-best-primary",
+                                              Database::Validation);
                         }
 
                         if (!bestValidation) {
@@ -1407,9 +1438,15 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                             * targetMatching->getMinValidationEER())
                                         << "%\n";
 
-                            deepNet->exportNetworkFreeParameters(
-                                "weights_validation_EER");
-                            deepNet->save("net_state_validation_EER");
+                            if (itTargets == itTargetsBegin) {
+                                bestValidationPrimary = true;
+                                deepNet->exportNetworkFreeParameters(
+                                    "weights_validation_EER");
+                                deepNet->save("net_state_validation_EER");
+
+                                std::cout << "    'weights_validation_EER'"
+                                    " saved!" << std::endl;
+                            }
                         }
                         else {
                             std::cout << "\n--- HIGHER validation EER: "
@@ -1438,6 +1475,7 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                             nbNoValid = 0;
                     }
                 }
+
                 deepNet->clear(Database::Validation);
             }
             else {
@@ -1687,8 +1725,11 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                 // learning
                 sp->readRandomBatch(Database::Learn);
 
+                bool bestValidationPrimary = false;
+
                 for (std::vector<std::shared_ptr<Target> >::const_iterator
                             itTargets = deepNet->getTargets().begin(),
+                            itTargetsBegin = deepNet->getTargets().begin(),
                             itTargetsEnd = deepNet->getTargets().end();
                         itTargets != itTargetsEnd;
                         ++itTargets)
@@ -1708,9 +1749,10 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                             * targetScore->getMaxValidationScore())
                                         << "% [" << opt.validMetric << "]\n";
 
-                            deepNet->log("validation", Database::Validation);
+                            (*itTargets)->log("validation", Database::Validation);
 
-                            if (itTargets == deepNet->getTargets().begin()) {
+                            if (itTargets == itTargetsBegin) {
+                                bestValidationPrimary = true;
                                 deepNet->exportNetworkFreeParameters(
                                     "weights_validation");
                                 deepNet->save("net_state_validation");
@@ -1728,6 +1770,13 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                             * targetScore->getMaxValidationScore())
                                         << "%)\n" << std::endl;
 
+                        }
+
+                        if (itTargets != itTargetsBegin
+                            && bestValidationPrimary)
+                        {
+                            (*itTargets)->log("validation-best-primary",
+                                              Database::Validation);
                         }
 
                         std::cout << "    Sensitivity: " << (100.0
@@ -1792,9 +1841,10 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                             * targetBBox->getMaxValidationScore())
                                         << "% [" << opt.validMetric << "]\n";
 
-                            deepNet->log("validation", Database::Validation);
+                            (*itTargets)->log("validation", Database::Validation);
 
-                            if (itTargets == deepNet->getTargets().begin()) {
+                            if (itTargets == itTargetsBegin) {
+                                bestValidationPrimary = true;
                                 deepNet->exportNetworkFreeParameters(
                                     "weights_validation");
                                 deepNet->save("net_state_validation");
@@ -1812,6 +1862,13 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                             * targetBBox->getMaxValidationScore())
                                         << "%)\n" << std::endl;
 
+                        }
+
+                        if (itTargets != itTargetsBegin
+                            && bestValidationPrimary)
+                        {
+                            (*itTargets)->log("validation-best-primary",
+                                              Database::Validation);
                         }
 
                         if (!bestValidation) {
@@ -1850,7 +1907,8 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
                                             * targetMatching->getMinValidationEER())
                                         << "%\n";
 
-                            if (itTargets == deepNet->getTargets().begin()) {
+                            if (itTargets == itTargetsBegin) {
+                                bestValidationPrimary = true;
                                 deepNet->exportNetworkFreeParameters(
                                     "weights_validation_EER");
                                 deepNet->save("net_state_validation_EER");
@@ -2238,7 +2296,7 @@ void logStats(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     deepNet->logReceptiveFields("receptive_fields.log");
     std::cout << "[LOG] Labels mapping (*.Target/labels_mapping.log)"
         << std::endl;
-    deepNet->logLabelsMapping("labels_mapping.log");
+    deepNet->logLabelsMapping("labels_mapping.log", true);
     std::cout << "[LOG] Labels legend (*.Target/labels_legend.png)"
         << std::endl;
     deepNet->logLabelsLegend("labels_legend.png");

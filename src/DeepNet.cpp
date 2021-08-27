@@ -2801,14 +2801,15 @@ void N2D2::DeepNet::log(const std::string& baseName,
     }
 }
 
-void N2D2::DeepNet::logLabelsMapping(const std::string& fileName) const
+void N2D2::DeepNet::logLabelsMapping(const std::string& fileName,
+                                     bool withStats) const
 {
     for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
          = mTargets.begin(),
          itTargetsEnd = mTargets.end();
          itTargets != itTargetsEnd;
          ++itTargets) {
-        (*itTargets)->logLabelsMapping(fileName);
+        (*itTargets)->logLabelsMapping(fileName, withStats);
     }
 }
 

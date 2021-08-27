@@ -354,7 +354,7 @@ void N2D2::BatchNormCell_Frame<T>::propagate(bool inference)
 
                 (*mMean)(output) = mSavedMean(output) * mMovingAverageMomentum
                                 + (*mMean)(output) * (1.0 - mMovingAverageMomentum);
-                (*mVariance)(output) = mSavedVariance(output) * mMovingAverageMomentum
+                (*mVariance)(output) = mSavedVariance(output) * ((ParamT)size / ((ParamT)size-1)) * mMovingAverageMomentum
                                     + (*mVariance)(output) * (1.0 - mMovingAverageMomentum);
             }
 
