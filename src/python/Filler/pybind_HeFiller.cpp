@@ -53,6 +53,7 @@ void declare_HeFiller(py::module &m, const std::string& typeStr) {
     .def("getVarianceNorm", &HeFiller<T>::getVarianceNorm)
     .def("getMeanNorm", &HeFiller<T>::getMeanNorm)
     .def("getScaling", &HeFiller<T>::getScaling)
+    .def("getDataType", [typeStr](HeFiller<T>){return typeStr;})
     ;
 }
 

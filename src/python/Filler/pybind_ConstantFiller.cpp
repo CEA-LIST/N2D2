@@ -40,6 +40,7 @@ void declare_ConstantFiller(py::module &m, const std::string& typeStr) {
 
     .def(py::init<T>(), py::arg("value")=0.0)
     .def("getValue", &ConstantFiller<T>::getValue)
+    .def("getDataType", [typeStr](ConstantFiller<T>){return typeStr;})
     ;
 }
 

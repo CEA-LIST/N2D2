@@ -100,12 +100,10 @@ class Block(Cell):
     def __getitem__(self, item):
         if isinstance(item, int):
             return list(self._cells.values())[item]
-        else: 
-            # TODO : Change, bad practice
-            # this should be an elif and else should raise a typeError for two reasons
-            # 1. This doesn't test the type of item if it's not an int
-            # 2. This decrease the code readability as the type of item is not obvious
+        elif isinstance(item, str): 
             return self._cells[item]
+        else:
+            raise n2d2.error_handler.WrongInputType("item", type(item), ["str", "int"])
 
     def get_cells(self):
         cells = {}

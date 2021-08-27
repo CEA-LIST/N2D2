@@ -65,7 +65,9 @@ class SGD(Solver):
 
     _solver_generators = {
         'Frame<float>': N2D2.SGDSolver_Frame_float,
-        'Frame_CUDA<float>': N2D2.SGDSolver_Frame_CUDA_float
+        'Frame_CUDA<float>': N2D2.SGDSolver_Frame_CUDA_float,
+        'Frame<double>': N2D2.SGDSolver_Frame_double,
+        'Frame_CUDA<double>': N2D2.SGDSolver_Frame_CUDA_double,
     }
 
     _convention_converter= n2d2.ConventionConverter({
@@ -132,7 +134,9 @@ class Adam(Solver):
 
     _solver_generators = {
         'Frame<float>': N2D2.AdamSolver_Frame_float,
-        'Frame_CUDA<float>': N2D2.AdamSolver_Frame_CUDA_float
+        'Frame_CUDA<float>': N2D2.AdamSolver_Frame_CUDA_float,
+        'Frame<double>': N2D2.AdamSolver_Frame_double,
+        'Frame_CUDA<double>': N2D2.AdamSolver_Frame_CUDA_double,
     }
 
     _convention_converter= n2d2.ConventionConverter({

@@ -69,9 +69,6 @@ class NeuralNetworkCell(N2D2_Interface, Cell, ABC):
 
     @abstractmethod
     def __init__(self,  **config_parameters):
-        
-        # TODO : We may want to check activation parameter type here since every cell_frame can have an activation ?
-        # else we need to add this check on every classes
         if "activation" in config_parameters:
             if not isinstance(config_parameters["activation"], n2d2.activation.ActivationFunction):
                 raise n2d2.error_handler.WrongInputType("activation", str(type(config_parameters["activation"])), [str(n2d2.activation.ActivationFunction)])
@@ -2151,7 +2148,7 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
                 if not isinstance(value, n2d2.solver.Solver):
                     raise n2d2.error_handler.WrongInputType("bias_solver", str(type(value)), [str(n2d2.solver.Solver)])
                 self._N2D2_object.setBiasSolver(value.N2D2())
-            # elif key is 'quantizer': # TODO : Add getter and setter 
+            # elif key is 'quantizer': # TODO : Add getter and setter (On pybind)
             #     if isinstance(value, n2d2.quantizer.Quantizer):
             #         self._N2D2_object.setQuantizer(value.N2D2())
             #     else:
@@ -2175,7 +2172,7 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
             n2d2.converter.from_N2D2_object(N2D2_object.getScaleSolver())
         parameter['bias_solver'] = \
             n2d2.converter.from_N2D2_object(N2D2_object.getBiasSolver())
-        # parameter['quantizer'] = \ # TODO : Add getter and setter 
+        # parameter['quantizer'] = \ # TODO : Add getter and setter  (On pybind) 
         #     n2d2.converter.from_N2D2_object(N2D2_object.getQuantizer())
         return parameter
 

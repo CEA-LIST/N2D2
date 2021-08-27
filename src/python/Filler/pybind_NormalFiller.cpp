@@ -41,6 +41,8 @@ void declare_NormalFiller(py::module &m, const std::string& typeStr) {
     .def(py::init<double, double>(), py::arg("mean")=0.0, py::arg("stdDev")=1.0)
     .def("getMean", &NormalFiller<T>::getMean)
     .def("getStdDev", &NormalFiller<T>::getStdDev)
+    .def("getDataType", [typeStr](NormalFiller<T>){return typeStr;})
+
     ;
 }
 

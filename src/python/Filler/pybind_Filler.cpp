@@ -33,7 +33,7 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_Filler(py::module &m) {
     py::class_<Filler, std::shared_ptr<Filler>, Parameterizable> (m, "Filler", py::multiple_inheritance())
-    .def("getType", &Filler::getType);;
+    .def("getType", &Filler::getType);
 }
 }
 #endif

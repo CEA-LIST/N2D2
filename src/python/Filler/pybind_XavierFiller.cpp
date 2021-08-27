@@ -58,6 +58,7 @@ void declare_XavierFiller(py::module &m, const std::string& typeStr) {
     .def("getVarianceNorm", &XavierFiller<T>::getVarianceNorm)
     .def("getDistribution", &XavierFiller<T>::getDistribution)
     .def("getScaling", &XavierFiller<T>::getScaling)
+    .def("getDataType", [typeStr](XavierFiller<T>){return typeStr;})
     ;
 }
 

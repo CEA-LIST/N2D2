@@ -103,7 +103,7 @@ Here we will list parameters which can be directly modified in your script.
 | ``default_model``        | If you have compiled N2D2 with **CUDA**, you                      |
 |                          | can use ``Frame_CUDA``, default= ``Frame``                        |
 +--------------------------+-------------------------------------------------------------------+
-| ``default_datatype``     | Datatype of the layer of the neural network. Can be ``int``or     |
+| ``default_datatype``     | Datatype of the layer of the neural network. Can be ``double``or  |
 |                          | ``float``, default= ``float``                                     |
 |                          |                                                                   |
 |                          | **Important :** This variable doesn't affect the data type of     |
@@ -123,7 +123,7 @@ Example
 
         n2d2.global_variables.default_model = "Frame_CUDA"
 
-        n2d2.global_variables.default_datatype = "int"
+        n2d2.global_variables.default_datatype = "double"
 
         n2d2.global_variables.verbosity = n2d2.global_variables.Verbosity.graph_only
 
@@ -136,7 +136,8 @@ Some modifiable parameters require a method to be set.
 +--------------------------+-------------------------------------------------------------------+
 | Default values           | Description                                                       |
 +==========================+===================================================================+
-| ``set_random_seed``      | Seed used to generate random numbers, default = ``0``             |
+| ``set_random_seed``      | Seed used to generate random numbers(0 = time based),             |
+|                          | default = ``0``                                                   |
 +--------------------------+-------------------------------------------------------------------+
 | ``set_cuda_device``      | Device to use for GPU computation with CUDA, default = ``0``      |
 +--------------------------+-------------------------------------------------------------------+

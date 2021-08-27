@@ -37,17 +37,18 @@ test:ubuntu:
     - make test
 
 test:python_api:
+  extends: .before_script_template
   stage: test
   tags:
     - ubuntu
   image: "python:3.7"
-  before_script:
-    - python3.7 setup.py install
-    - cd python
-    - pip install -r requirements.txt
   script:
+    - make -j4
+    - cp lib/*.so ../python/
+    - cd ../python
+    - pip install -r requirements.txt
     # Run on discovery all tests located in python/tests and discard the stdout to only show the errors/warnings and the results of the tests
-    - python3.7 -m unittest discover -s python/tests -v 1> /dev/null
+    - python3.7 -m unittest discover -s tests -v 1> /dev/null
 
 
 # HTTP server setup on is154584 (using python simplehttp):
