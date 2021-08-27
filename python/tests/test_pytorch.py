@@ -434,7 +434,6 @@ class test_interop_DeepNetCell(unittest.TestCase):
     def tearDown(self):
         n2d2.global_variables.default_model = "Frame"
 
-    # TODO : make an equivalent test for CUDA
     def test_ONNX_CPU(self):
         print('=== Testing ONNX CPU ===')
 
