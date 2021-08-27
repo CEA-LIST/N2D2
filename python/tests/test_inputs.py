@@ -39,7 +39,6 @@ import n2d2
 from n2d2 import activation
 
 """
-TODO
 Here we test if the errors for main parameters are well set.
 
 Optional parameters (N2D2) type are checked using N2D2 in n2d2_interface._set_N2D2_parameter()
