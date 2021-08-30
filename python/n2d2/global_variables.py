@@ -60,4 +60,5 @@ def generate_name(obj):
 
 def set_random_seed(seed):
     N2D2.mtSeed(seed)
+    global default_seed
     default_seed = seed

@@ -62,7 +62,7 @@ class test_tensor_conversion(unittest.TestCase):
     
     def test_torch_to_n2d2_cuda_int(self):
         a = torch.ones(self.batch_size, self.channel, self.x, self.y, 
-                        dtype=torch.int32, device=torch.device('cuda:0'))
+                        dtype=torch.int32, device=torch.device('cuda'))
  
         b = n2d2.pytorch.pytorch_interface._to_n2d2(a)
         b.dtoh()
@@ -78,28 +78,28 @@ class test_tensor_conversion(unittest.TestCase):
 
     def test_torch_to_n2d2_float(self):
         torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
-                        dtype=torch.float, device=torch.device('cuda:0'))
+                        dtype=torch.float, device=torch.device('cuda'))
         float_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
         float_n2d2_tensor.dtoh()
         for i in float_n2d2_tensor: 
             self.assertEqual(i, 1)
     def test_torch_to_n2d2_double(self):
         torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
-                        dtype=torch.double, device=torch.device('cuda:0'))
+                        dtype=torch.double, device=torch.device('cuda'))
         double_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
         double_n2d2_tensor.dtoh()
         for i in double_n2d2_tensor: 
             self.assertEqual(i, 1)
     def test_torch_to_n2d2__short(self):
         torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
-                        dtype=torch.short, device=torch.device('cuda:0'))
+                        dtype=torch.short, device=torch.device('cuda'))
         short_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
         short_n2d2_tensor.dtoh()
         for i in short_n2d2_tensor: 
             self.assertEqual(i, 1)
     def test_torch_to_n2d2_long(self):
         torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
-                        dtype=torch.long, device=torch.device('cuda:0'))
+                        dtype=torch.long, device=torch.device('cuda'))
         long_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
         long_n2d2_tensor.dtoh()
         for i in long_n2d2_tensor: 
