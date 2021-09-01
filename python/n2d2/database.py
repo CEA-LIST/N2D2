@@ -137,10 +137,10 @@ class DIR(Database):
     def __init__(self,
                  data_path,
                  learn,
-                 test=0.0, # TODO : default should be [1.0-Learn-Validation] to match ini_files ?
+                 test=None, # replaced by [1.0-Learn-Validation] if let undefined
                  validation=0.0,
                  depth=1,
-                 label_name="", # TODO : rename label_path ? (if done, do it in docstring to !)
+                 label_path="",
                  label_depth=1,
                  roi_file="",
                  roi_dir="",
@@ -155,14 +155,14 @@ class DIR(Database):
         :type data_path: str
         :param learn: If ``per_label_partitioning`` is ``True``, fraction of images used for the learning; else, number of images used for the learning, regardless of their labels
         :type learn: float
-        :param test: If ``per_label_partitioning`` is ``True``, fraction of images used for the test; else, number of images used for the test, regardless of their labels, default=0.0
+        :param test: If ``per_label_partitioning`` is ``True``, fraction of images used for the test; else, number of images used for the test, regardless of their labels, default= `[1.0-Learn-Validation]`
         :type test: float, optional
         :param validation: If ``per_label_partitioning`` is ``True``, fraction of images used for the validation; else, number of images used for the validation, regardless of their labels, default=0.0
         :type validation: float, optional
         :param depth: Number of sub-directory levels to include, defaults=1 
         :type depth: int, optional
-        :param label_name: Path to the label file, defaults="" 
-        :type label_name: str, optional
+        :param label_path: Path to the label file, defaults="" 
+        :type label_path: str, optional
         :param label_depth: Number of sub-directory name levels used to form the data labels, defaults=0
         :type label_depth: int, optional
         :param roi_file: File containing the stimuli ROIs. If a ROI file is specified, ``label_depth`` should be set to ``-1``, default=""
@@ -191,8 +191,8 @@ class DIR(Database):
             self._N2D2_object.setValidExtensions(valid_extensions)
 
         self._set_N2D2_parameters(self._config_parameters)
-        self._N2D2_object.loadDir(data_path, depth, label_name, label_depth)
-        if not roi_file == "": # TODO : error if roi_file and roi_dir are specified ?
+        self._N2D2_object.loadDir(data_path, depth, label_path, label_depth)
+        if not roi_file == "": 
             self._N2D2_object.loadROIs(roi_file)
         if not roi_dir == "":
             self._N2D2_object.loadROIsDir(roi_dir, roi_extension, depth)
@@ -200,16 +200,26 @@ class DIR(Database):
             if learn + validation > 1.0:
                 raise RuntimeError("DIR Databse: Learn (" + str(learn) + ") + "
                     "Validation (" + str(validation) + ") cannot be > 1.0")
-            if test == 0.0:
+            if test is None:
                 test = 1.0 - learn - validation
                 self._N2D2_object.partitionStimuliPerLabel(learn, validation, test, equiv_label_partitioning)
                 self._N2D2_object.partitionStimuli(0.0, 0.0, 1.0)
         else:
-            if test == 0.0:
+            if self._N2D2_object.getNbStimuli() < learn + validation:
+                raise RuntimeError("DIR Databse: Learn (" + str(learn) + ") + "
+                    "Validation (" + str(validation) + ") cannot be > number of detected stimuli (" 
+                    + str(self._N2D2_object.getNbStimuli()) + ")")
+            if test is None:
                 test = self._N2D2_object.getNbStimuli() - learn - validation
-            self._N2D2_object.partitionStimuli(learn, "Learn")
-            self._N2D2_object.partitionStimuli(validation, "Validation")
-            self._N2D2_object.partitionStimuli(test, "Test")
+            else:
+                if self._N2D2_object.getNbStimuli() < learn + validation + test:
+                    raise RuntimeError("DIR Databse: Learn (" + str(learn) + ") + "
+                        "Validation (" + str(validation) + ") + Test ("+str(test)+
+                        ") cannot be > number of detected stimuli (" 
+                        + str(self._N2D2_object.getNbStimuli()) + ")")
+            self._N2D2_object.partitionStimuli(int(learn), N2D2.Database.StimuliSet.__members__["Learn"])
+            self._N2D2_object.partitionStimuli(int(validation), N2D2.Database.StimuliSet.__members__["Validation"])
+            self._N2D2_object.partitionStimuli(int(test), N2D2.Database.StimuliSet.__members__["Test"])
 
     def load(self, data_path, depth=0, label_path="", label_depth=0):
 
