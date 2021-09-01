@@ -297,7 +297,7 @@ public:
         actClippingMode = parseClippingMode(
                            opts.parse("-act-clipping-mode", std::string("MSE"), 
                                           "activation clipping mode on export, "
-                                          "can be 'None', 'MSE' or 'KL-Divergence'"));
+                                          "can be 'None', 'MSE', 'KL-Divergence' or 'Quantile'"));
         actScalingMode = parseScalingMode(
                            opts.parse("-act-rescaling-mode", std::string("Single-shift"), 
                                           "activation scaling mode on export, "
@@ -305,6 +305,8 @@ public:
                                           "or 'Double-shift'"));
         actRescalePerOutput = opts.parse("-act-rescale-per-output", false, 
                                               "rescale activation per output on export");
+        actQuantileValue = opts.parse("-act-quantile-value", 0.9999, 
+                                              "quantile value for 'Quantile' clipping mode");
         timeStep =    opts.parse("-ts", 0.1, "timestep for clock-based simulations (ns)");
         saveTestSet = opts.parse("-save-test-set", std::string(), "save the test dataset to a "
                                                                   "specified location");
@@ -383,6 +385,7 @@ public:
     ClippingMode actClippingMode;
     ScalingMode actScalingMode;
     bool actRescalePerOutput;
+    double actQuantileValue;
     bool exportNoUnsigned;
     bool exportNoCrossLayerEqualization;
     double timeStep;
@@ -757,13 +760,15 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
         RangeStats::logOutputsRange(exportDir + "/calibration/outputs_range.dat", outputsRange);
         Histogram::logOutputsHistogram(exportDir + "/calibration/outputs_histogram", outputsHistogram, 
-                                       opt.nbBits, opt.actClippingMode);
+                                       opt.nbBits, opt.actClippingMode,
+                                       opt.actQuantileValue);
 
 
         std::cout << "Quantization (" << opt.nbBits << " bits)..." << std::endl;
         dnQuantization.quantizeNetwork(outputsHistogram, outputsRange,
                                        opt.nbBits, opt.actClippingMode, 
-                                       opt.actScalingMode, opt.actRescalePerOutput);
+                                       opt.actScalingMode, opt.actRescalePerOutput,
+                                       opt.actQuantileValue);
         
         afterCalibration = true;
     }

@@ -58,7 +58,8 @@ public:
                          std::size_t nbBits,
                          ClippingMode actClippingMode,
                          ScalingMode actScalingMode,
-                         bool rescalePerOutputChannel);
+                         bool rescalePerOutputChannel,
+                         double quantileValue = 0.9999);
 
 private:
     /**
@@ -70,7 +71,8 @@ private:
     void quantizeActivations(const std::unordered_map<std::string, Histogram>& outputsHistogram,
                              const std::unordered_map<std::string, RangeStats>& outputsRange,
                              std::unordered_map<std::string, long double>& biasScalings,
-                             std::size_t nbBits, ClippingMode actClippingMode);
+                             std::size_t nbBits, ClippingMode actClippingMode,
+                             double quantileValue = 0.9999);
 
     double getActivationQuantizationScaling(const Cell& cell, std::size_t nbBits) const;
 
@@ -101,7 +103,8 @@ private:
     static double getCellThreshold(const std::string& cellName,
                                    const std::unordered_map<std::string, Histogram>& outputsHistogram,
                                    const std::unordered_map<std::string, RangeStats>& outputsRange,
-                                   std::size_t nbBits, ClippingMode actClippingMode);
+                                   std::size_t nbBits, ClippingMode actClippingMode,
+                                   double quantileValue = 0.9999);
 
     static void approximateActivationScaling(Cell& cell, Activation& activation,
                                              ScalingMode actScalingMode);
