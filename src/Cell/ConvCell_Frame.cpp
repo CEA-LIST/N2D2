@@ -219,7 +219,9 @@ void N2D2::ConvCell_Frame<T>::initializeParameters(unsigned int nbInputChannels,
     setInputsDims({nbInputChannels});
     // END: addition to initialize
 
-
+    if (mMapping.empty()) {
+        mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
+    }
     if (!mNoBias) {
         if (mBias->empty()) {
             mBias->resize({1, 1, getNbOutputs(), 1});

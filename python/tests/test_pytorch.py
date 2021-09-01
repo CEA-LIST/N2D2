@@ -527,7 +527,6 @@ class test_interop(unittest.TestCase):
 
     def tearDown(self):
         n2d2.global_variables.default_model = "Frame"
-    @unittest.skip("Conv CPU on N2D2 is broken")
     def test_conv_CPU(self):
         print('=== Testing Conv layer CPU ===')
         n2d2.global_variables.default_model = "Frame"
