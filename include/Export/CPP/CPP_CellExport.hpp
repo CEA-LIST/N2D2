@@ -30,6 +30,10 @@
 #include "Scaling.hpp"
 #include "utils/Registrar.hpp"
 
+//included to check the cell type
+#include "Cell/FcCell.hpp"
+#include "Cell/ConvCell.hpp"
+
 namespace N2D2 {
 /**
  * Virtual base class for methods commun to every cell type for the CPP export
@@ -61,6 +65,10 @@ public:
     std::string getLabelActivationRange(const Cell& cell) const;
     //Return the label in function to the scaling type of the output layer
     std::string getLabelScaling(const Cell& cell) const;
+    //Return the range of the current layer (if fc/conv) or parent layer (if not fc/conv)
+    std::string getActRangeSaveOutputs(const DeepNet& deepNet, const Cell& cell) const;
+    //Return the range of the parent layer
+    std::string getParentActRange(const DeepNet& deepNet, const Cell& cell) const;
 
     inline static std::unique_ptr<CPP_CellExport> getInstance(Cell& cell);
 

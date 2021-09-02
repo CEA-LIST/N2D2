@@ -17,7 +17,7 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-
+#include "DeepNet.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Export/C/C_CellExport.hpp"
 #include "Export/CPP/CPP_CellExport.hpp"
@@ -346,7 +346,96 @@ void N2D2::CPP_CellExport::generateBenchmarkEnd(const DeepNet& /*deepNet*/,
         "#endif\n\n";
 }
 
-void N2D2::CPP_CellExport::generateSaveOutputs(const DeepNet& /*deepNet*/,
+std::string N2D2::CPP_CellExport::getParentActRange(const DeepNet& deepNet, const Cell& cell) const {
+
+    const std::vector<std::shared_ptr<Cell> > parents = deepNet.getParentCells(cell.getName());
+
+    const std::string parentIdentifier
+        = Utils::CIdentifier((parents[0]) ? parents[0]->getName() : "env");
+    const std::string parentPrefix
+        = N2D2::Utils::upperCase(parentIdentifier);
+
+    std::string parentPrefixAct = "";
+
+    //check if parent is there, if not put the input image precision
+    if(!parents[0]){
+        parentPrefixAct = "NB_BITS";
+    }
+    //if parent is fc/conv
+    if(parents[0] && (parents[0]->getType() == ConvCell::Type || parents[0]->getType() == FcCell::Type)){
+        std::shared_ptr<Cell_Frame_Top> parentCellTop =
+                            std::dynamic_pointer_cast<Cell_Frame_Top>(parents[0]);
+        if(parentCellTop->getActivation() && (parentCellTop->getActivation()->getQuantizedNbBits() > 0)){
+            parentPrefixAct = parentPrefix + "_NB_BITS_ACT";
+        }
+        else{
+            parentPrefixAct = "NB_BITS";
+        }
+    }
+    //look for grandparent
+    else if(parents[0] && parents[0]->getType() != ConvCell::Type && parents[0]->getType() != FcCell::Type){
+        const std::vector<std::shared_ptr<Cell> > grandParents
+                    = deepNet.getParentCells(parents[0]->getName());
+        if(grandParents[0] && (grandParents[0]->getType() == ConvCell::Type || grandParents[0]->getType() == FcCell::Type)){
+            const std::string grandParentIdentifier
+                = Utils::CIdentifier((grandParents[0]) ? grandParents[0]->getName() : "env");
+            const std::string grandParentPrefix
+                = N2D2::Utils::upperCase(grandParentIdentifier);
+
+            std::shared_ptr<Cell_Frame_Top> grandParentCellTop =
+                            std::dynamic_pointer_cast<Cell_Frame_Top>(grandParents[0]);
+            if(grandParentCellTop->getActivation() && (grandParentCellTop->getActivation()->getQuantizedNbBits() > 0)){
+                parentPrefixAct = grandParentPrefix + "_NB_BITS_ACT";
+            }
+            else{
+                parentPrefixAct = "NB_BITS";
+            }
+        }
+    }
+
+    return parentPrefixAct;
+}
+
+std::string N2D2::CPP_CellExport::getActRangeSaveOutputs(const DeepNet& deepNet, const Cell& cell) const {
+    const std::string identifier = N2D2::Utils::CIdentifier(cell.getName());
+    const std::string prefix = N2D2::Utils::upperCase(identifier);
+
+    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+    const Activation& activation = *cellFrame.getActivation();
+
+    std::string labelName = "";
+
+    //if fc/conv cell check if QAT or not
+    if(cell.getType() == ConvCell::Type || cell.getType() == FcCell::Type){
+        if(activation.getQuantizedNbBits() > 0){
+            labelName = prefix + "_NB_BITS_ACT, ";
+        }
+        else{
+            labelName = "NB_BITS, ";
+        }
+    }
+    //if not fc/conv check if parent is fc/conv and take its act precision
+    else{
+        const std::vector<std::shared_ptr<Cell> > parents = deepNet.getParentCells(cell.getName());
+        if(parents[0] && (parents[0]->getType() == ConvCell::Type || parents[0]->getType() == FcCell::Type)){
+            std::shared_ptr<Cell_Frame_Top> parentCellTop =
+                            std::dynamic_pointer_cast<Cell_Frame_Top>(parents[0]);
+            if(parentCellTop->getActivation() && (parentCellTop->getActivation()->getQuantizedNbBits() > 0)){
+                const std::string parentIdentifier
+                            = Utils::CIdentifier((parents[0]) ? parents[0]->getName() : "env");
+                const std::string parentPrefix
+                            = N2D2::Utils::upperCase(parentIdentifier);
+                labelName = parentPrefix + "_NB_BITS_ACT, ";
+            }
+            else{
+                labelName = "NB_BITS, ";
+            }
+        }
+    }
+    return labelName;
+}
+
+void N2D2::CPP_CellExport::generateSaveOutputs(const DeepNet& deepNet,
                                                const Cell& cell, 
                                                std::stringstream& functionCalls)
 {
@@ -361,6 +450,7 @@ void N2D2::CPP_CellExport::generateSaveOutputs(const DeepNet& /*deepNet*/,
                                 << identifier << "_output.txt\", \"w\");\n";
     functionCalls << "    saveOutputs("
                 << prefix << "_NB_OUTPUTS, "
+                << CPP_CellExport::getActRangeSaveOutputs(deepNet,cell)
                 << prefix << "_OUTPUTS_HEIGHT, " 
                 << prefix << "_OUTPUTS_WIDTH, "
                 << prefix << "_MEM_CONT_OFFSET, "

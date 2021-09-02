@@ -499,6 +499,7 @@ void N2D2::CPP_FcCellExport::generateCallCode(
                     << prefix << "_MEM_WRAP_SIZE, "
                     << prefix << "_MEM_STRIDE, "
                     << prefix << "_NB_BITS_W,"
+                    << CPP_CellExport::getParentActRange(deepNet,cell) << ", "
                     << CPP_CellExport::getLabelActivationRange(cell)
                 << ">("
                     << inputBuffer << " , "
@@ -516,6 +517,7 @@ void N2D2::CPP_FcCellExport::generateCallCode(
                         << prefix << "_MEM_WRAP_SIZE, "
                         << prefix << "_MEM_STRIDE, "
                         << prefix << "_NB_BITS_W,"
+                        << CPP_CellExport::getParentActRange(deepNet,cell) << ", "
                         << CPP_CellExport::getLabelActivationRange(cell)
                     << ">("
                         << inputBuffer << " , "

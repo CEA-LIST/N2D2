@@ -87,4 +87,11 @@ typedef union
     } ufields;
 } T1_8_Vector;
 
+typedef struct PackSupport {
+    uint8_t         accumulator;
+    unsigned int    cptAccumulator;
+    int             nb_bit;
+} PackSupport;
+
+
 #endif // N2D2_EXPORTCPP_TYPEDEF_UNION_H
