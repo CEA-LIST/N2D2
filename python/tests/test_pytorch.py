@@ -353,14 +353,12 @@ class N2D2LeNet(torch.nn.Module):
         def conv_def():
             weights_filler = Constant(value=weight_value)
             weights_solver = SGD(**solver_config)
-            bias_solver = SGD(**solver_config)
-            return ConfigSection(activation=Rectifier(), weights_solver=weights_solver, bias_solver=bias_solver,
+            return ConfigSection(activation=Rectifier(), weights_solver=weights_solver,
                                 no_bias=True, weights_filler=weights_filler)
         def fc_def():
             weights_filler = Constant(value=weight_value)
             weights_solver = SGD(**solver_config)
-            bias_solver = SGD(**solver_config)
-            return ConfigSection(weights_solver=weights_solver, bias_solver=bias_solver,
+            return ConfigSection(weights_solver=weights_solver,
                                 no_bias=True, weights_filler=weights_filler)
         def bn_def():
             scale_solver = SGD(**solver_config)
@@ -452,7 +450,7 @@ class test_interop_DeepNetCell(unittest.TestCase):
                 decay=0.0, iteration_size=1, learning_rate=learning_rate, learning_rate_decay=0.1, 
                 learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0,
                 momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25))
-        deepNet[-1].set_with_loss(False)
+        deepNet[-1].with_loss = False
         print(deepNet)
         
         # Creating the N2D2 equivalent
@@ -497,7 +495,7 @@ class test_interop_DeepNetCell(unittest.TestCase):
                 decay=0.0, iteration_size=1, learning_rate=learning_rate, learning_rate_decay=0.1, 
                 learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0,
                 momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25))
-        deepNet[-1].set_with_loss(False)
+        deepNet[-1].with_loss = False
         print(deepNet)
         
         # Creating the N2D2 equivalent

@@ -44,7 +44,7 @@ class test_Fc(test_params):
             "bias_solver": n2d2.solver.SGD(),
             "weights_filler": n2d2.filler.Normal(),
             "bias_filler": n2d2.filler.Normal(),
-            'no_bias': True,
+            'no_bias': False,
             # "mapping": n2d2.Tensor([5, 5],  datatype="bool"), # TODO : Add back mapping to Fc ?
         }
         self.object = n2d2.cells.Fc(10, 5, **self.parameters)
@@ -74,7 +74,7 @@ class test_Conv(test_params):
             "bias_solver": n2d2.solver.SGD(),
             "weights_filler": n2d2.filler.Normal(),
             "bias_filler": n2d2.filler.Normal(),
-            "no_bias": True,
+            "no_bias": False,
             "back_propagate": True,
             "weights_export_flip": True,
             "mapping": n2d2.Tensor([5, 5],  datatype="bool"),

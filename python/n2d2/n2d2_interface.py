@@ -21,10 +21,10 @@
 
 import N2D2
 import n2d2
-
+from n2d2.error_handler import deprecated
 class ConventionConverter():
     """
-    This class stocks two dictionaries to translate parameter name from n2d2 to N2D2 
+    Bidirectional mapping to translate parameters name from n2d2 convention to N2D2 convention
     """
     def __init__(self, dic):
         self.python_to_N2D2 = dic
@@ -56,7 +56,6 @@ class N2D2_Interface:
         "integer": int,
         "float": float,
         "bool": lambda x: False if x == '0' else True,
-        # "bool": bool,
         "string": str,
         "list": list,
     }
@@ -121,20 +120,43 @@ class N2D2_Interface:
         for key, value in parameters.items():
             self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
 
-
+    def __setattr__(self, key: str, value) -> None:
+        if "_constructor_arguments" in self.__dict__ and \
+                key in self._constructor_arguments:
+            raise RuntimeError("You cannot modify constructor arguments.") 
+        elif "_optional_constructor_arguments" in self.__dict__ and \
+                key in self._optional_constructor_arguments:
+            raise RuntimeError(key + " is not settable for " + self.get_name()) 
+        elif "_config_parameters" in self.__dict__ and \
+                key in self._config_parameters:
+            self._config_parameters[key] = value
+            self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+        else:
+            super().__setattr__(key, value)
+    
+    def __getattr__(self, key: str):
+        # Using __dict__ attribute to avoid infinite recursion !
+        if key in self.__dict__["_constructor_arguments"]:
+            return self.__dict__["_constructor_arguments"][key]
+        elif key in self.__dict__["_optional_constructor_arguments"]:
+            return self.__dict__["_optional_constructor_arguments"][key]
+        elif key in self.__dict__["_config_parameters"]:
+            return self.__dict__["_config_parameters"][key]
+        else:
+            return self.__getattribute__(key)
+            
+    @deprecated()
     def set_parameter(self, key, value):
         if key in self._constructor_arguments:
-            self._constructor_arguments[key] = value
-            self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+            raise RuntimeError("You cannot modify constructor arguments.") 
         elif key in self._optional_constructor_arguments:
-            self._optional_constructor_arguments[key] = value
-            self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+            raise RuntimeError(key + " is not settable for " + self.get_name()) 
         elif key in self._config_parameters:
             self._config_parameters[key] = value
             self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
         else:
             raise ValueError(key + " is not a parameter of " + self.get_name()) 
-        
+    @deprecated()
     def get_parameter(self, key):
         """
         :param key: Parameter name

@@ -128,8 +128,8 @@ class test_cells(unittest.TestCase):
             n2d2.cells.Deconv(1, 1, [1, 1], weights_filler=1)
         with self.assertRaises(n2d2.error_handler.WrongInputType):
             n2d2.cells.Deconv(1, 1, [1, 1], bias_filler=1)
-        with self.assertRaises(n2d2.error_handler.WrongInputType):
-            n2d2.cells.Deconv(1, 1, [1, 1], quantizer=1)
+        # with self.assertRaises(n2d2.error_handler.WrongInputType):
+        #     n2d2.cells.Deconv(1, 1, [1, 1], quantizer=1)
 
     def test_ElemWise(self):
         with self.assertRaises(n2d2.error_handler.WrongInputType):

@@ -18,6 +18,7 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
+import warnings
 
 class WrongInputType(TypeError):
     def __init__(self, input_name, input_type, array_of_possible_type):
@@ -72,3 +73,14 @@ class UndefinedParameterError(RuntimeError):
 class IpOnly(NotImplementedError):
     def __init__(self):
       super().__init__("This feature is only available in n2d2-ip. (see : https://cea-list.github.io/N2D2-docs/about.html)")
+
+def deprecated(version="", reason=""):
+    def show_warning(function):
+        message = function.__name__ + " is deprecated"
+        if version :
+            message += " since version (" + version + ")"
+        if reason:
+            message += " : " + reason
+        warnings.warn(message, DeprecationWarning)
+        return function
+    return show_warning
