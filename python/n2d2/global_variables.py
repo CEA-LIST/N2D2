@@ -31,7 +31,7 @@ default_net = N2D2.Network(default_seed, saveSeed=False)
 cuda_compiled = N2D2.cuda_compiled
 n2d2_ip_compiled = N2D2.N2D2_IP 
 
-objects_counter = {}
+_objects_counter = {}
 
 
 class Verbosity:
@@ -51,11 +51,11 @@ def generate_name(obj):
     Function used to generate name of an object
     """
     name = obj.__class__.__name__
-    if name in objects_counter:
-        objects_counter[name] += 1
+    if name in _objects_counter:
+        _objects_counter[name] += 1
     else:
-        objects_counter[name] = 0
-    name += "_"+str(objects_counter[name])
+        _objects_counter[name] = 0
+    name += "_"+str(_objects_counter[name])
     return name
 
 def set_random_seed(seed):

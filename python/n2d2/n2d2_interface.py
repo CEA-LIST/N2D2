@@ -126,7 +126,7 @@ class N2D2_Interface:
             raise RuntimeError("You cannot modify constructor arguments.") 
         elif "_optional_constructor_arguments" in self.__dict__ and \
                 key in self._optional_constructor_arguments:
-            raise RuntimeError(key + " is not settable for " + self.get_name()) 
+            raise RuntimeError(key + " is not settable for " + str(type(self)))
         elif "_config_parameters" in self.__dict__ and \
                 key in self._config_parameters:
             self._config_parameters[key] = value

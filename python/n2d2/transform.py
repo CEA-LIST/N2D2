@@ -186,7 +186,7 @@ class PadCrop(Transformation):
         self._N2D2_object = N2D2.PadCropTransformation(self._constructor_arguments['width'],
                                                        self._constructor_arguments['height'])
         self._set_N2D2_parameters(self._config_parameters)
-
+        self.load_N2D2_parameters(self.N2D2())
 
 class Distortion(Transformation):
     """
@@ -230,8 +230,7 @@ class Distortion(Transformation):
         #     self._N2D2_object.setParameter("Scaling", str(self._config_parameters.pop('scaling')))
 
         self._set_N2D2_parameters(self._config_parameters)
-
-
+        self.load_N2D2_parameters(self.N2D2())
 
 class Rescale(Transformation):
     """
@@ -266,8 +265,7 @@ class Rescale(Transformation):
         self._N2D2_object = N2D2.RescaleTransformation(self._constructor_arguments['width'],
                                                        self._constructor_arguments['height'])
         self._set_N2D2_parameters(self._config_parameters)
-
-
+        self.load_N2D2_parameters(self.N2D2())
 
 
 class ColorSpace(Transformation):
@@ -315,8 +313,7 @@ class ColorSpace(Transformation):
 
         self._N2D2_object = N2D2.ColorSpaceTransformation(self._constructor_arguments['color_space'])
         self._set_N2D2_parameters(self._config_parameters)
-
-
+        self.load_N2D2_parameters(self.N2D2())
 
 
 
@@ -362,8 +359,7 @@ class RangeAffine(Transformation):
                                                            self._constructor_arguments['first_value'],
                                                            **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
-
-
+        self.load_N2D2_parameters(self.N2D2())
 
 class SliceExtraction(Transformation):
     """
@@ -433,6 +429,7 @@ class SliceExtraction(Transformation):
                                                            self._constructor_arguments['height'],
                                                            **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
 
 
@@ -466,6 +463,7 @@ class Flip(Transformation):
 
         self._N2D2_object = N2D2.FlipTransformation(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
 
 
@@ -510,6 +508,7 @@ class RandomResizeCrop(Transformation):
                                                 self._constructor_arguments['height'],
                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
 class ChannelExtraction(Transformation):
     """
@@ -550,4 +549,4 @@ class ChannelExtraction(Transformation):
         self._N2D2_object = N2D2.ChannelExtractionTransformation(self._constructor_arguments['channel'],
                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
-
+        self.load_N2D2_parameters(self.N2D2())
