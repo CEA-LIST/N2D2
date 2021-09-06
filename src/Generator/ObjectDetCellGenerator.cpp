@@ -191,51 +191,54 @@ N2D2::ObjectDetCellGenerator::generate(Network& /*network*/, const DeepNet& deep
 #ifdef JSONCPP
     const std::string anchorsJSONpath = Utils::expandEnvVars(
         iniConfig.getProperty<std::string>("AnchorJSON", ""));
-    std::ifstream jsonData(anchorsJSONpath);
+    if(!anchorsJSONpath.empty()) {
 
-    if (!jsonData.good()) {
-        throw std::runtime_error("AnchorCellGenerator::generate: Could not open JSON Anchor file "
-                                    "(missing?): " + anchorsJSONpath);
-    }
-    Json::Reader reader;
-    Json::Value labels;
-    if (!reader.parse(jsonData, labels)) {
-        std::cerr << "AnchorCellGenerator::generate: Error parsing JSON file " 
-            << anchorsJSONpath<< " at line "
-            << reader.getFormattedErrorMessages() << std::endl;
+        std::ifstream jsonData(anchorsJSONpath);
 
-        throw std::runtime_error("JSON file parsing failed");
-    }
-    const Json::Value& jsonAnnotations = labels["ANCHORS"];
-    if(jsonAnnotations.size() < 1 ){
-        std::cerr << "Error parsing JSON file " << anchorsJSONpath << " at field "
-            << "annotations: Cannot have more than one"
-            << " annotations mask per file, here it is " 
-            << jsonAnnotations.size() << std::endl;
+        if (!jsonData.good()) {
+            throw std::runtime_error("ObjDetCellGenerator::generate: Could not open JSON Anchor file "
+                                        "(missing?): " + anchorsJSONpath);
+        }
+        Json::Reader reader;
+        Json::Value labels;
+        if (!reader.parse(jsonData, labels)) {
+            std::cerr << "ObjDetCellGenerator::generate: Error parsing JSON file " 
+                << anchorsJSONpath<< " at line "
+                << reader.getFormattedErrorMessages() << std::endl;
 
-        throw std::runtime_error(" file parsing failed");
-    }
-    for(unsigned int cls = 0; cls < jsonAnnotations.size(); ++cls ){
-        const Json::Value& clsAnchors = jsonAnnotations[cls];
-        for(unsigned int idx = 0; idx < clsAnchors.size(); ++idx ) {
-            const Json::Value& idxAnchors = clsAnchors[idx];
-            if(idxAnchors.size() != 4 ) {
-                std::cerr << "Error parsing JSON file " << anchorsJSONpath << " at field "
-                    << "annotations: Cannot have an anchor field values size different than 4 " 
-                    << idxAnchors.size() << std::endl;
-                throw std::runtime_error(" file parsing failed");
+            throw std::runtime_error("JSON file parsing failed");
+        }
+        const Json::Value& jsonAnnotations = labels["ANCHORS"];
+        if(jsonAnnotations.size() < 1 ){
+            std::cerr << "Error parsing JSON file " << anchorsJSONpath << " at field "
+                << "annotations: Cannot have more than one"
+                << " annotations mask per file, here it is " 
+                << jsonAnnotations.size() << std::endl;
+
+            throw std::runtime_error(" file parsing failed");
+        }
+        for(unsigned int cls = 0; cls < jsonAnnotations.size(); ++cls ){
+            const Json::Value& clsAnchors = jsonAnnotations[cls];
+            for(unsigned int idx = 0; idx < clsAnchors.size(); ++idx ) {
+                const Json::Value& idxAnchors = clsAnchors[idx];
+                if(idxAnchors.size() != 4 ) {
+                    std::cerr << "Error parsing JSON file " << anchorsJSONpath << " at field "
+                        << "annotations: Cannot have an anchor field values size different than 4 " 
+                        << idxAnchors.size() << std::endl;
+                    throw std::runtime_error(" file parsing failed");
+                }
+                
+                const double x0 = idxAnchors[1].asDouble();
+                const double y0 = idxAnchors[0].asDouble();
+                const double w = std::abs(x0) + std::abs(idxAnchors[3].asDouble());
+                const double h = std::abs(y0) + std::abs(idxAnchors[2].asDouble());
+
+                anchors.push_back(AnchorCell_Frame_Kernels::Anchor(x0,
+                                                                y0,
+                                                                w,
+                                                                h));
+                
             }
-            
-            const double x0 = idxAnchors[1].asDouble();
-            const double y0 = idxAnchors[0].asDouble();
-            const double w = std::abs(x0) + std::abs(idxAnchors[3].asDouble());
-            const double h = std::abs(y0) + std::abs(idxAnchors[2].asDouble());
-
-            anchors.push_back(AnchorCell_Frame_Kernels::Anchor(x0,
-                                                            y0,
-                                                            w,
-                                                            h));
-            
         }
     }
 #endif
