@@ -19,6 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 import warnings
+from functools import wraps
 
 class WrongInputType(TypeError):
     def __init__(self, input_name, input_type, array_of_possible_type):
@@ -76,11 +77,16 @@ class IpOnly(NotImplementedError):
 
 def deprecated(version="", reason=""):
     def show_warning(function):
-        message = function.__name__ + " is deprecated"
-        if version :
-            message += " since version (" + version + ")"
-        if reason:
-            message += " : " + reason
-        warnings.warn(message, DeprecationWarning)
-        return function
+        
+        @wraps(function) 
+        def wrapper(function):
+            print(function)
+            message = function.__name__ + " is deprecated"
+            if version :
+                message += " since version (" + version + ")"
+            if reason:
+                message += " : " + reason
+            warnings.warn(message, DeprecationWarning)
+            return function
+        return wrapper
     return show_warning

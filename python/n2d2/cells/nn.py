@@ -110,7 +110,6 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
     def __setattr__(self, key: str, value) -> None:
         
         if key is 'activation':
-            print("yes")
             if not isinstance(value, n2d2.activation.ActivationFunction):
                 raise n2d2.error_handler.WrongInputType("activation", str(type(value)), [str(n2d2.activation.ActivationFunction)])
             else:
@@ -296,6 +295,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         print("Note: Replacing potentially existing activation in cells: " + self.get_name())
         self._config_parameters['activation'] = activation
         self._N2D2_object.setActivation(self._config_parameters['activation'].N2D2())
+    
     @deprecated(reason="You should use activation as a python attribute.")
     def get_activation(self):
         if 'activation' in self._config_parameters:
@@ -710,8 +710,10 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
         :param solver: Solver object
         :type solver: :py:class:`n2d2.solver.Solver`
         """
-        self.set_bias_solver(solver.copy())
-        self.set_weights_solver(solver.copy())
+        if not isinstance(solver, n2d2.solver.Solver):
+            raise n2d2.error_handler.WrongInputType("solver", str(type(solver)), ["n2d2.solver.Solver"])
+        self.bias_solver = solver.copy()
+        self.weights_solver = solver.copy()
 
 
 class Conv(NeuralNetworkCell, Datatyped, Trainable):
@@ -994,9 +996,10 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
         :param solver: Solver object
         :type solver: :py:class:`n2d2.solver.Solver`
         """
-        if self.has_bias():
-            self.bias_solver = solver.copy()
-        self.set_weights_solver = solver.copy()
+        if not isinstance(solver, n2d2.solver.Solver):
+            raise n2d2.error_handler.WrongInputType("solver", str(type(solver)), ["n2d2.solver.Solver"])
+        self.bias_solver = solver.copy()
+        self.weights_solver = solver.copy()
 
     def has_quantizer(self):
         return True if self.quantizer else False
@@ -1648,8 +1651,9 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
         :param solver: Solver object
         :type solver: :py:class:`n2d2.solver.Solver`
         """
-        if self.has_bias():
-            self.bias_solver = solver.copy()
+        if not isinstance(solver, n2d2.solver.Solver):
+            raise n2d2.error_handler.WrongInputType("solver", str(type(solver)), ["n2d2.solver.Solver"])
+        self.bias_solver = solver.copy()
         self.weights_solver= solver.copy()
     
     def set_filler(self, filler, refill=False):
@@ -2188,8 +2192,8 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
         """
         if not isinstance(solver, n2d2.solver.Solver):
             raise n2d2.error_handler.WrongInputType("solver", str(type(solver)), ["n2d2.solver.Solver"])
-        self.set_bias_solver(solver.copy())
-        self.set_scale_solver(solver.copy())
+        self.bias_solver = solver.copy()
+        self.scale_solver = solver.copy()
 
     def has_quantizer(self):
         if self.quantizer:

@@ -33,7 +33,7 @@ void init_RandomResizeCropTransformation(py::module &m) {
 
     trans
     .def(py::init<unsigned int, unsigned int, unsigned int, unsigned int>(), 
-        py::arg("width"), py::arg("height"), py::arg("offsetX")=0, py::arg("offsetY")=0)
+        py::arg("width"), py::arg("height"), py::arg("OffsetX")=0, py::arg("OffsetY")=0)
     .def("getWidth", &RandomResizeCropTransformation::getWidth)
     .def("getHeight", &RandomResizeCropTransformation::getHeight)
     .def("getOffsetX", &RandomResizeCropTransformation::getOffsetX)

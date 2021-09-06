@@ -139,12 +139,12 @@ class Block(Cell):
     def set_solver(self, solver):
         for cell in self.get_cells().values():
             if isinstance(cell, Trainable):
-                cell.set_solver(solver.copy())
-                if cell.has_quantizer() and isinstance(cell.get_quantizer(), Trainable):
-                    cell.get_quantizer().set_solver(solver.copy())
-            if cell.get_activation() and cell.get_activation().has_quantizer() \
-                    and isinstance(cell.get_activation().get_quantizer(), Trainable):
-                cell.get_activation().get_quantizer().set_solver(solver.copy())
+                cell.solver = solver.copy()
+                if cell.has_quantizer() and isinstance(cell.quantizer, Trainable):
+                    cell.quantizer.solver = solver.copy()
+            if cell.activation and cell.activation.has_quantizer() \
+                    and isinstance(cell.activation.quantizer, Trainable):
+                cell.activation.quantizer.solver = solver.copy()
 
 
     def import_free_parameters(self, dir_name, ignore_not_exists=False):

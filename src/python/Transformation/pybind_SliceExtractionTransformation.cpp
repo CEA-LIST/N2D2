@@ -41,7 +41,7 @@ void init_SliceExtractionTransformation(py::module &m) {
     .value("MeanBorder", SliceExtractionTransformation::BorderType::MeanBorder)
     .export_values();
 
-    set.def(py::init<unsigned int, unsigned int, unsigned int, unsigned int>(), py::arg("width"), py::arg("height"), py::arg("offsetX") = 0,  py::arg("offsetY") = 0)
+    set.def(py::init<unsigned int, unsigned int, unsigned int, unsigned int>(), py::arg("width"), py::arg("height"), py::arg("OffsetX") = 0,  py::arg("OffsetY") = 0)
     .def(py::init<SliceExtractionTransformation&>(), py::arg("trans"))
     .def("getWidth", &SliceExtractionTransformation::getWidth)
     .def("getHeight", &SliceExtractionTransformation::getHeight)

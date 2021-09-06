@@ -99,6 +99,11 @@ class Transformation(N2D2_Interface, ABC):
     def get_apply_set(self):
         return self._apply_to
 
+    @classmethod
+    def create_from_N2D2_object(cls, N2D2_object): # TODO : add an optional parameter apply_to ?
+        n2d2_transform = super().create_from_N2D2_object(N2D2_object)
+        n2d2_transform._apply_to = N2D2.Database.StimuliSetMask.All 
+        return n2d2_transform
 
 class Composite(Transformation):
     """
@@ -188,6 +193,12 @@ class PadCrop(Transformation):
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments.update({
+            'width': N2D2_object.getWidth(),
+            'height': N2D2_object.getHeight(),
+        })
+
 class Distortion(Transformation):
     """
     Apply elastic distortion to the image. 
@@ -267,6 +278,11 @@ class Rescale(Transformation):
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments.update({
+            'width': N2D2_object.getWidth(),
+            'height': N2D2_object.getHeight(),
+        })
 
 class ColorSpace(Transformation):
 
@@ -315,6 +331,10 @@ class ColorSpace(Transformation):
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments.update({
+            'color_space': N2D2_object.getColorSpace(),
+        })
 
 
 class RangeAffine(Transformation):
@@ -361,6 +381,19 @@ class RangeAffine(Transformation):
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments.update({
+            'first_operator': N2D2_object.getFirstOperator(),
+            'first_value': N2D2_object.getFirstValue(),
+        })
+    
+    def _load_N2D2_optional_parameters(self, N2D2_object):
+        self._optional_constructor_arguments.update({
+            'second_operator': N2D2_object.getSecondOperator(),
+            'second_value': N2D2_object.getSecondValue(),
+        })
+
+
 class SliceExtraction(Transformation):
     """
     Extract a slice from an image.
@@ -369,8 +402,8 @@ class SliceExtraction(Transformation):
     _convention_converter= n2d2.ConventionConverter({
         "width": "width",
         "height": "height",
-        "offset_x": "offsetX",
-        "offset_y": "offsetY",
+        "offset_x": "OffsetX",
+        "offset_y": "OffsetY",
         "random_offset_x": "RandomOffsetX",
         "random_offset_y": "RandomOffsetY",
         "random_rotation": "RandomRotation",
@@ -430,8 +463,16 @@ class SliceExtraction(Transformation):
                                                            **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
-
-
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments.update({
+            'width': N2D2_object.getWidth(),
+            'height': N2D2_object.getHeight(),
+        })
+    def _load_N2D2_optional_parameters(self, N2D2_object):
+        self._optional_constructor_arguments.update({
+            'offset_x':  N2D2_object.getOffsetX(),
+            'offset_y':  N2D2_object.getOffsetY(),
+        })
 
 class Flip(Transformation):
     """
@@ -475,8 +516,8 @@ class RandomResizeCrop(Transformation):
     _convention_converter= n2d2.ConventionConverter({
         "width": "Width",
         "height": "Height",
-        "offset_x": "offsetX",
-        "offset_y": "offsetY",
+        "offset_x": "OffsetX",
+        "offset_y": "OffsetY",
         "scale_min": "ScaleMin",
         "scale_max": "ScaleMax",
         "ratio_min": "RatioMin",
@@ -509,13 +550,26 @@ class RandomResizeCrop(Transformation):
                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments.update({
+            'width': N2D2_object.getWidth(),
+            'height': N2D2_object.getHeight(),
+        })
+    def _load_N2D2_optional_parameters(self, N2D2_object):
+        self._optional_constructor_arguments.update({
+            'offset_x':  N2D2_object.getOffsetX(),
+            'offset_y':  N2D2_object.getOffsetY(),
+        })
 
 class ChannelExtraction(Transformation):
     """
     Extract an image channel.
     """
+    _Type = "ChannelExtraction"
+
     _convention_converter= n2d2.ConventionConverter({
         "channel": "Channel",
+        
     })
     def __init__(self, channel, **config_parameters):
         """
@@ -550,3 +604,8 @@ class ChannelExtraction(Transformation):
                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
+
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments.update({
+            'channel': N2D2_object.getChannel(),
+        })
