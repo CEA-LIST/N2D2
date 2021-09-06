@@ -174,9 +174,9 @@ int main(int argc, char* argv[])
     N2D2::Network n2d2_dnn;
     n2d2_dnn.setPrecision(bitPrecision);
     n2d2_dnn.setDeviceID(device);
-    if(profiling) {
-        n2d2_dnn.setProfiling();
-    }
+    // if(profiling) {
+    //    n2d2_dnn.setProfiling();
+    // }
     n2d2_dnn.setIterBuild(iterBuild);
     n2d2_dnn.setMaxBatchSize(batchSize);
     n2d2_dnn.setInputEngine(modelToLoad);
