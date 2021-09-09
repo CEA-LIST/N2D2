@@ -593,6 +593,60 @@ And :math:`R` is the resulting image.
   | :math:`R=\alpha'.O + (1-\alpha').B`
   
 
+Labels mapping
+^^^^^^^^^^^^^^
+
+When processing the first batch of data, you might get a message like the 
+following in the console:
+
+.. code-block::
+
+  BlendingTransformation: labels mapping is required with the following mapping:
+    1 -> 9   (cat)
+    2 -> 12   (dog)
+    3 -> 66   (bird)
+
+
+What happens here is that the labels ID from the database containing the objects 
+to blend (specified by the ``Database`` parameter) must match the correct labels 
+ID from the current database (specified by the ``[database]`` section).
+In the log above, the labels ID on the left are the ones from the objects 
+database and the labels ID on the right are the ones from the current database.
+In N2D2, upon loading a database, a new label ID is created for each new unique
+label name encoutered, in the loading order (alphabetical for ``DIR_Database``,
+but may be arbitrary for other database drivers). The objects database may
+contain only a subset of the labels present in the current database,
+and/or the labels may be loaded in a different order. In both cases, the ID
+affected to a label name will be different between the two databases. During
+blending however, one wants that the blended object labels correspond to the
+labels of the current database. To solve this, labels mapping is automatically
+performed in N2D2 so that for corresponding label names, the label 
+ID in the objects database is translated to the label ID of current database.
+In the log above for example, the objects database contains only 3 labels: 
+"cat", "dog" and "bird", with ID 1, 2 and 3 respectively. These
+labels ID are automatically replaced by the corresponding ID (for identical 
+label name) in the current database, for the blended objects, which are here 
+9, 12 and 66 respectively.
+
+.. Note::
+
+  Each label from the objects database (objects to blend) must match
+  an existing label in the current database. There is a match if:
+
+  - There is an identical label name in the current database;
+  - There is a single label name in the current database that ends with the
+    objects database label name. For example, the label "/dog" in the objects
+    database will match with the "dog" label in the current database.
+
+  If the objects database contains a label name that does not exist/match in 
+  the current database, an error is emitted:
+
+  ::
+
+      BlendingTransformation: label "xxx" in blending database not present in current database!
+
+
+
 ChannelDropTransformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
