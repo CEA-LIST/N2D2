@@ -27,7 +27,7 @@ model_cache = expanduser("~") + "/MODELS"
 default_seed = 1 # TODO : I am not sure this should be a global variable as modifying it doesn't change the seed used !
 default_model = 'Frame'
 default_datatype = 'float'
-default_net = N2D2.Network(default_seed, saveSeed=False)
+default_net = N2D2.Network(default_seed, saveSeed=False, printTimeElapsed=False)
 cuda_compiled = N2D2.cuda_compiled
 n2d2_ip_compiled = N2D2.N2D2_IP 
 

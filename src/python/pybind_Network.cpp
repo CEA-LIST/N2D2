@@ -30,7 +30,7 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_Network(py::module &m) {
     py::class_<Network>(m, "Network")
-    .def(py::init<unsigned int, bool>(), py::arg("seed") = 0, py::arg("saveSeed") = true)
+    .def(py::init<unsigned int, bool, bool>(), py::arg("seed") = 0, py::arg("saveSeed") = true, py::arg("printTimeElapsed") = true)
     // .def("run", &Network::run, py::arg("stop") = 0, py::arg("clearActivity") = true)
     // .def("stop", &Network::stop, py::arg("stop") = 0, py::arg("discard") = false)
     // .def("reset", &Network::reset, py::arg("timestamp") = 0)

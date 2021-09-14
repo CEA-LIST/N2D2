@@ -87,14 +87,15 @@ N2D2::NetworkObserver::~NetworkObserver()
     mNet.removeObserver(this);
 }
 
-N2D2::Network::Network(unsigned int seed, bool saveSeed)
+N2D2::Network::Network(unsigned int seed, bool saveSeed, bool printTimeElapsed)
     : mInitialized(false),
       mFirstEvent(0),
       mLastEvent(0),
       mStop(0),
       mDiscard(false),
       mStartTime(std::chrono::high_resolution_clock::now()),
-      mSaveSeed(saveSeed)
+      mSaveSeed(saveSeed),
+      mPrintTimeElapsed(printTimeElapsed)
 {
 // ctor
 #if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
@@ -300,7 +301,9 @@ N2D2::Network::~Network()
         = std::chrono::duration_cast<std::chrono::duration<double> >(
             std::chrono::high_resolution_clock::now() - mStartTime).count();
 
-    std::cout << "Time elapsed: " << timeElapsed << " s" << std::endl;
+    if(mPrintTimeElapsed){
+        std::cout << "Time elapsed: " << timeElapsed << " s" << std::endl;
+    }
 }
 
 unsigned int N2D2::Network::readSeed(const std::string& fileName)
