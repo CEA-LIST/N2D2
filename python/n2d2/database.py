@@ -125,12 +125,13 @@ class DIR(Database):
     Allow you to load your own database.
     """
     _type = "DIR"
-
-    _convention_converter = n2d2.ConventionConverter({
+    _parameters = {
         "load_data_in_memory": "loadDataInMemory",
         "ignore_masks": "IgnoreMasks",
         "valid_extensions": "ValidExtensions",
-    })
+    }
+    _parameters.update(_database_parameters)
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     _convention_converter.update(_database_parameters)
 
@@ -222,7 +223,6 @@ class DIR(Database):
             self._N2D2_object.partitionStimuli(int(test), N2D2.Database.StimuliSet.__members__["Test"])
 
     def load(self, data_path, depth=0, label_path="", label_depth=0):
-
         self._N2D2_object.loadDir(data_path, depth, label_path, label_depth)
 
 class MNIST(Database):
@@ -231,13 +231,15 @@ class MNIST(Database):
     Label are hard coded, you don't need to specify a path to the label file.
     """
     _type = "MNIST"
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters = {
         "extract_roi": "extractROIs",
         "validation": "validation",
         "label_path": "labelPath",
         "stimuli_per_label_train": "StimuliPerLabelTrain",
         "stimuli_per_label_test": "StimuliPerLabelTest",
-    })
+    }
+    _parameters.update(_database_parameters)
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, data_path, **config_parameters):
         """
@@ -262,6 +264,7 @@ class MNIST(Database):
         self._N2D2_object = N2D2.MNIST_IDX_Database(self._constructor_arguments['data_path'],
                                                     **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
 
 class CIFAR100(Database):
@@ -270,12 +273,14 @@ class CIFAR100(Database):
     """
 
     _type = "CIFAR100"
-
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters = {
         "use_coarse": "useCoarse",
         "validation": "validation",
         "use_test_for_validation": "useTestForVal",
-    })
+    }  
+    _parameters.update(_database_parameters)
+
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, **config_parameters):
         """
@@ -291,7 +296,7 @@ class CIFAR100(Database):
         self._parse_optional_arguments(['validation', 'use_coarse', "use_test_for_validation"])
         self._N2D2_object = N2D2.CIFAR100_Database(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
-
+        self.load_N2D2_parameters(self.N2D2())
 
 class ILSVRC2012(Database):
     """
@@ -299,12 +304,15 @@ class ILSVRC2012(Database):
     """
 
     _type = "ILSVRC2012"
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters = {
         "use_validation_for_test": "useValidationForTest",
         "learn": "Learn",
         "random_partitioning": "RandomPartitioning",
         "background_class": "backgroundClass"
-    })
+    }
+    _parameters.update(_database_parameters)
+    _convention_converter= n2d2.ConventionConverter(_parameters)
+
     def __init__(self, learn, **config_parameters):
         """
         :param learn: Fraction of images used for the learning
@@ -320,6 +328,7 @@ class ILSVRC2012(Database):
         self._N2D2_object = N2D2.ILSVRC2012_Database(self._constructor_arguments['learn'],
                                                     **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
 
 
@@ -329,13 +338,15 @@ class Cityscapes(Database):
     """
 
     _type = "Cityscapes"
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters = {
         "inc_train_extra": "incTrainExtra",
         "use_coarse": "useCoarse",
         "single_instance_labels": "singleInstanceLabels",
         "labels": "Labels"
+    }
+    _parameters.update(_database_parameters)
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
-    })
     def __init__(self, **config_parameters):
         """
         :param inc_train_extra: If ``True``, includes the left 8-bit images - ``trainextra`` set (19,998 images), default=False
@@ -350,6 +361,7 @@ class Cityscapes(Database):
         self._parse_optional_arguments(['inc_train_extra', 'use_coarse', 'single_instance_labels'])
         self._N2D2_object = N2D2.Cityscapes_Database(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
 class GTSRB(Database):
     """
@@ -357,9 +369,11 @@ class GTSRB(Database):
     """
 
     _type = "GTSRB"
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters = {
         "validation": "validation",
-    })
+    }
+    _parameters.update(_database_parameters)
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, validation, **config_parameters):
         """
@@ -372,3 +386,4 @@ class GTSRB(Database):
         self._parse_optional_arguments([])
         self._N2D2_object = N2D2.GTSRB_DIR_Database(validation, **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
