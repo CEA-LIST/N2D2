@@ -78,29 +78,7 @@ void N2D2::CPP_CellExport::generateActivation(const Cell& cell, std::ofstream& h
             <<" in cell " << cell.getName() << ": An additional clipping value per channel "
             << " is required"
             << Utils::cdef << std::endl;
-            header << "#define " << prefix 
-                    << "_NB_BITS_ACT " << (int) activation.getQuantizedNbBits() 
-                    << "\n";
         }
-    }
-}
-
-void N2D2::CPP_CellExport::generateWeightPrecision(const Cell& cell, std::ofstream& header) {
-    const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
-    if(cell.getQuantizedNbBits() > 0) {
-        /*
-        header << "#define " << prefix
-                << "_NB_BITS_W " << (int) cell.getQuantizedNbBits()
-                << "\n";
-        */
-        header << "#define " << prefix
-                << "_NB_BITS_W " << (int) pow(2,std::ceil(log2(cell.getQuantizedNbBits())))
-                << "\n";
-    }
-    else{
-        header << "#define " << prefix
-                << "_NB_BITS_W " << (int) cell.getQuantizedNbBits()
-                << "\n";
     }
 }
 
@@ -154,7 +132,7 @@ void N2D2::CPP_CellExport::generateScaling(
                                                                 clippingPerOutput.end());
                 assert(clippingPerOutput_INT32.size() == scalingPerOutput.size());
                 header << "static const N2D2::FloatingPointClippingAndScaling<1> "
-                                                                            << prefix << "_CLIPPED_SCALING = {";
+                                                                            << prefix << "_SCALING = {";
                 header << scalingPerOutput.front() << ", " << clippingPerOutput_INT32.front() << "};\n";
             }
         }
@@ -174,7 +152,7 @@ void N2D2::CPP_CellExport::generateScaling(
                 assert(clippingPerOutput_INT32.size() == scalingPerOutput.size());
                 header << "static const N2D2::FloatingPointClippingAndScalingPerChannel<" 
                                                                             << clippingPerOutput_INT32.size() << "> " 
-                                                                            << prefix << "_CLIPPED_SCALING = {{";
+                                                                            << prefix << "_SCALING = {{";
                 header << Utils::join(scalingPerOutput.begin(), scalingPerOutput.end(), ',');
                 header << "}, {";
                 header << Utils::join(clippingPerOutput_INT32.begin(), clippingPerOutput_INT32.end(), ',');
@@ -212,7 +190,7 @@ void N2D2::CPP_CellExport::generateScaling(
                                                                             << clippingPerOutput_INT32.size()  << ", " 
                                                                             << fpScaling.getFractionalBits() 
                                                                             << "> " 
-                                                                            << prefix << "_CLIPPED_SCALING = {{";
+                                                                            << prefix << "_SCALING = {{";
                 header << Utils::join(scalingPerOutput.begin(), scalingPerOutput.end(), ',');
                 header << "}, {";
                 header << Utils::join(clippingPerOutput_INT32.begin(), clippingPerOutput_INT32.end(), ',');
@@ -263,62 +241,6 @@ void N2D2::CPP_CellExport::generateScaling(
     header << "\n";
 }
 
-void N2D2::CPP_CellExport::generateOutputType(const DeepNet& /*deepNet*/,
-                                                const Cell& cell,
-                                                std::stringstream& functionCalls)
-{
-    const std::string identifier = N2D2::Utils::CIdentifier(cell.getName());
-
-    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
-
-    std::string dataType = DeepNetExport::isCellOutputUnsigned(cell)
-                ? "UDATA_T" : "DATA_T";
-
-    const std::string prefix = Utils::upperCase(identifier);
-
-    //adapt cell output type
-    if (cellFrame.getActivation()
-        && (cellFrame.getActivation()->getType() == "Rectifier" || cellFrame.getActivation()->getType() == "Linear"))
-    {
-        const Activation& activation = *cellFrame.getActivation();
-        int actPrecision = (int) activation.getQuantizedNbBits();
-
-        if(actPrecision > 0 && actPrecision <= 8){
-            dataType = DeepNetExport::isCellOutputUnsigned(cell) ? "uint8_t" : "int8_t";
-        }
-        else if(actPrecision > 8 && actPrecision <= 16){
-            dataType = DeepNetExport::isCellOutputUnsigned(cell) ? "uint16_t" : "int16_t";
-        }
-        else if(actPrecision > 16){
-            dataType = DeepNetExport::isCellOutputUnsigned(cell) ? "uint32_t" : "int32_t";
-        }
-
-        //functionCalls : cell output type
-        //for the last FC
-        if(actPrecision>8){
-            functionCalls << "    // " << cell.getName() << "\n";
-            functionCalls << "    " << dataType << " " << identifier
-                            << "_output["  << prefix << "_MEM_CONT_SIZE" << "] = " << "{0};\n\n";
-        }
-        //for all other preceding layers
-        else{
-            functionCalls << "    // " << cell.getName() << "\n";
-            functionCalls << "    " << dataType << "* " << identifier
-                << "_output = " << "(" << dataType << "*) mem + "
-                << prefix << "_MEM_CONT_OFFSET" <<";\n\n";
-        }
-
-    }
-    else{
-        //functionalCalls : cell output type by default
-        functionCalls << "    // " << cell.getName() << "\n";
-        functionCalls << "    " << dataType << "* " << identifier
-                << "_output = " << "(" << dataType << "*) mem + "
-                << prefix << "_MEM_CONT_OFFSET" <<";\n\n";
-    }
-
-}
-
 void N2D2::CPP_CellExport::generateBenchmarkStart(const DeepNet& /*deepNet*/,
                                                   const Cell& cell, 
                                                   std::stringstream& functionCalls)
@@ -346,95 +268,6 @@ void N2D2::CPP_CellExport::generateBenchmarkEnd(const DeepNet& /*deepNet*/,
         "#endif\n\n";
 }
 
-std::string N2D2::CPP_CellExport::getParentActRange(const DeepNet& deepNet, const Cell& cell) const {
-
-    const std::vector<std::shared_ptr<Cell> > parents = deepNet.getParentCells(cell.getName());
-
-    const std::string parentIdentifier
-        = Utils::CIdentifier((parents[0]) ? parents[0]->getName() : "env");
-    const std::string parentPrefix
-        = N2D2::Utils::upperCase(parentIdentifier);
-
-    std::string parentPrefixAct = "";
-
-    //check if parent is there, if not put the input image precision
-    if(!parents[0]){
-        parentPrefixAct = "NB_BITS";
-    }
-    //if parent is fc/conv
-    if(parents[0] && (parents[0]->getType() == ConvCell::Type || parents[0]->getType() == FcCell::Type)){
-        std::shared_ptr<Cell_Frame_Top> parentCellTop =
-                            std::dynamic_pointer_cast<Cell_Frame_Top>(parents[0]);
-        if(parentCellTop->getActivation() && (parentCellTop->getActivation()->getQuantizedNbBits() > 0)){
-            parentPrefixAct = parentPrefix + "_NB_BITS_ACT";
-        }
-        else{
-            parentPrefixAct = "NB_BITS";
-        }
-    }
-    //look for grandparent
-    else if(parents[0] && parents[0]->getType() != ConvCell::Type && parents[0]->getType() != FcCell::Type){
-        const std::vector<std::shared_ptr<Cell> > grandParents
-                    = deepNet.getParentCells(parents[0]->getName());
-        if(grandParents[0] && (grandParents[0]->getType() == ConvCell::Type || grandParents[0]->getType() == FcCell::Type)){
-            const std::string grandParentIdentifier
-                = Utils::CIdentifier((grandParents[0]) ? grandParents[0]->getName() : "env");
-            const std::string grandParentPrefix
-                = N2D2::Utils::upperCase(grandParentIdentifier);
-
-            std::shared_ptr<Cell_Frame_Top> grandParentCellTop =
-                            std::dynamic_pointer_cast<Cell_Frame_Top>(grandParents[0]);
-            if(grandParentCellTop->getActivation() && (grandParentCellTop->getActivation()->getQuantizedNbBits() > 0)){
-                parentPrefixAct = grandParentPrefix + "_NB_BITS_ACT";
-            }
-            else{
-                parentPrefixAct = "NB_BITS";
-            }
-        }
-    }
-
-    return parentPrefixAct;
-}
-
-std::string N2D2::CPP_CellExport::getActRangeSaveOutputs(const DeepNet& deepNet, const Cell& cell) const {
-    const std::string identifier = N2D2::Utils::CIdentifier(cell.getName());
-    const std::string prefix = N2D2::Utils::upperCase(identifier);
-
-    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
-    const Activation& activation = *cellFrame.getActivation();
-
-    std::string labelName = "";
-
-    //if fc/conv cell check if QAT or not
-    if(cell.getType() == ConvCell::Type || cell.getType() == FcCell::Type){
-        if(activation.getQuantizedNbBits() > 0){
-            labelName = prefix + "_NB_BITS_ACT, ";
-        }
-        else{
-            labelName = "NB_BITS, ";
-        }
-    }
-    //if not fc/conv check if parent is fc/conv and take its act precision
-    else{
-        const std::vector<std::shared_ptr<Cell> > parents = deepNet.getParentCells(cell.getName());
-        if(parents[0] && (parents[0]->getType() == ConvCell::Type || parents[0]->getType() == FcCell::Type)){
-            std::shared_ptr<Cell_Frame_Top> parentCellTop =
-                            std::dynamic_pointer_cast<Cell_Frame_Top>(parents[0]);
-            if(parentCellTop->getActivation() && (parentCellTop->getActivation()->getQuantizedNbBits() > 0)){
-                const std::string parentIdentifier
-                            = Utils::CIdentifier((parents[0]) ? parents[0]->getName() : "env");
-                const std::string parentPrefix
-                            = N2D2::Utils::upperCase(parentIdentifier);
-                labelName = parentPrefix + "_NB_BITS_ACT, ";
-            }
-            else{
-                labelName = "NB_BITS, ";
-            }
-        }
-    }
-    return labelName;
-}
-
 void N2D2::CPP_CellExport::generateSaveOutputs(const DeepNet& deepNet,
                                                const Cell& cell, 
                                                std::stringstream& functionCalls)
@@ -450,7 +283,6 @@ void N2D2::CPP_CellExport::generateSaveOutputs(const DeepNet& deepNet,
                                 << identifier << "_output.txt\", \"w\");\n";
     functionCalls << "    saveOutputs("
                 << prefix << "_NB_OUTPUTS, "
-                << CPP_CellExport::getActRangeSaveOutputs(deepNet,cell)
                 << prefix << "_OUTPUTS_HEIGHT, " 
                 << prefix << "_OUTPUTS_WIDTH, "
                 << prefix << "_MEM_CONT_OFFSET, "
@@ -464,57 +296,4 @@ void N2D2::CPP_CellExport::generateSaveOutputs(const DeepNet& deepNet,
             << ");\n";
     functionCalls << "    fclose(" << identifier << "_stream);\n";
     functionCalls << "#endif\n";
-}
-
-std::string N2D2::CPP_CellExport::getLabelActivationRange(const Cell& cell) const {
-    const std::string identifier = N2D2::Utils::CIdentifier(cell.getName());
-    const std::string prefix = N2D2::Utils::upperCase(identifier);
-
-    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
-    const Activation& activation = *cellFrame.getActivation();
-    /* If activation have been quantized through QAT method
-       the dynamic can be layer specific, use the specific flag then.
-       Else use the global DNN dynamic NBBITS
-    */
-    if(activation.getQuantizedNbBits() > 0) {
-        std::string labelName = prefix + "_NB_BITS_ACT";
-        return labelName;
-    } 
-    else {
-        std::string labelName = "NB_BITS";
-        return labelName;
-    }
-}
-
-std::string N2D2::CPP_CellExport::getLabelScaling(const Cell& cell) const {
-    const std::string identifier = N2D2::Utils::CIdentifier(cell.getName());
-    const std::string prefix = N2D2::Utils::upperCase(identifier);
-    std::string label = prefix + "_SCALING" ;
-
-    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
-
-
-    if (cellFrame.getActivation() == nullptr) {
-        return label;
-    }
-
-    const Activation& activation = *cellFrame.getActivation();
-    const Scaling& activationScaling = activation.getActivationScaling();
-
-    /* 
-        Check if the scaling is clipped then adapt the label
-    */
-    if(activationScaling.getMode() == ScalingMode::FLOAT_MULT) {
-        if(activationScaling.getFloatingPointScaling().getIsClipped()) {
-            label = prefix + "_CLIPPED_SCALING";
-        }
-    } 
-    else if(activationScaling.getMode() == ScalingMode::FIXED_MULT16 ||
-            activationScaling.getMode() == ScalingMode::FIXED_MULT32){
-        if(activationScaling.getFixedPointScaling().getIsClipped()) {
-            label = prefix + "_CLIPPED_SCALING";
-        }
-    }
-
-    return label;
 }

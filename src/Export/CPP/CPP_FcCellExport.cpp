@@ -70,7 +70,6 @@ void N2D2::CPP_FcCellExport::generateHeaderConstants(const FcCell& cell, std::of
            << "#define " << prefix << "_NO_BIAS " << (int) cell.getParameter<bool>("NoBias") << "\n\n";
 
     CPP_CellExport::generateActivation(cell, header);
-    CPP_CellExport::generateWeightPrecision(cell, header);
     CPP_CellExport::generateActivationScaling(cell, header);
 
     header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix << "_NB_OUTPUTS*" 
@@ -219,41 +218,13 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsQAT(const FcCell & cell, std::
            << "// If the previous cell was a 2D cell, CHANNELS_SIZE is flatten in "
                << "the [CHANNELS_HEIGHT][CHANNELS_WIDTH][NB_CHANNELS] order.\n";
 
-    int wPrecision = (int)pow(2,std::ceil(log2(cell.getQuantizedNbBits())));
-    std::string wType = "";
-    bool accumulate = false;
+    const unsigned int wPrecision = cell.getQuantizedNbBits();
+    const bool accumulate = (cell.getNbChannels() > 1
+                                && (wPrecision > 0 && wPrecision < 8));
 
-    if((cell.getNbChannels() == 1 && (wPrecision > 0 && wPrecision < 8)) || (wPrecision == 8)){
-        accumulate = false;
-        wType = "int8_t";
-        std::cout << Utils::cwarning << "Cell with number of channels = " << cell.getNbChannels() << ", and weight precision = " << wPrecision << " :: weights will not be accumulated!";
-    }
-    else if(cell.getNbChannels() > 1 && (wPrecision > 0 && wPrecision < 8)){
-        accumulate = true;
-        wType = "uint8_t";
-    }
-    else if (wPrecision > 8 && wPrecision <= 16){
-        accumulate = false;
-        wType = "int16_t";
-        std::cout << Utils::cwarning << "Weight precision = " << wPrecision << " :: weights will not be accumulated!";
-    }
-    else if (wPrecision > 16 && wPrecision <= 32){
-        accumulate = false;
-        wType = "int32_t";
-        std::cout << Utils::cwarning << "Weight precision = " << wPrecision << " :: weights will not be accumulated!";
-    }
-    else{
-        accumulate = false;
-        wType = "int64_t";
-        std::cout << Utils::cwarning << "Weight precision = " << wPrecision << " :: weights will not be accumulated!";
-    }
-
-
-    header << "static const "<< wType << " " << identifier << "_weights["
-               << prefix << "_WEIGHTS_SIZE"
-           << "] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_WEIGHTS) = ";
-
-    header << "{\n";
+    header << "static const data<" << wPrecision << "> "
+        << identifier << "_weights[" << prefix << "_WEIGHTS_SIZE"
+        << "] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_WEIGHTS) = {\n";
 
     //number of int8 necessary to store
     //one weight of all channels
@@ -452,9 +423,6 @@ void N2D2::CPP_FcCellExport::generateCallCode(
 
     includes << "#include \"" << identifier << ".hpp\"\n";
 
-    //set output type
-    generateOutputType(deepNet, cell, functionCalls);
-
     generateBenchmarkStart(deepNet, cell, functionCalls);
 
     const auto& parents = deepNet.getParentCells(cell.getName());
@@ -485,65 +453,19 @@ void N2D2::CPP_FcCellExport::generateCallCode(
         << parentPrefix << "_MEM_WRAP_SIZE, "
         << parentPrefix << "_MEM_STRIDE, ";
 
-    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
-    if (cellFrame.getActivation()
-        && (cellFrame.getActivation()->getType() == "Rectifier" || cellFrame.getActivation()->getType() == "Linear"))
-    {
-        const Activation& activation = *cellFrame.getActivation();
-        int actPrecision = (int) activation.getQuantizedNbBits();
-        //if this is the last FC in the network, its activation is not quantized
-        if(actPrecision > 8){
-            functionCalls << "0, "
-                    << prefix << "_MEM_CONT_SIZE, "
-                    << prefix << "_MEM_WRAP_OFFSET, "
-                    << prefix << "_MEM_WRAP_SIZE, "
-                    << prefix << "_MEM_STRIDE, "
-                    << prefix << "_NB_BITS_W,"
-                    << CPP_CellExport::getParentActRange(deepNet,cell) << ", "
-                    << CPP_CellExport::getLabelActivationRange(cell)
-                << ">("
-                    << inputBuffer << " , "
-                    << outputBuffer << ", "
-                    << identifier << "_biases, "
-                    << identifier << "_weights, "
-                    << CPP_CellExport::getLabelScaling(cell)
-                << ");\n\n";
-        }
-        //if this is FC with activation quantized
-        else{
-            functionCalls << prefix << "_MEM_CONT_OFFSET, "
-                        << prefix << "_MEM_CONT_SIZE, "
-                        << prefix << "_MEM_WRAP_OFFSET, "
-                        << prefix << "_MEM_WRAP_SIZE, "
-                        << prefix << "_MEM_STRIDE, "
-                        << prefix << "_NB_BITS_W,"
-                        << CPP_CellExport::getParentActRange(deepNet,cell) << ", "
-                        << CPP_CellExport::getLabelActivationRange(cell)
-                    << ">("
-                        << inputBuffer << " , "
-                        << outputBuffer << ", "
-                        << identifier << "_biases, "
-                        << identifier << "_weights, "
-                        << CPP_CellExport::getLabelScaling(cell)
-                    << ");\n\n";
-        }
-    }
-    else{
     // Memory mapping: output
     functionCalls << prefix << "_MEM_CONT_OFFSET, "
                 << prefix << "_MEM_CONT_SIZE, "
                 << prefix << "_MEM_WRAP_OFFSET, "
                 << prefix << "_MEM_WRAP_SIZE, "
-                << prefix << "_MEM_STRIDE, "
-                << CPP_CellExport::getLabelActivationRange(cell)
+                << prefix << "_MEM_STRIDE"
             << ">("
                 << inputBuffer << " , "
                 << outputBuffer << ", "
                 << identifier << "_biases, "
                 << identifier << "_weights, "
-                << CPP_CellExport::getLabelScaling(cell)
+                << prefix << "_SCALING"
             << ");\n\n";
-    }
 
     generateBenchmarkEnd(deepNet, cell, functionCalls);
     generateSaveOutputs(deepNet, cell, functionCalls);

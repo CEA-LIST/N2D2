@@ -144,9 +144,6 @@ void N2D2::CPP_PoolCellExport::generateCallCode(
 
     includes << "#include \"" << identifier << ".hpp\"\n";
 
-    //set output type
-    generateOutputType(deepNet, cell, functionCalls);
-
     generateBenchmarkStart(deepNet, cell, functionCalls);
 
     const auto& parents = deepNet.getParentCells(cell.getName());
@@ -188,8 +185,7 @@ void N2D2::CPP_PoolCellExport::generateCallCode(
                 << prefix << "_MEM_CONT_SIZE, "
                 << prefix << "_MEM_WRAP_OFFSET, "
                 << prefix << "_MEM_WRAP_SIZE, "
-                << prefix << "_MEM_STRIDE, "
-                << CPP_CellExport::getParentActRange(deepNet,cell)
+                << prefix << "_MEM_STRIDE"
             << ">("
                 << inputBuffer << " , "
                 << outputBuffer

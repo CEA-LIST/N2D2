@@ -114,9 +114,12 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
     if (includeInputInBuffer) {
         // Create memory manager and allocate input channels
         const std::shared_ptr<StimuliProvider>& sp = deepNet.getStimuliProvider();
+        const std::size_t nbBits = std::abs((int)CellExport::mPrecision);
+        const unsigned int nbChannelsInBytes = ((sp->getNbChannels() * nbBits)
+            + (sp->getNbChannels() * nbBits) % 8) / 8;
         const unsigned int nbChannelsAligned = (sp->getNbChannels() > 1)
-            ? memoryAlignment * (unsigned int)std::ceil(sp->getNbChannels()
-                                                    / (double)memoryAlignment) : 1;
+            ? memoryAlignment * (unsigned int)std::ceil(nbChannelsInBytes
+                                / (double)memoryAlignment) : nbChannelsInBytes;
 
         memManager.allocate(std::shared_ptr<Cell>(),
             nbChannelsAligned,
@@ -151,9 +154,13 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
             std::vector<std::shared_ptr<Cell> > childs
                 = deepNet.getChildCells(cell->getName());
 
+            const std::size_t nbBits = std::abs(CellExport
+                ::getQuantizedOutputNbBits(deepNet, *cell));
+            const unsigned int sizeInBytes = ((cell->getNbOutputs() * nbBits)
+                + (cell->getNbOutputs() * nbBits) % 8) / 8;
             unsigned int size = (cell->getNbOutputs() > 1)
-                ? memoryAlignment * (unsigned int)std::ceil(cell->getNbOutputs()
-                                                / (double)memoryAlignment) : 1;
+                ? memoryAlignment * (unsigned int)std::ceil(sizeInBytes
+                                    / (double)memoryAlignment) : sizeInBytes;
             unsigned int stride = size;
             unsigned int length = cell->getOutputsWidth();
             unsigned int count = cell->getOutputsHeight();
@@ -191,6 +198,15 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                     {
                         isWrappable = false;
                     }
+
+                    // If the following condition is not verified, the 
+                    // concatenated channels will not be contiguous in memory!
+                    // Note: nbBits is necessarily the same for all inputs.
+                    if ((((*itCell)->getNbOutputs() * nbBits) % 8) != 0
+                        && (itCell + 1) != itCellEnd)
+                    {
+                        noBranchConcat = false;
+                    }
                 }
 
                 if (noBranchConcat) {
@@ -199,12 +215,16 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
 
                     // In this case, the memory alignment is on the concatenated
                     // size (stride), not each cell size
-                    size = cell->getNbOutputs();
+                    size = sizeInBytes;
+
+                    const unsigned int concatSizeInBytes
+                        = ((concatCell->getNbOutputs() * nbBits)
+                            + (concatCell->getNbOutputs() * nbBits) % 8) / 8;
                     stride = (concatCell->getNbOutputs() > 1)
                             ? memoryAlignment * (unsigned int)
-                                std::ceil(concatCell->getNbOutputs()
+                                std::ceil(concatSizeInBytes
                                 / (double)memoryAlignment)
-                            : 1;
+                            : concatSizeInBytes;
 
                     assert(concatCell->getNbOutputs() > cell->getNbOutputs());
                     assert(concatCell->getOutputsWidth()
@@ -339,9 +359,14 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                             // only one of them
                             ? (*itCell)->getNbOutputs()
                             : (*itCell)->getNbChannels();
+                    const std::size_t cellNbBits = std::abs(CellExport
+                        ::getQuantizedOutputNbBits(deepNet, *(*itCell)));
+                    const unsigned int cellSizeInBytes = ((nbChannels * cellNbBits)
+                        + (nbChannels * cellNbBits) % 8) / 8;
                     const size_t inputSize = (nbChannels > 1)
                             ? memoryAlignment * (unsigned int)std::ceil(
-                                nbChannels / (double)memoryAlignment) : 1;
+                                cellSizeInBytes / (double)memoryAlignment)
+                            : cellSizeInBytes;
                     const size_t inputFullSize = inputSize
                         * (*itCell)->getChannelsWidth()
                         * (*itCell)->getChannelsHeight();
@@ -398,8 +423,7 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
             if (wrapAroundBuffer && wrapAroundSize > 0) {
                 memManager.reallocate(memPlane,
                     cell, concatOffset,
-                    size, true, wrapAroundExtra, childs,
-                    stride, length, count);
+                    size, true, wrapAroundExtra, childs, stride, length, count);
             }
             else {
                 memManager.reallocate(memPlane.memSpace,
@@ -477,7 +501,8 @@ void N2D2::CPP_DeepNetExport::generateParamsHeader(const std::string& fileName)
 
     // Constants
     paramsHeader << "#define NB_BITS " << (int)CellExport::mPrecision << "\n"
-                 << "#define UNSIGNED_DATA " << DeepNetExport::mUnsignedData << "\n\n";
+                 << "#define UNSIGNED_DATA " << ((int)CellExport::mPrecision > 0
+                                    && DeepNetExport::mUnsignedData) << "\n\n";
 
     paramsHeader << "#endif // N2D2_EXPORTC_PARAMS_H" << std::endl;
 }
@@ -595,10 +620,12 @@ void N2D2::CPP_DeepNetExport::generateEnvironmentHeader(DeepNet& deepNet,
             envHeader << "typedef int32_t Target_" << targetIdx << "_T;\n";
         }
         else {
+            const int nbBits
+                = CellExport::getQuantizedOutputNbBits(deepNet, *cell);
             std::string dataType = DeepNetExport::isCellOutputUnsigned(*cell)
-                ? "UDATA_T" : "DATA_T";
+                ? "udata" : "data";
 
-            envHeader << "typedef " << dataType << " Target_"
+            envHeader << "typedef " << dataType << "<" << nbBits << "> Target_"
                 << targetIdx << "_T;\n";
         }
     }
@@ -815,58 +842,13 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
     std::stringstream functionCalls;
 
     // Fill in includes, buffers and functionCalls for each layer
-    /*
-    buffers << "static DATA_T mem[MEMORY_SIZE]"
-        " N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_MEMORY);\n";
-    */
-
-    //find the max type for mem (excluding the very last output, which can be int32)
-    const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
-    int maxActPrecision = 0;
-    //the output of the last layer is in int32, do not take into account
-    for (std::vector<std::vector<std::string> >::const_iterator itLayer
-        = layers.begin() + 1,
-        itLayerEnd = layers.end() -1; itLayer != itLayerEnd; ++itLayer)
-    {
-        for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
-            itEnd = (*itLayer).end();
-            it != itEnd; ++it)
-        {
-            const std::shared_ptr<Cell> cell = deepNet.getCell(*it);
-
-            const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(*cell);
-
-            if (cellFrame.getActivation() && (cellFrame.getActivation()->getType() == "Rectifier" ||
-                                              cellFrame.getActivation()->getType() == "Linear"))
-            {
-                const Activation& activation = *cellFrame.getActivation();
-                int actPrecision = (int) activation.getQuantizedNbBits();
-                maxActPrecision = std::max(actPrecision,maxActPrecision);
-            }
-        }
-    }
-    //this is a default case
-    std::string dataType = "DATA_T";
-    //change the type according to the max
-    if(maxActPrecision > 0 && maxActPrecision <= 8){
-            dataType = "int8_t";
-    }
-    else if(maxActPrecision > 8 && maxActPrecision <= 16){
-            dataType = "int16_t";
-    }
-    else if(maxActPrecision > 16){
-            dataType = "int32_t";
-    }
-
-    // Fill in includes, buffers and functionCalls for each layer
-    buffers << "static "<< dataType << " mem[MEMORY_SIZE]"
+    buffers << "static uint8_t mem[MEMORY_SIZE]"
         " N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_MEMORY);\n";
 
     functionCalls << "#ifdef SAVE_OUTPUTS\n"
                 << "    FILE* env_stream = fopen(\"env_output.txt\", \"w\");\n"
                 << "    saveOutputs("
                 << "ENV_NB_OUTPUTS, "
-                << "NB_BITS, "
                 << "ENV_SIZE_Y, " 
                 << "ENV_SIZE_X, "
                 << "ENV_MEM_CONT_OFFSET, "
@@ -881,7 +863,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                 << "    fclose(env_stream);\n"
                 << "#endif\n";
 
-    //const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
+    const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
 
     for (std::vector<std::vector<std::string> >::const_iterator itLayer
         = layers.begin() + 1,
@@ -896,23 +878,21 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                 = N2D2::Utils::CIdentifier(cell->getName());
             const std::string prefix = Utils::upperCase(identifier);
 
+            const int nbBits
+                = CellExport::getQuantizedOutputNbBits(deepNet, *cell);
             std::string dataType = DeepNetExport::isCellOutputUnsigned(*cell)
-                ? "UDATA_T" : "DATA_T";
+                ? "udata" : "data";
 
             if (cell->getParentsCells().size() > 1) {
                 dataType = DeepNetExport::isCellInputsUnsigned(*cell)
-                    ? "UDATA_T" : "DATA_T";
+                    ? "udata" : "data";
             }
 
             // functionCalls
-            //this is replaced by CPP_CellExport::generateOutputType
-            //called by each cell
-            /*
             functionCalls << "    // " << cell->getName() << "\n";
-            functionCalls << "    " << dataType << "* " << identifier
-                << "_output = " << "(" << dataType << "*) mem + " 
-                << prefix << "_MEM_CONT_OFFSET" <<";\n\n";
-            */
+            functionCalls << "    " << dataType << "<" << nbBits << ">* "
+                << identifier << "_output = (" << dataType << "<" << nbBits
+                << ">*)(mem + " << prefix << "_MEM_CONT_OFFSET);\n\n";
 
             CPP_CellExport::getInstance(*cell)->generateCallCode(deepNet, *cell, 
                 includes, buffers, functionCalls);
@@ -932,46 +912,24 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
         const std::string targetCellPrefix = N2D2::Utils::upperCase(targetCellIdentifier);
 
         if (!outputTargets[targetIdx]->getParameter<bool>("DataAsTarget")) {
-
-            //if this is QAT, maxActPrecision >0
-            //replace maxpropagate to take the output of the last layer into account
-            //the output of the last FC is int32
-            if(maxActPrecision > 0){
-                functionCalls << "    maxPropagate<"
-                            << targetCellPrefix << "_NB_OUTPUTS, "
-                            << targetCellPrefix << "_OUTPUTS_HEIGHT, "
-                            << targetCellPrefix << "_OUTPUTS_WIDTH, "
-                            << "0, "
-                            << targetCellPrefix << "_MEM_CONT_SIZE, "
-                            << targetCellPrefix << "_MEM_WRAP_OFFSET, "
-                            << targetCellPrefix << "_MEM_WRAP_SIZE, "
-                            << targetCellPrefix << "_MEM_STRIDE"
-                        << ">("
-                            << targetCellIdentifier << "_output, "
-                            << "outputs"
-                        << ");\n\n";
-            }
-            else{
-                functionCalls << "    maxPropagate<"
-                            << targetCellPrefix << "_NB_OUTPUTS, "
-                            << targetCellPrefix << "_OUTPUTS_HEIGHT, "
-                            << targetCellPrefix << "_OUTPUTS_WIDTH, "
-                            << targetCellPrefix << "_MEM_CONT_OFFSET, "
-                            << targetCellPrefix << "_MEM_CONT_SIZE, "
-                            << targetCellPrefix << "_MEM_WRAP_OFFSET, "
-                            << targetCellPrefix << "_MEM_WRAP_SIZE, "
-                            << targetCellPrefix << "_MEM_STRIDE"
-                        << ">("
-                            << targetCellIdentifier << "_output, "
-                            << "outputs"
-                        << ");\n\n";
-            }
+            functionCalls << "    maxPropagate<"
+                        << targetCellPrefix << "_NB_OUTPUTS, "
+                        << targetCellPrefix << "_OUTPUTS_HEIGHT, "
+                        << targetCellPrefix << "_OUTPUTS_WIDTH, "
+                        << targetCellPrefix << "_MEM_CONT_OFFSET, "
+                        << targetCellPrefix << "_MEM_CONT_SIZE, "
+                        << targetCellPrefix << "_MEM_WRAP_OFFSET, "
+                        << targetCellPrefix << "_MEM_WRAP_SIZE, "
+                        << targetCellPrefix << "_MEM_STRIDE"
+                    << ">("
+                        << targetCellIdentifier << "_output, "
+                        << "outputs"
+                    << ");\n\n";
 
             functionCalls << "#ifdef SAVE_OUTPUTS\n"
                         << "    FILE* max_stream = fopen(\"max_output.txt\", \"w\");\n"
                         << "    saveOutputs("
                         << targetCellPrefix << "_NB_OUTPUTS, "
-                        << targetCellPrefix << "_NB_BITS_ACT, "
                         << targetCellPrefix << "_OUTPUTS_HEIGHT, " 
                         << targetCellPrefix << "_OUTPUTS_WIDTH, "
                         << targetCellPrefix << "_MEM_CONT_OFFSET, "
@@ -987,15 +945,14 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                         << "#endif\n";
         }
         else {
-            std::string dataType = DeepNetExport::isCellOutputUnsigned(*targetCell)
-                ? "UDATA_T" : "DATA_T";
-
             functionCalls << "    memcpy(outputs, "
                         << targetCellIdentifier << "_output, "
-                        << targetCellPrefix << "_NB_OUTPUTS * "
-                        << targetCellPrefix << "_OUTPUTS_HEIGHT * " 
-                        << targetCellPrefix << "_OUTPUTS_WIDTH * "
-                        "sizeof(" << dataType << "));\n";
+                        << targetCellPrefix << "_MEM_CONT_SIZE);\n"
+                        "    if (" << targetCellPrefix << "_MEM_WRAP_SIZE > 0)\n"
+                        "        memcpy((uint8_t*) outputs + "
+                        << targetCellPrefix << "_MEM_CONT_SIZE, (uint8_t*) mem"
+                        " + " << targetCellPrefix << "_MEM_WRAP_OFFSET, "
+                        << targetCellPrefix << "_MEM_WRAP_SIZE);\n";
         }
     }
 
@@ -1016,18 +973,20 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
     networkPropagateFile << buffers.str()
                          << "\n\n";
 
-    const std::string inputType = DeepNetExport::mEnvDataUnsigned?"UDATA_T":"DATA_T";
+    const std::string inputType = ((int)CellExport::mPrecision > 0
+        && DeepNetExport::mEnvDataUnsigned) ? "udata" : "data";
+    const int inputNbBits = (int)CellExport::mPrecision;
 
     networkPropagateFile << "namespace N2D2 {\n"
-                            << "\n"
-                            << "template<>\n"
-                            << "void Network::propagate(const " << inputType << "* inputs, "
-                                                    << "Target_T* outputs) const \n"
-                            << "{\n"
-                            << functionCalls.str()
-                            << "\n"
-                            << "}\n"
-                            << "\n";
+        << "\n"
+        << "template<>\n"
+        << "void Network::propagate(const " << inputType << "<" << inputNbBits
+            << ">* inputs, " << "Target_T* outputs) const \n"
+        << "{\n"
+        << functionCalls.str()
+        << "\n"
+        << "}\n"
+        << "\n";
 
 
     networkPropagateFile << "/*template<>\n"

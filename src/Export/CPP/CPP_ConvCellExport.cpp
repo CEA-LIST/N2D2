@@ -101,7 +101,6 @@ void N2D2::CPP_ConvCellExport::generateHeaderConstants(const ConvCell& cell, std
            << "#define " << prefix << "_NO_BIAS " << (int) cell.getParameter<bool>("NoBias") << "\n\n";
 
     CPP_CellExport::generateActivation(cell, header);
-    CPP_CellExport::generateWeightPrecision(cell, header);
     CPP_CellExport::generateActivationScaling(cell, header);
 
     header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix << "_NB_OUTPUTS*" 
@@ -296,49 +295,11 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
             << "[NB_OUTPUTS][KERNEL_HEIGHT][KERNEL_WIDTH][NB_CHANNELS]\n";
     }
 
-    int wPrecision = (int)pow(2,std::ceil(log2(cell.getQuantizedNbBits())));
-    std::string wType = "";
-    bool accumulate = false;
+    const unsigned int wPrecision = cell.getQuantizedNbBits();
+    const bool accumulate = (cell.getNbChannels() > 1
+                                && (wPrecision > 0 && wPrecision < 8));
 
-    // if nbChannels = 1, or precision = 8, or convDW - do not accumulate
-    // convDW : 1 channel per output, wOffset can be in the middle of the word
-    /*
-    if((cell.getNbChannels() == 1 && (wPrecision > 0 && wPrecision < 8)) || (wPrecision == 8) || isDWConv){
-        accumulate = false;
-        wType = "int8_t";
-        std::cout << Utils::cwarning << "Cell with number of channels = " << cell.getNbChannels() << ", and weight precision = " << wPrecision << " :: weights will not be accumulated!";
-    }
-    else if(cell.getNbChannels() > 1 && (wPrecision > 0 && wPrecision < 8) && !isDWConv){
-        accumulate = true;
-        wType = "uint8_t";
-    }
-    */
-    if((cell.getNbChannels() == 1 && (wPrecision > 0 && wPrecision < 8)) || (wPrecision == 8)){
-        accumulate = false;
-        wType = "int8_t";
-        std::cout << Utils::cwarning << "Cell with number of channels = " << cell.getNbChannels() << ", and weight precision = " << wPrecision << " :: weights will not be accumulated!";
-    }
-    else if(cell.getNbChannels() > 1 && (wPrecision > 0 && wPrecision < 8)){
-        accumulate = true;
-        wType = "uint8_t";
-    }
-    else if (wPrecision > 8 && wPrecision <= 16){
-        accumulate = false;
-        wType = "int16_t";
-        std::cout << Utils::cwarning << "Weight precision = " << wPrecision << " :: weights will not be accumulated!";
-    }
-    else if (wPrecision > 16 && wPrecision <= 32){
-        accumulate = false;
-        wType = "int32_t";
-        std::cout << Utils::cwarning << "Weight precision = " << wPrecision << " :: weights will not be accumulated!";
-    }
-    else{
-        accumulate = false;
-        wType = "int64_t";
-        std::cout << Utils::cwarning << "Weight precision = " << wPrecision << " :: weights will not be accumulated!";
-    }
-
-    header << "static const " << wType << " " << identifier << "_weights["
+    header << "static const data<" << wPrecision << "> " << identifier << "_weights["
            << prefix << "_WEIGHTS_SIZE] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_WEIGHTS) = {";
 
 
@@ -547,9 +508,6 @@ void N2D2::CPP_ConvCellExport::generateCallCode(
 
     includes << "#include \"" << identifier << ".hpp\"\n";
 
-    //set output type
-    generateOutputType(deepNet, cell, functionCalls);
-
     generateBenchmarkStart(deepNet, cell, functionCalls);
 
     const auto& parents = deepNet.getParentCells(cell.getName());
@@ -596,17 +554,14 @@ void N2D2::CPP_ConvCellExport::generateCallCode(
                 << prefix << "_MEM_CONT_SIZE, "
                 << prefix << "_MEM_WRAP_OFFSET, "
                 << prefix << "_MEM_WRAP_SIZE, "
-                << prefix << "_MEM_STRIDE,"
-                << prefix << "_NB_BITS_W,"
-                << CPP_CellExport::getParentActRange(deepNet,cell) << ", "
-                << CPP_CellExport::getLabelActivationRange(cell)
+                << prefix << "_MEM_STRIDE"
             << ">"
             <<"("
                 << inputBuffer << " , "
                 << outputBuffer << ", "
                 << identifier << "_biases, "
                 << identifier << "_weights, "
-                << CPP_CellExport::getLabelScaling(cell)
+                << prefix << "_SCALING"
             << ");\n\n";
 
     generateBenchmarkEnd(deepNet, cell, functionCalls);

@@ -31,7 +31,7 @@ void readStimulus(const N2D2::Network& network, const std::string& stimulusPath,
 {
     envRead(stimulusPath, inputBuffer.size(),
             network.inputHeight(), network.inputWidth(),
-            (DATA_T*) inputBuffer.data(), //TODO
+            inputBuffer.data(),
             expectedOutputBuffer.size(), expectedOutputBuffer.data());
 }
 
@@ -88,10 +88,10 @@ int main(int argc, char* argv[]) {
 
     const N2D2::Network network{};
 
-#if ENV_DATA_UNSIGNED
-    std::vector<UDATA_T> inputBuffer(network.inputSize());
+#if NB_BITS > 0 && ENV_DATA_UNSIGNED
+    std::vector<udata<NB_BITS>> inputBuffer(network.inputSize());
 #else
-    std::vector<DATA_T> inputBuffer(network.inputSize());
+    std::vector<data<NB_BITS>> inputBuffer(network.inputSize());
 #endif
 
     std::vector<Target_T> expectedOutputBuffer(OUTPUTS_SIZE[0]);

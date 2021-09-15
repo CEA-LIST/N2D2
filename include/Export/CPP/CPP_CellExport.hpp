@@ -56,19 +56,10 @@ public:
 
     static void generateActivation(const Cell& cell, std::ofstream& header);
     static void generateActivationScaling(const Cell& cell, std::ofstream& header);
-    static void generateWeightPrecision(const Cell& cell, std::ofstream& header);
     static void generateScaling(const std::string& prefix,
                                 const Scaling& scaling,
                                 bool outputUnsigned,
                                 std::ofstream& header);
-    //Return the label in function to the dynamic range of the output layer
-    std::string getLabelActivationRange(const Cell& cell) const;
-    //Return the label in function to the scaling type of the output layer
-    std::string getLabelScaling(const Cell& cell) const;
-    //Return the range of the current layer (if fc/conv) or parent layer (if not fc/conv)
-    std::string getActRangeSaveOutputs(const DeepNet& deepNet, const Cell& cell) const;
-    //Return the range of the parent layer
-    std::string getParentActRange(const DeepNet& deepNet, const Cell& cell) const;
 
     inline static std::unique_ptr<CPP_CellExport> getInstance(Cell& cell);
 
@@ -89,9 +80,6 @@ public:
     virtual void generateSaveOutputs(const DeepNet& deepNet,
                                      const Cell& cell, 
                                      std::stringstream& functionCalls);
-    virtual void generateOutputType(const DeepNet& deepNet,
-                                                const Cell& cell,
-                                                std::stringstream& functionCalls);
 };
 }
 
