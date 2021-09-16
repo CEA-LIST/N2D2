@@ -2196,10 +2196,9 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
         self.scale_solver = solver.copy()
 
     def has_quantizer(self):
-        if self.quantizer:
-            return True
-        else:
-            return False
+        # BatchNorm objects don't have a quantizer !
+        return False
+
 
 class Activation(NeuralNetworkCell, Datatyped):
 

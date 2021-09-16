@@ -370,6 +370,17 @@ class Tensor:
         n2d2_tensor.is_cuda = "CudaTensor" in str(type(N2D2_Tensor)) 
         return n2d2_tensor
 
+    def __array__(self):
+        """Magic method called by Numpy to create an array
+
+        Example :
+        ```
+        t = n2d2.Tensor([2,2])
+        a = numpy.array(t)
+        ```
+        """
+        return self.to_numpy()
+
     def __setitem__(self, index, value):
         """
         Set an element of the tensor.
@@ -482,7 +493,6 @@ class Tensor:
     def detach_cell(self):
         """
         Detach the cells from the tensor, thereby removing all information about the computation graph/deepnet object.
-        Therefore no gradients pass this tensor after this operation has been performed.
         """
         self.cell = None
         return self
@@ -493,7 +503,7 @@ class Tensor:
 
     def get_deepnet(self):
         """
-        Method called by the cells, if the tensor is not part of a graph, it will be linked to an :py:class:`n22d.provider.Provider` object.
+        Method called by the cells, if the tensor is not part of a graph, it will be linked to an :py:class:`n2d2.provider.Provider` object.
         """
         if self.cell is None:
             # TensorPlaceholder will set the cell attribute to it self.
