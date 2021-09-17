@@ -977,13 +977,13 @@ private:
     **************************************PACK_ACTIVATIONS**********************************
     ***************************************************************************************/
     template<typename Output_T>
-    N2D2_ALWAYS_INLINE static void compact_data_during_loop (const int32_t value,
+    N2D2_ALWAYS_INLINE static void compact_data_during_loop (const uint8_t value,
                                Output_T* __restrict outputs,
                                int* outputOffset,
                                PackSupport* infoPack)
     {
-        unsigned int mask = (1 << infoPack->nb_bit) - 1;
-        unsigned int nbSlot = ceil((double)8/infoPack->nb_bit);
+        constexpr unsigned int mask = (1L << std::numeric_limits<Output_T>::digits) - 1;
+        constexpr unsigned int nbSlot = ceil((double)8/std::numeric_limits<Output_T>::digits);
 
         infoPack->accumulator |= value & mask;
         infoPack->cptAccumulator += 1;
@@ -996,7 +996,7 @@ private:
             //*(outputOffset) += 1;
         }
         else {
-            infoPack->accumulator <<= infoPack->nb_bit;
+            infoPack->accumulator <<= std::numeric_limits<Output_T>::digits;
         }
     }
 
@@ -1007,12 +1007,12 @@ private:
     {
         // if data still accumulated but not stored
         if (infoPack->cptAccumulator != 0) {
-            unsigned int nbSlot = ceil((double)8/infoPack->nb_bit);
+            constexpr unsigned int nbSlot = ceil((double)8/std::numeric_limits<Output_T>::digits);
 
             // Add extra zero to shift data to the left
             infoPack->cptAccumulator += 1;
             while (infoPack->cptAccumulator < nbSlot) {
-                infoPack->accumulator <<= infoPack->nb_bit;
+                infoPack->accumulator <<= std::numeric_limits<Output_T>::digits;
                 infoPack->cptAccumulator += 1;
             }
             outputs[*(outputOffset)] = infoPack->accumulator;
@@ -1248,7 +1248,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
         = ((NB_CHANNELS * std::numeric_limits<Input_T>::digits)
             + (NB_CHANNELS * std::numeric_limits<Input_T>::digits) % 8) / 8;
 
-    PackSupport infoPack = { 0, 0, std::numeric_limits<Output_T>::digits };
+    PackSupport infoPack = { 0, 0 };
 
     int outputOffset = 0;
 
@@ -1432,7 +1432,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
     const Weight_T* __restrict weights,
     const Rescaling_T& __restrict rescaling) const
 {
-    PackSupport infoPack = { 0, 0, std::numeric_limits<Output_T>::digits };
+    PackSupport infoPack = { 0, 0 };
 
     static_assert(NB_OUTPUTS % NB_CHANNELS == 0,
         "NB_OUTPUTS should be a multiple of NB_CHANNELS.");
@@ -1581,7 +1581,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
 
                                 //test for 4b only
                                 if(std::numeric_limits<Weight_T>::digits == 4) {
-                                    const data<4> w = (const data<4>)weights[wOffset + (iInt8+iInt8_start)];
+                                    const Weight_T w = weights[wOffset + (iInt8+iInt8_start)];
 
                                     if(trueISlot == 0) {
                                         weightedSum += ((Input_T*)((uint8_t*)inputs + iOffsetInRange))[channel]
@@ -1650,7 +1650,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
     //max slot possible, needed for not QAT > 8 bits case! TODO optimize this!
     const unsigned int NB_SLOT = 8;
 
-    PackSupport infoPack = { 0, 0, std::numeric_limits<Input_T>::digits };
+    PackSupport infoPack = { 0, 0 };
 
     int outputOffset = 0;
 
@@ -1693,9 +1693,15 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
                 // <--
 
                 if (POOLING_TYPE == Max) {
-                    //Input_T maxVal = std::numeric_limits<Input_T>::lowest();
-                    std::array<Input_T,NB_SLOT> maxVal;
-                    maxVal.fill(std::numeric_limits<Input_T>::lowest());
+                    Input_T maxVal = std::numeric_limits<Input_T>::lowest();
+                    
+                    if(std::numeric_limits<Input_T>::digits == 4) {
+                        maxVal.fields.op0 = std::numeric_limits<Input_T>::lowest();
+                        maxVal.fields.op1 = std::numeric_limits<Input_T>::lowest();
+                    }
+
+                    //std::array<Input_T,NB_SLOT> maxVal;
+                    //maxVal.fill(std::numeric_limits<Input_T>::lowest());
 
                     for (int sy = 0; sy < POOL_HEIGHT; ++sy) {
                         if ((PADDING_Y != 0
@@ -1752,18 +1758,18 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
                             //4 bits example for now : unpack and find max for each input
                             //TODO :: write separate methods for each input range
                             if(std::numeric_limits<Input_T>::digits == 4){
-                                const data<4> in = (const data<4>)inputs[iOffsetInRange];
+                                const Input_T& in = inputs[iOffsetInRange];
 
-                                if(in.fields.op1 > maxVal[0]){
-                                    maxVal[0] = in.fields.op1;
+                                if(in.fields.op1 > maxVal.fields.op1){
+                                    maxVal.fields.op1 = in.fields.op1;
                                 }
-                                if(in.fields.op0 > maxVal[1]){
-                                    maxVal[1] = in.fields.op0;
+                                if(in.fields.op0 > maxVal.fields.op0){
+                                    maxVal.fields.op0 = in.fields.op0;
                                 }
                             }
                             else{
-                                if(*((Input_T*)((uint8_t*)inputs + iOffsetInRange)) > maxVal[0]) {
-                                    maxVal[0] = *((Input_T*)((uint8_t*)inputs + iOffsetInRange));
+                                if(*((Input_T*)((uint8_t*)inputs + iOffsetInRange)) > maxVal) {
+                                    maxVal = *((Input_T*)((uint8_t*)inputs + iOffsetInRange));
                                 }
                             }
                         }
@@ -1773,13 +1779,16 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
                     int32_t output_max[NB_SLOT];
 
                     if(std::numeric_limits<Input_T>::digits < 8){
-                        for(int iSlot = 0; iSlot < NB_SLOT_REAL; iSlot++){
-                            output_max[iSlot] = maxVal[iSlot];
-                            compact_data_during_loop(output_max[iSlot], outputs, &outputOffset, &infoPack);
-                        }
+                        compact_data_during_loop(maxVal.fields.op1, outputs, &outputOffset, &infoPack);
+                        compact_data_during_loop(maxVal.fields.op0, outputs, &outputOffset, &infoPack);
+
+                        //for(int iSlot = 0; iSlot < NB_SLOT_REAL; iSlot++){
+                        //    output_max[iSlot] = maxVal[iSlot];
+                        //    compact_data_during_loop(output_max[iSlot], outputs, &outputOffset, &infoPack);
+                        //}
                     }
                     else{
-                        ((Output_T*)((uint8_t*)outputs + oOffset))[output] = maxVal[0];
+                        ((Output_T*)((uint8_t*)outputs + oOffset))[output] = maxVal;
                     }
                 }
                 //TODO :: adapt and test average pooling with packed inputs
@@ -1884,7 +1893,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
     static_assert(OUTPUTS_WIDTH == 1, "Outputs width should be 1");
     static_assert(OUTPUT_MEM_WRAP_SIZE == 0, "Output wrapping not supported");
 
-    PackSupport infoPack = { 0, 0, std::numeric_limits<Output_T>::digits };
+    PackSupport infoPack = { 0, 0 };
 
     int outputOffset = 0;
 
@@ -1950,7 +1959,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
             }
         }
         if (std::numeric_limits<Output_T>::digits < 8) {
-            int32_t output_val = sat<Output_T>(weightedSum, och, ACTIVATION, rescaling);
+            int8_t output_val = sat<Output_T>(weightedSum, och, ACTIVATION, rescaling);
             unsigned int nbSlot = ceil((double)8/std::numeric_limits<Output_T>::digits);
             outputOffset = std::floor(och/nbSlot);
             compact_data_during_loop(output_val, outputs, &outputOffset, &infoPack);

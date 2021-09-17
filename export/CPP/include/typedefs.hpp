@@ -44,6 +44,9 @@ namespace std {
     template <int BITWIDTH>
     struct is_floating_point<data<BITWIDTH>>
         : std::is_floating_point<decltype(data<BITWIDTH>::value)>::type {};
+    template <int BITWIDTH>
+    struct is_unsigned<data<BITWIDTH>>
+        : std::is_unsigned<decltype(data<BITWIDTH>::value)>::type {};
 
     template <int BITWIDTH>
     class numeric_limits<data<BITWIDTH>> {
@@ -297,7 +300,6 @@ struct udata<1>
 typedef struct PackSupport {
     uint8_t         accumulator;
     unsigned int    cptAccumulator;
-    int             nb_bit;
 } PackSupport;
 
 
