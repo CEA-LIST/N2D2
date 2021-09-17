@@ -180,6 +180,7 @@ void N2D2::CPP_PoolCellExport::generateCallCode(
         << parentPrefix << "_MEM_WRAP_OFFSET, "
         << parentPrefix << "_MEM_WRAP_SIZE, "
         << parentPrefix << "_MEM_STRIDE, ";
+
     // Memory mapping: output
     functionCalls << prefix << "_MEM_CONT_OFFSET, "
                 << prefix << "_MEM_CONT_SIZE, "

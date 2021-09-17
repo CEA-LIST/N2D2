@@ -17,13 +17,12 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-#include "DeepNet.hpp"
+
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Export/C/C_CellExport.hpp"
 #include "Export/CPP/CPP_CellExport.hpp"
 #include "Export/DeepNetExport.hpp"
 #include "utils/Utils.hpp"
-#include <cmath>
 
 void N2D2::CPP_CellExport::generateHeaderBegin(const Cell& cell, std::ofstream& header) {
     // Append date & time to the file.
@@ -268,7 +267,7 @@ void N2D2::CPP_CellExport::generateBenchmarkEnd(const DeepNet& /*deepNet*/,
         "#endif\n\n";
 }
 
-void N2D2::CPP_CellExport::generateSaveOutputs(const DeepNet& deepNet,
+void N2D2::CPP_CellExport::generateSaveOutputs(const DeepNet& /*deepNet*/,
                                                const Cell& cell, 
                                                std::stringstream& functionCalls)
 {

@@ -30,10 +30,6 @@
 #include "Scaling.hpp"
 #include "utils/Registrar.hpp"
 
-//included to check the cell type
-#include "Cell/FcCell.hpp"
-#include "Cell/ConvCell.hpp"
-
 namespace N2D2 {
 /**
  * Virtual base class for methods commun to every cell type for the CPP export

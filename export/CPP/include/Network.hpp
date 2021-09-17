@@ -24,8 +24,6 @@
 #include "typedefs.h" // old C header, deprecated
 #include "typedefs.hpp"
 
-#include <iostream>
-
 #define N2D2_THROW_OR_ABORT(ex, msg) throw ex(msg)
 #define N2D2_ALWAYS_INLINE __attribute__((always_inline))
 
@@ -1580,7 +1578,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                                 */
 
                                 //test for 4b only
-                                if(std::numeric_limits<Weight_T>::digits == 4) {
+                                if constexpr(std::numeric_limits<Weight_T>::digits == 4) {
                                     const Weight_T w = weights[wOffset + (iInt8+iInt8_start)];
 
                                     if(trueISlot == 0) {
@@ -1695,7 +1693,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
                 if (POOLING_TYPE == Max) {
                     Input_T maxVal = std::numeric_limits<Input_T>::lowest();
                     
-                    if(std::numeric_limits<Input_T>::digits == 4) {
+                    if constexpr(std::numeric_limits<Input_T>::digits == 4) {
                         maxVal.fields.op0 = std::numeric_limits<Input_T>::lowest();
                         maxVal.fields.op1 = std::numeric_limits<Input_T>::lowest();
                     }
@@ -1757,7 +1755,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
 
                             //4 bits example for now : unpack and find max for each input
                             //TODO :: write separate methods for each input range
-                            if(std::numeric_limits<Input_T>::digits == 4){
+                            if constexpr(std::numeric_limits<Input_T>::digits == 4){
                                 const Input_T& in = inputs[iOffsetInRange];
 
                                 if(in.fields.op1 > maxVal.fields.op1){
@@ -1778,7 +1776,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
                     outputOffset = oOffset + output;
                     int32_t output_max[NB_SLOT];
 
-                    if(std::numeric_limits<Input_T>::digits < 8){
+                    if constexpr(std::numeric_limits<Input_T>::digits < 8){
                         compact_data_during_loop(maxVal.fields.op1, outputs, &outputOffset, &infoPack);
                         compact_data_during_loop(maxVal.fields.op0, outputs, &outputOffset, &infoPack);
 

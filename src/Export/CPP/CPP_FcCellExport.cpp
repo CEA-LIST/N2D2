@@ -30,8 +30,6 @@
 #include "utils/Registrar.hpp"
 #include "utils/Utils.hpp"
 
-#include <cstdint>
-
 N2D2::Registrar<N2D2::FcCellExport> N2D2::CPP_FcCellExport::mRegistrar(
     {"CPP", "CPP_ASMP", "CPP_STM32", "CPP_HLS"},
     N2D2::CPP_FcCellExport::generate);
@@ -81,14 +79,11 @@ void N2D2::CPP_FcCellExport::generateHeaderConstants(const FcCell& cell, std::of
 }
 
 void N2D2::CPP_FcCellExport::generateHeaderFreeParameters(const FcCell & cell, std::ofstream& header) {
+    generateHeaderBias(cell, header);
 
-    if(cell.getQuantizedNbBits() > 0){
-        generateHeaderBiasQAT(cell, header);
+    if (cell.getQuantizedNbBits() > 0)
         generateHeaderWeightsQAT(cell, header);
-    }
-    else{
-        generateHeaderBias(cell, header);
-
+    else {
         if (mThreshold > 0.0) {
             generateHeaderWeightsSparse(cell, header);
         }
@@ -100,43 +95,12 @@ void N2D2::CPP_FcCellExport::generateHeaderFreeParameters(const FcCell & cell, s
 
 void N2D2::CPP_FcCellExport::generateHeaderBias(const FcCell & cell, std::ofstream& header) {
     const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string wType = (cell.getQuantizedNbBits() <= 0) ? "BDATA_T" :
+                              (cell.getQuantizedNbBits() <= 4) ? "int16_t" :
+                              (cell.getQuantizedNbBits() <= 8) ? "int32_t" :
+                                                                 "int64_t";
 
-    header << "static const BDATA_T " << identifier << "_biases[" 
-               << Utils::upperCase(identifier) << "_OUTPUTS_SIZE"
-           <<"] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_BIASSES) = {";
-
-    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
-
-    Tensor<Float_T> bias;
-    for (std::size_t output = 0; output < cell.getNbOutputs(); ++output) {
-        if (cell.getParameter<bool>("NoBias")) {
-            header << "0";
-        }
-        else {
-            cell.getBias(output, bias);
-            CellExport::generateFreeParameter(bias(0), header);
-        }
-
-        CellExport::generateSingleShiftHalfAddition(cellFrame, output, header);
-        header << ", ";
-    }
-
-    header << "};\n";
-}
-
-void N2D2::CPP_FcCellExport::generateHeaderBiasQAT(const FcCell & cell, std::ofstream& header) {
-    const std::string identifier = Utils::CIdentifier(cell.getName());
-
-    int wPrecision = (int)pow(2,std::ceil(log2(cell.getQuantizedNbBits())));
-    std::string wType = "";
-    if(wPrecision > 0 && wPrecision <= 8){
-        wType = "int32_t";
-    }
-    else{
-        wType = "int64_t";
-    }
-
-    header << "static const " << wType << " " << identifier << "_biases["
+    header << "static const " << wType << " " << identifier << "_biases[" 
                << Utils::upperCase(identifier) << "_OUTPUTS_SIZE"
            <<"] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_BIASSES) = {";
 
@@ -218,7 +182,10 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsQAT(const FcCell & cell, std::
            << "// If the previous cell was a 2D cell, CHANNELS_SIZE is flatten in "
                << "the [CHANNELS_HEIGHT][CHANNELS_WIDTH][NB_CHANNELS] order.\n";
 
-    const unsigned int wPrecision = cell.getQuantizedNbBits();
+    // Force wPrecision to be a multiple of 2 (for example, 3 bits weights will
+    // be stored on 4 bits)
+    const unsigned int wPrecision
+        = (int)std::pow(2, std::ceil(std::log2(cell.getQuantizedNbBits())));
     const bool accumulate = (cell.getNbChannels() > 1
                                 && (wPrecision > 0 && wPrecision < 8));
 
