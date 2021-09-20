@@ -2,12 +2,19 @@ Export: TensorRT
 ================
 
 Export type: ``CPP_TensorRT``
- C++ export using TensorRT.
 
-::
+C++ export using TensorRT.
 
-    n2d2 MobileNet_ONNX.ini -seed 1 -w /dev/null -export CPP_TensorRT
+.. code-block::
 
+    n2d2 MobileNet_ONNX.ini -seed 1 -w /dev/null -export CPP_TensorRT -nbbits 32
+    cd export_CPP_TensorRT_float32
+    make
+
+.. Warning::
+
+    The calibration for this export is done using the tools provided by NVIDIA. For this reason, you cannot calibrate when exporting your network.
+    You need to use the export to calibrate your network.
 
 The TensorRT API export can run the generated program in NVIDIA GPU
 architecture. It use CUDA, cuDNN and TensorRT API library. All the
@@ -15,6 +22,7 @@ native TensorRT layers are supported. The export support from TensorRT
 2.1 to TensorRT 5.0 versions.
 
 Program options related to the TensorRT API export:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +--------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Option [default value]   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
@@ -32,12 +40,14 @@ Program options related to the TensorRT API export:
 | ``-nbbits`` [-32]        | Number of bits used for computation. Value -32 for Full FP32 bits configuration, -16 for Half FP16 bits configuration and 8 for INT8 bits configuration. When running INT8 mode for the first time, the TensorRT calibration process can be very long. Once generated the generated calibration table will be automatically reused. Supported compute mode in function of the compute capability are provided here: https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#compute-capabilities .   |
 +--------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
+Example
+~~~~~~~
+
 Test the exported network with layer wise profiling:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
-    cd export_CPP_TensorRT_float32
-    make
     ./bin/n2d2_tensorRT_test -prof
 
 The results of the layer wise profiling should look like:
@@ -55,4 +65,9 @@ The results of the layer wise profiling should look like:
     Average profiled tensorRT process time per stimulus = 0.113932 ms
 
 
+Calibrate the exported network :
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+::
+
+    ./bin/n2d2_tensorRT_test -nbbits 8
