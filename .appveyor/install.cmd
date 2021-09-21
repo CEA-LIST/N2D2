@@ -16,7 +16,16 @@ appveyor DownloadFile ^
 opencv-2.4.13.2-vc14.exe -o"C:\tools_vc14" -y
 
 echo Installing Protobuf
-choco install -y protoc
+git clone -q --branch=master https://github.com/google/protobuf.git C:\projects\protobuf
+cd C:\projects\protobuf
+mkdir build
+cd build
+cmake ..\cmake -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
+cmake --build . --config Release
+cmake --build . --config Release --target install
+
+echo Installing graphviz (optional)
+choco install graphviz
 
 if DEFINED USE_CUDA goto :use_cuda
 goto :endif

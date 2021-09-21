@@ -2048,8 +2048,8 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 #else
 #pragma omp parallel for if (weights.size() > 1024)
 #endif
-                for (unsigned int output = 0;
-                    output < fcCell->getNbOutputs(); ++output)
+                for (int output = 0;
+                    output < (int)fcCell->getNbOutputs(); ++output)
                 {
                     for (unsigned int ch = 0; ch < fcCell->getNbChannels(); ++ch) {
                         for (unsigned int iy = 0; iy < fcCell->getChannelsHeight(); ++iy) {

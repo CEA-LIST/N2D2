@@ -158,7 +158,7 @@ target_compile_definitions(n2d2_lib PUBLIC N2D2_COMPILE_PATH=\"${CMAKE_SOURCE_DI
 
 if(MSVC)
     # TODO clean-up warnings
-    target_compile_options(n2d2_lib PUBLIC /W3 /wd4250 /wd4512 /wd4267 /wd4244 /wd4800 /wd4297)
+    target_compile_options(n2d2_lib PUBLIC /W3 /wd4250 /wd4512 /wd4267 /wd4244 /wd4800 /wd4297 /bigobj)
     target_compile_definitions(n2d2_lib PUBLIC _CONSOLE _VISUALC_ NeedFunctionPrototypes _CRT_SECURE_NO_WARNINGS _VARIADIC_MAX=10)
 else()
     target_compile_options(n2d2_lib PUBLIC -std=c++0x -Wall -Wextra -pedantic -Wno-unknown-pragmas -fsigned-char -fPIC)
@@ -260,6 +260,13 @@ if(pybind11_FOUND)
 else()
     message(STATUS "Using third_party/pybind11.")
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/pybind11)
+endif()
+
+if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/third_party/pybind11/CMakeLists.txt")
+  message(FATAL_ERROR
+          "Cannot find third_party/pybind11 directory that's needed to "
+          "build N2D2. If you use git, make sure you have cloned submodules:\n"
+          "  git submodule update --init --recursive\n")
 endif()
 
 pybind11_add_module(N2D2 MODULE ${src_files_python})
