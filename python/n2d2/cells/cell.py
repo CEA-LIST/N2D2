@@ -59,7 +59,7 @@ class Cell(ABC):
         if key == "name":
             return self._name
         else:
-            return super().__getattr__(key)
+            return super().__getattribute__(key)
 
     def get_name(self):
         return self._name
