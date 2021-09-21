@@ -128,8 +128,8 @@ endfunction()
 # Must be called after find_package(CUDA) as the find_package call resets CUDA_NVCC_FLAGS
 macro(set_nvcc_flags)
     set(CUDA_PROPAGATE_HOST_FLAGS OFF)
-    # Must be replace by sm_80 for A100 architecture
-    list(APPEND CUDA_NVCC_FLAGS -std=c++11;-arch=sm_30;)
+    cuda_select_nvcc_arch_flags(ARCH_FLAGS Common)
+    list(APPEND CUDA_NVCC_FLAGS -std=c++11;${ARCH_FLAGS})
     if (MSVC)
         list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-MD;)
     else()
