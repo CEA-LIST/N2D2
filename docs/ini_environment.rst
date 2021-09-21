@@ -542,7 +542,9 @@ This transformation can be used to blend image objects, provided by another
 | ``TypeMixing`` [0]             | If true (1), multiple object types can be mixed on the same image                                                           |
 +--------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
 | ``DensityRange`` [0.0 0.0]     | Range of density of the objects to blend in the image (values are from 0.0 to 1.0). A different random density in this      |
-|                                | range is used for each image. If the two values are equal, the density is constant.                                         |
+|                                | range is used for each image. If the two values are equal, the density is constant. A constant density of 0 (corresponding  |
+|                                | the default range [0.0 0.0]) means that only a single object is blended in the image in all cases, regardless of the object |
+|                                | size. Indeed, the density parameter is checked only *after* the first object was inserted.                                  |
 +--------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
 | ``MarginH`` [0]                | Minimum horizontal margin between inserted objects (in pixels)                                                              |
 +--------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
@@ -582,7 +584,7 @@ And :math:`R` is the resulting image.
       0 & \text{otherwise}
     \end{cases}`
   | :math:`\alpha' = gaussian\_blur(\alpha)`
-  | :math:`R=\alpha'.O + (1-\alpha').B`
+  | :math:`R=\alpha'.O + (1-\alpha').I`
 
 ``SmoothEdgeLinearByDistance``: combines ``SmoothEdge`` and ``LinearByDistance``.
   | :math:`\alpha = \begin{cases}
@@ -590,7 +592,7 @@ And :math:`R` is the resulting image.
       0 & \text{otherwise}
     \end{cases}`
   | :math:`\alpha' = gaussian\_blur(\alpha)`
-  | :math:`R=\alpha'.O + (1-\alpha').B`
+  | :math:`R=\alpha'.O + (1-\alpha').I`
   
 
 Labels mapping
@@ -1034,6 +1036,28 @@ Compute image gradient.
 | ``GradientScale`` [1.0]          | Rescale the image by this factor before applying the gradient and the threshold, then scale it back to filter the labels                                                                       |
 +----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
+
+LabelFilterTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Filter labels in the image. The specified labels can be removed, kept (meaning 
+all the other labels removed), or merged (the specified labels are replace by 
+the first one).
+
++----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Option [default value]           | Description                                                                                                                                                                                    |
++==================================+================================================================================================================================================================================================+
+| ``Labels``                       | Space-separated list of label names to be filtered                                                                                                                                             |
++----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``Filter`` [``Remove``]          | Type of filter to apply: ``Remove``, ``Keep`` (labels not in the list are removed) or ``Merge`` (labels in the list are all replaced by the first one)                                         |
++----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``DefaultLabel`` [-2]            | Default label, to be used where labels are removed. With the default value (-2), the default label of the associated database is used. If there is no default label, -1 (ignore) is used       |
++----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+This transformation filters both pixel-wise labels and ROIs.
+
+
+
 LabelSliceExtractionTransformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1297,6 +1321,14 @@ A random object of with the label ``Label`` is extracted from the image.
 |                           | single value                                     |
 +---------------------------+--------------------------------------------------+
 
+When ``LabelSegmentation`` is 0, this transformation directly extracts one of 
+the annotation ROI whose label matches ``Label``. When ``LabelSegmentation`` is 
+true (1), the annotation ROIs are not used directly. Rather, the flattened
+pixel-wise annotation is (re-)labeled using connected-component labeling to
+obtain ROIs to extract. Note that the annotation ROIs are part of the 
+flattened pixel-wise annotation (see also the ``Database`` ``CompositeLabel`` 
+parameter).
+
 
 Additional parameters for ROI filtering, before random selection of a single one:
 
@@ -1319,6 +1351,7 @@ Additional parameters for ROI filtering, before random selection of a single one
 | ``MergeMaxVDist``        | 1             | Maximum vertical distance for merging (in pixels)                                         |
 +--------------------------+---------------+-------------------------------------------------------------------------------------------+
 
+Note that these parameters applies only when ``LabelSegmentation`` is true (1).
 
 
 RandomAffineTransformation
