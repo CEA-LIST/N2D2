@@ -18,11 +18,12 @@ opencv-2.4.13.2-vc14.exe -o"C:\tools_vc14" -y
 echo Installing Protobuf
 git clone -q --branch=master https://github.com/google/protobuf.git C:\projects\protobuf
 cd C:\projects\protobuf
-mkdir build
-cd build
+mkdir build_cmake
+cd build_cmake
 cmake ..\cmake -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
 cmake --build . --config Release
 cmake --build . --config Release --target install
+cd C:\projects\n2d2
 
 echo Installing graphviz (optional)
 choco install graphviz
