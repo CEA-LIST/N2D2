@@ -23,6 +23,8 @@ cd build_cmake
 cmake ..\cmake -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
 cmake --build . --config Release
 cmake --build . --config Release --target install
+set CMAKE_INCLUDE_PATH=%CMAKE_INCLUDE_PATH%;C:\Program Files (x86)\protobuf\include
+set CMAKE_LIBRARY_PATH=%CMAKE_LIBRARY_PATH%;C:\Program Files (x86)\protobuf\lib
 cd C:\projects\n2d2
 
 echo Installing graphviz (optional)
