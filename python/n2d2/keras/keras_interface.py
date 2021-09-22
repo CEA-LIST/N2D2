@@ -87,7 +87,7 @@ class CustomSequential(keras.Sequential):
         n2d2.global_variables.default_model = "Frame_CUDA"
         
         db = n2d2.database.Database()
-        provider = n2d2.provider.DataProvider(db,[inputs_shape[3], inputs_shape[1], inputs_shape[2]], batch_size=inputs_shape[0])
+        provider = n2d2.provider.DataProvider(db,[inputs_shape[3], inputs_shape[2], inputs_shape[1]], batch_size=inputs_shape[0])
         self.deepNetCell = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "model.onnx")
         for cell in self.deepNetCell:
             if isinstance(cell, n2d2.cells.Softmax):
@@ -115,30 +115,25 @@ class CustomSequential(keras.Sequential):
         x_var = tf.Variable(x)
 
         x_numpy = x.numpy()
-        print("Numpy shape : ", x_numpy.shape)
         inputs_batch_size = x_numpy.shape[0]
         inputs_shape = np.array(x_numpy.shape)
-        
-        # Make sure with have a full batch
+        # Make sure we have a full batch
         if inputs_batch_size < self.batch_size:
-
             inputs_shape[0] = self.batch_size
-
             x_numpy.resize(inputs_shape)
-        print("Numpy shape : ", x_numpy.shape)
+        # print("Numpy shape : ", x_numpy.shape)
         # perform operation on tensor #
         fistCellName = self.deepNet.getLayers()[1][0] # 0 = env
         lastCellName = self.deepNet.getLayers()[-1][-1]
 
-        x_tensor = N2D2.Tensor_float(x_numpy) # Bad conversion need to change convention NHWC -> HWCN 
-        x_tensor.reshape([inputs_shape[1], inputs_shape[2], inputs_shape[3],inputs_shape[0]])
-
+        x_tensor = N2D2.Tensor_float(x_numpy) # Need to change convention NHWC -> HWCN 
+        x_tensor.reshape([inputs_shape[3], inputs_shape[1], inputs_shape[2],inputs_shape[0]])
         for n_value, t_value in zip(x_numpy.flatten(), x_tensor):
             if n_value != t_value:
                 print(x_numpy.flatten())
                 print([i for i in x_tensor])
                 raise ValueError(f"{n_value} != {t_value}")
-        print("x tensor dim : ", x_tensor.dims())
+        # print("x tensor dim : ", x_tensor.dims())
 
         firstCell = self.deepNet.getCell_Frame_Top(fistCellName)
         self.diffOutputs = N2D2.Tensor_float(x_numpy.shape)
@@ -236,6 +231,5 @@ class CustomSequential(keras.Sequential):
             #         print(outputs)
             #         print(f"Diff values : {i} != {j}\nShape TF : {tf_outputs.shape};\nShape N2D2 : {outputs.shape}")
             #         raise ValueError("TF and N2D2 are different !")
-            # print('TEST passed !!!!')
             ######## DEBUG #########
             return outputs

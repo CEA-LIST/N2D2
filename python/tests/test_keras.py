@@ -22,25 +22,52 @@ import unittest
 import tensorflow as tf
 import n2d2
 import N2D2
-from tensorflow.keras.layers import MaxPooling2D
+from tensorflow.keras.layers import MaxPooling2D, Conv2D, Dense, Flatten
 from tensorflow.keras import Input
 
 class test_keras(unittest.TestCase):
     def setUp(self):
+        pass
+    def test_propagation(self):
         self.model = n2d2.keras.CustomSequential([
-            Input(shape=[2, 2, 1]),
+            Input(shape=[3, 3, 2]),
             MaxPooling2D(pool_size=(1, 1))
-        ], batch_size=1)
+        ], batch_size=4)
         self.model.compile(loss="categorical_crossentropy", optimizer="SGD", metrics=["accuracy"])
-        self.x = tf.random.uniform([1,2,2,1])
-    def test_propagation_is_working(self):
+        self.x = tf.random.uniform([4,3,3,2])
         y = self.model.call(self.x)
-        print("Predicted :")
-        print(y)
-        print("Expected :")
-        print(self.x)
         for predicted, truth in zip(y.numpy().flatten(), self.x.numpy().flatten()):
             self.assertEqual(predicted, truth)
-
+    def test_propagation_conv(self):
+        self.model = n2d2.keras.CustomSequential([
+            Input(shape=[3, 3, 2]),
+            Conv2D(3, kernel_size=(1, 1))
+        ], batch_size=5)
+        self.model.compile(loss="categorical_crossentropy", optimizer="SGD", metrics=["accuracy"])
+        self.x = tf.random.uniform([5,3,3,2])
+        n2d2_y = self.model.call(self.x)
+        tf_y = self.model.tf_model.call(self.x)
+        print("N2D2 output : ")
+        print(n2d2_y)
+        print("TF output : ")
+        print(tf_y)
+        for predicted, truth in zip(n2d2_y.numpy().flatten(), tf_y.numpy().flatten()):
+            self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))))
+    # def test_propagation_fc(self):
+    #     self.model = n2d2.keras.CustomSequential([
+    #         Input(shape=[3,3,1]),
+    #         Flatten(),
+    #         Dense(9)
+    #     ], batch_size=5)
+    #     self.model.compile(loss="categorical_crossentropy", optimizer="SGD", metrics=["accuracy"])
+    #     self.x = tf.random.uniform([5, 9])
+    #     n2d2_y = self.model.call(self.x)
+    #     tf_y = self.model.tf_model.call(self.x)
+    #     print("N2D2 output : ")
+    #     print(n2d2_y)
+    #     print("TF output : ")
+    #     print(tf_y)
+    #     for predicted, truth in zip(n2d2_y.numpy().flatten(), tf_y.numpy().flatten()):
+    #         self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))))
 if __name__ == '__main__':
     unittest.main()

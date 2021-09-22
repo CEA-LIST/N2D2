@@ -17,12 +17,14 @@ from tensorflow.keras import layers
 
 from n2d2.keras import CustomSequential
 
+from time import time
 """
 ## Prepare the data
 """
+start_time = time()
 # training parameters
-batch_size = 2
-# batch_size = 128
+# batch_size = 2
+batch_size = 128
 epochs = 10
 # Model / data parameters
 num_classes = 10
@@ -58,7 +60,7 @@ model = CustomSequential(
         layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
         layers.MaxPooling2D(pool_size=(2, 2)),
         layers.Flatten(),
-        layers.Dropout(0.5),
+        # layers.Dropout(0.5),
         layers.Dense(num_classes, activation="softmax"),
     ], 
     batch_size=batch_size)
@@ -70,7 +72,7 @@ model = CustomSequential(
 #         layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
 #         layers.MaxPooling2D(pool_size=(2, 2)),
 #         layers.Flatten(),
-#         layers.Dropout(0.5),
+#         # layers.Dropout(0.5),
 #         layers.Dense(num_classes, activation="softmax"),
 #     ]
 # )
@@ -94,3 +96,5 @@ model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_spl
 score = model.evaluate(x_test, y_test, verbose=0)
 print("Test loss:", score[0])
 print("Test accuracy:", score[1])
+
+print(f"Script time : {time()-start_time}s")
