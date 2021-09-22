@@ -8,41 +8,122 @@ C++ export using TensorRT.
 .. code-block::
 
     n2d2 MobileNet_ONNX.ini -seed 1 -w /dev/null -export CPP_TensorRT -nbbits 32
-    cd export_CPP_TensorRT_float32
-    make
 
 .. Warning::
 
     The calibration for this export is done using the tools provided by NVIDIA. For this reason, you cannot calibrate when exporting your network.
     You need to use the export to calibrate your network.
 
-The TensorRT API export can run the generated program in NVIDIA GPU
-architecture. It use CUDA, cuDNN and TensorRT API library. All the
-native TensorRT layers are supported. The export support from TensorRT
-2.1 to TensorRT 5.0 versions.
+Informations
+~~~~~~~~~~~~~
 
-Program options related to the TensorRT API export
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In order to exploit TensorRT optimizations, the N2D2 Framework provide a code generator linked with a C++/Python API 
+that gives access to TensorRT methods, I/O handling and specifics control. 
+The generated code is provided as a standalone code with its own compilation environment under a Makefile format. Moreover
+a benchmark environment with stimuli from the test dataset is given to evaluates execution time performances of your model.
 
-+--------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Option [default value]   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-+==========================+===============================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================+
-| ``-batch`` [1]           | Size of the batch to use                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-+--------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``-dev`` [0]             | CUDA Device ID selection                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-+--------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``-stimulus`` [NULL]     | Path to a specific input stimulus to test. For example: -stimulus :math:`{/stimulus/env0000.pgm}` command will test the file env0000.pgm of the stimulus folder.                                                                                                                                                                                                                                                                                                                                              |
-+--------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``-prof``                | Activates the layer wise profiling mechanism. This option can decrease execution time performance.                                                                                                                                                                                                                                                                                                                                                                                                            |
-+--------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``-iter-build`` [1]      | Sets the number of minimization build iterations done by the tensorRT builder to find the best layer tactics.                                                                                                                                                                                                                                                                                                                                                                                                 |
-+--------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``-nbbits`` [-32]        | Number of bits used for computation. Value -32 for Full FP32 bits configuration, -16 for Half FP16 bits configuration and 8 for INT8 bits configuration. When running INT8 mode for the first time, the TensorRT calibration process can be very long. Once generated the generated calibration table will be automatically reused. Supported compute mode in function of the compute capability are provided here: https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#compute-capabilities .   |
-+--------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+This allow a low level of dependency, only TensorRT, CUDA, cuDNN, cuBLAS and GCC are needed. 
+We recommended you to ensure the correct compatibility of your installation by referring to the TensorRT archive page:  
+https://docs.nvidia.com/deeplearning/tensorrt/archives/index.html
+Follow the support matrix section of your TensorRT version, notice that TensorRT export 
+have been tested from TensorRT 2.1 to TensorRT 7.2 versions.
+
+The TensorRT library includes implementation for the most common deep learning layers, but strong limitations 
+are known depending of the TensorRT version. For example, TensorRT provide a support to the well-known resize layer since version 6.0.1.
+This layer is widely use for decoder, segmentation and detector tasks. For inferior version a support have been integrated under a plugin
+layer. The TensorRT plugin layers allow the application to implement not supported layers.
+You can find additional informations about how to implements new plugin layers here :
+https://docs.nvidia.com/deeplearning/tensorrt/developer-guide/index.html#add_custom_layer
+
+The plugin layers that N2D2 TensorRT generator implements are available in the folder ``export/CPP_TensorRT/include/plugins/``. These layers are
+used by the N2D2 TensorRT generator when TensorRT doesn't provide support to a requested layers.
 
 
-Deploy a TensorRT model in application:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Benchmark your TensorRT Model - C++ Benchmark
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The TensorRT export is given with a C++ benchmark ready to be used. The benchmark program is able to evaluates the applicative performances
+of your model on the test dataset exported under the ``stimuli`` folder at export time. A per-layer execution time analysis is also performed
+to evaluates your mode latency and identify potential bottleneck. 
+Moreover different numerical precision supporter by NVIDIA GPU can be evaluates in order to assess potential acceleration factor and eventual
+applicative performances losses. 
+
+When numerical precision is set to ``8`` bits for benchmark, the program will use the calibration files exported under the ``batches_calib`` folder
+at export time. The calibration files also corresponds to the test stimuli pre-processes for the ``IInt8EntropyCalibrator2`` that implement TensorRT.    
+You can find more informations about the INT8 calibration procedure with TensorRT here :
+https://docs.nvidia.com/deeplearning/tensorrt/developer-guide/index.html#optimizing_int8_c
+
+The command to compile and execute the C++ TensorRT Benchmark under a ``FP32`` precision is :
+
+::
+
+    make
+    cd export_CPP_TensorRT_float32/
+    ./bin/n2d2_tensorRT_test -nbbits -32
+
+To launch the Benchmark in ``FP16`` (half precision) use this command :
+
+::
+
+    ./bin/n2d2_tensorRT_test -nbbits -16
+
+To launch the Benchmark in ``INT8`` use this command :
+
+::
+
+    ./bin/n2d2_tensorRT_test -nbbits 8
+
+
+List of the program option related to the TensorRT C++ benchmark:
+
++-----------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Option [default value]            | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
++===================================+===============================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================+
+| ``-batch`` [1]                    | Size of the batch to use                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
++-----------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``-dev`` [0]                      | CUDA Device ID selection                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
++-----------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``-stimulus`` [NULL]              | Path to a specific input stimulus to test. For example: -stimulus :math:`{/stimulus/env0000.pgm}` command will test the file env0000.pgm of the stimulus folder.                                                                                                                                                                                                                                                                                                                                              |
++-----------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``-prof``                         | Activates the layer wise profiling mechanism. This option can decrease execution time performance.                                                                                                                                                                                                                                                                                                                                                                                                            |
++-----------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``-iter-build`` [1]               | Sets the number of minimization build iterations done by the tensorRT builder to find the best layer tactics.                                                                                                                                                                                                                                                                                                                                                                                                 |
++-----------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``-nbbits`` [-32]                 | Number of bits used for computation. Value -32 for Full FP32 bits configuration, -16 for Half FP16 bits configuration and 8 for INT8 bits configuration. When running INT8 mode for the first time, the TensorRT calibration process can be very long. Once generated the generated calibration table will be automatically reused. Supported compute mode in function of the compute capability are provided here: https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#compute-capabilities .   |
++-----------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``-calib-cache``                  | Path and name to the calibration file generated by TensorRT calibrator when precision is INT8. Must be compatible with the TensorRT Entropy Calibrator version used to calibrate.                                                                                                                                                                                                                                                                                                                             |
++-----------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``-calib-folder`` [batches_calib] | Path to the calibration data samples. This is mandatory when precision is set to INT8 and if no calibration file cache is load.                                                                                                                                                                                                                                                                                                                                                                               |
++-----------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+Analyse the execution performances of your TensorRT Model (FP32)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here is a small example that described how to report the per-layer analysis on execution time.
+
+Launch the Benchmark with the ``-prof`` argument :
+::
+
+    ./bin/n2d2_tensorRT_test -prof
+
+At the end of the execution the performances analysis is displayed in your screen :
+
+.. code-block:: console
+
+    (19%)  **************************************** CONV1 + CONV1_ACTIVATION: 0.0219467 ms
+    (05%)  ************ POOL1: 0.00675573 ms
+    (13%)  **************************** CONV2 + CONV2_ACTIVATION: 0.0159089 ms
+    (05%)  ************ POOL2: 0.00616047 ms
+    (14%)  ****************************** CONV3 + CONV3_ACTIVATION: 0.0159713 ms
+    (19%)  **************************************** FC1 + FC1_ACTIVATION: 0.0222242 ms
+    (13%)  **************************** FC2: 0.0149013 ms
+    (08%)  ****************** SOFTMAX: 0.0100633 ms
+    Average profiled tensorRT process time per stimulus = 0.113932 ms
+
+You can evaluates impact of the performances for various batch size and the different numerical precision supported.
+
+Deploy your TensorRT Model in Application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The TensorRT export is provided with a C++ and a python interface. The python interface is accessible through a wrapper
 to the C++ API method and linked with the libboost-python librabry.
@@ -119,37 +200,4 @@ Method accessible through C++ or Python API are listed and detailled here:
 | ``void``    | estimated                 | estimated                 | ``float*``, ``uint``,     |  inputData,outputID, useGPU, threshold                      | Copy per output pixel estimated labels of a specified output. UseGpu is recommended and threshold value allow to clip the outputs values before classification                                                                                                 | Use after run initialize()                                  |                                
 |             |                           |                           | ``bool``, ``float``       |                                                             |                                                                                                                                                                                                                                                                |                                                             |
 +-------------+---------------------------+---------------------------+---------------------------+-------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------+
-
-
-Example
-~~~~~~~
-
-Test the exported network with layer wise profiling:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-::
-
-    ./bin/n2d2_tensorRT_test -prof
-
-The results of the layer wise profiling should look like:
-
-.. code-block:: console
-
-    (19%)  **************************************** CONV1 + CONV1_ACTIVATION: 0.0219467 ms
-    (05%)  ************ POOL1: 0.00675573 ms
-    (13%)  **************************** CONV2 + CONV2_ACTIVATION: 0.0159089 ms
-    (05%)  ************ POOL2: 0.00616047 ms
-    (14%)  ****************************** CONV3 + CONV3_ACTIVATION: 0.0159713 ms
-    (19%)  **************************************** FC1 + FC1_ACTIVATION: 0.0222242 ms
-    (13%)  **************************** FC2: 0.0149013 ms
-    (08%)  ****************** SOFTMAX: 0.0100633 ms
-    Average profiled tensorRT process time per stimulus = 0.113932 ms
-
-
-Calibrate the exported network :
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-::
-
-    ./bin/n2d2_tensorRT_test -nbbits 8
 
