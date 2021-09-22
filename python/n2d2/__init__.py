@@ -49,6 +49,7 @@ import n2d2.mapping
 import n2d2.error_handler
 import n2d2.models
 import n2d2.pytorch
+import n2d2.keras
 # IP functions
 import n2d2.quantizer
 import n2d2.converter

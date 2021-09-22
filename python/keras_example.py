@@ -15,12 +15,15 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-import interop_keras
+from n2d2.keras import CustomSequential
 
 """
 ## Prepare the data
 """
-
+# training parameters
+batch_size = 2
+# batch_size = 128
+epochs = 10
 # Model / data parameters
 num_classes = 10
 input_shape = (28, 28, 1)
@@ -47,7 +50,7 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 ## Build the model
 """
 
-model = interop_keras.CustomSequential(
+model = CustomSequential(
     [
         keras.Input(shape=input_shape),
         layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
@@ -57,8 +60,8 @@ model = interop_keras.CustomSequential(
         layers.Flatten(),
         layers.Dropout(0.5),
         layers.Dense(num_classes, activation="softmax"),
-    ]
-)
+    ], 
+    batch_size=batch_size)
 # model = tf.keras.Sequential(
 #     [
 #         keras.Input(shape=input_shape),
@@ -77,9 +80,7 @@ model.summary()
 """
 ## Train the model
 """
-# batch_size = 1
-batch_size = 128
-epochs = 10
+
 
 
 model.compile(loss="categorical_crossentropy", optimizer="SGD", metrics=["accuracy"])
