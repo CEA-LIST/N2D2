@@ -216,7 +216,6 @@ endif()
 
 INCLUDE(FindProtobuf)
 FIND_PACKAGE(Protobuf QUIET)
-endif()
 if (Protobuf_FOUND)
     file(DOWNLOAD https://raw.githubusercontent.com/onnx/onnx/master/onnx/onnx.proto3
         ${CMAKE_BINARY_DIR}/onnx.proto)
