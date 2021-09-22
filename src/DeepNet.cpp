@@ -828,6 +828,20 @@ std::vector<unsigned int> N2D2::DeepNet::getReceptiveField(
     const std::string& name,
     const std::vector<unsigned int>& outputField) const
 {
+    const std::map<std::string, std::map<std::vector<unsigned int>,
+        std::vector<unsigned int> > >::const_iterator
+            it = mReceptiveFields.find(name);
+
+    if (it != mReceptiveFields.end()) {
+        const std::map<std::vector<unsigned int>,
+            std::vector<unsigned int> >::const_iterator
+                itCell = (*it).second.find(outputField);
+        
+        if (itCell != (*it).second.end()) {
+            return (*itCell).second;
+        }
+    }
+
     const std::map<std::string, std::shared_ptr<Cell> >::const_iterator itCell
         = mCells.find(name);
     const std::vector<unsigned int> cellReceptiveField
@@ -853,7 +867,10 @@ std::vector<unsigned int> N2D2::DeepNet::getReceptiveField(
         }
     }
 
-    return (hasParent) ? maxReceptiveField : cellReceptiveField;
+    const std::vector<unsigned int> receptiveField
+        = (hasParent) ? maxReceptiveField : cellReceptiveField;
+    mReceptiveFields[name][outputField] = receptiveField;
+    return receptiveField;
 }
 
 void N2D2::DeepNet::clearAll()
@@ -3033,6 +3050,10 @@ void N2D2::DeepNet::logReceptiveFields(const std::string& fileName) const
             }
         }
     }
+
+    // Clear the cache in order to avoid using memory and in case the topology
+    // changes before a future call.
+    mReceptiveFields.clear();
 
     gnuplot.setXrange(0, 1.2 * objMaxSize);
     gnuplot.setYrange(0, 1.2 * objMaxSize);

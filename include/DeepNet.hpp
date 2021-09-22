@@ -312,6 +312,10 @@ private:
     std::multimap<std::string, std::string> mParentLayers;
     unsigned int mStreamIdx;
     unsigned int mStreamTestIdx;
+    // Cache for getReceptiveField()
+    mutable std::map<std::string,
+                     std::map<std::vector<unsigned int>,
+                              std::vector<unsigned int> > > mReceptiveFields;
 };
 }
 
