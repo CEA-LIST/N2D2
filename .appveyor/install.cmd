@@ -20,7 +20,7 @@ git clone -q --branch=master https://github.com/google/protobuf.git C:\projects\
 cd C:\projects\protobuf
 mkdir build_cmake
 cd build_cmake
-cmake ..\cmake -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
+cmake ..\cmake -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
 cmake --build . --config Release
 cmake --build . --config Release --target install
 cd C:\projects\n2d2
