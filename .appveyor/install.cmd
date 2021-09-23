@@ -20,7 +20,7 @@ git clone -q --branch=master https://github.com/google/protobuf.git C:\projects\
 cd C:\projects\protobuf
 mkdir build_cmake
 cd build_cmake
-cmake ..\cmake -A x64 -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
+cmake ..\cmake -A x64 -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_BUILD_SHARED_LIBS=ON
 cmake --build . --config Release
 cmake --build . --config Release --target install
 set CMAKE_INCLUDE_PATH=%CMAKE_INCLUDE_PATH%;C:/Program Files (x86)/protobuf/include
