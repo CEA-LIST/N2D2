@@ -843,7 +843,7 @@ void findLearningRate(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             = std::dynamic_pointer_cast<TargetScore>(*itTargets);
 
         if (target) {
-            fileName = "find_lr_" + target->getName() + ".dat";
+            fileName = "find_lr_" + Utils::filePath(target->getName()) + ".dat";
             const std::vector<Float_T>& loss = target->getLoss();
 
             std::ofstream lrLoss(fileName.c_str());

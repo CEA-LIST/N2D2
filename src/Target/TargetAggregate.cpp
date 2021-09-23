@@ -59,7 +59,7 @@ void N2D2::TargetAggregate::setROIsLabelTarget(const std::shared_ptr<Target>& ta
     mROIsLabelTarget = target;
 
     // Create target_rois_label.dat for target_rois_viewer.py
-    const std::string fileName = mName + "/target_rois_label.dat";
+    const std::string fileName = Utils::filePath(mName) + "/target_rois_label.dat";
     std::ofstream roisLabelData(fileName);
 
     if (!roisLabelData.good())
@@ -73,7 +73,7 @@ void N2D2::TargetAggregate::logConfusionMatrix(const std::string& fileName,
                                           Database::StimuliSet set) const
 {
     (*mScoreSet.find(set)).second.confusionMatrix.log(
-        mName + "/ConfusionMatrix_" + fileName + ".dat", getTargetLabelsName());
+        Utils::filePath(mName) + "/ConfusionMatrix_" + fileName + ".dat", getTargetLabelsName());
 }
 
 void N2D2::TargetAggregate::logMisclassified(const std::string& fileName,
@@ -86,7 +86,7 @@ void N2D2::TargetAggregate::logMisclassified(const std::string& fileName,
 
     const unsigned int nbTargets = getNbTargets();
 
-    std::ofstream data((mName + "/Misclassified_" + fileName + ".dat").c_str());
+    std::ofstream data((Utils::filePath(mName) + "/Misclassified_" + fileName + ".dat").c_str());
 
     if (!data.good())
         throw std::runtime_error("Could not log misclassified stimuli file.");

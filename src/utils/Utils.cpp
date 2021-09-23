@@ -681,6 +681,24 @@ std::string N2D2::Utils::CIdentifier(const std::string& str) {
     return identifier;
 }
 
+bool N2D2::Utils::isNotValidFilePath(int c) {
+    return (iscntrl(c)
+        || c == '<'
+        || c == '>'
+        || c == ':'
+        || c == '"'
+        || c == '|'
+        || c == '?'
+        || c == '*');
+}
+
+std::string N2D2::Utils::filePath(const std::string& str) {
+    std::string filePath(str);
+    std::replace_if(filePath.begin(), filePath.end(),
+                    Utils::isNotValidFilePath, '_');
+    return filePath;
+}
+
 double N2D2::Utils::normalInverse(double p)
 {
     if (p < 0.0 || p > 1.0)

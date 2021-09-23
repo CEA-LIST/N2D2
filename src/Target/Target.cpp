@@ -64,7 +64,7 @@ N2D2::Target::Target(const std::string& name,
       mDefaultTarget(-2)
 {
     // ctor
-    Utils::createDirectories(name);
+    Utils::createDirectories(Utils::filePath(name));
 
     if (!labelsMapping_.empty())
         labelsMapping(labelsMapping_, createMissingLabels);
@@ -319,7 +319,7 @@ void N2D2::Target::logLabelsMapping(const std::string& fileName, bool withStats)
     if (mDataAsTarget)
         return;
 
-    const std::string dataFileName = mName + "/" + fileName + ".dat";
+    const std::string dataFileName = Utils::filePath(mName) + "/" + fileName + ".dat";
     std::ofstream labelsData(dataFileName);
 
     if (!labelsData.good())
@@ -881,7 +881,7 @@ void N2D2::Target::process_Frame(BaseTensor& values,
 
 void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 {
-    const std::string dirPath = mName + "/" + dirName;
+    const std::string dirPath = Utils::filePath(mName) + "/" + dirName;
     Utils::createDirectories(dirPath);
 
     const bool validDatabase
@@ -1271,7 +1271,7 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
                                           unsigned int yOffset,
                                           bool append) const
 {
-    const std::string dirPath = mName + "/" + dirName;
+    const std::string dirPath = Utils::filePath(mName) + "/" + dirName;
     Utils::createDirectories(dirPath);
 
     int dev = 0;
@@ -1611,8 +1611,8 @@ void N2D2::Target::logLabelsLegend(const std::string& fileName) const
     cv::cvtColor(legendImg, imgColor, CV_HSV2BGR);
 #endif
 
-    if (!cv::imwrite(mName + "/" + fileName, imgColor))
-        throw std::runtime_error("Unable to write image: " + mName + "/"
+    if (!cv::imwrite(Utils::filePath(mName) + "/" + fileName, imgColor))
+        throw std::runtime_error("Unable to write image: " + Utils::filePath(mName) + "/"
                                  + fileName);
 }
 

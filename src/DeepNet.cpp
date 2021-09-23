@@ -650,7 +650,7 @@ void N2D2::DeepNet::save(const std::string& dirName) const
          itEnd = mCells.end();
          it != itEnd;
          ++it)
-        (*it).second->save(dirName + "/" + (*it).first);
+        (*it).second->save(dirName + "/" + Utils::filePath((*it).first));
 }
 
 void N2D2::DeepNet::load(const std::string& dirName)
@@ -660,7 +660,7 @@ void N2D2::DeepNet::load(const std::string& dirName)
          itEnd = mCells.end();
          it != itEnd;
          ++it)
-        (*it).second->load(dirName + "/" + (*it).first);
+        (*it).second->load(dirName + "/" + Utils::filePath((*it).first));
 }
 
 void N2D2::DeepNet::saveNetworkParameters() const
@@ -670,7 +670,7 @@ void N2D2::DeepNet::saveNetworkParameters() const
          itEnd = mCells.end();
          it != itEnd;
          ++it)
-        (*it).second->saveParameters((*it).first + ".cfg");
+        (*it).second->saveParameters(Utils::filePath((*it).first) + ".cfg");
 }
 
 void N2D2::DeepNet::loadNetworkParameters()
@@ -680,7 +680,7 @@ void N2D2::DeepNet::loadNetworkParameters()
          itEnd = mCells.end();
          it != itEnd;
          ++it)
-        (*it).second->loadParameters((*it).first + ".cfg");
+        (*it).second->loadParameters(Utils::filePath((*it).first) + ".cfg");
 }
 
 void N2D2::DeepNet::exportNetworkFreeParameters(const std::string
@@ -692,12 +692,15 @@ void N2D2::DeepNet::exportNetworkFreeParameters(const std::string
          = mCells.begin(),
          itEnd = mCells.end();
          it != itEnd;
-         ++it) {
-        (*it).second->exportFreeParameters(dirName + "/" + (*it).first
+         ++it)
+    {
+        const std::string name = Utils::filePath((*it).first);
+        
+        (*it).second->exportFreeParameters(dirName + "/" + name
                                            + ".syntxt");
-        (*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first
+        (*it).second->logFreeParametersDistrib(dirName + "/" + name
             + "_weights.distrib.dat", Cell::Multiplicative);
-        (*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first
+        (*it).second->logFreeParametersDistrib(dirName + "/" + name
             + "_biases.distrib.dat", Cell::Additive);
     }
 }
@@ -711,10 +714,13 @@ void N2D2::DeepNet::exportNetworkSolverParameters(const std::string
          = mCells.begin(),
          itEnd = mCells.end();
          it != itEnd;
-         ++it) {
-        (*it).second->exportFreeParameters(dirName + "/" + (*it).first
+         ++it)
+    {
+        const std::string name = Utils::filePath((*it).first);
+
+        (*it).second->exportFreeParameters(dirName + "/" + name
                                            + ".syntxt");
-        //(*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first +
+        //(*it).second->logFreeParametersDistrib(dirName + "/" + name +
         //".distrib.dat");
     }
 }
@@ -728,7 +734,7 @@ void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName,
          itEnd = mCells.end();
          it != itEnd;
          ++it){
-        (*it).second->importFreeParameters(dirName + "/" + (*it).first
+        (*it).second->importFreeParameters(dirName + "/" + Utils::filePath((*it).first)
                                            + ".syntxt", ignoreNotExists);
     }
 }
@@ -743,7 +749,7 @@ void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName,
     it = mCells.begin(), itEnd = mCells.end(); it != itEnd; ++it) {
         if (weightName.compare((*it).first) == 0) {
             (*it).second->importFreeParameters(dirName + "/"
-                                                + (*it).first + ".syntxt");
+                                                + Utils::filePath((*it).first) + ".syntxt");
             std::cout << "Weight " << (*it).first
             << " successfully imported" << std::endl;
             weightsFound = true;
@@ -1152,7 +1158,7 @@ void N2D2::DeepNet::spikeCodingCompare(const std::string& dirName,
                 throw std::runtime_error("DeepNet::spikeCodingCompare(): only "
                                          "works with Spike models");
 
-            cellSpike->spikeCodingCompare(dirName + "/" + (*it).first + ".dat");
+            cellSpike->spikeCodingCompare(dirName + "/" + Utils::filePath((*it).first) + ".dat");
         }
     }
 }
@@ -1549,7 +1555,7 @@ void N2D2::DeepNet::logOutputs(const std::string& dirName,
             const Tensor<Float_T> outputs
                 = tensor_cast<Float_T>(cellFrame->getOutputs())[batchPos];
 
-            StimuliProvider::logData(dirName + "/" + (*itCell) + ".dat",
+            StimuliProvider::logData(dirName + "/" + Utils::filePath(*itCell) + ".dat",
                                      outputs);
         }
     }
@@ -1576,7 +1582,7 @@ void N2D2::DeepNet::logDiffInputs(const std::string& dirName,
             const Tensor<Float_T> diffInputs
                 = tensor_cast<Float_T>(cellFrame->getDiffInputs())[batchPos];
 
-            StimuliProvider::logData(dirName + "/" + (*itCell) + ".dat",
+            StimuliProvider::logData(dirName + "/" + Utils::filePath(*itCell) + ".dat",
                                      diffInputs);
         }
     }
@@ -1591,7 +1597,7 @@ void N2D2::DeepNet::logFreeParameters(const std::string& dirName) const
          itEnd = mCells.end();
          it != itEnd;
          ++it) {
-        (*it).second->logFreeParameters(dirName + "/" + (*it).first);
+        (*it).second->logFreeParameters(dirName + "/" + Utils::filePath((*it).first));
     }
 }
 
@@ -1655,7 +1661,7 @@ void N2D2::DeepNet::logSchedule(const std::string& dirName) const
     for (int i = 0; i < (int)solvers.size(); ++i) {
         if (solvers[i].second) {
             solvers[i].second->logSchedule(dirName + "/"
-                    + solvers[i].first + "_schedule.log",
+                    + Utils::filePath(solvers[i].first) + "_schedule.log",
                 mStimuliProvider->getBatchSize(),
                 mDatabase->getNbStimuli(Database::Learn));
         }
@@ -2035,7 +2041,7 @@ void N2D2::DeepNet::logSpikeStats(const std::string& dirName,
          it != itEnd;
          ++it) {
         const Synapse::Stats cellStats = std::dynamic_pointer_cast<Cell_Spike>(
-            (*it).second)->logStats(dirName + "/" + (*it).first);
+            (*it).second)->logStats(dirName + "/" + Utils::filePath((*it).first));
 
         globalStats.nbSynapses += cellStats.nbSynapses;
         globalStats.readEvents += cellStats.readEvents;

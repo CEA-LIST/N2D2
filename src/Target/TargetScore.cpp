@@ -210,7 +210,7 @@ void N2D2::TargetScore::logSuccess(const std::string& fileName,
 {
     assert(mScoreSet.find(set) != mScoreSet.end());
 
-    const std::string dataFileName = mName + "/Success_" + fileName + ".dat";
+    const std::string dataFileName = Utils::filePath(mName) + "/Success_" + fileName + ".dat";
 
     if (set == Database::Validation) {
         assert(mScoreSet.find(Database::Learn) != mScoreSet.end());
@@ -250,7 +250,7 @@ void N2D2::TargetScore::logSuccess(const std::string& fileName,
         multiplot.setMultiplot();
 
         Monitor::logDataRate((*mScoreSet.find(Database::Learn)).second.success,
-                             mName + "/" + fileName + "_LearningSuccess.dat",
+                             Utils::filePath(mName) + "/" + fileName + "_LearningSuccess.dat",
                              avgWindow,
                              true);
 
@@ -278,7 +278,7 @@ void N2D2::TargetScore::logTopNSuccess(const std::string& fileName,
     if (!mDataAsTarget && mTargetTopN > 1) {
         assert(mScoreTopNSet.find(set) != mScoreTopNSet.end());
 
-        const std::string dataFileName = mName + "/SuccessTopN_" + fileName
+        const std::string dataFileName = Utils::filePath(mName) + "/SuccessTopN_" + fileName
                                          + ".dat";
 
         if (set == Database::Validation) {
@@ -322,7 +322,7 @@ void N2D2::TargetScore::logTopNSuccess(const std::string& fileName,
 
             Monitor::logDataRate(
                 (*mScoreTopNSet.find(Database::Learn)).second.success,
-                mName + "/" + fileName + "_LearningTopNSuccess.dat",
+                Utils::filePath(mName) + "/" + fileName + "_LearningTopNSuccess.dat",
                 avgWindow,
                 true);
 
@@ -352,7 +352,7 @@ void N2D2::TargetScore::logConfusionMatrix(const std::string& fileName,
         : std::vector<std::string>();
 
     (*mScoreSet.find(set)).second.confusionMatrix.log(
-        mName + "/ConfusionMatrix_" + fileName + ".dat", labelsName);
+        Utils::filePath(mName) + "/ConfusionMatrix_" + fileName + ".dat", labelsName);
 }
 
 void N2D2::TargetScore::logMisclassified(const std::string& fileName,
@@ -367,7 +367,7 @@ void N2D2::TargetScore::logMisclassified(const std::string& fileName,
     const unsigned int nbTargetsConfusion
         = (mMaskLabelTarget && mMaskedLabel >= 0) ? (nbTargets + 1) : nbTargets;
 
-    std::ofstream data((mName + "/Misclassified_" + fileName + ".dat").c_str());
+    std::ofstream data((Utils::filePath(mName) + "/Misclassified_" + fileName + ".dat").c_str());
 
     if (!data.good())
         throw std::runtime_error("Could not log misclassified stimuli file.");

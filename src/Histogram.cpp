@@ -415,6 +415,6 @@ void N2D2::Histogram::logOutputsHistogram(const std::string& dirName,
             thresholds["QUANTILE"] = hist.getQuantileValue(quantileValue);
         }
 
-        (*it).second.log(dirName + "/" + (*it).first + ".dat", thresholds);
+        (*it).second.log(dirName + "/" + Utils::filePath((*it).first) + ".dat", thresholds);
     }
 }
