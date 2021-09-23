@@ -26,6 +26,9 @@ try:
 except:
     pass
 
+# FIXME : We need to import keras first to avoid a SegFault
+import n2d2.keras # Put in a try block to avoid error if torch is not installed ?
+
 # It's better to access these variables without mentioning global_variable in the path
 from n2d2.global_variables import * 
 
@@ -48,9 +51,7 @@ import n2d2.activation
 import n2d2.mapping
 import n2d2.error_handler
 import n2d2.models
-import n2d2.pytorch
-import n2d2.keras
-# IP functions
+import n2d2.pytorch # Put in a try block to avoid error if torch is not installed ?
 import n2d2.quantizer
 import n2d2.converter
 

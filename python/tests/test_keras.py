@@ -18,9 +18,10 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
+import n2d2
 import unittest
 import tensorflow as tf
-import n2d2
+from n2d2.keras import CustomSequential
 import N2D2
 from tensorflow.keras.layers import MaxPooling2D, Conv2D, Dense, Flatten
 from tensorflow.keras import Input
@@ -29,7 +30,7 @@ class test_keras(unittest.TestCase):
     def setUp(self):
         pass
     def test_propagation(self):
-        self.model = n2d2.keras.CustomSequential([
+        self.model = CustomSequential([
             Input(shape=[3, 3, 2]),
             MaxPooling2D(pool_size=(1, 1))
         ], batch_size=4)
@@ -39,7 +40,7 @@ class test_keras(unittest.TestCase):
         for predicted, truth in zip(y.numpy().flatten(), self.x.numpy().flatten()):
             self.assertEqual(predicted, truth)
     def test_propagation_conv(self):
-        self.model = n2d2.keras.CustomSequential([
+        self.model = CustomSequential([
             Input(shape=[3, 3, 2]),
             Conv2D(3, kernel_size=(1, 1))
         ], batch_size=5)
