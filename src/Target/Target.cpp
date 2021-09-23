@@ -389,7 +389,7 @@ void N2D2::Target::logLabelsMapping(const std::string& fileName, bool withStats)
         gnuplot.set("yrange [0:]");
         gnuplot.setXlabel("Output #");
         gnuplot.setYlabel("Number of stimuli (right: % of total) / ROIs");
-        gnuplot << "stats \"" + dataFileName + "\" using ($4+$5+$6) name \"STIMULI\"";
+        gnuplot << "stats \"" + dataFileName + "\" using ($4+$5+$6) name \"STIMULI\" nooutput";
         gnuplot.set("ytics nomirror");
         gnuplot.set("y2tics 5");
         gnuplot.set("format y2 \"%g%%\"");
