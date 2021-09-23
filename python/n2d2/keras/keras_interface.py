@@ -128,11 +128,7 @@ class CustomSequential(keras.Sequential):
 
         x_tensor = N2D2.Tensor_float(x_numpy) # Need to change convention NHWC -> HWCN 
         x_tensor.reshape([inputs_shape[3], inputs_shape[1], inputs_shape[2],inputs_shape[0]])
-        for n_value, t_value in zip(x_numpy.flatten(), x_tensor):
-            if n_value != t_value:
-                print(x_numpy.flatten())
-                print([i for i in x_tensor])
-                raise ValueError(f"{n_value} != {t_value}")
+
         # print("x tensor dim : ", x_tensor.dims())
 
         firstCell = self.deepNet.getCell_Frame_Top(fistCellName)
