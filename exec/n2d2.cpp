@@ -639,7 +639,7 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     importFreeParemeters(opt, *deepNet);
 
     deepNet->removeDropout();
-    deepNet->fuseBatchNormWithConv();
+    deepNet->fuseBatchNorm();
 
     const std::string exportDir = "export_" + opt.genExport + "_" + 
                                   ((opt.nbBits > 0) ? "int" : "float") +
@@ -2513,7 +2513,7 @@ int main(int argc, char* argv[]) try
         }
  
         if (opt.fuse)
-            deepNet->fuseBatchNormWithConv();
+            deepNet->fuseBatchNorm();
     }
     else if (opt.nbBits > 0) {
         // afterCalibration means that we are trying to simulate export result.

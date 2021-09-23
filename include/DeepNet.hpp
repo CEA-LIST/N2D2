@@ -126,7 +126,7 @@ public:
     void initializeCMonitors(unsigned int nbTimesteps);
     void spikeCodingCompare(const std::string& dirName, unsigned int idx) const;
 
-    void fuseBatchNormWithConv();
+    void fuseBatchNorm();
     void insertBatchNormAfterConv(bool moveActivation = true);
     void fusePadding();
     void removeDropout();
