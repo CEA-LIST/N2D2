@@ -2921,6 +2921,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 inputData = inputData1;
             }
 
+            // One of the input is constant, cannot use ElemWiseCell
             if (!inputData.empty() && node.input_size() == 2) {
                 std::shared_ptr<Cell> dataCell = getCell(inputData);
 
@@ -2928,11 +2929,13 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 // In CNTK models, bias is added as constant after the operator
                 // In this case, we try to merge everything in the operator bias
                 if (dataCell
-                    &&(node.op_type() == "Add" || node.op_type() == "Sum")
+                    && (node.op_type() == "Add" || node.op_type() == "Sum"
+                        || (node.op_type() == "Sub" && inputData == inputData1))
                     && (dataCell->getType() == ConvCell::Type
                         || dataCell->getType() == FcCell::Type)
                     && dataCell->getParameter<bool>("NoBias"))
                 {
+                    // Infer bias from Conv/Fc (without activation) + Add
                     std::shared_ptr<Cell_Frame_Top> dataCellFrame
                         = std::dynamic_pointer_cast<Cell_Frame_Top>(dataCell);
 
@@ -2950,6 +2953,9 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         for (unsigned int output = 0;
                             output < dataCell->getNbOutputs(); ++output)
                         {
+                            if (node.op_type() == "Sub")
+                                biases[output](0) = -biases[output](0);
+
                             if (dataCell->getType() == ConvCell::Type) {
                                 std::dynamic_pointer_cast<ConvCell>(dataCell)
                                     ->setBias(output, biases[output]);
@@ -2965,6 +2971,69 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         redirect[node.output(0)] = inputData;
                         continue;
                     }
+                }
+                else if (dataCell
+                    && (node.op_type() == "Add" || node.op_type() == "Sum"
+                        || (node.op_type() == "Sub" && inputData == inputData1))
+                    && (dataCell->getType() == ScalingCell::Type))
+                {
+                    // Infer batchnorm from Scaling (Mul) + Add
+                    std::shared_ptr<Activation> activation
+                        = std::shared_ptr<Activation>();
+
+                    std::shared_ptr<BatchNormCell> batchNormCell
+                        = Registrar<BatchNormCell>::create<Float_T>(model)(
+                            *deepNet, 
+                            node.output(0),
+                            dataCell->getNbOutputs(),
+                            activation);
+
+                    const std::vector<std::shared_ptr<Cell> > parentCells
+                        = dataCell->getParentsCells();
+                    const Scaling& scaling
+                        = std::dynamic_pointer_cast<ScalingCell>(dataCell)
+                            ->getScaling();
+                    const auto& scales = scaling.getFloatingPointScaling()
+                                                        .getScalingPerOutput();
+                    // Remove original "Mul" scaling cell
+                    deepNet->removeCell(dataCell);
+
+                    for (auto parentCell: parentCells)
+                        batchNormCell->addInput(parentCell.get());
+
+                    deepNet->addCell(batchNormCell, parentCells);
+                    batchNormCell->initialize();
+                    cell = batchNormCell;
+
+                    std::shared_ptr<Cell_Frame_Top> cellFrame
+                        = std::dynamic_pointer_cast<Cell_Frame_Top>(batchNormCell);
+
+                    // Set parameters
+                    Tensor<Float_T> biases
+                        = ONNX_unpackTensor<Float_T>((*itInit).second);
+                    biases.reshape({1, dataCell->getNbOutputs()});
+
+                    if (cellFrame)
+                        cellFrame->keepInSync(false);
+
+                    for (unsigned int output = 0;
+                        output < batchNormCell->getNbOutputs(); ++output)
+                    {
+                        const Tensor<Float_T> scale({1}, scales[output]);
+                        const Tensor<Float_T> mean({1}, 0.0);
+                        const Tensor<Float_T> variance({1}, 1.0
+                            - batchNormCell->getParameter<double>("Epsilon"));
+
+                        batchNormCell->setBias(output, biases[output]);
+                        batchNormCell->setScale(output, scale);
+                        batchNormCell->setMean(output, mean);
+                        batchNormCell->setVariance(output, variance);
+                    }
+
+                    if (cellFrame)
+                        cellFrame->synchronizeToD(true);
+
+                    continue;
                 }
                 else if (node.op_type() != "Max") {
                     if (inputData == inputData2
@@ -2984,34 +3053,42 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     std::shared_ptr<Cell> opCell;
                     std::shared_ptr<Transformation> trans;
 
-                    if (constant.size() == 1) {
-                        if (node.op_type() == "Mul") {
-                            // Use ScalingCell for Mul
-                            opCell = Registrar<ScalingCell>::create<Float_T>(model)(
-                                *deepNet, 
-                                node.output(0),
-                                nbOutputs,
-                                Scaling::floatingPointScaling(
-                                    std::vector<Float_T>(nbOutputs, 
-                                                         constant(0))));
-                            
+                    if (node.op_type() == "Mul"
+                        && (constant.size() == 1
+                            || constant.size() == nbOutputs))
+                    {
+                        // Use ScalingCell for Mul
+                        const std::vector<Float_T> scaling
+                            = (constant.size() == 1)
+                                ? std::vector<Float_T>(nbOutputs, constant(0))
+                                : constant.data();
+
+                        opCell = Registrar<ScalingCell>::create<Float_T>(model)(
+                            *deepNet, 
+                            node.output(0),
+                            nbOutputs,
+                            Scaling::floatingPointScaling(scaling));
+
+                        if (constant.size() == 1) {
                             std::cout << "  scaling factor = " << constant(0)
                                 << std::endl;
                         }
-                        else {
-                            const RangeAffineTransformation::Operator op
-                                = (node.op_type() == "Sub")
-                                    ? RangeAffineTransformation::Minus
-                                : (node.op_type() == "Div")
-                                    ? RangeAffineTransformation::Divides
-                                    : RangeAffineTransformation::Plus;
+                    }
+                    else if (constant.size() == 1) {
+                        const RangeAffineTransformation::Operator op
+                            = (node.op_type() == "Sub")
+                                ? RangeAffineTransformation::Minus
+                            : (node.op_type() == "Div")
+                                ? RangeAffineTransformation::Divides
+                                : RangeAffineTransformation::Plus;
 
-                            trans = std::make_shared<RangeAffineTransformation>(
-                                op,
-                                std::vector<double>(1, constant(0)));
-                        }
+                        trans = std::make_shared<RangeAffineTransformation>(
+                            op,
+                            std::vector<double>(1, constant(0)));
                     }
                     else {
+                        // May fail because AffineTransformation does not
+                        // support multidirectional broadcasting
                         const AffineTransformation::Operator op
                             = (node.op_type() == "Sub")
                                 ? AffineTransformation::Minus
