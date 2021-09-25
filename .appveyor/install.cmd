@@ -20,7 +20,7 @@ git clone -q --branch=master https://github.com/google/protobuf.git C:\projects\
 cd C:\projects\protobuf
 :: with CMake > 3.15, protobuf CMake won't let us choose MultiThreadedDLL
 :: because the Dprotobuf_MSVC_STATIC_RUNTIME option is not enforced...
-powershell -Command "(gc CMakeLists.txt) -replace 'MultiThreaded\$<\$<CONFIG:Debug>:Debug>', 'MultiThreaded$<$<CONFIG:Debug>:Debug>DLL' | Out-File -encoding ASCII CMakeLists.txt"
+powershell -Command "(gc cmake/CMakeLists.txt) -replace 'MultiThreaded\$<\$<CONFIG:Debug>:Debug>', 'MultiThreaded$<$<CONFIG:Debug>:Debug>DLL' | Out-File -encoding ASCII cmake/CMakeLists.txt"
 mkdir build_cmake
 cd build_cmake
 cmake ..\cmake -A x64 ^
