@@ -316,10 +316,6 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
             // Set up the layer
             std::vector<std::shared_ptr<Cell> > parentCells;
 
-#ifdef ONNX
-            iniConfig.currentSection((*it), false);
-            const std::string type = iniConfig.getProperty<std::string>("Type");
-
             for (std::vector<std::string>::const_iterator itParent
                 = parentLayers[(*it)].begin();
                 itParent != parentLayers[(*it)].end();
@@ -333,6 +329,10 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
                     parentCells.push_back(deepNet->getCell((*itParent)));
                 }
             }
+
+#ifdef ONNX
+            iniConfig.currentSection((*it), false);
+            const std::string type = iniConfig.getProperty<std::string>("Type");
 
             if (type == "ONNX") {
                 const std::string fileName
