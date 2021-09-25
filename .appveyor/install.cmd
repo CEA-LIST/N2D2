@@ -18,12 +18,13 @@ opencv-2.4.13.2-vc14.exe -o"C:\tools_vc14" -y
 echo Installing Protobuf
 git clone -q --branch=master https://github.com/google/protobuf.git C:\projects\protobuf
 cd C:\projects\protobuf
+:: with CMake > 3.15, protobuf CMake won't let us choose MultiThreadedDLL
+:: because the Dprotobuf_MSVC_STATIC_RUNTIME option is not enforced...
+powershell -Command "(gc cmake/CMakeLists.txt) -replace 'MultiThreaded', 'MultiThreadedDLL' | Out-File -encoding ASCII cmake/CMakeLists.txt"
 mkdir build_cmake
 cd build_cmake
 cmake ..\cmake -A x64 ^
   -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL ^
-  -DCMAKE_CONFIGURATION_TYPES="Release" ^
-  -DBUILD_SHARED_LIBS=0 ^
   -Dprotobuf_BUILD_TESTS=0 ^
   -Dprotobuf_MSVC_STATIC_RUNTIME=0
 cmake --build . --config Release
