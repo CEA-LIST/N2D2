@@ -145,7 +145,6 @@ class N2D2_Interface:
         else:
             return self.__getattribute__(key)
             
-    @deprecated()
     def set_parameter(self, key, value):
         if key in self._constructor_arguments:
             raise RuntimeError("You cannot modify constructor arguments.") 
@@ -156,7 +155,7 @@ class N2D2_Interface:
             self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
         else:
             raise ValueError(key + " is not a parameter of " + self.get_name()) 
-    @deprecated()
+
     def get_parameter(self, key):
         """
         :param key: Parameter name
