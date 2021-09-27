@@ -34,6 +34,7 @@ N2D2
    export_CPP_STM32
    export_TensorRT
    export_DNeuro
+   export_ONNX
    export_legacy
 
 .. toctree::

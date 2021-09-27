@@ -594,9 +594,21 @@ std::shared_ptr<N2D2::BaseTensor> N2D2::DeepNetGenerator::ONNX_unpackTensor(
         return std::make_shared<Tensor<float> >(
             ONNX_unpackTensor<float>(onnxTensor, expectedDims));
     }
+    else if (onnxTensor->data_type() == onnx::TensorProto_DataType_FLOAT16) {
+        return std::make_shared<Tensor<half_float::half> >(
+            ONNX_unpackTensor<half_float::half>(onnxTensor, expectedDims));
+    }
     else if (onnxTensor->data_type() == onnx::TensorProto_DataType_DOUBLE) {
         return std::make_shared<Tensor<double> >(
             ONNX_unpackTensor<double>(onnxTensor, expectedDims));
+    }
+    else if (onnxTensor->data_type() == onnx::TensorProto_DataType_INT8) {
+        return std::make_shared<Tensor<int8_t> >(
+            ONNX_unpackTensor<int8_t>(onnxTensor, expectedDims));
+    }
+    else if (onnxTensor->data_type() == onnx::TensorProto_DataType_INT16) {
+        return std::make_shared<Tensor<int16_t> >(
+            ONNX_unpackTensor<int16_t>(onnxTensor, expectedDims));
     }
     else if (onnxTensor->data_type() == onnx::TensorProto_DataType_INT32) {
         return std::make_shared<Tensor<int32_t> >(

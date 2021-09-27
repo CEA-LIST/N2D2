@@ -977,6 +977,7 @@ template class N2D2::Tensor<double>;
 template class N2D2::Tensor<half_float::half>;
 template class N2D2::Tensor<bool>;
 template class N2D2::Tensor<char>;
+template class N2D2::Tensor<signed char>;
 template class N2D2::Tensor<unsigned char>;
 template class N2D2::Tensor<short>;
 template class N2D2::Tensor<unsigned short>;
