@@ -1,3 +1,5 @@
+.. _post_quant-label:
+
 Post-training quantization
 ==========================
 

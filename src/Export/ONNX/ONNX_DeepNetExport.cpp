@@ -39,6 +39,7 @@
 #include "Target/TargetScore.hpp"
 #include "Export/CellExport.hpp"
 #include "Export/DeepNetExport.hpp"
+#include "Export/ONNX/ONNX_Config.hpp"
 #include "Export/ONNX/ONNX_CellExport.hpp"
 #include "Export/ONNX/ONNX_DeepNetExport.hpp"
 #include "Export/ONNX/Cells/ONNX_ConcatCell.hpp"
@@ -62,6 +63,14 @@ void N2D2::ONNX_DeepNetExport::generate(DeepNet& deepNet,
 
     if(!DeepNetExport::mExportParameters.empty())
         exportParams.load(DeepNetExport::mExportParameters);
+
+    ONNX_CellExport::mImplicitCasting = exportParams.getProperty(
+        ONNX_Config::IMPLICIT_CASTING,
+        ONNX_Config::IMPLICIT_CASTING_DEFAULT);
+
+    ONNX_CellExport::mFakeQuantization = exportParams.getProperty(
+        ONNX_Config::FAKE_QUANTIZATION,
+        ONNX_Config::FAKE_QUANTIZATION_DEFAULT);
 
     DrawNet::drawGraph(deepNet, dirName + "/graph");
 
@@ -88,7 +97,6 @@ void N2D2::ONNX_DeepNetExport::saveModel(DeepNet& deepNet,
 
 onnx::ModelProto N2D2::ONNX_DeepNetExport::generateModel(DeepNet& deepNet)
 {
-
     // Create an ONNX model
     onnx::ModelProto model;
     model.set_ir_version(onnx::Version::IR_VERSION);
@@ -159,11 +167,24 @@ void N2D2::ONNX_DeepNetExport::setTensorProto(
     onnx::ValueInfoProto* info,
     const BaseTensor& tensor)
 {
+    const onnx::TensorProto::DataType dataType
+        = (ONNX_CellExport::mFakeQuantization)
+            ? onnx::TensorProto::FLOAT :
+          (CellExport::mPrecision > 0 && CellExport::mPrecision <= 8)
+            ? onnx::TensorProto::INT8 :
+          (CellExport::mPrecision > 8 && CellExport::mPrecision <= 16)
+            ? onnx::TensorProto::INT16 :
+          (CellExport::mPrecision > 16)
+            ? onnx::TensorProto::INT32 :
+          (CellExport::mPrecision == -16)
+            ? onnx::TensorProto::FLOAT16 :
+          (CellExport::mPrecision == -32)
+            ? onnx::TensorProto::FLOAT : onnx::TensorProto::DOUBLE;
 
     onnx::TypeProto *inputType = info->mutable_type();
     onnx::TypeProto::Tensor *inputTypeTensor
         = inputType->mutable_tensor_type();
-    inputTypeTensor->set_elem_type(getElemType(tensor));
+    inputTypeTensor->set_elem_type(dataType);
 
     onnx::TensorShapeProto *inputTypeTensorShape
         = inputTypeTensor->mutable_shape();
@@ -179,27 +200,6 @@ void N2D2::ONNX_DeepNetExport::setTensorProto(
     for (size_t dim = 1; dim < dims.size(); ++dim) {
         inputTypeTensorDim = inputTypeTensorShape->add_dim();
         inputTypeTensorDim->set_dim_value(dims[dim]);
-    }
-}
-
-onnx::TensorProto::DataType N2D2::ONNX_DeepNetExport::getElemType(
-    const BaseTensor& tensor)
-{
-    if (tensor.getType() == &typeid(float))
-        return onnx::TensorProto::FLOAT;
-    else if (tensor.getType() == &typeid(half_float::half))
-        return onnx::TensorProto::FLOAT16;
-    else if (tensor.getType() == &typeid(double))
-        return onnx::TensorProto::DOUBLE;
-    else if (tensor.getType() == &typeid(int8_t))
-        return onnx::TensorProto::INT8;
-    else if (tensor.getType() == &typeid(int16_t))
-        return onnx::TensorProto::INT16;
-    else if (tensor.getType() == &typeid(int32_t))
-        return onnx::TensorProto::INT32;
-    else {
-        throw std::runtime_error("ONNX_DeepNetExport::getElemType(): "
-                                 "tensor type not supported by ONNX!");
     }
 }
 

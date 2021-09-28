@@ -1459,7 +1459,12 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             continue;
         }
         //ConstantOfShape
-        else if (node.op_type() == "Conv") {
+        else if (node.op_type() == "Conv" || node.op_type() == "ConvInteger") {
+            if (node.op_type() == "ConvInteger" && node.input_size() > 2) {
+                throw std::runtime_error("Unsupported operation: "
+                    "ConvInteger with zero point");
+            }
+
             // kernel_shape
             std::vector<unsigned int> kernelDims;
 
@@ -1620,7 +1625,8 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                                                                 activation);
 
             // Parameters
-            convCell->setParameter<bool>("NoBias", (node.input_size() != 3));
+            convCell->setParameter<bool>("NoBias", (node.input_size() != 3
+                                        || node.op_type() == "ConvInteger"));
 
             if (iniConfig.currentSection(node.output(0), false)) {
                 ConvCellGenerator::generateParams(convCell, iniConfig,
@@ -1812,7 +1818,6 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             if (cellFrame)
                 cellFrame->synchronizeToD(true);
         }
-        //ConvInteger
         //else if (node.op_type() == "ConvTranspose") {
 
         //}
@@ -1926,7 +1931,14 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         }
         //GatherElements
         //GatherND
-        else if (node.op_type() == "Gemm" || node.op_type() == "MatMul") {
+        else if (node.op_type() == "Gemm" || node.op_type() == "MatMul"
+            || node.op_type() == "MatMulInteger")
+        {
+            if (node.op_type() == "MatMulInteger" && node.input_size() > 2) {
+                throw std::runtime_error("Unsupported operation: "
+                    "MatMulInteger with zero point");
+            }
+
             const std::string inputData1 = redirectName(node.input(0));
             const std::string inputData2 = redirectName(node.input(1));
             std::string inputData;
@@ -2248,7 +2260,6 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         //LpNormalization
         //LpPool
         //MatMul -> see Gemm
-        //MatMulInteger
         //Max -> see Sum
         //MaxPool -> see AveragePool
         //MaxRoiPool

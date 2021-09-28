@@ -50,7 +50,15 @@ void N2D2::ONNX_FcCellExport::generateNode(
     const Cell& cell)
 {
     onnx::NodeProto *node = graph->add_node();
-    node->set_op_type("Gemm");
+
+    const bool fcInteger = (!mFakeQuantization &&
+        CellExport::mPrecision > 0 && CellExport::mPrecision <= 8);
+
+    if (fcInteger)
+        node->set_op_type("MatMulInteger");
+    else
+        node->set_op_type("Gemm");
+
     node->set_name(cell.getName());
 
     // Set parent nodes
@@ -67,42 +75,48 @@ void N2D2::ONNX_FcCellExport::generateNode(
     // Set weights input
     node->add_input(cell.getName() + "_w");
 
-    if (!cell.getParameter<bool>("NoBias"))
-        node->add_input(cell.getName() + "_b");
+    if (!cell.getParameter<bool>("NoBias") && fcInteger) {
+        node->add_output(cell.getName() + "_bias");
+    }
+    else {
+        if (!cell.getParameter<bool>("NoBias"))
+            node->add_input(cell.getName() + "_b");
 
-    // Set output node
-    if (generateActivation(graph, cell))
-        node->add_output(cell.getName() + "_act");
-    else
-        node->add_output(cell.getName());
+        if (generateActivation(graph, cell))
+            node->add_output(cell.getName() + "_act");
+        else
+            node->add_output(cell.getName());
+    }
 
     // Attributes
     // **********
     const FcCell& fcCell = dynamic_cast<const FcCell&>(cell);
 
-    // Attr alpha
-    onnx::AttributeProto *gemm_alpha = node->add_attribute();
-    gemm_alpha->set_name("alpha");
-    gemm_alpha->set_type(onnx::AttributeProto::FLOAT);
-    gemm_alpha->set_f(1);
+    if (!fcInteger) {
+        // Attr alpha
+        onnx::AttributeProto *gemm_alpha = node->add_attribute();
+        gemm_alpha->set_name("alpha");
+        gemm_alpha->set_type(onnx::AttributeProto::FLOAT);
+        gemm_alpha->set_f(1);
 
-    // Attr beta
-    onnx::AttributeProto *gemm_beta = node->add_attribute();
-    gemm_beta->set_name("beta");
-    gemm_beta->set_type(onnx::AttributeProto::FLOAT);
-    gemm_beta->set_f(!cell.getParameter<bool>("NoBias"));
+        // Attr beta
+        onnx::AttributeProto *gemm_beta = node->add_attribute();
+        gemm_beta->set_name("beta");
+        gemm_beta->set_type(onnx::AttributeProto::FLOAT);
+        gemm_beta->set_f(!cell.getParameter<bool>("NoBias"));
 
-    // Attr transA
-    onnx::AttributeProto *gemm_transA = node->add_attribute();
-    gemm_transA->set_name("transA");
-    gemm_transA->set_type(onnx::AttributeProto::INT);
-    gemm_transA->set_i(0);
+        // Attr transA
+        onnx::AttributeProto *gemm_transA = node->add_attribute();
+        gemm_transA->set_name("transA");
+        gemm_transA->set_type(onnx::AttributeProto::INT);
+        gemm_transA->set_i(0);
 
-    // Attr transB
-    onnx::AttributeProto *gemm_transB = node->add_attribute();
-    gemm_transB->set_name("transB");
-    gemm_transB->set_type(onnx::AttributeProto::INT);
-    gemm_transB->set_i(1);
+        // Attr transB
+        onnx::AttributeProto *gemm_transB = node->add_attribute();
+        gemm_transB->set_name("transB");
+        gemm_transB->set_type(onnx::AttributeProto::INT);
+        gemm_transB->set_i(1);
+    }
 
     // Weights input
     onnx::TensorProto *fc_w = graph->add_initializer();
@@ -112,16 +126,45 @@ void N2D2::ONNX_FcCellExport::generateNode(
     assert(weightsInterface->size() == 1);
     const BaseTensor& weights = (*weightsInterface)[0];
 
-    ONNX_castAndPackTensor(fc_w, weights,
-        {fcCell.getInputsSize(), fcCell.getNbOutputs()});
+    if (fcInteger) {
+        const Tensor<Float_T>& weightsFloat = tensor_cast<Float_T>(weights);
+        Tensor<Float_T> weightsT({weights.dimB(),
+                                  weights.size() / weights.dimB()});
+
+        for (int i = 0; i < weights.size() / weights.dimB(); ++i) {
+            for (int n = 0; n < weights.dimB(); ++n)
+                weightsT(n, i) = weightsFloat(i, n);
+        }
+
+        ONNX_castAndPackTensor(mPrecision, fc_w, weightsT,
+            {fcCell.getInputsSize(), fcCell.getNbOutputs()});
+    }
+    else {
+        ONNX_castAndPackTensor(mPrecision, fc_w, weights,
+            {fcCell.getInputsSize(), fcCell.getNbOutputs()});
+    }
 
     // Bias input
     if (!cell.getParameter<bool>("NoBias")) {
+        if (fcInteger) {
+            onnx::NodeProto *nodeBias = graph->add_node();
+            nodeBias->set_op_type("Add");
+            nodeBias->set_name(cell.getName() + "_bias");
+            nodeBias->add_input(cell.getName() + "_bias");
+            nodeBias->add_input(cell.getName() + "_b");
+                    
+            if (generateActivation(graph, cell))
+                nodeBias->add_output(cell.getName() + "_act");
+            else
+                nodeBias->add_output(cell.getName());
+        }
+
         onnx::TensorProto *fc_b = graph->add_initializer();
         fc_b->set_name(cell.getName() + "_b");
 
         const BaseTensor* biases = fcCell.getBiases();
-        ONNX_castAndPackTensor(fc_b, *biases, {biases->size()});
+        ONNX_castAndPackTensor((mPrecision > 0) ? 4 * mPrecision : mPrecision,
+            fc_b, *biases, {biases->size()});
     }
 }
 

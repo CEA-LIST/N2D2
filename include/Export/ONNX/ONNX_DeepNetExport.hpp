@@ -44,7 +44,6 @@ private:
     static std::string getCellModelType(const Cell& cell);
     static void setTensorProto(onnx::ValueInfoProto* info,
                                const BaseTensor& tensor);
-    static onnx::TensorProto::DataType getElemType(const BaseTensor& tensor);
 
     static Registrar<DeepNetExport> mRegistrar;
 };

@@ -61,7 +61,17 @@ void N2D2::ONNX_SoftmaxCellExport::generateNode(
         itParent = parents.begin(), itParentEnd = parents.end();
         itParent != itParentEnd; ++itParent)
     {
-        node->add_input((*itParent) ? (*itParent)->getName() : "env");
+        const std::string parentName = (*itParent)
+            ? (*itParent)->getName() : "env";
+
+        if (CellExport::mPrecision > 0) {
+            // Softmax is never quantized. If it is kept in the export, the
+            // input must be casted to float.
+            node->add_input(ONNX_castInput(graph, parentName,
+                onnx::TensorProto::FLOAT));
+        }
+        else
+            node->add_input(parentName);
     }
 
     // Set output node to the name of the cell

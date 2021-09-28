@@ -50,7 +50,15 @@ void N2D2::ONNX_ConvCellExport::generateNode(
     const Cell& cell)
 {
     onnx::NodeProto *node = graph->add_node();
-    node->set_op_type("Conv");
+
+    const bool convInteger = (!mFakeQuantization &&
+        CellExport::mPrecision > 0 && CellExport::mPrecision <= 8);
+
+    if (convInteger)
+        node->set_op_type("ConvInteger");
+    else
+        node->set_op_type("Conv");
+
     node->set_name(cell.getName());
 
     // Set parent nodes
@@ -67,14 +75,18 @@ void N2D2::ONNX_ConvCellExport::generateNode(
     // Set weights input
     node->add_input(cell.getName() + "_w");
 
-    if (!cell.getParameter<bool>("NoBias"))
-        node->add_input(cell.getName() + "_b");
+    if (!cell.getParameter<bool>("NoBias") && convInteger) {
+        node->add_output(cell.getName() + "_bias");
+    }
+    else {
+        if (!cell.getParameter<bool>("NoBias"))
+            node->add_input(cell.getName() + "_b");
 
-    // Set output node
-    if (generateActivation(graph, cell))
-        node->add_output(cell.getName() + "_act");
-    else
-        node->add_output(cell.getName());
+        if (generateActivation(graph, cell))
+            node->add_output(cell.getName() + "_act");
+        else
+            node->add_output(cell.getName());
+    }
 
     // Attributes
     // **********
@@ -145,15 +157,29 @@ void N2D2::ONNX_ConvCellExport::generateNode(
     const BaseInterface* weightsInterface = convCell.getWeights();
     const BaseTensor& weights = (*weightsInterface)[0];
 
-    ONNX_castAndPackTensor(conv_w, weights);
+    ONNX_castAndPackTensor(mPrecision, conv_w, weights);
 
     // Bias input
     if (!cell.getParameter<bool>("NoBias")) {
+        if (convInteger) {
+            onnx::NodeProto *nodeBias = graph->add_node();
+            nodeBias->set_op_type("Add");
+            nodeBias->set_name(cell.getName() + "_bias");
+            nodeBias->add_input(cell.getName() + "_bias");
+            nodeBias->add_input(cell.getName() + "_b");
+                    
+            if (generateActivation(graph, cell))
+                nodeBias->add_output(cell.getName() + "_act");
+            else
+                nodeBias->add_output(cell.getName());
+        }
+
         onnx::TensorProto *conv_b = graph->add_initializer();
         conv_b->set_name(cell.getName() + "_b");
 
         const std::shared_ptr<BaseTensor> biases = convCell.getBiases();
-        ONNX_castAndPackTensor(conv_b, *biases, {biases->size()});
+        ONNX_castAndPackTensor((mPrecision > 0) ? 4 * mPrecision : mPrecision,
+            conv_b, *biases, {biases->size()});
     }
 }
 

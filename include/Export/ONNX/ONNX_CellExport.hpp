@@ -50,7 +50,19 @@ public:
         return rMap;
     }
 
-    static void ONNX_castAndPackTensor(onnx::TensorProto* onnxTensor,
+    static bool mImplicitCasting;
+    static bool mFakeQuantization;
+
+    static std::string ONNX_castInput(
+        onnx::GraphProto* graph,
+        const std::string& input,
+        onnx::TensorProto::DataType to);
+    static std::string ONNX_castOutput(
+        onnx::GraphProto* graph,
+        const std::string& output,
+        onnx::TensorProto::DataType to);
+    static void ONNX_castAndPackTensor(int precision,
+                                       onnx::TensorProto* onnxTensor,
                                        const BaseTensor& tensor,
                                        const std::vector<size_t>& shape
                                                     = std::vector<size_t>());
@@ -58,6 +70,8 @@ public:
                                 const BaseTensor& tensor,
                                 const std::vector<size_t>& shape
                                                     = std::vector<size_t>());
+    template <class T>
+    static onnx::TensorProto::DataType ONNX_dataType();
     template <class T>
     static void ONNX_packTensor(onnx::TensorProto* onnxTensor,
                                 const Tensor<T>& tensor,
@@ -82,45 +96,63 @@ std::unique_ptr<N2D2::ONNX_CellExport> N2D2::ONNX_CellExport::getInstance(Cell& 
     return Registrar<ONNX_CellExport>::create(cell.getType())(cell);
 }
 
-namespace N2D2 {
-template <>
-void ONNX_CellExport::ONNX_packTensor<float>(
-    onnx::TensorProto* onnxTensor,
-    const Tensor<float>& tensor,
-    const std::vector<size_t>& shape);
+template <class T>
+onnx::TensorProto::DataType N2D2::ONNX_CellExport::ONNX_dataType()
+{
+    throw std::runtime_error("ONNX_CellExport::ONNX_dataType(): "
+                             "tensor type not supported by ONNX!");
+}
 
 template <>
-void ONNX_CellExport::ONNX_packTensor<half_float::half>(
-    onnx::TensorProto* onnxTensor,
-    const Tensor<half_float::half>& tensor,
-    const std::vector<size_t>& shape);
-
+onnx::TensorProto::DataType N2D2::ONNX_CellExport
+    ::ONNX_dataType<float>();
 template <>
-void ONNX_CellExport::ONNX_packTensor<double>(
-    onnx::TensorProto* onnxTensor,
-    const Tensor<double>& tensor,
-    const std::vector<size_t>& shape);
-
+onnx::TensorProto::DataType N2D2::ONNX_CellExport
+    ::ONNX_dataType<half_float::half>();
 template <>
-void ONNX_CellExport::ONNX_packTensor<int8_t>(
-    onnx::TensorProto* onnxTensor,
-    const Tensor<int8_t>& tensor,
-    const std::vector<size_t>& shape);
-
+onnx::TensorProto::DataType N2D2::ONNX_CellExport
+    ::ONNX_dataType<double>();
 template <>
-void ONNX_CellExport::ONNX_packTensor<int16_t>(
-    onnx::TensorProto* onnxTensor,
-    const Tensor<int16_t>& tensor,
-    const std::vector<size_t>& shape);
-
+onnx::TensorProto::DataType N2D2::ONNX_CellExport
+    ::ONNX_dataType<int8_t>();
 template <>
-void ONNX_CellExport::ONNX_packTensor<int32_t>(
+onnx::TensorProto::DataType N2D2::ONNX_CellExport
+    ::ONNX_dataType<uint8_t>();
+template <>
+onnx::TensorProto::DataType N2D2::ONNX_CellExport
+    ::ONNX_dataType<int16_t>();
+template <>
+onnx::TensorProto::DataType N2D2::ONNX_CellExport
+    ::ONNX_dataType<uint16_t>();
+template <>
+onnx::TensorProto::DataType N2D2::ONNX_CellExport
+    ::ONNX_dataType<int32_t>();
+template <>
+onnx::TensorProto::DataType N2D2::ONNX_CellExport
+    ::ONNX_dataType<uint32_t>();
+template <>
+onnx::TensorProto::DataType N2D2::ONNX_CellExport
+    ::ONNX_dataType<int64_t>();
+template <>
+onnx::TensorProto::DataType N2D2::ONNX_CellExport
+    ::ONNX_dataType<uint64_t>();
+
+template <class T>
+void N2D2::ONNX_CellExport::ONNX_packTensor(
     onnx::TensorProto* onnxTensor,
-    const Tensor<int32_t>& tensor,
-    const std::vector<size_t>& shape);
+    const Tensor<T>& tensor,
+    const std::vector<size_t>& shape)
+{
+    onnxTensor->set_data_type(ONNX_dataType<T>());
+
+    std::vector<size_t> dims = (!shape.empty()) ? shape : tensor.dims();
+    std::reverse(dims.begin(), dims.end());
+    std::for_each(dims.begin(), dims.end(), [&onnxTensor](size_t dim)
+        { onnxTensor->mutable_dims()->Add(dim); });
+    onnxTensor->set_raw_data(&tensor.data().data()[0],
+        sizeof(T) * tensor.size());
 }
 
 #endif
 
 #endif // N2D2_ONNX_CELLEXPORT_H
-
