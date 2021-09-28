@@ -55,12 +55,6 @@ class Cell(ABC):
     def export_free_parameters(self, dir_name):
         pass
 
-    def __getattr__(self, key: str):
-        if key == "name":
-            return self._name
-        else:
-            return super().__getattr__(key)
-
     def get_name(self):
         return self._name
 

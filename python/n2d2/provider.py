@@ -190,6 +190,8 @@ class DataProvider(Provider):
         """
         self._deepnet = n2d2.deepnet.DeepNet()
         self._deepnet.set_provider(self)
+        self._deepnet.N2D2().initialize()
+
         self._N2D2_object.readBatch(set=self.get_partition(), startIndex=idx)
         return n2d2.Tensor.from_N2D2(self._N2D2_object.getData())._set_cell(self)
 

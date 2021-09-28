@@ -106,6 +106,11 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         self._inference = False
 
         self.nb_input_cells = 0
+    def __getattr__(self, key: str) -> None:
+        if key is "name":
+            return self.get_name()
+        else:
+            return N2D2_Interface.__getattr__(self, key)
 
     def __setattr__(self, key: str, value) -> None:
         
@@ -267,7 +272,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             self._input_cells.append(cell.get_name())
 
         self._deepnet.N2D2().addCell(self._N2D2_object, parents)
-        if not initialized: # If not initialized
+        if not initialized: 
             self._N2D2_object.initializeDataDependent()
             if self._N2D2_object.getMapping().empty():
                 self._N2D2_object.setMapping(n2d2.Tensor([self.get_nb_outputs(), inputs.dimZ()],
@@ -479,7 +484,9 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
         elif key is 'quantizer':
             if isinstance(value, n2d2.quantizer.Quantizer):
                 self._N2D2_object.setQuantizer(value.N2D2())
+                self._N2D2_object.initializeWeightQuantizer()
                 self._config_parameters["quantizer"] = value
+                
             else:
                 raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
         elif key is 'filler':
@@ -864,6 +871,7 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
         elif key is 'quantizer':
             if isinstance(value, n2d2.quantizer.Quantizer):
                 self._N2D2_object.setQuantizer(value.N2D2())
+                self._N2D2_object.initializeWeightQuantizer()
                 self._config_parameters["quantizer"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
@@ -972,8 +980,8 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
         :param value: The value of the parameter
         :type value: Any
         """
-        self._config_parameters['weights_solver'].set_parameter(key, value)
-        self._config_parameters['bias_solver'].set_parameter(key, value)
+        self.weights_solver.set_parameter(key, value)
+        self.bias_solver.set_parameter(key, value)
 
     @deprecated(reason="You should use weights_solver as an attribute.")
     def get_weights_solver(self):
