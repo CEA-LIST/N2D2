@@ -207,13 +207,9 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsQAT(const FcCell & cell, std::
     if(accumulate){
         nbInt8_nbCh = ( (cell.getNbChannels()*wPrecision) + (cell.getNbChannels()*wPrecision) % 8 ) / 8;
         nbSlot_per_Int8 = 8/(size_t)wPrecision;
-        std::cout << "nbSlot_per_Int8 = " << nbSlot_per_Int8 << std::endl;
         nbSlot_total = nbInt8_nbCh*nbSlot_per_Int8;
-        std::cout << " >>> nbSlot_total = " << nbSlot_total << std::endl;
         nbSlot_taken = cell.getNbChannels();
-        std::cout << " >>> nbSlot_taken = " << nbSlot_taken << std::endl;
         nbSlot_free = nbSlot_total - nbSlot_taken;
-        std::cout << " >>> nbSlot_free = " << nbSlot_free << std::endl;
     }
     else{
         nbSlot_total = cell.getNbChannels();
@@ -253,8 +249,11 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsQAT(const FcCell & cell, std::
 
                     if(accumulate){
                         cell.getWeight(output, wch, weight);
-
-                        accumulator |= (static_cast<uint32_t>(std::round(weight(0))) & mask);
+                        value = weight(0);
+                        if(wPrecision == 1 && value == -1){
+                            value = 0;
+                        }
+                        accumulator |= (static_cast<uint32_t>(std::round(value)) & mask);
 
                         //if the last weight in accumulator
                         if(wCounter == (nbSlot_per_Int8-1)){
@@ -272,12 +271,8 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsQAT(const FcCell & cell, std::
                         }
                     }
                     else{
-
                         cell.getWeight(output,  wch, weight);
                         value = weight(0);
-                        if(wPrecision == 1 && value == -1){
-                            value = 0;
-                        }
                         CellExport::generateFreeParameter(value, header);
 
                         header << ", ";

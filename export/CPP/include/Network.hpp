@@ -756,7 +756,7 @@ private:
                                                Bias_T& __restrict weightedSum)
     {
         weightedSum += ((weights[0*WEIGHTS_INC].fields.op7 == 0)
-            ? (*inputs) : -(*inputs));
+                ? (Bias_T)(-(*inputs)) : (Bias_T)(*inputs));
     }
 
     template<int NB_ITERATIONS,
@@ -771,9 +771,9 @@ private:
                                                Bias_T& __restrict weightedSum)
     {
         weightedSum += ((weights[0*WEIGHTS_INC].fields.op7 == 0)
-                ? inputs[0*INPUTS_INC] : -inputs[0*INPUTS_INC])
+                ? (Bias_T)(-inputs[0*INPUTS_INC]) : (Bias_T)inputs[0*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op6 == 0)
-                ? inputs[1*INPUTS_INC] : -inputs[1*INPUTS_INC]);
+                ? (Bias_T)(-inputs[1*INPUTS_INC]) : (Bias_T)inputs[1*INPUTS_INC]);
     }
 
     template<int NB_ITERATIONS,
@@ -788,11 +788,11 @@ private:
                                                Bias_T& __restrict weightedSum)
     {
         weightedSum += ((weights[0*WEIGHTS_INC].fields.op7 == 0)
-                ? inputs[0*INPUTS_INC] : -inputs[0*INPUTS_INC])
+                ? (Bias_T)(-inputs[0*INPUTS_INC]) : (Bias_T)inputs[0*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op6 == 0)
-                ? inputs[1*INPUTS_INC] : -inputs[1*INPUTS_INC])
+                ? (Bias_T)(-inputs[1*INPUTS_INC]) : (Bias_T)inputs[1*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op5 == 0)
-                ? inputs[2*INPUTS_INC] : -inputs[2*INPUTS_INC]);
+                ? (Bias_T)(-inputs[2*INPUTS_INC]) : (Bias_T)inputs[2*INPUTS_INC]);
     }
 
     template<int NB_ITERATIONS,
@@ -807,13 +807,13 @@ private:
                                                Bias_T& __restrict weightedSum)
     {
         weightedSum += ((weights[0*WEIGHTS_INC].fields.op7 == 0)
-                ? inputs[0*INPUTS_INC] : -inputs[0*INPUTS_INC])
+                ? (Bias_T)(-inputs[0*INPUTS_INC]) : (Bias_T)inputs[0*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op6 == 0)
-                ? inputs[1*INPUTS_INC] : -inputs[1*INPUTS_INC])
+                ? (Bias_T)(-inputs[1*INPUTS_INC]) : (Bias_T)inputs[1*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op5 == 0)
-                ? inputs[2*INPUTS_INC] : -inputs[2*INPUTS_INC])
+                ? (Bias_T)(-inputs[2*INPUTS_INC]) : (Bias_T)inputs[2*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op4 == 0)
-                ? inputs[3*INPUTS_INC] : -inputs[3*INPUTS_INC]);
+                ? (Bias_T)(-inputs[3*INPUTS_INC]) : (Bias_T)inputs[3*INPUTS_INC]);
     }
 
     template<int NB_ITERATIONS,
@@ -828,15 +828,15 @@ private:
                                                Bias_T& __restrict weightedSum)
     {
         weightedSum += ((weights[0*WEIGHTS_INC].fields.op7 == 0)
-                ? inputs[0*INPUTS_INC] : -inputs[0*INPUTS_INC])
+                ? (Bias_T)(-inputs[0*INPUTS_INC]) : (Bias_T)inputs[0*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op6 == 0)
-                ? inputs[1*INPUTS_INC] : -inputs[1*INPUTS_INC])
+                ? (Bias_T)(-inputs[1*INPUTS_INC]) : (Bias_T)inputs[1*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op5 == 0)
-                ? inputs[2*INPUTS_INC] : -inputs[2*INPUTS_INC])
+                ? (Bias_T)(-inputs[2*INPUTS_INC]) : (Bias_T)inputs[2*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op4 == 0)
-                ? inputs[3*INPUTS_INC] : -inputs[3*INPUTS_INC])
+                ? (Bias_T)(-inputs[3*INPUTS_INC]) : (Bias_T)inputs[3*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op3 == 0)
-                ? inputs[4*INPUTS_INC] : -inputs[4*INPUTS_INC]);
+                ? (Bias_T)(-inputs[4*INPUTS_INC]) : (Bias_T)inputs[4*INPUTS_INC]);
     }
 
     template<int NB_ITERATIONS,
@@ -851,17 +851,17 @@ private:
                                                Bias_T& __restrict weightedSum)
     {
         weightedSum += ((weights[0*WEIGHTS_INC].fields.op7 == 0)
-                ? inputs[0*INPUTS_INC] : -inputs[0*INPUTS_INC])
+                ? (Bias_T)(-inputs[0*INPUTS_INC]) : (Bias_T)inputs[0*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op6 == 0)
-                ? inputs[1*INPUTS_INC] : -inputs[1*INPUTS_INC])
+                ? (Bias_T)(-inputs[1*INPUTS_INC]) : (Bias_T)inputs[1*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op5 == 0)
-                ? inputs[2*INPUTS_INC] : -inputs[2*INPUTS_INC])
+                ? (Bias_T)(-inputs[2*INPUTS_INC]) : (Bias_T)inputs[2*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op4 == 0)
-                ? inputs[3*INPUTS_INC] : -inputs[3*INPUTS_INC])
+                ? (Bias_T)(-inputs[3*INPUTS_INC]) : (Bias_T)inputs[3*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op3 == 0)
-                ? inputs[4*INPUTS_INC] : -inputs[4*INPUTS_INC])
+                ? (Bias_T)(-inputs[4*INPUTS_INC]) : (Bias_T)inputs[4*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op2 == 0)
-                ? inputs[5*INPUTS_INC] : -inputs[5*INPUTS_INC]);
+                ? (Bias_T)(-inputs[5*INPUTS_INC]) : (Bias_T)inputs[5*INPUTS_INC]);
     }
 
     template<int NB_ITERATIONS,
@@ -876,19 +876,19 @@ private:
                                                Bias_T& __restrict weightedSum)
     {
         weightedSum += ((weights[0*WEIGHTS_INC].fields.op7 == 0)
-                ? inputs[0*INPUTS_INC] : -inputs[0*INPUTS_INC])
+                ? (Bias_T)(-inputs[0*INPUTS_INC]) : (Bias_T)inputs[0*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op6 == 0)
-                ? inputs[1*INPUTS_INC] : -inputs[1*INPUTS_INC])
+                ? (Bias_T)(-inputs[1*INPUTS_INC]) : (Bias_T)inputs[1*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op5 == 0)
-                ? inputs[2*INPUTS_INC] : -inputs[2*INPUTS_INC])
+                ? (Bias_T)(-inputs[2*INPUTS_INC]) : (Bias_T)inputs[2*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op4 == 0)
-                ? inputs[3*INPUTS_INC] : -inputs[3*INPUTS_INC])
+                ? (Bias_T)(-inputs[3*INPUTS_INC]) : (Bias_T)inputs[3*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op3 == 0)
-                ? inputs[4*INPUTS_INC] : -inputs[4*INPUTS_INC])
+                ? (Bias_T)(-inputs[4*INPUTS_INC]) : (Bias_T)inputs[4*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op2 == 0)
-                ? inputs[5*INPUTS_INC] : -inputs[5*INPUTS_INC])
+                ? (Bias_T)(-inputs[5*INPUTS_INC]) : (Bias_T)inputs[5*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op1 == 0)
-                ? inputs[6*INPUTS_INC] : -inputs[6*INPUTS_INC]);
+                ? (Bias_T)(-inputs[6*INPUTS_INC]) : (Bias_T)inputs[6*INPUTS_INC]);
     }
 
     template<int INPUTS_INC = 1,
@@ -902,21 +902,23 @@ private:
                                             Bias_T weightedSum)
     {
         weightedSum += ((weights[0*WEIGHTS_INC].fields.op7 == 0)
-                ? inputs[0*INPUTS_INC] : -inputs[0*INPUTS_INC])
+                ? (Bias_T)(-inputs[0*INPUTS_INC]) : (Bias_T)inputs[0*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op6 == 0)
-                ? inputs[1*INPUTS_INC] : -inputs[1*INPUTS_INC])
+                ? (Bias_T)(-inputs[1*INPUTS_INC]) : (Bias_T)inputs[1*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op5 == 0)
-                ? inputs[2*INPUTS_INC] : -inputs[2*INPUTS_INC])
+                ? (Bias_T)(-inputs[2*INPUTS_INC]) : (Bias_T)inputs[2*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op4 == 0)
-                ? inputs[3*INPUTS_INC] : -inputs[3*INPUTS_INC])
+                ? (Bias_T)(-inputs[3*INPUTS_INC]) : (Bias_T)inputs[3*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op3 == 0)
-                ? inputs[4*INPUTS_INC] : -inputs[4*INPUTS_INC])
+                ? (Bias_T)(-inputs[4*INPUTS_INC]) : (Bias_T)inputs[4*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op2 == 0)
-                ? inputs[5*INPUTS_INC] : -inputs[5*INPUTS_INC])
+                ? (Bias_T)(-inputs[5*INPUTS_INC]) : (Bias_T)inputs[5*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op1 == 0)
-                ? inputs[6*INPUTS_INC] : -inputs[6*INPUTS_INC])
+                ? (Bias_T)(-inputs[6*INPUTS_INC]) : (Bias_T)inputs[6*INPUTS_INC])
             + ((weights[0*WEIGHTS_INC].fields.op0 == 0)
-                ? inputs[7*INPUTS_INC] : -inputs[7*INPUTS_INC]);
+                ? (Bias_T)(-inputs[7*INPUTS_INC]) : (Bias_T)inputs[7*INPUTS_INC]);
+
+        return weightedSum;
     }
 
     template<int NB_ITERATIONS,
@@ -1383,10 +1385,6 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
                     unsigned int nbSlot = ceil((double)8/std::numeric_limits<Output_T>::digits);
                     outputOffset = oOffset + std::floor(output/nbSlot);
                     compact_data_during_loop(output_val, outputs, &outputOffset, &infoPack);
-                    //force 0 into "extra" memory (until mem manager is adapted)
-                    if(output > ceil(NB_OUTPUTS/2)){
-                        outputs[oOffset + output] = 0;
-                    }
                }
                else{
                 ((Output_T*)((uint8_t*)outputs + oOffset))[output]
@@ -1961,9 +1959,6 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
             unsigned int nbSlot = ceil((double)8/std::numeric_limits<Output_T>::digits);
             outputOffset = std::floor(och/nbSlot);
             compact_data_during_loop(output_val, outputs, &outputOffset, &infoPack);
-            if(och > ceil(NB_OUTPUTS/2)){
-                outputs[och] = 0;
-            }
         }
         //do not accumulate for the last fc which is int32
         else{
@@ -2010,12 +2005,12 @@ inline void N2D2::Network::saveOutputs(
                                 - OUTPUT_MEM_CONT_SIZE;
                 }
 
-                //for (int output = 0; output < NB_OUTPUTS_COMPACT; output++) {
-                for (int output = 0; output < NB_OUTPUTS; output++) {
+                // if no "+" it is printed always as unsigned!
+                for (int output = 0; output < NB_OUTPUTS_COMPACT; output++) {
                     if (std::is_floating_point<Output_T>::value)
-                        fprintf(pFile, "%f", (float)((Output_T*)((uint8_t*)outputs + oOffset))[output]);
+                        fprintf(pFile, "%f", +(float)((Output_T*)((uint8_t*)outputs + oOffset))[output]);
                     else
-                        fprintf(pFile, "%d", ((Output_T*)((uint8_t*)outputs + oOffset))[output]);
+                        fprintf(pFile, "%d", +((Output_T*)((uint8_t*)outputs + oOffset))[output]);
 
                     fprintf(pFile, ", ");
                 }
@@ -2030,8 +2025,7 @@ inline void N2D2::Network::saveOutputs(
     }
     else if (format == Format::CHW) {
         fprintf(pFile, "");
-        //for(int output = 0; output < NB_OUTPUTS_COMPACT; output++) {
-        for(int output = 0; output < NB_OUTPUTS; output++) {
+        for(int output = 0; output < NB_OUTPUTS_COMPACT; output++) {
             fprintf(pFile, "");
 
             for(int oy = 0; oy < OUTPUTS_HEIGHT; oy++) {
@@ -2048,8 +2042,9 @@ inline void N2D2::Network::saveOutputs(
                             - OUTPUT_MEM_CONT_OFFSET - OUTPUT_MEM_CONT_SIZE;
                     }
 
+                    // if no "+" it is printed always as unsigned!
                     if (std::is_floating_point<Output_T>::value)
-                        fprintf(pFile, "%f", (float)((Output_T*)((uint8_t*)outputs + oOffset))[output]);
+                        fprintf(pFile, "%f", +(float)((Output_T*)((uint8_t*)outputs + oOffset))[output]);
                     else
                         fprintf(pFile, "%d", ((Output_T*)((uint8_t*)outputs + oOffset))[output]);
                     fprintf(pFile, " ");
