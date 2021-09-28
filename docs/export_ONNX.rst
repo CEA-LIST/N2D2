@@ -51,6 +51,7 @@ possible, notably using the ONNX *ConvInteger* and *MatMulInteger* when
 
 .. figure:: _static/export_ONNX_quant.svg
    :alt: Example of fully integer, quantized, exported ONNX graph.
+   :align: center
 
 By default, strict adherence to the ONNX standard is enforced, by adding 
 explicit ``Cast`` operators when required. The automatic insertion of ``Cast``
@@ -60,6 +61,7 @@ to true. This results in the simplified graph below:
 .. figure:: _static/export_ONNX_quant_implicit_cast.svg
    :alt: Example of fully integer, quantized, exported ONNX graph without 
          ``Cast`` operators (with ``ImplicitCasting`` set to 1).
+   :align: center
 
 The ``FakeQuantization`` parameter allows to export a quantized network using
 fake quantization, meaning the parameters of the network are quantized (integer) 
@@ -73,6 +75,7 @@ exactly with floating-point.
 .. figure:: _static/export_ONNX_quant_fake.svg
    :alt: Example of fully integer, quantized, exported ONNX graph with fake
          quantization (``FakeQuantization`` set to 1).
+   :align: center
 
 .. Note::
 
