@@ -73,7 +73,8 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         if "activation" in config_parameters:
             if not isinstance(config_parameters["activation"], n2d2.activation.ActivationFunction):
                 raise n2d2.error_handler.WrongInputType("activation", str(type(config_parameters["activation"])), [str(n2d2.activation.ActivationFunction)])
-        
+        else:
+            config_parameters["activation"] = None
         if 'name' in config_parameters:
             name = config_parameters.pop('name')
         else:
@@ -115,11 +116,15 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
     def __setattr__(self, key: str, value) -> None:
         
         if key is 'activation':
-            if not isinstance(value, n2d2.activation.ActivationFunction):
-                raise n2d2.error_handler.WrongInputType("activation", str(type(value)), [str(n2d2.activation.ActivationFunction)])
+            if not (isinstance(value, n2d2.activation.ActivationFunction) or value is None):
+                raise n2d2.error_handler.WrongInputType("activation", str(type(value)), [str(n2d2.activation.ActivationFunction), "None"])
             else:
                 self._config_parameters["activation"] = value
-                self._N2D2_object.setActivation(value.N2D2())
+                if self._N2D2_object:
+                    if value:
+                        self._N2D2_object.setActivation(value.N2D2())
+                    else:
+                        self._N2D2_object.setActivation(value)
         else:
             return super().__setattr__(key, value)
 
@@ -2426,7 +2431,7 @@ class Transpose(NeuralNetworkCell, Datatyped):
 
             """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
-                self.__setattr__([key, value])
+                self.__setattr__(key, value)
             self.load_N2D2_parameters(self.N2D2())
 
         self._add_to_graph(inputs)
