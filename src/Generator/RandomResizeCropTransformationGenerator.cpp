@@ -35,13 +35,9 @@ N2D2::RandomResizeCropTransformationGenerator::generate(IniParser& iniConfig,
 
     const unsigned int width = iniConfig.getProperty<unsigned int>("Width");
     const unsigned int height = iniConfig.getProperty<unsigned int>("Height");
-    const unsigned int offsetX = iniConfig.getProperty
-                                 <unsigned int>("OffsetX", 0);
-    const unsigned int offsetY = iniConfig.getProperty
-                                 <unsigned int>("OffsetY", 0);
 
     std::shared_ptr<RandomResizeCropTransformation> trans = std::make_shared
-        <RandomResizeCropTransformation>(width, height, offsetX, offsetY);
+        <RandomResizeCropTransformation>(width, height);
     trans->setParameters(iniConfig.getSection(section, true));
     return trans;
 }

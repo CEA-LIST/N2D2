@@ -553,8 +553,6 @@ class test_RandomResizeCrop(test_params):
         self.parameters = {
             "width": 10,
             "height": 9,
-            "offset_x": 0,
-            "offset_y": 1,
             "scale_min": 0.3,
             "scale_max": 0.5,
             "ratio_min": 0.0,
@@ -565,8 +563,6 @@ class test_RandomResizeCrop(test_params):
     def test_parameters(self):
         self.assertEqual(self.parameters["width"], self.object.N2D2().getWidth())
         self.assertEqual(self.parameters["height"], self.object.N2D2().getHeight())
-        self.assertEqual(self.parameters["offset_x"], self.object.N2D2().getOffsetX())
-        self.assertEqual(self.parameters["offset_y"], self.object.N2D2().getOffsetY())
         self.assertEqual(self.parameters["scale_min"], round(self.object.N2D2().getScaleMin(), 5))
         self.assertEqual(self.parameters["scale_max"], self.object.N2D2().getScaleMax())
         self.assertEqual(self.parameters["ratio_min"], self.object.N2D2().getRatioMin())

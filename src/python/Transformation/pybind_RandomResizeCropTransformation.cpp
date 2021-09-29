@@ -32,12 +32,10 @@ void init_RandomResizeCropTransformation(py::module &m) {
     py::class_<RandomResizeCropTransformation, std::shared_ptr<RandomResizeCropTransformation>, Transformation> trans (m, "RandomResizeCropTransformation", py::multiple_inheritance());
 
     trans
-    .def(py::init<unsigned int, unsigned int, unsigned int, unsigned int>(), 
-        py::arg("width"), py::arg("height"), py::arg("OffsetX")=0, py::arg("OffsetY")=0)
+    .def(py::init<unsigned int, unsigned int>(), 
+        py::arg("width"), py::arg("height"))
     .def("getWidth", &RandomResizeCropTransformation::getWidth)
     .def("getHeight", &RandomResizeCropTransformation::getHeight)
-    .def("getOffsetX", &RandomResizeCropTransformation::getOffsetX)
-    .def("getOffsetY", &RandomResizeCropTransformation::getOffsetY)
     .def("getScaleMin", &RandomResizeCropTransformation::getScaleMin)
     .def("getScaleMax", &RandomResizeCropTransformation::getScaleMax)
     .def("getRatioMin", &RandomResizeCropTransformation::getRatioMin)

@@ -29,8 +29,8 @@ N2D2::SliceExtractionTransformation::SliceExtractionTransformation(
     unsigned int offsetY)
     : mWidth(width),
       mHeight(height),
-      mOffsetX(this, "OffsetX", offsetX),
-      mOffsetY(this, "OffsetY", offsetY),
+      mOffsetX(offsetX),
+      mOffsetY(offsetY),
       mRandomOffsetX(this, "RandomOffsetX", false),
       mRandomOffsetY(this, "RandomOffsetY", false),
       mRandomRotation(this, "RandomRotation", false),
@@ -50,8 +50,8 @@ N2D2::SliceExtractionTransformation::SliceExtractionTransformation(
     const SliceExtractionTransformation& trans)
     : mWidth(trans.mWidth),
       mHeight(trans.mHeight),
-      mOffsetX(this, "OffsetX", trans.mOffsetX),
-      mOffsetY(this, "OffsetY", trans.mOffsetY),
+      mOffsetX(trans.mOffsetX),
+      mOffsetY(trans.mOffsetY),
       mRandomOffsetX(this, "RandomOffsetX", trans.mRandomOffsetX),
       mRandomOffsetY(this, "RandomOffsetY", trans.mRandomOffsetY),
       mRandomRotation(this, "RandomRotation", trans.mRandomRotation),

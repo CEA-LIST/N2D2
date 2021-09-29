@@ -516,8 +516,6 @@ class RandomResizeCrop(Transformation):
     _convention_converter= n2d2.ConventionConverter({
         "width": "Width",
         "height": "Height",
-        "offset_x": "OffsetX",
-        "offset_y": "OffsetY",
         "scale_min": "ScaleMin",
         "scale_max": "ScaleMax",
         "ratio_min": "RatioMin",
@@ -531,10 +529,6 @@ class RandomResizeCrop(Transformation):
         :type width: int
         :param height: Height of the image to Crop.
         :type height: int
-        :param offset_x: X offset, default=0
-        :type offset_x: int, optional
-        :param offset_y: Y offset, default=0
-        :type offset_y: int, optional
         """
         Transformation.__init__(self, **config_parameters)
 
@@ -543,7 +537,7 @@ class RandomResizeCrop(Transformation):
             'height': height,
         })
 
-        self._parse_optional_arguments(['offset_x', 'offset_y'])
+        # self._parse_optional_arguments(['offset_x', 'offset_y'])
 
         self._N2D2_object = N2D2.RandomResizeCropTransformation(self._constructor_arguments['width'],
                                                 self._constructor_arguments['height'],
@@ -554,11 +548,6 @@ class RandomResizeCrop(Transformation):
         self._constructor_arguments.update({
             'width': N2D2_object.getWidth(),
             'height': N2D2_object.getHeight(),
-        })
-    def _load_N2D2_optional_parameters(self, N2D2_object):
-        self._optional_constructor_arguments.update({
-            'offset_x':  N2D2_object.getOffsetX(),
-            'offset_y':  N2D2_object.getOffsetY(),
         })
 
 class ChannelExtraction(Transformation):
