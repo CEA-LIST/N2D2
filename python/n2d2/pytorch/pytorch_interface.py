@@ -123,7 +123,7 @@ class Block(torch.nn.Module):
                 
                 n2d2_tensor = _to_n2d2(inputs)
 
-                if n2d2.cuda_compiled:
+                if n2d2.global_variables.cuda_compiled:
                     n2d2_tensor.cuda()
                     n2d2_tensor.htod()
                 if self.training: # training is  a torch.nn.Module attribute (cf. https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module)

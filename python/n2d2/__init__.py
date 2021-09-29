@@ -27,7 +27,9 @@ except:
     pass
 
 # It's better to access these variables without mentioning global_variable in the path
-from n2d2.global_variables import * 
+from n2d2.global_variables import GlobalVariables
+
+global_variables = GlobalVariables()
 
 # It's better to access these methods without mentioning utils in the path
 from n2d2.utils import *

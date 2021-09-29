@@ -22,43 +22,40 @@
 import N2D2
 from os.path import expanduser
 
-model_cache = expanduser("~") + "/MODELS"
 
-default_seed = 1 # TODO : I am not sure this should be a global variable as modifying it doesn't change the seed used !
-default_model = 'Frame'
-default_datatype = 'float'
-default_net = N2D2.Network(default_seed, saveSeed=False, printTimeElapsed=False)
-cuda_compiled = N2D2.cuda_compiled
-n2d2_ip_compiled = N2D2.N2D2_IP 
+class GlobalVariables:
+    
+    def __init__(self):
+        self.model_cache = expanduser("~") + "/MODELS"
+        self._seed = 1
+        self.default_model = 'Frame'
+        self.default_datatype = 'float'
+        self.default_net = N2D2.Network(self._seed, saveSeed=False, printTimeElapsed=False)
+        self.cuda_compiled = N2D2.cuda_compiled
+        self.n2d2_ip_compiled = N2D2.N2D2_IP 
+        self._cuda_device = 0
+        class VerbosityClass:
+            graph_only = 0  # Only names, cell types and inputs
+            short = 1  # Constructor arguments only
+            detailed = 2  # Config parameters and their parameters
+        self.Verbosity = VerbosityClass()
+        self.verbosity = self.Verbosity.detailed
 
-_objects_counter = {}
-
-
-class Verbosity:
-    graph_only = 0  # Only names, cell types and inputs
-    short = 1  # Constructor arguments only
-    detailed = 2  # Config parameters and their parameters
-
-verbosity = Verbosity.detailed
-
-# TODO : Move this function to utils ?
-def set_cuda_device(id):
-    N2D2.CudaContext.setDevice(id)
-
-# TODO : Move this function to utils ?
-def generate_name(obj):
-    """
-    Function used to generate name of an object
-    """
-    name = obj.__class__.__name__
-    if name in _objects_counter:
-        _objects_counter[name] += 1
-    else:
-        _objects_counter[name] = 0
-    name += "_"+str(_objects_counter[name])
-    return name
-
-def set_random_seed(seed):
-    N2D2.mtSeed(seed)
-    global default_seed
-    default_seed = seed
+    @property
+    def seed(self):
+        return self._seed
+    @seed.setter
+    def seed(self, value):
+        self._default_seed = value
+        N2D2.mtSeed(value)
+    @property
+    def cuda_device(self):
+        return self._cuda_device
+    @cuda_device.setter
+    def cuda_device(self, value):
+        self._cuda_device = value
+        N2D2.CudaContext.setDevice(value)
+    def set_cuda_device(self, device):
+        raise RuntimeError(f"set_cuda_device should not be used anymore, please replace it with :\nn2d2.global_variables.cuda_device = {device}")
+    def set_random_seed(self, seed):
+        raise RuntimeError (f"set_random_seed should not be used anymore, please replace it with :\nn2d2.global_variables.seed = {seed}")

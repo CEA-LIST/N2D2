@@ -468,7 +468,7 @@ class Tensor:
         CUDA tensor are stored and computed in the GPU (Device).
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         """
-        if not n2d2.cuda_compiled:
+        if not n2d2.global_variables.cuda_compiled:
             raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeDToH()
@@ -482,7 +482,7 @@ class Tensor:
         CUDA tensor are stored and computed in the GPU (Device).
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         """
-        if not n2d2.cuda_compiled:
+        if not n2d2.global_variables.cuda_compiled:
             raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeHToD()

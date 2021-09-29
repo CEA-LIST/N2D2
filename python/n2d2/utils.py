@@ -66,5 +66,17 @@ def download_model(url, install_dir, dir_name):
             raw.extractall(os.path.dirname(target))
 
 
+_objects_counter = {}
 
-
+# TODO : Move this function to utils ?
+def generate_name(obj):
+    """
+    Function used to generate name of an object
+    """
+    name = obj.__class__.__name__
+    if name in _objects_counter:
+        _objects_counter[name] += 1
+    else:
+        _objects_counter[name] = 0
+    name += "_"+str(_objects_counter[name])
+    return name
