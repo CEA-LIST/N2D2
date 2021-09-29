@@ -115,6 +115,13 @@ Here we will list parameters which can be directly modified in your script.
 |                          | ``n2d2.global_variables.Verbosity.detailed``,                     |
 |                          | default= ``n2d2.global_variables.Verbosity.detailed``             |
 +--------------------------+-------------------------------------------------------------------+
+|``seed``                  | Seed used to generate random numbers(0 = time based),             |
+|                          | default = ``0``                                                   |
++--------------------------+-------------------------------------------------------------------+
+|``cuda_device``           | Device to use for GPU computation with CUDA, default = ``0``      |
++--------------------------+-------------------------------------------------------------------+
+
+
 
 Example
 ^^^^^^^
@@ -126,26 +133,7 @@ Example
         n2d2.global_variables.default_datatype = "double"
 
         n2d2.global_variables.verbosity = n2d2.global_variables.Verbosity.graph_only
+        
+        n2d2.global_variables.seed = 1
 
-
-Method to set default values
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Some modifiable parameters require a method to be set.
-
-+--------------------------+-------------------------------------------------------------------+
-| Default values           | Description                                                       |
-+==========================+===================================================================+
-| ``set_random_seed``      | Seed used to generate random numbers(0 = time based),             |
-|                          | default = ``0``                                                   |
-+--------------------------+-------------------------------------------------------------------+
-| ``set_cuda_device``      | Device to use for GPU computation with CUDA, default = ``0``      |
-+--------------------------+-------------------------------------------------------------------+
-
-Example
-^^^^^^^
-
-.. code-block:: python
-
-        n2d2.global_variables.set_random_seed(1)
-        n2d2.global_variables.set_cuda_device(1)
+        n2d2.global_variables.cuda_device = 1
