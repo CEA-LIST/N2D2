@@ -348,6 +348,7 @@ namespace Utils {
                               const std::string& sep = ".");
     bool isNotValidIdentifier(int c);
     std::string CIdentifier(const std::string& str);
+    std::string RTLIdentifier(const std::string& str);
     bool isNotValidFilePath(int c);
     std::string filePath(const std::string& str);
 

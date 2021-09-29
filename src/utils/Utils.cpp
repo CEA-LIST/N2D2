@@ -681,6 +681,30 @@ std::string N2D2::Utils::CIdentifier(const std::string& str) {
     return identifier;
 }
 
+std::string N2D2::Utils::RTLIdentifier(const std::string& str) {
+    std::string identifier(str);
+    std::replace_if(identifier.begin(), identifier.end(),
+                    Utils::isNotValidIdentifier, '_');
+
+    if (!identifier.empty() && !isalpha(identifier[0]))
+        identifier = "_" + identifier;
+
+    // Modelsim: Identifier may not contain adjacent underlines.
+    std::size_t prevSize;
+
+    do {
+        prevSize = identifier.size();
+        identifier = searchAndReplace(identifier, "__", "_");
+    }
+    while (identifier.size() != prevSize);
+
+    // Strip underscores as the identifier may be concatenated with "_"
+    identifier.erase(0, identifier.find_first_not_of("_"));
+    identifier.erase(identifier.find_last_not_of("_"));
+
+    return identifier;
+}
+
 bool N2D2::Utils::isNotValidFilePath(int c) {
     return (iscntrl(c)
         || c == '<'
