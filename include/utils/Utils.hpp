@@ -348,6 +348,8 @@ namespace Utils {
                               const std::string& sep = ".");
     bool isNotValidIdentifier(int c);
     std::string CIdentifier(const std::string& str);
+    bool isNotValidFilePath(int c);
+    std::string filePath(const std::string& str);
 
     template <typename T> std::string TtoString(const T& data);
 

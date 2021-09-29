@@ -73,7 +73,7 @@ void N2D2::TargetCompare::process(Database::StimuliSet set)
                                      labels.dimB()});
     }
 */
-    const std::string dirPath = mCell->getName() + ".Target/Compare";
+    const std::string dirPath = Utils::filePath(mCell->getName()) + ".Target/Compare";
 
     if(mLogDistrib || mLogError)
         Utils::createDirectories(dirPath);

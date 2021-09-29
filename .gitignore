@@ -13,3 +13,4 @@ doc/
 *~
 *.gch
 Doxyfile
+build*

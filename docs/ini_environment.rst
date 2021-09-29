@@ -497,6 +497,29 @@ Kaiser window.
 | *WindowName*\ ``.Beta`` [5.0]   | Beta                   |
 +---------------------------------+------------------------+
 
+CentroidCropTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Find the centroid of the image and crop the image so that the center of the image
+matches the centroid location. The cropping can be done on both axis, or just
+one axis with the ``Axis`` parameter. If ``Axis`` is 1, only the horizontal axis
+will be cropped so that the centroid x-location is at half the image width.
+
+
++------------------------------------+-------------------------------------------------------------+
+| Option [default value]             | Description                                                 |
++====================================+=============================================================+
+| ``Axis`` [-1]                      | Axis to consider for the centroid                           |
+|                                    | (-1 = both, 0 = cols, 1 = rows)                             |
++------------------------------------+-------------------------------------------------------------+
+
+In practice, this transformation can be used in conjunction with the 
+``PadCropTransformation``, in order to obtain cropped images of always of the same
+dimension (by cropping for example to the smallest image obtained after 
+``CentroidCropTransformation``), all centered on their respective centroid.
+
+
+
 BlendingTransformation
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -519,7 +542,9 @@ This transformation can be used to blend image objects, provided by another
 | ``TypeMixing`` [0]             | If true (1), multiple object types can be mixed on the same image                                                           |
 +--------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
 | ``DensityRange`` [0.0 0.0]     | Range of density of the objects to blend in the image (values are from 0.0 to 1.0). A different random density in this      |
-|                                | range is used for each image. If the two values are equal, the density is constant.                                         |
+|                                | range is used for each image. If the two values are equal, the density is constant. A constant density of 0 (corresponding  |
+|                                | the default range [0.0 0.0]) means that only a single object is blended in the image in all cases, regardless of the object |
+|                                | size. Indeed, the density parameter is checked only *after* the first object was inserted.                                  |
 +--------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
 | ``MarginH`` [0]                | Minimum horizontal margin between inserted objects (in pixels)                                                              |
 +--------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
@@ -559,16 +584,70 @@ And :math:`R` is the resulting image.
       0 & \text{otherwise}
     \end{cases}`
   | :math:`\alpha' = gaussian\_blur(\alpha)`
-  | :math:`R=\alpha'.O + (1-\alpha').B`
+  | :math:`R=\alpha'.O + (1-\alpha').I`
 
-``SmoothEdgeByDistance``: combines ``SmoothEdge`` and ``LinearByDistance``.
+``SmoothEdgeLinearByDistance``: combines ``SmoothEdge`` and ``LinearByDistance``.
   | :math:`\alpha = \begin{cases}
       \Delta & \text{when } LABEL \neq 0\\
       0 & \text{otherwise}
     \end{cases}`
   | :math:`\alpha' = gaussian\_blur(\alpha)`
-  | :math:`R=\alpha'.O + (1-\alpha').B`
+  | :math:`R=\alpha'.O + (1-\alpha').I`
   
+
+Labels mapping
+^^^^^^^^^^^^^^
+
+When processing the first batch of data, you might get a message like the 
+following in the console:
+
+.. code-block::
+
+  BlendingTransformation: labels mapping is required with the following mapping:
+    1 -> 9   (cat)
+    2 -> 12   (dog)
+    3 -> 66   (bird)
+
+
+What happens here is that the labels ID from the database containing the objects 
+to blend (specified by the ``Database`` parameter) must match the correct labels 
+ID from the current database (specified by the ``[database]`` section).
+In the log above, the labels ID on the left are the ones from the objects 
+database and the labels ID on the right are the ones from the current database.
+In N2D2, upon loading a database, a new label ID is created for each new unique
+label name encoutered, in the loading order (alphabetical for ``DIR_Database``,
+but may be arbitrary for other database drivers). The objects database may
+contain only a subset of the labels present in the current database,
+and/or the labels may be loaded in a different order. In both cases, the ID
+affected to a label name will be different between the two databases. During
+blending however, one wants that the blended object labels correspond to the
+labels of the current database. To solve this, labels mapping is automatically
+performed in N2D2 so that for corresponding label names, the label 
+ID in the objects database is translated to the label ID of current database.
+In the log above for example, the objects database contains only 3 labels: 
+"cat", "dog" and "bird", with ID 1, 2 and 3 respectively. These
+labels ID are automatically replaced by the corresponding ID (for identical 
+label name) in the current database, for the blended objects, which are here 
+9, 12 and 66 respectively.
+
+.. Note::
+
+  Each label from the objects database (objects to blend) must match
+  an existing label in the current database. There is a match if:
+
+  - There is an identical label name in the current database;
+  - There is a single label name in the current database that ends with the
+    objects database label name. For example, the label "/dog" in the objects
+    database will match with the "dog" label in the current database.
+
+  If the objects database contains a label name that does not exist/match in 
+  the current database, an error is emitted:
+
+  ::
+
+      BlendingTransformation: label "xxx" in blending database not present in current database!
+
+
 
 ChannelDropTransformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -957,6 +1036,28 @@ Compute image gradient.
 | ``GradientScale`` [1.0]          | Rescale the image by this factor before applying the gradient and the threshold, then scale it back to filter the labels                                                                       |
 +----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
+
+LabelFilterTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Filter labels in the image. The specified labels can be removed, kept (meaning 
+all the other labels removed), or merged (the specified labels are replace by 
+the first one).
+
++----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Option [default value]           | Description                                                                                                                                                                                    |
++==================================+================================================================================================================================================================================================+
+| ``Labels``                       | Space-separated list of label names to be filtered                                                                                                                                             |
++----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``Filter`` [``Remove``]          | Type of filter to apply: ``Remove``, ``Keep`` (labels not in the list are removed) or ``Merge`` (labels in the list are all replaced by the first one)                                         |
++----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``DefaultLabel`` [-2]            | Default label, to be used where labels are removed. With the default value (-2), the default label of the associated database is used. If there is no default label, -1 (ignore) is used       |
++----------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+This transformation filters both pixel-wise labels and ROIs.
+
+
+
 LabelSliceExtractionTransformation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1220,6 +1321,14 @@ A random object of with the label ``Label`` is extracted from the image.
 |                           | single value                                     |
 +---------------------------+--------------------------------------------------+
 
+When ``LabelSegmentation`` is 0, this transformation directly extracts one of 
+the annotation ROI whose label matches ``Label``. When ``LabelSegmentation`` is 
+true (1), the annotation ROIs are not used directly. Rather, the flattened
+pixel-wise annotation is (re-)labeled using connected-component labeling to
+obtain ROIs to extract. Note that the annotation ROIs are part of the 
+flattened pixel-wise annotation (see also the ``Database`` ``CompositeLabel`` 
+parameter).
+
 
 Additional parameters for ROI filtering, before random selection of a single one:
 
@@ -1242,6 +1351,7 @@ Additional parameters for ROI filtering, before random selection of a single one
 | ``MergeMaxVDist``        | 1             | Maximum vertical distance for merging (in pixels)                                         |
 +--------------------------+---------------+-------------------------------------------------------------------------------------------+
 
+Note that these parameters applies only when ``LabelSegmentation`` is true (1).
 
 
 RandomAffineTransformation
@@ -1408,6 +1518,30 @@ Extract a slice from an image.
 +----------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
 | ``BorderValue`` [0.0 0.0 0.0]                | Background color used when padding with ``BorderType`` is ``ConstantBorder``                                    |
 +----------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
+
+
+StripeRemoveTransformation
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Remove one or several stripe(s) (a group of rows or columns) from 2D data.
+
++------------------------------------+---------------------------------------------------------------------------------------------------------------------------+
+| Option [default value]             | Description                                                                                                               |
++====================================+===========================================================================================================================+
+| ``Axis``                           | Axis of the stripe (0 = columns, 1 = rows)                                                                                |
++------------------------------------+---------------------------------------------------------------------------------------------------------------------------+
+| ``Offset``                         | Offset of the beginning of the stripe, in number of rows or columns                                                       |
++------------------------------------+---------------------------------------------------------------------------------------------------------------------------+
+| ``Length``                         | Length of the stripe, in number of rows or columns (a length of 1 means a single row or column will be removed)           |
++------------------------------------+---------------------------------------------------------------------------------------------------------------------------+
+| ``RandomOffset`` [0]               | If true (1), the stripe offset will be random along the chosen axis                                                       |
++------------------------------------+---------------------------------------------------------------------------------------------------------------------------+
+| ``NbIterations`` [1]               | Number of stripes to remove                                                                                               |
++------------------------------------+---------------------------------------------------------------------------------------------------------------------------+
+| ``StepOffset`` [``Offset``]        | Offset between successive stripes, when ``NbIterations`` > 1, not taking into account the length of the stripes           |
++------------------------------------+---------------------------------------------------------------------------------------------------------------------------+
+
+
 
 ThresholdTransformation
 ~~~~~~~~~~~~~~~~~~~~~~~

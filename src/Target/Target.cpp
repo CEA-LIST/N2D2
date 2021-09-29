@@ -18,6 +18,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
+#include "utils/Gnuplot.hpp"
 #include "Target/Target.hpp"
 #include "N2D2.hpp"
 #include "StimuliProvider.hpp"
@@ -63,7 +64,7 @@ N2D2::Target::Target(const std::string& name,
       mDefaultTarget(-2)
 {
     // ctor
-    Utils::createDirectories(name);
+    Utils::createDirectories(Utils::filePath(name));
 
     if (!labelsMapping_.empty())
         labelsMapping(labelsMapping_, createMissingLabels);
@@ -312,29 +313,103 @@ const std::vector<std::string>& N2D2::Target::getTargetLabelsName() const
     return mLabelsName;
 }
 
-void N2D2::Target::logLabelsMapping(const std::string& fileName) const
+void N2D2::Target::logLabelsMapping(const std::string& fileName, bool withStats)
+    const
 {
     if (mDataAsTarget)
         return;
 
-    const std::string dataFileName = mName + "/" + fileName + ".dat";
+    const std::string dataFileName = Utils::filePath(mName) + "/" + fileName + ".dat";
     std::ofstream labelsData(dataFileName);
 
     if (!labelsData.good())
         throw std::runtime_error("Could not save log class mapping data file: "
                                  + dataFileName);
 
-    labelsData << "label name output\n";
+    labelsData << "label name output"
+        " nb.stimuli(Learn) nb.stimuli(Validation) nb.stimuli(Test)"
+        " nb.ROIs(Learn) nb.ROIs(Validation) nb.ROIs(Test)\n";
+
+    size_t nbLabel = 0;
+    size_t nbLabelROIs = 0;
 
     for (unsigned int label = 0,
                       size = mStimuliProvider->getDatabase().getNbLabels();
          label < size;
          ++label)
     {
+        const std::string labelName = mStimuliProvider->getDatabase()
+                                        .getLabelName(label);
+
         labelsData << label
-            << " " << Utils::quoted(mStimuliProvider->getDatabase()
-                                        .getLabelName(label))
-            << " " << getLabelTarget(label) << "\n";
+            << " " << Utils::quoted(labelName)
+            << " " << getLabelTarget(label);
+
+        if (withStats) {
+            const size_t nbLabelLearn = mStimuliProvider->getDatabase()
+                    .getNbStimuliWithLabel(labelName, Database::LearnOnly);
+            const size_t nbLabelValidation = mStimuliProvider->getDatabase()
+                    .getNbStimuliWithLabel(labelName, Database::ValidationOnly);
+            const size_t nbLabelTest = mStimuliProvider->getDatabase()
+                    .getNbStimuliWithLabel(labelName, Database::TestOnly);
+            const size_t nbLabelROIsLearn = mStimuliProvider->getDatabase()
+                    .getNbROIsWithLabel(labelName, Database::LearnOnly);
+            const size_t nbLabelROIsValidation = mStimuliProvider->getDatabase()
+                    .getNbROIsWithLabel(labelName, Database::ValidationOnly);
+            const size_t nbLabelROIsTest = mStimuliProvider->getDatabase()
+                    .getNbROIsWithLabel(labelName, Database::TestOnly);
+
+            labelsData << " " << nbLabelLearn
+                << " " << nbLabelValidation
+                << " " << nbLabelTest
+                << " " << nbLabelROIsLearn
+                << " " << nbLabelROIsValidation
+                << " " << nbLabelROIsTest;
+
+            nbLabel += nbLabelLearn + nbLabelValidation + nbLabelTest;
+            nbLabelROIs += nbLabelROIsLearn + nbLabelROIsValidation
+                            + nbLabelROIsTest;
+        }
+
+        labelsData << "\n";
+    }
+
+    if (withStats) {
+        std::stringstream outputStr;
+        outputStr << "size " << ((getNbTargets() + 1) * 50 + 550)
+                            << ",600 enhanced";
+
+        Gnuplot::setDefaultOutput("png", outputStr.str(), "png");
+
+        Gnuplot gnuplot(dataFileName + ".gnu");
+        gnuplot.set("grid");
+        gnuplot.set("key outside");
+        gnuplot.set("xtics 1");
+        gnuplot.setXrange(-0.5, getNbTargets() - 0.5);
+        gnuplot.set("yrange [0:]");
+        gnuplot.setXlabel("Output #");
+        gnuplot.setYlabel("Number of stimuli (right: % of total) / ROIs");
+        gnuplot << "stats \"" + dataFileName + "\" using ($4+$5+$6) name \"STIMULI\" nooutput";
+        gnuplot.set("ytics nomirror");
+        gnuplot.set("y2tics 5");
+        gnuplot.set("format y2 \"%g%%\"");
+        gnuplot.set("link y2 via y*100./STIMULI_sum inverse y*STIMULI_sum/100.");
+
+        std::stringstream plotCmd;
+        plotCmd << "using 3:4 smooth frequency with points title \"Stimuli(Learn)\""
+            ", '' using 3:5 smooth frequency with points title \"Stimuli(Validation)\""
+            ", '' using 3:6 smooth frequency with points title \"Stimuli(Test)\"";
+    
+        if (nbLabelROIs > 0) {
+            plotCmd << ", '' using 3:7 smooth frequency with points title \"ROIs(Learn)\""
+            ", '' using 3:8 smooth frequency with points title \"ROIs(Validation)\""
+            ", '' using 3:9 smooth frequency with points title \"ROIs(Test)\"";
+        }
+
+        gnuplot.saveToFile(dataFileName);
+        gnuplot.plot(dataFileName, plotCmd.str());
+
+        Gnuplot::setDefaultOutput();
     }
 }
 
@@ -729,9 +804,14 @@ void N2D2::Target::process_Frame(BaseTensor& values,
     if (nbOutputs > 1 && mTargetTopN > 1)
         std::iota(outputsIdx.begin(), outputsIdx.end(), 0);
 
+    int dev = 0;
+#ifdef CUDA
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
     const Tensor<int>& labels = mStimuliProvider->getLabelsData();
-    TensorLabels_T& estimatedLabels = mTargetData[0].estimatedLabels;
-    TensorLabelsValue_T& estimatedLabelsValue = mTargetData[0].estimatedLabelsValue;
+    TensorLabels_T& estimatedLabels = mTargetData[dev].estimatedLabels;
+    TensorLabelsValue_T& estimatedLabelsValue = mTargetData[dev].estimatedLabelsValue;
 
     if (estimatedLabels.empty()) {
         estimatedLabels.resize({mCell->getOutputsWidth(),
@@ -801,7 +881,7 @@ void N2D2::Target::process_Frame(BaseTensor& values,
 
 void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 {
-    const std::string dirPath = mName + "/" + dirName;
+    const std::string dirPath = Utils::filePath(mName) + "/" + dirName;
     Utils::createDirectories(dirPath);
 
     const bool validDatabase
@@ -1191,7 +1271,7 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
                                           unsigned int yOffset,
                                           bool append) const
 {
-    const std::string dirPath = mName + "/" + dirName;
+    const std::string dirPath = Utils::filePath(mName) + "/" + dirName;
     Utils::createDirectories(dirPath);
 
     int dev = 0;
@@ -1531,8 +1611,8 @@ void N2D2::Target::logLabelsLegend(const std::string& fileName) const
     cv::cvtColor(legendImg, imgColor, CV_HSV2BGR);
 #endif
 
-    if (!cv::imwrite(mName + "/" + fileName, imgColor))
-        throw std::runtime_error("Unable to write image: " + mName + "/"
+    if (!cv::imwrite(Utils::filePath(mName) + "/" + fileName, imgColor))
+        throw std::runtime_error("Unable to write image: " + Utils::filePath(mName) + "/"
                                  + fileName);
 }
 

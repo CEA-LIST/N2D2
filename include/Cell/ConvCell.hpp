@@ -119,6 +119,10 @@ public:
     {
         return mKernelDims[1];
     };
+    const std::vector<unsigned int>& getKernelDims() const
+    {
+        return mKernelDims;
+    };
     unsigned int getStrideX() const
     {
         return mStrideDims[0];
@@ -126,6 +130,10 @@ public:
     unsigned int getStrideY() const
     {
         return mStrideDims[1];
+    };
+    const std::vector<unsigned int>& getStrideDims() const
+    {
+        return mStrideDims;
     };
     unsigned int getSubSampleX() const
     {
@@ -135,6 +143,10 @@ public:
     {
         return mSubSampleDims[1];
     };
+    const std::vector<unsigned int>& getSubSampleDims() const
+    {
+        return mSubSampleDims;
+    };
     int getPaddingX() const
     {
         return mPaddingDims[0];
@@ -142,6 +154,10 @@ public:
     int getPaddingY() const
     {
         return mPaddingDims[1];
+    };
+    const std::vector<int>& getPaddingDims() const
+    {
+        return mPaddingDims;
     };
     const std::vector<int>& getExtendedPadding() const
     {
@@ -155,6 +171,10 @@ public:
     unsigned int getDilationY() const
     {
         return mDilationDims[1];
+    };
+    const std::vector<unsigned int>& getDilationDims() const
+    {
+        return mDilationDims;
     };
     std::shared_ptr<Solver> getWeightsSolver()
     {
@@ -177,10 +197,11 @@ public:
                    const Matrix<double>& value,
                    bool normalize);
     virtual BaseInterface* getWeights() { return NULL; };
+    virtual const BaseInterface* getWeights() const { return NULL; };
     virtual void setWeights(unsigned int /*k*/,
                     BaseInterface* /*weights*/,
                     unsigned int /*offset*/) {};
-    virtual std::shared_ptr<BaseTensor> getBiases()
+    virtual const std::shared_ptr<BaseTensor> getBiases() const
     {
         return std::shared_ptr<BaseTensor>();
     };

@@ -107,6 +107,18 @@ protected:
     std::vector<T> mData;
 };
 
+class BaseTensor;
+template <class U, bool ROUND = false>
+typename std::enable_if<std::is_convertible<float,U>::value
+        || std::is_convertible<half_float::half,U>::value
+        || std::is_convertible<double,U>::value, Tensor<U> >::type
+        tensor_cast(const BaseTensor& base);
+template <class U, bool ROUND = false>
+typename std::enable_if<!std::is_convertible<float,U>::value
+        && !std::is_convertible<half_float::half,U>::value
+        && !std::is_convertible<double,U>::value, Tensor<U> >::type
+        tensor_cast(const BaseTensor& base);
+
 class BaseTensor {
 public:
     struct Index {
@@ -298,12 +310,12 @@ protected:
     size_t getOffsetAt(unsigned int dim, size_t i, Args... args) const;
 
 
-    template <class U> friend
+    template <class U, bool ROUND> friend
         typename std::enable_if<std::is_convertible<float,U>::value
             || std::is_convertible<half_float::half,U>::value
             || std::is_convertible<double,U>::value, Tensor<U> >::type
             tensor_cast(const BaseTensor& base);
-    template <class U> friend
+    template <class U, bool ROUND> friend
         typename std::enable_if<!std::is_convertible<float,U>::value
             && !std::is_convertible<half_float::half,U>::value
             && !std::is_convertible<double,U>::value, Tensor<U> >::type
@@ -461,12 +473,12 @@ protected:
                         bool signedMapping = false);
 
 protected:
-    template <class U>
+    template <class U, bool ROUND>
     friend typename std::enable_if<std::is_convertible<float,U>::value
             || std::is_convertible<half_float::half,U>::value
             || std::is_convertible<double,U>::value, Tensor<U> >::type
             tensor_cast(const BaseTensor& base);
-    template <class U>
+    template <class U, bool ROUND>
     friend typename std::enable_if<!std::is_convertible<float,U>::value
             && !std::is_convertible<half_float::half,U>::value
             && !std::is_convertible<double,U>::value, Tensor<U> >::type
@@ -483,7 +495,7 @@ protected:
     const size_t mDataOffset;
 };
 
-template <class T>
+template <class T, bool ROUND>
 typename std::enable_if<std::is_convertible<float,T>::value
                      || std::is_convertible<half_float::half,T>::value
                      || std::is_convertible<double,T>::value, Tensor<T> >::type
@@ -508,19 +520,34 @@ tensor_cast(const BaseTensor& base)
         const Tensor<float>& tensor
             = dynamic_cast<const Tensor<float>&>(base);
 
-        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+        if (std::is_integral<T>::value && ROUND) {
+            std::transform(tensor.begin(), tensor.end(),
+                (*dataTensor)().begin(), (float (&)(float)) std::roundf);
+        }
+        else
+            std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
     }
     else if (base.getType() == &typeid(half_float::half)) {
         const Tensor<half_float::half>& tensor
             = dynamic_cast<const Tensor<half_float::half>&>(base);
 
-        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+        if (std::is_integral<T>::value && ROUND) {
+            std::transform(tensor.begin(), tensor.end(),
+                (*dataTensor)().begin(), (float (&)(float)) std::roundf);
+        }
+        else
+            std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
     }
     else if (base.getType() == &typeid(double)) {
         const Tensor<double>& tensor
             = dynamic_cast<const Tensor<double>&>(base);
 
-        std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
+        if (std::is_integral<T>::value && ROUND) {
+            std::transform(tensor.begin(), tensor.end(),
+                (*dataTensor)().begin(), (double (&)(double)) std::round);
+        }
+        else
+            std::copy(tensor.begin(), tensor.end(), (*dataTensor)().begin());
     }
     else if (base.getType() == &typeid(int8_t)) {
         const Tensor<int8_t>& tensor
@@ -584,7 +611,7 @@ tensor_cast(const BaseTensor& base)
         base.mSizeM1);
 }
 
-template <class T>
+template <class T, bool ROUND>
 typename std::enable_if<!std::is_convertible<float,T>::value
                      && !std::is_convertible<half_float::half,T>::value
                      && !std::is_convertible<double,T>::value, Tensor<T> >::type

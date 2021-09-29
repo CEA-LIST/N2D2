@@ -32,7 +32,8 @@ namespace N2D2 {
 enum class ClippingMode {
     NONE,
     MSE,
-    KL_DIVERGENCE
+    KL_DIVERGENCE,
+    QUANTILE
 };
 
 inline ClippingMode parseClippingMode(const std::string& str) {
@@ -48,6 +49,10 @@ inline ClippingMode parseClippingMode(const std::string& str) {
         return ClippingMode::KL_DIVERGENCE;
     }
 
+    if(str == "Quantile") {
+        return ClippingMode::QUANTILE;
+    }
+
     throw std::runtime_error("Unknown clipping mode '" + str + "'.");
 }
 
@@ -58,6 +63,8 @@ inline std::size_t getNbBinsForClippingMode(std::size_t nbBits,
         case ClippingMode::MSE:
         case ClippingMode::KL_DIVERGENCE:
             return std::min((1 << nbBits)*64, 65536);
+        case ClippingMode::QUANTILE:
+            return 65536;
         default:
             return 0;
     }
@@ -88,6 +95,7 @@ public:
 
     double calibrateMSE(std::size_t nbBits) const;
     double calibrateKLDivergence(std::size_t nbBits) const;
+    double getQuantileValue(double quantile) const;
     
     void save(std::ostream& state) const;
     void load(std::istream& state);
@@ -102,7 +110,8 @@ public:
                     std::unordered_map<std::string, Histogram>& outputsHistogram);
     static void logOutputsHistogram(const std::string& fileName,
                     const std::unordered_map<std::string, Histogram>& outputsHistogram,
-                    std::size_t nbBits, ClippingMode clippingMode);
+                    std::size_t nbBits, ClippingMode clippingMode,
+                    double quantileValue = 0.9999);
 
 private:
     static double KLDivergence(const Histogram& ref, const Histogram& quant);

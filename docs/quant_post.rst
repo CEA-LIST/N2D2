@@ -1,3 +1,5 @@
+.. _post_quant-label:
+
 Post-training quantization
 ==========================
 
@@ -44,6 +46,8 @@ each layer is done the following:
    - Mean Squared Error (MSE);
 
    - Kullback–Leibler divergence metric (KL-divergence).
+
+   Another, simpler method, is to just clip the values above a fixed quantile.
 
 
 .. figure:: _static/activations_histogram.png
@@ -108,12 +112,14 @@ The following parameters are available in command line:
 +--------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
 | ``-wt-clipping-mode`` [``None``]           | Weights clipping mode on export, can be ``None``, ``MSE`` or ``KL-Divergence``                                           |
 +--------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
-| ``-act-clipping-mode`` [``MSE``]           | Activations clipping mode on export, can be ``None``, ``MSE`` or ``KL-Divergence``                                       |
+| ``-act-clipping-mode`` [``MSE``]           | Activations clipping mode on export, can be ``None``, ``MSE``, ``KL-Divergence`` or ``Quantile``                         |
 +--------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
 | ``-act-rescaling-mode`` [``Single-shift``] | Activations scaling mode on export, can be ``Floating-point``, ``Fixed-point16``, ``Fixed-point32``, ``Single-shift``    |
 |                                            | or ``Double-shift``                                                                                                      |
 +--------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
 | ``-act-rescale-per-output`` [0]            | If true (1), rescale activation per output instead of per layer                                                          |
++--------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| ``-act-quantile-value`` [0.9999]           | If activation clipping mode is ``Quantile``, fraction of the values to keep without clipping                             |
 +--------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
 
 ``-act-rescaling-mode``

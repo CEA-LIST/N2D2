@@ -51,7 +51,7 @@ void N2D2::TargetBBox::logConfusionMatrix(const std::string& fileName,
         || set == Database::Learn) {
 
         (*mScoreSet.find(set)).second.confusionMatrix.log(
-                             mName + "/ConfusionMatrix_" + fileName + ".dat",
+                             Utils::filePath(mName) + "/ConfusionMatrix_" + fileName + ".dat",
                              mLabelsBBoxName);
     }
 }
@@ -137,7 +137,7 @@ void N2D2::TargetBBox::logSuccess(const std::string& fileName,
     assert(mScoreSet.find(set) != mScoreSet.end());
 
     if (set == Database::Validation ) {
-        const std::string dataFileName = mName + "/AverageSuccess_" + fileName + ".dat";
+        const std::string dataFileName = Utils::filePath(mName) + "/AverageSuccess_" + fileName + ".dat";
         // Save validation scores file
         std::ofstream dataFile(dataFileName);
 
@@ -177,7 +177,7 @@ void N2D2::TargetBBox::logSuccess(const std::string& fileName,
 
 
         Monitor::logDataRate(successLearn[0],
-                             mName + "/" + fileName + "_LearningSuccess.dat",
+                             Utils::filePath(mName) + "/" + fileName + "_LearningSuccess.dat",
                              avgWindow,
                              true);
 
@@ -620,7 +620,7 @@ cv::Mat N2D2::TargetBBox::drawEstimatedBBox(unsigned int batchPos) const
 
 void N2D2::TargetBBox::logEstimatedLabels(const std::string& dirName) const
 {
-    const std::string dirPath = mName + "/" + dirName;
+    const std::string dirPath = Utils::filePath(mName) + "/" + dirName;
     Utils::createDirectories(dirPath);
     const std::vector<int>& batch = mStimuliProvider->getBatch();
 

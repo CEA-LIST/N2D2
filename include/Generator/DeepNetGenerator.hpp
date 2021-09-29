@@ -94,8 +94,14 @@ N2D2::Tensor<T> N2D2::DeepNetGenerator::ONNX_unpackTensor(
 
     if ((onnxTensor->data_type() == onnx::TensorProto_DataType_FLOAT
             && !std::is_same<T, float>::value)
+        || (onnxTensor->data_type() == onnx::TensorProto_DataType_FLOAT16
+            && !std::is_same<T, half_float::half>::value)
         || (onnxTensor->data_type() == onnx::TensorProto_DataType_DOUBLE
             && !std::is_same<T, double>::value)
+        || (onnxTensor->data_type() == onnx::TensorProto_DataType_INT8
+            && !std::is_same<T, int8_t>::value)
+        || (onnxTensor->data_type() == onnx::TensorProto_DataType_INT16
+            && !std::is_same<T, int16_t>::value)
         || (onnxTensor->data_type() == onnx::TensorProto_DataType_INT32
             && !std::is_same<T, int32_t>::value)
         || (onnxTensor->data_type() == onnx::TensorProto_DataType_INT64

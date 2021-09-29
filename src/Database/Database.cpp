@@ -83,16 +83,48 @@ void N2D2::Database::loadROIs(const std::string& fileName,
         = labelFile->read(fileName,
                 std::bind(&Database::labelID, this, std::placeholders::_1));
 
+    const std::string& multiChannelMatch
+        = getParameter<std::string>("MultiChannelMatch");
+    std::map<std::string, std::string> matchChannel;
+
+    if (!multiChannelMatch.empty()) {
+        for (std::map<std::string, StimulusID>::const_iterator it
+            = stimuliName.begin(), itEnd = stimuliName.end(); it != itEnd; ++it)
+        {
+            const std::regex regexp(multiChannelMatch);
+
+            if (!std::regex_match((*it).first, regexp))
+                continue;
+
+            const std::vector<std::string>& multiChannelReplace
+                = getParameter<std::vector<std::string> >
+                    ("MultiChannelReplace");
+
+            for (size_t ch = 0; ch < multiChannelReplace.size(); ++ch) {
+                const std::string chFilePath
+                    = std::regex_replace((*it).first, regexp,
+                                        multiChannelReplace[ch]);
+
+                matchChannel[chFilePath] = (*it).first;
+            }
+        }
+    }
+
     for (std::map<std::string, std::vector<ROI*> >::const_iterator
         it = ROIs.begin(), itEnd = ROIs.end(); it != itEnd; ++it)
     {
+        const std::map<std::string, std::string>::const_iterator itMatchCh
+            = matchChannel.find((*it).first);
+        const std::string name = (itMatchCh != matchChannel.end())
+            ? (*itMatchCh).first : (*it).first;
+
         // Find corresponding stimulus
         std::map<std::string, StimulusID>::const_iterator itStimulus
-            = stimuliName.find((*it).first);
+            = stimuliName.find(name);
 
         // Support for "double extension" for label files, like .box.json
         if (itStimulus == stimuliName.end())
-            itStimulus = stimuliName.find(Utils::fileBaseName((*it).first));
+            itStimulus = stimuliName.find(Utils::fileBaseName(name));
 
         if (itStimulus != stimuliName.end()) {
             std::vector<ROI*>& stimulusROIs
@@ -1613,20 +1645,55 @@ unsigned int N2D2::Database::getNbROIs() const
     return nbROIs;
 }
 
-unsigned int N2D2::Database::getNbROIsWithLabel(int label) const
+unsigned int N2D2::Database::getNbStimuliWithLabel(
+    int label,
+    StimuliSetMask setMask) const
+{
+    size_t count = 0;
+    const std::vector<StimuliSet> stimuliSets = getStimuliSets(setMask);
+
+    for (std::vector<Database::StimuliSet>::const_iterator itSet
+        = stimuliSets.begin(),
+        itSetEnd = stimuliSets.end();
+        itSet != itSetEnd;
+        ++itSet)
+    {
+        count += std::count_if(
+            mStimuliSets(*itSet).begin(),
+            mStimuliSets(*itSet).end(),
+            std::bind(std::equal_to<int>(),
+                    label,
+                    std::bind<int>((int (Database::*)(StimulusID) const) &Database::getStimulusLabel, this, std::placeholders::_1)));
+    }
+
+    return count;
+}
+
+unsigned int N2D2::Database::getNbROIsWithLabel(int label,
+    StimuliSetMask setMask) const
 {
     unsigned int nbROIs = 0;
 
-    for (std::vector<Stimulus>::const_iterator it = mStimuli.begin(),
-                                               itEnd = mStimuli.end();
-         it != itEnd;
-         ++it) {
-        for (std::vector<ROI*>::const_iterator itROIs = (*it).ROIs.begin(),
-                                               itROIsEnd = (*it).ROIs.end();
-             itROIs != itROIsEnd;
-             ++itROIs) {
-            if ((*itROIs)->getLabel() == label)
-                ++nbROIs;
+    const std::vector<StimuliSet> stimuliSets = getStimuliSets(setMask);
+
+    for (std::vector<Database::StimuliSet>::const_iterator itSet
+        = stimuliSets.begin(),
+        itSetEnd = stimuliSets.end();
+        itSet != itSetEnd;
+        ++itSet)
+    {
+        for (std::vector<unsigned int>::const_iterator it = mStimuliSets(*itSet).begin(),
+                                                itEnd = mStimuliSets(*itSet).end();
+            it != itEnd;
+            ++it)
+        {
+            for (std::vector<ROI*>::const_iterator itROIs = mStimuli[(*it)].ROIs.begin(),
+                                                itROIsEnd = mStimuli[(*it)].ROIs.end();
+                itROIs != itROIsEnd;
+                ++itROIs) {
+                if ((*itROIs)->getLabel() == label)
+                    ++nbROIs;
+            }
         }
     }
 
@@ -2018,12 +2085,12 @@ cv::Mat N2D2::Database::loadData(
 
         for (size_t ch = 0; ch < multiChannelReplace.size(); ++ch) {
             const std::regex regexp((std::string)mMultiChannelMatch);
+            std::string chFileName;
             cv::Mat chData;
 
             if (std::regex_match(fileName, regexp)) {
-                const std::string chFileName
-                    = std::regex_replace(fileName, regexp,
-                                         multiChannelReplace[ch]);
+                chFileName = std::regex_replace(fileName, regexp,
+                                                multiChannelReplace[ch]);
 
                 if (chFileName == fileName)
                     chData = data;
@@ -2041,8 +2108,21 @@ cv::Mat N2D2::Database::loadData(
                 //        << ch << " data for stimulus: " << fileName
                 //        << Utils::cdef << std::endl;
 
-                chData = cv::Mat(data.cols, data.rows, data.type(),
+                chData = cv::Mat(data.rows, data.cols, data.type(),
                                  cv::Scalar(0));
+            }
+
+            if (chData.size() != data.size() || chData.depth() != data.depth())
+            {
+                std::stringstream errorStr;
+                errorStr << "Database::loadStimulusData():"
+                    " channel #" << ch << " \"" << chFileName << "\" size / depth ("
+                    << chData.size() << " / " << chData.depth() << ") does not"
+                    " match with channel \"" << fileName << "\" ("
+                    << data.size() << " / " << data.depth() << ")";
+
+#pragma omp critical(Database__loadData)
+                throw std::runtime_error(errorStr.str());
             }
 
             channels.push_back(chData);
