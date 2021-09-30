@@ -686,9 +686,6 @@ std::string N2D2::Utils::RTLIdentifier(const std::string& str) {
     std::replace_if(identifier.begin(), identifier.end(),
                     Utils::isNotValidIdentifier, '_');
 
-    if (!identifier.empty() && !isalpha(identifier[0]))
-        identifier = "_" + identifier;
-
     // Modelsim: Identifier may not contain adjacent underlines.
     std::size_t prevSize;
 
@@ -700,7 +697,10 @@ std::string N2D2::Utils::RTLIdentifier(const std::string& str) {
 
     // Strip underscores as the identifier may be concatenated with "_"
     identifier.erase(0, identifier.find_first_not_of("_"));
-    identifier.erase(identifier.find_last_not_of("_"));
+    identifier.erase(identifier.find_last_not_of("_") + 1);
+
+    if (!identifier.empty() && !isalpha(identifier[0]))
+        identifier = "ID" + identifier;
 
     return identifier;
 }
