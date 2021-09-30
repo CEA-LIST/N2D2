@@ -155,7 +155,7 @@ void N2D2::ONNX_ConvCellExport::generateNode(
     conv_w->set_name(cell.getName() + "_w");
 
     const BaseInterface* weightsInterface = convCell.getWeights();
-    const BaseTensor& weights = (*weightsInterface)[0];
+    const BaseTensor& weights = (*weightsInterface)[0U];
 
     ONNX_castAndPackTensor(mPrecision, conv_w, weights);
 

@@ -124,7 +124,7 @@ void N2D2::ONNX_FcCellExport::generateNode(
 
     const BaseInterface* weightsInterface = fcCell.getWeights();
     assert(weightsInterface->size() == 1);
-    const BaseTensor& weights = (*weightsInterface)[0];
+    const BaseTensor& weights = (*weightsInterface)[0U];
 
     if (fcInteger) {
         const Tensor<Float_T>& weightsFloat = tensor_cast<Float_T>(weights);

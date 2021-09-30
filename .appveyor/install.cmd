@@ -16,7 +16,9 @@ appveyor DownloadFile ^
 opencv-2.4.13.2-vc14.exe -o"C:\tools_vc14" -y
 
 echo Installing Protobuf
-git clone -q --branch=master https://github.com/google/protobuf.git C:\projects\protobuf
+:: Clone version 3.0.x, which corresponds to the default Ubuntu 18.04 LTS version
+:: Don't use master, as it breaks the build too often!
+git clone -q --branch=3.0.x https://github.com/google/protobuf.git C:\projects\protobuf
 cd C:\projects\protobuf
 :: with CMake > 3.15, protobuf CMake won't let us choose MultiThreadedDLL
 :: because the Dprotobuf_MSVC_STATIC_RUNTIME option is not enforced...
