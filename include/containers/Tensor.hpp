@@ -107,18 +107,6 @@ protected:
     std::vector<T> mData;
 };
 
-class BaseTensor;
-template <class U, bool ROUND = false>
-typename std::enable_if<std::is_convertible<float,U>::value
-        || std::is_convertible<half_float::half,U>::value
-        || std::is_convertible<double,U>::value, Tensor<U> >::type
-        tensor_cast(const BaseTensor& base);
-template <class U, bool ROUND = false>
-typename std::enable_if<!std::is_convertible<float,U>::value
-        && !std::is_convertible<half_float::half,U>::value
-        && !std::is_convertible<double,U>::value, Tensor<U> >::type
-        tensor_cast(const BaseTensor& base);
-
 class BaseTensor {
 public:
     struct Index {
@@ -620,6 +608,12 @@ tensor_cast(const BaseTensor& base)
 
     throw std::runtime_error("tensor_cast(): "
                              "tensor type not supported (not assignable)!");
+}
+
+template <class T>
+Tensor<T> tensor_cast(const BaseTensor& base)
+{
+    return tensor_cast<T, false>(base);
 }
 
 template <class T>
