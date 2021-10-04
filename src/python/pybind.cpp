@@ -24,16 +24,18 @@
 namespace py = pybind11;
 
 namespace N2D2 {
+#ifdef CUDA
 void init_CudaContext(py::module&);
-void init_Tensor(py::module&);
 void init_CudaTensor(py::module&);
+void init_Cell_Frame_CUDA(py::module&);
+#endif
+void init_Tensor(py::module&);
 void init_Network(py::module&);
 void init_Database(py::module&);
 void init_StimuliProvider(py::module&);
 void init_Cell(py::module&);
 void init_Cell_Frame_Top(py::module&);
 void init_Cell_Frame(py::module&);
-void init_Cell_Frame_CUDA(py::module&);
 void init_Target(py::module&);
 void init_TargetScore(py::module&);
 void init_DeepNet(py::module&);
@@ -41,16 +43,18 @@ void init_DeepNetGenerator(py::module&);
 void init_DrawNet(py::module&);
 
 PYBIND11_MODULE(N2D2, m) {
+#ifdef CUDA
     init_CudaContext(m);
-    init_Tensor(m);
     init_CudaTensor(m);
+    init_Cell_Frame_CUDA(m);
+#endif
+    init_Tensor(m);
     init_Network(m);
     init_Database(m);
     init_StimuliProvider(m);
     init_Cell(m);
     init_Cell_Frame_Top(m);
     init_Cell_Frame(m);
-    init_Cell_Frame_CUDA(m);
     init_Target(m);
     init_TargetScore(m);
     init_DeepNet(m);
