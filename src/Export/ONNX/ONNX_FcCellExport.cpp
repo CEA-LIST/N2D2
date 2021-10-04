@@ -30,6 +30,7 @@
 #include "Export/ONNX/ONNX_DeepNetExport.hpp"
 #include "utils/Registrar.hpp"
 #include "utils/Utils.hpp"
+#include "controler/Interface.hpp"
 
 #include <fstream>
 #include <string>
