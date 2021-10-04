@@ -1,6 +1,6 @@
 import numpy
 import pylab
-import N2D2
+import pyn2d2 as N2D2
 
 a = N2D2.Tensor_float([1, 2, 3])
 print(a)

@@ -269,11 +269,11 @@ if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/third_party/pybind11/CMakeLists.txt")
           "  git submodule update --init --recursive\n")
 endif()
 
-pybind11_add_module(N2D2 MODULE ${src_files_python})
+pybind11_add_module(pyn2d2 MODULE ${src_files_python})
 message(STATUS "pybind11 include dirs: " "${pybind11_INCLUDE_DIRS}")
-target_include_directories(N2D2 PUBLIC ${pybind11_INCLUDE_DIRS})
-target_compile_definitions(N2D2 PUBLIC PYBIND=1)
-target_link_libraries_whole_archive(N2D2 n2d2_lib)
+target_include_directories(pyn2d2 PUBLIC ${pybind11_INCLUDE_DIRS})
+target_compile_definitions(pyn2d2 PUBLIC PYBIND=1)
+target_link_libraries_whole_archive(pyn2d2 n2d2_lib)
 
 
 
