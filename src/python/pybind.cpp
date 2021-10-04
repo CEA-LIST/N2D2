@@ -42,7 +42,7 @@ void init_DeepNet(py::module&);
 void init_DeepNetGenerator(py::module&);
 void init_DrawNet(py::module&);
 
-PYBIND11_MODULE(N2D2, m) {
+PYBIND11_MODULE(pyn2d2, m) {
 #ifdef CUDA
     init_CudaContext(m);
     init_CudaTensor(m);
