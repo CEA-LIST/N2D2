@@ -42,6 +42,8 @@
 
 namespace N2D2 {
 
+class Adversarial;
+
 class StimuliProvider : virtual public Parameterizable, public std::enable_shared_from_this<StimuliProvider> {
 public:
     struct Transformations {
@@ -384,7 +386,7 @@ public:
     };
 #endif
 
-    void setAttack(std::string attack)
+    void setAdversarialAttack(const std::shared_ptr<Adversarial>& attack)
     {
         mAttackAdv = attack;
     };
@@ -487,7 +489,7 @@ public:
             ? mProvidedData[getDevice(dev)].targetData
             : mProvidedData[getDevice(dev)].data;
     };
-    const std::string getAttack()
+    std::shared_ptr<Adversarial> getAdversarialAttack() const
     {
         return mAttackAdv;
     };
@@ -569,8 +571,8 @@ protected:
     DevicesInfo mDevicesInfo;
     bool mFuture;
 
-    /// Adversarial attack name used against the deepNet
-    std::string mAttackAdv;
+    /// Adversarial attack used against the deepNet
+    std::shared_ptr<Adversarial> mAttackAdv;
 
     /// Set of Device IDs used by the deepNet
     std::set<int> mDevices;

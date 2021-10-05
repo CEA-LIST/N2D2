@@ -64,26 +64,10 @@ std::shared_ptr<N2D2::StimuliProvider> N2D2::StimuliProviderGenerator::generate(
                                   <bool>("CompositeStimuli", false);
     const std::string cachePath = Utils::expandEnvVars(iniConfig.getProperty
                                   <std::string>("CachePath", ""));
-    
-    // Used for adversarial attacks
-    const std::string attackName = iniConfig.getProperty
-                                  <std::string>("Attack", "");
 
     std::shared_ptr<StimuliProvider> sp(new StimuliProvider(
         database, size, batchSize, compositeStimuli));
     sp->setCachePath(cachePath);
-
-    if (!attackName.empty()) {
-
-        unsigned int nbDevice = std::count(sp->getStates().begin(), 
-                                    sp->getStates().end(), 
-                                    N2D2::DeviceState::Connected);
-
-        if (nbDevice == 1)
-            sp->setAttack(attackName);
-        else
-            throw std::runtime_error("Impossible to launch an adversarial attack with Multi-GPU.");
-    }
 
     if (!targetSize.empty())
         sp->setTargetSize(targetSize);
@@ -158,6 +142,20 @@ N2D2::StimuliProviderGenerator::generateSubSections(const std::shared_ptr
             else
                 throw std::runtime_error("Unknown StimuliProvider type: ["
                                          + (*it) + "].");
+
+        } else if (Utils::match(section + ".Adversarial", *it)) {
+            
+            sp->setAdversarialAttack(AdversarialGenerator::generate(iniConfig, section + ".Adversarial"));
+
+#ifdef CUDA
+            if (sp->getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) {
+                unsigned int nbDevice = std::count(sp->getStates().begin(), 
+                                                   sp->getStates().end(), 
+                                                   N2D2::DeviceState::Connected);
+                if (nbDevice > 1)
+                    throw std::runtime_error("Impossible to launch an adversarial attack with Multi-GPU.");
+            }
+#endif
         }
     }
 }

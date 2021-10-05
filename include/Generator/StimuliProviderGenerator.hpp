@@ -23,6 +23,7 @@
 
 #include "Generator/StimuliDataGenerator.hpp"
 #include "Generator/TransformationGenerator.hpp"
+#include "Generator/AdversarialGenerator.hpp"
 #include "StimuliProvider.hpp"
 #include "utils/IniParser.hpp"
 
