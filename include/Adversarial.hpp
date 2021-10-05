@@ -22,19 +22,137 @@
 #define N2D2_ADVERSARIAL_H
 
 #include "DeepNet.hpp"
+#include "utils/Parameterizable.hpp"
 
 namespace N2D2 {
 
-void attackLauncher(std::shared_ptr<DeepNet>& deepNet, 
-                    const std::string attStr, 
-                    const bool targeted);
+class Adversarial : public Parameterizable, public std::enable_shared_from_this<Adversarial> {
+public:
+    enum Attack_T {
+        None,
+        Vanilla,
+        GN,
+        FGSM,
+        PGD
+    };
 
-void singleTestAdv(std::shared_ptr<DeepNet>& deepNet, 
-                   std::string dirName);
+    Adversarial(const Attack_T attackName = None);
+
+    void attackLauncher(std::shared_ptr<DeepNet>& deepNet);
+
+    void singleTestAdv(std::shared_ptr<DeepNet>& deepNet, 
+                       std::string dirName);
     
-void multiTestAdv(std::shared_ptr<DeepNet>& deepNet, 
-                  std::string dirName);
+    void multiTestAdv(std::shared_ptr<DeepNet>& deepNet, 
+                      std::string dirName);
+
+    // Setters
+
+    void setAttackName(const Attack_T attackName)
+    {
+        mName = attackName;
+    };
+    void setEps(const float eps)
+    {
+        mEps = eps;
+    };
+    void setNbIterations(const unsigned int nbIter)
+    {
+        mNbIterations = nbIter;
+    };
+    void setRandomStart(const bool random)
+    {
+        mRandomStart = random;
+    };
+    void setTargeted(const bool targeted)
+    {
+        mTargeted = targeted;
+    };
+
+    // Getters
+
+    Attack_T getAttackName()
+    {
+        return mName;
+    };
+    float getEps()
+    {
+        return mEps;
+    };
+    unsigned int getNbIterations()
+    {
+        return mNbIterations;
+    };
+    bool getRandomStart()
+    {
+        return mRandomStart;
+    };
+    bool getTargeted()
+    {
+        return mTargeted;
+    };
+
+    virtual ~Adversarial() {};
+
+private:
+    /// Adversarial attack name
+    Attack_T mName;
+    /// Degradation rate
+    float mEps;
+    /// Number of attacks on each image
+    unsigned int mNbIterations;
+    /// Random start
+    bool mRandomStart;
+    /// Targeted attack
+    bool mTargeted;
+
+};
+
+namespace {
+template <>
+const char* const EnumStrings<N2D2::Adversarial::Attack_T>::data[]
+    = {"None", "Vanilla", "GN", "FGSM", "PGD"};
+}
+
+
+// ----------------------------------------------------------------------------
+// --------------------------- Adversarial attacks ----------------------------
+// ----------------------------------------------------------------------------
+
+// These attacks aim to modify the images provided by the StimuliProvider
+// After calling the following functions, the images contained 
+// in StimuliProvider are modified
+
+void Vanilla_attack();
+
+void GN_attack(std::shared_ptr<DeepNet>& deepNet, 
+               const float eps);
+
+void FGSM_attack(std::shared_ptr<DeepNet>& deepNet,
+                 const float eps, 
+                 const bool targeted = false);
+
+void FFGSM_attack(std::shared_ptr<DeepNet>& deepNet,
+                  const float eps, 
+                  const float alpha,
+                  const bool targeted = false);
+
+void PGD_attack(std::shared_ptr<DeepNet>& deepNet,
+                const float eps, 
+                const unsigned int nbIter,
+                const float alpha,
+                const bool targeted = false,
+                const bool random_start = false);
+
+// Not implemented
+/*
+void CW_attack(std::shared_ptr<DeepNet>& deepNet,
+               const float c,
+               const float kappa,
+               const unsigned int nbIter,
+               const float lr);
+*/
 
 }
 
-#endif //N2D2_ADVERSARIAL_H
+#endif // N2D2_ADVERSARIAL_H

@@ -19,40 +19,56 @@
 */
 
 #include "Adversarial.hpp"
+#include "StimuliProvider.hpp"
+#include "Cell/Cell_Frame_Top.hpp"
+#include "utils/Utils.hpp"
 
+N2D2::Adversarial::Adversarial(const N2D2::Adversarial::Attack_T attackName) 
+    : // Variables
+      mName(attackName),
+      mEps(0.1f),
+      mNbIterations(10U),
+      mRandomStart(false),
+      mTargeted(false)
 
-void N2D2::attackLauncher(std::shared_ptr<N2D2::DeepNet>& deepNet, const std::string attStr, const bool targeted) 
 {
-    /// Degradation rate
-    const float eps = 0.3f;
+    // ctor
+}
 
-    if (attStr == "PGD") {
-        /// Number of attacks on each image
-        const unsigned int nbIter = 40;
-        /// Gradient step
-        const float gradStep = eps/(float)nbIter;
-        const bool random_start = true;
-        deepNet->PGD_attack(eps, nbIter, gradStep, targeted, random_start);
-    }
-    else if (attStr == "GN") {
-        deepNet->GN_attack(eps);
-    } 
-    else if (attStr == "Vanilla") {
-        deepNet->Vanilla_attack();
-    } 
-    else if (attStr == "FGSM") {
-        deepNet->FGSM_attack(eps, targeted);
-    } 
-    else {
-        std::cout << "\nUnknown attack !" << std::endl;
-        std::exit(0);
+void N2D2::Adversarial::attackLauncher(std::shared_ptr<N2D2::DeepNet>& deepNet) 
+{
+    switch (mName) {
+    case PGD:
+        {
+            /// Gradient step
+            const float gradStep = mEps/(float)mNbIterations;
+            PGD_attack(deepNet, mEps, mNbIterations, 
+                       gradStep, mTargeted, mRandomStart);
+            break;
+        }
+
+    case GN:
+        GN_attack(deepNet, mEps);
+        break;
+
+    case Vanilla:
+        Vanilla_attack();
+        break;
+
+    case FGSM:
+        FGSM_attack(deepNet, mEps, mTargeted);
+        break;
+    
+    case None:
+    default:
+        throw std::runtime_error("Unknown adversarial attack");
     }
 }
 
-void N2D2::singleTestAdv(std::shared_ptr<N2D2::DeepNet>& deepNet, std::string dirName) {
+void N2D2::Adversarial::singleTestAdv(std::shared_ptr<N2D2::DeepNet>& deepNet, std::string dirName) {
     const std::shared_ptr<Database>& database = deepNet->getDatabase();
     const std::shared_ptr<StimuliProvider>& sp = deepNet->getStimuliProvider();
-    const std::string attackName = sp->getAttack();
+    const std::string attackName = Utils::toString(mName);
 
     if (deepNet->getTargets().size() != 1) {
         std::stringstream msgStr;
@@ -62,8 +78,6 @@ void N2D2::singleTestAdv(std::shared_ptr<N2D2::DeepNet>& deepNet, std::string di
         throw std::runtime_error(msgStr.str());
     }
 
-    /// Run targeted attacks or not
-    const bool targeted = false;
     /// Database used for attacks
     Database::StimuliSet set = Database::Test;
 
@@ -80,17 +94,17 @@ void N2D2::singleTestAdv(std::shared_ptr<N2D2::DeepNet>& deepNet, std::string di
     // Target design
     // Target is the following class to the initial class
     // Can be changed if the user wishes
-    if (targeted) {
+    if (mTargeted) {
         Tensor<int>& labels = sp->getLabelsData();
         for (unsigned int i = 0; i < labels.size(); ++i)
             labels(i) = (labels(i) + 1) % ((int)database->getNbLabels());
         labels.synchronizeHToD();
     }
 
-    attackLauncher(deepNet, attackName, targeted);
+    attackLauncher(deepNet);
 
     std::cout << attackName << " attack" << std::endl;
-    if (targeted) std::cout << "Targeted mode" << std::endl;
+    if (mTargeted) std::cout << "Targeted mode" << std::endl;
     else std::cout << "Untargeted mode" << std::endl;
 
     sp->synchronize();
@@ -103,7 +117,7 @@ void N2D2::singleTestAdv(std::shared_ptr<N2D2::DeepNet>& deepNet, std::string di
     successes.resize(dataInput.dimB(), 0);
 
     for (unsigned int i = 0; i < successes.size(); ++i) {
-        if (targeted) {
+        if (mTargeted) {
             if (deepNet->getTarget()->getEstimatedLabels()[i](0) == labels[i](0)) {
                 successes[i] = 1;
             }
@@ -158,13 +172,11 @@ void N2D2::singleTestAdv(std::shared_ptr<N2D2::DeepNet>& deepNet, std::string di
     //deepNet->logOutputs(dirName + "/" + attackName + "/outputs_adv");
 }
 
-void N2D2::multiTestAdv(std::shared_ptr<N2D2::DeepNet>& deepNet, std::string dirName) {
+void N2D2::Adversarial::multiTestAdv(std::shared_ptr<N2D2::DeepNet>& deepNet, std::string dirName) {
     const std::shared_ptr<Database>& database = deepNet->getDatabase();
     const std::shared_ptr<StimuliProvider>& sp = deepNet->getStimuliProvider();
-    const std::string attackName = sp->getAttack();
+    const std::string attackName = Utils::toString(mName);
 
-    /// Run targeted attacks or not
-    const bool targeted = false;
     /// Number of images used 
     const unsigned int nbImages = 2000;
     /// Database used for attacks
@@ -208,14 +220,14 @@ void N2D2::multiTestAdv(std::shared_ptr<N2D2::DeepNet>& deepNet, std::string dir
         // Target design
         // Target is the following class to the initial class
         // Can be changed if the user wishes
-        if (targeted) {
+        if (mTargeted) {
             Tensor<int>& labels = sp->getLabelsData();
             for (unsigned int i = 0; i < labels.size(); ++i)
                 labels(i) = (labels(i) + 1) % ((int)database->getNbLabels());
             labels.synchronizeHToD();
         }
 
-        attackLauncher(deepNet, attackName, targeted);
+        attackLauncher(deepNet);
 
         sp->synchronize();
         deepNet->test(set);
@@ -224,7 +236,7 @@ void N2D2::multiTestAdv(std::shared_ptr<N2D2::DeepNet>& deepNet, std::string dir
         deepNet->getTarget()->getEstimatedLabelsValue().synchronizeDToH();
 
         for (unsigned int i = 0; i < sp->getBatchSize(); ++i) {
-            if (targeted) {
+            if (mTargeted) {
                 if (deepNet->getTarget()->getEstimatedLabels()[i](0) == labels[i](0)) {
                     labelSuccesses[labelsCopy[i](0)] += 1;
                     ++counterSuccess;
@@ -262,4 +274,170 @@ void N2D2::multiTestAdv(std::shared_ptr<N2D2::DeepNet>& deepNet, std::string dir
         }
     }
 
+}
+
+// ----------------------------------------------------------------------------
+// --------------------------- Adversarial attacks ----------------------------
+// ----------------------------------------------------------------------------
+
+void N2D2::Vanilla_attack()
+{
+    // Nothing
+}
+
+void N2D2::GN_attack(std::shared_ptr<DeepNet>& deepNet, 
+                     const float eps)
+{
+    Tensor<Float_T>& dataInput = deepNet->getStimuliProvider()->getData();
+
+    // Adding gaussian noise (mean = 0, standard deviation = 1)
+    for (unsigned int i = 0; i < dataInput.size(); ++i) {
+        dataInput(i) += eps * Random::randNormal(0.0, 1.0);
+        dataInput(i) = std::max(0.0f, std::min(dataInput(i), 1.0f));
+    }
+}
+
+void N2D2::FGSM_attack(std::shared_ptr<DeepNet>& deepNet, 
+                       const float eps, 
+                       const bool targeted)
+{
+    Tensor<Float_T>& dataInput = deepNet->getStimuliProvider()->getData();
+    int _targeted = targeted ? 1 : (-1);
+
+    // first layer after env cell
+    // used to retrieve diffOutputs from this layer
+    std::shared_ptr<Cell_Frame_Top> firstLayer 
+        = std::dynamic_pointer_cast<Cell_Frame_Top>(deepNet->getCell(deepNet->getLayers()[1][0]));
+
+    // Requires to call Database::Learn to access all the information
+    // provided by Target::provideTargets
+    deepNet->propagate(Database::Learn, true, NULL);
+    deepNet->backPropagate(NULL);
+
+    // Saving gradients in gradInputs
+    firstLayer->getDiffOutputs().synchronizeDToH();
+    Tensor<Float_T> gradInputs = tensor_cast<Float_T>(firstLayer->getDiffOutputs());
+
+    for (unsigned int i = 0; i < dataInput.size(); ++i) {
+        gradInputs(i) = (Float_T(0) < gradInputs(i)) - (gradInputs(i) < Float_T(0));
+        dataInput(i) -= _targeted * eps * gradInputs(i);
+        dataInput(i) = std::max(0.0f, std::min(dataInput(i), 1.0f));
+    }
+}
+
+void N2D2::FFGSM_attack(std::shared_ptr<DeepNet>& deepNet, 
+                        const float eps, 
+                        const float alpha,
+                        const bool targeted)
+{
+    Tensor<Float_T>& dataInput = deepNet->getStimuliProvider()->getData();
+    const Tensor<Float_T> dataInputCopy = dataInput.clone();
+    int _targeted = targeted ? 1 : (-1);
+
+    // first layer after env cell
+    // used to retrieve diffOutputs from this layer
+    std::shared_ptr<Cell_Frame_Top> firstLayer 
+        = std::dynamic_pointer_cast<Cell_Frame_Top>(deepNet->getCell(deepNet->getLayers()[1][0]));
+    
+    for (unsigned int i = 0; i < dataInput.size(); ++i) {
+        dataInput(i) += eps * Random::randUniform(-1.0, 1.0);
+        dataInput(i) = std::max(0.0f, std::min(dataInput(i), 1.0f));
+    }
+
+    // Requires to call Database::Learn to access all the information
+    // provided by Target::provideTargets
+    deepNet->propagate(Database::Learn, true, NULL);
+    deepNet->backPropagate(NULL);
+
+    // Saving gradients in gradInputs
+    firstLayer->getDiffOutputs().synchronizeDToH();
+    Tensor<Float_T> gradInputs = tensor_cast<Float_T>(firstLayer->getDiffOutputs());
+
+    for (unsigned int i = 0; i < dataInput.size(); ++i) {
+        gradInputs(i) = (Float_T(0) < gradInputs(i)) - (gradInputs(i) < Float_T(0));    // sign method
+        dataInput(i) -= _targeted * alpha * gradInputs(i);
+        dataInput(i) = std::max(dataInputCopy(i) - eps, std::min(dataInput(i), dataInputCopy(i) + eps));
+        dataInput(i) = std::max(0.0f, std::min(dataInput(i), 1.0f));                    // clamping
+    }
+}
+
+void N2D2::PGD_attack(std::shared_ptr<DeepNet>& deepNet,
+                      const float eps, 
+                      const unsigned int nbIter, 
+                      const float alpha,
+                      const bool targeted,
+                      const bool random_start)
+{
+    const std::shared_ptr<StimuliProvider>& sp = deepNet->getStimuliProvider();
+
+    Tensor<Float_T>& dataInput = sp->getData();
+    const Tensor<Float_T> dataInputCopy = dataInput.clone();
+    const Tensor<int>& labels = sp->getLabelsData();
+    // weird behaviour (should be this line but it only works with the opposite)
+    // int _targeted = targeted ? 1 : (-1);
+    int _targeted = targeted ? (-1) : 1;
+    unsigned int nbAttempts = 0;
+
+    // first layer after env cell
+    // used to retrieve diffOutputs from this layer
+    std::shared_ptr<Cell_Frame_Top> firstLayer 
+        = std::dynamic_pointer_cast<Cell_Frame_Top>(deepNet->getCell(deepNet->getLayers()[1][0]));
+
+    std::vector<int> successes;
+    successes.resize(dataInput.dimB(), -1);
+    unsigned int counterSuccess = 0;
+
+    if (random_start) {
+        for (unsigned int i = 0; i < dataInput.size(); ++i) {
+            dataInput(i) += eps * Random::randUniform(-1.0, 1.0);
+            dataInput(i) = std::max(0.0f, std::min(dataInput(i), 1.0f));
+        }
+    }
+
+    while (counterSuccess < successes.size() 
+            && nbAttempts < nbIter) {
+        
+        sp->synchronize();
+        
+        // Requires to call Database::Learn to access all the information
+        // provided by Target::provideTargets
+        deepNet->propagate(Database::Learn, true, NULL);
+        deepNet->backPropagate(NULL);
+
+        // Saving signed gradients in gradInputs
+        firstLayer->getDiffOutputs().synchronizeDToH();
+        Tensor<Float_T> gradInputs = tensor_cast<Float_T>(firstLayer->getDiffOutputs());
+        deepNet->getTarget()->getEstimatedLabels().synchronizeDToH();
+        Tensor<int> top1Indexes = tensor_cast<int>(deepNet->getTarget()->getEstimatedLabels());
+
+        for (unsigned int i = 0; i < dataInput.dimB(); ++i) {
+            if (successes[i] == -1) {
+                bool success = false;
+                if (targeted) {
+                    if (top1Indexes[i](0) == labels[i](0)) {
+                        success = true;
+                    }
+                } else {
+                    if (top1Indexes[i](0) != labels[i](0)) {
+                        success = true;
+                    }
+                }
+
+                if (!success) {
+                    if (nbAttempts != nbIter-1) {
+                        for (unsigned int j = 0; j < dataInput[i].size(); ++j) {
+                            gradInputs[i](j) = (Float_T(0) < gradInputs[i](j)) - (gradInputs[i](j) < Float_T(0));   // signed gradiants
+                            dataInput[i](j) -= _targeted * alpha * gradInputs[i](j);
+                            dataInput[i](j) = std::max(dataInputCopy[i](j) - eps, std::min(dataInput[i](j), dataInputCopy[i](j) + eps));
+                            dataInput[i](j) = std::max(0.0f, std::min(dataInput[i](j), 1.0f));                      // clamping
+                        }
+                    }
+                } else {
+                    successes[i] = nbAttempts + 1;
+                    ++counterSuccess;
+                }
+            }
+        }
+        ++nbAttempts;
+    }
 }
