@@ -25,6 +25,7 @@
 #include "DeepNet.hpp"
 #include "third_party/half.hpp"
 #include "Cell/ConvCell_Frame_Kernels.hpp"
+#include "Adversarial.hpp"
 
 template <class T>
 N2D2::Cell_Frame_CUDA<T>::Cell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
@@ -89,7 +90,7 @@ void N2D2::Cell_Frame_CUDA<T>::addInput(StimuliProvider& sp,
 
     // For some adversarial attacks, it is required to backpropagate
     // the gradiants to the inputs
-    if (!sp.getAttack().empty()) {
+    if (sp.getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) {
         std::vector<size_t> inputsDims(mInputsDims);
         inputsDims.push_back(sp.getBatchSize());
         mDiffOutputs.push_back(new CudaTensor<T>(inputsDims), 0);

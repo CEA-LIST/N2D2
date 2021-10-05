@@ -441,8 +441,8 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
 
         sp->synchronize();
 
-        if (!sp->getAttack().empty()) 
-            attackLauncher(deepNet, sp->getAttack(), false);
+        if (sp->getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) 
+            sp->getAdversarialAttack()->attackLauncher(deepNet);
 
         std::thread inferThread(inferThreadWrapper,
                                 deepNet, Database::Test, &timings);
@@ -1010,8 +1010,8 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             
             sp->synchronize();
 
-            if (!sp->getAttack().empty()) 
-                attackLauncher(deepNet, sp->getAttack(), false);
+            if (sp->getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) 
+                sp->getAdversarialAttack()->attackLauncher(deepNet);
 
             std::thread learnThread(learnThreadWrapper,
                                     deepNet,
@@ -1487,8 +1487,8 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
         sp->synchronize();
 
-        if (!sp->getAttack().empty()) 
-            attackLauncher(deepNet, sp->getAttack(), false);
+        if (sp->getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) 
+            sp->getAdversarialAttack()->attackLauncher(deepNet);
 
         std::thread learnThread(learnThreadWrapper,
                                 deepNet,
@@ -2595,11 +2595,12 @@ int main(int argc, char* argv[]) try
 
     // Adversararial testing section
     if (!opt.testAdv.empty()) {
+        std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
 
-        if (deepNet->getStimuliProvider()->getAttack().empty()) {
+        if (sp->getAdversarialAttack()->getAttackName() == Adversarial::Attack_T::None) {
             std::stringstream msgStr;
             msgStr << "Please precise the name of your attack "
-                   << "in the [sp] section of the ini file";
+                   << "in the [sp.Adversarial] section of the ini file";
 
             throw std::runtime_error(msgStr.str());
         }
@@ -2609,9 +2610,9 @@ int main(int argc, char* argv[]) try
         Utils::createDirectories(dirName.str());
 
         if (opt.testAdv == "Multi")
-            multiTestAdv(deepNet, dirName.str());
+            sp->getAdversarialAttack()->multiTestAdv(deepNet, dirName.str());
         else if (opt.testAdv == "Solo")
-            singleTestAdv(deepNet, dirName.str());
+            sp->getAdversarialAttack()->singleTestAdv(deepNet, dirName.str());
         else
             throw std::runtime_error("Unknown adversarial option");
     }
