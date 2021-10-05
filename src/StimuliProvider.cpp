@@ -24,6 +24,7 @@
 #include "utils/BinaryCvMat.hpp"
 #include "utils/Gnuplot.hpp"
 #include "utils/GraphViz.hpp"
+#include "Adversarial.hpp"
 
 N2D2::StimuliProvider::ProvidedData::ProvidedData(ProvidedData&& other)
     : batch(std::move(other.batch)),
@@ -76,6 +77,11 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
 #ifdef CUDA
     mDevicesInfo.states.resize(count, N2D2::DeviceState::Excluded);
 #endif
+
+    // Default construction of the adversarial attack
+    // Another attack pointer may be brought by the StimuliProvider generator
+    std::shared_ptr<Adversarial> adv(new Adversarial(Adversarial::Attack_T::None));
+    setAdversarialAttack(adv);
 
 #ifdef CUDA
     const char* gpuDevices = std::getenv("N2D2_GPU_DEVICES");

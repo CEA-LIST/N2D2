@@ -74,6 +74,7 @@
 #include "Target/TargetMatching.hpp"
 #include "Transformation/RangeAffineTransformation.hpp"
 #include "utils/ProgramOptions.hpp"
+#include "Adversarial.hpp"
 
 #ifdef CUDA
 #include <cudnn.h>
@@ -276,6 +277,8 @@ public:
                                                     " in the Test set");
         testId =      opts.parse("-test-id", -1, "test a single specific stimulus ID (takes"
                                                  " precedence over -test-index)");
+        testAdv =     opts.parse("-testAdv", std::string(), "performs an adversarial study "
+                                                            "only options: Solo or Multi");
         check =       opts.parse("-check", "enable gradient computation checking");
         logOutputs =  opts.parse("-log-outputs", 0U, "log layers outputs for the n-th "
                                                      "stimulus (0 = no log)");
@@ -371,6 +374,7 @@ public:
     unsigned int avgWindow;
     int testIndex;
     int testId;
+    std::string testAdv;
     bool check;
     unsigned int logOutputs;
     bool logJSON;
@@ -436,6 +440,10 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
                                             .count()));
 
         sp->synchronize();
+
+        if (sp->getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) 
+            sp->getAdversarialAttack()->attackLauncher(deepNet);
+
         std::thread inferThread(inferThreadWrapper,
                                 deepNet, Database::Test, &timings);
 
@@ -1001,6 +1009,10 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             startTime = std::chrono::high_resolution_clock::now();
             
             sp->synchronize();
+
+            if (sp->getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) 
+                sp->getAdversarialAttack()->attackLauncher(deepNet);
+
             std::thread learnThread(learnThreadWrapper,
                                     deepNet,
                                     (opt.bench) ? &timings : NULL);
@@ -1474,6 +1486,10 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         }
 
         sp->synchronize();
+
+        if (sp->getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) 
+            sp->getAdversarialAttack()->attackLauncher(deepNet);
+
         std::thread learnThread(learnThreadWrapper,
                                 deepNet,
                                 (opt.bench) ? &timings : NULL);
@@ -2575,6 +2591,30 @@ int main(int argc, char* argv[]) try
 
     if (cEnv) {
         testCStdp(opt, deepNet);
+    }
+
+    // Adversararial testing section
+    if (!opt.testAdv.empty()) {
+        std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
+
+        if (sp->getAdversarialAttack()->getAttackName() == Adversarial::Attack_T::None) {
+            std::stringstream msgStr;
+            msgStr << "Please precise the name of your attack "
+                   << "in the [sp.Adversarial] section of the ini file";
+
+            throw std::runtime_error(msgStr.str());
+        }
+
+        std::ostringstream dirName;
+        dirName << "testAdversarial";
+        Utils::createDirectories(dirName.str());
+
+        if (opt.testAdv == "Multi")
+            sp->getAdversarialAttack()->multiTestAdv(deepNet, dirName.str());
+        else if (opt.testAdv == "Solo")
+            sp->getAdversarialAttack()->singleTestAdv(deepNet, dirName.str());
+        else
+            throw std::runtime_error("Unknown adversarial option");
     }
 
     std::shared_ptr<Environment> env = std::dynamic_pointer_cast

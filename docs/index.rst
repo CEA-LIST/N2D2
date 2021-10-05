@@ -47,6 +47,7 @@ N2D2
    ini_environment
    ini_layers
    ini_target
+   adversarial
 
 .. toctree::
    :maxdepth: 1

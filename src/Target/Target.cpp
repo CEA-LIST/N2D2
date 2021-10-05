@@ -413,6 +413,11 @@ void N2D2::Target::logLabelsMapping(const std::string& fileName, bool withStats)
     }
 }
 
+// For future improvements
+// The 'set' argument in Target::provideTargets should be removed
+// in order to to have access to all the parts of the 
+// provideTargets method with any type of dataset (Learn, Test,...)
+
 void N2D2::Target::provideTargets(Database::StimuliSet set)
 {
     std::shared_ptr<Cell_Frame_Top> targetCell 
