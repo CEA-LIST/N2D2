@@ -56,34 +56,6 @@ namespace {
         throw std::runtime_error("Can't convert value, types are incompatibles.");
     }
 
-    template<typename U,
-             typename std::enable_if<std::is_arithmetic<U>::value 
-                && !std::is_same<U, bool>::value>::type* = nullptr >
-    U _sign(const U& value) {
-        return static_cast<U>(((U(0) < value)-(value < U(0))));
-    }
-
-    template<typename U,
-             typename std::enable_if<!(std::is_arithmetic<U>::value 
-                && !std::is_same<U, bool>::value)>::type* = nullptr >
-    U _sign(const U& /*value*/) {
-        throw std::runtime_error("Can't create signed Tensor from non arithmetic type.");
-    }
-
-    template<typename U,
-             typename std::enable_if<std::is_arithmetic<U>::value 
-                && !std::is_same<U, bool>::value>::type* = nullptr >
-    U _clamp(const U& value, const U& Min, const U& Max) {
-        return std::max(Min, std::min(value, Max));
-    }
-
-    template<typename U,
-             typename std::enable_if<!(std::is_arithmetic<U>::value 
-                && !std::is_same<U, bool>::value)>::type* = nullptr >
-    U _clamp(const U& /*value*/, const U& /*Min*/, const U& /*Max*/) {
-        throw std::runtime_error("Can't clamp Tensor from non arithmetic type.");
-    }
-
     template<typename T, typename Enable = void>
     struct try_make_signed {
         typedef typename std::make_signed<T>::type type;
@@ -882,33 +854,6 @@ template <class T>
 double N2D2::Tensor<T>::mean() const
 {
     return sum()/(*mData)().size();
-}
-
-template <class T>
-N2D2::Tensor<T> N2D2::Tensor<T>::sign() const 
-{
-    std::vector<T> newData = std::vector<T>(begin(), end());
-    for (typename std::vector<T>::iterator it = newData.begin();
-        it != newData.end(); ++it)
-    {
-        *it = _sign<T>(*it);
-    }
-    return Tensor<T>(mDims,
-                     std::make_shared<DataTensor<T> >(newData),
-                     mValid,
-                     0,
-                     mSize,
-                     mSizeM1);
-}
-
-template <class T>
-void N2D2::Tensor<T>::clamp(const T& Min, const T& Max)
-{
-    for (typename std::vector<T>::iterator it = (*mData)().begin();
-        it != (*mData)().end(); ++it)
-    {
-        *it = _clamp<T>(*it, Min, Max);
-    }
 }
 
 template <class T>
