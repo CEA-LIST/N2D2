@@ -12,7 +12,7 @@
 
 #ifdef PYBIND
 #include "Quantizer/Activation/QuantizerActivation.hpp"
-
+#include "containers/Tensor.hpp"
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;

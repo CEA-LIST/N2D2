@@ -13,8 +13,8 @@
 #define N2D2_QUANTIZERCELL_H
 
 #include "utils/Parameterizable.hpp"
-#include "containers/CudaTensor.hpp"
-#include "controler/CudaInterface.hpp"
+// #include "containers/CudaTensor.hpp"
+// #include "controler/CudaInterface.hpp"
 #include "Solver/Solver.hpp"
 
 namespace N2D2 {

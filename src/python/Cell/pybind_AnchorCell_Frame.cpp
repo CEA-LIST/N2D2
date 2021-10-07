@@ -23,6 +23,7 @@
 #ifdef PYBIND
 #include "Cell/AnchorCell_Frame.hpp"
 #include "Cell/AnchorCell_Frame_Kernels_struct.hpp"
+#include "StimuliProvider.hpp"
 
 
 #include <pybind11/pybind11.h>

@@ -13,7 +13,6 @@
 #define N2D2_QUANTIZERACTIVATION_H
 
 #include "utils/Parameterizable.hpp"
-#include "containers/CudaTensor.hpp"
 #include "Solver/Solver.hpp"
 
 namespace N2D2 {

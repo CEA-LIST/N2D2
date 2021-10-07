@@ -21,6 +21,7 @@
 
 #ifdef PYBIND
 #include "Cell/ProposalCell_Frame.hpp"
+#include "StimuliProvider.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

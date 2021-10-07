@@ -27,6 +27,9 @@ from n2d2.n2d2_interface import N2D2_Interface
 from n2d2.cells.cell import Cell, Trainable
 from abc import ABC, abstractmethod
 from n2d2.error_handler import deprecated
+import n2d2.global_variables as gb
+cuda_compiled = gb.cuda_compiled
+
 _cell_parameters = {
     "deep_net": "DeepNet", 
     "name": "Name", 
@@ -388,8 +391,13 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
     _cell_constructors = {
         'Frame<double>': N2D2.FcCell_Frame_double,
         'Frame<float>': N2D2.FcCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.FcCell_Frame_CUDA_float,
+        
     }
+
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA<float>': N2D2.FcCell_Frame_CUDA_float,
+        })
 
     _parameters = {
         "no_bias":"NoBias", 
@@ -456,10 +464,12 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
 
         # Set and initialize here all complex cells members
         for key, value in self._config_parameters.items():
-            self.__setattr__(key, value)
-
+            if key is not "quantizer":
+                self.__setattr__(key, value)
+            
         self._N2D2_object.initializeParameters(nb_inputs, nb_input_cells)
-        self.load_N2D2_parameters(self.N2D2())
+        if 'quantizer' in self._config_parameters:
+            self.quantizer = self._config_parameters["quantizer"]
 
     def __setattr__(self, key: str, value) -> None:
         if key is 'weights_solver':
@@ -736,10 +746,16 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
 
     _cell_constructors = {
         'Frame<float>': N2D2.ConvCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.ConvCell_Frame_CUDA_float,
+        
         'Frame<double>': N2D2.ConvCell_Frame_double,
-        'Frame_CUDA<double>': N2D2.ConvCell_Frame_CUDA_double,
+        
     }
+
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA<float>': N2D2.ConvCell_Frame_CUDA_float,
+            'Frame_CUDA<double>': N2D2.ConvCell_Frame_CUDA_double,
+        })
     
     _parameters = {
         "no_bias":"NoBias", 
@@ -841,10 +857,12 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
 
         """Set and initialize here all complex cells members"""
         for key, value in self._config_parameters.items():
-            self.__setattr__(key, value)
+            if key is not "quantizer":
+                self.__setattr__(key, value)
             
-
         self._N2D2_object.initializeParameters(nb_inputs, nb_input_cells)
+        if 'quantizer' in self._config_parameters:
+            self.quantizer = self._config_parameters["quantizer"]
         self.load_N2D2_parameters(self.N2D2())
 
 
@@ -1133,11 +1151,16 @@ class Softmax(NeuralNetworkCell, Datatyped):
 
     _cell_constructors = {
         'Frame<float>': N2D2.SoftmaxCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.SoftmaxCell_Frame_CUDA_float,
         'Frame<double>': N2D2.SoftmaxCell_Frame_double,
-        'Frame_CUDA<double>': N2D2.SoftmaxCell_Frame_CUDA_double,
     }
 
+
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA<float>': N2D2.SoftmaxCell_Frame_CUDA_float,
+            'Frame_CUDA<double>': N2D2.SoftmaxCell_Frame_CUDA_double,
+        })
+    
     _parameters = {
         "with_loss": "withLoss",
         "group_size": "groupSize",
@@ -1217,8 +1240,11 @@ class Pool(NeuralNetworkCell, Datatyped):
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
     }
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
+        })
 
     _parameters = {
         "pool_dims": "poolDims",
@@ -1329,8 +1355,11 @@ class Pool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
     }
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
+        })
     _parameters = {
         "pool_dims": "poolDims",
         "stride_dims": "strideDims",
@@ -1400,8 +1429,12 @@ class GlobalPool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
     }
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
+        })
+
     _parameters = {
         "pool_dims": "poolDims",
         "stride_dims": "strideDims",
@@ -1478,10 +1511,13 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
     """
     _cell_constructors = {
         'Frame<float>': N2D2.DeconvCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.DeconvCell_Frame_CUDA_float,
         'Frame<double>': N2D2.DeconvCell_Frame_double,
-        'Frame_CUDA<double>': N2D2.DeconvCell_Frame_CUDA_double,
     }
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA<float>': N2D2.DeconvCell_Frame_CUDA_float,
+            'Frame_CUDA<double>': N2D2.DeconvCell_Frame_CUDA_double,
+        })
     _parameters = {
         "no_bias": "NoBias",
         "back_propagate": "BackPropagate",
@@ -1815,8 +1851,12 @@ class ElemWise(NeuralNetworkCell):
 
     _cell_constructors = {
         'Frame': N2D2.ElemWiseCell_Frame,
-        'Frame_CUDA': N2D2.ElemWiseCell_Frame_CUDA,
     }
+
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA': N2D2.ElemWiseCell_Frame_CUDA,
+        })
     _parameters = {
         "operation": "operation",
         "mode": "mode",
@@ -1930,11 +1970,13 @@ class Dropout(NeuralNetworkCell, Datatyped):
 
     _cell_constructors = {
         'Frame<float>': N2D2.DropoutCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.DropoutCell_Frame_CUDA_float,
         'Frame<double>': N2D2.DropoutCell_Frame_double,
-        'Frame_CUDA<double>': N2D2.DropoutCell_Frame_CUDA_double,
     }
-
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA<float>': N2D2.DropoutCell_Frame_CUDA_float,
+            'Frame_CUDA<double>': N2D2.DropoutCell_Frame_CUDA_double,
+        })
     _parameters = {
         "dropout": "Dropout",
     }  
@@ -1986,9 +2028,11 @@ class Padding(NeuralNetworkCell):
 
     _cell_constructors = {
         'Frame': N2D2.PaddingCell_Frame,
-        'Frame_CUDA': N2D2.PaddingCell_Frame_CUDA,
-    }
-
+    }    
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA': N2D2.PaddingCell_Frame_CUDA,
+        })
     _parameters = {
         "top_pad":"top_pad",
         "bot_pad":"bot_pad",
@@ -2072,9 +2116,11 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
 
     _cell_constructors = {
         'Frame<float>': N2D2.BatchNormCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.BatchNormCell_Frame_CUDA_float,
     }
-
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA<float>': N2D2.BatchNormCell_Frame_CUDA_float,
+        })
     _parameters = {
         "nb_inputs": "NbInputs",
         "scale_solver": "ScaleSolver",
@@ -2217,8 +2263,11 @@ class Activation(NeuralNetworkCell, Datatyped):
 
     _cell_constructors = {
         'Frame<float>': N2D2.ActivationCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.ActivationCell_Frame_CUDA_float,
     }
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA<float>': N2D2.ActivationCell_Frame_CUDA_float,
+        })
 
     _parameters = {
     }
@@ -2263,8 +2312,11 @@ class Reshape(NeuralNetworkCell, Datatyped):
 
     _cell_constructors = {
         'Frame<float>': N2D2.ReshapeCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.ReshapeCell_Frame_CUDA_float,
     }
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA<float>': N2D2.ReshapeCell_Frame_CUDA_float,
+        })
     _parameters = {
         "dims": "Dims",
     }
@@ -2317,8 +2369,11 @@ class Reshape(NeuralNetworkCell, Datatyped):
 class Resize(NeuralNetworkCell):
     _cell_constructors = {
         'Frame': N2D2.ResizeCell_Frame,
-        'Frame_CUDA': N2D2.ResizeCell_Frame_CUDA,
     }
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA': N2D2.ResizeCell_Frame_CUDA,
+        })
     _parameters = {
         "align_corners": "AlignCorners",
     }
@@ -2389,8 +2444,11 @@ class Resize(NeuralNetworkCell):
 class Transpose(NeuralNetworkCell, Datatyped):
     _cell_constructors = {
         'Frame<float>': N2D2.TransposeCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.TransposeCell_Frame_CUDA_float,
     }
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA<float>': N2D2.TransposeCell_Frame_CUDA_float,
+        })
     _parameters = {}
     _parameters.update(_cell_frame_parameters)
 
