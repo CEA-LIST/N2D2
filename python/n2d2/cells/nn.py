@@ -329,7 +329,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
     def import_free_parameters(self, dir_name, ignore_not_exists=False):
         if self._N2D2_object:
             filename = dir_name + "/" + self.get_name() + ".syntxt"
-            print("import " + filename)
+            print("Import " + filename)
             self._N2D2_object.importFreeParameters(filename, ignore_not_exists)
             self._N2D2_object.importActivationParameters(dir_name, ignore_not_exists)
 
@@ -474,7 +474,7 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
     def __setattr__(self, key: str, value) -> None:
         if key is 'weights_solver':
             if isinstance(value, n2d2.solver.Solver):
-                self._N2D2_object.setWeightsSolver(value.N2D2())
+                self._N2D2_object.resetWeightsSolver(value.N2D2())
                 self._config_parameters["weights_solver"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("weights_solver", str(type(value)), [str(n2d2.solver.Solver)])
@@ -724,7 +724,7 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
     @deprecated(reason="You should use weights_solver as an attribute.")
     def set_weights_solver(self, solver):
         self._config_parameters['weights_solver'] = solver
-        self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
+        self._N2D2_object.resetWeightsSolver(self._config_parameters['weights_solver'].N2D2())
     
     def set_solver(self, solver):
         """"Set the weights and bias solver with the same solver.
@@ -869,7 +869,7 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
     def __setattr__(self, key: str, value) -> None:
         if key is 'weights_solver':
             if isinstance(value, n2d2.solver.Solver):
-                self._N2D2_object.setWeightsSolver(value.N2D2())
+                self._N2D2_object.resetWeightsSolver(value.N2D2())
                 self._config_parameters["weights_solver"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("weights_solver", str(type(value)), [str(n2d2.solver.Solver)])
@@ -1015,7 +1015,7 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
     @deprecated(reason="You should use weights_solver as an attribute.")
     def set_weights_solver(self, solver):
         self._config_parameters['weights_solver'] = solver
-        self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
+        self._N2D2_object.resetWeightsSolver(self._config_parameters['weights_solver'].N2D2())
     @deprecated(reason="You should use bias_solver as an attribute.")
     def set_bias_solver(self, solver):
         self._config_parameters['bias_solver'] = solver
@@ -1619,7 +1619,7 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
     def __setattr__(self, key: str, value) -> None:
         if key is 'weights_solver':
             if isinstance(value, n2d2.solver.Solver):
-                self._N2D2_object.setWeightsSolver(value.N2D2())
+                self._N2D2_object.resetWeightsSolver(value.N2D2())
                 self._config_parameters["weights_solver"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("weights_solver", str(type(value)), [str(n2d2.solver.Solver)])
@@ -1720,12 +1720,12 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
             self.refill_weights()
     def set_weights_filler(self, solver, refill=False):
         self._config_parameters['weights_filler'] = solver
-        self._N2D2_object.setWeightsSolver(self._config_parameters['weights_filler'].N2D2())
+        self._N2D2_object.setWeightsFiller(self._config_parameters['weights_filler'].N2D2())
         if refill:
             self.refill_weights()
     def set_bias_filler(self, solver, refill=False):
         self._config_parameters['bias_filler'] = solver
-        self._N2D2_object.setBiasSolver(self._config_parameters['bias_filler'].N2D2())
+        self._N2D2_object.setBiasFiller(self._config_parameters['bias_filler'].N2D2())
         if refill:
             self.refill_weights()
 
@@ -1744,7 +1744,7 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
     @deprecated(reason="You should use weights_solver as an argument")
     def set_weights_solver(self, solver):
         self._config_parameters['weights_solver'] = solver
-        self._N2D2_object.setWeightsSolver(self._config_parameters['weights_solver'].N2D2())
+        self._N2D2_object.resetWeightsSolver(self._config_parameters['weights_solver'].N2D2())
     @deprecated(reason="You should use bias_solver as an argument")
     def set_bias_solver(self, solver):
         self._config_parameters['bias_solver'] = solver
@@ -2180,6 +2180,8 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
                 raise n2d2.error_handler.WrongInputType("bias_solver", str(type(value)), [str(n2d2.solver.Solver)])
             self._N2D2_object.setBiasSolver(value.N2D2())
             self._config_parameters["bias_solver"] = value
+        elif key is 'solver':
+            self.set_solver(value)
         else:
             return super().__setattr__(key, value)
 
@@ -2472,7 +2474,7 @@ class Transpose(NeuralNetworkCell, Datatyped):
         self._parse_optional_arguments([])
 
     def _load_N2D2_constructor_parameters(self, N2D2_object):
-        self._constructor_arguments['perm'] =  N2D2_object.getPermutation()
+        self._constructor_arguments['perm'] = N2D2_object.getPermutation()
         
     def __call__(self, inputs):
         super().__call__(inputs)

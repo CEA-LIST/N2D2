@@ -77,6 +77,13 @@ public:
 
     void resetWeights();
     void resetBias();
+    void resetWeightsSolver(const std::shared_ptr<Solver>& solver)
+    {
+        setWeightsSolver(solver);
+        for (unsigned int k = 0, size = mWeightsSolvers.size(); k < size; ++k) {
+            mWeightsSolvers[k] = mWeightsSolver->clone();
+        }
+    };
 
     virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     virtual void initialize();

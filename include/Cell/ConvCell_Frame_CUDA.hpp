@@ -87,6 +87,13 @@ public:
       
     void resetWeights();
     void resetBias();
+    void resetWeightsSolver(const std::shared_ptr<Solver>& solver)
+    {
+        setWeightsSolver(solver);
+        for (unsigned int k = 0, size = mWeightsSolvers.size(); k < size; ++k) {
+            mWeightsSolvers[k] = mWeightsSolver->clone();
+        }
+    };
 
     virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     virtual void initialize();
@@ -117,6 +124,12 @@ public:
     {
         return mBias;
     };
+    virtual BaseTensor& getDiffSynapses(unsigned int index = 0)
+    {
+        return mDiffSharedSynapses[index];
+    };
+    //virtual const BaseTensor& getDiffSynapses(unsigned int index = 0);
+
     void setBiases(const std::shared_ptr<BaseTensor>& biases);
     void checkGradient(double /*epsilon*/ = 1.0e-4,
                        double /*maxError*/ = 1.0e-6);
