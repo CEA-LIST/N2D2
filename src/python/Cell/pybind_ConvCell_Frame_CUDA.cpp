@@ -43,6 +43,8 @@ void declare_ConvCell_Frame_CUDA(py::module &m, const std::string& typeStr) {
     .def("initializeWeightQuantizer", &ConvCell_Frame_CUDA<T>::initializeWeightQuantizer)
     .def("resetWeights", &ConvCell_Frame_CUDA<T>::resetWeights)
     .def("resetBias", &ConvCell_Frame_CUDA<T>::resetBias)
+    .def("resetWeightsSolver", &ConvCell_Frame_CUDA<T>::resetWeightsSolver, py::arg("solver"))
+    .def("getDiffSynapses", &ConvCell_Frame_CUDA<T>::getDiffSynapses, py::arg("index") = 0, py::return_value_policy::reference)
     ;
 
 }
