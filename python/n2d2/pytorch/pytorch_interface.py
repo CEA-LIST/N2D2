@@ -87,7 +87,7 @@ def _to_torch(N2D2_tensor):
     torch_tensor = torch.from_numpy(numpy_tensor)
     if n2d2_tensor.is_cuda:
         torch_tensor = torch_tensor.cuda() # Create GPU memory copy
-    if n2d2_tensor.nb_dims() ==4:
+    if n2d2_tensor.nb_dims() == 4:
         torch_tensor.resize_(_switching_convention(n2d2_tensor.dims())) 
     return torch_tensor
 
