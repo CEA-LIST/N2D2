@@ -23,7 +23,8 @@ import n2d2
 from n2d2.error_handler import deprecated
 from n2d2.n2d2_interface import N2D2_Interface
 from abc import ABC, abstractmethod
-
+import n2d2.global_variables as gb
+cuda_compiled = gb.cuda_compiled
 
 _activation_parameters = {
         "quantizer": "Quantizer"
@@ -93,8 +94,11 @@ class Linear(ActivationFunction):
     """
     _linear_activation_generators = {
         'Frame<float>': N2D2.LinearActivation_Frame_float,
-        'Frame_CUDA<float>': N2D2.LinearActivation_Frame_CUDA_float
     }
+    if cuda_compiled:
+        _linear_activation_generators.update({
+            'Frame_CUDA<float>': N2D2.LinearActivation_Frame_CUDA_float,
+        })
     _parameters = {
         "clipping": "Clipping",
     }
@@ -130,8 +134,12 @@ class Rectifier(ActivationFunction):
     """
     _rectifier_activation_generators = {
         'Frame<float>': N2D2.RectifierActivation_Frame_float,
-        'Frame_CUDA<float>': N2D2.RectifierActivation_Frame_CUDA_float,
+        
     }
+    if cuda_compiled:
+        _rectifier_activation_generators.update({
+            'Frame_CUDA<float>': N2D2.RectifierActivation_Frame_CUDA_float,
+        })
     _parameters = {
         "leak_slope": "LeakSlope",
         "clipping": "Clipping",
@@ -174,8 +182,11 @@ class Tanh(ActivationFunction):
     """
     _tanh_activation_generators = {
         'Frame<float>': N2D2.TanhActivation_Frame_float,
-        'Frame_CUDA<float>': N2D2.TanhActivation_Frame_CUDA_float,
     }
+    if cuda_compiled:
+        _tanh_activation_generators.update({
+            'Frame_CUDA<float>': N2D2.TanhActivation_Frame_CUDA_float,
+        })
     _parameters = {
         "alpha": "Alpha",
     }

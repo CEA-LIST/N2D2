@@ -274,7 +274,7 @@ class DeepNetCell(Iterable):
         #self._cells = self._embedded_deepnet.get_cells()
         Iterable.__init__(self, list(self._embedded_deepnet.get_cells().values()), name=name)
 
-        self._deepnet = None 
+        self._deepnet = self._embedded_deepnet
         self._inference = False
 
 
@@ -321,10 +321,6 @@ class DeepNetCell(Iterable):
         # TODO: Not tested for other inputs that provider yet
         if not isinstance(inputs, n2d2.Tensor):
             raise ValueError("Needs tensor with provider as input")
-
-        #self._deepnet = self._infer_deepnet(inputs)
-
-        #print(self._embedded_deepnet)
 
         # Recreate graph with underlying N2D2 deepnet
         self._deepnet = self.concat_to_deepnet(inputs.get_deepnet())
@@ -414,7 +410,8 @@ class DeepNetCell(Iterable):
     def import_free_parameters(self, dir_name, ignore_not_exists=False):
         """Import parameters.
         """
-        self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignore_not_exists=ignore_not_exists)
+        print("import DeepNetCell '" + self._name + "' weights from " + dir_name)
+        self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignoreNotExists=ignore_not_exists)
 
     def remove(self, name):
         cell = self._embedded_deepnet.N2D2().getCells()[name]

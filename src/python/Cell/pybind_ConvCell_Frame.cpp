@@ -40,6 +40,7 @@ void declare_ConvCell_Frame(py::module &m, const std::string& typeStr) {
     .def("initializeWeightQuantizer", &ConvCell_Frame<T>::initializeWeightQuantizer)
     .def("resetWeights", &ConvCell_Frame<T>::resetWeights)
     .def("resetBias", &ConvCell_Frame<T>::resetBias)
+    .def("resetWeightsSolver", &ConvCell_Frame<T>::resetWeightsSolver, py::arg("solver"))
     ;
 
 }

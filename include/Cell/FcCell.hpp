@@ -27,6 +27,7 @@
 #include "Cell.hpp"
 #include "utils/Registrar.hpp"
 #include "Quantizer/Cell/QuantizerCell.hpp"
+#include "controler/Interface.hpp"
 
 
 namespace N2D2 {

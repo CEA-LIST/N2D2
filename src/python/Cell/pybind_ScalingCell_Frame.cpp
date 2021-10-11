@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
 #ifdef PYBIND
 
 #include "Cell/ScalingCell_Frame.hpp"
@@ -53,5 +52,5 @@ void init_ScalingCell_Frame(py::module &m) {
 }
 }
 #endif
-#endif
+
 

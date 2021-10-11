@@ -48,7 +48,10 @@ void declare_DeconvCell_Frame(py::module &m, const std::string& typeStr) {
          py::arg("strideDims") = std::vector<unsigned int>(2, 1U), 
          py::arg("paddingDims") = std::vector<int>(2, 0), 
          py::arg("dilationDims") = std::vector<unsigned int>(2, 1U),
-         py::arg("activation") = std::shared_ptr<Activation>());
+         py::arg("activation") = std::shared_ptr<Activation>())
+         
+    .def("resetWeightsSolver", &DeconvCell_Frame<T>::resetWeightsSolver, py::arg("solver"))
+;
 
 }
 
