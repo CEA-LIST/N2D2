@@ -38,6 +38,7 @@ void declare_FcCell_Frame_CUDA(py::module &m, const std::string& typeStr) {
     .def("initializeWeightQuantizer", &FcCell_Frame_CUDA<T>::initializeWeightQuantizer)
     .def("resetWeights", &FcCell_Frame_CUDA<T>::resetWeights)
     .def("resetBias", &FcCell_Frame_CUDA<T>::resetBias)
+    .def("resetWeightsSolver", &FcCell_Frame_CUDA<T>::resetWeightsSolver, py::arg("solver"))
     ;
 
 }

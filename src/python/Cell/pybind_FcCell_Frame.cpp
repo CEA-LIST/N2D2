@@ -37,6 +37,7 @@ void declare_FcCell_Frame(py::module &m, const std::string& typeStr) {
     .def("initializeWeightQuantizer", &FcCell_Frame<T>::initializeWeightQuantizer)
     .def("resetWeights", &FcCell_Frame<T>::resetWeights)
     .def("resetBias", &FcCell_Frame<T>::resetBias)
+    .def("resetWeightsSolver", &FcCell_Frame<T>::resetWeightsSolver, py::arg("solver"))
     ;
     
 
