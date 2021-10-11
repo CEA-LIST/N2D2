@@ -19,6 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 import N2D2
+from n2d2 import quantizer
 import n2d2.activation
 from n2d2.quantizer import ActivationQuantizer
 import n2d2.solver
@@ -456,11 +457,14 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
 
         # Set and initialize here all complex cells members
         for key, value in self._config_parameters.items():
-            self.__setattr__(key, value)
-
+            if key is not "quantizer":
+                self.__setattr__(key, value)
+            
         self._N2D2_object.initializeParameters(nb_inputs, nb_input_cells)
+        if 'quantizer' in self._config_parameters:
+            self.quantizer = self._config_parameters["quantizer"]
         self.load_N2D2_parameters(self.N2D2())
-
+        
     def __setattr__(self, key: str, value) -> None:
         if key is 'weights_solver':
             if isinstance(value, n2d2.solver.Solver):
@@ -841,10 +845,12 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
 
         """Set and initialize here all complex cells members"""
         for key, value in self._config_parameters.items():
-            self.__setattr__(key, value)
-            
+            if key is not "quantizer":
+                self.__setattr__(key, value)
 
         self._N2D2_object.initializeParameters(nb_inputs, nb_input_cells)
+        if 'quantizer' in self._config_parameters:
+            self.quantizer = self._config_parameters["quantizer"]
         self.load_N2D2_parameters(self.N2D2())
 
 
