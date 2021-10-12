@@ -505,12 +505,10 @@ void init_N2D2(py::module& m) {
     init_DeconvCell_Frame_CUDA(m);
     init_DropoutCell_Frame_CUDA(m);
     init_ElemWiseCell_Frame_CUDA(m);
-    init_ElemWiseCell_Frame_CUDA(m);
     init_FMPCell_Frame_CUDA(m);
     init_LRNCell_Frame_CUDA(m);
     init_LSTMCell_Frame_CUDA(m);
     init_NormalizeCell_Frame_CUDA(m); 
-    init_ObjectDetCell_Frame_CUDA(m);
     init_ObjectDetCell_Frame_CUDA(m);
     init_PaddingCell_Frame_CUDA(m);
     init_PoolCell_Frame_CUDA(m);
