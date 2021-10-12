@@ -363,29 +363,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
     # pybind
     list(APPEND src_files_python "${CMAKE_CURRENT_LIST_DIR}/src/python/pybind_N2D2.cpp")
-    # add_n2d2_pybind(pyn2d2 ${src_files_python} n2d2_lib)
-
-    find_package(Python COMPONENTS Interpreter Development) # This module doesn't work if CMake < 3.12
-
-    find_package(pybind11 CONFIG 2.2)
-    if(NOT pybind11_FOUND)
-        find_package(pybind11 2.2)
-    endif()
-
-    if(pybind11_FOUND)
-        message(STATUS "System pybind11 found.")
-    else()
-        message(STATUS "Using third_party/pybind11.")
-        add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/pybind11)
-    endif()
-
-    pybind11_add_module(N2D2 MODULE ${src_files_python})
-    message(STATUS "pybind11 include dirs: " "${pybind11_INCLUDE_DIRS}")
-    target_include_directories(N2D2 PUBLIC ${pybind11_INCLUDE_DIRS})
-    target_compile_definitions(n2d2_lib PUBLIC PYBIND=1)
-    target_compile_definitions(N2D2 PUBLIC PYBIND=1)
-    target_link_libraries_whole_archive(N2D2 n2d2_lib ${ARGN})
-
+    add_n2d2_pybind(N2D2 "${src_files_python}" n2d2_lib)
 
     # docs target
     add_custom_target(docs)
