@@ -470,6 +470,7 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
         self._N2D2_object.initializeParameters(nb_inputs, nb_input_cells)
         if 'quantizer' in self._config_parameters:
             self.quantizer = self._config_parameters["quantizer"]
+        self.load_N2D2_parameters(self.N2D2())
 
     def __setattr__(self, key: str, value) -> None:
         if key is 'weights_solver':
