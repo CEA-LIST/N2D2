@@ -2457,6 +2457,17 @@ int main(int argc, char* argv[]) try
         database.logROIsStats("dbstats/testset-roi-size.dat",
                               "dbstats/testset-roi-label.dat",
                               Database::TestOnly);
+
+        // Multi-channels
+        if (!database.getParameter<std::string>("MultiChannelMatch").empty()) {
+            database.logMultiChannelStats("dbstats/database-multi-stats.dat");
+            database.logMultiChannelStats("dbstats/learnset-multi-stats.dat",
+                                          Database::LearnOnly);
+            database.logMultiChannelStats("dbstats/validationset-multi-stats.dat",
+                                          Database::ValidationOnly);
+            database.logMultiChannelStats("dbstats/testset-multi-stats.dat",
+                                          Database::TestOnly);
+        }
     }
 
     /**

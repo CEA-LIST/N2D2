@@ -163,6 +163,8 @@ public:
     void logROIsStats(const std::string& sizeFileName,
                       const std::string& labelFileName,
                       StimuliSetMask setMask = All) const;
+    void logMultiChannelStats(const std::string& fileName,
+                              StimuliSetMask setMask = All) const;
 
     /**
      * Extract all the ROIs in stimuli as new stimuli and remove stimuli with no
