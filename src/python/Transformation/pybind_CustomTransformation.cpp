@@ -42,7 +42,7 @@ namespace N2D2 {
         std::vector<std::shared_ptr<ROI> >& labelsROI,
         int id) override 
         {
-            PYBIND11_OVERRIDE(
+            PYBIND11_OVERLOAD(
                 void,                       /* Return type */
                 CustomTransformation,       /* Parent class */
                 apply_int,                  /* Name of function in C++ (must match Python name) */
@@ -58,7 +58,7 @@ namespace N2D2 {
             std::vector<std::shared_ptr<ROI> >& labelsROI,
             int id) override 
         {
-            PYBIND11_OVERRIDE(
+            PYBIND11_OVERLOAD(
                 void,                       /* Return type */
                 CustomTransformation,       /* Parent class */
                 apply_float,                /* Name of function in C++ (must match Python name) */
@@ -74,7 +74,7 @@ namespace N2D2 {
             std::vector<std::shared_ptr<ROI> >& labelsROI,
             int id) override 
         {
-            PYBIND11_OVERRIDE(
+            PYBIND11_OVERLOAD(
                 void,                       /* Return type */
                 CustomTransformation,       /* Parent class */
                 apply_double,               /* Name of function in C++ (must match Python name) */
@@ -90,7 +90,7 @@ namespace N2D2 {
             std::vector<std::shared_ptr<ROI> >& labelsROI,
             int id) override 
         {
-            PYBIND11_OVERRIDE(
+            PYBIND11_OVERLOAD(
                 void,                       /* Return type */
                 CustomTransformation,       /* Parent class */
                 apply_unsigned_char,        /* Name of function in C++ (must match Python name) */
@@ -107,7 +107,7 @@ namespace N2D2 {
             std::vector<std::shared_ptr<ROI> >& labelsROI,
             int id) override 
         {
-            PYBIND11_OVERRIDE(
+            PYBIND11_OVERLOAD(
                 void,                       /* Return type */
                 CustomTransformation,       /* Parent class */
                 apply_char,                 /* Name of function in C++ (must match Python name) */
@@ -123,7 +123,7 @@ namespace N2D2 {
             std::vector<std::shared_ptr<ROI> >& labelsROI,
             int id) override 
         {
-            PYBIND11_OVERRIDE(
+            PYBIND11_OVERLOAD(
                 void,                       /* Return type */
                 CustomTransformation,       /* Parent class */
                 apply_short,                /* Name of function in C++ (must match Python name) */
@@ -139,7 +139,7 @@ namespace N2D2 {
             std::vector<std::shared_ptr<ROI> >& labelsROI,
             int id) override 
         {
-            PYBIND11_OVERRIDE(
+            PYBIND11_OVERLOAD(
                 void,                       /* Return type */
                 CustomTransformation,       /* Parent class */
                 apply_unsigned_short,       /* Name of function in C++ (must match Python name) */

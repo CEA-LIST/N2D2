@@ -345,6 +345,35 @@ class N2D2BN(torch.nn.Module):
         x = self.sequence(x)
         return x
 
+
+### Defining Transpose layer ###
+
+class TorchTranspose(torch.nn.Module):
+
+    def __init__(self, *perm):
+        super(TorchTranspose, self).__init__()
+        self.perm = perm
+
+    def forward(self, x):
+        x = x.permute(*self.perm)
+        return x
+
+
+class N2D2Transpose(torch.nn.Module):
+
+    def __init__(self, perm):
+        super(N2D2Transpose, self).__init__()
+        self.n2d2_cell = n2d2.cells.Transpose(perm=perm)
+        self.layer = pytorch.Block(n2d2.cells.Sequence([self.n2d2_cell]))
+        self.sequence = torch.nn.Sequential(
+            self.layer
+        )
+
+    def forward(self, x):
+        x = self.sequence(x)
+        return x
+
+
 ### Defining LeNet ###
 class N2D2LeNet(torch.nn.Module): 
     def __init__(self):
@@ -635,6 +664,34 @@ class test_interop(unittest.TestCase):
         print("Eval ...")
         tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, cuda=True, test_backward=False)
         res = tester.test_multiple_step((batch_size, 1, 2, 2), (batch_size,  1, 2, 2))
+        self.assertNotEqual(res, -1, msg="CUDA eval failed")
+
+    def test_transpose_CPU(self):
+        print('=== Testing Transpose layer CPU ===')
+        n2d2.global_variables.default_model = "Frame"
+        torch_model = TorchTranspose(0, 1, 3, 2)
+        n2d2_model = N2D2Transpose([1, 0, 2, 3])
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 1, 3, 3))
+        self.assertNotEqual(res, -1, msg="CPU train failed")
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 1, 3, 3))
+        self.assertNotEqual(res, -1, msg="CPU eval failed")
+
+    def test_transpose_GPU(self):
+        print('=== Testing Transpose layer GPU ===')
+        n2d2.global_variables.default_model = "Frame_CUDA"
+        torch_model = TorchTranspose(0, 1, 3, 2)
+        n2d2_model = N2D2Transpose([1, 0, 2, 3])
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs, cuda=True, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 1, 3, 3))
+        self.assertNotEqual(res, -1, msg="CUDA train failed")
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, cuda=True, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 3, 3), (batch_size, 1, 3, 3))
         self.assertNotEqual(res, -1, msg="CUDA eval failed")
 
     def test_LeNet_CPU(self):

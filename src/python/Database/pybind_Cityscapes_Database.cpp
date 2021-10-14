@@ -22,6 +22,7 @@
 */
 
 #ifdef PYBIND
+#ifdef JSONCPP
 #include "Database/Cityscapes_Database.hpp"
 
 #include <pybind11/pybind11.h>
@@ -39,4 +40,5 @@ void init_Cityscapes_Database(py::module &m) {
     ;
 }
 }
+#endif
 #endif

@@ -60,7 +60,16 @@ class test_Fc(test_params):
         #                  n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping())) # TODO : Add back mapping to Fc ?
         super().test_parameters()
 
-
+    def test_solver(self):
+        solver = n2d2.solver.Adam()
+        self.object.solver = solver
+        self.assertTrue(isinstance(self.object.weights_solver, n2d2.solver.Adam))
+        self.assertTrue(isinstance(self.object.bias_solver, n2d2.solver.Adam))
+    def test_filler(self):
+        filler = n2d2.filler.Xavier()
+        self.object.filler = filler
+        self.assertTrue(isinstance(self.object.weights_filler, n2d2.filler.Xavier))
+        self.assertTrue(isinstance(self.object.bias_filler, n2d2.filler.Xavier))
 class test_Conv(test_params):
     def setUp(self):
         self.parameters = {
@@ -96,7 +105,17 @@ class test_Conv(test_params):
                          n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping()))
 
         super().test_parameters()
-
+        
+    def test_solver(self):
+        solver = n2d2.solver.Adam()
+        self.object.solver = solver
+        self.assertTrue(isinstance(self.object.weights_solver, n2d2.solver.Adam))
+        self.assertTrue(isinstance(self.object.bias_solver, n2d2.solver.Adam))
+    def test_filler(self):
+        filler = n2d2.filler.Xavier()
+        self.object.filler = filler
+        self.assertTrue(isinstance(self.object.weights_filler, n2d2.filler.Xavier))
+        self.assertTrue(isinstance(self.object.bias_filler, n2d2.filler.Xavier))
 class test_Softmax(test_params):
     def setUp(self):
         self.parameters = {
@@ -174,6 +193,17 @@ class test_Deconv(test_params):
         self.assertEqual(n2d2.Tensor.from_N2D2(self.parameters["mapping"].N2D2()), 
                          n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping()))
         super().test_parameters()
+
+    def test_solver(self):
+        solver = n2d2.solver.Adam()
+        self.object.solver = solver
+        self.assertTrue(isinstance(self.object.weights_solver, n2d2.solver.Adam))
+        self.assertTrue(isinstance(self.object.bias_solver, n2d2.solver.Adam))
+    def test_filler(self):
+        filler = n2d2.filler.Xavier()
+        self.object.filler = filler
+        self.assertTrue(isinstance(self.object.weights_filler, n2d2.filler.Xavier))
+        self.assertTrue(isinstance(self.object.bias_filler, n2d2.filler.Xavier))
 
 class test_ElemWise(test_params):
     def setUp(self):
@@ -265,6 +295,14 @@ class test_BatchNorm2d(test_params):
 
         super().test_parameters()
 
+    def test_solver(self):
+        tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
+        self.object(tensor)
+        solver = n2d2.solver.Adam()
+        self.object.solver = solver
+        self.assertTrue(isinstance(self.object.scale_solver, n2d2.solver.Adam))
+        self.assertTrue(isinstance(self.object.bias_solver, n2d2.solver.Adam))
+        
 class test_Activation(test_params):
     def setUp(self):
         self.parameters = {
@@ -553,8 +591,6 @@ class test_RandomResizeCrop(test_params):
         self.parameters = {
             "width": 10,
             "height": 9,
-            "offset_x": 0,
-            "offset_y": 1,
             "scale_min": 0.3,
             "scale_max": 0.5,
             "ratio_min": 0.0,
@@ -565,8 +601,6 @@ class test_RandomResizeCrop(test_params):
     def test_parameters(self):
         self.assertEqual(self.parameters["width"], self.object.N2D2().getWidth())
         self.assertEqual(self.parameters["height"], self.object.N2D2().getHeight())
-        self.assertEqual(self.parameters["offset_x"], self.object.N2D2().getOffsetX())
-        self.assertEqual(self.parameters["offset_y"], self.object.N2D2().getOffsetY())
         self.assertEqual(self.parameters["scale_min"], round(self.object.N2D2().getScaleMin(), 5))
         self.assertEqual(self.parameters["scale_max"], self.object.N2D2().getScaleMax())
         self.assertEqual(self.parameters["ratio_min"], self.object.N2D2().getRatioMin())

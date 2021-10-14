@@ -22,6 +22,8 @@ import N2D2
 import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
 from abc import ABC, abstractmethod
+import n2d2.global_variables as gb
+cuda_compiled = gb.cuda_compiled
 
 clamping_values = ["min:max", ":max", "min:", ""]
 
@@ -64,11 +66,13 @@ class SGD(Solver):
 
     _solver_generators = {
         'Frame<float>': N2D2.SGDSolver_Frame_float,
-        'Frame_CUDA<float>': N2D2.SGDSolver_Frame_CUDA_float,
         'Frame<double>': N2D2.SGDSolver_Frame_double,
-        'Frame_CUDA<double>': N2D2.SGDSolver_Frame_CUDA_double,
     }
-
+    if cuda_compiled:
+        _solver_generators.update({
+            'Frame_CUDA<float>': N2D2.SGDSolver_Frame_CUDA_float,
+            'Frame_CUDA<double>': N2D2.SGDSolver_Frame_CUDA_double,
+        })
     _convention_converter= n2d2.ConventionConverter({
         "learning_rate": "LearningRate",
         "momentum": "Momentum",
@@ -133,10 +137,13 @@ class Adam(Solver):
 
     _solver_generators = {
         'Frame<float>': N2D2.AdamSolver_Frame_float,
-        'Frame_CUDA<float>': N2D2.AdamSolver_Frame_CUDA_float,
-        'Frame<double>': N2D2.AdamSolver_Frame_double,
-        'Frame_CUDA<double>': N2D2.AdamSolver_Frame_CUDA_double,
+        'Frame<double>': N2D2.AdamSolver_Frame_double, 
     }
+    if cuda_compiled:
+        _solver_generators.update({
+            'Frame_CUDA<float>': N2D2.AdamSolver_Frame_CUDA_float,
+            'Frame_CUDA<double>': N2D2.AdamSolver_Frame_CUDA_double,
+        })
 
     _convention_converter= n2d2.ConventionConverter({
         "learning_rate": "LearningRate",

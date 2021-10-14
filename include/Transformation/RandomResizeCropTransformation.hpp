@@ -42,9 +42,7 @@ public:
     static const char* Type;
 
     RandomResizeCropTransformation(unsigned int width,
-                                  unsigned int height,
-                                  unsigned int offsetX = 0,
-                                  unsigned int offsetY = 0);
+                                  unsigned int height);
     RandomResizeCropTransformation(const RandomResizeCropTransformation& trans);
     const char* getType() const
     {
@@ -88,12 +86,6 @@ public:
     unsigned int getHeight(){
         return mHeight;
     };
-    unsigned int getOffsetX(){
-        return mOffsetX;
-    };
-    unsigned int getOffsetY(){
-        return mOffsetY;
-    };
     float getScaleMin(){
         return mScaleMin;
     };
@@ -115,8 +107,6 @@ private:
 
     const unsigned int mWidth;
     const unsigned int mHeight;
-    Parameter<unsigned int> mOffsetX;
-    Parameter<unsigned int> mOffsetY;
     Parameter<float> mScaleMin;
     Parameter<float> mScaleMax;
     Parameter<float> mRatioMin;

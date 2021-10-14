@@ -18,7 +18,10 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
-import torch
+try:
+    import torch
+except ImportError:
+    pass
 import n2d2
 
 def _switching_convention(dims):
@@ -84,7 +87,7 @@ def _to_torch(N2D2_tensor):
     torch_tensor = torch.from_numpy(numpy_tensor)
     if n2d2_tensor.is_cuda:
         torch_tensor = torch_tensor.cuda() # Create GPU memory copy
-    if n2d2_tensor.nb_dims() ==4:
+    if n2d2_tensor.nb_dims() == 4:
         torch_tensor.resize_(_switching_convention(n2d2_tensor.dims())) 
     return torch_tensor
 
@@ -123,7 +126,7 @@ class Block(torch.nn.Module):
                 
                 n2d2_tensor = _to_n2d2(inputs)
 
-                if n2d2.cuda_compiled:
+                if n2d2.global_variables.cuda_compiled:
                     n2d2_tensor.cuda()
                     n2d2_tensor.htod()
                 if self.training: # training is  a torch.nn.Module attribute (cf. https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module)
@@ -187,3 +190,47 @@ class Block(torch.nn.Module):
             inputs.requires_grad = True
         return N2D2_computation.apply(inputs)
 
+def wrap(torch_model, input_size):
+    model_path = './tmp.onnx'
+    print("Exporting torch module to ONNX ...")
+    dummy_in = torch.randn(input_size)
+    torch.onnx.export(torch_model, dummy_in, model_path, verbose=True, training=torch.onnx.TrainingMode.TRAINING)
+
+    # Importing the ONNX to N2D2
+    print("Importing ONNX model to N2D2 ...")
+    db = n2d2.database.Database()
+    provider = n2d2.provider.DataProvider(db,[input_size[2], input_size[3], input_size[1]], batch_size=input_size[0])
+    deepNet = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "./tmp.onnx")
+    # print("Cleaning temporary ONNX file.")
+    # remove(model_path)
+    deepNet.set_solver(n2d2.solver.SGD(
+                decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, 
+                learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0,
+                momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25))
+    need_to_flatten = False
+
+    for cell in deepNet:
+        if isinstance(cell, n2d2.cells.Softmax):
+            # ONNX import Softmax with_loss = True supposing we are using a CrossEntropy loss.
+            cell.with_loss = False
+        elif isinstance(cell, n2d2.cells.Fc):
+            # We suppose that the Fully connected layer are at the end of the network.
+            need_to_flatten = True
+        else:
+            pass
+    # Creating an N2D2 Module specific 
+    class n2d2_module(torch.nn.Module):   
+        def __init__(self):
+            super(n2d2_module, self).__init__()
+            self.n2d2_block = Block(deepNet)
+        def forward(self, x):
+            x = self.n2d2_block(x)
+            if need_to_flatten:
+                x = x.view(input_size[0], -1)
+            return x
+        def __str__(self):
+            return self.n2d2_block()
+    print(deepNet)
+
+    converted_model = n2d2_module()
+    return converted_model 

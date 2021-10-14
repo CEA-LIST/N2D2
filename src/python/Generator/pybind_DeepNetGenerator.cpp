@@ -21,7 +21,6 @@
 */
 
 #ifdef PYBIND
-#ifdef ONNX
 
 #include "Xnet/Network.hpp"
 #include "containers/Tensor.hpp"
@@ -37,15 +36,18 @@ namespace N2D2 {
 void init_DeepNetGenerator(py::module &m) {
     py::class_<DeepNetGenerator>(m, "DeepNetGenerator")
     .def_static("generate", &DeepNetGenerator::generate, py::arg("network"), py::arg("fileName"))
+    #ifdef ONNX
     .def_static("generateFromONNX", &DeepNetGenerator::generateFromONNX, 
         py::arg("network"), 
         py::arg("fileName"), 
         py::arg("iniConfig"), 
         py::arg("deepNet")=std::shared_ptr<DeepNet>(),
         py::arg("parentCells")=std::vector<std::shared_ptr<Cell>>())
+    #endif
     ;
+    
 
 }
 }
-#endif
+
 #endif

@@ -53,7 +53,7 @@ if args.arch == 'MobileNetv1':
 elif args.arch == 'MobileNetv1Bn':
     batch_size = 64
 elif args.arch == 'MobileNetv1SAT':
-    batch_size = 64
+    batch_size = 16
 elif args.arch == 'MobileNetv2':
     size = 224
     batch_size = 64

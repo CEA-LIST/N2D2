@@ -23,8 +23,12 @@ import N2D2
 import n2d2 # To remove if interface is moved to provider
 from n2d2 import error_handler
 from n2d2.provider import TensorPlaceholder
+import n2d2.global_variables as gb
 from functools import reduce
 import random
+
+cuda_compiled = gb.cuda_compiled
+
 
 hard_coded_type = {
     "f": float,
@@ -57,19 +61,20 @@ class Tensor:
         "char": N2D2.Tensor_char,
 
     }
-    _cuda_tensor_generators = {
-        "f": N2D2.CudaTensor_float,
-        "float": N2D2.CudaTensor_float,
-        "short": N2D2.CudaTensor_short,
-        "s": N2D2.CudaTensor_short,
-        "long": N2D2.CudaTensor_long,
-        "l": N2D2.CudaTensor_long,
-        "i": N2D2.CudaTensor_int,
-        "int": N2D2.CudaTensor_int,
-        "d": N2D2.CudaTensor_double,
-        "double": N2D2.CudaTensor_double,
-        # bool datatype cannot be defined for CudaTensor
-    }
+    if cuda_compiled:
+        _cuda_tensor_generators = {
+            "f": N2D2.CudaTensor_float,
+            "float": N2D2.CudaTensor_float,
+            "short": N2D2.CudaTensor_short,
+            "s": N2D2.CudaTensor_short,
+            "long": N2D2.CudaTensor_long,
+            "l": N2D2.CudaTensor_long,
+            "i": N2D2.CudaTensor_int,
+            "int": N2D2.CudaTensor_int,
+            "d": N2D2.CudaTensor_double,
+            "double": N2D2.CudaTensor_double,
+            # bool datatype cannot be defined for CudaTensor
+        }
     
     _dim_format = {
         "N2D2": lambda x: x,
@@ -97,6 +102,8 @@ class Tensor:
             raise error_handler.WrongInputType("cuda", type(cuda), [str(bool)])
         self.is_cuda = cuda
         if cuda:
+            if not cuda_compiled:
+                raise RuntimeError("You did not compiled N2D2 with CUDA !")
             generators = self._cuda_tensor_generators
         else:
             generators = self._tensor_generators
@@ -283,6 +290,8 @@ class Tensor:
     def cuda(self):
         """Convert the tensor to a cuda tensor
         """
+        if not cuda_compiled:
+            raise RuntimeError("You did not compiled N2D2 with CUDA !")
         # TODO : avoid to copy data
         if not self.is_cuda:
             self.is_cuda = True
@@ -468,7 +477,7 @@ class Tensor:
         CUDA tensor are stored and computed in the GPU (Device).
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         """
-        if not n2d2.cuda_compiled:
+        if not n2d2.global_variables.cuda_compiled:
             raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeDToH()
@@ -482,7 +491,7 @@ class Tensor:
         CUDA tensor are stored and computed in the GPU (Device).
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         """
-        if not n2d2.cuda_compiled:
+        if not n2d2.global_variables.cuda_compiled:
             raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeHToD()

@@ -24,13 +24,9 @@ const char* N2D2::RandomResizeCropTransformation::Type = "RandomResizeCrop";
 
 N2D2::RandomResizeCropTransformation::RandomResizeCropTransformation(
     unsigned int width,
-    unsigned int height,
-    unsigned int offsetX,
-    unsigned int offsetY)
+    unsigned int height)
     : mWidth(width),
       mHeight(height),
-      mOffsetX(this, "OffsetX", offsetX),
-      mOffsetY(this, "OffsetY", offsetY),
       mScaleMin(this, "ScaleMin", 1.0),
       mScaleMax(this, "ScaleMax", 1.0),
       mRatioMin(this, "RatioMin", 1.0),
@@ -43,8 +39,6 @@ N2D2::RandomResizeCropTransformation::RandomResizeCropTransformation(
     const RandomResizeCropTransformation& trans)
     : mWidth(trans.mWidth),
       mHeight(trans.mHeight),
-      mOffsetX(this, "OffsetX", trans.mOffsetX),
-      mOffsetY(this, "OffsetY", trans.mOffsetY),
       mScaleMin(this, "ScaleMin", trans.mScaleMin),
       mScaleMax(this, "ScaleMax", trans.mScaleMax),
       mRatioMin(this, "RatioMin", trans.mRatioMin),

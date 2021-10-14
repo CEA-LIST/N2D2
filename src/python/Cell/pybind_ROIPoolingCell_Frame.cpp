@@ -20,6 +20,7 @@
 */
 #ifdef PYBIND
 #include "Cell/ROIPoolingCell_Frame.hpp"
+#include "StimuliProvider.hpp"
 
 #include <pybind11/pybind11.h>
 
