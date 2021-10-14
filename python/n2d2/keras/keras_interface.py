@@ -31,7 +31,7 @@ import N2D2
 import n2d2
 
 # Work instead of using run_eagerly=True in compile()
-tf.config.experimental_functions_run_eagerly = True
+# tf.config.experimental_functions_run_eagerly = True
 
 class CustomSequential(keras.Sequential):
     def __init__(self, layers=None, name=None, batch_size=None, **kwargs):
@@ -166,7 +166,6 @@ class CustomSequential(keras.Sequential):
 
 
         def custom_grad(dy):
-            return None
             dy_numpy = dy.numpy()
 
             #print("GRAD: ", dy_numpy[0,:])
@@ -179,7 +178,7 @@ class CustomSequential(keras.Sequential):
                 dy_numpy.resize(diffInputs_shape)
 
             # perform operation on tensor #
-            dy_tensor = N2D2.Tensor_float(-dy_numpy)
+            dy_tensor = N2D2.Tensor_float(-dy_numpy * self.batch_size)
             diffInputs = self.deepNet.getCell_Frame_Top(lastCellName).getDiffInputs()
             #FIXME: incoherency in dims
             dy_tensor.reshape(diffInputs.dims())
@@ -192,10 +191,10 @@ class CustomSequential(keras.Sequential):
             dx_tensor = self.deepNet.getCell_Frame_Top(fistCellName).getDiffOutputs()
             dx_tensor.synchronizeDToH()
             dx_numpy = np.array(dx_tensor)
-            dx = tf.convert_to_tensor(-dx_numpy, dtype=tf.float32)
+            dy_tensor = N2D2.Tensor_float(-dy_numpy * self.batch_size)
+            dx = tf.convert_to_tensor(-dx_numpy / self.batch_size, dtype=tf.float32)
             return dx
             # return None
-
         return y, custom_grad
 
     def call(self, inputs, training=None, mask=None):
