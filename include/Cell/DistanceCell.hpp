@@ -41,13 +41,14 @@ public:
         std::function<std::shared_ptr<DistanceCell>(const DeepNet& deepNet, 
                                                    const std::string& name,
                                                    unsigned int nbOutputs,
-                                                   double margin)>;
+                                                   double margin,
+                                                   double centercoef)>;
 
     static RegistryMap_T& registry();
     static const char* Type;
 
     DistanceCell(const DeepNet& deepNet, const std::string& name,
-                unsigned int nbOutputs, double margin);
+                unsigned int nbOutputs, double margin, double centercoef);
     virtual ~DistanceCell() = default;
 
     const char* getType() const;
@@ -80,6 +81,7 @@ protected:
     virtual void setOutputsDims();
 
     double mMargin;
+    double mCenterCoef;
     Parameter<std::size_t> mEndIT;
     
     std::shared_ptr<Filler> mWeightsFiller;
