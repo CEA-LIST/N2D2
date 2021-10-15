@@ -103,39 +103,41 @@ onnx::TensorProto::DataType N2D2::ONNX_CellExport::ONNX_dataType()
                              "tensor type not supported by ONNX!");
 }
 
+namespace N2D2 {
 template <>
-onnx::TensorProto::DataType N2D2::ONNX_CellExport
+onnx::TensorProto::DataType ONNX_CellExport
     ::ONNX_dataType<float>();
 template <>
-onnx::TensorProto::DataType N2D2::ONNX_CellExport
+onnx::TensorProto::DataType ONNX_CellExport
     ::ONNX_dataType<half_float::half>();
 template <>
-onnx::TensorProto::DataType N2D2::ONNX_CellExport
+onnx::TensorProto::DataType ONNX_CellExport
     ::ONNX_dataType<double>();
 template <>
-onnx::TensorProto::DataType N2D2::ONNX_CellExport
+onnx::TensorProto::DataType ONNX_CellExport
     ::ONNX_dataType<int8_t>();
 template <>
-onnx::TensorProto::DataType N2D2::ONNX_CellExport
+onnx::TensorProto::DataType ONNX_CellExport
     ::ONNX_dataType<uint8_t>();
 template <>
-onnx::TensorProto::DataType N2D2::ONNX_CellExport
+onnx::TensorProto::DataType ONNX_CellExport
     ::ONNX_dataType<int16_t>();
 template <>
-onnx::TensorProto::DataType N2D2::ONNX_CellExport
+onnx::TensorProto::DataType ONNX_CellExport
     ::ONNX_dataType<uint16_t>();
 template <>
-onnx::TensorProto::DataType N2D2::ONNX_CellExport
+onnx::TensorProto::DataType ONNX_CellExport
     ::ONNX_dataType<int32_t>();
 template <>
-onnx::TensorProto::DataType N2D2::ONNX_CellExport
+onnx::TensorProto::DataType ONNX_CellExport
     ::ONNX_dataType<uint32_t>();
 template <>
-onnx::TensorProto::DataType N2D2::ONNX_CellExport
+onnx::TensorProto::DataType ONNX_CellExport
     ::ONNX_dataType<int64_t>();
 template <>
-onnx::TensorProto::DataType N2D2::ONNX_CellExport
+onnx::TensorProto::DataType ONNX_CellExport
     ::ONNX_dataType<uint64_t>();
+}
 
 template <class T>
 void N2D2::ONNX_CellExport::ONNX_packTensor(

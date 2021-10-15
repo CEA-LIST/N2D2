@@ -132,8 +132,8 @@ void N2D2::ONNX_FcCellExport::generateNode(
         Tensor<Float_T> weightsT({weights.dimB(),
                                   weights.size() / weights.dimB()});
 
-        for (int i = 0; i < weights.size() / weights.dimB(); ++i) {
-            for (int n = 0; n < weights.dimB(); ++n)
+        for (unsigned int i = 0; i < weights.size() / weights.dimB(); ++i) {
+            for (unsigned int n = 0; n < weights.dimB(); ++n)
                 weightsT(n, i) = weightsFloat(i, n);
         }
 
