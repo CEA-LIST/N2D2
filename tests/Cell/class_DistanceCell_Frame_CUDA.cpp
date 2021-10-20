@@ -34,10 +34,11 @@ public:
     DistanceCell_Frame_Test_CUDA(const DeepNet& deepNet, 
                             const std::string& name,
                             unsigned int nbOutputs,
-                            double margin)
+                            double margin,
+                            double centercoef)
         : Cell(deepNet, name, nbOutputs),
-          DistanceCell(deepNet, name, nbOutputs, margin),
-          DistanceCell_Frame_CUDA(deepNet, name, nbOutputs, margin)
+          DistanceCell(deepNet, name, nbOutputs, margin, centercoef),
+          DistanceCell_Frame_CUDA(deepNet, name, nbOutputs, margin, centercoef)
     {
     }
 };
@@ -55,10 +56,11 @@ TEST(DistanceCell_Frame_CUDA,
     const unsigned int feat_dim = 5;
     const unsigned int batch = 4;
     double margin = 0.3;
+    double centercoef = 0.0;
     const unsigned int nbOutputs = num_class;
 
     //  ------------------------------- CLASS INSTANCE -------------------------------------
-    DistanceCell_Frame_Test_CUDA Distance(dn, "Distance", nbOutputs, margin);
+    DistanceCell_Frame_Test_CUDA Distance(dn, "Distance", nbOutputs, margin, centercoef);
     ASSERT_EQUALS(Distance.getName(), "Distance");
     ASSERT_EQUALS(Distance.getNbOutputs(), nbOutputs);
 

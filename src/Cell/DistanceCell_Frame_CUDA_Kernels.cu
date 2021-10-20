@@ -74,6 +74,7 @@ void cudaDistanceL2Backward_input_kernel(unsigned int size, // feat_dim * Batch
                                             unsigned int nb_class, 
                                             unsigned int feat_dim,
                                             const T margin,
+                                            const T centercoef,
                                             const T *label,
                                             const T *inputs,
                                             const T *means, 
@@ -90,7 +91,7 @@ void cudaDistanceL2Backward_input_kernel(unsigned int size, // feat_dim * Batch
         for (int j = 0; j < nb_class; ++j) // j -> index over the number of classes
         {
             if (label[i*nb_class + j] > 0.0f)
-                t += (means[j*feat_dim + k] - inputs[index]) * ((T)1.0 + margin) * diffInputs[i*nb_class + j];
+                t += (means[j*feat_dim + k] - inputs[index]) * (((T)1.0 + margin) * diffInputs[i*nb_class + j] - centercoef);
             else
                 t += (means[j*feat_dim + k] - inputs[index]) * diffInputs[i*nb_class + j];
         }
@@ -105,6 +106,7 @@ void cudaDistanceL2Backward_mean_kernel(unsigned int size, // feat_dim * nb_clas
                                             unsigned int feat_dim,
                                             unsigned int batchsize,
                                             const T margin,
+                                            const T centercoef,
                                             const T *label,
                                             const T *inputs,
                                             const T *means, 
@@ -121,7 +123,7 @@ void cudaDistanceL2Backward_mean_kernel(unsigned int size, // feat_dim * nb_clas
         for (int i = 0; i < batchsize; ++i) // i -> index over the Batch
         {
             if (label[i*nb_class + j] > 0.0f)
-                t += (inputs[i*feat_dim + k] - means[index]) * ((T)1.0 + margin) * diffInputs[i*nb_class + j];
+                t += (inputs[i*feat_dim + k] - means[index]) * (((T)1.0 + margin) * diffInputs[i*nb_class + j] - centercoef);
             else
                 t += (inputs[i*feat_dim + k] - means[index]) * diffInputs[i*nb_class + j];
         }
@@ -176,6 +178,7 @@ void cudaDistanceL2Backward_input(unsigned int size,
                                     unsigned int nb_class, 
                                     unsigned int feat_dim,
                                     const T margin,
+                                    const T centercoef,
                                     const T *label,
                                     const T *inputs,
                                     const T *means, 
@@ -184,6 +187,7 @@ void cudaDistanceL2Backward_input(unsigned int size,
 {
     cudaDistanceL2Backward_input_kernel<<<(size + 255) / 256, 256>>>(size, nb_class, feat_dim,
         reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(margin),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(centercoef),
         reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(label),
         reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(inputs),
         reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(means), 
@@ -199,6 +203,7 @@ void cudaDistanceL2Backward_mean(unsigned int size,
                                     unsigned int feat_dim,
                                     unsigned int batchsize,
                                     const T margin,
+                                    const T centercoef,
                                     const T *label,
                                     const T *inputs,
                                     const T *means, 
@@ -207,6 +212,7 @@ void cudaDistanceL2Backward_mean(unsigned int size,
 {
     cudaDistanceL2Backward_mean_kernel<<<(size + 255) / 256, 256>>>(size, nb_class, feat_dim, batchsize,
         reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(margin),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(centercoef),
         reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(label),
         reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(inputs),
         reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(means), 
@@ -235,6 +241,7 @@ template void cudaDistanceL2Backward_input(unsigned int size,
                                 unsigned int nb_class, 
                                 unsigned int feat_dim,
                                 const float margin,
+                                const float centercoef,
                                 const float *label,
                                 const float *inputs,
                                 const float *means, 
@@ -246,6 +253,7 @@ template void cudaDistanceL2Backward_mean(unsigned int size,
                                     unsigned int feat_dim,
                                     unsigned int batchsize,
                                     const float margin,
+                                    const float centercoef,
                                     const float *label,
                                     const float *inputs,
                                     const float *means, 

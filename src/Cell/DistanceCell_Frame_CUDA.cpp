@@ -40,9 +40,9 @@ static const N2D2::Registrar<N2D2::DistanceCell> registrarFloat(
 
 template<class T>
 N2D2::DistanceCell_Frame_CUDA<T>::DistanceCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
-                                                        unsigned int nbOutputs, double margin)
+                                                        unsigned int nbOutputs, double margin, double centercoef)
     : Cell(deepNet, name, nbOutputs),
-      DistanceCell(deepNet, name, nbOutputs, std::move(margin)),
+      DistanceCell(deepNet, name, nbOutputs, std::move(margin), std::move(centercoef)),
       Cell_Frame_CUDA<T>(deepNet, name, nbOutputs),
       mMean(std::make_shared<CudaTensor<T> >())
 {
@@ -164,12 +164,14 @@ void N2D2::DistanceCell_Frame_CUDA<T>::backPropagate()
     unsigned int nb_class = this->getNbOutputs();
     unsigned int feat_dim = mDiffMean.dimZ();
     unsigned int batchsize = mDiffOutputs[0].dimB();
+    T center_coef = (T)mCenterCoef / (T)batchsize;
 
     cudaDistanceL2Backward_mean(size_mean,
                                     nb_class, 
                                     feat_dim,
                                     batchsize,
                                     (T)mCurrentMargin,
+                                    center_coef,
                                     mLabels.getDevicePtr(),
                                     input0->getDevicePtr(),
                                     mMean->getDevicePtr(), 
@@ -185,6 +187,7 @@ void N2D2::DistanceCell_Frame_CUDA<T>::backPropagate()
                                     nb_class, 
                                     feat_dim,
                                     (T)mCurrentMargin,
+                                    center_coef,
                                     mLabels.getDevicePtr(),
                                     input0->getDevicePtr(),
                                     mMean->getDevicePtr(), 

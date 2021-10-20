@@ -45,13 +45,13 @@ public:
 
     
     DistanceCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
-                           unsigned int nbOutputs, double margin);
+                           unsigned int nbOutputs, double margin, double centercoef);
     virtual ~DistanceCell_Frame_CUDA() = default;
 
     static std::shared_ptr<DistanceCell> create(const DeepNet& deepNet, const std::string& name,
-                                               unsigned int nbOutputs, double margin)
+                                               unsigned int nbOutputs, double margin, double centercoef)
     {
-        return std::make_shared<DistanceCell_Frame_CUDA>(deepNet, name, nbOutputs, std::move(margin));
+        return std::make_shared<DistanceCell_Frame_CUDA>(deepNet, name, nbOutputs, std::move(margin), std::move(centercoef));
     }
 
     virtual void initialize();

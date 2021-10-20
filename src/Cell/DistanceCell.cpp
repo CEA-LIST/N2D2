@@ -35,9 +35,10 @@ N2D2::RegistryMap_T& N2D2::DistanceCell::registry() {
 }
 
 N2D2::DistanceCell::DistanceCell(const DeepNet& deepNet, const std::string& name,
-                               unsigned int nbOutputs, double margin)
+                               unsigned int nbOutputs, double margin, double centercoef)
     : Cell(deepNet, name, nbOutputs),
       mMargin(std::move(margin)),
+      mCenterCoef(std::move(centercoef)),
       mEndIT(this, "EndRampIT", 0)
 {
 }
@@ -71,7 +72,6 @@ void N2D2::DistanceCell::exportFreeParameters(const std::string& fileName) const
                                  + weightsFile);
 
     const unsigned int channelsSize = getInputsSize();
-    std::cout << "Export means : check it is feature size (512):  " << channelsSize << std::endl;
 
     for (unsigned int output = 0; output < getNbOutputs(); ++output) {
         for (unsigned int channel = 0; channel < channelsSize; ++channel) {
