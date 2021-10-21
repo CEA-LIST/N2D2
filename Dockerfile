@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y \
         libopencv-dev \
         python-dev \
         python3-dev
+	protobuf-compiler \  
+        libprotoc-dev
 
 ENV N2D2_ROOT=/opt/N2D2
 WORKDIR $N2D2_ROOT
