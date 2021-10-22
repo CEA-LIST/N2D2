@@ -142,7 +142,7 @@ TEST(DeepNet, setEnvironment)
     ASSERT_EQUALS(deepNet.getStimuliProvider(), env);
 }
 
-TEST(DeepNet, fuseBatchNormWithConv)
+TEST(DeepNet, fuseBatchNorm)
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
@@ -209,7 +209,7 @@ TEST(DeepNet, fuseBatchNormWithConv)
     conv1->logFreeParametersDistrib("class_DeepNet_conv1_ref.log");
 
     // Fuse!
-    deepNet.fuseBatchNormWithConv();
+    deepNet.fuseBatchNorm();
 
     ASSERT_EQUALS(deepNet.getLayers().size(), 2U);
     ASSERT_EQUALS(conv1->getParameter<bool>("NoBias"), false);

@@ -64,7 +64,7 @@ N2D2::Target::Target(const std::string& name,
       mDefaultTarget(-2)
 {
     // ctor
-    Utils::createDirectories(name);
+    Utils::createDirectories(Utils::filePath(name));
 
     if (!labelsMapping_.empty())
         labelsMapping(labelsMapping_, createMissingLabels);
@@ -319,7 +319,7 @@ void N2D2::Target::logLabelsMapping(const std::string& fileName, bool withStats)
     if (mDataAsTarget)
         return;
 
-    const std::string dataFileName = mName + "/" + fileName + ".dat";
+    const std::string dataFileName = Utils::filePath(mName) + "/" + fileName + ".dat";
     std::ofstream labelsData(dataFileName);
 
     if (!labelsData.good())
@@ -389,7 +389,7 @@ void N2D2::Target::logLabelsMapping(const std::string& fileName, bool withStats)
         gnuplot.set("yrange [0:]");
         gnuplot.setXlabel("Output #");
         gnuplot.setYlabel("Number of stimuli (right: % of total) / ROIs");
-        gnuplot << "stats \"" + dataFileName + "\" using ($4+$5+$6) name \"STIMULI\"";
+        gnuplot << "stats \"" + dataFileName + "\" using ($4+$5+$6) name \"STIMULI\" nooutput";
         gnuplot.set("ytics nomirror");
         gnuplot.set("y2tics 5");
         gnuplot.set("format y2 \"%g%%\"");
@@ -413,7 +413,12 @@ void N2D2::Target::logLabelsMapping(const std::string& fileName, bool withStats)
     }
 }
 
-void N2D2::Target::provideTargets(Database::StimuliSet set) // TODO debug here 
+// For future improvements
+// The 'set' argument in Target::provideTargets should be removed
+// in order to to have access to all the parts of the 
+// provideTargets method with any type of dataset (Learn, Test,...)
+
+void N2D2::Target::provideTargets(Database::StimuliSet set)
 {
     std::shared_ptr<Cell_Frame_Top> targetCell 
         = std::dynamic_pointer_cast<Cell_Frame_Top>(mCell);
@@ -881,7 +886,7 @@ void N2D2::Target::process_Frame(BaseTensor& values,
 
 void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
 {
-    const std::string dirPath = mName + "/" + dirName;
+    const std::string dirPath = Utils::filePath(mName) + "/" + dirName;
     Utils::createDirectories(dirPath);
 
     const bool validDatabase
@@ -1271,7 +1276,7 @@ void N2D2::Target::logEstimatedLabelsJSON(const std::string& dirName,
                                           unsigned int yOffset,
                                           bool append) const
 {
-    const std::string dirPath = mName + "/" + dirName;
+    const std::string dirPath = Utils::filePath(mName) + "/" + dirName;
     Utils::createDirectories(dirPath);
 
     int dev = 0;
@@ -1612,8 +1617,8 @@ void N2D2::Target::logLabelsLegend(const std::string& fileName) const
     cv::cvtColor(legendImg, imgColor, CV_HSV2BGR);
 #endif
 
-    if (!cv::imwrite(mName + "/" + fileName, imgColor))
-        throw std::runtime_error("Unable to write image: " + mName + "/"
+    if (!cv::imwrite(Utils::filePath(mName) + "/" + fileName, imgColor))
+        throw std::runtime_error("Unable to write image: " + Utils::filePath(mName) + "/"
                                  + fileName);
 }
 

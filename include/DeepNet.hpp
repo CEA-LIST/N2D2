@@ -127,7 +127,7 @@ public:
     void initializeCMonitors(unsigned int nbTimesteps);
     void spikeCodingCompare(const std::string& dirName, unsigned int idx) const;
 
-    void fuseBatchNormWithConv();
+    void fuseBatchNorm();
     void insertBatchNormAfterConv(bool moveActivation = true);
     void fusePadding();
     void removeDropout();
@@ -316,6 +316,10 @@ private:
     std::multimap<std::string, std::string> mParentLayers;
     unsigned int mStreamIdx;
     unsigned int mStreamTestIdx;
+    // Cache for getReceptiveField()
+    mutable std::map<std::string,
+                     std::map<std::vector<unsigned int>,
+                              std::vector<unsigned int> > > mReceptiveFields;
 };
 }
 

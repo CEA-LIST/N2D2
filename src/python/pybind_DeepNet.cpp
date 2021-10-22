@@ -64,7 +64,7 @@ void init_DeepNet(py::module &m) {
     .def("cReset", &DeepNet::cReset, py::arg("timestamp") = 0)
     .def("initializeCMonitors", &DeepNet::initializeCMonitors, py::arg("nbTimesteps"))
     .def("spikeCodingCompare", &DeepNet::spikeCodingCompare, py::arg("dirName"), py::arg("idx"))
-    .def("fuseBatchNormWithConv", &DeepNet::fuseBatchNormWithConv)
+    .def("fuseBatchNorm", &DeepNet::fuseBatchNorm)
     .def("removeDropout", &DeepNet::removeDropout)
     .def("setDatabase", &DeepNet::setDatabase, py::arg("database"))
     .def("setStimuliProvider", &DeepNet::setStimuliProvider, py::arg("sp"))

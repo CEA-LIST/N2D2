@@ -24,48 +24,49 @@
 #include "FloatT.hpp"
 #include <utility>
 
+#include "CudaUtils.hpp"
 
 namespace N2D2 {
 
 template<typename T>
-void cudaFloatingPointScaling_propagate(const T* input, T* output,
+void cudaFloatingPointScaling_propagate(const cudaDeviceProp& deviceProp,
+                                        const T* input, T* output,
                                         std::size_t batchSize, std::size_t nbChannels,
                                         std::size_t heigth, std::size_t width,
                                         bool isClipped,
                                         Float_T* clippingFactorPerChannel,
                                         Float_T* scalingFactorPerChannel,
-                                        std::size_t quantizedNbBits, bool isOutputUnsigned,
-                                        dim3 blocksPerGrid, dim3 threadsPerBlock);
+                                        std::size_t quantizedNbBits, bool isOutputUnsigned);
 
 template<typename T>
-void cudaFixedPointScaling_propagate(const T* input, T* output,
+void cudaFixedPointScaling_propagate(const cudaDeviceProp& deviceProp,
+                                     const T* input, T* output,
                                      std::size_t batchSize, std::size_t nbChannels,
                                      std::size_t heigth, std::size_t width,
                                      bool isClipped,
                                      Float_T* clippingFactorPerChannel,
                                      std::int32_t* scalingPerOutput, std::size_t nbFractionalBits,
-                                     std::size_t quantizedNbBits, bool isOutputUnsigned,
-                                     dim3 blocksPerGrid, dim3 threadsPerBlock);
+                                     std::size_t quantizedNbBits, bool isOutputUnsigned);
 
 template<typename T>
-void cudaSingleShiftScaling_propagate(const T* input, T* output,
+void cudaSingleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
+                                      const T* input, T* output,
                                       std::size_t batchSize, std::size_t nbChannels,
                                       std::size_t heigth, std::size_t width,
                                       bool isClipped,
                                       Float_T* clippingFactorPerChannel,
                                       unsigned char* scalingPerOutput,
-                                      std::size_t quantizedNbBits, bool isOutputUnsigned,
-                                      dim3 blocksPerGrid, dim3 threadsPerBlock);
+                                      std::size_t quantizedNbBits, bool isOutputUnsigned);
 
 template<typename T>
-void cudaDoubleShiftScaling_propagate(const T* input, T* output,
+void cudaDoubleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
+                                      const T* input, T* output,
                                       std::size_t batchSize, std::size_t nbChannels,
                                       std::size_t heigth, std::size_t width,
                                       bool isClipped,
                                       std::pair<unsigned char, unsigned char>* clippingFactorPerChannel,
                                       std::pair<unsigned char, unsigned char>* scalingPerOutput,
-                                      std::size_t quantizedNbBits, bool isOutputUnsigned,
-                                      dim3 blocksPerGrid, dim3 threadsPerBlock);
+                                      std::size_t quantizedNbBits, bool isOutputUnsigned);
 
 }
 

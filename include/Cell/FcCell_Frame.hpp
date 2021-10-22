@@ -96,6 +96,8 @@ public:
     {
         return &mSynapses;
     };
+    virtual const BaseInterface* getWeights() const { return &mSynapses; };
+    virtual const BaseTensor* getBiases() const { return &mBias; };
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void saveFreeParameters(const std::string& fileName) const;
     void loadFreeParameters(const std::string& fileName,

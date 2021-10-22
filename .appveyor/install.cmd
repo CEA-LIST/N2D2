@@ -16,7 +16,30 @@ appveyor DownloadFile ^
 opencv-2.4.13.2-vc14.exe -o"C:\tools_vc14" -y
 
 echo Installing Protobuf
-choco install -y protoc
+:: Clone version 3.0.x, which corresponds to the default Ubuntu 18.04 LTS version
+:: Don't use master, as it breaks the build too often!
+git clone -q --branch=3.0.x https://github.com/google/protobuf.git C:\projects\protobuf
+cd C:\projects\protobuf
+:: with CMake > 3.15, protobuf CMake won't let us choose MultiThreadedDLL
+:: because the Dprotobuf_MSVC_STATIC_RUNTIME option is not enforced...
+powershell -Command "(gc cmake/CMakeLists.txt) -replace 'MultiThreaded\$<\$<CONFIG:Debug>:Debug>', 'MultiThreaded$<$<CONFIG:Debug>:Debug>DLL' | Out-File -encoding ASCII cmake/CMakeLists.txt"
+mkdir build_cmake
+cd build_cmake
+cmake ..\cmake -A x64 ^
+  -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL ^
+  -DCMAKE_CONFIGURATION_TYPES="Release" ^
+  -DBUILD_SHARED_LIBS=0 ^
+  -Dprotobuf_BUILD_TESTS=0 ^
+  -Dprotobuf_MSVC_STATIC_RUNTIME=0
+cmake --build . --config Release
+cmake --build . --config Release --target install
+set CMAKE_INCLUDE_PATH=%CMAKE_INCLUDE_PATH%;C:/Program Files (x86)/protobuf/include
+set CMAKE_LIBRARY_PATH=%CMAKE_LIBRARY_PATH%;C:/Program Files (x86)/protobuf/lib
+set PATH=C:/Program Files (x86)/protobuf/bin;%PATH%
+cd C:\projects\n2d2
+
+echo Installing graphviz (optional)
+choco install graphviz
 
 if DEFINED USE_CUDA goto :use_cuda
 goto :endif

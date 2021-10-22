@@ -154,51 +154,57 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
 #ifdef JSONCPP
     const std::string anchorsJSONpath = Utils::expandEnvVars(
         iniConfig.getProperty<std::string>("AnchorJSON", ""));
-    std::ifstream jsonData(anchorsJSONpath);
+    if(!anchorsJSONpath.empty()) {
+        std::ifstream jsonData(anchorsJSONpath);
+        std::cout << "anchorsJSONpath.empty()" << anchorsJSONpath.empty() << std::endl;
+        if (!jsonData.good()) {
+            throw std::runtime_error("AnchorCellGenerator::generate: Could not open JSON Anchor file "
+                                        "(missing?): " + anchorsJSONpath);
+        }
+        Json::Reader reader;
+        Json::Value labels;
+        if (!reader.parse(jsonData, labels)) {
+            std::cerr << "AnchorCellGenerator::generate: Error parsing JSON file " 
+                << anchorsJSONpath<< " at line "
+                << reader.getFormattedErrorMessages() << std::endl;
 
-    if (!jsonData.good()) {
-        throw std::runtime_error("AnchorCellGenerator::generate: Could not open JSON Anchor file "
-                                    "(missing?): " + anchorsJSONpath);
-    }
-    Json::Reader reader;
-    Json::Value labels;
-    if (!reader.parse(jsonData, labels)) {
-        std::cerr << "AnchorCellGenerator::generate: Error parsing JSON file " 
-            << anchorsJSONpath<< " at line "
-            << reader.getFormattedErrorMessages() << std::endl;
-
-        throw std::runtime_error("JSON file parsing failed");
-    }
-    const Json::Value& jsonAnnotations = labels["ANCHORS"];
-    if(jsonAnnotations.size() < 1 ){
-        std::cerr << "Error parsing JSON file " << anchorsJSONpath << " at field "
-            << "annotations: Cannot have more than one"
+            throw std::runtime_error("JSON file parsing failed");
+        }
+        const Json::Value& jsonAnnotations = labels["ANCHORS"];
+        if(jsonAnnotations.size() < 1 ){
+            std::cerr << "Error parsing JSON file " << anchorsJSONpath << " at field "
+                << "annotations: Cannot have more than one"
+                << " annotations mask per file, here it is " 
             << " annotations mask per file, here it is " 
-            << jsonAnnotations.size() << std::endl;
+                << " annotations mask per file, here it is " 
+                << jsonAnnotations.size() << std::endl;
 
-        throw std::runtime_error(" file parsing failed");
-    }
-    for(unsigned int cls = 0; cls < jsonAnnotations.size(); ++cls ){
-        const Json::Value& clsAnchors = jsonAnnotations[cls];
-        for(unsigned int idx = 0; idx < clsAnchors.size(); ++idx ) {
-            const Json::Value& idxAnchors = clsAnchors[idx];
-            if(idxAnchors.size() != 4 ) {
-                std::cerr << "Error parsing JSON file " << anchorsJSONpath << " at field "
+            throw std::runtime_error(" file parsing failed");
+        }
+        for(unsigned int cls = 0; cls < jsonAnnotations.size(); ++cls ){
+            const Json::Value& clsAnchors = jsonAnnotations[cls];
+            for(unsigned int idx = 0; idx < clsAnchors.size(); ++idx ) {
+                const Json::Value& idxAnchors = clsAnchors[idx];
+                if(idxAnchors.size() != 4 ) {
+                    std::cerr << "Error parsing JSON file " << anchorsJSONpath << " at field "
+                        << "annotations: Cannot have an anchor field values size different than 4 " 
                     << "annotations: Cannot have an anchor field values size different than 4 " 
-                    << idxAnchors.size() << std::endl;
-                throw std::runtime_error(" file parsing failed");
-            }
-            
-            const double x0 = idxAnchors[1].asDouble();
-            const double y0 = idxAnchors[0].asDouble();
-            const double w = std::abs(x0) + std::abs(idxAnchors[3].asDouble());
-            const double h = std::abs(y0) + std::abs(idxAnchors[2].asDouble());
+                        << "annotations: Cannot have an anchor field values size different than 4 " 
+                        << idxAnchors.size() << std::endl;
+                    throw std::runtime_error(" file parsing failed");
+                }
+                
+                const double x0 = idxAnchors[1].asDouble();
+                const double y0 = idxAnchors[0].asDouble();
+                const double w = std::abs(x0) + std::abs(idxAnchors[3].asDouble());
+                const double h = std::abs(y0) + std::abs(idxAnchors[2].asDouble());
 
-            anchors.push_back(AnchorCell_Frame_Kernels::Anchor(x0,
-                                                            y0,
-                                                            w,
-                                                            h));
-            
+                anchors.push_back(AnchorCell_Frame_Kernels::Anchor(x0,
+                                                                y0,
+                                                                w,
+                                                                h));
+                
+            }
         }
     }
 #endif

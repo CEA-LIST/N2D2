@@ -142,6 +142,20 @@ N2D2::StimuliProviderGenerator::generateSubSections(const std::shared_ptr
             else
                 throw std::runtime_error("Unknown StimuliProvider type: ["
                                          + (*it) + "].");
+
+        } else if (Utils::match(section + ".Adversarial", *it)) {
+            
+            sp->setAdversarialAttack(AdversarialGenerator::generate(iniConfig, section + ".Adversarial"));
+
+#ifdef CUDA
+            if (sp->getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) {
+                unsigned int nbDevice = std::count(sp->getStates().begin(), 
+                                                   sp->getStates().end(), 
+                                                   N2D2::DeviceState::Connected);
+                if (nbDevice > 1)
+                    throw std::runtime_error("Impossible to launch an adversarial attack with Multi-GPU.");
+            }
+#endif
         }
     }
 }

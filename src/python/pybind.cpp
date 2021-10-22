@@ -37,8 +37,9 @@ void init_IniParser(py::module&);
 void init_Tensor(py::module&);
 void init_Network(py::module&);
 void init_StimuliProvider(py::module&);
-
-//target 
+void init_Cell(py::module&);
+void init_Cell_Frame_Top(py::module&);
+void init_Cell_Frame(py::module&);
 void init_Target(py::module&);
 void init_TargetScore(py::module&);
 
@@ -47,7 +48,6 @@ void init_DeepNet(py::module&);
 void init_DeepNetQuantization(py::module&);
 void init_DeepNetExport(py::module&);
 void init_DrawNet(py::module&);
-
 //Database
 void init_Database(py::module&);
 void init_DIR_Database(py::module&);
@@ -293,7 +293,6 @@ void init_N2D2(py::module& m) {
     init_Network(m);
     
     init_StimuliProvider(m);
-
     init_Target(m);
     init_TargetScore(m);
 

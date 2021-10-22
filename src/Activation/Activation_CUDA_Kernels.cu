@@ -323,8 +323,13 @@ __global__ void cudaSwish_propagate_kernel<__half>(__half* x,
 
     for (unsigned int i = index; i < size; i += stride) {
 // hexp and hlog are only available since CUDA 8.0
-#if __CUDA_ARCH__ >= 530 && defined(CUDART_VERSION) && CUDART_VERSION >= 8000
+#if __CUDA_ARCH__ >= 530 && defined(CUDART_VERSION) && CUDART_VERSION >= 9000
         const __half sig = __hdiv(__float2half(1.0f),
+                                  __hadd(__float2half(1.0f),
+                                         hexp(__hneg(x[i]))));
+#elif __CUDA_ARCH__ >= 530 && defined(CUDART_VERSION) && CUDART_VERSION >= 8000
+// __hdiv was named hdiv in CUDA 8...
+        const __half sig = hdiv(__float2half(1.0f),
                                   __hadd(__float2half(1.0f),
                                          hexp(__hneg(x[i]))));
 #else

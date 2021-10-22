@@ -77,6 +77,7 @@
 #include "Target/TargetMatching.hpp"
 #include "Transformation/RangeAffineTransformation.hpp"
 #include "utils/ProgramOptions.hpp"
+#include "Adversarial.hpp"
 
 #ifdef CUDA
 #include <cudnn.h>
@@ -280,6 +281,8 @@ public:
                                                     " in the Test set");
         testId =      opts.parse("-test-id", -1, "test a single specific stimulus ID (takes"
                                                  " precedence over -test-index)");
+        testAdv =     opts.parse("-testAdv", std::string(), "performs an adversarial study "
+                                                            "only options: Solo or Multi");
         check =       opts.parse("-check", "enable gradient computation checking");
         logOutputs =  opts.parse("-log-outputs", 0U, "log layers outputs for the n-th "
                                                      "stimulus (0 = no log)");
@@ -313,7 +316,7 @@ public:
         actClippingMode = parseClippingMode(
                            opts.parse("-act-clipping-mode", std::string("MSE"), 
                                           "activation clipping mode on export, "
-                                          "can be 'None', 'MSE' or 'KL-Divergence'"));
+                                          "can be 'None', 'MSE', 'KL-Divergence' or 'Quantile'"));
         actScalingMode = parseScalingMode(
                            opts.parse("-act-rescaling-mode", std::string("Floating-point"), 
                                           "activation scaling mode on export, "
@@ -321,6 +324,8 @@ public:
                                           "or 'Double-shift'"));
         actRescalePerOutput = opts.parse("-act-rescale-per-output", false, 
                                               "rescale activation per output on export");
+        actQuantileValue = opts.parse("-act-quantile-value", 0.9999, 
+                                              "quantile value for 'Quantile' clipping mode");
         timeStep =    opts.parse("-ts", 0.1, "timestep for clock-based simulations (ns)");
         saveTestSet = opts.parse("-save-test-set", std::string(), "save the test dataset to a "
                                                                   "specified location");
@@ -386,6 +391,7 @@ public:
     unsigned int avgWindow;
     int testIndex;
     int testId;
+    std::string testAdv;
     bool check;
     unsigned int logOutputs;
     bool logJSON;
@@ -403,6 +409,7 @@ public:
     ClippingMode actClippingMode;
     ScalingMode actScalingMode;
     bool actRescalePerOutput;
+    double actQuantileValue;
     bool exportNoUnsigned;
     bool exportNoCrossLayerEqualization;
     double timeStep;
@@ -451,7 +458,7 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
         if (opt.logKernels)
             deepNet->logFreeParameters("kernels_quantized");
 #endif            
-        //deepNet->exportNetworkFreeParameters("weights_quantized");
+        deepNet->exportNetworkFreeParameters("weights_quantized");
     }
 
     startTimeSp = std::chrono::high_resolution_clock::now();
@@ -472,6 +479,10 @@ void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalib
                                             .count()));
 
         sp->synchronize();
+
+        if (sp->getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) 
+            sp->getAdversarialAttack()->attackLauncher(deepNet);
+
         std::thread inferThread(inferThreadWrapper,
                                 deepNet, Database::Test, &timings);
 
@@ -677,8 +688,9 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
     importFreeParameters(opt, *deepNet);
 
     deepNet->removeDropout();
+
     if(!opt.qatSAT) {
-        deepNet->fuseBatchNormWithConv();
+        deepNet->fuseBatchNorm();
     }
     const std::string exportDir = "export_" + opt.genExport + "_" + 
                                   ((opt.nbBits > 0) ? "int" : "float") +
@@ -799,13 +811,15 @@ bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
 
         RangeStats::logOutputsRange(exportDir + "/calibration/outputs_range.dat", outputsRange);
         Histogram::logOutputsHistogram(exportDir + "/calibration/outputs_histogram", outputsHistogram, 
-                                       opt.nbBits, opt.actClippingMode);
+                                       opt.nbBits, opt.actClippingMode,
+                                       opt.actQuantileValue);
 
 
         std::cout << "Quantization (" << opt.nbBits << " bits)..." << std::endl;
         dnQuantization.quantizeNetwork(outputsHistogram, outputsRange,
                                        opt.nbBits, opt.actClippingMode, 
-                                       opt.actScalingMode, opt.actRescalePerOutput);
+                                       opt.actScalingMode, opt.actRescalePerOutput,
+                                       opt.actQuantileValue);
         
         afterCalibration = true;
     }
@@ -899,7 +913,7 @@ void findLearningRate(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             = std::dynamic_pointer_cast<TargetScore>(*itTargets);
 
         if (target) {
-            fileName = "find_lr_" + target->getName() + ".dat";
+            fileName = "find_lr_" + Utils::filePath(target->getName()) + ".dat";
             const std::vector<Float_T>& loss = target->getLoss();
 
             std::ofstream lrLoss(fileName.c_str());
@@ -1057,6 +1071,10 @@ void learn_epoch(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
             startTime = std::chrono::high_resolution_clock::now();
             
             sp->synchronize();
+
+            if (sp->getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) 
+                sp->getAdversarialAttack()->attackLauncher(deepNet);
+
             std::thread learnThread(learnThreadWrapper,
                                     deepNet,
                                     (opt.bench) ? &timings : NULL);
@@ -1531,6 +1549,10 @@ void learn(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         }
 
         sp->synchronize();
+
+        if (sp->getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) 
+            sp->getAdversarialAttack()->attackLauncher(deepNet);
+
         std::thread learnThread(learnThreadWrapper,
                                 deepNet,
                                 (opt.bench) ? &timings : NULL);
@@ -2498,6 +2520,17 @@ int main(int argc, char* argv[]) try
         database.logROIsStats("dbstats/testset-roi-size.dat",
                               "dbstats/testset-roi-label.dat",
                               Database::TestOnly);
+
+        // Multi-channels
+        if (!database.getParameter<std::string>("MultiChannelMatch").empty()) {
+            database.logMultiChannelStats("dbstats/database-multi-stats.dat");
+            database.logMultiChannelStats("dbstats/learnset-multi-stats.dat",
+                                          Database::LearnOnly);
+            database.logMultiChannelStats("dbstats/validationset-multi-stats.dat",
+                                          Database::ValidationOnly);
+            database.logMultiChannelStats("dbstats/testset-multi-stats.dat",
+                                          Database::TestOnly);
+        }
     }
 
     /**
@@ -2579,7 +2612,7 @@ int main(int argc, char* argv[]) try
         }
  
         if (opt.fuse)
-            deepNet->fuseBatchNormWithConv();
+            deepNet->fuseBatchNorm();
     }
     else if (opt.nbBits > 0) {
         // afterCalibration means that we are trying to simulate export result.
@@ -2641,6 +2674,30 @@ int main(int argc, char* argv[]) try
 
     if (cEnv) {
         testCStdp(opt, deepNet);
+    }
+
+    // Adversararial testing section
+    if (!opt.testAdv.empty()) {
+        std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
+
+        if (sp->getAdversarialAttack()->getAttackName() == Adversarial::Attack_T::None) {
+            std::stringstream msgStr;
+            msgStr << "Please precise the name of your attack "
+                   << "in the [sp.Adversarial] section of the ini file";
+
+            throw std::runtime_error(msgStr.str());
+        }
+
+        std::ostringstream dirName;
+        dirName << "testAdversarial";
+        Utils::createDirectories(dirName.str());
+
+        if (opt.testAdv == "Multi")
+            sp->getAdversarialAttack()->multiTestAdv(deepNet, dirName.str());
+        else if (opt.testAdv == "Solo")
+            sp->getAdversarialAttack()->singleTestAdv(deepNet, dirName.str());
+        else
+            throw std::runtime_error("Unknown adversarial option");
     }
 
     std::shared_ptr<Environment> env = std::dynamic_pointer_cast

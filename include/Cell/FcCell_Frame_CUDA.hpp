@@ -84,10 +84,8 @@ public:
     inline void getQuantWeight(unsigned int output, unsigned int channel,
                           BaseTensor& value) const;
     inline void getBias(unsigned int output, BaseTensor& value) const;
-    inline BaseInterface* getWeights()
-    {
-        return &mSynapses;
-    };
+    virtual const BaseInterface* getWeights() const { return &mSynapses; };
+    virtual const BaseTensor* getBiases() const { return &mBias; };
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void logFreeParameters(const std::string& fileName,
                            unsigned int output) const;

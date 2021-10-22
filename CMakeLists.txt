@@ -157,8 +157,8 @@ endfunction()
 # Must be called after find_package(CUDA) as the find_package call resets CUDA_NVCC_FLAGS
 macro(set_nvcc_flags)
     set(CUDA_PROPAGATE_HOST_FLAGS OFF)
-    # Must be replace by sm_80 for A100 architecture
-    list(APPEND CUDA_NVCC_FLAGS -std=c++11;-arch=sm_30;)
+    cuda_select_nvcc_arch_flags(ARCH_FLAGS Auto)
+    list(APPEND CUDA_NVCC_FLAGS -std=c++11;${ARCH_FLAGS})
     if (MSVC)
         list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-MD;)
     else()
@@ -193,7 +193,7 @@ target_compile_definitions(n2d2_lib PUBLIC N2D2_COMPILE_PATH=\"${CMAKE_SOURCE_DI
 
 if(MSVC)
     # TODO clean-up warnings
-    target_compile_options(n2d2_lib PUBLIC /W3 /wd4250 /wd4512 /wd4267 /wd4244 /wd4800 /wd4297)
+    target_compile_options(n2d2_lib PUBLIC /W3 /wd4250 /wd4512 /wd4267 /wd4244 /wd4800 /wd4297 /bigobj)
     target_compile_definitions(n2d2_lib PUBLIC _CONSOLE _VISUALC_ NeedFunctionPrototypes _CRT_SECURE_NO_WARNINGS _VARIADIC_MAX=10)
 else()
     target_compile_options(n2d2_lib PUBLIC -std=c++0x -Wall -Wextra -pedantic -Wno-unknown-pragmas -fsigned-char -fPIC)
@@ -280,9 +280,6 @@ if(MSVC)
                             "install it from http://www.softagalleria.net/dirent.php")
     endif()
 endif()
-
-
-
 
 set_target_properties(n2d2_lib PROPERTIES COTIRE_ADD_UNITY_BUILD FALSE)
 set_target_properties(n2d2_lib PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "${CMAKE_CURRENT_LIST_DIR}/include/Precompiled.hpp")
