@@ -33,6 +33,7 @@ test:ubuntu:
     - ubuntu
   script:
 #    - cd build
+    - export N2D2_DATA=/nvme0/DATABASE
     - make tests -j4
     - make test
 
