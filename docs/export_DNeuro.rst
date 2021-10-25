@@ -214,7 +214,7 @@ provided in ``RTL/NETWORK/simu/PythonTOOL``. To generate a Vivado project, run:
 ::
 
     cd RTL/NETWORK/simu
-    python2.7 PythonTOOL/vivadoGenerate.py
+    python PythonTOOL/vivadoGenerate.py
 
 This script creates a new project in ``RTL/NETWORK/simu/VivadoTOOL/project_export_DNeuro``.
 Do not forget to change the default project's part.

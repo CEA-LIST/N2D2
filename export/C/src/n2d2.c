@@ -1442,11 +1442,10 @@ elemwise_propagate(unsigned int channelsHeight,
                 if (rescaleFactorPerOutput[0] != 0) { //Fixed-point
                     const size_t half = (1u << (shift -1));
                     opValue = (opValue*rescaleFactorPerOutput[output] 
-                        + half) >> shift;
-                    outputs[output][oy][ox] = sat(opValue, func, 0);
-                } else { //Single-shift
-                    outputs[output][oy][ox] = sat(opValue, func, shift);
+                        + half);
                 }
+
+                outputs[output][oy][ox] = sat(opValue, func, shift);
             }
         }
     }
@@ -1483,11 +1482,10 @@ elemwise_upropagate(unsigned int channelsHeight,
                 if (rescaleFactorPerOutput[0] != 0) { //Fixed-point
                     const size_t half = (1u << (shift -1));
                     opValue = (opValue*rescaleFactorPerOutput[output] 
-                        + half) >> shift;
-                    outputs[output][oy][ox] = usat(opValue, func, 0);
-                }else{ //Single-shift
-                    outputs[output][oy][ox] = usat(opValue, func, shift);
+                        + half);
                 }
+
+                outputs[output][oy][ox] = usat(opValue, func, shift);
             }
         }
     }
