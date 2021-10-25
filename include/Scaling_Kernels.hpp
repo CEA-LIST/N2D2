@@ -34,14 +34,14 @@ class Tensor;
 template<typename T>
 void floatingPointScaling_propagate(const Tensor<T>& input, Tensor<T>& output,
                                     std::size_t batchSize, std::size_t nbChannels,
-                                    std::size_t heigth, std::size_t width,
+                                    std::size_t height, std::size_t width,
                                     const std::vector<Float_T>& scalingFactorPerChannel,
                                     std::size_t quantizedNbBits, bool isOutputUnsigned);
 
 template<typename T>
 void fixedPointScaling_propagate(const Tensor<T>& input, Tensor<T>& output,
                                  std::size_t batchSize, std::size_t nbChannels,
-                                 std::size_t heigth, std::size_t width,
+                                 std::size_t height, std::size_t width,
                                  const std::vector<std::int32_t>& scalingPerOutput, 
                                  std::size_t nbFractionalBits,
                                  std::size_t quantizedNbBits, bool isOutputUnsigned);
@@ -49,14 +49,14 @@ void fixedPointScaling_propagate(const Tensor<T>& input, Tensor<T>& output,
 template<typename T>
 void singleShiftScaling_propagate(const Tensor<T>& input, Tensor<T>& output,
                                   std::size_t batchSize, std::size_t nbChannels,
-                                  std::size_t heigth, std::size_t width,
+                                  std::size_t height, std::size_t width,
                                   const std::vector<unsigned char>& scalingPerOutput,
                                   std::size_t quantizedNbBits, bool isOutputUnsigned);
 
 template<typename T>
 void doubleShiftScaling_propagate(const Tensor<T>& input, Tensor<T>& output,
                         std::size_t batchSize, std::size_t nbChannels,
-                        std::size_t heigth, std::size_t width,
+                        std::size_t height, std::size_t width,
                         const std::vector<std::pair<unsigned char, unsigned char>>& scalingPerOutput,
                         std::size_t quantizedNbBits, bool isOutputUnsigned);
 

@@ -41,7 +41,7 @@ __device__ T saturate(T value, std::size_t quantizedNbBits, bool isOutputUnsigne
 template<typename T>
 __global__ void cudaFloatingPointScaling_kernel(const T* input, T* output,
                                                 std::size_t batchSize, std::size_t nbChannels,
-                                                std::size_t heigth, std::size_t width,
+                                                std::size_t height, std::size_t width,
                                                 Float_T* scalingFactorPerChannel, 
                                                 std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
@@ -54,9 +54,9 @@ __global__ void cudaFloatingPointScaling_kernel(const T* input, T* output,
     
     for (std::size_t batch = startBatch; batch < batchSize; batch += strideBatch) {
         for(std::size_t ch = 0; ch < nbChannels; ch++) {
-            for (std::size_t i = startI; i < heigth*width; i += strideI) {
-                const std::size_t index = batch*nbChannels*heigth*width + 
-                                          ch*heigth*width +
+            for (std::size_t i = startI; i < height*width; i += strideI) {
+                const std::size_t index = batch*nbChannels*height*width + 
+                                          ch*height*width +
                                           i;
 
                 T res = input[index]*scalingFactorPerChannel[ch];
@@ -73,7 +73,7 @@ __global__ void cudaFloatingPointScaling_kernel(const T* input, T* output,
 template<typename T>
 __global__ void cudaFixedPointScaling_kernel(const T* input, T* output,
                                              std::size_t batchSize, std::size_t nbChannels,
-                                             std::size_t heigth, std::size_t width,
+                                             std::size_t height, std::size_t width,
                                              std::int32_t* scalingFactorPerChannel, std::size_t nbFractionalBits,
                                              std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
@@ -88,9 +88,9 @@ __global__ void cudaFixedPointScaling_kernel(const T* input, T* output,
     
     for (std::size_t batch = startBatch; batch < batchSize; batch += strideBatch) {
         for(std::size_t ch = 0; ch < nbChannels; ch++) {
-            for (std::size_t i = startI; i < heigth*width; i += strideI) {
-                const std::size_t index = batch*nbChannels*heigth*width + 
-                                          ch*heigth*width +
+            for (std::size_t i = startI; i < height*width; i += strideI) {
+                const std::size_t index = batch*nbChannels*height*width + 
+                                          ch*height*width +
                                           i;
                 
                 const long long half = (nbFractionalBits > 0)
@@ -109,7 +109,7 @@ __global__ void cudaFixedPointScaling_kernel(const T* input, T* output,
 template<typename T>
 __global__ void cudaSingleShiftScaling_kernel(const T* input, T* output,
                                                 std::size_t batchSize, std::size_t nbChannels,
-                                                std::size_t heigth, std::size_t width,
+                                                std::size_t height, std::size_t width,
                                                 unsigned char* scalingFactorPerChannel,
                                                 std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
@@ -122,9 +122,9 @@ __global__ void cudaSingleShiftScaling_kernel(const T* input, T* output,
     
     for (std::size_t batch = startBatch; batch < batchSize; batch += strideBatch) {
         for(std::size_t ch = 0; ch < nbChannels; ch++) {
-            for (std::size_t i = startI; i < heigth*width; i += strideI) {
-                const std::size_t index = batch*nbChannels*heigth*width + 
-                                          ch*heigth*width +
+            for (std::size_t i = startI; i < height*width; i += strideI) {
+                const std::size_t index = batch*nbChannels*height*width + 
+                                          ch*height*width +
                                           i;
                 
                 const long long half = (scalingFactorPerChannel[ch] > 0)
@@ -143,7 +143,7 @@ __global__ void cudaSingleShiftScaling_kernel(const T* input, T* output,
 template<typename T>
 __global__ void cudaDoubleShiftScaling_kernel(const T* input, T* output,
                                               std::size_t batchSize, std::size_t nbChannels,
-                                              std::size_t heigth, std::size_t width,
+                                              std::size_t height, std::size_t width,
                                               std::pair<unsigned char, unsigned char>* scalingFactorPerChannel,
                                               std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
@@ -156,9 +156,9 @@ __global__ void cudaDoubleShiftScaling_kernel(const T* input, T* output,
     
     for (std::size_t batch = startBatch; batch < batchSize; batch += strideBatch) {
         for(std::size_t ch = 0; ch < nbChannels; ch++) {
-            for (std::size_t i = startI; i < heigth*width; i += strideI) {
-                const std::size_t index = batch*nbChannels*heigth*width + 
-                                          ch*heigth*width +
+            for (std::size_t i = startI; i < height*width; i += strideI) {
+                const std::size_t index = batch*nbChannels*height*width + 
+                                          ch*height*width +
                                           i;
                 
                 const long long half = (scalingFactorPerChannel[ch].second > 0)
@@ -186,7 +186,7 @@ template<>
 void cudaFloatingPointScaling_propagate<half_float::half>(const cudaDeviceProp& deviceProp,
                                                                 const half_float::half* input, half_float::half* output,
                                                                 std::size_t batchSize, std::size_t nbChannels,
-                                                                std::size_t heigth, std::size_t width,
+                                                                std::size_t height, std::size_t width,
                                                                 Float_T* scalingFactorPerChannel,
                                                                 std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
@@ -198,7 +198,7 @@ template<typename T>
 void cudaFloatingPointScaling_propagate(const cudaDeviceProp& deviceProp,
                                               const T* input, T* output,
                                               std::size_t batchSize, std::size_t nbChannels,
-                                              std::size_t heigth, std::size_t width,
+                                              std::size_t height, std::size_t width,
                                               Float_T* scalingFactorPerChannel,
                                               std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
@@ -209,7 +209,7 @@ void cudaFloatingPointScaling_propagate(const cudaDeviceProp& deviceProp,
 
     cudaFloatingPointScaling_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, 
                                                                         batchSize, nbChannels, 
-                                                                        heigth, width, 
+                                                                        height, width, 
                                                                         scalingFactorPerChannel,
                                                                         quantizedNbBits, isOutputUnsigned);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
@@ -224,7 +224,7 @@ template<>
 void cudaFixedPointScaling_propagate<half_float::half>(const cudaDeviceProp& deviceProp,
                                                              const half_float::half* input, half_float::half* output,
                                                              std::size_t batchSize, std::size_t nbChannels,
-                                                             std::size_t heigth, std::size_t width,
+                                                             std::size_t height, std::size_t width,
                                                              std::int32_t* scalingFactorPerChannel, std::size_t nbFractionalBits,
                                                              std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
@@ -235,7 +235,7 @@ template<typename T>
 void cudaFixedPointScaling_propagate(const cudaDeviceProp& deviceProp,
                                            const T* input, T* output,
                                            std::size_t batchSize, std::size_t nbChannels,
-                                           std::size_t heigth, std::size_t width,
+                                           std::size_t height, std::size_t width,
                                            std::int32_t* scalingFactorPerChannel, std::size_t nbFractionalBits,
                                            std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
@@ -246,7 +246,7 @@ void cudaFixedPointScaling_propagate(const cudaDeviceProp& deviceProp,
 
     cudaFixedPointScaling_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, 
                                                                      batchSize, nbChannels, 
-                                                                     heigth, width, 
+                                                                     height, width, 
                                                                      scalingFactorPerChannel, nbFractionalBits,
                                                                      quantizedNbBits, isOutputUnsigned);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
@@ -262,7 +262,7 @@ template<>
 void cudaSingleShiftScaling_propagate<half_float::half>(const cudaDeviceProp& deviceProp,
                                                               const half_float::half* input, half_float::half* output,
                                                               std::size_t batchSize, std::size_t nbChannels,
-                                                              std::size_t heigth, std::size_t width,
+                                                              std::size_t height, std::size_t width,
                                                               unsigned char* scalingFactorPerChannel,
                                                               std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
@@ -273,7 +273,7 @@ template<typename T>
 void cudaSingleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
                                             const T* input, T* output,
                                             std::size_t batchSize, std::size_t nbChannels,
-                                            std::size_t heigth, std::size_t width,
+                                            std::size_t height, std::size_t width,
                                             unsigned char* scalingFactorPerChannel,
                                             std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
@@ -284,7 +284,7 @@ void cudaSingleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
 
     cudaSingleShiftScaling_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, 
                                                                       batchSize, nbChannels, 
-                                                                      heigth, width, 
+                                                                      height, width, 
                                                                       scalingFactorPerChannel,
                                                                       quantizedNbBits, isOutputUnsigned);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
@@ -299,7 +299,7 @@ template<>
 void cudaDoubleShiftScaling_propagate<half_float::half>(const cudaDeviceProp& deviceProp,
                                                               const half_float::half* input, half_float::half* output,
                                                               std::size_t batchSize, std::size_t nbChannels,
-                                                              std::size_t heigth, std::size_t width,
+                                                              std::size_t height, std::size_t width,
                                                               std::pair<unsigned char, unsigned char>* scalingFactorPerChannel,
                                                               std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
@@ -310,7 +310,7 @@ template<typename T>
 void cudaDoubleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
                                             const T* input, T* output,
                                             std::size_t batchSize, std::size_t nbChannels,
-                                            std::size_t heigth, std::size_t width,
+                                            std::size_t height, std::size_t width,
                                             std::pair<unsigned char, unsigned char>* scalingFactorPerChannel,
                                             std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
@@ -321,7 +321,7 @@ void cudaDoubleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
 
     cudaDoubleShiftScaling_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, 
                                                                       batchSize, nbChannels, 
-                                                                      heigth, width, 
+                                                                      height, width, 
                                                                       scalingFactorPerChannel,
                                                                       quantizedNbBits, isOutputUnsigned);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
@@ -335,21 +335,21 @@ void cudaDoubleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
 template void cudaFloatingPointScaling_propagate<float>(const cudaDeviceProp& deviceProp,
                                                               const float* input, float* output,
                                                               std::size_t batchSize, std::size_t nbChannels,
-                                                              std::size_t heigth, std::size_t width,
+                                                              std::size_t height, std::size_t width,
                                                               Float_T* scalingFactorPerChannel,
                                                               std::size_t quantizedNbBits, bool isOutputUnsigned);
 
 template void cudaFloatingPointScaling_propagate<double>(const cudaDeviceProp& deviceProp,
                                                                const double* input, double* output,
                                                                std::size_t batchSize, std::size_t nbChannels,
-                                                               std::size_t heigth, std::size_t width,
+                                                               std::size_t height, std::size_t width,
                                                                Float_T* scalingFactorPerChannel,
                                                                std::size_t quantizedNbBits, bool isOutputUnsigned);
 
 template void cudaFloatingPointScaling_propagate<half_float::half>(const cudaDeviceProp& deviceProp,
                                                                          const half_float::half* input, half_float::half* output,
                                                                          std::size_t batchSize, std::size_t nbChannels,
-                                                                         std::size_t heigth, std::size_t width,
+                                                                         std::size_t height, std::size_t width,
                                                                          Float_T* scalingFactorPerChannel,
                                                                          std::size_t quantizedNbBits, bool isOutputUnsigned);
 
@@ -357,19 +357,19 @@ template void cudaFloatingPointScaling_propagate<half_float::half>(const cudaDev
 template void cudaFixedPointScaling_propagate<float>(const cudaDeviceProp& deviceProp,
                                                            const float* input, float* output,
                                                            std::size_t batchSize, std::size_t nbChannels,
-                                                           std::size_t heigth, std::size_t width,
+                                                           std::size_t height, std::size_t width,
                                                            std::int32_t* scalingFactorPerChannel, std::size_t nbFractionalBits,
                                                            std::size_t quantizedNbBits, bool isOutputUnsigned);
 template void cudaFixedPointScaling_propagate<double>(const cudaDeviceProp& deviceProp,
                                                             const double* input, double* output,
                                                             std::size_t batchSize, std::size_t nbChannels,
-                                                            std::size_t heigth, std::size_t width,
+                                                            std::size_t height, std::size_t width,
                                                             std::int32_t* scalingFactorPerChannel, std::size_t nbFractionalBits,
                                                             std::size_t quantizedNbBits, bool isOutputUnsigned);
 template void cudaFixedPointScaling_propagate<half_float::half>(const cudaDeviceProp& deviceProp,
                                                                       const half_float::half* input, half_float::half* output,
                                                                       std::size_t batchSize, std::size_t nbChannels,
-                                                                      std::size_t heigth, std::size_t width,
+                                                                      std::size_t height, std::size_t width,
                                                                       std::int32_t* scalingFactorPerChannel, std::size_t nbFractionalBits,
                                                                       std::size_t quantizedNbBits, bool isOutputUnsigned);
 
@@ -377,19 +377,19 @@ template void cudaFixedPointScaling_propagate<half_float::half>(const cudaDevice
 template void cudaSingleShiftScaling_propagate<float>(const cudaDeviceProp& deviceProp,
                                                             const float* input, float* output,
                                                             std::size_t batchSize, std::size_t nbChannels,
-                                                            std::size_t heigth, std::size_t width,
+                                                            std::size_t height, std::size_t width,
                                                             unsigned char* scalingFactorPerChannel,
                                                             std::size_t quantizedNbBits, bool isOutputUnsigned);
 template void cudaSingleShiftScaling_propagate<double>(const cudaDeviceProp& deviceProp,
                                                              const double* input, double* output,
                                                              std::size_t batchSize, std::size_t nbChannels,
-                                                             std::size_t heigth, std::size_t width,
+                                                             std::size_t height, std::size_t width,
                                                              unsigned char* scalingFactorPerChannel,
                                                              std::size_t quantizedNbBits, bool isOutputUnsigned);
 template void cudaSingleShiftScaling_propagate<half_float::half>(const cudaDeviceProp& deviceProp,
                                                                        const half_float::half* input, half_float::half* output,
                                                                        std::size_t batchSize, std::size_t nbChannels,
-                                                                       std::size_t heigth, std::size_t width,
+                                                                       std::size_t height, std::size_t width,
                                                                        unsigned char* scalingFactorPerChannel,
                                                                        std::size_t quantizedNbBits, bool isOutputUnsigned);
 
@@ -397,19 +397,19 @@ template void cudaSingleShiftScaling_propagate<half_float::half>(const cudaDevic
 template void cudaDoubleShiftScaling_propagate<float>(const cudaDeviceProp& deviceProp,
                                                             const float* input, float* output,
                                                             std::size_t batchSize, std::size_t nbChannels,
-                                                            std::size_t heigth, std::size_t width,
+                                                            std::size_t height, std::size_t width,
                                                             std::pair<unsigned char, unsigned char>* scalingFactorPerChannel,
                                                             std::size_t quantizedNbBits, bool isOutputUnsigned);
 template void cudaDoubleShiftScaling_propagate<double>(const cudaDeviceProp& deviceProp,
                                                              const double* input, double* output,
                                                              std::size_t batchSize, std::size_t nbChannels,
-                                                             std::size_t heigth, std::size_t width,
+                                                             std::size_t height, std::size_t width,
                                                              std::pair<unsigned char, unsigned char>* scalingFactorPerChannel,
                                                              std::size_t quantizedNbBits, bool isOutputUnsigned);
 template void cudaDoubleShiftScaling_propagate<half_float::half>(const cudaDeviceProp& deviceProp,
                                                                        const half_float::half* input, half_float::half* output,
                                                                        std::size_t batchSize, std::size_t nbChannels,
-                                                                       std::size_t heigth, std::size_t width,
+                                                                       std::size_t height, std::size_t width,
                                                                        std::pair<unsigned char, unsigned char>* scalingFactorPerChannel,
                                                                        std::size_t quantizedNbBits, bool isOutputUnsigned);
 }

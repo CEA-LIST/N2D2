@@ -32,7 +32,7 @@ template<typename T>
 void cudaFloatingPointScaling_propagate(const cudaDeviceProp& deviceProp,
                                         const T* input, T* output,
                                         std::size_t batchSize, std::size_t nbChannels,
-                                        std::size_t heigth, std::size_t width,
+                                        std::size_t height, std::size_t width,
                                         Float_T* scalingFactorPerChannel,
                                         std::size_t quantizedNbBits, bool isOutputUnsigned);
 
@@ -40,7 +40,7 @@ template<typename T>
 void cudaFixedPointScaling_propagate(const cudaDeviceProp& deviceProp,
                                      const T* input, T* output,
                                      std::size_t batchSize, std::size_t nbChannels,
-                                     std::size_t heigth, std::size_t width,
+                                     std::size_t height, std::size_t width,
                                      std::int32_t* scalingPerOutput, std::size_t nbFractionalBits,
                                      std::size_t quantizedNbBits, bool isOutputUnsigned);
 
@@ -48,7 +48,7 @@ template<typename T>
 void cudaSingleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
                                       const T* input, T* output,
                                       std::size_t batchSize, std::size_t nbChannels,
-                                      std::size_t heigth, std::size_t width,
+                                      std::size_t height, std::size_t width,
                                       unsigned char* scalingPerOutput,
                                       std::size_t quantizedNbBits, bool isOutputUnsigned);
 
@@ -56,7 +56,7 @@ template<typename T>
 void cudaDoubleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
                                       const T* input, T* output,
                                       std::size_t batchSize, std::size_t nbChannels,
-                                      std::size_t heigth, std::size_t width,
+                                      std::size_t height, std::size_t width,
                                       std::pair<unsigned char, unsigned char>* scalingPerOutput,
                                       std::size_t quantizedNbBits, bool isOutputUnsigned);
 
