@@ -58,10 +58,21 @@ public:
     {
         return std::make_shared<FcCell_Frame_CUDA>(deepNet, name, nbOutputs, activation);
     }
+    
+    void resetWeights();
+    void resetBias();
+    void resetWeightsSolver(const std::shared_ptr<Solver>& solver)
+    {
+        setWeightsSolver(solver);
+        for (unsigned int k = 0, size = mWeightsSolvers.size(); k < size; ++k) {
+            mWeightsSolvers[k] = mWeightsSolver->clone();
+        }
+    };
 
     virtual void initialize();
-    virtual void initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping = Tensor<bool>());
+    virtual void initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs);
     virtual void initializeWeightQuantizer();
+    virtual void check_input();
     virtual void initializeDataDependent();
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);
@@ -73,10 +84,8 @@ public:
     inline void getQuantWeight(unsigned int output, unsigned int channel,
                           BaseTensor& value) const;
     inline void getBias(unsigned int output, BaseTensor& value) const;
-    inline BaseInterface* getWeights()
-    {
-        return &mSynapses;
-    };
+    virtual const BaseInterface* getWeights() const { return &mSynapses; };
+    virtual const BaseTensor* getBiases() const { return &mBias; };
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void logFreeParameters(const std::string& fileName,
                            unsigned int output) const;

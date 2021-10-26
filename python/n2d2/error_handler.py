@@ -18,6 +18,8 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
+import warnings
+from functools import wraps
 
 class WrongInputType(TypeError):
     def __init__(self, input_name, input_type, array_of_possible_type):
@@ -42,7 +44,7 @@ class WrongValue(ValueError):
         :param input_name: Name of the empty list
         :type input_name: str
         """
-        super().__init__(input_name + " has value " + str(input_value) + " but only " + accepted_values + " are accepted.")
+        super().__init__(input_name + " has value '" + str(input_value) + "' but only [" + accepted_values + "] are accepted.")
 
 
 class IsEmptyError(ValueError):
@@ -68,3 +70,23 @@ class UndefinedModelError(RuntimeError):
 class UndefinedParameterError(RuntimeError):
    def __init__(self, value, obj):
       super().__init__("Parameter \'" + str(value) + "\' does not exist in object of type " + str(type(obj)))
+
+class IpOnly(NotImplementedError):
+    def __init__(self):
+      super().__init__("This feature is only available in n2d2-ip. (see : https://cea-list.github.io/N2D2-docs/about.html)")
+
+def deprecated(version="", reason=""):
+    def show_warning(function):
+        
+        @wraps(function) 
+        def wrapper(function):
+            print(function)
+            message = function.__name__ + " is deprecated"
+            if version :
+                message += " since version (" + version + ")"
+            if reason:
+                message += " : " + reason
+            warnings.warn(message, DeprecationWarning)
+            return function
+        return wrapper
+    return show_warning

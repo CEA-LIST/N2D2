@@ -126,7 +126,7 @@ public:
     /// is produced. If the seed is set to a positive value, it is garanteed
     /// that the simulation will always produce the
     /// same results.
-    Network(unsigned int seed = 0);
+    Network(unsigned int seed = 0, bool saveSeed = true, bool printTimeElapsed=true);
     /// Process all the events in the network until no further event remains in
     /// the priority queue.
     /// @param stop If not 0, stop the simulation to the specified timestamp.
@@ -200,6 +200,8 @@ private:
     bool mDiscard;
     std::stack<SpikeEvent*> mEventsPool;
     const std::chrono::high_resolution_clock::time_point mStartTime;
+    bool mSaveSeed;
+    bool mPrintTimeElapsed;
 };
 }
 

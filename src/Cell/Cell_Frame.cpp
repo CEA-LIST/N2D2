@@ -330,23 +330,8 @@ void N2D2::Cell_Frame<T>::linkInput(Cell* cell)
     }
     else {
         throw std::runtime_error(
-            "Cell_Frame<T>::addInput(): cannot mix Spike and Frame models");
+            "Cell_Frame<T>::linkInput(): cannot mix Spike and Frame models");
     }
-
-    // Define input-output connections
-    const unsigned int cellNbOutputs = cell->getNbOutputs();
-
-    //if (mMapping.empty()){
-    //      throw std::runtime_error("Cell_Frame<T>::linkInput(): Mapping is empty");
-    //}
-    if (!mMapping.empty() && mMapping.dimY() != cellNbOutputs)
-        throw std::runtime_error("Cell_Frame<T>::addInput(): number of mapping "
-                                 "rows must be equal to the number of input "
-                                 "channels");
-    //if (mMapping.empty()){
-    //    mMapping.append(Tensor<bool>({getNbOutputs(), cell->getNbOutputs()}, true));
-    //}
-
 }
 
 /**
@@ -379,18 +364,6 @@ void N2D2::Cell_Frame<T>::linkInput(StimuliProvider& sp,
     setInputsDims(sp.getSize());
     mInputs.push_back(&sp.getData());
 
-    //if (mMapping.empty()){
-    //      throw std::runtime_error("Cell_Frame<T>::linkInput(): Mapping is empty");
-    //}
-
-
-    if (!mMapping.empty() && mMapping.dimY() != sp.getNbChannels())
-        throw std::runtime_error("Cell_Frame<T>::addInput(): number of mapping "
-                                 "rows must be equal to the number of input "
-                                 "channels");
-    //if (mMapping.empty()){
-     //   mMapping.append(Tensor<bool>({getNbOutputs(), sp.getNbChannels()}, true));
-    //}
 }
 // END code used exclusively in python API
 
@@ -688,6 +661,23 @@ unsigned int N2D2::Cell_Frame<T>::getMaxOutput(unsigned int batchPos) const
     const Tensor<T> output = mOutputs[batchPos];
     return std::distance(output.begin(),
                          std::max_element(output.begin(), output.end()));
+}
+template<>
+std::string N2D2::Cell_Frame<double>::getPyDataType() {
+    return std::string("double");
+}
+
+template<>
+std::string N2D2::Cell_Frame<float>::getPyDataType() {
+    return std::string("float");
+}
+template<>
+std::string N2D2::Cell_Frame<half_float::half>::getPyDataType() {
+    return std::string("half_float");
+}
+template<class T>
+std::string N2D2::Cell_Frame<T>::getPyModel(){
+    return std::string("Frame");
 }
 
 namespace N2D2 {

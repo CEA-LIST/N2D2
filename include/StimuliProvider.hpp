@@ -42,6 +42,8 @@
 
 namespace N2D2 {
 
+class Adversarial;
+
 class StimuliProvider : virtual public Parameterizable, public std::enable_shared_from_this<StimuliProvider> {
 public:
     struct Transformations {
@@ -350,7 +352,9 @@ public:
                         int dev = -1);
 
     void setStreamedTensor(TensorData_T& streamedTensor);
-                        
+
+    void setStreamedLabel(Tensor<int>& streamedLabel);
+
     void synchronizeToDevices();
 
     void reverseLabels(const cv::Mat& mat,
@@ -394,6 +398,11 @@ public:
        mDevicesInfo.states.assign(states.begin(), states.end()); 
     };
 #endif
+
+    void setAdversarialAttack(const std::shared_ptr<Adversarial>& attack)
+    {
+        mAttackAdv = attack;
+    };
 
     // Getters
     Database& getDatabase()
@@ -478,7 +487,7 @@ public:
     };
     TensorData_T& getData(int dev = -1)
     {
-        // TODO : mStreamTensor may need to be reworked, if we want to have multiGPU for python ! 
+        // TODO : mStreamedTensor may need to be reworked, if we want to have multiGPU for python ! 
         if (mStreamTensor) {
             if (!mStreamedTensor) {
                 throw std::runtime_error("Error: StreamTensor==true but StreamedTensor is not initialized");
@@ -497,7 +506,16 @@ public:
     };
     Tensor<int>& getLabelsData(int dev = -1)
     {
-        return mProvidedData[getDevice(dev)].labelsData;
+        if (mStreamLabel) {
+            if (!mStreamedLabel) {
+                throw std::runtime_error("Error: StreamLabel==true but StreamedLabel is not initialized");
+            }
+            return *mStreamedLabel;
+        }
+        else {
+            return mProvidedData[getDevice(dev)].labelsData;
+        }
+        
     };
     const TensorData_T& getData(int dev = -1) const
     {
@@ -512,6 +530,10 @@ public:
         return (!mProvidedData[getDevice(dev)].targetData.empty())
             ? mProvidedData[getDevice(dev)].targetData
             : mProvidedData[getDevice(dev)].data;
+    };
+    std::shared_ptr<Adversarial> getAdversarialAttack() const
+    {
+        return mAttackAdv;
     };
 /*
     const std::vector<std::vector<std::shared_ptr<ROI> > >&
@@ -573,6 +595,8 @@ protected:
     Parameter<Float_T> mQuantizationMax;
     /// Set to deepnet interface mode
     Parameter<bool> mStreamTensor;
+    /// Set to deepnet interface mode
+    Parameter<bool> mStreamLabel;
 
     // Internal variables
     Database& mDatabase;
@@ -595,11 +619,14 @@ protected:
     bool mFuture;
 
     TensorData_T* mStreamedTensor;
-    
+    Tensor<int>* mStreamedLabel;
+
     //Deprecated vector
     std::vector<std::vector<unsigned int >> mDatabaseLearnIndexes;
     std::vector<std::vector<unsigned int >> mDatabaseValIndexes;
     std::vector<std::vector<unsigned int >> mDatabaseTestIndexes;
+    /// Adversarial attack used against the deepNet
+    std::shared_ptr<Adversarial> mAttackAdv;
 
     /// Set of Device IDs used by the deepNet
     std::set<int> mDevices;

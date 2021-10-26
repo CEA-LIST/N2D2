@@ -41,7 +41,6 @@ void declare_Tensor_buffer_protocol(py::class_<Tensor<T>, BaseTensor>& tensor) {
         std::vector<ssize_t> strides;
         ssize_t stride = sizeof(T);
 
-        // Loop reversed beause N2D2 dims are reversed from mathematical and python convention.
         for (unsigned int dim = 0; dim < b.nbDims(); ++dim) {
             dims.push_back(b.dims()[dim]);
             strides.push_back(stride);
@@ -60,7 +59,7 @@ void declare_Tensor_buffer_protocol(py::class_<Tensor<T>, BaseTensor>& tensor) {
             strides                                     /* Strides (in bytes) for each index */
         );
     })
-    .def("__init__", [](Tensor<T>& m, py::array_t<T, py::array::c_style | py::array::forcecast> b) {
+    .def(py::init([]( py::array_t<T, py::array::c_style | py::array::forcecast> b) {
         /* Request a buffer descriptor from Python */
         py::buffer_info info = b.request();
 /*
@@ -78,8 +77,8 @@ void declare_Tensor_buffer_protocol(py::class_<Tensor<T>, BaseTensor>& tensor) {
         }
 */
         const std::vector<size_t> dims(info.shape.begin(), info.shape.end());
-        new (&m) Tensor<T>(dims, static_cast<T*>(info.ptr));
-    });
+        return new Tensor<T>(dims, static_cast<T*>(info.ptr));
+    }));
 }
 
 template<typename T, typename std::enable_if<std::is_same<T, bool>::value>::type* = nullptr>
@@ -92,12 +91,6 @@ void declare_Tensor(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("Tensor_" + typeStr);
     py::class_<Tensor<T>, BaseTensor> tensor(m, pyClassName.c_str(), py::multiple_inheritance(), py::buffer_protocol());
     tensor.def(py::init<>())
-    // Init with lambda to switch dimensions not working ===================================
-    // .def(py::init([] (const std::vector<size_t>& dims, const T& value){
-    //     std::reverse(dims.begin(), dims.end());
-    //     return new Tensor<T>(dims, value);
-    // }))
-    //======================================================================================
     .def(py::init<const std::vector<size_t>&, const T&>(), py::arg("dims"), py::arg("value") = T())
     /// Bare bones interface
     .def("__getitem__", [](const Tensor<T>& b, size_t i) {
@@ -162,9 +155,7 @@ void declare_Tensor(py::module &m, const std::string& typeStr) {
     })
     .def("sum", &Tensor<T>::sum, py::arg("valAbs")=false)
     .def("mean", &Tensor<T>::mean, py::arg("valAbs")=false)
-    .def("resize", (void (Tensor<T>::*)(const std::vector<size_t>&, const T& value)) &Tensor<T>::resize, py::arg("dims"), py::arg("value"))
     .def("fill", &Tensor<T>::fill, py::arg("value"))
-    .def("newCuda", &Tensor<T>::newCuda)
     ;
 
     declare_Tensor_buffer_protocol(tensor);
@@ -194,8 +185,8 @@ void init_Tensor(py::module &m) {
     .def("op_assign", &BaseTensor::operator=)
     .def("nbDims", &BaseTensor::nbDims)
     .def("dims", &BaseTensor::dims)
-    .def("isValid", &BaseTensor::isValid)
-    .def("setValid", &BaseTensor::setValid)
+    .def("isValid", &BaseTensor::isValid, py::arg("dev")=-1)
+    .def("setValid", &BaseTensor::setValid, py::arg("dev")=-1)
     // .def("clearValid", &BaseTensor::clearValid)
     .def("getType", &BaseTensor::getType)
     .def("getTypeName", &BaseTensor::getTypeName)

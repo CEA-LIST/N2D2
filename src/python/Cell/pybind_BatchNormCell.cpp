@@ -19,8 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef CUDA
-
 #ifdef PYBIND
 #include "Cell/BatchNormCell.hpp"
 
@@ -41,6 +39,4 @@ void init_BatchNormCell(py::module &m) {
     .def("getEpsilon", &BatchNormCell::getEpsilon);
 }
 }
-#endif
-
 #endif

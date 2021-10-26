@@ -36,14 +36,27 @@ way in N2D2
 """
 Example for custom transformation
 """
-"""
-class CustomRescaleTransform():
-    def __init__(self, factor):
-        self.factor = factor
-        
-    def __call__(self, x):
-        return self.factor*x
-"""
+# class Test(N2D2.CustomTransformation):
+#     """
+#     Override this class to create your own Transformation.
+#     You need to override the following method : 
+#         - apply_unsigned_char(self, Tensor<unsigned char>& frame, Tensor<int>& /*labels*/, std::vector<std::shared_ptr<ROI> >& /*labelsROI*/, int /*id*/ = -1)
+#         - apply_int(self, Tensor<int>& frame, Tensor<int>& /*labels*/, std::vector<std::shared_ptr<ROI> >& /*labelsROI*/, int /*id*/ = -1)
+#         - etc ..
+#     """
+#     def __init__(self):
+#         print("init TEST")
+#         N2D2.CustomTransformation.__init__(self)
+#         print("DONE")
+
+#     def apply_unsigned_char(self, frame, labels, labelsROI, id):
+#          print("using python function !")
+
+# class CustomTransformation(Transformation):
+#     def __init__(self, **config_parameters):
+#         Transformation.__init__(self, **config_parameters)
+#         self._N2D2_object = Test()
+
 """
 Example for a Python wrapper around the binding
 """
@@ -55,6 +68,15 @@ class PadCropTransformation():
     def __call__(self, x):
         return self.trans.apply(x)
 """
+
+# TODO : Change binding to expose apply method 
+# class CustomTransformation(Transformation):
+#     def __init__(self, custom_transformation):
+#         super().__init__()
+#         self._transformation = custom_transformation
+
+# https://pybind11.readthedocs.io/en/stable/reference.html#c.PYBIND11_OVERRIDE
+# https://pybind11.readthedocs.io/en/stable/advanced/classes.html#overriding-virtuals
 
 class Transformation(N2D2_Interface, ABC):
 
@@ -77,6 +99,11 @@ class Transformation(N2D2_Interface, ABC):
     def get_apply_set(self):
         return self._apply_to
 
+    @classmethod
+    def create_from_N2D2_object(cls, N2D2_object): # TODO : add an optional parameter apply_to ?
+        n2d2_transform = super().create_from_N2D2_object(N2D2_object)
+        n2d2_transform._apply_to = N2D2.Database.StimuliSetMask.All 
+        return n2d2_transform
 
 class Composite(Transformation):
     """
@@ -105,7 +132,7 @@ class Composite(Transformation):
 
     def get_transformations(self):
         """
-        Retrun the list of transformations applied by the composite trnasformation
+        Return the list of transformations applied by the composite transformation
         """
         return self._transformations
 
@@ -164,7 +191,13 @@ class PadCrop(Transformation):
         self._N2D2_object = N2D2.PadCropTransformation(self._constructor_arguments['width'],
                                                        self._constructor_arguments['height'])
         self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments.update({
+            'width': N2D2_object.getWidth(),
+            'height': N2D2_object.getHeight(),
+        })
 
 class Distortion(Transformation):
     """
@@ -208,8 +241,7 @@ class Distortion(Transformation):
         #     self._N2D2_object.setParameter("Scaling", str(self._config_parameters.pop('scaling')))
 
         self._set_N2D2_parameters(self._config_parameters)
-
-
+        self.load_N2D2_parameters(self.N2D2())
 
 class Rescale(Transformation):
     """
@@ -244,9 +276,13 @@ class Rescale(Transformation):
         self._N2D2_object = N2D2.RescaleTransformation(self._constructor_arguments['width'],
                                                        self._constructor_arguments['height'])
         self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
-
-
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments.update({
+            'width': N2D2_object.getWidth(),
+            'height': N2D2_object.getHeight(),
+        })
 
 class ColorSpace(Transformation):
 
@@ -293,9 +329,12 @@ class ColorSpace(Transformation):
 
         self._N2D2_object = N2D2.ColorSpaceTransformation(self._constructor_arguments['color_space'])
         self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
-
-
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments.update({
+            'color_space': N2D2_object.getColorSpace(),
+        })
 
 
 class RangeAffine(Transformation):
@@ -340,7 +379,19 @@ class RangeAffine(Transformation):
                                                            self._constructor_arguments['first_value'],
                                                            **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments.update({
+            'first_operator': N2D2_object.getFirstOperator(),
+            'first_value': N2D2_object.getFirstValue(),
+        })
+    
+    def _load_N2D2_optional_parameters(self, N2D2_object):
+        self._optional_constructor_arguments.update({
+            'second_operator': N2D2_object.getSecondOperator(),
+            'second_value': N2D2_object.getSecondValue(),
+        })
 
 
 class SliceExtraction(Transformation):
@@ -351,8 +402,8 @@ class SliceExtraction(Transformation):
     _convention_converter= n2d2.ConventionConverter({
         "width": "width",
         "height": "height",
-        "offset_x": "offsetX",
-        "offset_y": "offsetY",
+        "offset_x": "OffsetX",
+        "offset_y": "OffsetY",
         "random_offset_x": "RandomOffsetX",
         "random_offset_y": "RandomOffsetY",
         "random_rotation": "RandomRotation",
@@ -411,8 +462,17 @@ class SliceExtraction(Transformation):
                                                            self._constructor_arguments['height'],
                                                            **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
-
-
+        self.load_N2D2_parameters(self.N2D2())
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments.update({
+            'width': N2D2_object.getWidth(),
+            'height': N2D2_object.getHeight(),
+        })
+    def _load_N2D2_optional_parameters(self, N2D2_object):
+        self._optional_constructor_arguments.update({
+            'offset_x':  N2D2_object.getOffsetX(),
+            'offset_y':  N2D2_object.getOffsetY(),
+        })
 
 class Flip(Transformation):
     """
@@ -444,6 +504,7 @@ class Flip(Transformation):
 
         self._N2D2_object = N2D2.FlipTransformation(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
 
 
@@ -455,8 +516,6 @@ class RandomResizeCrop(Transformation):
     _convention_converter= n2d2.ConventionConverter({
         "width": "Width",
         "height": "Height",
-        "offset_x": "offsetX",
-        "offset_y": "offsetY",
         "scale_min": "ScaleMin",
         "scale_max": "ScaleMax",
         "ratio_min": "RatioMin",
@@ -470,10 +529,6 @@ class RandomResizeCrop(Transformation):
         :type width: int
         :param height: Height of the image to Crop.
         :type height: int
-        :param offset_x: X offset, default=0
-        :type offset_x: int, optional
-        :param offset_y: Y offset, default=0
-        :type offset_y: int, optional
         """
         Transformation.__init__(self, **config_parameters)
 
@@ -482,19 +537,28 @@ class RandomResizeCrop(Transformation):
             'height': height,
         })
 
-        self._parse_optional_arguments(['offset_x', 'offset_y'])
+        # self._parse_optional_arguments(['offset_x', 'offset_y'])
 
         self._N2D2_object = N2D2.RandomResizeCropTransformation(self._constructor_arguments['width'],
                                                 self._constructor_arguments['height'],
                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments.update({
+            'width': N2D2_object.getWidth(),
+            'height': N2D2_object.getHeight(),
+        })
 
 class ChannelExtraction(Transformation):
     """
     Extract an image channel.
     """
+    _Type = "ChannelExtraction"
+
     _convention_converter= n2d2.ConventionConverter({
         "channel": "Channel",
+        
     })
     def __init__(self, channel, **config_parameters):
         """
@@ -517,7 +581,7 @@ class ChannelExtraction(Transformation):
         
         if channel not in N2D2.ChannelExtractionTransformation.Channel.__members__.keys():
             raise n2d2.error_handler.WrongValue("channel", channel,
-                                                " ".join(N2D2.ChannelExtractionTransformation.Channel.__members__.keys()))
+                                                ", ".join(N2D2.ChannelExtractionTransformation.Channel.__members__.keys()))
 
         self._constructor_arguments.update({
             'channel': N2D2.ChannelExtractionTransformation.Channel.__members__[channel],
@@ -528,9 +592,9 @@ class ChannelExtraction(Transformation):
         self._N2D2_object = N2D2.ChannelExtractionTransformation(self._constructor_arguments['channel'],
                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
-# TODO : Change binding to expose apply method 
-# class CustomTransformation(Transformation):
-#     def __init__(self, custom_transformation):
-#         super().__init__()
-#         self._transformation = custom_transformation
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments.update({
+            'channel': N2D2_object.getChannel(),
+        })

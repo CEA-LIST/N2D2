@@ -51,7 +51,10 @@ void declare_DeconvCell_Frame_CUDA(py::module &m, const std::string& typeStr) {
          py::arg("strideDims") = std::vector<unsigned int>(2, 1U), 
          py::arg("paddingDims") = std::vector<int>(2, 0), 
          py::arg("dilationDims") = std::vector<unsigned int>(2, 1U),
-         py::arg("activation") = std::make_shared<TanhActivation_Frame_CUDA<Float_T> >());
+         py::arg("activation") = std::shared_ptr<Activation>())
+         
+    .def("resetWeightsSolver", &DeconvCell_Frame_CUDA<T>::resetWeightsSolver, py::arg("solver"))
+    ;
 
 }
 

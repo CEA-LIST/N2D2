@@ -76,6 +76,9 @@ public:
     double getDecay(){
         return mDecay;
     };
+    double getMinDecay(){
+        return mMinDecay;
+    };
     double getPower(){
         return mPower;
     };

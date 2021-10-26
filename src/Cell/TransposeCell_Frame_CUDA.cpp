@@ -66,6 +66,14 @@ void N2D2::TransposeCell_Frame_CUDA<T>::initialize()
     }
 }
 
+
+template <class T>
+void N2D2::TransposeCell_Frame_CUDA<T>::initializeDataDependent()
+{
+    Cell_Frame_CUDA<T>::initializeDataDependent();
+    initialize();
+}
+
 template <class T>
 void N2D2::TransposeCell_Frame_CUDA<T>::propagate(bool inference)
 {
@@ -88,6 +96,7 @@ void N2D2::TransposeCell_Frame_CUDA<T>::propagate(bool inference)
 
     Cell_Frame_CUDA<T>::propagate(inference);
     mDiffInputs.clearValid();
+
 }
 
 template <class T>
@@ -111,10 +120,10 @@ void N2D2::TransposeCell_Frame_CUDA<T>::backPropagate()
         cudaCopyTranspose(CudaContext::getDeviceProp(),
                         mDiffInputs.getDevicePtr(),
                         diffOutput->getDevicePtr(),
-                        mDiffInputs[0].dimX(),
-                        mDiffInputs[0].dimY(),
-                        mDiffInputs[0].dimZ(),
-                        mDiffInputs[0].dimB(),
+                        mDiffInputs.dimX(),
+                        mDiffInputs.dimY(),
+                        mDiffInputs.dimZ(),
+                        mDiffInputs.dimB(),
                         invPerm[0],
                         invPerm[1],
                         invPerm[2],

@@ -31,7 +31,7 @@ N2D2::StimuliData::StimuliData(const std::string& name,
       mStdDevData(this, "StdDevData", false)
 {
     // ctor
-    Utils::createDirectories(mName);
+    Utils::createDirectories(Utils::filePath(mName));
 }
 
 N2D2::StimuliData::StimuliData(const StimuliData& stimuliData)
@@ -62,7 +62,7 @@ void N2D2::StimuliData::displayData() const
             << "\n"
                "Value std. dev.: " << mGlobalValue.stdDev << "\n";
 
-    const std::string fileName = mName + "/data.dat";
+    const std::string fileName = Utils::filePath(mName) + "/data.dat";
 
     std::ofstream data(fileName.c_str());
 
@@ -112,7 +112,7 @@ void N2D2::StimuliData::logSizeRange() const
     if (mValue.empty())
         return;
 
-    const std::string fileName = mName + "/sizeRange.dat";
+    const std::string fileName = Utils::filePath(mName) + "/sizeRange.dat";
 
     std::ofstream data(fileName.c_str());
 
@@ -174,7 +174,7 @@ void N2D2::StimuliData::logValueRange() const
     if (mValue.empty())
         return;
 
-    const std::string fileName = mName + "/valueRange.dat";
+    const std::string fileName = Utils::filePath(mName) + "/valueRange.dat";
 
     std::ofstream data(fileName.c_str());
 
@@ -243,7 +243,7 @@ unsigned int N2D2::StimuliData::generate(Database::StimuliSetMask setMask,
 {
     clear();
 
-    const std::string& cacheName = mName + "/_cache";
+    const std::string& cacheName = Utils::filePath(mName) + "/_cache";
 
     // For progression visualization
     unsigned int toLoad = 0;
@@ -279,12 +279,12 @@ unsigned int N2D2::StimuliData::generate(Database::StimuliSetMask setMask,
         Float_T globalValueMin = std::numeric_limits<Float_T>::max();
         Float_T globalValueMax = -std::numeric_limits<Float_T>::max();
 
-        const std::string& meanDataFile = mName + "/meanData.bin";
+        const std::string& meanDataFile = Utils::filePath(mName) + "/meanData.bin";
         bool computeMeanData = mMeanData
                                 && !std::ifstream(meanDataFile.c_str()).good();
         cv::Mat meanData;
 
-        const std::string& stdDevDataFile = mName + "/stdDevData.bin";
+        const std::string& stdDevDataFile = Utils::filePath(mName) + "/stdDevData.bin";
         bool computeStdDevData = mStdDevData
                                && !std::ifstream(stdDevDataFile.c_str()).good();
         cv::Mat M2Data;
@@ -368,7 +368,9 @@ unsigned int N2D2::StimuliData::generate(Database::StimuliSetMask setMask,
                 count[loaded + index] = data.size();
 
                 // Size
-                const Size size(data.dimX(), data.dimY(), data.dimZ());
+                // Use dimD to get the true 3rd dimension, as dimZ has a special
+                // meaning!
+                const Size size(data.dimX(), data.dimY(), data.dimD());
 
                 // Value
                 const Value value(minVal, maxVal, dataMean, dataStdDev);
@@ -385,10 +387,10 @@ unsigned int N2D2::StimuliData::generate(Database::StimuliSetMask setMask,
                         minSizeY = data.dimY();
                 }
 
-                if (data.dimZ() < minSizeZ) {
+                if (data.dimD() < minSizeZ) {
 #pragma omp critical(StimuliData__generate_minSizeZ)
-                    if (data.dimZ() < minSizeZ)
-                        minSizeZ = data.dimZ();
+                    if (data.dimD() < minSizeZ)
+                        minSizeZ = data.dimD();
                 }
 
                 if (minVal < globalValueMin) {
@@ -409,10 +411,10 @@ unsigned int N2D2::StimuliData::generate(Database::StimuliSetMask setMask,
                         maxSizeY = data.dimY();
                 }
 
-                if (data.dimZ() > maxSizeZ) {
+                if (data.dimD() > maxSizeZ) {
 #pragma omp critical(StimuliData__generate_maxSizeZ)
-                    if (data.dimZ() > maxSizeZ)
-                        maxSizeZ = data.dimZ();
+                    if (data.dimD() > maxSizeZ)
+                        maxSizeZ = data.dimD();
                 }
 
                 if (maxVal > globalValueMax) {

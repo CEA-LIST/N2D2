@@ -84,11 +84,22 @@ public:
                                                          dilationDims,
                                                          activation);
     }
+      
+    void resetWeights();
+    void resetBias();
+    void resetWeightsSolver(const std::shared_ptr<Solver>& solver)
+    {
+        setWeightsSolver(solver);
+        for (unsigned int k = 0, size = mWeightsSolvers.size(); k < size; ++k) {
+            mWeightsSolvers[k] = mWeightsSolver->clone();
+        }
+    };
 
     virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     virtual void initialize();
-    virtual void initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping = Tensor<bool>());
+    virtual void initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs);
     virtual void initializeWeightQuantizer();
+    virtual void check_input();
     virtual void initializeDataDependent();
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);
@@ -106,13 +117,23 @@ public:
     {
         return &mSharedSynapses;
     };
+    inline const BaseInterface* getWeights() const
+    {
+        return &mSharedSynapses;
+    };
     void setWeights(unsigned int k,
                     BaseInterface* weights,
                     unsigned int offset);
-    inline std::shared_ptr<BaseTensor> getBiases()
+    inline const std::shared_ptr<BaseTensor> getBiases() const
     {
         return mBias;
     };
+    virtual BaseTensor& getDiffSynapses(unsigned int index = 0)
+    {
+        return mDiffSharedSynapses[index];
+    };
+    //virtual const BaseTensor& getDiffSynapses(unsigned int index = 0);
+
     void setBiases(const std::shared_ptr<BaseTensor>& biases);
     void checkGradient(double /*epsilon*/ = 1.0e-4,
                        double /*maxError*/ = 1.0e-6);

@@ -284,7 +284,8 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
                                                 std::size_t nbBits,
                                                 ClippingMode actClippingMode,
                                                 ScalingMode actScalingMode,
-                                                bool rescalePerOutputChannel)
+                                                bool rescalePerOutputChannel,
+                                                double quantileValue)
 {
     const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
 
@@ -310,7 +311,7 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
     }
 
     quantizeActivations(outputsHistogram, outputsRange, biasScalings,
-                        nbBits, actClippingMode);
+                        nbBits, actClippingMode, quantileValue);
 
 #ifdef VERBOSE_QUANT
     std::cout << "  Scaling approximation [" << (int)actScalingMode << "]:"
@@ -671,7 +672,7 @@ void N2D2::DeepNetQuantization::quantizeActivations(
                 const std::unordered_map<std::string, Histogram>& outputsHistogram,
                 const std::unordered_map<std::string, RangeStats>& outputsRange,
                 std::unordered_map<std::string, long double>& biasScalings,
-                std::size_t nbBits, ClippingMode actClippingMode)
+                std::size_t nbBits, ClippingMode actClippingMode, double quantileValue)
 {
 #ifdef VERBOSE_QUANT
     std::cout << "  Quantizing activations:" << std::endl;
@@ -731,7 +732,7 @@ void N2D2::DeepNetQuantization::quantizeActivations(
                                                                             cell->getName();
                 activationScaling = getCellThreshold(cellStatsName, 
                                                     outputsHistogram, outputsRange, 
-                                                    nbBits, clip?actClippingMode:ClippingMode::NONE);
+                                                    nbBits, clip?actClippingMode:ClippingMode::NONE, quantileValue);
             }
             else {
                 throw std::runtime_error("Quantization of cell '" + cell->getName() + "' of type '" + 
@@ -1033,7 +1034,7 @@ void N2D2::DeepNetQuantization::approximateScalingCell(ScalingCell& cell, Scalin
 
 std::pair<std::size_t, std::vector<std::int32_t>>
 N2D2::DeepNetQuantization::approximateScalingWithFixedPoint(
-    ScalingMode mode,
+    ScalingMode& mode,
     const std::vector<Float_T>& scalingPerOutput)
 {
     /**
@@ -1048,23 +1049,32 @@ N2D2::DeepNetQuantization::approximateScalingWithFixedPoint(
         = (mode == ScalingMode::FIXED_MULT16)
             ? std::numeric_limits<std::int16_t>::max()
             : std::numeric_limits<std::int32_t>::max();
-    const std::size_t maxNbFractionalBits = 50;
+    const double maxScaling = *std::max_element(scalingPerOutput.begin(),
+                                                scalingPerOutput.end());
 
-    const double maxScaling = *std::max_element(scalingPerOutput.begin(), scalingPerOutput.end());
-    std::size_t nbFractionalBits
-        = ((mode == ScalingMode::FIXED_MULT16)
-            ? std::numeric_limits<std::int16_t>::digits
-            : std::numeric_limits<std::int32_t>::digits)
-                - std::ceil(maxScaling);
+    if (maxScaling >= limit) {
+        if (mode == ScalingMode::FIXED_MULT16) {
+            std::cout << Utils::cwarning << "Max scaling (" << maxScaling
+                << ") doesn't fit in FIXED_MULT16. "
+                "Falling back to FIXED_MULT32." << Utils::cdef << std::endl;
 
-    assert(std::round(maxScaling * (1ull << nbFractionalBits)) < limit);
-    while(std::round(maxScaling * (1ull << (nbFractionalBits + 1))) < limit && 
-            nbFractionalBits + 1 <= maxNbFractionalBits) 
-    {
-        nbFractionalBits++;
+            mode = ScalingMode::FIXED_MULT32;
+            return approximateScalingWithFixedPoint(mode, scalingPerOutput);
+        }
+        else {
+            std::stringstream errorStr;
+            errorStr << "Max scaling (" << maxScaling
+                << ") doesn't fit in FIXED_MULT32." << std::endl;
+
+            throw std::runtime_error(errorStr.str());
+        }
     }
-    
-    
+
+    const std::size_t maxNbFractionalBits = 50;
+    const std::size_t nbFractionalBits
+        = std::min((std::size_t)std::floor(std::log(limit / maxScaling)
+                                            / std::log(2.0)),
+                   maxNbFractionalBits);
 
     std::vector<std::int32_t> scalingFixedPoint;
     for(auto sc: scalingPerOutput) {
@@ -1163,13 +1173,15 @@ std::vector<std::vector<unsigned char>> N2D2::DeepNetQuantization::approximateAc
 double N2D2::DeepNetQuantization::getCellThreshold(const std::string& cellName,
                                        const std::unordered_map<std::string, Histogram>& outputsHistogram,
                                        const std::unordered_map<std::string, RangeStats>& outputsRange,
-                                       std::size_t nbBits, ClippingMode actClippingMode) 
+                                       std::size_t nbBits, ClippingMode actClippingMode, double quantileValue) 
 {
     switch(actClippingMode) {
         case ClippingMode::KL_DIVERGENCE:
             return outputsHistogram.at(cellName).calibrateKLDivergence(nbBits);
         case ClippingMode::MSE:
             return outputsHistogram.at(cellName).calibrateMSE(nbBits);
+        case ClippingMode::QUANTILE:
+            return outputsHistogram.at(cellName).getQuantileValue(quantileValue);
         default: {
             const auto& range = outputsRange.at(cellName);
             return Utils::max_abs(range.minVal(), range.maxVal());

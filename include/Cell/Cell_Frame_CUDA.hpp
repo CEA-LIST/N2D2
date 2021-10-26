@@ -92,6 +92,7 @@ public:
 
     virtual void clearInputTensors();
     virtual void clearOutputTensors();
+    virtual void initializeParameters(unsigned int /*nbChannels*/, unsigned int /*nbInputs*/){};
     virtual void initializeDataDependent();
     virtual void linkInput(Cell* cell);
     virtual void linkInput(StimuliProvider& sp,  
@@ -125,6 +126,8 @@ public:
     virtual BaseTensor& getDiffOutputs(unsigned int index = 0);
     virtual const BaseTensor& getDiffOutputs(unsigned int index = 0) const;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
+    virtual std::string getPyDataType();
+    virtual std::string getPyModel();
     void exportActivationParameters(const std::string& dirName) const;
     void importActivationParameters(const std::string& dirName, bool ignoreNotExists);
     bool isCuda() const

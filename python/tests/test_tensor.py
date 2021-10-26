@@ -26,7 +26,7 @@ class test_tensor(unittest.TestCase):
     def setUp(self):
         self.cuda = False
         self.x, self.y, self.z = (2,3,4)
-        self.tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], datatype=int, value=0, cuda=self.cuda)
+        self.tensor = n2d2.Tensor([self.x, self.y, self.z], datatype="int", value=0, cuda=self.cuda)
     
     def tearDown(self):
         self.setUp()
@@ -36,7 +36,7 @@ class test_tensor(unittest.TestCase):
         self.assertEqual(self.tensor[0, 0, 0], 1)
 
     def test_value_param(self):
-        self.tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], datatype=int, value=5, cuda=self.cuda)
+        self.tensor = n2d2.Tensor([self.x, self.y, self.z], datatype="int", value=5, cuda=self.cuda)
         for i in self.tensor:
             self.assertEqual(i, 5)
 
@@ -66,7 +66,7 @@ class test_tensor(unittest.TestCase):
 
     def test_dim(self):
         self.x, self.y, self.z, self.b = (1, 2, 3, 4)
-        self.tensor = n2d2.tensor.Tensor([self.b, self.z, self.y, self.x], datatype=int, value=0, cuda=self.cuda)
+        self.tensor = n2d2.Tensor([self.b, self.z, self.y, self.x], datatype="int", value=0, cuda=self.cuda)
         self.assertEqual(self.tensor.dimX(), self.x)
         self.assertEqual(self.tensor.dimY(), self.y)
         self.assertEqual(self.tensor.dimZ(), self.z)
@@ -77,10 +77,10 @@ class test_tensor(unittest.TestCase):
         self.assertEqual(self.tensor.shape(), [self.z, self.y, self.x])
 
     def test_equal(self):
-        same_tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], datatype=int, value=0, cuda=self.cuda)
-        type_different = n2d2.tensor.Tensor([self.x, self.y, self.z], datatype=float, value=0, cuda=self.cuda)
-        different_tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], datatype=int, value=1, cuda=self.cuda)
-        dim_different = n2d2.tensor.Tensor([self.x, self.y], datatype=int, value=0, cuda=self.cuda)
+        same_tensor = n2d2.Tensor([self.x, self.y, self.z], datatype="int", value=0, cuda=self.cuda)
+        type_different = n2d2.Tensor([self.x, self.y, self.z], datatype="float", value=0, cuda=self.cuda)
+        different_tensor = n2d2.Tensor([self.x, self.y, self.z], datatype="int", value=1, cuda=self.cuda)
+        dim_different = n2d2.Tensor([self.x, self.y], datatype="int", value=0, cuda=self.cuda)
         self.assertTrue(self.tensor == same_tensor)
         self.assertTrue(self.tensor == type_different)
         self.assertTrue(self.tensor != different_tensor)
@@ -91,7 +91,7 @@ class test_tensor(unittest.TestCase):
         self.assertTrue(5 in self.tensor)
 
     def test_numpy(self):
-        self.tensor = n2d2.tensor.Tensor([3, 2], cuda=self.cuda)
+        self.tensor = n2d2.Tensor([3, 2], cuda=self.cuda)
         self.tensor[0] = 1
         self.tensor[1] = 2
         self.tensor[2] = 3
@@ -116,20 +116,35 @@ class test_tensor(unittest.TestCase):
         n2d2_tensor = n2d2.Tensor.from_N2D2(N2D2_tensor)
         
         self.assertTrue(np.array_equal(n2d2_tensor._tensor, N2D2_tensor))
-        self.assertTrue(n2d2_tensor._datatype == int)
+        self.assertEqual(n2d2_tensor._datatype, "i")
+
+    def test_cuda_cpu_conversion(self):
+        self.tensor[0] = 1
+        copy = self.tensor.copy()
+        if self.cuda:
+            self.tensor.cpu()
+            self.assertFalse(self.tensor.is_cuda)
+        else:
+            self.tensor.cuda()
+            self.assertTrue(self.tensor.is_cuda)
+        self.assertEqual(self.tensor, copy)
+        
+    # TODO : add test to see if N2D2 -> Numpy is well done without memory copies.
 
 class test_cudatensor(test_tensor):
     def setUp(self):
         self.cuda = True
         self.x, self.y, self.z = (2,3,4)
-        self.tensor = n2d2.tensor.Tensor([self.x, self.y, self.z], datatype=int, value=0, cuda=self.cuda)
+        self.tensor = n2d2.Tensor([self.x, self.y, self.z], datatype="int", value=0, cuda=self.cuda)
     
     def test_synchronize(self):
         copy_tensor = self.tensor.copy()
-        self.tensor[0, 0, 0] = 1
+        self.tensor.htod() # Synchronizing the device with the host
+        self.tensor[0] = 1
+        print(self.tensor)
         self.tensor.dtoh() # Synchronizing the host with the device
         self.assertEqual(self.tensor, copy_tensor)
-        self.tensor[0, 0, 0] = 1
+        self.tensor[0] = 1
         self.tensor.htod() # Synchronizing the device with the host
         self.assertNotEqual(self.tensor, copy_tensor)
     

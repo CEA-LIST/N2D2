@@ -203,8 +203,8 @@ double N2D2::Histogram::MSE(double threshold, std::size_t nbBits) const {
 
     const bool isUnsigned = mMinVal >= 0.0;
 
-    const double minVal = isUnsigned?0:-(1 << (nbBits - 1));
-    const double maxVal = isUnsigned?((1 << nbBits) - 1):((1 << (nbBits - 1)) - 1);
+    const double minVal = isUnsigned?0:-(1LL << (nbBits - 1));
+    const double maxVal = isUnsigned?((1ULL << nbBits) - 1):((1ULL << (nbBits - 1)) - 1);
     const double scaling = maxVal/threshold;
 
 
@@ -245,6 +245,20 @@ double N2D2::Histogram::calibrateKLDivergence(std::size_t nbBits) const {
     }
 
     return bestThreshold;
+}
+
+double N2D2::Histogram::getQuantileValue(double quantile) const {
+    const size_t quantileNbValues = quantile * mNbValues;
+    size_t nbValues = 0;
+
+    for (std::size_t bin = 0; bin < mNbBins; ++bin) {
+        nbValues += mValues[bin];
+
+        if (nbValues >= quantileNbValues)
+            return getBinValue(bin);
+    }
+
+    return getBinValue(mNbBins - 1);
 }
 
 N2D2::Histogram N2D2::Histogram::quantize(double newMinVal, double newMaxVal,
@@ -379,7 +393,7 @@ void N2D2::Histogram::loadOutputsHistogram(const std::string& fileName,
 
 void N2D2::Histogram::logOutputsHistogram(const std::string& dirName,
                         const std::unordered_map<std::string, Histogram>& outputsHistogram,
-                        std::size_t nbBits, ClippingMode clippingMode)
+                        std::size_t nbBits, ClippingMode clippingMode, double quantileValue)
 {
     Utils::createDirectories(dirName);
 
@@ -397,7 +411,10 @@ void N2D2::Histogram::logOutputsHistogram(const std::string& dirName,
         else if(clippingMode == ClippingMode::MSE) {
             thresholds["MSE"] = hist.calibrateMSE(nbBits);
         }
+        else if(clippingMode == ClippingMode::QUANTILE) {
+            thresholds["QUANTILE"] = hist.getQuantileValue(quantileValue);
+        }
 
-        (*it).second.log(dirName + "/" + (*it).first + ".dat", thresholds);
+        (*it).second.log(dirName + "/" + Utils::filePath((*it).first) + ".dat", thresholds);
     }
 }

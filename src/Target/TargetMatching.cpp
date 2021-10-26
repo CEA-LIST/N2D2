@@ -300,7 +300,7 @@ void N2D2::TargetMatching::log(const std::string& fileName,
         // Ensures that the ROC is saved only if this is the best result
         || mValidationEER.back().second == mMinValidationEER))
     {
-        const std::string dataFileName = mName + "/ROC_" + fileName + ".dat";
+        const std::string dataFileName = Utils::filePath(mName) + "/ROC_" + fileName + ".dat";
 
         std::ofstream data(dataFileName.c_str());
 
@@ -331,7 +331,7 @@ void N2D2::TargetMatching::log(const std::string& fileName,
     }
 
     if (!mValidationEER.empty()) {
-        const std::string dataFileName = mName + "/EER_" + fileName + ".dat";
+        const std::string dataFileName = Utils::filePath(mName) + "/EER_" + fileName + ".dat";
 
         std::ofstream dataFile(dataFileName);
 
@@ -374,7 +374,7 @@ void N2D2::TargetMatching::log(const std::string& fileName,
     }
 
     if (!mValidationFRR.empty()) {
-        const std::string dataFileName = mName + "/FRR_" + fileName + ".dat";
+        const std::string dataFileName = Utils::filePath(mName) + "/FRR_" + fileName + ".dat";
 
         std::ofstream dataFile(dataFileName);
 

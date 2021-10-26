@@ -715,6 +715,7 @@ void convcell_outputs_print(const char* name,
                             unsigned int nbOutputs,
                             unsigned int outputsHeight,
                             unsigned int outputsWidth,
+                            unsigned int outputOffset,
                             DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
 
 void convcell_outputs_save(const char* fileName,
@@ -722,6 +723,7 @@ void convcell_outputs_save(const char* fileName,
                            unsigned int nbOutputs,
                            unsigned int outputsHeight,
                            unsigned int outputsWidth,
+                           unsigned int outputOffset,
                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
 
 void poolcell_outputs_print(const char* name,

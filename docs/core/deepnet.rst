@@ -10,7 +10,7 @@ DeepNetGenerator:
 .. testsetup::
 
    import numpy
-   import N2D2
+   import pyn2d2 as N2D2
 
    N2D2.CudaContext.setDevice(1)
 

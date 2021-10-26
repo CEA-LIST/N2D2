@@ -35,7 +35,7 @@ void declare_BatchNormCell_Frame_CUDA(py::module &m, const std::string& typeStr)
     const std::string pyClassName("BatchNormCell_Frame_CUDA_" + typeStr);
     py::class_<BatchNormCell_Frame_CUDA<T>, std::shared_ptr<BatchNormCell_Frame_CUDA<T>>, BatchNormCell, Cell_Frame_CUDA<T>> (m, pyClassName.c_str(), py::multiple_inheritance())
     .def(py::init<const DeepNet&, const std::string&, unsigned int, const std::shared_ptr<Activation>&>(),
-         py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation") = std::make_shared<TanhActivation_Frame_CUDA<T> >());
+         py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation") = std::shared_ptr<Activation>())
     ;
 
 }

@@ -385,6 +385,7 @@ void N2D2::C_ConvCellExport::generateCellFunction(
             << prefix << "_NB_OUTPUTS, "
             << prefix << "_OUTPUTS_HEIGHT, "
             << prefix << "_OUTPUTS_WIDTH, "
+            << prefix << "_OUTPUT_OFFSET, "
             << outputName
          << ");\n"
          << "#endif\n";

@@ -64,7 +64,8 @@ public:
     }
 
     virtual void initialize();
-    virtual void initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping = Tensor<bool>());
+    virtual void initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs);
+    virtual void check_input();
     virtual void initializeDataDependent();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
@@ -124,6 +125,10 @@ protected:
     CudaTensor<ParamT> mSavedMean;
     CudaTensor<ParamT> mSavedVariance;
     CudaTensor<T> mDummyDiffOutput;
+
+    // Necessary to use backpropagate 
+    // after propagate(inference = true)
+    bool mValidCache;
 
 private:
     static Registrar<BatchNormCell> mRegistrar;

@@ -23,25 +23,37 @@ import N2D2
 import n2d2.global_variables
 from n2d2.deepnet import DeepNet
 from abc import ABC, abstractmethod
+from n2d2.tensor import Interface
+
 
 class Cell(ABC):
     @abstractmethod
     def __init__(self, name):
         if not name:
             name = n2d2.generate_name(self)
+        else:
+            if not isinstance(name, str):
+                raise n2d2.error_handler.WrongInputType("name", str(type(name)), ["str"])
         self._name = name
 
+    @abstractmethod
     def __call__(self, x):
-        raise RuntimeError("Cell instance without __call__() method")
+        pass
 
+    @abstractmethod
     def test(self):
-        raise RuntimeError("Cell instance without test() method")
-
+        pass
+    @abstractmethod
     def learn(self):
-        raise RuntimeError("Cell instance without learn() method")
+        pass
 
-    def import_free_parameters(self, dir_name, ignoreNotExists=False):
-        raise RuntimeError("Cell instance without import_free_parameters() method")
+    @abstractmethod
+    def import_free_parameters(self, dir_name, ignore_not_exists=False):
+        pass
+
+    @abstractmethod
+    def export_free_parameters(self, dir_name):
+        pass
 
     def get_name(self):
         return self._name
@@ -50,7 +62,34 @@ class Cell(ABC):
         return type(self).__name__
 
 
+# TODO: Empty at the moment. Check for mutualisation of code in Fc, Conv, Deconv, BatchNorm
+class Trainable(ABC):
+
+    @abstractmethod
+    def __init__(self):
+        if "solver" in self._config_parameters:
+            solver = self._config_parameters.pop('solver')
+            self.set_solver(solver)
+        if "filler" in self._config_parameters:
+            filler = self._config_parameters.pop('filler')
+            self.set_filler(filler)
+
+    @abstractmethod
+    def set_solver(self, solver):
+        pass
+
+    @abstractmethod
+    def set_filler(self, solver):
+        pass
+
+    @abstractmethod
+    def has_quantizer(self):
+        pass
+
+
 class Block(Cell):
+    #@abstractmethod
+
     def __init__(self, cells, name=None):
         assert (isinstance(cells, list))
         self._cells = {}
@@ -58,24 +97,57 @@ class Block(Cell):
             self._cells[cell.get_name()] = cell
         Cell.__init__(self, name)
 
-    def __getitem__(self, name):
-        return self._cells[name]
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return list(self._cells.values())[item]
+        elif isinstance(item, str): 
+            return self._cells[item]
+        else:
+            raise n2d2.error_handler.WrongInputType("item", type(item), ["str", "int"])
 
-    def __call__(self, x):
-        raise RuntimeError("Block requires custom __call__() method")
+    def get_cells(self):
+        cells = {}
+        self._get_cells(cells)
+        return cells
+
+    def _get_cells(self, cells):
+        for elem in self._cells.values():
+            if isinstance(elem, Block):
+                elem._get_cells(cells)
+            else:
+                cells[elem.get_name()] = elem
 
     def test(self):
         for cell in self._cells.values():
             cell.test()
+        return self
 
     def learn(self):
         for cell in self._cells.values():
             cell.learn()
+        return self
 
-    def import_free_parameters(self, dir_name, ignoreNotExists=False):
+    def __call__(self, x):
+        raise RuntimeError("Block '" + self.get_name() + "' has no __call__ method implemented")
+
+    def set_solver(self, solver):
+        for cell in self.get_cells().values():
+            if isinstance(cell, Trainable):
+                cell.solver = solver.copy()
+                if cell.has_quantizer() and isinstance(cell.quantizer, Trainable):
+                    cell.quantizer.solver = solver.copy()
+            if cell.activation and cell.activation.has_quantizer() \
+                    and isinstance(cell.activation.quantizer, Trainable):
+                cell.activation.quantizer.solver = solver.copy()
+
+
+    def import_free_parameters(self, dir_name, ignore_not_exists=False):
         for cell in self._cells.values():
-            cell.import_free_parameters(dir_name, ignoreNotExists=ignoreNotExists)
+            cell.import_free_parameters(dir_name, ignore_not_exists=ignore_not_exists)
 
+    def export_free_parameters(self, dir_name):
+        for cell in self._cells.values():
+            cell.export_free_parameters(dir_name)
     """
     def __str__(self):
         output = "\'" + self._name + "\' " + "[\n"
@@ -101,20 +173,13 @@ class Block(Cell):
         return output
 
 
-
-class Sequence(Block):
+class Iterable(Block, ABC):
+    @abstractmethod
     def __init__(self, cells, name=None):
         Block.__init__(self, cells, name)
         self._seq = cells
 
-    def __call__(self, x):
-        x.get_deepnet().begin_group(name=self._name)
-        for cell in self._seq:
-            x = cell(x)
-        x.get_deepnet().end_group()
-        return x
-
-    def __getitem__(self, item):
+    def __getitem__(self, item): # Redondant with the definition given in Block
         if isinstance(item, int):
             return list(self._cells.values())[item]
         else:
@@ -125,7 +190,6 @@ class Sequence(Block):
             if item.get_name() == cell.get_name():
                 return i
         raise RuntimeError("Element with name '" + item.get_name() + "' not found in sequence")
-
 
     def __len__(self):
         return len(self._seq)
@@ -147,10 +211,59 @@ class Sequence(Block):
         return output
 
 
-class DeepNetCell(Block):
+    def __iter__(self):
+        return self._seq.__iter__()
+
+class Sequence(Iterable):
+    def __init__(self, cells, name=None):
+        Iterable.__init__(self, cells, name)
+
+    def __call__(self, x):
+        x.get_deepnet().begin_group(name=self._name)
+        for cell in self:
+            x = cell(x)
+        x.get_deepnet().end_group()
+        return x
+
+class Layer(Iterable):
+
+    def __init__(self, cells, mapping=None, name=None):
+        Iterable.__init__(self, cells, name)
+        if mapping:
+            if isinstance(mapping, list):
+                self._mapping = mapping
+            else:
+                raise n2d2.error_handler.WrongInputType('mapping', type(mapping), [str(type(list))])
+
+    def __call__(self, x):
+        out = []
+        if isinstance(x, n2d2.tensor.Interface):
+            inputs = x.get_tensors()
+        else:
+            inputs = [x]
+        x.get_deepnet().begin_group(name=self._name)
+        for out_idx, cell in enumerate(self):
+            cell_inputs = []
+            for in_idx, ipt in enumerate(inputs):
+                # Default is all-to-all
+                if self._mapping is None or self._mapping[in_idx][out_idx]:
+                    cell_inputs.append(ipt)
+            out.append(cell(Interface(cell_inputs)))
+        x.get_deepnet().end_group()
+        return Interface([out])
+
+
+class DeepNetCell(Iterable):
+    """
+    n2d2 Cell wrapper for a N2D2 deepnet object. Allows chaining a N2D2 deepnet (for example loaded from a ONNX or INI file)
+    into the dynamic computation graph of the n2d2 API. During each use of the  the __call__ method, 
+    the N2D2 deepnet is converted to a n2d2 representation and the N2D2 deepnet is concatenated to the deepnet of the 
+    incoming tensor object.
+    """
 
     def __init__(self, N2D2_object):
 
+        # Save
         self._embedded_deepnet = DeepNet.create_from_N2D2_object(N2D2_object)
 
         if not N2D2_object.getName() == "":
@@ -159,21 +272,22 @@ class DeepNetCell(Block):
             name = None
 
         #self._cells = self._embedded_deepnet.get_cells()
-        Block.__init__(self, list(self._embedded_deepnet.get_cells().values()), name=name)
+        Iterable.__init__(self, list(self._embedded_deepnet.get_cells().values()), name=name)
 
-        self._deepnet = None # TODO : @Johannes : shouldn't this be equal to _embedded_deepnet ? 
+        self._deepnet = self._embedded_deepnet
         self._inference = False
 
 
     @classmethod
     def load_from_ONNX(cls, provider, model_path, ini_file=None):
         """Load a deepnet from an ONNX file given a provider object.
+
         :param provider: Provider object to base deepnet upon
-        :type provider: n2d2.provider.Provider
+        :type provider: :py:class:`n2d2.provider.DataProvider`
         :param model_path: Path to the model.
         :type model_path: str
         :param ini_file: Path to an optional .ini file with additional onnx import instructions
-        :type model_path: str
+        :type ini_file: str
         """
         if not isinstance(provider, n2d2.provider.Provider):
             raise ValueError("Input needs to be of type 'provider'")
@@ -194,6 +308,7 @@ class DeepNetCell(Block):
     @classmethod
     def load_from_INI(cls, path):
         """Load a deepnet from an INI file.
+        
         :param model_path: Path to the ini file.
         :type model_path: str
         """
@@ -207,12 +322,8 @@ class DeepNetCell(Block):
         if not isinstance(inputs, n2d2.Tensor):
             raise ValueError("Needs tensor with provider as input")
 
-        #self._deepnet = self._infer_deepnet(inputs)
-
-        #print(self._embedded_deepnet)
-
         # Recreate graph with underlying N2D2 deepnet
-        self._deepnet = self.concat_to_deepnet(inputs.cell.get_deepnet())
+        self._deepnet = self.concat_to_deepnet(inputs.get_deepnet())
 
         #if not provider.dims() == N2D2_object.getStimuliProvider().getData().dims():
         #    raise RuntimeError(
@@ -280,16 +391,27 @@ class DeepNetCell(Block):
     #        cell.clear_data_tensors()
 
     def update(self):
+        """Update learnable parameters
+        """
         self.get_deepnet().update()
 
     def test(self):
+        """Set the network to ``test`` mode.
+        """
         self._inference = True
+        return self
 
     def learn(self):
+        """Set the network to ``learn`` mode.
+        """
         self._inference = False
+        return self
 
-    def import_free_parameters(self, dir_name, ignoreNotExists=False):
-        self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignoreNotExists=ignoreNotExists)
+    def import_free_parameters(self, dir_name, ignore_not_exists=False):
+        """Import parameters.
+        """
+        print("import DeepNetCell '" + self._name + "' weights from " + dir_name)
+        self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignoreNotExists=ignore_not_exists)
 
     def remove(self, name):
         cell = self._embedded_deepnet.N2D2().getCells()[name]
@@ -298,12 +420,18 @@ class DeepNetCell(Block):
         self._cells = self._embedded_deepnet.get_cells()
 
     def get_deepnet(self):
+        """Get the :py:class:`n2d2.deepnet.DeepNet` used for computation. 
+        """
         return self._deepnet
 
     def get_embedded_deepnet(self):
+        """Get the :py:class:`n2d2.deepnet.DeepNet` used to define this cell. 
+        """
         return self._embedded_deepnet
 
     def get_input_cells(self):
+        """Returns the cells located at the entry of the network.
+        """
         output = []
         cells = self._embedded_deepnet.get_groups().get_elements()[0]
         if isinstance(cells, n2d2.deepnet.Group):
@@ -314,6 +442,8 @@ class DeepNetCell(Block):
         return output
 
     def get_output_cells(self):
+        """Returns the cells located at the end of the network.
+        """
         output = []
         cells = self._embedded_deepnet.get_groups().get_elements()[-1]
         if isinstance(cells, n2d2.deepnet.Group):

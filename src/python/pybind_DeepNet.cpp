@@ -64,7 +64,7 @@ void init_DeepNet(py::module &m) {
     .def("cReset", &DeepNet::cReset, py::arg("timestamp") = 0)
     .def("initializeCMonitors", &DeepNet::initializeCMonitors, py::arg("nbTimesteps"))
     .def("spikeCodingCompare", &DeepNet::spikeCodingCompare, py::arg("dirName"), py::arg("idx"))
-    .def("fuseBatchNormWithConv", &DeepNet::fuseBatchNormWithConv)
+    .def("fuseBatchNorm", &DeepNet::fuseBatchNorm)
     .def("removeDropout", &DeepNet::removeDropout)
     .def("setDatabase", &DeepNet::setDatabase, py::arg("database"))
     .def("setStimuliProvider", &DeepNet::setStimuliProvider, py::arg("sp"))
@@ -96,12 +96,13 @@ void init_DeepNet(py::module &m) {
     .def("logStats", &DeepNet::logStats, py::arg("dirName"))
     // .def("logSpikeStats", &DeepNet::logSpikeStats, py::arg("dirName"), py::arg("nbPatterns"))
     .def("log", &DeepNet::log, py::arg("baseName"), py::arg("set"))
-    .def("logLabelsMapping", &DeepNet::logLabelsMapping, py::arg("fileName"))
-    // .def("logEstimatedLabels", &DeepNet::logEstimatedLabels, py::arg("dirName"))
-    // .def("logEstimatedLabelsJSON", &DeepNet::logEstimatedLabelsJSON, py::arg("dirName"))
-    // .def("logLabelsLegend", &DeepNet::logLabelsLegend, py::arg("fileName"))
+    .def("logLabelsMapping", &DeepNet::logLabelsMapping, py::arg("fileName"), py::arg("withStats") = false)
+    .def("logEstimatedLabels", &DeepNet::logEstimatedLabels, py::arg("dirName"))
+    .def("logEstimatedLabelsJSON", &DeepNet::logEstimatedLabelsJSON, py::arg("dirName"))
+    .def("logLabelsLegend", &DeepNet::logLabelsLegend, py::arg("fileName"))
     .def("logTimings", &DeepNet::logTimings, py::arg("fileName"), py::arg("timings"))
     .def("logReceptiveFields", &DeepNet::logReceptiveFields, py::arg("fileName"))
+    .def("exportNetworkFreeParameters", &DeepNet::exportNetworkFreeParameters, py::arg("dirName"))
     ;
 }
 }

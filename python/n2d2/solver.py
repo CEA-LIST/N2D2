@@ -22,6 +22,10 @@ import N2D2
 import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
 from abc import ABC, abstractmethod
+import n2d2.global_variables as gb
+cuda_compiled = gb.cuda_compiled
+
+clamping_values = ["min:max", ":max", "min:", ""]
 
 class Solver(N2D2_Interface, ABC):
     @abstractmethod
@@ -40,6 +44,12 @@ class Solver(N2D2_Interface, ABC):
         N2D2_Interface.__init__(self, **config_parameters)
         self._model_key = self._model + '<' + self._datatype + '>'
 
+    @classmethod
+    def create_from_N2D2_object(cls, N2D2_object):
+        n2d2_solver = super().create_from_N2D2_object(N2D2_object)
+        n2d2_solver._model_key = N2D2_object.getModel() + "<" \
+            + N2D2_object.getDataType() + ">"
+        return n2d2_solver
     def get_type(self):
         return type(self).__name__
 
@@ -56,13 +66,18 @@ class SGD(Solver):
 
     _solver_generators = {
         'Frame<float>': N2D2.SGDSolver_Frame_float,
-        'Frame_CUDA<float>': N2D2.SGDSolver_Frame_CUDA_float
+        'Frame<double>': N2D2.SGDSolver_Frame_double,
     }
-
+    if cuda_compiled:
+        _solver_generators.update({
+            'Frame_CUDA<float>': N2D2.SGDSolver_Frame_CUDA_float,
+            'Frame_CUDA<double>': N2D2.SGDSolver_Frame_CUDA_double,
+        })
     _convention_converter= n2d2.ConventionConverter({
         "learning_rate": "LearningRate",
         "momentum": "Momentum",
         "decay": "Decay",
+        "min_decay": "MinDecay",
         "power": "Power",
         "iteration_size": "IterationSize",
         "max_iterations": "MaxIterations",
@@ -76,16 +91,10 @@ class SGD(Solver):
         "iteration_pass": "IterationPass",
         "nb_iteration": "NbIteration",
         "datatype": "Datatype",# Pure n2d2
-        "model": "Model",# Pure n2d2
-        "from_argument": "FromArgument", # Pure n2d2
-        
-        
-        
+        "model": "Model",# Pure n2d2   
     })
-    def __init__(self, from_arguments=True, **config_parameters):
+    def __init__(self, **config_parameters):
         """
-        :param from_arguments: If False, N2D2_object is not created based on config_parameters
-        :type  from_arguments: bool, optional
         :param datatype: Datatype of the weights, default=float
         :type datatype: str, optional
         :param model: Can be either ``Frame`` or ``Frame_CUDA``, default='Frame'
@@ -96,28 +105,45 @@ class SGD(Solver):
         :type momentum: float, optional
         :param decay: Decay, default=0.0
         :type decay: float, optional
+        :param min_decay: Min decay, default=0.0
+        :type min_decay: float, optional
         :param learning_rate_policy: Learning rate decay policy. Can be any of ``None``, ``StepDecay``, ``ExponentialDecay``, ``InvTDecay``, default='None'
         :type learning_rate_policy: str, optional
         :param learning_rate_step_size: Learning rate step size (in number of stimuli), default=1
         :type learning_rate_step_size: int, optional
         :param learning_rate_decay: Learning rate decay, default=0.1
         :type learning_rate_decay: float, optional
-        :param clamping: If true, clamp the weights and bias between -1 and 1, default=False
-        :type clamping: boolean, optional
+        :param clamping: Weights clamping, format: ``min:max``, or ``:max``, or ``min:``, or empty, default=""
+        :type clamping: str, optional
 
         """
         Solver.__init__(self, **config_parameters)
-        if from_arguments:
-            self._set_N2D2_object(self._solver_generators[self._model_key]())
-            self._set_N2D2_parameters(self._config_parameters)
+        if "learning_rate_policy" in config_parameters:
+            learning_rate_policy = config_parameters["learning_rate_policy"]
+            if learning_rate_policy not in self._solver_generators[self._model_key].LearningRatePolicy.__members__.keys():
+                raise n2d2.error_handler.WrongValue("learning_rate_policy", learning_rate_policy,
+                        ", ".join(self._solver_generators[self._model_key].LearningRatePolicy.__members__.keys()))
+        if "clamping" in config_parameters:
+            clamping = config_parameters['clamping']
+            if clamping not in clamping_values:
+                raise n2d2.error_handler.WrongValue("clamping", clamping,
+                        "'" + "', '".join(clamping_values) +"'")
+        self._set_N2D2_object(self._solver_generators[self._model_key]())
+        self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
 
 
 class Adam(Solver):
 
     _solver_generators = {
         'Frame<float>': N2D2.AdamSolver_Frame_float,
-        'Frame_CUDA<float>': N2D2.AdamSolver_Frame_CUDA_float
+        'Frame<double>': N2D2.AdamSolver_Frame_double, 
     }
+    if cuda_compiled:
+        _solver_generators.update({
+            'Frame_CUDA<float>': N2D2.AdamSolver_Frame_CUDA_float,
+            'Frame_CUDA<double>': N2D2.AdamSolver_Frame_CUDA_double,
+        })
 
     _convention_converter= n2d2.ConventionConverter({
         "learning_rate": "LearningRate",
@@ -127,15 +153,9 @@ class Adam(Solver):
         "clamping": "Clamping",
         "datatype": "Datatype",# Pure n2d2
         "model": "Model",# Pure n2d2
-        "from_argument": "FromArgument", # Pure n2d2
-        
-        
-        
     })
-    def __init__(self, from_arguments=True, **config_parameters):
+    def __init__(self, **config_parameters):
         """
-        :param from_arguments: If False, N2D2_object is not created based on config_parameters
-        :type  from_arguments: bool, optional
         :param datatype: Datatype of the weights, default=float
         :type datatype: str, optional
         :param model: Can be either ``Frame`` or ``Frame_CUDA``, default='Frame'
@@ -148,10 +168,15 @@ class Adam(Solver):
         :type beta2: float, optional
         :param epsilon: Epsilon, default=1.0e-8
         :type epsilon: float, optional
-        :param clamping: If true, clamp the weights and bias between -1 and 1, default=False
-        :type clamping: boolean, optional
+        :param clamping: Weights clamping, format: ``min:max``, or ``:max``, or ``min:``, or empty, default=""
+        :type clamping: str, optional
         """
         Solver.__init__(self, **config_parameters)
-        if from_arguments:
-            self._set_N2D2_object(self._solver_generators[self._model_key]())
-            self._set_N2D2_parameters(self._config_parameters)
+        if "clamping" in config_parameters:
+            clamping = config_parameters['clamping']
+            if clamping not in clamping_values:
+                raise n2d2.error_handler.WrongValue("clamping", clamping,
+                        "'" + "', '".join(clamping_values) +"'")
+        self._set_N2D2_object(self._solver_generators[self._model_key]())
+        self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())

@@ -127,7 +127,7 @@ public:
     void initializeCMonitors(unsigned int nbTimesteps);
     void spikeCodingCompare(const std::string& dirName, unsigned int idx) const;
 
-    void fuseBatchNormWithConv();
+    void fuseBatchNorm();
     void insertBatchNormAfterConv(bool moveActivation = true);
     void fusePadding();
     void removeDropout();
@@ -258,7 +258,8 @@ public:
     void logSpikeStats(const std::string& dirName,
                        unsigned int nbPatterns) const;
     void log(const std::string& baseName, Database::StimuliSet set) const;
-    void logLabelsMapping(const std::string& fileName) const;
+    void logLabelsMapping(const std::string& fileName,
+                          bool withStats = false) const;
     void logEstimatedLabels(const std::string& dirName) const;
     void logEstimatedLabelsJSON(const std::string& dirName) const;
     void logLabelsLegend(const std::string& fileName) const;
@@ -315,6 +316,10 @@ private:
     std::multimap<std::string, std::string> mParentLayers;
     unsigned int mStreamIdx;
     unsigned int mStreamTestIdx;
+    // Cache for getReceptiveField()
+    mutable std::map<std::string,
+                     std::map<std::vector<unsigned int>,
+                              std::vector<unsigned int> > > mReceptiveFields;
 };
 }
 

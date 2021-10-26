@@ -84,6 +84,8 @@ function(add_n2d2_doc source target deps)
         configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
 
         file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR}) #Doxygen won't create this for us
+        file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR}/html) #Prevents intermittent error
+        file(MAKE_DIRECTORY ${DOXYGEN_OUTPUT_DIR}/xml) #Prevents intermittent error
         add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
                         DEPENDS ${ALL_PUBLIC_HEADERS}
                         COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYFILE_OUT}
@@ -123,11 +125,40 @@ function(add_n2d2_doc source target deps)
     endif()
 endfunction()
 
+function(add_n2d2_pybind name source linked_libs) 
+
+    # Python binding
+    # Requires PyBind >= 2.2, because previous versions had a bug with virtual 
+    # inherance: https://github.com/pybind/pybind11/issues/865
+
+    find_package(Python 3.7 COMPONENTS Interpreter Development)
+
+    find_package(pybind11 CONFIG 2.2)
+    if(NOT pybind11_FOUND)
+        find_package(pybind11 2.2)
+    endif()
+
+    if(pybind11_FOUND)
+        message(STATUS "System pybind11 found.")
+    else()
+        message(STATUS "Using third_party/pybind11.")
+        add_subdirectory(${N2D2_SOURCE_DIR}/third_party/pybind11)
+    endif()
+
+    pybind11_add_module(${name} MODULE ${source})
+    message(STATUS "pybind11 include dirs: " "${pybind11_INCLUDE_DIRS}")
+    target_include_directories(${name} PUBLIC ${pybind11_INCLUDE_DIRS})
+    target_compile_definitions(${name} PUBLIC PYBIND=1)
+    target_compile_definitions(${linked_libs} PUBLIC PYBIND=1)
+    target_link_libraries_whole_archive(${name} ${linked_libs} ${ARGN})
+
+endfunction()
+
 # Must be called after find_package(CUDA) as the find_package call resets CUDA_NVCC_FLAGS
 macro(set_nvcc_flags)
     set(CUDA_PROPAGATE_HOST_FLAGS OFF)
-    # Must be replace by sm_80 for A100 architecture
-    list(APPEND CUDA_NVCC_FLAGS -std=c++11;-arch=sm_30;)
+    cuda_select_nvcc_arch_flags(ARCH_FLAGS Auto)
+    list(APPEND CUDA_NVCC_FLAGS -std=c++11;${ARCH_FLAGS})
     if (MSVC)
         list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-MD;)
     else()
@@ -146,17 +177,23 @@ project(N2D2)
 # n2d2_lib target
 file(GLOB_RECURSE src_files "src/*.cpp")
 file(GLOB_RECURSE src_files_python "src/python/*.cpp")
+
+list(REMOVE_ITEM src_files "${CMAKE_CURRENT_LIST_DIR}/src/python/pybind_N2D2.cpp")
+list(REMOVE_ITEM src_files_python "${CMAKE_CURRENT_LIST_DIR}/src/python/pybind_N2D2.cpp")
+
 foreach(item ${src_files_python})
     list(REMOVE_ITEM src_files ${item})
 endforeach()
+
 add_library(n2d2_lib STATIC ${src_files})
+set(src_files_python_os ${src_files_python} PARENT_SCOPE)
 
 target_include_directories(n2d2_lib PUBLIC "include")
 target_compile_definitions(n2d2_lib PUBLIC N2D2_COMPILE_PATH=\"${CMAKE_SOURCE_DIR}\")
 
 if(MSVC)
     # TODO clean-up warnings
-    target_compile_options(n2d2_lib PUBLIC /W3 /wd4250 /wd4512 /wd4267 /wd4244 /wd4800 /wd4297)
+    target_compile_options(n2d2_lib PUBLIC /W3 /wd4250 /wd4512 /wd4267 /wd4244 /wd4800 /wd4297 /bigobj)
     target_compile_definitions(n2d2_lib PUBLIC _CONSOLE _VISUALC_ NeedFunctionPrototypes _CRT_SECURE_NO_WARNINGS _VARIADIC_MAX=10)
 else()
     target_compile_options(n2d2_lib PUBLIC -std=c++0x -Wall -Wextra -pedantic -Wno-unknown-pragmas -fsigned-char -fPIC)
@@ -244,30 +281,6 @@ if(MSVC)
     endif()
 endif()
 
-# Python binding
-# Requires PyBind >= 2.2, because previous versions had a bug with virtual 
-# inherance: https://github.com/pybind/pybind11/issues/865
-#find_package(Python COMPONENTS Interpreter Development)
-#find_package(pybind11 CONFIG 2.2)
-#if(NOT pybind11_FOUND)
-#    find_package(pybind11 2.2)
-#endif()
-
-#if(pybind11_FOUND)
-#    message(STATUS "System pybind11 found.")
-#else()
-#    message(STATUS "Using third_party/pybind11.")
-#    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/third_party/pybind11)
-#endif()
-
-#pybind11_add_module(N2D2 MODULE ${src_files_python})
-#message(STATUS "pybind11 include dirs: " "${pybind11_INCLUDE_DIRS}")
-#target_include_directories(N2D2 PUBLIC ${pybind11_INCLUDE_DIRS})
-#target_compile_definitions(N2D2 PUBLIC PYBIND=1)
-#target_link_libraries_whole_archive(N2D2 n2d2_lib)
-
-
-
 set_target_properties(n2d2_lib PROPERTIES COTIRE_ADD_UNITY_BUILD FALSE)
 set_target_properties(n2d2_lib PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "${CMAKE_CURRENT_LIST_DIR}/include/Precompiled.hpp")
 cotire(n2d2_lib)
@@ -345,6 +358,9 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         add_n2d2_executable(${file} exec n2d2_lib)
     endforeach()
 
+    # pybind
+    list(APPEND src_files_python "${CMAKE_CURRENT_LIST_DIR}/src/python/pybind_N2D2.cpp")
+    add_n2d2_pybind(N2D2 "${src_files_python}" n2d2_lib)
 
     # docs target
     add_custom_target(docs)

@@ -156,17 +156,23 @@ void N2D2::BatchNormCell_Frame<T>::initialize()
 
 
 template <class T>
-void N2D2::BatchNormCell_Frame<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
+void N2D2::BatchNormCell_Frame<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
 {
-    // NOTE: this is addition to initialize()
-    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
+    // BEGIN: addition to initialize()
+    if (nbInputs != 1) {
+          throw std::runtime_error("nbInputs != 1 for cell " + mName);
+    }
+    // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
+    // However, this requires a reinitialization of the input dims which is unsafe
+    setInputsDims({nbInputChannels});
+    // END: addition to initialize()
 
     //std::vector<size_t> requiredDims(mInputs[0].nbDims(), 1);
     //requiredDims[mInputs[0].nbDims() - 2] = mInputs.dimZ();
 
-    // NOTE: In contrast to normal initialize, this works only for 4D Tensors at the moment!
+    // NOTE/TODO: In contrast to normal initialize, this works only for 4D Tensors at the moment!
     std::vector<size_t> requiredDims(4, 1);
-    requiredDims[2] = inputDimZ;
+    requiredDims[2] = nbInputChannels;
 
     if (mScale->empty())
         mScale->resize(requiredDims, ParamT(1.0));
@@ -246,14 +252,31 @@ void N2D2::BatchNormCell_Frame<T>::initializeParameters(unsigned int inputDimZ, 
 
 
 template <class T>
-void N2D2::BatchNormCell_Frame<T>::initializeDataDependent(){
-    Cell_Frame<T>::initializeDataDependent();
+void N2D2::BatchNormCell_Frame<T>::check_input()
+{
+    if (mInputs.size() == 0) {
+          throw std::runtime_error("mInputs.size() = 0 for cell " + mName);
+    }
 
     if (mInputs.dimZ() != mOutputs.dimZ()) {
-    throw std::domain_error("BatchNormCell_Frame<T>::initialize():"
+        throw std::domain_error("BatchNormCell_Frame<T>::initializeDataDependent():"
                             " the number of output channels must be equal "
                             "to the sum of inputs channels.");
     }
+
+    if (mInputs.dimZ() != mOutputs.dimZ()) {
+        throw std::domain_error("BatchNormCell_Frame<T>::initializeDataDependent():"
+                            " the number of output channels must be equal "
+                            "to the sum of inputs channels.");
+    }
+}
+
+
+template <class T>
+void N2D2::BatchNormCell_Frame<T>::initializeDataDependent(){
+    Cell_Frame<T>::initializeDataDependent();
+
+    check_input();
 
     mNbPropagate = 0;
 }
@@ -263,6 +286,7 @@ void N2D2::BatchNormCell_Frame<T>::initializeDataDependent(){
 template <class T>
 void N2D2::BatchNormCell_Frame<T>::propagate(bool inference)
 {
+    check_input();
     mInputs.synchronizeDBasedToH();
     unsigned int outputOffset = 0;
 
@@ -330,7 +354,7 @@ void N2D2::BatchNormCell_Frame<T>::propagate(bool inference)
 
                 (*mMean)(output) = mSavedMean(output) * mMovingAverageMomentum
                                 + (*mMean)(output) * (1.0 - mMovingAverageMomentum);
-                (*mVariance)(output) = mSavedVariance(output) * mMovingAverageMomentum
+                (*mVariance)(output) = mSavedVariance(output) * ((ParamT)size / ((ParamT)size-1)) * mMovingAverageMomentum
                                     + (*mVariance)(output) * (1.0 - mMovingAverageMomentum);
             }
 

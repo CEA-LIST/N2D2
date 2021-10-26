@@ -20,24 +20,23 @@
 """
 
 import n2d2
+from abc import ABC, abstractmethod
 
-
-class CrossEntropyClassifier:
+class LossFunction(ABC):
+    @abstractmethod
     def __init__(self, provider, **target_config_parameters):
-        self._softmax = n2d2.cells.nn.Softmax(with_loss=True)
+        self._name = n2d2.generate_name(self)
         self._target = n2d2.target.Score(provider, **target_config_parameters)
 
     def __call__(self, inputs):
-        x = self._softmax(inputs)
-        self._target(x)
-        #self._target.provide_targets()
-        #self._target.process()
-        loss = n2d2.Tensor(dims=[1], value=self.get_current_loss(), cell=self)
-        loss._leaf = True
-        return loss
+        self._deepnet = inputs.get_deepnet()
+        self._loss._leaf = True
+        
+    def get_name(self):
+        return self._name
 
     def get_deepnet(self):
-        return self._softmax.get_deepnet()
+        return self._deepnet
 
     def get_average_success(self, window=0):
         return self._target.get_average_success(window=window)
@@ -105,3 +104,25 @@ class CrossEntropyClassifier:
     #         string += "\n"
     #     print(string)
 
+class CrossEntropyClassifier(LossFunction):
+    def __init__(self, provider, **target_config_parameters):
+        LossFunction.__init__(self, provider, **target_config_parameters)
+        self._softmax = n2d2.cells.nn.Softmax(with_loss=True)
+
+    def __call__(self, inputs):
+        x = self._softmax(inputs)
+        self._target(x)
+        self._loss = n2d2.Tensor(dims=[1], value=self.get_current_loss(), cell=self)
+        LossFunction.__call__(self, inputs)
+        return self._loss
+
+class MeanSquareErrorRegression(LossFunction):
+    # TODO : This class have not been tested !
+    def __init__(self, provider, **target_config_parameters):
+        LossFunction.__init__(self, provider, **target_config_parameters)
+
+    def __call__(self, inputs):
+        self._target(inputs)
+        self._loss = n2d2.Tensor(dims=[1], value=self.get_current_loss(), cell=self)
+        LossFunction.__call__(self, inputs)
+        return  self._loss

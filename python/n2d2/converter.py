@@ -31,14 +31,12 @@ object_dict = {
     "Tanh": n2d2.activation.Tanh,
 
     "SGD": n2d2.solver.SGD,
+    "Adam": n2d2.solver.Adam,
 
     "He": n2d2.filler.He,
     "Normal": n2d2.filler.Normal,
     "Xavier": n2d2.filler.Xavier,
     "Constant": n2d2.filler.Constant,
-
-    "SATCell": n2d2.quantizer.SATCell,
-    "SATActivation": n2d2.quantizer.SATAct,
 
     "Fc": n2d2.cells.Fc,
     "Conv": n2d2.cells.Conv,
@@ -50,6 +48,8 @@ object_dict = {
     "Pool": n2d2.cells.Pool,
     "BatchNorm": n2d2.cells.BatchNorm2d,
     "Reshape": n2d2.cells.Reshape,
+    "Resize": n2d2.cells.Resize,
+    "Transpose": n2d2.cells.Transpose,
 }
 
 

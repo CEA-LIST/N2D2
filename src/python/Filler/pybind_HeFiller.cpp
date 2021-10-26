@@ -39,7 +39,7 @@ void declare_HeFiller(py::module &m, const std::string& typeStr) {
             m, pyClassName.c_str(), py::multiple_inheritance()
     );
 
-    py::enum_<class HeFiller<T>::VarianceNorm>(filler, "VarianceNorm")
+    py::enum_<enum HeFiller<T>::VarianceNorm>(filler, "VarianceNorm")
     .value("FanIn", HeFiller<T>::VarianceNorm::FanIn)
     .value("Average", HeFiller<T>::VarianceNorm::Average)
     .value("FanOut", HeFiller<T>::VarianceNorm::FanOut)
@@ -53,6 +53,7 @@ void declare_HeFiller(py::module &m, const std::string& typeStr) {
     .def("getVarianceNorm", &HeFiller<T>::getVarianceNorm)
     .def("getMeanNorm", &HeFiller<T>::getMeanNorm)
     .def("getScaling", &HeFiller<T>::getScaling)
+    .def("getDataType", [typeStr](HeFiller<T>){return typeStr;})
     ;
 }
 

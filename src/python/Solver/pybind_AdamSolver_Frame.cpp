@@ -39,6 +39,9 @@ void declare_AdamSolver_Frame(py::module &m, const std::string& typeStr) {
         AdamSolver> (m, pyClassName.c_str(), py::multiple_inheritance()) 
     .def(py::init())
     .def(py::init<AdamSolver_Frame<T>>(), py::arg("solver"))
+    .def("getDataType", [typeStr](AdamSolver_Frame<T>){return typeStr;})
+    .def("getModel", [](AdamSolver_Frame<T>){return "Frame";})
+
 ;
 }
 

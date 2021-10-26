@@ -144,9 +144,8 @@ void init_Cell(py::module &m) {
      Initialize the state of the cell (e.g. weights random initialization)
     )mydelimiter")
 
+    .def("setMapping", &Cell::setMapping, py::arg("mapping"))
     .def("initializeDataDependent", &Cell::initializeDataDependent)
-    .def("initializeParameters", &Cell::initializeParameters, py::arg("inputDimZ"), py::arg("nbInputs"), py::arg("mapping")=Tensor<bool>())
-    .def("initializeWeightQuantizer", &Cell::initializeWeightQuantizer)
 
     .def("save", &Cell::save, py::arg("dirName"),    
     R"mydelimiter(
@@ -189,6 +188,13 @@ void init_Cell(py::module &m) {
      :type fileName: str
      :param ignoreNotExists: If true, don't throw an error if the file doesn't exist
      :type ignoreNotExists: bool, optional
+     )mydelimiter")
+    .def("exportActivationParameters", &Cell::exportActivationParameters, py::arg("fileName"),
+     R"mydelimiter(
+     Export activation parameters to a file
+
+     :param fileName: Source file
+     :type fileName: str
      )mydelimiter")
     // .def("logFreeParameters", &Cell::logFreeParameters, py::arg("fileName"))
     // .def("logFreeParametersDistrib", &Cell::logFreeParametersDistrib, py::arg("fileName"), py::arg("type"))

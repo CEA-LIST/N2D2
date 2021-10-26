@@ -53,7 +53,8 @@ public:
 TEST(TransposeCell_Frame, propagate)
 {
     // NHWC -> NCHW
-    const std::vector<int> permutation = {1, 2, 0, 3};
+    //const std::vector<int> permutation = {1, 2, 0, 3};
+    const std::vector<int> permutation = {2, 0, 1, 3};
 
     Network net;
     DeepNet dn(net);
@@ -61,6 +62,9 @@ TEST(TransposeCell_Frame, propagate)
     Random::mtSeed(0);
 
     const unsigned int nbOutputs = 10;
+    const unsigned int batchSize = 8;
+    const unsigned int dimX = 3;
+    const unsigned int dimY = 3;
     TransposeCell_Frame_Test<Float_T> transpose(dn, "transpose",
         nbOutputs,
         permutation);
@@ -72,16 +76,16 @@ TEST(TransposeCell_Frame, propagate)
     ASSERT_EQUALS(perm[3], permutation[3]);
 
     const std::vector<int> invPerm = transpose.getInversePermutation();
-    ASSERT_EQUALS(invPerm[0], 2);
-    ASSERT_EQUALS(invPerm[1], 0);
-    ASSERT_EQUALS(invPerm[2], 1);
+    ASSERT_EQUALS(invPerm[0], 1);
+    ASSERT_EQUALS(invPerm[1], 2);
+    ASSERT_EQUALS(invPerm[2], 0);
     ASSERT_EQUALS(invPerm[3], 3);
 
     ASSERT_EQUALS(transpose.getName(), "transpose");
     ASSERT_EQUALS(transpose.getNbOutputs(), nbOutputs);
 
-    Tensor<Float_T> inputs({nbOutputs, 2, 4, 1});
-    Tensor<Float_T> diffOutputs({nbOutputs, 2, 4, 1});
+    Tensor<Float_T> inputs({dimX, dimY, nbOutputs, batchSize});
+    Tensor<Float_T> diffOutputs({dimX, dimY, nbOutputs, batchSize});
 
     for (unsigned int index = 0; index < inputs.size(); ++index)
         inputs(index) = Random::randUniform(-1.0, 1.0);
@@ -94,10 +98,13 @@ TEST(TransposeCell_Frame, propagate)
     const Tensor<Float_T>& outputs = tensor_cast<Float_T>(transpose.getOutputs());
     //ASSERT_NOTHROW_ANY(transpose.checkGradient(1.0e-3, 1.0e-3));
 
-    ASSERT_EQUALS(outputs.dimX(), 2);
-    ASSERT_EQUALS(outputs.dimY(), 4);
-    ASSERT_EQUALS(outputs.dimZ(), nbOutputs);
-    ASSERT_EQUALS(outputs.dimB(), 1);
+    ASSERT_EQUALS(outputs.dimX(), nbOutputs);
+    ASSERT_EQUALS(outputs.dimY(), dimX);
+    ASSERT_EQUALS(outputs.dimZ(), dimY);
+    ASSERT_EQUALS(outputs.dimB(), batchSize);
+
+    ASSERT_EQUALS_DELTA(std::accumulate(outputs.begin(), outputs.end(), 0.0),
+    std::accumulate(inputs.begin(), inputs.end(), 0.0), 1.0e-12);
 
     std::size_t coords[4];
     for (coords[3] = 0; coords[3] < inputs.dims()[3]; ++coords[3]) {
@@ -108,6 +115,32 @@ TEST(TransposeCell_Frame, propagate)
                     ASSERT_EQUALS_DELTA(
                         outputs(coords[perm[0]], coords[perm[1]],
                                 coords[perm[2]], coords[perm[3]]),
+                        inputs(coords[0], coords[1],
+                               coords[2], coords[3]),
+                        1.0e-12);
+                }
+            }
+        }
+    }
+
+
+    transpose.mDiffInputs = transpose.getOutputs();
+    transpose.mDiffInputs.setValid();
+    transpose.mDiffInputs.synchronizeHToD();
+
+    transpose.backPropagate();
+
+    ASSERT_EQUALS_DELTA(std::accumulate(diffOutputs.begin(), diffOutputs.end(), 0.0),
+    std::accumulate(inputs.begin(), inputs.end(), 0.0), 1.0e-12);
+
+    for (coords[3] = 0; coords[3] < inputs.dims()[3]; ++coords[3]) {
+        for (coords[2] = 0; coords[2] < inputs.dims()[2]; ++coords[2]) {
+            for (coords[1] = 0; coords[1] < inputs.dims()[1]; ++coords[1]) {
+                for (coords[0] = 0; coords[0] < inputs.dims()[0]; ++coords[0])
+                {
+                    ASSERT_EQUALS_DELTA(
+                        diffOutputs(coords[0], coords[1],
+                                coords[2], coords[3]),
                         inputs(coords[0], coords[1],
                                coords[2], coords[3]),
                         1.0e-12);

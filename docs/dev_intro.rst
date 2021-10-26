@@ -152,6 +152,7 @@ The ``ConvCell_Frame<T>`` is the final class implementing the convolution
 C++ for CPU *Programming model*. It is only an implementation class, which
 therefore does not provide any new members.
 
+.. _dev-tensor-t:
 
 The ``Tensor<T>`` class
 -----------------------

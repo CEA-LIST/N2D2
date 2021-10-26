@@ -99,6 +99,18 @@ struct tensor_t<void> {
 
 class BaseInterface {
 public:
+    virtual bool empty() const = 0;
+    virtual size_t dimX() const = 0;
+    virtual size_t dimY() const = 0;
+    virtual size_t dimD() const = 0;
+    virtual size_t dimZ() const = 0;
+    virtual size_t dimB() const = 0;
+    virtual size_t size() const = 0;
+    virtual size_t dataSize() const = 0;
+    virtual BaseTensor& back() = 0;
+    virtual const BaseTensor& back() const = 0;
+    virtual BaseTensor& operator[](unsigned int t) = 0;
+    virtual const BaseTensor& operator[](unsigned int t) const = 0;
     virtual ~BaseInterface() {};
 };
 

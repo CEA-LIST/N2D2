@@ -69,8 +69,17 @@ public:
                                                       activation);
     }
 
+    void resetWeightsSolver(const std::shared_ptr<Solver>& solver)
+    {
+        setWeightsSolver(solver);
+        for (unsigned int k = 0, size = mWeightsSolvers.size(); k < size; ++k) {
+            mWeightsSolvers[k] = mWeightsSolver->clone();
+        }
+    };
+
     virtual void initialize();
-    virtual void initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping = Tensor<bool>());
+    virtual void initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs);
+    virtual void check_input();
     virtual void initializeDataDependent();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
@@ -96,10 +105,14 @@ public:
     {
         return &mSharedSynapses;
     };
+    inline const BaseInterface* getWeights() const
+    {
+        return &mSharedSynapses;
+    };
     void setWeights(unsigned int k,
                     BaseInterface* weights,
                     unsigned int offset);
-    inline std::shared_ptr<BaseTensor> getBiases()
+    inline const std::shared_ptr<BaseTensor> getBiases() const
     {
         return mBias;
     };

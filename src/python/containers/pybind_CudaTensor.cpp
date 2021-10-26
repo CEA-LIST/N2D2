@@ -39,7 +39,6 @@ void declare_CudaDeviceTensor(py::module &m, const std::string& typeStr) {
     // .def("getDevicePtr", (T* (CudaDeviceTensor<T>::*)() const) &CudaDeviceTensor<T>::getDevicePtr)
     // .def("getDevicePtr", (T* (CudaDeviceTensor<T>::*)(int) const) &CudaDeviceTensor<T>::getDevicePtr, py::arg("dev") = -1)
     // .def("isDevicePtr", &CudaDeviceTensor<T>::isDevicePtr, py::arg("dev") = -1)
-    .def("setDevicePtr", (void (CudaDeviceTensor<T>::*)(T*)) &CudaDeviceTensor<T>::setDevicePtr, py::arg("dataDevice"))
     .def("isOwner", &CudaDeviceTensor<T>::isOwner);
 }
 
@@ -49,6 +48,14 @@ void declare_CudaTensor(py::module &m, const std::string& typeStr) {
     py::class_<CudaTensor<T>, Tensor<T>, CudaBaseTensor, BaseTensor>(m, pyClassName.c_str(), py::multiple_inheritance(), py::buffer_protocol())
     .def(py::init<>())
     .def(py::init<const std::vector<size_t>&, const T&>(), py::arg("dims"), py::arg("value") = T())
+    // .def(py::init<const std::vector<size_t>&, long, int>(), py::arg("dims"), py::arg("data_ptr"), py::arg("dev"))
+    .def(py::init([](const std::vector<size_t>& dims, long data_ptr, int dev){
+        /* We use a lambda function to bind this constructor.
+        *  If we don't add this lambda function, pybind will understand that the Cpp function wait for a pointer to the python variable data_ptr.
+        *  But in reality, data_ptr is already a pointer, this is why we need an explicit conversion.  
+        */ 
+        return new CudaTensor<T>(dims, (T*)data_ptr, dev);
+    }))
     /// Bare bones interface
     .def("__getitem__", [](const CudaTensor<T>& b, size_t i) {
         if (i >= b.size()) throw py::index_error();
@@ -130,7 +137,7 @@ void declare_CudaTensor(py::module &m, const std::string& typeStr) {
             strides             /* Strides (in bytes) for each index */
         );
     })
-    .def("__init__", [](CudaTensor<T>& m, py::array_t<T, py::array::c_style | py::array::forcecast> b) {
+    .def(py::init([](py::array_t<T, py::array::c_style | py::array::forcecast> b) {
         /* Request a buffer descriptor from Python */
         py::buffer_info info = b.request();
 /*
@@ -148,8 +155,9 @@ void declare_CudaTensor(py::module &m, const std::string& typeStr) {
         }
 */
         const std::vector<size_t> dims(info.shape.begin(), info.shape.end());
-        new (&m) CudaTensor<T>(Tensor<T>(dims, static_cast<T*>(info.ptr)));
-    });
+        return new CudaTensor<T>(Tensor<T>(dims, static_cast<T*>(info.ptr)));
+    }))
+    ;
 }
 
 void init_CudaTensor(py::module &m) {
@@ -161,7 +169,7 @@ void init_CudaTensor(py::module &m) {
     declare_CudaDeviceTensor<double>(m, "double");
 
     py::class_<CudaBaseTensor>(m, "CudaBaseTensor")
-    .def("deviceTensor", (CudaBaseDeviceTensor& (CudaBaseTensor::*)()) &CudaBaseTensor::deviceTensor)
+    .def("deviceTensor", (CudaBaseDeviceTensor& (CudaBaseTensor::*)()) &CudaBaseTensor::deviceTensor, py::return_value_policy::reference)
     .def("hostBased", &CudaBaseTensor::hostBased)
     ;
 
@@ -171,8 +179,9 @@ void init_CudaTensor(py::module &m) {
     declare_CudaTensor<unsigned char>(m, "unsigned_char");
     declare_CudaTensor<short>(m, "short");
     declare_CudaTensor<int>(m, "int");
+    declare_CudaTensor<long long>(m, "long"); // Correspond to long torch datatype
     declare_CudaTensor<unsigned int>(m, "unsigned_int");
-    declare_CudaTensor<unsigned long long>(m, "unsigned_long_long");
+    // declare_CudaTensor<unsigned long long>(m, "unsigned_long_long");
 }
 }
 #endif

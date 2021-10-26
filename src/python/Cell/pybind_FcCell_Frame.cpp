@@ -33,8 +33,13 @@ void declare_FcCell_Frame(py::module &m, const std::string& typeStr) {
     py::class_<FcCell_Frame<T>, std::shared_ptr<FcCell_Frame<T>>, FcCell, Cell_Frame<T>> (m, pyClassName.c_str(), py::multiple_inheritance()) 
 
     .def(py::init<const DeepNet&, const std::string&, unsigned int, const std::shared_ptr<Activation>&>(),
-         py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation") = std::make_shared<TanhActivation_Frame<Float_T> >())
+         py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation") = std::shared_ptr<Activation>())
+    .def("initializeWeightQuantizer", &FcCell_Frame<T>::initializeWeightQuantizer)
+    .def("resetWeights", &FcCell_Frame<T>::resetWeights)
+    .def("resetBias", &FcCell_Frame<T>::resetBias)
+    .def("resetWeightsSolver", &FcCell_Frame<T>::resetWeightsSolver, py::arg("solver"))
     ;
+    
 
 }
 

@@ -36,6 +36,10 @@ void init_ScalingMode(py::module &m) {
     .value("FIXED_MULT32", ScalingMode::FIXED_MULT32)
     .value("SINGLE_SHIFT", ScalingMode::SINGLE_SHIFT)
     .value("DOUBLE_SHIFT", ScalingMode::DOUBLE_SHIFT);
+    
+    py::enum_<WeightsApprox>(m, "WeightsApprox")
+    .value("NONE", WeightsApprox::NONE)
+    .value("RINTF", WeightsApprox::RINTF);
 }
 }
 #endif

@@ -48,7 +48,7 @@ void init_Target(py::module &m) {
         py::arg("sp"), 
         py::arg("targetValue") = 1.0,
         py::arg("defaultValue") = 0.0, 
-        py::arg("topN") = 1,  /* NOTE: this name is incoherent with the normal convention in the C++ class constructor ('targetTopN' vs. 'topN'). We choose the INI convention*/
+        py::arg("targetTopN") = 1, 
         py::arg("labelsMapping") = "", 
         py::arg("createMissingLabels") = false)
     .def("getName", &Target::getName)
@@ -67,7 +67,7 @@ void init_Target(py::module &m) {
     .def("getDefaultTarget", &Target::getDefaultTarget)
     .def("getTargetLabels", &Target::getTargetLabels, py::arg("output"))
     .def("getTargetLabelsName", &Target::getTargetLabelsName)
-    .def("logLabelsMapping", &Target::logLabelsMapping, py::arg("fileName"))
+    .def("logLabelsMapping", &Target::logLabelsMapping, py::arg("fileName"), py::arg("withStats") = false)
     .def("provideTargets", &Target::provideTargets, py::arg("set"),
      R"mydelimiter(
      Set the output target of a cell. Also create the mapping if labelsMapping option is defined.

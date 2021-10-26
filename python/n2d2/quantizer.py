@@ -21,17 +21,11 @@
 import N2D2
 from n2d2.n2d2_interface import N2D2_Interface
 import n2d2.global_variables
+from abc import ABC, abstractmethod
 
+class Quantizer(N2D2_Interface, ABC): 
 
-class Quantizer(N2D2_Interface):
-    _convention_converter= n2d2.ConventionConverter({
-        "range": "Range",
-        "apply_scaling": "ApplyScaling",
-        "apply_quantization": "ApplyQuantization",
-        "quant_mode": "QuantMode",
-        "alpha": "Alpha",
-    })
-    
+    @abstractmethod
     def __init__(self, **config_parameters):
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')
@@ -59,81 +53,40 @@ class Quantizer(N2D2_Interface):
         return output
 
 
-class CellQuantizer(Quantizer):
+class CellQuantizer(Quantizer, ABC):
+    @abstractmethod
+    def __init__(self, **config_parameters):
+        # TODO : add a type check for parameters range, solver and mode. 
+        Quantizer.__init__(self, **config_parameters)
 
+    def add_weights(self, weights, diff_weights):
+        """
+        :arg weights: Weights
+        :param weights: :py:class:`n2d2.Tensor`
+        :arg diff_weights: Diff Weights
+        :param diff_weights: :py:class:`n2d2.Tensor`
+        """
+        if not isinstance(diff_weights, n2d2.Tensor):
+            raise n2d2.error_handler("diff_weights", str(type(diff_weights)), ["n2d2.Tensor"])
+        if not isinstance(weights, n2d2.Tensor):
+            raise n2d2.error_handler("weights", str(type(weights)), ["n2d2.Tensor"])
+        self.N2D2().addWeights(weights.N2D2(), diff_weights.N2D2())
+
+    def add_biases(self, biases, diff_biases):
+        """
+        :arg biases: Biases
+        :param biases: :py:class:`n2d2.Tensor`
+        :arg diff_biases: Diff Biases
+        :param diff_biases: :py:class:`n2d2.Tensor`
+        """
+        if not isinstance(diff_biases, n2d2.Tensor):
+            raise n2d2.error_handler("diff_biases", type(diff_biases) ["n2d2.Tensor"])
+        if not isinstance(biases, n2d2.Tensor):
+            raise n2d2.error_handler("biases", type(biases) ["n2d2.Tensor"])
+        self.N2D2().addBiases(biases.N2D2(), diff_biases.N2D2())
+
+class ActivationQuantizer(Quantizer, ABC):
+    @abstractmethod
     def __init__(self, **config_parameters):
         Quantizer.__init__(self, **config_parameters)
 
-
-class ActivationQuantizer(Quantizer):
-
-    def __init__(self, **config_parameters):
-        Quantizer.__init__(self, **config_parameters)
-
-
-class SATCell(CellQuantizer):
-    """
-    Scale Adjust Training (SAT) weight quantizer.
-    """
-    _quantizer_generators = {
-        'Frame<float>': N2D2.SATQuantizerCell_Frame_float,
-        'Frame_CUDA<float>': N2D2.SATQuantizerCell_Frame_CUDA_float
-    }
-
-    def __init__(self, from_arguments=True, **config_parameters):
-        CellQuantizer.__init__(self, **config_parameters)
-        if from_arguments:
-            # No optional constructor arguments
-            self._set_N2D2_object(self._quantizer_generators[self._model_key]())
-            self._set_N2D2_parameters(self._config_parameters)
-
-    """
-    Access the quantized weights of the cell the quantizer is attached to.
-    """
-    def get_quantized_weights(self, input_idx):
-        return n2d2.Tensor.from_N2D2(self.N2D2().getQuantizedWeights(input_idx))
-
-    """
-    Access the quantized weights of the cell the quantizer is attached to.
-    """
-    def get_quantized_biases(self):
-        return n2d2.Tensor.from_N2D2(self.N2D2().getQuantizedBiases())
-
-
-class SATAct(ActivationQuantizer):
-    """
-    Scale Adjust Training (SAT) activation quantizer.
-    """
-    _quantizer_generators = {
-        'Frame<float>': N2D2.SATQuantizerActivation_Frame_float,
-        'Frame_CUDA<float>': N2D2.SATQuantizerActivation_Frame_CUDA_float
-    }
-
-    def __init__(self, from_arguments=True, **config_parameters):
-        ActivationQuantizer.__init__(self, **config_parameters)
-
-        if from_arguments:
-            # No optional constructor arguments
-            self._N2D2_object = self._quantizer_generators[self._model_key]()
-
-            """Set and initialize here all complex cells members"""
-            for key, value in self._config_parameters.items():
-                if key is 'solver':
-                    self._N2D2_object.setSolver(value.N2D2())
-                else:
-                    self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
-
-    """
-    def set_solver(self, solver):
-        if 'solver' in self._config_parameters:
-            print("Note: Replacing existing solver in SATAct quantizer")
-        self._config_parameters['solver'] = solver
-        self._N2D2_object.setSolver(self._config_parameters['solver'].N2D2())
-    """
-
-    """
-    Access the full precision activations of the activation function.
-    Note: This may be empty for some Quantizers if they are run exclusively in inference mode
-    """
-    def get_full_precision_activations(self):
-        return n2d2.Tensor.from_N2D2(self.N2D2().getFullPrecisionActivations())

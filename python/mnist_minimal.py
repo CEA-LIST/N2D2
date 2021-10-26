@@ -35,17 +35,21 @@ database2 = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw/")
 provider2 = n2d2.provider.DataProvider(database2, [28, 28, 1], batch_size=batch_size)
 
 
-print("Create Conv")
-cell1 = n2d2.cells.nn.Conv(1, 10, kernel_dims=[5, 5])
-#cell1 = n2d2.cells.Fc(28*28, 50)
+#print("Create Conv")
+#cell1 = n2d2.cells.nn.Conv(1, 10, kernel_dims=[5, 5], nb_input_cells=2)
+
+#print(cell1.get_weights()[0])
+
+cell1 = n2d2.cells.Fc(28*28, 50)
 #fc1 = n2d2.cells.Fc(50, 50)
-#TODO: Fc input dimension check before call
 print("Create Fc")
-fc2 = n2d2.cells.nn.Fc(10 * 24 * 24, 10)
-#fc2 = n2d2.cells.Fc(50, 10)
+#fc2 = n2d2.cells.nn.Fc(10 * 24 * 24, 10)
+fc2 = n2d2.cells.Fc(50, 10)
 
 #cell1.N2D2().exportFreeParameters("exported_parameters")
 #fc2.N2D2().exportFreeParameters("exported_parameters")
+
+#exit()
 
 loss_function = n2d2.application.CrossEntropyClassifier(provider)
 
@@ -68,7 +72,9 @@ for epoch in range(nb_epochs):
         #    x = provider.read_random_batch()
         #else:
         #    x = provider2.read_random_batch()
+
         x = provider.read_random_batch()
+
         x = cell1(x)
         x = fc2(x)
         x = loss_function(x)

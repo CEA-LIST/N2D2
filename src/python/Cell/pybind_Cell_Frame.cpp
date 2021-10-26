@@ -36,9 +36,11 @@ void declare_Cell_Frame(py::module &m, const std::string& typeStr) {
     // .def("getDiffOutputs", &Cell_Frame<T>::getDiffOutputs)
     .def("setDiffInputs", &Cell_Frame<T>::setDiffInputs, py::arg("diffInput"))
     .def("setDiffInputsValid", &Cell_Frame<T>::setDiffInputsValid)
-
+    .def("getPyDataType", &Cell_Frame<T>::getPyDataType)
+    .def("getPyModel", &Cell_Frame<T>::getPyModel)
     .def("clearInputTensors", &Cell_Frame<T>::clearInputTensors)
     .def("clearOutputTensors", &Cell_Frame<T>::clearOutputTensors)
+    .def("initializeParameters", &Cell_Frame<T>::initializeParameters, py::arg("nbInputChannels"), py::arg("nbInputs"))
     .def("linkInput",  (void (Cell_Frame<T>::*)(Cell*)) &Cell_Frame<T>::linkInput, py::arg("cell"))
     .def("linkInput",  (void (Cell_Frame<T>::*)(StimuliProvider&, unsigned int, unsigned int, unsigned int, unsigned int)) &Cell_Frame<T>::linkInput, 
         py::arg("sp"), py::arg("x0")=0, py::arg("y0")=0, py::arg("width")=0, py::arg("height")=0)

@@ -46,6 +46,7 @@ void init_SGDSolver(py::module &m) {
     sdg.def("getmLearningRate", &SGDSolver::getmLearningRate)
     .def("getMomentum", &SGDSolver::getMomentum)
     .def("getDecay", &SGDSolver::getDecay)
+    .def("getMinDecay", &SGDSolver::getMinDecay)
     .def("getPower", &SGDSolver::getPower)
     .def("getIterationSize", &SGDSolver::getIterationSize)
     .def("getMaxIterations", &SGDSolver::getMaxIterations)

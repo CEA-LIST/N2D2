@@ -29,6 +29,7 @@
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/ConvCell.hpp"
 #include "Cell/DeconvCell.hpp"
+#include "Cell/DistanceCell.hpp"
 #include "Cell/ConvCell_Spike.hpp"
 #include "Cell/DropoutCell.hpp"
 #include "Cell/FcCell.hpp"
@@ -653,7 +654,7 @@ void N2D2::DeepNet::save(const std::string& dirName) const
          itEnd = mCells.end();
          it != itEnd;
          ++it)
-        (*it).second->save(dirName + "/" + (*it).first);
+        (*it).second->save(dirName + "/" + Utils::filePath((*it).first));
 }
 
 void N2D2::DeepNet::load(const std::string& dirName)
@@ -663,7 +664,7 @@ void N2D2::DeepNet::load(const std::string& dirName)
          itEnd = mCells.end();
          it != itEnd;
          ++it)
-        (*it).second->load(dirName + "/" + (*it).first);
+        (*it).second->load(dirName + "/" + Utils::filePath((*it).first));
 }
 
 void N2D2::DeepNet::saveNetworkParameters() const
@@ -673,7 +674,7 @@ void N2D2::DeepNet::saveNetworkParameters() const
          itEnd = mCells.end();
          it != itEnd;
          ++it)
-        (*it).second->saveParameters((*it).first + ".cfg");
+        (*it).second->saveParameters(Utils::filePath((*it).first) + ".cfg");
 }
 
 void N2D2::DeepNet::loadNetworkParameters()
@@ -683,7 +684,7 @@ void N2D2::DeepNet::loadNetworkParameters()
          itEnd = mCells.end();
          it != itEnd;
          ++it)
-        (*it).second->loadParameters((*it).first + ".cfg");
+        (*it).second->loadParameters(Utils::filePath((*it).first) + ".cfg");
 }
 
 void N2D2::DeepNet::exportNetworkFreeParameters(const std::string
@@ -695,10 +696,13 @@ void N2D2::DeepNet::exportNetworkFreeParameters(const std::string
          = mCells.begin(),
          itEnd = mCells.end();
          it != itEnd;
-         ++it) {
-        (*it).second->exportFreeParameters(dirName + "/" + (*it).first
+         ++it)
+    {
+        const std::string name = Utils::filePath((*it).first);
+        
+        (*it).second->exportFreeParameters(dirName + "/" + name
                                            + ".syntxt");
-        (*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first
+        (*it).second->logFreeParametersDistrib(dirName + "/" + name
             + "_weights.distrib.dat", Cell::Multiplicative);
 
         (*it).second->exportQuantFreeParameters(dirName + "/" + (*it).first
@@ -706,7 +710,7 @@ void N2D2::DeepNet::exportNetworkFreeParameters(const std::string
         (*it).second->logQuantFreeParametersDistrib(dirName + "/" + (*it).first
             + "_weights_quant.distrib.dat", Cell::Multiplicative);
 
-        (*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first
+        (*it).second->logFreeParametersDistrib(dirName + "/" + name
             + "_biases.distrib.dat", Cell::Additive);
 
         (*it).second->exportActivationParameters(dirName);
@@ -722,10 +726,13 @@ void N2D2::DeepNet::exportNetworkSolverParameters(const std::string
          = mCells.begin(),
          itEnd = mCells.end();
          it != itEnd;
-         ++it) {
-        (*it).second->exportFreeParameters(dirName + "/" + (*it).first
+         ++it)
+    {
+        const std::string name = Utils::filePath((*it).first);
+
+        (*it).second->exportFreeParameters(dirName + "/" + name
                                            + ".syntxt");
-        //(*it).second->logFreeParametersDistrib(dirName + "/" + (*it).first +
+        //(*it).second->logFreeParametersDistrib(dirName + "/" + name +
         //".distrib.dat");
     }
 }
@@ -739,7 +746,7 @@ void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName,
          itEnd = mCells.end();
          it != itEnd;
          ++it){
-        (*it).second->importFreeParameters(dirName + "/" + (*it).first
+        (*it).second->importFreeParameters(dirName + "/" + Utils::filePath((*it).first)
                                            + ".syntxt", ignoreNotExists);
         (*it).second->importActivationParameters(dirName, ignoreNotExists);
 
@@ -756,7 +763,7 @@ void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName,
     it = mCells.begin(), itEnd = mCells.end(); it != itEnd; ++it) {
         if (weightName.compare((*it).first) == 0) {
             (*it).second->importFreeParameters(dirName + "/"
-                                                + (*it).first + ".syntxt");
+                                                + Utils::filePath((*it).first) + ".syntxt");
             std::cout << "Weight " << (*it).first
             << " successfully imported" << std::endl;
             weightsFound = true;
@@ -841,6 +848,20 @@ std::vector<unsigned int> N2D2::DeepNet::getReceptiveField(
     const std::string& name,
     const std::vector<unsigned int>& outputField) const
 {
+    const std::map<std::string, std::map<std::vector<unsigned int>,
+        std::vector<unsigned int> > >::const_iterator
+            it = mReceptiveFields.find(name);
+
+    if (it != mReceptiveFields.end()) {
+        const std::map<std::vector<unsigned int>,
+            std::vector<unsigned int> >::const_iterator
+                itCell = (*it).second.find(outputField);
+        
+        if (itCell != (*it).second.end()) {
+            return (*itCell).second;
+        }
+    }
+
     const std::map<std::string, std::shared_ptr<Cell> >::const_iterator itCell
         = mCells.find(name);
     const std::vector<unsigned int> cellReceptiveField
@@ -866,7 +887,10 @@ std::vector<unsigned int> N2D2::DeepNet::getReceptiveField(
         }
     }
 
-    return (hasParent) ? maxReceptiveField : cellReceptiveField;
+    const std::vector<unsigned int> receptiveField
+        = (hasParent) ? maxReceptiveField : cellReceptiveField;
+    mReceptiveFields[name][outputField] = receptiveField;
+    return receptiveField;
 }
 
 void N2D2::DeepNet::clearAll()
@@ -1148,7 +1172,7 @@ void N2D2::DeepNet::spikeCodingCompare(const std::string& dirName,
                 throw std::runtime_error("DeepNet::spikeCodingCompare(): only "
                                          "works with Spike models");
 
-            cellSpike->spikeCodingCompare(dirName + "/" + (*it).first + ".dat");
+            cellSpike->spikeCodingCompare(dirName + "/" + Utils::filePath((*it).first) + ".dat");
         }
     }
 }
@@ -1156,8 +1180,8 @@ void N2D2::DeepNet::spikeCodingCompare(const std::string& dirName,
 /**
  * Ref: https://tkv.io/posts/fusing-batchnorm-and-conv/
 */
-void N2D2::DeepNet::fuseBatchNormWithConv() {
-    std::cout << "Fuse BatchNorm with Conv..." << std::endl;
+void N2D2::DeepNet::fuseBatchNorm() {
+    std::cout << "Fuse BatchNorm with Conv/Fc..." << std::endl;
 
     for (auto it = mCells.begin(); it != mCells.end(); ) {
         const std::shared_ptr<Cell>& cell = (*it).second;
@@ -1167,7 +1191,7 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
             continue;
         }
 
-        // check if a Conv is preceding
+        // check if a Conv/Fc is preceding
         const std::vector<std::shared_ptr<Cell> > bnParents = getParentCells(cell->getName());
 
         if(bnParents.size() > 1) {
@@ -1178,39 +1202,39 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
             continue;
         }
 
-        if(!bnParents[0] || bnParents[0]->getType() != ConvCell::Type) {
+        if(!bnParents[0] || (bnParents[0]->getType() != ConvCell::Type
+            && bnParents[0]->getType() != FcCell::Type))
+        {
             std::cout << Utils::cnotice << "  cannot fuse BatchNorm \""
                 << cell->getName() << "\" because parent cell (\""
                 << ((bnParents[0]) ? bnParents[0]->getName() : "env")
-                << "\") is not a Conv" << Utils::cdef << std::endl;
+                << "\") is not a Conv/Fc" << Utils::cdef << std::endl;
 
             continue;
         }
 
-        // only a single Conv is preceding
+        // only a single Conv/Fc is preceding
         // check if BatchNorm is the only child
-        const std::vector<std::shared_ptr<Cell>> convChilds
+        const std::vector<std::shared_ptr<Cell>> childs
             = getChildCells(bnParents[0]->getName());
 
-        if (convChilds.size() != 1) {
+        if (childs.size() != 1) {
             std::cout << Utils::cnotice << "  cannot fuse BatchNorm \""
-                << cell->getName() << "\" because parent Conv "
+                << cell->getName() << "\" because parent Conv/Fc "
                 "(\"" << bnParents[0]->getName() << "\") has multiple "
                 "childs" << Utils::cdef << std::endl;
             
             continue;
         }
 
-        assert(convChilds[0] == cell);
+        assert(childs[0] == cell);
 
-        // OK, Conv's only child is BatchNorm, fuse them...
+        // OK, Conv's/Fc's only child is BatchNorm, fuse them...
+        std::shared_ptr<Cell> fuseCell = bnParents[0];
+
         std::cout << "  fuse BatchNorm \"" << cell->getName()
-            << "\" with Conv \"" << bnParents[0]->getName() << "\""
-            << std::endl;
-
-        std::shared_ptr<ConvCell> convCell =
-            std::dynamic_pointer_cast<ConvCell>(bnParents[0]);
-        const bool noBias = convCell->getParameter<bool>("NoBias");
+            << "\" with " << fuseCell->getType() << " \""
+            << fuseCell->getName() << "\"" << std::endl;
 
         std::shared_ptr<BatchNormCell> bnCell =
             std::dynamic_pointer_cast<BatchNormCell>(cell);
@@ -1224,20 +1248,20 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
             = tensor_cast<double>(*(bnCell->getVariances()));
         const double eps = bnCell->getParameter<double>("Epsilon");
 
-        assert(bnScales.size() == convCell->getNbOutputs());
-        assert(bnBiases.size() == convCell->getNbOutputs());
-        assert(bnMeans.size() == convCell->getNbOutputs());
-        assert(bnVariances.size() == convCell->getNbOutputs());
+        assert(bnScales.size() == fuseCell->getNbOutputs());
+        assert(bnBiases.size() == fuseCell->getNbOutputs());
+        assert(bnMeans.size() == fuseCell->getNbOutputs());
+        assert(bnVariances.size() == fuseCell->getNbOutputs());
         assert(eps > 0.0);
 
-        std::shared_ptr<Cell_Frame_Top> convCellTop =
-            std::dynamic_pointer_cast<Cell_Frame_Top>(bnParents[0]);
         std::shared_ptr<Cell_Frame_Top> bnCellTop =
             std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+        std::shared_ptr<Cell_Frame_Top> fuseCellTop =
+            std::dynamic_pointer_cast<Cell_Frame_Top>(fuseCell);
 
-        // Fuse only if  the convolution has a linear activation
-        if (convCellTop->getActivation()
-            && std::string(convCellTop->getActivation()->getType()) != "Linear")
+        // Fuse only if the cell has a linear activation
+        if (fuseCellTop->getActivation()
+            && std::string(fuseCellTop->getActivation()->getType()) != "Linear")
         {
             std::cout << Utils::cwarning << "  -> non-linear "
                 "activation before BatchNorm prevents fuse!"
@@ -1245,21 +1269,22 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
             continue;
         }
 
-        convCellTop->setActivation(bnCellTop->getActivation());
+        fuseCellTop->setActivation(bnCellTop->getActivation());
+        const bool noBias = fuseCell->getParameter<bool>("NoBias");
 
         if (noBias)
-            convCell->setParameter<bool>("NoBias", false);
+            fuseCell->setParameter<bool>("NoBias", false);
 
         double meanVariance = 0.0;
         unsigned int count = 0;
 
-        for (std::size_t output = 0; output < convCell->getNbOutputs(); ++output) {
+        for (std::size_t output = 0; output < fuseCell->getNbOutputs(); ++output) {
             if (bnVariances(output) > 1.0e-12) {
                 meanVariance += bnVariances(output);
                 ++count;
             }
             else {
-                std::cout << "    zero-variance " << convCell->getName()
+                std::cout << "    zero-variance " << fuseCell->getName()
                     << "[" << output << "]" << std::endl;
             }
         }
@@ -1272,9 +1297,13 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
                 << Utils::cdef << std::endl;
         }
 
-        convCellTop->synchronizeToH(false);
+        fuseCellTop->synchronizeToH(false);
 
-        for (std::size_t output = 0; output < convCell->getNbOutputs(); ++output) {
+        const std::size_t channelsSize
+            = (fuseCell->getType() == ConvCell::Type)
+                ? fuseCell->getNbChannels() : fuseCell->getInputsSize();
+
+        for (std::size_t output = 0; output < fuseCell->getNbOutputs(); ++output) {
             // Corrected for zero-variance issue:
             // "A Quantization-Friendly Separable Convolution for MobileNets"
             // https://arxiv.org/pdf/1803.08607.pdf
@@ -1284,15 +1313,30 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
                             ? bnVariances(output) : meanVariance));
 
             // Weights adjustments
-            for (std::size_t channel = 0; channel < convCell->getNbChannels(); ++channel) {
+            for (std::size_t channel = 0; channel < channelsSize; ++channel) {
                 Tensor<double> kernel;
-                convCell->getWeight(output, channel, kernel);
+
+                if (fuseCell->getType() == ConvCell::Type) {
+                    std::dynamic_pointer_cast<ConvCell>(fuseCell)
+                        ->getWeight(output, channel, kernel);
+                }
+                else if (fuseCell->getType() == FcCell::Type) {
+                    std::dynamic_pointer_cast<FcCell>(fuseCell)
+                        ->getWeight(output, channel, kernel);
+                }
 
                 for (std::size_t index = 0; index < kernel.size(); ++index) {
                     kernel(index) *= factor;
                 }
 
-                convCell->setWeight(output, channel, kernel);
+                if (fuseCell->getType() == ConvCell::Type) {
+                    std::dynamic_pointer_cast<ConvCell>(fuseCell)
+                        ->setWeight(output, channel, kernel);
+                }
+                else if (fuseCell->getType() == FcCell::Type) {
+                    std::dynamic_pointer_cast<FcCell>(fuseCell)
+                        ->setWeight(output, channel, kernel);
+                }
             }
 
             // Biases adjustments
@@ -1300,14 +1344,30 @@ void N2D2::DeepNet::fuseBatchNormWithConv() {
 
             if (noBias)
                 bias.resize({1}, 0.0);
-            else
-                convCell->getBias(output, bias);
+            else {
+                if (fuseCell->getType() == ConvCell::Type) {
+                    std::dynamic_pointer_cast<ConvCell>(fuseCell)
+                        ->getBias(output, bias);
+                }
+                else if (fuseCell->getType() == FcCell::Type) {
+                    std::dynamic_pointer_cast<FcCell>(fuseCell)
+                        ->getBias(output, bias);
+                }
+            }
 
             bias(0) = bnBiases(output) + (bias(0) - bnMeans(output)) * factor;
-            convCell->setBias(output, bias);
+
+            if (fuseCell->getType() == ConvCell::Type) {
+                std::dynamic_pointer_cast<ConvCell>(fuseCell)
+                    ->setBias(output, bias);
+            }
+            else if (fuseCell->getType() == FcCell::Type) {
+                std::dynamic_pointer_cast<FcCell>(fuseCell)
+                    ->setBias(output, bias);
+            }
         }
 
-        convCellTop->synchronizeToD(true);
+        fuseCellTop->synchronizeToD(true);
 
         // Replace BatchNorm by Conv for BatchNorm childs
         // and BatchNorm cell removal from DeepNet
@@ -1509,11 +1569,12 @@ void N2D2::DeepNet::logOutputs(const std::string& dirName,
             const Tensor<Float_T> outputs
                 = tensor_cast<Float_T>(cellFrame->getOutputs())[batchPos];
 
-            StimuliProvider::logData(dirName + "/" + (*itCell) + ".dat",
+            StimuliProvider::logData(dirName + "/" + Utils::filePath(*itCell) + ".dat",
                                      outputs);
         }
     }
 }
+
 
 void N2D2::DeepNet::logDiffInputs(const std::string& dirName,
                                   unsigned int batchPos) const
@@ -1536,7 +1597,7 @@ void N2D2::DeepNet::logDiffInputs(const std::string& dirName,
             const Tensor<Float_T> diffInputs
                 = tensor_cast<Float_T>(cellFrame->getDiffInputs())[batchPos];
 
-            StimuliProvider::logData(dirName + "/" + (*itCell) + ".dat",
+            StimuliProvider::logData(dirName + "/" + Utils::filePath(*itCell) + ".dat",
                                      diffInputs);
         }
     }
@@ -1551,7 +1612,7 @@ void N2D2::DeepNet::logFreeParameters(const std::string& dirName) const
          itEnd = mCells.end();
          it != itEnd;
          ++it) {
-        (*it).second->logFreeParameters(dirName + "/" + (*it).first);
+        (*it).second->logFreeParameters(dirName + "/" + Utils::filePath((*it).first));
     }
 }
 
@@ -1609,13 +1670,21 @@ void N2D2::DeepNet::logSchedule(const std::string& dirName) const
             solvers.push_back(std::make_pair((*it).first + "_weights",
                                              cellFc->getWeightsSolver()));
         }
+        // Distance
+        const std::shared_ptr<DistanceCell> cellDistance
+            = std::dynamic_pointer_cast<DistanceCell>(cell);
+
+        if (cellDistance) {
+            solvers.push_back(std::make_pair((*it).first + "_centroid",
+                                             cellDistance->getWeightsSolver()));
+        }
     }
 
 #pragma omp parallel for if (solvers.size() > 1)
     for (int i = 0; i < (int)solvers.size(); ++i) {
         if (solvers[i].second) {
             solvers[i].second->logSchedule(dirName + "/"
-                    + solvers[i].first + "_schedule.log",
+                    + Utils::filePath(solvers[i].first) + "_schedule.log",
                 mStimuliProvider->getBatchSize(),
                 mDatabase->getNbStimuli(Database::Learn));
         }
@@ -1995,7 +2064,7 @@ void N2D2::DeepNet::logSpikeStats(const std::string& dirName,
          it != itEnd;
          ++it) {
         const Synapse::Stats cellStats = std::dynamic_pointer_cast<Cell_Spike>(
-            (*it).second)->logStats(dirName + "/" + (*it).first);
+            (*it).second)->logStats(dirName + "/" + Utils::filePath((*it).first));
 
         globalStats.nbSynapses += cellStats.nbSynapses;
         globalStats.readEvents += cellStats.readEvents;
@@ -2791,105 +2860,38 @@ void N2D2::DeepNet::log(const std::string& baseName,
     }
 }
 
-void N2D2::DeepNet::logLabelsMapping(const std::string& fileName) const
+void N2D2::DeepNet::logLabelsMapping(const std::string& fileName,
+                                     bool withStats) const
 {
     for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
          = mTargets.begin(),
          itTargetsEnd = mTargets.end();
          itTargets != itTargetsEnd;
          ++itTargets) {
-        (*itTargets)->logLabelsMapping(fileName);
+        (*itTargets)->logLabelsMapping(fileName, withStats);
     }
 }
 
 void N2D2::DeepNet::logEstimatedLabels(const std::string& dirName) const
 {
-    const std::vector<int> devices(mStimuliProvider->getDevices().begin(),
-                                   mStimuliProvider->getDevices().end());
-
-#ifdef CUDA
-    int currentDev = 0;
-    const cudaError_t status = cudaGetDevice(&currentDev);
-    if (status != cudaSuccess)
-        currentDev = 0;
-#endif
-
-#pragma omp parallel for if (devices.size() > 1)
-    for (int dev = 0; dev < (int)devices.size(); ++dev) {
-#ifdef CUDA
-        if (mStates[devices[dev]] == N2D2::DeviceState::Connected) {
-            if (devices.size() > 1 || devices[dev] != currentDev) {
-                CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
-            }
-            for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-                = mTargets.begin(),
-                itTargetsEnd = mTargets.end();
-                itTargets != itTargetsEnd;
-                ++itTargets) {
-                (*itTargets)->logEstimatedLabels(dirName);
-            }
-        }
-#else
-        for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-            = mTargets.begin(),
-            itTargetsEnd = mTargets.end();
-            itTargets != itTargetsEnd;
-            ++itTargets) {
-            (*itTargets)->logEstimatedLabels(dirName);
-        }
-#endif
+    for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
+         = mTargets.begin(),
+         itTargetsEnd = mTargets.end();
+         itTargets != itTargetsEnd;
+         ++itTargets) {
+        (*itTargets)->logEstimatedLabels(dirName);
     }
-
-#ifdef CUDA
-    if (devices.size() > 1 || (devices.size() > 0 && devices[0] != currentDev)) {
-        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
-    }
-#endif
 }
 
 void N2D2::DeepNet::logEstimatedLabelsJSON(const std::string& dirName) const
 {
-    const std::vector<int> devices(mStimuliProvider->getDevices().begin(),
-                                   mStimuliProvider->getDevices().end());
-
-#ifdef CUDA
-    int currentDev = 0;
-    const cudaError_t status = cudaGetDevice(&currentDev);
-    if (status != cudaSuccess)
-        currentDev = 0;
-#endif
-
-#pragma omp parallel for if (devices.size() > 1)
-    for (int dev = 0; dev < (int)devices.size(); ++dev) {
-#ifdef CUDA
-        if (mStates[devices[dev]] == N2D2::DeviceState::Connected) {
-            if (devices.size() > 1 || devices[dev] != currentDev) {
-                CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
-            }
-            for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-                = mTargets.begin(),
-                itTargetsEnd = mTargets.end();
-                itTargets != itTargetsEnd;
-                ++itTargets) {
-                (*itTargets)->logEstimatedLabelsJSON(dirName);
-            }
-        }
-#else
-        for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-            = mTargets.begin(),
-            itTargetsEnd = mTargets.end();
-            itTargets != itTargetsEnd;
-            ++itTargets) {
-            (*itTargets)->logEstimatedLabelsJSON(dirName);
-        }
-#endif
+    for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
+         = mTargets.begin(),
+         itTargetsEnd = mTargets.end();
+         itTargets != itTargetsEnd;
+         ++itTargets) {
+        (*itTargets)->logEstimatedLabelsJSON(dirName);
     }
-
-#ifdef CUDA
-    if (devices.size() > 1 || (devices.size() > 0 && devices[0] != currentDev)) {
-        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
-    }
-#endif
 }
 
 void N2D2::DeepNet::logLabelsLegend(const std::string& dirName) const
@@ -3063,6 +3065,10 @@ void N2D2::DeepNet::logReceptiveFields(const std::string& fileName) const
             }
         }
     }
+
+    // Clear the cache in order to avoid using memory and in case the topology
+    // changes before a future call.
+    mReceptiveFields.clear();
 
     gnuplot.setXrange(0, 1.2 * objMaxSize);
     gnuplot.setYrange(0, 1.2 * objMaxSize);

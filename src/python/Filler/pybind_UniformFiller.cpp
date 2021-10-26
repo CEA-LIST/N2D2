@@ -44,6 +44,7 @@ void declare_UniformFiller(py::module &m, const std::string& typeStr) {
         py::arg("max"))
     .def("getMax", &UniformFiller<T>::getMax)
     .def("getMin", &UniformFiller<T>::getMin)
+    .def("getDataType", [typeStr](UniformFiller<T>){return typeStr;})
     ;
 }
 

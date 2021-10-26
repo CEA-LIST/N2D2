@@ -193,11 +193,17 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initialize()
 
 
 template <class T>
-void N2D2::BatchNormCell_Frame_CUDA<T>::initializeParameters(unsigned int inputDimZ, unsigned int nbInputs, const Tensor<bool>& mapping)
+void N2D2::BatchNormCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
 {
-    // NOTE: this is addition to initialize()
-    Cell::initializeParameters(inputDimZ, nbInputs, mapping);
-
+    // BEGIN: addition to initialize()
+    if (nbInputs != 1) {
+          throw std::runtime_error("nbInputs != 1 for cell " + mName);
+    }
+    // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
+    // However, this requires a reinitialization of the input dims which is unsafe
+    setInputsDims({nbInputChannels});
+    // END: addition to initialize()
+    
     /*
     cudnnTensorDescriptor_t derivedBnDesc;
     CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&derivedBnDesc));
@@ -226,7 +232,7 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initializeParameters(unsigned int inputD
     */
 
     std::vector<size_t> requiredDims(4, 1);
-    requiredDims[2] = inputDimZ;
+    requiredDims[2] = nbInputChannels;
 
     if (mScale->empty())
         mScale->resize(requiredDims, ParamT(1.0));
@@ -306,13 +312,32 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initializeParameters(unsigned int inputD
 
 
 template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::check_input()
+{
+    if (mInputs.size() == 0) {
+          throw std::runtime_error("mInputs.size() = 0 for cell " + mName);
+    }
+
+    if (mInputs.dimZ() != mOutputs.dimZ()) {
+        throw std::domain_error("BatchNormCell_Frame<T>::initializeDataDependent():"
+                            " the number of output channels must be equal "
+                            "to the sum of inputs channels.");
+    }
+
+    if (mInputs.dimZ() != mOutputs.dimZ()) {
+        throw std::domain_error("BatchNormCell_Frame<T>::initializeDataDependent():"
+                            " the number of output channels must be equal "
+                            "to the sum of inputs channels.");
+    }
+}
+
+
+template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::initializeDataDependent(){
     // NOTE: this is addition to initialize()
     Cell_Frame_CUDA<T>::initializeDataDependent();
 
-    if (mInputs.size() > 1)
-        throw std::domain_error("BatchNormCell_Frame_CUDA<T>::initialize(): "
-                                "inputs concatenation is not supported.");
+    check_input();
 
     mMode = CUDNN_BATCHNORM_SPATIAL;
     mNbPropagate = 0;
@@ -330,6 +355,8 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initializeDataDependent(){
 template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
 {
+    check_input();
+
     mInputs.synchronizeHBasedToD();
 
     const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
@@ -354,6 +381,9 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
             mMean->getDevicePtr(),
             mVariance->getDevicePtr(),
             mEpsilon));
+
+        mValidCache = false;
+
     } else {
         // mSavedMean and mSavedVariance cache parameters 
         // must be reinitialized to 0.0 at each forward pass on training:
@@ -378,6 +408,8 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
             mEpsilon,
             mSavedMean.getDevicePtr(),
             mSavedVariance.getDevicePtr()));
+
+        mValidCache = true;
     }
 
     if (!inference)
@@ -451,8 +483,8 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
                                         mDiffScale.getDevicePtr(),
                                         mDiffBias.getDevicePtr(),
                                         mEpsilon,
-                                        mSavedMean.getDevicePtr(),
-                                        mSavedVariance.getDevicePtr()));
+                                        (mValidCache) ? mSavedMean.getDevicePtr() : NULL,
+                                        (mValidCache) ? mSavedVariance.getDevicePtr() : NULL));
 
     mDiffScale.setValid();
     mDiffBias.setValid();

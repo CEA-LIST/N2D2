@@ -12,7 +12,7 @@
 
 #ifdef PYBIND
 #include "Quantizer/Activation/QuantizerActivation.hpp"
-
+#include "containers/Tensor.hpp"
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
@@ -25,6 +25,7 @@ void init_QuantizerActivation(py::module &m) {
     q.def("getType", &QuantizerActivation::getType);
     q.def("getFullPrecisionActivations", &QuantizerActivation::getFullPrecisionActivations, py::return_value_policy::reference);
     q.def("setRange", &QuantizerActivation::setRange, py::arg("integerRange"));
+    q.def("getRange", &QuantizerActivation::getRange);
 }
 }
 

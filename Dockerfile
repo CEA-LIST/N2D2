@@ -1,4 +1,6 @@
-FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
+FROM nvidia/cuda:10.2-cudnn8-devel-ubuntu18.04
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
         build-essential \
@@ -7,13 +9,13 @@ RUN apt-get update && apt-get install -y \
         wget \
         gnuplot \
         libopencv-dev \
-        libcv-dev \
-        libhighgui-dev
+        python-dev \
+        python3-dev
 
 ENV N2D2_ROOT=/opt/N2D2
 WORKDIR $N2D2_ROOT
 
-RUN git clone https://github.com/CEA-LIST/N2D2.git . && \
+RUN git clone --recursive https://github.com/CEA-LIST/N2D2.git . && \
     mkdir build && cd build && \
     cmake .. && \
     make -j"$(nproc)"

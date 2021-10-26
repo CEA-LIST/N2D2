@@ -25,6 +25,7 @@
 #include "DeepNet.hpp"
 #include "third_party/half.hpp"
 #include "Cell/ConvCell_Frame_Kernels.hpp"
+#include "Adversarial.hpp"
 
 template <class T>
 N2D2::Cell_Frame_CUDA<T>::Cell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
@@ -86,6 +87,14 @@ void N2D2::Cell_Frame_CUDA<T>::addInput(StimuliProvider& sp,
     // Define input-output sizes
     setInputsDims(sp.getSize());
     mInputs.push_back(&sp.getDataInput());
+
+    // For some adversarial attacks, it is required to backpropagate
+    // the gradiants to the inputs
+    if (sp.getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) {
+        std::vector<size_t> inputsDims(mInputsDims);
+        inputsDims.push_back(sp.getBatchSize());
+        mDiffOutputs.push_back(new CudaTensor<T>(inputsDims), 0);
+    }
 
     setOutputsDims();
 
@@ -333,23 +342,8 @@ void N2D2::Cell_Frame_CUDA<T>::linkInput(Cell* cell)
     }
     else {
         throw std::runtime_error(
-            "Cell_Frame<T>::addInput(): cannot mix Spike and Frame models");
+            "Cell_Frame<T>::linkInput(): cannot mix Spike and Frame models");
     }
-
-    // Define input-output connections
-    const unsigned int cellNbOutputs = cell->getNbOutputs();
-
-    //if (mMapping.empty()){
-    //      throw std::runtime_error("Cell_Frame<T>::linkInput(): Mapping is empty");
-    //}
-    if (!mMapping.empty() && mMapping.dimY() != cellNbOutputs)
-        throw std::runtime_error("Cell_Frame_CUDA<T>::addInput(): number of mapping "
-                                 "rows must be equal to the number of input "
-                                 "channels");
-    if (mMapping.empty()){
-        mMapping.append(Tensor<bool>({getNbOutputs(), cell->getNbOutputs()}, true));
-    }
-
 }
 
 /**
@@ -381,19 +375,6 @@ void N2D2::Cell_Frame_CUDA<T>::linkInput(StimuliProvider& sp,
      // Define input-output sizes
     setInputsDims(sp.getSize());
     mInputs.push_back(&sp.getData());
-
-    //if (mMapping.empty()){
-    //      throw std::runtime_error("Cell_Frame<T>::linkInput(): Mapping is empty");
-    //}
-
-
-    if (!mMapping.empty() && mMapping.dimY() != sp.getNbChannels())
-        throw std::runtime_error("Cell_Frame_CUDA<T>::addInput(): number of mapping "
-                                 "rows must be equal to the number of input "
-                                 "channels");
-    if (mMapping.empty()){
-        mMapping.append(Tensor<bool>({getNbOutputs(), sp.getNbChannels()}, true));
-    }
 }
 // END code used exlusively in python API
 
@@ -490,11 +471,12 @@ void N2D2::Cell_Frame_CUDA<T>::setOutputTarget(const Tensor<int>& targets)
             if (mTargets.empty() || mNbTargetOutputs.empty()) {
                 mTargets.resize(targets.dims());
                 mNbTargetOutputs.resize(
-                    {(getNbOutputs() > 1) ? getNbOutputs() : 2, mOutputs.dimB()}, 0U);
+                    {(getNbOutputs() > 1) ? getNbOutputs() : 2, mOutputs.dimB()});
             }
         }
 
         mTargets.synchronizeToD(targets);
+        mNbTargetOutputs.deviceTensor().fill(0U);
 
         cudaPopulateNbTargetOutputs(CudaContext::getDeviceProp(),
                                     mTargets.getDevicePtr(),
@@ -971,6 +953,24 @@ template <class T>
 N2D2::Cell_Frame_CUDA<T>::~Cell_Frame_CUDA()
 {
     // dtor
+}
+
+template<>
+std::string N2D2::Cell_Frame_CUDA<double>::getPyDataType() {
+    return std::string("double");
+}
+
+template<>
+std::string N2D2::Cell_Frame_CUDA<float>::getPyDataType() {
+    return std::string("float");
+}
+template<>
+std::string N2D2::Cell_Frame_CUDA<half_float::half>::getPyDataType() {
+    return std::string("half_float");
+}
+template<class T>
+std::string N2D2::Cell_Frame_CUDA<T>::getPyModel(){
+    return std::string("Frame_CUDA");
 }
 
 namespace N2D2 {

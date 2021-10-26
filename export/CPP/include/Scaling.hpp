@@ -90,8 +90,10 @@ struct FixedPointScaling {
         return smlal(weightedSum, SCALING, HALF_LO, HALF_HI) >> FRACTIONAL_BITS; 
     }
 
-    static const uint32_t HALF_LO = (1ull << (FRACTIONAL_BITS - 1)) & 0xFFFFFFFF;
-    static const uint32_t HALF_HI = (1ull << (FRACTIONAL_BITS - 1)) >> 32u;
+    static const uint32_t HALF_LO = (FRACTIONAL_BITS > 0)
+        ? (1ull << (FRACTIONAL_BITS - 1)) & 0xFFFFFFFF : 0;
+    static const uint32_t HALF_HI = (FRACTIONAL_BITS > 0)
+        ? (1ull << (FRACTIONAL_BITS - 1)) >> 32u : 0;
 };
 
 template<std::size_t SIZE, int64_t FRACTIONAL_BITS>
@@ -127,8 +129,10 @@ struct FixedPointScalingScalingPerChannel {
         return smlal(weightedSum, mScaling[output], HALF_LO, HALF_HI) >> FRACTIONAL_BITS; 
     }
 
-    static const uint32_t HALF_LO = (1ull << (FRACTIONAL_BITS - 1)) & 0xFFFFFFFF;
-    static const uint32_t HALF_HI = (1ull << (FRACTIONAL_BITS - 1)) >> 32u;
+    static const uint32_t HALF_LO = (FRACTIONAL_BITS > 0)
+        ? (1ull << (FRACTIONAL_BITS - 1)) & 0xFFFFFFFF : 0;
+    static const uint32_t HALF_HI = (FRACTIONAL_BITS > 0)
+        ? (1ull << (FRACTIONAL_BITS - 1)) >> 32u : 0;
 
     int32_t mScaling[SIZE];
 };

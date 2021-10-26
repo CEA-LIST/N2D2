@@ -21,10 +21,6 @@
 import N2D2
 import n2d2
 import unittest
-from n2d2.n2d2_interface import N2D2_Interface as N2D2_Interface
-
-
-
 
 class test_params(unittest.TestCase):
     def setUp(self):
@@ -34,22 +30,7 @@ class test_params(unittest.TestCase):
         self.object = None
 
     def test_parameters(self):
-        if self.object: # We don't do test if it's the dummy class
-            parameters = self.object.N2D2().getParameters()
-            for param in self.parameters.keys():
-                if self.object.python_to_n2d2_convention(param) in parameters:
-                    param_name = self.object.python_to_n2d2_convention(param)
-                    N2D2_param, N2D2_type = self.object.N2D2().getParameterAndType(param_name)
-                    N2D2_param = N2D2_Interface._N2D2_type_map[N2D2_type](N2D2_param)
-                    if isinstance(self.parameters[param], bool):
-                        self.assertEqual(self.parameters[param], bool(int(N2D2_param)))
-                    elif isinstance(self.parameters[param], list):
-                        dtype = type(self.parameters[param][0])
-                        N2D2_param = N2D2_param.split(" ")[:-1]
-                        N2D2_param = [dtype(p) for p in N2D2_param]
-                        self.assertEqual(self.parameters[param], N2D2_param)
-                    else:
-                        self.assertEqual(self.parameters[param], N2D2_param)
+        pass
 
 
 
@@ -63,9 +44,8 @@ class test_Fc(test_params):
             "bias_solver": n2d2.solver.SGD(),
             "weights_filler": n2d2.filler.Normal(),
             "bias_filler": n2d2.filler.Normal(),
-            'no_bias': True,
-            "mapping": n2d2.Tensor([5, 5],  datatype=bool),
-            "quantizer": n2d2.quantizer.SATCell(),
+            'no_bias': False,
+            # "mapping": n2d2.Tensor([5, 5],  datatype="bool"), # TODO : Add back mapping to Fc ?
         }
         self.object = n2d2.cells.Fc(10, 5, **self.parameters)
 
@@ -76,30 +56,37 @@ class test_Fc(test_params):
         self.assertIs(self.parameters["bias_solver"].N2D2(), self.object.N2D2().getBiasSolver())
         self.assertIs(self.parameters["weights_filler"].N2D2(), self.object.N2D2().getWeightsFiller())
         self.assertIs(self.parameters["bias_filler"].N2D2(), self.object.N2D2().getBiasFiller())
-        self.assertEqual(n2d2.Tensor.from_N2D2(self.parameters["mapping"].N2D2()), 
-                         n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping()))
-        self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
+        # self.assertEqual(n2d2.Tensor.from_N2D2(self.parameters["mapping"].N2D2()), 
+        #                  n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping())) # TODO : Add back mapping to Fc ?
         super().test_parameters()
 
-
+    def test_solver(self):
+        solver = n2d2.solver.Adam()
+        self.object.solver = solver
+        self.assertTrue(isinstance(self.object.weights_solver, n2d2.solver.Adam))
+        self.assertTrue(isinstance(self.object.bias_solver, n2d2.solver.Adam))
+    def test_filler(self):
+        filler = n2d2.filler.Xavier()
+        self.object.filler = filler
+        self.assertTrue(isinstance(self.object.weights_filler, n2d2.filler.Xavier))
+        self.assertTrue(isinstance(self.object.bias_filler, n2d2.filler.Xavier))
 class test_Conv(test_params):
     def setUp(self):
         self.parameters = {
             "name": "test",
             "activation": n2d2.activation.Tanh(),
             "weights_solver": n2d2.solver.SGD(),
-            "sub_sample_dims": [2, 2],
+            "sub_sample_dims": [1, 1],
             "stride_dims": [2, 2],
             "dilation_dims": [1, 1],
-            "padding_dims": [2, 2],
+            "padding_dims": [3, 3],
             "bias_solver": n2d2.solver.SGD(),
             "weights_filler": n2d2.filler.Normal(),
             "bias_filler": n2d2.filler.Normal(),
-            "no_bias": True,
+            "no_bias": False,
             "back_propagate": True,
             "weights_export_flip": True,
-            "mapping": n2d2.Tensor([5, 5],  datatype=bool),
-            "quantizer": n2d2.quantizer.SATCell(),
+            "mapping": n2d2.Tensor([5, 5],  datatype="bool"),
         }
         self.object = n2d2.cells.Conv(10, 5, [2, 2], **self.parameters)
 
@@ -116,10 +103,19 @@ class test_Conv(test_params):
         self.assertEqual(self.parameters["dilation_dims"], [self.object.N2D2().getDilationX(), self.object.N2D2().getDilationY()])
         self.assertEqual(n2d2.Tensor.from_N2D2(self.parameters["mapping"].N2D2()), 
                          n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping()))
-        self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
 
         super().test_parameters()
-
+        
+    def test_solver(self):
+        solver = n2d2.solver.Adam()
+        self.object.solver = solver
+        self.assertTrue(isinstance(self.object.weights_solver, n2d2.solver.Adam))
+        self.assertTrue(isinstance(self.object.bias_solver, n2d2.solver.Adam))
+    def test_filler(self):
+        filler = n2d2.filler.Xavier()
+        self.object.filler = filler
+        self.assertTrue(isinstance(self.object.weights_filler, n2d2.filler.Xavier))
+        self.assertTrue(isinstance(self.object.bias_filler, n2d2.filler.Xavier))
 class test_Softmax(test_params):
     def setUp(self):
         self.parameters = {
@@ -147,7 +143,7 @@ class test_Pool(test_params):
             "stride_dims": [2, 2],
             "padding_dims": [1, 1],
             "activation": n2d2.activation.Linear(),
-            "mapping": n2d2.Tensor([5, 5],  datatype=bool),
+            "mapping": n2d2.Tensor([5, 5],  datatype="bool"),
         }
         self.object = n2d2.cells.Pool([1, 1], **self.parameters)
 
@@ -171,7 +167,7 @@ class test_Deconv(test_params):
             "name": "test",
             "activation": n2d2.activation.Linear(),
             "weights_solver": n2d2.solver.SGD(),
-            "stride_dims": [2, 2],
+            "stride_dims": [0, 0],
             "dilation_dims": [1, 1],
             "padding_dims": [2, 2],
             "bias_solver": n2d2.solver.SGD(),
@@ -180,7 +176,7 @@ class test_Deconv(test_params):
             "no_bias": True,
             "back_propagate": True,
             "weights_export_flip": True,
-            "mapping": n2d2.Tensor([5, 5],  datatype=bool),
+            "mapping": n2d2.Tensor([5, 5],  datatype="bool"),
         }
         self.object = n2d2.cells.Deconv(10, 5, [2, 2], **self.parameters)
 
@@ -198,6 +194,17 @@ class test_Deconv(test_params):
                          n2d2.Tensor.from_N2D2(self.object.N2D2().getMapping()))
         super().test_parameters()
 
+    def test_solver(self):
+        solver = n2d2.solver.Adam()
+        self.object.solver = solver
+        self.assertTrue(isinstance(self.object.weights_solver, n2d2.solver.Adam))
+        self.assertTrue(isinstance(self.object.bias_solver, n2d2.solver.Adam))
+    def test_filler(self):
+        filler = n2d2.filler.Xavier()
+        self.object.filler = filler
+        self.assertTrue(isinstance(self.object.weights_filler, n2d2.filler.Xavier))
+        self.assertTrue(isinstance(self.object.bias_filler, n2d2.filler.Xavier))
+
 class test_ElemWise(test_params):
     def setUp(self):
         self.parameters = {
@@ -205,7 +212,7 @@ class test_ElemWise(test_params):
             "operation": "Max",
             "mode": "PerInput",
             "weights": [0.5],
-            "shifts": [0.5],
+            "shifts": [0.0],
             "activation": n2d2.activation.Linear(),
         }
         self.object = n2d2.cells.ElemWise(**self.parameters)
@@ -218,6 +225,8 @@ class test_ElemWise(test_params):
         self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
         self.assertEqual(N2D2.ElemWiseCell.Operation.__members__[self.parameters["operation"]], 
                         self.object.N2D2().getOperation())
+        self.assertEqual(N2D2.ElemWiseCell.CoeffMode.__members__[self.parameters["mode"]], 
+                        self.object.N2D2().getCoeffMode())
         self.assertEqual(self.parameters["weights"], self.object.N2D2().getWeights())
         self.assertEqual(self.parameters["shifts"], self.object.N2D2().getShifts())
         self.assertIs(self.parameters["activation"].N2D2(), self.object.N2D2().getActivation())
@@ -244,10 +253,10 @@ class test_Padding(test_params):
     def setUp(self):
         self.parameters = {
             "name": "test",
-            "top_pad": 1,
-            "bot_pad":0,
-            "left_pad": 0,
-            "right_pad": 1,
+            "top_pad": 0,
+            "bot_pad":1,
+            "left_pad": 2,
+            "right_pad": 3,
         }
         self.object = n2d2.cells.Padding(**self.parameters)
 
@@ -269,8 +278,8 @@ class test_BatchNorm2d(test_params):
             "nb_inputs": 5, 
             "scale_solver": n2d2.solver.SGD(),
             "bias_solver": n2d2.solver.SGD(),
-            "moving_average_momentum":0,
-            "epsilon": 1,
+            "moving_average_momentum":0.0,
+            "epsilon": 1.0,
         }
         self.object = n2d2.cells.BatchNorm2d(**self.parameters)
 
@@ -286,6 +295,14 @@ class test_BatchNorm2d(test_params):
 
         super().test_parameters()
 
+    def test_solver(self):
+        tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
+        self.object(tensor)
+        solver = n2d2.solver.Adam()
+        self.object.solver = solver
+        self.assertTrue(isinstance(self.object.scale_solver, n2d2.solver.Adam))
+        self.assertTrue(isinstance(self.object.bias_solver, n2d2.solver.Adam))
+        
 class test_Activation(test_params):
     def setUp(self):
         self.parameters = {
@@ -318,17 +335,40 @@ class test_Reshape(test_params):
         self.assertEqual(self.parameters["dims"], self.object.N2D2().getDims())
         super().test_parameters()
 
+class test_Resize(test_params):
+    def setUp(self):
+        self.parameters = {
+            "name": "test",
+            "outputs_width": 16,
+            "outputs_height":9,
+            "resize_mode":"BilinearTF",
+        }
+        self.object = n2d2.cells.Resize(**self.parameters)
+
+    def test_parameters(self):
+        # Need to instantiate the object (doing so by passing a dummy input)
+        tensor = n2d2.Tensor([1, 5, 4, 4], cuda=True)
+        self.object(tensor)
+        self.assertEqual(self.parameters["name"], self.object.N2D2().getName())
+        self.assertEqual(self.parameters["outputs_width"], self.object.N2D2().getResizeOutputWidth())
+        self.assertEqual(self.parameters["outputs_height"], self.object.N2D2().getResizeOutputHeight())
+        self.assertEqual(N2D2.ResizeCell.ResizeMode.__members__[self.parameters["resize_mode"]], 
+                self.object.N2D2().getMode())
+        super().test_parameters()
+
+
 ### TEST DATABASE ###
 
 class test_DIR(test_params):
     def setUp(self):
         self.parameters = {
+            "data_path": "/nvme0/DATABASE/MNIST/raw/",
+            "learn" : 0.0,
             "load_data_in_memory": True,
         }
         self.object = n2d2.database.DIR(**self.parameters)
 
     def test_parameters(self):
-        # Need to instantiate the object (doing so by passing a dummy input)
         self.assertEqual(self.parameters["load_data_in_memory"], self.object.N2D2().getLoadDataInMemory())
         super().test_parameters()
 
@@ -406,7 +446,7 @@ class test_PadCrop(test_params):
     def setUp(self):
         self.parameters = {
             "width": 10,
-            "height":10,
+            "height":9,
             "additive_wh": False,
             "border_type": "WrapBorder",
             "border_value": [0.0, 0.0, 0.0],
@@ -427,9 +467,9 @@ class test_Distortion(test_params):
         self.parameters = {
             "elastic_gaussian_size": 10,
             "elastic_sigma": 5.0,
-            "elastic_scaling": 0.0,
+            "elastic_scaling": 0.5,
             "scaling": 0.0,
-            "rotation": 0.0,
+            "rotation": 0.2,
             "ignore_missing_data": False,
         }
         self.object = n2d2.transform.Distortion(**self.parameters)
@@ -447,7 +487,7 @@ class test_Rescale(test_params):
     def setUp(self):
         self.parameters = {
             "height": 10,
-            "width": 10,
+            "width": 8,
             "keep_aspect_ratio": True,
             "resize_to_fit": False,
         }
@@ -477,8 +517,8 @@ class test_RangeAffine(test_params):
         self.parameters = {
             "first_operator": "Plus",
             "first_value": [1.0],
-            "second_operator": "Plus",
-            "second_value": [1.0],
+            "second_operator": "Minus",
+            "second_value": [0.0],
             "truncate": False,
         }
         self.object = n2d2.transform.RangeAffine(**self.parameters)
@@ -498,13 +538,13 @@ class test_SliceExtraction(test_params):
             "width": 4,
             "height": 2,
             "offset_x": 0,
-            "offset_y": 0,
+            "offset_y": 1,
             "random_offset_x":False,
             "random_offset_y":False,
             "random_rotation":True,
             "random_scaling": True,
             "random_rotation_range": [0.0, 1.0],
-            "random_scaling_range": [0.0, 1.0],
+            "random_scaling_range": [0.5, 1.0],
             "allow_padding": True,
             "border_type": "WrapBorder",
             "border_value": [1.0],
@@ -550,22 +590,18 @@ class test_RandomResizeCrop(test_params):
     def setUp(self):
         self.parameters = {
             "width": 10,
-            "height": 10,
-            "offset_x": 0,
-            "offset_y": 0,
-            "scale_min": 0.0,
-            "scale_max": 0.0,
+            "height": 9,
+            "scale_min": 0.3,
+            "scale_max": 0.5,
             "ratio_min": 0.0,
-            "ratio_max": 0.0,
+            "ratio_max": 1.0,
         }
         self.object = n2d2.transform.RandomResizeCrop(**self.parameters)
 
     def test_parameters(self):
         self.assertEqual(self.parameters["width"], self.object.N2D2().getWidth())
         self.assertEqual(self.parameters["height"], self.object.N2D2().getHeight())
-        self.assertEqual(self.parameters["offset_x"], self.object.N2D2().getOffsetX())
-        self.assertEqual(self.parameters["offset_y"], self.object.N2D2().getOffsetY())
-        self.assertEqual(self.parameters["scale_min"], self.object.N2D2().getScaleMin())
+        self.assertEqual(self.parameters["scale_min"], round(self.object.N2D2().getScaleMin(), 5))
         self.assertEqual(self.parameters["scale_max"], self.object.N2D2().getScaleMax())
         self.assertEqual(self.parameters["ratio_min"], self.object.N2D2().getRatioMin())
         self.assertEqual(self.parameters["ratio_max"], self.object.N2D2().getRatioMax())
@@ -590,7 +626,7 @@ class test_He(test_params):
             "datatype": "float",
             "variance_norm": 'Average',
             "scaling": 1.0,
-            "mean_norm": 1.0,
+            "mean_norm": 0.0,
         }
         self.object = n2d2.filler.He(**self.parameters)
 
@@ -654,17 +690,18 @@ class test_SGD(test_params):
             "datatype": "float",
             "model": "Frame",
             "learning_rate": 0.001,
-            "momentum": 0.0,
-            "decay": 0.0,
+            "momentum": 0.1,
+            "decay": 0.1,
+            "min_decay": 0.2,
             "power": 1.0,
-            "iteration_size": 1,
-            "max_iterations": 1,
-            "warm_up_duration": 0,
-            "warm_up_lr_frac": 1.0,
+            "iteration_size": 2,
+            "max_iterations": 5,
+            "warm_up_duration": 4,
+            "warm_up_lr_frac": 1.1,
             "learning_rate_policy": "None",
-            "learning_rate_step_size": 1,
-            "learning_rate_decay": 0.1,
-            "clamping": False,
+            "learning_rate_step_size": 3,
+            "learning_rate_decay": 0.001,
+            "clamping": "min:max",
             "polyak_momentum": False,
         }
         self.object = n2d2.solver.SGD(**self.parameters)
@@ -673,6 +710,7 @@ class test_SGD(test_params):
         self.assertEqual(self.parameters["learning_rate"], self.object.N2D2().getmLearningRate())
         self.assertEqual(self.parameters["momentum"], self.object.N2D2().getMomentum())
         self.assertEqual(self.parameters["decay"], self.object.N2D2().getDecay())
+        self.assertEqual(self.parameters["min_decay"], self.object.N2D2().getMinDecay())
         self.assertEqual(self.parameters["power"], self.object.N2D2().getPower())
         self.assertEqual(self.parameters["iteration_size"], self.object.N2D2().getIterationSize())
         self.assertEqual(self.parameters["max_iterations"], self.object.N2D2().getMaxIterations())
@@ -682,7 +720,7 @@ class test_SGD(test_params):
                         self.object.N2D2().getLearningRatePolicy())
         self.assertEqual(self.parameters["learning_rate_step_size"], self.object.N2D2().getLearningRateStepSize())
         self.assertEqual(self.parameters["learning_rate_decay"], self.object.N2D2().getLearningRateDecay())
-        self.assertEqual(self.parameters["clamping"], bool(int(self.object.N2D2().getmClamping())))
+        self.assertEqual(self.parameters["clamping"],self.object.N2D2().getmClamping())
         self.assertEqual(self.parameters["polyak_momentum"], bool(int(self.object.N2D2().getPolyakMomentum())))
 
         super().test_parameters()
@@ -693,16 +731,16 @@ class test_Adam(test_params):
             "datatype": "float",
             "model": "Frame",
             "learning_rate": 0.001,
-            "clamping": False,
+            "clamping": "min:max",
             "beta1": 0.1,
-            "beta2": 0.1,
-            "epsilon": 0.1,
+            "beta2": 0.2,
+            "epsilon": 0.3,
         }
         self.object = n2d2.solver.Adam(**self.parameters)
 
     def test_parameters(self):
         self.assertEqual(self.parameters["learning_rate"], self.object.N2D2().getmLearningRate())
-        self.assertEqual(self.parameters["clamping"], bool(int(self.object.N2D2().getmClamping())))
+        self.assertEqual(self.parameters["clamping"],self.object.N2D2().getmClamping())
         self.assertEqual(self.parameters["beta1"], self.object.N2D2().getBeta1())
         self.assertEqual(self.parameters["beta2"], self.object.N2D2().getBeta2())
         self.assertEqual(self.parameters["epsilon"], self.object.N2D2().getEpsilon())
@@ -713,40 +751,34 @@ class test_Adam(test_params):
 class Linear(test_params):
     def setUp(self):
         self.parameters = {
-            "quantizer": n2d2.quantizer.SATAct(),
         }
         self.object = n2d2.activation.Linear(**self.parameters)
 
     def test_parameters(self):
-        self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
         super().test_parameters()
 
 class Rectifier(test_params):
     def setUp(self):
         self.parameters = {
             "leak_slope": 0.0,
-            "clipping": 0.0,
-            "quantizer": n2d2.quantizer.SATAct(),
+            "clipping": 0.5,
         }
         self.object = n2d2.activation.Rectifier(**self.parameters)
 
     def test_parameters(self):
         self.assertEqual(self.parameters["leak_slope"], self.object.N2D2().getLeakSlope())
         self.assertEqual(self.parameters["clipping"], self.object.N2D2().getClipping())
-        self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
         super().test_parameters()
 
 class Tanh(test_params):
     def setUp(self):
         self.parameters = {
             "alpha": 0.0,
-            "quantizer": n2d2.quantizer.SATAct(),
         }
         self.object = n2d2.activation.Tanh(**self.parameters)
 
     def test_parameters(self):
         self.assertEqual(self.parameters["alpha"], self.object.N2D2().getAlpha())
-        self.assertIs(self.parameters["quantizer"].N2D2(), self.object.N2D2().getQuantizer())
         super().test_parameters()
 
 ### Provider ###

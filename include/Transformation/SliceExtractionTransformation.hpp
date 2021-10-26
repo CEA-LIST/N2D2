@@ -131,8 +131,8 @@ private:
     const unsigned int mWidth;
     const unsigned int mHeight;
 
-    Parameter<unsigned int> mOffsetX;
-    Parameter<unsigned int> mOffsetY;
+    unsigned int mOffsetX;
+    unsigned int mOffsetY;
     Parameter<bool> mRandomOffsetX;
     Parameter<bool> mRandomOffsetY;
     /// If true, enable random rotations on slices

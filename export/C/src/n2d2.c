@@ -2158,7 +2158,7 @@ void resize_nearest_neighbor_propagete(unsigned int nbChannels,
 }
 
 void convcell_output_out(FILE* file, bool isOutputUnsigned, unsigned int nbOutputs,
-                         unsigned int outputsHeight, unsigned int outputsWidth,
+                         unsigned int outputsHeight, unsigned int outputsWidth, unsigned int outputOffset,
                          DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
 {
     for (unsigned int output = 0; output < nbOutputs; ++output) {
@@ -2167,12 +2167,12 @@ void convcell_output_out(FILE* file, bool isOutputUnsigned, unsigned int nbOutpu
         for (unsigned int oy = 0; oy < outputsHeight; ++oy) {
             for (unsigned int ox = 0; ox < outputsWidth; ++ox) {
 #if NB_BITS < 0
-                fprintf(file, "%f ", outputs[output][oy][ox]);
+                fprintf(file, "%f ", outputs[output + outputOffset][oy][ox]);
 #else
                 if (isOutputUnsigned) {
-                   fprintf(file, "%d ", (UDATA_T)outputs[output][oy][ox]);
+                   fprintf(file, "%d ", (UDATA_T)outputs[output + outputOffset][oy][ox]);
                 } else {
-                   fprintf(file, "%d ", outputs[output][oy][ox]);
+                   fprintf(file, "%d ", outputs[output + outputOffset][oy][ox]);
                 }
 #endif
             }
@@ -2186,7 +2186,7 @@ void convcell_output_out(FILE* file, bool isOutputUnsigned, unsigned int nbOutpu
 }
 
 void convcell_outputs_save(const char* fileName, bool isOutputUnsigned, unsigned int nbOutputs,
-                           unsigned int outputsHeight, unsigned int outputsWidth,
+                           unsigned int outputsHeight, unsigned int outputsWidth, unsigned int outputOffset,
                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
 {
     FILE* file = fopen(fileName, "w");
@@ -2195,18 +2195,18 @@ void convcell_outputs_save(const char* fileName, bool isOutputUnsigned, unsigned
         return;
     }
 
-    convcell_output_out(file, isOutputUnsigned, nbOutputs, outputsHeight, outputsWidth, outputs);
+    convcell_output_out(file, isOutputUnsigned, nbOutputs, outputsHeight, outputsWidth, outputOffset, outputs);
     if(fclose(file) != 0) {
         fprintf(stderr, "Couldn't close file %s.", fileName);
     }
 }
 
 void convcell_outputs_print(const char* name, bool isOutputUnsigned, unsigned int nbOutputs,
-                            unsigned int outputsHeight, unsigned int outputsWidth,
+                            unsigned int outputsHeight, unsigned int outputsWidth, unsigned int outputOffset,
                             DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
 {
     printf("%s outputs:\n", name);
-    convcell_output_out(stdout, isOutputUnsigned, nbOutputs, outputsHeight, outputsWidth, outputs);
+    convcell_output_out(stdout, isOutputUnsigned, nbOutputs, outputsHeight, outputsWidth, outputOffset, outputs);
 }
 
 void convcell_outputs_dynamic_print(
