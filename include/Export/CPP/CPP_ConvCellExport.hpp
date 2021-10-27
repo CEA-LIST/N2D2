@@ -40,6 +40,7 @@ public:
 
     static void generateHeaderBias(const ConvCell& cell, std::ofstream& header);
     static void generateHeaderWeights(const ConvCell& cell, std::ofstream& header);
+    static void generateHeaderWeightsQAT(const ConvCell& cell, std::ofstream& header);
 
     static bool isDWConvolution(const Cell& cell);
 

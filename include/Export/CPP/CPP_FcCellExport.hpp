@@ -39,6 +39,7 @@ public:
 
     static void generateHeaderBias(const FcCell& cell, std::ofstream& header);
     static void generateHeaderWeights(const FcCell& cell, std::ofstream& header);
+    static void generateHeaderWeightsQAT(const FcCell& cell, std::ofstream& header);
     static void generateHeaderWeightsSparse(const FcCell& cell, std::ofstream& header);
 
     static std::unique_ptr<CPP_FcCellExport> getInstance(Cell& cell);

@@ -19,6 +19,7 @@
 */
 
 #include "ScalingMode.hpp"
+#include "DeepNet.hpp"
 #include "Cell/Cell.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Export/CellExport.hpp"
@@ -112,5 +113,46 @@ void N2D2::CellExport::generateSingleShiftHalfAddition(const Cell_Frame_Top& cel
 
             stream << " + " << half;
         }
+    }
+}
+
+int N2D2::CellExport::getQuantizedOutputNbBits(const DeepNet& deepNet,
+                                               const Cell& cell)
+{
+    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+    const std::shared_ptr<N2D2::Activation> activation
+        = cellFrame.getActivation();
+
+    if (activation) {
+        return (activation->isQuantized())
+            ? activation->getQuantizedNbBits()          // QAT
+            : (int)CellExport::mPrecision;              // Post-training
+    }
+    else {
+        int nbBits = 0;
+        const std::vector<std::shared_ptr<Cell> >& parents
+            = deepNet.getParentCells(cell.getName());
+
+        for (const std::shared_ptr<Cell>& parent: parents) {
+            const int parentNbBits = (parent)
+                ? getQuantizedOutputNbBits(deepNet, *parent)
+                : (int)CellExport::mPrecision;
+
+            if (nbBits == 0)
+                nbBits = parentNbBits;
+            else if (parentNbBits != nbBits) {
+                std::stringstream msgStr;
+                msgStr << "Inputs precision mismatch for cell \""
+                    << cell.getName() << "\": first parent (\""
+                    << ((parents[0]) ? parents[0]->getName() : "env")
+                    << "\" is " << nbBits << ", whereas parent \""
+                    << ((parent) ? parent->getName() : "env") << "\" is "
+                    << parentNbBits << ")";
+
+                throw std::runtime_error(msgStr.str());
+            }
+        }
+
+        return nbBits;
     }
 }
