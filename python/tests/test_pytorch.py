@@ -173,10 +173,9 @@ class Test_Networks():
             self.optimizer2.zero_grad()
             loss2.backward()
             self.optimizer2.step()
-            # if self.compare_tensor(loss1, loss2):
-            #     print("Different loss : ", loss1.item(), "|", loss2.item())
-            #     number_fail+=1
-            #     return -1
+            if self.compare_tensor(loss1, loss2):
+                print("Different loss : ", loss1.item(), "|", loss2.item())
+                return -1
         return 0
     
     def test_multiple_step(self, input_size, label_size):
