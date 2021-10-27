@@ -2578,6 +2578,8 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         << Utils::cdef << std::endl;
                 }
             }
+            std::size_t resizeDimX = 0;
+            std::size_t resizeDimY = 0;
 
             const std::string inputX = redirectName(node.input(0));
             std::shared_ptr<Cell> inputXCell = getCell(inputX);
@@ -2601,38 +2603,54 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         " supported by N2D2.");
                 }
             }
-            const std::string inputSizes 
-                = redirectName(node.input(3));
 
-            //std::vector<size_t>  inputsDims;       
-            std:: size_t nbOutputs  = 0;
+            if ((itInit = initializer.find(redirectName(node.input(3)))) != initializer.end()) {
+                const Tensor<int64_t> sizesTensor
+                            = ONNX_unpackTensor<int64_t>((*itInit).second);
 
-            //Todo : Improve the minigraph handling for sizes from input
-            if ((itConcat = concat.find(inputSizes)) != concat.end()) {
-                for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
-                    const std::string input = redirectName((*itConcat).second[i]);
-                    std::map<std::string, std::vector<std::string> >
-                        ::const_iterator itConcat2ndDim;
-                    if ((itConcat2ndDim = concat.find(input)) != concat.end()) {
-                        for (unsigned int i = 0; i < (*itConcat2ndDim).second.size(); ++i) {
-                            const std::string input2nd = redirectName((*itConcat2ndDim).second[i]);
+                const std::string inputSizes 
+                    = redirectName(node.input(3));
+
+                if(!sizesTensor.empty()) {
+                    std::cout << "Resize is initialized from constant size: " << std::endl;
+                    resizeDimX = sizesTensor(3);
+                    resizeDimY = sizesTensor(2);
+                    std::cout << "===> Only dimensions X [" << sizesTensor(3) 
+                                << "] and Y [" << sizesTensor(2) << "] are resized"
+                                << "Other dimensions are not used C[" << sizesTensor(1)
+                                << "] N["<< sizesTensor(0) << "]" << std::endl; 
+
+                }
+                else {
+                    std:: size_t nbOutputs  = 0;
+
+                    //Todo : Improve the minigraph handling for sizes from input
+                    if ((itConcat = concat.find(inputSizes)) != concat.end()) {
+                        for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
+                            const std::string input = redirectName((*itConcat).second[i]);
                             std::map<std::string, std::vector<std::string> >
-                                ::const_iterator itConcat3rddDim;
-                            if ((itConcat3rddDim = concat.find(input2nd)) != concat.end()) {
-                                for (unsigned int i = 0; i < (*itConcat3rddDim).second.size(); ++i) {
-                                    const std::string input3rd 
-                                        = redirectName((*itConcat3rddDim).second[i]);
-                                    std::shared_ptr<Cell> inputCell3rd = getCell(input3rd);
-                                    nbOutputs += inputCell3rd->getNbOutputs();
-                                    inputsDims = inputCell3rd->getOutputsDims();
+                                ::const_iterator itConcat2ndDim;
+                            if ((itConcat2ndDim = concat.find(input)) != concat.end()) {
+                                for (unsigned int i = 0; i < (*itConcat2ndDim).second.size(); ++i) {
+                                    const std::string input2nd = redirectName((*itConcat2ndDim).second[i]);
+                                    std::map<std::string, std::vector<std::string> >
+                                        ::const_iterator itConcat3rddDim;
+                                    if ((itConcat3rddDim = concat.find(input2nd)) != concat.end()) {
+                                        for (unsigned int i = 0; i < (*itConcat3rddDim).second.size(); ++i) {
+                                            const std::string input3rd 
+                                                = redirectName((*itConcat3rddDim).second[i]);
+                                            std::shared_ptr<Cell> inputCell3rd = getCell(input3rd);
+                                            nbOutputs += inputCell3rd->getNbOutputs();
+                                            inputsDims = inputCell3rd->getOutputsDims();
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
+
                 }
             }
-            std::size_t resizeDimX = inputsDims[0];
-            std::size_t resizeDimY = inputsDims[1];
 
             std::shared_ptr<ResizeCell> resizeCell
                 = Registrar<ResizeCell>::create(model)(*deepNet, 
