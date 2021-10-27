@@ -224,7 +224,7 @@ namespace N2D2_HELPER{
             << CUDNN_MINOR << "." << CUDNN_PATCHLEVEL << "\n\n";
     #endif
     }
-
+    Options::Options(){} // Empty constructor for python API
     Options::Options(int argc, char* argv[]) {
         ProgramOptions opts(argc, argv);
 

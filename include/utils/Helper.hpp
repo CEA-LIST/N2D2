@@ -65,6 +65,8 @@ namespace N2D2_HELPER{
 
     class Options {
     public:
+        Options();
+
         Options(int argc, char* argv[]);
         unsigned int seed;
         unsigned int log;
