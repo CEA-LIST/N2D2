@@ -427,13 +427,13 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
         :type name: str, optional
         :param activation: Activation function, default= None
         :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
-        :param solver: Set the weights and bias solver, this parameter override parameters ``weights_solver`` and bias_solver``, default= :py:class:`n2d2.solver.SGD`
+        :param solver: Set the weights and bias solver, this parameter override parameters ``weights_solver`` and ``bias_solver``, default= :py:class:`n2d2.solver.SGD`
         :type solver: :py:class:`n2d2.solver.Solver`, optional
         :param weights_solver: Solver for weights, default= :py:class:`n2d2.solver.SGD`
         :type weights_solver: :py:class:`n2d2.solver.Solver`, optional
         :param bias_solver: Solver for biases, default= :py:class:`n2d2.filler.Normal`
         :type bias_solver: :py:class:`n2d2.solver.Solver`, optional
-        :param filler: Set the weights and bias filler, this parameter override parameters ``weights_filler`` and bias_filler``, default= :py:class:`n2d2.filler.NormalFiller`
+        :param filler: Set the weights and bias filler, this parameter override parameters ``weights_filler`` and ``bias_filler``, default= :py:class:`n2d2.filler.NormalFiller`
         :type filler: :py:class:`n2d2.filler.Filler`, optional
         :param weights_filler: Weights initial values filler, default= :py:class:`n2d2.filler.Normal`
         :type weights_filler: :py:class:`n2d2.filler.Filler`, optional
@@ -810,13 +810,13 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
         :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param mapping: Mapping
         :type mapping: :py:class:`n2d2.Tensor`
-        :param filler: Set the weights and bias filler, this parameter override parameters ``weights_filler`` and bias_filler``, default= :py:class:`n2d2.filler.NormalFiller`
+        :param filler: Set the weights and bias filler, this parameter override parameters ``weights_filler`` and ``bias_filler``, default= :py:class:`n2d2.filler.NormalFiller`
         :type filler: :py:class:`n2d2.filler.Filler`, optional
         :param weights_filler: Weights initial values filler, default= :py:class:`n2d2.filler.Normal`
         :type weights_filler: :py:class:`n2d2.filler.Filler`, optional
         :param bias_filler: Biases initial values filler, default= :py:class:`n2d2.filler.Normal`
         :type bias_filler: :py:class:`n2d2.filler.Filler`, optional
-        :param solver: Set the weights and bias solver, this parameter override parameters ``weights_solver`` and bias_solver``, default= :py:class:`n2d2.solver.SGD`
+        :param solver: Set the weights and bias solver, this parameter override parameters ``weights_solver`` and ``bias_solver``, default= :py:class:`n2d2.solver.SGD`
         :type solver: :py:class:`n2d2.solver.Solver`, optional
         :param weights_solver: Solver for weights
         :type weights_solver: :py:class:`n2d2.solver.Solver`, optional
@@ -1564,13 +1564,13 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
         :type dilation_dims: list, optional
         :param activation: Activation function, default= None
         :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
-        :param filler: Set the weights and bias filler, this parameter override parameters ``weights_filler`` and bias_filler``, default= :py:class:`n2d2.filler.NormalFiller`
+        :param filler: Set the weights and bias filler, this parameter override parameters ``weights_filler`` and ``bias_filler``, default= :py:class:`n2d2.filler.NormalFiller`
         :type filler: :py:class:`n2d2.filler.Filler`, optional
         :param weights_filler: Weights initial values filler, default= :py:class:`n2d2.filler.NormalFiller`
         :type weights_filler: :py:class:`n2d2.filler.Filler`, optional
         :param bias_filler: Biases initial values filler, default= :py:class:`n2d2.filler.NormalFiller`
         :type bias_filler: :py:class:`n2d2.filler.Filler`, optional
-        :param solver: Set the weights and bias solver, this parameter override parameters ``weights_solver`` and bias_solver``, default= :py:class:`n2d2.solver.SGD`
+        :param solver: Set the weights and bias solver, this parameter override parameters ``weights_solver`` and ``bias_solver``, default= :py:class:`n2d2.solver.SGD`
         :type solver: :py:class:`n2d2.solver.Solver`, optional
         :param weights_solver: Solver for weights, default= :py:class:`n2d2.solver.SGD`
         :type weights_solver: :py:class:`n2d2.solver.Solver`, optional

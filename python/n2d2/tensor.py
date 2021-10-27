@@ -19,6 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
+import numpy
 import N2D2
 import n2d2 # To remove if interface is moved to provider
 from n2d2 import error_handler
@@ -26,6 +27,12 @@ from n2d2.provider import TensorPlaceholder
 import n2d2.global_variables as gb
 from functools import reduce
 import random
+try: 
+    from numpy import ndarray, array
+except ImportError:
+    numpy_imported=False
+else:
+    numpy_imported=True
 
 cuda_compiled = gb.cuda_compiled
 
@@ -306,10 +313,8 @@ class Tensor:
         :param copy: if false, memory is shared between :py:class:`n2d2.Tensor` and ``numpy.array``, else data are copied in memory, default=True
         :type copy: Boolean, optional
         """
-        try:
-            from numpy import array 
-        except ImportError:
-            raise ImportError("Numpy is not installed")
+        if not numpy_imported:
+            raise ImportError("Numpy is not installed !")
         return array(self.N2D2(), copy=copy) 
 
     @classmethod
@@ -321,9 +326,7 @@ class Tensor:
         :return: Converted tensor
         :rtype: :py:class:`n2d2.Tensor`
         """
-        try: 
-            from numpy import ndarray 
-        except ImportError:
+        if not numpy_imported:
             raise ImportError("Numpy is not installed !")
         if not isinstance(np_array, ndarray):
             raise error_handler.WrongInputType("np_array", type(np_array), ["numpy.array"])

@@ -42,13 +42,13 @@ Creation of the network
 Defining the inputs of the Neural Network
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First of all, if you have CUDA available, you can unable it with the following line :
+First of all, if you have CUDA available, you can enable it with the following line :
 
 .. testcode::
 
     n2d2.global_variables.default_model = "Frame_CUDA"
 
-The default_model is ``Frame``. 
+The default model is ``Frame``. 
 
 Once this is done, you can load the database by using the appropriate driver :py:class:`n2d2.database.GTSRB`. 
 We set 20% of the data to be used for validation.
