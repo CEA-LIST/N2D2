@@ -285,3 +285,40 @@ class N2D2_Interface:
         return output
 
 
+class Options():
+    """
+    This class is a wrapper around :py:class:`N2D2.Options` object.
+    Its goal is to emulate options given via the commande line.
+    The following N2D2 functions use this object :
+
+    - :py:func:`learnThreadWrapper`
+    - :py:func:`inferThreadWrapper`
+    - :py:func:`test`
+    - :py:func:`importFreeParameters`
+    - :py:func:`generateExport`
+    - :py:func:`findLearningRate`
+    - :py:func:`learn_epoch`
+    - :py:func:`learn`
+    - :py:func:`learnStdp`
+    - :py:func:`testStdp`
+    - :py:func:`testCStdp`
+    - :py:func:`logStats`
+
+    This object should not be used directly by the user !
+    """
+    def __init__(self, **parameters):
+        self.N2D2 = N2D2.Options
+        self.set_parameters(**parameters)
+    
+    def set_parameters(self, **parameters):
+        for key, value in parameters.items():
+            try:
+                setattr(self.N2D2, key, value)
+            except AttributeError:
+                raise AttributeError(f"{key} is not a valid parameter")
+            except TypeError:
+                # TODO : custom error if the type expected is from N2D2
+                raise TypeError(f"Parameter {key} is of type {type(value)} but should be of type {type(getattr(self.N2D2, key))}.")
+
+    def N2D2(self):
+        return self.N2D2

@@ -88,7 +88,6 @@ class Trainable(ABC):
 
 
 class Block(Cell):
-    #@abstractmethod
 
     def __init__(self, cells, name=None):
         assert (isinstance(cells, list))
@@ -185,7 +184,7 @@ class Iterable(Block, ABC):
         else:
             return self._cells[item]
 
-    def get_index(self, item):
+    def get_index(self, item): # TODO : add documentation 
         for i, cell in enumerate(self._seq):
             if item.get_name() == cell.get_name():
                 return i
@@ -195,7 +194,14 @@ class Iterable(Block, ABC):
         return len(self._seq)
 
     def insert(self, index, cell):
+        if index < 0:
+            raise ValueError("Negative index are not supported.")
         self._seq.insert(index, cell)
+        self._cells[cell.get_name()] = cell
+
+    def append(self, cell):
+        """Append a cell at the end of the sequence."""
+        self._seq.append(cell)
         self._cells[cell.get_name()] = cell
 
     def _generate_str(self, indent_level):
@@ -453,8 +459,51 @@ class DeepNetCell(Iterable):
             output.append(cells)
         return output
 
+    def fit(self, provider, learn_epoch=0, log_epoch=1000, avg_window=10000, bench=False, ban_multi_device=False, valid_metric="Sensitivity", stop_valid=0, log_kernels=False): # TODO : rename to avoid copying tf ?
+        """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
+        :param provider: The data provider used for the training of your neural network.
+        :type provider: :py:class:`n2d2.provider.DataProvider`
+        :param learn_epoch: The number of epochs steps, default=0
+        :type learn_epoch: int, optional
+        :param log_epoch: The number of epochs between logs, default=1000
+        :type log_epoch: int, optional
+        :param avg_window: The average window to compute success rate during learning, default=10000
+        :type avg_window: int, optional
+        :param bench: If ``True``, activate the benchmarking of the learning speed , default=False
+        :type bench: bool, optional
+        :param valid_metric: Validation metric to use can be ``Sensitivity``, ``Specificity``, ``Precision``, ``NegativePredictiveValue``, ``MissRate``, ``FallOut``, ``FalseDiscoveryRate, ``FalseOmissionRate``, ``Accuracy``, ``F1Score``, ``Informedness``, ``Markedness``, default="Sensitivity"
+        :type valid_metric: str, optional
+        :param stop_valid: The maximum number of successive lower score validation, default=0
+        :type stop_valid: int, optional
+        :param log_kernels: If ``True``, log kernels afer learning, default=False
+        :type log_kernels: bool, optional
+        """
 
+        """
+        - Epoch mandatory argument ?
+        - Add a target argument ?
+        """
+        # Checking inputs
+        if valid_metric not in N2D2.ConfusionTableMetric.__members__.keys():
+            raise n2d2.error_handler.WrongValue("metric", valid_metric, ", ".join(N2D2.ConfusionTableMetric.__members__.keys()))
+        else:
+            N2D2_valid_metric = N2D2.ConfusionTableMetric.__members__[valid_metric]
+        if not isinstance(provider, n2d2.provider.DataProvider):
+            raise n2d2.error_handler.WrongInputType("provider", type(provider), [str(type(n2d2.provider.DataProvider))])
+        
+        # Generating the N2D2 DeepNet
+        dummy_input = n2d2.Tensor(provider.dims(), cuda=n2d2.global_variables.cuda_compiled, dim_format="N2D2")
+        dummy_output = self(dummy_input)
 
-
-
+        N2D2_deepnet = dummy_output.get_deepnet().N2D2()
+        N2D2_deepnet.setStimuliProvider(provider.N2D2())
+        N2D2_deepnet.setDatabase(provider.get_database().N2D2())
+        
+        # Calling learn function
+        parameters = n2d2.n2d2_interface.Options(
+                        avg_window=avg_window, bench=bench, learn_epoch=learn_epoch,
+                        log_epoch=log_epoch, ban_multi_device=ban_multi_device,
+                         valid_metric=N2D2_valid_metric, 
+                        stop_valid=stop_valid, log_kernels=log_kernels)
+        N2D2.learn_epoch(parameters.N2D2(), N2D2_deepnet)
 

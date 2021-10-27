@@ -64,7 +64,7 @@ class Database(N2D2_Interface):
         """
         Return the number fo stimuli  available for this partition
         
-        :param partition: The partition can be  ``Test``, ``Validation``, ``Test``,  ``Unpartitioned``
+        :param partition: The partition can be  ``Learn``, ``Validation``, ``Test``,  ``Unpartitioned``
         :type partition: str 
         """
         return self.N2D2().getNbStimuli(N2D2.Database.StimuliSet.__members__[partition])

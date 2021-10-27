@@ -44,7 +44,7 @@ class LossFunction(ABC):
     def clear_success(self):
         self._target.clear_success()
 
-    def get_average_score(self, metric):
+    def get_average_score(self, metric): # TODO : add documentation ! metric datatype ???
         return self._target.get_average_score(metric=metric)
 
     def get_loss(self, saveFile=""):
