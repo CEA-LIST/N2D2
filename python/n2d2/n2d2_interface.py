@@ -307,13 +307,13 @@ class Options():
     This object should not be used directly by the user !
     """
     def __init__(self, **parameters):
-        self.N2D2 = N2D2.Options
+        self._N2D2 = N2D2.Options()
         self.set_parameters(**parameters)
     
     def set_parameters(self, **parameters):
         for key, value in parameters.items():
             try:
-                setattr(self.N2D2, key, value)
+                setattr(self._N2D2, key, value)
             except AttributeError:
                 raise AttributeError(f"{key} is not a valid parameter")
             except TypeError:
@@ -321,4 +321,4 @@ class Options():
                 raise TypeError(f"Parameter {key} is of type {type(value)} but should be of type {type(getattr(self.N2D2, key))}.")
 
     def N2D2(self):
-        return self.N2D2
+        return self._N2D2

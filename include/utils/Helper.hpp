@@ -41,28 +41,6 @@
 using namespace N2D2;
 
 namespace N2D2_HELPER{
-    
-    #ifdef CUDA
-    extern unsigned int cudaDevice;
-    std::vector<unsigned int> setMultiDevices(std::string cudaDev);
-    #endif
-
-    void learnThreadWrapper(const std::shared_ptr<DeepNet>& deepNet,
-                            std::vector<std::pair<std::string, double> >* timings=NULL);
-
-    void inferThreadWrapper(const std::shared_ptr<DeepNet>& deepNet,
-                            Database::StimuliSet set,
-                            std::vector<std::pair<std::string, double> >* timings=NULL);
-    //#define GPROF_INTERRUPT
-
-    #if defined(__GNUC__) && !defined(NDEBUG) && defined(GPROF_INTERRUPT)
-    #include <dlfcn.h>
-    void sigUsr1Handler(int /*sig*/);
-    #endif
-
-
-    void printVersionInformation();
-
     class Options {
     public:
         Options();
@@ -120,7 +98,24 @@ namespace N2D2_HELPER{
         std::string iniConfig;
 
     };
+    #ifdef CUDA
+    extern unsigned int cudaDevice;
+    std::vector<unsigned int> setMultiDevices(std::string cudaDev);
+    #endif
 
+    void learnThreadWrapper(const std::shared_ptr<DeepNet>& deepNet,
+                            std::vector<std::pair<std::string, double> >* timings=NULL);
+
+    void inferThreadWrapper(const std::shared_ptr<DeepNet>& deepNet,
+                            Database::StimuliSet set,
+                            std::vector<std::pair<std::string, double> >* timings=NULL);
+    //#define GPROF_INTERRUPT
+
+    #if defined(__GNUC__) && !defined(NDEBUG) && defined(GPROF_INTERRUPT)
+    #include <dlfcn.h>
+    void sigUsr1Handler(int /*sig*/);
+    #endif
+    void printVersionInformation();
     void test(const Options&, std::shared_ptr<DeepNet>&, bool);
     void importFreeParameters(const Options& opt, DeepNet& deepNet);
     bool generateExport(const Options&, std::shared_ptr<DeepNet>&);

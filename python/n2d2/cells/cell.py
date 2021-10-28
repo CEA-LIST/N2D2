@@ -459,7 +459,7 @@ class DeepNetCell(Iterable):
             output.append(cells)
         return output
 
-    def fit(self, provider, learn_epoch=0, log_epoch=1000, avg_window=10000, bench=False, ban_multi_device=False, valid_metric="Sensitivity", stop_valid=0, log_kernels=False): # TODO : rename to avoid copying tf ?
+    def fit(self, provider, target, learn_epoch=0, log_epoch=1000, avg_window=10000, bench=False, ban_multi_device=False, valid_metric="Sensitivity", stop_valid=0, log_kernels=False): # TODO : rename to avoid copying tf ?
         """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
         :param provider: The data provider used for the training of your neural network.
         :type provider: :py:class:`n2d2.provider.DataProvider`
@@ -480,8 +480,7 @@ class DeepNetCell(Iterable):
         """
 
         """
-        - Epoch mandatory argument ?
-        - Add a target argument ?
+        - Epoch as a mandatory argument ?
         """
         # Checking inputs
         if valid_metric not in N2D2.ConfusionTableMetric.__members__.keys():
@@ -493,17 +492,16 @@ class DeepNetCell(Iterable):
         
         # Generating the N2D2 DeepNet
         dummy_input = n2d2.Tensor(provider.dims(), cuda=n2d2.global_variables.cuda_compiled, dim_format="N2D2")
-        dummy_output = self(dummy_input)
-
+        dummy_output = target(self(dummy_input))
         N2D2_deepnet = dummy_output.get_deepnet().N2D2()
+        target.clear_success() # removing the dummy batch TODO useless ?
         N2D2_deepnet.setStimuliProvider(provider.N2D2())
         N2D2_deepnet.setDatabase(provider.get_database().N2D2())
         
         # Calling learn function
         parameters = n2d2.n2d2_interface.Options(
-                        avg_window=avg_window, bench=bench, learn_epoch=learn_epoch,
+                        avg_window=avg_window, bench=bench, learnEpoch=learn_epoch,
                         log_epoch=log_epoch, ban_multi_device=ban_multi_device,
                          valid_metric=N2D2_valid_metric, 
                         stop_valid=stop_valid, log_kernels=log_kernels)
         N2D2.learn_epoch(parameters.N2D2(), N2D2_deepnet)
-

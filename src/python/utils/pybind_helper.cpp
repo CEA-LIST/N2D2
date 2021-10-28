@@ -29,14 +29,14 @@ namespace py = pybind11;
 
 namespace N2D2 {
     void init_helper(py::module &m) {
-        py::class_<Options, std::shared_ptr<Options>> (m, "Options")
+        py::class_<Options> (m, "Options")
         .def(py::init<>())
         .def_readwrite("seed", &Options::seed)
         .def_readwrite("log", &Options::log)
         .def_readwrite("log_epoch", &Options::logEpoch)
         .def_readwrite("report", &Options::report)
         .def_readwrite("learn", &Options::learn)
-        .def_readwrite("learn_epoch", &Options::learnEpoch)
+        .def_readwrite("learnEpoch", &Options::learnEpoch)
         .def_readwrite("pre_samples", &Options::preSamples)
         .def_readwrite("find_lr", &Options::findLr)
         .def_readwrite("valid_metric", &Options::validMetric)
@@ -81,9 +81,8 @@ namespace N2D2 {
         .def_readwrite("version", &Options::version)
         .def_readwrite("ini_config", &Options::iniConfig)
         ;
-        m.def("learn", &N2D2_HELPER::learn, py::arg("opt"), py::arg("deepNet"));
-        m.def("learn_epoch", &N2D2_HELPER::learn_epoch, py::arg("opt"), py::arg("deepNet"));
-
+        m.def("learn_epoch", &learn_epoch, py::arg("opt"), py::arg("deepNet"));
+        m.def("test", &test, py::arg("opt"), py::arg("deepNet"), py::arg("afterCalibration"));
     }
 }
 
