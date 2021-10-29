@@ -228,46 +228,47 @@ namespace N2D2_HELPER{
     Options::Options(int argc, char* argv[]) {
         ProgramOptions opts(argc, argv);
 
-        seed =        opts.parse("-seed", 0U, "N2D2 random seed (0 = time based)");
-        log =         opts.parse("-log", 1000U, "number of steps between logs");
-        logEpoch =    opts.parse("-log-epoch", 1U, "number of epochs between logs "
+        seed =        opts.parse("-seed", seed, "N2D2 random seed (0 = time based)");
+        log =         opts.parse("-log", log, "number of steps between logs");
+        logEpoch =    opts.parse("-log-epoch", logEpoch, "number of epochs between logs "
                                                     "(0 = no log)");
-        report =      opts.parse("-report", 100U, "number of steps between reportings");
-        learn =       opts.parse("-learn", 0U, "number of backprop learning steps");
-        learnEpoch =  opts.parse("-learn-epoch", 0U, "number of epoch steps");
-        preSamples =  opts.parse("-pre-samples", -1, "if >= 0, log pre-processing samples "
+        report =      opts.parse("-report", report, "number of steps between reportings");
+        learn =       opts.parse("-learn", learn, "number of backprop learning steps");
+        learnEpoch =  opts.parse("-learn-epoch", learnEpoch, "number of epoch steps");
+        preSamples =  opts.parse("-pre-samples", preSamples, "if >= 0, log pre-processing samples "
                                                     "of the corresponding stimulus ID");
-        findLr =      opts.parse("-find-lr", 0U, "find an appropriate learning rate over a"
+        findLr =      opts.parse("-find-lr", findLr, "find an appropriate learning rate over a"
                                                 " number of iterations");
-        validMetric = opts.parse("-valid-metric", ConfusionTableMetric::Sensitivity,
+        validMetric = opts.parse("-valid-metric", validMetric,
                                                 "validation metric to use (default is "
                                                 "Sensitivity)");
-        stopValid =   opts.parse("-stop-valid", 0U, "max. number of successive lower score "
+        stopValid =   opts.parse("-stop-valid", stopValid, "max. number of successive lower score "
                                                 "validation");
         test =        opts.parse("-test", "perform testing");
+        std::cout << test << std::endl;
         testQAT =        opts.parse("-testQAT", "perform testing");
         fuse =        opts.parse("-fuse", "fuse BatchNorm with Conv for test and export");
         bench =       opts.parse("-bench", "learning speed benchmarking");
-        learnStdp =   opts.parse("-learn-stdp", 0U, "number of STDP learning steps");
-        presentTime =   opts.parse("-present-time", 1.0, "presentation time in Us");
-        avgWindow =   opts.parse("-ws", 10000U, "average window to compute success rate "
+        learnStdp =   opts.parse("-learn-stdp", learnStdp, "number of STDP learning steps");
+        presentTime =   opts.parse("-present-time", presentTime, "presentation time in Us");
+        avgWindow =   opts.parse("-ws", avgWindow, "average window to compute success rate "
                                                 "during learning");
-        testIndex =   opts.parse("-test-index", -1, "test a single specific stimulus index"
+        testIndex =   opts.parse("-test-index", testIndex, "test a single specific stimulus index"
                                                     " in the Test set");
-        testId =      opts.parse("-test-id", -1, "test a single specific stimulus ID (takes"
+        testId =      opts.parse("-test-id", testId, "test a single specific stimulus ID (takes"
                                                 " precedence over -test-index)");
-        testAdv =     opts.parse("-testAdv", std::string(), "performs an adversarial study "
+        testAdv =     opts.parse("-testAdv", testAdv, "performs an adversarial study "
                                                             "only options: Solo or Multi");
         check =       opts.parse("-check", "enable gradient computation checking");
-        logOutputs =  opts.parse("-log-outputs", 0U, "log layers outputs for the n-th "
+        logOutputs =  opts.parse("-log-outputs", logOutputs, "log layers outputs for the n-th "
                                                     "stimulus (0 = no log)");
         logJSON =     opts.parse("-log-json", "log JSON annotations");
         logDbStats =  opts.parse("-log-db-stats", "log database stimuli and ROIs stats");
         logKernels =  opts.parse("-log-kernels", "log kernels afer learning");
         genConfig =   opts.parse("-cfg", "save base configuration and exit");
-        genExport =   opts.parse("-export", std::string(), "generate an export and exit");
-        nbBits =      opts.parse("-nbbits", 8, "number of bits per weight for exports");
-        calibration = opts.parse("-calib", 0, "number of stimuli used for the calibration "
+        genExport =   opts.parse("-export", genExport, "generate an export and exit");
+        nbBits =      opts.parse("-nbbits", nbBits, "number of bits per weight for exports");
+        calibration = opts.parse("-calib", calibration, "number of stimuli used for the calibration "
                                             "(0 = no calibration, -1 = use the full "
                                             "test dataset)");
         calibrationReload = opts.parse("-calib-reload", "reload and reuse the data of a "
@@ -297,16 +298,16 @@ namespace N2D2_HELPER{
                                         "activation scaling mode on export, "
                                         "can be 'Floating-point', 'Fixed-point16', 'Fixed-point32', 'Single-shift' "
                                         "or 'Double-shift'"));
-        actRescalePerOutput = opts.parse("-act-rescale-per-output", false, 
+        actRescalePerOutput = opts.parse("-act-rescale-per-output", actRescalePerOutput, 
                                             "rescale activation per output on export");
-        actQuantileValue = opts.parse("-act-quantile-value", 0.9999, 
+        actQuantileValue = opts.parse("-act-quantile-value", actQuantileValue, 
                                             "quantile value for 'Quantile' clipping mode");
-        timeStep =    opts.parse("-ts", 0.1, "timestep for clock-based simulations (ns)");
-        saveTestSet = opts.parse("-save-test-set", std::string(), "save the test dataset to a "
+        timeStep =    opts.parse("-ts", timeStep, "timestep for clock-based simulations (ns)");
+        saveTestSet = opts.parse("-save-test-set", saveTestSet, "save the test dataset to a "
                                                                 "specified location");
-        load =        opts.parse("-l", std::string(), "start with a previously saved state from a "
+        load =        opts.parse("-l", load, "start with a previously saved state from a "
                                                     "specified location");
-        weights =     opts.parse("-w", std::string(), "start with weights imported from a specified "
+        weights =     opts.parse("-w", weights, "start with weights imported from a specified "
                                                     "location (even when loading a previously "
                                                     "saved state)");
         ignoreNoExist =     opts.parse("-w-ignore", "intialize with default values weights that are " 
