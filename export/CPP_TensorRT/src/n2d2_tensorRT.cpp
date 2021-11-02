@@ -97,7 +97,20 @@ void N2D2::Network::initialize() {
         setTensorRTPrecision();
         std::cout << "====> Set TensorRT Precision" << std::endl;
         mNetBuilder = nvinfer1::createInferBuilder(gLogger);
+#ifndef ONNX
         mNetDef.push_back(mNetBuilder->createNetwork());
+#else
+#if NV_TENSORRT_MAJOR > 5
+
+        nvinfer1::NetworkDefinitionCreationFlags creationFlag;
+        creationFlag = 1 << int(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_PRECISION);
+        creationFlag |= 1 << int(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        mNetDef.push_back(mNetBuilder->createNetworkV2(creationFlag));
+#else
+        mNetDef.push_back(mNetBuilder->createNetwork());
+#endif
+#endif
+
 #if NV_TENSORRT_MAJOR > 4
         if(mDataType == nvinfer1::DataType::kHALF)
             mNetBuilder->setFp16Mode(true);
@@ -374,6 +387,9 @@ std::vector<nvinfer1::ITensor *>
             nvinfer1::ActivationType finalActivation = activation;
             //Special cases for Clip Relu (Relu6) and Leaky Relu:
             if(activation == nvinfer1::ActivationType::kRELU){
+//Need a special case for TensorRT 5.0.X while clipped Relu and Leaky Relu are only supported since TensorRT 5.1.0 : 
+// ==> https://docs.nvidia.com/deeplearning/tensorrt/release-notes/tensorrt-5.html#rel_5-0-RC
+#if ((NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 5) 
                 //ReluClipped:               
                 if(beta != 0.0 && alpha == 0.0) {
                    finalActivation = nvinfer1::ActivationType::kCLIP;
@@ -381,6 +397,7 @@ std::vector<nvinfer1::ITensor *>
                 if(alpha != 0.0 && beta == 0.0) {
                     finalActivation = nvinfer1::ActivationType::kLEAKY_RELU;
                 }
+#endif
             }
             auto layer = mNetDef.back()->addActivation(*inputs_tensor[i],
                                             finalActivation);
