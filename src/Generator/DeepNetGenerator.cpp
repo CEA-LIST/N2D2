@@ -2599,8 +2599,9 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 const Tensor<float> scalesTensor
                             = ONNX_unpackTensor<float>((*itInit).second);
                 if(!scalesTensor.empty()) {
-                    throw std::runtime_error("Resize from Scales ratio per map is not yet"
-                        " supported by N2D2.");
+                    inputsDims = inputXCell->getOutputsDims();
+                    resizeDimX = std::rintf(inputsDims[0]*scalesTensor(3));
+                    resizeDimY = std::rintf(inputsDims[1]*scalesTensor(2));
                 }
             }
 
