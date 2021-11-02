@@ -2648,7 +2648,8 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                             }
                         }
                     }
-
+                    resizeDimX = inputsDims[0];
+                    resizeDimY = inputsDims[1];
                 }
             }
 
