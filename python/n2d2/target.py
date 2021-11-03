@@ -106,6 +106,8 @@ class Score(Target):
 
         self.provide_targets()
         self.process()
+        inputs._leaf = True
+        return inputs
 
 
     def provide_targets(self):
@@ -113,6 +115,19 @@ class Score(Target):
 
     def process(self):
         self._N2D2_object.process(self._provider.get_partition())
+
+    def get_loss(self):
+        """
+        Return full loss vector of all batches
+        """
+        return self.N2D2().getLoss()
+
+
+    def loss(self):
+        """
+        Return loss of last batch
+        """
+        return self.get_loss()[-1]
 
     def get_average_success(self, window=0):
         if not self._N2D2_object.getTargetTopN() == 1:

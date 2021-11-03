@@ -153,6 +153,13 @@ class DeepNet(N2D2_Interface):
         """
         self.N2D2().exportNetworkFreeParameters(dirname)
 
+    def log_stats(self, dirname):
+        """Export statistics of the deepnet graph
+        :param dirname: path to the directory where you want to save the data.
+        :type dirname: str
+        """
+        self.N2D2().logStats(dirname)
+
     def __str__(self):
         return self._groups.__str__()
 

@@ -25,18 +25,14 @@ from n2d2.utils import ConfigSection
 from n2d2.cells.nn import Conv, Deconv, Padding, ElemWise
 from n2d2.cells import Block
 from n2d2.activation import Linear, Tanh
-from n2d2.solver import SGD
 from n2d2.filler import Constant, Normal
+from n2d2.tensor import Interface
 
-
-decoder_solver_config = ConfigSection(learning_rate_policy='CosineDecay', learning_rate=0.01, momentum=0.9,
-                              decay=0.00004, warm_up_duration=0, max_iterations=59500, polyak_momentum=False)
 
 class DecoderConv(Conv):
     def __init__(self, nb_inputs, nb_outputs, **config_parameters):
         Conv.__init__(self, nb_inputs, nb_outputs, kernel_dims=[1, 1], stride_dims=[1, 1], activation=Tanh(), back_propagate=False,
                     weights_filler=Normal(std_dev=0.1), bias_filler=Constant(value=0.2),
-                    weights_solver=SGD(**decoder_solver_config), bias_solver=SGD(**decoder_solver_config),
                     **config_parameters)
 
 
@@ -44,7 +40,6 @@ class DecoderDeconv(Deconv):
     def __init__(self, nb_inputs, nb_outputs, **config_parameters):
         Deconv.__init__(self, nb_inputs, nb_outputs, activation=Linear(), kernel_dims=[4, 4], stride_dims=[2, 2],
                     weights_filler=Normal(std_dev=0.1), bias_filler=Constant(value=0.2),
-                    weights_solver=SGD(**decoder_solver_config), bias_solver=SGD(**decoder_solver_config),
                     **config_parameters)
 
 
@@ -58,17 +53,20 @@ class DecoderFuse(ElemWise):
         ElemWise.__init__(self, operation='Sum', **config_parameters)
 
 
-class SegmentationDecoder(Block):
-    def __init__(self, nb_inputs):
+class SegmentationNetwork(Block):
+    def __init__(self, backbone, features, nb_channels):
 
-        if not len(nb_inputs) == 4:
-            RuntimeError("'nb_inputs' needs exactly 4 elements.")
+        self.backbone_features = features
+        self.backbone = backbone
 
-        Block.__init__(self, [
-            DecoderConv(nb_inputs[0], 5, name="conv_1x1_x4"),
-            DecoderConv(nb_inputs[1], 5, name="conv_1x1_x8"),
-            DecoderConv(nb_inputs[2], 5, name="conv_1x1_x16"),
-            DecoderConv(nb_inputs[3], 5, name="conv_1x1_x32"),
+        if not len(nb_channels) == 4:
+            RuntimeError("'nb_channels' needs exactly 4 elements.")
+
+        self.decoder = Block([
+            DecoderConv(nb_channels[0], 5, name="conv_1x1_x4"),
+            DecoderConv(nb_channels[1], 5, name="conv_1x1_x8"),
+            DecoderConv(nb_channels[2], 5, name="conv_1x1_x16"),
+            DecoderConv(nb_channels[3], 5, name="conv_1x1_x32"),
 
             DecoderDeconv(5, 5, name="deconv1"),
             DecoderPadding(name="deconv1_pad"),
@@ -84,66 +82,42 @@ class SegmentationDecoder(Block):
 
             Deconv(5, 5, kernel_dims=[8, 8], stride_dims=[4, 4], activation=Linear(),
                   weights_filler=Normal(std_dev=0.1), bias_filler=Constant(value=0.2),
-                  weights_solver=SGD(**decoder_solver_config), bias_solver=SGD(**decoder_solver_config),
                   name="deconv_fuse3"),
             Padding(top_pad=-2, bot_pad=-2, left_pad=-2, right_pad=-2, name="out_adapt")
-        ])
+        ], name="decoder")
 
-    def __call__(self, inputs):
+        super().__init__([self.backbone, self.decoder])
 
-        if not len(inputs) == 4:
-            RuntimeError("'inputs' needs exactly 4 elements.")
+    def __call__(self, x):
+        super().__call__(x)
+
+        # No need to get output since we use features as different levels
+        self.backbone(x)
 
         # post_backbone_convs
-        x_x4 = self["conv_1x1_x4"](inputs[0])
-        x_x8 = self["conv_1x1_x8"](inputs[1])
-        x_x16 = self["conv_1x1_x16"](inputs[2])
-        x_x32 = self["conv_1x1_x32"](inputs[3])
+        x_x4 = self.decoder["conv_1x1_x4"](self.backbone_features[0].get_outputs())
+        x_x8 = self.decoder["conv_1x1_x8"](self.backbone_features[1].get_outputs())
+        x_x16 = self.decoder["conv_1x1_x16"](self.backbone_features[2].get_outputs())
+        x_x32 = self.decoder["conv_1x1_x32"](self.backbone_features[3].get_outputs())
 
         # deconv_sequence1
-        x = self["deconv1"](x_x32)
-        x = self["deconv1_pad"](x)
-        x = self["fuse1"]([x, x_x16])
+        x = self.decoder["deconv1"](x_x32)
+        x = self.decoder["deconv1_pad"](x)
+        x = self.decoder["fuse1"](Interface([x, x_x16]))
 
         # deconv_sequence2
-        x = self["deconv_fuse1"](x)
-        x = self["deconv_fuse1_pad"](x)
-        x = self["fuse2"]([x, x_x8])
+        x = self.decoder["deconv_fuse1"](x)
+        x = self.decoder["deconv_fuse1_pad"](x)
+        x = self.decoder["fuse2"](Interface([x, x_x8]))
 
         # deconv_sequence3
-        x = self["deconv_fuse2"](x)
-        x = self["deconv_fuse2_pad"](x)
-        x = self["fuse3"]([x, x_x4])
+        x = self.decoder["deconv_fuse2"](x)
+        x = self.decoder["deconv_fuse2_pad"](x)
+        x = self.decoder["fuse3"](Interface([x, x_x4]))
 
         # deconv_sequence4
-        x = self["deconv_fuse3"](x)
-        x = self["out_adapt"](x)
+        x = self.decoder["deconv_fuse3"](x)
+        x = self.decoder["out_adapt"](x)
 
         return x
-
-
-    """
-    # Note: Not functional
-    def set_Cityscapes_solvers(self, max_iterations):
-        print("Add solvers")
-
-
-        #solver_config = ConfigSection(learning_rate_policy='CosineDecay', learning_rate=0.01, momentum=0.9,
-        #                decay=0.00004, warm_up_duration=0, max_iterations=max_iterations, polyak_momentum=False)
-
-        solver_config = ConfigSection(learning_rate=0.03)
-
-        weights_solver = SGD
-        weights_solver_config = solver_config
-        bias_solver = SGD
-        bias_solver_config = solver_config
-
-        for name, cells in self.get_cells().items():
-            if isinstance(cells, Conv) or isinstance(cells, Deconv):
-                print("Add solver: " + name)
-                cells.set_weights_solver(SGD(**weights_solver_config))
-                cells.set_bias_solver(SGD(**bias_solver_config))
-    """
-
-
 
