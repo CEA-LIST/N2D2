@@ -36,9 +36,15 @@ class Cell(ABC):
                 raise n2d2.error_handler.WrongInputType("name", str(type(name)), ["str"])
         self._name = name
 
-    @abstractmethod
     def __call__(self, x):
-        pass
+        """
+        Do the common check on the inputs and infer the deepNet from the inputs.
+        """
+        if not (isinstance(x, n2d2.Tensor) or isinstance(x, n2d2.Interface)):
+            raise TypeError(self.get_name() + " received an input of type " + str(
+                type(x)) + ", input should be of type n2d2.Tensor or n2d2.Interface instead.")
+        else:
+            self._deepnet = x.get_deepnet()
 
     @abstractmethod
     def test(self):
@@ -88,6 +94,11 @@ class Trainable(ABC):
 
 
 class Block(Cell):
+    """
+        The Block class is the most general type of cell container, from which all other containers are derived.
+        It saves its cells internally with a dictionary. The Block class has no implicit structure for propagation,
+        the __call__ method therefore has to be defined explicitly.
+    """
     #@abstractmethod
 
     def __init__(self, cells, name=None):
@@ -103,9 +114,14 @@ class Block(Cell):
         elif isinstance(item, str): 
             return self._cells[item]
         else:
-            raise n2d2.error_handler.WrongInputType("item", type(item), ["str", "int"])
+            raise n2d2.error_handler.WrongInputType("item", type(item), ["str"])
 
     def get_cells(self):
+        """
+           Returns dictionary with all cells that are not Blocks (i.e. NeuralNetworkCells). This allows
+           therefore to access all cells by a dictionary without having to consider the recursive block
+           structure of the model
+        """
         cells = {}
         self._get_cells(cells)
         return cells
@@ -128,7 +144,7 @@ class Block(Cell):
         return self
 
     def __call__(self, x):
-        raise RuntimeError("Block '" + self.get_name() + "' has no __call__ method implemented")
+        super().__call__(x)
 
     def set_solver(self, solver):
         for cell in self.get_cells().values():
@@ -148,14 +164,6 @@ class Block(Cell):
     def export_free_parameters(self, dir_name):
         for cell in self._cells.values():
             cell.export_free_parameters(dir_name)
-    """
-    def __str__(self):
-        output = "\'" + self._name + "\' " + "[\n"
-        for cell in self._cells.values():
-            output += "\t" + str(cell) + "\n"
-        output += "]\n"
-        return output
-    """
 
     def __str__(self):
         return self._generate_str(1)
@@ -174,29 +182,41 @@ class Block(Cell):
 
 
 class Iterable(Block, ABC):
+    """
+       This abstract class describes a Block object with order, i.e. an array/list-like object.
+       It implements several methods of python lists. The __call__ method is implicitly defined by the order
+       of the list.
+    """
     @abstractmethod
     def __init__(self, cells, name=None):
         Block.__init__(self, cells, name)
+        # This is the sequential representation of the cells, since the self._cells object is a dictionary and therefore
+        # does not guarantee order
         self._seq = cells
 
-    def __getitem__(self, item): # Redondant with the definition given in Block
-        if isinstance(item, int):
-            return list(self._cells.values())[item]
-        else:
-            return self._cells[item]
-
-    def get_index(self, item):
-        for i, cell in enumerate(self._seq):
-            if item.get_name() == cell.get_name():
-                return i
-        raise RuntimeError("Element with name '" + item.get_name() + "' not found in sequence")
+    def __getitem__(self, idx):
+        return self._seq.__getitem__(idx)
 
     def __len__(self):
-        return len(self._seq)
+        return self._seq.__len__()
+
+    def __iter__(self):
+        return self._seq.__iter__()
 
     def insert(self, index, cell):
         self._seq.insert(index, cell)
         self._cells[cell.get_name()] = cell
+
+    def remove(self, cell):
+        self._seq.remove(cell)
+        del self._cells[cell.get_name()]
+
+    def append(self, cell):
+        self._seq.append(cell)
+        self._cells[cell.get_name()] = cell
+
+    def index(self, item):
+        return self._seq.index(item)
 
     def _generate_str(self, indent_level):
         output = "\'" + self.get_name() + "\' " + self.get_type() + "("
@@ -211,14 +231,16 @@ class Iterable(Block, ABC):
         return output
 
 
-    def __iter__(self):
-        return self._seq.__iter__()
 
 class Sequence(Iterable):
+    """
+         This implementation of the Iterable class describes a sequential (vertical) ordering of cells.
+    """
     def __init__(self, cells, name=None):
         Iterable.__init__(self, cells, name)
 
     def __call__(self, x):
+        super().__call__(x)
         x.get_deepnet().begin_group(name=self._name)
         for cell in self:
             x = cell(x)
@@ -226,6 +248,10 @@ class Sequence(Iterable):
         return x
 
 class Layer(Iterable):
+    """
+        This implementation of the Iterable class describes a layered (horizontal) ordering of cells.
+        An optional mapping can be given to define connectivity with preceding input cell
+    """
 
     def __init__(self, cells, mapping=None, name=None):
         Iterable.__init__(self, cells, name)
@@ -236,15 +262,16 @@ class Layer(Iterable):
                 raise n2d2.error_handler.WrongInputType('mapping', type(mapping), [str(type(list))])
 
     def __call__(self, x):
+        super().__call__(x)
         out = []
         if isinstance(x, n2d2.tensor.Interface):
-            inputs = x.get_tensors()
+            x = x.get_tensors()
         else:
-            inputs = [x]
+            x = [x]
         x.get_deepnet().begin_group(name=self._name)
         for out_idx, cell in enumerate(self):
             cell_inputs = []
-            for in_idx, ipt in enumerate(inputs):
+            for in_idx, ipt in enumerate(x):
                 # Default is all-to-all
                 if self._mapping is None or self._mapping[in_idx][out_idx]:
                     cell_inputs.append(ipt)
@@ -253,7 +280,7 @@ class Layer(Iterable):
         return Interface([out])
 
 
-class DeepNetCell(Iterable):
+class DeepNetCell(Block):
     """
     n2d2 Cell wrapper for a N2D2 deepnet object. Allows chaining a N2D2 deepnet (for example loaded from a ONNX or INI file)
     into the dynamic computation graph of the n2d2 API. During each use of the  the __call__ method, 
@@ -272,7 +299,7 @@ class DeepNetCell(Iterable):
             name = None
 
         #self._cells = self._embedded_deepnet.get_cells()
-        Iterable.__init__(self, list(self._embedded_deepnet.get_cells().values()), name=name)
+        Block.__init__(self, list(self._embedded_deepnet.get_cells().values()), name=name)
 
         self._deepnet = self._embedded_deepnet
         self._inference = False
@@ -316,14 +343,14 @@ class DeepNetCell(Iterable):
             N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path))
         return n2d2_deepnet
 
-    def __call__(self, inputs):
-
+    def __call__(self, x):
+        super().__call__(x)
         # TODO: Not tested for other inputs that provider yet
-        if not isinstance(inputs, n2d2.Tensor):
+        if not isinstance(x, n2d2.Tensor):
             raise ValueError("Needs tensor with provider as input")
 
         # Recreate graph with underlying N2D2 deepnet
-        self._deepnet = self.concat_to_deepnet(inputs.get_deepnet())
+        self._deepnet = self.concat_to_deepnet(x.get_deepnet())
 
         #if not provider.dims() == N2D2_object.getStimuliProvider().getData().dims():
         #    raise RuntimeError(
@@ -336,7 +363,7 @@ class DeepNetCell(Iterable):
         #self.get_first().set_deepnet(self._deepnet)
         for cell in self.get_input_cells():
             cell.N2D2().clearInputTensors()
-            cell._link_N2D2_input(inputs.cell)
+            cell._link_N2D2_input(x.cell)
 
         self._deepnet.N2D2().propagate(self._inference)
 

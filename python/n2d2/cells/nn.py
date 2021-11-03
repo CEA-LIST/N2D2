@@ -124,6 +124,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             else:
                 self._config_parameters["activation"] = value
                 if self._N2D2_object:
+                    # TODO: What is this?
                     if value:
                         self._N2D2_object.setActivation(value.N2D2())
                     else:
@@ -168,15 +169,9 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         self._inference = True
         return self
 
-    def _infer_deepnet(self, inputs):
-        if isinstance(inputs, n2d2.tensor.Interface) or isinstance(inputs, n2d2.Tensor):
-            deepnet = inputs.get_deepnet()
-        else:
-            raise TypeError("Object of type " + str(type(inputs)) + " cannot implicitly provide a deepNet to cells.")
-        return deepnet
-
-
     def dims(self):
+        if self.get_outputs().dims() == []:
+            RuntimeError("Cell has no dims since it is not initialized yet.")
         return self.get_outputs().dims()
 
     def get_outputs(self):
@@ -374,13 +369,8 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             output += ""
         return output
 
-    def __call__(self, inputs):
-        """
-        Do the common check on the inputs and infer the deepNet from the inputs.
-        """
-        if not (isinstance(inputs, n2d2.Tensor) or isinstance(inputs, n2d2.Interface)):
-            raise TypeError(self.get_name() + " received an inputs of type " + str(type(inputs)) + ", inputs should be of type n2d2.Tensor instead.")
-        self._deepnet = self._infer_deepnet(inputs)
+    def __call__(self, x):
+        super(NeuralNetworkCell, self).__call__(x)
 
 
 class Fc(NeuralNetworkCell, Datatyped, Trainable):
@@ -650,7 +640,7 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
     #         raise RuntimeError("No Quantizer in cell '" + self.get_name() + "'")
 
     def has_quantizer(self):
-        return True if self.quantizer else False
+        return 'quantizer' in self._config_parameters
 
 
     def set_filler(self, filler, refill=False):
@@ -1034,7 +1024,7 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
         self.weights_solver = solver.copy()
 
     def has_quantizer(self):
-        return True if self.quantizer else False
+        return 'quantizer' in self._config_parameters
 
     def set_weight(self, output_index, channel_index, value):
         """
@@ -1484,17 +1474,17 @@ class GlobalPool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
                                                                          strideDims=[1, 1],
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
 
-            if 'activation' not in self._config_parameters:
-                self._config_parameters['activation'] = \
-                    n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
+            #if 'activation' not in self._config_parameters:
+            #    self._config_parameters['activation'] = \
+            #        n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
 
-            """Set and initialize here all complex cells members"""
-            for key, value in self._config_parameters.items():
-                if key is 'activation':
-                    if value:
-                        self._N2D2_object.setActivation(value.N2D2())
-                else:
-                    self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+            #"""Set and initialize here all complex cells members"""
+            #for key, value in self._config_parameters.items():
+            #    if key is 'activation':
+            #        if value:
+            #            self._N2D2_object.setActivation(value.N2D2())
+            #    else:
+            #        self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
 
             self._N2D2_object.setMapping(n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2())
             self.load_N2D2_parameters(self.N2D2())
@@ -1920,7 +1910,6 @@ class ElemWise(NeuralNetworkCell):
         self._optional_constructor_arguments['shifts'] = N2D2_object.getShifts()
 
     def __call__(self, inputs):
-
         super().__call__(inputs)
 
         if self._N2D2_object is None:
@@ -1962,7 +1951,7 @@ class ElemWise(NeuralNetworkCell):
 
         return self.get_outputs()
 
-
+# TODO: Test
 class Dropout(NeuralNetworkCell, Datatyped):
     """
     Dropout layer :cite:`Srivastava2014`.
@@ -2500,92 +2489,3 @@ class Transpose(NeuralNetworkCell, Datatyped):
         self._N2D2_object.propagate(self._inference)
 
         return self.get_outputs()
-
-
-
-"""
-class Concat(NeuralNetworkCell):
-    _cell_constructors = {
-        'Frame_CUDA': N2D2.ConcatCell_Frame_CUDA,
-    }
-    _parameters = {}
-    _parameters.update(_cell_frame_parameters)
-
-    _convention_converter = n2d2.ConventionConverter(_parameters)
-
-    def __init__(self, dim, from_arguments=True, **config_parameters):
-        
-        #:param dim: dim dimension for concatenation
-        #:type dim: int
-        
-
-        if not from_arguments and (dim is not None or len(config_parameters) > 0):
-            raise RuntimeError("from_arguments = True but not None constructor arguments")
-        if from_arguments:
-            self._create_from_arguments(dim, **config_parameters)
-
-    def _create_from_arguments(self, dim, **config_parameters):
-        if not isinstance(dim, int):
-            raise n2d2.error_handler.WrongInputType("outputs_width", type(dim), ["int"])
-
-        NeuralNetworkCell.__init__(self, **config_parameters)
-
-        #if not dim == 2:
-        #    raise RuntimeError("Only dim=2 is supported at the moment")
-
-        self._constructor_arguments.update({
-            'dim': dim,
-        })
-
-        # No optional parameter
-        self._parse_optional_arguments([])
-
-    @classmethod
-    def create_from_N2D2_object(cls, N2D2_object, n2d2_deepnet=None):
-
-        n2d2_cell = cls(None, from_arguments=False)
-
-        NeuralNetworkCell.__init__(n2d2_cell,
-                                   name=N2D2_object.getName(),
-                                   **cls._get_N2D2_parameters(N2D2_object))
-
-        n2d2_cell._set_N2D2_object(N2D2_object)
-
-        n2d2_cell._constructor_arguments['dim'] = n2d2_cell._N2D2_object.getDim()
-
-        if n2d2_deepnet is not None:
-            n2d2_cell._deepnet = n2d2_deepnet
-            n2d2_cell._sync_inputs_and_parents()
-        else:
-            n2d2_cell._deepnet = None
-            n2d2_cell._N2D2_object.clearInputs()
-
-        return n2d2_cell
-
-    def __call__(self, inputs):
-        super().__call__(inputs)
-
-        if not isinstance(inputs, n2d2.tensor.Interface):
-            raise n2d2.error_handler.WrongInputType("outputs_width", type(inputs), ["n2d2.tensor.Interface"])
-
-        if self._N2D2_object is None:
-            nb_outputs = inputs.dimZ()
-
-            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
-                                                                           self.get_name(),
-                                                                           nb_outputs,
-                                                                           self._constructor_arguments['dim'],
-                                                                           **self.n2d2_function_argument_parser(
-                                                                               self._optional_constructor_arguments)))
-
-            #Set and initialize here all complex cells members
-            for key, value in self._config_parameters.items():
-                self._set_N2D2_parameter(self.python_to_n2d2_convention(key), value)
-
-        self._add_to_graph(inputs)
-
-        self._N2D2_object.propagate(self._inference)
-
-        return self.get_outputs()
-    
-"""

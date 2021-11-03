@@ -502,7 +502,7 @@ class Tensor:
             raise RuntimeError("Trying to synchronize a non-cuda Tensor to host")
         return self
 
-    def detach_cell(self):
+    def detach(self):
         """
         Detach the cells from the tensor, thereby removing all information about the computation graph/deepnet object.
         """
@@ -560,10 +560,16 @@ class Interface(n2d2.provider.Provider):
         if not tensors:
             raise n2d2.error_handler.IsEmptyError('Tensors')
 
-        if not tensors[0].cell: # Check if the first tensor is linked to a deepnet
-            self._deepnet = None
-        else:
-            self._deepnet = tensors[0].cell.get_deepnet()
+        #if not tensors[0].cell: # Check if the first tensor is linked to a deepnet
+        #    self._deepnet = None
+        #else:
+        #    self._deepnet = tensors[0].cell.get_deepnet()
+
+        self._deepnet = None
+        for tensor in tensors: # Check for the first tensor that is linked to a deepnet
+            if tensor.cell:
+                self._deepnet = tensor.cell.get_deepnet()
+                break
         
         nb_channels = 0
         for tensor in tensors:
@@ -577,6 +583,8 @@ class Interface(n2d2.provider.Provider):
                 if tensor.dimB() != tensors[0].dimB():
                     raise ValueError("Tensors should have the same batch size.")
                 current_deepnet = None if not tensor.cell else tensor.cell.get_deepnet()
+                if current_deepnet is None:
+                    current_deepnet = self._deepnet
                 if current_deepnet is not self._deepnet:
                     raise ValueError("The tensors used to create the Interface are not linked to the same DeepNet (maybe you want to detach the cell of the tensors ?).")
                 nb_channels += tensor.dimZ()
@@ -603,5 +611,9 @@ class Interface(n2d2.provider.Provider):
     def dims(self):
         #return [self.dimB(), self.dimZ(), self.dimX(), self.dimY()]
         return [self.dimX(), self.dimY(), self.dimZ(), self.dimB()]
+    def __len__(self):
+        return self.tensors.__len__()
+    def __getitem__(self, item):
+        return self.tensors.__getitem__(item)
     def get_tensors(self):
         return self.tensors
