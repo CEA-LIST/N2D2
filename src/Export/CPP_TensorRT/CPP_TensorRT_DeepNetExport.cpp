@@ -127,7 +127,7 @@ void N2D2::CPP_TensorRT_DeepNetExport
 
     prog << "   std::vector<nvinfer1::ITensor *> in_tensor;\n";
     prog << "   in_tensor.push_back(mNetDef.back()->addInput(\"ENV_INPUT\","
-         << " nvinfer1::DataType::kFLOAT, nvinfer1::DimsCHW{ENV_NB_OUTPUTS,"
+         << " nvinfer1::DataType::kFLOAT, trt_Dims3{ENV_NB_OUTPUTS,"
          << " ENV_SIZE_Y, ENV_SIZE_X}));\n"
         << "\n\n";
 

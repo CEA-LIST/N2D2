@@ -52,6 +52,21 @@
 #include "utils.h"
 #include "common_cuda.hpp"
 
+#if NV_TENSORRT_MAJOR < 5
+    typedef nvinfer1::DimsNCHW trt_Dims4;
+    typedef nvinfer1::DimsCHW trt_Dims3;
+    typedef nvinfer1::DimsHW trt_Dims2;
+    typedef nvinfer1::DimsHW trt_DimsHW;
+
+#else
+    typedef nvinfer1::Dims4 trt_Dims4;
+    typedef nvinfer1::Dims3 trt_Dims3;
+    typedef nvinfer1::Dims2 trt_Dims2;
+    typedef nvinfer1::DimsHW trt_DimsHW;
+#endif
+
+
+
 static unsigned int nextDivisor(unsigned int target, unsigned int value)
 {
     unsigned int v = value;
