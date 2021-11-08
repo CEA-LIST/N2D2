@@ -104,7 +104,7 @@ class Score(Target):
         Target.__init__(self, provider, **config_parameters)
 
     def __call__(self, inputs):
-        if self._N2D2_object is None:
+        if self._N2D2_object is None: # TODO : We allow the user to modify the graph but we do not check if the target is associated with the last cell.
             self._N2D2_object = N2D2.TargetScore(self._constructor_parameters['name'],
                                                  inputs.cell.N2D2(),
                                                  self._provider.N2D2(),

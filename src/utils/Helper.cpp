@@ -318,7 +318,7 @@ namespace N2D2_HELPER{
                                                         "integer exports");
         exportNoCrossLayerEqualization =   opts.parse("-no-cle", "disable the use of cross layer"
                                                             " equalization in integer exports");
-        exportNbStimuliMax = opts.parse("-db-export", -1, "max. number of stimuli to export "
+        exportNbStimuliMax = opts.parse("-db-export", exportNbStimuliMax, "max. number of stimuli to export "
                                                         "(0 = no dataset export, -1 = unlimited)");
         qatSAT = opts.parse("-qat-sat","fuse a QAT trained with SAT method ");
         N2D2::DeepNetExport::setExportParameters(opts.parse("-export-parameters", std::string(), 

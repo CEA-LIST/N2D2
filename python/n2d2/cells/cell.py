@@ -449,6 +449,8 @@ class DeepNetCell(Iterable):
 
     def get_output_cells(self):
         """Returns the cells located at the end of the network.
+        :return: Return a list of cells located at the end of the network
+        :rtype: list
         """
         output = []
         cells = self._embedded_deepnet.get_groups().get_elements()[-1]
@@ -459,10 +461,8 @@ class DeepNetCell(Iterable):
             output.append(cells)
         return output
 
-    def fit(self, provider, target, learn_epoch=0, log_epoch=1000, avg_window=10000, bench=False, ban_multi_device=False, valid_metric="Sensitivity", stop_valid=0, log_kernels=False): # TODO : rename to avoid copying tf ?
+    def fit(self, learn_epoch=0, log_epoch=1000, avg_window=10000, bench=False, ban_multi_device=False, valid_metric="Sensitivity", stop_valid=0, log_kernels=False): # TODO : rename to avoid copying tf ?
         """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
-        :param provider: The data provider used for the training of your neural network.
-        :type provider: :py:class:`n2d2.provider.DataProvider`
         :param learn_epoch: The number of epochs steps, default=0
         :type learn_epoch: int, optional
         :param log_epoch: The number of epochs between logs, default=1000
@@ -487,21 +487,37 @@ class DeepNetCell(Iterable):
             raise n2d2.error_handler.WrongValue("metric", valid_metric, ", ".join(N2D2.ConfusionTableMetric.__members__.keys()))
         else:
             N2D2_valid_metric = N2D2.ConfusionTableMetric.__members__[valid_metric]
-        if not isinstance(provider, n2d2.provider.DataProvider):
-            raise n2d2.error_handler.WrongInputType("provider", type(provider), [str(type(n2d2.provider.DataProvider))])
-        
+
         # Generating the N2D2 DeepNet
-        dummy_input = n2d2.Tensor(provider.dims(), cuda=n2d2.global_variables.cuda_compiled, dim_format="N2D2")
-        dummy_output = target(self(dummy_input))
-        N2D2_deepnet = dummy_output.get_deepnet().N2D2()
-        target.clear_success() # removing the dummy batch TODO useless ?
-        N2D2_deepnet.setStimuliProvider(provider.N2D2())
-        N2D2_deepnet.setDatabase(provider.get_database().N2D2())
-        
+        N2D2_deepnet = self._embedded_deepnet.N2D2()
+        N2D2_deepnet.initialize()
+
         # Calling learn function
         parameters = n2d2.n2d2_interface.Options(
-                        avg_window=avg_window, bench=bench, learnEpoch=learn_epoch,
+                        avg_window=avg_window, bench=bench, learn_epoch=learn_epoch,
                         log_epoch=log_epoch, ban_multi_device=ban_multi_device,
                          valid_metric=N2D2_valid_metric, 
                         stop_valid=stop_valid, log_kernels=log_kernels)
         N2D2.learn_epoch(parameters.N2D2(), N2D2_deepnet)
+
+        # TEST FUNCTION
+        log = 1000
+        report = 100
+        test_index = -1
+        test_id = -1
+        qat_sat = False
+        log_kernels = False
+        wt_round_mode = N2D2.WeightsApprox.__members__["NONE"]
+        b_round_mode = N2D2.WeightsApprox.__members__["NONE"]
+        c_round_mode = N2D2.WeightsApprox.__members__["NONE"]
+        act_scaling_mode = N2D2.ScalingMode.__members__["FLOAT_MULT"]
+        test_dir_name = "test"
+        log_JSON = False
+        log_outputs = 0
+        parameters2 = n2d2.n2d2_interface.Options(log=log, report=report,
+                        test_index=test_index, test_id=test_id, qat_SAT=qat_sat,
+                        wt_round_mode=wt_round_mode, b_round_mode=b_round_mode,
+                        c_round_mode=c_round_mode, act_scaling_mode=act_scaling_mode,
+                        ini_config="/"+test_dir_name+"ini", log_JSON=log_JSON, log_outputs=log_outputs,
+                        bench=bench,  log_kernels=log_kernels)
+        N2D2.test(parameters2.N2D2(), N2D2_deepnet, False)
