@@ -245,8 +245,7 @@ namespace N2D2_HELPER{
         stopValid =   opts.parse("-stop-valid", stopValid, "max. number of successive lower score "
                                                 "validation");
         test =        opts.parse("-test", "perform testing");
-        std::cout << test << std::endl;
-        testQAT =        opts.parse("-testQAT", "perform testing");
+        testQAT =     opts.parse("-testQAT", "perform testing");
         fuse =        opts.parse("-fuse", "fuse BatchNorm with Conv for test and export");
         bench =       opts.parse("-bench", "learning speed benchmarking");
         learnStdp =   opts.parse("-learn-stdp", learnStdp, "number of STDP learning steps");
@@ -264,7 +263,7 @@ namespace N2D2_HELPER{
                                                     "stimulus (0 = no log)");
         logJSON =     opts.parse("-log-json", "log JSON annotations");
         logDbStats =  opts.parse("-log-db-stats", "log database stimuli and ROIs stats");
-        logKernels =  opts.parse("-log-kernels", "log kernels afer learning");
+        logKernels =  opts.parse("-log-kernels", "log kernels after learning");
         genConfig =   opts.parse("-cfg", "save base configuration and exit");
         genExport =   opts.parse("-export", genExport, "generate an export and exit");
         nbBits =      opts.parse("-nbbits", nbBits, "number of bits per weight for exports");

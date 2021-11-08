@@ -500,24 +500,57 @@ class DeepNetCell(Iterable):
                         stop_valid=stop_valid, log_kernels=log_kernels)
         N2D2.learn_epoch(parameters.N2D2(), N2D2_deepnet)
 
-        # TEST FUNCTION
-        log = 1000
-        report = 100
-        test_index = -1
-        test_id = -1
-        qat_sat = False
-        log_kernels = False
-        wt_round_mode = N2D2.WeightsApprox.__members__["NONE"]
-        b_round_mode = N2D2.WeightsApprox.__members__["NONE"]
-        c_round_mode = N2D2.WeightsApprox.__members__["NONE"]
-        act_scaling_mode = N2D2.ScalingMode.__members__["FLOAT_MULT"]
-        test_dir_name = "test"
-        log_JSON = False
-        log_outputs = 0
+    def run_test(self, log = 1000, report = 100, test_index = -1, test_id = -1, 
+                 qat_sat = False, log_kernels = False, wt_round_mode = "NONE", 
+                 b_round_mode = "NONE", c_round_mode = "NONE", 
+                 act_scaling_mode = "FLOAT_MULT", test_dir_name = "test", log_JSON = False, log_outputs = 0):
+        """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
+        :param log: The number of steps between logs, default=1000
+        :type log: int, optional
+        :param report: Number of steps between reportings, default=100
+        :type report: int, optional
+        :param test_index: Test a single specific stimulus index in the Test set, default=-1
+        :type test_index: int, optional
+        :param test_id: Test a single specific stimulus ID (takes precedence over `test_index`), default=-1
+        :type test_id: int, optional
+        :param qat_sat: Fuse a QAT trained with SAT method, default=False
+        :type qat_sat: bool, optional
+        :param log_kernels: Log kernels after learning, default=False
+        :type log_kernels: bool, optional
+        :param wt_round_mode: Weights clipping mode on export, can be `NONE`,`RINTF`, default="NONE"
+        :type wt_round_mode: str, optional
+        :param b_round_mode: Biases clipping mode on export, can be `NONE`,`RINTF`, default="NONE"
+        :type b_round_mode: str, optional
+        :param c_round_mode: Clip clipping mode on export, can be `NONE`,`RINTF`, default="NONE"
+        :type c_round_mode: str, optional
+        :param act_scaling_mode: activation scaling mode on export, can be `NONE`, `FLOAT_MULT`, `FIXED_MULT16`, `SINGLE_SHIFT` or `DOUBLE_SHIFT`, default="FLOAT_MULT"
+        :type act_scaling_mode: str, optional
+        :param log_JSON: If ``True``, log JSON annotations, default=False
+        :type log_JSON: bool, optional
+        :param log_outputs: log layers outputs for the n-th stimulus (0 = no log), default=0
+        :type log_outputs: int, optional
+        """
+        if wt_round_mode not in N2D2.WeightsApprox.__members__.keys():
+            raise n2d2.error_handler.WrongValue("wt_round_mode", wt_round_mode, ", ".join(N2D2.WeightsApprox.__members__.keys()))
+        else:
+            N2D2_wt_round_mode = N2D2.WeightsApprox.__members__[wt_round_mode]
+        if b_round_mode not in N2D2.WeightsApprox.__members__.keys():
+            raise n2d2.error_handler.WrongValue("b_round_mode", b_round_mode, ", ".join(N2D2.WeightsApprox.__members__.keys()))
+        else:
+            N2D2_b_round_mode = N2D2.WeightsApprox.__members__[b_round_mode]
+        if c_round_mode not in N2D2.WeightsApprox.__members__.keys():
+            raise n2d2.error_handler.WrongValue("b_round_mode", c_round_mode, ", ".join(N2D2.WeightsApprox.__members__.keys()))
+        else:
+            N2D2_c_round_mode = N2D2.WeightsApprox.__members__[c_round_mode]
+
+        if act_scaling_mode not in N2D2.ScalingMode.__members__.keys():
+            raise n2d2.error_handler.WrongValue("act_scaling_mode", act_scaling_mode, ", ".join(N2D2.ScalingMode.__members__.keys()))
+        else:
+            N2D2_act_scaling_mode = N2D2.ScalingMode.__members__[act_scaling_mode]
+
         parameters2 = n2d2.n2d2_interface.Options(log=log, report=report,
                         test_index=test_index, test_id=test_id, qat_SAT=qat_sat,
-                        wt_round_mode=wt_round_mode, b_round_mode=b_round_mode,
-                        c_round_mode=c_round_mode, act_scaling_mode=act_scaling_mode,
-                        ini_config="/"+test_dir_name+"ini", log_JSON=log_JSON, log_outputs=log_outputs,
-                        bench=bench,  log_kernels=log_kernels)
-        N2D2.test(parameters2.N2D2(), N2D2_deepnet, False)
+                        wt_round_mode=N2D2_wt_round_mode, b_round_mode=N2D2_b_round_mode,
+                        c_round_mode=N2D2_c_round_mode, act_scaling_mode=N2D2_act_scaling_mode,
+                        log_JSON=log_JSON, log_outputs=log_outputs, log_kernels=log_kernels)
+        N2D2.test(parameters2.N2D2(), self._embedded_deepnet.N2D2(), False)
