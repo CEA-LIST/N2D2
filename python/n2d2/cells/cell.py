@@ -322,7 +322,7 @@ class DeepNetCell(Iterable):
             N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path))
         return n2d2_deepnet
 
-    def __call__(self, inputs):
+    def __call__(self, inputs): # TODO : Only call propagate on the embded deepNet
 
         # TODO: Not tested for other inputs that provider yet
         if not isinstance(inputs, n2d2.Tensor):
@@ -353,6 +353,10 @@ class DeepNetCell(Iterable):
             return outputs[0]
         else:
             return outputs
+
+    def append_cell(self, cell):  # TODO : test if it work (especially with the target)
+        self._deepnet.N2D2().addCell(cell.N2D2(), [o_cell.N2D2() for o_cell in self._deepnet.get_output_cells()])
+        self._seq.append(cell)
 
     def concat_to_deepnet(self, deepnet):
         new_n2d2_deepnet = deepnet
@@ -503,7 +507,7 @@ class DeepNetCell(Iterable):
     def run_test(self, log = 1000, report = 100, test_index = -1, test_id = -1, 
                  qat_sat = False, log_kernels = False, wt_round_mode = "NONE", 
                  b_round_mode = "NONE", c_round_mode = "NONE", 
-                 act_scaling_mode = "FLOAT_MULT", test_dir_name = "test", log_JSON = False, log_outputs = 0):
+                 act_scaling_mode = "FLOAT_MULT", log_JSON = False, log_outputs = 0):
         """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
         :param log: The number of steps between logs, default=1000
         :type log: int, optional
@@ -548,9 +552,9 @@ class DeepNetCell(Iterable):
         else:
             N2D2_act_scaling_mode = N2D2.ScalingMode.__members__[act_scaling_mode]
 
-        parameters2 = n2d2.n2d2_interface.Options(log=log, report=report,
+        parameters = n2d2.n2d2_interface.Options(log=log, report=report,
                         test_index=test_index, test_id=test_id, qat_SAT=qat_sat,
                         wt_round_mode=N2D2_wt_round_mode, b_round_mode=N2D2_b_round_mode,
                         c_round_mode=N2D2_c_round_mode, act_scaling_mode=N2D2_act_scaling_mode,
                         log_JSON=log_JSON, log_outputs=log_outputs, log_kernels=log_kernels)
-        N2D2.test(parameters2.N2D2(), self._embedded_deepnet.N2D2(), False)
+        N2D2.test(parameters.N2D2(), self._embedded_deepnet.N2D2(), False)

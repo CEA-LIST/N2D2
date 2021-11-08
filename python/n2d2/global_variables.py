@@ -82,7 +82,11 @@ class GlobalVariables:
         return self._cuda_device
     @cuda_device.setter
     def cuda_device(self, value):
+        if value > N2D2.CudaContext.nbDevice():
+            raise RuntimeError(f"Cannot set device {value}, you have {N2D2.CudaContext.nbDevice()} devices")
         self._cuda_device = value
+        N2D2.setCudaDeviceOption(value) # Setting this variable is mandatory to use the fit method otherwise, 
+                                # the device used for learning would be 0 (default value)
         N2D2.CudaContext.setDevice(value)
 
     @property

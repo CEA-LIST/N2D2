@@ -102,6 +102,7 @@ namespace N2D2_HELPER{
     };
     #ifdef CUDA
     extern unsigned int cudaDevice;
+    void setCudaDeviceOption(unsigned int value);
     std::vector<unsigned int> setMultiDevices(std::string cudaDev);
     #endif
 
