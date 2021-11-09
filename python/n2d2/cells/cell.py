@@ -236,6 +236,7 @@ class Sequence(Iterable):
 
     def to_deepnet_cell(self, provider):
         """Convert a :py:class:`n2d2.cells.Sequence` to a :py:class:`n2d2.cells.DeepNetCell`
+
         :param provider: Data provider used by the neural network
         :type provider: :py:class:`n2d2.provider.DataProvider`
         :return: The corresponding :py:class:`n2d2.cells.DeepNetCell`
@@ -288,6 +289,12 @@ class DeepNetCell(Iterable):
     """
 
     def __init__(self, N2D2_object):
+        """As a user, you should **not** use this method, if you want to create a DeepNetCell object, please use :
+        :py:meth:`n2d2.cells.DeepNetCell.load_from_ONNX`, :py:meth:`n2d2.cells.DeepNetCell.load_from_INI`, :py:meth:`n2d2.cells.Sequence.to_deepnet_cell`
+
+        :param N2D2_object: The N2D2 DeepNet object
+        :type N2D2_object: :py:class:`N2D2.DeepNet`
+        """
 
         # Save
         self._embedded_deepnet = DeepNet.create_from_N2D2_object(N2D2_object)
@@ -373,10 +380,6 @@ class DeepNetCell(Iterable):
             return outputs[0]
         else:
             return outputs
-
-    def append_cell(self, cell):  # TODO : test if it work (especially with the target)
-        self._deepnet.N2D2().addCell(cell.N2D2(), [o_cell.N2D2() for o_cell in self._deepnet.get_output_cells()])
-        self._seq.append(cell)
 
     def concat_to_deepnet(self, deepnet):
         new_n2d2_deepnet = deepnet
@@ -473,6 +476,7 @@ class DeepNetCell(Iterable):
 
     def get_output_cells(self):
         """Returns the cells located at the end of the network.
+
         :return: Return a list of cells located at the end of the network
         :rtype: list
         """
@@ -485,8 +489,9 @@ class DeepNetCell(Iterable):
             output.append(cells)
         return output
 
-    def fit(self, learn_epoch=0, log_epoch=1000, avg_window=10000, bench=False, ban_multi_device=False, valid_metric="Sensitivity", stop_valid=0, log_kernels=False): # TODO : rename to avoid copying tf ?
+    def fit(self, learn_epoch, log_epoch=1000, avg_window=10000, bench=False, ban_multi_device=False, valid_metric="Sensitivity", stop_valid=0, log_kernels=False): # TODO : rename to avoid copying tf ?
         """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
+        
         :param learn_epoch: The number of epochs steps, default=0
         :type learn_epoch: int, optional
         :param log_epoch: The number of epochs between logs, default=1000
@@ -499,13 +504,10 @@ class DeepNetCell(Iterable):
         :type valid_metric: str, optional
         :param stop_valid: The maximum number of successive lower score validation, default=0
         :type stop_valid: int, optional
-        :param log_kernels: If ``True``, log kernels afer learning, default=False
+        :param log_kernels: If ``True``, log kernels after learning, default=False
         :type log_kernels: bool, optional
         """
 
-        """
-        - Epoch as a mandatory argument ?
-        """
         # Checking inputs
         if valid_metric not in N2D2.ConfusionTableMetric.__members__.keys():
             raise n2d2.error_handler.WrongValue("metric", valid_metric, ", ".join(N2D2.ConfusionTableMetric.__members__.keys()))
@@ -529,6 +531,7 @@ class DeepNetCell(Iterable):
                  b_round_mode = "NONE", c_round_mode = "NONE", 
                  act_scaling_mode = "FLOAT_MULT", log_JSON = False, log_outputs = 0):
         """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
+        
         :param log: The number of steps between logs, default=1000
         :type log: int, optional
         :param report: Number of steps between reportings, default=100

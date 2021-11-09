@@ -50,7 +50,7 @@ each layer is done the following:
    Another, simpler method, is to just clip the values above a fixed quantile.
 
 
-.. figure:: ../_static/activations_histogram.png
+.. figure:: /_static/activations_histogram.png
    :alt: Activation values histogram and corresponding thresholds.
 
 
