@@ -34,6 +34,7 @@
 #include "Cell/FcCell.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/PaddingCell.hpp"
+#include "Cell/ReshapeCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
 #include "Cell/Cell_CSpike_Top.hpp"
 #include "utils/Utils.hpp"
@@ -1527,6 +1528,54 @@ void N2D2::DeepNet::removeDropout() {
 
             removeCell(cell, true);
         }
+    }
+}
+
+void N2D2::DeepNet::removeExtraReshape() {
+    std::cout << "Remove extra Reshape..." << std::endl;
+
+    for (auto it = mCells.begin(); it != mCells.end(); ) {
+        const std::shared_ptr<Cell>& cell = (*it).second;
+        ++it; // increase it before being potentially invalided by removeCell()
+
+        if (cell->getType() != ReshapeCell::Type) {
+            continue;
+        }
+
+        const std::vector<std::shared_ptr<Cell> > childs
+            = getChildCells(cell->getName());
+
+        if (childs.empty())
+            continue;
+
+        // check if Reshape is the only childs
+        bool remove = true;
+
+        for (auto itChild = childs.begin(); itChild != childs.end();
+            ++itChild)
+        {
+            if ((*itChild)->getType() != ReshapeCell::Type)
+            {
+                remove = false;
+                break;
+            }
+
+            // check if childs Reshape have other parents
+            const std::vector<std::shared_ptr<Cell> > childParents
+                = getParentCells((*itChild)->getName());
+
+            if (childParents.size() > 1) {
+                remove = false;
+                break;
+            }
+        }
+
+        if (!remove)
+            continue;
+
+        std::cout << "  remove useless Reshape \"" << cell->getName() << "\""
+            << std::endl;
+        removeCell(cell, true);
     }
 }
 

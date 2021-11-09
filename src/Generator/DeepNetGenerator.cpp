@@ -430,6 +430,8 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
         }
     }
 
+    deepNet->removeExtraReshape();
+
     if (deepNet->getTargets().empty())
         throw std::runtime_error(
             "Missing target cell (no [*.Target] section found)");
