@@ -194,6 +194,8 @@ class Iterable(Block, ABC):
         return len(self._seq)
 
     def insert(self, index, cell):
+        if not isinstance(cell, n2d2.cells.Cell):
+            raise n2d2.error_handler.WrongInputType("cell", type(cell), ["n2d2.cells.Cell"])
         if index < 0:
             raise ValueError("Negative index are not supported.")
         self._seq.insert(index, cell)
@@ -201,6 +203,8 @@ class Iterable(Block, ABC):
 
     def append(self, cell):
         """Append a cell at the end of the sequence."""
+        if not isinstance(cell, n2d2.cells.Cell):
+            raise n2d2.error_handler.WrongInputType("cell", type(cell), ["n2d2.cells.Cell"])
         self._seq.append(cell)
         self._cells[cell.get_name()] = cell
 
@@ -216,7 +220,6 @@ class Iterable(Block, ABC):
         output += "\n" + ((indent_level - 1) * "\t") + ")"
         return output
 
-
     def __iter__(self):
         return self._seq.__iter__()
 
@@ -230,6 +233,23 @@ class Sequence(Iterable):
             x = cell(x)
         x.get_deepnet().end_group()
         return x
+
+    def to_deepnet_cell(self, provider):
+        """Convert a :py:class:`n2d2.cells.Sequence` to a :py:class:`n2d2.cells.DeepNetCell`
+        :param provider: Data provider used by the neural network
+        :type provider: :py:class:`n2d2.provider.DataProvider`
+        :return: The corresponding :py:class:`n2d2.cells.DeepNetCell`
+        :rtype: :py:class:`n2d2.cells.DeepNetCell`
+        """
+        if not isinstance(provider, n2d2.provider.DataProvider):
+            raise n2d2.error_handler.WrongInputType("provider", type(provider), ["n2d2.provider.DataProvider"])
+        target = n2d2.target.Score(provider)
+        dummy_input = provider.read_random_batch()
+        dummy_output = target(self(dummy_input))
+        N2D2_deepnet = dummy_output.get_deepnet().N2D2()
+        N2D2_deepnet.addTarget(target.N2D2())
+        N2D2_deepnet.setDatabase(provider.N2D2().getDatabase())
+        return DeepNetCell(N2D2_deepnet)
 
 class Layer(Iterable):
 
@@ -261,7 +281,7 @@ class Layer(Iterable):
 
 class DeepNetCell(Iterable):
     """
-    n2d2 Cell wrapper for a N2D2 deepnet object. Allows chaining a N2D2 deepnet (for example loaded from a ONNX or INI file)
+    n2d2 wrapper for a N2D2 deepnet object. Allows chaining a N2D2 deepnet (for example loaded from a ONNX or INI file)
     into the dynamic computation graph of the n2d2 API. During each use of the  the __call__ method, 
     the N2D2 deepnet is converted to a n2d2 representation and the N2D2 deepnet is concatenated to the deepnet of the 
     incoming tensor object.
