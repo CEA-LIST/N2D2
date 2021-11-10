@@ -188,15 +188,12 @@ class Group:
 
     def get_cells(self):
         cells = {}
-        self._get_cells(cells)
-        return cells
-
-    def _get_cells(self, cells):
         for elem in self._elements:
             if isinstance(elem, Group):
-                elem._get_cells(cells)
+                cells.update(elem.get_cells())
             else:
                 cells[elem.get_name()] = elem
+        return cells
 
     def get_group(self, group_id):
         if isinstance(group_id, int):
