@@ -340,6 +340,7 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
             for(const std::string& childName: children) {
                 auto child = mCells.at(childName);
                 const Tensor<bool> mapping = child->getMapping().clone();
+                const bool isMapping = (child->getType() != ReshapeCell::Type);
                 child->clearInputs();
 
                 unsigned int nbChannels = 0;
@@ -348,8 +349,10 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
                     const std::string parentName = parents[k];
 
                     if (parentName == "env") {
-                        const Tensor<bool> parentMapping = mapping.rows(
-                            nbChannels, mStimuliProvider->getNbChannels());
+                        const Tensor<bool> parentMapping = (isMapping)
+                            ? mapping.rows(nbChannels,
+                                           mStimuliProvider->getNbChannels())
+                            : Tensor<bool>();
                         nbChannels += mStimuliProvider->getNbChannels();
 
                         child->addInput(*mStimuliProvider, 0, 0,
@@ -358,8 +361,10 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
                     }
                     else {
                         auto parentCell = mCells.at(parentName);
-                        const Tensor<bool> parentMapping = mapping.rows(
-                            nbChannels, parentCell->getNbOutputs());
+                        const Tensor<bool> parentMapping = (isMapping)
+                            ? mapping.rows(nbChannels,
+                                           parentCell->getNbOutputs())
+                            : Tensor<bool>();
                         nbChannels += parentCell->getNbOutputs();
 
                         child->addInput(parentCell.get(), parentMapping);
