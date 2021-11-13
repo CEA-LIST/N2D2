@@ -133,6 +133,12 @@ void N2D2::CPP_FcCellExport::generateHeaderWeights(const FcCell & cell, std::ofs
 
     header << "{\n";
 
+    const Cell_Frame_Top* cellFrame
+        = dynamic_cast<const Cell_Frame_Top*>(&cell);
+
+    if (cellFrame != NULL)
+        cellFrame->synchronizeToH(false);
+
     Tensor<Float_T> weight;
     
     // Need it in OHWC order, the order in the weights tensor is OCHW.
@@ -158,6 +164,9 @@ void N2D2::CPP_FcCellExport::generateHeaderWeights(const FcCell & cell, std::ofs
             }
         }
     }
+
+    if (cellFrame != NULL)
+        cellFrame->keepInSync(true);
 
     header << "};\n\n";
 }
