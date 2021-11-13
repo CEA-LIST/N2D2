@@ -61,12 +61,16 @@ void N2D2::CPP_ReshapeCellExport::generateHeaderConstants(const ReshapeCell& cel
     const std::string identifier = N2D2::Utils::CIdentifier(cell.getName());
     const std::string prefix = N2D2::Utils::upperCase(identifier);
 
+    const std::vector<size_t>& shape = cell.getOutputsDims();
+
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs() << "\n"
            << "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels() << "\n"
            << "#define " << prefix << "_OUTPUTS_WIDTH " << cell.getOutputsWidth() << "\n"
            << "#define " << prefix << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
            << "#define " << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth() << "\n"
-           << "#define " << prefix << "_CHANNELS_HEIGHT " << cell.getChannelsHeight() << "\n\n";
+           << "#define " << prefix << "_CHANNELS_HEIGHT " << cell.getChannelsHeight() << "\n"
+           << "const int " << prefix << "_SHAPE[" << shape.size() << "] = {"
+            << Utils::join(shape.begin(), shape.end(), ',') << "};\n\n";
 
     header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix << "_NB_OUTPUTS*" 
                                                         << prefix << "_OUTPUTS_WIDTH*" 
