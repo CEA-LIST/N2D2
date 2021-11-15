@@ -36,6 +36,7 @@ typedef enum {
 typedef enum {
     Max,
     Average,
+    NearestNeighbor,
     Bilinear,
     BilinearTF
 } Pooling_T;
