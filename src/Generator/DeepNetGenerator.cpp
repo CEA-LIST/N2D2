@@ -727,13 +727,10 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     && std::all_of(sp->getSize().begin() + size.size(),
                                 sp->getSize().end(), [](size_t i){return i == 1;})))
             {
-                std::ostringstream errorStr;
-                errorStr << "Unexpected size for ONNX input \""
+                std::cout << Utils::cwarning << "Unexpected size for ONNX input \""
                     << valueInfo->name() << "\": got " << size
                     << " , but StimuliProvider provides " << sp->getSize()
-                    << std::endl;
-
-                throw std::runtime_error(errorStr.str());
+                    << Utils::cdef << std::endl;
             }
         }
     }

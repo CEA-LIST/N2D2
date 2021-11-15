@@ -86,6 +86,9 @@ protected:
     static std::pair<std::vector<unsigned char>, double> approximateScalingWithPowerOf2Divs(
                                                 Float_T scaling, std::size_t nbDivisions);
 
+    static void approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
+                                       std::size_t nbBits);
+
 private:
     /**
      * Return the scalings that have been applied to the biasses of each layer. 
@@ -143,8 +146,6 @@ private:
                                                 std::size_t nbDivisions);
 
 
-    static void approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
-                                       std::size_t nbBits);
 
 };
 

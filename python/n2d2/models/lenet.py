@@ -20,55 +20,53 @@
 """
 
 from n2d2.utils import ConfigSection
-from n2d2.cells.nn import Fc, Conv, Softmax, Pool2d
+from n2d2.cells.nn import Fc, Conv, Pool2d, BatchNorm2d, Dropout
 from n2d2.cells import Sequence
-from n2d2.activation import Rectifier
-from n2d2.solver import SGD
-from n2d2.filler import Normal, He
-import n2d2.global_variables
+from n2d2.activation import Rectifier, Linear
+from n2d2.filler import Normal, Xavier
 
-solver_config = ConfigSection(learning_rate=0.05, momentum=0.9, decay=0.0005, learning_rate_decay=0.993)
 
 def conv_def():
-    weights_filler = He()
-    weights_solver = SGD(**solver_config)
-    bias_solver = SGD(**solver_config)
-    return ConfigSection(activation=Rectifier(), weights_solver=weights_solver, bias_solver=bias_solver,
-                           no_bias=True, weights_filler=weights_filler)
+    weights_filler = Xavier(variance_norm='FanOut', scaling=1.0)
+    return ConfigSection(activation=Linear(), no_bias=True, weights_filler=weights_filler)
 
 def fc_def():
     weights_filler = Normal(mean=0.0, std_dev=0.01)
-    weights_solver = SGD(**solver_config)
-    bias_solver = SGD(**solver_config)
-    return ConfigSection(weights_solver=weights_solver, bias_solver=bias_solver,
-                           no_bias=True, weights_filler=weights_filler)
+    return ConfigSection(no_bias=True, weights_filler=weights_filler)
 
 def bn_def():
-    scale_solver = SGD(**solver_config)
-    bias_solver = SGD(**solver_config)
-    return ConfigSection(activation=Rectifier(), scale_solver=scale_solver, bias_solver=bias_solver)
+    return ConfigSection(activation=Rectifier())
+
+
 
 class LeNet(Sequence):
     def __init__(self, nb_outputs=10):
-        conv2_mapping = n2d2.Tensor([6, 16], datatype="bool")
-        conv2_mapping.set_values([
-            [1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1],
-            [1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1],
-            [1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1],
-            [0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1],
-            [0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1],
-            [0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1]])
-
         Sequence.__init__(self, [
             Conv(1, 6, kernel_dims=[5, 5], **conv_def()),
             Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling='Max'),
-            Conv(6, 16, kernel_dims=[5, 5], mapping=conv2_mapping, **conv_def()),
+            Conv(6, 16, kernel_dims=[5, 5], **conv_def()),
             Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling='Max'),
             Conv(16, 120, kernel_dims=[5, 5], **conv_def()),
-            Fc(120, 84, **fc_def()),
-            Fc(84, nb_outputs, **fc_def()),
-            # Softmax(with_loss=True),
-            Softmax(),
+            Fc(120, 84, activation=Rectifier(), **fc_def()),
+            Dropout(dropout=0.5),
+            Fc(84, nb_outputs, activation=Linear(), **fc_def()),
+        ])
+
+
+class LeNetBN(Sequence):
+    def __init__(self, nb_outputs=10):
+        Sequence.__init__(self, [
+            Conv(1, 6, kernel_dims=[5, 5], **conv_def()),
+            BatchNorm2d(6, **bn_def()),
+            Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling='Max'),
+            Conv(6, 16, kernel_dims=[5, 5], **conv_def()),
+            BatchNorm2d(16, **bn_def()),
+            Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling='Max'),
+            Conv(16, 120, kernel_dims=[5, 5], **conv_def()),
+            BatchNorm2d(120, **bn_def()),
+            Fc(120, 84, activation=Rectifier(), **fc_def()),
+            Dropout(dropout=0.5),
+            Fc(84, nb_outputs, activation=Linear(), **fc_def()),
         ])
 
 

@@ -153,6 +153,13 @@ class DeepNet(N2D2_Interface):
         """
         self.N2D2().exportNetworkFreeParameters(dirname)
 
+    def log_stats(self, dirname):
+        """Export statistics of the deepnet graph
+        :param dirname: path to the directory where you want to save the data.
+        :type dirname: str
+        """
+        self.N2D2().logStats(dirname)
+
     def __str__(self):
         return self._groups.__str__()
 
@@ -181,15 +188,12 @@ class Group:
 
     def get_cells(self):
         cells = {}
-        self._get_cells(cells)
-        return cells
-
-    def _get_cells(self, cells):
         for elem in self._elements:
             if isinstance(elem, Group):
-                elem._get_cells(cells)
+                cells.update(elem.get_cells())
             else:
                 cells[elem.get_name()] = elem
+        return cells
 
     def get_group(self, group_id):
         if isinstance(group_id, int):
