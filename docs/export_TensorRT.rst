@@ -7,7 +7,7 @@ C++ export using TensorRT.
 
 .. code-block::
 
-    n2d2 MobileNet_ONNX.ini -seed 1 -w /dev/null -export CPP_TensorRT -nbbits 32
+    n2d2 MobileNet_ONNX.ini -seed 1 -w /dev/null -export CPP_TensorRT -nbbits -32
 
 .. Warning::
 
@@ -37,6 +37,23 @@ https://docs.nvidia.com/deeplearning/tensorrt/developer-guide/index.html#add_cus
 
 The plugin layers that N2D2 TensorRT generator implements are available in the folder ``export/CPP_TensorRT/include/plugins/``. These layers are
 used by the N2D2 TensorRT generator when TensorRT doesn't provide support to a requested layers.
+
+
+Export parameters
+~~~~~~~~~~~~~~~~~
+
+Extra parameters can be passed during export using the 
+``-export-parameters params.ini`` command line argument. The parameters must be 
+saved in an INI-like file.
+
+List of available parameters:
+
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| Argument [default value]                                        | Description                                                                                                              |
++=================================================================+==========================================================================================================================+
+| ``GenStimuliCalib`` [1]                                         | If true (1), generate calibration files, necessary for 8-bits precision.                                                 |
+|                                                                 | Beware that calibration files may take a lot of disk space!                                                              |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
 
 
 Benchmark your TensorRT Model - C++ Benchmark
