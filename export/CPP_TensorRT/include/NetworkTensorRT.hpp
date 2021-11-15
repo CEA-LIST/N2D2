@@ -432,6 +432,18 @@ public:
 
     std::vector<nvinfer1::ITensor *>
                 add_reshape(std::string layerName,
+                            unsigned int nbDims,
+                            const int shape[],
+                            std::vector<nvinfer1::ITensor *> inputs_tensor);
+
+    std::vector<nvinfer1::ITensor *>
+                add_transpose(std::string layerName,
+                            unsigned int nbDims,
+                            const int perm[],
+                            std::vector<nvinfer1::ITensor *> inputs_tensor);
+
+    std::vector<nvinfer1::ITensor *>
+                add_group_reshape(std::string layerName,
                             unsigned int groupSize,
                             bool restoreShape,
                             std::vector<nvinfer1::ITensor *> inputs_tensor);
