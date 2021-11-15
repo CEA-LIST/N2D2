@@ -368,8 +368,7 @@ class DeepNetCell(Block):
         ini_parser.currentSection("onnx", True)
         N2D2_deepnet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, ini_parser,
                                             N2D2_deepnet, [None])
-        n2d2_deepnet = cls(N2D2_deepnet)
-        return n2d2_deepnet
+        return cls(N2D2_deepnet)
 
     @classmethod
     def load_from_INI(cls, path):
@@ -378,9 +377,8 @@ class DeepNetCell(Block):
         :param model_path: Path to the ini file.
         :type model_path: str
         """
-        n2d2_deepnet = DeepNet.create_from_N2D2_object(
-            N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path))
-        return n2d2_deepnet
+        n2d2_deepnet = N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path)
+        return cls(n2d2_deepnet)
 
     def __call__(self, x):
         super().__call__(x)
@@ -555,8 +553,8 @@ class DeepNetCell(Block):
         parameters = n2d2.n2d2_interface.Options(
                         avg_window=avg_window, bench=bench, learn_epoch=learn_epoch,
                         log_epoch=log_epoch, ban_multi_device=ban_multi_device,
-                         valid_metric=N2D2_valid_metric, 
-                        stop_valid=stop_valid, log_kernels=log_kernels)
+                        valid_metric=N2D2_valid_metric, stop_valid=stop_valid, 
+                        log_kernels=log_kernels)
         N2D2.learn_epoch(parameters.N2D2(), N2D2_deepnet)
 
     def run_test(self, log = 1000, report = 100, test_index = -1, test_id = -1, 

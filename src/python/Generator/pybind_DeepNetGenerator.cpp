@@ -36,6 +36,7 @@ namespace N2D2 {
 void init_DeepNetGenerator(py::module &m) {
     py::class_<DeepNetGenerator>(m, "DeepNetGenerator")
     .def_static("generate", &DeepNetGenerator::generate, py::arg("network"), py::arg("fileName"))
+    .def_static("generateFromINI", &DeepNetGenerator::generateFromINI, py::arg("network"), py::arg("fileName"))
     #ifdef ONNX
     .def_static("generateFromONNX", &DeepNetGenerator::generateFromONNX, 
         py::arg("network"), 

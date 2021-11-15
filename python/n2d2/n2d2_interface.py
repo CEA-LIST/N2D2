@@ -291,19 +291,19 @@ class Options():
     Its goal is to emulate options given via the commande line.
     The following N2D2 functions use this object :
 
-    - :py:func:`learnThreadWrapper`
-    - :py:func:`inferThreadWrapper`
-    - :py:func:`test`
-    - :py:func:`importFreeParameters`
-    - :py:func:`generateExport`
-    - :py:func:`findLearningRate`
-    - :py:func:`learn_epoch`
-    - :py:func:`learn`
-    - :py:func:`learnStdp`
-    - :py:func:`testStdp`
-    - :py:func:`testCStdp`
-    - :py:func:`logStats`
-
+    - :py:func:`N2D2.learnThreadWrapper`
+    - :py:func:`N2D2.inferThreadWrapper`
+    - :py:func:`N2D2.test`
+    - :py:func:`N2D2.importFreeParameters`
+    - :py:func:`N2D2.generateExport`
+    - :py:func:`N2D2.findLearningRate`
+    - :py:func:`N2D2.learn_epoch`
+    - :py:func:`N2D2.learn`
+    - :py:func:`N2D2.learnStdp`
+    - :py:func:`N2D2.testStdp`
+    - :py:func:`N2D2.testCStdp`
+    - :py:func:`N2D2.logStats`
+    
     This object should not be used directly by the user !
     """
     def __init__(self, **parameters):
