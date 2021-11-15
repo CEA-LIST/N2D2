@@ -430,6 +430,8 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
         }
     }
 
+    deepNet->removeExtraReshape();
+
     if (deepNet->getTargets().empty())
         throw std::runtime_error(
             "Missing target cell (no [*.Target] section found)");
@@ -2587,7 +2589,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             std::map<std::string, std::vector<std::string> >
                 ::const_iterator itConcat;
             std::vector<std::shared_ptr<Cell> > parentCells;
-            if ((itInit = initializer.find(redirectName(node.input(1)))) != initializer.end()) {
+            if (node.input_size() > 1 && (itInit = initializer.find(redirectName(node.input(1)))) != initializer.end()) {
                 const Tensor<float> roiTensor
                             = ONNX_unpackTensor<float>((*itInit).second);
                 if(!roiTensor.empty()) {
@@ -2595,7 +2597,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         " supported by N2D2.");
                 }
             }
-            if ((itInit = initializer.find(redirectName(node.input(2)))) != initializer.end()) {
+            if (node.input_size() > 2 && (itInit = initializer.find(redirectName(node.input(2)))) != initializer.end()) {
                 const Tensor<float> scalesTensor
                             = ONNX_unpackTensor<float>((*itInit).second);
                 if(!scalesTensor.empty()) {
@@ -2605,7 +2607,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 }
             }
 
-            if ((itInit = initializer.find(redirectName(node.input(3)))) != initializer.end()) {
+            if (node.input_size() > 3 && (itInit = initializer.find(redirectName(node.input(3)))) != initializer.end()) {
                 const Tensor<int64_t> sizesTensor
                             = ONNX_unpackTensor<int64_t>((*itInit).second);
 

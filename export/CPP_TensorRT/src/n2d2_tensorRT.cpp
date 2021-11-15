@@ -1946,13 +1946,122 @@ std::vector<nvinfer1::ITensor *>
 }
 
 std::vector<nvinfer1::ITensor *>
-          N2D2::Network::add_reshape(std::string layerName,
+      N2D2::Network::add_reshape(std::string layerName,
+                    unsigned int nbDims,
+                    const int shape[],
+                    std::vector<nvinfer1::ITensor *> inputs_tensor)
+{
+    std::vector<nvinfer1::ITensor *> output_tensor;
+    std::cout << "Add reshape layer: " << layerName << std::endl;
+    for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
+    {
+
+        nvinfer1::Dims tensor_dims = inputs_tensor[0]->getDimensions();
+
+        std::string outName = layerName + "_" + std::to_string(i);
+        auto layer = mNetDef.back()->addShuffle(*inputs_tensor[i]);
+        assert(layer != nullptr);
+
+        nvinfer1::Dims reshape_dims;
+        reshape_dims.nbDims = nbDims;
+
+        for (int dim = 0; dim < nbDims; ++dim) {
+            if (shape[dim] != 0)
+                reshape_dims.d[dim] = shape[dim];
+            else
+                reshape_dims.d[dim] = tensor_dims.d[dim];
+        }
+
+        layer->setReshapeDimensions(reshape_dims);
+
+        layer->setName(outName.c_str());
+        output_tensor.push_back(layer->getOutput(0));
+        output_tensor.back()->setName(outName.c_str());
+
+        nvinfer1::Dims tensor_in_dims = inputs_tensor[i]->getDimensions();
+        std::cout << "               " << inputs_tensor[i]->getName()
+                    << "---> " << output_tensor.back()->getName() << std::endl;
+
+        std::cout << "               ";
+        std::cout << "{";
+        for(unsigned int d = 0; d < tensor_in_dims.nbDims; ++d)
+                std::cout << tensor_in_dims.d[d] << " ";
+        std::cout << "} ----> ";
+
+        nvinfer1::Dims tensor_output_dims = output_tensor.back()->getDimensions();
+        std::cout << "{";
+        for(unsigned int d = 0; d < tensor_output_dims.nbDims; ++d)
+                std::cout << tensor_output_dims.d[d] << " ";
+        std::cout << "}" << std::endl;
+    }
+
+    return output_tensor;
+}
+
+std::vector<nvinfer1::ITensor *>
+      N2D2::Network::add_transpose(std::string layerName,
+                    unsigned int nbDims,
+                    const int perm[],
+                    std::vector<nvinfer1::ITensor *> inputs_tensor)
+{
+    std::vector<nvinfer1::ITensor *> output_tensor;
+    std::cout << "Add transpose layer: " << layerName << std::endl;
+    for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
+    {
+
+        nvinfer1::Dims tensor_dims = inputs_tensor[0]->getDimensions();
+
+        std::string outName = layerName + "_" + std::to_string(i);
+        auto layer = mNetDef.back()->addShuffle(*inputs_tensor[i]);
+        assert(layer != nullptr);
+
+        nvinfer1::Dims reshape_dims;
+        nvinfer1::Permutation perm_dims;
+
+        reshape_dims.nbDims = nbDims;
+
+        for (int dim = 0; dim < nbDims; ++dim) {
+            reshape_dims.d[dim] = tensor_dims.d[perm[dim]];
+            perm_dims.order[dim] = perm[dim];
+        }
+
+#if NV_TENSORRT_MAJOR < 4
+        layer->setReshapeDimensions(reshape_dims);
+#endif
+        layer->setFirstTranspose(perm_dims);
+
+        layer->setName(outName.c_str());
+        output_tensor.push_back(layer->getOutput(0));
+        output_tensor.back()->setName(outName.c_str());
+
+        nvinfer1::Dims tensor_in_dims = inputs_tensor[i]->getDimensions();
+        std::cout << "               " << inputs_tensor[i]->getName()
+                    << "---> " << output_tensor.back()->getName() << std::endl;
+
+        std::cout << "               ";
+        std::cout << "{";
+        for(unsigned int d = 0; d < tensor_in_dims.nbDims; ++d)
+                std::cout << tensor_in_dims.d[d] << " ";
+        std::cout << "} ----> ";
+
+        nvinfer1::Dims tensor_output_dims = output_tensor.back()->getDimensions();
+        std::cout << "{";
+        for(unsigned int d = 0; d < tensor_output_dims.nbDims; ++d)
+                std::cout << tensor_output_dims.d[d] << " ";
+        std::cout << "}" << std::endl;
+    }
+
+    return output_tensor;
+}
+
+std::vector<nvinfer1::ITensor *>
+          N2D2::Network::add_group_reshape(std::string layerName,
                         unsigned int groupSize,
                         bool restoreShape,
                         std::vector<nvinfer1::ITensor *> inputs_tensor)
 {
     std::vector<nvinfer1::ITensor *> output_tensor;
-    std::cout << "Add Reshapelayer: " << layerName << std::endl;
+    std::cout << "Add group reshape layer: " << layerName << std::endl;
 
 
     for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
@@ -1979,7 +2088,7 @@ std::vector<nvinfer1::ITensor *>
 
             if(!(groupSize % nbOutputs))
                 throw std::runtime_error(
-                    "add_reshape(): groupsize must be divisible by nbOutputs");
+                    "add_group_reshape(): groupsize must be divisible by nbOutputs");
 
             reshape_dims.d[0] = groupSize;
             reshape_dims.d[1] = dimY * (nbOutputs / groupSize);
@@ -2001,10 +2110,10 @@ std::vector<nvinfer1::ITensor *>
 
             if(!(groupSize % nbOutputs))
                 throw std::runtime_error(
-                    "add_reshape(): groupsize must be divisible by nbOutputs");
+                    "add_group_reshape(): groupsize must be divisible by nbOutputs");
             if( (dimY > 1 || dimX > 1) && !restoreShape)
                 throw std::runtime_error(
-                    "add_reshape(): can only be applied on 1 dimension tensor");
+                    "add_group_reshape(): can only be applied on 1 dimension tensor");
 
             reshape_dims.d[0] = batch;
             reshape_dims.d[1] = !restoreShape ? groupSize : dimY * nbOutputs;

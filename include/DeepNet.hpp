@@ -130,6 +130,7 @@ public:
     void insertBatchNormAfterConv(bool moveActivation = true);
     void fusePadding();
     void removeDropout();
+    void removeExtraReshape();
 
 #ifdef CUDA
     void lastBatch() {

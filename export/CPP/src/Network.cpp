@@ -27,22 +27,18 @@ std::size_t N2D2::Network::inputSize() const {
 }
 
 
-
-#if NETWORK_TARGETS != 1
-#error "Only one target is supported for now"
-#endif
-std::size_t N2D2::Network::outputHeight() const {
-    return OUTPUTS_HEIGHT[0];
+std::size_t N2D2::Network::outputHeight(std::size_t index) const {
+    return OUTPUTS_HEIGHT[index];
 }
 
-std::size_t N2D2::Network::outputWidth() const {
-    return OUTPUTS_WIDTH[0];
+std::size_t N2D2::Network::outputWidth(std::size_t index) const {
+    return OUTPUTS_WIDTH[index];
 }
 
-std::size_t N2D2::Network::outputNbOutputs() const {
-    return NB_OUTPUTS[0];
+std::size_t N2D2::Network::outputNbOutputs(std::size_t index) const {
+    return NB_OUTPUTS[index];
 }
 
-std::size_t N2D2::Network::outputSize() const {
-    return outputHeight()*outputWidth()*outputNbOutputs();
+std::size_t N2D2::Network::outputSize(std::size_t index) const {
+    return outputHeight(index)*outputWidth(index)*outputNbOutputs(index);
 }
