@@ -523,8 +523,8 @@ class DeepNetCell(Block):
     def fit(self, learn_epoch, log_epoch=1000, avg_window=10000, bench=False, ban_multi_device=False, valid_metric="Sensitivity", stop_valid=0, log_kernels=False): # TODO : rename to avoid copying tf ?
         """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
         
-        :param learn_epoch: The number of epochs steps, default=0
-        :type learn_epoch: int, optional
+        :param learn_epoch: The number of epochs steps
+        :type learn_epoch: int
         :param log_epoch: The number of epochs between logs, default=1000
         :type log_epoch: int, optional
         :param avg_window: The average window to compute success rate during learning, default=10000

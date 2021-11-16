@@ -26,7 +26,7 @@ import time
 t = time.time()
 
 # ARGUMENTS PARSING
-parser = argparse.ArgumentParser(description="Comparison betwen N2D2 and Torch layer")
+parser = argparse.ArgumentParser()
 
 parser.add_argument('--device', '-d', type=int, default=0, help='GPU device (default=0)')
 parser.add_argument('--fit', action='store_true', help='Train with the fit method')
@@ -54,17 +54,13 @@ print(provider)
 print("\n### Loading Model ###")
 model = n2d2.cells.DeepNetCell.load_from_ONNX(provider, args.onnx)
 print(model)
-if args.fit:
-    target_name="Score_fit"
-else:
-    target_name="Score_normal"
-target = n2d2.target.Score(provider, name=target_name)
 
 if args.fit:
     model.fit(learn_epoch=nb_epochs, valid_metric='Accuracy')
 
     model.run_test()
 else:
+    target = n2d2.target.Score(provider)
     print("\n### Training ###")
     for epoch in range(nb_epochs):
 
