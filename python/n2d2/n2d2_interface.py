@@ -314,11 +314,12 @@ class Options():
         for key, value in parameters.items():
             try:
                 setattr(self._N2D2, key, value)
-            except AttributeError:
-                raise AttributeError(f"{key} is not a valid parameter")
-            except TypeError:
-                # TODO : custom error if the type expected is from N2D2
-                raise TypeError(f"Parameter {key} is of type {type(value)} but should be of type {type(getattr(self.N2D2, key))}.")
+            except AttributeError as e:
+                e.args = (f"'{key}' is not a valid parameter",)
+                raise 
+            except TypeError as e:
+                e.args = (f"Parameter '{key}' is of type '{type(value).__name__}' but should be of type '{type(getattr(self.N2D2(), key)).__name__}' instead.",)
+                raise 
 
     def N2D2(self):
         return self._N2D2

@@ -82,13 +82,27 @@ class GlobalVariables:
         return self._cuda_device
     @cuda_device.setter
     def cuda_device(self, value):
-        if value > N2D2.CudaContext.nbDevice():
-            raise RuntimeError(f"Cannot set device {value}, you have {N2D2.CudaContext.nbDevice()} devices")
-        self._cuda_device = value
-        N2D2.setCudaDeviceOption(value) # Setting this variable is mandatory to use the fit method otherwise, 
-                                # the device used for learning would be 0 (default value)
-        N2D2.CudaContext.setDevice(value)
-
+        if isinstance(value, int): 
+            if value > N2D2.CudaContext.nbDevice():
+                raise RuntimeError(f"Cannot set device {value}, you have {N2D2.CudaContext.nbDevice()} devices")
+            self._cuda_device = value
+            N2D2.setCudaDeviceOption(value) # Setting this variable is mandatory to use the fit method otherwise, 
+                                    # the device used for learning would be 0 (default value)
+            N2D2.CudaContext.setDevice(value)
+        elif isinstance(value, tuple) or isinstance(value, list):
+            devices = ""
+            first_device = value[0]
+            for val in value:
+                if not isinstance(val, int):
+                    raise TypeError("Device should be of type 'int'")
+                elif val > N2D2.CudaContext.nbDevice():
+                    raise RuntimeError(f"Cannot set device {value}, you have {N2D2.CudaContext.nbDevice()} devices")
+                devices += str(val) +","
+            devices = devices.strip(",")
+            N2D2.setMultiDevices(devices)
+            N2D2.CudaContext.setDevice(first_device)
+        else:
+            raise TypeError(f"Device should be of type 'int' or 'tuple' got {type(value).__name__} instead")
     @property
     def cuda_compiled(self):
         return self._cuda_compiled
