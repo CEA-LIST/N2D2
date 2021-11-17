@@ -74,11 +74,12 @@ class test_loss_function(unittest.TestCase):
     def test_diffOutputs_update(self):
         x = self.provider.read_random_batch()
         model = self.model
+        print(model)
         x = model(x)
         x = self.loss_function(x, self.provider.get_labels())
-        old = [i for i in n2d2.Tensor.from_N2D2(model[-2].N2D2().getDiffOutputs())]
+        old = [i for i in n2d2.Tensor.from_N2D2(model[-1].N2D2().getDiffOutputs())]
         x.back_propagate()
-        new = [i for i in n2d2.Tensor.from_N2D2(model[-2].N2D2().getDiffOutputs())]
+        new = [i for i in n2d2.Tensor.from_N2D2(model[-1].N2D2().getDiffOutputs())]
         flag = False
         for i,j in zip(old, new):
             if i != j :
@@ -92,9 +93,9 @@ class test_loss_function(unittest.TestCase):
         x = model(x)
         x = self.loss_function(x, self.provider.get_labels())
         x.back_propagate()
-        old_weights = [w for a in model[-2].get_weights()[0] for w in a]
+        old_weights = [w for a in model[-1].get_weights()[0] for w in a]
         x.update()
-        weights = [w for a in model[-2].get_weights()[0] for w in a]
+        weights = [w for a in model[-1].get_weights()[0] for w in a]
         flag = False
         for i, j in zip(weights, old_weights):
             if i != j:
