@@ -1,6 +1,7 @@
 """
     (C) Copyright 2021 CEA LIST. All Rights Reserved.
     Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
+                    Johannes THIELE (johannes.thiele@cea
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -18,6 +19,10 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
+"""
+This script allow you to run a training on a onnx file using the "fit" method or a manually defined training loop.
+"""
+
 import n2d2
 import math
 import argparse
@@ -31,7 +36,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--device', '-d', type=int, default=0, help='GPU device (default=0)')
 parser.add_argument('--fit', action='store_true', help='Train with the fit method')
 parser.add_argument('--epochs', "-e", type=int, default=10, help='Number of epochs (default=10)')
-parser.add_argument("--onnx", type=str, default="$ONNX_PATH/LeNet.onnx", help='Path to the onnx file')
+parser.add_argument("--onnx", default="./LeNet.onnx", type=str, help='Path to the onnx file')
+parser.add_argument("--data_path", type=str, help='Path to the MNIST Dataset')
 args = parser.parse_args()
 
 
@@ -44,7 +50,7 @@ nb_epochs = args.epochs
 batch_size = 256
 
 print("\n### Create database ###")
-database = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw/", validation=0.1)
+database = n2d2.database.MNIST(data_path=args.data_path, validation=0.1)
 
 print("\n### Create Provider ###")
 provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size=batch_size)
@@ -56,10 +62,11 @@ model = n2d2.cells.DeepNetCell.load_from_ONNX(provider, args.onnx)
 print(model)
 
 if args.fit:
+    # Training using fit method !
     model.fit(learn_epoch=nb_epochs, valid_metric='Accuracy')
-
     model.run_test()
 else:
+    # Manual training loop
     target = n2d2.target.Score(provider)
     print("\n### Training ###")
     for epoch in range(nb_epochs):

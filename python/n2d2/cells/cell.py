@@ -200,12 +200,6 @@ class Iterable(Block, ABC):
         else:
             return self._cells[item]
 
-    def get_index(self, item): # TODO : add documentation 
-        for i, cell in enumerate(self._seq):
-            if item.get_name() == cell.get_name():
-                return i
-        raise RuntimeError("Element with name '" + item.get_name() + "' not found in sequence")
-
     def __len__(self):
         return self._seq.__len__()
 
