@@ -49,9 +49,6 @@ import n2d2.activation
 import n2d2.mapping
 import n2d2.error_handler
 import n2d2.models
-import n2d2.pytorch
 # IP functions
 import n2d2.quantizer
 import n2d2.converter
-
-import n2d2.loss_function

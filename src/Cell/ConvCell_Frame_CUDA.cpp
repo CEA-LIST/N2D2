@@ -769,7 +769,7 @@ void N2D2::ConvCell_Frame_CUDA<T>::check_input()
           " equal to the number of inputs defined for the cell.");
     }
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        if (mInputs[k].dimZ() != mSharedSynapses[k].dimZ()*mNbGroups[k]){
+        if (mInputs[k].dimZ() != mSharedSynapses[k].dimZ()){
             std::cout << "mInputs.dimZ(): " << mInputs[k].dimZ() << std::endl;
             std::cout << "mSharedSynapses.dimZ(): " << mSharedSynapses[k].dimZ() << std::endl;
             std::cout << "mNbGroups: " << mNbGroups[k] << std::endl;

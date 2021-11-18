@@ -48,6 +48,7 @@ Finally we will run the newly created model with torch by using :py:class:`n2d2.
 
         import n2d2
         import torch
+        import pytorch_interoperability
         from os import remove
         class MNIST_CNN(torch.nn.Module):   
                 def __init__(self):
@@ -90,10 +91,10 @@ Finally we will run the newly created model with torch by using :py:class:`n2d2.
         remove(model_path) # Cleaning temporary onnx file
 
         # Setting SoftMax layer with_loss=False
-        deepNetCell[-1].set_with_loss(False)
+        deepNetCell[-1].with_loss = False
 
-        n2d2_deepNet = n2d2.pytorch.Block(deepNetCell)
-        
+        n2d2_deepNet = pytorch_interoperability.Block(deepNetCell)
+
         # Dummy imput and label for the example
         input_tensor = torch.ones(batch_size, 1, 28, 28)
         label = torch.ones(batch_size, 10)
