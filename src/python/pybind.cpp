@@ -234,6 +234,8 @@ void init_QuantizerActivation_Frame(py::module&);
 
 void init_DeepNetGenerator(py::module&);
 
+void init_helper(py::module&);
+
 #ifdef CUDA
 void init_CudaContext(py::module&);
 void init_CudaTensor(py::module&);
@@ -481,6 +483,7 @@ void init_N2D2(py::module& m) {
     init_QuantizerActivation_Frame(m);
     
     init_DeepNetGenerator(m);
+    init_helper(m);
     // Creating a variable to know if CUDA have been used for the compilation.
     #ifdef CUDA
     m.attr("cuda_compiled") = true;

@@ -68,7 +68,7 @@ void init_DeepNet(py::module &m) {
     .def("removeDropout", &DeepNet::removeDropout)
     .def("setDatabase", &DeepNet::setDatabase, py::arg("database"))
     .def("setStimuliProvider", &DeepNet::setStimuliProvider, py::arg("sp"))
-    // .def("getDatabase", &DeepNet::getDatabase)
+    .def("getDatabase", &DeepNet::getDatabase)
     .def("getStimuliProvider", &DeepNet::getStimuliProvider)
     .def("getCells", &DeepNet::getCells)
     .def("getCell", &DeepNet::getCell<Cell>, py::arg("name"))

@@ -194,8 +194,11 @@ class Iterable(Block, ABC):
         # does not guarantee order
         self._seq = cells
 
-    def __getitem__(self, idx):
-        return self._seq.__getitem__(idx)
+    def __getitem__(self, item): # Redondant with the definition given in Block
+        if isinstance(item, int):
+            return list(self._cells.values())[item]
+        else:
+            return self._cells[item]
 
     def __len__(self):
         return self._seq.__len__()
@@ -204,16 +207,23 @@ class Iterable(Block, ABC):
         return self._seq.__iter__()
 
     def insert(self, index, cell):
+        if not isinstance(cell, n2d2.cells.Cell):
+            raise n2d2.error_handler.WrongInputType("cell", type(cell), ["n2d2.cells.Cell"])
+        if index < 0:
+            raise ValueError("Negative index are not supported.")
         self._seq.insert(index, cell)
+        self._cells[cell.get_name()] = cell
+
+    def append(self, cell):
+        """Append a cell at the end of the sequence."""
+        if not isinstance(cell, n2d2.cells.Cell):
+            raise n2d2.error_handler.WrongInputType("cell", type(cell), ["n2d2.cells.Cell"])
+        self._seq.append(cell)
         self._cells[cell.get_name()] = cell
 
     def remove(self, cell):
         self._seq.remove(cell)
         del self._cells[cell.get_name()]
-
-    def append(self, cell):
-        self._seq.append(cell)
-        self._cells[cell.get_name()] = cell
 
     def index(self, item):
         return self._seq.index(item)
@@ -231,7 +241,6 @@ class Iterable(Block, ABC):
         return output
 
 
-
 class Sequence(Iterable):
     """
          This implementation of the Iterable class describes a sequential (vertical) ordering of cells.
@@ -246,6 +255,24 @@ class Sequence(Iterable):
             x = cell(x)
         x.get_deepnet().end_group()
         return x
+
+    def to_deepnet_cell(self, provider):
+        """Convert a :py:class:`n2d2.cells.Sequence` to a :py:class:`n2d2.cells.DeepNetCell`
+
+        :param provider: Data provider used by the neural network
+        :type provider: :py:class:`n2d2.provider.DataProvider`
+        :return: The corresponding :py:class:`n2d2.cells.DeepNetCell`
+        :rtype: :py:class:`n2d2.cells.DeepNetCell`
+        """
+        if not isinstance(provider, n2d2.provider.DataProvider):
+            raise n2d2.error_handler.WrongInputType("provider", type(provider), ["n2d2.provider.DataProvider"])
+        target = n2d2.target.Score(provider)
+        dummy_input = provider.read_random_batch()
+        dummy_output = target(self(dummy_input))
+        N2D2_deepnet = dummy_output.get_deepnet().N2D2()
+        N2D2_deepnet.addTarget(target.N2D2())
+        N2D2_deepnet.setDatabase(provider.N2D2().getDatabase())
+        return DeepNetCell(N2D2_deepnet)
 
 class Layer(Iterable):
     """
@@ -282,13 +309,19 @@ class Layer(Iterable):
 
 class DeepNetCell(Block):
     """
-    n2d2 Cell wrapper for a N2D2 deepnet object. Allows chaining a N2D2 deepnet (for example loaded from a ONNX or INI file)
+    n2d2 wrapper for a N2D2 deepnet object. Allows chaining a N2D2 deepnet (for example loaded from a ONNX or INI file)
     into the dynamic computation graph of the n2d2 API. During each use of the  the __call__ method, 
     the N2D2 deepnet is converted to a n2d2 representation and the N2D2 deepnet is concatenated to the deepnet of the 
     incoming tensor object.
     """
 
     def __init__(self, N2D2_object):
+        """As a user, you should **not** use this method, if you want to create a DeepNetCell object, please use :
+        :py:meth:`n2d2.cells.DeepNetCell.load_from_ONNX`, :py:meth:`n2d2.cells.DeepNetCell.load_from_INI`, :py:meth:`n2d2.cells.Sequence.to_deepnet_cell`
+
+        :param N2D2_object: The N2D2 DeepNet object
+        :type N2D2_object: :py:class:`N2D2.DeepNet`
+        """
 
         # Save
         self._embedded_deepnet = DeepNet.create_from_N2D2_object(N2D2_object)
@@ -329,8 +362,7 @@ class DeepNetCell(Block):
         ini_parser.currentSection("onnx", True)
         N2D2_deepnet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, ini_parser,
                                             N2D2_deepnet, [None])
-        n2d2_deepnet = cls(N2D2_deepnet)
-        return n2d2_deepnet
+        return cls(N2D2_deepnet)
 
     @classmethod
     def load_from_INI(cls, path):
@@ -339,9 +371,8 @@ class DeepNetCell(Block):
         :param model_path: Path to the ini file.
         :type model_path: str
         """
-        n2d2_deepnet = DeepNet.create_from_N2D2_object(
-            N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path))
-        return n2d2_deepnet
+        n2d2_deepnet = N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path)
+        return cls(n2d2_deepnet)
 
     def __call__(self, x):
         super().__call__(x)
@@ -470,6 +501,9 @@ class DeepNetCell(Block):
 
     def get_output_cells(self):
         """Returns the cells located at the end of the network.
+
+        :return: Return a list of cells located at the end of the network
+        :rtype: list
         """
         output = []
         cells = self._embedded_deepnet.get_groups().get_elements()[-1]
@@ -480,8 +514,95 @@ class DeepNetCell(Block):
             output.append(cells)
         return output
 
+    def fit(self, learn_epoch, log_epoch=1000, avg_window=10000, bench=False, ban_multi_device=False, valid_metric="Sensitivity", stop_valid=0, log_kernels=False): # TODO : rename to avoid copying tf ?
+        """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
+        
+        :param learn_epoch: The number of epochs steps
+        :type learn_epoch: int
+        :param log_epoch: The number of epochs between logs, default=1000
+        :type log_epoch: int, optional
+        :param avg_window: The average window to compute success rate during learning, default=10000
+        :type avg_window: int, optional
+        :param bench: If ``True``, activate the benchmarking of the learning speed , default=False
+        :type bench: bool, optional
+        :param valid_metric: Validation metric to use can be ``Sensitivity``, ``Specificity``, ``Precision``, ``NegativePredictiveValue``, ``MissRate``, ``FallOut``, ``FalseDiscoveryRate, ``FalseOmissionRate``, ``Accuracy``, ``F1Score``, ``Informedness``, ``Markedness``, default="Sensitivity"
+        :type valid_metric: str, optional
+        :param stop_valid: The maximum number of successive lower score validation, default=0
+        :type stop_valid: int, optional
+        :param log_kernels: If ``True``, log kernels after learning, default=False
+        :type log_kernels: bool, optional
+        """
 
+        # Checking inputs
+        if valid_metric not in N2D2.ConfusionTableMetric.__members__.keys():
+            raise n2d2.error_handler.WrongValue("metric", valid_metric, ", ".join(N2D2.ConfusionTableMetric.__members__.keys()))
+        else:
+            N2D2_valid_metric = N2D2.ConfusionTableMetric.__members__[valid_metric]
 
+        # Generating the N2D2 DeepNet
+        N2D2_deepnet = self._embedded_deepnet.N2D2()
+        N2D2_deepnet.initialize()
 
+        # Calling learn function
+        parameters = n2d2.n2d2_interface.Options(
+                        avg_window=avg_window, bench=bench, learn_epoch=learn_epoch,
+                        log_epoch=log_epoch, ban_multi_device=ban_multi_device,
+                        valid_metric=N2D2_valid_metric, stop_valid=stop_valid, 
+                        log_kernels=log_kernels)
+        N2D2.learn_epoch(parameters.N2D2(), N2D2_deepnet)
 
+    def run_test(self, log = 1000, report = 100, test_index = -1, test_id = -1, 
+                 qat_sat = False, log_kernels = False, wt_round_mode = "NONE", 
+                 b_round_mode = "NONE", c_round_mode = "NONE", 
+                 act_scaling_mode = "FLOAT_MULT", log_JSON = False, log_outputs = 0):
+        """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
+        
+        :param log: The number of steps between logs, default=1000
+        :type log: int, optional
+        :param report: Number of steps between reportings, default=100
+        :type report: int, optional
+        :param test_index: Test a single specific stimulus index in the Test set, default=-1
+        :type test_index: int, optional
+        :param test_id: Test a single specific stimulus ID (takes precedence over `test_index`), default=-1
+        :type test_id: int, optional
+        :param qat_sat: Fuse a QAT trained with SAT method, default=False
+        :type qat_sat: bool, optional
+        :param log_kernels: Log kernels after learning, default=False
+        :type log_kernels: bool, optional
+        :param wt_round_mode: Weights clipping mode on export, can be `NONE`,`RINTF`, default="NONE"
+        :type wt_round_mode: str, optional
+        :param b_round_mode: Biases clipping mode on export, can be `NONE`,`RINTF`, default="NONE"
+        :type b_round_mode: str, optional
+        :param c_round_mode: Clip clipping mode on export, can be `NONE`,`RINTF`, default="NONE"
+        :type c_round_mode: str, optional
+        :param act_scaling_mode: activation scaling mode on export, can be `NONE`, `FLOAT_MULT`, `FIXED_MULT16`, `SINGLE_SHIFT` or `DOUBLE_SHIFT`, default="FLOAT_MULT"
+        :type act_scaling_mode: str, optional
+        :param log_JSON: If ``True``, log JSON annotations, default=False
+        :type log_JSON: bool, optional
+        :param log_outputs: log layers outputs for the n-th stimulus (0 = no log), default=0
+        :type log_outputs: int, optional
+        """
+        if wt_round_mode not in N2D2.WeightsApprox.__members__.keys():
+            raise n2d2.error_handler.WrongValue("wt_round_mode", wt_round_mode, ", ".join(N2D2.WeightsApprox.__members__.keys()))
+        else:
+            N2D2_wt_round_mode = N2D2.WeightsApprox.__members__[wt_round_mode]
+        if b_round_mode not in N2D2.WeightsApprox.__members__.keys():
+            raise n2d2.error_handler.WrongValue("b_round_mode", b_round_mode, ", ".join(N2D2.WeightsApprox.__members__.keys()))
+        else:
+            N2D2_b_round_mode = N2D2.WeightsApprox.__members__[b_round_mode]
+        if c_round_mode not in N2D2.WeightsApprox.__members__.keys():
+            raise n2d2.error_handler.WrongValue("b_round_mode", c_round_mode, ", ".join(N2D2.WeightsApprox.__members__.keys()))
+        else:
+            N2D2_c_round_mode = N2D2.WeightsApprox.__members__[c_round_mode]
 
+        if act_scaling_mode not in N2D2.ScalingMode.__members__.keys():
+            raise n2d2.error_handler.WrongValue("act_scaling_mode", act_scaling_mode, ", ".join(N2D2.ScalingMode.__members__.keys()))
+        else:
+            N2D2_act_scaling_mode = N2D2.ScalingMode.__members__[act_scaling_mode]
+
+        parameters = n2d2.n2d2_interface.Options(log=log, report=report,
+                        test_index=test_index, test_id=test_id, qat_SAT=qat_sat,
+                        wt_round_mode=N2D2_wt_round_mode, b_round_mode=N2D2_b_round_mode,
+                        c_round_mode=N2D2_c_round_mode, act_scaling_mode=N2D2_act_scaling_mode,
+                        log_JSON=log_JSON, log_outputs=log_outputs, log_kernels=log_kernels)
+        N2D2.test(parameters.N2D2(), self._embedded_deepnet.N2D2(), False)

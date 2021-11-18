@@ -24,7 +24,7 @@ Use-case presentation
 We propose to recognize traffic signs, for an advanced driver-assistance systems (ADAS).
 The traffic signs are already segmented and extracted from images, taken from a front-view camera embedded in a car.
 
-.. figure:: ../_static/gtsrb.png
+.. figure:: /_static/gtsrb.png
    :alt: Example of data featured in GTSRB.
 
 To build our classifier, we will use the ``German Traffic Sign Benchmark (GTSRB)`` (https://benchmark.ini.rub.de/) a multi-class, single-image classification challenge held at the International Joint Conference on Neural Networks (IJCNN) 2011. 

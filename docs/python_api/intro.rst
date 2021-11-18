@@ -93,7 +93,7 @@ Default values
 The python API used default values that you can modify at any time in your scripts.
 
 List of modifiable parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Here we will list parameters which can be directly modified in your script.
 
@@ -103,7 +103,7 @@ Here we will list parameters which can be directly modified in your script.
 | ``default_model``        | If you have compiled N2D2 with **CUDA**, you                      |
 |                          | can use ``Frame_CUDA``, default= ``Frame``                        |
 +--------------------------+-------------------------------------------------------------------+
-| ``default_datatype``     | Datatype of the layer of the neural network. Can be ``double``or  |
+| ``default_datatype``     | Datatype of the layer of the neural network. Can be ``double`` or |
 |                          | ``float``, default= ``float``                                     |
 |                          |                                                                   |
 |                          | **Important :** This variable doesn't affect the data type of     |

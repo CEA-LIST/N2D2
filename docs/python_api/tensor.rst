@@ -3,16 +3,10 @@ Tensor
 
 Introduction
 ------------
-The n2d2 library propose a tensor implementation with the :py:class:`n2d2.Tensor` class.
 
 :py:class:`n2d2.Tensor` is a wrapper of the ``Tensor`` object available in N2D2 (see :ref:`Tensor<dev-tensor-t>`).
 
-The class :py:class:`n2d2.Tensor` also contain a reference to the element that produce it. (It is ``None`` if you create it manually)
-
-.. figure:: ../_static/n2d2-tensor.png
-  :alt: :py:class:`n2d2.Tensor` implementation
-
-  :py:class:`n2d2.Tensor` implementation.
+The class :py:class:`n2d2.Tensor` contains a reference to the element which produce it and can be seen as the edge of the computation graph.
 
 
 Manipulating tensors

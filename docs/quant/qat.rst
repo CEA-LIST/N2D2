@@ -18,7 +18,7 @@ N2D2 provides a complete design environement for a super wide range of quantizat
 each level of the neural network. This high granularity enables to search for the best implementation depending on the
 hardware constraints. Moreover to achieve the best performances, N2D2 implements the latest quantization methods currently at the best of the state-of-the-art, summarized in the figure below. Each dot represents one DNN (from the MobileNet or ResNet family), quantized with the number of bits indicated beside.
 
-.. figure:: ../_static/qat_sota.png
+.. figure:: /_static/qat_sota.png
    :alt: QAT state-of-the-art.
 
 The user can leverage the high modularity of our super set of quantizer blocks and simply choose the  method that best fits with the initial requirements, computation resources and time to market strategy.
@@ -43,7 +43,7 @@ Weights-Only Quantization
 
 Example of fake-quantized weights on 4-bits / 15 levels:
 
-.. figure:: _static/qat_weights_fakeQ.png
+.. figure:: /_static/qat_weights_fakeQ.png
    :alt: Weights Quantization in fake quantization on 15 levels.
 
 Mixed Weights-Activations Quantization
@@ -62,7 +62,7 @@ Mixed Weights-Activations Quantization
 
 Example of an activation feature map quantized in 4-bits / 15 levels:
 
-.. figure:: _static/qat_fm_4b.png
+.. figure:: /_static/qat_fm_4b.png
    :alt: 4-bits Quantized Activation Feature Map .
 
 Integer-Only Quantization
@@ -81,7 +81,7 @@ Integer-Only Quantization
 
 Example of full integer weights on 4-bits / 15 levels:
 
-.. figure:: _static/qat_weights_integer.png
+.. figure:: /_static/qat_weights_integer.png
    :alt: Weights Quantization in integer mode on 15 levels.
 
       
@@ -97,7 +97,7 @@ of available computation resources.
 Overview of the cell quantizer implementation :
 
 
-.. figure:: _static/qat_cell_flow.png
+.. figure:: /_static/qat_cell_flow.png
    :alt: Cell Quantizer Functional Block.
 
 The common set of parameters for any kind of Cell Quantizer.
@@ -146,7 +146,7 @@ full-precision counterparts in some cases. This method exploits DoReFa scheme fo
 
 Example of clamped weights when ``QWeight.ApplyQuantization=false``:
 
-.. figure:: _static/qat_weights_Clamp.png
+.. figure:: /_static/qat_weights_Clamp.png
    :alt: Weights Full-Precision clamped.
 
 
@@ -160,7 +160,7 @@ of available computing resources.
 
 Overview of the activation quantizer implementation:
 
-.. figure:: _static/qat_act_flow.png
+.. figure:: /_static/qat_act_flow.png
    :alt: Activation Quantizer Functionnal Block.
 
 The common set of parameters for any kind of Activation Quantizer.
@@ -479,7 +479,7 @@ In addition, if you want to quantized also the ``resnet-18-v1`` activations you 
 This base-block will be used to overwrites all the ``rectifier`` activation function of the ONNX model.
 To identify the name of the different activation function you can use the netron tool: 
 
-.. figure:: _static/qat_netron_r.png
+.. figure:: /_static/qat_netron_r.png
    :alt: Relu Name.
 
 We then overrides all the activation function of the model by our previously described activation quantizer:
@@ -532,7 +532,7 @@ In ResNet-18 the first layer is a convolution layer, we have to specify that to 
 
 We first start to identify the name of the first layer under the netron environement: 
 
-.. figure:: _static/qat_netron_conv_name.png
+.. figure:: /_static/qat_netron_conv_name.png
    :alt: First Conv Cell Name.
 
 We then overrides the range of the first convolution layer of the ``resnet18v1.onnx`` model:
@@ -760,7 +760,7 @@ for example *weights_clamped* folder.
 Congratulations! Your ``LeNet`` model have clamped weights now ! You can check the results 
 in your *weights_clamped* folder, for example check your *conv3_weights_quant.distrib.png* file :
 
-.. figure:: _static/qat_lenet_clamp.png
+.. figure:: /_static/qat_lenet_clamp.png
    :alt: Clamp weights.
 
 Now that your ``LeNet`` model provides clamped weights you can play with it and try different quantization mode.
@@ -861,7 +861,7 @@ at the learning phase or at the test phase. In this example this graph is genera
 
 As you can see in the following figure, the batch-normalization layers are present (and essential) in your quantized model:
 
-.. figure:: _static/qat_conv_bn.png
+.. figure:: /_static/qat_conv_bn.png
    :alt: batchnorm.
 
 Obviously, no one wants batch-normalization layers in it's quantized model. We answer this problem with our internal tool
@@ -878,7 +878,7 @@ Results must be exactly the same than with batch-normalization. Moreover quantiz
 model !
 You can check the results in the newly generated ``LeNet.ini.png`` graph :
 
-.. figure:: _static/qat_conv_nobn.png
+.. figure:: /_static/qat_conv_nobn.png
    :alt: no batchnorm.
 
 Moreover you can find your quantized weights and biases under the folder ``weights_quantized``.

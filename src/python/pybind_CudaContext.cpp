@@ -31,7 +31,8 @@ namespace N2D2 {
 void init_CudaContext(py::module &m) {
     py::class_<CudaContext>(m, "CudaContext")
     .def_static("setDevice", &CudaContext::setDevice)
-    .def_static("getDeviceProp", &CudaContext::getDeviceProp);
+    .def_static("getDeviceProp", &CudaContext::getDeviceProp)
+    .def_static("nbDevice", &CudaContext::nbDevice);
 }
 }
 #endif
