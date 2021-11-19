@@ -68,7 +68,6 @@ def download_model(url, install_dir, dir_name):
 
 _objects_counter = {}
 
-# TODO : Move this function to utils ?
 def generate_name(obj):
     """
     Function used to generate name of an object

@@ -57,10 +57,11 @@ def from_N2D2_object(N2D2_object, **kwargs):
     """
         :param N2D2_object: N2D2 object to convert.
         :type N2D2_object: :py:class:`N2D2.Activation/Cell/Solver/Filler/Quantizer
+
         Convert a N2D2 activation into a n2d2 activation.
         The _N2D2_object attribute of the generated n2d2 cells is replaced by the N2D2_cell given in entry.
     """
-    if N2D2_object:
+    if N2D2_object is not None: # Here a simple "if N2D2_object: " condition is dangerous ! An N2D2 object can be evaluate to False/0.
         object_type = N2D2_object.getType()
         # TODO: Change SAT type name convention in N2D2 to avoid ambiguity?
         if object_type == "SAT":

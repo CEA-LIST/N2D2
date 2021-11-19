@@ -19,7 +19,7 @@
 #     knowledge of the CeCILL-C license and that you accept its terms.
 # """
 
-# # TODO : This test fail when used with the other tests, this test is not unitary. It should be added as an integration test
+# This test is not unitary. It should be added as an integration test
 
 # import unittest
 # import n2d2

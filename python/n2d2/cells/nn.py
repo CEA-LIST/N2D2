@@ -823,7 +823,7 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
             raise n2d2.error_handler.WrongInputType("nb_inputs", str(type(nb_inputs)), ["int"])
         if not isinstance(nb_outputs, int):
             raise n2d2.error_handler.WrongInputType("nb_outputs", str(type(nb_outputs)), ["int"])
-        if not isinstance(kernel_dims, list): # TODO : check the type of the elements ?
+        if not isinstance(kernel_dims, list): 
             raise n2d2.error_handler.WrongInputType("kernel_dims", str(type(kernel_dims)), ["list"])
 
         NeuralNetworkCell.__init__(self, **config_parameters)
@@ -1267,7 +1267,7 @@ class Pool(NeuralNetworkCell, Datatyped):
         :param mapping: Mapping
         :type mapping: :py:class:`n2d2.Tensor`, optional
         """
-        if not isinstance(pool_dims, list): # TODO : check the type of the elements ?
+        if not isinstance(pool_dims, list):
             raise n2d2.error_handler.WrongInputType("pool_dims", str(type(pool_dims)), ["list"])
         NeuralNetworkCell.__init__(self, **config_parameters)
 
@@ -1365,7 +1365,7 @@ class Pool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
                  pool_dims,
                  **config_parameters):
         # TODO : @ johannes : Why don't we use super().init(self, pool_dims, **config_parameters) ? instead of copy pasting code ?
-        if not isinstance(pool_dims, list): # TODO : check the type of the elements ?
+        if not isinstance(pool_dims, list): 
             raise n2d2.error_handler.WrongInputType("pool_dims", str(type(pool_dims)), ["list"])
         
         NeuralNetworkCell.__init__(self, **config_parameters)
@@ -1579,7 +1579,7 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
             raise n2d2.error_handler.WrongInputType("nb_inputs", str(type(nb_inputs)), ["int"])
         if not isinstance(nb_outputs, int):
             raise n2d2.error_handler.WrongInputType("nb_outputs", str(type(nb_outputs)), ["int"])
-        if not isinstance(kernel_dims, list): # TODO : check the type of the elements ?
+        if not isinstance(kernel_dims, list):
             raise n2d2.error_handler.WrongInputType("kernel_dims", str(type(kernel_dims)), ["list"])
 
         NeuralNetworkCell.__init__(self, **config_parameters)
@@ -1669,11 +1669,6 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
             n2d2.converter.from_N2D2_object(N2D2_object.getWeightsFiller())
         parameter['bias_filler'] = \
             n2d2.converter.from_N2D2_object(N2D2_object.getBiasFiller())
-        # TODO : No quantizer object for Deconv
-        # quantizer = N2D2_object.getQuantizer()
-        # if quantizer:
-        #     parameter['quantizer'] = \
-        #         n2d2.converter.from_N2D2_object(quantizer)
         return parameter
 
     def __call__(self, inputs):
@@ -2291,7 +2286,6 @@ class Activation(NeuralNetworkCell, Datatyped):
             for key, value in self._config_parameters.items():
                 self.__setattr__(key, value)
             self.load_N2D2_parameters(self.N2D2())
-        # TODO : Add error if activation is None ?
         self._add_to_graph(inputs)
 
         self._N2D2_object.propagate(self._inference)
@@ -2320,7 +2314,7 @@ class Reshape(NeuralNetworkCell, Datatyped):
         :param dims: dims of the new shape of the layer
         :type dims: list
         """
-        if not isinstance(dims, list): # TODO : check the type of the elements ?
+        if not isinstance(dims, list): 
             raise n2d2.error_handler.WrongInputType("dims", str(type(dims)), ["list"])
         NeuralNetworkCell.__init__(self, **config_parameters)
 

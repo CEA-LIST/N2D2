@@ -88,7 +88,6 @@ class Tensor:
         "Numpy": lambda x: [i for i in reversed(x)],
     }
 
-    # TODO: Why is default not N2D2?
     def __init__(self, dims, value=None, cuda=False, datatype="float", cell=None, dim_format='Numpy'):
         """
         :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (the convention used depends of the ``dim_format`` argument, by default it's the same as ``Numpy``)
@@ -125,8 +124,8 @@ class Tensor:
         else:
             raise error_handler.WrongInputType("dims", type(dims), [str(list)])
 
-        if value and not isinstance(value, hard_coded_type[datatype]): # TODO : We may want to try an auto-cast ! 
-            raise TypeError("You want to fill the tensor with " + str(type(value)) + " but " + str(datatype) + " is the datatype.")
+        if value and not isinstance(value, hard_coded_type[datatype]): 
+            raise TypeError(f"You want to fill the tensor with '{str(type(value).__name__)}' but datatype is set to : '{str(datatype)}'.")
 
         if datatype in generators:
             if not value:
@@ -139,7 +138,7 @@ class Tensor:
                     self[0:] = value
                     self.htod() # Need to synchronize the host to the device
         else:
-            raise TypeError("Unrecognized Tensor datatype " + str(datatype))
+            raise TypeError(f"Unrecognized Tensor datatype {str(datatype)}")
 
         
 
@@ -176,7 +175,7 @@ class Tensor:
         if nb_dims != self.nb_dims():
             raise ValueError("The number of dims should be " + str(self.nb_dims()) + " but is "+ str(nb_dims) + " instead.")
         if dims != self.shape():
-            raise ValueError("Dimension are "+ str(dims) + " should be "+ str(self.shape()) + " instead.")
+            raise ValueError(f"Dimension are {str(dims)} should be {str(self.shape())} instead.")
 
         def flatten(list_to_flatten):
             if len(list_to_flatten) == 1:
@@ -236,10 +235,10 @@ class Tensor:
         dims = self.dims()
         coord = [i for i in reversed(coord)]
         if len(dims) != len(coord):
-            raise ValueError(str(len(coord)) + "D array does not match " + str(len(dims)) + "D tensor.") 
+            raise ValueError(f"{str(len(coord))}D array does not match {str(len(dims))}D tensor.") 
         for c, d in zip(coord, dims):
             if not c < d:
-                raise ValueError("Coordinate does not fit the dimensions of the tensor, max: "+str(d)+" got " + str(c)) 
+                raise ValueError(f"Coordinate does not fit the dimensions of the tensor, max: {str(d)} got {str(c)}") 
         idx = 0
         for i in range(len(dims)):
             if i == 0:
@@ -273,7 +272,7 @@ class Tensor:
             old_dims_str = ""
             for dim in self.shape():
                 old_dims_str += str(dim) +" "
-            raise ValueError("new size ("+new_dims_str+"= " + str(reduce((lambda x,y: x*y), new_dims))+") does not match current size ("+ old_dims_str+"= " +str(self.__len__())+")")
+            raise ValueError(f"new size ({new_dims_str}= {str(reduce((lambda x,y: x*y), new_dims))}) does not match current size ({old_dims_str}= {str(self.__len__())})")
         self._tensor.reshape([int(d) for d in reversed(new_dims)])
 
     def copy(self):
@@ -286,7 +285,6 @@ class Tensor:
     def cpu(self):
         """Convert the tensor to a cpu tensor
         """
-        # TODO : avoid to copy data
         if self.is_cuda:
             self.is_cuda = False
             new_tensor = self._tensor_generators[self._datatype](self.dims())
@@ -299,7 +297,6 @@ class Tensor:
         """
         if not cuda_compiled:
             raise RuntimeError("You did not compiled N2D2 with CUDA !")
-        # TODO : avoid to copy data
         if not self.is_cuda:
             self.is_cuda = True
             new_tensor = self._cuda_tensor_generators[self._datatype](self.dims())
@@ -411,7 +408,7 @@ class Tensor:
             try:
                 value = hard_coded_type[self._datatype](value)
             except:
-                raise RuntimeError("Autocast failed, tried to cast : " + str(type(value)) + " to " + self._datatype)
+                raise RuntimeError(f"Autocast failed, tried to cast : {str(type(value))} to {self._datatype}")
 
         if isinstance(index, tuple) or isinstance(index, list):
             self._tensor[self._get_index(index)] = value
@@ -556,7 +553,7 @@ class Interface(n2d2.provider.Provider):
         self._name = n2d2.generate_name(self)
         self.tensors = []
         if not isinstance(tensors, list):
-            raise ValueError("'tensors' should be a list !")
+            raise ValueError("'tensors' parameter should be a list !")
         if not tensors:
             raise n2d2.error_handler.IsEmptyError('Tensors')
 
@@ -574,7 +571,7 @@ class Interface(n2d2.provider.Provider):
         nb_channels = 0
         for tensor in tensors:
             if not isinstance(tensor, Tensor):
-                raise ValueError("The elements of 'tensors' should all be of type " + str(type(n2d2.Tensor)))
+                raise ValueError(f"The elements of 'tensors' should all be of type {str(type(n2d2.Tensor))}")
             else:
                 if tensor.dimX() != tensors[0].dimX():
                     raise ValueError("Tensors should have the same X dimension.")

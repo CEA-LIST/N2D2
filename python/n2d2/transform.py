@@ -57,18 +57,6 @@ Example for custom transformation
 #         Transformation.__init__(self, **config_parameters)
 #         self._N2D2_object = Test()
 
-"""
-Example for a Python wrapper around the binding
-"""
-"""
-class PadCropTransformation():
-    def __init__(self, dimX, dimY):
-        self.trans = N2D2.PadCropTransformation(dimX, dimY)
-        
-    def __call__(self, x):
-        return self.trans.apply(x)
-"""
-
 # TODO : Change binding to expose apply method 
 # class CustomTransformation(Transformation):
 #     def __init__(self, custom_transformation):
