@@ -49,7 +49,8 @@ if __name__ == '__main__':
         name='n2d2',
         version='0.0.1',
         package_dir={
-            "n2d2": "python/n2d2"
+            "n2d2": "python/n2d2",
+			"pytorch_interoperability": "python/pytorch_interoperability"
         },
         packages=packages,
         ext_modules=[CMakeExtension('N2D2')],

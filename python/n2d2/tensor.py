@@ -19,7 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-import numpy
+
 import N2D2
 import n2d2 # To remove if interface is moved to provider
 from n2d2 import error_handler
