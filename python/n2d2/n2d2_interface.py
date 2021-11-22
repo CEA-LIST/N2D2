@@ -103,7 +103,6 @@ class N2D2_Interface:
     def _set_N2D2_parameter(self, key, value):
         parsed_parameter = self.parse_py_to_ini_(value)
         returned_parameter, returned_type = self._N2D2_object.getParameterAndType(key)
-        # TODO : This test trigger an error if we send an int instead of a float for example
         # Maybe allowing an auto cast for this kind of situations can be a good idea ?
         if returned_type == "bool":
             if not isinstance(value, bool):

@@ -68,7 +68,6 @@ class Cell(ABC):
         return type(self).__name__
 
 
-# TODO: Empty at the moment. Check for mutualisation of code in Fc, Conv, Deconv, BatchNorm
 class Trainable(ABC):
 
     @abstractmethod
@@ -99,7 +98,6 @@ class Block(Cell):
         It saves its cells internally with a dictionary. The Block class has no implicit structure for propagation,
         the __call__ method therefore has to be defined explicitly.
     """
-    #@abstractmethod
 
     def __init__(self, cells, name=None):
         assert (isinstance(cells, list))
@@ -156,7 +154,6 @@ class Block(Cell):
                     and isinstance(cell.activation.quantizer, Trainable):
                 cell.activation.quantizer.solver = solver.copy()
 
-
     def import_free_parameters(self, dir_name, ignore_not_exists=False):
         for cell in self._cells.values():
             cell.import_free_parameters(dir_name, ignore_not_exists=ignore_not_exists)
@@ -180,6 +177,9 @@ class Block(Cell):
         output += "\n" + ((indent_level - 1) * "\t") + ")"
         return output
 
+    def items(self):
+        return self._cells.items()
+
 
 class Iterable(Block, ABC):
     """
@@ -194,11 +194,12 @@ class Iterable(Block, ABC):
         # does not guarantee order
         self._seq = cells
 
-    def __getitem__(self, item): # Redondant with the definition given in Block
+    def __getitem__(self, item):
+
         if isinstance(item, int):
-            return list(self._cells.values())[item]
+            return self._seq.__getitem__(item)
         else:
-            return self._cells[item]
+            return super().__getitem__(item)
 
     def __len__(self):
         return self._seq.__len__()
@@ -313,6 +314,10 @@ class DeepNetCell(Block):
     into the dynamic computation graph of the n2d2 API. During each use of the  the __call__ method, 
     the N2D2 deepnet is converted to a n2d2 representation and the N2D2 deepnet is concatenated to the deepnet of the 
     incoming tensor object.
+    The object is manipulated with the bound methods of the N2D2 DeepNet object, and its computation graph is
+    also exclusively defined by the DeepNet object that is passed to it during construction.
+    It therefore only inherits from Block, and not from the Iterable class and its children, which are reserved for the
+    python APIs implicit way of constructing graphs.
     """
 
     def __init__(self, N2D2_object):
@@ -376,25 +381,16 @@ class DeepNetCell(Block):
 
     def __call__(self, x):
         super().__call__(x)
-        # TODO: Not tested for other inputs that provider yet
+        # NOTE: This currently only supports a provider output as input
         if not isinstance(x, n2d2.Tensor):
-            raise ValueError("Needs tensor with provider as input")
+            raise ValueError("Needs tensor with provider output as input")
 
-        # Recreate graph with underlying N2D2 deepnet
+        # Concatenate existing deepnet graph on deepnet of input
         self._deepnet = self.concat_to_deepnet(x.get_deepnet())
 
-        #if not provider.dims() == N2D2_object.getStimuliProvider().getData().dims():
-        #    raise RuntimeError(
-        #        "N2D2 object has input dimensions " + str(N2D2_object.getStimuliProvider().getData().dims()) +
-        #        " while given provider has dimensions " + str(provider.dims()))
-
-        #if inputs.nb_dims() != 4:
-        #    raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-
-        #self.get_first().set_deepnet(self._deepnet)
         for cell in self.get_input_cells():
             cell.N2D2().clearInputTensors()
-            cell._link_N2D2_input(x.cell)
+            cell.N2D2().linkInput(x.cell.N2D2())
 
         self._deepnet.N2D2().propagate(self._inference)
 
@@ -409,8 +405,6 @@ class DeepNetCell(Block):
     def concat_to_deepnet(self, deepnet):
         new_n2d2_deepnet = deepnet
 
-
-        #new_n2d2_deepnet.N2D2().setStimuliProvider(self._N2D2_object.getStimuliProvider())
         cells = self._embedded_deepnet.N2D2().getCells()
         layers = self._embedded_deepnet.N2D2().getLayers()
         if not layers[0][0] == "env":
@@ -443,10 +437,6 @@ class DeepNetCell(Block):
         #new_n2d2_deepnet.end_group()
 
         return new_n2d2_deepnet
-    
-    #def clear_data_tensors(self):
-    #    for cell in self._embedded_deepnet.get_cells().values():
-    #        cell.clear_data_tensors()
 
     def update(self):
         """Update learnable parameters
@@ -514,7 +504,7 @@ class DeepNetCell(Block):
             output.append(cells)
         return output
 
-    def fit(self, learn_epoch, log_epoch=1000, avg_window=10000, bench=False, ban_multi_device=False, valid_metric="Sensitivity", stop_valid=0, log_kernels=False): # TODO : rename to avoid copying tf ?
+    def fit(self, learn_epoch, log_epoch=1000, avg_window=10000, bench=False, ban_multi_device=False, valid_metric="Sensitivity", stop_valid=0, log_kernels=False):
         """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
         
         :param learn_epoch: The number of epochs steps

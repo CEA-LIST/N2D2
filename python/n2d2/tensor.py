@@ -101,7 +101,7 @@ class Tensor:
         :param dim_format: Define the format used when you declare the dimensions of the tensor. The ``N2D2`` convention is the reversed of the ``Numpy`` the numpy one (e.g. a [2, 3] numpy array is equivalent to a [3, 2] N2D2 Tensor), default="Numpy"
         :type dim_format: str, optional
         """
-        self._leaf=False
+        self._leaf = False
         self.cell = cell
         self._datatype = datatype
         if not isinstance(cuda, bool):
@@ -124,8 +124,9 @@ class Tensor:
         else:
             raise error_handler.WrongInputType("dims", type(dims), [str(list)])
 
-        if value and not isinstance(value, hard_coded_type[datatype]): 
+        if value and not isinstance(value, hard_coded_type[datatype]):
             raise TypeError(f"You want to fill the tensor with '{str(type(value).__name__)}' but datatype is set to : '{str(datatype)}'.")
+
 
         if datatype in generators:
             if not value:

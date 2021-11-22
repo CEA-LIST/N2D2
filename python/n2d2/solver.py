@@ -1,5 +1,5 @@
 """
-    (C) Copyright 2020 CEA LIST. All Rights Reserved.
+    (C) Copyright 2021 CEA LIST. All Rights Reserved.
     Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
@@ -50,6 +50,7 @@ class Solver(N2D2_Interface, ABC):
         n2d2_solver._model_key = N2D2_object.getModel() + "<" \
             + N2D2_object.getDataType() + ">"
         return n2d2_solver
+
     def get_type(self):
         return type(self).__name__
 

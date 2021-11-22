@@ -79,3 +79,13 @@ def generate_name(obj):
         _objects_counter[name] = 0
     name += "_"+str(_objects_counter[name])
     return name
+
+
+def model_logger(model, path, log_dict=None):
+    print("Logging the model at " + path)
+    model.export_free_parameters(path)
+    if log_dict:
+        file = open(path + "log.txt", "w")
+        for key, value in log_dict.items():
+            file.write(key + str(value))
+        file.close()

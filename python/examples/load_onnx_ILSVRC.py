@@ -29,7 +29,7 @@ import argparse
 parser = argparse.ArgumentParser(description="Testbench for several standard architectures on the ILSVRC2012 dataset")
 parser.add_argument('--arch', type=str, default='MobileNetv2-onnx', metavar='N',
                     help='MobileNetv2-onnx|ResNet-onnx|')
-parser.add_argument('--epochs', type=int, default=-1, metavar='S',
+parser.add_argument('--epochs', type=int, default=0, metavar='S',
                     help='Nb Epochs. 0 is testing only (default: architecture dependent)')
 parser.add_argument('--batch_size', type=int, default=64, metavar='S',
                     help='Batch size')

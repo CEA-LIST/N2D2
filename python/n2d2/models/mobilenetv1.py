@@ -23,14 +23,13 @@ from n2d2.utils import ConfigSection
 from n2d2.cells.nn import Fc, Conv, ConvDepthWise, ConvPointWise, GlobalPool2d, BatchNorm2d
 from n2d2.cells import Sequence
 from n2d2.activation import Rectifier, Linear
-from n2d2.filler import He, Xavier, Constant
-from n2d2.solver import SGD
+from n2d2.filler import He, Xavier, Constant, Normal
 from n2d2.models.ILSVRC_outils import ILSVRC_preprocessing
 
-
+# NOTE: This is the filler optimized for quantization. In normal training He might work better
 def conv_config(with_bn):
     return ConfigSection(activation=Linear() if with_bn else Rectifier(),
-                         weights_filler=He(), no_bias=True)
+                         weights_filler=Xavier(variance_norm='FanOut', scaling=2.0), no_bias=True)
 
 
 class MobileNetv1Extractor(Sequence):
@@ -103,7 +102,7 @@ class MobileNetv1Head(Sequence):
     def __init__(self, nb_outputs, alpha=None):
 
         pool = GlobalPool2d(pooling='Average', name="pool1")
-        fc = Fc(32 * int(32 * alpha), nb_outputs, activation=Linear(), weights_filler=Xavier(),
+        fc = Fc(32 * int(32 * alpha), nb_outputs, activation=Linear(), weights_filler=Normal(mean=0.0, std_dev=0.01),
                 bias_filler=Constant(value=0.0), name="fc")
 
         Sequence.__init__(self, [pool, fc], "head")
@@ -120,7 +119,7 @@ class MobileNetv1(Sequence):
                 for cell in scale:
                     if isinstance(cell, Conv):
                         bn_name = "bn" + cell.get_name()[4:]
-                        scale.insert(scale.get_index(cell)+1, BatchNorm2d(cell.get_nb_outputs(), name=bn_name))
+                        scale.insert(scale.index(cell)+1, BatchNorm2d(cell.get_nb_outputs(), activation=Rectifier(), name=bn_name))
 
         self.head = MobileNetv1Head(nb_outputs, alpha)
 
@@ -131,6 +130,3 @@ class MobileNetv1(Sequence):
 def ILSVRC_preprocessing(size=224):
    return ILSVRC_preprocessing(size)
 
-
-def load_from_ONNX(dims=None, batch_size=1, path=None, download=False):
-    raise RuntimeError("Not implemented")

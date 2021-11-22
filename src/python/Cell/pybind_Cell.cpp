@@ -170,6 +170,14 @@ void init_Cell(py::module &m) {
      :param fileName: Destination file
      :type fileName: str
      )mydelimiter")
+     .def("exportQuantFreeParameters", &Cell::exportQuantFreeParameters, py::arg("fileName"),    
+    R"mydelimiter(
+     Export quantized cell free parameters to a file, in ASCII format compatible between
+     the different cell models
+     
+     :param fileName: Destination file
+     :type fileName: str
+     )mydelimiter")
     .def("importFreeParameters", &Cell::importFreeParameters, py::arg("fileName"), py::arg("ignoreNotExists") = false,
      R"mydelimiter(
      Load cell free parameters from a file, in ASCII format compatible between

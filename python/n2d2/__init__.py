@@ -21,7 +21,7 @@
 try:    
     # If you try to import numpy after initialising a deepNet, the import cause a crash.
     # Importing numpy before the library is a temporary fix. 
-    # I put this import in a try bloc to avoid adding an explicit dependance to numpy. 
+    # I put this import in a try bloc to avoid adding an explicit dependence to numpy.
     import numpy
 except:
     pass

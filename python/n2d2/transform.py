@@ -24,61 +24,25 @@ import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
 from abc import ABC, abstractmethod
 
-"""
-For the tranformations, it is relatively important to be able to write custom 
-transformations in Python. This is because these transformations are anyways not
-executed on GPU at the moment, and additionaly they depend strongly on the data
-that is used.
-However, at the moment this remains tricky due to how data is loaded in an optimized
-way in N2D2
-"""
-
-"""
-Example for custom transformation
-"""
-# class Test(N2D2.CustomTransformation):
-#     """
-#     Override this class to create your own Transformation.
-#     You need to override the following method : 
-#         - apply_unsigned_char(self, Tensor<unsigned char>& frame, Tensor<int>& /*labels*/, std::vector<std::shared_ptr<ROI> >& /*labelsROI*/, int /*id*/ = -1)
-#         - apply_int(self, Tensor<int>& frame, Tensor<int>& /*labels*/, std::vector<std::shared_ptr<ROI> >& /*labelsROI*/, int /*id*/ = -1)
-#         - etc ..
-#     """
-#     def __init__(self):
-#         print("init TEST")
-#         N2D2.CustomTransformation.__init__(self)
-#         print("DONE")
-
-#     def apply_unsigned_char(self, frame, labels, labelsROI, id):
-#          print("using python function !")
-
-# class CustomTransformation(Transformation):
-#     def __init__(self, **config_parameters):
-#         Transformation.__init__(self, **config_parameters)
-#         self._N2D2_object = Test()
-
-# TODO : Change binding to expose apply method 
-# class CustomTransformation(Transformation):
-#     def __init__(self, custom_transformation):
-#         super().__init__()
-#         self._transformation = custom_transformation
-
-# https://pybind11.readthedocs.io/en/stable/reference.html#c.PYBIND11_OVERRIDE
-# https://pybind11.readthedocs.io/en/stable/advanced/classes.html#overriding-virtuals
 
 class Transformation(N2D2_Interface, ABC):
 
     @abstractmethod
     def __init__(self, **config_parameters):
-
+        """
+          :param apply_to: To which partition the transform is applied. One of: "LearnOnly", "ValidationOnly", "TestOnly", "NoLearn", "NoValidation", "NoTest", `All`, default=`All`
+          :type apply_to: str, optional
+          """
         self._apply_to = N2D2.Database.StimuliSetMask.All
         if 'apply_to' in config_parameters:
+            if not isinstance(config_parameters['apply_to'], str):
+                raise n2d2.error_handler.WrongInputType("apply_to", type(config_parameters['apply_to']), ['str'])
             self._apply_to = N2D2.Database.StimuliSetMask.__members__[config_parameters.pop('apply_to')]
 
         N2D2_Interface.__init__(self, **config_parameters)
 
     def __str__(self):
-        output = self._Type #+ "Transformation"
+        output = self._Type
         output += N2D2_Interface.__str__(self)
         if self._apply_to is not N2D2.Database.StimuliSetMask.All:
             output += "[apply_to=" + str(self._apply_to) + "]"
@@ -88,7 +52,7 @@ class Transformation(N2D2_Interface, ABC):
         return self._apply_to
 
     @classmethod
-    def create_from_N2D2_object(cls, N2D2_object): # TODO : add an optional parameter apply_to ?
+    def create_from_N2D2_object(cls, N2D2_object):
         n2d2_transform = super().create_from_N2D2_object(N2D2_object)
         n2d2_transform._apply_to = N2D2.Database.StimuliSetMask.All 
         return n2d2_transform

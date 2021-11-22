@@ -30,7 +30,7 @@ parser.add_argument('--batch_size', type=int, default=64, metavar='S',
                     help='Batch size')
 parser.add_argument('--dev', type=int, default=0, metavar='S',
                     help='cuda device (default: 0)')
-parser.add_argument("--data_path", type=str, help="Path to ILSVRC2012 dataset")
+parser.add_argument("--data_path", type=str, help="Path to MNIST dataset")
 
 args = parser.parse_args()
 
@@ -50,12 +50,13 @@ print(provider)
 
 print("\n### Loading Model ###")
 model = n2d2.models.lenet.LeNet(10)
-print(model)
 
 softmax = n2d2.cells.nn.Softmax(with_loss=True)
 target = n2d2.target.Score(provider)
 
 model.set_solver(n2d2.solver.SGD(learning_rate=0.01, momentum=0.9))
+
+print(model)
 
 print("\n### Training ###")
 for epoch in range(args.epochs):
@@ -68,6 +69,7 @@ for epoch in range(args.epochs):
     for i in range(math.ceil(database.get_nb_stimuli('Learn')/args.batch_size)):
 
         x = provider.read_random_batch()
+
         x = model(x)
         x = softmax(x)
         x = target(x)
@@ -77,7 +79,6 @@ for epoch in range(args.epochs):
 
         print("Example: " + str(i * args.batch_size) + ", loss: "
               + "{0:.3f}".format(target.loss()), end='\r')
-
 
     print("\n### Validation ###")
 
