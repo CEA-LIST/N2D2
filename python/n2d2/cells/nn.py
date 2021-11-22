@@ -258,7 +258,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
 
     def _add_to_graph(self, inputs):
         self.add_input(inputs)
-        self._deepnet.add_to_current_group(self)
+        #self._deepnet.add_to_current_group(self)
 
     @deprecated(reason="You should use activation as a python attribute.")
     def set_activation(self, activation):
@@ -326,7 +326,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         for idx, ipt in enumerate(parents):
             if ipt is not None:
                 self._input_cells.append(parents[idx].getName())
-        self._deepnet.add_to_current_group(self)
+        #self._deepnet.add_to_current_group(self)
 
     def __str__(self):
         output = "\'" + self.get_name() + "\' " + self.get_type() + "(" + self._model_key + ")"
@@ -1172,7 +1172,6 @@ class Softmax(NeuralNetworkCell, Datatyped):
 
             """Set and initialize here all complex cells members"""
             for key, value in self._config_parameters.items():
-                print(key, value)
                 self.__setattr__(key, value)
             self.load_N2D2_parameters(self.N2D2())
 
