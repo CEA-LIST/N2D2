@@ -1,0 +1,2034 @@
+execve("/usr/bin/vi", ["vi", "src/DeepNetQuantization.cpp"], 0x7ffe99b6da98 /* 69 vars */) = 0
+brk(NULL)                               = 0x564c95502000
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c474000
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/tls/haswell/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib/tls/haswell/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/tls/haswell/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib/tls/haswell/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/tls/haswell/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib/tls/haswell/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/tls/haswell/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib/tls/haswell", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/tls/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib/tls/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/tls/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib/tls/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/tls/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib/tls/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/tls/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib/tls", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/haswell/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib/haswell/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/haswell/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib/haswell/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/haswell/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib/haswell/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/haswell/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib/haswell", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/libgcrypt/lib/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/libgcrypt/lib", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/tls/haswell/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64/tls/haswell/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/tls/haswell/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64/tls/haswell/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/tls/haswell/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64/tls/haswell/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/tls/haswell/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64/tls/haswell", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/tls/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64/tls/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/tls/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64/tls/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/tls/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64/tls/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/tls/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64/tls", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/haswell/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64/haswell/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/haswell/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64/haswell/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/haswell/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64/haswell/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/haswell/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64/haswell", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/gcc63/lib64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/gcc63/lib64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/tls/haswell/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib/tls/haswell/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/tls/haswell/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib/tls/haswell/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/tls/haswell/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib/tls/haswell/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/tls/haswell/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib/tls/haswell", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/tls/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib/tls/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/tls/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib/tls/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/tls/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib/tls/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/tls/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib/tls", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/haswell/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib/haswell/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/haswell/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib/haswell/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/haswell/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib/haswell/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/haswell/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib/haswell", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/lib/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+openat(AT_FDCWD, "/usr/lib/tls/haswell/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/tls/haswell/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/tls/haswell/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/tls/haswell/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/tls/haswell/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/tls/haswell/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/tls/haswell/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/tls/haswell", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/tls/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/tls/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/tls/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/tls/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/tls/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/tls/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/tls/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/tls", 0x7ffc0f2286c0)    = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/haswell/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/haswell/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/haswell/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/haswell/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/haswell/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/haswell/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/haswell/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/haswell", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib", {st_mode=S_IFDIR|0755, st_size=12288, ...}) = 0
+openat(AT_FDCWD, "/usr/lib/libv4l/tls/haswell/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l/tls/haswell/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libv4l/tls/haswell/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l/tls/haswell/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libv4l/tls/haswell/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l/tls/haswell/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libv4l/tls/haswell/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l/tls/haswell", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libv4l/tls/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l/tls/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libv4l/tls/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l/tls/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libv4l/tls/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l/tls/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libv4l/tls/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l/tls", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libv4l/haswell/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l/haswell/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libv4l/haswell/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l/haswell/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libv4l/haswell/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l/haswell/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libv4l/haswell/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l/haswell", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libv4l/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libv4l/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libv4l/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libv4l/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/libv4l", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/tls/haswell/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64/tls/haswell/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/tls/haswell/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64/tls/haswell/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/tls/haswell/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64/tls/haswell/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/tls/haswell/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64/tls/haswell", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/tls/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64/tls/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/tls/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64/tls/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/tls/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64/tls/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/tls/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64/tls", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/haswell/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64/haswell/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/haswell/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64/haswell/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/haswell/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64/haswell/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/haswell/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64/haswell", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/cuda/lib64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/cuda/lib64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/tls/haswell/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib/tls/haswell/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/tls/haswell/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib/tls/haswell/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/tls/haswell/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib/tls/haswell/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/tls/haswell/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib/tls/haswell", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/tls/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib/tls/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/tls/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib/tls/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/tls/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib/tls/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/tls/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib/tls", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/haswell/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib/haswell/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/haswell/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib/haswell/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/haswell/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib/haswell/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/haswell/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib/haswell", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/avx512_1/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib/avx512_1/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/avx512_1/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib/avx512_1", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/x86_64/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib/x86_64", 0x7ffc0f2286c0) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/local/systemc233/lib", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=269680, ...}) = 0
+mmap(NULL, 269680, PROT_READ, MAP_PRIVATE, 3, 0) = 0x14e34c432000
+close(3)                                = 0
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libgtk-3.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0 \274\10\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=7350712, ...}) = 0
+mmap(NULL, 9466848, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34b945000
+mprotect(0x14e34c036000, 2097152, PROT_NONE) = 0
+mmap(0x14e34c236000, 73728, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x6f1000) = 0x14e34c236000
+mmap(0x14e34c248000, 17376, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e34c248000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libgdk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libgdk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libgdk-3.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libgdk-3.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0000\266\2\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=1003808, ...}) = 0
+mmap(NULL, 3102064, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34b64f000
+mprotect(0x14e34b73a000, 2097152, PROT_NONE) = 0
+mmap(0x14e34b93a000, 40960, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0xeb000) = 0x14e34b93a000
+mmap(0x14e34b944000, 1392, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e34b944000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libpangocairo-1.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libpangocairo-1.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libpangocairo-1.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libpangocairo-1.0.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\340H\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=51096, ...}) = 0
+mmap(NULL, 2146488, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34b442000
+mprotect(0x14e34b44e000, 2093056, PROT_NONE) = 0
+mmap(0x14e34b64d000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0xb000) = 0x14e34b64d000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libpango-1.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libpango-1.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libpango-1.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libpango-1.0.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0000\313\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=313264, ...}) = 0
+mmap(NULL, 2409104, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34b1f5000
+mprotect(0x14e34b23f000, 2093056, PROT_NONE) = 0
+mmap(0x14e34b43e000, 16384, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x49000) = 0x14e34b43e000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libcairo.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libcairo.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libcairo.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libcairo.so.2", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\200\"\1\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=1161648, ...}) = 0
+mmap(NULL, 3262896, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34aed8000
+mprotect(0x14e34aff0000, 2093056, PROT_NONE) = 0
+mmap(0x14e34b1ef000, 20480, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x117000) = 0x14e34b1ef000
+mmap(0x14e34b1f4000, 2480, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e34b1f4000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libgdk_pixbuf-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libgdk_pixbuf-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libgdk_pixbuf-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libgdk_pixbuf-2.0.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\260b\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=146776, ...}) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c430000
+mmap(NULL, 2242224, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34acb4000
+mprotect(0x14e34acd6000, 2097152, PROT_NONE) = 0
+mmap(0x14e34aed6000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x22000) = 0x14e34aed6000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libgio-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libgio-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libgio-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libgio-2.0.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0@\201\3\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=1690808, ...}) = 0
+mmap(NULL, 3793528, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34a915000
+mprotect(0x14e34aaab000, 2093056, PROT_NONE) = 0
+mmap(0x14e34acaa000, 32768, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x195000) = 0x14e34acaa000
+mmap(0x14e34acb2000, 4728, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e34acb2000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libgobject-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libgobject-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libgobject-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0`\260\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=342072, ...}) = 0
+mmap(NULL, 2440040, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34a6c1000
+mprotect(0x14e34a713000, 2097152, PROT_NONE) = 0
+mmap(0x14e34a913000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x52000) = 0x14e34a913000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libglib-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libglib-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libglib-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libglib-2.0.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0@\260\1\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=1137968, ...}) = 0
+mmap(NULL, 3236232, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34a3aa000
+mprotect(0x14e34a4be000, 2097152, PROT_NONE) = 0
+mmap(0x14e34a6be000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x114000) = 0x14e34a6be000
+mmap(0x14e34a6c0000, 392, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e34a6c0000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libSM.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libSM.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libSM.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libSM.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\300\33\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=30960, ...}) = 0
+mmap(NULL, 2126192, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34a1a2000
+mprotect(0x14e34a1a9000, 2093056, PROT_NONE) = 0
+mmap(0x14e34a3a8000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x6000) = 0x14e34a3a8000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libICE.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libICE.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libICE.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libICE.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\0F\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=97952, ...}) = 0
+mmap(NULL, 2207584, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e349f87000
+mprotect(0x14e349f9e000, 2093056, PROT_NONE) = 0
+mmap(0x14e34a19d000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x16000) = 0x14e34a19d000
+mmap(0x14e34a19f000, 12128, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e34a19f000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libXt.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libXt.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libXt.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libXt.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\0201\1\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=425552, ...}) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c42e000
+mmap(NULL, 2523872, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e349d1e000
+mprotect(0x14e349d80000, 2097152, PROT_NONE) = 0
+mmap(0x14e349f80000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x62000) = 0x14e349f80000
+mmap(0x14e349f86000, 736, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e349f86000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libX11.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libX11.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libX11.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libX11.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\300\207\1\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=1277384, ...}) = 0
+mmap(NULL, 3374392, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e3499e6000
+mprotect(0x14e349b19000, 2097152, PROT_NONE) = 0
+mmap(0x14e349d19000, 20480, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x133000) = 0x14e349d19000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libm.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libm.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libm.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libm.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\200\272\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=1700792, ...}) = 0
+mmap(NULL, 3789144, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e349648000
+mprotect(0x14e3497e5000, 2093056, PROT_NONE) = 0
+mmap(0x14e3499e4000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x19c000) = 0x14e3499e4000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libtinfo.so.5", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libtinfo.so.5", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libtinfo.so.5", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libtinfo.so.5", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\220\311\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=170784, ...}) = 0
+mmap(NULL, 2267936, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34941e000
+mprotect(0x14e349443000, 2097152, PROT_NONE) = 0
+mmap(0x14e349643000, 20480, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x25000) = 0x14e349643000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libselinux.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libselinux.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libselinux.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libselinux.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\20b\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=154832, ...}) = 0
+mmap(NULL, 2259152, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e3491f6000
+mprotect(0x14e34921b000, 2093056, PROT_NONE) = 0
+mmap(0x14e34941a000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x24000) = 0x14e34941a000
+mmap(0x14e34941c000, 6352, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e34941c000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libacl.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libacl.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libacl.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libacl.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\340\33\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=31232, ...}) = 0
+mmap(NULL, 2126336, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e348fee000
+mprotect(0x14e348ff5000, 2093056, PROT_NONE) = 0
+mmap(0x14e3491f4000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x6000) = 0x14e3491f4000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libgpm.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libgpm.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libgpm.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libgpm.so.2", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\300\34\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=22456, ...}) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c42c000
+mmap(NULL, 2118752, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e348de8000
+mprotect(0x14e348ded000, 2093056, PROT_NONE) = 0
+mmap(0x14e348fec000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x4000) = 0x14e348fec000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libdl.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libdl.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libdl.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libdl.so.2", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0P\16\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=14560, ...}) = 0
+mmap(NULL, 2109712, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e348be4000
+mprotect(0x14e348be7000, 2093056, PROT_NONE) = 0
+mmap(0x14e348de6000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x2000) = 0x14e348de6000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/liblua5.2.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/liblua5.2.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/liblua5.2.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/liblua5.2.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\260e\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=203624, ...}) = 0
+mmap(NULL, 2298608, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e3489b2000
+mprotect(0x14e3489e1000, 2097152, PROT_NONE) = 0
+mmap(0x14e348be1000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x2f000) = 0x14e348be1000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libperl.so.5.26", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libperl.so.5.26", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libperl.so.5.26", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libperl.so.5.26", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\0\260\2\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=2083216, ...}) = 0
+mmap(NULL, 4179016, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e3485b5000
+mprotect(0x14e3487aa000, 2097152, PROT_NONE) = 0
+mmap(0x14e3489aa000, 32768, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1f5000) = 0x14e3489aa000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libpthread.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libpthread.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libpthread.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libpthread.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0000b\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=144976, ...}) = 0
+mmap(NULL, 2221184, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e348396000
+mprotect(0x14e3483b0000, 2093056, PROT_NONE) = 0
+mmap(0x14e3485af000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x19000) = 0x14e3485af000
+mmap(0x14e3485b1000, 13440, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e3485b1000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libpython3.6m.so.1.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libpython3.6m.so.1.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libpython3.6m.so.1.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libpython3.6m.so.1.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\300\230\6\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=4683728, ...}) = 0
+mmap(NULL, 6989568, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e347ceb000
+mprotect(0x14e3480c2000, 2093056, PROT_NONE) = 0
+mmap(0x14e3482c1000, 659456, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x3d6000) = 0x14e3482c1000
+mmap(0x14e348362000, 210688, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e348362000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libtcl8.6.so", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libtcl8.6.so", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libtcl8.6.so", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libtcl8.6.so", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0@X\2\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=1770184, ...}) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c42a000
+mmap(NULL, 3869104, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34793a000
+mprotect(0x14e347adc000, 2093056, PROT_NONE) = 0
+mmap(0x14e347cdb000, 61440, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1a1000) = 0x14e347cdb000
+mmap(0x14e347cea000, 2480, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e347cea000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libc.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libc.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libc.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\20\35\2\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=2030928, ...}) = 0
+mmap(NULL, 4131552, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e347549000
+mprotect(0x14e347730000, 2097152, PROT_NONE) = 0
+mmap(0x14e347930000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1e7000) = 0x14e347930000
+mmap(0x14e347936000, 15072, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e347936000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libgmodule-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libgmodule-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libgmodule-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libgmodule-2.0.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\20\21\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=14232, ...}) = 0
+mmap(NULL, 2109560, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e347345000
+mprotect(0x14e347348000, 2093056, PROT_NONE) = 0
+mmap(0x14e347547000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x2000) = 0x14e347547000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libXi.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libXi.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libXi.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libXi.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\200!\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=63944, ...}) = 0
+mmap(NULL, 2159240, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e347135000
+mprotect(0x14e347144000, 2093056, PROT_NONE) = 0
+mmap(0x14e347343000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0xe000) = 0x14e347343000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libXfixes.so.3", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libXfixes.so.3", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libXfixes.so.3", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libXfixes.so.3", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0@\25\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=22640, ...}) = 0
+mmap(NULL, 2117896, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e346f2f000
+mprotect(0x14e346f34000, 2093056, PROT_NONE) = 0
+mmap(0x14e347133000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x4000) = 0x14e347133000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libcairo-gobject.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libcairo-gobject.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libcairo-gobject.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libcairo-gobject.so.2", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\0003\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=34720, ...}) = 0
+mmap(NULL, 2130272, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e346d26000
+mprotect(0x14e346d2c000, 2097152, PROT_NONE) = 0
+mmap(0x14e346f2c000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x6000) = 0x14e346f2c000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libatk-1.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libatk-1.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libatk-1.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libatk-1.0.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\20\242\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=153520, ...}) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c428000
+mmap(NULL, 2249880, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e346b00000
+mprotect(0x14e346b22000, 2097152, PROT_NONE) = 0
+mmap(0x14e346d22000, 16384, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x22000) = 0x14e346d22000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libatk-bridge-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libatk-bridge-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libatk-bridge-2.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libatk-bridge-2.0.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0`\305\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=198312, ...}) = 0
+mmap(NULL, 2294480, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e3468cf000
+mprotect(0x14e3468fd000, 2097152, PROT_NONE) = 0
+mmap(0x14e346afd000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x2e000) = 0x14e346afd000
+mmap(0x14e346aff000, 720, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e346aff000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libepoxy.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libepoxy.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libepoxy.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libepoxy.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\220\274\5\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=1053560, ...}) = 0
+mmap(NULL, 3148920, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e3465ce000
+mprotect(0x14e3466c1000, 2097152, PROT_NONE) = 0
+mmap(0x14e3468c1000, 57344, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0xf3000) = 0x14e3468c1000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libpangoft2-1.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libpangoft2-1.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libpangoft2-1.0.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libpangoft2-1.0.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0000q\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=87904, ...}) = 0
+mmap(NULL, 2183504, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e3463b8000
+mprotect(0x14e3463cc000, 2097152, PROT_NONE) = 0
+mmap(0x14e3465cc000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x14000) = 0x14e3465cc000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libfontconfig.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libfontconfig.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libfontconfig.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libfontconfig.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\0n\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=281984, ...}) = 0
+mmap(NULL, 2377736, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e346173000
+mprotect(0x14e3461b1000, 2097152, PROT_NONE) = 0
+mmap(0x14e3463b1000, 28672, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x3e000) = 0x14e3463b1000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libXinerama.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libXinerama.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libXinerama.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libXinerama.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\360\n\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=10376, ...}) = 0
+mmap(NULL, 2105640, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e345f70000
+mprotect(0x14e345f72000, 2093056, PROT_NONE) = 0
+mmap(0x14e346171000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1000) = 0x14e346171000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libXrandr.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libXrandr.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libXrandr.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libXrandr.so.2", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\0\34\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=43320, ...}) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c426000
+mmap(NULL, 2138504, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e345d65000
+mprotect(0x14e345d6f000, 2093056, PROT_NONE) = 0
+mmap(0x14e345f6e000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x9000) = 0x14e345f6e000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libXcursor.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libXcursor.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libXcursor.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libXcursor.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0 #\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=39240, ...}) = 0
+mmap(NULL, 2134472, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e345b5b000
+mprotect(0x14e345b64000, 2093056, PROT_NONE) = 0
+mmap(0x14e345d63000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x8000) = 0x14e345d63000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libXcomposite.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libXcomposite.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libXcomposite.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libXcomposite.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0@\f\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=10288, ...}) = 0
+mmap(NULL, 2105496, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e345958000
+mprotect(0x14e34595a000, 2093056, PROT_NONE) = 0
+mmap(0x14e345b59000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1000) = 0x14e345b59000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libXdamage.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libXdamage.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libXdamage.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libXdamage.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0`\v\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=10272, ...}) = 0
+mmap(NULL, 2105512, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e345755000
+mprotect(0x14e345757000, 2093056, PROT_NONE) = 0
+mmap(0x14e345956000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1000) = 0x14e345956000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libxkbcommon.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libxkbcommon.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libxkbcommon.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libxkbcommon.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\20@\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=256424, ...}) = 0
+mmap(NULL, 2351480, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e345516000
+mprotect(0x14e345553000, 2093056, PROT_NONE) = 0
+mmap(0x14e345752000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x3c000) = 0x14e345752000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libwayland-cursor.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libwayland-cursor.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libwayland-cursor.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libwayland-cursor.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\220\21\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=31104, ...}) = 0
+mmap(NULL, 2126320, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34530e000
+mprotect(0x14e345312000, 2093056, PROT_NONE) = 0
+mmap(0x14e345511000, 20480, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x3000) = 0x14e345511000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libwayland-egl.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libwayland-egl.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libwayland-egl.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libwayland-egl.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0@\6\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=6024, ...}) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c424000
+mmap(NULL, 2101304, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34510c000
+mprotect(0x14e34510d000, 2093056, PROT_NONE) = 0
+mmap(0x14e34530c000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0) = 0x14e34530c000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libwayland-client.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libwayland-client.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libwayland-client.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libwayland-client.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\360O\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=60552, ...}) = 0
+mmap(NULL, 2155688, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e344efd000
+mprotect(0x14e344f0a000, 2093056, PROT_NONE) = 0
+mmap(0x14e345109000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0xc000) = 0x14e345109000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libXext.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libXext.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libXext.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libXext.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\2205\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=73640, ...}) = 0
+mmap(NULL, 2169496, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e344ceb000
+mprotect(0x14e344cfc000, 2093056, PROT_NONE) = 0
+mmap(0x14e344efb000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x10000) = 0x14e344efb000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/librt.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/librt.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/librt.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/librt.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\0\"\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=31680, ...}) = 0
+mmap(NULL, 2128864, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e344ae3000
+mprotect(0x14e344aea000, 2093056, PROT_NONE) = 0
+mmap(0x14e344ce9000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x6000) = 0x14e344ce9000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libfreetype.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libfreetype.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libfreetype.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libfreetype.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\360\267\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=735704, ...}) = 0
+mmap(NULL, 2830840, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34482f000
+mprotect(0x14e3448dc000, 2093056, PROT_NONE) = 0
+mmap(0x14e344adb000, 32768, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0xac000) = 0x14e344adb000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libthai.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libthai.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libthai.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libthai.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0 \34\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=36904, ...}) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c422000
+mmap(NULL, 2132112, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e344626000
+mprotect(0x14e34462e000, 2093056, PROT_NONE) = 0
+mmap(0x14e34482d000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x7000) = 0x14e34482d000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libpixman-1.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libpixman-1.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libpixman-1.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libpixman-1.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0P\233\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=673808, ...}) = 0
+mmap(NULL, 2769224, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e344381000
+mprotect(0x14e34441e000, 2093056, PROT_NONE) = 0
+mmap(0x14e34461d000, 36864, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x9c000) = 0x14e34461d000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libpng16.so.16", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libpng16.so.16", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libpng16.so.16", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libpng16.so.16", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\340D\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=202672, ...}) = 0
+mmap(NULL, 2297872, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34414f000
+mprotect(0x14e344180000, 2093056, PROT_NONE) = 0
+mmap(0x14e34437f000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x30000) = 0x14e34437f000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libxcb-shm.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libxcb-shm.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libxcb-shm.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libxcb-shm.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0P\r\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=10312, ...}) = 0
+mmap(NULL, 2105448, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e343f4c000
+mprotect(0x14e343f4e000, 2093056, PROT_NONE) = 0
+mmap(0x14e34414d000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1000) = 0x14e34414d000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libxcb.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libxcb.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libxcb.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libxcb.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0P\261\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=162232, ...}) = 0
+mmap(NULL, 2257576, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e343d24000
+mprotect(0x14e343d4a000, 2097152, PROT_NONE) = 0
+mmap(0x14e343f4a000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x26000) = 0x14e343f4a000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libxcb-render.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libxcb-render.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libxcb-render.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libxcb-render.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\260L\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=51288, ...}) = 0
+mmap(NULL, 2146424, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e343b17000
+mprotect(0x14e343b23000, 2093056, PROT_NONE) = 0
+mmap(0x14e343d22000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0xb000) = 0x14e343d22000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libXrender.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libXrender.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libXrender.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libXrender.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0`\32\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=39448, ...}) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c420000
+mmap(NULL, 2134632, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34390d000
+mprotect(0x14e343916000, 2093056, PROT_NONE) = 0
+mmap(0x14e343b15000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x8000) = 0x14e343b15000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libz.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libz.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libz.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libz.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\220\37\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=116960, ...}) = 0
+mmap(NULL, 2212016, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e3436f0000
+mprotect(0x14e34370c000, 2093056, PROT_NONE) = 0
+mmap(0x14e34390b000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1b000) = 0x14e34390b000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libresolv.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libresolv.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libresolv.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libresolv.so.2", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\00008\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=97072, ...}) = 0
+mmap(NULL, 2202240, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e3434d6000
+mprotect(0x14e3434ed000, 2093056, PROT_NONE) = 0
+mmap(0x14e3436ec000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x16000) = 0x14e3436ec000
+mmap(0x14e3436ee000, 6784, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e3436ee000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libmount.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libmount.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libmount.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libmount.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0000\253\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=340232, ...}) = 0
+mmap(NULL, 2440288, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e343282000
+mprotect(0x14e3432d3000, 2093056, PROT_NONE) = 0
+mmap(0x14e3434d2000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x50000) = 0x14e3434d2000
+mmap(0x14e3434d5000, 3168, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e3434d5000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libffi.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libffi.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libffi.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libffi.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0@\27\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=31032, ...}) = 0
+mmap(NULL, 2127368, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34307a000
+mprotect(0x14e343081000, 2093056, PROT_NONE) = 0
+mmap(0x14e343280000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x6000) = 0x14e343280000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libpcre.so.3", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libpcre.so.3", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libpcre.so.3", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libpcre.so.3", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0 \25\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=464824, ...}) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c41e000
+mmap(NULL, 2560264, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e342e08000
+mprotect(0x14e342e78000, 2097152, PROT_NONE) = 0
+mmap(0x14e343078000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x70000) = 0x14e343078000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libuuid.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libuuid.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libuuid.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libuuid.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0@\26\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=27112, ...}) = 0
+mmap(NULL, 2122112, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e342c01000
+mprotect(0x14e342c07000, 2093056, PROT_NONE) = 0
+mmap(0x14e342e06000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x5000) = 0x14e342e06000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libbsd.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libbsd.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libbsd.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libbsd.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0P4\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=80104, ...}) = 0
+mmap(NULL, 2179152, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e3429ec000
+mprotect(0x14e3429ff000, 2093056, PROT_NONE) = 0
+mmap(0x14e342bfe000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x12000) = 0x14e342bfe000
+mmap(0x14e342c00000, 80, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e342c00000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libattr.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libattr.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libattr.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libattr.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\260\20\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=18680, ...}) = 0
+mmap(NULL, 2113752, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e3427e7000
+mprotect(0x14e3427eb000, 2093056, PROT_NONE) = 0
+mmap(0x14e3429ea000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x3000) = 0x14e3429ea000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libcrypt.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libcrypt.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libcrypt.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libcrypt.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0P\r\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=39208, ...}) = 0
+mmap(NULL, 2322976, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e3425af000
+mprotect(0x14e3425b8000, 2093056, PROT_NONE) = 0
+mmap(0x14e3427b7000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x8000) = 0x14e3427b7000
+mmap(0x14e3427b9000, 184864, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e3427b9000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libexpat.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libexpat.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libexpat.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libexpat.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0@8\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=202880, ...}) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c41c000
+mmap(NULL, 2298016, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34237d000
+mprotect(0x14e3423ac000, 2097152, PROT_NONE) = 0
+mmap(0x14e3425ac000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x2f000) = 0x14e3425ac000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libutil.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libutil.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libutil.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libutil.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0p\16\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=10592, ...}) = 0
+mmap(NULL, 2105616, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34217a000
+mprotect(0x14e34217c000, 2093056, PROT_NONE) = 0
+mmap(0x14e34237b000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1000) = 0x14e34237b000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libdbus-1.so.3", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libdbus-1.so.3", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libdbus-1.so.3", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libdbus-1.so.3", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\340\261\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=313496, ...}) = 0
+mmap(NULL, 2409168, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e341f2d000
+mprotect(0x14e341f78000, 2097152, PROT_NONE) = 0
+mmap(0x14e342178000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x4b000) = 0x14e342178000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libatspi.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libatspi.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libatspi.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libatspi.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\340\346\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=194728, ...}) = 0
+mmap(NULL, 2290584, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e341cfd000
+mprotect(0x14e341d29000, 2097152, PROT_NONE) = 0
+mmap(0x14e341f29000, 16384, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x2c000) = 0x14e341f29000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libharfbuzz.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libharfbuzz.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libharfbuzz.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libharfbuzz.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\300p\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=646064, ...}) = 0
+mmap(NULL, 2741296, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e341a5f000
+mprotect(0x14e341afb000, 2097152, PROT_NONE) = 0
+mmap(0x14e341cfb000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x9c000) = 0x14e341cfb000
+close(3)                                = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c41a000
+openat(AT_FDCWD, "/usr/local/lib/libdatrie.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libdatrie.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libdatrie.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libdatrie.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\300\20\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=26544, ...}) = 0
+mmap(NULL, 2121744, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e341858000
+mprotect(0x14e34185e000, 2093056, PROT_NONE) = 0
+mmap(0x14e341a5d000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x5000) = 0x14e341a5d000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libXau.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libXau.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libXau.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libXau.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\240\r\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=14440, ...}) = 0
+mmap(NULL, 2109704, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e341654000
+mprotect(0x14e341656000, 2097152, PROT_NONE) = 0
+mmap(0x14e341856000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x2000) = 0x14e341856000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libXdmcp.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libXdmcp.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libXdmcp.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libXdmcp.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\20\21\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=22616, ...}) = 0
+mmap(NULL, 2117760, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34144e000
+mprotect(0x14e341453000, 2093056, PROT_NONE) = 0
+mmap(0x14e341652000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x4000) = 0x14e341652000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libblkid.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libblkid.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libblkid.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libblkid.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0000\230\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=311720, ...}) = 0
+mmap(NULL, 2411776, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e341201000
+mprotect(0x14e341248000, 2097152, PROT_NONE) = 0
+mmap(0x14e341448000, 20480, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x47000) = 0x14e341448000
+mmap(0x14e34144d000, 3328, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e34144d000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libsystemd.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libsystemd.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libsystemd.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libsystemd.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0P\324\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=536648, ...}) = 0
+mmap(NULL, 2634312, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e340f7d000
+mprotect(0x14e340ffd000, 2093056, PROT_NONE) = 0
+mmap(0x14e3411fc000, 16384, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x7f000) = 0x14e3411fc000
+mmap(0x14e341200000, 584, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e341200000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libgraphite2.so.3", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libgraphite2.so.3", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libgraphite2.so.3", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libgraphite2.so.3", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\200$\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=182424, ...}) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c418000
+mmap(NULL, 2277560, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e340d50000
+mprotect(0x14e340d7b000, 2093056, PROT_NONE) = 0
+mmap(0x14e340f7a000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x2a000) = 0x14e340f7a000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/liblzma.so.5", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/liblzma.so.5", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/liblzma.so.5", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/liblzma.so.5", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\340(\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=153984, ...}) = 0
+mmap(NULL, 2248968, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e340b2a000
+mprotect(0x14e340b4e000, 2097152, PROT_NONE) = 0
+mmap(0x14e340d4e000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x24000) = 0x14e340d4e000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/liblz4.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/liblz4.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/liblz4.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/liblz4.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\240\35\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=112672, ...}) = 0
+mmap(NULL, 2207840, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e34090e000
+mprotect(0x14e340929000, 2093056, PROT_NONE) = 0
+mmap(0x14e340b28000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1a000) = 0x14e340b28000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libgcrypt.so.20", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libgcrypt.so.20", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libgcrypt.so.20", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libgcrypt.so.20", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\0\274\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=1159864, ...}) = 0
+mmap(NULL, 3256328, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e3405f2000
+mprotect(0x14e340706000, 2097152, PROT_NONE) = 0
+mmap(0x14e340906000, 28672, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x114000) = 0x14e340906000
+mmap(0x14e34090d000, 8, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x14e34090d000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/local/lib/libgpg-error.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/lib/libgpg-error.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/local/systemc233/lib/libgpg-error.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libgpg-error.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\340+\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0644, st_size=84032, ...}) = 0
+mmap(NULL, 2179304, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x14e3403dd000
+mprotect(0x14e3403f1000, 2093056, PROT_NONE) = 0
+mmap(0x14e3405f0000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x13000) = 0x14e3405f0000
+close(3)                                = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c416000
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c414000
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c412000
+mmap(NULL, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x14e34c40f000
+arch_prctl(ARCH_SET_FS, 0x14e34c40fa80) = 0
+mprotect(0x14e347930000, 16384, PROT_READ) = 0
+mprotect(0x14e3405f0000, 4096, PROT_READ) = 0
+mprotect(0x14e340906000, 8192, PROT_READ) = 0
+mprotect(0x14e340b28000, 4096, PROT_READ) = 0
+mprotect(0x14e348de6000, 4096, PROT_READ) = 0
+mprotect(0x14e3485af000, 4096, PROT_READ) = 0
+mprotect(0x14e340d4e000, 4096, PROT_READ) = 0
+mprotect(0x14e340f7a000, 8192, PROT_READ) = 0
+mprotect(0x14e344ce9000, 4096, PROT_READ) = 0
+mprotect(0x14e3411fc000, 12288, PROT_READ) = 0
+mprotect(0x14e342e06000, 4096, PROT_READ) = 0
+mprotect(0x14e341448000, 16384, PROT_READ) = 0
+mprotect(0x14e342bfe000, 4096, PROT_READ) = 0
+mprotect(0x14e341652000, 4096, PROT_READ) = 0
+mprotect(0x14e341856000, 4096, PROT_READ) = 0
+mprotect(0x14e341a5d000, 4096, PROT_READ) = 0
+mprotect(0x14e343078000, 4096, PROT_READ) = 0
+mprotect(0x14e34a6be000, 4096, PROT_READ) = 0
+mprotect(0x14e3499e4000, 4096, PROT_READ) = 0
+mprotect(0x14e34390b000, 4096, PROT_READ) = 0
+mprotect(0x14e34437f000, 4096, PROT_READ) = 0
+mprotect(0x14e344adb000, 28672, PROT_READ) = 0
+mprotect(0x14e341cfb000, 4096, PROT_READ) = 0
+mprotect(0x14e343280000, 4096, PROT_READ) = 0
+mprotect(0x14e34a913000, 4096, PROT_READ) = 0
+mprotect(0x14e343f4a000, 4096, PROT_READ) = 0
+mprotect(0x14e349d19000, 4096, PROT_READ) = 0
+mprotect(0x14e342178000, 4096, PROT_READ) = 0
+mprotect(0x14e341f29000, 12288, PROT_READ) = 0
+mprotect(0x14e34237b000, 4096, PROT_READ) = 0
+mprotect(0x14e3425ac000, 8192, PROT_READ) = 0
+mprotect(0x14e3427b7000, 4096, PROT_READ) = 0
+mprotect(0x14e3429ea000, 4096, PROT_READ) = 0
+mprotect(0x14e34941a000, 4096, PROT_READ) = 0
+mprotect(0x14e3434d2000, 8192, PROT_READ) = 0
+mprotect(0x14e3436ec000, 4096, PROT_READ) = 0
+mprotect(0x14e343b15000, 4096, PROT_READ) = 0
+mprotect(0x14e343d22000, 4096, PROT_READ) = 0
+mprotect(0x14e34414d000, 4096, PROT_READ) = 0
+mprotect(0x14e34461d000, 32768, PROT_READ) = 0
+mprotect(0x14e34482d000, 4096, PROT_READ) = 0
+mprotect(0x14e344efb000, 4096, PROT_READ) = 0
+mprotect(0x14e345109000, 8192, PROT_READ) = 0
+mprotect(0x14e34530c000, 4096, PROT_READ) = 0
+mprotect(0x14e345511000, 4096, PROT_READ) = 0
+mprotect(0x14e345752000, 8192, PROT_READ) = 0
+mprotect(0x14e345956000, 4096, PROT_READ) = 0
+mprotect(0x14e345b59000, 4096, PROT_READ) = 0
+mprotect(0x14e347133000, 4096, PROT_READ) = 0
+mprotect(0x14e345d63000, 4096, PROT_READ) = 0
+mprotect(0x14e345f6e000, 4096, PROT_READ) = 0
+mprotect(0x14e346171000, 4096, PROT_READ) = 0
+mprotect(0x14e3463b1000, 8192, PROT_READ) = 0
+mprotect(0x14e34b43e000, 12288, PROT_READ) = 0
+mprotect(0x14e3465cc000, 4096, PROT_READ) = 0
+mprotect(0x14e3468c1000, 28672, PROT_READ) = 0
+mprotect(0x14e346d22000, 12288, PROT_READ) = 0
+mprotect(0x14e346afd000, 4096, PROT_READ) = 0
+mprotect(0x14e34b1ef000, 12288, PROT_READ) = 0
+mprotect(0x14e346f2c000, 8192, PROT_READ) = 0
+mprotect(0x14e347343000, 4096, PROT_READ) = 0
+mprotect(0x14e347547000, 4096, PROT_READ) = 0
+mprotect(0x14e347cdb000, 57344, PROT_READ) = 0
+mprotect(0x14e3482c1000, 16384, PROT_READ) = 0
+mprotect(0x14e3489aa000, 20480, PROT_READ) = 0
+mprotect(0x14e348be1000, 8192, PROT_READ) = 0
+mprotect(0x14e348fec000, 4096, PROT_READ) = 0
+mprotect(0x14e3491f4000, 4096, PROT_READ) = 0
+mprotect(0x14e349643000, 16384, PROT_READ) = 0
+mprotect(0x14e34a19d000, 4096, PROT_READ) = 0
+mprotect(0x14e34a3a8000, 4096, PROT_READ) = 0
+mprotect(0x14e349f80000, 4096, PROT_READ) = 0
+mprotect(0x14e34acaa000, 28672, PROT_READ) = 0
+mprotect(0x14e34aed6000, 4096, PROT_READ) = 0
+mprotect(0x14e34b64d000, 4096, PROT_READ) = 0
+mprotect(0x14e34b93a000, 28672, PROT_READ) = 0
+mprotect(0x14e34c236000, 45056, PROT_READ) = 0
+mprotect(0x564c94814000, 65536, PROT_READ) = 0
+mprotect(0x14e34c476000, 4096, PROT_READ) = 0
+munmap(0x14e34c432000, 269680)          = 0
+set_tid_address(0x14e34c40fd50)         = 41048
+set_robust_list(0x14e34c40fd60, 24)     = 0
+rt_sigaction(SIGRTMIN, {sa_handler=0x14e34839bcb0, sa_mask=[], sa_flags=SA_RESTORER|SA_SIGINFO, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGRT_1, {sa_handler=0x14e34839bd50, sa_mask=[], sa_flags=SA_RESTORER|SA_RESTART|SA_SIGINFO, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigprocmask(SIG_UNBLOCK, [RTMIN RT_1], NULL, 8) = 0
+prlimit64(0, RLIMIT_STACK, NULL, {rlim_cur=RLIM64_INFINITY, rlim_max=RLIM64_INFINITY}) = 0
+brk(NULL)                               = 0x564c95502000
+brk(0x564c95523000)                     = 0x564c95523000
+futex(0x14e34a6bff38, FUTEX_WAKE_PRIVATE, 2147483647) = 0
+futex(0x14e34a6bff38, FUTEX_WAKE_PRIVATE, 2147483647) = 0
+statfs("/sys/fs/selinux", 0x7ffc0f228fd0) = -1 ENOENT (No such file or directory)
+statfs("/selinux", 0x7ffc0f228fd0)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/proc/filesystems", O_RDONLY|O_CLOEXEC) = 3
+fstat(3, {st_mode=S_IFREG|0444, st_size=0, ...}) = 0
+read(3, "nodev\tsysfs\nnodev\trootfs\nnodev\tr"..., 1024) = 511
+read(3, "", 1024)                       = 0
+close(3)                                = 0
+access("/etc/selinux/config", F_OK)     = -1 ENOENT (No such file or directory)
+sigaltstack({ss_sp=0x564c95511a50, ss_flags=0, ss_size=8192}, NULL) = 0
+lseek(0, 0, SEEK_CUR)                   = -1 ESPIPE (Illegal seek)
+lseek(1, 0, SEEK_CUR)                   = -1 ESPIPE (Illegal seek)
+lseek(2, 0, SEEK_CUR)                   = -1 ESPIPE (Illegal seek)
+rt_sigaction(SIGPIPE, {sa_handler=SIG_IGN, sa_mask=[PIPE], sa_flags=SA_RESTORER|SA_RESTART, sa_restorer=0x14e347588040}, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+openat(AT_FDCWD, "/usr/lib/locale/locale-archive", O_RDONLY|O_CLOEXEC) = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=1683056, ...}) = 0
+mmap(NULL, 1683056, PROT_READ, MAP_PRIVATE, 3, 0) = 0x14e340242000
+close(3)                                = 0
+access("/home/bt206055/anaconda3/bin/vi", X_OK) = -1 ENOENT (No such file or directory)
+access("/home/bt206055/anaconda3/condabin/vi", X_OK) = -1 ENOENT (No such file or directory)
+access("/usr/local/gcc-aarch64-elf/bin/vi", X_OK) = -1 ENOENT (No such file or directory)
+access("/usr/local/gcc-aarch64-linux/bin/vi", X_OK) = -1 ENOENT (No such file or directory)
+access("/usr/local/dtc-1.4.7/vi", X_OK) = -1 ENOENT (No such file or directory)
+access("/product/metaframe/vi", X_OK)   = -1 ENOENT (No such file or directory)
+access("/usr/bin/vi", X_OK)             = 0
+stat("/usr/bin/vi", {st_mode=S_IFREG|0755, st_size=3173784, ...}) = 0
+brk(0x564c9554b000)                     = 0x564c9554b000
+stat("/usr/share/vim/vim80", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+ioctl(1, TCGETS, {B38400 opost isig icanon echo ...}) = 0
+getcwd("/local2/is240426/bt206055/n2d2/git_n2d2/N2D2-IP/N2D2", 4096) = 53
+chdir("/local2/is240426/bt206055/n2d2/git_n2d2/N2D2-IP/N2D2") = 0
+chdir("/home/bt206055")                 = 0
+getcwd("/home/bt206055", 1025)          = 15
+chdir("/local2/is240426/bt206055/n2d2/git_n2d2/N2D2-IP/N2D2") = 0
+sysinfo({uptime=3827372, loads=[351296, 370784, 280448], totalram=201376706560, freeram=9319993344, sharedram=3657728, bufferram=15371157504, totalswap=8589930496, freeswap=8584937472, procs=2822, totalhigh=0, freehigh=0, mem_unit=1}) = 0
+prlimit64(0, RLIMIT_DATA, NULL, {rlim_cur=RLIM64_INFINITY, rlim_max=RLIM64_INFINITY}) = 0
+getuid()                                = 1608
+stat("/usr/share/vim", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+openat(AT_FDCWD, "/usr/share/locale/locale.alias", O_RDONLY|O_CLOEXEC) = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=2995, ...}) = 0
+read(3, "# Locale name alias data base.\n#"..., 4096) = 2995
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/lang/en_US.UTF-8/LC_MESSAGES/vim.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/lang/en_US.utf8/LC_MESSAGES/vim.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/lang/en_US/LC_MESSAGES/vim.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/lang/en.UTF-8/LC_MESSAGES/vim.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/lang/en.utf8/LC_MESSAGES/vim.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/lang/en/LC_MESSAGES/vim.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/locale-langpack/en_US.UTF-8/LC_MESSAGES/vim.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/locale-langpack/en_US.utf8/LC_MESSAGES/vim.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/locale-langpack/en_US/LC_MESSAGES/vim.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/locale-langpack/en.UTF-8/LC_MESSAGES/vim.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/locale-langpack/en.utf8/LC_MESSAGES/vim.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/locale-langpack/en/LC_MESSAGES/vim.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+readlink("/proc/self/exe", "/usr/bin/vim.gtk3", 4096) = 17
+openat(AT_FDCWD, ".", O_RDONLY)         = 3
+fchdir(3)                               = 0
+chdir("src")                            = 0
+getcwd("/local2/is240426/bt206055/n2d2/git_n2d2/N2D2-IP/N2D2/src", 4096) = 57
+fchdir(3)                               = 0
+close(3)                                = 0
+stat("src/DeepNetQuantization.cpp", {st_mode=S_IFREG|0644, st_size=54579, ...}) = 0
+rt_sigaction(SIGWINCH, {sa_handler=0x564c944a2680, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e347588040}, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+rt_sigprocmask(SIG_UNBLOCK, [WINCH], [], 8) = 0
+rt_sigaction(SIGTSTP, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e347588040}, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+rt_sigprocmask(SIG_UNBLOCK, [TSTP], [], 8) = 0
+rt_sigaction(SIGCONT, {sa_handler=0x564c944a20e0, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e347588040}, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+rt_sigprocmask(SIG_UNBLOCK, [CONT], [], 8) = 0
+rt_sigaction(SIGPIPE, {sa_handler=SIG_IGN, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e347588040}, {sa_handler=SIG_IGN, sa_mask=[PIPE], sa_flags=SA_RESTORER|SA_RESTART, sa_restorer=0x14e347588040}, 8) = 0
+rt_sigprocmask(SIG_UNBLOCK, [PIPE], [], 8) = 0
+rt_sigaction(SIGINT, {sa_handler=0x564c944a26b0, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e347588040}, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+rt_sigprocmask(SIG_UNBLOCK, [INT], [], 8) = 0
+rt_sigaction(SIGALRM, {sa_handler=SIG_IGN, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e347588040}, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+rt_sigprocmask(SIG_UNBLOCK, [ALRM], [], 8) = 0
+rt_sigaction(SIGPWR, {sa_handler=0x564c944a2750, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e347588040}, {sa_handler=SIG_DFL, sa_mask=[], sa_flags=0}, 8) = 0
+rt_sigprocmask(SIG_UNBLOCK, [PWR], [], 8) = 0
+rt_sigaction(SIGHUP, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGQUIT, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGILL, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGTRAP, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGABRT, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGFPE, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGBUS, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGSEGV, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGSYS, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGTERM, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGVTALRM, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGPROF, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGXCPU, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGXFSZ, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGUSR1, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+rt_sigaction(SIGUSR2, {sa_handler=0x564c944a4180, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x14e3483a8980}, NULL, 8) = 0
+ioctl(0, TCGETS, {B38400 opost isig icanon echo ...}) = 0
+ioctl(1, TCGETS, {B38400 opost isig icanon echo ...}) = 0
+stat("/home/bt206055/.terminfo", 0x564c955354a0) = -1 ENOENT (No such file or directory)
+stat("/etc/terminfo", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+stat("/lib/terminfo", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+stat("/usr/share/terminfo", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+access("/etc/terminfo/s/screen", R_OK)  = -1 ENOENT (No such file or directory)
+access("/lib/terminfo/s/screen", R_OK)  = 0
+openat(AT_FDCWD, "/lib/terminfo/s/screen", O_RDONLY) = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=1653, ...}) = 0
+read(3, "\32\1*\0+\0\20\0i\1\231\2screen|VT 100/ANSI X"..., 4096) = 1653
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+ioctl(1, TCGETS, {B38400 opost isig icanon echo ...}) = 0
+ioctl(1, TCGETS, {B38400 opost isig icanon echo ...}) = 0
+ioctl(1, TCGETS, {B38400 opost isig icanon echo ...}) = 0
+ioctl(1, TCGETS, {B38400 opost isig icanon echo ...}) = 0
+ioctl(1, TIOCGWINSZ, {ws_row=62, ws_col=234, ws_xpixel=0, ws_ypixel=0}) = 0
+ioctl(0, TCGETS, {B38400 opost isig icanon echo ...}) = 0
+ioctl(1, TCGETS, {B38400 opost isig icanon echo ...}) = 0
+ioctl(1, TIOCGWINSZ, {ws_row=62, ws_col=234, ws_xpixel=0, ws_ypixel=0}) = 0
+brk(0x564c95570000)                     = 0x564c95570000
+brk(0x564c95594000)                     = 0x564c95594000
+ioctl(1, TCGETS, {B38400 opost isig icanon echo ...}) = 0
+ioctl(1, TIOCGWINSZ, {ws_row=62, ws_col=234, ws_xpixel=0, ws_ypixel=0}) = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 3
+fchdir(3)                               = 0
+chdir("/usr/share/vim")                 = 0
+getcwd("/usr/share/vim", 4096)          = 15
+fchdir(3)                               = 0
+close(3)                                = 0
+stat("/usr/share/vim/vimrc", {st_mode=S_IFREG|0644, st_size=2469, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vimrc", O_RDONLY) = 3
+fcntl(3, F_GETFD)                       = 0
+fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(3, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vimrc", {st_mode=S_IFREG|0644, st_size=2469, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=2469, ...}) = 0
+read(3, "\" All system-wide defaults are s"..., 4096) = 2469
+stat("/home/bt206055/.vim/debian.vim", 0x7ffc0f228150) = -1 ENOENT (No such file or directory)
+stat("/usr/share/vim/vimfiles/debian.vim", 0x7ffc0f228150) = -1 ENOENT (No such file or directory)
+stat("/usr/share/vim/vim80/debian.vim", {st_mode=S_IFREG|0644, st_size=2064, ...}) = 0
+stat("/usr/share/vim/vim80/debian.vim", {st_mode=S_IFREG|0644, st_size=2064, ...}) = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 4
+fchdir(4)                               = 0
+chdir("/usr/share/vim/vim80")           = 0
+getcwd("/usr/share/vim/vim80", 4096)    = 21
+fchdir(4)                               = 0
+close(4)                                = 0
+stat("/usr/share/vim/vim80/debian.vim", {st_mode=S_IFREG|0644, st_size=2064, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/debian.vim", O_RDONLY) = 4
+fcntl(4, F_GETFD)                       = 0
+fcntl(4, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(4, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/debian.vim", {st_mode=S_IFREG|0644, st_size=2064, ...}) = 0
+fstat(4, {st_mode=S_IFREG|0644, st_size=2064, ...}) = 0
+read(4, "\" Debian system-wide default con"..., 4096) = 2064
+getuid()                                = 1608
+stat("/etc/papersize", {st_mode=S_IFREG|0644, st_size=7, ...}) = 0
+openat(AT_FDCWD, "/etc/papersize", O_RDONLY|O_NONBLOCK) = 5
+close(5)                                = 0
+openat(AT_FDCWD, "/etc/papersize", O_RDONLY) = 5
+fstat(5, {st_mode=S_IFREG|0644, st_size=7, ...}) = 0
+read(5, "letter\n", 4096)               = 7
+read(5, "", 4096)                       = 0
+close(5)                                = 0
+read(4, "", 4096)                       = 0
+read(4, "", 4096)                       = 0
+close(4)                                = 0
+stat("/usr/share/vim/vimfiles/after/debian.vim", 0x7ffc0f228150) = -1 ENOENT (No such file or directory)
+stat("/home/bt206055/.vim/after/debian.vim", 0x7ffc0f228150) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, ".", O_RDONLY)         = 4
+fchdir(4)                               = 0
+chdir("/usr/share/vim/vim80/syntax")    = 0
+getcwd("/usr/share/vim/vim80/syntax", 4096) = 28
+fchdir(4)                               = 0
+close(4)                                = 0
+stat("/usr/share/vim/vim80/syntax/syntax.vim", {st_mode=S_IFREG|0644, st_size=1228, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/syntax/syntax.vim", O_RDONLY) = 4
+fcntl(4, F_GETFD)                       = 0
+fcntl(4, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(4, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/syntax/syntax.vim", {st_mode=S_IFREG|0644, st_size=1228, ...}) = 0
+fstat(4, {st_mode=S_IFREG|0644, st_size=1228, ...}) = 0
+read(4, "\" Vim syntax support file\n\" Main"..., 4096) = 1228
+stat("/home/bt206055/.vim/syntax/synload.vim", 0x7ffc0f226e30) = -1 ENOENT (No such file or directory)
+stat("/var/lib/vim/addons/syntax/synload.vim", 0x7ffc0f226e30) = -1 ENOENT (No such file or directory)
+stat("/usr/share/vim/vimfiles/syntax/synload.vim", 0x7ffc0f226e30) = -1 ENOENT (No such file or directory)
+stat("/usr/share/vim/vim80/syntax/synload.vim", {st_mode=S_IFREG|0644, st_size=1984, ...}) = 0
+stat("/usr/share/vim/vim80/syntax/synload.vim", {st_mode=S_IFREG|0644, st_size=1984, ...}) = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 5
+fchdir(5)                               = 0
+chdir("/usr/share/vim/vim80/syntax")    = 0
+getcwd("/usr/share/vim/vim80/syntax", 4096) = 28
+fchdir(5)                               = 0
+close(5)                                = 0
+stat("/usr/share/vim/vim80/syntax/synload.vim", {st_mode=S_IFREG|0644, st_size=1984, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/syntax/synload.vim", O_RDONLY) = 5
+fcntl(5, F_GETFD)                       = 0
+fcntl(5, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(5, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/syntax/synload.vim", {st_mode=S_IFREG|0644, st_size=1984, ...}) = 0
+fstat(5, {st_mode=S_IFREG|0644, st_size=1984, ...}) = 0
+read(5, "\" Vim syntax support file\n\" Main"..., 4096) = 1984
+stat("/home/bt206055/.vim/syntax/syncolor.vim", 0x7ffc0f226330) = -1 ENOENT (No such file or directory)
+stat("/var/lib/vim/addons/syntax/syncolor.vim", 0x7ffc0f226330) = -1 ENOENT (No such file or directory)
+stat("/usr/share/vim/vimfiles/syntax/syncolor.vim", 0x7ffc0f226330) = -1 ENOENT (No such file or directory)
+stat("/usr/share/vim/vim80/syntax/syncolor.vim", {st_mode=S_IFREG|0644, st_size=4093, ...}) = 0
+stat("/usr/share/vim/vim80/syntax/syncolor.vim", {st_mode=S_IFREG|0644, st_size=4093, ...}) = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 6
+fchdir(6)                               = 0
+chdir("/usr/share/vim/vim80/syntax")    = 0
+getcwd("/usr/share/vim/vim80/syntax", 4096) = 28
+fchdir(6)                               = 0
+close(6)                                = 0
+stat("/usr/share/vim/vim80/syntax/syncolor.vim", {st_mode=S_IFREG|0644, st_size=4093, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/syntax/syncolor.vim", O_RDONLY) = 6
+fcntl(6, F_GETFD)                       = 0
+fcntl(6, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(6, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/syntax/syncolor.vim", {st_mode=S_IFREG|0644, st_size=4093, ...}) = 0
+fstat(6, {st_mode=S_IFREG|0644, st_size=4093, ...}) = 0
+read(6, "\" Vim syntax support file\n\" Main"..., 4096) = 4093
+openat(AT_FDCWD, "/usr/share/vim/vim80/rgb.txt", O_RDONLY) = 7
+fstat(7, {st_mode=S_IFREG|0644, st_size=17780, ...}) = 0
+read(7, "255 250 250\t\tsnow\n248 248 255\t\tg"..., 4096) = 4096
+read(7, "dYellow\n255 255 224\t\tlight yello"..., 4096) = 4096
+read(7, "8\t\tLightBlue2\n154 192 205\t\tLight"..., 4096) = 4096
+read(7, "1 159\t\tPaleVioletRed2\n205 104 13"..., 4096) = 4096
+read(7, "9 199 199\t\tgray78\n199 199 199\t\tg"..., 4096) = 1396
+read(7, "", 4096)                       = 0
+lseek(7, 0, SEEK_SET)                   = 0
+read(7, "255 250 250\t\tsnow\n248 248 255\t\tg"..., 4096) = 4096
+read(7, "dYellow\n255 255 224\t\tlight yello"..., 4096) = 4096
+read(7, "8\t\tLightBlue2\n154 192 205\t\tLight"..., 4096) = 4096
+read(7, "1 159\t\tPaleVioletRed2\n205 104 13"..., 4096) = 4096
+read(7, "9 199 199\t\tgray78\n199 199 199\t\tg"..., 4096) = 1396
+read(7, "", 4096)                       = 0
+close(7)                                = 0
+read(6, "", 4096)                       = 0
+read(6, "", 4096)                       = 0
+close(6)                                = 0
+stat("/usr/share/vim/vimfiles/after/syntax/syncolor.vim", 0x7ffc0f226330) = -1 ENOENT (No such file or directory)
+stat("/var/lib/vim/addons/after/syntax/syncolor.vim", 0x7ffc0f226330) = -1 ENOENT (No such file or directory)
+stat("/home/bt206055/.vim/after/syntax/syncolor.vim", 0x7ffc0f226330) = -1 ENOENT (No such file or directory)
+read(5, "", 4096)                       = 0
+read(5, "", 4096)                       = 0
+close(5)                                = 0
+stat("/home/bt206055/.vim/filetype.vim", 0x7ffc0f226e00) = -1 ENOENT (No such file or directory)
+stat("/var/lib/vim/addons/filetype.vim", 0x7ffc0f226e00) = -1 ENOENT (No such file or directory)
+stat("/usr/share/vim/vimfiles/filetype.vim", 0x7ffc0f226e00) = -1 ENOENT (No such file or directory)
+stat("/usr/share/vim/vim80/filetype.vim", {st_mode=S_IFREG|0644, st_size=56051, ...}) = 0
+stat("/usr/share/vim/vim80/filetype.vim", {st_mode=S_IFREG|0644, st_size=56051, ...}) = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 5
+fchdir(5)                               = 0
+chdir("/usr/share/vim/vim80")           = 0
+getcwd("/usr/share/vim/vim80", 4096)    = 21
+fchdir(5)                               = 0
+close(5)                                = 0
+stat("/usr/share/vim/vim80/filetype.vim", {st_mode=S_IFREG|0644, st_size=56051, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/filetype.vim", O_RDONLY) = 5
+fcntl(5, F_GETFD)                       = 0
+fcntl(5, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(5, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/filetype.vim", {st_mode=S_IFREG|0644, st_size=56051, ...}) = 0
+fstat(5, {st_mode=S_IFREG|0644, st_size=56051, ...}) = 0
+read(5, "\" Vim support file to detect fil"..., 4096) = 4096
+brk(0x564c955b5000)                     = 0x564c955b5000
+brk(0x564c955b4000)                     = 0x564c955b4000
+read(5, " be before catch *.lst)\nau BufNe"..., 4096) = 4096
+brk(0x564c955d5000)                     = 0x564c955d5000
+brk(0x564c955d4000)                     = 0x564c955d4000
+read(5, "mand Scripts (*.cmd too)\nau BufN"..., 4096) = 4096
+brk(0x564c955f5000)                     = 0x564c955f5000
+brk(0x564c955f4000)                     = 0x564c955f4000
+read(5, "(1).getline(2).getline(3).getlin"..., 4096) = 4096
+brk(0x564c95615000)                     = 0x564c95615000
+brk(0x564c95614000)                     = 0x564c95614000
+read(5, "e,BufRead *.gp,.gprc\t\tsetf gp\n\n\""..., 4096) = 4096
+brk(0x564c95636000)                     = 0x564c95636000
+brk(0x564c95634000)                     = 0x564c95634000
+read(5, "tab\n\n\" Inno Setup\nau BufNewFile,"..., 4096) = 4096
+brk(0x564c95655000)                     = 0x564c95655000
+brk(0x564c95653000)                     = 0x564c95653000
+read(5, ".config\tsetf manconf\n\n\" Maple V\n"..., 4096) = 4096
+brk(0x564c95675000)                     = 0x564c95675000
+brk(0x564c95673000)                     = 0x564c95673000
+read(5, "Read *.papp,*.pxml,*.pxsl\tsetf p"..., 4096) = 4096
+brk(0x564c95694000)                     = 0x564c95694000
+brk(0x564c95692000)                     = 0x564c95692000
+read(5, "\n\" Readline\nau BufNewFile,BufRea"..., 4096) = 4096
+brk(0x564c956b4000)                     = 0x564c956b4000
+brk(0x564c956b2000)                     = 0x564c956b2000
+read(5, "talog\t\t\tsetf catalog\nau BufNewFi"..., 4096) = 4096
+brk(0x564c956d3000)                     = 0x564c956d3000
+brk(0x564c956d1000)                     = 0x564c956d1000
+brk(0x564c956f2000)                     = 0x564c956f2000
+brk(0x564c956f1000)                     = 0x564c956f1000
+read(5, "nt,mount,path,service,socket,swa"..., 4096) = 4096
+brk(0x564c95712000)                     = 0x564c95712000
+brk(0x564c95710000)                     = 0x564c95710000
+read(5, "ufNewFile,BufRead *.wbt\t\t\tsetf w"..., 4096) = 4096
+read(5, "t * if !did_filetype() | runtime"..., 4096) = 4096
+brk(0x564c95731000)                     = 0x564c95731000
+brk(0x564c95730000)                     = 0x564c95730000
+read(5, "tcap')\n\t\\|endif\n\n\" ReDIF\n\" Only "..., 4096) = 2803
+brk(0x564c95751000)                     = 0x564c95751000
+brk(0x564c9574f000)                     = 0x564c9574f000
+openat(AT_FDCWD, "/home/bt206055/.vim/ftdetect/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/var/lib/vim/addons/ftdetect/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vimfiles/ftdetect/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/ftdetect/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vimfiles/after/ftdetect/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/var/lib/vim/addons/after/ftdetect/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/home/bt206055/.vim/after/ftdetect/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+read(5, "", 4096)                       = 0
+read(5, "", 4096)                       = 0
+close(5)                                = 0
+stat("/usr/share/vim/vimfiles/after/filetype.vim", 0x7ffc0f226e00) = -1 ENOENT (No such file or directory)
+stat("/var/lib/vim/addons/after/filetype.vim", 0x7ffc0f226e00) = -1 ENOENT (No such file or directory)
+stat("/home/bt206055/.vim/after/filetype.vim", 0x7ffc0f226e00) = -1 ENOENT (No such file or directory)
+read(4, "", 4096)                       = 0
+read(4, "", 4096)                       = 0
+close(4)                                = 0
+stat("/etc/vim/vimrc.local", 0x7ffc0f227910) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/etc/vim/vimrc.local", O_RDONLY|O_NONBLOCK) = -1 ENOENT (No such file or directory)
+read(3, "", 4096)                       = 0
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 3
+fchdir(3)                               = 0
+chdir("/home/bt206055")                 = 0
+getcwd("/home/bt206055", 4096)          = 15
+fchdir(3)                               = 0
+close(3)                                = 0
+stat("/home/bt206055/.vimrc", {st_mode=S_IFREG|0644, st_size=347, ...}) = 0
+openat(AT_FDCWD, "/home/bt206055/.vimrc", O_RDONLY) = 3
+fcntl(3, F_GETFD)                       = 0
+fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(3, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/home/bt206055/.vimrc", {st_mode=S_IFREG|0644, st_size=347, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=347, ...}) = 0
+read(3, "\n:set hlsearch\ninoremap jj <Esc>"..., 8192) = 347
+openat(AT_FDCWD, ".", O_RDONLY)         = 4
+fchdir(4)                               = 0
+chdir("/usr/share/vim/vim80/syntax")    = 0
+getcwd("/usr/share/vim/vim80/syntax", 4096) = 28
+fchdir(4)                               = 0
+close(4)                                = 0
+stat("/usr/share/vim/vim80/syntax/syntax.vim", {st_mode=S_IFREG|0644, st_size=1228, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/syntax/syntax.vim", O_RDONLY) = 4
+fcntl(4, F_GETFD)                       = 0
+fcntl(4, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(4, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/syntax/syntax.vim", {st_mode=S_IFREG|0644, st_size=1228, ...}) = 0
+fstat(4, {st_mode=S_IFREG|0644, st_size=1228, ...}) = 0
+read(4, "\" Vim syntax support file\n\" Main"..., 4096) = 1228
+stat("/usr/share/vim/vim80/syntax/syntax.vim", {st_mode=S_IFREG|0644, st_size=1228, ...}) = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 5
+fchdir(5)                               = 0
+chdir("/usr/share/vim/vim80/syntax")    = 0
+getcwd("/usr/share/vim/vim80/syntax", 4096) = 28
+fchdir(5)                               = 0
+close(5)                                = 0
+stat("/usr/share/vim/vim80/syntax/nosyntax.vim", {st_mode=S_IFREG|0644, st_size=755, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/syntax/nosyntax.vim", O_RDONLY) = 5
+fcntl(5, F_GETFD)                       = 0
+fcntl(5, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(5, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/syntax/nosyntax.vim", {st_mode=S_IFREG|0644, st_size=755, ...}) = 0
+fstat(5, {st_mode=S_IFREG|0644, st_size=755, ...}) = 0
+read(5, "\" Vim syntax support file\n\" Main"..., 4096) = 755
+read(5, "", 4096)                       = 0
+read(5, "", 4096)                       = 0
+close(5)                                = 0
+stat("/home/bt206055/.vim/syntax/synload.vim", 0x7ffc0f226e30) = -1 ENOENT (No such file or directory)
+stat("/var/lib/vim/addons/syntax/synload.vim", 0x7ffc0f226e30) = -1 ENOENT (No such file or directory)
+stat("/usr/share/vim/vimfiles/syntax/synload.vim", 0x7ffc0f226e30) = -1 ENOENT (No such file or directory)
+stat("/usr/share/vim/vim80/syntax/synload.vim", {st_mode=S_IFREG|0644, st_size=1984, ...}) = 0
+stat("/usr/share/vim/vim80/syntax/synload.vim", {st_mode=S_IFREG|0644, st_size=1984, ...}) = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 5
+fchdir(5)                               = 0
+chdir("/usr/share/vim/vim80/syntax")    = 0
+getcwd("/usr/share/vim/vim80/syntax", 4096) = 28
+fchdir(5)                               = 0
+close(5)                                = 0
+stat("/usr/share/vim/vim80/syntax/synload.vim", {st_mode=S_IFREG|0644, st_size=1984, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/syntax/synload.vim", O_RDONLY) = 5
+fcntl(5, F_GETFD)                       = 0
+fcntl(5, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(5, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/syntax/synload.vim", {st_mode=S_IFREG|0644, st_size=1984, ...}) = 0
+fstat(5, {st_mode=S_IFREG|0644, st_size=1984, ...}) = 0
+read(5, "\" Vim syntax support file\n\" Main"..., 4096) = 1984
+stat("/home/bt206055/.vim/syntax/syncolor.vim", 0x7ffc0f226330) = -1 ENOENT (No such file or directory)
+stat("/var/lib/vim/addons/syntax/syncolor.vim", 0x7ffc0f226330) = -1 ENOENT (No such file or directory)
+stat("/usr/share/vim/vimfiles/syntax/syncolor.vim", 0x7ffc0f226330) = -1 ENOENT (No such file or directory)
+stat("/usr/share/vim/vim80/syntax/syncolor.vim", {st_mode=S_IFREG|0644, st_size=4093, ...}) = 0
+stat("/usr/share/vim/vim80/syntax/syncolor.vim", {st_mode=S_IFREG|0644, st_size=4093, ...}) = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 6
+fchdir(6)                               = 0
+chdir("/usr/share/vim/vim80/syntax")    = 0
+getcwd("/usr/share/vim/vim80/syntax", 4096) = 28
+fchdir(6)                               = 0
+close(6)                                = 0
+stat("/usr/share/vim/vim80/syntax/syncolor.vim", {st_mode=S_IFREG|0644, st_size=4093, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/syntax/syncolor.vim", O_RDONLY) = 6
+fcntl(6, F_GETFD)                       = 0
+fcntl(6, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(6, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/syntax/syncolor.vim", {st_mode=S_IFREG|0644, st_size=4093, ...}) = 0
+fstat(6, {st_mode=S_IFREG|0644, st_size=4093, ...}) = 0
+read(6, "\" Vim syntax support file\n\" Main"..., 4096) = 4093
+read(6, "", 4096)                       = 0
+read(6, "", 4096)                       = 0
+close(6)                                = 0
+stat("/usr/share/vim/vimfiles/after/syntax/syncolor.vim", 0x7ffc0f226330) = -1 ENOENT (No such file or directory)
+stat("/var/lib/vim/addons/after/syntax/syncolor.vim", 0x7ffc0f226330) = -1 ENOENT (No such file or directory)
+stat("/home/bt206055/.vim/after/syntax/syncolor.vim", 0x7ffc0f226330) = -1 ENOENT (No such file or directory)
+read(5, "", 4096)                       = 0
+read(5, "", 4096)                       = 0
+close(5)                                = 0
+read(4, "", 4096)                       = 0
+read(4, "", 4096)                       = 0
+close(4)                                = 0
+stat("/home/bt206055/.vim/filetype.vim", 0x7ffc0f228120) = -1 ENOENT (No such file or directory)
+stat("/var/lib/vim/addons/filetype.vim", 0x7ffc0f228120) = -1 ENOENT (No such file or directory)
+stat("/usr/share/vim/vimfiles/filetype.vim", 0x7ffc0f228120) = -1 ENOENT (No such file or directory)
+stat("/usr/share/vim/vim80/filetype.vim", {st_mode=S_IFREG|0644, st_size=56051, ...}) = 0
+stat("/usr/share/vim/vim80/filetype.vim", {st_mode=S_IFREG|0644, st_size=56051, ...}) = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 4
+fchdir(4)                               = 0
+chdir("/usr/share/vim/vim80")           = 0
+getcwd("/usr/share/vim/vim80", 4096)    = 21
+fchdir(4)                               = 0
+close(4)                                = 0
+stat("/usr/share/vim/vim80/filetype.vim", {st_mode=S_IFREG|0644, st_size=56051, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/filetype.vim", O_RDONLY) = 4
+fcntl(4, F_GETFD)                       = 0
+fcntl(4, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(4, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/filetype.vim", {st_mode=S_IFREG|0644, st_size=56051, ...}) = 0
+fstat(4, {st_mode=S_IFREG|0644, st_size=56051, ...}) = 0
+read(4, "\" Vim support file to detect fil"..., 4096) = 4096
+close(4)                                = 0
+stat("/usr/share/vim/vimfiles/after/filetype.vim", 0x7ffc0f228120) = -1 ENOENT (No such file or directory)
+stat("/var/lib/vim/addons/after/filetype.vim", 0x7ffc0f228120) = -1 ENOENT (No such file or directory)
+stat("/home/bt206055/.vim/after/filetype.vim", 0x7ffc0f228120) = -1 ENOENT (No such file or directory)
+read(3, "", 8192)                       = 0
+read(3, "", 8192)                       = 0
+close(3)                                = 0
+openat(AT_FDCWD, "/home/bt206055/.vim/pack/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vimfiles/pack/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/pack/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+fstat(3, {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+getdents(3, /* 3 entries */, 32768)     = 72
+openat(AT_FDCWD, "/usr/share/vim/vim80/pack/dist/start/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+getdents(3, /* 0 entries */, 32768)     = 0
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/share/vim/vimfiles/after/pack/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/home/bt206055/.vim/after/pack/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/home/bt206055/.vim/plugin/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/home/bt206055/.vim/plugin/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/var/lib/vim/addons/plugin/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/var/lib/vim/addons/plugin/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vimfiles/plugin/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vimfiles/plugin/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+fstat(3, {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+getdents(3, /* 15 entries */, 32768)    = 520
+stat("/usr/share/vim/vim80/plugin/zipPlugin.vim", {st_mode=S_IFREG|0644, st_size=2510, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/zipPlugin.vim", {st_mode=S_IFREG|0644, st_size=2510, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/zipPlugin.vim", {st_mode=S_IFREG|0644, st_size=2510, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/gzip.vim", {st_mode=S_IFREG|0644, st_size=2499, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/gzip.vim", {st_mode=S_IFREG|0644, st_size=2499, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/gzip.vim", {st_mode=S_IFREG|0644, st_size=2499, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/tohtml.vim", {st_mode=S_IFREG|0644, st_size=9924, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/tohtml.vim", {st_mode=S_IFREG|0644, st_size=9924, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/tohtml.vim", {st_mode=S_IFREG|0644, st_size=9924, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/rrhelper.vim", {st_mode=S_IFREG|0644, st_size=1414, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/rrhelper.vim", {st_mode=S_IFREG|0644, st_size=1414, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/rrhelper.vim", {st_mode=S_IFREG|0644, st_size=1414, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/tarPlugin.vim", {st_mode=S_IFREG|0644, st_size=2271, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/tarPlugin.vim", {st_mode=S_IFREG|0644, st_size=2271, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/tarPlugin.vim", {st_mode=S_IFREG|0644, st_size=2271, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/manpager.vim", {st_mode=S_IFREG|0644, st_size=784, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/manpager.vim", {st_mode=S_IFREG|0644, st_size=784, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/manpager.vim", {st_mode=S_IFREG|0644, st_size=784, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/matchparen.vim", {st_mode=S_IFREG|0644, st_size=6746, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/matchparen.vim", {st_mode=S_IFREG|0644, st_size=6746, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/matchparen.vim", {st_mode=S_IFREG|0644, st_size=6746, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/vimballPlugin.vim", {st_mode=S_IFREG|0644, st_size=2898, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/vimballPlugin.vim", {st_mode=S_IFREG|0644, st_size=2898, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/vimballPlugin.vim", {st_mode=S_IFREG|0644, st_size=2898, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/netrwPlugin.vim", {st_mode=S_IFREG|0644, st_size=10440, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/netrwPlugin.vim", {st_mode=S_IFREG|0644, st_size=10440, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/netrwPlugin.vim", {st_mode=S_IFREG|0644, st_size=10440, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/getscriptPlugin.vim", {st_mode=S_IFREG|0644, st_size=1393, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/getscriptPlugin.vim", {st_mode=S_IFREG|0644, st_size=1393, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/getscriptPlugin.vim", {st_mode=S_IFREG|0644, st_size=1393, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/spellfile.vim", {st_mode=S_IFREG|0644, st_size=499, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/spellfile.vim", {st_mode=S_IFREG|0644, st_size=499, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/spellfile.vim", {st_mode=S_IFREG|0644, st_size=499, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/logiPat.vim", {st_mode=S_IFREG|0644, st_size=10269, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/logiPat.vim", {st_mode=S_IFREG|0644, st_size=10269, ...}) = 0
+stat("/usr/share/vim/vim80/plugin/logiPat.vim", {st_mode=S_IFREG|0644, st_size=10269, ...}) = 0
+getdents(3, /* 0 entries */, 32768)     = 0
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+fstat(3, {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+getdents(3, /* 15 entries */, 32768)    = 520
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/zipPlugin.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/zipPlugin.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/gzip.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/gzip.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/tohtml.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/tohtml.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/rrhelper.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/rrhelper.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/tarPlugin.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/tarPlugin.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/manpager.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/manpager.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/matchparen.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/matchparen.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/vimballPlugin.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/vimballPlugin.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/netrwPlugin.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/netrwPlugin.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/getscriptPlugin.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/getscriptPlugin.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/spellfile.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/spellfile.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/README.txt/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/README.txt/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/logiPat.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/logiPat.vim/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOTDIR (Not a directory)
+getdents(3, /* 0 entries */, 32768)     = 0
+close(3)                                = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 3
+fchdir(3)                               = 0
+chdir("/usr/share/vim/vim80/plugin")    = 0
+getcwd("/usr/share/vim/vim80/plugin", 4096) = 28
+fchdir(3)                               = 0
+close(3)                                = 0
+stat("/usr/share/vim/vim80/plugin/getscriptPlugin.vim", {st_mode=S_IFREG|0644, st_size=1393, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/getscriptPlugin.vim", O_RDONLY) = 3
+fcntl(3, F_GETFD)                       = 0
+fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(3, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/plugin/getscriptPlugin.vim", {st_mode=S_IFREG|0644, st_size=1393, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=1393, ...}) = 0
+read(3, "\" ------------------------------"..., 4096) = 1393
+read(3, "", 4096)                       = 0
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 3
+fchdir(3)                               = 0
+chdir("/usr/share/vim/vim80/plugin")    = 0
+getcwd("/usr/share/vim/vim80/plugin", 4096) = 28
+fchdir(3)                               = 0
+close(3)                                = 0
+stat("/usr/share/vim/vim80/plugin/gzip.vim", {st_mode=S_IFREG|0644, st_size=2499, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/gzip.vim", O_RDONLY) = 3
+fcntl(3, F_GETFD)                       = 0
+fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(3, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/plugin/gzip.vim", {st_mode=S_IFREG|0644, st_size=2499, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=2499, ...}) = 0
+read(3, "\" Vim plugin for editing compres"..., 4096) = 2499
+read(3, "", 4096)                       = 0
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 3
+fchdir(3)                               = 0
+chdir("/usr/share/vim/vim80/plugin")    = 0
+getcwd("/usr/share/vim/vim80/plugin", 4096) = 28
+fchdir(3)                               = 0
+close(3)                                = 0
+stat("/usr/share/vim/vim80/plugin/logiPat.vim", {st_mode=S_IFREG|0644, st_size=10269, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/logiPat.vim", O_RDONLY) = 3
+fcntl(3, F_GETFD)                       = 0
+fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(3, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/plugin/logiPat.vim", {st_mode=S_IFREG|0644, st_size=10269, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=10269, ...}) = 0
+read(3, "\" LogiPat: Boolean logical patte"..., 4096) = 4096
+read(3, "  let s:nopstack= 0\n  endif\n\n  \""..., 4096) = 4096
+read(3, "tern {{{2\nfun! s:LP_Not(pat)\n\"  "..., 4096) = 2077
+read(3, "", 4096)                       = 0
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 3
+fchdir(3)                               = 0
+chdir("/usr/share/vim/vim80/plugin")    = 0
+getcwd("/usr/share/vim/vim80/plugin", 4096) = 28
+fchdir(3)                               = 0
+close(3)                                = 0
+stat("/usr/share/vim/vim80/plugin/manpager.vim", {st_mode=S_IFREG|0644, st_size=784, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/manpager.vim", O_RDONLY) = 3
+fcntl(3, F_GETFD)                       = 0
+fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(3, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/plugin/manpager.vim", {st_mode=S_IFREG|0644, st_size=784, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=784, ...}) = 0
+read(3, "\" Vim plugin for using Vim as ma"..., 4096) = 784
+close(3)                                = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 3
+fchdir(3)                               = 0
+chdir("/usr/share/vim/vim80/plugin")    = 0
+getcwd("/usr/share/vim/vim80/plugin", 4096) = 28
+fchdir(3)                               = 0
+close(3)                                = 0
+stat("/usr/share/vim/vim80/plugin/matchparen.vim", {st_mode=S_IFREG|0644, st_size=6746, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/matchparen.vim", O_RDONLY) = 3
+fcntl(3, F_GETFD)                       = 0
+fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(3, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/plugin/matchparen.vim", {st_mode=S_IFREG|0644, st_size=6746, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=6746, ...}) = 0
+read(3, "\" Vim plugin for showing matchin"..., 4096) = 4096
+read(3, "hparen_timeout\") ? b:matchparen_"..., 4096) = 2650
+read(3, "", 4096)                       = 0
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 3
+fchdir(3)                               = 0
+chdir("/usr/share/vim/vim80/plugin")    = 0
+getcwd("/usr/share/vim/vim80/plugin", 4096) = 28
+fchdir(3)                               = 0
+close(3)                                = 0
+stat("/usr/share/vim/vim80/plugin/netrwPlugin.vim", {st_mode=S_IFREG|0644, st_size=10440, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/netrwPlugin.vim", O_RDONLY) = 3
+fcntl(3, F_GETFD)                       = 0
+fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(3, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/plugin/netrwPlugin.vim", {st_mode=S_IFREG|0644, st_size=10440, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=10440, ...}) = 0
+read(3, "\" netrwPlugin.vim: Handles file "..., 4096) = 4096
+brk(0x564c95770000)                     = 0x564c95770000
+brk(0x564c9576f000)                     = 0x564c9576f000
+read(3, ">0,<q-args>)\ncom! -nargs=* -bar "..., 4096) = 4096
+read(3, "      listing when appropriate.\n"..., 4096) = 2248
+read(3, "", 4096)                       = 0
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 3
+fchdir(3)                               = 0
+chdir("/usr/share/vim/vim80/plugin")    = 0
+getcwd("/usr/share/vim/vim80/plugin", 4096) = 28
+fchdir(3)                               = 0
+close(3)                                = 0
+stat("/usr/share/vim/vim80/plugin/rrhelper.vim", {st_mode=S_IFREG|0644, st_size=1414, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/rrhelper.vim", O_RDONLY) = 3
+fcntl(3, F_GETFD)                       = 0
+fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(3, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/plugin/rrhelper.vim", {st_mode=S_IFREG|0644, st_size=1414, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=1414, ...}) = 0
+read(3, "\" Vim plugin with helper functio"..., 4096) = 1414
+read(3, "", 4096)                       = 0
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 3
+fchdir(3)                               = 0
+chdir("/usr/share/vim/vim80/plugin")    = 0
+getcwd("/usr/share/vim/vim80/plugin", 4096) = 28
+fchdir(3)                               = 0
+close(3)                                = 0
+stat("/usr/share/vim/vim80/plugin/spellfile.vim", {st_mode=S_IFREG|0644, st_size=499, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/spellfile.vim", O_RDONLY) = 3
+fcntl(3, F_GETFD)                       = 0
+fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(3, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/plugin/spellfile.vim", {st_mode=S_IFREG|0644, st_size=499, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=499, ...}) = 0
+read(3, "\" Vim plugin for downloading spe"..., 4096) = 499
+read(3, "", 4096)                       = 0
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 3
+fchdir(3)                               = 0
+chdir("/usr/share/vim/vim80/plugin")    = 0
+getcwd("/usr/share/vim/vim80/plugin", 4096) = 28
+fchdir(3)                               = 0
+close(3)                                = 0
+stat("/usr/share/vim/vim80/plugin/tarPlugin.vim", {st_mode=S_IFREG|0644, st_size=2271, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/tarPlugin.vim", O_RDONLY) = 3
+fcntl(3, F_GETFD)                       = 0
+fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(3, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/plugin/tarPlugin.vim", {st_mode=S_IFREG|0644, st_size=2271, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=2271, ...}) = 0
+read(3, "\" tarPlugin.vim -- a Vim plugin "..., 4096) = 2271
+read(3, "", 4096)                       = 0
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 3
+fchdir(3)                               = 0
+chdir("/usr/share/vim/vim80/plugin")    = 0
+getcwd("/usr/share/vim/vim80/plugin", 4096) = 28
+fchdir(3)                               = 0
+close(3)                                = 0
+stat("/usr/share/vim/vim80/plugin/tohtml.vim", {st_mode=S_IFREG|0644, st_size=9924, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/tohtml.vim", O_RDONLY) = 3
+fcntl(3, F_GETFD)                       = 0
+fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(3, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/plugin/tohtml.vim", {st_mode=S_IFREG|0644, st_size=9924, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=9924, ...}) = 0
+read(3, "\" Vim plugin for converting a sy"..., 4096) = 4096
+read(3, "er: allow g:html_font to\n\"      "..., 4096) = 4096
+read(3, "move use of setwinvar() function"..., 4096) = 1732
+read(3, "", 4096)                       = 0
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 3
+fchdir(3)                               = 0
+chdir("/usr/share/vim/vim80/plugin")    = 0
+getcwd("/usr/share/vim/vim80/plugin", 4096) = 28
+fchdir(3)                               = 0
+close(3)                                = 0
+stat("/usr/share/vim/vim80/plugin/vimballPlugin.vim", {st_mode=S_IFREG|0644, st_size=2898, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/vimballPlugin.vim", O_RDONLY) = 3
+fcntl(3, F_GETFD)                       = 0
+fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(3, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/plugin/vimballPlugin.vim", {st_mode=S_IFREG|0644, st_size=2898, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=2898, ...}) = 0
+read(3, "\" vimballPlugin : construct a fi"..., 4096) = 2898
+read(3, "", 4096)                       = 0
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+openat(AT_FDCWD, ".", O_RDONLY)         = 3
+fchdir(3)                               = 0
+chdir("/usr/share/vim/vim80/plugin")    = 0
+getcwd("/usr/share/vim/vim80/plugin", 4096) = 28
+fchdir(3)                               = 0
+close(3)                                = 0
+stat("/usr/share/vim/vim80/plugin/zipPlugin.vim", {st_mode=S_IFREG|0644, st_size=2510, ...}) = 0
+openat(AT_FDCWD, "/usr/share/vim/vim80/plugin/zipPlugin.vim", O_RDONLY) = 3
+fcntl(3, F_GETFD)                       = 0
+fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
+fcntl(3, F_GETFL)                       = 0x8000 (flags O_RDONLY|O_LARGEFILE)
+stat("/usr/share/vim/vim80/plugin/zipPlugin.vim", {st_mode=S_IFREG|0644, st_size=2510, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=2510, ...}) = 0
+read(3, "\" zipPlugin.vim: Handles browsin"..., 4096) = 2510
+read(3, "", 4096)                       = 0
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+openat(AT_FDCWD, "/home/bt206055/.vim/pack/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vimfiles/pack/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vim80/pack/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+fstat(3, {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+getdents(3, /* 3 entries */, 32768)     = 72
+brk(0x564c95790000)                     = 0x564c95790000
+brk(0x564c9578f000)                     = 0x564c9578f000
+openat(AT_FDCWD, "/usr/share/vim/vim80/pack/dist/start/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+getdents(3, /* 0 entries */, 32768)     = 0
+brk(0x564c95787000)                     = 0x564c95787000
+close(3)                                = 0
+openat(AT_FDCWD, "/usr/share/vim/vimfiles/after/pack/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/home/bt206055/.vim/after/pack/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vimfiles/after/plugin/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/usr/share/vim/vimfiles/after/plugin/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/var/lib/vim/addons/after/plugin/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/var/lib/vim/addons/after/plugin/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/home/bt206055/.vim/after/plugin/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/home/bt206055/.vim/after/plugin/", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/home/bt206055/.viminfo", O_RDONLY) = 3
+fstat(3, {st_mode=S_IFREG|0600, st_size=41893, ...}) = 0
+read(3, "# This viminfo file was generate"..., 8192) = 8192
+read(3, "40426/bt206055/svn_dolphin/desig"..., 8192) = 8192
+read(3, "/is240426/bt206055/svn_dolphin/d"..., 8192) = 8192
+read(3, "033,4,1635940241,\"/local2/is2404"..., 8192) = 8192
+read(3, "240426/bt206055/n2d2/git_n2d2/N2"..., 8192) = 8192
+read(3, "\t100\n\t+\t26\t0\n\t+\t27\t63\n\t+\t28\t0\n\t+"..., 8192) = 933
+read(3, "", 8192)                       = 0
+close(3)                                = 0
+sysinfo({uptime=3827372, loads=[351296, 370784, 280448], totalram=201376706560, freeram=9317261312, sharedram=3657728, bufferram=15371157504, totalswap=8589930496, freeswap=8584937472, procs=2822, totalhigh=0, freehigh=0, mem_unit=1}) = 0
+socket(AF_UNIX, SOCK_STREAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0) = 3
+connect(3, {sa_family=AF_UNIX, sun_path="/var/run/nscd/socket"}, 110) = 0
+sendto(3, "\2\0\0\0\r\0\0\0\6\0\0\0hosts\0", 18, MSG_NOSIGNAL, NULL, 0) = 18
+poll([{fd=3, events=POLLIN|POLLERR|POLLHUP}], 1, 5000) = 1 ([{fd=3, revents=POLLIN}])
+recvmsg(3, {msg_name=NULL, msg_namelen=0, msg_iov=[{iov_base="hosts\0", iov_len=6}, {iov_base="~\265\4\0\0\0\0\0", iov_len=8}], msg_iovlen=2, msg_control=[{cmsg_len=20, cmsg_level=SOL_SOCKET, cmsg_type=SCM_RIGHTS, cmsg_data=[4]}], msg_controllen=20, msg_flags=MSG_CMSG_CLOEXEC}, MSG_CMSG_CLOEXEC) = 14
+mmap(NULL, 308606, PROT_READ, MAP_SHARED, 4, 0) = 0x14e34c3c3000
+close(4)                                = 0
+close(3)                                = 0
+openat(AT_FDCWD, "/etc/gai.conf", O_RDONLY|O_CLOEXEC) = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=2584, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=2584, ...}) = 0
+read(3, "# Configuration for getaddrinfo("..., 4096) = 2584
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+futex(0x14e347937044, FUTEX_WAKE_PRIVATE, 2147483647) = 0
+socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE) = 3
+bind(3, {sa_family=AF_NETLINK, nl_pid=0, nl_groups=00000000}, 12) = 0
+getsockname(3, {sa_family=AF_NETLINK, nl_pid=41048, nl_groups=00000000}, [12]) = 0
+sendto(3, {{len=20, type=RTM_GETADDR, flags=NLM_F_REQUEST|NLM_F_DUMP, seq=1635946742, pid=0}, {ifa_family=AF_UNSPEC, ...}}, 20, 0, {sa_family=AF_NETLINK, nl_pid=0, nl_groups=00000000}, 12) = 20
+recvmsg(3, {msg_name={sa_family=AF_NETLINK, nl_pid=0, nl_groups=00000000}, msg_namelen=12, msg_iov=[{iov_base=[{{len=76, type=RTM_NEWADDR, flags=NLM_F_MULTI, seq=1635946742, pid=41048}, {ifa_family=AF_INET, ifa_prefixlen=8, ifa_flags=IFA_F_PERMANENT, ifa_scope=RT_SCOPE_HOST, ifa_index=if_nametoindex("lo")}, [{{nla_len=8, nla_type=IFA_ADDRESS}, 127.0.0.1}, {{nla_len=8, nla_type=IFA_LOCAL}, 127.0.0.1}, {{nla_len=7, nla_type=IFA_LABEL}, "lo"}, {{nla_len=8, nla_type=IFA_FLAGS}, IFA_F_PERMANENT}, {{nla_len=20, nla_type=IFA_CACHEINFO}, {ifa_prefered=4294967295, ifa_valid=4294967295, cstamp=546, tstamp=546}}]}, {{len=88, type=RTM_NEWADDR, flags=NLM_F_MULTI, seq=1635946742, pid=41048}, {ifa_family=AF_INET, ifa_prefixlen=22, ifa_flags=IFA_F_PERMANENT, ifa_scope=RT_SCOPE_UNIVERSE, ifa_index=if_nametoindex("eno1")}, [{{nla_len=8, nla_type=IFA_ADDRESS}, 10.8.26.99}, {{nla_len=8, nla_type=IFA_LOCAL}, 10.8.26.99}, {{nla_len=8, nla_type=IFA_BROADCAST}, 10.8.27.255}, {{nla_len=9, nla_type=IFA_LABEL}, "eno1"}, {{nla_len=8, nla_type=IFA_FLAGS}, IFA_F_PERMANENT}, {{nla_len=20, nla_type=IFA_CACHEINFO}, {ifa_prefered=4294967295, ifa_valid=4294967295, cstamp=10056, tstamp=10056}}]}, {{len=88, type=RTM_NEWADDR, flags=NLM_F_MULTI, seq=1635946742, pid=41048}, {ifa_family=AF_INET, ifa_prefixlen=16, ifa_flags=IFA_F_PERMANENT, ifa_scope=RT_SCOPE_UNIVERSE, ifa_index=if_nametoindex("docker0")}, [{{nla_len=8, nla_type=IFA_ADDRESS}, 172.17.0.1}, {{nla_len=8, nla_type=IFA_LOCAL}, 172.17.0.1}, {{nla_len=8, nla_type=IFA_BROADCAST}, 172.17.255.255}, {{nla_len=12, nla_type=IFA_LABEL}, "docker0"}, {{nla_len=8, nla_type=IFA_FLAGS}, IFA_F_PERMANENT}, {{nla_len=20, nla_type=IFA_CACHEINFO}, {ifa_prefered=4294967295, ifa_valid=4294967295, cstamp=14857, tstamp=14857}}]}], iov_len=4096}], msg_iovlen=1, msg_controllen=0, msg_flags=0}, 0) = 252
+recvmsg(3, {msg_name={sa_family=AF_NETLINK, nl_pid=0, nl_groups=00000000}, msg_namelen=12, msg_iov=[{iov_base=[{{len=72, type=RTM_NEWADDR, flags=NLM_F_MULTI, seq=1635946742, pid=41048}, {ifa_family=AF_INET6, ifa_prefixlen=128, ifa_flags=IFA_F_PERMANENT, ifa_scope=RT_SCOPE_HOST, ifa_index=if_nametoindex("lo")}, [{{nla_len=20, nla_type=IFA_ADDRESS}, ::1}, {{nla_len=20, nla_type=IFA_CACHEINFO}, {ifa_prefered=4294967295, ifa_valid=4294967295, cstamp=546, tstamp=546}}, {{nla_len=8, nla_type=IFA_FLAGS}, IFA_F_PERMANENT}]}, {{len=72, type=RTM_NEWADDR, flags=NLM_F_MULTI, seq=1635946742, pid=41048}, {ifa_family=AF_INET6, ifa_prefixlen=64, ifa_flags=IFA_F_PERMANENT, ifa_scope=RT_SCOPE_LINK, ifa_index=if_nametoindex("eno1")}, [{{nla_len=20, nla_type=IFA_ADDRESS}, fe80::e643:4bff:fe5c:9eec}, {{nla_len=20, nla_type=IFA_CACHEINFO}, {ifa_prefered=4294967295, ifa_valid=4294967295, cstamp=10056, tstamp=10056}}, {{nla_len=8, nla_type=IFA_FLAGS}, IFA_F_PERMANENT}]}, {{len=72, type=RTM_NEWADDR, flags=NLM_F_MULTI, seq=1635946742, pid=41048}, {ifa_family=AF_INET6, ifa_prefixlen=64, ifa_flags=IFA_F_PERMANENT, ifa_scope=RT_SCOPE_LINK, ifa_index=if_nametoindex("docker0")}, [{{nla_len=20, nla_type=IFA_ADDRESS}, fe80::42:3dff:fe24:16c7}, {{nla_len=20, nla_type=IFA_CACHEINFO}, {ifa_prefered=4294967295, ifa_valid=4294967295, cstamp=475120, tstamp=475120}}, {{nla_len=8, nla_type=IFA_FLAGS}, IFA_F_PERMANENT}]}, {{len=72, type=RTM_NEWADDR, flags=NLM_F_MULTI, seq=1635946742, pid=41048}, {ifa_family=AF_INET6, ifa_prefixlen=64, ifa_flags=IFA_F_PERMANENT, ifa_scope=RT_SCOPE_LINK, ifa_index=if_nametoindex("vethca85748")}, [{{nla_len=20, nla_type=IFA_ADDRESS}, fe80::c0b5:baff:fe07:69fb}, {{nla_len=20, nla_type=IFA_CACHEINFO}, {ifa_prefered=4294967295, ifa_valid=4294967295, cstamp=10776472, tstamp=10776472}}, {{nla_len=8, nla_type=IFA_FLAGS}, IFA_F_PERMANENT}]}, {{len=72, type=RTM_NEWADDR, flags=NLM_F_MULTI, seq=1635946742, pid=41048}, {ifa_family=AF_INET6, ifa_prefixlen=64, ifa_flags=IFA_F_PERMANENT, ifa_scope=RT_SCOPE_LINK, ifa_index=if_nametoindex("veth2af11e7")}, [{{nla_len=20, nla_type=IFA_ADDRESS}, fe80::d8c2:93ff:fed0:166e}, {{nla_len=20, nla_type=IFA_CACHEINFO}, {ifa_prefered=4294967295, ifa_valid=4294967295, cstamp=381078320, tstamp=381078320}}, {{nla_len=8, nla_type=IFA_FLAGS}, IFA_F_PERMANENT}]}, {{len=72, type=RTM_NEWADDR, flags=NLM_F_MULTI, seq=1635946742, pid=41048}, {ifa_family=AF_INET6, ifa_prefixlen=64, ifa_flags=IFA_F_PERMANENT, ifa_scope=RT_SCOPE_LINK, ifa_index=if_nametoindex("vethbf84e40")}, [{{nla_len=20, nla_type=IFA_ADDRESS}, fe80::d4e6:eff:fe0b:e82c}, {{nla_len=20, nla_type=IFA_CACHEINFO}, {ifa_prefered=4294967295, ifa_valid=4294967295, cstamp=138936109, tstamp=138936109}}, {{nla_len=8, nla_type=IFA_FLAGS}, IFA_F_PERMANENT}]}, {{len=72, type=RTM_NEWADDR, flags=NLM_F_MULTI, seq=1635946742, pid=41048}, {ifa_family=AF_INET6, ifa_prefixlen=64, ifa_flags=IFA_F_PERMANENT, ifa_scope=RT_SCOPE_LINK, ifa_index=if_nametoindex("veth522dac5")}, [{{nla_len=20, nla_type=IFA_ADDRESS}, fe80::41f:14ff:febf:74eb}, {{nla_len=20, nla_type=IFA_CACHEINFO}, {ifa_prefered=4294967295, ifa_valid=4294967295, cstamp=185158643, tstamp=185158643}}, {{nla_len=8, nla_type=IFA_FLAGS}, IFA_F_PERMANENT}]}, {{len=72, type=RTM_NEWADDR, flags=NLM_F_MULTI, seq=1635946742, pid=41048}, {ifa_family=AF_INET6, ifa_prefixlen=64, ifa_flags=IFA_F_PERMANENT, ifa_scope=RT_SCOPE_LINK, ifa_index=if_nametoindex("veth9948405")}, [{{nla_len=20, nla_type=IFA_ADDRESS}, fe80::2c70:e0ff:fe6b:5a0b}, {{nla_len=20, nla_type=IFA_CACHEINFO}, {ifa_prefered=4294967295, ifa_valid=4294967295, cstamp=191836348, tstamp=191836348}}, {{nla_len=8, nla_type=IFA_FLAGS}, IFA_F_PERMANENT}]}], iov_len=4096}], msg_iovlen=1, msg_controllen=0, msg_flags=0}, 0) = 576
+recvmsg(3, {msg_name={sa_family=AF_NETLINK, nl_pid=0, nl_groups=00000000}, msg_namelen=12, msg_iov=[{iov_base={{len=20, type=NLMSG_DONE, flags=NLM_F_MULTI, seq=1635946742, pid=41048}, 0}, iov_len=4096}], msg_iovlen=1, msg_controllen=0, msg_flags=0}, 0) = 20
+close(3)                                = 0
+socket(AF_INET, SOCK_DGRAM|SOCK_CLOEXEC, IPPROTO_IP) = 3
+connect(3, {sa_family=AF_INET, sin_port=htons(6010), sin_addr=inet_addr("127.0.0.1")}, 16) = 0
+getsockname(3, {sa_family=AF_INET, sin_port=htons(36188), sin_addr=inet_addr("127.0.0.1")}, [28->16]) = 0
+close(3)                                = 0
+socket(AF_INET6, SOCK_DGRAM|SOCK_CLOEXEC, IPPROTO_IP) = 3
+connect(3, {sa_family=AF_INET6, sin6_port=htons(6010), inet_pton(AF_INET6, "::1", &sin6_addr), sin6_flowinfo=htonl(0), sin6_scope_id=0}, 28) = 0
+getsockname(3, {sa_family=AF_INET6, sin6_port=htons(52583), inet_pton(AF_INET6, "::1", &sin6_addr), sin6_flowinfo=htonl(0), sin6_scope_id=0}, [28]) = 0
+close(3)                                = 0
+socket(AF_INET6, SOCK_STREAM|SOCK_CLOEXEC, IPPROTO_TCP) = 3
+setsockopt(3, SOL_TCP, TCP_NODELAY, [1], 4) = 0
+setsockopt(3, SOL_SOCKET, SO_KEEPALIVE, [1], 4) = 0
+connect(3, {sa_family=AF_INET6, sin6_port=htons(6010), inet_pton(AF_INET6, "::1", &sin6_addr), sin6_flowinfo=htonl(0), sin6_scope_id=0}, 28) = 0
+getpeername(3, {sa_family=AF_INET6, sin6_port=htons(6010), inet_pton(AF_INET6, "::1", &sin6_addr), sin6_flowinfo=htonl(0), sin6_scope_id=0}, [124->28]) = 0
+uname({sysname="Linux", nodename="is240426", ...}) = 0
+access("/home/bt206055/.Xauthority", R_OK) = 0
+openat(AT_FDCWD, "/home/bt206055/.Xauthority", O_RDONLY) = 4
+fstat(4, {st_mode=S_IFREG|0600, st_size=6427, ...}) = 0
+read(4, "\1\0\0\10is231452\0\00213\0\22MIT-MAGIC-COOK"..., 8192) = 6427
+read(4, "", 8192)                       = 0
+close(4)                                = 0
+getsockname(3, {sa_family=AF_INET6, sin6_port=htons(54902), inet_pton(AF_INET6, "::1", &sin6_addr), sin6_flowinfo=htonl(0), sin6_scope_id=0}, [124->28]) = 0
+fcntl(3, F_GETFL)                       = 0x2 (flags O_RDWR)
+fcntl(3, F_SETFL, O_RDWR|O_NONBLOCK)    = 0
+fcntl(3, F_SETFD, FD_CLOEXEC)           = 0
+poll([{fd=3, events=POLLIN|POLLOUT}], 1, -1) = 1 ([{fd=3, revents=POLLOUT}])
+writev(3, [{iov_base="l\0\v\0\0\0\22\0\20\0\0\0", iov_len=12}, {iov_base="", iov_len=0}, {iov_base="MIT-MAGIC-COOKIE-1", iov_len=18}, {iov_base="\0\0", iov_len=2}, {iov_base="\350\333:\224k~|:\n\37\356\207:\237\6\332", iov_len=16}, {iov_base="", iov_len=0}], 6) = 48
+recvfrom(3, 0x564c95773200, 8, 0, NULL, NULL) = -1 EAGAIN (Resource temporarily unavailable)
+poll([{fd=3, events=POLLIN}], 1, -1)    = ? ERESTART_RESTARTBLOCK (Interrupted by signal)
+--- SIGCONT {si_signo=SIGCONT, si_code=SI_USER, si_pid=15549, si_uid=1608} ---
+rt_sigreturn({mask=[]})                 = -1 EINTR (Interrupted system call)
+poll([{fd=3, events=POLLIN}], 1, -1)    = ? ERESTART_RESTARTBLOCK (Interrupted by signal)
+--- SIGCONT {si_signo=SIGCONT, si_code=SI_USER, si_pid=15549, si_uid=1608} ---
+rt_sigreturn({mask=[]})                 = -1 EINTR (Interrupted system call)
+poll([{fd=3, events=POLLIN}], 1, -1
