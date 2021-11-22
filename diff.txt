@@ -1,0 +1,406 @@
+diff --git a/export/C/include/n2d2.h b/export/C/include/n2d2.h
+index 26b75502..9eb46b33 100755
+--- a/export/C/include/n2d2.h
++++ b/export/C/include/n2d2.h
+@@ -711,42 +711,49 @@ void resize_nearest_neighbor_propagete(unsigned int nbChannels,
+                                        DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+ 
+ void convcell_outputs_print(const char* name,
++                            bool isOutputUnsigned,
+                             unsigned int nbOutputs,
+                             unsigned int outputsHeight,
+                             unsigned int outputsWidth,
+                             DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+ 
+ void convcell_outputs_save(const char* fileName,
++                           bool isOutputUnsigned,
+                            unsigned int nbOutputs,
+                            unsigned int outputsHeight,
+                            unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+ 
+ void poolcell_outputs_print(const char* name,
++                            bool isOutputUnsigned,
+                             unsigned int nbOutputs,
+                             unsigned int outputsHeight,
+                             unsigned int outputsWidth,
+                             DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+ 
+ void poolcell_outputs_save(const char* fileName,
++                           bool isOutputUnsigned,
+                            unsigned int nbOutputs,
+                            unsigned int outputsHeight,
+                            unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+ 
+ void elemwisecell_outputs_print(const char* name,
++                            bool isOutputUnsigned,
+                             unsigned int nbOutputs,
+                             unsigned int outputsHeight,
+                             unsigned int outputsWidth,
+                             DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+ 
+ void elemwisecell_outputs_save(const char* fileName,
++                           bool isOutputUnsigned,
+                            unsigned int nbOutputs,
+                            unsigned int outputsHeight,
+                            unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+ 
+ void scalingcell_outputs_print(const char* name,
++                            bool isOutputUnsigned,
+                             unsigned int nbOutputs,
+                             unsigned int outputOffset,
+                             unsigned int outputsHeight,
+@@ -754,6 +761,7 @@ void scalingcell_outputs_print(const char* name,
+                             DATA_T outputs[nbOutputs][outputsHeight][outputsWidth]);
+ 
+ void scalingcell_outputs_save(const char* fileName,
++                           bool isOutputUnsigned,
+                            unsigned int nbOutputs,
+                            unsigned int outputOffset,
+                            unsigned int outputsHeight,
+@@ -771,10 +779,12 @@ void convcell_outputs_dynamic_print(
+     RUNNING_MEAN_T* pMeanVal);
+ 
+ void fccell_outputs_print(const char* name,
++                          bool isOutputUnsigned,
+                           unsigned int nbOutputs,
+                           DATA_T outputs[nbOutputs]);
+ 
+ void fccell_outputs_save(const char* fileName,
++                         bool isOutputUnsigned,
+                          unsigned int nbOutputs,
+                          DATA_T outputs[nbOutputs]);
+ 
+diff --git a/export/C/src/n2d2.c b/export/C/src/n2d2.c
+index ee630bb7..05709833 100755
+--- a/export/C/src/n2d2.c
++++ b/export/C/src/n2d2.c
+@@ -2157,7 +2157,7 @@ void resize_nearest_neighbor_propagete(unsigned int nbChannels,
+     }    
+ }
+ 
+-void convcell_output_out(FILE* file, unsigned int nbOutputs,
++void convcell_output_out(FILE* file, bool isOutputUnsigned, unsigned int nbOutputs,
+                          unsigned int outputsHeight, unsigned int outputsWidth,
+                          DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+ {
+@@ -2169,7 +2169,11 @@ void convcell_output_out(FILE* file, unsigned int nbOutputs,
+ #if NB_BITS < 0
+                 fprintf(file, "%f ", outputs[output][oy][ox]);
+ #else
+-                fprintf(file, "%d ", outputs[output][oy][ox]);
++                if (isOutputUnsigned) {
++                   fprintf(file, "%d ", (UDATA_T)outputs[output][oy][ox]);
++                } else {
++                   fprintf(file, "%d ", outputs[output][oy][ox]);
++                }
+ #endif
+             }
+ 
+@@ -2181,7 +2185,7 @@ void convcell_output_out(FILE* file, unsigned int nbOutputs,
+ 
+ }
+ 
+-void convcell_outputs_save(const char* fileName, unsigned int nbOutputs,
++void convcell_outputs_save(const char* fileName, bool isOutputUnsigned, unsigned int nbOutputs,
+                            unsigned int outputsHeight, unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+ {
+@@ -2191,18 +2195,18 @@ void convcell_outputs_save(const char* fileName, unsigned int nbOutputs,
+         return;
+     }
+ 
+-    convcell_output_out(file, nbOutputs, outputsHeight, outputsWidth, outputs);
++    convcell_output_out(file, isOutputUnsigned, nbOutputs, outputsHeight, outputsWidth, outputs);
+     if(fclose(file) != 0) {
+         fprintf(stderr, "Couldn't close file %s.", fileName);
+     }
+ }
+ 
+-void convcell_outputs_print(const char* name, unsigned int nbOutputs,
++void convcell_outputs_print(const char* name, bool isOutputUnsigned, unsigned int nbOutputs,
+                             unsigned int outputsHeight, unsigned int outputsWidth,
+                             DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+ {
+     printf("%s outputs:\n", name);
+-    convcell_output_out(stdout, nbOutputs, outputsHeight, outputsWidth, outputs);
++    convcell_output_out(stdout, isOutputUnsigned, nbOutputs, outputsHeight, outputsWidth, outputs);
+ }
+ 
+ void convcell_outputs_dynamic_print(
+@@ -2250,7 +2254,8 @@ void convcell_outputs_dynamic_print(
+ #endif
+ }
+ 
+-void fccell_outputs_out(FILE* file, 
++void fccell_outputs_out(FILE* file,
++                        bool isOutputUnsigned,
+                         unsigned int nbOutputs,
+                         DATA_T outputs[nbOutputs])
+ {
+@@ -2258,12 +2263,17 @@ void fccell_outputs_out(FILE* file,
+ #if NB_BITS < 0
+         fprintf(file, "%d: %f\n", output, outputs[output]);
+ #else
+-        fprintf(file, "%d: %d\n", output, outputs[output]);
++        if (isOutputUnsigned) {
++           fprintf(file, "%d ", (UDATA_T)outputs[output]);
++        } else {
++           fprintf(file, "%d ", outputs[output]);
++        }
+ #endif
+     }
+ }
+ 
+ void fccell_outputs_save(const char* fileName,
++                         bool isOutputUnsigned,
+                          unsigned int nbOutputs,
+                          DATA_T outputs[nbOutputs])
+ {
+@@ -2273,18 +2283,19 @@ void fccell_outputs_save(const char* fileName,
+         return;
+     }
+ 
+-    fccell_outputs_out(file, nbOutputs, outputs);
++    fccell_outputs_out(file, isOutputUnsigned, nbOutputs, outputs);
+     if(fclose(file) != 0) {
+         fprintf(stderr, "Couldn't close file %s.", fileName);
+     }
+ }
+ 
+ void fccell_outputs_print(const char* name,
++                          bool isOutputUnsigned,
+                           unsigned int nbOutputs,
+                           DATA_T outputs[nbOutputs])
+ {
+     printf("%s outputs:\n", name);
+-    fccell_outputs_out(stdout, nbOutputs, outputs);
++    fccell_outputs_out(stdout, isOutputUnsigned, nbOutputs, outputs);
+ }
+ 
+ void fccell_outputs_dynamic_print(const char* name,
+@@ -2439,7 +2450,7 @@ void time_analysis(const char* name,
+     printf("%s timing = %f us\n", name, (*timing).mean);
+ }
+ 
+-void poolcell_output_out(FILE* file, unsigned int nbOutputs,
++void poolcell_output_out(FILE* file, bool isOutputUnsigned, unsigned int nbOutputs,
+                          unsigned int outputsHeight, unsigned int outputsWidth,
+                          DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+ {
+@@ -2451,7 +2462,11 @@ void poolcell_output_out(FILE* file, unsigned int nbOutputs,
+ #if NB_BITS < 0
+                 fprintf(file, "%f ", outputs[output][oy][ox]);
+ #else
+-                fprintf(file, "%d ", outputs[output][oy][ox]);
++                if (isOutputUnsigned) {
++                   fprintf(file, "%d ", (UDATA_T)outputs[output][oy][ox]);
++                } else {
++                   fprintf(file, "%d ", outputs[output][oy][ox]);
++                }
+ #endif
+             }
+ 
+@@ -2463,7 +2478,7 @@ void poolcell_output_out(FILE* file, unsigned int nbOutputs,
+ 
+ }
+ 
+-void poolcell_outputs_save(const char* fileName, unsigned int nbOutputs,
++void poolcell_outputs_save(const char* fileName, bool isOutputUnsigned, unsigned int nbOutputs,
+                            unsigned int outputsHeight, unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+ {
+@@ -2473,22 +2488,22 @@ void poolcell_outputs_save(const char* fileName, unsigned int nbOutputs,
+         return;
+     }
+ 
+-    poolcell_output_out(file, nbOutputs, outputsHeight, outputsWidth, outputs);
++    poolcell_output_out(file, nbOutputs, isOutputUnsigned, outputsHeight, outputsWidth, outputs);
+     if(fclose(file) != 0) {
+         fprintf(stderr, "Couldn't close file %s.", fileName);
+     }
+ }
+ 
+-void poolcell_outputs_print(const char* name, unsigned int nbOutputs,
++void poolcell_outputs_print(const char* name, bool isOutputUnsigned, unsigned int nbOutputs,
+                             unsigned int outputsHeight, unsigned int outputsWidth,
+                             DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+ {
+     printf("%s outputs:\n", name);
+-    poolcell_output_out(stdout, nbOutputs, outputsHeight, outputsWidth, outputs);
++    poolcell_output_out(stdout, isOutputUnsigned,  nbOutputs, outputsHeight, outputsWidth, outputs);
+ }
+ 
+ 
+-void elemwisecell_output_out(FILE* file, unsigned int nbOutputs,
++void elemwisecell_output_out(FILE* file, bool isOutputUnsigned, unsigned int nbOutputs,
+                          unsigned int outputsHeight, unsigned int outputsWidth,
+                          DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+ {
+@@ -2500,7 +2515,11 @@ void elemwisecell_output_out(FILE* file, unsigned int nbOutputs,
+ #if NB_BITS < 0
+                 fprintf(file, "%f ", outputs[output][oy][ox]);
+ #else
+-                fprintf(file, "%d ", outputs[output][oy][ox]);
++                if (isOutputUnsigned) {
++                   fprintf(file, "%d ", (UDATA_T)outputs[output][oy][ox]);
++                } else {
++                   fprintf(file, "%d ", outputs[output][oy][ox]);
++                }
+ #endif
+             }
+ 
+@@ -2512,7 +2531,7 @@ void elemwisecell_output_out(FILE* file, unsigned int nbOutputs,
+ 
+ }
+ 
+-void elemwisecell_outputs_save(const char* fileName, unsigned int nbOutputs,
++void elemwisecell_outputs_save(const char* fileName, bool isOutputUnsigned, unsigned int nbOutputs,
+                            unsigned int outputsHeight, unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+ {
+@@ -2522,21 +2541,21 @@ void elemwisecell_outputs_save(const char* fileName, unsigned int nbOutputs,
+         return;
+     }
+ 
+-    elemwisecell_output_out(file, nbOutputs, outputsHeight, outputsWidth, outputs);
++    elemwisecell_output_out(file, isOutputUnsigned, nbOutputs, outputsHeight, outputsWidth, outputs);
+     if(fclose(file) != 0) {
+         fprintf(stderr, "Couldn't close file %s.", fileName);
+     }
+ }
+ 
+-void elemwisecell_outputs_print(const char* name, unsigned int nbOutputs,
++void elemwisecell_outputs_print(const char* name, bool isOutputUnsigned,unsigned int nbOutputs,
+                             unsigned int outputsHeight, unsigned int outputsWidth,
+                             DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+ {
+     printf("%s outputs:\n", name);
+-    elemwisecell_output_out(stdout, nbOutputs, outputsHeight, outputsWidth, outputs);
++    elemwisecell_output_out(stdout, isOutputUnsigned, nbOutputs, outputsHeight, outputsWidth, outputs);
+ }
+ 
+-void scalingcell_output_out(FILE* file, unsigned int nbOutputs, unsigned int outputOffset,
++void scalingcell_output_out(FILE* file, bool isOutputUnsigned, unsigned int nbOutputs, unsigned int outputOffset,
+                          unsigned int outputsHeight, unsigned int outputsWidth,
+                          DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+ {
+@@ -2548,7 +2567,11 @@ void scalingcell_output_out(FILE* file, unsigned int nbOutputs, unsigned int out
+ #if NB_BITS < 0
+                 fprintf(file, "%f ", outputs[outputOffset + output][oy][ox]);
+ #else
+-                fprintf(file, "%d ", outputs[outputOffset + output][oy][ox]);
++                if (isOutputUnsigned) {
++                   fprintf(file, "%d ", (UDATA_T)outputs[outputOffset + output][oy][ox]);
++                } else {
++                   fprintf(file, "%d ", outputs[outputOffset + output][oy][ox]);
++                }
+ #endif
+             }
+ 
+@@ -2560,7 +2583,7 @@ void scalingcell_output_out(FILE* file, unsigned int nbOutputs, unsigned int out
+ 
+ }
+ 
+-void scalingcell_outputs_save(const char* fileName, unsigned int nbOutputs, unsigned int outputOffset,
++void scalingcell_outputs_save(const char* fileName, bool isOutputUnsigned, unsigned int nbOutputs, unsigned int outputOffset,
+                            unsigned int outputsHeight, unsigned int outputsWidth,
+                            DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+ {
+@@ -2570,18 +2593,18 @@ void scalingcell_outputs_save(const char* fileName, unsigned int nbOutputs, unsi
+         return;
+     }
+ 
+-    scalingcell_output_out(file, nbOutputs, outputOffset, outputsHeight, outputsWidth, outputs);
++    scalingcell_output_out(file, isOutputUnsigned, nbOutputs, outputOffset, outputsHeight, outputsWidth, outputs);
+     if(fclose(file) != 0) {
+         fprintf(stderr, "Couldn't close file %s.", fileName);
+     }
+ }
+ 
+-void scalingcell_outputs_print(const char* name, unsigned int nbOutputs, unsigned int outputOffset,
++void scalingcell_outputs_print(const char* name, bool isOutputUnsigned, unsigned int nbOutputs, unsigned int outputOffset,
+                             unsigned int outputsHeight, unsigned int outputsWidth,
+                             DATA_T outputs[nbOutputs][outputsHeight][outputsWidth])
+ {
+     printf("%s outputs:\n", name);
+-    scalingcell_output_out(stdout, nbOutputs, outputOffset, outputsHeight, outputsWidth, outputs);
++    scalingcell_output_out(stdout, isOutputUnsigned, nbOutputs, outputOffset, outputsHeight, outputsWidth, outputs);
+ }
+ 
+ 
+diff --git a/src/Export/C/C_ConvCellExport.cpp b/src/Export/C/C_ConvCellExport.cpp
+index 164aa38c..228bca1d 100644
+--- a/src/Export/C/C_ConvCellExport.cpp
++++ b/src/Export/C/C_ConvCellExport.cpp
+@@ -381,6 +381,7 @@ void N2D2::C_ConvCellExport::generateCellFunction(
+     prog << "#ifdef SAVE_OUTPUTS\n"
+          << "    convcell_outputs_save("
+             << "\"" << identifier << ".txt\", "
++            << DeepNetExport::isCellOutputUnsigned(cell) << ","
+             << prefix << "_NB_OUTPUTS, "
+             << prefix << "_OUTPUTS_HEIGHT, "
+             << prefix << "_OUTPUTS_WIDTH, "
+diff --git a/src/Export/C/C_DeepNetExport.cpp b/src/Export/C/C_DeepNetExport.cpp
+index 24a62a75..ef044e10 100644
+--- a/src/Export/C/C_DeepNetExport.cpp
++++ b/src/Export/C/C_DeepNetExport.cpp
+@@ -362,7 +362,7 @@ void N2D2::C_DeepNetExport::generateProgramFunction(DeepNet& deepNet,
+          << "(DATA_T in_data[ENV_NB_OUTPUTS][ENV_SIZE_Y][ENV_SIZE_X],"
+             " uint32_t out_data[OUTPUTS_HEIGHT][OUTPUTS_WIDTH]) {\n"
+             "#ifdef SAVE_OUTPUTS\n"
+-            "    convcell_outputs_save(\"in_data.txt\", ENV_NB_OUTPUTS, ENV_SIZE_Y, ENV_SIZE_X, in_data);\n"
++            "    convcell_outputs_save(\"in_data.txt\", ENV_DATA_UNSIGNED, ENV_NB_OUTPUTS, ENV_SIZE_Y, ENV_SIZE_X, in_data);\n"
+             "#endif\n"
+             "\n"
+             "#ifdef TIME_ANALYSIS\n"
+diff --git a/src/Export/C/C_ElemWiseCellExport.cpp b/src/Export/C/C_ElemWiseCellExport.cpp
+index 099e0d4a..b30544d4 100755
+--- a/src/Export/C/C_ElemWiseCellExport.cpp
++++ b/src/Export/C/C_ElemWiseCellExport.cpp
+@@ -119,6 +119,7 @@ void N2D2::C_ElemWiseCellExport::generateCellFunction(Cell& cell,
+     prog << "#ifdef SAVE_OUTPUTS\n"
+          << "    elemwisecell_outputs_save("
+             << "\"" << identifier << ".txt\", "
++            << DeepNetExport::isCellOutputUnsigned(cell) << ","
+             << prefix << "_NB_OUTPUTS, "
+             << prefix << "_OUTPUTS_HEIGHT, "
+             << prefix << "_OUTPUTS_WIDTH, "
+diff --git a/src/Export/C/C_FcCellExport.cpp b/src/Export/C/C_FcCellExport.cpp
+index 13649cf1..0ac326ea 100644
+--- a/src/Export/C/C_FcCellExport.cpp
++++ b/src/Export/C/C_FcCellExport.cpp
+@@ -344,6 +344,7 @@ void N2D2::C_FcCellExport::generateCellFunction(
+     prog << "#ifdef SAVE_OUTPUTS\n"
+          << "    fccell_outputs_save("
+             << "\"" << identifier << ".txt\", "
++            << DeepNetExport::isCellOutputUnsigned(cell) << ","
+             << prefix << "_NB_OUTPUTS, "
+             << outputName
+          << ");\n"
+diff --git a/src/Export/C/C_PoolCellExport.cpp b/src/Export/C/C_PoolCellExport.cpp
+index 4079a901..ab7db5ea 100644
+--- a/src/Export/C/C_PoolCellExport.cpp
++++ b/src/Export/C/C_PoolCellExport.cpp
+@@ -190,6 +190,7 @@ void N2D2::C_PoolCellExport::generateCellFunction(
+     prog << "#ifdef SAVE_OUTPUTS\n"
+          << "    poolcell_outputs_save("
+             << "\"" << identifier << ".txt\", "
++            << DeepNetExport::isCellOutputUnsigned(cell) << ","
+             << prefix << "_NB_OUTPUTS, "
+             << prefix << "_OUTPUTS_HEIGHT, "
+             << prefix << "_OUTPUTS_WIDTH, "
+diff --git a/src/Export/C/C_ScalingCellExport.cpp b/src/Export/C/C_ScalingCellExport.cpp
+index 1e4a49f7..a67558fb 100755
+--- a/src/Export/C/C_ScalingCellExport.cpp
++++ b/src/Export/C/C_ScalingCellExport.cpp
+@@ -146,6 +146,7 @@ void N2D2::C_ScalingCellExport::generateCellFunction(
+     prog << "#ifdef SAVE_OUTPUTS\n"
+          << "    scalingcell_outputs_save("
+             << "\"" << identifier << ".txt\", "
++            << DeepNetExport::isCellOutputUnsigned(cell) << ","
+             << prefix << "_NB_OUTPUTS, "
+             << prefix << "_OUTPUT_OFFSET, "
+             << prefix << "_OUTPUTS_HEIGHT, "
