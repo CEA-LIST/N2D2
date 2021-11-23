@@ -321,23 +321,14 @@ Tanh
         :members:
         :inherited-members:
 
-Loss function
--------------
+Target
+------
 
-.. autoclass:: n2d2.application.LossFunction
+Last cell of the network this object computes the loss.
+
+To understand what the Target does, please refer to this part of the documentation : :doc:`Target INI </ini/target>`.
+
+.. autoclass:: n2d2.target.Score
         :members:
         :inherited-members:
 
-CrossEntropyClassifier
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: n2d2.application.CrossEntropyClassifier
-        :members:
-        :inherited-members:
-
-MeanSquareErrorRegression
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: n2d2.application.MeanSquareErrorRegression
-        :members:
-        :inherited-members:
