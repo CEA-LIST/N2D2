@@ -352,9 +352,7 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
     """
 
     _cell_constructors = {
-        'Frame<double>': N2D2.FcCell_Frame_double,
         'Frame<float>': N2D2.FcCell_Frame_float,
-        
     }
 
     if cuda_compiled:
@@ -696,13 +694,11 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
 
     _cell_constructors = {
         'Frame<float>': N2D2.ConvCell_Frame_float,
-        'Frame<double>': N2D2.ConvCell_Frame_double,
     }
 
     if cuda_compiled:
         _cell_constructors.update({
             'Frame_CUDA<float>': N2D2.ConvCell_Frame_CUDA_float,
-            'Frame_CUDA<double>': N2D2.ConvCell_Frame_CUDA_double,
         })
     
     _parameters = {
@@ -1099,14 +1095,12 @@ class Softmax(NeuralNetworkCell, Datatyped):
 
     _cell_constructors = {
         'Frame<float>': N2D2.SoftmaxCell_Frame_float,
-        'Frame<double>': N2D2.SoftmaxCell_Frame_double,
     }
 
 
     if cuda_compiled:
         _cell_constructors.update({
             'Frame_CUDA<float>': N2D2.SoftmaxCell_Frame_CUDA_float,
-            'Frame_CUDA<double>': N2D2.SoftmaxCell_Frame_CUDA_double,
         })
     
     _parameters = {
@@ -1435,12 +1429,10 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
     """
     _cell_constructors = {
         'Frame<float>': N2D2.DeconvCell_Frame_float,
-        'Frame<double>': N2D2.DeconvCell_Frame_double,
     }
     if cuda_compiled:
         _cell_constructors.update({
             'Frame_CUDA<float>': N2D2.DeconvCell_Frame_CUDA_float,
-            'Frame_CUDA<double>': N2D2.DeconvCell_Frame_CUDA_double,
         })
     _parameters = {
         "no_bias": "NoBias",
@@ -1888,12 +1880,10 @@ class Dropout(NeuralNetworkCell, Datatyped):
 
     _cell_constructors = {
         'Frame<float>': N2D2.DropoutCell_Frame_float,
-        'Frame<double>': N2D2.DropoutCell_Frame_double,
     }
     if cuda_compiled:
         _cell_constructors.update({
             'Frame_CUDA<float>': N2D2.DropoutCell_Frame_CUDA_float,
-            'Frame_CUDA<double>': N2D2.DropoutCell_Frame_CUDA_double,
         })
     _parameters = {
         "dropout": "Dropout",

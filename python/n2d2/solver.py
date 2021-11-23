@@ -67,12 +67,10 @@ class SGD(Solver):
 
     _solver_generators = {
         'Frame<float>': N2D2.SGDSolver_Frame_float,
-        'Frame<double>': N2D2.SGDSolver_Frame_double,
     }
     if cuda_compiled:
         _solver_generators.update({
             'Frame_CUDA<float>': N2D2.SGDSolver_Frame_CUDA_float,
-            'Frame_CUDA<double>': N2D2.SGDSolver_Frame_CUDA_double,
         })
     _convention_converter= n2d2.ConventionConverter({
         "learning_rate": "LearningRate",
@@ -138,12 +136,10 @@ class Adam(Solver):
 
     _solver_generators = {
         'Frame<float>': N2D2.AdamSolver_Frame_float,
-        'Frame<double>': N2D2.AdamSolver_Frame_double, 
     }
     if cuda_compiled:
         _solver_generators.update({
             'Frame_CUDA<float>': N2D2.AdamSolver_Frame_CUDA_float,
-            'Frame_CUDA<double>': N2D2.AdamSolver_Frame_CUDA_double,
         })
 
     _convention_converter= n2d2.ConventionConverter({

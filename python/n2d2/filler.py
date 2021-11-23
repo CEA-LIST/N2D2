@@ -57,8 +57,6 @@ class He(Filler):
     """
     _filler_generators = {
         '<float>': N2D2.HeFiller_float,
-        '<double>': N2D2.HeFiller_double,
-
     }
 
     _convention_converter= n2d2.ConventionConverter({
@@ -114,8 +112,6 @@ class Normal(Filler):
     """Static members"""
     _filler_generators = {
         '<float>': N2D2.NormalFiller_float,
-        '<double>': N2D2.NormalFiller_double,
-
     }
     _convention_converter= n2d2.ConventionConverter({
         "mean": "mean",
@@ -157,8 +153,6 @@ class Xavier(Filler):
     """Static members"""
     _filler_generators = {
         '<float>': N2D2.XavierFiller_float,
-        '<double>': N2D2.XavierFiller_double,
-
     }
 
     _convention_converter= n2d2.ConventionConverter({
@@ -218,7 +212,6 @@ class Constant(Filler):
     """Static members"""
     _filler_generators = {
         '<float>': N2D2.ConstantFiller_float,        
-        '<double>': N2D2.ConstantFiller_double,
     }
     _convention_converter= n2d2.ConventionConverter({
         "value": "value",
