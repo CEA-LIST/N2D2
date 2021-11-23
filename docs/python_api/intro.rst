@@ -7,6 +7,43 @@ With the library you can import data, pre-process them, create a deep neural net
 You can also import a network using the :doc:`ini file configuration<../ini/intro>` or the ONNX library.
 
 
+Here are the functionalities available with the Python API :
+
++------------------------+------------+------------------+
+|        Feature         |  Available | Python API Only  |
++========================+============+==================+
+| Import a network from  | ✔️         |                  |
+| an INI file            |            |                  |
++------------------------+------------+------------------+
+| Import a network from  | ✔️         |                  |
+| an ONNX file           |            |                  |
++------------------------+------------+------------------+
+| Build a network with   | ✔️         |                  |
+| the API                |            |                  |
++------------------------+------------+------------------+
+| Load and apply         | ✔️         |                  |
+| transformation to a    |            |                  |
+| dataset                |            |                  |
++------------------------+------------+------------------+
+| Train a network        | ✔️         |                  |
++------------------------+------------+------------------+
+| Flexible definition of | ✔️         | ✔️               |
+| the computation graph  |            |                  |
++------------------------+------------+------------------+
+| Test a network with    | ✔️         |                  |
+| the N2D2 analysis tools|            |                  |
++------------------------+------------+------------------+
+| Torch interoperability | ✔️         | ✔️               |
++------------------------+------------+------------------+
+| Keras interoperability | ❌         | ✔️               |
++------------------------+------------+------------------+
+| Multi GPU support      | ✔️         |                  |
++------------------------+------------+------------------+
+| Exporting network      | ❌         |                  |
++------------------------+------------+------------------+
+
+
+
 Installation
 ------------
 
@@ -118,7 +155,8 @@ Here we will list parameters which can be directly modified in your script.
 |``seed``                  | Seed used to generate random numbers(0 = time based),             |
 |                          | default = ``0``                                                   |
 +--------------------------+-------------------------------------------------------------------+
-|``cuda_device``           | Device to use for GPU computation with CUDA, default = ``0``      |
+|``cuda_device``           | Device to use for GPU computation with CUDA, you can enable multi | 
+|                          | GPU by giving a tuple of device, default = ``0``                  |
 +--------------------------+-------------------------------------------------------------------+
 
 
@@ -137,3 +175,5 @@ Example
         n2d2.global_variables.seed = 1
 
         n2d2.global_variables.cuda_device = 1
+        # Multi GPU example :
+        n2d2.global_variables.cuda_device = 0, 1 

@@ -64,17 +64,7 @@ N2D2
    :maxdepth: 1
    :caption: C++/Python core:
    
-   core/intro
-   core/activations
-   core/containers
-   core/cells
-   core/databases
-   core/deepnet
-   core/filler
-   core/solver
-   core/stimuliprovider
-   core/transformation
-   core/target
+   core/core
    core/example
 
 .. toctree::
