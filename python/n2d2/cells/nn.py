@@ -258,7 +258,6 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
 
     def _add_to_graph(self, inputs):
         self.add_input(inputs)
-        #self._deepnet.add_to_current_group(self)
 
     @deprecated(reason="You should use activation as a python attribute.")
     def set_activation(self, activation):
@@ -326,7 +325,6 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         for idx, ipt in enumerate(parents):
             if ipt is not None:
                 self._input_cells.append(parents[idx].getName())
-        #self._deepnet.add_to_current_group(self)
 
     def __str__(self):
         output = "\'" + self.get_name() + "\' " + self.get_type() + "(" + self._model_key + ")"
@@ -845,7 +843,6 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
         elif key is 'mapping':
             if isinstance(value, n2d2.Tensor):
                 self._N2D2_object.setMapping(value.N2D2())
-                # TODO : add mapping to config_parmaters ?
             else:
                 raise n2d2.error_handler.WrongInputType('mapping', type(value), [str(type(n2d2.Tensor))])
         elif key is 'filler':
@@ -1288,7 +1285,7 @@ class Pool(NeuralNetworkCell, Datatyped):
                 raise n2d2.error_handler.WrongInputType('mapping', type(value), [str(type(n2d2.Tensor))])
             if value.dimX() != value.dimY():
                 raise ValueError("Pool Cell supports only unit maps")
-            self._N2D2_object.setMapping(value.N2D2()) # TODO : Mapping not in config param ?
+            self._N2D2_object.setMapping(value.N2D2())
         else:
             return super().__setattr__(key, value)
 
@@ -1559,7 +1556,6 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
         elif key is 'mapping':
             if isinstance(value, n2d2.Tensor):
                 self._N2D2_object.setMapping(value.N2D2())
-                # TODO : Mapping not in config paramater ?
             else:
                 raise n2d2.error_handler.WrongInputType('mapping', type(value), [str(type(n2d2.Tensor))])
         elif key is 'filler':
@@ -1871,7 +1867,6 @@ class ElemWise(NeuralNetworkCell):
 
         return self.get_outputs()
 
-# TODO: Test
 class Dropout(NeuralNetworkCell, Datatyped):
     """
     Dropout layer :cite:`Srivastava2014`.
