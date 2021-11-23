@@ -696,9 +696,7 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
 
     _cell_constructors = {
         'Frame<float>': N2D2.ConvCell_Frame_float,
-        
         'Frame<double>': N2D2.ConvCell_Frame_double,
-        
     }
 
     if cuda_compiled:
@@ -1204,7 +1202,7 @@ class Pool(NeuralNetworkCell, Datatyped):
     }  
     _parameters.update(_cell_frame_parameters)
 
-    _convention_converter= n2d2.ConventionConverter(_parameters)
+    _convention_converter = n2d2.ConventionConverter(_parameters)
 
     def __init__(self,
                  pool_dims,
@@ -1233,7 +1231,6 @@ class Pool(NeuralNetworkCell, Datatyped):
             'pool_dims': pool_dims,
         })
 
-        # Note: Removed Pooling
         self._parse_optional_arguments(['stride_dims', 'padding_dims', 'pooling'])
         if "pooling" in self._optional_constructor_arguments: 
             pooling = self._optional_constructor_arguments["pooling"]
@@ -1300,7 +1297,12 @@ class Pool(NeuralNetworkCell, Datatyped):
             self._N2D2_object.setMapping(value.N2D2()) # TODO : Mapping not in config param ?
         else:
             return super().__setattr__(key, value)
-class Pool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
+
+
+class Pool2d(Pool):
+    """
+    'Standard' pooling where all feature maps are pooled independently.
+    """
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
@@ -1319,36 +1321,30 @@ class Pool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
     _parameters.update(_cell_frame_parameters)
 
     _convention_converter= n2d2.ConventionConverter(_parameters)
+
     def __init__(self,
                  pool_dims,
                  **config_parameters):
-        # TODO : @ johannes : Why don't we use super().init(self, pool_dims, **config_parameters) ? instead of copy pasting code ?
-        if not isinstance(pool_dims, list):
-            raise n2d2.error_handler.WrongInputType("pool_dims", str(type(pool_dims)), ["list"])
-        
-        NeuralNetworkCell.__init__(self, **config_parameters)
-        self._constructor_arguments.update({
-            'pool_dims': pool_dims,
-        })
-
-        self._parse_optional_arguments(['stride_dims', 'padding_dims', 'pooling'])
-
-        if "pooling" in self._optional_constructor_arguments: 
-            pooling = self._optional_constructor_arguments["pooling"]
-            if not isinstance(pooling, str):
-                raise n2d2.error_handler.WrongInputType("pooling", str(type(pooling)), ["str"])
-            if pooling not in N2D2.PoolCell.Pooling.__members__.keys():
-                raise n2d2.error_handler.WrongValue("pooling", pooling,
-                                                    ", ".join(N2D2.PoolCell.Pooling.__members__.keys()))
-            self._optional_constructor_arguments['pooling'] = \
-                N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
-
-        if 'mapping' in self._config_parameters:
+        """
+        :param pool_dims: Pooling area dimensions
+        :type pool_dims: list
+        :param name: Name for the cells.
+        :type name: str
+        :param pooling: Type of pooling (``Max`` or ``Average``), default="Max"
+        :type pooling: str, optional
+        :param stride_dims: Dimension of the stride of the kernel.
+        :type stride_dims: list, optional
+        :param padding_dims: Dimensions of the padding.
+        :type padding_dims: list, optional
+        :param activation: Activation function, default= None
+        :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
+        """
+        if 'mapping' in config_parameters:
             raise RuntimeError('Pool2d does not support custom mappings')
-
+        Pool.__init__(self, pool_dims, **config_parameters)
 
     def __call__(self, inputs):
-        super().__call__(inputs)
+        NeuralNetworkCell.__call__(self, inputs)
 
         if self._N2D2_object is None:
 
@@ -1374,8 +1370,12 @@ class Pool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
         return self.get_outputs()
 
 
-class GlobalPool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
-
+class GlobalPool2d(Pool2d):
+    """
+    Global 2d pooling on full spatial dimension of input. Before the first call, the pooling
+    dimension will be an empty list, which will be filled with the inferred dimensions after
+    the first call.
+    """
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
     }
@@ -1385,43 +1385,26 @@ class GlobalPool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
         })
 
     _parameters = {
-        "pool_dims": "poolDims",
-        "stride_dims": "strideDims",
-        "padding_dims": "paddingDims",
         "pooling": "pooling",
-        "ext_padding_dims": "ExtPaddingDims",
-    }  
+    }
     _parameters.update(_cell_frame_parameters)
 
     _convention_converter= n2d2.ConventionConverter(_parameters)
-    def __init__(self,
-                 **config_parameters):
-        # TODO : @ johannes : Why don't we use super().init(self, pool_dims, **config_parameters) ? instead of copy pasting code ?
 
-        NeuralNetworkCell.__init__(self, **config_parameters)
+    def __init__(self, **config_parameters):
+        """
+        :param name: Name for the cells.
+        :type name: str
+        :param activation: Activation function, default= None
+        :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
+        """
+        if 'pool_dims' in config_parameters:
+            raise RuntimeError('GlobalPool2d does not support custom pool dims')
+        Pool2d.__init__(self, [], **config_parameters)
 
-        self._parse_optional_arguments(['pooling'])
-
-        if "pooling" in self._optional_constructor_arguments: 
-            pooling = self._optional_constructor_arguments["pooling"]
-            if not isinstance(pooling, str):
-                raise n2d2.error_handler.WrongInputType("pooling", str(type(pooling)), ["str"])
-            if pooling not in self._cell_constructors[self._model_key].Pooling.__members__.keys():
-                raise n2d2.error_handler.WrongValue("pooling", pooling,
-                                                    ", ".join(self._cell_constructors[self._model_key].Pooling.__members__.keys()))
-            self._optional_constructor_arguments['pooling'] = \
-                N2D2.PoolCell.Pooling.__members__[self._optional_constructor_arguments['pooling']]
-
-        if 'mapping' in self._config_parameters:
-            raise RuntimeError('Pool2d does not support custom mappings')
-
-
-    #@classmethod
-    #def create_from_N2D2_object(cls, inputs, N2D2_object, n2d2_deepnet):
-    #    return n2d2_cell
 
     def __call__(self, inputs):
-        super().__call__(inputs)
+        NeuralNetworkCell.__call__(self, inputs)
 
         if self._N2D2_object is None:
 
@@ -1432,17 +1415,9 @@ class GlobalPool2d(NeuralNetworkCell, Datatyped): # Should inherit Pool ?
                                                                          strideDims=[1, 1],
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
 
-            #if 'activation' not in self._config_parameters:
-            #    self._config_parameters['activation'] = \
-            #        n2d2.converter.from_N2D2_object(self._N2D2_object.getActivation())
-
-            #"""Set and initialize here all complex cells members"""
-            #for key, value in self._config_parameters.items():
-            #    if key is 'activation':
-            #        if value:
-            #            self._N2D2_object.setActivation(value.N2D2())
-            #    else:
-            #        self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+            """Set and initialize here all complex cells members"""
+            for key, value in self._config_parameters.items():
+                self.__setattr__(key, value)
 
             self._N2D2_object.setMapping(n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(inputs.dims()[2], inputs.dims()[2]).N2D2())
             self.load_N2D2_parameters(self.N2D2())
@@ -1479,7 +1454,6 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
         "padding_dims": "paddingDims",
         "dilation_dims": "dilationDims",
         "ext_padding_dims":" ExtPaddingDims",
-        "dilation_dims": "dilationDims",
         "weights_filler": "WeightsFiller",
         "bias_filler": "BiasFiller",
         "weights_solver": "WeightsSolver",
