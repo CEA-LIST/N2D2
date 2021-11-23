@@ -63,7 +63,6 @@ def from_N2D2_object(N2D2_object, **kwargs):
     """
     if N2D2_object is not None: # Here a simple "if N2D2_object: " condition is dangerous ! An N2D2 object can be evaluate to False/0.
         object_type = N2D2_object.getType()
-        # TODO: Change SAT type name convention in N2D2 to avoid ambiguity?
         if object_type == "SAT":
             if "Cell" in str(N2D2_object):
                 object_type = "SATCell"
