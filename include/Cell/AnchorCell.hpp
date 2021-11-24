@@ -146,4 +146,11 @@ const char* const EnumStrings<N2D2::AnchorCell_Frame_Kernels::Format>
     = {"CA", "AC"};
 }
 
+namespace {
+template <>
+const char* const EnumStrings<N2D2::AnchorCell_Frame_Kernels::PixelFormat>
+::data[]
+    = {"XY", "YX"};
+}
+
 #endif // N2D2_ANCHORCELL_H

@@ -65,10 +65,10 @@ public:
     std::size_t inputNbChannels() const;
     std::size_t inputSize() const;
 
-    std::size_t outputHeight() const;
-    std::size_t outputWidth() const;
-    std::size_t outputNbOutputs() const;
-    std::size_t outputSize() const;
+    std::size_t outputHeight(std::size_t index = 0) const;
+    std::size_t outputWidth(std::size_t index = 0) const;
+    std::size_t outputNbOutputs(std::size_t index = 0) const;
+    std::size_t outputSize(std::size_t index = 0) const;
 
 private:
     template<// For all inputs

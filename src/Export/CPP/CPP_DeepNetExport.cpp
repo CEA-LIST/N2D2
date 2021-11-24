@@ -30,6 +30,7 @@
 #include "Cell/FcCell.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/ElemWiseCell.hpp"
+#include "Cell/ReshapeCell.hpp"
 #include "Cell/ScalingCell.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Target/TargetScore.hpp"
@@ -151,6 +152,7 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                 continue;
             }
 
+            const bool noAlloc = (cell->getType() == ReshapeCell::Type);
             std::vector<std::shared_ptr<Cell> > childs
                 = deepNet.getChildCells(cell->getName());
 
@@ -194,7 +196,8 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                     if (!((*itCell)->getType() == ConvCell::Type
                         || (*itCell)->getType() == PoolCell::Type
                         || (*itCell)->getType() == ElemWiseCell::Type
-                        || (*itCell)->getType() == ScalingCell::Type))
+                        || (*itCell)->getType() == ScalingCell::Type
+                        || (*itCell)->getType() == ReshapeCell::Type))
                     {
                         isWrappable = false;
                     }
@@ -237,7 +240,8 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                 isWrappable = (cell->getType() == ConvCell::Type
                     || cell->getType() == PoolCell::Type
                     || cell->getType() == ElemWiseCell::Type
-                    || cell->getType() == ScalingCell::Type);
+                    || cell->getType() == ScalingCell::Type
+                    || cell->getType() == ReshapeCell::Type);
                 allocableCells.push_back(cell);
             }
 
@@ -350,6 +354,7 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                     }
                     // No margin necessary for ElemWiseCell
                     // No margin necessary for ScalingCell
+                    // No margin necessary for ReshapeCell
 
                     // Take into account memory alignment of the input
                     const size_t nbChannels
@@ -397,7 +402,7 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
             const MemoryManager::MemoryPlane& memPlane
                 = (itConcat != noBranchConcats.end())
                     ? (*itConcat).second :
-                  (wrapAroundBuffer && wrapAroundSize > 0)
+                  ((wrapAroundBuffer || noAlloc) && wrapAroundSize > 0)
                     ? (*wrapAroundMemPlane) :
                        memManager.allocate(size, childs, stride, length, count);
 
@@ -420,7 +425,7 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                 }
             }
 
-            if (wrapAroundBuffer && wrapAroundSize > 0) {
+            if ((wrapAroundBuffer && wrapAroundSize > 0) && !noAlloc) {
                 memManager.reallocate(memPlane,
                     cell, concatOffset,
                     size, true, wrapAroundExtra, childs, stride, length, count);

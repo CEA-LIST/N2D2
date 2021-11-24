@@ -1442,11 +1442,10 @@ elemwise_propagate(unsigned int channelsHeight,
                 if (rescaleFactorPerOutput[0] != 0) { //Fixed-point
                     const size_t half = (1u << (shift -1));
                     opValue = (opValue*rescaleFactorPerOutput[output] 
-                        + half) >> shift;
-                    outputs[output][oy][ox] = sat(opValue, func, 0);
-                } else { //Single-shift
-                    outputs[output][oy][ox] = sat(opValue, func, shift);
+                        + half);
                 }
+
+                outputs[output][oy][ox] = sat(opValue, func, shift);
             }
         }
     }
@@ -1483,11 +1482,10 @@ elemwise_upropagate(unsigned int channelsHeight,
                 if (rescaleFactorPerOutput[0] != 0) { //Fixed-point
                     const size_t half = (1u << (shift -1));
                     opValue = (opValue*rescaleFactorPerOutput[output] 
-                        + half) >> shift;
-                    outputs[output][oy][ox] = usat(opValue, func, 0);
-                }else{ //Single-shift
-                    outputs[output][oy][ox] = usat(opValue, func, shift);
+                        + half);
                 }
+
+                outputs[output][oy][ox] = usat(opValue, func, shift);
             }
         }
     }
@@ -1523,6 +1521,42 @@ scalingcell_propagate( unsigned int nbChannels,
                         + half) >> nbFractionalBits;
 #else
                 outputs[output + outputOffset][oy][ox]  = inputs[output][oy][ox];
+#endif
+            }
+        }
+    }
+}
+
+void
+scalingcell_upropagate( unsigned int nbChannels,
+                   unsigned int channelsHeight,
+                   unsigned int channelsWidth,
+                   DATA_T inputs[nbChannels][channelsHeight][channelsWidth],
+                   unsigned int outputsHeight,
+                   unsigned int outputsWidth,
+                   unsigned int nbOutputs,
+                   unsigned int outputOffset,
+                   DATA_T outputs[nbOutputs][outputsHeight][outputsWidth],
+                   const int32_t rescaleFactorPerOutput[nbOutputs],
+                   unsigned int nbFractionalBits)
+{
+    if ( (nbChannels != nbOutputs) || (channelsHeight != outputsHeight)
+            || (channelsWidth != outputsWidth)  ) 
+    {
+        fprintf(stderr,
+                "scaling_propagate(): inputs dimensions must be equal to outputs dimensions\n");
+        return;
+    }  
+    for(unsigned int output = 0; output < nbChannels; ++ output) {
+        for(unsigned int oy = 0; oy < channelsHeight; ++oy) {
+            for(unsigned int ox = 0; ox < channelsWidth; ++ox) {
+#if NB_BITS > 0
+                const size_t half = (1u << (nbFractionalBits -1));
+                outputs[output + outputOffset][oy][ox] 
+                    = ((UDATA_T)inputs[output][oy][ox]*rescaleFactorPerOutput[output] 
+                        + half) >> nbFractionalBits;
+#else
+                outputs[output + outputOffset][oy][ox]  = (UDATA_T)inputs[output][oy][ox];
 #endif
             }
         }

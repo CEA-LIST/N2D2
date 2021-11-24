@@ -108,12 +108,6 @@ private:
 
 };
 
-namespace {
-template <>
-const char* const EnumStrings<N2D2::Adversarial::Attack_T>::data[]
-    = {"None", "Vanilla", "GN", "FGSM", "PGD"};
-}
-
 
 // ----------------------------------------------------------------------------
 // --------------------------- Adversarial attacks ----------------------------
@@ -153,6 +147,12 @@ void CW_attack(std::shared_ptr<DeepNet>& deepNet,
                const float lr);
 */
 
+}
+
+namespace {
+template <>
+const char* const EnumStrings<N2D2::Adversarial::Attack_T>::data[]
+    = {"None", "Vanilla", "GN", "FGSM", "PGD"};
 }
 
 #endif // N2D2_ADVERSARIAL_H

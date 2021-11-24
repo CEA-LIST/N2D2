@@ -187,6 +187,12 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeights(const ConvCell& cell, std::
     header << "static const WDATA_T " << identifier << "_weights["
            << prefix << "_WEIGHTS_SIZE] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_WEIGHTS) = {";
 
+    const Cell_Frame_Top* cellFrame
+        = dynamic_cast<const Cell_Frame_Top*>(&cell);
+
+    if (cellFrame != NULL)
+        cellFrame->synchronizeToH(false);
+
     Tensor<Float_T> kernel;
 
     std::size_t i = 0;
@@ -223,6 +229,9 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeights(const ConvCell& cell, std::
             }
         }
     }
+
+    if (cellFrame != NULL)
+        cellFrame->keepInSync(true);
 
     header << "\n};\n\n";
 }

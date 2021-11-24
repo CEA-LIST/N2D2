@@ -127,7 +127,7 @@ void N2D2::CPP_ObjectDetCellExport
     if(partsPerClass.size() > 1)
         header << partsPerClass.size();
     else
-        header << "1" ;
+        header << prefix << "_NB_CLASS" ;
 
     header << "] = {";
     for(unsigned int i = 0; i < partsPerClass.size(); ++i)
@@ -150,7 +150,7 @@ void N2D2::CPP_ObjectDetCellExport
     if(templatesPerClass.size() > 1)
         header << templatesPerClass.size();
     else
-        header << "1" ;
+        header <<  prefix << "_NB_CLASS"  ;
     header << "] = {";
 
     for(unsigned int i = 0; i < templatesPerClass.size(); ++i)
@@ -179,8 +179,8 @@ void N2D2::CPP_ObjectDetCellExport
                          << cell.getNbAnchors() << "\n";
 
     header << "static const WDATA_T " << identifier << "_anchors[" 
-            << prefix << "_NB_CLASS][" << prefix 
-            << "_NB_ANCHORS][4] = {";
+            << prefix << "_NB_ANCHORS][" << prefix 
+            << "_NB_CLASS][4] = {";
 
     unsigned int nbTotalAnchors =  cell.getNbAnchors() * cell.getNbClass() ;
 

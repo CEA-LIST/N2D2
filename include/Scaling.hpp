@@ -95,15 +95,15 @@ public:
 
 #ifdef CUDA
     template<typename T>
-    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
+    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output) const {
         cudaFloatingPointScaling_propagate(CudaContext::getDeviceProp(),
-                                            input.getDevicePtr(), output.getDevicePtr(),
+                                           input.getDevicePtr(), output.getDevicePtr(),
                                            input.dimB(), input.dimZ(), 
                                            input.dimY(), input.dimX(),
                                            isClipped,
                                            mCudaClippingPerOutput.getDevicePtr(),
                                            mCudaScalingPerOutput.getDevicePtr(), 
-                                           qBits, 
+                                           cell.getQuantizedNbBits(), 
                                            DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif
@@ -167,7 +167,7 @@ public:
     
 #ifdef CUDA
     template<typename T>
-    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
+    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output) const {
         cudaFixedPointScaling_propagate(CudaContext::getDeviceProp(),
                                         input.getDevicePtr(), output.getDevicePtr(),
                                         input.dimB(), input.dimZ(), 
@@ -175,7 +175,7 @@ public:
                                         isClipped,
                                         mCudaClippingPerOutput.getDevicePtr(),
                                         mCudaScalingPerOutput.getDevicePtr(), mNbFractionalBits, 
-                                        qBits, 
+                                        cell.getQuantizedNbBits(), 
                                         DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif
@@ -237,7 +237,7 @@ public:
     
 #ifdef CUDA
     template<typename T>
-    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
+    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output) const {
         cudaSingleShiftScaling_propagate(CudaContext::getDeviceProp(),
                                          input.getDevicePtr(), output.getDevicePtr(),
                                          input.dimB(), input.dimZ(), 
@@ -245,7 +245,7 @@ public:
                                          isClipped,
                                          mCudaClippingPerOutput.getDevicePtr(),
                                          mCudaScalingPerOutput.getDevicePtr(), 
-                                         qBits, 
+                                         cell.getQuantizedNbBits(), 
                                          DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif
@@ -307,7 +307,7 @@ public:
     
 #ifdef CUDA
     template<typename T>
-    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
+    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output) const {
         cudaDoubleShiftScaling_propagate(CudaContext::getDeviceProp(),
                                          input.getDevicePtr(), output.getDevicePtr(),
                                          input.dimB(), input.dimZ(), 
@@ -315,7 +315,7 @@ public:
                                          isClipped,
                                          mCudaClippingPerOutput.getDevicePtr(),
                                          mCudaScalingPerOutput.getDevicePtr(), 
-                                         qBits, 
+                                         cell.getQuantizedNbBits(), 
                                          DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif

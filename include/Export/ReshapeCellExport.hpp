@@ -1,5 +1,5 @@
 /*
-    (C) Copyright 2015 CEA LIST. All Rights Reserved.
+    (C) Copyright 2019 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -18,43 +18,30 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_EXPORTC_TYPEDEFS_H
-#define N2D2_EXPORTC_TYPEDEFS_H
+#ifndef N2D2_RESHAPE_CELL_EXPORT_H
+#define N2D2_RESHAPE_CELL_EXPORT_H
 
-typedef enum {
-    Logistic,
-    LogisticWithLoss,
-    FastSigmoid,
-    Tanh,
-    TanhLeCun,
-    Saturation,
-    Rectifier,
-    Linear,
-    Softplus
-} ActivationFunction_T;
+#include <functional>
+#include <string>
 
-typedef enum {
-    Max,
-    Average,
-    NearestNeighbor,
-    Bilinear,
-    BilinearTF
-} Pooling_T;
+#include "Export/CellExport.hpp"
+#include "utils/Registrar.hpp"
 
-typedef enum {
-    Sum,
-    AbsSum,
-    EuclideanSum,
-    Prod
-} Operation_T;
+namespace N2D2 {
 
-typedef enum {
-    PerLayer,
-    PerInput,
-    PerChannel
-} CoeffMode_T;
+class Cell;
+class ReshapeCell;
 
-typedef float WDATA_T;
-typedef float BDATA_T;
-typedef float SUM_T;
-#endif // N2D2_EXPORTC_TYPEDEFS_H
+class ReshapeCellExport: public CellExport {
+public:
+    using RegistryCreate_T = std::function<void(ReshapeCell& cell, const std::string& dirName)>;
+
+    static RegistryMap_T& registry();
+
+    static void generate(Cell& cell, const std::string& dirName, const std::string& type);
+};
+}
+
+#endif // N2D2_RESHAPE_CELL_EXPORT_H
+
+

@@ -205,6 +205,28 @@ emulator generates for each network's layer an output file
 *layer_name_output.txt* containing the output tensor values of the layer, as
 expected for the DNeuro IP.
 
+Synthesis
+~~~~~~~~~
+
+To generate a project ready for synthesis in Vivado or Quartus, use the scripts
+provided in ``RTL/NETWORK/simu/PythonTOOL``. To generate a Vivado project, run:
+
+::
+
+    cd RTL/NETWORK/simu
+    python PythonTOOL/vivadoGenerate.py
+
+This script creates a new project in ``RTL/NETWORK/simu/VivadoTOOL/project_export_DNeuro``.
+Do not forget to change the default project's part.
+
+
+.. Warning::
+
+    Do not create a project and add the sources manually, as the sources
+    organization into libraries will not be setup properly: the sources in the
+    directories ``CONV_COMMON``, ``CONV_Tn_Oy_CHy_K1_Sy_P1`` and 
+    ``CONV_Tn_Oy_CHy_K1_Sy_Pn`` must be placed in libraries of the same name!
+
 
 Export parameters
 ~~~~~~~~~~~~~~~~~

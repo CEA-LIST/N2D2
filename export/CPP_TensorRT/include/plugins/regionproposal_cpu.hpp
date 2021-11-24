@@ -106,7 +106,7 @@ public:
             batchInput = inputDim[0].d[0];
 
         //return nvinfer1::DimsNCHW(batchInput, mNbProposals*mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
-        return nvinfer1::DimsNCHW(mNbProposals, mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
+        return trt_Dims4(mNbProposals, mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
 
 	}
 

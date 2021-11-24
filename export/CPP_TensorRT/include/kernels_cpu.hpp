@@ -62,7 +62,7 @@ void ROIPooling_bilinear_cpu(unsigned int batchSize,
                              unsigned int outputWidth,
                              unsigned int stimuliHeight,
                              unsigned int stimuliWidth,
-                             std::vector<nvinfer1::DimsCHW> featureDims,
+                             std::vector<trt_Dims3> featureDims,
                              unsigned int nbProposals,
                              const float* inputs,
                              float* outputs);

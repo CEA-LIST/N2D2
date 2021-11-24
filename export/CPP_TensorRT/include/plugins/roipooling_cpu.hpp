@@ -50,7 +50,7 @@ public:
         mStimuliHeight = stimuliHeight;
         mStimuliWidth = stimuliWidth;
         for(unsigned int i = 0; i < nbFeature; ++i)
-            mFeatureDims.push_back( nvinfer1::DimsCHW(  featureChannels[i],
+            mFeatureDims.push_back( trt_Dims3(  featureChannels[i],
                                                         featureHeight[i],
                                                         featureWidth[i]));
 
@@ -69,7 +69,7 @@ public:
         mNbInputFeature = read<int>(d);
         mFeatureDims.resize(mNbInputFeature);
         for(unsigned int k = 0; k < mNbInputFeature; ++k)
-            mFeatureDims[k] = read<nvinfer1::DimsCHW>(d);
+            mFeatureDims[k] = read<trt_Dims3>(d);
 
         mStimuliHeight = read<int>(d);
         mStimuliWidth = read<int>(d);
@@ -93,7 +93,7 @@ public:
                                                const nvinfer1::Dims* inputDim,
                                                int nbInputDims) override
 	{
-        return nvinfer1::DimsNCHW(mOutputDims.d[0], mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
+        return trt_Dims4(mOutputDims.d[0], mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
 	}
 
 	virtual void configure(const nvinfer1::Dims* inputDims,
@@ -213,7 +213,7 @@ public:
 	{
         size_t inputDimParamSize = 4*sizeof(int); //
         size_t ROIParamI = 4*sizeof(int) + sizeof(Pooling_T)
-                            + mNbInputFeature*sizeof(nvinfer1::DimsCHW); //
+                            + mNbInputFeature*sizeof(trt_Dims3); //
 
         mSerializationSize = inputDimParamSize + ROIParamI;
 
@@ -231,7 +231,7 @@ public:
         write<int>(d, (int)mNbInputFeature);
 
         for(unsigned int k = 0; k < mNbInputFeature; ++k)
-            write<nvinfer1::DimsCHW>(d, mFeatureDims[k]);
+            write<trt_Dims3>(d, mFeatureDims[k]);
 
         write<int>(d, (int)mStimuliHeight);
         write<int>(d, (int)mStimuliWidth);
@@ -255,7 +255,7 @@ private:
     }
 
     nvinfer1::Dims mOutputDims;
-    std::vector<nvinfer1::DimsCHW> mFeatureDims;
+    std::vector<trt_Dims3> mFeatureDims;
     unsigned int mNbInputFeature;
     unsigned int mStimuliHeight;
     unsigned int mStimuliWidth;
