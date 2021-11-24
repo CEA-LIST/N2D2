@@ -42,6 +42,7 @@ enum ConfusionTableMetric {
     FallOut,
     FalseDiscoveryRate,
     FalseOmissionRate,
+    IU,
     Accuracy,
     F1Score,
     Informedness,
@@ -93,6 +94,11 @@ public:
     {
         return (1.0 - negativePredictiveValue());
     };
+    /// IU rate (iu): From mean IU metrics: https://arxiv.org/pdf/1411.4038.pdf
+    inline double iu() const
+    {
+        return (mTp > 0) ? (mTp / (double)((mFp + mTp) + (mFn + mTp) - mTp )) : 0.0;
+    };
     // Combined metrics
     /// Accuracy (ACC)
     inline double accuracy() const
@@ -136,6 +142,8 @@ public:
             return falseDiscoveryRate();
         case FalseOmissionRate:
             return falseOmissionRate();
+        case IU:
+            return iu();
         // Combined metrics
         case Accuracy:
             return accuracy();
@@ -244,6 +252,7 @@ const char* const EnumStrings<N2D2::ConfusionTableMetric>::data[]
     "FallOut",
     "FalseDiscoveryRate",
     "FalseOmissionRate",
+    "IU",
     "Accuracy",
     "F1Score",
     "Informedness",
@@ -449,7 +458,7 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
                                  + confFile);
 
     confData << "Target TargetName Sensitivity Specificity Precision"
-                " Accuracy F1-score Informedness\n";
+                " Accuracy F1-score Informedness IU\n";
 
     const std::vector<ConfusionTable<T> > conf = getConfusionTables();
     double avgSensitivity = 0.0;
@@ -458,6 +467,7 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
     double avgAccuracy = 0.0;
     double avgF1Score = 0.0;
     double avgInformedness = 0.0;
+    double avgIU = 0.0;
     unsigned int maxLabelSize = 3;
 
     const unsigned int nbTargetsNoEmpty = (emptySet)
@@ -472,6 +482,7 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
             avgAccuracy += conf[target].accuracy();
             avgF1Score += conf[target].fScore();
             avgInformedness += conf[target].informedness();
+            avgIU += conf[target].iu();
             ++nbRelevant;
         }
 
@@ -495,7 +506,8 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
             << " " << conf[target].precision()
             << " " << conf[target].accuracy()
             << " " << conf[target].fScore()
-            << " " << conf[target].informedness() << "\n";
+            << " " << conf[target].informedness() 
+            << " " << conf[target].iu() << "\n";
     }
 
     if (nbRelevant > 0) {
@@ -505,6 +517,7 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
         avgAccuracy /= nbRelevant;
         avgF1Score /= nbRelevant;
         avgInformedness /= nbRelevant;
+        avgIU /= nbRelevant;
     }
 
     confData << "\n";
@@ -514,7 +527,8 @@ void N2D2::ConfusionMatrix<T>::log(const std::string& fileName,
         << " " << avgPrecision
         << " " << avgAccuracy
         << " " << avgF1Score
-        << " " << avgInformedness << "\n";
+        << " " << avgInformedness 
+        << " " << avgIU << "\n";
 
     confData.close();
 
