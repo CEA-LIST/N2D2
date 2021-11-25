@@ -2645,14 +2645,15 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                                     << "] and Y [" << resizeDimY << "]" << std::endl; 
                 } 
                 else {
+                    itInit = initializer.find(redirectName(node.input(3)));
                     const Tensor<int64_t> sizesTensor
                                 = ONNX_unpackTensor<int64_t>((*itInit).second);
                     if(!sizesTensor.empty()) {
                         resizeDimX = sizesTensor(3);
                         resizeDimY = sizesTensor(2);
-                    std::cout << "   Resize from [sizes] " << 
-                                    "===> dimensions X [" << resizeDimX 
-                                    << "] and Y [" << resizeDimY << "]" << std::endl; 
+                        std::cout << "   Resize from [sizes] " << 
+                                        "===> dimensions X [" << resizeDimX 
+                                        << "] and Y [" << resizeDimY << "]" << std::endl; 
 
                     }
                 }
