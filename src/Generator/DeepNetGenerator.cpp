@@ -2537,7 +2537,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         << Utils::cdef << std::endl;
                 }
                 else {
-                        std::cout << Utils::cwarning  
+                        std::cout << Utils::cnotice  
                                 << (*itAttr).second->s()
                                 << "   Resize Mode for Coordinate: [" << (*itAttr).second->s() 
                                 << "] not yet supported by N2D2, back to default mode"
@@ -2549,7 +2549,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             }
 
             if ((itAttr = attribute.find("cubic_coeff_a")) != attribute.end()) {
-                std::cout << Utils::cwarning  
+                std::cout << Utils::cnotice  
                         << "   Resize Parameter: [cubic_coeff_a]"  
                         << " not yet supported by N2D2"
                     << Utils::cdef << std::endl;
@@ -2569,11 +2569,11 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         << Utils::cdef << std::endl;
                 }
                 else {
-                    std::cout << Utils::cwarning  
+                    std::cout << Utils::cnotice  
                             << "   Resize Mode for Coordinate: [" << (*itAttr).second->s() 
                             << "] not yet supported by N2D2, back to default mode"
                         << Utils::cdef << std::endl;
-                    std::cout << Utils::cwarning  
+                    std::cout << Utils::cnotice  
                             << (*itAttr).second->s()
                             << "  is not yet supported by N2D2, "
                             << " back to default interpolation resize mode => Nearest Neighbor"
@@ -2593,6 +2593,9 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 const Tensor<float> roiTensor
                             = ONNX_unpackTensor<float>((*itInit).second);
                 if(!roiTensor.empty()) {
+                    std::cout << "   Resize from [scales] " << 
+                                    "===> dimensions X [" << resizeDimX 
+                                    << "] and Y [" << resizeDimY << "]" << std::endl; 
                     throw std::runtime_error("Resize from ROI maps is not yet"
                         " supported by N2D2.");
                 }
@@ -2604,48 +2607,32 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     inputsDims = inputXCell->getOutputsDims();
                     resizeDimX = std::rintf(inputsDims[0]*scalesTensor(3));
                     resizeDimY = std::rintf(inputsDims[1]*scalesTensor(2));
+                    std::cout << "   Resize from [scales] " << 
+                                    "===> dimensions X [" << resizeDimX 
+                                    << "] and Y [" << resizeDimY << "]" << std::endl; 
                 }
             }
-
-            if (node.input_size() > 3 && (itInit = initializer.find(redirectName(node.input(3)))) != initializer.end()) {
-                const Tensor<int64_t> sizesTensor
-                            = ONNX_unpackTensor<int64_t>((*itInit).second);
-
+            if (node.input_size() > 3) {
                 const std::string inputSizes 
                     = redirectName(node.input(3));
 
-                if(!sizesTensor.empty()) {
-                    std::cout << "Resize is initialized from constant size: " << std::endl;
-                    resizeDimX = sizesTensor(3);
-                    resizeDimY = sizesTensor(2);
-                    std::cout << "===> Only dimensions X [" << sizesTensor(3) 
-                                << "] and Y [" << sizesTensor(2) << "] are resized"
-                                << "Other dimensions are not used C[" << sizesTensor(1)
-                                << "] N["<< sizesTensor(0) << "]" << std::endl; 
-
-                }
-                else {
-                    std:: size_t nbOutputs  = 0;
-
-                    //Todo : Improve the minigraph handling for sizes from input
-                    if ((itConcat = concat.find(inputSizes)) != concat.end()) {
-                        for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
-                            const std::string input = redirectName((*itConcat).second[i]);
-                            std::map<std::string, std::vector<std::string> >
-                                ::const_iterator itConcat2ndDim;
-                            if ((itConcat2ndDim = concat.find(input)) != concat.end()) {
-                                for (unsigned int i = 0; i < (*itConcat2ndDim).second.size(); ++i) {
-                                    const std::string input2nd = redirectName((*itConcat2ndDim).second[i]);
-                                    std::map<std::string, std::vector<std::string> >
-                                        ::const_iterator itConcat3rddDim;
-                                    if ((itConcat3rddDim = concat.find(input2nd)) != concat.end()) {
-                                        for (unsigned int i = 0; i < (*itConcat3rddDim).second.size(); ++i) {
-                                            const std::string input3rd 
-                                                = redirectName((*itConcat3rddDim).second[i]);
-                                            std::shared_ptr<Cell> inputCell3rd = getCell(input3rd);
-                                            nbOutputs += inputCell3rd->getNbOutputs();
-                                            inputsDims = inputCell3rd->getOutputsDims();
-                                        }
+                //Todo : Improve the minigraph handling for sizes from input
+                if ((itConcat = concat.find(inputSizes)) != concat.end()) {
+                    for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
+                        const std::string input = redirectName((*itConcat).second[i]);
+                        std::map<std::string, std::vector<std::string> >
+                            ::const_iterator itConcat2ndDim;
+                        if ((itConcat2ndDim = concat.find(input)) != concat.end()) {
+                            for (unsigned int i = 0; i < (*itConcat2ndDim).second.size(); ++i) {
+                                const std::string input2nd = redirectName((*itConcat2ndDim).second[i]);
+                                std::map<std::string, std::vector<std::string> >
+                                    ::const_iterator itConcat3rddDim;
+                                if ((itConcat3rddDim = concat.find(input2nd)) != concat.end()) {
+                                    for (unsigned int i = 0; i < (*itConcat3rddDim).second.size(); ++i) {
+                                        const std::string input3rd 
+                                            = redirectName((*itConcat3rddDim).second[i]);
+                                        std::shared_ptr<Cell> inputCell3rd = getCell(input3rd);
+                                        inputsDims = inputCell3rd->getOutputsDims();
                                     }
                                 }
                             }
@@ -2653,6 +2640,21 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     }
                     resizeDimX = inputsDims[0];
                     resizeDimY = inputsDims[1];
+                    std::cout << "   Resize from [minigraph] " << 
+                        "===> dimensions X [" << resizeDimX 
+                                    << "] and Y [" << resizeDimY << "]" << std::endl; 
+                } 
+                else {
+                    const Tensor<int64_t> sizesTensor
+                                = ONNX_unpackTensor<int64_t>((*itInit).second);
+                    if(!sizesTensor.empty()) {
+                        resizeDimX = sizesTensor(3);
+                        resizeDimY = sizesTensor(2);
+                    std::cout << "   Resize from [sizes] " << 
+                                    "===> dimensions X [" << resizeDimX 
+                                    << "] and Y [" << resizeDimY << "]" << std::endl; 
+
+                    }
                 }
             }
 
