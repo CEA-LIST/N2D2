@@ -59,31 +59,25 @@ __global__ void cudaFloatingPointScaling_kernel(const T* input, T* output,
                                                 Float_T* scalingFactorPerChannel, 
                                                 std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
-    const std::size_t startBatch = blockIdx.x*blockDim.x + threadIdx.x;
-    const std::size_t startI = blockIdx.y*blockDim.y + threadIdx.y;
-    
-    const std::size_t strideBatch = blockDim.x*gridDim.x;
-    const std::size_t strideI = blockDim.y*gridDim.y;
-    
-    
-    for (std::size_t batch = startBatch; batch < batchSize; batch += strideBatch) {
-        for(std::size_t ch = 0; ch < nbChannels; ch++) {
-            for (std::size_t i = startI; i < height*width; i += strideI) {
-                const std::size_t index = batch*nbChannels*height*width + 
-                                          ch*height*width +
-                                          i;
+    const unsigned int batchOffset = blockIdx.z * nbChannels * height * width;
 
-                //clipping before scaling
-                T res = isClipped ? Clip(input[index], clippingFactorPerChannel[ch]) 
-                                    : input[index];
-                res = Scale(res, scalingFactorPerChannel[ch]);
+    for (unsigned int z = blockIdx.x; z < nbChannels; z += gridDim.x) {
+        for (unsigned int y = threadIdx.y; y < height; y += blockDim.y) {
+            for (unsigned int x = threadIdx.x; x < width; x += blockDim.x) {
+                const unsigned int idx
+                    = x + width * (y + height * z) + batchOffset;
+
+                T res = isClipped ? Clip(input[idx], clippingFactorPerChannel[z])
+                                  : input[idx];
+                res = Scale(res, scalingFactorPerChannel[z]);
                 if(quantizedNbBits > 0) {
                     res = saturate(round(res), quantizedNbBits, isOutputUnsigned);
                 }
-                output[index] = res;
+                output[idx] = res;
             }
         }
     }
+
 }
 
 template<typename T>
@@ -139,15 +133,6 @@ __global__ void cudaSingleShiftScaling_kernel(const T* input, T* output,
                 const unsigned int index
                     = x + width * (y + height * z) + batchOffset;
                 
-                //TODO::add clipping here properly, nothing for now
-                /*
-                const long long half = (scalingFactorPerChannel[ch] > 0)
-                    ? (1ll << (scalingFactorPerChannel[ch] - 1))
-                    : 0ll;
-                const long long res = (
-                    static_cast<long long>(round(input[index])) + half
-                ) >> scalingFactorPerChannel[ch];
-                */
                 T realInput = input[index];
                 if(isClipped){
                     realInput = (realInput > T(clippingFactorPerChannel[z])) ? T(clippingFactorPerChannel[z]) : realInput;
@@ -169,6 +154,7 @@ __global__ void cudaSingleShiftScaling_kernel(const T* input, T* output,
     }
 }
 
+//TODO adapt for QAT with clipping and scaling factors
 template<typename T>
 __global__ void cudaDoubleShiftScaling_kernel(const T* input, T* output,
                                               std::size_t batchSize, std::size_t nbChannels,
@@ -177,45 +163,24 @@ __global__ void cudaDoubleShiftScaling_kernel(const T* input, T* output,
                                               std::pair<unsigned char, unsigned char>* scalingFactorPerChannel,
                                               std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
-    const std::size_t startBatch = blockIdx.x*blockDim.x + threadIdx.x;
-    const std::size_t startI = blockIdx.y*blockDim.y + threadIdx.y;
-    
-    const std::size_t strideBatch = blockDim.x*gridDim.x;
-    const std::size_t strideI = blockDim.y*gridDim.y;
-    
-    
-    for (std::size_t batch = startBatch; batch < batchSize; batch += strideBatch) {
-        for(std::size_t ch = 0; ch < nbChannels; ch++) {
-            for (std::size_t i = startI; i < height*width; i += strideI) {
-                const std::size_t index = batch*nbChannels*height*width + 
-                                          ch*height*width +
-                                          i;
+    const unsigned int batchOffset = blockIdx.z * nbChannels * height * width;
 
-                //TODO::add clipping here properly, nothing for now  
-                const long long half = (scalingFactorPerChannel[ch].second > 0)
-                    ? (1ll << (scalingFactorPerChannel[ch].second - 1))
+    for (unsigned int z = blockIdx.x; z < nbChannels; z += gridDim.x) {
+        for (unsigned int y = threadIdx.y; y < height; y += blockDim.y) {
+            for (unsigned int x = threadIdx.x; x < width; x += blockDim.x) {
+                const unsigned int idx
+                    = x + width * (y + height * z) + batchOffset;
+
+                const long long half = (scalingFactorPerChannel[z].second > 0)
+                    ? (1ll << (scalingFactorPerChannel[z].second - 1))
                     : 0ll;
-                const long long val = static_cast<long long>(round(input[index]));
+                const long long val = static_cast<long long>(round(input[idx]));
                 const long long res = (
-                    val + (val << scalingFactorPerChannel[ch].first) +  half
-                ) >> scalingFactorPerChannel[ch].second;
-                
-                /*
-                const long long half = (scalingFactorPerChannel[ch].second > 0)
-                ? (1ll << (scalingFactorPerChannel[ch].second - 1))
-                : 0ll;
+                    val + (val << scalingFactorPerChannel[z].first) +  half
+                ) >> scalingFactorPerChannel[z].second;
 
-                long long val = round(input[index]);
-                if(isClipped){
-                    val = (val > clippingFactorPerChannel[ch]) ? clippingFactorPerChannel[ch] : val;
-                }
 
-                const long long res = (
-                    val + (val << scalingFactorPerChannel[ch].first) +  half
-                ) >> scalingFactorPerChannel[ch].second;
-                */
-
-                output[index] = saturate(res, quantizedNbBits, isOutputUnsigned);
+                output[idx] = saturate(res, quantizedNbBits, isOutputUnsigned);
             }
         }
     }
@@ -251,6 +216,7 @@ void cudaFloatingPointScaling_propagate(const cudaDeviceProp& deviceProp,
                                               Float_T* scalingFactorPerChannel,
                                               std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
+
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
