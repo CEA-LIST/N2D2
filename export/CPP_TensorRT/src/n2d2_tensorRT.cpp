@@ -26,6 +26,7 @@
 #endif
 
 PluginFactory mPluginFactory;
+#include "plugins/objectdetection_gpu.hpp"
 
 N2D2::Network::Network()
 {
@@ -157,6 +158,7 @@ void N2D2::Network::initialize() {
     }
     createContext();
     std::cout << "====> Set TensorRT context done" << std::endl;
+
 }
 
 void N2D2::Network::setIOMemory() {
@@ -284,6 +286,7 @@ void N2D2::Network::createContext()
 
         }
 #if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+
         mCudaEngine = mNetBuilder->buildEngineWithConfig(*mNetDef.back(), *mNetBuilderConfig);
         mNetBuilderConfig->destroy();
 #else
@@ -350,24 +353,43 @@ void N2D2::Network::createContext()
 
     mPluginFactory.destroyPlugin();
     nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(gLogger);
-    nvinfer1::ICudaEngine* engine = runtime->deserializeCudaEngine(gieModelStream->data(),
-                                                                   gieModelStream->size(),
-                                                                   &mPluginFactory);
-#if NV_TENSORRT_MAJOR > 4
-    if(runtime->getNbDLACores() > 1)
-        runtime->setDLACore(runtime->getNbDLACores() - 1) ;
+    int numCreators = 0;
+    nvinfer1::IPluginCreator* const* tmpList = getPluginRegistry()->getPluginCreatorList(&numCreators);
+    for (int k = 0; k < numCreators; ++k)
+    {
+        if (!tmpList[k])
+        {
+            std::cout << "Plugin Creator for plugin " << k << " is a nullptr." << std::endl;
+            continue;
+        }
+        std::string pluginName = tmpList[k]->getPluginName();
+        std::cout << k << ": " << pluginName << std::endl;
+    }
 
-    std::cout << "Available DLA Cores / Used DLA Cores: " << runtime->getNbDLACores() << " / " << runtime->getDLACore() << std::endl;
+    nvinfer1::ICudaEngine* engine = runtime->deserializeCudaEngine(gieModelStream->data(),
+                                                                   gieModelStream->size()
+                                                                   &mPluginFactory);
+    //nvinfer1::ICudaEngine* engine = runtime->deserializeCudaEngine(gieModelStream->data(),
+    //                                                               gieModelStream->size());
+#if NV_TENSORRT_MAJOR > 4
+    //if(runtime->getNbDLACores() > 1)
+    //    runtime->setDLACore(runtime->getNbDLACores() - 1) ;
+
+    //std::cout << "Available DLA Cores / Used DLA Cores: " << runtime->getNbDLACores() << " / " << runtime->getDLACore() << std::endl;
 #endif
 
 
 
     if (gieModelStream)
         gieModelStream->destroy();
+    std::cout << "gieModelStream destroy done" << std::endl;
 
-    mContext = engine->createExecutionContext();
-
+    mContext = mCudaEngine->createExecutionContext();
+    std::cout << "mContext done" << std::endl;
+    //mCudaEngine->destroy();
     mPluginFactory.destroyPlugin();
+    std::cout << "mPluginFactory destroyPlugin done" << std::endl;
+
 }
 
 /*
@@ -2205,31 +2227,43 @@ std::vector<nvinfer1::ITensor *>
                         unsigned int nbAnchors,
                         const float* anchor)
 {
-
         std::vector<nvinfer1::ITensor *> output_tensor;
         std::cout << "Add anchors layer: " << layerName << std::endl;
 
         for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
         {
-            std::string outName = layerName + "_" + std::to_string(i);
-            nvinfer1::IPlugin* pluginAnc = mPluginFactory.createPlugin(outName.c_str(),
-                                                                mMaxBatchSize,
-                                                                nbOutputs,
-                                                                outputHeight,
-                                                                outputWidth,
-                                                                stimuliHeight,
-                                                                stimuliWidth,
-                                                                featureMapWidth,
-                                                                featureMapHeight,
-                                                                scoreCls,
-                                                                isCoordinatesAnchors,
-                                                                isFlip,
-                                                                nbAnchors,
-                                                                anchor);
 
-            auto layer = mNetDef.back()->addPlugin(&inputs_tensor[i],
-                                        1,
-                                        *pluginAnc);
+            std::string outName = layerName + "_" + std::to_string(i);
+
+            nvinfer1::PluginFieldCollection fieldCollection;
+            std::vector<nvinfer1::PluginField> pluginAttributs;
+
+            auto creator = getPluginRegistry()->getPluginCreator("AnchorGPUPlugin", "1");
+            pluginAttributs.emplace_back(nvinfer1::PluginField("batchSize", &mMaxBatchSize, nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nbOutputs", &(nbOutputs), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("outputHeight", &(outputHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("outputWidth", &(outputWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliHeight", &(stimuliHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliWidth", &(stimuliWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapWidth", &(featureMapWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapHeight", &(featureMapHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("scoreCls", &(scoreCls), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("isCoordinatesAnchors", &(isCoordinatesAnchors), nvinfer1::PluginFieldType::kCHAR, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("isFlip", &(isFlip), nvinfer1::PluginFieldType::kCHAR, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nbAnchors", &(nbAnchors), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("anchors", reinterpret_cast<const void *>(anchor), nvinfer1::PluginFieldType::kFLOAT32, 4*nbAnchors));
+
+            fieldCollection.nbFields = pluginAttributs.size();
+            fieldCollection.fields = pluginAttributs.data();
+
+            nvinfer1::IPluginV2* pluginAnchor = creator->createPlugin("AnchorGPUPlugin", &fieldCollection);
+            std::cout << "pluginAnchor done " << std::endl;
+
+            auto layer = mNetDef.back()->addPluginV2(&inputs_tensor[i],
+                                    inputs_tensor.size(),
+                                    *pluginAnchor);
+            std::cout << "addPluginV2 done " << std::endl;
+
 
            layer->setName(outName.c_str());
 
@@ -2252,6 +2286,7 @@ std::vector<nvinfer1::ITensor *>
            std::cout << "}" << std::endl;
         }
         return output_tensor;
+
 
 }
 
@@ -2390,6 +2425,43 @@ std::vector<nvinfer1::ITensor *>
             }
 
             std::string outName = layerName + "_" + std::to_string(i);
+
+            nvinfer1::PluginFieldCollection fieldCollection;
+            std::vector<nvinfer1::PluginField> pluginAttributs;
+
+            auto creator = getPluginRegistry()->getPluginCreator("ObjDetGPUPlugin", "1");
+            pluginAttributs.emplace_back(nvinfer1::PluginField("batchSize", &mMaxBatchSize, nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nbOutputs", &(nbOutputs), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("outputHeight", &(outputHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("outputWidth", &(outputWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("channelHeight", &(channelHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("channelWidth", &(channelWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliWidth", &(stimuliWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliHeight", &(stimuliHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapWidth", &(featureMapWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapHeight", &(featureMapHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nbProposals", &(nbProposals), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nbCls", &(nbCls), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nbAnchors", &(nbAnchors), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("isCoordinatesAnchors", &(isCoordinatesAnchors), nvinfer1::PluginFieldType::kCHAR, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("isPixelFormatXY", &(isPixelFormatXY), nvinfer1::PluginFieldType::kCHAR, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nmsIoU", useInternalNMS ? &mDetectorNMS : &nmsIoU, nvinfer1::PluginFieldType::kFLOAT64, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("scoreThreshold", useInternalThresholds ? reinterpret_cast<const void *>(mDetectorThresholds) : reinterpret_cast<const void *>(scoreThreshold), nvinfer1::PluginFieldType::kFLOAT32, nbCls));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("maxParts", &(maxParts), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("maxTemplates", &(maxTemplates), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("numPartsPerClass", reinterpret_cast<const void *>(numPartsPerClass), nvinfer1::PluginFieldType::kINT32, nbCls));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("numTemplatesPerClass", reinterpret_cast<const void *>(numTemplatesPerClass), nvinfer1::PluginFieldType::kINT32, nbCls));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("anchor", reinterpret_cast<const void *>(anchor), nvinfer1::PluginFieldType::kFLOAT32, 4*nbCls*nbAnchors));
+
+            fieldCollection.nbFields = pluginAttributs.size();
+            fieldCollection.fields = pluginAttributs.data();
+
+            nvinfer1::IPluginV2* pluginObjDet = creator->createPlugin("ObjDetGPUPlugin", &fieldCollection);
+            std::cout << "pluginObjDet done " << std::endl;
+
+            /*
+            nvinfer1::IPluginV2* pluginObjDet = mPluginFactoryV2->createPlugin(layerMsg.name().c_str(), w.empty() ? nullptr : &w[0], w.size(), mPluginNamespace.c_str());
+
             nvinfer1::IPlugin* pluginObjDet = mPluginFactory.createPlugin(outName.c_str(),
                                                                 mMaxBatchSize,
                                                                 nbOutputs,
@@ -2413,10 +2485,13 @@ std::vector<nvinfer1::ITensor *>
                                                                 numPartsPerClass,
                                                                 numTemplatesPerClass,
                                                                 anchor);
+        */
 
-        auto layer = mNetDef.back()->addPlugin(&concat_tensor[0],
+        auto layer = mNetDef.back()->addPluginV2(&concat_tensor[0],
                                     inputs_tensor.size(),
                                     *pluginObjDet);
+            std::cout << "addPluginV2 done " << std::endl;
+
         layer->setName(outName.c_str());
         output_tensor.push_back(layer->getOutput(0));
         nvinfer1::Dims tensor_dims = output_tensor.back()->getDimensions();
