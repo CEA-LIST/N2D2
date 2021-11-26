@@ -1951,7 +1951,7 @@ extern "C" void cuda_batchnormcell_propagate(unsigned int nbChannels,
            mean,
            scale,
            epsilon);
-    checkCudaKernelsErrors();
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 
 }
 
