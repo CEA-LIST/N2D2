@@ -711,6 +711,7 @@ const N2D2::Tensor<T> N2D2::Tensor<T>::rows(size_t j0,
 
 template <class T>
 void N2D2::Tensor<T>::synchronizeToH(BaseTensor& tensor) const {
+    tensor.resize(dims());
     tensor = *this;
 }
 
