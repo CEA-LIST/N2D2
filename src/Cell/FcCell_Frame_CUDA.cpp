@@ -362,6 +362,11 @@ void N2D2::FcCell_Frame_CUDA<T>::propagate(bool inference)
             synapses = cuda_device_tensor_cast<T>(mSynapses[k]);
         }
 
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
+        const int excepts = fegetexcept();
+        fedisableexcept(FE_INVALID);
+#endif
+
         // Computes mOutputs = alpha*mSynapses'*mInputs + beta*mOutputs
         CHECK_CUBLAS_STATUS(cublasGemm(
             CudaContext::cublasHandle(),
@@ -378,6 +383,10 @@ void N2D2::FcCell_Frame_CUDA<T>::propagate(bool inference)
             reinterpret_cast<const typename Cuda::cuda_type<T>::type*>(&beta),
             reinterpret_cast<typename Cuda::cuda_type<T>::type*>(mOutputs.getDevicePtr()),
             mOutputs.dimZ()));
+
+#if !defined(WIN32) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_WIN32)
+        feenableexcept(excepts);
+#endif
     }
 
     if (!mNoBias) {
