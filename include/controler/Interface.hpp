@@ -341,8 +341,19 @@ template <class T, int STACKING_DIM>
 void N2D2::Interface<T, STACKING_DIM>::push_back(tensor_type* tensor,
                                                  size_t refs)
 {
-    if (!mData.empty()) {
-        if (tensor->nbDims() != mData.back()->nbDims()) {
+    // Find the first non-empty tensor in the interface
+    tensor_type* prevTensor = NULL;
+
+    for (unsigned int k = 0; k < mData.size(); ++k) {
+        if (!mData[k]->empty()) {
+            prevTensor = mData[k];
+            break;
+        }
+    }
+
+    // If there is already a non-empty tensor, check the dimensions
+    if (prevTensor != NULL && !tensor->empty()) {
+        if (tensor->nbDims() != prevTensor->nbDims()) {
             throw std::runtime_error("Interface::push_back(): "
                             "tensor must have the same number of dimensions");
         }
@@ -352,7 +363,7 @@ void N2D2::Interface<T, STACKING_DIM>::push_back(tensor_type* tensor,
                 && (STACKING_DIM >= 0
                     || tensor->nbDims() - dim != -STACKING_DIM)
                 && dim < mMatchingDim.size() && mMatchingDim[dim]
-                && tensor->dims()[dim] != mData.back()->dims()[dim])
+                && tensor->dims()[dim] != prevTensor->dims()[dim])
             {
                 throw std::runtime_error("Interface::push_back(): "
                                          "tensor dimension must match");
@@ -360,13 +371,15 @@ void N2D2::Interface<T, STACKING_DIM>::push_back(tensor_type* tensor,
         }
     }
 
-    const unsigned int stackingDim = (STACKING_DIM >= 0)
-        ? STACKING_DIM : tensor->nbDims() + STACKING_DIM;
-    const size_t tensorOffset = mData.size();
-    const size_t indexOffset = mDataOffset.size();
+    if (!tensor->empty()) {
+        const unsigned int stackingDim = (STACKING_DIM >= 0)
+            ? STACKING_DIM : tensor->nbDims() + STACKING_DIM;
+        const size_t tensorOffset = mData.size();
+        const size_t indexOffset = mDataOffset.size();
 
-    for (size_t index = 0; index < tensor->dims()[stackingDim]; ++index)
-        mDataOffset.push_back(std::make_pair(tensorOffset, indexOffset));
+        for (size_t index = 0; index < tensor->dims()[stackingDim]; ++index)
+            mDataOffset.push_back(std::make_pair(tensorOffset, indexOffset));
+    }
 
     mData.push_back(tensor);
     mDataRefs.push_back(refs);

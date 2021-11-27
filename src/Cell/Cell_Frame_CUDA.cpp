@@ -95,6 +95,8 @@ void N2D2::Cell_Frame_CUDA<T>::addInput(StimuliProvider& sp,
         inputsDims.push_back(sp.getBatchSize());
         mDiffOutputs.push_back(new CudaTensor<T>(inputsDims), 0);
     }
+    else
+        mDiffOutputs.push_back(new CudaTensor<T>(), 0);
 
     setOutputsDims();
 
@@ -190,9 +192,7 @@ void N2D2::Cell_Frame_CUDA<T>::addInput(BaseTensor& inputs,
 
     setInputsDims(inputsDims);
     mInputs.push_back(&inputs);
-
-    if (!diffOutputs.empty())
-        mDiffOutputs.push_back(&diffOutputs);
+    mDiffOutputs.push_back(&diffOutputs);
 
     setOutputsDims();
 

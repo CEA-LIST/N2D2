@@ -274,7 +274,7 @@ void N2D2::PoolCell_Frame_CUDA<T>::propagate(bool inference)
 template <class T>
 void N2D2::PoolCell_Frame_CUDA<T>::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (!mDiffInputs.isValid())
         return;
 
     if (!mPaddedInputs.empty()) {
@@ -289,6 +289,11 @@ void N2D2::PoolCell_Frame_CUDA<T>::backPropagate()
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mDiffOutputs[k].empty()) {
+            offset += mOutputs.dimX() * mOutputs.dimY() * mInputs[k].dimZ();
+            continue;
+        }
+
         const typename Cuda::cudnn_scaling_type<T>::type beta
                             = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
 
@@ -339,17 +344,19 @@ void N2D2::PoolCell_Frame_CUDA<T>::checkGradient(double epsilon, double maxError
                   std::bind(&PoolCell_Frame_CUDA<T>::backPropagate, this),
                   (mPooling == Max));
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << k << "]";
-
-            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

@@ -363,10 +363,15 @@ void N2D2::DeconvCell_Frame<T>::backPropagate()
         mDiffBias.setValid();
     }
 
-    if (!mDiffOutputs.empty() && mBackPropagate) {
+    if (mBackPropagate) {
         offset = 0;
 
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+            if (mDiffOutputs[k].empty()) {
+                offset += mInputs[k].dimZ();
+                continue;
+            }
+
             const T beta = (mDiffOutputs[k].isValid()) ? T(1.0) : T(0.0);
 
             Tensor<T> diffOutput = (mDiffOutputs[k].isValid())
@@ -443,17 +448,19 @@ void N2D2::DeconvCell_Frame<T>::checkGradient(double epsilon, double maxError)
     if (!mNoBias)
         gc.check(mName + "_mDiffBias", (*mBias), mDiffBias);
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int k = 0; k < mInputs.size(); ++k) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << k << "]";
-
-            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

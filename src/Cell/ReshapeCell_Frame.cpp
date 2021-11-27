@@ -92,7 +92,7 @@ void N2D2::ReshapeCell_Frame<T>::backPropagate()
 
     Cell_Frame<T>::backPropagate();
 
-    if (!mDiffOutputs.empty()) {
+    if (!mDiffOutputs[0].empty()) {
         Tensor<T> diffOutputs = tensor_cast<T>(mDiffOutputs[0]);
         // TODO: replace copy with DataTensor pointer copy
         std::copy(mDiffInputs.begin(), mDiffInputs.end(), diffOutputs.begin());
@@ -119,17 +119,19 @@ void N2D2::ReshapeCell_Frame<T>::checkGradient(double epsilon, double maxError)
                   std::bind(&ReshapeCell_Frame<T>::propagate, this, false),
                   std::bind(&ReshapeCell_Frame<T>::backPropagate, this));
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int k = 0; k < mInputs.size(); ++k) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << k << "]";
-
-            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

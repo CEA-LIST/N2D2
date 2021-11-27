@@ -802,7 +802,7 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
 
 void N2D2::AnchorCell_Frame::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (mDiffOutputs[0].empty() || !mDiffInputs.isValid())
         return;
 
     Cell_Frame<Float_T>::backPropagate();
@@ -819,7 +819,7 @@ void N2D2::AnchorCell_Frame::backPropagate()
 
     Tensor<Float_T> diffOutputsCls
         = tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
-    Tensor<Float_T> diffOutputsCoords = (mDiffOutputs.size() > 1)
+    Tensor<Float_T> diffOutputsCoords = (mDiffOutputs.size() > 1 && !mDiffOutputs[1].empty())
         ? tensor_cast_nocopy<Float_T>(mDiffOutputs[1]) : diffOutputsCls;
     const unsigned int coordsOffset = (mDiffOutputs.size() > 1)
         ? 0 : mScoresCls;

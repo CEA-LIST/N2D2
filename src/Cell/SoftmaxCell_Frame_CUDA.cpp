@@ -146,7 +146,7 @@ void N2D2::SoftmaxCell_Frame_CUDA<T>::propagate(bool /*inference*/)
 template <class T>
 void N2D2::SoftmaxCell_Frame_CUDA<T>::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (mDiffOutputs[0].empty() || !mDiffInputs.isValid())
         return;
 
     if (mWithLoss)
