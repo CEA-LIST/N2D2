@@ -85,7 +85,7 @@ struct data<-64>
 {
     data<-64>() = default;
     constexpr data<-64>(double v): value(v) {};
-    constexpr operator double() { return value; }
+    constexpr operator double() const { return value; }
     union {
         double value;
     };
@@ -96,7 +96,7 @@ struct data<-32>
 {
     data<-32>() = default;
     constexpr data<-32>(float v): value(v) {};
-    constexpr operator float() { return value; }
+    constexpr operator float() const { return value; }
     union {
         float value;
     };
@@ -107,7 +107,7 @@ struct data<-16>
 {
     data<-16>() = default;
     constexpr data<-16>(float v): value(v) {};
-    constexpr operator float() { return value; }
+    constexpr operator float() const { return value; }
     union {
         float value;
     };
@@ -118,7 +118,7 @@ struct data<32>
 {
     data<32>() = default;
     constexpr data<32>(int32_t v): value(v) {};
-    constexpr operator int32_t() { return value; }
+    constexpr operator int32_t() const { return value; }
     union {
         int32_t value;
     };
@@ -129,7 +129,7 @@ struct udata<32>
 {
     udata<32>() = default;
     constexpr udata<32>(uint32_t v): value(v) {};
-    constexpr operator uint32_t() { return value; }
+    constexpr operator uint32_t() const { return value; }
     union {
         uint32_t value;
     };
@@ -140,7 +140,7 @@ struct data<16>
 {
     data<16>() = default;
     constexpr data<16>(int16_t v): value(v) {};
-    constexpr operator int16_t() { return value; }
+    constexpr operator int16_t() const { return value; }
     union {
         int16_t value;
     };
@@ -151,7 +151,7 @@ struct udata<16>
 {
     udata<16>() = default;
     constexpr udata<16>(uint16_t v): value(v) {};
-    constexpr operator uint16_t() { return value; }
+    constexpr operator uint16_t() const { return value; }
     union {
         uint16_t value;
     };
@@ -162,7 +162,7 @@ struct data<8>
 {
     data<8>() = default;
     constexpr data<8>(int8_t v): value(v) {};
-    constexpr operator int8_t() { return value; }
+    constexpr operator int8_t() const { return value; }
     union {
         int8_t value;
     };
@@ -173,7 +173,7 @@ struct udata<8>
 {
     udata<8>() = default;
     constexpr udata<8>(uint8_t v): value(v) {};
-    constexpr operator uint8_t() { return value; }
+    constexpr operator uint8_t() const { return value; }
     union {
         uint8_t value;
     };
@@ -184,7 +184,7 @@ struct data<4>
 {
     data<4>() = default;
     constexpr data<4>(uint8_t v): value(v) {};
-    constexpr operator uint8_t() { return value; }
+    constexpr operator uint8_t() const { return value; }
     union {
         int8_t value;
         uint8_t uvalue;
@@ -201,7 +201,7 @@ struct udata<4>
 {
     udata<4>() = default;
     constexpr udata<4>(uint8_t v): value(v) {};
-    constexpr operator uint8_t() { return value; }
+    constexpr operator uint8_t() const { return value; }
     union {
         uint8_t value;
         uint8_t uvalue;
@@ -218,7 +218,7 @@ struct data<2>
 {
     data<2>() = default;
     constexpr data<2>(uint8_t v): value(v) {};
-    constexpr operator uint8_t() { return value; }
+    constexpr operator uint8_t() const { return value; }
     union {
         int8_t value;
         uint8_t uvalue;
@@ -237,7 +237,7 @@ struct udata<2>
 {
     udata<2>() = default;
     constexpr udata<2>(uint8_t v): value(v) {};
-    constexpr operator uint8_t() { return value; }
+    constexpr operator uint8_t() const { return value; }
     union {
         uint8_t value;
         uint8_t uvalue;
@@ -256,7 +256,7 @@ struct data<1>
 {
     data<1>() = default;
     constexpr data<1>(uint8_t v): value(v) {};
-    constexpr operator uint8_t() { return value; }
+    constexpr operator uint8_t() const { return value; }
     union {
         int8_t value;
         uint8_t uvalue;
@@ -279,7 +279,7 @@ struct udata<1>
 {
     udata<1>() = default;
     constexpr udata<1>(uint8_t v): value(v) {};
-    constexpr operator uint8_t() { return value; }
+    constexpr operator uint8_t() const { return value; }
     union {
         uint8_t value;
         uint8_t uvalue;

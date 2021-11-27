@@ -1794,7 +1794,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::elemWisePropagate(
                                         INPUT_MEM_STRIDE,
                                         ARGS...>(pos, ch, firstInputs, inputs...);
 
-                outputs[oOffset + ch]
+                ((Output_T*)((uint8_t*)outputs + oOffset))[ch]
                     = sat<Output_T>(val, ch, ACTIVATION, rescaling);
             }
         }
@@ -2719,7 +2719,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::resizeNearestNeighborPropagate(
             }
 
             for (int output = 0; output < NB_OUTPUTS; ++output) {
-                outputs[oOffset + output] = inputs[iOffset + output];
+                ((Output_T*)((uint8_t*)outputs + oOffset))[output] = ((Input_T*)((uint8_t*)inputs + iOffset))[output];
             }
         }
     }
@@ -2773,8 +2773,8 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::scalingPropagate(
             }
 
             for (int ch = 0; ch < NB_OUTPUTS; ++ch) {
-                outputs[oOffset + ch]
-                    = sat<Output_T>(inputs[iOffset + ch], ch, Linear, rescaling);
+                ((Output_T*)((uint8_t*)outputs + oOffset))[ch]
+                    = sat<Output_T>(((Input_T*)((uint8_t*)inputs + iOffset))[ch], ch, Linear, rescaling);
             }
         }
     }
