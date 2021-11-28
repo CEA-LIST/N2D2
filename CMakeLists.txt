@@ -197,11 +197,6 @@ if(MSVC)
     target_compile_definitions(n2d2_lib PUBLIC _CONSOLE _VISUALC_ NeedFunctionPrototypes _CRT_SECURE_NO_WARNINGS _VARIADIC_MAX=10)
 else()
     target_compile_options(n2d2_lib PUBLIC -std=c++0x -Wall -Wextra -pedantic -Wno-unknown-pragmas -fsigned-char -fPIC)
-
-    if(COVERAGE)
-        add_compile_options(--coverage)
-        add_link_options(--coverage)
-    endif()
 endif()
 
 find_package(OpenCV REQUIRED)
