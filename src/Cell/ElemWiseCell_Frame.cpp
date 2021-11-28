@@ -62,12 +62,12 @@ void N2D2::ElemWiseCell_Frame::initialize()
     }
 
     if(mWeights.empty()) {
-        std::cout << Utils::cwarning << "ElemWiseCell_Frame::initialize(): Empty weights for cell " 
+        std::cout << Utils::cnotice << "ElemWiseCell_Frame::initialize(): Empty weights for cell " 
                     << mName << ": Initialize weights to default value(1.0)" 
                     << Utils::cdef << std::endl;
     }
     if(mShifts.empty()) {
-        std::cout << Utils::cwarning << "ElemWiseCell_Frame::initialize(): Empty shifts for cell " 
+        std::cout << Utils::cnotice << "ElemWiseCell_Frame::initialize(): Empty shifts for cell " 
                     << mName << ": Initialize shifts to default value(0.0)" 
                     << Utils::cdef << std::endl;
     }

@@ -124,6 +124,9 @@ void N2D2::Network::initialize() {
         if(mDataType == nvinfer1::DataType::kHALF) {
             mNetBuilderConfig->setFlag(nvinfer1::BuilderFlag::kFP16);
         }
+        if(mNbBits == 8) {
+            mNetBuilderConfig->setFlag(nvinfer1::BuilderFlag::kINT8);
+        }
 #else 
     #if NV_TENSORRT_MAJOR > 4
         if(mDataType == nvinfer1::DataType::kHALF) {
@@ -190,6 +193,10 @@ void N2D2::Network::createContext()
         mNetBuilder->setMaxBatchSize(mMaxBatchSize);
         mNetBuilderConfig->setMinTimingIterations(mIterBuild);
         mNetBuilderConfig->setMaxWorkspaceSize(128<<20);
+        if(mUseDLA) {
+            mNetBuilderConfig->setDLACore(0) ;
+            mNetBuilderConfig->setFlag(nvinfer1::BuilderFlag::kGPU_FALLBACK);
+        }
         if(mDataType == nvinfer1::DataType::kHALF) {
             mNetBuilderConfig->setFlag(nvinfer1::BuilderFlag::kFP16);
         }
@@ -354,10 +361,12 @@ void N2D2::Network::createContext()
                                                                    gieModelStream->size(),
                                                                    &mPluginFactory);
 #if NV_TENSORRT_MAJOR > 4
+#if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) < 8
     if(runtime->getNbDLACores() > 1)
         runtime->setDLACore(runtime->getNbDLACores() - 1) ;
 
     std::cout << "Available DLA Cores / Used DLA Cores: " << runtime->getNbDLACores() << " / " << runtime->getDLACore() << std::endl;
+#endif
 #endif
 
 
@@ -1294,9 +1303,9 @@ std::vector<nvinfer1::ITensor *>
             nvinfer1::Weights scale_trt;
             nvinfer1::Weights shift_trt;
             nvinfer1::Weights power_trt;
-            const std::size_t coeffIdx =  coeffMode == PerChannel ? 
+            const long int coeffIdx =  coeffMode == PerChannel ? 
                                             0 : input;
-            const std::size_t coeffLength =  coeffMode == PerChannel ? 
+            const long int coeffLength =  coeffMode == PerChannel ? 
                                             nbOutputs : 1;
 
             if(mDataType != nvinfer1::DataType::kHALF)
@@ -2745,7 +2754,7 @@ void N2D2::Network::add_weighted(unsigned int nbOutputs,
     const unsigned int blockSize = std::ceil((int)image_height * image_width / groupSize);
 
     const dim3 threadsPerBlocks = {groupSize, 1, 1};
-    const dim3 blocksPerGrid = {blockSize, 1, mMaxBatchSize};
+    const dim3 blocksPerGrid = {blockSize, 1, (unsigned int) mMaxBatchSize};
 
     //Use INTERNEAREST resize factor if output image and input image dont have the same size
     const float multy = ((float) outputsHeight)/((float) image_height);
