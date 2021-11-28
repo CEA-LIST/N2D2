@@ -375,6 +375,7 @@ void N2D2::Cell_Frame_CUDA<T>::linkInput(StimuliProvider& sp,
      // Define input-output sizes
     setInputsDims(sp.getSize());
     mInputs.push_back(&sp.getData());
+    mDiffOutputs.push_back(new CudaTensor<T>(), 0);
 }
 // END code used exlusively in python API
 
