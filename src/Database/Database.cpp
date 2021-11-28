@@ -2284,8 +2284,6 @@ cv::Mat N2D2::Database::loadData(
 
         cv::merge(channels, data);
     }
-    else
-        data = dataFile->read(fileName);
 
     // Check stimulus depth
     if (data.depth() != depth) {
