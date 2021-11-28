@@ -168,7 +168,10 @@ void N2D2::FcCell_Frame_CUDA<T>::getQuantWeight(unsigned int output,
     if (!mQuantizer)
         return;
 
-    const CudaTensor<T>& synapses = cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(0));
+    const unsigned int k = mInputs.getTensorIndex(channel);
+    channel -= mInputs.getTensorDataOffset(channel);
+
+    const CudaTensor<T>& synapses = cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(k));
     synapses.synchronizeDToH(0, 0, channel, output, 1);
 
     value.resize({1});
