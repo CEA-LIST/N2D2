@@ -262,6 +262,42 @@ void N2D2::Database::saveROIs(const std::string& fileName,
                   << "\": " << (*it).second << " patterns" << std::endl;
 }
 
+void N2D2::Database::logPartition(const std::string& dirName) const
+{
+    Utils::createDirectories(dirName);
+
+    const std::vector<StimuliSet> stimuliSets = getStimuliSets(All);
+
+    for (std::vector<Database::StimuliSet>::const_iterator itSet
+         = stimuliSets.begin(),
+         itSetEnd = stimuliSets.end();
+         itSet != itSetEnd;
+         ++itSet)
+    {
+        const unsigned int size = mStimuliSets(*itSet).size();
+        std::ostringstream fileNameStr;
+        fileNameStr << dirName << "/" << (*itSet) << ".log";
+
+        std::ofstream stats(fileNameStr.str().c_str());
+
+        if (!stats.good())
+            throw std::runtime_error("Could not create partition file: " + fileNameStr.str());
+
+        // Append date & time to the file.
+        const time_t now = std::time(0);
+        tm* localNow = std::localtime(&now);
+
+        stats << "# " << std::asctime(localNow); // std::asctime() already
+        // appends end of line
+
+        for (int i = 0; i < (int)size; ++i) {
+            const StimulusID id = mStimuliSets(*itSet)[i];
+
+            stats << mStimuli[id].name << "\n";
+        }
+    }
+}
+
 void N2D2::Database::logStats(const std::string& sizeFileName,
                               const std::string& labelFileName,
                               StimuliSetMask setMask) const
