@@ -11,7 +11,7 @@ stages:
   before_script:
     - mkdir build
     - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=1 ..
 
 build:ubuntu:
   extends: .before_script_template
@@ -36,6 +36,13 @@ test:ubuntu:
     - export N2D2_DATA=/nvme0/DATABASE
     - make tests -j4
     - make test
+    - gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root ${CI_PROJECT_DIR}
+  coverage: /^\s*lines:\s*\d+.\d+\%/
+  artifacts:
+    name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}
+    expire_in: 2 days
+    reports:
+      cobertura: build/coverage.xml
 
 test:python_api:
   extends: .before_script_template
