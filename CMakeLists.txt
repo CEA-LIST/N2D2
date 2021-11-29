@@ -143,6 +143,13 @@ function(add_n2d2_pybind name source linked_libs)
     else()
         message(STATUS "Using third_party/pybind11.")
         add_subdirectory(${N2D2_SOURCE_DIR}/third_party/pybind11)
+
+        if (NOT EXISTS "${N2D2_SOURCE_DIR}/third_party/pybind11/CMakeLists.txt")
+          message(FATAL_ERROR
+                  "Cannot find third_party/pybind11 directory that's needed to "
+                  "build N2D2. If you use git, make sure you have cloned submodules:\n"
+                  "  git submodule update --init --recursive\n")
+        endif()
     endif()
 
     pybind11_add_module(${name} MODULE ${source})
