@@ -176,7 +176,7 @@ class DIR(Database):
         :type per_label_partitioning: bool, optional
         :param equiv_label_partitioning: If ``True``, the stimuli are equi-partitioned in the ``learn`` and ``validation`` sets, meaning that the same number of stimuli for each label is used (only when ``per_label_partitioning`` is ``True``). The remaining stimuli are partitioned in the ``test`` set, default=True
         :type equiv_label_partitioning: bool, optional
-        :param ignore_mask: #TODO : add a description for this parameter, default=[]
+        :param ignore_mask: List of mask strings to ignore. If any is present in a file path, the file gets ignored. The usual * and + wildcards are allowed, default=[]
         :type ignore_mask: list, optional
         :param valid_extensions: List of valid stimulus file extensions (if left empty, any file extension is considered a valid stimulus), default=[]
         :type valid_extensions: list, optional
