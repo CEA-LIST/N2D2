@@ -1975,8 +1975,8 @@ std::vector<nvinfer1::ITensor *>
         reshape_dims.nbDims = nbDims;
 
         for (int dim = 0; dim < nbDims; ++dim) {
-            if (shape[dim] != 0)
-                reshape_dims.d[dim] = shape[dim];
+            if (shape[nbDims - 1 - dim] != 0)
+                reshape_dims.d[dim] = shape[nbDims - 1 - dim];
             else
                 reshape_dims.d[dim] = tensor_dims.d[dim];
         }
@@ -2027,11 +2027,11 @@ std::vector<nvinfer1::ITensor *>
         nvinfer1::Dims reshape_dims;
         nvinfer1::Permutation perm_dims;
 
-        reshape_dims.nbDims = nbDims;
+        reshape_dims.nbDims = nbDims - 1;
 
-        for (int dim = 0; dim < nbDims; ++dim) {
-            reshape_dims.d[dim] = tensor_dims.d[perm[dim]];
-            perm_dims.order[dim] = perm[dim];
+        for (int dim = 1; dim < nbDims; ++dim) {
+            reshape_dims.d[dim - 1] = tensor_dims.d[perm[nbDims - 1 - dim]];
+            perm_dims.order[dim - 1] = perm[nbDims - 1 - dim];
         }
 
 #if NV_TENSORRT_MAJOR < 4
