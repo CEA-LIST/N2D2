@@ -871,12 +871,14 @@ void N2D2::DeepNetQuantization::fuseScalingCells() {
             }
             else if(parentCell->getType() == ElemWiseCell::Type) {
                 auto parentElemWiseCell = std::dynamic_pointer_cast<ElemWiseCell>(parentCell);
-                moveScalingCellAboveParentElemWiseCell(scalingCell, parentElemWiseCell);
+                const bool moved = moveScalingCellAboveParentElemWiseCell(scalingCell, parentElemWiseCell);
 
-                // The ScalingCell has been potentially moved as parent of the ElemeWiseCell.
-                // Recurse to try to merge this ScalingCell with its new parents.
-                fuseScalingCells();
-                return;
+                if (moved) {
+                    // The ScalingCell has been moved as parent of the ElemeWiseCell.
+                    // Recurse to try to merge this ScalingCell with its new parents.
+                    fuseScalingCells();
+                    return;
+                }
             }
         }
     }
@@ -958,7 +960,7 @@ void N2D2::DeepNetQuantization::fuseScalingCellWithParentScalingCell(
     mDeepNet.removeCell(scalingCell);
 }
 
-void N2D2::DeepNetQuantization::moveScalingCellAboveParentElemWiseCell(
+bool N2D2::DeepNetQuantization::moveScalingCellAboveParentElemWiseCell(
                                         const std::shared_ptr<ScalingCell>& scalingCell, 
                                         const std::shared_ptr<ElemWiseCell>& parentElemWiseCell)
 {
@@ -990,7 +992,10 @@ void N2D2::DeepNetQuantization::moveScalingCellAboveParentElemWiseCell(
         }
 
         mDeepNet.removeCell(scalingCell);
+        return true;
     }
+
+    return false;
 }
 
 void N2D2::DeepNetQuantization::approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
