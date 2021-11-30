@@ -30,10 +30,13 @@ N2D2::SGDSolver::SGDSolver()
       mIterationSize(this, "IterationSize", 1U),
       mMaxIterations(this, "MaxIterations", 0U),
       mWarmUpDuration(this, "WarmUpDuration", 0U),
+      mWarmUpLRFrac(this, "WarmUpLRFrac", 0.25),
       mLearningRatePolicy(this, "LearningRatePolicy", None),
       mLearningRateStepSize(this, "LearningRateStepSize", 1U),
       mLearningRateDecay(this, "LearningRateDecay", 0.1),
       mClamping(this, "Clamping", ""),
+      mPolyakMomentum(this, "PolyakMomentum", true),
+      mMinDecay(this, "MinDecay", 0.0),
       mIterationPass(0),
       mNbIterations(0)
 {
@@ -48,12 +51,15 @@ N2D2::SGDSolver::SGDSolver(const SGDSolver& solver)
       mIterationSize(this, "IterationSize", solver.mIterationSize),
       mMaxIterations(this, "MaxIterations", solver.mMaxIterations),
       mWarmUpDuration(this, "WarmUpDuration", solver.mWarmUpDuration),
+      mWarmUpLRFrac(this, "WarmUpLRFrac", solver.mWarmUpLRFrac),
       mLearningRatePolicy(this, "LearningRatePolicy",
                           solver.mLearningRatePolicy),
       mLearningRateStepSize(this, "LearningRateStepSize",
                             solver.mLearningRateStepSize),
       mLearningRateDecay(this, "LearningRateDecay", solver.mLearningRateDecay),
       mClamping(this, "Clamping", solver.mClamping),
+      mPolyakMomentum(this, "PolyakMomentum", solver.mPolyakMomentum),
+      mMinDecay(this, "MinDecay", solver.mMinDecay),
       mIterationPass(solver.mIterationPass),
       mNbIterations(solver.mNbIterations)
 {
@@ -103,7 +109,7 @@ double N2D2::SGDSolver::getLearningRate(unsigned int batchSize, bool silent)
         {
             if(mWarmUpDuration > currentStep)
             {
-                rate *= currentStep / (double) mWarmUpDuration;
+                rate *= (1.0-mWarmUpLRFrac)*(currentStep / (double) mWarmUpDuration) + mWarmUpLRFrac;
             }
             else
             {
@@ -111,7 +117,8 @@ double N2D2::SGDSolver::getLearningRate(unsigned int batchSize, bool silent)
                 double cosine_decay = 0.5 * (1.0 
                                     + (double) std::cos(M_PI * (double) step / 
                                      (double) (mMaxIterations - mWarmUpDuration)));
-                rate *=  std::max(0.0, cosine_decay) ;
+                const double cosine_decay_min = (1.0 - mMinDecay) * cosine_decay + mMinDecay;
+                rate *=  std::max(0.0, cosine_decay_min) ;
             }
         }
         if (mNbIterations > 0) {

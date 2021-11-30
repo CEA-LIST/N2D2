@@ -31,6 +31,9 @@ public:
                       const std::string& labelPath = "",
                       bool extractROIs = false);
     virtual ~GTSRB_DIR_Database() {};
+    double getValidation(){
+        return mValidation;
+    };
 
 protected:
     double mValidation;

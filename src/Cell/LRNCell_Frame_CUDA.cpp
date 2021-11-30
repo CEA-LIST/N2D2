@@ -124,7 +124,7 @@ void N2D2::LRNCell_Frame_CUDA<T>::propagate(bool /*inference*/)
 template <class T>
 void N2D2::LRNCell_Frame_CUDA<T>::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (!mDiffInputs.isValid())
         return;
 
     const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
@@ -132,6 +132,9 @@ void N2D2::LRNCell_Frame_CUDA<T>::backPropagate()
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mDiffOutputs[k].empty())
+            continue;
+
         const typename Cuda::cudnn_scaling_type<T>::type beta
             = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
 
@@ -169,6 +172,7 @@ void N2D2::LRNCell_Frame_CUDA<T>::backPropagate()
 template <class T>
 void N2D2::LRNCell_Frame_CUDA<T>::update()
 {
+    Cell_Frame_CUDA<T>::update();
 }
 
 template <class T>

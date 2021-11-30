@@ -29,6 +29,7 @@
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/ConvCell.hpp"
 #include "Cell/DeconvCell.hpp"
+#include "Cell/DistanceCell.hpp"
 #include "Cell/ConvCell_Spike.hpp"
 #include "Cell/DropoutCell.hpp"
 #include "Cell/FcCell.hpp"
@@ -69,6 +70,7 @@ N2D2::DeepNet::DeepNet(Network& net)
 void N2D2::DeepNet::addCell(const std::shared_ptr<Cell>& cell,
                             const std::vector<std::shared_ptr<Cell>>& parents)
 {
+    // Check which parent has the largest order in mLayers 
     unsigned int cellOrder = 0;
     for (auto it = mLayers.begin(); it != mLayers.end(); ++it) {
         for (auto itParent = parents.begin(); itParent != parents.end(); ++itParent) {
@@ -82,12 +84,14 @@ void N2D2::DeepNet::addCell(const std::shared_ptr<Cell>& cell,
         }
     }
 
+    // Add additional layer for new cell if highest order parent is in final layer
     if (cellOrder + 1 >= mLayers.size()) {
         mLayers.resize(cellOrder + 2);
     }
 
     mLayers[cellOrder + 1].push_back(cell->getName());
 
+    // Add link information to mParentLayers s
     for (auto itParent = parents.begin(); itParent != parents.end(); ++itParent) {
         if (*itParent) {
             mParentLayers.insert(std::make_pair(cell->getName(), (*itParent)->getName()));
@@ -706,8 +710,16 @@ void N2D2::DeepNet::exportNetworkFreeParameters(const std::string
                                            + ".syntxt");
         (*it).second->logFreeParametersDistrib(dirName + "/" + name
             + "_weights.distrib.dat", Cell::Multiplicative);
+
+        (*it).second->exportQuantFreeParameters(dirName + "/" + (*it).first
+                                           + "_quant.syntxt");
+        (*it).second->logQuantFreeParametersDistrib(dirName + "/" + (*it).first
+            + "_weights_quant.distrib.dat", Cell::Multiplicative);
+
         (*it).second->logFreeParametersDistrib(dirName + "/" + name
             + "_biases.distrib.dat", Cell::Additive);
+
+        (*it).second->exportActivationParameters(dirName);
     }
 }
 
@@ -742,6 +754,8 @@ void N2D2::DeepNet::importNetworkFreeParameters(const std::string& dirName,
          ++it){
         (*it).second->importFreeParameters(dirName + "/" + Utils::filePath((*it).first)
                                            + ".syntxt", ignoreNotExists);
+        (*it).second->importActivationParameters(dirName, ignoreNotExists);
+
     }
 }
 
@@ -1615,6 +1629,7 @@ void N2D2::DeepNet::logOutputs(const std::string& dirName,
     }
 }
 
+
 void N2D2::DeepNet::logDiffInputs(const std::string& dirName,
                                   unsigned int batchPos) const
 {
@@ -1708,6 +1723,14 @@ void N2D2::DeepNet::logSchedule(const std::string& dirName) const
                                              cellFc->getBiasSolver()));
             solvers.push_back(std::make_pair((*it).first + "_weights",
                                              cellFc->getWeightsSolver()));
+        }
+        // Distance
+        const std::shared_ptr<DistanceCell> cellDistance
+            = std::dynamic_pointer_cast<DistanceCell>(cell);
+
+        if (cellDistance) {
+            solvers.push_back(std::make_pair((*it).first + "_centroid",
+                                             cellDistance->getWeightsSolver()));
         }
     }
 
@@ -2521,7 +2544,6 @@ void N2D2::DeepNet::propagate(
          itTargets != itTargetsEnd;
          ++itTargets)
     {
-        //std::cout << "process " << (*itTargets)->getName() << std::endl;
         time1 = std::chrono::high_resolution_clock::now();
         (*itTargets)->provideTargets(set);
 
@@ -2552,8 +2574,6 @@ void N2D2::DeepNet::propagate(
                 throw std::runtime_error(
                     "DeepNet::learn(): learning requires Cell_Frame_Top cells");
 
-            //std::cout << "propagate " << mCells[(*itCell)]->getName()
-            //    << std::endl;
             time1 = std::chrono::high_resolution_clock::now();
             cellFrame->propagate(inference);
 
@@ -2577,7 +2597,6 @@ void N2D2::DeepNet::propagate(
          itTargets != itTargetsEnd;
          ++itTargets)
     {
-        //std::cout << "process " << (*itTargets)->getName() << std::endl;
         time1 = std::chrono::high_resolution_clock::now();
         (*itTargets)->process(set);
 
@@ -2591,6 +2610,31 @@ void N2D2::DeepNet::propagate(
                 + (*itTargets)->getType() + "[process]",
                 std::chrono::duration_cast
                 <std::chrono::duration<double> >(time2 - time1).count()));
+        }
+    }
+}
+
+
+void N2D2::DeepNet::propagate(bool inference)
+{
+    const unsigned int nbLayers = mLayers.size();
+
+    // Signal propagation
+    for (unsigned int l = 1; l < nbLayers; ++l) {
+        for (std::vector<std::string>::const_iterator itCell
+             = mLayers[l].begin(),
+             itCellEnd = mLayers[l].end();
+             itCell != itCellEnd;
+             ++itCell) {
+            std::shared_ptr<Cell_Frame_Top> cellFrame
+                = std::dynamic_pointer_cast<Cell_Frame_Top>(mCells[(*itCell)]);
+
+            if (!cellFrame)
+                throw std::runtime_error(
+                    "DeepNet::learn(): learning requires Cell_Frame_Top cells");
+
+            cellFrame->propagate(inference);
+    
         }
     }
 }
@@ -2609,8 +2653,7 @@ void N2D2::DeepNet::backPropagate(
              itCell != itCellEnd;
              ++itCell)
         {
-            //std::cout << "back-propagate " << mCells[(*itCell)]->getName()
-            //    << std::endl;
+
             time1 = std::chrono::high_resolution_clock::now();
             std::dynamic_pointer_cast
                 <Cell_Frame_Top>(mCells[(*itCell)])->backPropagate();
@@ -2648,8 +2691,7 @@ void N2D2::DeepNet::update(
              itCell != itCellEnd;
              ++itCell)
         {
-            //std::cout << "update " << mCells[(*itCell)]->getName()
-            //    << std::endl;
+      
             time1 = std::chrono::high_resolution_clock::now();
 #ifdef CUDA
             //update states
@@ -2741,7 +2783,6 @@ void N2D2::DeepNet::cTicks(Time_T start,
                 if (!cellCSpike)
                     throw std::runtime_error(
                         "DeepNet::cTicks(): requires Cell_CSpike cells");
-                //std::cout << mCells[(*itCell)]->getName() << std::endl;
                 if (cellCSpike->tick(t))
                     return;
             }
@@ -2887,92 +2928,24 @@ void N2D2::DeepNet::logLabelsMapping(const std::string& fileName,
 
 void N2D2::DeepNet::logEstimatedLabels(const std::string& dirName) const
 {
-    const std::vector<int> devices(mStimuliProvider->getDevices().begin(),
-                                   mStimuliProvider->getDevices().end());
-
-#ifdef CUDA
-    int currentDev = 0;
-    const cudaError_t status = cudaGetDevice(&currentDev);
-    if (status != cudaSuccess)
-        currentDev = 0;
-#endif
-
-#pragma omp parallel for if (devices.size() > 1)
-    for (int dev = 0; dev < (int)devices.size(); ++dev) {
-#ifdef CUDA
-        if (mStates[devices[dev]] == N2D2::DeviceState::Connected) {
-            if (devices.size() > 1 || devices[dev] != currentDev) {
-                CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
-            }
-            for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-                = mTargets.begin(),
-                itTargetsEnd = mTargets.end();
-                itTargets != itTargetsEnd;
-                ++itTargets) {
-                (*itTargets)->logEstimatedLabels(dirName);
-            }
-        }
-#else
-        for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-            = mTargets.begin(),
-            itTargetsEnd = mTargets.end();
-            itTargets != itTargetsEnd;
-            ++itTargets) {
-            (*itTargets)->logEstimatedLabels(dirName);
-        }
-#endif
+    for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
+         = mTargets.begin(),
+         itTargetsEnd = mTargets.end();
+         itTargets != itTargetsEnd;
+         ++itTargets) {
+        (*itTargets)->logEstimatedLabels(dirName);
     }
-
-#ifdef CUDA
-    if (devices.size() > 1 || (devices.size() > 0 && devices[0] != currentDev)) {
-        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
-    }
-#endif
 }
 
 void N2D2::DeepNet::logEstimatedLabelsJSON(const std::string& dirName) const
 {
-    const std::vector<int> devices(mStimuliProvider->getDevices().begin(),
-                                   mStimuliProvider->getDevices().end());
-
-#ifdef CUDA
-    int currentDev = 0;
-    const cudaError_t status = cudaGetDevice(&currentDev);
-    if (status != cudaSuccess)
-        currentDev = 0;
-#endif
-
-#pragma omp parallel for if (devices.size() > 1)
-    for (int dev = 0; dev < (int)devices.size(); ++dev) {
-#ifdef CUDA
-        if (mStates[devices[dev]] == N2D2::DeviceState::Connected) {
-            if (devices.size() > 1 || devices[dev] != currentDev) {
-                CHECK_CUDA_STATUS(cudaSetDevice(devices[dev]));
-            }
-            for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-                = mTargets.begin(),
-                itTargetsEnd = mTargets.end();
-                itTargets != itTargetsEnd;
-                ++itTargets) {
-                (*itTargets)->logEstimatedLabelsJSON(dirName);
-            }
-        }
-#else
-        for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
-            = mTargets.begin(),
-            itTargetsEnd = mTargets.end();
-            itTargets != itTargetsEnd;
-            ++itTargets) {
-            (*itTargets)->logEstimatedLabelsJSON(dirName);
-        }
-#endif
+    for (std::vector<std::shared_ptr<Target> >::const_iterator itTargets
+         = mTargets.begin(),
+         itTargetsEnd = mTargets.end();
+         itTargets != itTargetsEnd;
+         ++itTargets) {
+        (*itTargets)->logEstimatedLabelsJSON(dirName);
     }
-
-#ifdef CUDA
-    if (devices.size() > 1 || (devices.size() > 0 && devices[0] != currentDev)) {
-        CHECK_CUDA_STATUS(cudaSetDevice(currentDev));
-    }
-#endif
 }
 
 void N2D2::DeepNet::logLabelsLegend(const std::string& dirName) const

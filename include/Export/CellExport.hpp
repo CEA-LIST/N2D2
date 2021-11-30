@@ -86,7 +86,7 @@ public:
                                       bool typeAccuracy = true);
 
     static long long int getIntApprox(double value, IntApprox method = Round);
-    static long long int getIntFreeParameter(double value);
+    static long long int getIntFreeParameter(double value, bool truncMode = false);
 
     /**
      * If the ScalingMode of the cell activation is a SINGLE_SHIFT, 
@@ -95,6 +95,9 @@ public:
      */
     static void generateSingleShiftHalfAddition(const Cell_Frame_Top& cell, std::size_t output, 
                                                 std::ostream& stream);
+
+    static int getQuantizedOutputNbBits(const DeepNet& deepNet,
+                                        const Cell& cell);
 };
 }
 

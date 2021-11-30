@@ -97,6 +97,15 @@ void N2D2::ElemWiseCell_Frame_CUDA::initialize()
         mInterTerm.resize(mOutputs.dims());
 }
 
+
+void N2D2::ElemWiseCell_Frame_CUDA::initializeDataDependent()
+{
+    // NOTE: this is addition to initialize()
+    Cell_Frame_CUDA<Float_T>::initializeDataDependent();
+
+    initialize();
+}
+
 void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
 {
     const unsigned int nbInputs = mInputs.size();
@@ -334,7 +343,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
 
 void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (!mDiffInputs.isValid())
         return;
 
     const unsigned int nbInputs = mInputs.size();
@@ -343,6 +352,9 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
     Cell_Frame_CUDA<Float_T>::backPropagate();
 
     for (unsigned int k = 0; k < nbInputs; ++k) {
+        if (mDiffOutputs[k].empty())
+            continue;
+
         const float beta = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
 
         std::shared_ptr<CudaDeviceTensor<Float_T> > input
@@ -490,6 +502,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
 
 void N2D2::ElemWiseCell_Frame_CUDA::update()
 {
+    Cell_Frame_CUDA<float>::update();
 }
 
 void N2D2::ElemWiseCell_Frame_CUDA::checkGradient(double epsilon, double maxError)
@@ -502,17 +515,19 @@ void N2D2::ElemWiseCell_Frame_CUDA::checkGradient(double epsilon, double maxErro
                   std::bind(&ElemWiseCell_Frame_CUDA::backPropagate, this),
                   (mOperation == Max));
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << k << "]";
-
-            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

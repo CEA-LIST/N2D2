@@ -37,7 +37,7 @@ N2D2::RegistryMap_T& N2D2::ScalingCell::registry() {
 N2D2::ScalingCell::ScalingCell(const DeepNet& deepNet, const std::string& name,
                                unsigned int nbOutputs, Scaling scaling)
     : Cell(deepNet, name, nbOutputs),
-      mScaling(std::move(scaling))
+      mScaling(scaling)
 {
 }
 
@@ -57,7 +57,7 @@ N2D2::Scaling& N2D2::ScalingCell::getScaling() {
 }
 
 void N2D2::ScalingCell::setScaling(Scaling scaling) {
-    mScaling = std::move(scaling);
+    mScaling = scaling;
 }
 
 void N2D2::ScalingCell::setOutputsDims() {

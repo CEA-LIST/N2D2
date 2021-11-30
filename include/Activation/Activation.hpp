@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "Scaling.hpp"
+#include "Quantizer/Activation/QuantizerActivation.hpp"
 #include "utils/Parameterizable.hpp"
 
 namespace N2D2 {
@@ -38,7 +39,7 @@ public:
     virtual ~Activation() {};
 
     virtual const char* getType() const = 0;
-
+    
     virtual void propagate(const Cell& cell,
                            const BaseTensor& input,
                            BaseTensor& output,
@@ -57,7 +58,7 @@ public:
     virtual void backPropagate(const Cell& cell,
                                const BaseTensor& output,
                                BaseTensor& diffInOut);
-
+    virtual void update(unsigned int batchSize) = 0;
     /**
      * Return the possible range of the activation's output as a pair of min-max. 
      */
@@ -68,6 +69,34 @@ public:
 
     const Scaling& getActivationScaling() const;
     void setActivationScaling(Scaling scaling);
+    void exportParameters(const std::string& dirName,
+                            const std::string& cellName) const;
+    void importParameters(const std::string& dirName,
+                            const std::string& cellName,
+                            const bool ignoreNotExists);
+
+
+    std::shared_ptr<QuantizerActivation> getQuantizer()
+    {
+        return mQuantizer;
+    };
+
+    void setQuantizer(std::shared_ptr<QuantizerActivation> quant)
+    {
+        mQuantizer = quant;
+    }
+
+    bool isQuantized() const {
+        return mQuantizedNbBits > 0;
+    }
+
+    void setQuantized(std::size_t nbBits) {
+        mQuantizedNbBits = nbBits;
+    }
+
+    std::size_t getQuantizedNbBits() const {
+        return mQuantizedNbBits;
+    }
 
 protected:
     virtual void saveInternal(std::ostream& /*state*/,
@@ -75,6 +104,9 @@ protected:
     virtual void loadInternal(std::istream& /*state*/) {};
 
     Scaling mScaling;
+    std::shared_ptr<QuantizerActivation> mQuantizer;
+    std::size_t mQuantizedNbBits = 0;
+
 };
 }
 

@@ -97,3 +97,34 @@ N2D2::ActivationCellGenerator::generate(Network& /*network*/, const DeepNet& dee
 
     return cell;
 }
+
+
+void N2D2::ActivationCellGenerator::generateParams( const std::shared_ptr<ActivationCell>& cell,
+                                                    IniParser& iniConfig,
+                                                    const std::string& section,
+                                                    const std::string& model,
+                                                    const DataType& dataType)
+{
+    std::shared_ptr<Cell_Frame_Top> cellFrame
+        = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+
+    std::shared_ptr<Activation> activation
+        = ActivationGenerator::generate(
+            iniConfig,
+            section,
+            model,
+            dataType,
+            "ActivationFunction",
+            (dataType == Float32)
+                ? Registrar<TanhActivation>::create<float>(model)()
+            : (dataType == Float16)
+                ? Registrar<TanhActivation>::create<half_float::half>(model)()
+                : Registrar<TanhActivation>::create<double>(model)(),
+            true );
+
+    if (activation) {
+        std::cout << "Additional ACTIVATION Detected" << std::endl;
+        cellFrame->setActivation(activation);
+    }   
+
+}

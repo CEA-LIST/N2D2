@@ -26,6 +26,8 @@
 
 #include "Cell.hpp"
 #include "utils/Registrar.hpp"
+#include "Quantizer/Cell/QuantizerCell.hpp"
+
 
 namespace N2D2 {
 
@@ -103,6 +105,10 @@ public:
     {
         mBiasSolver = solver;
     };
+    virtual void setQuantizer(std::shared_ptr<QuantizerCell> quant)
+    {
+        mQuantizer = quant;
+    }
     virtual void logFreeParameters(const std::string& fileName,
                                    unsigned int output,
                                    unsigned int channel) const;
@@ -172,6 +178,14 @@ public:
     {
         return mDilationDims[1];
     };
+    std::shared_ptr<Filler> getWeightsFiller()
+    {
+        return mWeightsFiller;
+    };
+    std::shared_ptr<Filler> getBiasFiller()
+    {
+        return mBiasFiller;
+    };
     const std::vector<unsigned int>& getDilationDims() const
     {
         return mDilationDims;
@@ -184,7 +198,14 @@ public:
     {
         return mBiasSolver;
     };
+    std::shared_ptr<QuantizerCell> getQuantizer()
+    {
+        return mQuantizer;
+    };
     virtual void getWeight(unsigned int output,
+                           unsigned int channel,
+                           BaseTensor& value) const = 0;
+    virtual void getQuantWeight(unsigned int output,
                            unsigned int channel,
                            BaseTensor& value) const = 0;
     virtual void getBias(unsigned int output, BaseTensor& value) const = 0;
@@ -208,9 +229,12 @@ public:
     virtual void setBiases(const std::shared_ptr<BaseTensor>&
                            /*biases*/) {};
     virtual void exportFreeParameters(const std::string& fileName) const;
+    virtual void exportQuantFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,
                                       bool ignoreNotExists = false);
     virtual void logFreeParametersDistrib(const std::string& fileName,
+                                          FreeParametersType type = All) const;
+    virtual void logQuantFreeParametersDistrib(const std::string& fileName,
                                           FreeParametersType type = All) const;
     void writeMap(const std::string& fileName) const;
     void randomizeFreeParameters(double stdDev);
@@ -261,6 +285,7 @@ protected:
     std::shared_ptr<Filler> mBiasFiller;
     std::shared_ptr<Solver> mWeightsSolver;
     std::shared_ptr<Solver> mBiasSolver;
+    std::shared_ptr<QuantizerCell> mQuantizer;
 };
 }
 

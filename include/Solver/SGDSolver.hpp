@@ -67,13 +67,51 @@ public:
                      unsigned int batchSize,
                      unsigned int epochSize = 0,
                      unsigned int maxSteps = 0);
+    double getmLearningRate(){
+        return mLearningRate;
+    };
+    double getMomentum(){
+        return mMomentum;
+    };
+    double getDecay(){
+        return mDecay;
+    };
+    double getMinDecay(){
+        return mMinDecay;
+    };
+    double getPower(){
+        return mPower;
+    };
+    unsigned int getIterationSize(){
+        return mIterationSize;
+    };
+    unsigned long long int getMaxIterations(){
+        return mMaxIterations;
+    };
+    unsigned int getWarmUpDuration(){
+        return mWarmUpDuration;
+    };
+    double getWarmUpLRFrac(){
+        return mWarmUpLRFrac;
+    };
+    LearningRatePolicy getLearningRatePolicy(){
+        return mLearningRatePolicy;
+    };
+    unsigned int getLearningRateStepSize(){
+        return mLearningRateStepSize;
+    };
+    double getLearningRateDecay(){
+        return mLearningRateDecay;
+    };
+    std::string getmClamping(){
+        return mClamping;
+    };
+    bool getPolyakMomentum(){
+        return mPolyakMomentum;
+    };
 
-    // TODO: Find other way to adapt learning rate to presentation time
-    void scaleLearningRate(double scaling)
-    {
-        std::cout << "Scale learning rate from " << mLearningRate << " to ";
-        mLearningRate *= scaling;
-        std::cout << mLearningRate << std::endl;
+    unsigned int getNbIterations(){
+        return mNbIterations;
     };
 
     virtual ~SGDSolver() {};
@@ -96,6 +134,8 @@ protected:
     Parameter<unsigned long long int> mMaxIterations;
     /// WarmUp Duration for Cosine Rules
     Parameter<unsigned int> mWarmUpDuration;
+    //LR starting value for warmup = fraction of initial LR
+    Parameter<double>  mWarmUpLRFrac;
     /// Learning rate decay policy
     Parameter<LearningRatePolicy> mLearningRatePolicy;
     /// Learning rate step size
@@ -104,7 +144,9 @@ protected:
     Parameter<double> mLearningRateDecay;
     /// Weights clamping, format: "min:max", or ":max", or "min:", or empty
     Parameter<std::string> mClamping;
-
+    // Polyak Momentum method use for param update: true by default 
+    Parameter<bool> mPolyakMomentum;
+    Parameter<double> mMinDecay;
     unsigned int mIterationPass;
     unsigned int mNbIterations;
 

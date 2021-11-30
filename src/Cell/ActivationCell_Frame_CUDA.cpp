@@ -59,10 +59,6 @@ N2D2::ActivationCell_Frame_CUDA<T>::ActivationCell_Frame_CUDA(
 template <class T>
 void N2D2::ActivationCell_Frame_CUDA<T>::initialize()
 {
-    if (mInputs.size() > 1)
-        throw std::domain_error("ActivationCell_Frame_CUDA<T>::initialize(): "
-                                "inputs concatenation is not supported.");
-
     if (mInputs.dimZ() != mOutputs.dimZ()) {
         throw std::domain_error("ActivationCell_Frame_CUDA<T>::initialize():"
                                 " the number of output channels must be equal "
@@ -70,14 +66,58 @@ void N2D2::ActivationCell_Frame_CUDA<T>::initialize()
     }
 }
 
+
+template <class T>
+void N2D2::ActivationCell_Frame_CUDA<T>::initializeDataDependent()
+{
+    Cell_Frame_CUDA<T>::initializeDataDependent();
+    initialize();
+}
+
+
 template <class T>
 void N2D2::ActivationCell_Frame_CUDA<T>::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
+    if(!inference) {
+        if(mInputs.size() > 1) {
+            if(mWorkspaceGPU.empty()) {
+                mWorkspaceGPU.resize({  mDiffInputs.dimX(), 
+                                        mDiffInputs.dimY(), 
+                                        mDiffInputs.dimZ(), 
+                                        mDiffInputs.dimB()});
+                mWorkspaceGPU.fill(T(0.0));
+                mWorkspaceGPU.synchronizeHToD();
+            }
+        }
+    }
+    // Copy data following inputs size and batch size to allow 
+    // in-place operation in activation step
+    if(mInputs.size() > 1) {
+        size_t outStrideOffset = 0;
+        for(size_t b = 0; b < mOutputs.dimB(); ++b) {
+            for(size_t k = 0; k < mInputs.size(); ++k) {
+                const CudaTensor<T>& input = cuda_tensor_cast<T>(mInputs[k]);
+                const size_t chrunkSize 
+                    = (input.dimX()*input.dimY()*input.dimZ()) ;
+                thrust_copy(input.getDevicePtr() + b*chrunkSize,
+                            mOutputs.getDevicePtr() + outStrideOffset,
+                            chrunkSize);
+                
+                outStrideOffset += chrunkSize;
+            }
+        }
+    }
+    else {
+        const CudaTensor<T>& input = cuda_tensor_cast<T>(mInputs[0]);
+        const size_t size 
+                    = (input.dimX()*input.dimY()*input.dimZ()*input.dimB()) ;
+        thrust_copy(input.getDevicePtr(),
+                    mOutputs.getDevicePtr(),
+                    size);
+    }
 
-    const CudaTensor<T>& input = cuda_tensor_cast<T>(mInputs[0]);
-    mActivation->propagate(*this, input, mOutputs, inference);
-
+    mActivation->propagate(*this, mOutputs, inference);
     mDiffInputs.clearValid();
 }
 
@@ -87,7 +127,45 @@ void N2D2::ActivationCell_Frame_CUDA<T>::backPropagate()
     if (!mDiffInputs.isValid())
         return;
 
-    if (!mDiffOutputs.empty()) {
+    if(mInputs.size() > 1) {
+        //backpropagate 
+        mActivation->backPropagate(*this, 
+                                    mOutputs, 
+                                    mOutputs, 
+                                    mDiffInputs,
+                                    mWorkspaceGPU);
+
+        size_t diffOutStride = 0;
+        for(size_t k = 0; k < mDiffOutputs.size(); ++k) {
+            const size_t chrunkSize 
+                = (mInputs[k].dimX()*mInputs[k].dimY()*mInputs[k].dimZ()) ;
+
+            if (mDiffOutputs[k].empty()) {
+                diffOutStride += chrunkSize;
+                continue;
+            }
+
+            CudaTensor<T> diffOutput = (mDiffOutputs[k].isValid())
+                                                ? cuda_tensor_cast<T>(mDiffOutputs[k])
+                                                : cuda_tensor_cast_nocopy<T>(mDiffOutputs[k]);
+            for(size_t b = 0; b < mWorkspaceGPU.dimB(); ++b) {
+                const size_t batchOffset 
+                    = mWorkspaceGPU.dimX() * mWorkspaceGPU.dimY() *mWorkspaceGPU.dimZ();
+
+                thrust_copy(mWorkspaceGPU.getDevicePtr() + b*batchOffset + diffOutStride,
+                            diffOutput.getDevicePtr() + chrunkSize*b,
+                            chrunkSize);
+                
+            }
+
+            mDiffOutputs[k].deviceTensor() = diffOutput.deviceTensor();
+            mDiffOutputs[k].setValid();
+            mDiffOutputs[k].synchronizeDToHBased();
+
+            diffOutStride += chrunkSize;
+        }
+    } 
+    else if (!mDiffOutputs[0].empty()) {
         const CudaTensor<T>& input = cuda_tensor_cast<T>(mInputs[0]);
         CudaTensor<T> diffOutput = (mDiffOutputs[0].isValid())
             ? cuda_tensor_cast<T>(mDiffOutputs[0])
@@ -106,7 +184,7 @@ void N2D2::ActivationCell_Frame_CUDA<T>::backPropagate()
 template <class T>
 void N2D2::ActivationCell_Frame_CUDA<T>::update()
 {
-
+    mActivation->update(mInputs.dimB());
 }
 
 template <class T>
@@ -119,17 +197,19 @@ void N2D2::ActivationCell_Frame_CUDA<T>::checkGradient(double epsilon, double ma
                   std::bind(&ActivationCell_Frame_CUDA<T>::propagate, this, false),
                   std::bind(&ActivationCell_Frame_CUDA<T>::backPropagate, this));
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int k = 0; k < mInputs.size(); ++k) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << k << "]";
-
-            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

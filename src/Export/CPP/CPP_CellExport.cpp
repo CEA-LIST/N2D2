@@ -71,6 +71,13 @@ void N2D2::CPP_CellExport::generateActivation(const Cell& cell, std::ofstream& h
                 << type << " in cell " << cell.getName() << " is not supported!"
                 << Utils::cdef << std::endl;
         }
+        const Activation& activation = *cellFrame.getActivation();
+        if(activation.getQuantizedNbBits() > 0) {
+            std::cout << Utils::cwarning << "Mixed-precision from QAT have been detected"
+            <<" in cell " << cell.getName() << ": An additional clipping value per channel "
+            << " is required"
+            << Utils::cdef << std::endl;
+        }
     }
 }
 
@@ -111,15 +118,45 @@ void N2D2::CPP_CellExport::generateScaling(
     }
     else if(scaling.getMode() == ScalingMode::FLOAT_MULT) {
         const auto& scalingPerOutput = scaling.getFloatingPointScaling().getScalingPerOutput();
+
         if(Utils::all_same(scalingPerOutput.begin(), scalingPerOutput.end())) {
-            header << "static const N2D2::FloatingPointScaling " << prefix << "_SCALING = {" 
+            if(!scaling.getFloatingPointScaling().getIsClipped()){
+                header << "static const N2D2::FloatingPointScaling " << prefix << "_SCALING = {"
                                                                     << scalingPerOutput.front() << "};\n";
+            }
+            else{
+                const std::vector<Float_T>& clippingPerOutput
+                        = scaling.getFloatingPointScaling().getClippingPerOutput();
+                std::vector<int32_t> clippingPerOutput_INT32(  clippingPerOutput.begin(),
+                                                                clippingPerOutput.end());
+                assert(clippingPerOutput_INT32.size() == scalingPerOutput.size());
+                header << "static const N2D2::FloatingPointClippingAndScaling<1> "
+                                                                            << prefix << "_SCALING = {";
+                header << scalingPerOutput.front() << ", " << clippingPerOutput_INT32.front() << "};\n";
+            }
         }
         else {
+            if(!scaling.getFloatingPointScaling().getIsClipped()) {
             header << "static const N2D2::FloatingPointScalingPerChannel<" << scalingPerOutput.size() << "> " 
                                                                            << prefix << "_SCALING = {";
             header << Utils::join(scalingPerOutput.begin(), scalingPerOutput.end(), ',');
             header << "};\n";
+            }
+            else {
+                const std::vector<Float_T>& clippingPerOutput 
+                        = scaling.getFloatingPointScaling().getClippingPerOutput(); 
+                //Implicit cast from float to int32_t... To improve
+                std::vector<int32_t> clippingPerOutput_INT32(  clippingPerOutput.begin(), 
+                                                                clippingPerOutput.end());
+                assert(clippingPerOutput_INT32.size() == scalingPerOutput.size());
+                header << "static const N2D2::FloatingPointClippingAndScalingPerChannel<" 
+                                                                            << clippingPerOutput_INT32.size() << "> " 
+                                                                            << prefix << "_SCALING = {{";
+                header << Utils::join(scalingPerOutput.begin(), scalingPerOutput.end(), ',');
+                header << "}, {";
+                header << Utils::join(clippingPerOutput_INT32.begin(), clippingPerOutput_INT32.end(), ',');
+                header << "}};\n";
+            }
         }
     }
     else if(scaling.getMode() == ScalingMode::FIXED_MULT16
@@ -134,11 +171,31 @@ void N2D2::CPP_CellExport::generateScaling(
                                                         << "> " << prefix << "_SCALING;\n";
         }
         else {
-            header << "static const N2D2::FixedPointScalingScalingPerChannel<" << scalingPerOutput.size() << ", " 
-                                                                               << fpScaling.getFractionalBits() 
-                                                                        << "> " << prefix << "_SCALING = {";
-            header << Utils::join(scalingPerOutput.begin(), scalingPerOutput.end(), ',');
-            header << "};\n";
+            if(!scaling.getFixedPointScaling().getIsClipped()) {
+                header << "static const N2D2::FixedPointScalingPerChannel<" << scalingPerOutput.size() << ", " 
+                                                                                << fpScaling.getFractionalBits() 
+                                                                            << "> " << prefix << "_SCALING = {";
+                header << Utils::join(scalingPerOutput.begin(), scalingPerOutput.end(), ',');
+                header << "};\n";
+            }            
+            else {
+                const std::vector<Float_T>& clippingPerOutput 
+                        = scaling.getFixedPointScaling().getClippingPerOutput(); 
+                //Implicit cast from float to int32_t... To improve
+                std::vector<int32_t> clippingPerOutput_INT32(  clippingPerOutput.begin(), 
+                                                                clippingPerOutput.end());
+                assert(clippingPerOutput_INT32.size() == scalingPerOutput.size());
+                header << "static const N2D2::FixedPointClippingAndScalingPerChannel<" 
+                                                                            << clippingPerOutput_INT32.size()  << ", " 
+                                                                            << fpScaling.getFractionalBits() 
+                                                                            << "> " 
+                                                                            << prefix << "_SCALING = {{";
+                header << Utils::join(scalingPerOutput.begin(), scalingPerOutput.end(), ',');
+                header << "}, {";
+                header << Utils::join(clippingPerOutput_INT32.begin(), clippingPerOutput_INT32.end(), ',');
+                header << "}};\n";
+            }
+
         }
     }
     else if(scaling.getMode() == ScalingMode::SINGLE_SHIFT) {

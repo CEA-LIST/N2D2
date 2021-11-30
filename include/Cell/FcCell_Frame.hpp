@@ -50,11 +50,26 @@ public:
     }
 
     virtual void initialize();
+    virtual void initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs);
+    virtual void initializeWeightQuantizer();
+    virtual void check_input();
+    virtual void initializeDataDependent();
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
+
+    void resetWeights();
+    void resetBias();
+    void resetWeightsSolver(const std::shared_ptr<Solver>& solver)
+    {
+        setWeightsSolver(solver);
+        for (unsigned int k = 0, size = mWeightsSolvers.size(); k < size; ++k) {
+            mWeightsSolvers[k] = mWeightsSolver->clone();
+        }
+    };
+
     inline void getWeight(unsigned int output, unsigned int channel,
                           BaseTensor& value) const
     {
@@ -62,10 +77,27 @@ public:
         value.resize(std::initializer_list<size_t>({1}));
         value = Tensor<T>({1}, mSynapses(0, 0, channel, output));
     };
+    inline void getQuantWeight(unsigned int output, unsigned int channel,
+                          BaseTensor& value) const
+    {
+        if (!mQuantizer)
+            return;
+
+        const unsigned int k = mInputs.getTensorIndex(channel);
+        channel -= mInputs.getTensorDataOffset(channel);
+
+        const Tensor<T>& synapses = tensor_cast<T>(mQuantizer->getQuantizedWeights(k));
+        value.resize(std::initializer_list<size_t>({1}));
+        value = Tensor<T>({1}, synapses(0, 0, channel, output));
+    };
     inline void getBias(unsigned int output, BaseTensor& value) const
     {
         value.resize(std::initializer_list<size_t>({1}));
         value = Tensor<T>({1}, mBias(output));
+    };
+    inline BaseInterface* getWeights()
+    {
+        return &mSynapses;
     };
     virtual const BaseInterface* getWeights() const { return &mSynapses; };
     virtual const BaseTensor* getBiases() const { return &mBias; };
@@ -83,6 +115,9 @@ protected:
     };
     inline void setBias(unsigned int output, const BaseTensor& value)
     {
+        if (!mNoBias && mBias.empty())
+            mBias.resize({getNbOutputs(), 1, 1, 1});
+
         mBias(output) = tensor_cast<T>(value)(0);
     };
 

@@ -47,7 +47,7 @@ template<class T>
 N2D2::ScalingCell_Frame<T>::ScalingCell_Frame(const DeepNet& deepNet, const std::string& name,
                                               unsigned int nbOutputs, Scaling scaling)
     : Cell(deepNet, name, nbOutputs),
-      ScalingCell(deepNet, name, nbOutputs, std::move(scaling)),
+      ScalingCell(deepNet, name, nbOutputs, scaling),
       Cell_Frame<T>(deepNet, name, nbOutputs)
 {
 }
@@ -68,7 +68,7 @@ void N2D2::ScalingCell_Frame<T>::propagate(bool /*inference*/) {
     mInputs.synchronizeDBasedToH();
 
     const Tensor<T>& input = tensor_cast<T>(mInputs[0]);
-    mScaling.propagate(*this, input, mOutputs);
+    mScaling.propagate(*this, input, mOutputs, mQuantizedNbBits);
 
     Cell_Frame<T>::propagate();
     mDiffInputs.clearValid();
@@ -81,7 +81,7 @@ void N2D2::ScalingCell_Frame<T>::backPropagate() {
 
 template<class T>
 void N2D2::ScalingCell_Frame<T>::update() {
-    // Nothing to update
+    Cell_Frame<T>::update();
 }
 
 template<class T>

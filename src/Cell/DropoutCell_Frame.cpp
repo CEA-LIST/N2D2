@@ -69,6 +69,17 @@ void N2D2::DropoutCell_Frame<T>::initialize()
     mMask.resize(mOutputs.dims());
 }
 
+
+template <class T>
+void N2D2::DropoutCell_Frame<T>::initializeDataDependent()
+{
+    // NOTE: this is addition to initialize()
+    Cell_Frame<T>::initializeDataDependent();
+
+    initialize();
+}
+
+
 template <class T>
 void N2D2::DropoutCell_Frame<T>::propagate(bool inference)
 {
@@ -142,12 +153,17 @@ void N2D2::DropoutCell_Frame<T>::propagate(bool inference)
 template <class T>
 void N2D2::DropoutCell_Frame<T>::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (!mDiffInputs.isValid())
         return;
 
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mDiffOutputs[k].empty()) {
+            offset += mOutputs.dimX() * mOutputs.dimY() * mInputs[k].dimZ();
+            continue;
+        }
+
         if (mDiffOutputs[k].isValid())
             throw std::runtime_error(
                 "Cannot blend gradient from a Dropout cell");
@@ -190,6 +206,7 @@ void N2D2::DropoutCell_Frame<T>::backPropagate()
 template <class T>
 void N2D2::DropoutCell_Frame<T>::update()
 {
+    Cell_Frame<T>::update();
 }
 
 template <class T>

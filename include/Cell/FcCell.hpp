@@ -26,6 +26,8 @@
 
 #include "Cell.hpp"
 #include "utils/Registrar.hpp"
+#include "Quantizer/Cell/QuantizerCell.hpp"
+#include "controler/Interface.hpp"
 
 
 namespace N2D2 {
@@ -84,10 +86,22 @@ public:
     {
         mBiasSolver = solver;
     };
+    void setQuantizer(const std::shared_ptr<QuantizerCell>& quantizer)
+    {
+        mQuantizer = quantizer;
+    };
     virtual void logFreeParameters(const std::string& fileName,
                                    unsigned int output) const;
     virtual void logFreeParameters(const std::string& dirName) const;
     unsigned long long int getNbSynapses(bool includeBias = true) const;
+    std::shared_ptr<Filler> getWeightsFiller()
+    {
+        return mWeightsFiller;
+    };
+    std::shared_ptr<Filler> getBiasFiller()
+    {
+        return mBiasFiller;
+    };
     std::shared_ptr<Solver> getWeightsSolver()
     {
         return mWeightsSolver;
@@ -96,15 +110,26 @@ public:
     {
         return mBiasSolver;
     };
+    std::shared_ptr<QuantizerCell> getQuantizer()
+    {
+        return mQuantizer;
+    };
     virtual void getWeight(unsigned int output,
                            unsigned int channel, BaseTensor& value) const = 0;
+    virtual void getQuantWeight(unsigned int output,
+                           unsigned int channel,
+                           BaseTensor& value) const = 0;
     virtual void getBias(unsigned int output, BaseTensor& value) const = 0;
+    virtual BaseInterface* getWeights() { return NULL; };
     virtual const BaseInterface* getWeights() const { return NULL; };
     virtual const BaseTensor* getBiases() const { return NULL; };
     virtual void exportFreeParameters(const std::string& fileName) const;
+    virtual void exportQuantFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,
                                       bool ignoreNotExists = false);
     virtual void logFreeParametersDistrib(const std::string& fileName,
+                                          FreeParametersType type = All) const;
+    virtual void logQuantFreeParametersDistrib(const std::string& fileName,
                                           FreeParametersType type = All) const;
     void writeMap(const std::string& fileName) const;
     void randomizeFreeParameters(double stdDev);
@@ -122,6 +147,7 @@ public:
                                                 std::size_t /*channel*/);
     
     void getStats(Stats& stats) const;
+   
     virtual void setWeight(unsigned int output, unsigned int channel,
                            const BaseTensor& value) = 0;
     virtual void setBias(unsigned int output, const BaseTensor& value) = 0;
@@ -144,6 +170,8 @@ protected:
     std::shared_ptr<Filler> mBiasFiller;
     std::shared_ptr<Solver> mWeightsSolver;
     std::shared_ptr<Solver> mBiasSolver;
+    std::shared_ptr<QuantizerCell> mQuantizer;
+
 };
 }
 namespace {

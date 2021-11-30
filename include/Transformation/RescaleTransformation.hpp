@@ -59,6 +59,19 @@ public:
         return depth;
     };
     virtual ~RescaleTransformation() {};
+    unsigned int getWidth(){
+        return mWidth;
+    };
+    unsigned int getHeight(){
+        return mHeight;
+    };
+    bool getKeepAspectRatio(){
+        return mKeepAspectRatio;
+    };
+    bool getResizeToFit(){
+        return mResizeToFit;
+    };
+
 
 private:
     virtual RescaleTransformation* doClone() const

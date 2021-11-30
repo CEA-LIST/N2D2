@@ -48,7 +48,7 @@ template<class T>
 N2D2::ScalingCell_Frame_CUDA<T>::ScalingCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
                                                         unsigned int nbOutputs, Scaling scaling)
     : Cell(deepNet, name, nbOutputs),
-      ScalingCell(deepNet, name, nbOutputs, std::move(scaling)),
+      ScalingCell(deepNet, name, nbOutputs, scaling),
       Cell_Frame_CUDA<T>(deepNet, name, nbOutputs)
 {
 }
@@ -69,7 +69,7 @@ void N2D2::ScalingCell_Frame_CUDA<T>::propagate(bool inference) {
     mInputs.synchronizeHBasedToD();
     
     const CudaTensor<T>& input = cuda_tensor_cast<T>(mInputs[0]);
-    mScaling.propagate(*this, input, mOutputs);
+    mScaling.propagate(*this, input, mOutputs, mQuantizedNbBits);
     
     Cell_Frame_CUDA<T>::propagate(inference);
     mDiffInputs.clearValid();
@@ -83,7 +83,7 @@ void N2D2::ScalingCell_Frame_CUDA<T>::backPropagate() {
 
 template<class T>
 void N2D2::ScalingCell_Frame_CUDA<T>::update() {
-    // Nothing to update
+    Cell_Frame_CUDA<T>::update();
 }
 
 template<class T>

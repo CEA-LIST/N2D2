@@ -43,6 +43,7 @@ public:
                                const BaseTensor& output,
                                const BaseTensor& diffInput,
                                BaseTensor& diffOutput);
+    virtual void update(unsigned int batchSize);
     virtual ~TanhActivation_Frame() {};
 
 private:
@@ -55,12 +56,15 @@ void N2D2::TanhActivation_Frame<T>::propagate(
     const Cell& cell, 
     const BaseTensor& baseInput,
     BaseTensor& baseOutput,
-    bool /*inference*/)
+    bool inference)
 {
     const Tensor<T>& input = dynamic_cast<const Tensor<T>&>(baseInput);
     Tensor<T>& output = dynamic_cast<Tensor<T>&>(baseOutput);
-
-    mScaling.propagate(cell, input, output);
+    //If activations is quantized : use Q Level of activations for saturate    
+    //Else : Use Q Level of weights parameters 
+    const std::size_t nbbits = mQuantizedNbBits > 0 ? 
+                                mQuantizedNbBits : cell.getQuantizedNbBits();
+    mScaling.propagate(cell, input, output, nbbits);
 
     if (mAlpha != 1.0) {
         const T alpha(mAlpha);
@@ -73,6 +77,9 @@ void N2D2::TanhActivation_Frame<T>::propagate(
         for (int index = 0; index < (int)output.size(); ++index)
             output(index) = std::tanh(output(index));
     }
+    if(mQuantizer) {
+        mQuantizer->propagate(baseOutput, inference);
+    }
 }
 
 template <class T>
@@ -83,8 +90,15 @@ void N2D2::TanhActivation_Frame<T>::backPropagate(
     const BaseTensor& baseDiffInput,
     BaseTensor& baseDiffOutput)
 {
+    if(mQuantizer) {
+        mQuantizer->back_propagate( mQuantizer->getFullPrecisionActivations(), 
+                                    baseOutput,/*Not use for the moment*/
+                                    baseDiffInput,
+                                    baseDiffOutput);
+    }
     const Tensor<T>& output = dynamic_cast<const Tensor<T>&>(baseOutput);
-    const Tensor<T>& diffInput = dynamic_cast<const Tensor<T>&>(baseDiffInput);
+    const Tensor<T>& diffInput = (!mQuantizer)  ? dynamic_cast<const Tensor<T>&>(baseDiffInput) 
+                                : dynamic_cast<const Tensor<T>&>(baseDiffOutput);
     Tensor<T>& diffOutput = dynamic_cast<Tensor<T>&>(baseDiffOutput);
 
     if (mAlpha != 1.0) {
@@ -102,4 +116,11 @@ void N2D2::TanhActivation_Frame<T>::backPropagate(
     mScaling.backPropagate(cell, diffOutput, diffOutput);
 }
 
+template <class T>
+void N2D2::TanhActivation_Frame<T>::update(unsigned int batchSize)
+{
+    if(mQuantizer) {
+        mQuantizer->update(batchSize);
+    }
+}
 #endif // N2D2_TANHACTIVATION_FRAME_H

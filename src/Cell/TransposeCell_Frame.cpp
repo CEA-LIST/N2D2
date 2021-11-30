@@ -61,6 +61,14 @@ void N2D2::TransposeCell_Frame<T>::initialize()
     }
 }
 
+
+template <class T>
+void N2D2::TransposeCell_Frame<T>::initializeDataDependent()
+{
+    Cell_Frame<T>::initializeDataDependent();
+    initialize();
+}
+
 template <class T>
 void N2D2::TransposeCell_Frame<T>::propagate(bool inference)
 {
@@ -93,7 +101,7 @@ void N2D2::TransposeCell_Frame<T>::backPropagate()
 
     Cell_Frame<T>::backPropagate();
 
-    if (!mDiffOutputs.empty()) {
+    if (!mDiffOutputs[0].empty()) {
         const std::vector<int> invPerm = getInversePermutation();
 
         Tensor<T> diffOutputs = tensor_cast<T>(mDiffOutputs[0]);
@@ -139,17 +147,19 @@ void N2D2::TransposeCell_Frame<T>::checkGradient(double epsilon, double maxError
                   std::bind(&TransposeCell_Frame<T>::propagate, this, false),
                   std::bind(&TransposeCell_Frame<T>::backPropagate, this));
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int k = 0; k < mInputs.size(); ++k) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << k << "]";
-
-            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

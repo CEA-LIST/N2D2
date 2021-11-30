@@ -149,6 +149,8 @@ void N2D2::LRNCell_Frame<T>::update()
 
         mDiffOutputs[k] = diffOutput;
     }
+
+    Cell_Frame<T>::update();
 }
 
 template <class T>

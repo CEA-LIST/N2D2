@@ -29,6 +29,13 @@ template <class T> class ConstantFiller : public Filler {
 public:
     ConstantFiller(T value = 0.0);
     void apply(BaseTensor& data, bool restrictPositive=false);
+    const char* getType() const
+    {
+        return "Constant";
+    };
+    T getValue(){
+        return mValue;
+    };
     virtual ~ConstantFiller() {};
 
 private:

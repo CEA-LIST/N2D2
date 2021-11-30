@@ -108,7 +108,7 @@ void N2D2::NormalizeCell_Frame<T>::propagate(bool /*inference*/) {
 
 template<class T>
 void N2D2::NormalizeCell_Frame<T>::backPropagate() {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (mDiffOutputs[0].empty() || !mDiffInputs.isValid())
         return;
 
     Cell_Frame<T>::backPropagate();
@@ -157,7 +157,8 @@ void N2D2::NormalizeCell_Frame<T>::backPropagate() {
 
 template<class T>
 void N2D2::NormalizeCell_Frame<T>::update() {
-    // Nothing to update
+
+    Cell_Frame<T>::update();
 }
 
 template<class T>
@@ -169,17 +170,19 @@ void N2D2::NormalizeCell_Frame<T>::checkGradient(double epsilon, double maxError
                   std::bind(&NormalizeCell_Frame<T>::propagate, this, false),
                   std::bind(&NormalizeCell_Frame<T>::backPropagate, this));
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int in = 0; in < mInputs.size(); ++in) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << in << "]";
-
-            gc.check(name.str(), mInputs[in], mDiffOutputs[in]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

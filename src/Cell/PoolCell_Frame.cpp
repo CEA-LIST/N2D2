@@ -111,6 +111,15 @@ void N2D2::PoolCell_Frame<T>::initialize()
     }
 }
 
+
+template <class T>
+void N2D2::PoolCell_Frame<T>::initializeDataDependent()
+{
+    Cell_Frame<T>::initializeDataDependent();
+    initialize();
+}
+
+
 template <class T>
 void N2D2::PoolCell_Frame<T>::propagate(bool inference)
 {
@@ -167,7 +176,7 @@ void N2D2::PoolCell_Frame<T>::propagate(bool inference)
 template <class T>
 void N2D2::PoolCell_Frame<T>::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (!mDiffInputs.isValid())
         return;
 
     Cell_Frame<T>::backPropagate();
@@ -177,6 +186,11 @@ void N2D2::PoolCell_Frame<T>::backPropagate()
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mDiffOutputs[k].empty()) {
+            offset += mInputs[k].dimZ();
+            continue;
+        }
+
         const T beta = (mDiffOutputs[k].isValid()) ? T(1.0) : T(0.0);
 
         Tensor<T> diffOutput = (mDiffOutputs[k].isValid())
@@ -215,6 +229,7 @@ void N2D2::PoolCell_Frame<T>::backPropagate()
 template <class T>
 void N2D2::PoolCell_Frame<T>::update()
 {
+    Cell_Frame<T>::update();
 }
 
 template <class T>
@@ -228,17 +243,19 @@ void N2D2::PoolCell_Frame<T>::checkGradient(double epsilon, double maxError)
                   std::bind(&PoolCell_Frame::backPropagate, this),
                   (mPooling == Max));
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int in = 0; in < mInputs.size(); ++in) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << in << "]";
-
-            gc.check(name.str(), mInputs[in], mDiffOutputs[in]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

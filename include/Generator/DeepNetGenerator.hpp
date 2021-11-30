@@ -45,8 +45,8 @@ public:
         const std::string& fileName,
         IniParser& iniConfig,
         std::shared_ptr<DeepNet> deepNet = std::shared_ptr<DeepNet>(),
-        const std::vector<std::shared_ptr<Cell> >& parentCells
-            = std::vector<std::shared_ptr<Cell> >());
+        const std::vector<std::shared_ptr<Cell>>& parentCells
+            = std::vector<std::shared_ptr<Cell>>());
 
 private:
     static void ONNX_processGraph(std::shared_ptr<DeepNet> deepNet,

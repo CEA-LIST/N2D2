@@ -30,6 +30,7 @@
 #include "Solver/SGDSolver_Frame_CUDA.hpp"
 #include "containers/CudaTensor.hpp"
 
+
 namespace N2D2 {
 template <class T>
 class FcCell_Frame_CUDA : public virtual FcCell, public Cell_Frame_CUDA<T> {
@@ -57,14 +58,30 @@ public:
     {
         return std::make_shared<FcCell_Frame_CUDA>(deepNet, name, nbOutputs, activation);
     }
+    
+    void resetWeights();
+    void resetBias();
+    void resetWeightsSolver(const std::shared_ptr<Solver>& solver)
+    {
+        setWeightsSolver(solver);
+        for (unsigned int k = 0, size = mWeightsSolvers.size(); k < size; ++k) {
+            mWeightsSolvers[k] = mWeightsSolver->clone();
+        }
+    };
 
     virtual void initialize();
+    virtual void initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs);
+    virtual void initializeWeightQuantizer();
+    virtual void check_input();
+    virtual void initializeDataDependent();
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
     inline void getWeight(unsigned int output, unsigned int channel,
+                          BaseTensor& value) const;
+    inline void getQuantWeight(unsigned int output, unsigned int channel,
                           BaseTensor& value) const;
     inline void getBias(unsigned int output, BaseTensor& value) const;
     virtual const BaseInterface* getWeights() const { return &mSynapses; };
@@ -77,9 +94,11 @@ public:
     void loadFreeParameters(const std::string& fileName,
                             bool ignoreNotExists = false);
     void exportFreeParameters(const std::string& fileName) const;
+    void exportQuantFreeParameters(const std::string& fileName) const;
     void importFreeParameters(const std::string& fileName,
                               bool ignoreNotExists = false);
     void logFreeParametersDistrib(const std::string& fileName) const;
+    void logQuantFreeParametersDistrib(const std::string& fileName) const;
     
     std::pair<Float_T, Float_T> getFreeParametersRange(FreeParametersType type = All) const;
     std::pair<Float_T, Float_T> getFreeParametersRangePerOutput(std::size_t output, 
@@ -142,9 +161,30 @@ void N2D2::FcCell_Frame_CUDA<T>::getWeight(unsigned int output,
 }
 
 template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::getQuantWeight(unsigned int output,
+                                           unsigned int channel,
+                                           BaseTensor& value) const
+{
+    if (!mQuantizer)
+        return;
+
+    const unsigned int k = mInputs.getTensorIndex(channel);
+    channel -= mInputs.getTensorDataOffset(channel);
+
+    const CudaTensor<T>& synapses = cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(k));
+    synapses.synchronizeDToH(0, 0, channel, output, 1);
+
+    value.resize({1});
+    value = Tensor<T>({1}, synapses(0, 0, channel, output));
+}
+
+template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::setBias(unsigned int output,
                                          const BaseTensor& value)
 {
+    if (!mNoBias && mBias.empty())
+        mBias.resize({getNbOutputs()});
+
     mBias(output) = tensor_cast<T>(value)(0);
 
     if (mKeepInSync)

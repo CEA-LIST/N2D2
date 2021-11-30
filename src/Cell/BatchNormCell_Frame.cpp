@@ -152,9 +152,141 @@ void N2D2::BatchNormCell_Frame<T>::initialize()
 
 }
 
+
+
+
+template <class T>
+void N2D2::BatchNormCell_Frame<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
+{
+    // BEGIN: addition to initialize()
+    if (nbInputs != 1) {
+          throw std::runtime_error("nbInputs != 1 for cell " + mName);
+    }
+    // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
+    // However, this requires a reinitialization of the input dims which is unsafe
+    setInputsDims({nbInputChannels});
+    // END: addition to initialize()
+
+    //std::vector<size_t> requiredDims(mInputs[0].nbDims(), 1);
+    //requiredDims[mInputs[0].nbDims() - 2] = mInputs.dimZ();
+
+    // NOTE/TODO: In contrast to normal initialize, this works only for 4D Tensors at the moment!
+    std::vector<size_t> requiredDims(4, 1);
+    requiredDims[2] = nbInputChannels;
+
+    if (mScale->empty())
+        mScale->resize(requiredDims, ParamT(1.0));
+    else {
+        if (mScale->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared scale, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mScale->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    if (mBias->empty())
+        mBias->resize(requiredDims, ParamT(0.0));
+    else {
+        if (mBias->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared bias, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mBias->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    if (mMean->empty())
+        mMean->resize(requiredDims, ParamT(0.0));
+    else {
+        if (mMean->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared mean, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mMean->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    if (mVariance->empty())
+        mVariance->resize(requiredDims, ParamT(0.0));
+    else {
+        if (mVariance->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared variance, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mVariance->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    mSavedMean.resize(requiredDims);
+    mSavedVariance.resize(requiredDims);
+
+    mDiffScale.resize(requiredDims);
+    mDiffBias.resize(requiredDims);
+    mDiffSavedMean.resize(requiredDims);
+    mDiffSavedVariance.resize(requiredDims);
+    if(mMovingAverageMomentum < 0.0 || mMovingAverageMomentum >= 1.0)
+    {
+        std::stringstream msgStr;
+        msgStr << "BatchNormCell_Frame<T>::initialize():"
+            " in cell " + mName + ", wrong value for MovingAverageMomentum. "
+            "Expected value range [0.0, 1.0[ whereas actual value is "
+            << mMovingAverageMomentum << std::endl;
+
+        throw std::runtime_error(msgStr.str());
+
+    }
+}
+
+
+template <class T>
+void N2D2::BatchNormCell_Frame<T>::check_input()
+{
+    if (mInputs.size() == 0) {
+          throw std::runtime_error("mInputs.size() = 0 for cell " + mName);
+    }
+
+    if (mInputs.dimZ() != mOutputs.dimZ()) {
+        throw std::domain_error("BatchNormCell_Frame<T>::initializeDataDependent():"
+                            " the number of output channels must be equal "
+                            "to the sum of inputs channels.");
+    }
+
+    if (mInputs.dimZ() != mOutputs.dimZ()) {
+        throw std::domain_error("BatchNormCell_Frame<T>::initializeDataDependent():"
+                            " the number of output channels must be equal "
+                            "to the sum of inputs channels.");
+    }
+}
+
+
+template <class T>
+void N2D2::BatchNormCell_Frame<T>::initializeDataDependent(){
+    Cell_Frame<T>::initializeDataDependent();
+
+    check_input();
+
+    mNbPropagate = 0;
+}
+
+
+
 template <class T>
 void N2D2::BatchNormCell_Frame<T>::propagate(bool inference)
 {
+    check_input();
     mInputs.synchronizeDBasedToH();
     unsigned int outputOffset = 0;
 
@@ -321,7 +453,7 @@ void N2D2::BatchNormCell_Frame<T>::backPropagate()
             mDiffBias(output) = sumBias + betaBias * mDiffBias(output);
         }
 
-        if (!mDiffOutputs.empty() && mBackPropagate) {
+        if (!mDiffOutputs[k].empty() && mBackPropagate) {
             const unsigned int size = mInputs.dimB() * getNbOutputs();
             const bool isValid = mDiffOutputs[k].isValid();
             Tensor<T> diffOutput = (isValid)
@@ -360,6 +492,8 @@ void N2D2::BatchNormCell_Frame<T>::backPropagate()
             }
 
             mDiffOutputs[k] = diffOutput;
+            mDiffOutputs[k].setValid();
+            mDiffOutputs[k].synchronizeHToD();
         }
 
         outputOffset += input.dimZ();
@@ -367,11 +501,6 @@ void N2D2::BatchNormCell_Frame<T>::backPropagate()
 
     mDiffScale.setValid();
     mDiffBias.setValid();
-
-    if (!mDiffOutputs.empty() && mBackPropagate) {
-        mDiffOutputs.setValid();
-        mDiffOutputs.synchronizeHToD();
-    }
 }
 
 template <class T>
@@ -386,6 +515,8 @@ void N2D2::BatchNormCell_Frame<T>::update()
 
     if (mDiffBias.isValid())
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
+        
+    Cell_Frame<T>::update();
 }
 
 template <class T>
@@ -402,17 +533,19 @@ void N2D2::BatchNormCell_Frame<T>::checkGradient(double epsilon, double maxError
     gc.check(mName + "_mDiffScale", (*mScale), mDiffScale);
     gc.check(mName + "_mDiffBias", (*mBias), mDiffBias);
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int in = 0; in < mInputs.size(); ++in) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << in << "]";
-
-            gc.check(name.str(), mInputs[in], mDiffOutputs[in]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

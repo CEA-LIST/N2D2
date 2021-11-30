@@ -41,6 +41,34 @@ struct FloatingPointScaling {
 };
 
 template<std::size_t SIZE>
+struct FloatingPointClippingAndScaling {
+    SUM_T operator()(SUM_T weightedSum, std::size_t /*output*/) const {
+        SUM_T clipValue = weightedSum;
+        clipValue = (clipValue < SUM_T(0)) ?
+                    SUM_T(0) : (clipValue > SUM_T(mClipping)) ?
+                    SUM_T(mClipping) : clipValue;
+        return round(clipValue * mScaling);
+    }
+
+    double mScaling;
+    int32_t mClipping;
+};
+
+template<std::size_t SIZE>
+struct FloatingPointClippingAndScalingPerChannel {
+    SUM_T operator()(SUM_T weightedSum, std::size_t output) const {
+        SUM_T clipValue = weightedSum;
+        clipValue = (clipValue < SUM_T(0)) ? 
+                    SUM_T(0) : (clipValue > SUM_T(mClipping[output])) ? 
+                    SUM_T(mClipping[output]) : clipValue;
+        return round(clipValue * mScaling[output]);
+    }
+
+    double mScaling[SIZE];
+    int32_t mClipping[SIZE];
+};
+
+template<std::size_t SIZE>
 struct FloatingPointScalingPerChannel {
     SUM_T operator()(SUM_T weightedSum, std::size_t output) const {
         return round(weightedSum * mScaling[output]);
@@ -66,6 +94,28 @@ struct FixedPointScaling {
         ? (1ull << (FRACTIONAL_BITS - 1)) & 0xFFFFFFFF : 0;
     static const uint32_t HALF_HI = (FRACTIONAL_BITS > 0)
         ? (1ull << (FRACTIONAL_BITS - 1)) >> 32u : 0;
+};
+
+template<std::size_t SIZE, int64_t FRACTIONAL_BITS>
+struct FixedPointClippingAndScalingPerChannel {
+    SUM_T operator()(SUM_T weightedSum, std::size_t output) const {
+        // Different rounding if weightesSum < 0
+        // if(weightedSum < 0) {
+        //     HALF--; 
+        // }
+        SUM_T clipValue = weightedSum;
+        clipValue = (clipValue < SUM_T(0)) ? 
+                    SUM_T(0) : (clipValue > SUM_T(mClipping[output])) ? 
+                    SUM_T(mClipping[output]) : clipValue;
+
+        return smlal(clipValue, mScaling[output], HALF_LO, HALF_HI) >> FRACTIONAL_BITS; 
+    }
+
+    static const uint32_t HALF_LO = (1ull << (FRACTIONAL_BITS - 1)) & 0xFFFFFFFF;
+    static const uint32_t HALF_HI = (1ull << (FRACTIONAL_BITS - 1)) >> 32u;
+
+    int32_t mScaling[SIZE];
+    int32_t mClipping[SIZE];
 };
 
 template<std::size_t SIZE, int64_t FRACTIONAL_BITS>

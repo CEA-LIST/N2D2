@@ -10,54 +10,62 @@ N2D2
    :maxdepth: 1
    :caption: Introduction:
 
-   intro
-   about
-   simus
-   perfs_tools
-   tuto
+   intro/intro
+   intro/about
+   intro/simus
+   intro/perfs_tools
+   intro/tuto
 
 .. toctree::
    :maxdepth: 1
    :caption: ONNX Import:
 
-   onnx_convert
-   onnx_import
-   onnx_transfer
+   onnx/convert
+   onnx/import
+   onnx/transfer
 
 .. toctree::
    :maxdepth: 1
    :caption: Quantization and Export:
 
-   quant_post
-   quant_qat
-   export_CPP
-   export_CPP_STM32
-   export_TensorRT
-   export_DNeuro
-   export_ONNX
-   export_legacy
+   quant/post
+   quant/qat
+   export/CPP
+   export/CPP_STM32
+   export/TensorRT
+   export/DNeuro
+   export/ONNX
+   export/legacy
 
 .. toctree::
    :maxdepth: 1
    :caption: INI File Interface:
 
-   ini_intro
-   ini_databases
-   ini_data_analysis
-   ini_environment
-   ini_layers
-   ini_target
+   ini/intro
+   ini/databases
+   ini/data_analysis
+   ini/environment
+   ini/layers
+   ini/target
    adversarial
 
 .. toctree::
    :maxdepth: 1
    :caption: Python API:
 
-   containers
-   cells
-   databases
-   stimuliprovider
-   deepnet
+   python_api/intro
+   python_api/databases
+   python_api/cells
+   python_api/tensor
+   python_api/interoperability
+   python_api/example
+
+.. toctree::
+   :maxdepth: 1
+   :caption: C++/Python core:
+   
+   core/core
+   core/example
 
 .. toctree::
    :maxdepth: 1
@@ -73,3 +81,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+* :ref:`references`

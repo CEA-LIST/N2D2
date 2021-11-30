@@ -110,6 +110,13 @@ void N2D2::ResizeCell_Frame_CUDA::initialize()
     }
 }
 
+
+void N2D2::ResizeCell_Frame_CUDA::initializeDataDependent()
+{
+    Cell_Frame_CUDA::initializeDataDependent();
+    initialize();
+}
+
 void N2D2::ResizeCell_Frame_CUDA::propagate(bool inference)
 {
     mInputs.synchronizeHBasedToD();
@@ -152,7 +159,7 @@ void N2D2::ResizeCell_Frame_CUDA::propagate(bool inference)
 
 void N2D2::ResizeCell_Frame_CUDA::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (!mDiffInputs.isValid())
         return;
 
     Cell_Frame_CUDA<Float_T>::backPropagate();
@@ -160,6 +167,13 @@ void N2D2::ResizeCell_Frame_CUDA::backPropagate()
     
     for(unsigned int k = 0; k < mInputs.size(); ++k)
     {
+        if (mDiffOutputs[k].empty()) {
+            diffInputOffset += mDiffOutputs[k].dimZ()
+                                *mDiffInputs.dimX()
+                                *mDiffInputs.dimY()
+                                *mDiffInputs.dimB();
+            continue;
+        }
 
         std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput
             = cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[k]);
@@ -200,7 +214,7 @@ void N2D2::ResizeCell_Frame_CUDA::backPropagate()
 
 void N2D2::ResizeCell_Frame_CUDA::update()
 {
-    // Nothing to update
+    Cell_Frame_CUDA<float>::update();
 }
 
 void N2D2::ResizeCell_Frame_CUDA::checkGradient(double /*epsilon*/, double /*maxError*/)

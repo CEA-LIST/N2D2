@@ -81,6 +81,9 @@ public:
     inline void getWeight(unsigned int output,
                           unsigned int channel,
                           BaseTensor& value) const;
+    inline void getQuantWeight(unsigned int output,
+                          unsigned int channel,
+                          BaseTensor& value) const;
     inline void getBias(unsigned int /*output*/, BaseTensor& value) const
     {
         value.resize({1});
@@ -177,6 +180,13 @@ void N2D2::ConvCell_Spike::getWeight(unsigned int output,
 
     value.resize(values.dims());
     value = values;
+}
+
+void N2D2::ConvCell_Spike::getQuantWeight(unsigned int /*output*/,
+                                     unsigned int /*channel*/,
+                                     BaseTensor& /*value*/) const
+{
+    // nothing here for now
 }
 
 N2D2::EventType_T N2D2::ConvCell_Spike::maps(unsigned int output,

@@ -56,6 +56,14 @@ public:
     {
         return Type;
     };
+    bool getWithLoss() const
+    {
+        return mWithLoss;
+    };
+    void setWithLoss(bool withLoss)
+    {
+        mWithLoss = withLoss;
+    };
     unsigned int getGroupSize() const
     {
         return mGroupSize;
@@ -65,7 +73,7 @@ public:
     virtual ~SoftmaxCell() {};
 
 protected:
-    const bool mWithLoss;
+    bool mWithLoss;
     const unsigned int mGroupSize;
     virtual void setOutputsDims();
 };

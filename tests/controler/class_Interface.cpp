@@ -55,7 +55,7 @@ TEST_DATASET(Interface,
 
     ASSERT_EQUALS(interface[0].dimX(), dimX);
     ASSERT_EQUALS(interface[0].dimY(), dimY);
-    ASSERT_EQUALS(interface.dimZ(), 1U);
+    ASSERT_EQUALS(interface.dimZ(), (A.empty()) ? 0 : 1);
     ASSERT_EQUALS(interface.dimB(), 1U);
 }
 

@@ -35,6 +35,7 @@
 #include "containers/CudaTensor.hpp"
 #include "controler/CudaInterface.hpp"
 
+
 namespace N2D2 {
 
 class DeepNet;
@@ -88,8 +89,21 @@ public:
     virtual void replaceInput(BaseTensor& oldInputs,
                               BaseTensor& newInputs,
                               BaseTensor& newDiffOutputs);
+
+    virtual void clearInputTensors();
+    virtual void clearOutputTensors();
+    virtual void initializeParameters(unsigned int /*nbChannels*/, unsigned int /*nbInputs*/){};
+    virtual void initializeDataDependent();
+    virtual void linkInput(Cell* cell);
+    virtual void linkInput(StimuliProvider& sp,  
+                    unsigned int x0,
+                    unsigned int y0,
+                    unsigned int width,
+                    unsigned int height);
+
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
+    virtual void update();
     virtual void setOutputTarget(const Tensor<int>& targets);
     virtual double applyLoss(double targetVal,
                              double defaultVal);
@@ -105,11 +119,17 @@ public:
     virtual const BaseTensor& getInputs(unsigned int index = 0) const;
     virtual BaseTensor& getOutputs();
     virtual const BaseTensor& getOutputs() const;
+    virtual void setDiffInputs(BaseTensor&);
+    virtual void setDiffInputsValid();
     virtual BaseTensor& getDiffInputs();
     virtual const BaseTensor& getDiffInputs() const;
     virtual BaseTensor& getDiffOutputs(unsigned int index = 0);
     virtual const BaseTensor& getDiffOutputs(unsigned int index = 0) const;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
+    virtual std::string getPyDataType();
+    virtual std::string getPyModel();
+    void exportActivationParameters(const std::string& dirName) const;
+    void importActivationParameters(const std::string& dirName, bool ignoreNotExists);
     bool isCuda() const
     {
         return true;
@@ -139,7 +159,7 @@ protected:
     CudaTensor<int> mTargets;
     CudaTensor<unsigned int> mNbTargetOutputs;
     CudaTensor<T> mLossMem;
-
+    
 #if CUDNN_VERSION >= 5000
     cudnnActivationDescriptor_t mActivationDesc;
 #else

@@ -22,6 +22,7 @@
 #include "Export/StimuliProviderExport.hpp"
 #include "Generator/DeepNetGenerator.hpp"
 #include "utils/UnitTest.hpp"
+#include "DrawNet.hpp"
 
 using namespace N2D2;
 

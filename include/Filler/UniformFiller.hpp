@@ -30,6 +30,16 @@ template <class T> class UniformFiller : public Filler {
 public:
     UniformFiller(T min = 0.0, T max = 1.0);
     void apply(BaseTensor& data, bool restrictPositive=false);
+    const char* getType() const
+    {
+        return "Uniform";
+    };
+    T getMin(){
+        return mMin;
+    }; 
+    T getMax(){
+        return mMax;
+    };
     virtual ~UniformFiller() {};
 
 private:

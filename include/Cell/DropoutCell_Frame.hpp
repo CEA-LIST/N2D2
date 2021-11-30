@@ -48,6 +48,7 @@ public:
     }
 
     virtual void initialize();
+    virtual void initializeDataDependent();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();

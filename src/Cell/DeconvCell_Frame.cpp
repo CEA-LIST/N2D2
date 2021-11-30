@@ -170,9 +170,125 @@ void N2D2::DeconvCell_Frame<T>::initialize()
     }
 }
 
+
+
+
+
+
+template <class T>
+void N2D2::DeconvCell_Frame<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
+{
+   // BEGIN: addition to initialize()
+    // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
+    // However, this requires a reinitialization of the input dims which is unsafe
+    setInputsDims({nbInputChannels});
+    // END: addition to initialize()
+
+   if (!mNoBias) {
+        if (mBias->empty()) {
+            mBias->resize({1, 1, getNbOutputs(), 1});
+            mBiasFiller->apply((*mBias));
+        }
+        else {
+            if (mBias->dimX() != 1 || mBias->dimY() != 1
+                || mBias->dimZ() != getNbOutputs() || mBias->dimB() != 1)
+            {
+                throw std::runtime_error("DeconvCell_Frame<T>::initializeParameters(): in "
+                    "cell " + mName + ", wrong size for shared bias");
+            }
+        }
+    }
+
+    for (unsigned int k = 0, size = nbInputs; k < size; ++k) {
+
+        if (k < mWeightsSolvers.size())
+            continue;  // already initialized, skip!
+
+        mWeightsSolvers.push_back(mWeightsSolver->clone());
+
+        typename std::map<unsigned int,
+            std::pair<Interface<T>*, unsigned int> >::iterator
+                it = mExtSharedSynapses.find(k);
+
+        std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
+        kernelDims.push_back(getNbOutputs());
+        kernelDims.push_back(nbInputChannels);
+
+        if (it != mExtSharedSynapses.end()) {
+            Tensor<T>* extWeights
+                = &((*(*it).second.first)[(*it).second.second]);
+
+            if (!std::equal(kernelDims.begin(), kernelDims.end(),
+                            extWeights->dims().begin()))
+            {
+                std::stringstream errorStr;
+                errorStr << "DeconvCell_Frame<T>::initialize(): in cell "
+                    << mName << ", mismatch between external weights dim. ("
+                    << extWeights->dims() << ") and expected dim. ("
+                    << kernelDims << ")";
+
+                throw std::runtime_error(errorStr.str());
+            }
+
+            mSharedSynapses.push_back(extWeights);
+        }
+        else {
+            // Weight filler expect dimZ as input and dimB as output
+            std::vector<size_t> fillerKernelDims(kernelDims);
+            std::swap(fillerKernelDims.back(),
+                      fillerKernelDims[kernelDims.size() - 2]);
+
+            Tensor<T>* sharedSynapses = new Tensor<T>(fillerKernelDims);
+            mWeightsFiller->apply(*sharedSynapses);
+            // Inverse dimZ and dimB for Deconv
+            sharedSynapses->reshape(kernelDims);
+
+            mSharedSynapses.push_back(sharedSynapses, 0);
+        }
+
+        mDiffSharedSynapses.push_back(new Tensor<T>(kernelDims), 0);
+    }
+}
+
+
+template <class T>
+void N2D2::DeconvCell_Frame<T>::check_input()
+{
+    if (mInputs.size() != mSharedSynapses.size()) {
+          throw std::runtime_error("mInputs.size() != mSharedSynapses.size() for cell " + mName + 
+          ". Please verify that the number of input tensors given to the cell is"
+          " equal to the number of inputs defined for the cell.");
+    }
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].dimZ() != mSharedSynapses[k].dimZ()){
+            std::cout << "mInputs.dimZ(): " << mInputs[k].dimZ() << std::endl;
+            std::cout << "mSharedSynapses.dimZ(): " << mSharedSynapses[k].dimZ() << std::endl;
+            std::stringstream ss;
+            ss << "Unmatching dimension Z"
+            " between input and weight " << k << " for cell " + mName;
+            throw std::runtime_error(ss.str());
+        }
+    }
+}
+
+
+template <class T>
+void N2D2::DeconvCell_Frame<T>::initializeDataDependent() 
+{
+    // NOTE: this is addition to initialize()
+    Cell_Frame<T>::initializeDataDependent();
+    
+    check_input();
+}
+
+
+
+
 template <class T>
 void N2D2::DeconvCell_Frame<T>::propagate(bool inference)
 {
+    check_input();
+
     mInputs.synchronizeDBasedToH();
 
     const T alpha = T(1.0);
@@ -247,10 +363,15 @@ void N2D2::DeconvCell_Frame<T>::backPropagate()
         mDiffBias.setValid();
     }
 
-    if (!mDiffOutputs.empty() && mBackPropagate) {
+    if (mBackPropagate) {
         offset = 0;
 
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+            if (mDiffOutputs[k].empty()) {
+                offset += mInputs[k].dimZ();
+                continue;
+            }
+
             const T beta = (mDiffOutputs[k].isValid()) ? T(1.0) : T(0.0);
 
             Tensor<T> diffOutput = (mDiffOutputs[k].isValid())
@@ -288,6 +409,8 @@ void N2D2::DeconvCell_Frame<T>::update()
 
     if (!mNoBias && mDiffBias.isValid())
         mBiasSolver->update(*mBias, mDiffBias, mInputs.dimB());
+        
+    Cell_Frame<T>::update();
 }
 
 template <class T>
@@ -325,17 +448,19 @@ void N2D2::DeconvCell_Frame<T>::checkGradient(double epsilon, double maxError)
     if (!mNoBias)
         gc.check(mName + "_mDiffBias", (*mBias), mDiffBias);
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int k = 0; k < mInputs.size(); ++k) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << k << "]";
-
-            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

@@ -190,9 +190,173 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::initialize()
     mVariance->broadcastAnyTo(dev);
 }
 
+
+
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
+{
+    // BEGIN: addition to initialize()
+    if (nbInputs != 1) {
+          throw std::runtime_error("nbInputs != 1 for cell " + mName);
+    }
+    // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
+    // However, this requires a reinitialization of the input dims which is unsafe
+    setInputsDims({nbInputChannels});
+    // END: addition to initialize()
+    
+    /*
+    cudnnTensorDescriptor_t derivedBnDesc;
+    CHECK_CUDNN_STATUS(cudnnCreateTensorDescriptor(&derivedBnDesc));
+    CHECK_CUDNN_STATUS(cudnnDeriveBNTensorDescriptor(
+        derivedBnDesc, mInputs[0].getCudnnTensorDesc(), mMode));
+
+    cudnnDataType_t dataType;
+    const unsigned int nbDimsRequested = 5;
+    std::vector<int> dims(nbDimsRequested);
+    std::vector<int> strides(nbDimsRequested);
+    int nbDims;
+
+    CHECK_CUDNN_STATUS(cudnnGetTensorNdDescriptor(derivedBnDesc,
+                                                  nbDimsRequested,
+                                                  &dataType,
+                                                  &nbDims,
+                                                  &dims[0],
+                                                  &strides[0]));
+
+    dims.resize(nbDims);
+    strides.resize(nbDims);
+
+    CHECK_CUDNN_STATUS(cudnnDestroyTensorDescriptor(derivedBnDesc));
+
+    const std::vector<size_t> requiredDims(dims.rbegin(), dims.rend());
+    */
+
+    std::vector<size_t> requiredDims(4, 1);
+    requiredDims[2] = nbInputChannels;
+
+    if (mScale->empty())
+        mScale->resize(requiredDims, ParamT(1.0));
+    else {
+        if (mScale->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared scale, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mScale->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    if (mBias->empty())
+        mBias->resize(requiredDims, ParamT(0.0));
+    else {
+        if (mBias->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared bias, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mBias->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    if (mMean->empty())
+        mMean->resize(requiredDims, ParamT(0.0));
+    else {
+        if (mMean->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared mean, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mMean->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    if (mVariance->empty())
+        mVariance->resize(requiredDims, ParamT(0.0));
+    else {
+        if (mVariance->dims() != requiredDims) {
+            std::stringstream msgStr;
+            msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
+                " in cell " + mName + ", wrong size for shared variance, expected"
+                " size is " << requiredDims << " whereas actual size is "
+                << mVariance->dims() << std::endl;
+
+            throw std::runtime_error(msgStr.str());
+        }
+    }
+
+    if(mMovingAverageMomentum < 0.0 || mMovingAverageMomentum >= 1.0)
+    {
+        std::stringstream msgStr;
+        msgStr << "BatchNormCell_Frame_CUDA<T>::initialize():"
+            " in cell " + mName + ", wrong value for MovingAverageMomentum. "
+            "Expected value range [0.0, 1.0[ whereas actual value is "
+            << mMovingAverageMomentum << std::endl;
+
+        throw std::runtime_error(msgStr.str());
+
+    }
+
+    mSavedMean.resize(requiredDims, ParamT(0.0));
+    mSavedVariance.resize(requiredDims, ParamT(0.0));
+
+    mDiffScale.resize(requiredDims, ParamT(0.0));
+    mDiffBias.resize(requiredDims, ParamT(0.0));
+
+}
+
+
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::check_input()
+{
+    if (mInputs.size() == 0) {
+          throw std::runtime_error("mInputs.size() = 0 for cell " + mName);
+    }
+
+    if (mInputs.dimZ() != mOutputs.dimZ()) {
+        throw std::domain_error("BatchNormCell_Frame<T>::initializeDataDependent():"
+                            " the number of output channels must be equal "
+                            "to the sum of inputs channels.");
+    }
+
+    if (mInputs.dimZ() != mOutputs.dimZ()) {
+        throw std::domain_error("BatchNormCell_Frame<T>::initializeDataDependent():"
+                            " the number of output channels must be equal "
+                            "to the sum of inputs channels.");
+    }
+}
+
+
+template <class T>
+void N2D2::BatchNormCell_Frame_CUDA<T>::initializeDataDependent(){
+    // NOTE: this is addition to initialize()
+    Cell_Frame_CUDA<T>::initializeDataDependent();
+
+    check_input();
+
+    mMode = CUDNN_BATCHNORM_SPATIAL;
+    mNbPropagate = 0;
+
+    // CUDNN_BN_MIN_EPSILON is set to 0.0 since cuDNN 7.5.0
+    if (CUDNN_BN_MIN_EPSILON > 0.0 && mEpsilon < CUDNN_BN_MIN_EPSILON) {
+        mEpsilon = CUDNN_BN_MIN_EPSILON;
+    }
+   
+}
+
+
+
+
 template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
 {
+    check_input();
+
     mInputs.synchronizeHBasedToD();
 
     const typename Cuda::cudnn_scaling_type<T>::type alpha = 1.0f;
@@ -260,6 +424,13 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
 template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
 {
+    if (mDiffOutputs[0].empty()) {
+        std::cout << "Warning: BatchNormCell_Frame_CUDA::backPropagate() in cell " <<   
+            getName() << " is not compatible with empty mDiffOutputs. Skipping backpropagation"  
+            << std::endl;
+        return;
+    }
+
     if (!mDiffInputs.isValid())
         return;
 
@@ -271,14 +442,14 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
     const typename Cuda::cudnn_scaling_type<T>::type beta
         = (mScaleSolver->isNewIteration()) ? 0.0f : 1.0f;
     const typename Cuda::cudnn_scaling_type<T>::type betaData
-        = (!mDiffOutputs.empty() && mBackPropagate && mDiffOutputs[0].isValid())
+        = (mBackPropagate && mDiffOutputs[0].isValid())
             ? 1.0f : 0.0f;
 
     std::shared_ptr<CudaDeviceTensor<T> > input0
         = cuda_device_tensor_cast_nocopy<T>(mInputs[0]);
     std::shared_ptr<CudaDeviceTensor<T> > diffOutput0;
 
-    if (!mDiffOutputs.empty() && mBackPropagate) {
+    if (mBackPropagate) {
         diffOutput0 = (mDiffOutputs[0].isValid())
                 ? cuda_device_tensor_cast<T>(mDiffOutputs[0])
                 : cuda_device_tensor_cast_nocopy<T>(mDiffOutputs[0]);
@@ -317,11 +488,10 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
 
     mDiffScale.setValid();
     mDiffBias.setValid();
-
-    if (!mDiffOutputs.empty() && mBackPropagate) {
+    if (mBackPropagate) {
         mDiffOutputs[0].deviceTensor() = *diffOutput0;
         mDiffOutputs[0].setValid();
-        mDiffOutputs.synchronizeDToHBased();
+        mDiffOutputs[0].synchronizeDToHBased();
     }
 }
 
@@ -400,6 +570,7 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::update()
         mVariance->broadcastAllFrom(currentDev, mDevices);
     }
     
+    Cell_Frame_CUDA<T>::update();
 }
 
 template <class T>
@@ -475,17 +646,19 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::checkGradient(double epsilon,
     gc.check(mName + "_mDiffScale", (*mScale), mDiffScale);
     gc.check(mName + "_mDiffBias", (*mBias), mDiffBias);
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int in = 0; in < mInputs.size(); ++in) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << in << "]";
-
-            gc.check(name.str(), mInputs[in], mDiffOutputs[in]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

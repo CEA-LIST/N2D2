@@ -157,6 +157,7 @@ public:
                              int depth = 0);
     virtual void saveROIs(const std::string& fileName,
                           const std::string& header = "") const;
+    void logPartition(const std::string& dirName) const;
     void logStats(const std::string& sizeFileName,
                   const std::string& labelFileName,
                   StimuliSetMask setMask = All) const;
@@ -280,6 +281,10 @@ public:
                                 <ROI*>());
 
     // Getters
+    bool getLoadDataInMemory(){
+        return mLoadDataInMemory;
+    };
+    
     inline StimulusID getStimulusID(StimuliSet set, unsigned int index) const;
     std::string getStimulusName(StimulusID id, bool appendSlice = true) const;
     inline std::string getStimulusName(StimuliSet set,

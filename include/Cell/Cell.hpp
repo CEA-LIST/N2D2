@@ -283,6 +283,27 @@ public:
     /// Initialize the state of the cell (e.g. weights random initialization)
     virtual void initialize() {};
 
+    virtual void setMapping(const Tensor<bool>& mapping)
+    {   
+        if (!mMapping.empty()){
+            throw std::runtime_error("Cell::setMapping(): in "
+                        "cell " + mName + ", mMapping is not empty");
+        }
+        if (mapping.empty()) {
+            throw std::runtime_error("Cell::setMapping(): in "
+                        "cell " + mName + ", mapping is empty");
+        }
+        else {
+            mMapping.append(mapping);
+        }
+    };
+
+    // TODO: Replace by abstract method once implemented for all relevant cells
+    virtual void initializeDataDependent() 
+    {
+        throw std::runtime_error("Error: initializeDataDependent not implemented for this cell type!");
+    };
+
     /**
      * Save cell configuration and free parameters to a directory
      *
@@ -321,6 +342,14 @@ public:
      * @param fileName      Destination file
     */
     virtual void exportFreeParameters(const std::string& /*fileName*/) const {};
+    /**
+     * Export Activation parameters to a file, in ASCII format compatible between
+     *the different cell models
+     *
+     * @param fileName      Destination file
+    */
+    virtual void exportActivationParameters(const std::string& /*fileName*/) const {};
+    virtual void exportQuantFreeParameters(const std::string& /*fileName*/) const {};
 
     /**
      * Load cell free parameters from a file, in ASCII format compatible between
@@ -332,6 +361,9 @@ public:
     */
     virtual void importFreeParameters(const std::string& /*fileName*/,
                                       bool /*ignoreNotExists*/ = false) {};
+    virtual void importActivationParameters(const std::string& /*fileName*/,
+                                            bool /*ignoreNotExists*/ = false) {};
+
     virtual void logFreeParameters(const std::string & /*fileName*/) const {};
 
     /**
@@ -340,6 +372,15 @@ public:
      * @param fileName      Destination file
     */
     virtual void logFreeParametersDistrib(
+        const std::string& /*fileName*/,
+        FreeParametersType /*type*/ = All) const {};
+
+    /**
+     * Log cell free parameters quantized distribution
+     *
+     * @param fileName      Destination file
+    */
+    virtual void logQuantFreeParametersDistrib(
         const std::string& /*fileName*/,
         FreeParametersType /*type*/ = All) const {};
 

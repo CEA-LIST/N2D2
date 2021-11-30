@@ -47,6 +47,7 @@ public:
                                const BaseTensor& output,
                                const BaseTensor& diffInput,
                                BaseTensor& diffOutput);
+    virtual void update(unsigned int batchSize);
     virtual ~RectifierActivation_Frame_CUDA();
 
 protected:
@@ -79,17 +80,20 @@ void N2D2::RectifierActivation_Frame_CUDA<T>::propagate(
     const Cell& cell, 
     const BaseTensor& baseInput,
     BaseTensor& baseOutput,
-    bool /*inference*/)
+    bool inference)
 {
     const CudaTensor<T>& input = dynamic_cast<const CudaTensor<T>&>(baseInput);
     CudaTensor<T>& output = dynamic_cast<CudaTensor<T>&>(baseOutput);
 
-    mScaling.propagate(cell, input, output);
+    //If activations is quantized : use Q Level of activations for saturate    
+    //Else : Use Q Level of weights parameters 
+    const std::size_t nbbits = mQuantizedNbBits > 0 ? 
+                                mQuantizedNbBits : cell.getQuantizedNbBits();
+    mScaling.propagate(cell, input, output, nbbits);
 
     if (mLeakSlope == 0.0 && mClipping == 0.0) {
         const float alpha = 1.0f;
         const float beta = 0.0f;
-
         CHECK_CUDNN_STATUS(
             cudnnActivationForward(CudaContext::cudnnHandle(),
                                    mActivationDesc,
@@ -108,6 +112,9 @@ void N2D2::RectifierActivation_Frame_CUDA<T>::propagate(
             T(mLeakSlope),
             cell.isQuantized()?T(0.0):T(mClipping));
     }
+    if(mQuantizer) {
+        mQuantizer->propagate(baseOutput, inference);
+    }
 }
 
 template <class T>
@@ -118,8 +125,15 @@ void N2D2::RectifierActivation_Frame_CUDA<T>::backPropagate(
     const BaseTensor& baseDiffInput,
     BaseTensor& baseDiffOutput)
 {
+    if(mQuantizer) {
+        mQuantizer->back_propagate( mQuantizer->getFullPrecisionActivations(), 
+                                    baseOutput,/*Not use for the moment*/
+                                    baseDiffInput,
+                                    baseDiffOutput);
+    }
     const CudaTensor<T>& output = dynamic_cast<const CudaTensor<T>&>(baseOutput);
-    const CudaTensor<T>& diffInput = dynamic_cast<const CudaTensor<T>&>(baseDiffInput);
+    const CudaTensor<T>& diffInput = (!mQuantizer)  ? dynamic_cast<const CudaTensor<T>&>(baseDiffInput) 
+                                : dynamic_cast<const CudaTensor<T>&>(baseDiffOutput);
     CudaTensor<T>& diffOutput = dynamic_cast<CudaTensor<T>&>(baseDiffOutput);
 
     if (mLeakSlope == 0.0 && mClipping == 0.0) {
@@ -161,5 +175,11 @@ N2D2::RectifierActivation_Frame_CUDA<T>::~RectifierActivation_Frame_CUDA()
     cudnnDestroyActivationDescriptor(mActivationDesc);
 #endif
 }
-
+template <class T>
+void N2D2::RectifierActivation_Frame_CUDA<T>::update(unsigned int batchSize)
+{
+    if(mQuantizer) {
+        mQuantizer->update(batchSize);
+    }
+}
 #endif // N2D2_RECTIFIERACTIVATION_FRAME_CUDA_H

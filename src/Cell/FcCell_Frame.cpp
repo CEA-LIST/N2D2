@@ -64,6 +64,22 @@ N2D2::FcCell_Frame<T>::FcCell_Frame(const DeepNet& deepNet, const std::string& n
 }
 
 template <class T>
+void N2D2::FcCell_Frame<T>::resetWeights()
+{
+    for (unsigned int i = 0, size = mSynapses.size(); i < size; i++){
+        mWeightsFiller->apply(mSynapses[i]);
+    }
+    mSynapses.synchronizeDToH();
+}
+
+template <class T>
+void N2D2::FcCell_Frame<T>::resetBias()
+{
+    mBiasFiller->apply(mBias);
+    mBias.synchronizeDToH();
+}
+
+template <class T>
 void N2D2::FcCell_Frame<T>::initialize()
 {
     if (!mNoBias && mBias.empty()) {
@@ -88,6 +104,98 @@ void N2D2::FcCell_Frame<T>::initialize()
             {1, 1, mInputs[k].size() / mInputs.dimB(), mOutputs.dimZ()}, true), 0);
         mWeightsFiller->apply(mSynapses.back());
     }
+
+    if (mQuantizer) {
+        for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
+            mQuantizer->addWeights(mSynapses[k], mDiffSynapses[k]);
+        }
+        if (!mNoBias) {
+            mQuantizer->addBiases(mBias, mDiffBias);
+        }
+        mQuantizer->initialize();
+    }
+
+}
+
+
+template <class T>
+void N2D2::FcCell_Frame<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
+{
+
+    // BEGIN: addition to initialize()
+    //if (mMapping.empty()) {
+    //    mMapping.append(Tensor<bool>({getNbOutputs(), nbInputs*nbInputChannels}, true));
+    //}
+    // TODO: This is only required because getNbChannels() uses the input tensor dimensions to infer the number of input channels. 
+    // However, this requires a reinitialization of the input dims which is unsafe
+    setInputsDims({nbInputChannels});
+    // END: addition to initialize()
+
+    if (!mNoBias && mBias.empty()) {
+        mBias.resize({getNbOutputs(), 1, 1, 1});
+        mDiffBias.resize({getNbOutputs(), 1, 1, 1});
+        mBiasFiller->apply(mBias);
+    }
+
+    for (unsigned int k = 0, size = nbInputs; k < size; ++k) {
+        if (k < mWeightsSolvers.size())
+            continue;  // already initialized, skip!
+
+        mWeightsSolvers.push_back(mWeightsSolver->clone());
+        mSynapses.push_back(new Tensor<T>(
+            {1, 1, nbInputChannels, getNbOutputs()}), 0);
+        mDiffSynapses.push_back(new Tensor<T>(
+            {1, 1, nbInputChannels, getNbOutputs()}), 0);
+        mDropConnectMask.push_back(new Tensor<bool>(
+            {1, 1, nbInputChannels, getNbOutputs()}, true), 0);
+        mWeightsFiller->apply(mSynapses.back());
+    }
+
+    initializeWeightQuantizer();
+}
+
+
+
+template <class T>
+void N2D2::FcCell_Frame<T>::initializeWeightQuantizer()
+{
+    if (mQuantizer) {
+        for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
+            mQuantizer->addWeights(mSynapses[k], mDiffSynapses[k]);
+        }
+        if (!mNoBias) {
+            mQuantizer->addBiases(mBias, mDiffBias);
+        }
+        mQuantizer->initialize();
+    }
+}
+
+template <class T>
+void N2D2::FcCell_Frame<T>::check_input()
+{
+    if (mInputs.size() != mSynapses.size()) {
+          throw std::runtime_error("mInputs.size() != mSynapses.size() for cell " + mName + 
+          ". Please verify that the number of input tensors given to the cell is"
+          " equal to the number of inputs defined for the cell.");
+    }
+    for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mInputs[k].dimX()*mInputs[k].dimY()*mInputs[k].dimZ()
+        != mSynapses[k].dimX()*mSynapses[k].dimY()*mSynapses[k].dimZ()){
+            std::cout << "mInputs: " << mInputs[k].dims() << std::endl;
+            std::cout << "mSynapses: " << mSynapses[k].dims() << std::endl;
+            std::stringstream ss;
+            ss << "Unmatching dimensions X*Y*Z"
+            " between input and weight tensor " <<  k << " for cell " + mName;
+            throw std::runtime_error(ss.str());
+        }
+    }
+}
+
+
+template <class T>
+void N2D2::FcCell_Frame<T>::initializeDataDependent(){
+    Cell_Frame<T>::initializeDataDependent();
+    check_input();
 }
 
 template <class T>
@@ -122,9 +230,12 @@ void N2D2::FcCell_Frame<T>::load(const std::string& dirName)
         mBiasSolver->load(dirName + "/BiasSolver");
 }
 
+
 template <class T>
 void N2D2::FcCell_Frame<T>::propagate(bool inference)
 {
+    check_input();
+
     if (mNormalize) {
         for (unsigned int n = 0, nbOutputs = mOutputs.dimZ(); n < nbOutputs;
             ++n)
@@ -155,6 +266,10 @@ void N2D2::FcCell_Frame<T>::propagate(bool inference)
 
     mInputs.synchronizeDBasedToH();
 
+    if (mQuantizer) {
+        mQuantizer->propagate();
+    }
+
     const unsigned int outputSize = mOutputs.dimX() * mOutputs.dimY()
                                     * mOutputs.dimZ();
     const unsigned int count = mInputs.dimB() * outputSize;
@@ -173,10 +288,15 @@ void N2D2::FcCell_Frame<T>::propagate(bool inference)
                     = Random::randBernoulli(mDropConnect);
         }
 
-        const Tensor<T>& synapses = mSynapses[k];
         const Tensor<T>& input = tensor_cast<T>(mInputs[k]);
+        const Tensor<T>& synapses 
+            = mQuantizer ? (tensor_cast<T>(mQuantizer->getQuantizedWeights(k))) 
+                        : tensor_cast<T>(mSynapses[k]);
         const unsigned int inputSize = input.dimX() * input.dimY()
                                         * input.dimZ();
+        //const Tensor<T>& biases 
+        //    = (!mNoBias) ? (mQuantizer ? tensor_cast<T>(mQuantizer->getQuantizedBiases())
+        //                : mBias) : T(0.0) ;
 
 #if defined(_OPENMP) && _OPENMP >= 200805
 #pragma omp parallel for collapse(2) if (count > 16)
@@ -234,14 +354,18 @@ void N2D2::FcCell_Frame<T>::backPropagate()
         const Tensor<T>& input = tensor_cast_nocopy<T>(mInputs[k]);
         const unsigned int nbChannels = input.size() / input.dimB();
 
-        if (!mDiffOutputs.empty() && mBackPropagate) {
-            const T beta((mDiffOutputs[k].isValid()) ? 1.0 : 0.0);
+        if (mBackPropagate) {
+            if (mDiffOutputs[k].empty())
+                continue;
 
+            const T beta((mDiffOutputs[k].isValid()) ? 1.0 : 0.0);
             Tensor<T> diffOutput = (mDiffOutputs[k].isValid())
                 ? tensor_cast<T>(mDiffOutputs[k])
                 : tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
-            const Tensor<T>& synapses = mSynapses[k];
+            const Tensor<T>& synapses 
+                = mQuantizer ? tensor_cast<T>(mQuantizer->getQuantizedWeights(k))
+                            : tensor_cast<T>(mSynapses[k]);
             const unsigned int count = mInputs.dimB() * nbChannels;
 
 #if defined(_OPENMP) && _OPENMP >= 200805
@@ -333,20 +457,34 @@ void N2D2::FcCell_Frame<T>::backPropagate()
     }
 
     mDiffOutputs.synchronizeHToD();
+
+    if (mQuantizer && mBackPropagate) {
+        mQuantizer->back_propagate();
+    }
 }
 
 template <class T>
 void N2D2::FcCell_Frame<T>::update()
 {
     for (unsigned int k = 0, size = mSynapses.size(); k < size; ++k) {
-        if (mDiffSynapses[k].isValid()) {
+        if (mDiffSynapses[k].isValid() && !mQuantizer) {
             mWeightsSolvers[k]
                 ->update(mSynapses[k], mDiffSynapses[k], mInputs.dimB());
+        }
+        else if (mDiffSynapses[k].isValid() && mQuantizer) {
+            mWeightsSolvers[k]
+                ->update(mSynapses[k], mQuantizer->getDiffFullPrecisionWeights(k), mInputs.dimB());
         }
     }
 
     if (!mNoBias && mDiffBias.isValid())
         mBiasSolver->update(mBias, mDiffBias, mInputs.dimB());
+
+    if(mQuantizer){
+        mQuantizer->update((unsigned int)mInputs.dimB());
+    }
+
+    Cell_Frame<T>::update();
 }
 
 template <class T>
@@ -371,17 +509,19 @@ void N2D2::FcCell_Frame<T>::checkGradient(double epsilon, double maxError)
     if (!mNoBias)
         gc.check(mName + "_mDiffBias", mBias, mDiffBias);
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int in = 0; in < mInputs.size(); ++in) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << in << "]";
-
-            gc.check(name.str(), mInputs[in], mDiffOutputs[in]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 
     mLockRandom = false;

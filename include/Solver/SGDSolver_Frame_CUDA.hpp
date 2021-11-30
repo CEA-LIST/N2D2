@@ -88,7 +88,7 @@ void N2D2::SGDSolver_Frame_CUDA<T>::update(BaseTensor& baseData,
     CudaTensor<T>& data = dynamic_cast<CudaTensor<T>&>(baseData);
     CudaTensor<T>& diffData = dynamic_cast<CudaTensor<T>&>(baseDiffData);
 
-    const float rate = SGDSolver::getLearningRate(batchSize);
+    const float rate = SGDSolver::getLearningRate(batchSize, true);
 
     if (rate == 0.0)
         return;

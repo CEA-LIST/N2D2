@@ -64,6 +64,9 @@ public:
     }
 
     virtual void initialize();
+    virtual void initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs);
+    virtual void check_input();
+    virtual void initializeDataDependent();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();

@@ -5,13 +5,14 @@ NbOutputs={{NB_FILTERS}}
 Stride={{STRIDES}}
 Padding=1
 WeightsFiller.Scaling=$(${L}**(-1.0/(2*2-2)) if ${L} > 0 else 1.0)
-
+ 
+;NOTE: This has been corrected but not tested!!
 [{{SECTION_NAME}}_3x3_2] conv_def
 Input={{SECTION_NAME}}_3x3_1
-KernelDims=1 1
+KernelDims=3 3
 NbOutputs=$({{NB_FILTERS}})
 Stride=1
-Padding=0
+Padding=1
 WeightsFiller.Scaling=$(0.0 if ${L} > 0 else 1.0)
 ActivationFunction=Linear
 

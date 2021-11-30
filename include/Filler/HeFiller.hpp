@@ -39,6 +39,19 @@ public:
 
     HeFiller(VarianceNorm varianceNorm = FanIn, T meanNorm=0.0, T scaling = 1.0);
     void apply(BaseTensor& data, bool restrictPositive=false);
+    const char* getType() const
+    {
+        return "He";
+    };
+    VarianceNorm getVarianceNorm(){
+        return mVarianceNorm;
+    };
+    T getMeanNorm(){
+        return mMeanNorm;
+    }; 
+    T getScaling(){
+        return mScaling;
+    };
     virtual ~HeFiller() {};
 
 private:

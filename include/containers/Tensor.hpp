@@ -263,6 +263,7 @@ public:
         (*mValid)[0] = false;
     };
     virtual const std::type_info* getType() const = 0;
+    virtual const char* getTypeName() const = 0;
 #ifdef CUDA
     virtual BaseTensor* newCuda() const = 0;
 #endif
@@ -402,8 +403,9 @@ public:
     const Tensor<T> operator[](size_t i) const;
     Tensor<T> rows(size_t j0, size_t nb, int towardsDim = -1);
     const Tensor<T> rows(size_t j0, size_t nb, int towardsDim = -1) const;
-    double sum() const;
-    double mean() const;
+    double sum(bool valAbs = false) const;
+    double mean(bool valAbs = false) const;
+    double std() const;
     virtual void synchronizeToH(BaseTensor& tensor) const;
     BaseTensor& operator=(const BaseTensor& base);
     Tensor<T>& operator=(const Tensor<T>& tensor);
@@ -429,6 +431,10 @@ public:
     const std::type_info* getType() const
     {
         return &typeid(T);
+    };
+    const char* getTypeName() const
+    {
+        return typeid(T).name();
     };
 #ifdef CUDA
     // Create a CudaTensor<T>*, but due to a compiler bug in MSVC 2015, we return

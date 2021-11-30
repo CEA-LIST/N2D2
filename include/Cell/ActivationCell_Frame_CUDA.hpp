@@ -57,6 +57,7 @@ public:
     }
 
     virtual void initialize();
+    virtual void initializeDataDependent();
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
     virtual void update();
@@ -64,7 +65,8 @@ public:
                        double /*maxError*/ = 1.0e-6);
     virtual ~ActivationCell_Frame_CUDA();
 
-private:
+private:    
+    CudaTensor<T> mWorkspaceGPU;
     static Registrar<ActivationCell> mRegistrar;
 };
 }

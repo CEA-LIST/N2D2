@@ -90,6 +90,8 @@ protected:
                           const BaseTensor& value);
     inline void getWeight(unsigned int output, unsigned int channel,
                           BaseTensor& value) const;
+    inline void getQuantWeight(unsigned int output, unsigned int channel,
+                          BaseTensor& value) const;
     inline void setBias(unsigned int output, const BaseTensor& value);
     inline void getBias(unsigned int output, BaseTensor& value) const;
 
@@ -116,6 +118,14 @@ void N2D2::FcCell_Transcode
 {
     return (mTranscodeMode == Frame) ? FRAME::getWeight(output, channel, value)
                                      : SPIKE::getWeight(output, channel, value);
+}
+
+template <class FRAME, class SPIKE>
+void N2D2::FcCell_Transcode
+    <FRAME, SPIKE>::getQuantWeight(unsigned int /*output*/, unsigned int /*channel*/,
+                              BaseTensor& /*value*/) const
+{
+    //nothing here
 }
 
 template <class FRAME, class SPIKE>

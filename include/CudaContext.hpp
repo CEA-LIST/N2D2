@@ -32,6 +32,11 @@
 namespace N2D2 {
 class CudaContext {
 public:
+    static int nbDevice(){
+        int count = 1;
+        CHECK_CUDA_STATUS(cudaGetDeviceCount(&count));
+        return count;
+    }
     static void setDevice(int device = -1)
     {
         static int prevDevice = 0;

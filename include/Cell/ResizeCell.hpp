@@ -68,6 +68,13 @@ public:
     {
         return mResizeMode;
     };
+
+    unsigned int getResizeOutputWidth(){
+        return mResizeOutputWidth;
+    };
+    unsigned int getResizeOutputHeight(){
+        return mResizeOutputHeight;
+    };
     bool isAlignedCorner() const
     {
         return mAlignCorners;

@@ -46,5 +46,6 @@ N2D2::RangeAffineTransformationGenerator::generate(IniParser& iniConfig,
     std::shared_ptr<RangeAffineTransformation> trans = std::make_shared
         <RangeAffineTransformation>(
             firstOperator, firstValue, secondOperator, secondValue);
+    trans->setParameters(iniConfig.getSection(section, true));
     return trans;
 }

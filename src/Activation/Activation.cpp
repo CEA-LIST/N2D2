@@ -46,7 +46,21 @@ const N2D2::Scaling& N2D2::Activation::getActivationScaling() const {
 }
 
 void N2D2::Activation::setActivationScaling(Scaling scaling) {
-    mScaling = std::move(scaling);
+    mScaling = scaling;
+}
+void N2D2::Activation::exportParameters(const std::string& dirName,
+                                        const std::string& cellName) const
+{
+    if (mQuantizer)
+        mQuantizer->exportParameters(dirName, cellName);
+}
+
+void N2D2::Activation::importParameters(const std::string& dirName,
+                            const std::string& cellName,
+                            const bool ignoreNotExists)
+{
+    if (mQuantizer)
+        mQuantizer->importParameters(dirName, cellName, ignoreNotExists);
 }
 
 void N2D2::Activation::save(const std::string& dirName) const

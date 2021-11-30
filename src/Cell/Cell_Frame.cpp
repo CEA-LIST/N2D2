@@ -23,6 +23,7 @@
 #include "StimuliProvider.hpp"
 #include "third_party/half.hpp"
 #include "Cell/ConvCell_Frame_Kernels.hpp"
+#include "Adversarial.hpp"
 
 template <class T>
 N2D2::Cell_Frame<T>::Cell_Frame(const DeepNet& deepNet, const std::string& name,
@@ -82,6 +83,16 @@ void N2D2::Cell_Frame<T>::addInput(StimuliProvider& sp,
     // Define input-output sizes
     setInputsDims(sp.getSize());
     mInputs.push_back(&sp.getDataInput());
+
+    // For some adversarial attacks, it is required to backpropagate
+    // the gradiants to the inputs
+    if (sp.getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) {
+        std::vector<size_t> inputsDims(mInputsDims);
+        inputsDims.push_back(sp.getBatchSize());
+        mDiffOutputs.push_back(new Tensor<T>(inputsDims), 0);
+    }
+    else
+        mDiffOutputs.push_back(new Tensor<T>(), 0);
 
     setOutputsDims();
 
@@ -144,6 +155,8 @@ void N2D2::Cell_Frame<T>::addInput(Cell* cell, const Tensor<bool>& mapping)
         : Tensor<bool>({getNbOutputs(), cellNbOutputs}, true));
 }
 
+
+
 template <class T>
 void N2D2::Cell_Frame<T>::addInput(Cell* cell,
                                 unsigned int x0,
@@ -174,9 +187,7 @@ void N2D2::Cell_Frame<T>::addInput(BaseTensor& inputs,
 
     setInputsDims(inputsDims);
     mInputs.push_back(&inputs);
-
-    if (!diffOutputs.empty())
-        mDiffOutputs.push_back(&diffOutputs);
+    mDiffOutputs.push_back(&diffOutputs);
 
     setOutputsDims();
 
@@ -249,6 +260,139 @@ void N2D2::Cell_Frame<T>::replaceInput(BaseTensor& oldInputs,
     }
 }
 
+
+
+
+// BEGIN code used exlusively in python API
+
+/**
+ * This is run every time the input dimensions have changed to relink the cell input/diffOutput tensors.
+**/
+template <class T>
+void N2D2::Cell_Frame<T>::clearInputTensors() {
+    mInputs.clear();
+    mDiffOutputs.clear();
+
+    mInputsDims.clear();
+}
+
+
+/**
+ * This is run every time the input dimensions have changed to reinitialized the cell output/diffInput tensors.
+**/
+template <class T>
+void N2D2::Cell_Frame<T>::clearOutputTensors() {
+    mOutputs.clear();
+    mDiffInputs.clear();
+
+    mOutputsDims.clear();
+}
+
+/**
+ * Initialized like addInputs but without initializing mapping. This is run every time the input dimensions have changed
+**/
+template <class T>
+void N2D2::Cell_Frame<T>::initializeDataDependent()
+{
+    if (mInputs.size() == 0){
+         throw std::runtime_error(
+            "Cell_Frame<T>::initializeDataDependent(): cell has no inputs");
+    }
+
+    setOutputsDims();
+
+    /**
+     * At the moment data tensor reinitialisation is not supported, but technically it would be possible. **/
+    if (mOutputs.empty() && mDiffInputs.empty()) {
+        std::vector<size_t> outputsDims(mOutputsDims);
+        outputsDims.push_back(mInputs.dimB());
+
+        mOutputs.resize(outputsDims);
+        mDiffInputs.resize(outputsDims);
+    }
+    else {
+        throw std::runtime_error(
+            "Cell_Frame<T>::initializeDataDependent(): data tensors are already initialized");
+    }
+}
+
+/**
+ * Link an input that has to be of the same size as the current input dimensions of the cell.
+ * If the current input dimensions are empty, the input dimensions are initialized to 
+ * correspond to the cell output dimensions.
+**/
+template <class T>
+void N2D2::Cell_Frame<T>::linkInput(Cell* cell)
+{
+    /*if (cell->getNbOutputs() != getNbChannels()){
+        throw std::runtime_error("Cell has different number of channels than input");
+    }*/
+
+    // Define input-output sizes
+    setInputsDims(cell->getOutputsDims());
+
+    Cell_Frame_Top* cellFrame = dynamic_cast<Cell_Frame_Top*>(cell);
+
+    if (cellFrame != NULL) {
+        mInputs.push_back(&cellFrame->getOutputs());
+        mDiffOutputs.push_back(&cellFrame->getDiffInputs());
+    }
+    else {
+        throw std::runtime_error(
+            "Cell_Frame<T>::linkInput(): cannot mix Spike and Frame models");
+    }
+}
+
+/**
+ * Link an input that has to be of the same size as the current input dimensions of the cell.
+ * If the current input dimensions are empty, the input dimensions are initialized to 
+ * correspond to the cell output dimensions.
+**/
+template <class T>
+void N2D2::Cell_Frame<T>::linkInput(StimuliProvider& sp,  
+                                unsigned int x0,
+                                unsigned int y0,
+                                unsigned int width,
+                                unsigned int height)
+{
+    if (width == 0)
+        width = sp.getSizeX() - x0;
+    if (height == 0)
+        height = sp.getSizeY() - y0;
+
+    if (x0 > 0 || y0 > 0 || width < sp.getSizeX() || height < sp.getSizeY())
+        throw std::runtime_error("Cell_Frame<T>::linkInput(): adding a cropped "
+                                 "environment channel map as input is not "
+                                 "supported");
+    
+    /*if (sp.getNbChannels() != getNbChannels()){
+        throw std::runtime_error("Cell has different number of channels than input");
+    }*/
+
+     // Define input-output sizes
+    setInputsDims(sp.getSize());
+    mInputs.push_back(&sp.getData());
+    mDiffOutputs.push_back(new Tensor<T>(), 0);
+
+}
+// END code used exclusively in python API
+
+
+
+template <class T>
+void N2D2::Cell_Frame<T>::exportActivationParameters(const std::string& dirName) const
+{
+    if (mActivation)
+        mActivation->exportParameters(dirName, mName);
+}
+
+template <class T>
+void N2D2::Cell_Frame<T>::importActivationParameters(const std::string& dirName, bool ignoreNotExists)
+{
+    if (mActivation)
+        mActivation->importParameters(dirName, mName, ignoreNotExists);
+}
+
 template <class T>
 void N2D2::Cell_Frame<T>::propagate(bool inference)
 {
@@ -261,6 +405,13 @@ void N2D2::Cell_Frame<T>::backPropagate()
 {
     if (mActivation)
         mActivation->backPropagate(*this, mOutputs, mDiffInputs);
+}
+
+template <class T>
+void N2D2::Cell_Frame<T>::update()
+{
+    if (mActivation)
+        mActivation->update(mInputs.dimB());
 }
 
 template <class T>
@@ -520,6 +671,23 @@ unsigned int N2D2::Cell_Frame<T>::getMaxOutput(unsigned int batchPos) const
     const Tensor<T> output = mOutputs[batchPos];
     return std::distance(output.begin(),
                          std::max_element(output.begin(), output.end()));
+}
+template<>
+std::string N2D2::Cell_Frame<double>::getPyDataType() {
+    return std::string("double");
+}
+
+template<>
+std::string N2D2::Cell_Frame<float>::getPyDataType() {
+    return std::string("float");
+}
+template<>
+std::string N2D2::Cell_Frame<half_float::half>::getPyDataType() {
+    return std::string("half_float");
+}
+template<class T>
+std::string N2D2::Cell_Frame<T>::getPyModel(){
+    return std::string("Frame");
 }
 
 namespace N2D2 {

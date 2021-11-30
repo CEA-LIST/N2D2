@@ -59,11 +59,14 @@ protected:
  */
 class FloatingPointScaling: public AbstractScaling {
 public:
-    FloatingPointScaling(std::vector<Float_T> scalignPerOutput): 
-                            mScalingPerOutput(std::move(scalignPerOutput)) 
+    FloatingPointScaling(std::vector<Float_T> scalignPerOutput, bool isclipped, std::vector<Float_T> clipping): 
+                            mScalingPerOutput(std::move(scalignPerOutput)),
+                            isClipped(isclipped),
+                            mClippingPerOutput(std::move(clipping)) 
     {
 #ifdef CUDA
         mCudaScalingPerOutput.push_back(mScalingPerOutput);
+        mCudaClippingPerOutput.push_back(mClippingPerOutput);
 #endif
     }
 
@@ -71,34 +74,48 @@ public:
         return mScalingPerOutput;
     }
 
+    const std::vector<Float_T>& getClippingPerOutput() const {
+        return mClippingPerOutput;
+    }
+
+    bool getIsClipped() const {
+        return isClipped;
+    }
+
     template<typename T>
-    void propagate(const Cell& cell, const Tensor<T>& input, Tensor<T>& output) const {
+    void propagate(const Cell& cell, const Tensor<T>& input, Tensor<T>& output, const std::size_t qBits) const {
         floatingPointScaling_propagate(input, output,
                                        input.dimB(), input.dimZ(), 
                                        input.dimY(), input.dimX(),
+                                       isClipped, mClippingPerOutput,
                                        mScalingPerOutput, 
-                                       cell.getQuantizedNbBits(), 
+                                       qBits,
                                        DeepNetExport::isCellOutputUnsigned(cell));
     }
 
 #ifdef CUDA
     template<typename T>
-    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output) const {
+    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
         cudaFloatingPointScaling_propagate(CudaContext::getDeviceProp(),
                                            input.getDevicePtr(), output.getDevicePtr(),
                                            input.dimB(), input.dimZ(), 
                                            input.dimY(), input.dimX(),
+                                           isClipped,
+                                           mCudaClippingPerOutput.getDevicePtr(),
                                            mCudaScalingPerOutput.getDevicePtr(), 
-                                           cell.getQuantizedNbBits(), 
+                                           qBits,
                                            DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif
 
 private:
     std::vector<Float_T> mScalingPerOutput;
+    bool isClipped;
+    std::vector<Float_T> mClippingPerOutput;
 
 #ifdef CUDA
     CudaTensor<Float_T> mCudaScalingPerOutput;
+    CudaTensor<Float_T> mCudaClippingPerOutput;
 #endif
 };
 
@@ -111,11 +128,13 @@ private:
  */
 class FixedPointScaling: public AbstractScaling {
 public:
-    FixedPointScaling(std::size_t nbFractionalBits, std::vector<std::int32_t> scaling)
-           : mNbFractionalBits(nbFractionalBits), mScalingPerOutput(std::move(scaling))
+    FixedPointScaling(std::size_t nbFractionalBits, std::vector<std::int32_t> scaling, bool isclipped, std::vector<Float_T> clipping)
+           : mNbFractionalBits(nbFractionalBits), mScalingPerOutput(std::move(scaling)), 
+           isClipped(isclipped), mClippingPerOutput(std::move(clipping))
     {
 #ifdef CUDA
         mCudaScalingPerOutput.push_back(mScalingPerOutput);
+        mCudaClippingPerOutput.push_back(mClippingPerOutput);
 #endif
     }
 
@@ -123,29 +142,40 @@ public:
         return mScalingPerOutput;
     }
 
+    const std::vector<Float_T>& getClippingPerOutput() const {
+        return mClippingPerOutput;
+    }
+
+    bool getIsClipped() const {
+        return isClipped;
+    }
+
     std::size_t getFractionalBits() const {
         return mNbFractionalBits;
     }
 
     template<typename T>
-    void propagate(const Cell& cell, const Tensor<T>& input, Tensor<T>& output) const {
+    void propagate(const Cell& cell, const Tensor<T>& input, Tensor<T>& output, const std::size_t qBits) const {
         fixedPointScaling_propagate(input, output,
                                     input.dimB(), input.dimZ(), 
                                     input.dimY(), input.dimX(),
+                                    isClipped, mClippingPerOutput,
                                     mScalingPerOutput, mNbFractionalBits,
-                                    cell.getQuantizedNbBits(), 
+                                    qBits,
                                     DeepNetExport::isCellOutputUnsigned(cell));
     }
     
 #ifdef CUDA
     template<typename T>
-    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output) const {
+    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
         cudaFixedPointScaling_propagate(CudaContext::getDeviceProp(),
                                         input.getDevicePtr(), output.getDevicePtr(),
                                         input.dimB(), input.dimZ(), 
                                         input.dimY(), input.dimX(),
+                                        isClipped,
+                                        mCudaClippingPerOutput.getDevicePtr(),
                                         mCudaScalingPerOutput.getDevicePtr(), mNbFractionalBits, 
-                                        cell.getQuantizedNbBits(), 
+                                        qBits,
                                         DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif
@@ -153,9 +183,12 @@ public:
 private:
     std::size_t mNbFractionalBits;
     std::vector<std::int32_t> mScalingPerOutput;
+    bool isClipped;
+    std::vector<Float_T> mClippingPerOutput;
 
 #ifdef CUDA
     CudaTensor<std::int32_t> mCudaScalingPerOutput;
+    CudaTensor<Float_T> mCudaClippingPerOutput;
 #endif
 };
 
@@ -169,10 +202,12 @@ private:
  */
 class SingleShiftScaling: public AbstractScaling {
 public:
-    SingleShiftScaling(std::vector<unsigned char> scaling): mScalingPerOutput(std::move(scaling)) 
+    SingleShiftScaling(std::vector<unsigned char> scaling, bool isclipped, std::vector<Float_T> clipping): 
+    mScalingPerOutput(std::move(scaling)), isClipped(isclipped), mClippingPerOutput(std::move(clipping)) 
     {
 #ifdef CUDA
         mCudaScalingPerOutput.push_back(mScalingPerOutput);
+        mCudaClippingPerOutput.push_back(mClippingPerOutput);
 #endif
     }
 
@@ -180,34 +215,49 @@ public:
         return mScalingPerOutput;
     }
 
+    const std::vector<Float_T>& getClippingPerOutput() const {
+        return mClippingPerOutput;
+    }
+
+    bool getIsClipped() const {
+        return isClipped;
+    }
+
+
     template<typename T>
-    void propagate(const Cell& cell, const Tensor<T>& input, Tensor<T>& output) const {
+    void propagate(const Cell& cell, const Tensor<T>& input, Tensor<T>& output, const std::size_t qBits) const {
         singleShiftScaling_propagate(input, output,
                                      input.dimB(), input.dimZ(), 
                                      input.dimY(), input.dimX(),
+                                     isClipped, mClippingPerOutput,
                                      mScalingPerOutput, 
-                                     cell.getQuantizedNbBits(), 
+                                     qBits,
                                      DeepNetExport::isCellOutputUnsigned(cell));
     }
-    
+
 #ifdef CUDA
     template<typename T>
-    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output) const {
+    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
         cudaSingleShiftScaling_propagate(CudaContext::getDeviceProp(),
                                          input.getDevicePtr(), output.getDevicePtr(),
                                          input.dimB(), input.dimZ(), 
                                          input.dimY(), input.dimX(),
+                                         isClipped,
+                                         mCudaClippingPerOutput.getDevicePtr(),
                                          mCudaScalingPerOutput.getDevicePtr(), 
-                                         cell.getQuantizedNbBits(), 
+                                         qBits,
                                          DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif
 
 private:
     std::vector<unsigned char> mScalingPerOutput;
+    bool isClipped;
+    std::vector<Float_T> mClippingPerOutput;
 
 #ifdef CUDA
     CudaTensor<unsigned char> mCudaScalingPerOutput;
+    CudaTensor<Float_T> mCudaClippingPerOutput;
 #endif
 };
 
@@ -220,46 +270,64 @@ private:
  */
 class DoubleShiftScaling: public AbstractScaling {
 public:
-    DoubleShiftScaling(std::vector<std::pair<unsigned char, unsigned char>> scaling)
-                                : mScalingPerOutput(std::move(scaling)) 
+    DoubleShiftScaling(std::vector<std::pair<unsigned char, unsigned char>> scaling, bool isclipped, 
+                       std::vector<std::pair<unsigned char, unsigned char>> clipping) : 
+                       mScalingPerOutput(std::move(scaling)),  
+                       isClipped(isclipped), 
+                       mClippingPerOutput(std::move(clipping))
     {
 #ifdef CUDA
         mCudaScalingPerOutput.push_back(mScalingPerOutput);
+        mCudaClippingPerOutput.push_back(mClippingPerOutput);
 #endif
     }
 
     const std::vector<std::pair<unsigned char, unsigned char>>& getScalingPerOutput() const {
         return mScalingPerOutput;
     }
+
+    const std::vector<std::pair<unsigned char, unsigned char>>& getClippingPerOutput() const {
+        return mClippingPerOutput;
+    }
+
+    bool getIsClipped() const {
+        return isClipped;
+    }
     
     template<typename T>
-    void propagate(const Cell& cell, const Tensor<T>& input, Tensor<T>& output) const {
+    void propagate(const Cell& cell, const Tensor<T>& input, Tensor<T>& output, const std::size_t qBits) const {
         doubleShiftScaling_propagate(input, output,
                                      input.dimB(), input.dimZ(), 
                                      input.dimY(), input.dimX(),
+                                     isClipped, mClippingPerOutput,
                                      mScalingPerOutput, 
-                                     cell.getQuantizedNbBits(), 
+                                     qBits,
                                      DeepNetExport::isCellOutputUnsigned(cell));
     }
-    
+
 #ifdef CUDA
     template<typename T>
-    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output) const {
+    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
         cudaDoubleShiftScaling_propagate(CudaContext::getDeviceProp(),
                                          input.getDevicePtr(), output.getDevicePtr(),
                                          input.dimB(), input.dimZ(), 
                                          input.dimY(), input.dimX(),
+                                         isClipped,
+                                         mCudaClippingPerOutput.getDevicePtr(),
                                          mCudaScalingPerOutput.getDevicePtr(), 
-                                         cell.getQuantizedNbBits(), 
+                                         qBits,
                                          DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif
 
 private:
     std::vector<std::pair<unsigned char, unsigned char>> mScalingPerOutput;
+    bool isClipped;
+    std::vector<std::pair<unsigned char, unsigned char>> mClippingPerOutput;
 
 #ifdef CUDA
     CudaTensor<std::pair<unsigned char, unsigned char>> mCudaScalingPerOutput;
+    CudaTensor<std::pair<unsigned char, unsigned char>> mCudaClippingPerOutput;
 #endif
 };
 
@@ -268,32 +336,40 @@ class Scaling {
 public:
     Scaling();
 
-    static Scaling floatingPointScaling(std::vector<Float_T> scalingPerOutput) {
+    static Scaling floatingPointScaling(std::vector<Float_T> scalingPerOutput, 
+                                        bool isclipped, std::vector<Float_T> clippingPerOutput) 
+    {
         return Scaling(ScalingMode::FLOAT_MULT, 
-                       Utils::make_unique<FloatingPointScaling>(std::move(scalingPerOutput)));
+                       Utils::make_unique<FloatingPointScaling>(std::move(scalingPerOutput), isclipped, std::move(clippingPerOutput)));
     }
 
     static Scaling fixedPointScaling(ScalingMode mode,
                                      std::size_t nbFractionalBits, 
-                                     std::vector<std::int32_t> scalingPerOutput) 
+                                     std::vector<std::int32_t> scalingPerOutput,
+                                     bool isclipped, std::vector<Float_T> clippingPerOutput) 
     {
         assert(mode == ScalingMode::FIXED_MULT16
                 || mode == ScalingMode::FIXED_MULT32);
         return Scaling(mode, 
                        Utils::make_unique<FixedPointScaling>(nbFractionalBits, 
-                                                             std::move(scalingPerOutput)));
+                                                             std::move(scalingPerOutput), isclipped, std::move(clippingPerOutput)));
     }
 
-    static Scaling singleShiftScaling(std::vector<unsigned char> scalingPerOutput) {
+    static Scaling singleShiftScaling(std::vector<unsigned char> scalingPerOutput,
+                                      bool isclipped, std::vector<Float_T> clippingPerOutput) 
+    {
         return Scaling(ScalingMode::SINGLE_SHIFT, 
-                       Utils::make_unique<SingleShiftScaling>(std::move(scalingPerOutput)));
+                       Utils::make_unique<SingleShiftScaling>(std::move(scalingPerOutput), isclipped, std::move(clippingPerOutput)));
     }
 
     static Scaling doubleShiftScaling(std::vector<std::pair<unsigned char, 
-                                                            unsigned char>> scalingPerOutput) 
+                                                            unsigned char>> scalingPerOutput,
+                                      bool isclipped,
+                                      std::vector<std::pair<unsigned char, 
+                                                            unsigned char>> clippingPerOutput) 
     {
         return Scaling(ScalingMode::DOUBLE_SHIFT, 
-                       Utils::make_unique<DoubleShiftScaling>(std::move(scalingPerOutput)));
+                       Utils::make_unique<DoubleShiftScaling>(std::move(scalingPerOutput), isclipped, std::move(clippingPerOutput)));
     }
 
     ScalingMode getMode() const {
@@ -322,40 +398,41 @@ public:
     }
 
     template<class T>
-    void propagate(const Cell& cell, Tensor<T>& data) const;
+    void propagate(const Cell& cell, Tensor<T>& data, const std::size_t qBits = 0) const;
 
     template<class T>
-    void propagate(const Cell& cell, const Tensor<T>& input, Tensor<T>& output) const;
+    void propagate(const Cell& cell, const Tensor<T>& input, Tensor<T>& output, const std::size_t qBits = 0) const;
 
     template<class T>
     void backPropagate(const Cell& cell, const Tensor<T>& diffInput, Tensor<T>& diffOutput) const;
 
 #ifdef CUDA
     template<class T>
-    void propagate(const Cell& cell, CudaTensor<T>& data) const;
+    void propagate(const Cell& cell, CudaTensor<T>& data, const std::size_t qBits = 0) const;
 
     template<class T>
-    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output) const;
+    void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits = 0) const;
 
     template<class T>
     void backPropagate(const Cell& cell, const CudaTensor<T>& diffInput, CudaTensor<T>& diffOutput) const;
 #endif
 
 private:
+    //Scaling(ScalingMode mode, std::unique_ptr<AbstractScaling> scaling, bool isclipped, std::unique_ptr<AbstractScaling> clipping);
     Scaling(ScalingMode mode, std::unique_ptr<AbstractScaling> scaling);
 
 private:
     ScalingMode mMode;
-    std::unique_ptr<AbstractScaling> mScaling;
+    std::shared_ptr<AbstractScaling> mScaling;
 };
 
 template<class T>
-inline void Scaling::propagate(const Cell& cell, Tensor<T>& data) const {
-    propagate(cell, data, data);
+inline void Scaling::propagate(const Cell& cell, Tensor<T>& data, const std::size_t qBits) const {
+    propagate(cell, data, data, qBits);
 }
 
 template<class T>
-inline void Scaling::propagate(const Cell& cell, const Tensor<T>& input, Tensor<T>& output) const {
+inline void Scaling::propagate(const Cell& cell, const Tensor<T>& input, Tensor<T>& output, const std::size_t qBits) const {
     assert(input.size() == output.size());
     
     switch(mMode) {
@@ -364,17 +441,17 @@ inline void Scaling::propagate(const Cell& cell, const Tensor<T>& input, Tensor<
             output = input;
             break;
         case ScalingMode::FLOAT_MULT:
-            static_cast<const FloatingPointScaling&>(*mScaling).propagate(cell, input, output);
+            static_cast<const FloatingPointScaling&>(*mScaling).propagate(cell, input, output, qBits);
             break;
         case ScalingMode::FIXED_MULT16:
         case ScalingMode::FIXED_MULT32:
-            static_cast<const FixedPointScaling&>(*mScaling).propagate(cell, input, output);
+            static_cast<const FixedPointScaling&>(*mScaling).propagate(cell, input, output, qBits);
             break;
         case ScalingMode::SINGLE_SHIFT:
-            static_cast<const SingleShiftScaling&>(*mScaling).propagate(cell, input, output);
+            static_cast<const SingleShiftScaling&>(*mScaling).propagate(cell, input, output, qBits);
             break;
         case ScalingMode::DOUBLE_SHIFT:
-            static_cast<const DoubleShiftScaling&>(*mScaling).propagate(cell, input, output);
+            static_cast<const DoubleShiftScaling&>(*mScaling).propagate(cell, input, output, qBits);
             break;
         default:
             throw std::runtime_error("Unsupported scaling propagation.");
@@ -397,29 +474,30 @@ inline void Scaling::backPropagate(const Cell& /*cell*/,
 
 #ifdef CUDA
 template<class T>
-inline void Scaling::propagate(const Cell& cell, CudaTensor<T>& data) const {
-    propagate(cell, data, data);
+inline void Scaling::propagate(const Cell& cell, CudaTensor<T>& data, const std::size_t qBits) const {
+    propagate(cell, data, data, qBits);
 }
 
 template<class T>
-inline void Scaling::propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output) const {
+inline void Scaling::propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
+    assert(input.size() == output.size());
     switch(mMode) {
         case ScalingMode::NONE:
             // in-place is OK with no overhead: operator=() check that
             output.deviceTensor() = input.deviceTensor();
             break;
         case ScalingMode::FLOAT_MULT:
-            static_cast<const FloatingPointScaling&>(*mScaling).propagate(cell, input, output);
+            static_cast<const FloatingPointScaling&>(*mScaling).propagate(cell, input, output, qBits);
             break;
         case ScalingMode::FIXED_MULT16:
         case ScalingMode::FIXED_MULT32:
-            static_cast<const FixedPointScaling&>(*mScaling).propagate(cell, input, output);
+            static_cast<const FixedPointScaling&>(*mScaling).propagate(cell, input, output, qBits);
             break;
         case ScalingMode::SINGLE_SHIFT:
-            static_cast<const SingleShiftScaling&>(*mScaling).propagate(cell, input, output);
+            static_cast<const SingleShiftScaling&>(*mScaling).propagate(cell, input, output, qBits);
             break;
         case ScalingMode::DOUBLE_SHIFT:
-            static_cast<const DoubleShiftScaling&>(*mScaling).propagate(cell, input, output);
+            static_cast<const DoubleShiftScaling&>(*mScaling).propagate(cell, input, output, qBits);
             break;
         default:
             throw std::runtime_error("Unsupported scaling propagation.");

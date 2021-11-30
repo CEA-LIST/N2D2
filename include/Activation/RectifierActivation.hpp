@@ -44,7 +44,12 @@ public:
     };
 
     std::pair<double, double> getOutputRange() const;
-
+    double getLeakSlope(){
+        return mLeakSlope;
+    };
+    double getClipping(){
+        return mClipping;
+    };
     virtual ~RectifierActivation() {};
 
 protected:

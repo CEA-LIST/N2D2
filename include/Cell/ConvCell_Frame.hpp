@@ -75,8 +75,22 @@ public:
                                                     activation);
     }
 
+    void resetWeights();
+    void resetBias();
+    void resetWeightsSolver(const std::shared_ptr<Solver>& solver)
+    {
+        setWeightsSolver(solver);
+        for (unsigned int k = 0, size = mWeightsSolvers.size(); k < size; ++k) {
+            mWeightsSolvers[k] = mWeightsSolver->clone();
+        }
+    };
+
     virtual void setExtendedPadding(const std::vector<int>& paddingDims);
     virtual void initialize();
+    virtual void initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs);
+    virtual void initializeWeightQuantizer();
+    virtual void check_input();
+    virtual void initializeDataDependent();
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);
     virtual void propagate(bool inference = false);
@@ -92,6 +106,21 @@ public:
 
         value.resize(sharedSynapses[output][channel].dims());
         value = sharedSynapses[output][channel];
+    };
+    inline void getQuantWeight(unsigned int output,
+                          unsigned int channel,
+                          BaseTensor& value) const
+    {
+        if (!mQuantizer)
+            return;
+
+        const Tensor<T>& sharedSynapses
+            = tensor_cast<T>(mQuantizer->getQuantizedWeights(mSharedSynapses.getTensorIndex(channel)));
+        channel -= mSharedSynapses.getTensorDataOffset(channel);
+
+        value.resize(sharedSynapses[output][channel].dims());
+        value = sharedSynapses[output][channel];
+
     };
     inline void getBias(unsigned int output, BaseTensor& value) const
     {

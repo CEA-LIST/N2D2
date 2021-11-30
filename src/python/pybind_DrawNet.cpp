@@ -1,7 +1,7 @@
 /*
-    (C) Copyright 2010 CEA LIST. All Rights Reserved.
-    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
-                    Damien QUERLIOZ (damien.querlioz@cea.fr)
+    (C) Copyright 2021 CEA LIST. All Rights Reserved.
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
+                    Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -20,6 +20,7 @@
 */
 
 #ifdef PYBIND
+
 #include "DeepNet.hpp"
 #include "DrawNet.hpp"
 
@@ -34,4 +35,6 @@ void init_DrawNet(py::module &m) {
     .def_static("drawGraph", &DrawNet::drawGraph, py::arg("deepNet"), py::arg("fileName"));
 }
 }
+
 #endif
+

@@ -73,6 +73,9 @@ public:
     const std::vector<double>& getFirstValue() const { return mFirstValue; }
     const Operator& getSecondOperator() const { return mSecondOperator; }
     const std::vector<double>& getSecondValue() const { return mSecondValue; }
+    bool getTruncate(){
+        return mTruncate;
+    };
     virtual ~RangeAffineTransformation() {};
 
 private:

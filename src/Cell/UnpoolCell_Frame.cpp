@@ -127,7 +127,7 @@ void N2D2::UnpoolCell_Frame::propagate(bool inference)
 
 void N2D2::UnpoolCell_Frame::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (!mDiffInputs.isValid())
         return;
 
     Cell_Frame<Float_T>::backPropagate();
@@ -137,6 +137,11 @@ void N2D2::UnpoolCell_Frame::backPropagate()
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mDiffOutputs[k].empty()) {
+            offset += mInputs[k].dimZ();
+            continue;
+        }
+
         const Float_T beta = (mDiffOutputs[k].isValid()) ? 1.0 : 0.0;
 
         Tensor<Float_T> diffOutput = (mDiffOutputs[k].isValid())
@@ -177,6 +182,7 @@ void N2D2::UnpoolCell_Frame::backPropagate()
 
 void N2D2::UnpoolCell_Frame::update()
 {
+    Cell_Frame<float>::update();
 }
 
 void N2D2::UnpoolCell_Frame::checkGradient(double epsilon, double maxError)
@@ -189,17 +195,19 @@ void N2D2::UnpoolCell_Frame::checkGradient(double epsilon, double maxError)
                   std::bind(&UnpoolCell_Frame::backPropagate, this),
                   (mPooling == Max));
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int k = 0; k < mInputs.size(); ++k) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << k << "]";
-
-            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

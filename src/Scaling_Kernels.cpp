@@ -24,6 +24,7 @@
 #include "third_party/half.hpp"
 #include "utils/Utils.hpp"
 
+using N2D2::Float_T;
 
 template<typename T>
 T saturate(T value, std::size_t quantizedNbBits, bool isOutputUnsigned) {
@@ -38,9 +39,31 @@ T saturate(T value, std::size_t quantizedNbBits, bool isOutputUnsigned) {
 }
 
 template<typename T>
+T Clip(T value, Float_T clip) {
+    T res = T(0.0);
+
+    if(clip > 0.0) {
+        res = (value < T(0.0)) ? T(0.0) : (value > T(clip)) ? T(clip) : value;
+    }
+    if(clip <= 0.0) {
+        res = (value > T(0.0)) ? T(0.0) : (value < T(clip)) ? T(clip) : value;
+    }
+
+    return res;
+}
+
+template<typename T>
+T Scale(T value, Float_T scale) {
+    T res = value*T(scale);
+    return res;
+}
+
+template<typename T>
 void N2D2::floatingPointScaling_propagate(const Tensor<T>& input, Tensor<T>& output,
                                           std::size_t batchSize, std::size_t nbChannels,
                                           std::size_t height, std::size_t width,
+                                          bool isClipped,
+                                          const std::vector<Float_T>& clippingFactorPerChannel,
                                           const std::vector<Float_T>& scalingFactorPerChannel,
                                           std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
@@ -49,12 +72,14 @@ void N2D2::floatingPointScaling_propagate(const Tensor<T>& input, Tensor<T>& out
         for(std::size_t ch = 0; ch < nbChannels; ch++) {
             for(std::size_t y = 0; y < height; y++) {
                 for(std::size_t x = 0; x < width; x++) {
-                    auto res = input(index)*scalingFactorPerChannel[ch];
+
+                    T res = isClipped ? Clip(input(index), clippingFactorPerChannel[ch])
+                                    : input(index);
+                    res = Scale(res, scalingFactorPerChannel[ch]);
+
                     if(quantizedNbBits > 0) {
                         res = saturate(std::round(res), quantizedNbBits, isOutputUnsigned);
                     }
-
-
                     output(index) = (T) res;
                     index++;
                 }
@@ -67,6 +92,8 @@ template<typename T>
 void N2D2::fixedPointScaling_propagate(const Tensor<T>& input, Tensor<T>& output,
                                        std::size_t batchSize, std::size_t nbChannels,
                                        std::size_t height, std::size_t width,
+                                       bool isClipped,
+                                       const std::vector<Float_T>& clippingFactorPerChannel,
                                        const std::vector<std::int32_t>& scalingFactorPerChannel, 
                                        std::size_t nbFractionalBits,
                                        std::size_t quantizedNbBits, bool isOutputUnsigned)
@@ -80,12 +107,18 @@ void N2D2::fixedPointScaling_propagate(const Tensor<T>& input, Tensor<T>& output
         for(std::size_t ch = 0; ch < nbChannels; ch++) {
             for(std::size_t y = 0; y < height; y++) {
                 for(std::size_t x = 0; x < width; x++) {
+
+                    T realInput = isClipped ? Clip(input(index), clippingFactorPerChannel[ch])
+                                    : input(index);
+
                     const long long half = (nbFractionalBits > 0)
                         ? (1ll << (nbFractionalBits - 1))
                         : 0ll;
-                    const long long val = static_cast<long long>(std::round(input(index)));
-                    const long long res = (val*scalingFactorPerChannel[ch] + half) >> nbFractionalBits;
 
+                    long long rInput = round(realInput);
+                    const long long res = (
+                        static_cast<long long>(rInput) * scalingFactorPerChannel[ch] + half
+                    )  >> nbFractionalBits;
 
                     output(index) = saturate(res, quantizedNbBits, isOutputUnsigned);
                     index++;
@@ -99,6 +132,8 @@ template<typename T>
 void N2D2::singleShiftScaling_propagate(const Tensor<T>& input, Tensor<T>& output,
                                         std::size_t batchSize, std::size_t nbChannels,
                                         std::size_t height, std::size_t width,
+                                        bool /*isClipped*/,
+                                        const std::vector<Float_T>& /*clippingFactorPerChannel*/,
                                         const std::vector<unsigned char>& scalingFactorPerChannel,
                                         std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
@@ -111,6 +146,7 @@ void N2D2::singleShiftScaling_propagate(const Tensor<T>& input, Tensor<T>& outpu
         for(std::size_t ch = 0; ch < nbChannels; ch++) {
             for(std::size_t y = 0; y < height; y++) {
                 for(std::size_t x = 0; x < width; x++) {
+                    //TODO::add clipping here properly, nothing for now
                     const long long half = (scalingFactorPerChannel[ch] > 0)
                         ? (1ll << (scalingFactorPerChannel[ch] - 1ll))
                         : 0ll;
@@ -130,6 +166,8 @@ template<typename T>
 void N2D2::doubleShiftScaling_propagate(const Tensor<T>& input, Tensor<T>& output,
                 std::size_t batchSize, std::size_t nbChannels,
                 std::size_t height, std::size_t width,
+                bool /*isClipped*/,
+                const std::vector<std::pair<unsigned char, unsigned char>>& /*clippingFactorPerChannel*/,
                 const std::vector<std::pair<unsigned char, unsigned char>>& scalingFactorPerChannel,
                 std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
@@ -142,6 +180,7 @@ void N2D2::doubleShiftScaling_propagate(const Tensor<T>& input, Tensor<T>& outpu
         for(std::size_t ch = 0; ch < nbChannels; ch++) {
             for(std::size_t y = 0; y < height; y++) {
                 for(std::size_t x = 0; x < width; x++) {
+                    //TODO::add clipping here properly, nothing for now
                     const long long half = (scalingFactorPerChannel[ch].second > 0)
                         ? (1ll << (scalingFactorPerChannel[ch].second - 1ll))
                         : 0ll;
@@ -167,18 +206,24 @@ void N2D2::doubleShiftScaling_propagate(const Tensor<T>& input, Tensor<T>& outpu
 template void N2D2::floatingPointScaling_propagate<float>(const N2D2::Tensor<float>& input, N2D2::Tensor<float>& output,
                                                           std::size_t batchSize, std::size_t nbChannels,
                                                           std::size_t height, std::size_t width,
+                                                          bool isClipped,
+                                                          const std::vector<Float_T>& clippingFactorPerChannel,
                                                           const std::vector<Float_T>& scalingFactorPerChannel,
                                                           std::size_t quantizedNbBits, bool isOutputUnsigned);
 
 template void N2D2::floatingPointScaling_propagate<double>(const N2D2::Tensor<double>& input, N2D2::Tensor<double>& output,
                                                            std::size_t batchSize, std::size_t nbChannels,
                                                            std::size_t height, std::size_t width,
+                                                           bool isClipped,
+                                                           const std::vector<Float_T>& clippingFactorPerChannel,
                                                            const std::vector<Float_T>& scalingFactorPerChannel,
                                                            std::size_t quantizedNbBits, bool isOutputUnsigned);
 
 template void N2D2::floatingPointScaling_propagate<half_float::half>(const N2D2::Tensor<half_float::half>& input, N2D2::Tensor<half_float::half>& output,
                                                                      std::size_t batchSize, std::size_t nbChannels,
                                                                      std::size_t height, std::size_t width,
+                                                                     bool isClipped,
+                                                                     const std::vector<Float_T>& clippingFactorPerChannel,
                                                                      const std::vector<Float_T>& scalingFactorPerChannel,
                                                                      std::size_t quantizedNbBits, bool isOutputUnsigned);
 
@@ -186,16 +231,22 @@ template void N2D2::floatingPointScaling_propagate<half_float::half>(const N2D2:
 template void N2D2::fixedPointScaling_propagate<float>(const N2D2::Tensor<float>& input, N2D2::Tensor<float>& output,
                                                        std::size_t batchSize, std::size_t nbChannels,
                                                        std::size_t height, std::size_t width,
+                                                       bool /*isClipped*/,
+                                                       const std::vector<Float_T>& /*clippingFactorPerChannel*/,
                                                        const std::vector<std::int32_t>& scalingFactorPerChannel, std::size_t nbFractionalBits,
                                                        std::size_t quantizedNbBits, bool isOutputUnsigned);
 template void N2D2::fixedPointScaling_propagate<double>(const N2D2::Tensor<double>& input, N2D2::Tensor<double>& output,
                                                         std::size_t batchSize, std::size_t nbChannels,
                                                         std::size_t height, std::size_t width,
+                                                        bool /*isClipped*/,
+                                                        const std::vector<Float_T>& /*clippingFactorPerChannel*/,
                                                         const std::vector<std::int32_t>& scalingFactorPerChannel, std::size_t nbFractionalBits,
                                                         std::size_t quantizedNbBits, bool isOutputUnsigned);
 template void N2D2::fixedPointScaling_propagate<half_float::half>(const N2D2::Tensor<half_float::half>& input, N2D2::Tensor<half_float::half>& output,
                                                                   std::size_t batchSize, std::size_t nbChannels,
                                                                   std::size_t height, std::size_t width,
+                                                                  bool /*isClipped*/,
+                                                                  const std::vector<Float_T>& /*clippingFactorPerChannel*/,
                                                                   const std::vector<std::int32_t>& scalingFactorPerChannel, std::size_t nbFractionalBits,
                                                                   std::size_t quantizedNbBits, bool isOutputUnsigned);
 
@@ -203,16 +254,22 @@ template void N2D2::fixedPointScaling_propagate<half_float::half>(const N2D2::Te
 template void N2D2::singleShiftScaling_propagate<float>(const N2D2::Tensor<float>& input, N2D2::Tensor<float>& output,
                                                         std::size_t batchSize, std::size_t nbChannels,
                                                         std::size_t height, std::size_t width,
+                                                        bool /*isClipped*/,
+                                                        const std::vector<Float_T>& /*clippingFactorPerChannel*/,
                                                         const std::vector<unsigned char>& scalingFactorPerChannel,
                                                         std::size_t quantizedNbBits, bool isOutputUnsigned);
 template void N2D2::singleShiftScaling_propagate<double>(const N2D2::Tensor<double>& input, N2D2::Tensor<double>& output,
                                                          std::size_t batchSize, std::size_t nbChannels,
                                                          std::size_t height, std::size_t width,
+                                                         bool /*isClipped*/,
+                                                         const std::vector<Float_T>& /*clippingFactorPerChannel*/,
                                                          const std::vector<unsigned char>& scalingFactorPerChannel,
                                                          std::size_t quantizedNbBits, bool isOutputUnsigned);
 template void N2D2::singleShiftScaling_propagate<half_float::half>(const N2D2::Tensor<half_float::half>& input, N2D2::Tensor<half_float::half>& output,
                                                                    std::size_t batchSize, std::size_t nbChannels,
                                                                    std::size_t height, std::size_t width,
+                                                                   bool /*isClipped*/,
+                                                                   const std::vector<Float_T>& /*clippingFactorPerChannel*/,
                                                                    const std::vector<unsigned char>& scalingFactorPerChannel,
                                                                    std::size_t quantizedNbBits, bool isOutputUnsigned);
 
@@ -220,15 +277,21 @@ template void N2D2::singleShiftScaling_propagate<half_float::half>(const N2D2::T
 template void N2D2::doubleShiftScaling_propagate<float>(const N2D2::Tensor<float>& input, N2D2::Tensor<float>& output,
                                                             std::size_t batchSize, std::size_t nbChannels,
                                                             std::size_t height, std::size_t width,
+                                                            bool /*isClipped*/,
+                                                            const std::vector<std::pair<unsigned char, unsigned char>>& /*clippingFactorPerChannel*/,
                                                             const std::vector<std::pair<unsigned char, unsigned char>>& scalingFactorPerChannel,
                                                             std::size_t quantizedNbBits, bool isOutputUnsigned);
 template void N2D2::doubleShiftScaling_propagate<double>(const N2D2::Tensor<double>& input, N2D2::Tensor<double>& output,
                                                              std::size_t batchSize, std::size_t nbChannels,
                                                              std::size_t height, std::size_t width,
+                                                             bool /*isClipped*/,
+                                                             const std::vector<std::pair<unsigned char, unsigned char>>& /*clippingFactorPerChannel*/,
                                                              const std::vector<std::pair<unsigned char, unsigned char>>& scalingFactorPerChannel,
                                                              std::size_t quantizedNbBits, bool isOutputUnsigned);
 template void N2D2::doubleShiftScaling_propagate<half_float::half>(const N2D2::Tensor<half_float::half>& input, N2D2::Tensor<half_float::half>& output,
                                                                        std::size_t batchSize, std::size_t nbChannels,
                                                                        std::size_t height, std::size_t width,
+                                                                       bool /*isClipped*/,
+                                                                       const std::vector<std::pair<unsigned char, unsigned char>>& /*clippingFactorPerChannel*/,
                                                                        const std::vector<std::pair<unsigned char, unsigned char>>& scalingFactorPerChannel,
                                                                        std::size_t quantizedNbBits, bool isOutputUnsigned);

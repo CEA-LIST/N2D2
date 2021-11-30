@@ -82,8 +82,21 @@ public:
     virtual void replaceInput(BaseTensor& oldInputs,
                               BaseTensor& newInputs,
                               BaseTensor& newDiffOutputs);
+
+    virtual void clearInputTensors();
+    virtual void clearOutputTensors();
+    virtual void initializeParameters(unsigned int /*nbChannels*/, unsigned int /*nbInputs*/){};
+    virtual void initializeDataDependent();
+    virtual void linkInput(Cell* cell);
+    virtual void linkInput(StimuliProvider& sp,  
+                    unsigned int x0,
+                    unsigned int y0,
+                    unsigned int width,
+                    unsigned int height);
+    
     virtual void propagate(bool inference = false);
     virtual void backPropagate();
+    virtual void update();
     virtual void setOutputTarget(const Tensor<int>& targets);
     virtual double applyLoss(double targetVal,
                              double defaultVal);
@@ -117,6 +130,16 @@ public:
     {
         return mDiffInputs;
     }
+    void setDiffInputsValid()
+    {
+        mDiffInputs.setValid();        
+    }    
+    void setDiffInputs(Tensor<float>& diffInputs)
+    {
+        mDiffInputs = diffInputs;
+    }
+    virtual std::string getPyDataType();
+    virtual std::string getPyModel();
     virtual BaseTensor& getDiffOutputs(unsigned int index = 0) {
         return mDiffOutputs[index];
     }
@@ -124,6 +147,8 @@ public:
         return mDiffOutputs[index];
     }
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const;
+    void exportActivationParameters(const std::string& dirName) const;
+    void importActivationParameters(const std::string& dirName, bool ignoreNotExists);
     bool isCuda() const
     {
         return false;

@@ -293,8 +293,9 @@ void N2D2::ConvCellGenerator::generateParams(const std::shared_ptr<ConvCell>& ce
                                                                    dataType,
                                                                 "BiasSolver");
 
-    if (biasSolver)
+    if (biasSolver){
         cell->setBiasSolver(biasSolver);
+    }
 
     std::shared_ptr<Solver> weightsSolver = SolverGenerator::generate(iniConfig,
                                                                       section,
@@ -302,8 +303,26 @@ void N2D2::ConvCellGenerator::generateParams(const std::shared_ptr<ConvCell>& ce
                                                                       dataType,
                                                             "WeightsSolver");
 
-    if (weightsSolver)
+    if (weightsSolver){
         cell->setWeightsSolver(weightsSolver);
+    }
+
+    std::shared_ptr<QuantizerCell> quantizer = QuantizerCellGenerator::generate(iniConfig,
+                                                                        section,
+                                                                        model,
+                                                                        dataType, 
+                                                                    "QWeight");
+
+    if (quantizer) {
+        cell->setQuantizer(quantizer);
+
+        std::shared_ptr<Solver> quantizerSolver
+            = SolverGenerator::generate(iniConfig, section, model, dataType, "QWeightSolver");
+
+        if (quantizerSolver) {
+            cell->getQuantizer()->setSolver(quantizerSolver);
+        }
+    }
 
     std::map<std::string, std::string> params = getConfig(model, iniConfig);
 
@@ -316,6 +335,16 @@ void N2D2::ConvCellGenerator::generateParams(const std::shared_ptr<ConvCell>& ce
         cell->getWeightsSolver()->setPrefixedParameters(params, "Solvers.");
         cell->getWeightsSolver()->setPrefixedParameters(params,
                                                         "WeightsSolver.");
+    }
+    if (cell->getQuantizer()) {
+        std::cout << "Added " <<  cell->getQuantizer()->getType() << 
+            " quantizer to " << cell->getName() << std::endl; 
+        cell->getQuantizer()->setPrefixedParameters(params, "QWeight.");
+        if (cell->getQuantizer()->getSolver()) {
+            std::cout << "Added " << cell->getQuantizer()->getSolver()->getType() << 
+             " quantizer solver to " << cell->getName() << std::endl; 
+            cell->getQuantizer()->setPrefixedParameters(params, "QWeightSolver.");
+        }
     }
 
     // Will be processed in postGenerate

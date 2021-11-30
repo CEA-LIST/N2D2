@@ -66,6 +66,14 @@ void N2D2::TransposeCell_Frame_CUDA<T>::initialize()
     }
 }
 
+
+template <class T>
+void N2D2::TransposeCell_Frame_CUDA<T>::initializeDataDependent()
+{
+    Cell_Frame_CUDA<T>::initializeDataDependent();
+    initialize();
+}
+
 template <class T>
 void N2D2::TransposeCell_Frame_CUDA<T>::propagate(bool inference)
 {
@@ -88,6 +96,7 @@ void N2D2::TransposeCell_Frame_CUDA<T>::propagate(bool inference)
 
     Cell_Frame_CUDA<T>::propagate(inference);
     mDiffInputs.clearValid();
+
 }
 
 template <class T>
@@ -98,7 +107,7 @@ void N2D2::TransposeCell_Frame_CUDA<T>::backPropagate()
 
     Cell_Frame_CUDA<T>::backPropagate();
 
-    if (!mDiffOutputs.empty()) {
+    if (!mDiffOutputs[0].empty()) {
         const std::vector<int> invPerm = getInversePermutation();
 
         mDiffInputs.synchronizeHBasedToD();
@@ -111,10 +120,10 @@ void N2D2::TransposeCell_Frame_CUDA<T>::backPropagate()
         cudaCopyTranspose(CudaContext::getDeviceProp(),
                         mDiffInputs.getDevicePtr(),
                         diffOutput->getDevicePtr(),
-                        mDiffInputs[0].dimX(),
-                        mDiffInputs[0].dimY(),
-                        mDiffInputs[0].dimZ(),
-                        mDiffInputs[0].dimB(),
+                        mDiffInputs.dimX(),
+                        mDiffInputs.dimY(),
+                        mDiffInputs.dimZ(),
+                        mDiffInputs.dimB(),
                         invPerm[0],
                         invPerm[1],
                         invPerm[2],
@@ -141,17 +150,19 @@ void N2D2::TransposeCell_Frame_CUDA<T>::checkGradient(double epsilon, double max
                   std::bind(&TransposeCell_Frame_CUDA<T>::propagate, this, false),
                   std::bind(&TransposeCell_Frame_CUDA<T>::backPropagate, this));
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int k = 0; k < mInputs.size(); ++k) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << k << "]";
-
-            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

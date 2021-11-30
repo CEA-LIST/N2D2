@@ -18,8 +18,8 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifndef N2D2_DEEP_NET_QUANTIZATION_H
-#define N2D2_DEEP_NET_QUANTIZATION_H
+#ifndef N2D2_DEEP_NET_QUANTIZER_H
+#define N2D2_DEEP_NET_QUANTIZER_H
 
 #include <string>
 #include <unordered_map>
@@ -27,6 +27,7 @@
 
 #include "Histogram.hpp"
 #include "ScalingMode.hpp"
+#include "utils/Registrar.hpp"
 
 namespace N2D2 {
 
@@ -60,6 +61,33 @@ public:
                          ScalingMode actScalingMode,
                          bool rescalePerOutputChannel,
                          double quantileValue = 0.9999);
+protected:
+    DeepNet& mDeepNet;
+    std::string getCellModelType(const Cell& cell);
+    /**
+     * Approximate the multiplicative scaling factor by an addition of power of two divisions.
+     * 
+     * The following multiplication '1231 * 0.0119 = 14.6489' can be approximate with 
+     *
+     * - one power of two divison:
+     *       1231/128 = 9.6172 (precision of (1/0.0119)/128 = 0.6565)
+     * 
+     * - two power of two divisions:
+     *       1231/128 + 1231/256 = 14.4258 (precision of (1/0.0119)/128 + (1/0.0119)/256 = 0.9848)
+     * 
+     * - three power of two divisions:
+     *       1231/128 + 1231/256 + 1231/8192 = 14.5760 (precision  of (1/0.0119)/128 + 
+     *                                                                (1/0.0119)/256 + 
+     *                                                                (1/0.0119)/8192 = 0.9950)
+     * 
+     * 
+     * Return a pair with a vector of exponents and the precision of the approximation.
+     */
+    static std::pair<std::vector<unsigned char>, double> approximateScalingWithPowerOf2Divs(
+                                                Float_T scaling, std::size_t nbDivisions);
+
+    static void approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
+                                       std::size_t nbBits);
 
 private:
     /**
@@ -92,7 +120,6 @@ private:
     void moveScalingCellAboveParentElemWiseCell(const std::shared_ptr<ScalingCell>& scalingCell, 
                                                 const std::shared_ptr<ElemWiseCell>& parentElemWiseCell);
 
-    std::string getCellModelType(const Cell& cell);
 
     long double getMaxParentsScaling(const std::shared_ptr<Cell>& cell, 
                                  const std::unordered_map<std::string, long double>& scalingForCells) const;
@@ -118,35 +145,9 @@ private:
                                                 const std::vector<Float_T>& scalingPerOutput, 
                                                 std::size_t nbDivisions);
 
-    /**
-     * Approximate the multiplicative scaling factor by an addition of power of two divisions.
-     * 
-     * The following multiplication '1231 * 0.0119 = 14.6489' can be approximate with 
-     *
-     * - one power of two divison:
-     *       1231/128 = 9.6172 (precision of (1/0.0119)/128 = 0.6565)
-     * 
-     * - two power of two divisions:
-     *       1231/128 + 1231/256 = 14.4258 (precision of (1/0.0119)/128 + (1/0.0119)/256 = 0.9848)
-     * 
-     * - three power of two divisions:
-     *       1231/128 + 1231/256 + 1231/8192 = 14.5760 (precision  of (1/0.0119)/128 + 
-     *                                                                (1/0.0119)/256 + 
-     *                                                                (1/0.0119)/8192 = 0.9950)
-     * 
-     * 
-     * Return a pair with a vector of exponents and the precision of the approximation.
-     */
-    static std::pair<std::vector<unsigned char>, double> approximateScalingWithPowerOf2Divs(
-                                                Float_T scaling, std::size_t nbDivisions);
 
-    static void approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
-                                       std::size_t nbBits);
 
-private:
-    DeepNet& mDeepNet;
 };
 
 }
-
 #endif
