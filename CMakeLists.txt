@@ -208,7 +208,7 @@ endif()
 
 find_package(OpenCV REQUIRED)
 target_link_libraries(n2d2_lib PUBLIC ${OpenCV_LIBS})
-target_include_directories(n2d2_lib SYSTEM PUBLIC ${OpenCV_INCLUDE_DIRS})
+target_include_directories(n2d2_lib PUBLIC ${OpenCV_INCLUDE_DIRS})
 
 find_package(Threads REQUIRED)
 target_link_libraries(n2d2_lib PUBLIC Threads::Threads)
