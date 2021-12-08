@@ -256,7 +256,7 @@ public:
         mUseDLA = useDla;
     };
 
-    void setMaxWorkSpaceSize(int maxWorkSpaceSize){
+    void setMaxWorkSpaceSize(int64_t maxWorkSpaceSize){
         mMaxWorkSpaceSize = maxWorkSpaceSize;
     };
 
@@ -299,7 +299,7 @@ public:
     nvinfer1::DataType mDataType = nvinfer1::DataType::kFLOAT;
     float* mDetectorThresholds = NULL;
     double mDetectorNMS = -1.0;
-    int mMaxWorkSpaceSize = 128;
+    int64_t mMaxWorkSpaceSize = 1073741824; // 1GB
     void createContext();
     void setIOMemory();
     void setTensorRTPrecision();

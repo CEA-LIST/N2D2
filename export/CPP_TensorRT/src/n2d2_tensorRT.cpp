@@ -192,7 +192,7 @@ void N2D2::Network::createContext()
 
         mNetBuilder->setMaxBatchSize(mMaxBatchSize);
         mNetBuilderConfig->setMinTimingIterations(mIterBuild);
-        mNetBuilderConfig->setMaxWorkspaceSize(mMaxWorkSpaceSize<<20);
+        mNetBuilderConfig->setMaxWorkspaceSize(mMaxWorkSpaceSize);
         if(mUseDLA) {
             mNetBuilderConfig->setDLACore(0) ;
             mNetBuilderConfig->setFlag(nvinfer1::BuilderFlag::kGPU_FALLBACK);
