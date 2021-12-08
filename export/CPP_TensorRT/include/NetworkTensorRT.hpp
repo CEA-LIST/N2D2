@@ -252,6 +252,14 @@ public:
         mDetectorNMS = nmsIoU;
     };
 
+    void useDLA(bool useDla){
+        mUseDLA = useDla;
+    };
+
+    void setMaxWorkSpaceSize(int64_t maxWorkSpaceSize){
+        mMaxWorkSpaceSize = maxWorkSpaceSize;
+    };
+
     std::size_t mMaxBatchSize = 1;
     std::size_t mDeviceID = 0;
     std::size_t mIterBuild = 1;
@@ -291,13 +299,14 @@ public:
     nvinfer1::DataType mDataType = nvinfer1::DataType::kFLOAT;
     float* mDetectorThresholds = NULL;
     double mDetectorNMS = -1.0;
-
+    int64_t mMaxWorkSpaceSize = 1073741824; // 1GB
     void createContext();
     void setIOMemory();
     void setTensorRTPrecision();
 #ifndef ONNX
     void setInternalDimensions();
 #endif
+
 
     void add_target(std::vector<nvinfer1::ITensor *> outputs_tensor,
                     unsigned int targetIdx);

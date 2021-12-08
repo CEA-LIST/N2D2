@@ -192,7 +192,7 @@ void N2D2::Network::createContext()
 
         mNetBuilder->setMaxBatchSize(mMaxBatchSize);
         mNetBuilderConfig->setMinTimingIterations(mIterBuild);
-        mNetBuilderConfig->setMaxWorkspaceSize(128<<20);
+        mNetBuilderConfig->setMaxWorkspaceSize(mMaxWorkSpaceSize);
         if(mUseDLA) {
             mNetBuilderConfig->setDLACore(0) ;
             mNetBuilderConfig->setFlag(nvinfer1::BuilderFlag::kGPU_FALLBACK);
@@ -240,7 +240,7 @@ void N2D2::Network::createContext()
 
         mNetBuilder->setMaxBatchSize(mMaxBatchSize);
         mNetBuilder->setMinFindIterations(mIterBuild);
-        mNetBuilder->setMaxWorkspaceSize(128<<20);
+        mNetBuilder->setMaxWorkspaceSize(mMaxWorkSpaceSize<<20);
 #if NV_TENSORRT_MAJOR < 5
         if(mDataType == nvinfer1::DataType::kHALF)
             mNetBuilder->setHalf2Mode(true);
@@ -3062,7 +3062,8 @@ BOOST_PYTHON_MODULE(N2D2)
         .def("setInputDims", &N2D2::Network::setInputDims)
         .def("setOutputNbTargets", &N2D2::Network::setOutputNbTargets)
         .def("setOutputTarget", &N2D2::Network::setOutputTarget)
-           
+        .def("useDLA", &N2D2::Network::useDLA)
+        .def("setMaxWorkSpaceSize", &N2D2::Network::setMaxWorkSpaceSize)
         .def("estimated", &N2D2::Network::estimatedPy)
 
         .def("getOutputNbTargets", &N2D2::Network::getOutputNbTargets)
