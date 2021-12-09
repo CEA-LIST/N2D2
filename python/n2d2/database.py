@@ -356,6 +356,9 @@ class Cityscapes(Database):
         :param single_instance_labels: If ``True``, convert group labels to single instance labels (for example, ``cargroup`` becomes ``car``), default=True
         :type single_instance_labels: boolean, optional 
         """
+        if not n2d2.global_variables.json_compiled:
+            raise RuntimeError("JSON.cpp is not installed")
+
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['inc_train_extra', 'use_coarse', 'single_instance_labels'])
