@@ -357,7 +357,9 @@ class Cityscapes(Database):
         :type single_instance_labels: boolean, optional 
         """
         if not n2d2.global_variables.json_compiled:
-            raise RuntimeError("JSON.cpp is not installed")
+            raise RuntimeError(
+                "JSON for C++ library not installed\n\n"
+                "\tPlease install the libjsoncpp-dev package and reinstall n2d2\n\n")
 
         N2D2_Interface.__init__(self, **config_parameters)
 

@@ -587,6 +587,13 @@ Cityscapes_Database
 
 Cityscapes database :cite:`Cordts2016Cityscapes`.
 
+``Warning`` Don't forget to install the **libjsoncpp-dev** package on your device if you wish to use this database.
+
+.. code-block:: bash
+
+        # To install JSON for C++ library on Ubuntu
+        sudo apt-get install libjsoncpp-dev
+
 +----------------------------------------+----------------------------------------------------------------------------------------------------------+
 | Option [default value]                 | Description                                                                                              |
 +========================================+==========================================================================================================+
