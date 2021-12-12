@@ -18,7 +18,7 @@ Development Status :: 5 - Production/Stable
 Intended Audience :: Developers
 Intended Audience :: Education
 Intended Audience :: Science/Research
-License :: OSI Approved :: CEA CNRS Inria Logiciel Libre License, version 2.1
+License :: OSI Approved :: CEA CNRS Inria Logiciel Libre License, version 2.1 (CeCILL-2.1)
 Programming Language :: C++
 Programming Language :: Python
 Programming Language :: Python :: 3
@@ -61,7 +61,7 @@ class CMakeBuild(build_ext):
             raise RuntimeError("CMake must be installed to build N2D2")
 
         # This lists the number of processors available on the machine
-        max_jobs = str(multiprocessing.cpu_count())
+        max_jobs = str(multiprocessing.cpu_count() / 2)
 
         cwd = pathlib.Path().absolute()
 
