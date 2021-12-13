@@ -3216,7 +3216,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                             *deepNet, 
                             node.output(0),
                             nbOutputs,
-                            Scaling::floatingPointScaling(scaling));
+                            Scaling::floatingPointScaling(scaling, false, std::vector<Float_T>(0.0f)));
 
                         if (constant.size() == 1) {
                             std::cout << "  scaling factor = " << constant(0)
