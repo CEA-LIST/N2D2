@@ -335,6 +335,9 @@ class ILSVRC2012(Database):
 class Cityscapes(Database):
     """
     Cityscapes database :cite:`Cordts2016Cityscapes`.
+
+    .. warning::
+        Don't forget to install the **libjsoncpp-dev** package on your device if you wish to use this database.
     """
 
     _type = "Cityscapes"
