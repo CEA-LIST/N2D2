@@ -114,7 +114,7 @@ endif
 
 ifdef PYBIND
   ifneq ($(PARENT),.)
-    SRC:=$(filter-out N2D2/src/python/pybind_N2D2.cpp,$(PARENT))
+    SRC:=$(filter-out N2D2/src/python/pybind_N2D2.cpp,$(SRC))
   endif
 
   CPPFLAGS:=$(CPPFLAGS) -DPYBIND `$(PYBIND) -m pybind11 --includes`
