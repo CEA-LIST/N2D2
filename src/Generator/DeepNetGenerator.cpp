@@ -798,7 +798,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             ::const_iterator itAttr;
         std::map<std::string, const onnx::TensorProto*>::const_iterator itInit;
         std::map<std::string, std::vector<size_t> >::const_iterator itShape;
-        std::cout << "  ToIgnore ? " << node.output(0) << std::endl;
+
         if (std::find(ignore.begin(), ignore.end(), node.output(0))
             != ignore.end())
         {
@@ -3216,10 +3216,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                             *deepNet, 
                             node.output(0),
                             nbOutputs,
-                            Scaling::floatingPointScaling(
-                                    std::vector<Float_T>(nbOutputs, 
-                                                         constant(0)), false,std::vector<Float_T>(0.0f))
-);
+                            Scaling::floatingPointScaling(scaling));
 
                         if (constant.size() == 1) {
                             std::cout << "  scaling factor = " << constant(0)
