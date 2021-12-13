@@ -988,6 +988,8 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
         const double beta
             = (mStimuliProvider->getParameter<bool>("DataSignedMapping"))
                 ? 128.0 : 0.0;
+        const bool rgb = mStimuliProvider->getTargetSize().size() > 2
+                            && mStimuliProvider->getTargetSize()[2] == 3;
 
 #pragma omp parallel for if (size > 4)
         for (int batchPos = 0; batchPos < size; ++batchPos) {
@@ -1030,7 +1032,9 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                                             mImageLogFormat);
                     }
 
-                    cv::Mat inputImg = (cv::Mat)mStimuliProvider->getTargetDataChannel(0, batchPos);
+                    cv::Mat inputImg = (rgb)
+                        ? (cv::Mat)mStimuliProvider->getTargetData()[batchPos]
+                        : (cv::Mat)mStimuliProvider->getTargetDataChannel(0, batchPos);
                     cv::Mat inputImg8U;
                     inputImg.convertTo(inputImg8U, CV_8U, alpha, beta);
 
@@ -1064,7 +1068,9 @@ void N2D2::Target::logEstimatedLabels(const std::string& dirName) const
                 StimuliProvider::logData(fileName, values[batchPos]);
             }
             else {
-                const cv::Mat outputImg = (cv::Mat)values[batchPos][0];
+                const cv::Mat outputImg = (rgb)
+                    ? (cv::Mat)values[batchPos]
+                    : (cv::Mat)values[batchPos][0];
                 cv::Mat outputImg8U;
                 outputImg.convertTo(outputImg8U, CV_8U, alpha, beta);
 

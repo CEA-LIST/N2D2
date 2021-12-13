@@ -417,6 +417,10 @@ public:
     {
         return mSize;
     };
+    const std::vector<size_t>& getTargetSize() const
+    {
+        return mTargetSize;
+    };
     size_t getSizeX() const
     {
         assert(mSize.size() > 0);
