@@ -61,7 +61,8 @@ class CMakeBuild(build_ext):
             raise RuntimeError("CMake must be installed to build N2D2")
 
         # This lists the number of processors available on the machine
-        max_jobs = str(multiprocessing.cpu_count() / 2)
+        # The compilation will use half of them
+        max_jobs = str(int(multiprocessing.cpu_count() / 2))
 
         cwd = pathlib.Path().absolute()
 
