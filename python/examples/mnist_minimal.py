@@ -29,7 +29,7 @@ parser.add_argument('--epochs', type=int, default=5, metavar='S',
                     help='Nb Epochs. 0 is testing only (default: 120)')
 parser.add_argument('--batch_size', type=int, default=64, metavar='S',
                     help='Batch size')
-parser.add_argument("--data_path", type=str, help="Path to ILSVRC2012 dataset")
+parser.add_argument("--data_path", type=str, help="Path to MNIST dataset")
 
 args = parser.parse_args()
 

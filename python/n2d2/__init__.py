@@ -18,14 +18,6 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
-try:    
-    # If you try to import numpy after initialising a deepNet, the import cause a crash.
-    # Importing numpy before the library is a temporary fix. 
-    # I put this import in a try bloc to avoid adding an explicit dependence to numpy.
-    import numpy
-except:
-    pass
-
 # It's better to access these variables without mentioning global_variable in the path
 from n2d2.global_variables import GlobalVariables
 
