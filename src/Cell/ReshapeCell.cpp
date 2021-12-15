@@ -31,6 +31,7 @@ N2D2::ReshapeCell::ReshapeCell(const DeepNet& deepNet,
       mDims(dims)
 {
     // ctor
+    if (mDims.size() < 3) mDims.resize(3, 1);
 }
 
 std::vector<unsigned int> N2D2::ReshapeCell::getReceptiveField(
