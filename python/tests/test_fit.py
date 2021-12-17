@@ -21,39 +21,72 @@
 
 # This test is not unitary. It should be added as an integration test
 
-# import unittest
-# import n2d2
+import unittest
+import n2d2
+from math import ceil
+from n2d2 import tensor
+from n2d2.cells import Sequence
+import N2D2
+class test_fit_test(unittest.TestCase):
+    def setUp(self):
+        # Change default model
+        n2d2.global_variables.default_model = "Frame_CUDA"
+        n2d2.global_variables.cuda_device = 1
+    def tearDown(self):
+        # Change default model
+        n2d2.global_variables.default_model = "Frame"
 
-# class test_fit_test(unittest.TestCase):
-#     def setUp(self):
-#         # Change default model
-#         n2d2.global_variables.default_model = "Frame_CUDA"
-#     def tearDown(self):
-#         # Change default model
-#         n2d2.global_variables.default_model = "Frame"
+    def test(self):
+        batch_size = 256
+        epochs = 1
+        database = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw")
+        provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size=batch_size)
+        n2d2.global_variables.seed =1 # reset seed before defining each model to have the same weights !
+        model = Sequence([n2d2.cells.Fc(28*28, 50, activation=n2d2.activation.Rectifier()),
+                            n2d2.cells.Fc(50, 10),
+                            n2d2.cells.nn.Softmax(with_loss=True)        
+                            ], "model1")
+        n2d2.global_variables.seed =1
+        model_f = Sequence([n2d2.cells.Fc(28*28, 50, activation=n2d2.activation.Rectifier()),
+                            n2d2.cells.Fc(50, 10),
+                            n2d2.cells.nn.Softmax(with_loss=True)        
+                            ], "model2")
+        model.set_solver(n2d2.solver.SGD(learning_rate=0.01))
 
-#     def test(self):
-#         batch_size = 256
+        # Training using fit method !
+        # converting sequence into Deepnet
+        modelf = model_f.to_deepnet_cell(provider)
+        modelf.fit(learn_epoch=epochs, valid_metric='Accuracy')
+        fit_fc1_weights =  modelf[0].get_weights()
 
-#         print("\n### Create database ###")
-#         database = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw/", validation=0.1)
-#         print(database)
+        target = n2d2.target.Score(provider)
 
-#         print("\n### Create Provider ###")
-#         provider = n2d2.provider.DataProvider(database, [32, 32, 1], batch_size=batch_size)
-#         provider.add_transformation(n2d2.transform.Rescale(width=32, height=32))
-#         print(provider)
+        provider.set_partition("Learn")
+        model.learn()
+        for epoch in range(epochs):
 
-#         print("\n### Loading Model ###")
-#         model = n2d2.models.lenet.LeNet(10)
-#         print(model)
+            print("\n### Train Epoch: " + str(epoch) + " ###")
 
-#         deepnet_cell = model.to_deepnet_cell(provider)
+            for i in range(ceil(database.get_nb_stimuli('Learn')/batch_size)):
 
-#         deepnet_cell.fit(1)
+                x = provider.read_random_batch()
+                x = model(x)
+                x = target(x)
+                x.back_propagate()
+                x.update()
 
-# if __name__ == '__main__':
-#     """
-#     You need to add this line for the tests to be run.
-#     """
-#     unittest.main()
+                print("Example: " + str(i*batch_size) + ", loss: "
+                    + "{0:.3f}".format(target.loss()), end='\r')
+        python_loop_fc1_weights =  model[0].get_weights()
+
+        for i,j in zip(python_loop_fc1_weights, fit_fc1_weights):
+            for tensor1, tensor2 in zip(i, j):
+                for value1, value2 in zip(tensor1, tensor2):
+                    print(f"LOOP {value1} | FIT {value2}")
+                    self.assertTrue(abs(value1-value2) < (0.01 * abs(value2)) + 0.001)
+
+if __name__ == '__main__':
+    """
+    You need to add this line for the tests to be run.
+    """
+    unittest.main()
