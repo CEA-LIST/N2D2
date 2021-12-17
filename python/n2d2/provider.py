@@ -61,6 +61,9 @@ class Provider(N2D2_Interface,ABC):
 
     def dims(self):
         return self._N2D2_object.getData().dims()
+    
+    def shape(self):
+        return [i for i in reversed(self._N2D2_object.getData().dims())]
 
     def get_name(self):
         """
