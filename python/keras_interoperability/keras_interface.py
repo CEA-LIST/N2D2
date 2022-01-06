@@ -34,76 +34,16 @@ import n2d2
 # tf.config.experimental_functions_run_eagerly = True
 
 class CustomSequential(keras.Sequential):
-    def __init__(self, layers=None, name=None, batch_size=None, **kwargs):
-        # Don't let TF optimize these layers
-        for layer in layers:
-            layer.trainable = False
-
-        super(CustomSequential, self).__init__(layers, name, **kwargs)
-        # Don't use "self" directly, as wrapping it in a tf.function implicitly
-        # disable the eager mode even with run_eagerly=True
-        self.tf_model = keras.Sequential(layers, name)
+    def __init__(self, deepNet, batch_size, outputs_shape, name=None, **kwargs):
+        super(CustomSequential, self).__init__([], name, **kwargs)
+        self.deepNet= deepNet
+        self.batch_size=batch_size
         self.quant_model = None
-
-        
-        if batch_size:
-            self.batch_size=batch_size
-        else:
-            # Set batch size dimension
-            # TODO: not deduced until compile()!
-            # self.batch_size = 128 
-            self.batch_size = 5
-
-        inputs_shape = np.array(self.tf_model.inputs[0].shape)
-        inputs_shape[0] = self.batch_size
-
-        # Convert Keras model to ConcreteFunction
-        full_model = tf.function(lambda inputs: self.tf_model(inputs))
-        full_model = full_model.get_concrete_function(
-            tf.TensorSpec(inputs_shape, self.tf_model.inputs[0].dtype))
-
-        # Get frozen ConcreteFunction
-        frozen_func = convert_variables_to_constants_v2(full_model)
-
-        # Using tf2onnx
-        # Preferred method, as keras2onnx is much less popular than tf2onnx
-        ####################################################################
-        self.inputNames = [t.name for t in frozen_func.inputs]
-        self.outputNames = [t.name for t in frozen_func.outputs]
-
-        with frozen_func.graph.as_default():
-            with tf.compat.v1.Session() as sess:
-                onnx_graph = tf2onnx.tfonnx.process_tf_graph(sess.graph,
-                    opset=10,
-                    input_names=self.inputNames,
-                    output_names=self.outputNames)
-                    #inputs_as_nchw=self.inputNames)
-
-                model_proto = onnx_graph.make_model("test")
-                with open("model.onnx", "wb") as f:
-                    f.write(model_proto.SerializeToString())
-
-        # Import ONNX in N2D2
-        n2d2.global_variables.default_model = "Frame_CUDA"
-        
-        db = n2d2.database.Database()
-        provider = n2d2.provider.DataProvider(db,[inputs_shape[3], inputs_shape[2], inputs_shape[1]], batch_size=inputs_shape[0])
-        self.deepNetCell = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "model.onnx")
-        for cell in self.deepNetCell:
-            if isinstance(cell, n2d2.cells.Softmax):
-                # ONNX import Softmax with_loss = True supposing we are using a CrossEntropy loss.
-                cell.with_loss = False
-
-
-        print("N2D2 model : \n", self.deepNetCell)
-
-        self.deepNet = self.deepNetCell._embedded_deepnet.N2D2()
-        self.deepNet.initialize()
-        # N2D2.DrawNet.drawGraph(self.deepNet, "model")
-
-        # Now this CustomSequential model run on N2D2
+        self.outputs_shape = outputs_shape
 
     def compile(self, *args, **kwargs):
+        # TODO : We can update N2D2 Solver here.
+
         # By default, eager mode is disabled with compile(), preventing the use
         # of .numpy() in call()
         # FIXME: If this Sequential is inside another block, this is not enough!
@@ -115,7 +55,7 @@ class CustomSequential(keras.Sequential):
         x_var = tf.Variable(x)
 
         x_numpy = x.numpy()
-        inputs_batch_size = x_numpy.shape[0]
+        inputs_batch_size = x_numpy.shape[0] # TODO : Check size is the same as input shape of the network ?
         inputs_shape = np.array(x_numpy.shape)
         # Make sure we have a full batch
         if inputs_batch_size < self.batch_size:
@@ -148,7 +88,7 @@ class CustomSequential(keras.Sequential):
         # Set the correct output shape
         # N2D2 output shape is always 4 dimensions, but expected dimension
         # can be lower (if output of a Fc cell for example).
-        outputs_shape = np.array(self.tf_model.outputs[0].shape)
+        outputs_shape = np.array(self.outputs_shape)
         outputs_shape[0] = self.batch_size   # set batch size
 
         y_numpy = y_numpy.reshape(outputs_shape)
@@ -227,3 +167,65 @@ class CustomSequential(keras.Sequential):
             #         raise ValueError("TF and N2D2 are different !")
             ######## DEBUG #########
             return outputs
+
+
+
+def wrap(tf_model, batch_size, name=None):
+    # Don't let TF optimize these layers
+    for layer in tf_model.layers:
+        layer.trainable = False
+
+    
+
+    inputs_shape = np.array(tf_model.inputs[0].shape)
+    inputs_shape[0] = batch_size
+    outputs_shape = tf_model.outputs[0].shape
+    # Convert Keras model to ConcreteFunction
+    full_model = tf.function(lambda inputs: tf_model(inputs))
+    full_model = full_model.get_concrete_function(
+        tf.TensorSpec(inputs_shape, tf_model.inputs[0].dtype))
+
+    # Get frozen ConcreteFunction
+    frozen_func = convert_variables_to_constants_v2(full_model)
+
+    # Using tf2onnx
+    # Preferred method, as keras2onnx is much less popular than tf2onnx
+    ####################################################################
+    inputNames = [t.name for t in frozen_func.inputs]
+    outputNames = [t.name for t in frozen_func.outputs]
+
+    with frozen_func.graph.as_default():
+        with tf.compat.v1.Session() as sess:
+            onnx_graph = tf2onnx.tfonnx.process_tf_graph(sess.graph,
+                opset=10,
+                input_names=inputNames,
+                output_names=outputNames)
+                #inputs_as_nchw=self.inputNames)
+
+            model_proto = onnx_graph.make_model("test")
+            with open("model.onnx", "wb") as f:
+                f.write(model_proto.SerializeToString())
+
+    # Import ONNX in N2D2
+    n2d2.global_variables.default_model = "Frame_CUDA"
+    
+    db = n2d2.database.Database()
+    provider = n2d2.provider.DataProvider(db,[inputs_shape[3], inputs_shape[2], inputs_shape[1]], batch_size=inputs_shape[0])
+    deepNetCell = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "model.onnx")
+
+    for cell in deepNetCell:
+        # Layers modification after the import !
+        if isinstance(cell, n2d2.cells.Softmax):
+            # ONNX import Softmax with_loss = True supposing we are using a CrossEntropy loss.
+            cell.with_loss = False
+
+
+    print("N2D2 model : \n", deepNetCell)
+
+    deepNet = deepNetCell._embedded_deepnet.N2D2()
+    deepNet.initialize()
+    return CustomSequential(deepNet, batch_size, outputs_shape, name=name)
+
+    # N2D2.DrawNet.drawGraph(self.deepNet, "model")
+
+    # Now this CustomSequential model run on N2D2

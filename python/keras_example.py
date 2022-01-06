@@ -15,7 +15,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-from n2d2.keras import CustomSequential
+import keras_interoperability
 
 from time import time
 """
@@ -52,19 +52,7 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 ## Build the model
 """
 
-model = CustomSequential(
-    [
-        keras.Input(shape=input_shape),
-        layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
-        layers.MaxPooling2D(pool_size=(2, 2)),
-        layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
-        layers.MaxPooling2D(pool_size=(2, 2)),
-        layers.Flatten(),
-        # layers.Dropout(0.5),
-        layers.Dense(num_classes, activation="softmax"),
-    ], 
-    batch_size=batch_size)
-# model = tf.keras.Sequential(
+# model = CustomSequential(
 #     [
 #         keras.Input(shape=input_shape),
 #         layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
@@ -74,10 +62,24 @@ model = CustomSequential(
 #         layers.Flatten(),
 #         # layers.Dropout(0.5),
 #         layers.Dense(num_classes, activation="softmax"),
-#     ]
-# )
+#     ], 
+#     batch_size=batch_size)
+tf_model = tf.keras.Sequential(
+    [
+        keras.Input(shape=input_shape),
+        layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
+        layers.MaxPooling2D(pool_size=(2, 2)),
+        layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
+        layers.MaxPooling2D(pool_size=(2, 2)),
+        layers.Flatten(),
+        # layers.Dropout(0.5),
+        layers.Dense(num_classes, activation="softmax"),
+    ]
+)
+model = keras_interoperability.wrap(tf_model, batch_size=batch_size)
 
-model.summary()
+
+# model.summary() # TODO : Doesn't work anymore ...
 
 """
 ## Train the model

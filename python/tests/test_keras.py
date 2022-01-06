@@ -23,7 +23,7 @@ import keras
 import n2d2
 import unittest
 import tensorflow as tf
-from keras_interoperability import CustomSequential
+from keras_interoperability import wrap
 import N2D2
 from tensorflow.keras.layers import MaxPooling2D, Conv2D, Dense, Flatten
 from tensorflow.keras import Input
@@ -40,30 +40,34 @@ class test_keras(unittest.TestCase):
     def setUp(self):
         pass
     def test_propagation(self):
-        self.model = CustomSequential([
+        tf_model = keras.Sequential([
             Input(shape=[3, 3, 2]),
             MaxPooling2D(pool_size=(1, 1))
-        ], batch_size=4)
+        ])
+        self.model = wrap(tf_model, batch_size=5)
         self.model.compile(loss="categorical_crossentropy", optimizer="SGD", metrics=["accuracy"])
         self.x = tf.random.uniform([4,3,3,2])
         y = self.model.call(self.x)
         for predicted, truth in zip(y.numpy().flatten(), self.x.numpy().flatten()):
             self.assertEqual(predicted, truth)
+
     def test_propagation_conv(self):
-        self.model = CustomSequential([
+        tf_model = keras.Sequential([
             Input(shape=[3, 3, 2]),
             Conv2D(3, kernel_size=(1, 1))
-        ], batch_size=5)
+        ])
+        self.model = wrap(tf_model, batch_size=5)
         self.model.compile(loss="categorical_crossentropy", optimizer="SGD", metrics=["accuracy"]) # TODO : useless
         self.x = tf.random.uniform([5,3,3,2])
         n2d2_y = self.model.call(self.x)
-        tf_y = self.model.tf_model.call(self.x)
+        tf_y = tf_model.call(self.x)
         print("N2D2 output : ")
         print(n2d2_y)
         print("TF output : ")
         print(tf_y)
         for predicted, truth in zip(n2d2_y.numpy().flatten(), tf_y.numpy().flatten()):
             self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))))
+    ##################
     # def test_backpropagation_conv(self):
     #     self.model = CustomSequential([
     #         Input(shape=[3, 3, 2]),
@@ -79,18 +83,20 @@ class test_keras(unittest.TestCase):
 
     #     self.model.tf_model.fit(x=self.x, y=self.y, batch_size=5)
     #     self.model.fit(x=self.xn, y=self.yn, batch_size=5)
-        # TODO : Faire un fit et essayer de lancer une prédiction pour voir si on apprend la même chose  
-
+          # TODO : Faire un fit et essayer de lancer une prédiction pour voir si on apprend la même chose  
+    ##################
+    
     def test_propagation_fc(self):
-        self.model = CustomSequential([
+        tf_model = keras.Sequential([
             Input(shape=[3,3,1]),
             Flatten(),
             Dense(9)
-        ], batch_size=5)
+        ])
+        self.model = wrap(tf_model, batch_size=5)
         self.model.compile(loss="categorical_crossentropy", optimizer="SGD", metrics=["accuracy"])
-        self.x = tf.random.uniform([4,3,3,1])
+        self.x = tf.random.uniform([5,3,3,1])
         n2d2_y = self.model.call(self.x)
-        tf_y = self.model.tf_model.call(self.x)
+        tf_y = tf_model.call(self.x)
         print("N2D2 output : ")
         print(n2d2_y)
         print("TF output : ")
