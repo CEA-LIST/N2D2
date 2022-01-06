@@ -18,4 +18,4 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
-from n2d2.keras.keras_interface import *
+from keras_interoperability.keras_interface import *

@@ -23,7 +23,7 @@ import keras
 import n2d2
 import unittest
 import tensorflow as tf
-from n2d2.keras import CustomSequential
+from keras_interoperability import CustomSequential
 import N2D2
 from tensorflow.keras.layers import MaxPooling2D, Conv2D, Dense, Flatten
 from tensorflow.keras import Input
@@ -82,13 +82,13 @@ class test_keras(unittest.TestCase):
         # TODO : Faire un fit et essayer de lancer une prédiction pour voir si on apprend la même chose  
 
     def test_propagation_fc(self):
-        self.model = n2d2.keras.CustomSequential([
+        self.model = CustomSequential([
             Input(shape=[3,3,1]),
             Flatten(),
             Dense(9)
         ], batch_size=5)
         self.model.compile(loss="categorical_crossentropy", optimizer="SGD", metrics=["accuracy"])
-        self.x = tf.random.uniform([5, 9])
+        self.x = tf.random.uniform([4,3,3,1])
         n2d2_y = self.model.call(self.x)
         tf_y = self.model.tf_model.call(self.x)
         print("N2D2 output : ")

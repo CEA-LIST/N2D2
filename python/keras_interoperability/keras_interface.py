@@ -127,9 +127,8 @@ class CustomSequential(keras.Sequential):
         lastCellName = self.deepNet.getLayers()[-1][-1]
 
         x_tensor = N2D2.Tensor_float(x_numpy) # Need to change convention NHWC -> HWCN 
+        
         x_tensor.reshape([inputs_shape[3], inputs_shape[1], inputs_shape[2],inputs_shape[0]])
-
-        # print("x tensor dim : ", x_tensor.dims())
 
         firstCell = self.deepNet.getCell_Frame_Top(fistCellName)
         self.diffOutputs = N2D2.Tensor_float(x_numpy.shape)
