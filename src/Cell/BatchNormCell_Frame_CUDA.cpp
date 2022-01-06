@@ -381,6 +381,9 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
             mMean->getDevicePtr(),
             mVariance->getDevicePtr(),
             mEpsilon));
+
+        mValidCache = false;
+
     } else {
         // mSavedMean and mSavedVariance cache parameters 
         // must be reinitialized to 0.0 at each forward pass on training:
@@ -405,6 +408,8 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
             mEpsilon,
             mSavedMean.getDevicePtr(),
             mSavedVariance.getDevicePtr()));
+
+        mValidCache = true;
     }
 
     if (!inference)
@@ -419,7 +424,7 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::propagate(bool inference)
 template <class T>
 void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
 {
-    if (mDiffOutputs.empty()) {
+    if (mDiffOutputs[0].empty()) {
         std::cout << "Warning: BatchNormCell_Frame_CUDA::backPropagate() in cell " <<   
             getName() << " is not compatible with empty mDiffOutputs. Skipping backpropagation"  
             << std::endl;
@@ -437,14 +442,14 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
     const typename Cuda::cudnn_scaling_type<T>::type beta
         = (mScaleSolver->isNewIteration()) ? 0.0f : 1.0f;
     const typename Cuda::cudnn_scaling_type<T>::type betaData
-        = (!mDiffOutputs.empty() && mBackPropagate && mDiffOutputs[0].isValid())
+        = (mBackPropagate && mDiffOutputs[0].isValid())
             ? 1.0f : 0.0f;
 
     std::shared_ptr<CudaDeviceTensor<T> > input0
         = cuda_device_tensor_cast_nocopy<T>(mInputs[0]);
     std::shared_ptr<CudaDeviceTensor<T> > diffOutput0;
 
-    if (!mDiffOutputs.empty() && mBackPropagate) {
+    if (mBackPropagate) {
         diffOutput0 = (mDiffOutputs[0].isValid())
                 ? cuda_device_tensor_cast<T>(mDiffOutputs[0])
                 : cuda_device_tensor_cast_nocopy<T>(mDiffOutputs[0]);
@@ -478,15 +483,15 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::backPropagate()
                                         mDiffScale.getDevicePtr(),
                                         mDiffBias.getDevicePtr(),
                                         mEpsilon,
-                                        mSavedMean.getDevicePtr(),
-                                        mSavedVariance.getDevicePtr()));
+                                        (mValidCache) ? mSavedMean.getDevicePtr() : NULL,
+                                        (mValidCache) ? mSavedVariance.getDevicePtr() : NULL));
 
     mDiffScale.setValid();
     mDiffBias.setValid();
-    if (!mDiffOutputs.empty() && mBackPropagate) {
+    if (mBackPropagate) {
         mDiffOutputs[0].deviceTensor() = *diffOutput0;
         mDiffOutputs[0].setValid();
-        mDiffOutputs.synchronizeDToHBased();
+        mDiffOutputs[0].synchronizeDToHBased();
     }
 }
 
@@ -641,17 +646,19 @@ void N2D2::BatchNormCell_Frame_CUDA<T>::checkGradient(double epsilon,
     gc.check(mName + "_mDiffScale", (*mScale), mDiffScale);
     gc.check(mName + "_mDiffBias", (*mBias), mDiffBias);
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int in = 0; in < mInputs.size(); ++in) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << in << "]";
-
-            gc.check(name.str(), mInputs[in], mDiffOutputs[in]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

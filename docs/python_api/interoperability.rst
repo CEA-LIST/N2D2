@@ -34,7 +34,7 @@ If you work with ``CUDA`` tensor, the conversion ``Torch`` to ``n2d2`` is also d
 
 Documentation
 ~~~~~~~~~~~~~
-.. autoclass:: n2d2.pytorch.Block
+.. autoclass:: pytorch_interoperability.Block
         :members:
 
 Example :
@@ -42,12 +42,13 @@ Example :
 
 In this example, we will create with Torch a ``LeNet`` and export it with ``ONNX``.
 We will then use the n2d2 API to import the model using a :py:class:`n2d2.cells.DeepNetCell`.
-Finally we will run the newly created model with torch by using :py:class:`n2d2.pytorch.Block`.
+Finally we will run the newly created model with torch by using :py:class:`pytorch_interoperability.Block`.
 
 .. code-block:: python
 
         import n2d2
         import torch
+        import pytorch_interoperability
         from os import remove
         class MNIST_CNN(torch.nn.Module):   
                 def __init__(self):
@@ -90,10 +91,10 @@ Finally we will run the newly created model with torch by using :py:class:`n2d2.
         remove(model_path) # Cleaning temporary onnx file
 
         # Setting SoftMax layer with_loss=False
-        deepNetCell[-1].set_with_loss(False)
+        deepNetCell[-1].with_loss = False
 
-        n2d2_deepNet = n2d2.pytorch.Block(deepNetCell)
-        
+        n2d2_deepNet = pytorch_interoperability.Block(deepNetCell)
+
         # Dummy imput and label for the example
         input_tensor = torch.ones(batch_size, 1, 28, 28)
         label = torch.ones(batch_size, 10)
@@ -116,10 +117,8 @@ Gradient is badly computed when using import from ONNX
 When you import a network from ONNX, if the last layer imported is a :py:class:`n2d2.cells.Softmax`
 then there is a risk the loss is badly computed if you don't use a ``CrossEntropy`` loss.
 
-By default when imported the :py:class:`n2d2.cells.Softmax` set the argument ``withLoss=True``. 
+By default when imported the :py:class:`n2d2.cells.Softmax` set the argument ``with_loss=True``. 
 This argument skip the computation of the gradient for this cell.
-
-So you need to select the :py:class:`n2d2.cells.Softmax` object and use the method :py:meth:`n2d2.cells.Softmax.set_with_loss`.
 
 Output shape must be rigorously the same as the label shape
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 

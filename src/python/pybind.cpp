@@ -37,8 +37,9 @@ void init_IniParser(py::module&);
 void init_Tensor(py::module&);
 void init_Network(py::module&);
 void init_StimuliProvider(py::module&);
-
-//target 
+void init_Cell(py::module&);
+void init_Cell_Frame_Top(py::module&);
+void init_Cell_Frame(py::module&);
 void init_Target(py::module&);
 void init_TargetScore(py::module&);
 
@@ -47,7 +48,6 @@ void init_DeepNet(py::module&);
 void init_DeepNetQuantization(py::module&);
 void init_DeepNetExport(py::module&);
 void init_DrawNet(py::module&);
-
 //Database
 void init_Database(py::module&);
 void init_DIR_Database(py::module&);
@@ -59,7 +59,9 @@ void init_Caltech256_DIR_Database(py::module&);
 void init_CelebA_Database(py::module&);
 void init_CIFAR_Database(py::module&);
 void init_CKP_Database(py::module&);
+#ifdef JSONCPP
 void init_Cityscapes_Database(py::module&);
+#endif
 void init_GTSDB_DIR_Database(py::module&);
 void init_GTSRB_DIR_Database(py::module&);
 void init_ILSVRC2012_Database(py::module&);
@@ -234,6 +236,8 @@ void init_QuantizerActivation_Frame(py::module&);
 
 void init_DeepNetGenerator(py::module&);
 
+void init_helper(py::module&);
+
 #ifdef CUDA
 void init_CudaContext(py::module&);
 void init_CudaTensor(py::module&);
@@ -293,7 +297,6 @@ void init_N2D2(py::module& m) {
     init_Network(m);
     
     init_StimuliProvider(m);
-
     init_Target(m);
     init_TargetScore(m);
 
@@ -311,7 +314,9 @@ void init_N2D2(py::module& m) {
     init_CelebA_Database(m);
     init_CIFAR_Database(m);
     init_CKP_Database(m);
+    #ifdef JSONCPP
     init_Cityscapes_Database(m);
+    #endif    
     init_GTSDB_DIR_Database(m);
     init_GTSRB_DIR_Database(m);
     init_ILSVRC2012_Database(m);
@@ -482,6 +487,7 @@ void init_N2D2(py::module& m) {
     init_QuantizerActivation_Frame(m);
     
     init_DeepNetGenerator(m);
+    init_helper(m);
     // Creating a variable to know if CUDA have been used for the compilation.
     #ifdef CUDA
     m.attr("cuda_compiled") = true;
@@ -529,6 +535,12 @@ void init_N2D2(py::module& m) {
     init_QuantizerActivation_Frame_CUDA(m);
     #else
     m.attr("cuda_compiled") = false;
+    #endif
+
+    #ifdef JSONCPP
+    m.attr("json_compiled") = true;
+    #else
+    m.attr("json_compiled") = false;
     #endif
 }
 

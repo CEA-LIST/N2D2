@@ -57,7 +57,7 @@ Graph optimizations
 ~~~~~~~~~~~~~~~~~~~
 
 - Weights are equalized between layers when possible;
-- ``BatchNorm`` is automatically fused with the preceding ``Conv`` when possible;
+- ``BatchNorm`` is automatically fused with the preceding ``Conv`` or ``Fc`` when possible;
 - ``Padding`` layers are fused with ``Conv`` when possible;
 - ``Dropout`` layers are removed.
 

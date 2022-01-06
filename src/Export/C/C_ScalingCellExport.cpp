@@ -121,7 +121,7 @@ void N2D2::C_ScalingCellExport::generateCellFunction(
     const std::string& outputName,
     const std::string& /*outputSizeName*/,
     std::ofstream& prog,
-    bool /*isUnsigned*/,
+    bool isUnsigned,
     const std::string& funcProto,
     const std::string& /*memProto*/,
     bool /*memCompact*/)
@@ -131,7 +131,7 @@ void N2D2::C_ScalingCellExport::generateCellFunction(
     const std::string prefix = Utils::upperCase(identifier);
     const std::string proto = (funcProto.empty()) ? "scalingcell" : funcProto;
 
-    prog << "    " << proto << "_" << "propagate("
+    prog << "    " << proto << "_" << ((isUnsigned) ? "u" : "") << "propagate("
         << prefix << "_NB_CHANNELS, "
         << prefix << "_CHANNELS_HEIGHT, "
         << prefix << "_CHANNELS_WIDTH, "

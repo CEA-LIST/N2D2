@@ -95,6 +95,9 @@ public:
      */
     static void generateSingleShiftHalfAddition(const Cell_Frame_Top& cell, std::size_t output, 
                                                 std::ostream& stream);
+
+    static int getQuantizedOutputNbBits(const DeepNet& deepNet,
+                                        const Cell& cell);
 };
 }
 

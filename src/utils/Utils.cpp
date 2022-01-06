@@ -681,6 +681,48 @@ std::string N2D2::Utils::CIdentifier(const std::string& str) {
     return identifier;
 }
 
+std::string N2D2::Utils::RTLIdentifier(const std::string& str) {
+    std::string identifier(str);
+    std::replace_if(identifier.begin(), identifier.end(),
+                    Utils::isNotValidIdentifier, '_');
+
+    // Modelsim: Identifier may not contain adjacent underlines.
+    std::size_t prevSize;
+
+    do {
+        prevSize = identifier.size();
+        identifier = searchAndReplace(identifier, "__", "_");
+    }
+    while (identifier.size() != prevSize);
+
+    // Strip underscores as the identifier may be concatenated with "_"
+    identifier.erase(0, identifier.find_first_not_of("_"));
+    identifier.erase(identifier.find_last_not_of("_") + 1);
+
+    if (!identifier.empty() && !isalpha(identifier[0]))
+        identifier = "ID" + identifier;
+
+    return identifier;
+}
+
+bool N2D2::Utils::isNotValidFilePath(int c) {
+    return (iscntrl(c)
+        || c == '<'
+        || c == '>'
+        || c == ':'
+        || c == '"'
+        || c == '|'
+        || c == '?'
+        || c == '*');
+}
+
+std::string N2D2::Utils::filePath(const std::string& str) {
+    std::string filePath(str);
+    std::replace_if(filePath.begin(), filePath.end(),
+                    Utils::isNotValidFilePath, '_');
+    return filePath;
+}
+
 double N2D2::Utils::normalInverse(double p)
 {
     if (p < 0.0 || p > 1.0)

@@ -68,7 +68,6 @@ void N2D2::CPP_FcCellExport::generateHeaderConstants(const FcCell& cell, std::of
            << "#define " << prefix << "_NO_BIAS " << (int) cell.getParameter<bool>("NoBias") << "\n\n";
 
     CPP_CellExport::generateActivation(cell, header);
-    CPP_CellExport::generateWeightPrecision(cell, header);
     CPP_CellExport::generateActivationScaling(cell, header);
 
     header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix << "_NB_OUTPUTS*" 
@@ -82,18 +81,26 @@ void N2D2::CPP_FcCellExport::generateHeaderConstants(const FcCell& cell, std::of
 void N2D2::CPP_FcCellExport::generateHeaderFreeParameters(const FcCell & cell, std::ofstream& header) {
     generateHeaderBias(cell, header);
 
-    if (mThreshold > 0.0) {
-        generateHeaderWeightsSparse(cell, header);
-    }
+    if (cell.getQuantizedNbBits() > 0)
+        generateHeaderWeightsQAT(cell, header);
     else {
-        generateHeaderWeights(cell, header);
+        if (mThreshold > 0.0) {
+            generateHeaderWeightsSparse(cell, header);
+        }
+        else {
+            generateHeaderWeights(cell, header);
+        }
     }
 }
 
 void N2D2::CPP_FcCellExport::generateHeaderBias(const FcCell & cell, std::ofstream& header) {
     const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string wType = (cell.getQuantizedNbBits() <= 0) ? "BDATA_T" :
+                              (cell.getQuantizedNbBits() <= 4) ? "int16_t" :
+                              (cell.getQuantizedNbBits() <= 8) ? "int32_t" :
+                                                                 "int64_t";
 
-    header << "static const BDATA_T " << identifier << "_biases[" 
+    header << "static const " << wType << " " << identifier << "_biases[" 
                << Utils::upperCase(identifier) << "_OUTPUTS_SIZE"
            <<"] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_BIASSES) = {";
 
@@ -134,6 +141,12 @@ void N2D2::CPP_FcCellExport::generateHeaderWeights(const FcCell & cell, std::ofs
 
     header << "{\n";
 
+    const Cell_Frame_Top* cellFrame
+        = dynamic_cast<const Cell_Frame_Top*>(&cell);
+
+    if (cellFrame != NULL)
+        cellFrame->synchronizeToH(false);
+
     Tensor<Float_T> weight;
     
     // Need it in OHWC order, the order in the weights tensor is OCHW.
@@ -154,6 +167,146 @@ void N2D2::CPP_FcCellExport::generateHeaderWeights(const FcCell & cell, std::ofs
                     iweight++;
                     if(iweight % 30 == 0) {
                         header << "\n";
+                    }
+                }
+            }
+        }
+    }
+
+    if (cellFrame != NULL)
+        cellFrame->keepInSync(true);
+
+    header << "};\n\n";
+}
+
+void N2D2::CPP_FcCellExport::generateHeaderWeightsQAT(const FcCell & cell, std::ofstream& header) {
+    const std::string identifier = Utils::CIdentifier(cell.getName());
+    const std::string prefix = Utils::upperCase(identifier);
+
+    header << "#define " << prefix << "_WEIGHTS_SIZE ("
+               << prefix << "_OUTPUTS_SIZE*" << prefix << "_CHANNELS_SIZE"
+           << ")\n\n";
+
+    header << "// Flatten weights with the order[OUTPUTS_SIZE][CHANNELS_SIZE]. \n"
+           << "// If the previous cell was a 2D cell, CHANNELS_SIZE is flatten in "
+               << "the [CHANNELS_HEIGHT][CHANNELS_WIDTH][NB_CHANNELS] order.\n";
+
+    // Force wPrecision to be a multiple of 2 (for example, 3 bits weights will
+    // be stored on 4 bits)
+    const unsigned int wPrecision
+        = (int)std::pow(2, std::ceil(std::log2(cell.getQuantizedNbBits())));
+    const bool accumulate = (cell.getNbChannels() > 1
+                                && (wPrecision > 0 && wPrecision < 8));
+
+    header << "static const data<" << wPrecision << "> "
+        << identifier << "_weights[" << prefix << "_WEIGHTS_SIZE"
+        << "] N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_WEIGHTS) = {\n";
+
+    //number of int8 necessary to store
+    //one weight of all channels
+    std::size_t nbInt8_nbCh = 1;
+    //total bit "slots"
+    std::size_t nbSlot_total = 1;
+    //number of channels
+    std::size_t nbSlot_taken = 1;
+    //number of extra 0
+    std::size_t nbSlot_free = 0;
+    std::size_t nbSlot_per_Int8 = 1;
+
+    if(accumulate){
+        nbInt8_nbCh = ( (cell.getNbChannels()*wPrecision) + (cell.getNbChannels()*wPrecision) % 8 ) / 8;
+        nbSlot_per_Int8 = 8/(size_t)wPrecision;
+        nbSlot_total = nbInt8_nbCh*nbSlot_per_Int8;
+        nbSlot_taken = cell.getNbChannels();
+        nbSlot_free = nbSlot_total - nbSlot_taken;
+    }
+    else{
+        nbSlot_total = cell.getNbChannels();
+        nbSlot_taken = cell.getNbChannels();
+        nbSlot_free = 0;
+    }
+
+    uint32_t mask = 0;
+    if(wPrecision==4){
+        mask = 0x0F;
+    }
+    else if(wPrecision==2){
+        mask = 0x3;
+    }
+    else if(wPrecision==1){
+        mask = 0x1;
+    }
+
+    Tensor<Float_T> weight;
+    Float_T value;
+    uint32_t accumulator = 0;
+    int wCounter = 0;
+
+    // Need it in OHWC order, the order in the weights tensor is OCHW.
+    std::size_t iweight = 0;
+    for (std::size_t output = 0; output < cell.getNbOutputs(); output++) {
+        std::size_t maxHWC = (cell.getNbChannels()-1)*cell.getChannelsHeight()*cell.getChannelsWidth()
+                    + (cell.getChannelsHeight()-1)*cell.getChannelsWidth()
+                    + (cell.getChannelsWidth()-1);
+
+        for (std::size_t h = 0; h < cell.getChannelsHeight(); h++) {
+            for (std::size_t w = 0; w < cell.getChannelsWidth(); w++) {
+                for (std::size_t ch = 0; ch < nbSlot_taken; ch++) {
+                    const std::size_t wch = ch*cell.getChannelsHeight()*cell.getChannelsWidth() +
+                                            h*cell.getChannelsWidth() +
+                                            w;
+
+                    if(accumulate){
+                        cell.getWeight(output, wch, weight);
+                        value = weight(0);
+                        if(wPrecision == 1 && value == -1){
+                            value = 0;
+                        }
+                        accumulator |= (static_cast<uint32_t>(std::round(value)) & mask);
+
+                        //if the last weight in accumulator
+                        if(wCounter == (nbSlot_per_Int8-1)){
+                            header << "0x" << std::setfill('0') << std::setw(2) << std::hex << accumulator << std::dec << ", ";
+                            iweight++;
+                            accumulator = 0;
+                            wCounter = 0;
+                            if(iweight % 30 == 0) {
+                                header << "\n";
+                            }
+                        }
+                        else{
+                            accumulator <<= wPrecision;
+                            ++wCounter;
+                        }
+                    }
+                    else{
+                        cell.getWeight(output,  wch, weight);
+                        value = weight(0);
+                        CellExport::generateFreeParameter(value, header);
+
+                        header << ", ";
+                        iweight++;
+                        if(iweight % 30 == 0) {
+                            header << "\n";
+                        }
+                    }
+                }
+                //fill with extra 0 if needed
+                for(std::size_t free_sl = 0; free_sl < nbSlot_free; ++free_sl){
+                    accumulator |= (static_cast<uint32_t>(0) & mask);
+                    //if the last weight in accumulator
+                    if(wCounter == (nbSlot_per_Int8-1)){
+                        header << "0x" << std::setfill('0') << std::setw(2) << std::hex << accumulator << std::dec << ", ";
+                        iweight++;
+                        accumulator = 0;
+                        wCounter = 0;
+                        if(iweight % 30 == 0) {
+                            header << "\n";
+                        }
+                    }
+                    else{
+                        accumulator <<= wPrecision;
+                        ++wCounter;
                     }
                 }
             }
@@ -276,14 +429,13 @@ void N2D2::CPP_FcCellExport::generateCallCode(
                 << prefix << "_MEM_CONT_SIZE, "
                 << prefix << "_MEM_WRAP_OFFSET, "
                 << prefix << "_MEM_WRAP_SIZE, "
-                << prefix << "_MEM_STRIDE, "
-                << CPP_CellExport::getLabelActivationRange(cell)
+                << prefix << "_MEM_STRIDE"
             << ">("
                 << inputBuffer << " , "
                 << outputBuffer << ", "
                 << identifier << "_biases, "
                 << identifier << "_weights, "
-                << CPP_CellExport::getLabelScaling(cell)
+                << prefix << "_SCALING"
             << ");\n\n";
 
     generateBenchmarkEnd(deepNet, cell, functionCalls);

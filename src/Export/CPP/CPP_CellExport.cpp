@@ -77,19 +77,7 @@ void N2D2::CPP_CellExport::generateActivation(const Cell& cell, std::ofstream& h
             <<" in cell " << cell.getName() << ": An additional clipping value per channel "
             << " is required"
             << Utils::cdef << std::endl;
-            header << "#define " << prefix 
-                    << "_NB_BITS_ACT " << (int) activation.getQuantizedNbBits() 
-                    << "\n";
         }
-    }
-}
-
-void N2D2::CPP_CellExport::generateWeightPrecision(const Cell& cell, std::ofstream& header) {
-    const std::string prefix = Utils::upperCase(Utils::CIdentifier(cell.getName()));
-    if(cell.getQuantizedNbBits() > 0) {
-        header << "#define " << prefix
-                << "_NB_BITS_W " << (int) cell.getQuantizedNbBits()
-                << "\n";
     }
 }
 
@@ -130,9 +118,22 @@ void N2D2::CPP_CellExport::generateScaling(
     }
     else if(scaling.getMode() == ScalingMode::FLOAT_MULT) {
         const auto& scalingPerOutput = scaling.getFloatingPointScaling().getScalingPerOutput();
+
         if(Utils::all_same(scalingPerOutput.begin(), scalingPerOutput.end())) {
-            header << "static const N2D2::FloatingPointScaling " << prefix << "_SCALING = {" 
+            if(!scaling.getFloatingPointScaling().getIsClipped()){
+                header << "static const N2D2::FloatingPointScaling " << prefix << "_SCALING = {"
                                                                     << scalingPerOutput.front() << "};\n";
+            }
+            else{
+                const std::vector<Float_T>& clippingPerOutput
+                        = scaling.getFloatingPointScaling().getClippingPerOutput();
+                std::vector<int32_t> clippingPerOutput_INT32(  clippingPerOutput.begin(),
+                                                                clippingPerOutput.end());
+                assert(clippingPerOutput_INT32.size() == scalingPerOutput.size());
+                header << "static const N2D2::FloatingPointClippingAndScaling<1> "
+                                                                            << prefix << "_SCALING = {";
+                header << scalingPerOutput.front() << ", " << clippingPerOutput_INT32.front() << "};\n";
+            }
         }
         else {
             if(!scaling.getFloatingPointScaling().getIsClipped()) {
@@ -150,7 +151,7 @@ void N2D2::CPP_CellExport::generateScaling(
                 assert(clippingPerOutput_INT32.size() == scalingPerOutput.size());
                 header << "static const N2D2::FloatingPointClippingAndScalingPerChannel<" 
                                                                             << clippingPerOutput_INT32.size() << "> " 
-                                                                            << prefix << "_CLIPPED_SCALING = {{";
+                                                                            << prefix << "_SCALING = {{";
                 header << Utils::join(scalingPerOutput.begin(), scalingPerOutput.end(), ',');
                 header << "}, {";
                 header << Utils::join(clippingPerOutput_INT32.begin(), clippingPerOutput_INT32.end(), ',');
@@ -188,7 +189,7 @@ void N2D2::CPP_CellExport::generateScaling(
                                                                             << clippingPerOutput_INT32.size()  << ", " 
                                                                             << fpScaling.getFractionalBits() 
                                                                             << "> " 
-                                                                            << prefix << "_CLIPPED_SCALING = {{";
+                                                                            << prefix << "_SCALING = {{";
                 header << Utils::join(scalingPerOutput.begin(), scalingPerOutput.end(), ',');
                 header << "}, {";
                 header << Utils::join(clippingPerOutput_INT32.begin(), clippingPerOutput_INT32.end(), ',');
@@ -294,57 +295,4 @@ void N2D2::CPP_CellExport::generateSaveOutputs(const DeepNet& /*deepNet*/,
             << ");\n";
     functionCalls << "    fclose(" << identifier << "_stream);\n";
     functionCalls << "#endif\n";
-}
-
-std::string N2D2::CPP_CellExport::getLabelActivationRange(const Cell& cell) const {
-    const std::string identifier = N2D2::Utils::CIdentifier(cell.getName());
-    const std::string prefix = N2D2::Utils::upperCase(identifier);
-
-    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
-    const Activation& activation = *cellFrame.getActivation();
-    /* If activation have been quantized through QAT method
-       the dynamic can be layer specific, use the specific flag then.
-       Else use the global DNN dynamic NBBITS
-    */
-    if(activation.getQuantizedNbBits() > 0) {
-        std::string labelName = prefix + "_NB_BITS_ACT";
-        return labelName;
-    } 
-    else {
-        std::string labelName = "NB_BITS";
-        return labelName;
-    }
-}
-
-std::string N2D2::CPP_CellExport::getLabelScaling(const Cell& cell) const {
-    const std::string identifier = N2D2::Utils::CIdentifier(cell.getName());
-    const std::string prefix = N2D2::Utils::upperCase(identifier);
-    std::string label = prefix + "_SCALING" ;
-
-    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
-
-
-    if (cellFrame.getActivation() == nullptr) {
-        return label;
-    }
-
-    const Activation& activation = *cellFrame.getActivation();
-    const Scaling& activationScaling = activation.getActivationScaling();
-
-    /* 
-        Check if the scaling is clipped then adapt the label
-    */
-    if(activationScaling.getMode() == ScalingMode::FLOAT_MULT) {
-        if(activationScaling.getFloatingPointScaling().getIsClipped()) {
-            label = prefix + "_CLIPPED_SCALING";
-        }
-    } 
-    else if(activationScaling.getMode() == ScalingMode::FIXED_MULT16 ||
-            activationScaling.getMode() == ScalingMode::FIXED_MULT32){
-        if(activationScaling.getFixedPointScaling().getIsClipped()) {
-            label = prefix + "_CLIPPED_SCALING";
-        }
-    }
-
-    return label;
 }

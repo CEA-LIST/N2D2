@@ -231,6 +231,8 @@ the example above, the partitioning will be the following:
 +===========================================+========================================================================================================================================================================+
 | ``DataPath``                              | Path to the root stimuli directory                                                                                                                                     |
 +-------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``IgnoreMasks``                           | Space-separated list of mask strings to ignore. If any is present in a file path, the file gets ignored. The usual \* and \+ wildcards are allowed.                    |
++-------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | ``Learn``                                 | If ``PerLabelPartitioning`` is true, fraction of images used for the learning; else, number of images used for the learning, regardless of their labels                |
 +-------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | ``LoadInMemory`` [0]                      | Load the whole database into memory                                                                                                                                    |
@@ -604,6 +606,14 @@ Cityscapes database :cite:`Cordts2016Cityscapes`.
 +----------------------------------------+----------------------------------------------------------------------------------------------------------+
 | ``LabelPath`` []                       | Path to the database annotations (deduced from ``DataPath`` if left empty)                               |
 +----------------------------------------+----------------------------------------------------------------------------------------------------------+
+
+.. warning::
+        Don't forget to install the **libjsoncpp-dev** package on your device if you wish to use this database.
+
+.. code-block:: bash
+
+        # To install JSON for C++ library on Ubuntu
+        sudo apt-get install libjsoncpp-dev
 
 Daimler_Database
 ~~~~~~~~~~~~~~~~

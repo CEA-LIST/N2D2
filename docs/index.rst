@@ -34,6 +34,7 @@ N2D2
    export/CPP_STM32
    export/TensorRT
    export/DNeuro
+   export/ONNX
    export/legacy
 
 .. toctree::
@@ -46,6 +47,7 @@ N2D2
    ini/environment
    ini/layers
    ini/target
+   adversarial
 
 .. toctree::
    :maxdepth: 1
@@ -62,17 +64,7 @@ N2D2
    :maxdepth: 1
    :caption: C++/Python core:
    
-   core/intro
-   core/activations
-   core/containers
-   core/cells
-   core/databases
-   core/deepnet
-   core/filler
-   core/solver
-   core/stimuliprovider
-   core/transformation
-   core/target
+   core/core
    core/example
 
 .. toctree::

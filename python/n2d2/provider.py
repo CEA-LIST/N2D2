@@ -323,7 +323,7 @@ class TensorPlaceholder(Provider):
         The model of the tensor is defined by the compilation of the library.
         """
         if N2D2.cuda_compiled and not self._tensor.is_cuda: 
-            raise ValueError("You compiled N2D2 with CUDA this doesn't match the tensor model you are providing to the network.")
+            self._tensor.cuda()
         if not (self._tensor.data_type() == "f" or self._tensor.data_type() == "float"):
             raise TypeError("You try to stream a Tensor with the datatype '" + self._tensor.data_type() + "' you should provide a Tensor with a 'float' datatype.")
         self._set_N2D2_parameter('StreamTensor', True)

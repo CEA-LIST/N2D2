@@ -474,7 +474,7 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
             }
 /*
             const double alpha = 0.25;
-            Utils::createDirectories(mName);
+            Utils::createDirectories(Utils::filePath(mName));
 
             // Input image
             cv::Mat img = (cv::Mat)mStimuliProvider.getData(0, batchPos);
@@ -490,7 +490,7 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
             cv::Mat imgColor;
             cv::cvtColor(img8U, imgColor, cv::COLOR_GRAY2BGR);
             cv::Mat imgBlended;
-            std::string fileName = mName + "/anchors.png";
+            std::string fileName = Utils::filePath(mName) + "/anchors.png";
 
             for (unsigned int k = 0; k < nbAnchors; ++k) {
                 const std::vector<std::vector<AnchorCell_Frame_Kernels::BBox_T> >& GT
@@ -594,7 +594,7 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
                     cv::addWeighted(
                         imgColor, alpha, imgSampled, 1 - alpha, 0.0, imgBlended);
 
-                    fileName = mName + "/anchors_cls.png";
+                    fileName = Utils::filePath(mName) + "/anchors_cls.png";
 
                     if (!cv::imwrite(fileName, imgBlended))
                         throw std::runtime_error("Unable to write image: "
@@ -802,7 +802,7 @@ void N2D2::AnchorCell_Frame::propagate(bool inference)
 
 void N2D2::AnchorCell_Frame::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (mDiffOutputs[0].empty() || !mDiffInputs.isValid())
         return;
 
     Cell_Frame<Float_T>::backPropagate();
@@ -819,7 +819,7 @@ void N2D2::AnchorCell_Frame::backPropagate()
 
     Tensor<Float_T> diffOutputsCls
         = tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
-    Tensor<Float_T> diffOutputsCoords = (mDiffOutputs.size() > 1)
+    Tensor<Float_T> diffOutputsCoords = (mDiffOutputs.size() > 1 && !mDiffOutputs[1].empty())
         ? tensor_cast_nocopy<Float_T>(mDiffOutputs[1]) : diffOutputsCls;
     const unsigned int coordsOffset = (mDiffOutputs.size() > 1)
         ? 0 : mScoresCls;

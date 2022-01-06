@@ -212,7 +212,7 @@ void N2D2::PoolCell_Frame_EXT_CUDA<T>::propagate(bool inference)
 template <class T>
 void N2D2::PoolCell_Frame_EXT_CUDA<T>::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (!mDiffInputs.isValid())
         return;
 
     mDiffInputs.synchronizeHBasedToD();
@@ -221,6 +221,9 @@ void N2D2::PoolCell_Frame_EXT_CUDA<T>::backPropagate()
     const T alpha(1.0f);
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mDiffOutputs[k].empty())
+            continue;
+
         const T beta((mDiffOutputs[k].isValid()) ? 1.0f : 0.0f);
 
         std::shared_ptr<CudaDeviceTensor<T> > diffOutput
@@ -266,6 +269,8 @@ void N2D2::PoolCell_Frame_EXT_CUDA<T>::backPropagate()
         mDiffOutputs[k].deviceTensor() = *diffOutput;
         mDiffOutputs[k].setValid();
     }
+
+    mDiffOutputs.synchronizeDToHBased();
 }
 
 template <class T>
@@ -284,17 +289,19 @@ void N2D2::PoolCell_Frame_EXT_CUDA<T>::checkGradient(double epsilon, double maxE
                   std::bind(&PoolCell_Frame_EXT_CUDA<T>::backPropagate, this),
                   (mPooling == Max));
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << k << "]";
-
-            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

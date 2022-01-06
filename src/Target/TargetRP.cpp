@@ -52,7 +52,7 @@ void N2D2::TargetRP::logConfusionMatrix(const std::string& fileName,
 {
     if (mTargetType == Cls) {
         (*mScoreSet.find(set)).second.confusionMatrix.log(
-            mName + "/ConfusionMatrix_" + fileName + ".dat",
+            Utils::filePath(mName) + "/ConfusionMatrix_" + fileName + ".dat",
             getTargetLabelsName());
     }
 }
@@ -455,7 +455,7 @@ void N2D2::TargetRP::logEstimatedLabels(const std::string& dirName) const
     if (mTargetType != Cls)
         return;
 
-    const std::string dirPath = mName + "/" + dirName;
+    const std::string dirPath = Utils::filePath(mName) + "/" + dirName;
     Utils::createDirectories(dirPath);
 
     const std::vector<int>& batch = mStimuliProvider->getBatch();

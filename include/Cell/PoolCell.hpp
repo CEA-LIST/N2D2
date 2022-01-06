@@ -82,6 +82,10 @@ public:
     {
         return mPoolDims[1];
     };
+    const std::vector<unsigned int>& getPoolDims() const
+    {
+        return mPoolDims;
+    };
     unsigned int getStrideX() const
     {
         return mStrideDims[0];
@@ -90,6 +94,10 @@ public:
     {
         return mStrideDims[1];
     };
+    const std::vector<unsigned int>& getStrideDims() const
+    {
+        return mStrideDims;
+    };
     int getPaddingX() const
     {
         return mPaddingDims[0];
@@ -97,6 +105,10 @@ public:
     int getPaddingY() const
     {
         return mPaddingDims[1];
+    };
+    const std::vector<unsigned int>& getPaddingDims() const
+    {
+        return mPaddingDims;
     };
     const std::vector<int>& getExtendedPadding() const
     {

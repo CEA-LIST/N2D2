@@ -37,6 +37,7 @@ class DeepNet;
 class Filler;
 class Network;
 class Solver;
+class BaseInterface;
 
 class FcCell : public virtual Cell {
 public:
@@ -120,6 +121,8 @@ public:
                            BaseTensor& value) const = 0;
     virtual void getBias(unsigned int output, BaseTensor& value) const = 0;
     virtual BaseInterface* getWeights() { return NULL; };
+    virtual const BaseInterface* getWeights() const { return NULL; };
+    virtual const BaseTensor* getBiases() const { return NULL; };
     virtual void exportFreeParameters(const std::string& fileName) const;
     virtual void exportQuantFreeParameters(const std::string& fileName) const;
     virtual void importFreeParameters(const std::string& fileName,

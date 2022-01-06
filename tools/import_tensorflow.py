@@ -57,7 +57,7 @@ def exportFreeParameters(modelName, targetDir):
                 name[offset] = "variances"
 
             targetFile = os.path.join(targetDir, "_".join(name) + ".syntxt")
-            print "Exporting %s" % (targetFile)
+            print("Exporting ", targetFile)
 
             f = open(targetFile, 'w')
             f.write(re.sub('[\[\]]', '',

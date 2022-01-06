@@ -40,9 +40,9 @@ static const N2D2::Registrar<N2D2::DistanceCell> registrarFloat(
 
 template<class T>
 N2D2::DistanceCell_Frame_CUDA<T>::DistanceCell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
-                                                        unsigned int nbOutputs, double margin)
+                                                        unsigned int nbOutputs, double margin, double centercoef)
     : Cell(deepNet, name, nbOutputs),
-      DistanceCell(deepNet, name, nbOutputs, std::move(margin)),
+      DistanceCell(deepNet, name, nbOutputs, std::move(margin), std::move(centercoef)),
       Cell_Frame_CUDA<T>(deepNet, name, nbOutputs),
       mMean(std::make_shared<CudaTensor<T> >())
 {
@@ -164,12 +164,14 @@ void N2D2::DistanceCell_Frame_CUDA<T>::backPropagate()
     unsigned int nb_class = this->getNbOutputs();
     unsigned int feat_dim = mDiffMean.dimZ();
     unsigned int batchsize = mDiffOutputs[0].dimB();
+    T center_coef = (T)mCenterCoef / (T)batchsize;
 
     cudaDistanceL2Backward_mean(size_mean,
                                     nb_class, 
                                     feat_dim,
                                     batchsize,
                                     (T)mCurrentMargin,
+                                    center_coef,
                                     mLabels.getDevicePtr(),
                                     input0->getDevicePtr(),
                                     mMean->getDevicePtr(), 
@@ -185,6 +187,7 @@ void N2D2::DistanceCell_Frame_CUDA<T>::backPropagate()
                                     nb_class, 
                                     feat_dim,
                                     (T)mCurrentMargin,
+                                    center_coef,
                                     mLabels.getDevicePtr(),
                                     input0->getDevicePtr(),
                                     mMean->getDevicePtr(), 
@@ -290,17 +293,19 @@ void N2D2::DistanceCell_Frame_CUDA<T>::checkGradient(double epsilon, double maxE
                   std::bind(&DistanceCell_Frame_CUDA<T>::propagate, this, false),
                   std::bind(&DistanceCell_Frame_CUDA<T>::backPropagate, this));
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int in = 0; in < mInputs.size(); ++in) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << in << "]";
-
-            gc.check(name.str(), mInputs[in], mDiffOutputs[in]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }*/
 }
 

@@ -153,6 +153,140 @@ Supported layers
 +---------------------------------------------+-----------+------------------------------------------------+
 
 
+Usage
+-----
+
+Simulation
+~~~~~~~~~~
+
+When a network is exported, test vectors are exported automatically too, if
+the ``-db-export`` command line option value is > 0 (by default, the full test
+set is exported). All the test vectors are exported for the C++ emulator, while
+only the first image is pre-loaded as a test vector for the RTL simulation in
+the ``RTL/NETWORK/TB/network_tb.vhd`` file. This testbench is configured with a
+clock frequency of 100MHz (regardless of the ``EstimationFrequency`` export
+parameter). The testbench reads 3 times the same (first) image and outputs the
+results in the ``out_file/out.txt`` file, located in ``RTL/NETWORK/simu/VsimTOOL``
+for ModelSim.
+
+::
+
+    cd RTL/NETWORK/simu
+    make vsim
+
+
+C++ emulation
+~~~~~~~~~~~~~
+
+The DNeuro export comes with a C++ bit-accurate emulator.
+
+By default, the provided emulator will use the same parameters as the ones 
+defined in the export. For testing purposes it is possible to change the 
+accumulation size by defining the ``ACC_NB_BITS`` variable.
+
+::
+
+    cd EMULATOR
+    CXXFLAGS="-DACC_NB_BITS=18" make
+    ./dneuro_v2_emulator
+
+When running the emulator, all the exported images are evaluated by default, and
+a global score is computed from individual images good or bad classifications.
+It is possible to evaluate a single image with the following command line
+argument:
+
+::
+
+    ./dneuro_v2_emulator -stimulus stimuli/env00.ppm
+
+The ``stimuli/env00.ppm`` is an already pre-processed image automatically 
+exported by N2D2 and ready to be feed at the input of the neural network. The
+emulator generates for each network's layer an output file 
+*layer_name_output.txt* containing the output tensor values of the layer, as
+expected for the DNeuro IP.
+
+Synthesis
+~~~~~~~~~
+
+To generate a project ready for synthesis in Vivado or Quartus, use the scripts
+provided in ``RTL/NETWORK/simu/PythonTOOL``. To generate a Vivado project, run:
+
+::
+
+    cd RTL/NETWORK/simu
+    python PythonTOOL/vivadoGenerate.py
+
+This script creates a new project in ``RTL/NETWORK/simu/VivadoTOOL/project_export_DNeuro``.
+Do not forget to change the default project's part.
+
+
+.. Warning::
+
+    Do not create a project and add the sources manually, as the sources
+    organization into libraries will not be setup properly: the sources in the
+    directories ``CONV_COMMON``, ``CONV_Tn_Oy_CHy_K1_Sy_P1`` and 
+    ``CONV_Tn_Oy_CHy_K1_Sy_Pn`` must be placed in libraries of the same name!
+
+
+Export parameters
+~~~~~~~~~~~~~~~~~
+
+Extra parameters can be passed during export using the 
+``-export-parameters params.ini`` command line argument. The parameters must be 
+saved in an INI-like file.
+
+List of general available parameters:
+
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| Argument [default value]                                        | Description                                                                                                              |
++=================================================================+==========================================================================================================================+
+| ``NbDSPs``                                                      | Set the maximum number of DSPs that the network can use on the FPGA                                                      |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| ``NbMemoryBytes``                                               | Set the maximum memory, in bytes, that the network can use on the FPGA                                                   |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| ``Network`` [network]                                           | Name of the top-level HDL entity                                                                                         |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| ``EstimationFrequency`` [200]                                   | Frequency used for the FPS estimation given by the export                                                                |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| ``AccumulationNbBits`` [2.DATA_LENGTH+4]                        | Number of bits to use for the accumulation                                                                               |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+
+Output map class conversion to RGB settings:
+
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| Argument [default value]                                        | Description                                                                                                              |
++=================================================================+==========================================================================================================================+
+| ``OutputMapToRGB`` [0]                                          | If true (1), add an extra layer at the end of the network that converts the output of the network to an RGB output       |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| ``OutputMapToRGBBackgroundClass`` []                            | When ``OutputMapToRGB`` is 1, set the class that is used for background objects. The overlay color for this class will   |
+|                                                                 | be transparent                                                                                                           |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| ``OutputMapToRGBColorMasks`` []                                 | When ``OutputMapToRGB`` is 1, list of colors to use for the classes                                                      |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| ``OutputMapToRGBBinaryThresholdUpper`` [0]                      | Upper threshold for binary outputs                                                                                       |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| ``OutputMapToRGBBinaryThresholdLower`` [0]                      | Lower threshold for binary outputs                                                                                       |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+
+
+Internal per layer settings (for debug purpose only!):
+
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| Argument [default value]                                        | Description                                                                                                              |
++=================================================================+==========================================================================================================================+
+| ``RTLType`` []                                                  | Specific name of the RTL library module to use for this layer                                                            |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| ``NbChannelsInstantiation`` []                                  | Specific number of channels to instantiate                                                                               |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| ``NbOutputsInstantiation`` []                                   | Specific number of outputs to instantiate                                                                                |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| ``KernelHeightInstantiation`` []                                | Specific number of kernel height to instantiate                                                                          |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| ``KernelWidthInstantiation`` []                                 | Specific number of kernel width to instantiate                                                                           |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+
+
+
 FPGA compatibility tables
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 

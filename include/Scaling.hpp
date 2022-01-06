@@ -48,22 +48,7 @@ public:
     virtual ~AbstractScaling() {};
 
 protected:
-    AbstractScaling() {
-#ifdef CUDA
-        const cudaDeviceProp& props = CudaContext::getDeviceProp();
-        
-        // TODO Optimize dimensions based on the size of the batch and cell
-        mThreadsPerBlock = dim3(props.maxThreadsPerBlock/props.warpSize, 
-                                props.warpSize);
-        mBlocksPerGrid = dim3(4, props.multiProcessorCount);
-#endif
-    }
-
-protected:
-#ifdef CUDA
-    dim3 mBlocksPerGrid;
-    dim3 mThreadsPerBlock;
-#endif
+    AbstractScaling() {}
 };
 
 /**
@@ -104,22 +89,22 @@ public:
                                        input.dimY(), input.dimX(),
                                        isClipped, mClippingPerOutput,
                                        mScalingPerOutput, 
-                                       qBits, 
+                                       qBits,
                                        DeepNetExport::isCellOutputUnsigned(cell));
     }
 
 #ifdef CUDA
     template<typename T>
     void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
-        cudaFloatingPointScaling_propagate(input.getDevicePtr(), output.getDevicePtr(),
+        cudaFloatingPointScaling_propagate(CudaContext::getDeviceProp(),
+                                           input.getDevicePtr(), output.getDevicePtr(),
                                            input.dimB(), input.dimZ(), 
                                            input.dimY(), input.dimX(),
                                            isClipped,
                                            mCudaClippingPerOutput.getDevicePtr(),
                                            mCudaScalingPerOutput.getDevicePtr(), 
-                                           qBits, 
-                                           DeepNetExport::isCellOutputUnsigned(cell),
-                                           mBlocksPerGrid, mThreadsPerBlock);
+                                           qBits,
+                                           DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif
 
@@ -176,22 +161,22 @@ public:
                                     input.dimY(), input.dimX(),
                                     isClipped, mClippingPerOutput,
                                     mScalingPerOutput, mNbFractionalBits,
-                                    qBits, 
+                                    qBits,
                                     DeepNetExport::isCellOutputUnsigned(cell));
     }
     
 #ifdef CUDA
     template<typename T>
     void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
-        cudaFixedPointScaling_propagate(input.getDevicePtr(), output.getDevicePtr(),
+        cudaFixedPointScaling_propagate(CudaContext::getDeviceProp(),
+                                        input.getDevicePtr(), output.getDevicePtr(),
                                         input.dimB(), input.dimZ(), 
                                         input.dimY(), input.dimX(),
                                         isClipped,
                                         mCudaClippingPerOutput.getDevicePtr(),
                                         mCudaScalingPerOutput.getDevicePtr(), mNbFractionalBits, 
-                                        qBits, 
-                                        DeepNetExport::isCellOutputUnsigned(cell),
-                                        mBlocksPerGrid, mThreadsPerBlock);
+                                        qBits,
+                                        DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif
 
@@ -246,22 +231,22 @@ public:
                                      input.dimY(), input.dimX(),
                                      isClipped, mClippingPerOutput,
                                      mScalingPerOutput, 
-                                     qBits, 
+                                     qBits,
                                      DeepNetExport::isCellOutputUnsigned(cell));
     }
-    
+
 #ifdef CUDA
     template<typename T>
     void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
-        cudaSingleShiftScaling_propagate(input.getDevicePtr(), output.getDevicePtr(),
+        cudaSingleShiftScaling_propagate(CudaContext::getDeviceProp(),
+                                         input.getDevicePtr(), output.getDevicePtr(),
                                          input.dimB(), input.dimZ(), 
                                          input.dimY(), input.dimX(),
                                          isClipped,
                                          mCudaClippingPerOutput.getDevicePtr(),
                                          mCudaScalingPerOutput.getDevicePtr(), 
-                                         qBits, 
-                                         DeepNetExport::isCellOutputUnsigned(cell),
-                                         mBlocksPerGrid, mThreadsPerBlock);
+                                         qBits,
+                                         DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif
 
@@ -316,22 +301,22 @@ public:
                                      input.dimY(), input.dimX(),
                                      isClipped, mClippingPerOutput,
                                      mScalingPerOutput, 
-                                     qBits, 
+                                     qBits,
                                      DeepNetExport::isCellOutputUnsigned(cell));
     }
-    
+
 #ifdef CUDA
     template<typename T>
     void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
-        cudaDoubleShiftScaling_propagate(input.getDevicePtr(), output.getDevicePtr(),
+        cudaDoubleShiftScaling_propagate(CudaContext::getDeviceProp(),
+                                         input.getDevicePtr(), output.getDevicePtr(),
                                          input.dimB(), input.dimZ(), 
                                          input.dimY(), input.dimX(),
                                          isClipped,
                                          mCudaClippingPerOutput.getDevicePtr(),
                                          mCudaScalingPerOutput.getDevicePtr(), 
-                                         qBits, 
-                                         DeepNetExport::isCellOutputUnsigned(cell),
-                                         mBlocksPerGrid, mThreadsPerBlock);
+                                         qBits,
+                                         DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif
 

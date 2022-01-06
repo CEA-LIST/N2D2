@@ -143,6 +143,13 @@ function(add_n2d2_pybind name source linked_libs)
     else()
         message(STATUS "Using third_party/pybind11.")
         add_subdirectory(${N2D2_SOURCE_DIR}/third_party/pybind11)
+
+        if (NOT EXISTS "${N2D2_SOURCE_DIR}/third_party/pybind11/CMakeLists.txt")
+          message(FATAL_ERROR
+                  "Cannot find third_party/pybind11 directory that's needed to "
+                  "build N2D2. If you use git, make sure you have cloned submodules:\n"
+                  "  git submodule update --init --recursive\n")
+        endif()
     endif()
 
     pybind11_add_module(${name} MODULE ${source})
@@ -157,8 +164,8 @@ endfunction()
 # Must be called after find_package(CUDA) as the find_package call resets CUDA_NVCC_FLAGS
 macro(set_nvcc_flags)
     set(CUDA_PROPAGATE_HOST_FLAGS OFF)
-    # Must be replace by sm_80 for A100 architecture
-    list(APPEND CUDA_NVCC_FLAGS -std=c++11;-arch=sm_30;)
+    cuda_select_nvcc_arch_flags(ARCH_FLAGS Auto)
+    list(APPEND CUDA_NVCC_FLAGS -std=c++11;${ARCH_FLAGS})
     if (MSVC)
         list(APPEND CUDA_NVCC_FLAGS -Xcompiler;-MD;)
     else()
@@ -193,12 +200,11 @@ target_compile_definitions(n2d2_lib PUBLIC N2D2_COMPILE_PATH=\"${CMAKE_SOURCE_DI
 
 if(MSVC)
     # TODO clean-up warnings
-    target_compile_options(n2d2_lib PUBLIC /W3 /wd4250 /wd4512 /wd4267 /wd4244 /wd4800 /wd4297)
+    target_compile_options(n2d2_lib PUBLIC /W3 /wd4250 /wd4512 /wd4267 /wd4244 /wd4800 /wd4297 /bigobj)
     target_compile_definitions(n2d2_lib PUBLIC _CONSOLE _VISUALC_ NeedFunctionPrototypes _CRT_SECURE_NO_WARNINGS _VARIADIC_MAX=10)
 else()
     target_compile_options(n2d2_lib PUBLIC -std=c++0x -Wall -Wextra -pedantic -Wno-unknown-pragmas -fsigned-char -fPIC)
 endif()
-
 
 find_package(OpenCV REQUIRED)
 target_link_libraries(n2d2_lib PUBLIC ${OpenCV_LIBS})
@@ -224,14 +230,14 @@ endif()
 
 find_package(PugiXML QUIET)
 if(PUGIXML_FOUND)
-    target_include_directories(n2d2_lib PUBLIC ${PUGIXML_INCLUDE_DIR})
+    target_include_directories(n2d2_lib SYSTEM PUBLIC ${PUGIXML_INCLUDE_DIR})
     target_link_libraries(n2d2_lib PUBLIC ${PUGIXML_LIBRARY})
     target_compile_definitions(n2d2_lib PUBLIC PUGIXML=1)
 endif()
 
 find_package(JsonCpp QUIET)
 if(JsonCpp_FOUND)
-    target_include_directories(n2d2_lib PUBLIC ${JsonCpp_INCLUDE_DIR})
+    target_include_directories(n2d2_lib SYSTEM PUBLIC ${JsonCpp_INCLUDE_DIR})
     target_link_libraries(n2d2_lib PUBLIC ${JsonCpp_LIBRARY})
     target_compile_definitions(n2d2_lib PUBLIC JSONCPP=1)
 endif()
@@ -244,7 +250,7 @@ if (MongoDB_FOUND)
     find_package(OpenSSL REQUIRED)
     target_link_libraries(n2d2_lib PUBLIC ${OPENSSL_LIBRARIES})
 
-    target_include_directories(n2d2_lib PUBLIC ${MongoDB_INCLUDE_DIR})
+    target_include_directories(n2d2_lib SYSTEM PUBLIC ${MongoDB_INCLUDE_DIR})
     target_link_libraries(n2d2_lib PUBLIC ${MongoDB_LIBRARIES})
     target_compile_definitions(n2d2_lib PUBLIC MONGODB=1)
 endif()
@@ -261,7 +267,7 @@ if (Protobuf_FOUND)
     target_compile_options(onnx_proto_lib PUBLIC -std=c++0x -fPIC)
 
     get_filename_component("PROTO_HEADER_DIR" ${PROTO_HEADER} DIRECTORY)
-    target_include_directories(n2d2_lib PUBLIC ${PROTO_HEADER_DIR})
+    target_include_directories(n2d2_lib SYSTEM PUBLIC ${PROTO_HEADER_DIR})
     target_link_libraries(n2d2_lib PUBLIC onnx_proto_lib ${PROTOBUF_LIBRARY})
     target_compile_definitions(n2d2_lib PUBLIC ONNX=1)
 endif()
@@ -280,9 +286,6 @@ if(MSVC)
                             "install it from http://www.softagalleria.net/dirent.php")
     endif()
 endif()
-
-
-
 
 set_target_properties(n2d2_lib PROPERTIES COTIRE_ADD_UNITY_BUILD FALSE)
 set_target_properties(n2d2_lib PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "${CMAKE_CURRENT_LIST_DIR}/include/Precompiled.hpp")
@@ -312,11 +315,11 @@ if(CUDA_FOUND)
     cuda_add_library(n2d2_lib_cuda STATIC ${src_files_cuda})
 
     # CUDA
-    target_include_directories(n2d2_lib_cuda PUBLIC ${CUDA_INCLUDE_DIRS})
+    target_include_directories(n2d2_lib_cuda SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS})
     target_link_libraries(n2d2_lib_cuda PUBLIC ${CUDA_LIBRARIES})
 
     # CuDNN
-    target_include_directories(n2d2_lib_cuda PUBLIC ${CUDNN_INCLUDE_DIRS})
+    target_include_directories(n2d2_lib_cuda SYSTEM PUBLIC ${CUDNN_INCLUDE_DIRS})
     target_link_libraries(n2d2_lib_cuda PUBLIC ${CUDNN_LIBRARY})
 
     # Cublas
@@ -335,7 +338,7 @@ if(CUDA_FOUND)
     find_package(NVML)
     if(NVML_FOUND)
         message(STATUS "NVML Version : ${NVML_API_VERSION}")
-        target_include_directories(n2d2_lib_cuda PUBLIC ${NVML_INCLUDE_DIRS})
+        target_include_directories(n2d2_lib_cuda SYSTEM PUBLIC ${NVML_INCLUDE_DIRS})
         target_link_libraries(n2d2_lib_cuda PUBLIC ${NVML_LIBRARIES})
         target_compile_definitions(n2d2_lib_cuda PUBLIC NVML=1)
     else()

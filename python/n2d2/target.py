@@ -67,6 +67,7 @@ class Target(N2D2_Interface, ABC):
                                         'labels_mapping', 'create_missing_labels'])
 
         self._provider = provider
+        self._deepnet = None
 
 
     def get_name(self):
@@ -78,6 +79,14 @@ class Target(N2D2_Interface, ABC):
     def log_estimated_labels_json(self, dir_name, **kwargs):
         self._N2D2_object.logEstimatedLabelsJSON(dir_name, **kwargs)
 
+    def get_current_loss(self):
+        return self.N2D2().getLoss()[-1]
+
+    def get_deepnet(self):
+        return self._deepnet
+
+    def __str__(self):
+        return self.get_name()
 
 class Score(Target):
 
@@ -95,8 +104,7 @@ class Score(Target):
         Target.__init__(self, provider, **config_parameters)
 
     def __call__(self, inputs):
-
-        if self._N2D2_object is None:
+        if self._N2D2_object is None: # TODO : We allow the user to modify the graph but we do not check if the target is associated with the last cell.
             self._N2D2_object = N2D2.TargetScore(self._constructor_parameters['name'],
                                                  inputs.cell.N2D2(),
                                                  self._provider.N2D2(),
@@ -106,6 +114,10 @@ class Score(Target):
 
         self.provide_targets()
         self.process()
+        self._deepnet = inputs.get_deepnet()
+        loss = n2d2.Tensor(dims=[1], value=self.get_current_loss(), cell=self)
+        loss._leaf = True
+        return loss
 
 
     def provide_targets(self):
@@ -113,6 +125,19 @@ class Score(Target):
 
     def process(self):
         self._N2D2_object.process(self._provider.get_partition())
+
+    def get_loss(self):
+        """
+        Return full loss vector of all batches
+        """
+        return self.N2D2().getLoss()
+
+
+    def loss(self):
+        """
+        Return loss of last batch
+        """
+        return self.get_loss()[-1]
 
     def get_average_success(self, window=0):
         if not self._N2D2_object.getTargetTopN() == 1:

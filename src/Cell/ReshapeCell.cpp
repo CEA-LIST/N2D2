@@ -31,18 +31,7 @@ N2D2::ReshapeCell::ReshapeCell(const DeepNet& deepNet,
       mDims(dims)
 {
     // ctor
-    const int size = mDims.size();
-
-    if (size > 4) {
-        throw std::domain_error("ReshapeCell: the number of dimensions for"
-                                " the reshape cannot be above 4.");
-    }
-    else if (size > 3 && mDims[3] != 0) {
-        std::cout << Utils::cwarning << "ReshapeCell: fourth (batch) dimension"
-            " will be ignored." << Utils::cdef << std::endl;
-    }
-
-    mDims.resize(3, 1);
+    if (mDims.size() < 3) mDims.resize(3, 1);
 }
 
 std::vector<unsigned int> N2D2::ReshapeCell::getReceptiveField(
@@ -88,7 +77,7 @@ void N2D2::ReshapeCell::setOutputsDims()
 
     if (inputsSize != outputsSize) {
         std::stringstream msgStr;
-        msgStr << "ReshapeCell: the total size of the first 3 dimensions after"
+        msgStr << "ReshapeCell: the total size of the dimensions after"
             " reshape (" << dims << ") doesn't match the corresponding total"
             " input size (" << mInputsDims << ")" << std::endl;
 

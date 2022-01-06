@@ -129,5 +129,7 @@ N2D2::DIR_DatabaseGenerator::generate(IniParser& iniConfig,
     }
     while (!currentSection.empty());
 
+    database->logPartition("db_partition");
+
     return database;
 }

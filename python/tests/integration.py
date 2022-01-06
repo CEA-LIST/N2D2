@@ -18,6 +18,11 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
+
+"""
+This script aims to compare a network defined with an ini file with a network defined with the PythonAPI.
+"""
+
 import N2D2
 import n2d2
 

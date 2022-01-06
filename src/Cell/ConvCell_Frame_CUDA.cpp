@@ -769,16 +769,16 @@ void N2D2::ConvCell_Frame_CUDA<T>::check_input()
           " equal to the number of inputs defined for the cell.");
     }
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-        if (mInputs[k].dimZ() != mSharedSynapses[k].dimZ()*mNbGroups[k]){
+        if ((mNbGroups[k] > 0 && mInputs[k].dimZ() != mSharedSynapses[k].dimZ()*mNbGroups[k])
+        || (mNbGroups[k] == 0 && mInputs[k].dimZ() != mSharedSynapses[k].dimZ())){
             std::cout << "mInputs.dimZ(): " << mInputs[k].dimZ() << std::endl;
             std::cout << "mSharedSynapses.dimZ(): " << mSharedSynapses[k].dimZ() << std::endl;
             std::cout << "mNbGroups: " << mNbGroups[k] << std::endl;
             std::stringstream ss;
             ss << "Unmatching dimension Z"
-            " between input and weight " << k << " for cell " + mName;
+            " between input and weight tensor " << k << " for cell " + mName;
             throw std::runtime_error(ss.str());
         }
-        //std::cout << mName << " " << k << std::endl;
     }
 }
 
@@ -1396,8 +1396,11 @@ void N2D2::ConvCell_Frame_CUDA<T>::backPropagate()
     }
 
     /** If not first layer */
-    if (!mDiffOutputs.empty() && mBackPropagate) {
+    if (mBackPropagate) {
         for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+            if (mDiffOutputs[k].empty())
+                continue;
+
             const typename Cuda::cudnn_scaling_type<T>::type beta
                 = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
 
@@ -1542,17 +1545,19 @@ void N2D2::ConvCell_Frame_CUDA<T>::checkGradient(double epsilon, double maxError
     if (!mNoBias)
         gc.check(mName + "_mDiffBias", (*mBias), mDiffBias);
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int k = 0; k < mInputs.size(); ++k) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << k << "]";
-
-            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

@@ -64,7 +64,7 @@ class Database(N2D2_Interface):
         """
         Return the number fo stimuli  available for this partition
         
-        :param partition: The partition can be  ``Test``, ``Validation``, ``Test``,  ``Unpartitioned``
+        :param partition: The partition can be  ``Learn``, ``Validation``, ``Test``,  ``Unpartitioned``
         :type partition: str 
         """
         return self.N2D2().getNbStimuli(N2D2.Database.StimuliSet.__members__[partition])
@@ -176,7 +176,7 @@ class DIR(Database):
         :type per_label_partitioning: bool, optional
         :param equiv_label_partitioning: If ``True``, the stimuli are equi-partitioned in the ``learn`` and ``validation`` sets, meaning that the same number of stimuli for each label is used (only when ``per_label_partitioning`` is ``True``). The remaining stimuli are partitioned in the ``test`` set, default=True
         :type equiv_label_partitioning: bool, optional
-        :param ignore_mask: #TODO : add a description for this parameter, default=[]
+        :param ignore_mask: List of mask strings to ignore. If any is present in a file path, the file gets ignored. The usual * and + wildcards are allowed, default=[]
         :type ignore_mask: list, optional
         :param valid_extensions: List of valid stimulus file extensions (if left empty, any file extension is considered a valid stimulus), default=[]
         :type valid_extensions: list, optional
@@ -335,6 +335,9 @@ class ILSVRC2012(Database):
 class Cityscapes(Database):
     """
     Cityscapes database :cite:`Cordts2016Cityscapes`.
+
+    .. warning::
+        Don't forget to install the **libjsoncpp-dev** package on your device if you wish to use this database.
     """
 
     _type = "Cityscapes"
@@ -356,6 +359,11 @@ class Cityscapes(Database):
         :param single_instance_labels: If ``True``, convert group labels to single instance labels (for example, ``cargroup`` becomes ``car``), default=True
         :type single_instance_labels: boolean, optional 
         """
+        if not n2d2.global_variables.json_compiled:
+            raise RuntimeError(
+                "JSON for C++ library not installed\n\n"
+                "\tPlease install the libjsoncpp-dev package and reinstall n2d2\n\n")
+
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['inc_train_extra', 'use_coarse', 'single_instance_labels'])

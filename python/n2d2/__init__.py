@@ -18,17 +18,6 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
-try:    
-    # If you try to import numpy after initialising a deepNet, the import cause a crash.
-    # Importing numpy before the library is a temporary fix. 
-    # I put this import in a try bloc to avoid adding an explicit dependance to numpy. 
-    import numpy
-except:
-    pass
-
-# FIXME : We need to import keras first to avoid a SegFault
-import n2d2.keras # Put in a try block to avoid error if torch is not installed ?
-
 # It's better to access these variables without mentioning global_variable in the path
 from n2d2.global_variables import GlobalVariables
 
@@ -48,13 +37,10 @@ import n2d2.deepnet
 import n2d2.solver
 import n2d2.filler
 import n2d2.target
-import n2d2.application
 import n2d2.activation
 import n2d2.mapping
 import n2d2.error_handler
 import n2d2.models
-import n2d2.pytorch # Put in a try block to avoid error if torch is not installed ?
+# IP functions
 import n2d2.quantizer
 import n2d2.converter
-
-import n2d2.loss_function

@@ -59,7 +59,8 @@ public:
                          std::size_t nbBits,
                          ClippingMode actClippingMode,
                          ScalingMode actScalingMode,
-                         bool rescalePerOutputChannel);
+                         bool rescalePerOutputChannel,
+                         double quantileValue = 0.9999);
 protected:
     DeepNet& mDeepNet;
     std::string getCellModelType(const Cell& cell);
@@ -85,6 +86,9 @@ protected:
     static std::pair<std::vector<unsigned char>, double> approximateScalingWithPowerOf2Divs(
                                                 Float_T scaling, std::size_t nbDivisions);
 
+    static void approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
+                                       std::size_t nbBits);
+
 private:
     /**
      * Return the scalings that have been applied to the biasses of each layer. 
@@ -95,7 +99,8 @@ private:
     void quantizeActivations(const std::unordered_map<std::string, Histogram>& outputsHistogram,
                              const std::unordered_map<std::string, RangeStats>& outputsRange,
                              std::unordered_map<std::string, long double>& biasScalings,
-                             std::size_t nbBits, ClippingMode actClippingMode);
+                             std::size_t nbBits, ClippingMode actClippingMode,
+                             double quantileValue = 0.9999);
 
     double getActivationQuantizationScaling(const Cell& cell, std::size_t nbBits) const;
 
@@ -112,7 +117,7 @@ private:
      * 
      * This can be done if the ElemWiseCell is a simple addition multiple inputs.
      */
-    void moveScalingCellAboveParentElemWiseCell(const std::shared_ptr<ScalingCell>& scalingCell, 
+    bool moveScalingCellAboveParentElemWiseCell(const std::shared_ptr<ScalingCell>& scalingCell, 
                                                 const std::shared_ptr<ElemWiseCell>& parentElemWiseCell);
 
 
@@ -125,7 +130,8 @@ private:
     static double getCellThreshold(const std::string& cellName,
                                    const std::unordered_map<std::string, Histogram>& outputsHistogram,
                                    const std::unordered_map<std::string, RangeStats>& outputsRange,
-                                   std::size_t nbBits, ClippingMode actClippingMode);
+                                   std::size_t nbBits, ClippingMode actClippingMode,
+                                   double quantileValue = 0.9999);
 
     static void approximateActivationScaling(Cell& cell, Activation& activation,
                                              ScalingMode actScalingMode);
@@ -140,8 +146,6 @@ private:
                                                 std::size_t nbDivisions);
 
 
-    static void approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
-                                       std::size_t nbBits);
 
 };
 

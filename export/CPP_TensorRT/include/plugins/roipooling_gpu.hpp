@@ -58,7 +58,7 @@ public:
         mStimuliHeight = stimuliHeight;
         mStimuliWidth = stimuliWidth;
         for(unsigned int i = 0; i < nbFeature; ++i)
-            mFeatureDims.push_back( nvinfer1::DimsCHW(  featureChannels[i],
+            mFeatureDims.push_back( trt_Dims3(  featureChannels[i],
                                                         featureHeight[i],
                                                         featureWidth[i]));
 
@@ -80,7 +80,7 @@ public:
         mNbInputFeature = read<int>(d);
         mFeatureDims.resize(mNbInputFeature);
         for(unsigned int k = 0; k < mNbInputFeature; ++k)
-            mFeatureDims[k] = read<nvinfer1::DimsCHW>(d);
+            mFeatureDims[k] = read<trt_Dims3>(d);
 
         mThreadX.resize(mNbInputFeature);
         mThreadY.resize(mNbInputFeature);
@@ -125,7 +125,7 @@ public:
                                                const nvinfer1::Dims* inputDim,
                                                int nbInputDims) override
 	{
-        return nvinfer1::DimsNCHW(mOutputDims.d[0], mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
+        return trt_Dims4(mOutputDims.d[0], mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
 
 	}
 
@@ -215,7 +215,7 @@ public:
 	{
         size_t inputDimParamSize = 4*sizeof(int); //
         size_t ROIParamI = 4*sizeof(int) + sizeof(Pooling_T) + 6*sizeof(int)*mNbInputFeature + 2*sizeof(bool)
-                            + mNbInputFeature*sizeof(nvinfer1::DimsCHW); //
+                            + mNbInputFeature*sizeof(trt_Dims3); //
 
         mSerializationSize = inputDimParamSize + ROIParamI;
 
@@ -233,7 +233,7 @@ public:
         write<int>(d, (int)mNbInputFeature);
 
         for(unsigned int k = 0; k < mNbInputFeature; ++k)
-            write<nvinfer1::DimsCHW>(d, mFeatureDims[k]);
+            write<trt_Dims3>(d, mFeatureDims[k]);
 
         for(unsigned int k = 0; k < mNbInputFeature; ++k)
         {
@@ -332,7 +332,7 @@ private:
 
 
     nvinfer1::Dims mOutputDims;
-    std::vector<nvinfer1::DimsCHW> mFeatureDims;
+    std::vector<trt_Dims3> mFeatureDims;
     std::vector<unsigned int> mThreadX;
     std::vector<unsigned int> mThreadY;
     std::vector<unsigned int> mThreadZ;

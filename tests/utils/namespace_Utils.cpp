@@ -92,6 +92,22 @@ TEST_DATASET(Utils,
 }
 
 TEST_DATASET(Utils,
+             RTLIdentifier,
+             (std::string value, std::string expected),
+             std::make_tuple("token", "token"),
+             std::make_tuple("tok-en", "tok_en"),
+             std::make_tuple("tok-%en", "tok_en"),
+             std::make_tuple("0tok-%en", "ID0tok_en"),
+             std::make_tuple("___0tok-%en", "ID0tok_en"),
+             std::make_tuple("_token", "token"),
+             std::make_tuple("token_", "token"),
+             std::make_tuple("token__token", "token_token"),
+             std::make_tuple("__token__token__", "token_token"))
+{
+    ASSERT_EQUALS(Utils::RTLIdentifier(value), expected);
+}
+
+TEST_DATASET(Utils,
              match,
              (std::string first, std::string second, bool match),
              std::make_tuple("test", "test", true),

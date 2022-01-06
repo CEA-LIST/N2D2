@@ -24,6 +24,7 @@
 #include "utils/BinaryCvMat.hpp"
 #include "utils/Gnuplot.hpp"
 #include "utils/GraphViz.hpp"
+#include "Adversarial.hpp"
 
 N2D2::StimuliProvider::ProvidedData::ProvidedData(ProvidedData&& other)
     : batch(std::move(other.batch)),
@@ -78,6 +79,11 @@ N2D2::StimuliProvider::StimuliProvider(Database& database,
 #ifdef CUDA
     mDevicesInfo.states.resize(count, N2D2::DeviceState::Excluded);
 #endif
+
+    // Default construction of the adversarial attack
+    // Another attack pointer may be brought by the StimuliProvider generator
+    std::shared_ptr<Adversarial> adv(new Adversarial(Adversarial::Attack_T::None));
+    setAdversarialAttack(adv);
 
 #ifdef CUDA
     const char* gpuDevices = std::getenv("N2D2_GPU_DEVICES");
@@ -837,62 +843,62 @@ void N2D2::StimuliProvider::synchronize()
 
     synchronizeToDevices();
 }
-unsigned int
-    N2D2::StimuliProvider::setStimuliIndexes(   Database::StimuliSet set,   
-                                                const unsigned int nbEpochs,
-                                                bool randPermutation)
-{
-    if(nbEpochs == 0) {
-        std::stringstream msg;
-        msg << "StimuliProvider::DatabasePermutation(): nbEpochs (" << nbEpochs
-            << ") must be higher than 0 ! for set (" << set << ")";
+// unsigned int
+//     N2D2::StimuliProvider::setStimuliIndexes(   Database::StimuliSet set,   
+//                                                 const unsigned int nbEpochs,
+//                                                 bool randPermutation)
+// {
+//     if(nbEpochs == 0) {
+//         std::stringstream msg;
+//         msg << "StimuliProvider::DatabasePermutation(): nbEpochs (" << nbEpochs
+//             << ") must be higher than 0 ! for set (" << set << ")";
 
-        throw std::runtime_error(msg.str());
-    }
-    const unsigned int nMax = mDatabase.getNbStimuli(set);
-    std::vector<std::vector<unsigned int > >& indexes =
-            (set == Database::StimuliSet::Learn) ? mDatabaseLearnIndexes :
-            (set == Database::StimuliSet::Validation) ? mDatabaseValIndexes :
-                mDatabaseTestIndexes;
+//         throw std::runtime_error(msg.str());
+//     }
+//     const unsigned int nMax = mDatabase.getNbStimuli(set);
+//     std::vector<std::vector<unsigned int > >& indexes =
+//             (set == Database::StimuliSet::Learn) ? mDatabaseLearnIndexes :
+//             (set == Database::StimuliSet::Validation) ? mDatabaseValIndexes :
+//                 mDatabaseTestIndexes;
 
-    if(nMax == 0)
-    {
-        std::cout << Utils::cwarning << "setStimuliIndexes for set " << set <<
-            " is empty" << Utils::cdef
-            << std::endl;
-        return 0U;
-    }
-    if(indexes.empty())
-    {
-        indexes.resize(nbEpochs, 
-                                std::vector<unsigned int>(nMax));
-        for(unsigned int epoch = 0; epoch < nbEpochs; ++ epoch)
-        {
-            std::iota(  std::begin(indexes[epoch]),
-                        std::end(indexes[epoch]),
-                        0U);
+//     if(nMax == 0)
+//     {
+//         std::cout << Utils::cwarning << "setStimuliIndexes for set " << set <<
+//             " is empty" << Utils::cdef
+//             << std::endl;
+//         return 0U;
+//     }
+//     if(indexes.empty())
+//     {
+//         indexes.resize(nbEpochs, 
+//                                 std::vector<unsigned int>(nMax));
+//         for(unsigned int epoch = 0; epoch < nbEpochs; ++ epoch)
+//         {
+//             std::iota(  std::begin(indexes[epoch]),
+//                         std::end(indexes[epoch]),
+//                         0U);
 
-            //Sort index of data stimuli under a pseudo random range
-            if(randPermutation) {
-                for(unsigned int n = 0; n < (nMax - 1); ++n)
-                {
-                    const unsigned int randIdx = 
-                            Random::mtRand() % (nMax - n);
-                    const unsigned int tmp = indexes[epoch][n];
-                    indexes[epoch][n] = indexes[epoch][(randIdx+n)];
-                    indexes[epoch][(randIdx+n)] = tmp;
-                }
+//             //Sort index of data stimuli under a pseudo random range
+//             if(randPermutation) {
+//                 for(unsigned int n = 0; n < (nMax - 1); ++n)
+//                 {
+//                     const unsigned int randIdx = 
+//                             Random::mtRand() % (nMax - n);
+//                     const unsigned int tmp = indexes[epoch][n];
+//                     indexes[epoch][n] = indexes[epoch][(randIdx+n)];
+//                     indexes[epoch][(randIdx+n)] = tmp;
+//                 }
 
-            }
-        }
-    }
-    else {
-        std::cout << Utils::cwarning << "indexes for set " << set <<
-            " are already initialized" << Utils::cdef
-            << std::endl;
-    }
-    return nMax;
-} 
+//             }
+//         }
+//     }
+//     else {
+//         std::cout << Utils::cwarning << "indexes for set " << set <<
+//             " are already initialized" << Utils::cdef
+//             << std::endl;
+//     }
+//     return nMax;
+// } 
 unsigned int N2D2::StimuliProvider::getRandomIndex(Database::StimuliSet set)
 {
     return Random::randUniform(0, mDatabase.getNbStimuli(set) - 1);

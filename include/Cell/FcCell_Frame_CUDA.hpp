@@ -84,10 +84,8 @@ public:
     inline void getQuantWeight(unsigned int output, unsigned int channel,
                           BaseTensor& value) const;
     inline void getBias(unsigned int output, BaseTensor& value) const;
-    inline BaseInterface* getWeights()
-    {
-        return &mSynapses;
-    };
+    virtual const BaseInterface* getWeights() const { return &mSynapses; };
+    virtual const BaseTensor* getBiases() const { return &mBias; };
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void logFreeParameters(const std::string& fileName,
                            unsigned int output) const;
@@ -170,7 +168,10 @@ void N2D2::FcCell_Frame_CUDA<T>::getQuantWeight(unsigned int output,
     if (!mQuantizer)
         return;
 
-    const CudaTensor<T>& synapses = cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(0));
+    const unsigned int k = mInputs.getTensorIndex(channel);
+    channel -= mInputs.getTensorDataOffset(channel);
+
+    const CudaTensor<T>& synapses = cuda_tensor_cast<T>(mQuantizer->getQuantizedWeights(k));
     synapses.synchronizeDToH(0, 0, channel, output, 1);
 
     value.resize({1});

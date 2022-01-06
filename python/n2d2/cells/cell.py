@@ -36,9 +36,15 @@ class Cell(ABC):
                 raise n2d2.error_handler.WrongInputType("name", str(type(name)), ["str"])
         self._name = name
 
-    @abstractmethod
     def __call__(self, x):
-        pass
+        """
+        Do the common check on the inputs and infer the deepNet from the inputs.
+        """
+        if not (isinstance(x, n2d2.Tensor) or isinstance(x, n2d2.Interface)):
+            raise TypeError(self.get_name() + " received an input of type " + str(
+                type(x)) + ", input should be of type n2d2.Tensor or n2d2.Interface instead.")
+        else:
+            self._deepnet = x.get_deepnet()
 
     @abstractmethod
     def test(self):
@@ -62,7 +68,6 @@ class Cell(ABC):
         return type(self).__name__
 
 
-# TODO: Empty at the moment. Check for mutualisation of code in Fc, Conv, Deconv, BatchNorm
 class Trainable(ABC):
 
     @abstractmethod
@@ -88,7 +93,11 @@ class Trainable(ABC):
 
 
 class Block(Cell):
-    #@abstractmethod
+    """
+        The Block class is the most general type of cell container, from which all other containers are derived.
+        It saves its cells internally with a dictionary. The Block class has no implicit structure for propagation,
+        the __call__ method therefore has to be defined explicitly.
+    """
 
     def __init__(self, cells, name=None):
         assert (isinstance(cells, list))
@@ -103,9 +112,14 @@ class Block(Cell):
         elif isinstance(item, str): 
             return self._cells[item]
         else:
-            raise n2d2.error_handler.WrongInputType("item", type(item), ["str", "int"])
+            raise n2d2.error_handler.WrongInputType("item", type(item), ["str"])
 
     def get_cells(self):
+        """
+           Returns dictionary with all cells that are not Blocks (i.e. NeuralNetworkCells). This allows
+           therefore to access all cells by a dictionary without having to consider the recursive block
+           structure of the model
+        """
         cells = {}
         self._get_cells(cells)
         return cells
@@ -128,7 +142,7 @@ class Block(Cell):
         return self
 
     def __call__(self, x):
-        raise RuntimeError("Block '" + self.get_name() + "' has no __call__ method implemented")
+        super().__call__(x)
 
     def set_solver(self, solver):
         for cell in self.get_cells().values():
@@ -140,7 +154,6 @@ class Block(Cell):
                     and isinstance(cell.activation.quantizer, Trainable):
                 cell.activation.quantizer.solver = solver.copy()
 
-
     def import_free_parameters(self, dir_name, ignore_not_exists=False):
         for cell in self._cells.values():
             cell.import_free_parameters(dir_name, ignore_not_exists=ignore_not_exists)
@@ -148,16 +161,12 @@ class Block(Cell):
     def export_free_parameters(self, dir_name):
         for cell in self._cells.values():
             cell.export_free_parameters(dir_name)
-    """
-    def __str__(self):
-        output = "\'" + self._name + "\' " + "[\n"
-        for cell in self._cells.values():
-            output += "\t" + str(cell) + "\n"
-        output += "]\n"
-        return output
-    """
 
     def __str__(self):
+        """
+        Prints the cells of the block. Note that block stored cells in a dictionary, therefore the
+        order of the output depends on the order in which the cells where added to the Block
+        """
         return self._generate_str(1)
 
     def _generate_str(self, indent_level):
@@ -172,31 +181,57 @@ class Block(Cell):
         output += "\n" + ((indent_level - 1) * "\t") + ")"
         return output
 
+    def items(self):
+        return self._cells.items()
+
 
 class Iterable(Block, ABC):
+    """
+       This abstract class describes a Block object with order, i.e. an array/list-like object.
+       It implements several methods of python lists. The __call__ method is implicitly defined by the order
+       of the list.
+    """
     @abstractmethod
     def __init__(self, cells, name=None):
         Block.__init__(self, cells, name)
+        # This is the sequential representation of the cells, since the self._cells object is a dictionary and therefore
+        # does not guarantee order
         self._seq = cells
 
-    def __getitem__(self, item): # Redondant with the definition given in Block
-        if isinstance(item, int):
-            return list(self._cells.values())[item]
-        else:
-            return self._cells[item]
+    def __getitem__(self, item):
 
-    def get_index(self, item):
-        for i, cell in enumerate(self._seq):
-            if item.get_name() == cell.get_name():
-                return i
-        raise RuntimeError("Element with name '" + item.get_name() + "' not found in sequence")
+        if isinstance(item, int):
+            return self._seq.__getitem__(item)
+        else:
+            return super().__getitem__(item)
 
     def __len__(self):
-        return len(self._seq)
+        return self._seq.__len__()
+
+    def __iter__(self):
+        return self._seq.__iter__()
 
     def insert(self, index, cell):
+        if not isinstance(cell, n2d2.cells.Cell):
+            raise n2d2.error_handler.WrongInputType("cell", type(cell), ["n2d2.cells.Cell"])
+        if index < 0:
+            raise ValueError("Negative index are not supported.")
         self._seq.insert(index, cell)
         self._cells[cell.get_name()] = cell
+
+    def append(self, cell):
+        """Append a cell at the end of the sequence."""
+        if not isinstance(cell, n2d2.cells.Cell):
+            raise n2d2.error_handler.WrongInputType("cell", type(cell), ["n2d2.cells.Cell"])
+        self._seq.append(cell)
+        self._cells[cell.get_name()] = cell
+
+    def remove(self, cell):
+        self._seq.remove(cell)
+        del self._cells[cell.get_name()]
+
+    def index(self, item):
+        return self._seq.index(item)
 
     def _generate_str(self, indent_level):
         output = "\'" + self.get_name() + "\' " + self.get_type() + "("
@@ -211,21 +246,42 @@ class Iterable(Block, ABC):
         return output
 
 
-    def __iter__(self):
-        return self._seq.__iter__()
-
 class Sequence(Iterable):
+    """
+         This implementation of the Iterable class describes a sequential (vertical) ordering of cells.
+    """
     def __init__(self, cells, name=None):
         Iterable.__init__(self, cells, name)
 
     def __call__(self, x):
-        x.get_deepnet().begin_group(name=self._name)
+        super().__call__(x)
         for cell in self:
             x = cell(x)
-        x.get_deepnet().end_group()
         return x
 
+    def to_deepnet_cell(self, provider):
+        """Convert a :py:class:`n2d2.cells.Sequence` to a :py:class:`n2d2.cells.DeepNetCell`
+
+        :param provider: Data provider used by the neural network
+        :type provider: :py:class:`n2d2.provider.DataProvider`
+        :return: The corresponding :py:class:`n2d2.cells.DeepNetCell`
+        :rtype: :py:class:`n2d2.cells.DeepNetCell`
+        """
+        if not isinstance(provider, n2d2.provider.DataProvider):
+            raise n2d2.error_handler.WrongInputType("provider", type(provider), ["n2d2.provider.DataProvider"])
+        target = n2d2.target.Score(provider)
+        dummy_input = provider.read_random_batch()
+        dummy_output = target(self(dummy_input))
+        N2D2_deepnet = dummy_output.get_deepnet().N2D2()
+        N2D2_deepnet.addTarget(target.N2D2())
+        N2D2_deepnet.setDatabase(provider.N2D2().getDatabase())
+        return DeepNetCell(N2D2_deepnet)
+
 class Layer(Iterable):
+    """
+        This implementation of the Iterable class describes a layered (horizontal) ordering of cells.
+        An optional mapping can be given to define connectivity with preceding input cell
+    """
 
     def __init__(self, cells, mapping=None, name=None):
         Iterable.__init__(self, cells, name)
@@ -236,34 +292,43 @@ class Layer(Iterable):
                 raise n2d2.error_handler.WrongInputType('mapping', type(mapping), [str(type(list))])
 
     def __call__(self, x):
+        super().__call__(x)
         out = []
         if isinstance(x, n2d2.tensor.Interface):
-            inputs = x.get_tensors()
+            x = x.get_tensors()
         else:
-            inputs = [x]
-        x.get_deepnet().begin_group(name=self._name)
+            x = [x]
         for out_idx, cell in enumerate(self):
             cell_inputs = []
-            for in_idx, ipt in enumerate(inputs):
+            for in_idx, ipt in enumerate(x):
                 # Default is all-to-all
                 if self._mapping is None or self._mapping[in_idx][out_idx]:
                     cell_inputs.append(ipt)
             out.append(cell(Interface(cell_inputs)))
-        x.get_deepnet().end_group()
         return Interface([out])
 
 
-class DeepNetCell(Iterable):
+class DeepNetCell(Block):
     """
-    n2d2 Cell wrapper for a N2D2 deepnet object. Allows chaining a N2D2 deepnet (for example loaded from a ONNX or INI file)
+    n2d2 wrapper for a N2D2 deepnet object. Allows chaining a N2D2 deepnet (for example loaded from a ONNX or INI file)
     into the dynamic computation graph of the n2d2 API. During each use of the  the __call__ method, 
     the N2D2 deepnet is converted to a n2d2 representation and the N2D2 deepnet is concatenated to the deepnet of the 
     incoming tensor object.
+    The object is manipulated with the bound methods of the N2D2 DeepNet object, and its computation graph is
+    also exclusively defined by the DeepNet object that is passed to it during construction.
+    It therefore only inherits from Block, and not from the Iterable class and its children, which are reserved for the
+    python APIs implicit way of constructing graphs.
     """
 
     def __init__(self, N2D2_object):
+        """As a user, you should **not** use this method, if you want to create a DeepNetCell object, please use :
+        :py:meth:`n2d2.cells.DeepNetCell.load_from_ONNX`, :py:meth:`n2d2.cells.DeepNetCell.load_from_INI`, :py:meth:`n2d2.cells.Sequence.to_deepnet_cell`
 
-        # Save
+        :param N2D2_object: The N2D2 DeepNet object
+        :type N2D2_object: :py:class:`N2D2.DeepNet`
+        """
+
+        # Deepnet object that is encapsulated
         self._embedded_deepnet = DeepNet.create_from_N2D2_object(N2D2_object)
 
         if not N2D2_object.getName() == "":
@@ -271,8 +336,7 @@ class DeepNetCell(Iterable):
         else:
             name = None
 
-        #self._cells = self._embedded_deepnet.get_cells()
-        Iterable.__init__(self, list(self._embedded_deepnet.get_cells().values()), name=name)
+        Block.__init__(self, list(self._embedded_deepnet.get_cells().values()), name=name)
 
         self._deepnet = self._embedded_deepnet
         self._inference = False
@@ -302,8 +366,7 @@ class DeepNetCell(Iterable):
         ini_parser.currentSection("onnx", True)
         N2D2_deepnet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, ini_parser,
                                             N2D2_deepnet, [None])
-        n2d2_deepnet = cls(N2D2_deepnet)
-        return n2d2_deepnet
+        return cls(N2D2_deepnet)
 
     @classmethod
     def load_from_INI(cls, path):
@@ -312,31 +375,21 @@ class DeepNetCell(Iterable):
         :param model_path: Path to the ini file.
         :type model_path: str
         """
-        n2d2_deepnet = DeepNet.create_from_N2D2_object(
-            N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path))
-        return n2d2_deepnet
+        n2d2_deepnet = N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path)
+        return cls(n2d2_deepnet)
 
-    def __call__(self, inputs):
+    def __call__(self, x):
+        super().__call__(x)
+        # NOTE: This currently only supports a provider output as input
+        if not isinstance(x, n2d2.Tensor):
+            raise ValueError("Needs tensor with provider output as input")
 
-        # TODO: Not tested for other inputs that provider yet
-        if not isinstance(inputs, n2d2.Tensor):
-            raise ValueError("Needs tensor with provider as input")
+        # Concatenate existing deepnet graph on deepnet of input
+        self._deepnet = self.concat_to_deepnet(x.get_deepnet())
 
-        # Recreate graph with underlying N2D2 deepnet
-        self._deepnet = self.concat_to_deepnet(inputs.get_deepnet())
-
-        #if not provider.dims() == N2D2_object.getStimuliProvider().getData().dims():
-        #    raise RuntimeError(
-        #        "N2D2 object has input dimensions " + str(N2D2_object.getStimuliProvider().getData().dims()) +
-        #        " while given provider has dimensions " + str(provider.dims()))
-
-        #if inputs.nb_dims() != 4:
-        #    raise ValueError("Input Tensor should have 4 dimensions, " + str(inputs.nb_dims()), " were given.")
-
-        #self.get_first().set_deepnet(self._deepnet)
         for cell in self.get_input_cells():
             cell.N2D2().clearInputTensors()
-            cell._link_N2D2_input(inputs.cell)
+            cell.N2D2().linkInput(x.cell.N2D2())
 
         self._deepnet.N2D2().propagate(self._inference)
 
@@ -349,46 +402,28 @@ class DeepNetCell(Iterable):
             return outputs
 
     def concat_to_deepnet(self, deepnet):
-        new_n2d2_deepnet = deepnet
 
-
-        #new_n2d2_deepnet.N2D2().setStimuliProvider(self._N2D2_object.getStimuliProvider())
         cells = self._embedded_deepnet.N2D2().getCells()
         layers = self._embedded_deepnet.N2D2().getLayers()
         if not layers[0][0] == "env":
             print("Is env:" + layers[0][0])
             raise RuntimeError("First layer of N2D2 deepnet is not a StimuliProvider. You may be skipping cells")
 
-        # print("copy graph groups")
-        # print(new_n2d2_deepnet._groups)
+        self._cells = {}
 
-        #new_n2d2_deepnet.begin_group()
         for idx, layer in enumerate(layers[1:]):
-            if len(layer) > 1:
-                new_n2d2_deepnet.begin_group("layer" + str(idx))
-
-            # print("Layer: " + str(idx))
-            # print(layer)
 
             for cell in layer:
                 N2D2_cell = cells[cell]
-                # print("Adding cells: " + N2D2_cell.getName())
                 parents = self._embedded_deepnet.N2D2().getParentCells(N2D2_cell.getName())
                 if len(parents) == 1 and parents[0] is None:
                     parents = []
-                new_n2d2_deepnet.N2D2().addCell(N2D2_cell, parents)
+                deepnet.N2D2().addCell(N2D2_cell, parents)
                 n2d2_cell = self._embedded_deepnet.get_cells()[N2D2_cell.getName()]
-                n2d2_cell.set_deepnet(new_n2d2_deepnet)
-                new_n2d2_deepnet.add_to_current_group(n2d2_cell)
-            if len(layer) > 1:
-                new_n2d2_deepnet.end_group()
-        #new_n2d2_deepnet.end_group()
+                n2d2_cell.set_deepnet(deepnet)
+                self._cells[n2d2_cell.get_name()] = n2d2_cell
 
-        return new_n2d2_deepnet
-    
-    #def clear_data_tensors(self):
-    #    for cell in self._embedded_deepnet.get_cells().values():
-    #        cell.clear_data_tensors()
+        return deepnet
 
     def update(self):
         """Update learnable parameters
@@ -414,6 +449,11 @@ class DeepNetCell(Iterable):
         self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignoreNotExists=ignore_not_exists)
 
     def remove(self, name):
+        """Remove a cell from the encapsulated deepnet
+
+        :param name: Name of cell that shall be removed.
+        :type name: str
+        """
         cell = self._embedded_deepnet.N2D2().getCells()[name]
         self._embedded_deepnet.N2D2().removeCell(cell, False)
         self._embedded_deepnet = DeepNet.create_from_N2D2_object(self._embedded_deepnet.N2D2())
@@ -432,29 +472,105 @@ class DeepNetCell(Iterable):
     def get_input_cells(self):
         """Returns the cells located at the entry of the network.
         """
-        output = []
-        cells = self._embedded_deepnet.get_groups().get_elements()[0]
-        if isinstance(cells, n2d2.deepnet.Group):
-            for name in cells.get_cells():
-                output.append(self._embedded_deepnet.get_cells()[name])
-        else:
-            output.append(cells)
-        return output
+        return self._embedded_deepnet.get_input_cells()
 
     def get_output_cells(self):
         """Returns the cells located at the end of the network.
+
+        :return: Return a list of cells located at the end of the network
+        :rtype: list
         """
-        output = []
-        cells = self._embedded_deepnet.get_groups().get_elements()[-1]
-        if isinstance(cells, n2d2.deepnet.Group):
-            for name in cells.get_cells():
-                output.append(self._embedded_deepnet.get_cells()[name])
+        return self._embedded_deepnet.get_output_cells()
+
+    def fit(self, learn_epoch, log_epoch=1000, avg_window=10000, bench=False, ban_multi_device=False, valid_metric="Sensitivity", stop_valid=0, log_kernels=False):
+        """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
+        
+        :param learn_epoch: The number of epochs steps
+        :type learn_epoch: int
+        :param log_epoch: The number of epochs between logs, default=1000
+        :type log_epoch: int, optional
+        :param avg_window: The average window to compute success rate during learning, default=10000
+        :type avg_window: int, optional
+        :param bench: If ``True``, activate the benchmarking of the learning speed , default=False
+        :type bench: bool, optional
+        :param valid_metric: Validation metric to use can be ``Sensitivity``, ``Specificity``, ``Precision``, ``NegativePredictiveValue``, ``MissRate``, ``FallOut``, ``FalseDiscoveryRate, ``FalseOmissionRate``, ``Accuracy``, ``F1Score``, ``Informedness``, ``Markedness``, default="Sensitivity"
+        :type valid_metric: str, optional
+        :param stop_valid: The maximum number of successive lower score validation, default=0
+        :type stop_valid: int, optional
+        :param log_kernels: If ``True``, log kernels after learning, default=False
+        :type log_kernels: bool, optional
+        """
+
+        # Checking inputs
+        if valid_metric not in N2D2.ConfusionTableMetric.__members__.keys():
+            raise n2d2.error_handler.WrongValue("metric", valid_metric, ", ".join(N2D2.ConfusionTableMetric.__members__.keys()))
         else:
-            output.append(cells)
-        return output
+            N2D2_valid_metric = N2D2.ConfusionTableMetric.__members__[valid_metric]
 
+        # Generating the N2D2 DeepNet
+        N2D2_deepnet = self._embedded_deepnet.N2D2()
+        N2D2_deepnet.initialize()
 
+        # Calling learn function
+        parameters = n2d2.n2d2_interface.Options(
+                        avg_window=avg_window, bench=bench, learn_epoch=learn_epoch,
+                        log_epoch=log_epoch, ban_multi_device=ban_multi_device,
+                        valid_metric=N2D2_valid_metric, stop_valid=stop_valid, 
+                        log_kernels=log_kernels)
+        N2D2.learn_epoch(parameters.N2D2(), N2D2_deepnet)
 
+    def run_test(self, log = 1000, report = 100, test_index = -1, test_id = -1, 
+                 qat_sat = False, log_kernels = False, wt_round_mode = "NONE", 
+                 b_round_mode = "NONE", c_round_mode = "NONE", 
+                 act_scaling_mode = "FLOAT_MULT", log_JSON = False, log_outputs = 0):
+        """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
+        
+        :param log: The number of steps between logs, default=1000
+        :type log: int, optional
+        :param report: Number of steps between reportings, default=100
+        :type report: int, optional
+        :param test_index: Test a single specific stimulus index in the Test set, default=-1
+        :type test_index: int, optional
+        :param test_id: Test a single specific stimulus ID (takes precedence over `test_index`), default=-1
+        :type test_id: int, optional
+        :param qat_sat: Fuse a QAT trained with SAT method, default=False
+        :type qat_sat: bool, optional
+        :param log_kernels: Log kernels after learning, default=False
+        :type log_kernels: bool, optional
+        :param wt_round_mode: Weights clipping mode on export, can be `NONE`,`RINTF`, default="NONE"
+        :type wt_round_mode: str, optional
+        :param b_round_mode: Biases clipping mode on export, can be `NONE`,`RINTF`, default="NONE"
+        :type b_round_mode: str, optional
+        :param c_round_mode: Clip clipping mode on export, can be `NONE`,`RINTF`, default="NONE"
+        :type c_round_mode: str, optional
+        :param act_scaling_mode: activation scaling mode on export, can be `NONE`, `FLOAT_MULT`, `FIXED_MULT16`, `SINGLE_SHIFT` or `DOUBLE_SHIFT`, default="FLOAT_MULT"
+        :type act_scaling_mode: str, optional
+        :param log_JSON: If ``True``, log JSON annotations, default=False
+        :type log_JSON: bool, optional
+        :param log_outputs: log layers outputs for the n-th stimulus (0 = no log), default=0
+        :type log_outputs: int, optional
+        """
+        if wt_round_mode not in N2D2.WeightsApprox.__members__.keys():
+            raise n2d2.error_handler.WrongValue("wt_round_mode", wt_round_mode, ", ".join(N2D2.WeightsApprox.__members__.keys()))
+        else:
+            N2D2_wt_round_mode = N2D2.WeightsApprox.__members__[wt_round_mode]
+        if b_round_mode not in N2D2.WeightsApprox.__members__.keys():
+            raise n2d2.error_handler.WrongValue("b_round_mode", b_round_mode, ", ".join(N2D2.WeightsApprox.__members__.keys()))
+        else:
+            N2D2_b_round_mode = N2D2.WeightsApprox.__members__[b_round_mode]
+        if c_round_mode not in N2D2.WeightsApprox.__members__.keys():
+            raise n2d2.error_handler.WrongValue("b_round_mode", c_round_mode, ", ".join(N2D2.WeightsApprox.__members__.keys()))
+        else:
+            N2D2_c_round_mode = N2D2.WeightsApprox.__members__[c_round_mode]
 
+        if act_scaling_mode not in N2D2.ScalingMode.__members__.keys():
+            raise n2d2.error_handler.WrongValue("act_scaling_mode", act_scaling_mode, ", ".join(N2D2.ScalingMode.__members__.keys()))
+        else:
+            N2D2_act_scaling_mode = N2D2.ScalingMode.__members__[act_scaling_mode]
 
-
+        parameters = n2d2.n2d2_interface.Options(log=log, report=report,
+                        test_index=test_index, test_id=test_id, qat_SAT=qat_sat,
+                        wt_round_mode=N2D2_wt_round_mode, b_round_mode=N2D2_b_round_mode,
+                        c_round_mode=N2D2_c_round_mode, act_scaling_mode=N2D2_act_scaling_mode,
+                        log_JSON=log_JSON, log_outputs=log_outputs, log_kernels=log_kernels)
+        N2D2.test(parameters.N2D2(), self._embedded_deepnet.N2D2(), False)

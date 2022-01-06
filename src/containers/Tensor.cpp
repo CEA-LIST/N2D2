@@ -711,6 +711,7 @@ const N2D2::Tensor<T> N2D2::Tensor<T>::rows(size_t j0,
 
 template <class T>
 void N2D2::Tensor<T>::synchronizeToH(BaseTensor& tensor) const {
+    tensor.resize(dims());
     tensor = *this;
 }
 
@@ -995,6 +996,7 @@ template class N2D2::Tensor<double>;
 template class N2D2::Tensor<half_float::half>;
 template class N2D2::Tensor<bool>;
 template class N2D2::Tensor<char>;
+template class N2D2::Tensor<signed char>;
 template class N2D2::Tensor<unsigned char>;
 template class N2D2::Tensor<short>;
 template class N2D2::Tensor<unsigned short>;

@@ -83,7 +83,10 @@ public:
         if (!mQuantizer)
             return;
 
-        const Tensor<T>& synapses = tensor_cast<T>(mQuantizer->getQuantizedWeights(0));
+        const unsigned int k = mInputs.getTensorIndex(channel);
+        channel -= mInputs.getTensorDataOffset(channel);
+
+        const Tensor<T>& synapses = tensor_cast<T>(mQuantizer->getQuantizedWeights(k));
         value.resize(std::initializer_list<size_t>({1}));
         value = Tensor<T>({1}, synapses(0, 0, channel, output));
     };
@@ -96,6 +99,8 @@ public:
     {
         return &mSynapses;
     };
+    virtual const BaseInterface* getWeights() const { return &mSynapses; };
+    virtual const BaseTensor* getBiases() const { return &mBias; };
     void checkGradient(double epsilon = 1.0e-4, double maxError = 1.0e-6);
     void saveFreeParameters(const std::string& fileName) const;
     void loadFreeParameters(const std::string& fileName,

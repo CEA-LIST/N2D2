@@ -44,11 +44,12 @@ std::shared_ptr<N2D2::DistanceCell> N2D2::DistanceCellGenerator::generate(Networ
 
     const unsigned int nbOutputs = iniConfig.getProperty<unsigned int>("NbOutputs");
     const Float_T margin = iniConfig.getProperty<Float_T>("Margin");
+    const Float_T centercoef = iniConfig.getProperty<Float_T>("CenterCoef");
 
     std::cout << "Layer: " << section << " [Distance(" << model << ")]" << std::endl;   
 
     std::shared_ptr<DistanceCell> cell =  Registrar<DistanceCell>::create<float>(model)(deepNet, section,
-                                                              nbOutputs, margin);
+                                                              nbOutputs, margin, centercoef);
 
     if (!cell) {
         throw std::runtime_error("Cell model \"" + model + "\" is not valid in section [" + section + "] "

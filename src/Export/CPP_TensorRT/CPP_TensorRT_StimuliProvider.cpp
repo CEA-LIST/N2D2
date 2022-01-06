@@ -58,25 +58,31 @@ void N2D2::CPP_TensorRT_StimuliProvider::generateCalibFiles(StimuliProvider& sp,
             wMax/= normValue;
         }
     */
+
+#ifdef CUDA
+    int dev = 0;
+    CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+#endif
+
     unsigned int progress = 0, progressPrev = 0;
 
+#pragma omp parallel for schedule(dynamic)
     for (unsigned int i = 0; i < nbStimuli; ++i) {
+#ifdef CUDA
+        CHECK_CUDA_STATUS(cudaSetDevice(dev));
+#endif
 
-        std::stringstream dirStimuli;
         std::stringstream stimuliName;
-
-        dirStimuli << dirName ;
         stimuliName << dirName << "/batch_calibration" << i << ".batch";
-
-        Utils::createDirectories(dirStimuli.str());
 
         std::ofstream calibStimuli(stimuliName.str().c_str(),
                                  std::fstream::binary);
 
-        if (!calibStimuli.good())
+        if (!calibStimuli.good()) {
+#pragma omp critical(generateCalibFiles)
             throw std::runtime_error("Could not create stimuli binary file: "
                                      + stimuliName.str());
-
+        }
 
         const uint32_t sizeX = envSizeX;
         const uint32_t sizeY = envSizeY;
@@ -92,10 +98,11 @@ void N2D2::CPP_TensorRT_StimuliProvider::generateCalibFiles(StimuliProvider& sp,
         calibStimuli.write(reinterpret_cast<const char*>(&sizeX),
                             sizeof(sizeX));
 
-        sp.readStimulus(set, i);
+        StimuliProvider provider = sp.cloneParameters();
+        provider.readStimulus(set, i);
 
         for (unsigned int channel = 0; channel < nbChannels; ++channel) {
-            const Tensor<Float_T> frame = sp.getDataChannel(channel);
+            const Tensor<Float_T> frame = provider.getDataChannel(channel);
 
             for (unsigned int y = 0; y < envSizeY; ++y) {
                 for (unsigned int x = 0; x < envSizeX; ++x) {
@@ -108,18 +115,23 @@ void N2D2::CPP_TensorRT_StimuliProvider::generateCalibFiles(StimuliProvider& sp,
             }
         }
 
-        if (!calibStimuli.good())
+        if (!calibStimuli.good()) {
+#pragma omp critical(generateCalibFiles)
             throw std::runtime_error("Error writing stimuli binary file: "
                                      + stimuliName.str());
+        }
 
         calibStimuli.close();
         // Progress bar
         progress = (unsigned int)(20.0 * (i + 1) / (double)nbStimuli);
 
         if (progress > progressPrev) {
-            std::cout << std::string(progress - progressPrev, '.')
-                      << std::flush;
-            progressPrev = progress;
+#pragma omp critical(generateCalibFiles)
+            if (progress > progressPrev) {
+                std::cout << std::string(progress - progressPrev, '.')
+                        << std::flush;
+                progressPrev = progress;
+            }
         }
     }
 }

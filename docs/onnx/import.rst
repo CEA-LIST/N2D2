@@ -12,6 +12,24 @@ Import ONNX models
 .. |ccross| replace:: :raw-html:`<font color="red">` |cross| :raw-html:`</font>`
 
 
+Preliminary steps
+-----------------
+
+ONNX generators may generate complicated models, in order to take into account 
+for example dynamic size or shape calculation, from previous operator outputs 
+dimensions. This can be the case even when the graph is static and the dimensions 
+are known in the ONNX model. While such model may be imported in DL frameworks
+using standard operators/layers, it would be vastly sub-optimal, as some part
+of the graph would require unnecessary dynamic allocation, and would be very
+hard to optimize for inference on embedded platforms.
+
+For this reason, we do not always try to allow proper import of such graph in 
+N2D2 as is. While some simplifications may be handled directly in N2D2, we 
+recommend using the
+`ONNX Simplifier <https://github.com/daquexian/onnx-simplifier>`_ tool on your
+ONNX model before importing it into N2D2.
+
+
 
 With an INI file
 ----------------

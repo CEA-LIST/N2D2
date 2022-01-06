@@ -56,7 +56,6 @@ class Quantizer(N2D2_Interface, ABC):
 class CellQuantizer(Quantizer, ABC):
     @abstractmethod
     def __init__(self, **config_parameters):
-        # TODO : add a type check for parameters range, solver and mode. 
         Quantizer.__init__(self, **config_parameters)
 
     def add_weights(self, weights, diff_weights):

@@ -108,7 +108,7 @@ public:
                                                const nvinfer1::Dims* inputDim,
                                                int nbInputDims) override
 	{
-        return nvinfer1::DimsCHW(mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
+        return trt_Dims3(mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
 	}
 
 	virtual void configure(const nvinfer1::Dims* inputDims,

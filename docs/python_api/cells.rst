@@ -6,14 +6,12 @@ Introduction
 
 Cell objects are the atomics elements that compose a deep neural network.
 
-
-Each cell embed an :py:class:`N2D2.Cell` which do the computation.
-:py:class:`n2d2.cells.NeuralNetworkCell` are not dependant of a DeepNet this allow a dynamic management of the computation. 
+They are the node of the computation graph. :py:class:`n2d2.cells.NeuralNetworkCell` are not dependant of a DeepNet this allow a dynamic management of the computation. 
 
 Cells are organize with the following logic : 
-
+ - :py:class:`n2d2.cells.NeuralNetworkCell` : Atomic cell of a neural network;
  - :py:class:`n2d2.cells.Block` : Store a collection of :py:class:`n2d2.cells.NeuralNetworkCell`, the storage order does **not** determine the graph computation;
- - :py:class:`n2d2.cells.DeepNetCell` : This Cell allow you to use an :py:class:`N2D2.DeepNet`, it can be used for `ONNX` and `INI` import;
+ - :py:class:`n2d2.cells.DeepNetCell` : This cell allow you to use an :py:class:`N2D2.DeepNet`, it can be used for `ONNX` and `INI` import or to run optimize learning;
  - :py:class:`n2d2.cells.Iterable` : Similar to :py:class:`n2d2.cells.Block` but the order of storage determine the computation graph;
  - :py:class:`n2d2.cells.Sequence` : A vertical structure to create neural network;
  - :py:class:`n2d2.cells.Layer` : An horizontal structure to create neural network.
@@ -21,21 +19,59 @@ Cells are organize with the following logic :
 .. figure:: ../_static/n2d2_cell_diagram.png
    :alt: Cell class diagram
 
-.. autoclass:: n2d2.cells.NeuralNetworkCell
-        :members:
-        :inherited-members:
-
-.. autoclass:: n2d2.cells.DeepNetCell
-        :members:
-        :inherited-members:
+Sequence
+~~~~~~~~
 
 .. autoclass:: n2d2.cells.Sequence
         :members:
         :inherited-members:
 
+Layer
+~~~~~
+
 .. autoclass:: n2d2.cells.Layer
         :members:
         :inherited-members:
+
+DeepNetCell
+~~~~~~~~~~~
+
+The :py:class:`n2d2.cells.DeepNetCell` constructor require an :py:class:`N2D2.DeepNet`. In practice, you will not use the constructor directly.
+
+There are three methods to generate a :py:class:`n2d2.cells.DeepNetCell` : :py:meth:`n2d2.cells.DeepNetCell.load_from_ONNX`, :py:meth:`n2d2.cells.DeepNetCell.load_from_INI`, :py:meth:`n2d2.cells.Sequence.to_deepnet_cell` 
+
+The DeepNetCell can be used to train the neural network in an efficient way.
+
+**Example :**
+
+.. code-block::
+
+        database = n2d2.database.MNIST(data_path=DATA_PATH, validation=0.1)
+        provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size=BATCH_SIZE)
+        model = n2d2.cells.DeepNetCell.load_from_ONNX(provider, ONNX_PATH)
+        model.fit(nb_epochs)
+        model.run_test()
+
+Using :py:meth:`n2d2.cells.DeepNetCell.fit` method will reduce the learning time as it will parallelize the loading of the batch of data and the propagation. 
+
+If you want to use the dynamic computation graph  provided by the API, you can use the :py:class:`n2d2.cells.DeepNetCell` as a simple cell.
+
+**Example :**
+
+.. code-block::
+
+        database = n2d2.database.MNIST(data_path=DATA_PATH, validation=0.1)
+        provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size=BATCH_SIZE)
+        model = n2d2.cells.DeepNetCell.load_from_ONNX(provider, ONNX_PATH)
+        sequence = n2d2.cells.Sequence([model, n2d2.cells.Softmax(with_loss=True)])
+        input_tensor = n2d2.Tensor(DIMS)
+        output_tensor = sequence(input_tensor)
+
+
+.. autoclass:: n2d2.cells.DeepNetCell
+        :members:
+        :inherited-members:
+
 
 Cells
 -----
@@ -285,23 +321,14 @@ Tanh
         :members:
         :inherited-members:
 
-Loss function
--------------
+Target
+------
 
-.. autoclass:: n2d2.application.LossFunction
+Last cell of the network this object computes the loss.
+
+To understand what the Target does, please refer to this part of the documentation : :doc:`Target INI </ini/target>`.
+
+.. autoclass:: n2d2.target.Score
         :members:
         :inherited-members:
 
-CrossEntropyClassifier
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: n2d2.application.CrossEntropyClassifier
-        :members:
-        :inherited-members:
-
-MeanSquareErrorRegression
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: n2d2.application.MeanSquareErrorRegression
-        :members:
-        :inherited-members:

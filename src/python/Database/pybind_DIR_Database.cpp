@@ -47,7 +47,11 @@ void init_DIR_Database(py::module &m) {
         :param labelDepth: labelDepth = -1: no label for all stimuli (label ID = -1); labelDepth = 0: uses @p labelName string for all stimuli; labelDepth = 1: uses @p labelName string for stimuli in the current; directory (dirPath) and @p labelName + sub-directory name for stimuli in the sub-directories
         :type labelDepth: int
         )mydelimiter")
-    .def("setIgnoreMasks", &DIR_Database::setIgnoreMasks, py::arg("ignoreMasks"))
+    .def("setIgnoreMasks", &DIR_Database::setIgnoreMasks, py::arg("ignoreMasks"),
+        R"mydelimiter(
+        :param ignoreMasks: space-separated list of mask strings to ignore. If any is present in a file path, the file gets ignored. The usual * and + wildcards are allowed.
+        :type ignoreMasks: list
+        )mydelimiter")
     .def("setValidExtensions", &DIR_Database::setValidExtensions, py::arg("validExtensions"))
     ;
 }

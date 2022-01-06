@@ -24,7 +24,7 @@ import N2D2
 import n2d2
 from time import sleep
 import unittest
-import n2d2.pytorch as pytorch
+import pytorch_interoperability as pytorch
 
 from n2d2.utils import ConfigSection
 from n2d2.activation import Linear, Rectifier
@@ -52,19 +52,19 @@ class test_tensor_conversion(unittest.TestCase):
 
     def test_torch_to_n2d2(self):
         torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y)
-        n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
+        n2d2_tensor = pytorch.pytorch_interface._to_n2d2(torch_tensor)
         self.assertEqual(n2d2_tensor.dims(), self.n2d2_format)
 
     def test_n2d2_to_torch(self):
         n2d2_tensor = N2D2.Tensor_float(self.n2d2_format)
-        torch_tensor = n2d2.pytorch.pytorch_interface._to_torch(n2d2_tensor)
+        torch_tensor = pytorch.pytorch_interface._to_torch(n2d2_tensor)
         self.assertEqual(list(torch_tensor.shape), self.torch_format)
     
     def test_torch_to_n2d2_cuda_int(self):
         a = torch.ones(self.batch_size, self.channel, self.x, self.y, 
                         dtype=torch.int32, device=torch.device('cuda'))
  
-        b = n2d2.pytorch.pytorch_interface._to_n2d2(a)
+        b = pytorch.pytorch_interface._to_n2d2(a)
         b.dtoh()
         self.assertTrue(b.is_cuda)
         self.assertEqual(b.dims(), self.n2d2_format)
@@ -79,28 +79,28 @@ class test_tensor_conversion(unittest.TestCase):
     def test_torch_to_n2d2_float(self):
         torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
                         dtype=torch.float, device=torch.device('cuda'))
-        float_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
+        float_n2d2_tensor = pytorch.pytorch_interface._to_n2d2(torch_tensor)
         float_n2d2_tensor.dtoh()
         for i in float_n2d2_tensor: 
             self.assertEqual(i, 1)
     def test_torch_to_n2d2_double(self):
         torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
                         dtype=torch.double, device=torch.device('cuda'))
-        double_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
+        double_n2d2_tensor = pytorch.pytorch_interface._to_n2d2(torch_tensor)
         double_n2d2_tensor.dtoh()
         for i in double_n2d2_tensor: 
             self.assertEqual(i, 1)
     def test_torch_to_n2d2__short(self):
         torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
                         dtype=torch.short, device=torch.device('cuda'))
-        short_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
+        short_n2d2_tensor = pytorch.pytorch_interface._to_n2d2(torch_tensor)
         short_n2d2_tensor.dtoh()
         for i in short_n2d2_tensor: 
             self.assertEqual(i, 1)
     def test_torch_to_n2d2_long(self):
         torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
                         dtype=torch.long, device=torch.device('cuda'))
-        long_n2d2_tensor = n2d2.pytorch.pytorch_interface._to_n2d2(torch_tensor)
+        long_n2d2_tensor = pytorch.pytorch_interface._to_n2d2(torch_tensor)
         long_n2d2_tensor.dtoh()
         for i in long_n2d2_tensor: 
             self.assertEqual(i, 1)
@@ -173,10 +173,9 @@ class Test_Networks():
             self.optimizer2.zero_grad()
             loss2.backward()
             self.optimizer2.step()
-            # if self.compare_tensor(loss1, loss2):
-            #     print("Different loss : ", loss1.item(), "|", loss2.item())
-            #     number_fail+=1
-            #     return -1
+            if self.compare_tensor(loss1, loss2):
+                print("Different loss : ", loss1.item(), "|", loss2.item())
+                return -1
         return 0
     
     def test_multiple_step(self, input_size, label_size):
@@ -486,7 +485,7 @@ class test_interop_DeepNetCell(unittest.TestCase):
         class new_block(torch.nn.Module):   
             def __init__(self):
                 super(new_block, self).__init__()
-                self.deepNet = n2d2.pytorch.Block(deepNet)
+                self.deepNet = pytorch.Block(deepNet)
 
             # Defining the forward pass    
             def forward(self, x):
@@ -531,7 +530,7 @@ class test_interop_DeepNetCell(unittest.TestCase):
         class new_block(torch.nn.Module):   
             def __init__(self):
                 super(new_block, self).__init__()
-                self.deepNet = n2d2.pytorch.Block(deepNet)
+                self.deepNet = pytorch.Block(deepNet)
 
             # Defining the forward pass    
             def forward(self, x):

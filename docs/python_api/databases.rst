@@ -36,11 +36,6 @@ Like in the following example :
         inputs_tensor = provider.read_random_batch() 
 
 
-
-.. autoclass:: n2d2.database.Database
-        :members:
-        :inherited-members:
-
 DIR
 ~~~
 

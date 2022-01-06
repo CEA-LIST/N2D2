@@ -132,10 +132,14 @@ public:
     {
         return &mSharedSynapses;
     };
+    inline const BaseInterface* getWeights() const
+    {
+        return &mSharedSynapses;
+    };
     void setWeights(unsigned int k,
                     BaseInterface* weights,
                     unsigned int offset);
-    inline std::shared_ptr<BaseTensor> getBiases()
+    inline const std::shared_ptr<BaseTensor> getBiases() const
     {
         return mBias;
     };

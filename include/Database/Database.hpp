@@ -157,12 +157,15 @@ public:
                              int depth = 0);
     virtual void saveROIs(const std::string& fileName,
                           const std::string& header = "") const;
+    void logPartition(const std::string& dirName) const;
     void logStats(const std::string& sizeFileName,
                   const std::string& labelFileName,
                   StimuliSetMask setMask = All) const;
     void logROIsStats(const std::string& sizeFileName,
                       const std::string& labelFileName,
                       StimuliSetMask setMask = All) const;
+    void logMultiChannelStats(const std::string& fileName,
+                              StimuliSetMask setMask = All) const;
 
     /**
      * Extract all the ROIs in stimuli as new stimuli and remove stimuli with no

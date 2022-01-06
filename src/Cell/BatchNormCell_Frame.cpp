@@ -453,7 +453,7 @@ void N2D2::BatchNormCell_Frame<T>::backPropagate()
             mDiffBias(output) = sumBias + betaBias * mDiffBias(output);
         }
 
-        if (!mDiffOutputs.empty() && mBackPropagate) {
+        if (!mDiffOutputs[k].empty() && mBackPropagate) {
             const unsigned int size = mInputs.dimB() * getNbOutputs();
             const bool isValid = mDiffOutputs[k].isValid();
             Tensor<T> diffOutput = (isValid)
@@ -492,6 +492,8 @@ void N2D2::BatchNormCell_Frame<T>::backPropagate()
             }
 
             mDiffOutputs[k] = diffOutput;
+            mDiffOutputs[k].setValid();
+            mDiffOutputs[k].synchronizeHToD();
         }
 
         outputOffset += input.dimZ();
@@ -499,11 +501,6 @@ void N2D2::BatchNormCell_Frame<T>::backPropagate()
 
     mDiffScale.setValid();
     mDiffBias.setValid();
-
-    if (!mDiffOutputs.empty() && mBackPropagate) {
-        mDiffOutputs.setValid();
-        mDiffOutputs.synchronizeHToD();
-    }
 }
 
 template <class T>
@@ -536,17 +533,19 @@ void N2D2::BatchNormCell_Frame<T>::checkGradient(double epsilon, double maxError
     gc.check(mName + "_mDiffScale", (*mScale), mDiffScale);
     gc.check(mName + "_mDiffBias", (*mBias), mDiffBias);
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int in = 0; in < mInputs.size(); ++in) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << in << "]";
-
-            gc.check(name.str(), mInputs[in], mDiffOutputs[in]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

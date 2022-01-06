@@ -7,37 +7,117 @@ With the library you can import data, pre-process them, create a deep neural net
 You can also import a network using the :doc:`ini file configuration<../ini/intro>` or the ONNX library.
 
 
-Installation
-------------
+Here are the functionalities available with the Python API :
 
-To run the python API, you need to use ``python 3.7``.
++------------------------+------------+------------------+
+|        Feature         |  Available | Python API Only  |
++========================+============+==================+
+| Import a network from  | ✔️         |                  |
+| an INI file            |            |                  |
++------------------------+------------+------------------+
+| Import a network from  | ✔️         |                  |
+| an ONNX file           |            |                  |
++------------------------+------------+------------------+
+| Build a network with   | ✔️         |                  |
+| the API                |            |                  |
++------------------------+------------+------------------+
+| Load and apply         | ✔️         |                  |
+| transformation to a    |            |                  |
+| dataset                |            |                  |
++------------------------+------------+------------------+
+| Train a network        | ✔️         |                  |
++------------------------+------------+------------------+
+| Flexible definition of | ✔️         | ✔️               |
+| the computation graph  |            |                  |
++------------------------+------------+------------------+
+| Test a network with    | ✔️         |                  |
+| the N2D2 analysis tools|            |                  |
++------------------------+------------+------------------+
+| Torch interoperability | ✔️         | ✔️               |
++------------------------+------------+------------------+
+| Keras interoperability | ❌         | ✔️               |
++------------------------+------------+------------------+
+| Multi GPU support      | ✔️         |                  |
++------------------------+------------+------------------+
+| Exporting network      | ❌         |                  |
++------------------------+------------+------------------+
 
-We highly recommend that you use a virtual environment, to set one up, you can follow these steps :
+
+Installation of the virtual environment
+---------------------------------------
+
+| To run the python API, it’s good practice to use ``python 3.7`` or a newer version in a virtual environment.
+| To set up your environment, please follow these steps:
 
 .. code-block:: bash
 
-        # Creating python virtual environment
+        # Create your python virtual environment
         virtualenv -p python3.7 env
-        # Activating the virtual environment
+
+        # Activate the virtual environment
         source env/bin/activate
-        # Checking versions
+
+        # Check versions
         python --version
         pip --version
-        # Leaving the virtual environment
+
+        # To leave the virtual environment
         deactivate
 
 If everything went well, you should have the version ``3.7`` of python. 
 
-With setup.py
-^^^^^^^^^^^^^
 
-To install n2d2, you can go to the root of the project and use the ``setup.py`` script (with you **virtual environment activated**).
+Installation of the Python API
+------------------------------
+
+| There are multiple methods to install the python API on your device.
+| Feel free to use the method of your choice.
+
+
+With the Python Package Index (Py Pi)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can have access to the last stable version of the python API by using
+``pip`` and importing the package ``n2d2``.
 
 .. code-block:: bash
 
-        python setup.py install
+        pip install n2d2
 
-This should compile the n2d2 libraries and add it to your virtual environnement.
+
+
+From the N2D2 Github repository
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can have access to the developer version by importing the API from
+the N2D2 Github repository via ``pip``.
+
+.. code-block:: bash
+
+        pip install git+https://github.com/CEA-LIST/N2D2  
+
+
+
+If you have already cloned the Github repository  
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  
+
+You can still build the python API with a cloned N2D2 repository.
+Go at the root of the N2D2 projet and follow the following steps 
+(don't forget to activate your virtual environment before).
+
+.. code-block:: bash
+
+        # Build the N2D2 library
+        python setup.py bdist_wheel
+
+        # Install the n2d2 python packages in your virtual environment
+        pip install dist/*
+
+
+Test of the Python API
+----------------------
+
+Whatever the method you chose, it should compile the n2d2 libraries and add them to your virtual environnement.
 
 You can test it by trying to import n2d2 in your python interpreter :
 
@@ -45,46 +125,17 @@ You can test it by trying to import n2d2 in your python interpreter :
 
         python
         >>> import n2d2
+        >>> print(n2d2.Tensor([2,3]))
+        n2d2.Tensor([
+        0 0 0
+        0 0 0
+        ], device=cpu, datatype=float)
         >>> exit()
 
-Manually
-^^^^^^^^
-If the ``setup.py`` script doesn't work, you can try to install manually the librarie.
-When you compile ``N2D2``, the compiler creates a folder ``lib`` which contains the shared library of the binding between C++ and python (the file should be named ``N2D2-*.so``).
-You need to move/copy this file at the root of the python folder ``N2D2-IP/N2D2/python``.
+You can find more examples in the Python API section if you want to test every feature.
 
-You can check that the binding is working by moving to the python folder and typing :
-
-.. code-block:: bash
-
-        python
-        >>> import N2D2
-        >>> exit()
-
-If you have no error while importing ``N2D2``, the binding is working.
-
-If you don't want to always move/copy the library, you can add the path where the library is located to your ``pythonpath``.
-For this, you need to edit your ``.bashrc`` file. You can use any editor, for example : 
-
-.. code-block:: bash
-
-        nano ~/.bashrc
-
-then add the line :
-
-.. code-block:: bash
-
-        export PYTHONPATH=$PYTHONPATH:path_to_build_lib
-
-where ``path_to_build_lib`` is the path to the lib folder. Once this is done, use this command to apply the changes :
-
-.. code-block:: bash
-
-        source ~/.bashrc
-
-You can also add the library n2d2 to you python path, if you don't plan to work on the python directory.
-
-Once this is done, you can use the python library or the binding by importing respectively n2d2 or N2D2 in your python script. 
+| It might be possible you could find some issues by using the API.
+| So please notify us at https://github.com/CEA-LIST/N2D2/issues if you find any problem or any possible improvement.
 
 
 Default values
@@ -93,7 +144,7 @@ Default values
 The python API used default values that you can modify at any time in your scripts.
 
 List of modifiable parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Here we will list parameters which can be directly modified in your script.
 
@@ -103,7 +154,7 @@ Here we will list parameters which can be directly modified in your script.
 | ``default_model``        | If you have compiled N2D2 with **CUDA**, you                      |
 |                          | can use ``Frame_CUDA``, default= ``Frame``                        |
 +--------------------------+-------------------------------------------------------------------+
-| ``default_datatype``     | Datatype of the layer of the neural network. Can be ``double``or  |
+| ``default_datatype``     | Datatype of the layer of the neural network. Can be ``double`` or |
 |                          | ``float``, default= ``float``                                     |
 |                          |                                                                   |
 |                          | **Important :** This variable doesn't affect the data type of     |
@@ -118,7 +169,8 @@ Here we will list parameters which can be directly modified in your script.
 |``seed``                  | Seed used to generate random numbers(0 = time based),             |
 |                          | default = ``0``                                                   |
 +--------------------------+-------------------------------------------------------------------+
-|``cuda_device``           | Device to use for GPU computation with CUDA, default = ``0``      |
+|``cuda_device``           | Device to use for GPU computation with CUDA, you can enable multi | 
+|                          | GPU by giving a tuple of device, default = ``0``                  |
 +--------------------------+-------------------------------------------------------------------+
 
 
@@ -137,3 +189,5 @@ Example
         n2d2.global_variables.seed = 1
 
         n2d2.global_variables.cuda_device = 1
+        # Multi GPU example :
+        n2d2.global_variables.cuda_device = 0, 1 

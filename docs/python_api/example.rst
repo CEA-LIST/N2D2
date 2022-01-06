@@ -24,7 +24,7 @@ Use-case presentation
 We propose to recognize traffic signs, for an advanced driver-assistance systems (ADAS).
 The traffic signs are already segmented and extracted from images, taken from a front-view camera embedded in a car.
 
-.. figure:: ../_static/gtsrb.png
+.. figure:: /_static/gtsrb.png
    :alt: Example of data featured in GTSRB.
 
 To build our classifier, we will use the ``German Traffic Sign Benchmark (GTSRB)`` (https://benchmark.ini.rub.de/) a multi-class, single-image classification challenge held at the International Joint Conference on Neural Networks (IJCNN) 2011. 
@@ -42,13 +42,13 @@ Creation of the network
 Defining the inputs of the Neural Network
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First of all, if you have CUDA available, you can unable it with the following line :
+First of all, if you have CUDA available, you can enable it with the following line :
 
 .. testcode::
 
     n2d2.global_variables.default_model = "Frame_CUDA"
 
-The default_model is ``Frame``. 
+The default model is ``Frame``. 
 
 Once this is done, you can load the database by using the appropriate driver :py:class:`n2d2.database.GTSRB`. 
 We set 20% of the data to be used for validation.

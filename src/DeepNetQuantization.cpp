@@ -284,7 +284,8 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
                                                 std::size_t nbBits,
                                                 ClippingMode actClippingMode,
                                                 ScalingMode actScalingMode,
-                                                bool rescalePerOutputChannel)
+                                                bool rescalePerOutputChannel,
+                                                double quantileValue)
 {
     const std::vector<std::vector<std::string>>& layers = mDeepNet.getLayers();
 
@@ -310,7 +311,7 @@ void N2D2::DeepNetQuantization::quantizeNetwork(const std::unordered_map<std::st
     }
 
     quantizeActivations(outputsHistogram, outputsRange, biasScalings,
-                        nbBits, actClippingMode);
+                        nbBits, actClippingMode, quantileValue);
 
 #ifdef VERBOSE_QUANT
     std::cout << "  Scaling approximation [" << (int)actScalingMode << "]:"
@@ -671,7 +672,7 @@ void N2D2::DeepNetQuantization::quantizeActivations(
                 const std::unordered_map<std::string, Histogram>& outputsHistogram,
                 const std::unordered_map<std::string, RangeStats>& outputsRange,
                 std::unordered_map<std::string, long double>& biasScalings,
-                std::size_t nbBits, ClippingMode actClippingMode)
+                std::size_t nbBits, ClippingMode actClippingMode, double quantileValue)
 {
 #ifdef VERBOSE_QUANT
     std::cout << "  Quantizing activations:" << std::endl;
@@ -731,7 +732,7 @@ void N2D2::DeepNetQuantization::quantizeActivations(
                                                                             cell->getName();
                 activationScaling = getCellThreshold(cellStatsName, 
                                                     outputsHistogram, outputsRange, 
-                                                    nbBits, clip?actClippingMode:ClippingMode::NONE);
+                                                    nbBits, clip?actClippingMode:ClippingMode::NONE, quantileValue);
             }
             else {
                 throw std::runtime_error("Quantization of cell '" + cell->getName() + "' of type '" + 
@@ -870,12 +871,14 @@ void N2D2::DeepNetQuantization::fuseScalingCells() {
             }
             else if(parentCell->getType() == ElemWiseCell::Type) {
                 auto parentElemWiseCell = std::dynamic_pointer_cast<ElemWiseCell>(parentCell);
-                moveScalingCellAboveParentElemWiseCell(scalingCell, parentElemWiseCell);
+                const bool moved = moveScalingCellAboveParentElemWiseCell(scalingCell, parentElemWiseCell);
 
-                // The ScalingCell has been potentially moved as parent of the ElemeWiseCell.
-                // Recurse to try to merge this ScalingCell with its new parents.
-                fuseScalingCells();
-                return;
+                if (moved) {
+                    // The ScalingCell has been moved as parent of the ElemeWiseCell.
+                    // Recurse to try to merge this ScalingCell with its new parents.
+                    fuseScalingCells();
+                    return;
+                }
             }
         }
     }
@@ -957,7 +960,7 @@ void N2D2::DeepNetQuantization::fuseScalingCellWithParentScalingCell(
     mDeepNet.removeCell(scalingCell);
 }
 
-void N2D2::DeepNetQuantization::moveScalingCellAboveParentElemWiseCell(
+bool N2D2::DeepNetQuantization::moveScalingCellAboveParentElemWiseCell(
                                         const std::shared_ptr<ScalingCell>& scalingCell, 
                                         const std::shared_ptr<ElemWiseCell>& parentElemWiseCell)
 {
@@ -989,7 +992,10 @@ void N2D2::DeepNetQuantization::moveScalingCellAboveParentElemWiseCell(
         }
 
         mDeepNet.removeCell(scalingCell);
+        return true;
     }
+
+    return false;
 }
 
 void N2D2::DeepNetQuantization::approximateScalingCell(ScalingCell& cell, ScalingMode scalingCellMode, 
@@ -1172,13 +1178,15 @@ std::vector<std::vector<unsigned char>> N2D2::DeepNetQuantization::approximateAc
 double N2D2::DeepNetQuantization::getCellThreshold(const std::string& cellName,
                                        const std::unordered_map<std::string, Histogram>& outputsHistogram,
                                        const std::unordered_map<std::string, RangeStats>& outputsRange,
-                                       std::size_t nbBits, ClippingMode actClippingMode) 
+                                       std::size_t nbBits, ClippingMode actClippingMode, double quantileValue) 
 {
     switch(actClippingMode) {
         case ClippingMode::KL_DIVERGENCE:
             return outputsHistogram.at(cellName).calibrateKLDivergence(nbBits);
         case ClippingMode::MSE:
             return outputsHistogram.at(cellName).calibrateMSE(nbBits);
+        case ClippingMode::QUANTILE:
+            return outputsHistogram.at(cellName).getQuantileValue(quantileValue);
         default: {
             const auto& range = outputsRange.at(cellName);
             return Utils::max_abs(range.minVal(), range.maxVal());

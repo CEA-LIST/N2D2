@@ -25,6 +25,7 @@
 #include "DeepNet.hpp"
 #include "third_party/half.hpp"
 #include "Cell/ConvCell_Frame_Kernels.hpp"
+#include "Adversarial.hpp"
 
 template <class T>
 N2D2::Cell_Frame_CUDA<T>::Cell_Frame_CUDA(const DeepNet& deepNet, const std::string& name,
@@ -86,6 +87,16 @@ void N2D2::Cell_Frame_CUDA<T>::addInput(StimuliProvider& sp,
     // Define input-output sizes
     setInputsDims(sp.getSize());
     mInputs.push_back(&sp.getDataInput());
+
+    // For some adversarial attacks, it is required to backpropagate
+    // the gradiants to the inputs
+    if (sp.getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) {
+        std::vector<size_t> inputsDims(mInputsDims);
+        inputsDims.push_back(sp.getBatchSize());
+        mDiffOutputs.push_back(new CudaTensor<T>(inputsDims), 0);
+    }
+    else
+        mDiffOutputs.push_back(new CudaTensor<T>(), 0);
 
     setOutputsDims();
 
@@ -181,9 +192,7 @@ void N2D2::Cell_Frame_CUDA<T>::addInput(BaseTensor& inputs,
 
     setInputsDims(inputsDims);
     mInputs.push_back(&inputs);
-
-    if (!diffOutputs.empty())
-        mDiffOutputs.push_back(&diffOutputs);
+    mDiffOutputs.push_back(&diffOutputs);
 
     setOutputsDims();
 
@@ -366,6 +375,7 @@ void N2D2::Cell_Frame_CUDA<T>::linkInput(StimuliProvider& sp,
      // Define input-output sizes
     setInputsDims(sp.getSize());
     mInputs.push_back(&sp.getData());
+    mDiffOutputs.push_back(new CudaTensor<T>(), 0);
 }
 // END code used exlusively in python API
 

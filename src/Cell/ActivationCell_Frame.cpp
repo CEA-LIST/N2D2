@@ -125,55 +125,57 @@ void N2D2::ActivationCell_Frame<T>::backPropagate()
     if (!mDiffInputs.isValid())
         return;
 
-    if (!mDiffOutputs.empty()) {
-        if(mInputs.size() > 1) {
-            //backpropagate 
-            mActivation->backPropagate(*this, 
-                                        mOutputs, 
-                                        mOutputs, 
-                                        mDiffInputs,
-                                        mWorkspaceCPU);
+    if(mInputs.size() > 1) {
+        //backpropagate 
+        mActivation->backPropagate(*this, 
+                                    mOutputs, 
+                                    mOutputs, 
+                                    mDiffInputs,
+                                    mWorkspaceCPU);
 
-            size_t diffOutStride = 0;
-            for(size_t k = 0; k < mDiffOutputs.size(); ++k) {
-                Tensor<T> diffOutput = (mDiffOutputs[k].isValid())
-                                                    ? tensor_cast<T>(mDiffOutputs[k])
-                                                    : tensor_cast_nocopy<T>(mDiffOutputs[k]);
+        size_t diffOutStride = 0;
+        for(size_t k = 0; k < mDiffOutputs.size(); ++k) {
+            const size_t chrunkSize 
+                = (mInputs[k].dimX()*mInputs[k].dimY()*mInputs[k].dimZ()) ;
 
-                const size_t chrunkSize 
-                    = (diffOutput.dimX()*diffOutput.dimY()*diffOutput.dimZ()) ;
-
-                for(size_t b = 0; b < mWorkspaceCPU.dimB(); ++b) {
-                    const size_t batchOffset 
-                        = mWorkspaceCPU.dimX() * mWorkspaceCPU.dimY() *mWorkspaceCPU.dimZ();
-                    std::copy_n(mWorkspaceCPU.begin() + (b*batchOffset + diffOutStride),
-                                chrunkSize,
-                                diffOutput.begin() + (chrunkSize*b));
-                    
-                }
-
-                mDiffOutputs[k] = diffOutput;
-                mDiffOutputs[k].setValid();
-                mDiffOutputs[k].synchronizeHToD();
-
+            if (mDiffOutputs[k].empty()) {
                 diffOutStride += chrunkSize;
+                continue;
             }
-        } 
-        else {
-            const Tensor<T>& input = tensor_cast<T>(mInputs[0]);
-            Tensor<T> diffOutput = (mDiffOutputs[0].isValid())
-                ? tensor_cast<T>(mDiffOutputs[0])
-                : tensor_cast_nocopy<T>(mDiffOutputs[0]);
 
-            mActivation->backPropagate(*this, input, mOutputs, mDiffInputs,
-                                                            diffOutput);
+            Tensor<T> diffOutput = (mDiffOutputs[k].isValid())
+                                                ? tensor_cast<T>(mDiffOutputs[k])
+                                                : tensor_cast_nocopy<T>(mDiffOutputs[k]);
 
-            mDiffOutputs[0] = diffOutput;
+            for(size_t b = 0; b < mWorkspaceCPU.dimB(); ++b) {
+                const size_t batchOffset 
+                    = mWorkspaceCPU.dimX() * mWorkspaceCPU.dimY() *mWorkspaceCPU.dimZ();
+                std::copy_n(mWorkspaceCPU.begin() + (b*batchOffset + diffOutStride),
+                            chrunkSize,
+                            diffOutput.begin() + (chrunkSize*b));
+                
+            }
 
-            mDiffOutputs[0].setValid();
-            mDiffOutputs[0].synchronizeHToD();
+            mDiffOutputs[k] = diffOutput;
+            mDiffOutputs[k].setValid();
+            mDiffOutputs[k].synchronizeHToD();
 
+            diffOutStride += chrunkSize;
         }
+    } 
+    else if (!mDiffOutputs[0].empty()) {
+        const Tensor<T>& input = tensor_cast<T>(mInputs[0]);
+        Tensor<T> diffOutput = (mDiffOutputs[0].isValid())
+            ? tensor_cast<T>(mDiffOutputs[0])
+            : tensor_cast_nocopy<T>(mDiffOutputs[0]);
+
+        mActivation->backPropagate(*this, input, mOutputs, mDiffInputs,
+                                                        diffOutput);
+
+        mDiffOutputs[0] = diffOutput;
+
+        mDiffOutputs[0].setValid();
+        mDiffOutputs[0].synchronizeHToD();
 
     }
 }
@@ -194,17 +196,19 @@ void N2D2::ActivationCell_Frame<T>::checkGradient(double epsilon, double maxErro
                   std::bind(&ActivationCell_Frame<T>::propagate, this, false),
                   std::bind(&ActivationCell_Frame<T>::backPropagate, this));
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int k = 0; k < mInputs.size(); ++k) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << k << "]";
-
-            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

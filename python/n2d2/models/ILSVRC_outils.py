@@ -22,7 +22,6 @@
 
 from n2d2.transform import Rescale, PadCrop, ColorSpace, RangeAffine, SliceExtraction, Flip, Composite
 
-# TODO: Is this correct, in particular the PadCrop of dimension size+margin?
 def ILSVRC_preprocessing(size=224):
     margin = 32
 

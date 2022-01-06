@@ -172,7 +172,7 @@ void N2D2::ResizeCell_Frame::propagateNearestNeighbor(bool /*inference*/) {
 
 void N2D2::ResizeCell_Frame::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (mDiffOutputs[0].empty() || !mDiffInputs.isValid())
         return;
 
     Cell_Frame<Float_T>::backPropagate();
@@ -268,17 +268,19 @@ void N2D2::ResizeCell_Frame::checkGradient(double epsilon, double maxError)
                   std::bind(&ResizeCell_Frame::propagate, this, false),
                   std::bind(&ResizeCell_Frame::backPropagate, this));
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int in = 0; in < mInputs.size(); ++in) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << in << "]";
-
-            gc.check(name.str(), mInputs[in], mDiffOutputs[in]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

@@ -210,7 +210,7 @@ void N2D2::DropoutCell_Frame_CUDA<T>::propagate(bool inference)
 template <class T>
 void N2D2::DropoutCell_Frame_CUDA<T>::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (!mDiffInputs.isValid())
         return;
 
     int dev;
@@ -219,6 +219,11 @@ void N2D2::DropoutCell_Frame_CUDA<T>::backPropagate()
     unsigned int offset = 0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mDiffOutputs[k].empty()) {
+            offset += mOutputs.dimX() * mOutputs.dimY() * mInputs[k].dimZ();
+            continue;
+        }
+
         if (mDiffOutputs[k].isValid())
             throw std::runtime_error(
                 "Cannot blend gradient from a Dropout cell");
