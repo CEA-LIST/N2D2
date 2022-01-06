@@ -54,6 +54,8 @@ test:python_api:
     - make -j4
     - cp lib/*.so ../python/
     - cd ../python
+    # Docker have issue with tensorflow binary, a manual install seems to be needed (cf. https://github.com/tensorflow/text/issues/385) 
+    - pip install -U tensorflow==2.6.0
     - pip install -r requirements.txt
     # Run on discovery all tests located in python/tests and discard the stdout to only show the errors/warnings and the results of the tests
     - python3.7 -m unittest discover -s tests -v 1> /dev/null
