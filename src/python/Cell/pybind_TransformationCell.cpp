@@ -21,6 +21,7 @@
 
 #ifdef PYBIND
 #include "Cell/TransformationCell.hpp"
+#include "Transformation/Transformation.hpp"
 
 
 #include <pybind11/pybind11.h>
@@ -30,7 +31,8 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_TransformationCell(py::module &m) {
 
-    py::class_<TransformationCell, std::shared_ptr<TransformationCell>, Cell> (m, "TransformationCell", py::multiple_inheritance());
+    py::class_<TransformationCell, std::shared_ptr<TransformationCell>, Cell> (m, "TransformationCell", py::multiple_inheritance())
+    .def("getTransformation", &TransformationCell::getTransformation);
 
 }
 }
