@@ -25,6 +25,8 @@ from tensorflow import keras
 from tensorflow.python.eager import backprop
 
 import tf2onnx
+from onnxsim import simplify
+import onnx
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 
 import N2D2
@@ -191,6 +193,7 @@ def wrap(tf_model, batch_size, name=None):
     # Using tf2onnx
     # Preferred method, as keras2onnx is much less popular than tf2onnx
     ####################################################################
+    print("Exporting the model to ONNX ...")
     inputNames = [t.name for t in frozen_func.inputs]
     outputNames = [t.name for t in frozen_func.outputs]
 
@@ -200,11 +203,16 @@ def wrap(tf_model, batch_size, name=None):
                 opset=10,
                 input_names=inputNames,
                 output_names=outputNames)
-                #inputs_as_nchw=self.inputNames)
 
             model_proto = onnx_graph.make_model("test")
-            with open("model.onnx", "wb") as f:
+            with open("raw_model.onnx", "wb") as f:
                 f.write(model_proto.SerializeToString())
+
+    print("Simplifying the ONNX model ...")
+    onnx_model = onnx.load("raw_model.onnx")
+    model_simp, check = simplify(onnx_model)
+    assert check, "Simplified ONNX model could not be validated" # TODO : if check fail try to use the raw model !
+    onnx.save(model_simp, "model.onnx")
 
     # Import ONNX in N2D2
     n2d2.global_variables.default_model = "Frame_CUDA"
