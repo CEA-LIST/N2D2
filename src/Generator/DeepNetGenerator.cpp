@@ -1908,6 +1908,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                             throw std::runtime_error("Unsupported datatype: "
                                 "Conv or ConvInteger Layer only support Float32, Float64 or INT32 Biases");
                         }
+                        biases.reshape({1, convCell->getNbOutputs()}); // Adding an empty dim to avoid error when accessing bias
                         for (unsigned int output = 0;
                             output < convCell->getNbOutputs(); ++output)
                         {
