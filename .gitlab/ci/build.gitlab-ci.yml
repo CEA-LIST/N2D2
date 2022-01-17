@@ -1,0 +1,8 @@
+build:ubuntu:
+  extends: 
+    - .before_script_template
+  stage: build
+  tags:
+    - ubuntu
+  script:
+    - make -j4
