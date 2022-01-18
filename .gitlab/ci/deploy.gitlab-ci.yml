@@ -24,6 +24,7 @@ github:
   environment:
     name: Github
     url: https://github.com/CEA-LIST/N2D2
+  dependencies: []
 
 
 # Github.io deployment
@@ -43,3 +44,4 @@ github.io:
   environment:
     name: Github.io
     url: https://cea-list.github.io/N2D2-docs
+  dependencies: []

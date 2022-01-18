@@ -7,6 +7,7 @@ test:ubuntu:
   script:
     - make tests -j4
     - make test
+  dependencies: []
 
 
 test:python_api:
