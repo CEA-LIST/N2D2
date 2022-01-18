@@ -9,6 +9,8 @@ deploy-docs:
   environment:
     name: Documentation
     url: http://is154584.intra.cea.fr:8081/N2D2/${CI_COMMIT_REF_NAME}
+  dependencies:
+    - generate-docs
 
 
 # Github deployment

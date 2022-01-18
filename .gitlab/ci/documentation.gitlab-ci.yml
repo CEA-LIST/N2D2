@@ -6,6 +6,8 @@ generate-docs:
     - ubuntu
   script:
     - make docs -j4
+  dependencies:
+    - build:ubuntu
   artifacts:
     paths:
       - docs/_build/html

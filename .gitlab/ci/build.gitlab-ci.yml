@@ -10,4 +10,5 @@ build:ubuntu:
   artifacts:
     paths:
       - python/*.so
-    expire_in: 1 hrs
+    expire_in: 1 hour
+

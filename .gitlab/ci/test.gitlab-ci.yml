@@ -24,3 +24,5 @@ test:python_api:
     # Run on discovery all tests located in python/tests and discard the stdout 
     # only to show the errors/warnings and the results of the tests
     - python3.7 -m unittest discover -s tests -v 1> /dev/null
+  dependencies:
+    - build:ubuntu
