@@ -6,3 +6,8 @@ build:ubuntu:
     - ubuntu
   script:
     - make -j4
+    - cp lib/*.so ../python/
+  artifacts:
+    paths:
+      - python/*.so
+    expire_in: 1 hrs

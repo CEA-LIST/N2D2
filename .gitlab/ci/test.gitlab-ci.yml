@@ -17,8 +17,8 @@ test:python_api:
     - ubuntu
   image: "python:3.7"
   script:
-    - make -j4
-    - cp lib/*.so ../python/
+    #- make -j4
+    #- cp lib/*.so ../python/
     - cd ../python
     - pip install -r requirements.txt
     # Run on discovery all tests located in python/tests and discard the stdout 
