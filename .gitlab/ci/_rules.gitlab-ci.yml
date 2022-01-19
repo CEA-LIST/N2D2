@@ -10,5 +10,4 @@
 # Jobs that run only on the default branch (which should be 'master')
 .rules:default-branch-only:
   rules:
-  - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-    when: always 
+  - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH' 
