@@ -9,8 +9,6 @@ deploy-docs:
   environment:
     name: Documentation
     url: http://is154584.intra.cea.fr:8081/N2D2/${CI_COMMIT_REF_NAME}
-  dependencies:
-    - generate-docs
 
 
 # Github deployment
@@ -24,7 +22,6 @@ github:
   environment:
     name: Github
     url: https://github.com/CEA-LIST/N2D2
-  dependencies: []
 
 
 # Github.io deployment
@@ -44,4 +41,3 @@ github.io:
   environment:
     name: Github.io
     url: https://cea-list.github.io/N2D2-docs
-  dependencies: []

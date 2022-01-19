@@ -7,7 +7,6 @@ test:ubuntu:
   script:
     - make tests -j4
     - make test
-  dependencies: []
 
 
 test:python_api:
@@ -24,6 +23,4 @@ test:python_api:
     - pip install -r requirements.txt
     # Run on discovery all tests located in python/tests and discard the stdout 
     # only to show the errors/warnings and the results of the tests
-    - python3.7 -m unittest discover -s tests -v 1> /dev/null
-  dependencies:
-    - build:ubuntu
+    - python3.7 -m unittest discover -s tests -v -b 1> /dev/null 
