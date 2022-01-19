@@ -65,7 +65,6 @@ void init_StimuliProvider(py::module &m) {
     // .def("getChannelOnTheFlyTransformation", &StimuliProvider::getChannelOnTheFlyTransformation, py::arg("channel"), py::arg("set"))
     // .def("getBatch", &StimuliProvider::getBatch)
     .def("getData", (StimuliProvider::TensorData_T& (StimuliProvider::*)(int)) &StimuliProvider::getData, py::arg("dev") = -1)
-    // .def("getLabelsROIs", (const std::vector<std::vector<std::shared_ptr<ROI> > >& (StimuliProvider::*)() const) &StimuliProvider::getLabelsROIs)
     // .def("getData", (const StimuliProvider::TensorData_T (StimuliProvider::*)(unsigned int, unsigned int) const) &StimuliProvider::getData, py::arg("channel"), py::arg("batchPos") = 0)
     // .def("getCachePath", &StimuliProvider::getCachePath)
     .def("addTransformation", &StimuliProvider::addTransformation, py::arg("transformation"), py::arg("setMask"), "Add global CACHEABLE transformations, before applying any channel transformation")
@@ -74,10 +73,10 @@ void init_StimuliProvider(py::module &m) {
     .def("setStreamedLabel", &StimuliProvider::setStreamedLabel, py::arg("streamedLabel"), "Set Label that is streamed directly to connected Deepnet")
     .def("streamBatch", &StimuliProvider::streamBatch, py::arg("startIndex") = -1, py::arg("dev") = -1)
     .def("getLabelsData", (Tensor<int>& (StimuliProvider::*)(int)) &StimuliProvider::getLabelsData, py::arg("dev") = -1)
-    .def("getLabelsROIs", (const std::vector<std::vector<std::shared_ptr<ROI> > >& (StimuliProvider::*)() const) &StimuliProvider::getLabelsROIs)
+    // .def("getLabelsROIs", (const std::vector<std::vector<std::shared_ptr<ROI> > >& (StimuliProvider::*)(int) const) &StimuliProvider::getLabelsROIs, py::arg("dev") = -1)
     .def("getDataChannel", (const StimuliProvider::TensorData_T (StimuliProvider::*)(unsigned int, unsigned int, int) const) &StimuliProvider::getDataChannel, py::arg("channel"), py::arg("batchPos") = 0, py::arg("dev") = -1)
-    .def("getLabelsDataChannel", (const Tensor<int> (StimuliProvider::*)(unsigned int, unsigned int) const) &StimuliProvider::getLabelsDataChannel, py::arg("channel"), py::arg("batchPos") = 0)
-    .def("getLabelsROIs", (const std::vector<std::shared_ptr<ROI> >& (StimuliProvider::*)(unsigned int) const) &StimuliProvider::getLabelsROIs, py::arg("batchPos") = 0)
+    .def("getLabelsDataChannel", (const Tensor<int> (StimuliProvider::*)(unsigned int, unsigned int, int) const) &StimuliProvider::getLabelsDataChannel, py::arg("channel"), py::arg("batchPos") = 0, py::arg("dev") = -1)
+    .def("getLabelsROIs", (const std::vector<std::shared_ptr<ROI> >& (StimuliProvider::*)(unsigned int, int) const) &StimuliProvider::getLabelsROIs, py::arg("batchPos") = 0, py::arg("dev") = -1)
     ;
 
 }

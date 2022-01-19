@@ -1,0 +1,47 @@
+# HTTP server setup on is154584 (using python simplehttp):
+# systemctl config file: /etc/systemd/system/simplehttp.service
+# service restart: systemctl restart simplehttp.service
+deploy-docs:
+  stage: deploy
+  script:
+    - mkdir -p /local/is154584/www/N2D2/${CI_COMMIT_REF_NAME}
+    - cp -r docs/_build/html/* /local/is154584/www/N2D2/${CI_COMMIT_REF_NAME}
+  environment:
+    name: Documentation
+    url: http://is154584.intra.cea.fr:8081/N2D2/${CI_COMMIT_REF_NAME}
+  dependencies:
+    - generate-docs
+
+
+# Github deployment
+github:
+  extends: 
+    - .rules:default-branch-only
+  stage: deploy
+  script:
+    - git remote show github || git remote add github git@github.com:CEA-LIST/N2D2.git
+    - git push github HEAD:master
+  environment:
+    name: Github
+    url: https://github.com/CEA-LIST/N2D2
+  dependencies: []
+
+
+# Github.io deployment
+github.io:
+  extends: 
+    - .rules:default-branch-only
+  stage: deploy
+  script:
+    - git -C ../github.io/ pull || git clone git@github.com:CEA-LIST/N2D2-docs.git ../github.io
+    - cp -r docs/_build/html/* docs/README.md ../github.io/
+    - cd ../github.io
+    - git add --all
+    - git config user.email "olivier.bichler@cea.fr"
+    - git config user.name "gitlab-runner"
+    - git diff --quiet && git diff --staged --quiet || git commit -m "${CI_COMMIT_MESSAGE}"
+    - git push
+  environment:
+    name: Github.io
+    url: https://cea-list.github.io/N2D2-docs
+  dependencies: []

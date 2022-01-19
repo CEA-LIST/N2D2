@@ -1,0 +1,14 @@
+build:ubuntu:
+  extends: 
+    - .before_script_template
+  stage: build
+  tags:
+    - ubuntu
+  script:
+    - make -j4
+    - cp lib/*.so ../python/
+  artifacts:
+    paths:
+      - python/*.so
+    expire_in: 1 hour 30 mins
+

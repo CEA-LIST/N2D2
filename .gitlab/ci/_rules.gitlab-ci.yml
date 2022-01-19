@@ -1,0 +1,14 @@
+####################################################################################################
+# List of conditions to run CI/CD jobs                                                             #
+# References:                                                                                      #
+# * https://docs.gitlab.com/ee/ci/yaml/#rules                                                      #
+# * https://docs.gitlab.com/ee/ci/variables/README.html#syntax-of-environment-variable-expressions #
+#                                                                                                  #
+####################################################################################################
+
+
+# Jobs that run only on the default branch (which should be 'master')
+.rules:default-branch-only:
+  rules:
+  - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    when: always 
