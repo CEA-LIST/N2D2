@@ -39,7 +39,7 @@ TEST(ConvCellGenerator, ConvCellGenerator)
     IniParser iniConfig;
     iniConfig.load("ConvCellGenerator.in");
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {24, 24, 1});
 
@@ -105,7 +105,7 @@ TEST_DATASET(ConvCellGenerator,
     IniParser iniConfig;
     iniConfig.load("ConvCellGenerator_mapping.in");
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {24, 24, 1});
 

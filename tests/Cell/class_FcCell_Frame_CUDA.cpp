@@ -84,7 +84,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_CUDA<float> fc1(dn, "fc1", nbOutputs);
 
@@ -109,7 +109,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -153,7 +153,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -203,7 +203,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
     REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<float> fc1(
@@ -276,7 +276,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_Test_CUDA<float> fc1(
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
@@ -360,7 +360,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
     REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<float> fc1(
@@ -441,7 +441,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);
@@ -501,7 +501,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_CUDA<double> fc1(dn, "fc1", nbOutputs);
 
@@ -526,7 +526,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -570,7 +570,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -620,7 +620,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
     REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<double> fc1(
@@ -693,7 +693,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_Test_CUDA<double> fc1(
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
@@ -777,7 +777,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
     REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<double> fc1(
@@ -858,7 +858,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);
@@ -919,7 +919,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     if (!UnitTest::CudaDeviceExists(5, 3))
         return;     // REQUIRED() not enough (Cublas failure)
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_CUDA<half_float::half> fc1(dn, "fc1", nbOutputs);
 
@@ -945,7 +945,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     if (!UnitTest::CudaDeviceExists(5, 3))
         return;     // REQUIRED() not enough (Cublas failure)
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -990,7 +990,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     if (!UnitTest::CudaDeviceExists(5, 3))
         return;     // REQUIRED() not enough (Cublas failure)
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1042,7 +1042,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
 
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<half_float::half> fc1(
@@ -1116,7 +1116,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_Test_CUDA<half_float::half> fc1(
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
@@ -1202,7 +1202,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
 
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<half_float::half> fc1(
@@ -1286,7 +1286,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     if (!UnitTest::CudaDeviceExists(5, 3))
         return;     // REQUIRED() not enough (Cublas failure)
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);

@@ -17,7 +17,7 @@
 using namespace N2D2;
 
 TEST(MemoryManager, allocate1) {
-    Network net;
+    Network net(0U,false);
     DeepNet deepNet(net);
 
     std::shared_ptr<Cell> cell1
@@ -139,7 +139,7 @@ TEST(MemoryManager, allocate1) {
 }
 
 TEST(MemoryManager, allocate2) {
-    Network net;
+    Network net(0U,false);
     DeepNet deepNet(net);
 
     std::shared_ptr<Cell> cell1
@@ -283,7 +283,7 @@ TEST(MemoryManager, allocate2) {
 }
 
 TEST(MemoryManager, allocate3) {
-    Network net;
+    Network net(0U,false);
     DeepNet deepNet(net);
 
     std::shared_ptr<Cell> cell1
@@ -439,7 +439,7 @@ TEST(MemoryManager, allocate3) {
 }
 
 TEST(MemoryManager, allocate3_wrapAround) {
-    Network net;
+    Network net(0U,false);
     DeepNet deepNet(net);
 
     std::shared_ptr<Cell> cell1

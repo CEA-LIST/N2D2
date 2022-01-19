@@ -127,7 +127,7 @@ TEST_DATASET(ConvCell_Frame_float,
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 2U, 2U),
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 1U, 3U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame<float> conv1(dn, "conv1",
@@ -192,7 +192,7 @@ TEST_DATASET(ConvCell_Frame_float,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -325,7 +325,7 @@ TEST_DATASET(ConvCell_Frame_float,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -432,7 +432,7 @@ TEST_DATASET(ConvCell_Frame_float,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_Test<float> conv1(dn, "conv1",
@@ -573,7 +573,7 @@ TEST_DATASET(ConvCell_Frame_float,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_Test<float> conv1(dn, "conv1",
@@ -714,7 +714,7 @@ TEST_DATASET(ConvCell_Frame_float,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -806,7 +806,7 @@ TEST_DATASET(ConvCell_Frame_double,
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 2U, 2U),
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 1U, 3U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame<double> conv1(dn, "conv1",
@@ -871,7 +871,7 @@ TEST_DATASET(ConvCell_Frame_double,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1004,7 +1004,7 @@ TEST_DATASET(ConvCell_Frame_double,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1111,7 +1111,7 @@ TEST_DATASET(ConvCell_Frame_double,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_Test<double> conv1(dn, "conv1",
@@ -1252,7 +1252,7 @@ TEST_DATASET(ConvCell_Frame_double,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_Test<double> conv1(dn, "conv1",
@@ -1393,7 +1393,7 @@ TEST_DATASET(ConvCell_Frame_double,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1485,7 +1485,7 @@ TEST_DATASET(ConvCell_Frame_half,
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 2U, 2U),
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 1U, 3U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame<half_float::half> conv1(dn, "conv1",
@@ -1550,7 +1550,7 @@ TEST_DATASET(ConvCell_Frame_half,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1683,7 +1683,7 @@ TEST_DATASET(ConvCell_Frame_half,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1790,7 +1790,7 @@ TEST_DATASET(ConvCell_Frame_half,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_Test<half_float::half> conv1(dn, "conv1",
@@ -1931,7 +1931,7 @@ TEST_DATASET(ConvCell_Frame_half,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_Test<half_float::half> conv1(dn, "conv1",
@@ -2072,7 +2072,7 @@ TEST_DATASET(ConvCell_Frame_half,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 

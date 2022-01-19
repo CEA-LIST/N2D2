@@ -42,7 +42,7 @@ public:
 TEST(NormalizeCell_Frame,
      propagate)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);

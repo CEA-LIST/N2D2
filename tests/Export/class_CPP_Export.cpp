@@ -68,7 +68,7 @@ TEST(CPP_Export, generateMemory) {
 
     UnitTest::FileWriteContent("net_test.ini", data);
 
-    Network net(SEED);
+    Network net(SEED,false);
     std::shared_ptr<DeepNet> deepNet
         = DeepNetGenerator::generate(net, "net_test.ini");
 
@@ -184,7 +184,7 @@ TEST_DATASET(CPP_Export,
 
     UnitTest::FileWriteContent("net_test.ini", data);
 
-    Network net(SEED);
+    Network net(SEED,false);
     std::shared_ptr<DeepNet> deepNet
         = DeepNetGenerator::generate(net, "net_test.ini");
 
@@ -292,7 +292,7 @@ TEST_DATASET(CPP_Export,
 
     UnitTest::FileWriteContent("net_test.ini", data);
 
-    Network net(SEED);
+    Network net(SEED,false);
     std::shared_ptr<DeepNet> deepNet
         = DeepNetGenerator::generate(net, "net_test.ini");
 
@@ -374,7 +374,7 @@ TEST_DATASET(CPP_Export,
              std::make_tuple(false, MemoryManager::OptimizeMaxHoleMaxLifetimeFirst, 224*224*3 + 112*112*64 + 55*55*64),
              std::make_tuple(true, MemoryManager::OptimizeMaxHoleMaxLifetimeFirst, 112*112*64 + 112*64*2))
 {
-    Network net(SEED);
+    Network net(SEED,false);
     std::shared_ptr<DeepNet> deepNet
         = DeepNetGenerator::generate(net, "tests_data/ResNet-18.ini");
 
@@ -414,7 +414,7 @@ TEST(CPP_Export_32f, generate) {
     DeepNetExport::mEnvDataUnsigned = true;
     CellExport::mPrecision = static_cast<CellExport::Precision>(-32);
 
-    Network net(SEED);
+    Network net(SEED,false);
     std::shared_ptr<DeepNet> deepNet = DeepNetGenerator::generate(net, testDataDir + "model_wo_softmax.ini");
 
     deepNet->initialize();
@@ -452,7 +452,7 @@ TEST(CPP_Export_8i, generate) {
     DeepNetExport::mEnvDataUnsigned = true;
     CellExport::mPrecision = static_cast<CellExport::Precision>(8);
 
-    Network net(SEED);
+    Network net(SEED,false);
     std::shared_ptr<DeepNet> deepNet = DeepNetGenerator::generate(net, testDataDir + "model_wo_softmax.ini");
 
     deepNet->initialize();

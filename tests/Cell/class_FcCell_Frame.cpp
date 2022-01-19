@@ -88,7 +88,7 @@ TEST_DATASET(FcCell_Frame_float,
              std::make_tuple(10U),
              std::make_tuple(253U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame<float> fc1(
         dn, "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<float> >());
@@ -112,7 +112,7 @@ TEST_DATASET(FcCell_Frame_float,
              std::make_tuple(10U, 24U, 32U),
              std::make_tuple(10U, 32U, 24U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -152,7 +152,7 @@ TEST_DATASET(FcCell_Frame_float,
              std::make_tuple(10U, 24U, 32U),
              std::make_tuple(10U, 32U, 24U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -197,7 +197,7 @@ TEST_DATASET(FcCell_Frame_float,
              std::make_tuple(1U, 30U, 25U),
              std::make_tuple(1U, 30U, 30U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -290,7 +290,7 @@ TEST_DATASET(FcCell_Frame_float,
              std::make_tuple(1U, 30U, 25U),
              std::make_tuple(1U, 30U, 30U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -385,7 +385,7 @@ TEST_DATASET(FcCell_Frame_float,
              std::make_tuple(1U, 30U, 25U),
              std::make_tuple(1U, 30U, 30U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -434,7 +434,7 @@ TEST_DATASET(FcCell_Frame_float,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_Test<float> fc1(
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
@@ -505,7 +505,7 @@ TEST_DATASET(FcCell_Frame_float,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_Test<float> fc1(
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
@@ -588,7 +588,7 @@ TEST_DATASET(FcCell_Frame_float,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_Test<float> fc1(
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
@@ -664,7 +664,7 @@ TEST_DATASET(FcCell_Frame_float,
              std::make_tuple(1U, 30U, 25U),
              std::make_tuple(1U, 30U, 30U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);
@@ -721,7 +721,7 @@ TEST_DATASET(FcCell_Frame_double,
              std::make_tuple(10U),
              std::make_tuple(253U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame<double> fc1(
         dn, "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<double> >());
@@ -745,7 +745,7 @@ TEST_DATASET(FcCell_Frame_double,
              std::make_tuple(10U, 24U, 32U),
              std::make_tuple(10U, 32U, 24U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -785,7 +785,7 @@ TEST_DATASET(FcCell_Frame_double,
              std::make_tuple(10U, 24U, 32U),
              std::make_tuple(10U, 32U, 24U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -830,7 +830,7 @@ TEST_DATASET(FcCell_Frame_double,
              std::make_tuple(1U, 30U, 25U),
              std::make_tuple(1U, 30U, 30U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -923,7 +923,7 @@ TEST_DATASET(FcCell_Frame_double,
              std::make_tuple(1U, 30U, 25U),
              std::make_tuple(1U, 30U, 30U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1018,7 +1018,7 @@ TEST_DATASET(FcCell_Frame_double,
              std::make_tuple(1U, 30U, 25U),
              std::make_tuple(1U, 30U, 30U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1067,7 +1067,7 @@ TEST_DATASET(FcCell_Frame_double,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_Test<double> fc1(
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
@@ -1138,7 +1138,7 @@ TEST_DATASET(FcCell_Frame_double,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_Test<double> fc1(
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
@@ -1221,7 +1221,7 @@ TEST_DATASET(FcCell_Frame_double,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_Test<double> fc1(
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
@@ -1297,7 +1297,7 @@ TEST_DATASET(FcCell_Frame_double,
              std::make_tuple(1U, 30U, 25U),
              std::make_tuple(1U, 30U, 30U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);
@@ -1354,7 +1354,7 @@ TEST_DATASET(FcCell_Frame_half,
              std::make_tuple(10U),
              std::make_tuple(253U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame<half_float::half> fc1(
         dn, "fc1", nbOutputs, std::make_shared<TanhActivation_Frame<half_float::half> >());
@@ -1378,7 +1378,7 @@ TEST_DATASET(FcCell_Frame_half,
              std::make_tuple(10U, 24U, 32U),
              std::make_tuple(10U, 32U, 24U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1418,7 +1418,7 @@ TEST_DATASET(FcCell_Frame_half,
              std::make_tuple(10U, 24U, 32U),
              std::make_tuple(10U, 32U, 24U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1463,7 +1463,7 @@ TEST_DATASET(FcCell_Frame_half,
              std::make_tuple(1U, 30U, 25U),
              std::make_tuple(1U, 30U, 30U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1556,7 +1556,7 @@ TEST_DATASET(FcCell_Frame_half,
              std::make_tuple(1U, 30U, 25U),
              std::make_tuple(1U, 30U, 30U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1651,7 +1651,7 @@ TEST_DATASET(FcCell_Frame_half,
              std::make_tuple(1U, 30U, 25U),
              std::make_tuple(1U, 30U, 30U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1701,7 +1701,7 @@ TEST_DATASET(FcCell_Frame_half,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_Test<half_float::half> fc1(
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
@@ -1773,7 +1773,7 @@ TEST_DATASET(FcCell_Frame_half,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_Test<half_float::half> fc1(
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
@@ -1856,7 +1856,7 @@ TEST_DATASET(FcCell_Frame_half,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_Test<half_float::half> fc1(
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
@@ -1934,7 +1934,7 @@ TEST_DATASET(FcCell_Frame_half,
              std::make_tuple(1U, 30U, 25U),
              std::make_tuple(1U, 30U, 30U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);

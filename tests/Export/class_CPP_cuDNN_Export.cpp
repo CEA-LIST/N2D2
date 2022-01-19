@@ -124,7 +124,7 @@ TEST(CPP_cuDNN_Export, generate)
 
     UnitTest::FileWriteContent("net_test.ini", data);
 
-    Network net;
+    Network net(0U,false);
     std::shared_ptr<DeepNet> deepNet
         = DeepNetGenerator::generate(net, "net_test.ini");
 

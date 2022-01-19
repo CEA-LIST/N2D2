@@ -68,7 +68,7 @@ TEST_DATASET(ROIPoolingCell_Frame,
              std::make_tuple(10U, 7U, 1U),
              std::make_tuple(7U, 10U, 2U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     StimuliProvider sp(EmptyDatabase, {16, 16, 1}, 5);
@@ -103,7 +103,7 @@ TEST_DATASET(ROIPoolingCell_Frame,
 {
     const unsigned int nbProposals = 2;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -157,7 +157,7 @@ TEST_DATASET(ROIPoolingCell_Frame,
 {
     const unsigned int nbProposals = 2;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -236,7 +236,7 @@ TEST_DATASET(ROIPoolingCell_Frame,
 {
     const unsigned int nbProposals = 2;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -313,7 +313,7 @@ TEST(ROIPoolingCell_Frame,
     const unsigned int channelsHeight = 32;
     const unsigned int nbProposals = 2;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -395,7 +395,7 @@ TEST_DATASET(ROIPoolingCell_Frame,
     const unsigned int channelsHeight = 32;
     const unsigned int nbProposals = 2;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
