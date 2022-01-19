@@ -283,7 +283,7 @@ double N2D2::DistanceCell_Frame_CUDA<T>::applyLoss()
 }
 
 template<class T>
-void N2D2::DistanceCell_Frame_CUDA<T>::checkGradient(double epsilon, double maxError) {
+void N2D2::DistanceCell_Frame_CUDA<T>::checkGradient(double /*epsilon*/, double /*maxError*/) {
     throw std::runtime_error("checkGradient not supported yet.");
    
    /* GradientCheck<T> gc(epsilon, maxError);

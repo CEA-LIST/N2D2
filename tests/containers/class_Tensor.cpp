@@ -819,6 +819,34 @@ TEST(Tensor4d, clear)
     ASSERT_TRUE(A.empty());
 }
 
+TEST(Tensor4d, ctor_copy)
+{
+    const Tensor<double> A({2, 3, 4, 5}, 1.0);
+
+    Tensor<double> B(A);
+    // Data from A was converted to B
+    ASSERT_EQUALS(B.dims(), A.dims());
+    ASSERT_EQUALS(B(1, 1, 1, 1), 1.0);
+    // Changes in B will affect A
+    B(1, 1, 1, 1) = 2.0;
+    ASSERT_EQUALS(B(1, 1, 1, 1), 2.0);
+    ASSERT_EQUALS(A(1, 1, 1, 1), 2.0);
+}
+
+TEST(Tensor4d, clone)
+{
+    const Tensor<double> A({2, 3, 4, 5}, 1.0);
+
+    Tensor<double> B = A.clone();
+    // Data from A was converted to B
+    ASSERT_EQUALS(B.dims(), A.dims());
+    ASSERT_EQUALS(B(1, 1, 1, 1), 1.0);
+    // Changes in B won't affect A
+    B(1, 1, 1, 1) = 2.0;
+    ASSERT_EQUALS(B(1, 1, 1, 1), 2.0);
+    ASSERT_EQUALS(A(1, 1, 1, 1), 1.0);
+}
+
 TEST(Tensor4d, tensor_cast_double_to_float)
 {
     Tensor<double> A({2, 3, 4, 5}, 1.0);
