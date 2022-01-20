@@ -20,11 +20,12 @@
 """
 import unittest
 import n2d2
-from math import ceil
 from n2d2.cells import Sequence
 from random import randint
 
 class fit_FRAME(unittest.TestCase):
+    """This test the method fit and checks if it produces the same result as a learning loop we can manually do with the API.
+    """
     def setUp(self):
         self.seed = randint(1, 1000)
         print(f"Random seed : {self.seed}")
@@ -40,19 +41,21 @@ class fit_FRAME(unittest.TestCase):
         database = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw")
         provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size=batch_size)
         n2d2.global_variables.seed = self.seed # reset seed before defining each model to have the same weights !
-        model = Sequence([n2d2.cells.Fc(28*28, 50, activation=n2d2.activation.Rectifier()),
-                            n2d2.cells.Fc(50, 10),
+        model = Sequence([n2d2.cells.Fc(28*28, 50, activation=n2d2.activation.Rectifier(), no_bias=True, weights_filler=n2d2.filler.Constant(value=0.01)),
+                            n2d2.cells.Fc(50, 10, no_bias=True, weights_filler=n2d2.filler.Constant(value=0.01)),
                             n2d2.cells.nn.Softmax(with_loss=True)        
                             ], "model1")
+
         n2d2.global_variables.seed = self.seed
-        model_f = Sequence([n2d2.cells.Fc(28*28, 50, activation=n2d2.activation.Rectifier()),
-                            n2d2.cells.Fc(50, 10),
+        model_f = Sequence([n2d2.cells.Fc(28*28, 50, activation=n2d2.activation.Rectifier(), no_bias=True, weights_filler=n2d2.filler.Constant(value=0.01)),
+                            n2d2.cells.Fc(50, 10, no_bias=True, weights_filler=n2d2.filler.Constant(value=0.01)),
                             n2d2.cells.nn.Softmax(with_loss=True)        
                             ], "model2")
 
         # Training using fit method !
         # converting sequence into Deepnet
         modelf = model_f.to_deepnet_cell(provider)
+        n2d2.global_variables.seed = self.seed # reset seed for random batch reading !
         modelf.fit(learn_epoch=epochs, valid_metric='Accuracy')
         fit_fc1_weights =  modelf[0].get_weights()
 
@@ -60,27 +63,35 @@ class fit_FRAME(unittest.TestCase):
 
         provider.set_partition("Learn")
         model.learn()
+        n2d2.global_variables.seed = self.seed # reset seed for random batch reading !
+        provider.set_batch()
         for epoch in range(epochs):
 
             print("\n### Train Epoch: " + str(epoch) + " ###")
 
-            for i in range(ceil(database.get_nb_stimuli('Learn')/batch_size)):
-
-                x = provider.read_random_batch()
+            i = 0
+            while not provider.all_batchs_provided():
+                x = provider.read_batch()
                 x = model(x)
                 x = target(x)
                 x.back_propagate()
                 x.update()
-                print("Example: " + str(i*batch_size) + ", loss: "
+
+                print("Example: " + str(i) + ", loss: "
                     + "{0:.3f}".format(target.loss()), end='\r')
+                i += 1
+        print("\n")
         python_loop_fc1_weights =  model[0].get_weights()
 
         for i,j in zip(python_loop_fc1_weights, fit_fc1_weights):
             for tensor1, tensor2 in zip(i, j):
                 for value1, value2 in zip(tensor1, tensor2):
+                    print(f"LOOP {value1} | FIT {value2}")
                     self.assertTrue(abs(value1-value2) < (0.01 * abs(value2)) + 0.001, f"Different weights value found :\nLOOP {value1} | FIT {value2}")
 
 class fit_FRAME_CUDA(unittest.TestCase):
+    """This test the method fit and checks if it produces the same result as a learning loop we can manually do with the API.
+    """
     def setUp(self):
         self.seed = randint(1, 1000)
         print(f"Random seed : {self.seed}")
@@ -96,19 +107,19 @@ class fit_FRAME_CUDA(unittest.TestCase):
         database = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw")
         provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size=batch_size)
         n2d2.global_variables.seed = self.seed # reset seed before defining each model to have the same weights !
-        model = Sequence([n2d2.cells.Fc(28*28, 50, activation=n2d2.activation.Rectifier()),
-                            n2d2.cells.Fc(50, 10),
+        model = Sequence([n2d2.cells.Fc(28*28, 50, activation=n2d2.activation.Rectifier(), no_bias=True, weights_filler=n2d2.filler.Constant(value=0.01)),
+                            n2d2.cells.Fc(50, 10, weights_filler=n2d2.filler.Constant(value=0.01)),
                             n2d2.cells.nn.Softmax(with_loss=True)        
                             ], "model1")
         n2d2.global_variables.seed = self.seed
-        model_f = Sequence([n2d2.cells.Fc(28*28, 50, activation=n2d2.activation.Rectifier()),
-                            n2d2.cells.Fc(50, 10),
+        model_f = Sequence([n2d2.cells.Fc(28*28, 50, activation=n2d2.activation.Rectifier(), no_bias=True, weights_filler=n2d2.filler.Constant(value=0.01)),
+                            n2d2.cells.Fc(50, 10, no_bias=True, weights_filler=n2d2.filler.Constant(value=0.01)),
                             n2d2.cells.nn.Softmax(with_loss=True)        
                             ], "model2")
-
         # Training using fit method !
         # converting sequence into Deepnet
         modelf = model_f.to_deepnet_cell(provider)
+        n2d2.global_variables.seed = self.seed # reset seed for random batch reading !
         modelf.fit(learn_epoch=epochs, valid_metric='Accuracy')
         fit_fc1_weights =  modelf[0].get_weights()
 
@@ -116,25 +127,29 @@ class fit_FRAME_CUDA(unittest.TestCase):
 
         provider.set_partition("Learn")
         model.learn()
+        n2d2.global_variables.seed = self.seed # reset seed for random batch reading !
+        provider.set_batch()
         for epoch in range(epochs):
 
             print("\n### Train Epoch: " + str(epoch) + " ###")
 
-            for i in range(ceil(database.get_nb_stimuli('Learn')/batch_size)):
-
-                x = provider.read_random_batch()
+            i = 0
+            while not provider.all_batchs_provided():
+                x = provider.read_batch()
                 x = model(x)
                 x = target(x)
                 x.back_propagate()
                 x.update()
 
-                print("Example: " + str(i*batch_size) + ", loss: "
+                print("Example: " + str(i) + ", loss: "
                     + "{0:.3f}".format(target.loss()), end='\r')
+                i += 1
         python_loop_fc1_weights =  model[0].get_weights()
 
         for i,j in zip(python_loop_fc1_weights, fit_fc1_weights):
             for tensor1, tensor2 in zip(i, j):
                 for value1, value2 in zip(tensor1, tensor2):
+                    print(f"LOOP {value1} | FIT {value2}")
                     self.assertTrue(abs(value1-value2) < (0.01 * abs(value2)) + 0.001, f"Different weights value found :\nLOOP {value1} | FIT {value2}")
 
 if __name__ == '__main__':
