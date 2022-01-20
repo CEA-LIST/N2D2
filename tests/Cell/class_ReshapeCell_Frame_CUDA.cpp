@@ -60,7 +60,7 @@ TEST(ReshapeCell_Frame_CUDA, propagate)
     const unsigned int nbOutputs = 10;
     const std::vector<int> shape = {2, 1, (int)nbOutputs};
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);

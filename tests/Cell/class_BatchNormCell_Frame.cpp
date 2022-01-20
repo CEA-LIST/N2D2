@@ -57,7 +57,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 TEST(BatchNormCell_Frame_float, setScales)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {10, 10, 1});
 
@@ -100,7 +100,7 @@ TEST_DATASET(BatchNormCell_Frame_float,
              std::make_tuple(24U, 32U),
              std::make_tuple(32U, 24U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 

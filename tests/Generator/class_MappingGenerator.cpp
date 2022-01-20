@@ -44,7 +44,7 @@ TEST(MappingGenerator, MappingGenerator)
     IniParser iniConfig;
     iniConfig.load("MappingGenerator.in");
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {24, 24, 1});
     const std::shared_ptr<ConvCell_Frame<Float_T> > conv1(
@@ -95,7 +95,7 @@ TEST(MappingGenerator, MappingGenerator_bis)
     IniParser iniConfig;
     iniConfig.load("MappingGenerator_bis.in");
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {24, 24, 1});
     const std::shared_ptr<ConvCell_Frame<Float_T> > conv1(
@@ -135,7 +135,7 @@ TEST(MappingGenerator, MappingGenerator_ter)
     IniParser iniConfig;
     iniConfig.load("MappingGenerator_ter.in");
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {24, 24, 1});
     const std::shared_ptr<ConvCell_Frame<Float_T> > conv1(
@@ -163,7 +163,7 @@ TEST(MappingGenerator, MappingGenerator_env_ter)
     IniParser iniConfig;
     iniConfig.load("MappingGenerator_env_ter.in");
 
-    Network net;
+    Network net(0U,false);
     Environment env(net, EmptyDatabase, {24, 24, 1});
     Tensor<bool> mapping = MappingGenerator::generate(
         env, std::shared_ptr<Cell>(), 10, iniConfig, "conv1", "Mapping");

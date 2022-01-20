@@ -124,7 +124,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
 
     const unsigned int nbOutputs = 1;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -203,7 +203,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
 
     const unsigned int nbOutputs = 1;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -295,7 +295,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
 
     const unsigned int nbOutputs = 3;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     PoolCell_Frame_EXT_CUDA_Test<half_float::half> pool1(dn, "pool1",
                                    std::vector<unsigned int>({poolWidth, poolHeight}),
@@ -434,7 +434,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
 
     const unsigned int nbOutputs = 6;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     PoolCell_Frame_EXT_CUDA_Test<half_float::half> pool1(dn, "pool1",
                                    std::vector<unsigned int>({poolWidth, poolHeight}),
@@ -575,7 +575,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     PoolCell_Frame_EXT_CUDA<float> pool1(dn, "pool1",
                                     std::vector<unsigned int>({poolWidth, poolHeight}),
@@ -637,7 +637,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
 
     const unsigned int nbOutputs = 1;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -716,7 +716,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
 
     const unsigned int nbOutputs = 1;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -808,7 +808,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
 
     const unsigned int nbOutputs = 3;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     PoolCell_Frame_EXT_CUDA_Test<float> pool1(dn, "pool1",
                                    std::vector<unsigned int>({poolWidth, poolHeight}),
@@ -946,7 +946,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
 
     const unsigned int nbOutputs = 6;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     PoolCell_Frame_EXT_CUDA_Test<float> pool1(dn, "pool1",
                                    std::vector<unsigned int>({poolWidth, poolHeight}),
@@ -1105,7 +1105,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
 
     const unsigned int nbOutputs = 1;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1184,7 +1184,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
 
     const unsigned int nbOutputs = 1;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1276,7 +1276,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
 
     const unsigned int nbOutputs = 3;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     PoolCell_Frame_EXT_CUDA_Test<double> pool1(dn, "pool1",
                                    std::vector<unsigned int>({poolWidth, poolHeight}),
@@ -1415,7 +1415,7 @@ TEST_DATASET(PoolCell_Frame_EXT_CUDA,
 
     const unsigned int nbOutputs = 6;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     PoolCell_Frame_EXT_CUDA_Test<double> pool1(dn, "pool1",
                                    std::vector<unsigned int>({poolWidth, poolHeight}),
