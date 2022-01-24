@@ -138,7 +138,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     ConvCell_Frame_CUDA<float> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
@@ -207,7 +207,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
@@ -398,7 +398,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -491,7 +491,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -593,7 +593,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
@@ -750,7 +750,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
@@ -914,7 +914,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_CUDA_Test<float> conv1(dn, "conv1",
@@ -1100,7 +1100,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1194,7 +1194,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_CUDA<double> conv1(dn, "conv1",
@@ -1261,7 +1261,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1354,7 +1354,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1456,7 +1456,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
@@ -1613,7 +1613,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
@@ -1776,7 +1776,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1870,7 +1870,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 {
     REQUIRED(UnitTest::CudaDeviceExists(5, 3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     ConvCell_Frame_CUDA<half_float::half> conv1(dn, "conv1",
@@ -1938,7 +1938,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -2032,7 +2032,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -2136,7 +2136,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
@@ -2296,7 +2296,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
@@ -2461,7 +2461,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 

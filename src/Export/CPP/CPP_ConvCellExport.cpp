@@ -347,7 +347,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
     Tensor<Float_T> kernel;
     Float_T value;
     uint32_t accumulator = 0;
-    uint32_t accumulatorDW = 0;
+    // uint32_t accumulatorDW = 0;  // Not used for now
     std::size_t wCounter = 0;
     std::size_t i = 0;
 

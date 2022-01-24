@@ -119,7 +119,7 @@ TEST_DATASET(PoolCell_Frame,
              std::make_tuple(3U, 3U, 10U, 1U, 3U, 2U, 2U),
              std::make_tuple(3U, 3U, 10U, 1U, 3U, 1U, 3U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     PoolCell_Frame<float> pool1(dn, "pool1",
                          std::vector<unsigned int>({poolWidth, poolHeight}),
@@ -179,7 +179,7 @@ TEST_DATASET(PoolCell_Frame,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -256,7 +256,7 @@ TEST_DATASET(PoolCell_Frame,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -347,7 +347,7 @@ TEST_DATASET(PoolCell_Frame,
 
     const unsigned int nbOutputs = 3;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     PoolCell_Frame_Test<float> pool1(dn, "pool1",
                               std::vector<unsigned int>({poolWidth, poolHeight}),
@@ -484,7 +484,7 @@ TEST_DATASET(PoolCell_Frame,
 
     const unsigned int nbOutputs = 6;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     PoolCell_Frame_Test<float> pool1(dn, "pool1",
                               std::vector<unsigned int>({poolWidth, poolHeight}),
@@ -625,7 +625,7 @@ TEST_DATASET(PoolCell_Frame,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -702,7 +702,7 @@ TEST_DATASET(PoolCell_Frame,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -793,7 +793,7 @@ TEST_DATASET(PoolCell_Frame,
 
     const unsigned int nbOutputs = 3;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     PoolCell_Frame_Test<half_float::half> pool1(dn, "pool1",
                               std::vector<unsigned int>({poolWidth, poolHeight}),
@@ -929,7 +929,7 @@ TEST_DATASET(PoolCell_Frame,
 
     const unsigned int nbOutputs = 6;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     PoolCell_Frame_Test<half_float::half> pool1(dn, "pool1",
                               std::vector<unsigned int>({poolWidth, poolHeight}),
@@ -1071,7 +1071,7 @@ TEST_DATASET(PoolCell_Frame,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1148,7 +1148,7 @@ TEST_DATASET(PoolCell_Frame,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1239,7 +1239,7 @@ TEST_DATASET(PoolCell_Frame,
 
     const unsigned int nbOutputs = 3;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     PoolCell_Frame_Test<double> pool1(dn, "pool1",
                               std::vector<unsigned int>({poolWidth, poolHeight}),
@@ -1375,7 +1375,7 @@ TEST_DATASET(PoolCell_Frame,
 
     const unsigned int nbOutputs = 6;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     PoolCell_Frame_Test<double> pool1(dn, "pool1",
                               std::vector<unsigned int>({poolWidth, poolHeight}),

@@ -47,7 +47,7 @@ TEST(DistanceCell_Frame_CUDA,
      forward_margin_pytorch)
 {
     // TEST COMPARE TO PYTORCH
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Random::mtSeed(0);
 

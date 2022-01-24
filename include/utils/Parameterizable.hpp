@@ -290,6 +290,11 @@ public:
         return std::string("string");
     }
 
+    Parameter& operator=(const Parameter<T>& param)
+    {
+        mValue = param.mValue;
+        return *this;
+    }
 
     Parameter& operator=(const T& value)
     {

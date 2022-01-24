@@ -80,7 +80,7 @@ TEST_DATASET(ResizeCell_Frame_CUDA,
     if (!UnitTest::CudaDeviceExists(5, 3))
         return;     // REQUIRED() not enough (Cublas failure)
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     cv::theRNG().state = std::numeric_limits<std::uint64_t>::max();

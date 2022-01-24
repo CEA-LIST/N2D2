@@ -1,0 +1,26 @@
+test:ubuntu:
+  extends: 
+    - .before_script_template
+  stage: test
+  tags:
+    - ubuntu
+  script:
+    - make tests -j4
+    - make test
+
+
+test:python_api:
+  extends: 
+    - .before_script_template
+  stage: test
+  tags:
+    - ubuntu
+  image: "python:3.7"
+  script:
+    #- make -j4
+    #- cp lib/*.so ../python/
+    - cd ../python
+    - pip install -r requirements.txt
+    # Run on discovery all tests located in python/tests and discard the stdout 
+    # only to show the errors/warnings and the results of the tests
+    - python3.7 -m unittest discover -s tests -v -b 1> /dev/null 

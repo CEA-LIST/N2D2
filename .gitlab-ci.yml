@@ -1,104 +1,24 @@
-variables:
-  GIT_SUBMODULE_STRATEGY: recursive
-  OMP_NUM_THREADS: 4
+###############################################################################
+#            N2D2 Continious Integration and Continious Deployment            #
+#                                                                             #
+###############################################################################
+
 
 stages:
+  # Build N2D2
   - build
+  # Unit test stage
   - test
+  # Generate documentation files
+  - documentation
+  # Deploy N2D2 code to other web interfaces
   - deploy
 
-.before_script_template:
-  before_script:
-    - mkdir build
-    - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Coverage ..
 
-build:ubuntu:
-  extends: .before_script_template
-  stage: build
-  tags:
-    - ubuntu
-  script:
-    - make -j4
-    - cp lib/*.so ../python/
-    - make docs -j4
-  artifacts:
-    paths:
-      - docs/_build/html
-
-test:ubuntu:
-  extends: .before_script_template
-  stage: test
-  tags:
-    - ubuntu
-  script:
-#    - cd build
-    - export N2D2_DATA=/nvme0/DATABASE
-    - make tests -j4
-    - make test
-    - gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root ${CI_PROJECT_DIR} .
-  coverage: /^\s*lines:\s*\d+.\d+\%/
-  artifacts:
-    name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}
-    expire_in: 2 days
-    reports:
-      cobertura: build/coverage.xml
-
-test:python_api:
-  extends: .before_script_template
-  stage: test
-  tags:
-    - ubuntu
-  image: "python:3.7"
-  script:
-    - make -j4
-    - cp lib/*.so ../python/
-    - cd ../python
-    # Docker have issue with tensorflow binary, a manual install seems to be needed (cf. https://github.com/tensorflow/text/issues/385) 
-    - pip install -U tensorflow==2.6.0
-    - pip install -r requirements.txt
-    # Run on discovery all tests located in python/tests and discard the stdout to only show the errors/warnings and the results of the tests
-    - python3.7 -m unittest discover -s tests -v 1> /dev/null
-
-
-# HTTP server setup on is154584 (using python simplehttp):
-# systemctl config file: /etc/systemd/system/simplehttp.service
-# service restart: systemctl restart simplehttp.service
-docs:
-  stage: test
-  script:
-    - mkdir -p /local/is154584/www/N2D2/${CI_COMMIT_REF_NAME}
-    - cp -r docs/_build/html/* /local/is154584/www/N2D2/${CI_COMMIT_REF_NAME}
-  environment:
-    name: Documentation
-    url: http://is154584.intra.cea.fr:8081/N2D2/${CI_COMMIT_REF_NAME}
-
-# Github deployment
-github:
-  stage: deploy
-  script:
-    - git remote show github || git remote add github git@github.com:CEA-LIST/N2D2.git
-    - git push github HEAD:master
-  environment:
-    name: Github
-    url: https://github.com/CEA-LIST/N2D2
-  only:
-    - master
-
-# Github.io deployment
-github.io:
-  stage: deploy
-  script:
-    - git -C ../github.io/ pull || git clone git@github.com:CEA-LIST/N2D2-docs.git ../github.io
-    - cp -r docs/_build/html/* docs/README.md ../github.io/
-    - cd ../github.io
-    - git add --all
-    - git config user.email "olivier.bichler@cea.fr"
-    - git config user.name "gitlab-runner"
-    - git diff --quiet && git diff --staged --quiet || git commit -m "${CI_COMMIT_MESSAGE}"
-    - git push
-  environment:
-    name: Github.io
-    url: https://cea-list.github.io/N2D2-docs
-  only:
-    - master
+include:
+  - local: '/.gitlab/ci/_global.gitlab-ci.yml'
+  - local: '/.gitlab/ci/_rules.gitlab-ci.yml'
+  - local: '/.gitlab/ci/build.gitlab-ci.yml'
+  - local: '/.gitlab/ci/test.gitlab-ci.yml'
+  - local: '/.gitlab/ci/documentation.gitlab-ci.yml'
+  - local: '/.gitlab/ci/deploy.gitlab-ci.yml'

@@ -1312,16 +1312,25 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         }
         //BitShift
         else if (node.op_type() == "Cast") {
-            assert(node.attribute_size() > 0);
-
-            std::cout << Utils::cnotice << "  Ignore Cast operation to "
-                << node.attribute(0).GetTypeName()
+            std::cout << Utils::cnotice << "  Ignore Cast operation"
                 << Utils::cdef << std::endl;
 
             std::cout << "  " << node.output(0) << " -> "
                 << redirectName(node.input(0)) << std::endl;
             redirect[node.output(0)] = redirectName(node.input(0));
             continue;
+/*
+            std::cout <<  "  Ignore Cast operation to "
+                << node.attribute(0).GetTypeName()
+                <<  std::endl;
+
+            std::cout << "  " << node.output(0) << " -> "
+                << redirectName(node.input(0)) << std::endl;
+            redirect[node.output(0)] = redirectName(node.input(0));
+            assert(node.attribute_size() > 0);
+
+            continue;
+            */
         }
         //Ceil
         else if (node.op_type() == "Clip") {
@@ -1422,6 +1431,30 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 }
                 else
                     cellFrame->setActivation(activation);
+                std::cout << "  clipping in [" << minVal << ", " << maxVal << "]"
+                    << std::endl;
+            }
+            else if (minVal < 0.0 && maxVal > 0.0) {
+                std::shared_ptr<Cell_Frame_Top> cellFrame
+                    = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+                if (!cellFrame->getActivation()) {
+                    std::shared_ptr<Activation> activation
+                        = Registrar<LinearActivation>::create<Float_T>(model)();
+                    cellFrame->setActivation(activation);
+                }
+                else if (cellFrame->getActivation()->getType()
+                        != LinearActivation::Type) {
+                    std::ostringstream errorStr;
+                    errorStr << "Unsupported ONNX operator: " << node.op_type()
+                        << " with min=" << minVal << " and max=" << maxVal
+                        << " when non linear activation" << std::endl;
+
+                    throw std::runtime_error(errorStr.str());
+                }
+                
+                std::cout << Utils::cnotice << "  Ignore Clip operation when "
+                            << " min is inferior to 0 and max is superior to 0"
+                            << Utils::cdef << std::endl;
             }
             else {
                 std::ostringstream errorStr;
@@ -1432,8 +1465,6 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 throw std::runtime_error(errorStr.str());
             }
 
-            std::cout << "  clipping in [" << minVal << ", " << maxVal << "]"
-                << std::endl;
             std::cout << "  " << node.output(0) << " -> "
                 << redirectName(node.input(0)) << std::endl;
             redirect[node.output(0)] = redirectName(node.input(0));
@@ -1750,8 +1781,44 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     kernelDims.push_back(nbInputs);
                     kernelDims.push_back(convCell->getNbOutputs());
 
-                    const Tensor<Float_T> kernels
-                        = ONNX_unpackTensor<Float_T>((*itInit).second, kernelDims);
+                    Tensor<Float_T> kernels;
+                    if ((*itInit).second->data_type() == onnx::TensorProto_DataType_FLOAT) {
+                        Tensor<Float_T> wTmp 
+                            = ONNX_unpackTensor<Float_T>((*itInit).second, kernelDims);
+                        kernels.resize(wTmp.dims());
+                        kernels 
+                            = ONNX_unpackTensor<Float_T>((*itInit).second, kernelDims);
+                    }
+                    else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_INT8) {
+                        std::cout << Utils::cnotice 
+                            << "  Implicit Cast on Weights from INT8 to Float32 for " 
+                            << node.op_type()
+                            << " for layer type "
+                            << Utils::cdef << std::endl;
+                        Tensor<int8_t> wTmp 
+                            = ONNX_unpackTensor<int8_t>((*itInit).second, kernelDims);
+                        kernels.resize(wTmp.dims());
+                        for(unsigned int i = 0; i < wTmp.size(); ++i) {
+                            kernels(i) = (float) wTmp(i);
+                        }
+                    }
+                    else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_DOUBLE) {
+                        std::cout << Utils::cnotice 
+                            << "  Implicit Cast on Weights from Float64 to Float32 for " 
+                            << node.op_type()
+                            << " for layer type "
+                            << Utils::cdef << std::endl;
+                        Tensor<double> wTmp 
+                            = ONNX_unpackTensor<double>((*itInit).second, kernelDims);
+                        kernels.resize(wTmp.dims());
+                        for(unsigned int i = 0; i < wTmp.size(); ++i) {
+                            kernels(i) = (float) wTmp(i);
+                        }
+                    }
+                    else {
+                        throw std::runtime_error("Unsupported datatype: "
+                            "Conv or ConvInteger Layer only support Float32, Float64 or INT8 Weights");
+                    }
 
                     for (unsigned int output = 0;
                         output < convCell->getNbOutputs(); ++output)
@@ -1803,11 +1870,45 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         && (itInit = initializer.find(node.input(2)))
                             != initializer.end())
                     {
-                        Tensor<Float_T> biases = ONNX_unpackTensor<Float_T>(
-                            (*itInit).second,
-                            {(unsigned int)convCell->getNbOutputs()});
-                        biases.reshape({1, convCell->getNbOutputs()});
-
+                        Tensor<Float_T> biases;
+                        if ((*itInit).second->data_type() == onnx::TensorProto_DataType_FLOAT) {
+                            biases.resize({(unsigned int)convCell->getNbOutputs()});
+                            biases 
+                                = ONNX_unpackTensor<Float_T>((*itInit).second,
+                                                            {(unsigned int)convCell->getNbOutputs()});
+                        }
+                        else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_INT32) {
+                            std::cout << Utils::cnotice 
+                                << "  Implicit Cast on Biases from INT32 to Float32 for " 
+                                << node.op_type()
+                                << " for layer type "
+                                << Utils::cdef << std::endl;
+                            Tensor<int32_t> bTmp 
+                                = ONNX_unpackTensor<int32_t>((*itInit).second,
+                                                            {(unsigned int)convCell->getNbOutputs()});
+                            biases.resize(bTmp.dims());
+                            for(unsigned int i = 0; i < bTmp.size(); ++i) {
+                                biases(i) = (float) bTmp(i);
+                            }
+                        }
+                        else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_DOUBLE) {
+                            std::cout << Utils::cnotice 
+                                << "  Implicit Cast on Biases from Float64 to Float32 for " 
+                                << node.op_type()
+                                << " for layer type "
+                                << Utils::cdef << std::endl;
+                            Tensor<double> bTmp 
+                                = ONNX_unpackTensor<double>((*itInit).second, kernelDims);
+                            biases.resize(bTmp.dims());
+                            for(unsigned int i = 0; i < bTmp.size(); ++i) {
+                                biases(i) = (float) bTmp(i);
+                            }
+                        }
+                        else {
+                            throw std::runtime_error("Unsupported datatype: "
+                                "Conv or ConvInteger Layer only support Float32, Float64 or INT32 Biases");
+                        }
+                        biases.reshape({1, convCell->getNbOutputs()}); // Adding an empty dim to avoid error when accessing bias
                         for (unsigned int output = 0;
                             output < convCell->getNbOutputs(); ++output)
                         {
@@ -1972,7 +2073,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             //bool transA = false;
             bool transB = false;
 
-            if (node.op_type() == "Gemm") {
+            if (node.op_type() == "Gemm" || node.op_type() == "MatMulInteger") {
                 if ((itAttr = attribute.find("alpha")) != attribute.end())
                     alpha = (*itAttr).second->f();
 
@@ -1987,8 +2088,41 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             }
 
             if (!inputData.empty()) {
-                Tensor<Float_T> weights
-                    = ONNX_unpackTensor<Float_T>((*itInit).second);
+                Tensor<Float_T> weights;
+                if ((*itInit).second->data_type() == onnx::TensorProto_DataType_FLOAT) {
+                    Tensor<Float_T> wTmp = ONNX_unpackTensor<Float_T>((*itInit).second);
+                    weights.resize(wTmp.dims());
+                    weights 
+                        = ONNX_unpackTensor<Float_T>((*itInit).second);
+                }
+                else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_INT8) {
+                    std::cout << Utils::cnotice 
+                        << "  Implicit Cast on Weights from INT8 to Float32 for " 
+                        << node.op_type()
+                        << " for layer type "
+                        << Utils::cdef << std::endl;
+                    Tensor<int8_t> wTmp = ONNX_unpackTensor<int8_t>((*itInit).second);
+                    weights.resize(wTmp.dims());
+                    for(unsigned int i = 0; i < wTmp.size(); ++i) {
+                        weights(i) = (float) wTmp(i);
+                    }
+                }
+                else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_DOUBLE) {
+                    std::cout << Utils::cnotice 
+                        << "  Implicit Cast on Weights from Float64 to Float32 for " 
+                        << node.op_type()
+                        << " for layer type "
+                        << Utils::cdef << std::endl;
+                    Tensor<double> wTmp = ONNX_unpackTensor<double>((*itInit).second);
+                    weights.resize(wTmp.dims());
+                    for(unsigned int i = 0; i < wTmp.size(); ++i) {
+                        weights(i) = (float) wTmp(i);
+                    }
+                }
+                else {
+                    throw std::runtime_error("Unsupported datatype: "
+                        "Gemm or MatMul or MatMulInteger Layer only support Float32, Float64 or INT8 Weights");
+                }
 
                 if ((itShape = shape.find((*itInit).first)) != shape.end())
                     weights.reshape((*itShape).second);
@@ -3094,10 +3228,39 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     {
                         dataCell->setParameter<bool>("NoBias", false);
                         dataCell->initialize(); // Re-init with bias!
-
-                        Tensor<Float_T> biases = ONNX_unpackTensor<Float_T>(
-                            (*itInit).second);
-                        biases.reshape({1, dataCell->getNbOutputs()});
+                        Tensor<Float_T> biases;
+                        if ((*itInit).second->data_type() == onnx::TensorProto_DataType_FLOAT) {
+                            biases.resize({1, dataCell->getNbOutputs()});
+                            biases = ONNX_unpackTensor<Float_T>((*itInit).second);
+                        }
+                        else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_INT32) {
+                            std::cout << Utils::cnotice 
+                                << "  Implicit Cast on Biases from INT32 to Float32 for " 
+                                << node.op_type()
+                                << " for layer type "
+                                << Utils::cdef << std::endl;
+                            Tensor<int32_t> bTmp = ONNX_unpackTensor<int32_t>((*itInit).second);
+                            biases.resize({1, dataCell->getNbOutputs()});
+                            for(unsigned int i = 0; i < bTmp.size(); ++i) {
+                                biases(i) = (float) bTmp(i);
+                            }
+                        }
+                        else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_DOUBLE) {
+                            std::cout << Utils::cnotice 
+                                << "  Implicit Cast on Biases from Float64 to Float32 for " 
+                                << node.op_type()
+                                << " for layer type "
+                                << Utils::cdef << std::endl;
+                            Tensor<double> bTmp = ONNX_unpackTensor<double>((*itInit).second);
+                            biases.resize({1, dataCell->getNbOutputs()});
+                            for(unsigned int i = 0; i < bTmp.size(); ++i) {
+                                biases(i) = (float) bTmp(i);
+                            }
+                        }
+                        else {
+                            throw std::runtime_error("Unsupported datatype: "
+                                "Add or Sum  Layer only support Float32, Float64 or INT32 Weights");
+                        }
 
                         for (unsigned int output = 0;
                             output < dataCell->getNbOutputs(); ++output)

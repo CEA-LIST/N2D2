@@ -320,8 +320,10 @@ void cudaApplyLoss_kernel<__half>(__half* lossMem,
 {
     const unsigned int batchOutputOffset = blockIdx.z * nbOutputs
                                            * outputsHeight * outputsWidth;
+    /*
     const unsigned int batchTargetOffset = blockIdx.z
                                            * outputsHeight * outputsWidth;
+    */
 
     for (unsigned int output = blockIdx.x; output < nbOutputs;
         output += gridDim.x) {                                

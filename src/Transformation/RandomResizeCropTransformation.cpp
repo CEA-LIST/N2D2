@@ -122,10 +122,10 @@ N2D2::RandomResizeCropTransformation::apply(cv::Mat& frame,
 }
 
 void
-N2D2::RandomResizeCropTransformation::reverse(cv::Mat& frame,
-                                             cv::Mat& labels,
+N2D2::RandomResizeCropTransformation::reverse(cv::Mat& /*frame*/,
+                                             cv::Mat& /*labels*/,
                                              std::vector
-                                             <std::shared_ptr<ROI> >& labelsROI,
+                                             <std::shared_ptr<ROI> >& /*labelsROI*/,
                                              int /*id*/)
 {
     /*
@@ -170,9 +170,9 @@ N2D2::RandomResizeCropTransformation::extract(unsigned int x,
                                              unsigned int width,
                                              unsigned int height,
                                              cv::Mat& frame,
-                                             cv::Mat& labels,
+                                             cv::Mat& /*labels*/,
                                              std::vector
-                                             <std::shared_ptr<ROI> >& labelsROI,
+                                             <std::shared_ptr<ROI> >& /*labelsROI*/,
                                              int /*id*/)
 {
     cv::Point pTopLeft;

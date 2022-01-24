@@ -31,7 +31,7 @@ using namespace N2D2;
 
 TEST(Target, Target)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>(dn, "fc", 10));
@@ -60,7 +60,7 @@ TEST_DATASET(Target,
              std::make_tuple(2U, 2U, 0.0, 1.0, 2U),
              std::make_tuple(3U, 3U, 0.5, -0.5, 3U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>(dn, "fc", nbOutputs));
@@ -92,7 +92,7 @@ TEST(Target, Target_ter)
     database.addStimulus("s3", "label2");
     database.addStimulus("s4", "label3");
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>(net, "fc", 4));
@@ -138,7 +138,7 @@ TEST(Target, Target_ter2)
     database.addStimulus("s3", "label2");
     database.addStimulus("s4", "label3");
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>(net, "fc", 4));
@@ -185,7 +185,7 @@ TEST(Target, Target_ter3)
     database.addStimulus("s5", -1);
     database.addStimulus("s6", -1);
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>(net, "fc", 4));
@@ -226,7 +226,7 @@ TEST(Target, setLabelTarget)
     database.addStimulus("s5", -1);
     database.addStimulus("s6", -1);
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     std::shared_ptr<FcCell> fcCell(new FcCell_Frame<Float_T>(net, "fc", 4));

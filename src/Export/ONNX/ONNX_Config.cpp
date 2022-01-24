@@ -14,7 +14,7 @@
 
 
 const std::string N2D2::ONNX_Config::IMPLICIT_CASTING = "ImplicitCasting";
-const bool N2D2::ONNX_Config::IMPLICIT_CASTING_DEFAULT = false;
+const bool N2D2::ONNX_Config::IMPLICIT_CASTING_DEFAULT = true;
 
 const std::string N2D2::ONNX_Config::FAKE_QUANTIZATION = "FakeQuantization";
 const bool N2D2::ONNX_Config::FAKE_QUANTIZATION_DEFAULT = false;
