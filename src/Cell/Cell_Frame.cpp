@@ -372,7 +372,7 @@ void N2D2::Cell_Frame<T>::linkInput(StimuliProvider& sp,
      // Define input-output sizes
     setInputsDims(sp.getSize());
     mInputs.push_back(&sp.getData());
-    mDiffOutputs.push_back(new Tensor<T>(), 0);
+    mDiffOutputs.push_back(new Tensor<T>(mInputs[0].dims()), 0);
 
 }
 // END code used exclusively in python API

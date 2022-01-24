@@ -269,11 +269,18 @@ class Sequence(Iterable):
         """
         if not isinstance(provider, n2d2.provider.DataProvider):
             raise n2d2.error_handler.WrongInputType("provider", type(provider), ["n2d2.provider.DataProvider"])
-        target = n2d2.target.Score(provider)
-        dummy_input = provider.read_random_batch()
-        dummy_output = target(self(dummy_input))
+        # dummy_input = provider.read_random_batch()
+        dummy_input = n2d2.Tensor(provider.shape())
+
+        provider._deepnet = n2d2.deepnet.DeepNet()
+        provider._deepnet.set_provider(provider)
+        provider._deepnet.N2D2().initialize()
+        dummy_input = dummy_input._set_cell(provider)
+
+        dummy_output = self(dummy_input)
         N2D2_deepnet = dummy_output.get_deepnet().N2D2()
-        N2D2_deepnet.addTarget(target.N2D2())
+        N2D2_target =  N2D2.TargetScore("Target", dummy_output.cell.N2D2(), provider.N2D2())
+        N2D2_deepnet.addTarget(N2D2_target)
         N2D2_deepnet.setDatabase(provider.N2D2().getDatabase())
         return DeepNetCell(N2D2_deepnet)
 
