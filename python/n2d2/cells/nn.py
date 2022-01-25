@@ -153,7 +153,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         n2d2_cell._input_cells = []
 
         n2d2_cell._name = N2D2_object.getName()
-
+        n2d2_cell._inference = True
         if n2d2_deepnet is not None:
             n2d2_cell._deepnet = n2d2_deepnet
             n2d2_cell._sync_inputs_and_parents()
