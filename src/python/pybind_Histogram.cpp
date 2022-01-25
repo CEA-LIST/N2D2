@@ -2,7 +2,6 @@
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
                     Cyril MOINEAU (cyril.moineau@cea.fr)
-                    Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -21,18 +20,21 @@
 */
 
 #ifdef PYBIND
-#include "DeepNet.hpp"
-#include "Export/DeepNetExport.hpp"
+#include "Histogram.hpp"
+
 
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 namespace N2D2 {
-    void init_DeepNetExport(py::module &m) {
-        py::class_<DeepNetExport>(m, "DeepNetExport")
-        .def_static("setExportParameters", &DeepNetExport::setExportParameters, py::arg("exportParameters"));
-    }
+void init_Histogram(py::module &m) {
+    py::enum_<ClippingMode>(m, "ClippingMode")
+    .value("NONE", ClippingMode::NONE)
+    .value("MSE", ClippingMode::MSE)
+    .value("KL_DIVERGENCE", ClippingMode::KL_DIVERGENCE)
+    .value("QUANTILE", ClippingMode::QUANTILE);
+    
 }
-
+}
 #endif
