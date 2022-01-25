@@ -1,8 +1,8 @@
 """
     (C) Copyright 2021 CEA LIST. All Rights Reserved.
     Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
-                    Cyril MOINEAU (cyril.moineau@cea.fr) 
-                    
+                    Cyril MOINEAU (cyril.moineau@cea.fr)
+
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -68,18 +68,18 @@ class CustomSequential(keras.Sequential):
         fistCellName = self.deepNet.getLayers()[1][0] # 0 = env
         lastCellName = self.deepNet.getLayers()[-1][-1]
 
-        x_tensor = N2D2.Tensor_float(x_numpy) # Need to change convention NHWC -> HWCN 
-        
+        x_tensor = N2D2.Tensor_float(x_numpy) # Need to change convention NHWC -> HWCN
+
         x_tensor.reshape([inputs_shape[3], inputs_shape[1], inputs_shape[2],inputs_shape[0]])
 
         firstCell = self.deepNet.getCell_Frame_Top(fistCellName)
         self.diffOutputs = N2D2.Tensor_float(x_numpy.shape)
         firstCell.clearInputs()
-        # Need to add Input like this to initialize diffOutputs, 
+        # Need to add Input like this to initialize diffOutputs,
         # else we get a segFault when backPropagating because diffOutput would not be initialized !
-        firstCell.addInputBis(x_tensor, self.diffOutputs) 
+        firstCell.addInputBis(x_tensor, self.diffOutputs)
 
-        # TODO: propagate() provides targets and process targets which is 
+        # TODO: propagate() provides targets and process targets which is
         # useless here
         self.deepNet.propagate(N2D2.Database.Learn, False, [])
         y_tensor = self.deepNet.getCell_Frame_Top(lastCellName).getOutputs()
@@ -150,7 +150,7 @@ class CustomSequential(keras.Sequential):
             with backprop.GradientTape() as tape:
                 inputs_var = tf.Variable(inputs)
                 outputs = self.custom_op(inputs_var)
-            
+
             # Explicitly compute the gradient
             # !!! don't just call tape.gradient() without taking the result !!!
             #dummy = tape.gradient(outputs, inputs)
@@ -177,7 +177,7 @@ def wrap(tf_model, batch_size, name=None):
     for layer in tf_model.layers:
         layer.trainable = False
 
-    
+
 
     inputs_shape = np.array(tf_model.inputs[0].shape)
     inputs_shape[0] = batch_size
@@ -194,32 +194,36 @@ def wrap(tf_model, batch_size, name=None):
     # Preferred method, as keras2onnx is much less popular than tf2onnx
     ####################################################################
     print("Exporting the model to ONNX ...")
-    inputNames = [t.name for t in frozen_func.inputs]
-    outputNames = [t.name for t in frozen_func.outputs]
+    input_names = [t.name for t in frozen_func.inputs]
+    output_names = [t.name for t in frozen_func.outputs]
+    model_name = tf_model.name if tf_model.name is not None else "model"
 
     with frozen_func.graph.as_default():
         with tf.compat.v1.Session() as sess:
             onnx_graph = tf2onnx.tfonnx.process_tf_graph(sess.graph,
                 opset=10,
-                input_names=inputNames,
-                output_names=outputNames)
+                input_names=input_names,
+                output_names=output_names)
 
             model_proto = onnx_graph.make_model("test")
-            with open("raw_model.onnx", "wb") as f:
+            with open("raw_" + model_name + ".onnx", "wb") as f:
                 f.write(model_proto.SerializeToString())
 
+
     print("Simplifying the ONNX model ...")
-    onnx_model = onnx.load("raw_model.onnx")
+    onnx_model = onnx.load("raw_" + model_name + ".onnx")
     model_simp, check = simplify(onnx_model)
     assert check, "Simplified ONNX model could not be validated" # TODO : if check fail try to use the raw model !
-    onnx.save(model_simp, "model.onnx")
+    onnx.save(model_simp, model_name + ".onnx")
 
     # Import ONNX in N2D2
     n2d2.global_variables.default_model = "Frame_CUDA"
-    
+
     db = n2d2.database.Database()
     provider = n2d2.provider.DataProvider(db,[inputs_shape[3], inputs_shape[2], inputs_shape[1]], batch_size=inputs_shape[0])
-    deepNetCell = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "model.onnx")
+    deepNetCell = n2d2.cells.DeepNetCell.load_from_ONNX(provider, model_name + ".onnx")
+
+    new_sequence = n2d2.cells.Sequence([])
 
     for cell in deepNetCell:
         # Layers modification after the import !
@@ -227,13 +231,15 @@ def wrap(tf_model, batch_size, name=None):
             # ONNX import Softmax with_loss = True supposing we are using a CrossEntropy loss.
             cell.with_loss = False
 
-
+        if not isinstance(cell, n2d2.cells.Transformation):
+            new_sequence.append(cell)
+    
+    deepNetCell = new_sequence.to_deepnet_cell(provider)
     print("N2D2 model : \n", deepNetCell)
 
     deepNet = deepNetCell._embedded_deepnet.N2D2()
     deepNet.initialize()
+
+    N2D2.DrawNet.drawGraph(deepNet, "model")
     return CustomSequential(deepNet, batch_size, outputs_shape, name=name)
 
-    # N2D2.DrawNet.drawGraph(self.deepNet, "model")
-
-    # Now this CustomSequential model run on N2D2
