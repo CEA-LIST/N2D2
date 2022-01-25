@@ -153,7 +153,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         n2d2_cell._input_cells = []
 
         n2d2_cell._name = N2D2_object.getName()
-
+        n2d2_cell._inference = True
         if n2d2_deepnet is not None:
             n2d2_cell._deepnet = n2d2_deepnet
             n2d2_cell._sync_inputs_and_parents()
@@ -2390,6 +2390,68 @@ class Transpose(NeuralNetworkCell, Datatyped):
                                                                            self.get_name(),
                                                                            nb_outputs,
                                                                            self._constructor_arguments['perm'],
+                                                                           **self.n2d2_function_argument_parser(
+                                                                               self._optional_constructor_arguments)))
+
+            """Set and initialize here all complex cells members"""
+            for key, value in self._config_parameters.items():
+                self.__setattr__(key, value)
+            self.load_N2D2_parameters(self.N2D2())
+
+        self._add_to_graph(inputs)
+
+        self._N2D2_object.propagate(self._inference)
+
+        return self.get_outputs()
+
+class Transformation(NeuralNetworkCell, Datatyped):
+    _cell_constructors = {
+        'Frame': N2D2.TransformationCell_Frame,
+    }
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA': N2D2.TransformationCell_Frame_CUDA,
+        })
+    _parameters = {
+        "nb_outputs": "nbOutputs",
+        "transformation": "transformation"
+    }
+    _parameters.update(_cell_frame_parameters)
+
+    _convention_converter = n2d2.ConventionConverter(_parameters)
+
+    def __init__(self, perm, **config_parameters):
+        """
+        :param transformation: Transformation to apply
+        :type transformation: :py:class:`n2d2.transform.Transformation`
+        :param name: Cell name, default=None
+        :type name: str, optional
+        """
+        if not isinstance(perm, list):
+            raise n2d2.error_handler.WrongInputType("outputs_width", type(perm), ["list"])
+
+        NeuralNetworkCell.__init__(self, **config_parameters)
+
+        self._constructor_arguments.update({
+            "transformation": "transformation",
+        })
+
+        # No optional parameter
+        self._parse_optional_arguments([])
+
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments['transformation'] = N2D2_object.getTransformation()
+        
+    def __call__(self, inputs):
+        super().__call__(inputs)
+
+        if self._N2D2_object is None:
+            nb_outputs = inputs.dims()[2]
+
+            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+                                                                           self.get_name(),
+                                                                           nb_outputs,
+                                                                           self._constructor_arguments['transformation'],
                                                                            **self.n2d2_function_argument_parser(
                                                                                self._optional_constructor_arguments)))
 

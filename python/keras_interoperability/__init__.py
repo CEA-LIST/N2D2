@@ -1,7 +1,7 @@
-/*
-    (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
-                    Cyril MOINEAU (cyril.moineau@cea.fr)
+"""
+    (C) Copyright 2021 CEA LIST. All Rights Reserved.
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+                    Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -17,23 +17,5 @@
 
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
-*/
-
-#ifdef PYBIND
-#include "Cell/TransformationCell.hpp"
-#include "Transformation/Transformation.hpp"
-
-
-#include <pybind11/pybind11.h>
-
-namespace py = pybind11;
-
-namespace N2D2 {
-void init_TransformationCell(py::module &m) {
-
-    py::class_<TransformationCell, std::shared_ptr<TransformationCell>, Cell> (m, "TransformationCell", py::multiple_inheritance())
-    .def("getTransformation", &TransformationCell::getTransformation);
-
-}
-}
-#endif
+"""
+from keras_interoperability.keras_interface import *

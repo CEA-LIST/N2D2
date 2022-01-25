@@ -56,6 +56,9 @@ public:
         return Type;
     };
     void getStats(Stats& stats) const;
+    std::shared_ptr<Transformation> getTransformation(){
+        return mTransformation;
+    }
     virtual ~TransformationCell() {};
 
 protected:
