@@ -247,6 +247,8 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
 
             if not isinstance(cell, n2d2.provider.Provider):
                 parents.append(cell.N2D2())
+            else:
+                parents.append(None)
             self._input_cells.append(cell.get_name())
 
         self._deepnet.N2D2().addCell(self._N2D2_object, parents)

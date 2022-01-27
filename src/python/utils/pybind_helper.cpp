@@ -85,10 +85,11 @@ namespace N2D2 {
         ;
         m.def("learn_epoch", &learn_epoch, py::arg("opt"), py::arg("deepNet"));
         m.def("test", &test, py::arg("opt"), py::arg("deepNet"), py::arg("afterCalibration"));
-		#ifdef CUDA
+		m.def("generateExport", &generateExport, py::arg("opt"), py::arg("deepNet"));
+        #ifdef CUDA
         m.def("setCudaDeviceOption", &setCudaDeviceOption, py::arg("value"));
         m.def("setMultiDevices", &setMultiDevices, py::arg("cudaDev"));
-		#endif
+		#endif        
     }
 }
 
