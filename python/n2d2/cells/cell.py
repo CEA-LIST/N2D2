@@ -145,14 +145,22 @@ class Block(Cell):
         super().__call__(x)
 
     def set_solver(self, solver):
+        for cell in self._cells.values():
+            if isinstance(cell, Block):
+                cell.set_solver(solver)
+            else:
+                if isinstance(cell, Trainable):
+                    cell.solver = solver.copy()
+                    if cell.has_quantizer() and isinstance(cell.quantizer, Trainable):
+                        cell.quantizer.solver = solver.copy()
+                if cell.activation and cell.activation.has_quantizer() \
+                        and isinstance(cell.activation.quantizer, Trainable):
+                    cell.activation.quantizer.solver = solver.copy()
+
+    def set_back_propagate(self, value):
         for cell in self.get_cells().values():
             if isinstance(cell, Trainable):
-                cell.solver = solver.copy()
-                if cell.has_quantizer() and isinstance(cell.quantizer, Trainable):
-                    cell.quantizer.solver = solver.copy()
-            if cell.activation and cell.activation.has_quantizer() \
-                    and isinstance(cell.activation.quantizer, Trainable):
-                cell.activation.quantizer.solver = solver.copy()
+                cell.back_propagate = value
 
     def import_free_parameters(self, dir_name, ignore_not_exists=False):
         for cell in self._cells.values():
