@@ -3206,8 +3206,28 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 
             // One of the input is constant, cannot use ElemWiseCell
             if (!inputData.empty() && node.input_size() == 2) {
+
                 std::shared_ptr<Cell> dataCell = getCell(inputData);
 
+                // Checking if this layer adds a constant input full of 0.
+                if (node.op_type() == "Add"){
+                    Tensor<Float_T> constant = ONNX_unpackTensor<Float_T>((*itInit).second);
+                    bool removable = true;
+                    for(Tensor<Float_T>::iterator constantIterator = constant.begin(); 
+                        constantIterator != constant.end(); 
+                        constantIterator++){
+                        if ((*constantIterator) != 0){
+                            removable = false;
+                            break;
+                        }
+                    }
+                    if (removable){
+                        std::cout << "  " << node.output(0) << " -> "
+                            << inputData << std::endl;
+                        redirect[node.output(0)] = inputData;
+                        continue;
+                    }
+                }
                 // Special case for bias (CNTK)
                 // In CNTK models, bias is added as constant after the operator
                 // In this case, we try to merge everything in the operator bias
