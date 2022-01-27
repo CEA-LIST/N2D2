@@ -68,6 +68,13 @@ class Datatyped(ABC):
             self._datatype = n2d2.global_variables.default_datatype
 
 
+class Mapable(ABC):
+
+    @abstractmethod
+    def __init__(self):
+        pass
+
+
 
 class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
 
@@ -254,9 +261,10 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         self._deepnet.N2D2().addCell(self._N2D2_object, parents)
         if not initialized: 
             self._N2D2_object.initializeDataDependent()
-            if self._N2D2_object.getMapping().empty():
-                self._N2D2_object.setMapping(n2d2.Tensor([self.get_nb_outputs(), inputs.dimZ()],
-                                                         datatype="bool", dim_format="N2D2").N2D2())
+            if isinstance(self, Mapable):
+                if self._N2D2_object.getMapping().empty():
+                    self._N2D2_object.setMapping(n2d2.Tensor([self.get_nb_outputs(), inputs.dimZ()],
+                                                             datatype="bool", dim_format="N2D2").N2D2())
 
     def _add_to_graph(self, inputs):
         self.add_input(inputs)
@@ -400,8 +408,6 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
         :type weights_filler: :py:class:`n2d2.filler.Filler`, optional
         :param bias_filler: Biases initial values filler, default= :py:class:`n2d2.filler.Normal`
         :type bias_filler: :py:class:`n2d2.filler.Filler`, optional
-        :param mapping: Mapping
-        :type mapping: :py:class:`n2d2.Tensor`, optional
         :param no_bias: If ``True``, don’t use bias, default=False
         :type no_bias: bool, optional
         """
@@ -686,7 +692,7 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
         self.weights_solver = solver.copy()
 
 
-class Conv(NeuralNetworkCell, Datatyped, Trainable):
+class Conv(NeuralNetworkCell, Datatyped, Trainable, Mapable):
     """
     Convolutional layer.
     """
@@ -1065,15 +1071,15 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
 class ConvDepthWise(Conv):
 
     def __init__(self,
-                 nbChannels,
+                 nb_channel,
                  kernel_dims,
                  **config_parameters):
         if 'mapping' in config_parameters:
             raise RuntimeError('ConvDepthWise does not support custom mappings')
         else:
             config_parameters['mapping'] = n2d2.mapping.Mapping(nb_channels_per_group=1).create_mapping(
-                nbChannels, nbChannels)
-        Conv.__init__(self, nbChannels, nbChannels, kernel_dims, **config_parameters)
+                nb_channel, nb_channel)
+        Conv.__init__(self, nb_channel, nb_channel, kernel_dims, **config_parameters)
 
 
 class ConvPointWise(Conv):
@@ -1173,7 +1179,7 @@ class Softmax(NeuralNetworkCell, Datatyped):
         return self.get_outputs()
 
 
-class Pool(NeuralNetworkCell, Datatyped):
+class Pool(NeuralNetworkCell, Datatyped, Mapable):
     '''
     Pooling layer.
     '''
@@ -1422,7 +1428,7 @@ class GlobalPool2d(Pool2d):
         return self.get_outputs()
 
 
-class Deconv(NeuralNetworkCell, Datatyped, Trainable):
+class Deconv(NeuralNetworkCell, Datatyped, Trainable, Mapable):
     """
     Deconvolution layer.
     """
@@ -2032,7 +2038,7 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
         "bias_solver": "BiasSolver",
         "moving_average_momentum": "MovingAverageMomentum",
         "epsilon": "Epsilon",
-        "backpropagate": "BackPropagate"
+        "back_propagate": "BackPropagate"
     }
     _parameters.update(_cell_frame_parameters)
 
