@@ -590,6 +590,9 @@ N2D2::DeepNetGenerator::generateFromONNX(Network& network,
     ONNX_processGraph(deepNet, parentCells,
                       onnxModel.graph(), opsetVersion, iniConfig);
 
+    // TF exported ONNX can create extra transpose layers
+    deepNet->removeExtraTranspose();
+
     return deepNet;
 }
 
