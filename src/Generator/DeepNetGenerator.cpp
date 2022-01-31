@@ -592,6 +592,7 @@ N2D2::DeepNetGenerator::generateFromONNX(Network& network,
 
     // TF exported ONNX can create extra transpose layers
     deepNet->removeExtraTranspose();
+    deepNet->removeExtraReshape();
 
     return deepNet;
 }
@@ -3579,43 +3580,83 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 perm[2] = 1;
                 perm[3] = 0;
             }
-
-            const unsigned int nbOutputs = (inputXCell)
-                ? inputXCell->getOutputsDim(perm[2])
-                : sp->getSize()[perm[2]];
-
+            const std::vector<size_t>& outputDims = (inputXCell)
+                ? inputXCell->getOutputsDims()
+                : sp->getSize();
+            int nbDimEqualOne = 0;
+            for (size_t outputDim : outputDims)
+                nbDimEqualOne += (outputDim == 1) ? 1 : 0;
+            
+            const unsigned int nbOutputs = outputDims[perm[2]];
             std::map<std::string, std::vector<std::string> >
-                ::const_iterator itConcat;
-            std::vector<std::shared_ptr<Cell> > parentCells;
+                    ::const_iterator itConcat;
+                std::vector<std::shared_ptr<Cell> > parentCells;
 
-            if (globTranspose)
-                std::swap(perm[0], perm[1]);
+                if (globTranspose)
+                    std::swap(perm[0], perm[1]);
+            
+            if (nbDimEqualOne == 2){
+                // Only one dimension (except batch size) is nonunary
+                // This transpose is also a reshape which doesn't change the memory layout
+                if (perm[3] != 3){
+                    throw std::domain_error("TransposeCell: "
+                                "permutation of the fourth (batch) dimension "
+                                "is not supported.");
+                }
+                std::vector<int> dims = {};
+                for (int permIdx=0; permIdx<2; ++permIdx) 
+                    dims.push_back(outputDims[perm[permIdx]]);
+                dims.push_back(-1); // Batchsize doesn't change
+                std::shared_ptr<ReshapeCell> reshapeCell
+                    = Registrar<ReshapeCell>::create<Float_T>(model)(*deepNet, 
+                                                                    node.output(0),
+                                                                    nbOutputs,
+                                                                    dims);
+                if ((itConcat = concat.find(inputX)) != concat.end()) {
+                    throw std::runtime_error("Unsupported operation: Concat before "
+                        "Transpose");
+                } else {
+                    std::shared_ptr<Cell> inputXCell = getCell(inputX);
+                    parentCells.push_back(inputXCell);
 
-            std::shared_ptr<TransposeCell> transposeCell
-                = Registrar<TransposeCell>::create<Float_T>(model)(*deepNet, 
-                                                                node.output(0),
-                                                                nbOutputs,
-                                                                perm);
+                    if (inputXCell)
+                        reshapeCell->addInput(inputXCell.get());
+                    else {
+                        reshapeCell->addInput(*sp, 0, 0,
+                                            sp->getSizeX(), sp->getSizeY());
+                    }
+                }
 
-            if ((itConcat = concat.find(inputX)) != concat.end()) {
+                deepNet->addCell(reshapeCell, parentCells);
+                reshapeCell->initialize();
+                cell = reshapeCell;
+            }else{
+                // Normal case, we add the Transpose layer
+                std::shared_ptr<TransposeCell> transposeCell
+                    = Registrar<TransposeCell>::create<Float_T>(model)(*deepNet, 
+                                                                    node.output(0),
+                                                                    nbOutputs,
+                                                                    perm);
+                if ((itConcat = concat.find(inputX)) != concat.end()) {
                 throw std::runtime_error("Unsupported operation: Concat before "
                     "Transpose");
-            }
-            else {
-                std::shared_ptr<Cell> inputXCell = getCell(inputX);
-                parentCells.push_back(inputXCell);
-
-                if (inputXCell)
-                    transposeCell->addInput(inputXCell.get());
-                else {
-                    transposeCell->addInput(*sp, 0, 0,
-                                        sp->getSizeX(), sp->getSizeY());
                 }
-            }
+                else {
+                    std::shared_ptr<Cell> inputXCell = getCell(inputX);
+                    parentCells.push_back(inputXCell);
 
-            deepNet->addCell(transposeCell, parentCells);
-            transposeCell->initialize();
-            cell = transposeCell;
+                    if (inputXCell)
+                        transposeCell->addInput(inputXCell.get());
+                    else {
+                        transposeCell->addInput(*sp, 0, 0,
+                                            sp->getSizeX(), sp->getSizeY());
+                    }
+                }
+
+                deepNet->addCell(transposeCell, parentCells);
+                transposeCell->initialize();
+                cell = transposeCell;
+            }
         }
         //Unique
         //Unsqueeze
