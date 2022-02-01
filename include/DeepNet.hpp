@@ -132,6 +132,7 @@ public:
     void fusePadding();
     void removeDropout();
     void removeExtraReshape();
+    void removeExtraTranspose();
 
 #ifdef CUDA
     void lastBatch() {
