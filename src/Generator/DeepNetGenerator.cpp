@@ -3590,10 +3590,10 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             const unsigned int nbOutputs = outputDims[perm[2]];
             std::map<std::string, std::vector<std::string> >
                     ::const_iterator itConcat;
-                std::vector<std::shared_ptr<Cell> > parentCells;
+            std::vector<std::shared_ptr<Cell> > parentCells;
 
-                if (globTranspose)
-                    std::swap(perm[0], perm[1]);
+            if (globTranspose)
+                std::swap(perm[0], perm[1]);
             
             if (nbDimEqualOne == 2){
                 // Only one dimension (except batch size) is nonunary
