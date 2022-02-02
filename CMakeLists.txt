@@ -33,7 +33,7 @@ endmacro()
 
 function(set_cxx_standard_flags flags)
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
             set(${flags} -std=c++11 PARENT_SCOPE)
         else()
             set(${flags} -std=c++14 PARENT_SCOPE)
