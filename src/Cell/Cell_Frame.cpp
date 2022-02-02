@@ -672,22 +672,31 @@ unsigned int N2D2::Cell_Frame<T>::getMaxOutput(unsigned int batchPos) const
     return std::distance(output.begin(),
                          std::max_element(output.begin(), output.end()));
 }
-template<>
-std::string N2D2::Cell_Frame<double>::getPyDataType() {
-    return std::string("double");
+
+template <class T>
+std::string N2D2::Cell_Frame<T>::getPyDataType()
+{
+    if (typeid(T) == typeid(double)) {
+        return std::string("double");
+    }
+    else if (typeid(T) == typeid(float)) {
+        return std::string("float");
+    }
+    else if (typeid(T) == typeid(half_float::half)) {
+        return std::string("half_float");
+    }
+    else {
+        // This case should not happen
+        // If it happens, the type string returned by this function
+        // might be weird
+        return std::string(typeid(T).name());
+    }
 }
 
-template<>
-std::string N2D2::Cell_Frame<float>::getPyDataType() {
-    return std::string("float");
-}
-template<>
-std::string N2D2::Cell_Frame<half_float::half>::getPyDataType() {
-    return std::string("half_float");
-}
-template<class T>
-std::string N2D2::Cell_Frame<T>::getPyModel(){
-    return std::string("Frame");
+template <class T>
+std::string N2D2::Cell_Frame<T>::getPyModel()
+{
+    return std::string(N2D2::Cell_Frame_Top::FRAME_TYPE);
 }
 
 namespace N2D2 {
