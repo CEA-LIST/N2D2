@@ -2,6 +2,8 @@ test:ubuntu:
   extends: 
     - .before_script_template
   stage: test
+  variables:
+    CTEST_OUTPUT_ON_FAILURE: 1
   tags:
     - ubuntu
   script:
