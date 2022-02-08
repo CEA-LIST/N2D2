@@ -69,8 +69,9 @@ class CustomSequential(keras.Sequential):
         lastCellName = self.deepNet.getLayers()[-1][-1]
 
         x_tensor = N2D2.Tensor_float(x_numpy) # Need to change convention NHWC -> HWCN
+        # print(inputs_shape)
 
-        x_tensor.reshape([inputs_shape[3], inputs_shape[1], inputs_shape[2],inputs_shape[0]])
+        # x_tensor.reshape([inputs_shape[1], inputs_shape[2], inputs_shape[3],inputs_shape[0]])
 
         firstCell = self.deepNet.getCell_Frame_Top(fistCellName)
         self.diffOutputs = N2D2.Tensor_float(x_numpy.shape)
@@ -203,7 +204,8 @@ def wrap(tf_model, batch_size, name=None):
             onnx_graph = tf2onnx.tfonnx.process_tf_graph(sess.graph,
                 opset=10,
                 input_names=input_names,
-                output_names=output_names)
+                output_names=output_names,
+                inputs_as_nchw=input_names)
 
             model_proto = onnx_graph.make_model("test")
             with open("raw_" + model_name + ".onnx", "wb") as f:
@@ -220,21 +222,16 @@ def wrap(tf_model, batch_size, name=None):
     n2d2.global_variables.default_model = "Frame_CUDA"
 
     db = n2d2.database.Database()
-    provider = n2d2.provider.DataProvider(db,[inputs_shape[3], inputs_shape[2], inputs_shape[1]], batch_size=inputs_shape[0])
+    provider = n2d2.provider.DataProvider(db, [inputs_shape[2], inputs_shape[1], inputs_shape[3]], batch_size=inputs_shape[0])
+    # provider = n2d2.provider.DataProvider(db,[inputs_shape[3], inputs_shape[2], inputs_shape[1]], batch_size=inputs_shape[0])
     deepNetCell = n2d2.cells.DeepNetCell.load_from_ONNX(provider, model_name + ".onnx")
-
-    new_sequence = n2d2.cells.Sequence([])
 
     for cell in deepNetCell:
         # Layers modification after the import !
         if isinstance(cell, n2d2.cells.Softmax):
             # ONNX import Softmax with_loss = True supposing we are using a CrossEntropy loss.
             cell.with_loss = False
-
-        if not isinstance(cell, n2d2.cells.Transformation):
-            new_sequence.append(cell)
     
-    deepNetCell = new_sequence.to_deepnet_cell(provider)
     print("N2D2 model : \n", deepNetCell)
 
     deepNet = deepNetCell._embedded_deepnet.N2D2()
