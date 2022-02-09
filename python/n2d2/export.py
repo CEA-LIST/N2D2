@@ -20,7 +20,7 @@
 import n2d2
 import N2D2
 
-def _export(N2D2_deepnet, gen_export, nb_bits=8, qat_SAT=False, 
+def _parse_export_parameters(gen_export=None, nb_bits=8, qat_SAT=False, 
                  export_no_unsigned=False, calibration=0, 
                  export_no_cross_layer_equalization=False, 
                  wt_clipping_mode="MSE", act_clipping_mode="NONE", 
@@ -56,7 +56,7 @@ def _export(N2D2_deepnet, gen_export, nb_bits=8, qat_SAT=False,
     else:
         N2D2_wt_clipping_mode = N2D2.ClippingMode.__members__[wt_clipping_mode]
 
-    parameters = n2d2.n2d2_interface.Options(
+    return n2d2.n2d2_interface.Options(
                  gen_export=gen_export, 
                  nb_bits=nb_bits, 
                  qat_SAT=qat_SAT, 
@@ -76,13 +76,6 @@ def _export(N2D2_deepnet, gen_export, nb_bits=8, qat_SAT=False,
                  c_round_mode=N2D2_c_round_mode, 
                  find_lr=find_lr
                 )
-    N2D2_deepnet.initialize()
-    if (N2D2_deepnet.getDatabase().getNbStimuli(N2D2.Database.StimuliSet.__members__["Validation"]) > 0):
-        N2D2_deepnet.exportNetworkFreeParameters("weights_validation")
-    else:
-        N2D2_deepnet.exportNetworkFreeParameters("weights")
-    N2D2.generateExport(parameters.N2D2(), N2D2_deepnet)
-
 
 def export_c(N2D2_deepnet, nb_bits=8, qat_SAT=False, 
                  export_no_unsigned=False, calibration=0, 
@@ -92,7 +85,7 @@ def export_c(N2D2_deepnet, nb_bits=8, qat_SAT=False,
                  act_rescale_per_output=False, calibration_reload=False, report=100, 
                  export_nb_stimuli_max= -1, wt_round_mode = "NONE", 
                  b_round_mode="NONE", c_round_mode="NONE", find_lr=0):
-    _export(N2D2_deepnet, "C",nb_bits=nb_bits, 
+    parameters = _parse_export_parameters(gen_export="C",nb_bits=nb_bits, 
                  qat_SAT=qat_SAT, export_no_unsigned=export_no_unsigned, 
                  calibration=calibration,
                  export_no_cross_layer_equalization=export_no_cross_layer_equalization, 
@@ -108,6 +101,12 @@ def export_c(N2D2_deepnet, nb_bits=8, qat_SAT=False,
                  b_round_mode=b_round_mode, 
                  c_round_mode=c_round_mode, 
                  find_lr=find_lr)
+    N2D2_deepnet.initialize()
+    if (N2D2_deepnet.getDatabase().getNbStimuli(N2D2.Database.StimuliSet.__members__["Validation"]) > 0):
+        N2D2_deepnet.exportNetworkFreeParameters("weights_validation")
+    else:
+        N2D2_deepnet.exportNetworkFreeParameters("weights")
+    N2D2.generateExport(parameters.N2D2(), N2D2_deepnet)
 
 def export_cpp(N2D2_deepnet, nb_bits=8, qat_SAT=False, 
                  export_no_unsigned=False, calibration=0, 
@@ -117,7 +116,8 @@ def export_cpp(N2D2_deepnet, nb_bits=8, qat_SAT=False,
                  act_rescale_per_output=False, calibration_reload=False, report=100, 
                  export_nb_stimuli_max= -1, wt_round_mode = "NONE", 
                  b_round_mode="NONE", c_round_mode="NONE", find_lr=0):
-    _export(N2D2_deepnet, "CPP",nb_bits=nb_bits, 
+
+    parameters = _parse_export_parameters(gen_export="CPP",nb_bits=nb_bits, 
                  qat_SAT=qat_SAT, export_no_unsigned=export_no_unsigned, 
                  calibration=calibration,
                  export_no_cross_layer_equalization=export_no_cross_layer_equalization, 
@@ -133,3 +133,9 @@ def export_cpp(N2D2_deepnet, nb_bits=8, qat_SAT=False,
                  b_round_mode=b_round_mode, 
                  c_round_mode=c_round_mode, 
                  find_lr=find_lr)
+    N2D2_deepnet.initialize()
+    if (N2D2_deepnet.getDatabase().getNbStimuli(N2D2.Database.StimuliSet.__members__["Validation"]) > 0):
+        N2D2_deepnet.exportNetworkFreeParameters("weights_validation")
+    else:
+        N2D2_deepnet.exportNetworkFreeParameters("weights")
+    N2D2.generateExport(parameters.N2D2(), N2D2_deepnet)

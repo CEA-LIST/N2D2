@@ -68,10 +68,7 @@ class CustomSequential(keras.Sequential):
         fistCellName = self.deepNet.getLayers()[1][0] # 0 = env
         lastCellName = self.deepNet.getLayers()[-1][-1]
 
-        x_tensor = N2D2.Tensor_float(x_numpy) # Need to change convention NHWC -> HWCN
-        # print(inputs_shape)
-
-        # x_tensor.reshape([inputs_shape[1], inputs_shape[2], inputs_shape[3],inputs_shape[0]])
+        x_tensor = N2D2.Tensor_float(x_numpy) 
 
         firstCell = self.deepNet.getCell_Frame_Top(fistCellName)
         self.diffOutputs = N2D2.Tensor_float(x_numpy.shape)
@@ -80,9 +77,8 @@ class CustomSequential(keras.Sequential):
         # else we get a segFault when backPropagating because diffOutput would not be initialized !
         firstCell.addInputBis(x_tensor, self.diffOutputs)
 
-        # TODO: propagate() provides targets and process targets which is
-        # useless here
-        self.deepNet.propagate(N2D2.Database.Learn, False, [])
+        # TODO: Check if Keras want to run on inference or not
+        self.deepNet.propagate(False)
         y_tensor = self.deepNet.getCell_Frame_Top(lastCellName).getOutputs()
         y_tensor.synchronizeDToH()
         y_numpy = np.array(y_tensor)
@@ -122,7 +118,7 @@ class CustomSequential(keras.Sequential):
             # perform operation on tensor #
             dy_tensor = N2D2.Tensor_float(-dy_numpy * self.batch_size)
             diffInputs = self.deepNet.getCell_Frame_Top(lastCellName).getDiffInputs()
-            #FIXME: incoherency in dims
+
             dy_tensor.reshape(diffInputs.dims())
             diffInputs.op_assign(dy_tensor)
             diffInputs.synchronizeHToD()
@@ -141,34 +137,11 @@ class CustomSequential(keras.Sequential):
 
     def call(self, inputs, training=None, mask=None):
         if self.quant_model is not None:
-            # if inputs.shape[0] < self.batch_size:
-            #     inputs_shape = np.array(inputs.shape)
-            #     inputs_shape[0] = self.batch_size
-            #     inputs.reshape(inputs_shape)
-
             return self.quant_model(inputs=inputs)
         else:
             with backprop.GradientTape() as tape:
                 inputs_var = tf.Variable(inputs)
                 outputs = self.custom_op(inputs_var)
-
-            # Explicitly compute the gradient
-            # !!! don't just call tape.gradient() without taking the result !!!
-            #dummy = tape.gradient(outputs, inputs)
-
-            ######## DEBUG #########
-            # tf_outputs = self.tf_model.call(inputs, training, mask)
-            # tf_n = tf_outputs.numpy()
-            # n2d2_n =  outputs.numpy()
-            # for i, j in zip(tf_n.flatten(), n2d2_n.flatten()):
-            #     if(abs(float(i) - float(j)) > (0.01 * (abs(j)+ 0.0001))):
-            #         print("TF tensor : ")
-            #         print(tf_outputs)
-            #         print("N2D2 tensor : ")
-            #         print(outputs)
-            #         print(f"Diff values : {i} != {j}\nShape TF : {tf_outputs.shape};\nShape N2D2 : {outputs.shape}")
-            #         raise ValueError("TF and N2D2 are different !")
-            ######## DEBUG #########
             return outputs
 
 
@@ -177,8 +150,6 @@ def wrap(tf_model, batch_size, name=None):
     # Don't let TF optimize these layers
     for layer in tf_model.layers:
         layer.trainable = False
-
-
 
     inputs_shape = np.array(tf_model.inputs[0].shape)
     inputs_shape[0] = batch_size
@@ -199,18 +170,12 @@ def wrap(tf_model, batch_size, name=None):
     output_names = [t.name for t in frozen_func.outputs]
     model_name = tf_model.name if tf_model.name is not None else "model"
 
-    with frozen_func.graph.as_default():
-        with tf.compat.v1.Session() as sess:
-            onnx_graph = tf2onnx.tfonnx.process_tf_graph(sess.graph,
-                opset=10,
-                input_names=input_names,
-                output_names=output_names,
-                inputs_as_nchw=input_names)
-
-            model_proto = onnx_graph.make_model("test")
-            with open("raw_" + model_name + ".onnx", "wb") as f:
-                f.write(model_proto.SerializeToString())
-
+    spec = [tf.TensorSpec(inputs_shape, tf.float32, name=input_name) for input_name in input_names]
+    model_proto, external_tensor_storage = tf2onnx.convert.from_keras(tf_model,
+                input_signature=spec, opset=10, custom_ops=None,
+                custom_op_handlers=None, custom_rewriter=None,
+                inputs_as_nchw=input_names, extra_opset=None, shape_override=None,
+                target=None, large_model=False, output_path="raw_" + model_name + ".onnx")
 
     print("Simplifying the ONNX model ...")
     onnx_model = onnx.load("raw_" + model_name + ".onnx")
@@ -223,14 +188,19 @@ def wrap(tf_model, batch_size, name=None):
 
     db = n2d2.database.Database()
     provider = n2d2.provider.DataProvider(db, [inputs_shape[2], inputs_shape[1], inputs_shape[3]], batch_size=inputs_shape[0])
-    # provider = n2d2.provider.DataProvider(db,[inputs_shape[3], inputs_shape[2], inputs_shape[1]], batch_size=inputs_shape[0])
     deepNetCell = n2d2.cells.DeepNetCell.load_from_ONNX(provider, model_name + ".onnx")
 
+    previous_cell = None
     for cell in deepNetCell:
         # Layers modification after the import !
         if isinstance(cell, n2d2.cells.Softmax):
             # ONNX import Softmax with_loss = True supposing we are using a CrossEntropy loss.
             cell.with_loss = False
+        if isinstance(cell, n2d2.cells.Fc):
+            # Keras add Reshape before FullyConnected layers however N2D2 doesn't need them !
+            if ((previous_cell is not None) and isinstance(previous_cell, n2d2.cells.Reshape)):
+                deepNetCell.remove(previous_cell.get_name(), reconnect=True)
+        previous_cell = cell
     
     print("N2D2 model : \n", deepNetCell)
 

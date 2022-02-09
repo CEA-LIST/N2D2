@@ -467,14 +467,14 @@ class DeepNetCell(Block):
         print("import DeepNetCell '" + self._name + "' weights from " + dir_name)
         self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignoreNotExists=ignore_not_exists)
 
-    def remove(self, name):
+    def remove(self, name, reconnect=False):
         """Remove a cell from the encapsulated deepnet
 
         :param name: Name of cell that shall be removed.
         :type name: str
         """
         cell = self._embedded_deepnet.N2D2().getCells()[name]
-        self._embedded_deepnet.N2D2().removeCell(cell, False)
+        self._embedded_deepnet.N2D2().removeCell(cell, reconnect)
         self._embedded_deepnet = DeepNet.create_from_N2D2_object(self._embedded_deepnet.N2D2())
         self._cells = self._embedded_deepnet.get_cells()
 

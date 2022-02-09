@@ -70,6 +70,7 @@ void init_DeepNet(py::module &m) {
     .def("setStimuliProvider", &DeepNet::setStimuliProvider, py::arg("sp"))
     .def("getDatabase", &DeepNet::getDatabase)
     .def("getStimuliProvider", &DeepNet::getStimuliProvider)
+    .def("getMasterDevice", &DeepNet::getMasterDevice)    
     .def("getCells", &DeepNet::getCells)
     .def("getCell", &DeepNet::getCell<Cell>, py::arg("name"))
     .def("getCell_Frame_Top", &DeepNet::getCell<Cell_Frame_Top>, py::arg("name"))

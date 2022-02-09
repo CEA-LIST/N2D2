@@ -160,7 +160,7 @@ void N2D2::DeepNetQuantization::reportOutputsRange(std::unordered_map<std::strin
     #pragma omp parallel for schedule(dynamic)
     for (int i = 0; i < (int)layers.size(); ++i) {
 #ifdef CUDA
-        CudaContext::setDevice();
+        CudaContext::setDevice(mDeepNet.getMasterDevice());
 #endif
 
         for(auto itCell = layers[i].begin(); itCell != layers[i].end(); ++itCell) {
