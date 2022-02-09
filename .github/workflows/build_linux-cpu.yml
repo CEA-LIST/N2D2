@@ -10,7 +10,9 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Install required libraries
-      run: chmod +x ./.github/scripts/install_libraries_ubuntu.sh
+      run: |
+        chmod +x ./.github/scripts/install_libraries_ubuntu.sh
+        ./.github/scripts/install_libraries_ubuntu.sh
 
     - name: Build N2D2
       run: |
