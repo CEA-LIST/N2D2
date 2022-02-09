@@ -8,6 +8,8 @@ jobs:
     steps:
     - name: Check out repository
       uses: actions/checkout@v2
+      with:
+        submodules: recursive
 
     - name: Install required libraries
       run: |
