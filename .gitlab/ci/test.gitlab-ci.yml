@@ -18,7 +18,11 @@ test:python_api:
   image: "python:3.7"
   script:
     - cd ../python
-    - pip uninstall -y -r <(pip freeze) # Clearing previous package instalation
+
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    
     - pip install -r requirements.txt
     - pip install -r pytorch_interoperability/requirements.txt
     - pip install -r keras_interoperability/requirements.txt
