@@ -149,102 +149,8 @@ void N2D2::FcCell_Frame_CUDA<T>::initialize()
     }
 }
 
-
 template <class T>
-void N2D2::FcCell_Frame_CUDA<T>::addInput(StimuliProvider& /*sp*/,
-                                     unsigned int /*channel*/,
-                                     unsigned int /*x0*/,
-                                     unsigned int /*y0*/,
-                                     unsigned int /*width*/,
-                                     unsigned int /*height*/,
-                                     const Tensor<bool>& /*mapping*/)
-{
-    throw std::runtime_error("FcCell_Frame_CUDA<T>::addInput(): adding a single "
-                             "environment channel as input is not supported");
-}
-
-template <class T>
-void N2D2::FcCell_Frame_CUDA<T>::addInput(StimuliProvider& sp,
-                                     unsigned int x0,
-                                     unsigned int y0,
-                                     unsigned int width,
-                                     unsigned int height,
-                                     const Tensor<bool>& mapping)
-{
-    if (width == 0)
-        width = sp.getSizeX() - x0;
-    if (height == 0)
-        height = sp.getSizeY() - y0;
-
-    if (x0 > 0 || y0 > 0 || width < sp.getSizeX() || height < sp.getSizeY())
-        throw std::runtime_error("FcCell_Frame_CUDA<T>::addInput(): adding a "
-                                 "cropped environment channel map as input is "
-                                 "not supported");
-
-    // Define input-output sizes
-    setInputsDims(sp.getSize());
-    mInputs.push_back(&sp.getDataInput());
-
-    // For some adversarial attacks, it is required to backpropagate
-    // the gradiants to the inputs
-    if (sp.getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) {
-        std::vector<size_t> inputsDims(mInputsDims);
-        inputsDims.push_back(sp.getBatchSize());
-        mDiffOutputs.push_back(new CudaTensor<T>(inputsDims), 0);
-    }
-    else
-        mDiffOutputs.push_back(new CudaTensor<T>(), 0);
-
-    setOutputsDims();
-
-    if (mOutputs.empty()) {
-        std::vector<size_t> outputsDims(mOutputsDims);
-        outputsDims.push_back(sp.getBatchSize());
-
-        mOutputs.resize(outputsDims);
-        mDiffInputs.resize(outputsDims);
-    }
-
-    // Define input-output connections
-    if (!mapping.empty() && mapping.dimY() != sp.getNbChannels()) {
-        throw std::runtime_error("FcCell_Frame_CUDA<T>::addInput(): number of "
-                                 "mapping rows must be equal to the number of "
-                                 "input"
-                                 " channels");
-    }
-
-    mMapping.append((!mapping.empty())
-        ? mapping
-        : Tensor<bool>({getNbOutputs(), sp.getNbChannels()}, true));
-}
-
-template <class T>
-void N2D2::FcCell_Frame_CUDA<T>::addInput(Cell* cell, const Tensor<bool>& mapping)
-{
-    // Define input-output sizes
-    setInputsDims(cell->getOutputsDims());
-
-    Cell_Frame_Top* cellFrame = dynamic_cast<Cell_Frame_Top*>(cell);
-
-    if (cellFrame != NULL) {
-        mInputs.push_back(&cellFrame->getOutputs());
-        mDiffOutputs.push_back(&cellFrame->getDiffInputs());
-    }
-    else {
-        throw std::runtime_error(
-            "Cell_Frame::addInput(): cannot mix Spike and Frame models");
-    }
-
-    setOutputsDims();
-
-    if (mOutputs.empty()) {
-        std::vector<size_t> outputsDims(mOutputsDims);
-        outputsDims.push_back(mInputs.dimB());
-
-        mOutputs.resize(outputsDims);
-        mDiffInputs.resize(outputsDims);
-    }
-
+void N2D2::FcCell_Frame_CUDA<T>::applyMapping(Cell* cell, const Tensor<bool>&  mapping){
     // Define input-output connections
     const unsigned int cellNbOutputs = cell->getNbOutputs() * cell->getOutputsHeight() * cell->getOutputsWidth();
 
@@ -256,52 +162,6 @@ void N2D2::FcCell_Frame_CUDA<T>::addInput(Cell* cell, const Tensor<bool>& mappin
     mMapping.append((!mapping.empty())
         ? mapping
         : Tensor<bool>({getNbOutputs(), cellNbOutputs}, true));
-}
-
-template <class T>
-void N2D2::FcCell_Frame_CUDA<T>::addInput(Cell* cell,
-                                     unsigned int x0,
-                                     unsigned int y0,
-                                     unsigned int width,
-                                     unsigned int height)
-{
-    if (width == 0)
-        width = cell->getOutputsWidth() - x0;
-    if (height == 0)
-        height = cell->getOutputsHeight() - y0;
-
-    if (x0 > 0 || y0 > 0 || width < cell->getOutputsWidth()
-        || height < cell->getOutputsHeight())
-        throw std::runtime_error("FcCell_Frame_CUDA<T>::addInput(): adding a "
-                                 "cropped output map as input is not "
-                                 "supported");
-
-    FcCell_Frame_CUDA<T>::addInput(cell);
-}
-
-template <class T>
-void N2D2::FcCell_Frame_CUDA<T>::addInput(BaseTensor& inputs,
-                                     BaseTensor& diffOutputs)
-{
-    // Define input-output sizes
-    std::vector<size_t> inputsDims = inputs.dims();
-    inputsDims.pop_back();      // Remove batch
-
-    setInputsDims(inputsDims);
-    mInputs.push_back(&inputs);
-    mDiffOutputs.push_back(&diffOutputs);
-
-    setOutputsDims();
-
-    if (mOutputs.empty()) {
-        std::vector<size_t> outputsDims(mOutputsDims);
-        outputsDims.push_back(mInputs.dimB());
-
-        mOutputs.resize(outputsDims);
-        mDiffInputs.resize(outputsDims);
-    }
-
-    mMapping.resize({getNbOutputs(), getNbChannels()}, true);
 }
 
 template <class T>

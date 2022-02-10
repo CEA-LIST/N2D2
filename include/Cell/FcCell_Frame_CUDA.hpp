@@ -112,31 +112,9 @@ public:
                                         FreeParametersType /*type*/ = All);
     void processFreeParametersPerChannel(std::function<Float_T(Float_T)> /*func*/,
                                         std::size_t /*channel*/);
-    /**
-     * Manage inputs, in particular the transmission input(i) = output(i-1)
-     */
-    virtual void addInput(StimuliProvider& sp,
-                          unsigned int channel,
-                          unsigned int x0,
-                          unsigned int y0,
-                          unsigned int width,
-                          unsigned int height,
-                          const Tensor<bool>& mapping = Tensor<bool>());
-    virtual void addInput(StimuliProvider& sp,
-                          unsigned int x0 = 0,
-                          unsigned int y0 = 0,
-                          unsigned int width = 0,
-                          unsigned int height = 0,
-                          const Tensor<bool>& mapping = Tensor<bool>());
-    virtual void addInput(Cell* cell,
-                          const Tensor<bool>& mapping = Tensor<bool>());
-    virtual void addInput(Cell* cell,
-                          unsigned int x0,
-                          unsigned int y0,
-                          unsigned int width = 0,
-                          unsigned int height = 0);
-    virtual void addInput(BaseTensor& inputs,
-                          BaseTensor& diffOutputs);
+    
+    virtual void applyMapping(Cell* cell, const Tensor<bool>&  mapping);
+
     void synchronizeToH(bool keepInSync_) const;
     void synchronizeToD(bool keepInSync_);
     virtual ~FcCell_Frame_CUDA();
