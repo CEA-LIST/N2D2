@@ -184,7 +184,9 @@ def wrap(tf_model, batch_size, name=None):
     onnx.save(model_simp, model_name + ".onnx")
 
     # Import ONNX in N2D2
-    n2d2.global_variables.default_model = "Frame_CUDA"
+    if n2d2.global_variables.cuda_compiled:
+        n2d2.global_variables.default_model = "Frame_CUDA"
+        n2d2.global_variables.cuda_device = 0
 
     db = n2d2.database.Database()
     provider = n2d2.provider.DataProvider(db, [inputs_shape[2], inputs_shape[1], inputs_shape[3]], batch_size=inputs_shape[0])
