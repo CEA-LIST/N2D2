@@ -105,19 +105,19 @@ void N2D2::ONNX_FcCellExport::generateNode(
         gemm_beta->set_name("beta");
         gemm_beta->set_type(onnx::AttributeProto::FLOAT);
         gemm_beta->set_f(!cell.getParameter<bool>("NoBias"));
+
+        // Attr transA
+        onnx::AttributeProto *gemm_transA = node->add_attribute();
+        gemm_transA->set_name("transA");
+        gemm_transA->set_type(onnx::AttributeProto::INT);
+        gemm_transA->set_i(0);
+
+        // Attr transB
+        onnx::AttributeProto *gemm_transB = node->add_attribute();
+        gemm_transB->set_name("transB");
+        gemm_transB->set_type(onnx::AttributeProto::INT);
+        gemm_transB->set_i(1);
     }
-
-    // Attr transA
-    onnx::AttributeProto *gemm_transA = node->add_attribute();
-    gemm_transA->set_name("transA");
-    gemm_transA->set_type(onnx::AttributeProto::INT);
-    gemm_transA->set_i(0);
-
-    // Attr transB
-    onnx::AttributeProto *gemm_transB = node->add_attribute();
-    gemm_transB->set_name("transB");
-    gemm_transB->set_type(onnx::AttributeProto::INT);
-    gemm_transB->set_i(1);
 
     // Weights input
     onnx::TensorProto *fc_w = graph->add_initializer();
@@ -127,8 +127,9 @@ void N2D2::ONNX_FcCellExport::generateNode(
     assert(weightsInterface->size() == 1);
     const BaseTensor& weights = (*weightsInterface)[0U];
 
-    /*
     if (fcInteger) {
+        // Here we use MatMulInteger, so the weights need to be transposed
+        // (there are no transA/transA attributes).
         const Tensor<Float_T>& weightsFloat = tensor_cast<Float_T>(weights);
         Tensor<Float_T> weightsT({weights.dimB(),
                                   weights.size() / weights.dimB()});
@@ -145,9 +146,6 @@ void N2D2::ONNX_FcCellExport::generateNode(
         ONNX_castAndPackTensor(mPrecision, fc_w, weights,
             {fcCell.getInputsSize(), fcCell.getNbOutputs()});
     }
-    */
-    ONNX_castAndPackTensor(mPrecision, fc_w, weights,
-        {fcCell.getInputsSize(), fcCell.getNbOutputs()});
 
     // Bias input
     if (!cell.getParameter<bool>("NoBias")) {
