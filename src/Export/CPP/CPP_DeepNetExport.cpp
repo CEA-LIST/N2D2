@@ -822,14 +822,25 @@ void N2D2::CPP_DeepNetExport::generateMemoryInfoHeader(
             memInfo << "#define " << prefix << "_MEM_COUNT "
                 << memPlane.count <<"\n";
 
-            memInfo << "#define " << prefix << "_MEM_CONT_OFFSET "
-                << memPlane.getContiguousOffset() <<"\n";
-            memInfo << "#define " << prefix << "_MEM_CONT_SIZE "
-                << memPlane.getContiguousSize() <<"\n";
-            memInfo << "#define " << prefix << "_MEM_WRAP_OFFSET "
-                << memPlane.getWrappedOffset() <<"\n";
-            memInfo << "#define " << prefix << "_MEM_WRAP_SIZE "
-                << memPlane.getWrappedSize() <<"\n";
+            if (memPlane.getContiguousSize() == 0) {
+                // Simplify immediate wrapping (see issue #63)
+                memInfo << "#define " << prefix << "_MEM_CONT_OFFSET "
+                    << memPlane.getWrappedOffset() <<"\n";
+                memInfo << "#define " << prefix << "_MEM_CONT_SIZE "
+                    << memPlane.getWrappedSize() <<"\n";
+                memInfo << "#define " << prefix << "_MEM_WRAP_OFFSET 0\n";
+                memInfo << "#define " << prefix << "_MEM_WRAP_SIZE 0\n";
+            }
+            else {
+                memInfo << "#define " << prefix << "_MEM_CONT_OFFSET "
+                    << memPlane.getContiguousOffset() <<"\n";
+                memInfo << "#define " << prefix << "_MEM_CONT_SIZE "
+                    << memPlane.getContiguousSize() <<"\n";
+                memInfo << "#define " << prefix << "_MEM_WRAP_OFFSET "
+                    << memPlane.getWrappedOffset() <<"\n";
+                memInfo << "#define " << prefix << "_MEM_WRAP_SIZE "
+                    << memPlane.getWrappedSize() <<"\n";
+            }
         }
     }
 
