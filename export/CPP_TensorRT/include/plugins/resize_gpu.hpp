@@ -23,6 +23,7 @@
 
 #include "dnn_utils.hpp"
 #include "kernels_gpu.hpp"
+#if NV_TENSORRT_MAJOR < 8
 
 /**Plugin Layer implementation**/
 /**Resize GPU implementation**/
@@ -470,4 +471,5 @@ struct pluginResize_GPU{
       mPluginCount = 0;
     }
 };
+#endif
 #endif

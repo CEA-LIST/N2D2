@@ -19,9 +19,17 @@ public:
         CHECK_CUDA_STATUS(cudaFree(mDeviceInput));
     }
 
-    int getBatchSize() const override { return mStream.getBatchSize(); }
+    int getBatchSize() const
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+     override { return mStream.getBatchSize(); }
 
-    bool getBatch(void* bindings[], const char* names[], int nbBindings) override
+    bool getBatch(void* bindings[], const char* names[], int nbBindings) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
     {
         if (!mStream.next())
         {
@@ -33,7 +41,11 @@ public:
         return true;
     }
 
-    const void* readCalibrationCache(size_t& length) override
+    const void* readCalibrationCache(size_t& length)
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
     {
         mCalibrationCache.clear();
         std::ifstream input(calibrationTableName(), std::ios::binary);
@@ -46,7 +58,11 @@ public:
         return length ? &mCalibrationCache[0] : nullptr;
     }
 
-    virtual void writeCalibrationCache(const void* cache, size_t length) override
+    virtual void writeCalibrationCache(const void* cache, size_t length) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
     {
         std::ofstream output(calibrationTableName(), std::ios::binary);
         output.write(reinterpret_cast<const char*>(cache), length);

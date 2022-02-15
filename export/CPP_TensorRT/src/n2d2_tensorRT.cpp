@@ -24,8 +24,9 @@
 #ifndef ONNX
 #include "../dnn/include/env.hpp"
 #endif
-
+#if NV_TENSORRT_MAJOR < 8
 PluginFactory mPluginFactory;
+#endif
 
 N2D2::Network::Network()
 {
@@ -124,9 +125,6 @@ void N2D2::Network::initialize() {
         if(mDataType == nvinfer1::DataType::kHALF) {
             mNetBuilderConfig->setFlag(nvinfer1::BuilderFlag::kFP16);
         }
-        if(mNbBits == 8) {
-            mNetBuilderConfig->setFlag(nvinfer1::BuilderFlag::kINT8);
-        }
 #else 
     #if NV_TENSORRT_MAJOR > 4
         if(mDataType == nvinfer1::DataType::kHALF) {
@@ -160,6 +158,7 @@ void N2D2::Network::initialize() {
     }
     createContext();
     std::cout << "====> Set TensorRT context done" << std::endl;
+
 }
 
 void N2D2::Network::setIOMemory() {
@@ -240,7 +239,7 @@ void N2D2::Network::createContext()
 
         mNetBuilder->setMaxBatchSize(mMaxBatchSize);
         mNetBuilder->setMinFindIterations(mIterBuild);
-        mNetBuilder->setMaxWorkspaceSize(mMaxWorkSpaceSize<<20);
+        mNetBuilder->setMaxWorkspaceSize(mMaxWorkSpaceSize);
 #if NV_TENSORRT_MAJOR < 5
         if(mDataType == nvinfer1::DataType::kHALF)
             mNetBuilder->setHalf2Mode(true);
@@ -291,6 +290,7 @@ void N2D2::Network::createContext()
 
         }
 #if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+
         mCudaEngine = mNetBuilder->buildEngineWithConfig(*mNetDef.back(), *mNetBuilderConfig);
         mNetBuilderConfig->destroy();
 #else
@@ -308,7 +308,6 @@ void N2D2::Network::createContext()
             throw std::runtime_error("Could not open cuda engine file: " + mInputEngine);
 
         nvinfer1::IRuntime* infer = nvinfer1::createInferRuntime(gLogger);
-#if NV_TENSORRT_MAJOR > 1
         // support for stringstream deserialization was deprecated in TensorRT v2
         // instead, read the stringstream into a memory buffer and pass that to TRT.
         cudaEngineStream.seekg(0, std::ios::end);
@@ -319,14 +318,15 @@ void N2D2::Network::createContext()
             throw std::runtime_error("Could not allocate enough memory for load cuda engine file " + mInputEngine);
 
         cudaEngineStream.read((char*)modelMem, modelSize);
+#if NV_TENSORRT_MAJOR > 7
+        mCudaEngine = infer->deserializeCudaEngine(modelMem, 
+                                                  modelSize);
+#else
         mCudaEngine = infer->deserializeCudaEngine(modelMem, 
                                                   modelSize, 
                                                   &mPluginFactory);
-        free(modelMem);
-#else
-       // TensorRT v1 can deserialize directly from stringstream
-       mCudaEngine = infer->deserializeCudaEngine(cudaEngineStream);
 #endif
+        free(modelMem);
     }
         std::cout << "mCudaEngine->serialize" << std::endl;
 
@@ -354,29 +354,52 @@ void N2D2::Network::createContext()
     // Once the engine is built. Its safe to destroy the mCalibrator.
     mCalibrator.reset();
 #endif
-
+#if NV_TENSORRT_MAJOR < 8
     mPluginFactory.destroyPlugin();
+#endif
     nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(gLogger);
+    int numCreators = 0;
+    nvinfer1::IPluginCreator* const* tmpList = getPluginRegistry()->getPluginCreatorList(&numCreators);
+    for (int k = 0; k < numCreators; ++k)
+    {
+        if (!tmpList[k])
+        {
+            std::cout << "Plugin Creator for plugin " << k << " is a nullptr." << std::endl;
+            continue;
+        }
+        std::string pluginName = tmpList[k]->getPluginName();
+        std::cout << k << ": " << pluginName << std::endl;
+    }
+#if NV_TENSORRT_MAJOR > 7
+    nvinfer1::ICudaEngine* engine = runtime->deserializeCudaEngine(gieModelStream->data(),
+                                                                   gieModelStream->size());
+#else
     nvinfer1::ICudaEngine* engine = runtime->deserializeCudaEngine(gieModelStream->data(),
                                                                    gieModelStream->size(),
                                                                    &mPluginFactory);
+#endif
+    //nvinfer1::ICudaEngine* engine = runtime->deserializeCudaEngine(gieModelStream->data(),
+    //                                                               gieModelStream->size());
 #if NV_TENSORRT_MAJOR > 4
-#if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) < 8
     if(runtime->getNbDLACores() > 1)
         runtime->setDLACore(runtime->getNbDLACores() - 1) ;
 
     std::cout << "Available DLA Cores / Used DLA Cores: " << runtime->getNbDLACores() << " / " << runtime->getDLACore() << std::endl;
-#endif
 #endif
 
 
 
     if (gieModelStream)
         gieModelStream->destroy();
+    std::cout << "gieModelStream destroy done" << std::endl;
 
-    mContext = engine->createExecutionContext();
-
+    mContext = mCudaEngine->createExecutionContext();
+    std::cout << "mContext done" << std::endl;
+    //mCudaEngine->destroy();
+#if NV_TENSORRT_MAJOR < 8
     mPluginFactory.destroyPlugin();
+#endif
+
 }
 
 /*
@@ -1303,9 +1326,9 @@ std::vector<nvinfer1::ITensor *>
             nvinfer1::Weights scale_trt;
             nvinfer1::Weights shift_trt;
             nvinfer1::Weights power_trt;
-            const long int coeffIdx =  coeffMode == PerChannel ? 
+            const std::size_t coeffIdx =  coeffMode == PerChannel ? 
                                             0 : input;
-            const long int coeffLength =  coeffMode == PerChannel ? 
+            const std::size_t coeffLength =  coeffMode == PerChannel ? 
                                             nbOutputs : 1;
 
             if(mDataType != nvinfer1::DataType::kHALF)
@@ -2214,31 +2237,43 @@ std::vector<nvinfer1::ITensor *>
                         unsigned int nbAnchors,
                         const float* anchor)
 {
-
         std::vector<nvinfer1::ITensor *> output_tensor;
         std::cout << "Add anchors layer: " << layerName << std::endl;
 
         for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
         {
-            std::string outName = layerName + "_" + std::to_string(i);
-            nvinfer1::IPlugin* pluginAnc = mPluginFactory.createPlugin(outName.c_str(),
-                                                                mMaxBatchSize,
-                                                                nbOutputs,
-                                                                outputHeight,
-                                                                outputWidth,
-                                                                stimuliHeight,
-                                                                stimuliWidth,
-                                                                featureMapWidth,
-                                                                featureMapHeight,
-                                                                scoreCls,
-                                                                isCoordinatesAnchors,
-                                                                isFlip,
-                                                                nbAnchors,
-                                                                anchor);
 
-            auto layer = mNetDef.back()->addPlugin(&inputs_tensor[i],
-                                        1,
-                                        *pluginAnc);
+            std::string outName = layerName + "_" + std::to_string(i);
+
+            nvinfer1::PluginFieldCollection fieldCollection;
+            std::vector<nvinfer1::PluginField> pluginAttributs;
+
+            auto creator = getPluginRegistry()->getPluginCreator("AnchorGPUPlugin", "1");
+            pluginAttributs.emplace_back(nvinfer1::PluginField("batchSize", &mMaxBatchSize, nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nbOutputs", &(nbOutputs), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("outputHeight", &(outputHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("outputWidth", &(outputWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliHeight", &(stimuliHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliWidth", &(stimuliWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapWidth", &(featureMapWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapHeight", &(featureMapHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("scoreCls", &(scoreCls), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("isCoordinatesAnchors", &(isCoordinatesAnchors), nvinfer1::PluginFieldType::kCHAR, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("isFlip", &(isFlip), nvinfer1::PluginFieldType::kCHAR, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nbAnchors", &(nbAnchors), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("anchors", reinterpret_cast<const void *>(anchor), nvinfer1::PluginFieldType::kFLOAT32, 4*nbAnchors));
+
+            fieldCollection.nbFields = pluginAttributs.size();
+            fieldCollection.fields = pluginAttributs.data();
+
+            nvinfer1::IPluginV2* pluginAnchor = creator->createPlugin("AnchorGPUPlugin", &fieldCollection);
+            std::cout << "pluginAnchor done " << std::endl;
+
+            auto layer = mNetDef.back()->addPluginV2(&inputs_tensor[i],
+                                    inputs_tensor.size(),
+                                    *pluginAnchor);
+            std::cout << "addPluginV2 done " << std::endl;
+
 
            layer->setName(outName.c_str());
 
@@ -2261,6 +2296,7 @@ std::vector<nvinfer1::ITensor *>
            std::cout << "}" << std::endl;
         }
         return output_tensor;
+
 
 }
 
@@ -2399,6 +2435,43 @@ std::vector<nvinfer1::ITensor *>
             }
 
             std::string outName = layerName + "_" + std::to_string(i);
+
+            nvinfer1::PluginFieldCollection fieldCollection;
+            std::vector<nvinfer1::PluginField> pluginAttributs;
+
+            auto creator = getPluginRegistry()->getPluginCreator("ObjDetGPUPlugin", "1");
+            pluginAttributs.emplace_back(nvinfer1::PluginField("batchSize", &mMaxBatchSize, nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nbOutputs", &(nbOutputs), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("outputHeight", &(outputHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("outputWidth", &(outputWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("channelHeight", &(channelHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("channelWidth", &(channelWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliWidth", &(stimuliWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliHeight", &(stimuliHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapWidth", &(featureMapWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapHeight", &(featureMapHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nbProposals", &(nbProposals), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nbCls", &(nbCls), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nbAnchors", &(nbAnchors), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("isCoordinatesAnchors", &(isCoordinatesAnchors), nvinfer1::PluginFieldType::kCHAR, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("isPixelFormatXY", &(isPixelFormatXY), nvinfer1::PluginFieldType::kCHAR, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nmsIoU", useInternalNMS ? &mDetectorNMS : &nmsIoU, nvinfer1::PluginFieldType::kFLOAT64, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("scoreThreshold", useInternalThresholds ? reinterpret_cast<const void *>(mDetectorThresholds) : reinterpret_cast<const void *>(scoreThreshold), nvinfer1::PluginFieldType::kFLOAT32, nbCls));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("maxParts", &(maxParts), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("maxTemplates", &(maxTemplates), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("numPartsPerClass", reinterpret_cast<const void *>(numPartsPerClass), nvinfer1::PluginFieldType::kINT32, nbCls));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("numTemplatesPerClass", reinterpret_cast<const void *>(numTemplatesPerClass), nvinfer1::PluginFieldType::kINT32, nbCls));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("anchor", reinterpret_cast<const void *>(anchor), nvinfer1::PluginFieldType::kFLOAT32, 4*nbCls*nbAnchors));
+
+            fieldCollection.nbFields = pluginAttributs.size();
+            fieldCollection.fields = pluginAttributs.data();
+
+            nvinfer1::IPluginV2* pluginObjDet = creator->createPlugin("ObjDetGPUPlugin", &fieldCollection);
+            std::cout << "pluginObjDet done " << std::endl;
+
+            /*
+            nvinfer1::IPluginV2* pluginObjDet = mPluginFactoryV2->createPlugin(layerMsg.name().c_str(), w.empty() ? nullptr : &w[0], w.size(), mPluginNamespace.c_str());
+
             nvinfer1::IPlugin* pluginObjDet = mPluginFactory.createPlugin(outName.c_str(),
                                                                 mMaxBatchSize,
                                                                 nbOutputs,
@@ -2422,10 +2495,13 @@ std::vector<nvinfer1::ITensor *>
                                                                 numPartsPerClass,
                                                                 numTemplatesPerClass,
                                                                 anchor);
+        */
 
-        auto layer = mNetDef.back()->addPlugin(&concat_tensor[0],
+        auto layer = mNetDef.back()->addPluginV2(&concat_tensor[0],
                                     inputs_tensor.size(),
                                     *pluginObjDet);
+            std::cout << "addPluginV2 done " << std::endl;
+
         layer->setName(outName.c_str());
         output_tensor.push_back(layer->getOutput(0));
         nvinfer1::Dims tensor_dims = output_tensor.back()->getDimensions();
@@ -2484,6 +2560,7 @@ std::vector<nvinfer1::ITensor *>
                         const float* means,
                         const float* std)
 {
+#if NV_TENSORRT_MAJOR < 8
 
     std::vector<nvinfer1::ITensor *> output_tensor;
     std::cout << "Add Proposals layer: " << layerName << std::endl;
@@ -2557,6 +2634,9 @@ std::vector<nvinfer1::ITensor *>
     }
 
     return output_tensor;
+#else
+    throw std::runtime_error( "add_proposals(): This plugin is not supported with TensorRT-8");
+#endif
 
 }
 
@@ -2577,7 +2657,7 @@ std::vector<nvinfer1::ITensor *>
                             unsigned int scoreIndex,
                             unsigned int iouIndex)
 {
-
+#if NV_TENSORRT_MAJOR < 8
         std::vector<nvinfer1::ITensor *> output_tensor;
         std::cout << "Add RP layer: " << layerName << std::endl;
 
@@ -2627,6 +2707,9 @@ std::vector<nvinfer1::ITensor *>
         }
 
         return output_tensor;
+#else
+    throw std::runtime_error( "add_regionproposal(): This plugin is not supported with TensorRT-8");
+#endif
 }
 
 
@@ -2648,6 +2731,7 @@ std::vector<nvinfer1::ITensor *>
                             bool ignorePadding,
                             bool isFlip)
 {
+#if NV_TENSORRT_MAJOR < 8
 
         std::vector<nvinfer1::ITensor *> output_tensor;
         std::cout << "Add ROIPooling layer: " << layerName << std::endl;
@@ -2732,6 +2816,9 @@ std::vector<nvinfer1::ITensor *>
         }
 
         return output_tensor;
+#else
+    throw std::runtime_error( "add_regionproposal(): This plugin is not supported with TensorRT-8");
+#endif
 }
 
 void N2D2::Network::add_weighted(unsigned int nbOutputs,
@@ -3064,6 +3151,7 @@ BOOST_PYTHON_MODULE(N2D2)
         .def("setOutputTarget", &N2D2::Network::setOutputTarget)
         .def("useDLA", &N2D2::Network::useDLA)
         .def("setMaxWorkSpaceSize", &N2D2::Network::setMaxWorkSpaceSize)
+
         .def("estimated", &N2D2::Network::estimatedPy)
 
         .def("getOutputNbTargets", &N2D2::Network::getOutputNbTargets)

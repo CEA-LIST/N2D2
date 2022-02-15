@@ -24,6 +24,8 @@
 #include "dnn_utils.hpp"
 #include "kernels_cpu.hpp"
 
+#if NV_TENSORRT_MAJOR < 8
+
 /**Plugin Layer implementation**/
 /**Anchoring CPU implementation**/
 class AnchorCPUPlugin: public nvinfer1::IPlugin
@@ -315,4 +317,5 @@ struct pluginAnchor_CPU{
       mPluginCount = 0;
     }
 };
+#endif
 #endif
