@@ -73,14 +73,15 @@ public:
         mMaxParts = maxParts;
         mMaxTemplates = maxTemplates;
 
-        mPartsPerClass = new unsigned int[mNbClass];
+        //mPartsPerClass = new unsigned int[mNbClass];
         for(unsigned int i = 0; i < mNbClass; ++i) {
-            mPartsPerClass[i] = numPartsPerClass[i];
+            mPartsPerClass_HOST.push_back(numPartsPerClass[i]);
         }
 
-        mTemplatesPerClass = new unsigned int[mNbClass];
-        for(unsigned int i = 0; i < mNbClass; ++i)
-            mTemplatesPerClass[i] = numTemplatesPerClass[i];
+        //mTemplatesPerClass = new unsigned int[mNbClass];
+        for(unsigned int i = 0; i < mNbClass; ++i) {
+            mTemplatesPerClass_HOST.push_back(numTemplatesPerClass[i]);
+        }
         /*
         mAnchors.resize(mNbAnchors);
         for(unsigned int i = 0; i < mNbAnchors*4; i += 4)
@@ -99,7 +100,7 @@ public:
         checkCudaErrors( cudaMalloc((void**)&mAnchors,
                          4 * mNbAnchors * nbCls * sizeof(float)) );
         checkCudaErrors( cudaMemcpy(mAnchors,
-                         anchor,
+                         mAnchors_HOST.data(),
                          4 * mNbAnchors * nbCls *sizeof(float),
                          cudaMemcpyHostToDevice) );
         /**Initialize pixels map on GPU **/
@@ -263,13 +264,13 @@ public:
         for(unsigned int k = 0; k <  mNbClass; ++k)
             mScoreThreshold_HOST[k] = read<float>(d);
 
-        mPartsPerClass = new unsigned int[mNbClass];
+        mPartsPerClass_HOST.reserve(mNbClass);
         for(unsigned int k = 0; k < mNbClass; ++k)
-            mPartsPerClass[k] = read<unsigned int>(d);
+            mPartsPerClass_HOST[k] = read<unsigned int>(d);
 
-        mTemplatesPerClass = new unsigned int[mNbClass];
+        mTemplatesPerClass_HOST.reserve(mNbClass);
         for(unsigned int k = 0; k < mNbClass; ++k)
-            mTemplatesPerClass[k] = read<unsigned int>(d);
+            mTemplatesPerClass_HOST[k] = read<unsigned int>(d);
         /*mAnchors.resize(mNbAnchors);
         for(unsigned int i = 0; i < mNbAnchors; ++i)
         {
@@ -418,8 +419,8 @@ public:
 
         for(unsigned int c = 0; c < mNbClass; ++c) 
         {
-            nbTotalPart += mPartsPerClass[c];
-            nbTotalTemplate += mTemplatesPerClass[c];
+            nbTotalPart += mPartsPerClass_HOST[c];
+            nbTotalTemplate += mTemplatesPerClass_HOST[c];
         }
 
         checkCudaErrors( cudaMemset(mPixelMapSorted,
@@ -709,8 +710,8 @@ public:
             int mThreadZ = 1;
 
             int mBlockX = std::ceil(mNbProposals/(float) mThreadX);
-            int mBlockY = std::max(mPartsPerClass[cls], mTemplatesPerClass[cls]) > 0 ? 
-                            std::max(mPartsPerClass[cls], mTemplatesPerClass[cls]) : 1 ;
+            int mBlockY = std::max(mPartsPerClass_HOST[cls], mTemplatesPerClass_HOST[cls]) > 0 ? 
+                            std::max(mPartsPerClass_HOST[cls], mTemplatesPerClass_HOST[cls]) : 1 ;
             int mBlockZ = batchSize;
 
             dim3 blocks = {  (unsigned int) mBlockX, (unsigned int) mBlockY, (unsigned int) batchSize};
@@ -726,8 +727,8 @@ public:
 
             for(unsigned int c = 0; c < cls; ++c) 
             {
-                keypointClsOffset += mPartsPerClass[c] * 2;
-                templateClsOffset += mTemplatesPerClass[c] * 3;
+                keypointClsOffset += mPartsPerClass_HOST[c] * 2;
+                templateClsOffset += mTemplatesPerClass_HOST[c] * 3;
             }
 
             if(mIsCoordinatesAnchors) {
@@ -773,8 +774,8 @@ public:
                                         mMaxTemplates,
                                         keypointClsOffset,
                                         templateClsOffset,
-                                        mPartsPerClass[cls],
-                                        mTemplatesPerClass[cls],
+                                        mPartsPerClass_HOST[cls],
+                                        mTemplatesPerClass_HOST[cls],
                                         mIsCoordinatesAnchors,
                                         mIsPixelFormatXY,
                                         xRatio,
@@ -953,12 +954,12 @@ public:
         }
 
         for(unsigned int k = 0; k < mNbClass; ++k) {
-            *reinterpret_cast<unsigned int*>(d) = mPartsPerClass[k];
+            *reinterpret_cast<unsigned int*>(d) = mPartsPerClass_HOST[k];
             d += sizeof(unsigned int);
         }
 
         for(unsigned int k = 0; k < mNbClass; ++k) {
-            *reinterpret_cast<unsigned int*>(d) = mTemplatesPerClass[k];
+            *reinterpret_cast<unsigned int*>(d) = mTemplatesPerClass_HOST[k];
             d += sizeof(unsigned int);
         }
         /*for(unsigned int i = 0; i < mNbAnchors; ++i)
@@ -1036,8 +1037,8 @@ public:
                                                     mScoreThreshold_HOST.data(),
                                                     mMaxParts,
                                                     mMaxTemplates,
-                                                    mPartsPerClass,
-                                                    mTemplatesPerClass,
+                                                    mPartsPerClass_HOST.data(),
+                                                    mTemplatesPerClass_HOST.data(),
                                                     mAnchors_HOST.data());
 
         plugin->setPluginNamespace("");
@@ -1425,7 +1426,7 @@ public:
             {
                 //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
 
-                const float* p = static_cast<const float*>(fields[i].data);
+                const int* p = static_cast<const int*>(fields[i].data);
                 for (int j = 0; j < nbCls; ++j)
                 {
                     numPartsPerClass.push_back(*p);
@@ -1436,7 +1437,7 @@ public:
             {
                 //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
 
-                const float* t = static_cast<const float*>(fields[i].data);
+                const int* t = static_cast<const int*>(fields[i].data);
                 for (int j = 0; j < nbCls; ++j)
                 {
                     numTemplatesPerClass.push_back(*t);

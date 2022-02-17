@@ -20,6 +20,7 @@
 
 #ifndef PLUGINLAYERS_HPP
 #define PLUGINLAYERS_HPP
+#include "dnn_utils.hpp"
 
 #if NV_TENSORRT_MAJOR < 8
 #include "plugins/anchor_cpu.hpp"

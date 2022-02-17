@@ -2267,12 +2267,10 @@ std::vector<nvinfer1::ITensor *>
             fieldCollection.fields = pluginAttributs.data();
 
             nvinfer1::IPluginV2* pluginAnchor = creator->createPlugin("AnchorGPUPlugin", &fieldCollection);
-            std::cout << "pluginAnchor done " << std::endl;
 
             auto layer = mNetDef.back()->addPluginV2(&inputs_tensor[i],
                                     inputs_tensor.size(),
                                     *pluginAnchor);
-            std::cout << "addPluginV2 done " << std::endl;
 
 
            layer->setName(outName.c_str());
@@ -2426,114 +2424,58 @@ std::vector<nvinfer1::ITensor *>
 
     for(unsigned int i = 0; i < inputs_tensor[0]->size(); ++i)
     {
-            std::vector<nvinfer1::ITensor *> concat_tensor;
+        std::vector<nvinfer1::ITensor *> concat_tensor;
 
-            for(unsigned int k = 0; k < inputs_tensor.size(); ++k)
-            {
-              nvinfer1::ITensor * input_tensor = (inputs_tensor[k])->data()[i];
-              concat_tensor.push_back(input_tensor);
-            }
+        for(unsigned int k = 0; k < inputs_tensor.size(); ++k)
+        {
+            nvinfer1::ITensor * input_tensor = (inputs_tensor[k])->data()[i];
+            concat_tensor.push_back(input_tensor);
+        }
 
-            std::string outName = layerName + "_" + std::to_string(i);
+        std::string outName = layerName + "_" + std::to_string(i);
 
-            nvinfer1::PluginFieldCollection fieldCollection;
-            std::vector<nvinfer1::PluginField> pluginAttributs;
+        nvinfer1::PluginFieldCollection fieldCollection;
+        std::vector<nvinfer1::PluginField> pluginAttributs;
 
-            auto creator = getPluginRegistry()->getPluginCreator("ObjDetGPUPlugin", "1");
-            pluginAttributs.emplace_back(nvinfer1::PluginField("batchSize", &mMaxBatchSize, nvinfer1::PluginFieldType::kINT32, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("nbOutputs", &(nbOutputs), nvinfer1::PluginFieldType::kINT32, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("outputHeight", &(outputHeight), nvinfer1::PluginFieldType::kINT32, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("outputWidth", &(outputWidth), nvinfer1::PluginFieldType::kINT32, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("channelHeight", &(channelHeight), nvinfer1::PluginFieldType::kINT32, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("channelWidth", &(channelWidth), nvinfer1::PluginFieldType::kINT32, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliWidth", &(stimuliWidth), nvinfer1::PluginFieldType::kINT32, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliHeight", &(stimuliHeight), nvinfer1::PluginFieldType::kINT32, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapWidth", &(featureMapWidth), nvinfer1::PluginFieldType::kINT32, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapHeight", &(featureMapHeight), nvinfer1::PluginFieldType::kINT32, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("nbProposals", &(nbProposals), nvinfer1::PluginFieldType::kINT32, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("nbCls", &(nbCls), nvinfer1::PluginFieldType::kINT32, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("nbAnchors", &(nbAnchors), nvinfer1::PluginFieldType::kINT32, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("isCoordinatesAnchors", &(isCoordinatesAnchors), nvinfer1::PluginFieldType::kCHAR, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("isPixelFormatXY", &(isPixelFormatXY), nvinfer1::PluginFieldType::kCHAR, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("nmsIoU", useInternalNMS ? &mDetectorNMS : &nmsIoU, nvinfer1::PluginFieldType::kFLOAT64, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("scoreThreshold", useInternalThresholds ? reinterpret_cast<const void *>(mDetectorThresholds) : reinterpret_cast<const void *>(scoreThreshold), nvinfer1::PluginFieldType::kFLOAT32, nbCls));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("maxParts", &(maxParts), nvinfer1::PluginFieldType::kINT32, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("maxTemplates", &(maxTemplates), nvinfer1::PluginFieldType::kINT32, 1));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("numPartsPerClass", reinterpret_cast<const void *>(numPartsPerClass), nvinfer1::PluginFieldType::kINT32, nbCls));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("numTemplatesPerClass", reinterpret_cast<const void *>(numTemplatesPerClass), nvinfer1::PluginFieldType::kINT32, nbCls));
-            pluginAttributs.emplace_back(nvinfer1::PluginField("anchor", reinterpret_cast<const void *>(anchor), nvinfer1::PluginFieldType::kFLOAT32, 4*nbCls*nbAnchors));
+        auto creator = getPluginRegistry()->getPluginCreator("ObjDetGPUPlugin", "1");
+        pluginAttributs.emplace_back(nvinfer1::PluginField("batchSize", &mMaxBatchSize, nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("nbOutputs", &(nbOutputs), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("outputHeight", &(outputHeight), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("outputWidth", &(outputWidth), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("channelHeight", &(channelHeight), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("channelWidth", &(channelWidth), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliWidth", &(stimuliWidth), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliHeight", &(stimuliHeight), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapWidth", &(featureMapWidth), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapHeight", &(featureMapHeight), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("nbProposals", &(nbProposals), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("nbCls", &(nbCls), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("nbAnchors", &(nbAnchors), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("isCoordinatesAnchors", &(isCoordinatesAnchors), nvinfer1::PluginFieldType::kCHAR, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("isPixelFormatXY", &(isPixelFormatXY), nvinfer1::PluginFieldType::kCHAR, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("nmsIoU", useInternalNMS ? &mDetectorNMS : &nmsIoU, nvinfer1::PluginFieldType::kFLOAT64, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("scoreThreshold", useInternalThresholds ? reinterpret_cast<const void *>(mDetectorThresholds) : reinterpret_cast<const void *>(scoreThreshold), nvinfer1::PluginFieldType::kFLOAT32, nbCls));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("maxParts", &(maxParts), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("maxTemplates", &(maxTemplates), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("numPartsPerClass", reinterpret_cast<const void *>(numPartsPerClass), nvinfer1::PluginFieldType::kINT32, nbCls));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("numTemplatesPerClass", reinterpret_cast<const void *>(numTemplatesPerClass), nvinfer1::PluginFieldType::kINT32, nbCls));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("anchor", reinterpret_cast<const void *>(anchor), nvinfer1::PluginFieldType::kFLOAT32, 4*nbCls*nbAnchors));
 
-            fieldCollection.nbFields = pluginAttributs.size();
-            fieldCollection.fields = pluginAttributs.data();
+        fieldCollection.nbFields = pluginAttributs.size();
+        fieldCollection.fields = pluginAttributs.data();
 
             nvinfer1::IPluginV2* pluginObjDet = creator->createPlugin("ObjDetGPUPlugin", &fieldCollection);
-            std::cout << "pluginObjDet done " << std::endl;
-
-            /*
-            nvinfer1::IPluginV2* pluginObjDet = mPluginFactoryV2->createPlugin(layerMsg.name().c_str(), w.empty() ? nullptr : &w[0], w.size(), mPluginNamespace.c_str());
-
-            nvinfer1::IPlugin* pluginObjDet = mPluginFactory.createPlugin(outName.c_str(),
-                                                                mMaxBatchSize,
-                                                                nbOutputs,
-                                                                outputHeight,
-                                                                outputWidth,
-                                                                channelHeight,
-                                                                channelWidth,
-                                                                stimuliWidth,
-                                                                stimuliHeight,
-                                                                featureMapWidth,
-                                                                featureMapHeight,
-                                                                nbProposals,
-                                                                nbCls,
-                                                                nbAnchors,
-                                                                isCoordinatesAnchors,
-                                                                isPixelFormatXY,
-                                                                useInternalNMS ? mDetectorNMS : nmsIoU,
-                                                                useInternalThresholds ? mDetectorThresholds : scoreThreshold,
-                                                                maxParts,
-                                                                maxTemplates,
-                                                                numPartsPerClass,
-                                                                numTemplatesPerClass,
-                                                                anchor);
-        */
-
         auto layer = mNetDef.back()->addPluginV2(&concat_tensor[0],
                                     inputs_tensor.size(),
                                     *pluginObjDet);
-            std::cout << "addPluginV2 done " << std::endl;
 
         layer->setName(outName.c_str());
         output_tensor.push_back(layer->getOutput(0));
-        nvinfer1::Dims tensor_dims = output_tensor.back()->getDimensions();
-        std::cout << "{";
-
-        for(unsigned int d = 0; d < tensor_dims.nbDims; ++d)
-            std::cout << tensor_dims.d[d] << " ";
-
-        std::cout << "}" << std::endl;
-
-    /*
-        layer->setName(outName.c_str());
-        output_tensor.push_back(layer->getOutput(0));
-        output_tensor.back()->setType(mDataType);
-        output_tensor.back()->setName(outName.c_str());
-
-        nvinfer1::Dims tensor_in_dims = inputs_tensor[i]->getDimensions();
-        std::cout << "               " << inputs_tensor[i]->getName()
-                    << "---> " << output_tensor.back()->getName() << std::endl;
-
-        std::cout << "               ";
-        std::cout << "{";
-        for(unsigned int d = 0; d < tensor_in_dims.nbDims; ++d)
-                std::cout << tensor_in_dims.d[d] << " ";
-        std::cout << "} ----> ";
-
         nvinfer1::Dims tensor_dims = output_tensor.back()->getDimensions();
         std::cout << "{";
         for(unsigned int d = 0; d < tensor_dims.nbDims; ++d)
-                std::cout << tensor_dims.d[d] << " ";
+            std::cout << tensor_dims.d[d] << " ";
         std::cout << "}" << std::endl;
-        */
     }
     return output_tensor;
 }
