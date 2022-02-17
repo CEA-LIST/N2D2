@@ -93,7 +93,16 @@ class MobileNetv1Extractor(Sequence):
             ConvPointWise(32 * base_nb_outputs, 32 * base_nb_outputs, name="conv9_1x1", **conv_config(with_bn))
         ], "div32")
 
-        Sequence.__init__(self, [self.div2, self.div4, self.div8, self.div16, self.div32], "extractor")
+        seq = [self.div2, self.div4, self.div8, self.div16, self.div32]
+
+        for scale in seq:
+            for cell in scale:
+                if isinstance(cell, Conv):
+                    bn_name = "bn" + cell.get_name()[4:]
+                    scale.insert(scale.index(cell) + 1,
+                                 BatchNorm2d(cell.get_nb_outputs(), activation=Rectifier(), name=bn_name))
+
+        Sequence.__init__(self, seq, "extractor")
 
 
 
@@ -101,11 +110,11 @@ class MobileNetv1Head(Sequence):
 
     def __init__(self, nb_outputs, alpha=None):
 
-        pool = GlobalPool2d(pooling='Average', name="pool1")
-        fc = Fc(32 * int(32 * alpha), nb_outputs, activation=Linear(), weights_filler=Normal(mean=0.0, std_dev=0.01),
+        self.pool = GlobalPool2d(pooling='Average', name="pool1")
+        self.fc = Fc(32 * int(32 * alpha), nb_outputs, activation=Linear(), weights_filler=Normal(mean=0.0, std_dev=0.01),
                 bias_filler=Constant(value=0.0), name="fc")
 
-        Sequence.__init__(self, [pool, fc], "head")
+        Sequence.__init__(self, [self.pool, self.fc], "head")
 
 
 
@@ -113,14 +122,6 @@ class MobileNetv1(Sequence):
     def __init__(self, nb_outputs=1000, alpha=1.0, with_bn=False):
 
         self.extractor = MobileNetv1Extractor(alpha, with_bn)
-            
-        if with_bn:
-            for scale in self.extractor:
-                for cell in scale:
-                    if isinstance(cell, Conv):
-                        bn_name = "bn" + cell.get_name()[4:]
-                        scale.insert(scale.index(cell)+1, BatchNorm2d(cell.get_nb_outputs(), activation=Rectifier(), name=bn_name))
-
         self.head = MobileNetv1Head(nb_outputs, alpha)
 
         Sequence.__init__(self, [self.extractor, self.head], "mobilenet_v1")
