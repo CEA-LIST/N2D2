@@ -20,6 +20,11 @@
 ################################################################################
 
 
+# Update libraries
+sudo apt-get -y update
+
+
+# Basic libraries for all N2D2 versions
 sudo apt-get install -y \
     build-essential \
     cmake \
@@ -32,3 +37,37 @@ sudo apt-get install -y \
     protobuf-compiler \
     libprotoc-dev \
     libjsoncpp-dev
+
+
+# CUDA and CuDNN libraries for CUDA N2D2 versions
+if [ -n "$USE_CUDA" ] ; then
+    # Install the package for CUDA
+    CUDA_PKG=cuda-11-0_11.0.3-1_amd64.deb
+    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/$CUDA_PKG
+    dpkg -i $CUDA_PKG
+    rm $CUDA_PKG
+
+    sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub
+
+    # Install the package for CuDNN
+    CUDNN_PKG = libcudnn8_8.0.5.39-1+cuda11.0_amd64.deb
+    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/$CUDNN_PKG
+    dpkg -i $CUDNN_PKG
+
+    # Update the package lists
+    sudo apt-get -y update
+
+    # Install the CUDA and CuDNN packages
+    CUDA_VERSION="11.0"
+
+    sudo apt-get install -y --no-install-recommends cuda
+
+    # Install the runtime library
+    sudo apt-get install libcudnn8=8.0.5.39-1+cuda11.0
+
+    # Install the developer library.
+    sudo apt-get install libcudnn8-dev=8.0.5.39-1+cuda11.0
+
+    # Manually create CUDA symlink
+    ln -s /usr/local/cuda-$CUDA_VERSION /usr/local/cuda
+fi
