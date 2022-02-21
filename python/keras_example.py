@@ -52,18 +52,6 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 ## Build the model
 """
 
-# model = CustomSequential(
-#     [
-#         keras.Input(shape=input_shape),
-#         layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
-#         layers.MaxPooling2D(pool_size=(2, 2)),
-#         layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
-#         layers.MaxPooling2D(pool_size=(2, 2)),
-#         layers.Flatten(),
-#         # layers.Dropout(0.5),
-#         layers.Dense(num_classes, activation="softmax"),
-#     ], 
-#     batch_size=batch_size)
 tf_model = tf.keras.Sequential(
     [
         keras.Input(shape=input_shape),
@@ -76,7 +64,7 @@ tf_model = tf.keras.Sequential(
         layers.Dense(num_classes, activation="softmax"),
     ]
 )
-model = keras_interoperability.wrap(tf_model, batch_size=batch_size)
+model = keras_interoperability.wrap(tf_model, batch_size=batch_size, for_export=False)
 
 
 # model.summary() # TODO : Doesn't work anymore ...

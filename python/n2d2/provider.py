@@ -343,6 +343,7 @@ class TensorPlaceholder(Provider):
         """
         if N2D2.cuda_compiled and not self._tensor.is_cuda: 
             self._tensor.cuda()
+        self._tensor.htod()
         if not (self._tensor.data_type() == "f" or self._tensor.data_type() == "float"):
             raise TypeError("You try to stream a Tensor with the datatype '" + self._tensor.data_type() + "' you should provide a Tensor with a 'float' datatype.")
         self._set_N2D2_parameter('StreamTensor', True)

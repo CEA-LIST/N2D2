@@ -16,10 +16,9 @@ test:python_api:
   image: "python:3.7"
   script:
     - cd python
-    - pip3.7 install virtualenv
-    - python3.7 -m virtualenv venv
+    - python3.7 -m venv venv
     - source venv/bin/activate
-    - python3.7 --version
+    - python --version
     - pip3.7 --version
     
     - pip3.7 install -r requirements.txt

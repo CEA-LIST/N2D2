@@ -32,6 +32,7 @@ import tensorflow.keras as keras
 class test_keras(unittest.TestCase):
     def setUp(self):
         pass
+    @unittest.skip("This test is deprecated due to N2D2 not supporting a Pool Layer as an input.")
     def test_propagation(self):
         tf_model = keras.Sequential([
             Input(shape=[3, 3, 2]),
@@ -52,7 +53,11 @@ class test_keras(unittest.TestCase):
         self.model = wrap(tf_model, batch_size=5)
         self.model.compile(loss="categorical_crossentropy", optimizer="SGD", metrics=["accuracy"]) # TODO : useless
         self.x = tf.random.uniform([5,1,3,3])
+        print("=====================")
+        print(self.x)
         n2d2_y = self.model.call(self.x)
+        print(self.x)
+        print("=====================")
         tf_y = tf_model.call(self.x)
         print("N2D2 output : ")
         print(n2d2_y)
