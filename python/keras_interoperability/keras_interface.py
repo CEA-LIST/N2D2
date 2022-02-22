@@ -42,6 +42,9 @@ class CustomSequential(keras.Sequential):
         self.batch_size=batch_size
         self.quant_model = None
         self.outputs_shape = outputs_shape
+        self._transpose_input = n2d2.cells.Transpose([1,2,0,3])
+        # transpose_grad is the inverse operation of transpose_input
+        self._transpose_grad = n2d2.cells.Transpose([2,0,1,3])
 
     def compile(self, *args, **kwargs):
         # TODO : We can update N2D2 Solver here.
@@ -64,15 +67,16 @@ class CustomSequential(keras.Sequential):
             inputs_shape[0] = self.batch_size
             x_numpy.resize(inputs_shape)
 
-        fistCellName = self.deepNet.getLayers()[1][0] # 0 = env
+        firstCellName = self.deepNet.getLayers()[1][0] # 0 = env
         lastCellName = self.deepNet.getLayers()[-1][-1]
     
+        # Transposing input to respect nchw N2D2 input
         x_n2d2 = n2d2.Tensor.from_numpy(x_numpy)
-        x_n2d2 = n2d2.cells.Transpose([1,2,0,3])(x_n2d2)
+        x_n2d2 = self._transpose_input(x_n2d2)
         x_tensor = x_n2d2.N2D2()
  
-        firstCell = self.deepNet.getCell_Frame_Top(fistCellName)
-        self.diffOutputs = N2D2.Tensor_float(x_numpy.shape)
+        firstCell = self.deepNet.getCell_Frame_Top(firstCellName)
+        self.diffOutputs = N2D2.Tensor_float(x_n2d2.dims())
         firstCell.clearInputs()
         # Need to add Input like this to initialize diffOutputs,
         # else we get a segFault when backPropagating because diffOutput would not be initialized !
@@ -104,29 +108,37 @@ class CustomSequential(keras.Sequential):
 
         def custom_grad(dy):
             dy_numpy = dy.numpy()
-
-            #print("GRAD: ", dy_numpy[0,:])
             # Make sure we have a full batch
             if inputs_batch_size < self.batch_size:
                 diffInputs_shape = np.array(dy_numpy.shape)
                 diffInputs_shape[0] = self.batch_size
-
                 dy_numpy.resize(diffInputs_shape)
 
             # perform operation on tensor #
             dy_tensor = N2D2.Tensor_float(-dy_numpy * self.batch_size)
+            
             diffInputs = self.deepNet.getCell_Frame_Top(lastCellName).getDiffInputs()
-
             dy_tensor.reshape(diffInputs.dims())
             diffInputs.op_assign(dy_tensor)
+
+            if not diffInputs.isValid():
+                diffInputs.setValid() 
             diffInputs.synchronizeHToD()
 
-            self.deepNet.backPropagate([])
-            self.deepNet.update([])
+            self.deepNet.backPropagate()
+            self.deepNet.update()
 
-            dx_tensor = self.deepNet.getCell_Frame_Top(fistCellName).getDiffOutputs()
+            dx_tensor = self.deepNet.getCell_Frame_Top(firstCellName).getDiffOutputs()
+            
             dx_tensor.synchronizeDToH()
+
+            # transposing back the gradient 
+            n2d2_dx_tensor = n2d2.Tensor.from_N2D2(dx_tensor)
+            n2d2_dx_tensor = self._transpose_grad(n2d2_dx_tensor)
+            dx_tensor = n2d2_dx_tensor.N2D2()
+
             dx_numpy = np.array(dx_tensor)
+            
             dy_tensor = N2D2.Tensor_float(-dy_numpy * self.batch_size)
             dx = tf.convert_to_tensor(-dx_numpy / self.batch_size, dtype=tf.float32)
             return dx
