@@ -44,7 +44,7 @@ if [ -n "$USE_CUDA" ] ; then
     # Install the package for CUDA
     CUDA_PKG=cuda-11-0_11.0.3-1_amd64.deb
     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/$CUDA_PKG
-    dpkg -i $CUDA_PKG
+    sudo dpkg -i $CUDA_PKG
     rm $CUDA_PKG
 
     sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub
@@ -52,7 +52,7 @@ if [ -n "$USE_CUDA" ] ; then
     # Install the package for CuDNN
     CUDNN_PKG = libcudnn8_8.0.5.39-1+cuda11.0_amd64.deb
     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/$CUDNN_PKG
-    dpkg -i $CUDNN_PKG
+    sudo dpkg -i $CUDNN_PKG
 
     # Update the package lists
     sudo apt-get -y update
