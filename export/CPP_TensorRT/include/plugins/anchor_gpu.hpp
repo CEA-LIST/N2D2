@@ -309,7 +309,11 @@ public:
 #endif
     override
     {
+#if NV_TENSORRT_MAJOR > 5
         return (type == nvinfer1::DataType::kFLOAT && format == nvinfer1::PluginFormat::kLINEAR );
+#else
+        return (type == nvinfer1::DataType::kFLOAT && format == nvinfer1::PluginFormat::kNCHW );
+#endif
     }
 
     const char* getPluginType() const 

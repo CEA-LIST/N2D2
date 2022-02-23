@@ -467,14 +467,16 @@ public:
             {
                 const int pixelOffset = cls*mChannelWidth*mChannelHeight*mNbAnchors 
                                             +  mChannelWidth*mChannelHeight*mNbAnchors*mNbClass*batchPos;
-
-                const int nbMapDet = copy_if_int(    reinterpret_cast<int *>(mPixelMap) + pixelOffset,
+                std::cout << "pixelOffset: " << pixelOffset << std::endl;
+                const int nbMapDet = copy_if_int(  reinterpret_cast<int *>(mPixelMap) + pixelOffset,
                                                    reinterpret_cast<int *>(mPixelMapSorted) + pixelOffset,
                                                    mChannelWidth*mChannelHeight*mNbAnchors);
+                std::cout << "nbMapDet: " << nbMapDet << std::endl;
 
                 const int nbScoreDet = copy_if_float( reinterpret_cast<float *>(mScores) + pixelOffset,
                                                     reinterpret_cast<float *>(mScoresFiltered) + pixelOffset,
                                                     mChannelWidth*mChannelHeight*mNbAnchors);
+                std::cout << "nbScoreDet: " << nbScoreDet << std::endl;
 
                 if (nbScoreDet != nbMapDet)
                     throw std::runtime_error(
@@ -986,11 +988,15 @@ public:
 #if NV_TENSORRT_MAJOR > 7
     noexcept
 #endif
-    override {
-
+    override
+    {
+#if NV_TENSORRT_MAJOR > 5
         return (type == nvinfer1::DataType::kFLOAT && format == nvinfer1::PluginFormat::kLINEAR );
+#else
+        return (type == nvinfer1::DataType::kFLOAT && format == nvinfer1::PluginFormat::kNCHW );
+#endif
     }
-
+    
     const char* getPluginType() const 
 #if NV_TENSORRT_MAJOR > 7
     noexcept

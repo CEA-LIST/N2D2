@@ -354,9 +354,9 @@ void N2D2::Network::createContext()
     // Once the engine is built. Its safe to destroy the mCalibrator.
     mCalibrator.reset();
 #endif
-#if NV_TENSORRT_MAJOR < 8
-    mPluginFactory.destroyPlugin();
-#endif
+//#if NV_TENSORRT_MAJOR < 8
+//    mPluginFactory.destroyPlugin();
+//#endif
     nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(gLogger);
     int numCreators = 0;
     nvinfer1::IPluginCreator* const* tmpList = getPluginRegistry()->getPluginCreatorList(&numCreators);
@@ -393,7 +393,7 @@ void N2D2::Network::createContext()
         gieModelStream->destroy();
     std::cout << "gieModelStream destroy done" << std::endl;
 
-    mContext = mCudaEngine->createExecutionContext();
+    mContext = engine->createExecutionContext();
     std::cout << "mContext done" << std::endl;
     //mCudaEngine->destroy();
 #if NV_TENSORRT_MAJOR < 8
@@ -967,7 +967,7 @@ std::vector<nvinfer1::ITensor *>
     for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
     {
         std::string outName = layerName + "_" + std::to_string(i);
-#if NV_TENSORRT_MAJOR < 6
+#if NV_TENSORRT_MAJOR <= 6
         auto layer = mNetDef.back()->addPadding(*inputs_tensor[i],
                                        prePad,
                                        postPad);
@@ -1328,8 +1328,8 @@ std::vector<nvinfer1::ITensor *>
             nvinfer1::Weights power_trt;
             const std::size_t coeffIdx =  coeffMode == PerChannel ? 
                                             0 : input;
-            const std::size_t coeffLength =  coeffMode == PerChannel ? 
-                                            nbOutputs : 1;
+            const int64_t coeffLength = (int64_t) (coeffMode == PerChannel ? 
+                                            nbOutputs : 1);
 
             if(mDataType != nvinfer1::DataType::kHALF)
             {
@@ -2316,20 +2316,29 @@ std::vector<nvinfer1::ITensor *>
     for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
     {
         std::string outName = layerName + "_" + std::to_string(i);
-#if NV_TENSORRT_MAJOR < 6
-        nvinfer1::IPlugin* pluginResize = mPluginFactory.createPlugin(outName.c_str(),
-                                                                mMaxBatchSize,
-                                                                nbOutputs,
-                                                                outputHeight,
-                                                                outputWidth,
-                                                                featureHeight,
-                                                                featureWidth,
-                                                                resizeType,
-                                                                alignCorner);
+#if NV_TENSORRT_MAJOR < 9
+        nvinfer1::PluginFieldCollection fieldCollection;
+        std::vector<nvinfer1::PluginField> pluginAttributs;
 
-        auto layer = mNetDef.back()->addPlugin(&inputs_tensor[i],
-                                    1,
-                                    *pluginResize);
+        auto creator = getPluginRegistry()->getPluginCreator("ResizeGPUPlugin", "1");
+        pluginAttributs.emplace_back(nvinfer1::PluginField("batchSize", &mMaxBatchSize, nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("nbOutputs", &(nbOutputs), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("outputHeight", &(outputHeight), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("outputWidth", &(outputWidth), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("featureHeight", &(featureHeight), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("featureWidth", &(featureWidth), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("resizeType", &(resizeType), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("alignCorner", &(alignCorner), nvinfer1::PluginFieldType::kCHAR, 1));
+
+        fieldCollection.nbFields = pluginAttributs.size();
+        fieldCollection.fields = pluginAttributs.data();
+
+        nvinfer1::IPluginV2* pluginResize = creator->createPlugin("ResizeGPUPlugin", &fieldCollection);
+
+        auto layer = mNetDef.back()->addPluginV2(&inputs_tensor[i],
+                                inputs_tensor.size(),
+                                *pluginResize);
+
         layer->setName(outName.c_str());
         output_tensor.push_back(layer->getOutput(0));
         output_tensor.back()->setType(mDataType);
@@ -2464,7 +2473,7 @@ std::vector<nvinfer1::ITensor *>
         fieldCollection.nbFields = pluginAttributs.size();
         fieldCollection.fields = pluginAttributs.data();
 
-            nvinfer1::IPluginV2* pluginObjDet = creator->createPlugin("ObjDetGPUPlugin", &fieldCollection);
+        nvinfer1::IPluginV2* pluginObjDet = creator->createPlugin("ObjDetGPUPlugin", &fieldCollection);
         auto layer = mNetDef.back()->addPluginV2(&concat_tensor[0],
                                     inputs_tensor.size(),
                                     *pluginObjDet);

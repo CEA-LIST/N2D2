@@ -113,7 +113,7 @@ public:
                                     bool alignCorner)
     {
 
-        if(!strncmp(layerName, "Resize_GPU", 10))
+       /* if(!strncmp(layerName, "Resize_GPU", 10))
         {
             mResizeGPUPlugin.add(batchSize,
                                  nbOutputs,
@@ -126,7 +126,7 @@ public:
 
             return mResizeGPUPlugin.get();
         }
-        else
+        else*/
             throw std::runtime_error(
                 "PluginFactory::createPlugin this kind of resize layer is not implemented");
     }
@@ -390,11 +390,11 @@ public:
 	    	mProposalGPUPlugin.add(serialData, serialLength);
             return mProposalGPUPlugin.get();
         }
-        else if(!strncmp(layerName, "Resize_GPU", 10))
-        {
-	    	mResizeGPUPlugin.add(serialData, serialLength);
-            return mResizeGPUPlugin.get();
-        }
+        //else if(!strncmp(layerName, "Resize_GPU", 10))
+        //{
+	    //	mResizeGPUPlugin.add(serialData, serialLength);
+        //    return mResizeGPUPlugin.get();
+        //}
         else if(!strncmp(layerName, "ObjectDet_CPU", 13))
         {
 	    	mObjectDetCPUPlugin.add(serialData, serialLength);
@@ -420,7 +420,7 @@ public:
         mROIPoolingCPUPlugin.destroy();
         mROIPoolingGPUPlugin.destroy();
 
-        mResizeGPUPlugin.destroy();
+        //mResizeGPUPlugin.destroy();
 
         mObjectDetCPUPlugin.destroy();
 
@@ -437,7 +437,7 @@ public:
     pluginROIPooling_CPU mROIPoolingCPUPlugin;
     pluginROIPooling_GPU mROIPoolingGPUPlugin;
 
-    pluginResize_GPU mResizeGPUPlugin;
+    //pluginResize_GPU mResizeGPUPlugin;
 
     pluginObjDet_CPU mObjectDetCPUPlugin;
 
@@ -445,6 +445,7 @@ public:
 #else
     #include "plugins/objectdetection_gpu.hpp"
     #include "plugins/anchor_gpu.hpp"
+    #include "plugins/resize_gpu.hpp"
 #endif
 
 #endif // PLUGINLAYERS_HPP
