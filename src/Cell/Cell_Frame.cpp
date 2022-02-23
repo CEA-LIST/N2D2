@@ -116,6 +116,22 @@ void N2D2::Cell_Frame<T>::addInput(StimuliProvider& sp,
 }
 
 template <class T>
+void N2D2::Cell_Frame<T>::applyMapping(Cell* cell,const Tensor<bool>&  mapping){
+    // Define input-output connections
+    const unsigned int cellNbOutputs = cell->getNbOutputs();
+
+    if (!mapping.empty() && mapping.dimY() != cellNbOutputs)
+        throw std::runtime_error("Cell_Frame::addInput(): number of mapping "
+                                 "rows must be equal to the number of input "
+                                 "channels");
+
+    mMapping.append((!mapping.empty())
+        ? mapping
+        : Tensor<bool>({getNbOutputs(), cellNbOutputs}, true));
+}
+
+
+template <class T>
 void N2D2::Cell_Frame<T>::addInput(Cell* cell, const Tensor<bool>& mapping)
 {
     // Define input-output sizes
@@ -143,16 +159,7 @@ void N2D2::Cell_Frame<T>::addInput(Cell* cell, const Tensor<bool>& mapping)
     }
 
     // Define input-output connections
-    const unsigned int cellNbOutputs = cell->getNbOutputs();
-
-    if (!mapping.empty() && mapping.dimY() != cellNbOutputs)
-        throw std::runtime_error("Cell_Frame<T>::addInput(): number of mapping "
-                                 "rows must be equal to the number of input "
-                                 "channels");
-
-    mMapping.append((!mapping.empty())
-        ? mapping
-        : Tensor<bool>({getNbOutputs(), cellNbOutputs}, true));
+    applyMapping(cell, mapping);
 }
 
 
