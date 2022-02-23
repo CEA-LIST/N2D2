@@ -40,6 +40,7 @@ x_test = x_test.astype("float32") / 255
 x_train = np.expand_dims(x_train, -1)
 x_test = np.expand_dims(x_test, -1)
 print("x_train shape:", x_train.shape)
+
 print(x_train.shape[0], "train samples")
 print(x_test.shape[0], "test samples")
 
@@ -47,6 +48,7 @@ print(x_test.shape[0], "test samples")
 # convert class vectors to binary class matrices
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
+print("y_train shape:", y_train.shape)
 
 """
 ## Build the model
@@ -64,7 +66,7 @@ tf_model = tf.keras.Sequential(
         layers.Dense(num_classes, activation="softmax"),
     ]
 )
-model = keras_interoperability.wrap(tf_model, batch_size=batch_size, for_export=False)
+model = keras_interoperability.wrap(tf_model, batch_size=batch_size, for_export=True)
 
 
 # model.summary() # TODO : Doesn't work anymore ...

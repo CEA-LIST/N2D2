@@ -155,11 +155,7 @@ class CustomSequential(keras.Sequential):
             return outputs
 
 
-def wrap(tf_model, batch_size, name=None, for_export=True):
-    # Don't let TF optimize these layers
-    for layer in tf_model.layers:
-        layer.trainable = False
-
+def wrap(tf_model, batch_size, name=None, for_export=False):
     inputs_shape = np.array(tf_model.inputs[0].shape)
     inputs_shape[0] = batch_size
     outputs_shape = tf_model.outputs[0].shape
@@ -210,10 +206,13 @@ def wrap(tf_model, batch_size, name=None, for_export=True):
             # ONNX import Softmax with_loss = True supposing we are using a CrossEntropy loss.
             cell.with_loss = False
         if for_export:
-            if isinstance(cell, n2d2.cells.Fc):
-                # Keras add Reshape before FullyConnected layers however N2D2 doesn't need them !
-                if ((previous_cell is not None) and isinstance(previous_cell, n2d2.cells.Reshape)):
+            # Keras add Reshape before FullyConnected layers, which are not exportable.
+            if isinstance(cell, n2d2.cells.Fc) and isinstance(previous_cell, n2d2.cells.Reshape):
+                try:
                     deepNetCell.remove(previous_cell.get_name(), reconnect=True)
+                except RuntimeError as err:
+                    raise RuntimeError(f'N2D2 could not remove the layer "{previous_cell.get_name()}".\n \
+                        If you do not need to export this network, try to set "for_export=False"') from err
         previous_cell = cell
     
     print("N2D2 model : \n", deepNetCell)
