@@ -17,7 +17,6 @@ test:python_api:
   script:
     - cd python
     - docker build -t python_api:0.0.1 .
-    - docker container create --name python_test_ci \
-    --cpus=4 --runtime=nvidia -it python_api:0.0.1 /bin/bash
+    - docker container create --name python_test_ci --cpus=4 --runtime=nvidia -it python_api:0.0.1 /bin/bash
     - docker container run python_test_ci
 
