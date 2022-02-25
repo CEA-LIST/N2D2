@@ -16,15 +16,8 @@ test:python_api:
   image: "python:3.7"
   script:
     - cd python
-    - python3.7 -m venv venv
-    - source venv/bin/activate
-    - python --version
-    - pip3.7 --version
-    
-    - pip3.7 install -r requirements.txt
-    - pip3.7 install -r pytorch_interoperability/requirements.txt
-    - pip3.7 install -r keras_interoperability/requirements.txt
-    - pip3.7 freeze
-    # Run on discovery all tests located in python/tests and discard the stdout 
-    # only to show the errors/warnings and the results of the tests
-    - python3.7 -m unittest discover -s tests -v -b 1> /dev/null 
+    - docker build -t python_api:0.0.1 .
+    - docker container create --name python_test_ci \
+    --cpus=4 --runtime=nvidia -it python_api:0.0.1 /bin/bash
+    - docker container run python_test_ci
+
