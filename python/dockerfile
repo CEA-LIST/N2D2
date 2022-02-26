@@ -1,0 +1,46 @@
+FROM nvidia/cuda:11.2.1-cudnn8-devel-ubuntu18.04
+
+ENV TZ=Europe/Paris
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+  echo $TZ > /etc/timezone && \
+  apt-get clean && apt-get update -y && \
+  apt-get install -y \
+        build-essential \
+        cmake \
+        git \
+        wget \
+        gnuplot \
+        libopencv-dev \
+        protobuf-compiler \
+        libprotoc-dev \
+        libjsoncpp-dev \
+        libpugixml-dev \
+        libboost-all-dev \
+        libmongoclient-dev 
+
+# Python
+RUN apt-get clean && apt-get update -y && \
+  apt-get install -y --no-install-recommends \
+    python3.7 \
+    python3.7-dev \
+    python3-pip && \
+  apt-get clean && \
+  python3.7 -m pip install --upgrade pip && \
+  python3.7 -m pip install opencv-python && \
+  python3.7 -m pip install pybind11 && \
+  python3.7 -m pip install setuptools 
+
+WORKDIR .
+COPY . .
+
+# Checking versions
+# Install python dependencies 
+RUN python3.7 -m pip install -r requirements.txt && \
+    python3.7 -m pip install -r pytorch_interoperability/requirements.txt && \
+    python3.7 -m pip install -r keras_interoperability/requirements.txt
+
+# Checking python dependencies
+RUN python3.7 -m pip freeze
+
+CMD python3.7 -m unittest discover -s tests -v -b 1> /dev/null
