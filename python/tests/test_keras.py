@@ -20,7 +20,7 @@
 """
 
 import unittest
-
+import n2d2
 import tensorflow as tf
 from keras_interoperability import wrap
 from tensorflow.keras.layers import MaxPooling2D, Conv2D, Dense, Flatten
@@ -32,6 +32,9 @@ import tensorflow.keras as keras
 class test_keras(unittest.TestCase):
     def setUp(self):
         pass
+    def tearDown(self) -> None:
+        n2d2.global_variables.cuda_device = 0
+        n2d2.global_variables.default_model = 'Frame'
 
     @unittest.skip("This test is deprecated due to N2D2 not supporting a Pool Layer as an input.")
     def test_propagation(self):
@@ -68,13 +71,11 @@ class test_keras(unittest.TestCase):
             Input(shape=[3, 3, 2]),
             Conv2D(3, kernel_size=(1, 1), use_bias=False)
         ])
-
         self.model = wrap(tf_model, batch_size=5)
         sgd_opt = tf.keras.optimizers.SGD(
             learning_rate=0.01, momentum=0.0, nesterov=False, name='SGD')
         self.model.compile(loss="categorical_crossentropy", optimizer=sgd_opt, metrics=["accuracy"])
         tf_model.compile(loss="categorical_crossentropy", optimizer=sgd_opt, metrics=["accuracy"])
-
         self.x = tf.random.uniform([5,3,3,2])
         self.y = tf.random.uniform([5,3,3,3])
         self.xn = tf.identity(self.x)
@@ -85,12 +86,11 @@ class test_keras(unittest.TestCase):
         #     print(i)
         tf_model.fit(x=self.x, y=self.y, batch_size=5, validation_split=0, epochs=1)
         self.model.fit(x=self.xn, y=self.yn, batch_size=5, validation_split=0, epochs=1)
-        
+      
         # for i in tf_model.layers[0].weights:
         #     print(i)
         # for i in self.model._deepnet_cell[0].get_biases():
         #     print(i)
-
         self.x = tf.random.uniform([25,3,3,2])
         n2d2_y = self.model.call(self.x)
         tf_y = tf_model.call(self.x)
