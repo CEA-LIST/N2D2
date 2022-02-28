@@ -24,15 +24,12 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.python.eager import backprop
 import tf2onnx
-from onnxsim import simplify
-import onnx
+# from onnxsim import simplify
+# import onnx
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 
 import N2D2
 import n2d2
-
-# Work instead of using run_eagerly=True in compile()
-# tf.config.experimental_functions_run_eagerly = True
 
 class CustomSequential(keras.Sequential):
     def __init__(self, deepNetCell, batch_size, outputs_shape, name=None, **kwargs):
@@ -57,6 +54,8 @@ class CustomSequential(keras.Sequential):
 
     @tf.custom_gradient
     def custom_op(self, x):
+        """Method to handle propagation
+        """
         x_var = tf.Variable(x)
 
         x_numpy = x.numpy()
@@ -87,7 +86,6 @@ class CustomSequential(keras.Sequential):
         y_tensor = self.deepNet.getCell_Frame_Top(lastCellName).getOutputs()
         y_tensor.synchronizeDToH()
         y_numpy = np.array(y_tensor)
-        ###############################
 
         # Set the correct output shape
         # N2D2 output shape is always 4 dimensions, but expected dimension
@@ -107,6 +105,8 @@ class CustomSequential(keras.Sequential):
 
 
         def custom_grad(dy):
+            """Method to handle backpropagation
+            """
             dy_numpy = dy.numpy()
             # Make sure we have a full batch
             if inputs_batch_size < self.batch_size:
@@ -156,6 +156,20 @@ class CustomSequential(keras.Sequential):
 
 
 def wrap(tf_model, batch_size, name=None, for_export=False):
+    """Generate a custom model which run with N2D2 on backend.
+    The conversion between TensorFlow/Keras and N2D2 is done with ONNX.
+
+    :param tf_model: The TensorFlow/Keras model to transfert to N2D2.
+    :type tf_model: ``keras.Sequential``
+    :param batch_size: Batch size used.
+    :type batch_size: int
+    :param name: Name of the model, default=tf_model.name
+    :type name: str, optional
+    :param for_export: If True, remove some layers to make the model exportable, default=False
+    :type for_export: bool, optional
+    :return:
+    :rtype: ``keras.Sequential``
+    """
     inputs_shape = np.array(tf_model.inputs[0].shape)
     inputs_shape[0] = batch_size
     outputs_shape = tf_model.outputs[0].shape
@@ -173,21 +187,25 @@ def wrap(tf_model, batch_size, name=None, for_export=False):
     print("Exporting the model to ONNX ...")
     input_names = [t.name for t in frozen_func.inputs]
     output_names = [t.name for t in frozen_func.outputs]
-    model_name = tf_model.name if tf_model.name is not None else "model"
+    model_name = name if name is not None \
+                else tf_model.name if tf_model.name is not None\
+                else "model"
     
     spec = [tf.TensorSpec(inputs_shape, tf.float32, name=input_name) for input_name in input_names]
 
-    model_proto, external_tensor_storage = tf2onnx.convert.from_keras(
+    tf2onnx.convert.from_keras(
                 tf_model,
                 input_signature=spec, 
                 opset=10,
                 inputs_as_nchw=input_names,
-                output_path= "raw_" + model_name + ".onnx")
-    print("Simplifying the ONNX model ...")
-    onnx_model = onnx.load("raw_" + model_name + ".onnx")
-    model_simp, check = simplify(onnx_model)
-    assert check, "Simplified ONNX model could not be validated" # TODO : if check fail try to use the raw model !
-    onnx.save(model_simp, model_name + ".onnx")
+                output_path=model_name + ".onnx")
+                # output_path= "raw_" + model_name + ".onnx")
+
+    # print("Simplifying the ONNX model ...")
+    # onnx_model = onnx.load("raw_" + model_name + ".onnx")
+    # model_simp, check = simplify(onnx_model)
+    # assert check, "Simplified ONNX model could not be validated" # TODO : if check fail try to use the raw model !
+    # onnx.save(model_simp, model_name + ".onnx")
 
     # Import ONNX in N2D2
     if n2d2.global_variables.cuda_compiled:
@@ -215,10 +233,8 @@ def wrap(tf_model, batch_size, name=None, for_export=False):
                         If you do not need to export this network, try to set "for_export=False"') from err
         previous_cell = cell
     
-    print("N2D2 model : \n", deepNetCell)
-
     deepNetCell._embedded_deepnet.N2D2().initialize()
 
     N2D2.DrawNet.drawGraph(deepNetCell._embedded_deepnet.N2D2(), "model")
-    return CustomSequential(deepNetCell, batch_size, outputs_shape, name=name)
+    return CustomSequential(deepNetCell, batch_size, outputs_shape, name=model_name)
 
