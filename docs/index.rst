@@ -81,4 +81,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-* :ref:`references`
+* :ref:`References <references>`

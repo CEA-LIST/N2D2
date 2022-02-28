@@ -19,17 +19,19 @@ The NVIDIA CUDA and CuDNN libraries are required to enable GPU-acceleration.
 To compile and use N2D2, please refer to the
 [online documentation](https://cea-list.github.io/N2D2-docs/), which
 contains the following resources:
-- General presentation of the framework;
-- How to compile N2D2 and perform simulations;
-- How to write neural network models;
+- [General presentation of the framework](https://cea-list.github.io/N2D2-docs/intro/intro.html);
+- [How to compile N2D2 and perform simulations](https://cea-list.github.io/N2D2-docs/intro/simus.html);
+- How to write neural network models
+  - [With the INI interface](https://cea-list.github.io/N2D2-docs/ini/intro.html);
+  - [With the Python API](https://cea-list.github.io/N2D2-docs/python_api/intro.html)
 - Tutorials.
 
-The N2D2 executables and application examples are located in the [exec](exec) directory.
+The N2D2 executables and **application examples** are located in the [exec](exec) directory.
 
 
 ## Docker Image
 
-You can also pull a pre-built docker image from Docker Hub and run it with docker
+You can also pull a **pre-built docker image** from Docker Hub and run it with docker
 ```
 docker pull cealist/n2d2
 docker run --gpus all cealist/n2d2:latest

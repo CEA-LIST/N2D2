@@ -82,8 +82,7 @@ class He(Filler):
         if "variance_norm" in self._config_parameters:
             variance_norm = self._config_parameters["variance_norm"]
             if variance_norm not in self._filler_generators[self._model_key].VarianceNorm.__members__.keys():
-                raise n2d2.error_handler.WrongValue("variance_norm", variance_norm,
-                                                    ", ".join(self._filler_generators[self._model_key].VarianceNorm.__members__.keys()))
+                raise n2d2.error_handler.WrongValue("variance_norm", variance_norm, self._filler_generators[self._model_key].VarianceNorm.__members__.keys())
             self._config_parameters["variance_norm"] = self._filler_generators[self._model_key].VarianceNorm.__members__[variance_norm]
 
         self._parse_optional_arguments(['variance_norm', 'mean_norm', 'scaling'])
@@ -182,11 +181,9 @@ class Xavier(Filler):
             if k is 'std_dev' and not isinstance(v, float):
                 raise n2d2.error_handler.WrongInputType("std_dev", str(type(v)), ["float"])
             if k is "variance_norm" and v not in self._filler_generators[self._model_key].VarianceNorm.__members__.keys():
-                raise n2d2.error_handler.WrongValue("variance_norm", v,
-                        ", ".join(self._filler_generators[self._model_key].VarianceNorm.__members__.keys()))
+                raise n2d2.error_handler.WrongValue("variance_norm", v, self._filler_generators[self._model_key].VarianceNorm.__members__.keys())
             if k is "distribution" and v not in self._filler_generators[self._model_key].Distribution.__members__.keys():
-                raise n2d2.error_handler.WrongValue("distribution", v,
-                        ", ".join(self._filler_generators[self._model_key].Distribution.__members__.keys()))
+                raise n2d2.error_handler.WrongValue("distribution", v, self._filler_generators[self._model_key].Distribution.__members__.keys())
 
         if 'variance_norm' in self._optional_constructor_arguments:
             self._optional_constructor_arguments['variance_norm'] = \
