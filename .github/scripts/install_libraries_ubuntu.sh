@@ -27,7 +27,6 @@ sudo apt-get -y update
 # Basic libraries for all N2D2 versions
 sudo apt-get install -y \
     build-essential \
-    cmake \
     git \
     wget \
     gnuplot \
@@ -39,35 +38,64 @@ sudo apt-get install -y \
     libjsoncpp-dev
 
 
-# CUDA and CuDNN libraries for CUDA N2D2 versions
+# Installation of CMake
 if [ -n "$USE_CUDA" ] ; then
+
+    # It is not possible to build with the APT version of CMake a CUDA project 
+    # with a CUDA version higher than 11 on a device which doesn't possess a GPU.
+    # It is required to have a newer version of CMake
+    # Ref: https://askubuntu.com/questions/355565/how-do-i-install-the-latest-version-of-cmake-from-the-command-line
+    sudo apt remove -y --purge --auto-remove cmake
+    sudo apt update -y
+    sudo apt install -y software-properties-common lsb-release
+    sudo apt clean all -y
+    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+    sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+    sudo apt update -y
+    sudo apt install -y kitware-archive-keyring
+    rm /etc/apt/trusted.gpg.d/kitware.gpg
+    sudo apt update -y
+    sudo apt install -y cmake
+
+else
+    # The basic version proposed by the APT deposit 
+    # is enough for non-CUDA versions
+    sudo apt-get install -y cmake
+fi
+
+
+# CUDA and CuDNN libraries for CUDA N2D2 versions (CUDA 11.3 and CuDNN 8)
+# Ref: https://medium.com/geekculture/installing-cudnn-and-cuda-toolkit-on-ubuntu-20-04-for-machine-learning-tasks-f41985fcf9b2
+if [ -n "$USE_CUDA" ] ; then
+
     # Install the package for CUDA
-    CUDA_PKG=cuda-11-0_11.0.3-1_amd64.deb
-    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/$CUDA_PKG
+    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
+    sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
+
+    CUDA_PKG=cuda-repo-ubuntu2004-11-3-local_11.3.0-465.19.01-1_amd64.deb
+    wget https://developer.download.nvidia.com/compute/cuda/11.3.0/local_installers/$CUDA_PKG
     sudo dpkg -i $CUDA_PKG
     rm $CUDA_PKG
 
-    sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub
-
-    # Install the package for CuDNN
-    CUDNN_PKG = libcudnn8_8.0.5.39-1+cuda11.0_amd64.deb
-    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/$CUDNN_PKG
-    sudo dpkg -i $CUDNN_PKG
+    # Add keys
+    sudo apt-key add /var/cuda-repo-ubuntu2004-11-3-local/7fa2af80.pub
 
     # Update the package lists
     sudo apt-get -y update
 
-    # Install the CUDA and CuDNN packages
-    CUDA_VERSION="11.0"
+    # Install the CUDA package
+    sudo apt-get -y install cuda
 
-    sudo apt-get install -y --no-install-recommends cuda
+    # Install the runtime package for CuDNN
+    CUDNN_PKG=libcudnn8_8.2.1.32-1+cuda11.3_amd64.deb
+    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/$CUDNN_PKG
+    sudo dpkg -i $CUDNN_PKG
+    rm $CUDNN_PKG
 
-    # Install the runtime library
-    sudo apt-get install libcudnn8=8.0.5.39-1+cuda11.0
-
-    # Install the developer library.
-    sudo apt-get install libcudnn8-dev=8.0.5.39-1+cuda11.0
-
-    # Manually create CUDA symlink
-    ln -s /usr/local/cuda-$CUDA_VERSION /usr/local/cuda
+    # Install the developer package for CuDNN
+    CUDNN_DEV_PKG=libcudnn8-dev_8.2.1.32-1+cuda11.3_amd64.deb
+    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/$CUDNN_DEV_PKG
+    sudo dpkg -i $CUDNN_DEV_PKG
+    rm $CUDNN_DEV_PKG
+    
 fi
