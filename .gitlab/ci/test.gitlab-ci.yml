@@ -26,3 +26,22 @@ test:python_api:
     # Run on discovery all tests located in python/tests and discard the stdout 
     # only to show the errors/warnings and the results of the tests
     - python3.7 -m unittest discover -s tests -v -b 1> /dev/null 
+
+static_analysis:python_api:
+  stage: test
+  allow_failure: true
+  tags:
+    - ubuntu
+  before_script:
+    # Allow to use aliases in non interactive mode.
+    - shopt -s expand_aliases 
+    ### PyLint Warning to Ignore ###
+    # I1101 c-extension-no-member : C extension not found
+    # C0103 invalid-name : Name doesn't fit python convention (camel)
+    - alias run_linting='pylint -d I1101 -d C0103'
+
+  script:
+    - cd python
+    - pip install pylint
+    - pip install pylint-exit
+    - run_linting n2d2 pytorch_interoperability || pylint-exit $? 
