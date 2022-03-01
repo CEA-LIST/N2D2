@@ -169,7 +169,7 @@ void N2D2::Network::setIOMemory() {
     CHECK_CUDA_STATUS( cudaMalloc(&mInOutBuffer[0], InputBufferSize) );
 
     for(size_t i = 0; i < mTargetsDimensions.size(); ++i) {
-        size_t buffSize = mMaxBatchSize*mTargetsDimensions[i].d[0]*mTargetsDimensions[i].d[1]*mTargetsDimensions[i].d[2] * sizeof(float);
+        size_t buffSize = mMaxBatchSize*mTargetsDimensions[i].d[1]*mTargetsDimensions[i].d[2]*mTargetsDimensions[i].d[3] * sizeof(float);
         CHECK_CUDA_STATUS( cudaMalloc(&mInOutBuffer[1 + i], buffSize));
     }
 
@@ -362,8 +362,7 @@ void N2D2::Network::createContext()
     nvinfer1::IPluginCreator* const* tmpList = getPluginRegistry()->getPluginCreatorList(&numCreators);
     for (int k = 0; k < numCreators; ++k)
     {
-        if (!tmpList[k])
-        {
+        if (!tmpList[k]) {
             std::cout << "Plugin Creator for plugin " << k << " is a nullptr." << std::endl;
             continue;
         }
@@ -378,8 +377,7 @@ void N2D2::Network::createContext()
                                                                    gieModelStream->size(),
                                                                    &mPluginFactory);
 #endif
-    //nvinfer1::ICudaEngine* engine = runtime->deserializeCudaEngine(gieModelStream->data(),
-    //                                                               gieModelStream->size());
+
 #if NV_TENSORRT_MAJOR > 4
     if(runtime->getNbDLACores() > 1)
         runtime->setDLACore(runtime->getNbDLACores() - 1) ;
@@ -2316,7 +2314,7 @@ std::vector<nvinfer1::ITensor *>
     for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
     {
         std::string outName = layerName + "_" + std::to_string(i);
-#if NV_TENSORRT_MAJOR < 9
+#if NV_TENSORRT_MAJOR < 6
         nvinfer1::PluginFieldCollection fieldCollection;
         std::vector<nvinfer1::PluginField> pluginAttributs;
 
