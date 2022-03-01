@@ -37,7 +37,10 @@ static_analysis:python_api:
     ### PyLint Warning to Ignore ###
     # I1101 c-extension-no-member : C extension not found
     # C0103 invalid-name : Name doesn't fit python convention (camel)
-    - alias run_linting='pylint -d I1101 -d C0103'
+    # F0401 import-error : Unable to import
+    # E0611 no-name-in-module : Used when a name cannot be found in a module.
+
+    - alias run_linting='pylint -d I1101 -d C0103 -d F0401 -d C0326'
 
   script:
     - cd python

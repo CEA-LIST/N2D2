@@ -1,49 +1,77 @@
 """
-    (C) Copyright 2021 CEA LIST. All Rights Reserved.
-    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
-                    Cyril MOINEAU (cyril.moineau@cea.fr)
+(C) Copyright 2021 CEA LIST. All Rights Reserved.
+Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
+                Cyril MOINEAU (cyril.moineau@cea.fr)
 
 
-    This software is governed by the CeCILL-C license under French law and
-    abiding by the rules of distribution of free software.  You can  use,
-    modify and/ or redistribute the software under the terms of the CeCILL-C
-    license as circulated by CEA, CNRS and INRIA at the following URL
-    "http://www.cecill.info".
+This software is governed by the CeCILL-C license under French law and
+abiding by the rules of distribution of free software.  You can  use,
+modify and/ or redistribute the software under the terms of the CeCILL-C
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info".
 
-    As a counterpart to the access to the source code and  rights to copy,
-    modify and redistribute granted by the license, users are provided only
-    with a limited warranty  and the software's author,  the holder of the
-    economic rights,  and the successive licensors  have only  limited
-    liability.
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability.
 
-    The fact that you are presently reading this means that you have had
-    knowledge of the CeCILL-C license and that you accept its terms.
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL-C license and that you accept its terms.
 """
 import numpy as np
+
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.python.eager import backprop
-import tf2onnx
-# from onnxsim import simplify
-# import onnx
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
+
+import tf2onnx
 
 import N2D2
 import n2d2
 
+# pylint: disable=protected-access
+
 class CustomSequential(keras.Sequential):
-    def __init__(self, deepNetCell, batch_size, outputs_shape, name=None, **kwargs):
+    """A customSequential model which embedded an N2D2 Network.
+    """
+    def __init__(self, deepnet_cell: n2d2.cells.DeepNetCell,
+                 batch_size: int, outputs_shape: tf.Tensor, name: int=None, **kwargs) -> None:
+        """
+        :param deepnet_cell: The network used for propagation and backpropagation.
+        :type deepnet_cell: :py:class:`n2d2.cells.DeepNetCell`
+        :param batch_size: Batch size used
+        :type batch_size: int
+        :param output_shape: Shape of the output.
+        :type output_shape: tf.Tensor
+        :param name: Name of the model, default=None
+        :type name: str, optional
+        """
         super(CustomSequential, self).__init__([], name, **kwargs)
-        self.deepNet= deepNetCell._embedded_deepnet.N2D2()
-        self._deepnet_cell = deepNetCell
-        self.batch_size=batch_size
+        self.deepNet= deepnet_cell._embedded_deepnet.N2D2()
+        self._deepnet_cell = deepnet_cell
+        self.batch_size = batch_size
         self.quant_model = None
         self.outputs_shape = outputs_shape
-        self._transpose_input = n2d2.cells.Transpose([1,2,0,3])
+        self._transpose_input = n2d2.cells.Transpose([1, 2, 0, 3])
         # transpose_grad is the inverse operation of transpose_input
-        self._transpose_grad = n2d2.cells.Transpose([2,0,1,3])
+        self._transpose_grad = n2d2.cells.Transpose([2, 0, 1, 3])
 
-    def compile(self, *args, **kwargs):
+    def get_deepnet_cell(self) -> n2d2.cells.DeepNetCell:
+        """
+        :return: The DeepNet Cell used by the custom sequential
+        :rtype: :py:class:`n2d2.cells.DeepNetCell`
+        """
+        return self._deepnet_cell
+
+    def compile(self, *args, **kwargs) -> None:
+        """Overwritten Tensorflow compile method.
+
+        **FUTURE :**
+
+        - possibility to set the n2d2 solver.
+        """
         # TODO : We can update N2D2 Solver here.
 
         # By default, eager mode is disabled with compile(), preventing the use
@@ -53,7 +81,7 @@ class CustomSequential(keras.Sequential):
 
 
     @tf.custom_gradient
-    def custom_op(self, x):
+    def custom_op(self, x: tf.Tensor):
         """Method to handle propagation
         """
         x_var = tf.Variable(x)
@@ -68,12 +96,12 @@ class CustomSequential(keras.Sequential):
 
         firstCellName = self.deepNet.getLayers()[1][0] # 0 = env
         lastCellName = self.deepNet.getLayers()[-1][-1]
-    
+
         # Transposing input to respect nchw N2D2 input
         x_n2d2 = n2d2.Tensor.from_numpy(x_numpy)
         x_n2d2 = self._transpose_input(x_n2d2)
         x_tensor = x_n2d2.N2D2()
- 
+
         firstCell = self.deepNet.getCell_Frame_Top(firstCellName)
         self.diffOutputs = N2D2.Tensor_float(x_n2d2.dims())
         firstCell.clearInputs()
@@ -103,7 +131,7 @@ class CustomSequential(keras.Sequential):
         y = tf.convert_to_tensor(y_numpy, dtype=tf.float32)
 
 
-        def custom_grad(dy):
+        def custom_grad(dy:tf.Tensor):
             """Method to handle backpropagation
             """
             dy_numpy = dy.numpy()
@@ -115,37 +143,44 @@ class CustomSequential(keras.Sequential):
 
             # perform operation on tensor #
             dy_tensor = N2D2.Tensor_float(-dy_numpy * self.batch_size)
-            
+
             diffInputs = self.deepNet.getCell_Frame_Top(lastCellName).getDiffInputs()
             dy_tensor.reshape(diffInputs.dims())
             diffInputs.op_assign(dy_tensor)
 
             if not diffInputs.isValid():
-                diffInputs.setValid() 
+                diffInputs.setValid()
             diffInputs.synchronizeHToD()
 
             self.deepNet.backPropagate()
             self.deepNet.update()
 
             dx_tensor = self.deepNet.getCell_Frame_Top(firstCellName).getDiffOutputs()
-            
+
             dx_tensor.synchronizeDToH()
 
-            # transposing back the gradient 
+            # transposing back the gradient
             n2d2_dx_tensor = n2d2.Tensor.from_N2D2(dx_tensor)
             n2d2_dx_tensor = self._transpose_grad(n2d2_dx_tensor)
             dx_tensor = n2d2_dx_tensor.N2D2()
 
             dx_numpy = np.array(dx_tensor)
-            
+
             dy_tensor = N2D2.Tensor_float(-dy_numpy * self.batch_size)
             dx = tf.convert_to_tensor(-dx_numpy / self.batch_size, dtype=tf.float32)
             return dx
 
         return y, custom_grad
 
-    def call(self, inputs, training=None, mask=None):
-        self.training=training if training is not None else False
+    def call(self, inputs: tf.Tensor, training: bool=False):
+        """Method called to run the forward pass.
+
+        :param  inputs: Tensor to propagate
+        :type inputs: ``tf.Tensor``
+        :param training: If True set the model to training mode, default=False
+        :type training: bool, optional
+        """
+        self.training=training
         if self.quant_model is not None:
             return self.quant_model(inputs=inputs)
         else:
@@ -154,8 +189,7 @@ class CustomSequential(keras.Sequential):
                 outputs = self.custom_op(inputs_var)
             return outputs
 
-
-def wrap(tf_model, batch_size, name=None, for_export=False):
+def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export: bool=False):
     """Generate a custom model which run with N2D2 on backend.
     The conversion between TensorFlow/Keras and N2D2 is done with ONNX.
 
@@ -167,7 +201,7 @@ def wrap(tf_model, batch_size, name=None, for_export=False):
     :type name: str, optional
     :param for_export: If True, remove some layers to make the model exportable, default=False
     :type for_export: bool, optional
-    :return:
+    :return: Custom sequential
     :rtype: ``keras.Sequential``
     """
     inputs_shape = np.array(tf_model.inputs[0].shape)
@@ -186,25 +220,25 @@ def wrap(tf_model, batch_size, name=None, for_export=False):
     ####################################################################
     print("Exporting the model to ONNX ...")
     input_names = [t.name for t in frozen_func.inputs]
-    output_names = [t.name for t in frozen_func.outputs]
+    # output_names = [t.name for t in frozen_func.outputs]
     model_name = name if name is not None \
                 else tf_model.name if tf_model.name is not None\
                 else "model"
-    
+
     spec = [tf.TensorSpec(inputs_shape, tf.float32, name=input_name) for input_name in input_names]
 
     tf2onnx.convert.from_keras(
-                tf_model,
-                input_signature=spec, 
-                opset=10,
-                inputs_as_nchw=input_names,
-                output_path=model_name + ".onnx")
-                # output_path= "raw_" + model_name + ".onnx")
+        tf_model,
+        input_signature=spec,
+        opset=10,
+        inputs_as_nchw=input_names,
+        output_path=model_name + ".onnx")
+        # output_path= "raw_" + model_name + ".onnx")
 
     # print("Simplifying the ONNX model ...")
     # onnx_model = onnx.load("raw_" + model_name + ".onnx")
     # model_simp, check = simplify(onnx_model)
-    # assert check, "Simplified ONNX model could not be validated" # TODO : if check fail try to use the raw model !
+    # assert check, "Simplified ONNX model could not be validated"
     # onnx.save(model_simp, model_name + ".onnx")
 
     # Import ONNX in N2D2
@@ -212,13 +246,15 @@ def wrap(tf_model, batch_size, name=None, for_export=False):
         n2d2.global_variables.default_model = "Frame_CUDA"
         n2d2.global_variables.cuda_device = 0
 
-    db = n2d2.database.Database()
-    provider = n2d2.provider.DataProvider(db, [inputs_shape[2], inputs_shape[1], inputs_shape[3]], batch_size=inputs_shape[0])
+    database = n2d2.database.Database()
+    provider = n2d2.provider.DataProvider(database,
+                                          [inputs_shape[2], inputs_shape[1], inputs_shape[3]],
+                                          batch_size=inputs_shape[0])
 
-    deepNetCell = n2d2.cells.DeepNetCell.load_from_ONNX(provider, model_name + ".onnx")
+    deepnet_cell = n2d2.cells.DeepNetCell.load_from_ONNX(provider, model_name + ".onnx")
 
     previous_cell = None
-    for cell in deepNetCell:
+    for cell in deepnet_cell:
         # Layers modification after the import !
         if isinstance(cell, n2d2.cells.Softmax):
             # ONNX import Softmax with_loss = True supposing we are using a CrossEntropy loss.
@@ -227,14 +263,15 @@ def wrap(tf_model, batch_size, name=None, for_export=False):
             # Keras add Reshape before FullyConnected layers, which are not exportable.
             if isinstance(cell, n2d2.cells.Fc) and isinstance(previous_cell, n2d2.cells.Reshape):
                 try:
-                    deepNetCell.remove(previous_cell.get_name(), reconnect=True)
+                    deepnet_cell.remove(previous_cell.get_name(), reconnect=True)
                 except RuntimeError as err:
-                    raise RuntimeError(f'N2D2 could not remove the layer "{previous_cell.get_name()}".\n \
-                        If you do not need to export this network, try to set "for_export=False"') from err
+                    raise RuntimeError(f'N2D2 could not remove the layer \
+                    "{previous_cell.get_name()}".\n \
+                    If you do not need to export this network, try to set \
+                    "for_export=False"') from err
         previous_cell = cell
-    
-    deepNetCell._embedded_deepnet.N2D2().initialize()
 
-    N2D2.DrawNet.drawGraph(deepNetCell._embedded_deepnet.N2D2(), "model")
-    return CustomSequential(deepNetCell, batch_size, outputs_shape, name=model_name)
+    deepnet_cell._embedded_deepnet.N2D2().initialize()
 
+    N2D2.DrawNet.drawGraph(deepnet_cell._embedded_deepnet.N2D2(), "model")
+    return CustomSequential(deepnet_cell, batch_size, outputs_shape, name=model_name)

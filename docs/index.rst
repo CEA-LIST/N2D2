@@ -58,6 +58,7 @@ N2D2
    python_api/cells
    python_api/tensor
    python_api/interoperability
+   python_api/export
    python_api/example
 
 .. toctree::
