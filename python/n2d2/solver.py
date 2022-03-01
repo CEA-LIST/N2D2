@@ -120,13 +120,11 @@ class SGD(Solver):
         if "learning_rate_policy" in config_parameters:
             learning_rate_policy = config_parameters["learning_rate_policy"]
             if learning_rate_policy not in self._solver_generators[self._model_key].LearningRatePolicy.__members__.keys():
-                raise n2d2.error_handler.WrongValue("learning_rate_policy", learning_rate_policy,
-                        ", ".join(self._solver_generators[self._model_key].LearningRatePolicy.__members__.keys()))
+                raise n2d2.error_handler.WrongValue("learning_rate_policy", learning_rate_policy, self._solver_generators[self._model_key].LearningRatePolicy.__members__.keys())
         if "clamping" in config_parameters:
             clamping = config_parameters['clamping']
             if clamping not in clamping_values:
-                raise n2d2.error_handler.WrongValue("clamping", clamping,
-                        "'" + "', '".join(clamping_values) +"'")
+                raise n2d2.error_handler.WrongValue("clamping", clamping, clamping_values)
         self._set_N2D2_object(self._solver_generators[self._model_key]())
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
@@ -172,8 +170,7 @@ class Adam(Solver):
         if "clamping" in config_parameters:
             clamping = config_parameters['clamping']
             if clamping not in clamping_values:
-                raise n2d2.error_handler.WrongValue("clamping", clamping,
-                        "'" + "', '".join(clamping_values) +"'")
+                raise n2d2.error_handler.WrongValue("clamping", clamping, clamping_values)
         self._set_N2D2_object(self._solver_generators[self._model_key]())
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())

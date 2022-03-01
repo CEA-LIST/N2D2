@@ -19,7 +19,7 @@
 - [ ] I added new tests to check the change I am making if it requires
 - [ ] All existing and new tests are passing.
 
-If you need help, consider asking for advice by contacting the emails on the development files.
+If you need help, don't hesitate to ask for advice by contacting our support at n2d2-contact@cea.fr.
 
 <!-- Links -->
 [Contributor Guide]: https://github.com/CEA-LIST/N2D2/blob/master/CONTRIBUTING.md
