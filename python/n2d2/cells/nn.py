@@ -2134,6 +2134,18 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
         self._config_parameters['bias_solver'] = solver
         self._N2D2_object.setBiasSolver(self._config_parameters['bias_solver'].N2D2())
 
+    def get_biases(self) -> n2d2.Tensor:
+        return n2d2.Tensor.from_N2D2(self.N2D2().getBiases())
+
+    def get_scales(self) -> n2d2.Tensor:
+        return n2d2.Tensor.from_N2D2(self.N2D2().getScales())
+
+    def get_means(self) -> n2d2.Tensor:
+        return n2d2.Tensor.from_N2D2(self.N2D2().getMeans())
+
+    def get_variances(self) -> n2d2.Tensor:
+        return n2d2.Tensor.from_N2D2(self.N2D2().getVariances())
+
     def set_solver_parameter(self, key, value):
         """Set the parameter ``key`` with the value ``value`` for the attribute ``scale`` and ``bias`` solver.
 

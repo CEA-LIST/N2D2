@@ -23,7 +23,7 @@ import unittest
 import n2d2
 import tensorflow as tf
 from keras_interoperability import wrap
-from tensorflow.keras.layers import MaxPooling2D, Conv2D, Dense, Flatten
+from tensorflow.keras.layers import MaxPooling2D, Conv2D, Dense, Flatten, BatchNormalization
 from tensorflow.keras import Input
 import tensorflow.keras as keras
 
@@ -120,5 +120,20 @@ class test_keras(unittest.TestCase):
         for predicted, truth in zip(n2d2_y.numpy().flatten(), tf_y.numpy().flatten()):
             self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))))
 
+    def test_propagation_BN(self):
+        tf_model = keras.Sequential([
+            Input(shape=[1, 3, 3]),
+            BatchNormalization()
+        ])
+        self.model = wrap(tf_model, batch_size=5)
+        self.x = tf.random.uniform([5,1,3,3])
+        n2d2_y = self.model.call(self.x)
+        tf_y = tf_model.call(self.x)
+        print("N2D2 output : ")
+        print(n2d2_y)
+        print("TF output : ")
+        print(tf_y)
+        for predicted, truth in zip(n2d2_y.numpy().flatten(), tf_y.numpy().flatten()):
+            self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))))
 if __name__ == '__main__':
     unittest.main()

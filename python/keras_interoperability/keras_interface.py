@@ -81,8 +81,7 @@ class CustomSequential(keras.Sequential):
         # else we get a segFault when backPropagating because diffOutput would not be initialized !
         firstCell.addInputBis(x_tensor, self.diffOutputs)
 
-        # TODO: Check if Keras wants to run on inference or not
-        self.deepNet.propagate(False)
+        self.deepNet.propagate(not self.training)
         y_tensor = self.deepNet.getCell_Frame_Top(lastCellName).getOutputs()
         y_tensor.synchronizeDToH()
         y_numpy = np.array(y_tensor)
@@ -146,6 +145,7 @@ class CustomSequential(keras.Sequential):
         return y, custom_grad
 
     def call(self, inputs, training=None, mask=None):
+        self.training=training if training is not None else False
         if self.quant_model is not None:
             return self.quant_model(inputs=inputs)
         else:
