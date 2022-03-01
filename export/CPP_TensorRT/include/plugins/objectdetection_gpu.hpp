@@ -422,7 +422,7 @@ public:
             nbTotalPart += mPartsPerClass_HOST[c];
             nbTotalTemplate += mTemplatesPerClass_HOST[c];
         }
-
+/*
         checkCudaErrors( cudaMemset(mPixelMapSorted,
                                     -1,
                                     mChannelHeight * mChannelWidth
@@ -433,7 +433,7 @@ public:
                                     mChannelHeight * mChannelWidth
                                     * mNbAnchors * mNbClass
                                     * batchSize * sizeof(int)) );
-
+*/
 
         dim3 blocksPerGrid = {  (unsigned int) mBlockX,
                                 (unsigned int) mBlockY,
@@ -456,7 +456,8 @@ public:
                         reinterpret_cast<int *>(mPixelMap),
                         reinterpret_cast<float *>(mScores),
                         blocksPerGrid,
-                        threadsPerBlock);
+                        threadsPerBlock,
+                        stream);
 
         std::vector<std::vector <unsigned int> > count(batchSize,
                                                     std::vector<unsigned int>(mNbClass));
@@ -467,16 +468,13 @@ public:
             {
                 const int pixelOffset = cls*mChannelWidth*mChannelHeight*mNbAnchors 
                                             +  mChannelWidth*mChannelHeight*mNbAnchors*mNbClass*batchPos;
-                std::cout << "pixelOffset: " << pixelOffset << std::endl;
                 const int nbMapDet = copy_if_int(  reinterpret_cast<int *>(mPixelMap) + pixelOffset,
                                                    reinterpret_cast<int *>(mPixelMapSorted) + pixelOffset,
                                                    mChannelWidth*mChannelHeight*mNbAnchors);
-                std::cout << "nbMapDet: " << nbMapDet << std::endl;
 
                 const int nbScoreDet = copy_if_float( reinterpret_cast<float *>(mScores) + pixelOffset,
                                                     reinterpret_cast<float *>(mScoresFiltered) + pixelOffset,
                                                     mChannelWidth*mChannelHeight*mNbAnchors);
-                std::cout << "nbScoreDet: " << nbScoreDet << std::endl;
 
                 if (nbScoreDet != nbMapDet)
                     throw std::runtime_error(
@@ -791,7 +789,8 @@ public:
                                         reinterpret_cast<const float *>(inputs[1]),
                                         reinterpret_cast<float*>(outputs[0]),
                                         blocks,
-                                        threads);
+                                        threads,
+                                        stream);
             
 
         }
