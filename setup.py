@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
-""" Neural Network Design & Deployment with Python.
+""" Neural Network Design & Deployment with Python
 
 N2D2 is a Python package to use the N2D2 engine with a Python interface.
 """
 
 DOCLINES = (__doc__ or '').split("\n")
-VERSION = '0.1.0'
 
 import sys
+import os
 
 # Python supported version checks
 if sys.version_info[:2] < (3, 7):
     raise RuntimeError("Python version >= 3.7 required.")
+
+# Check N2D2 version
+if 'N2D2_VERSION' in os.environ:
+    VERSION = os.environ['N2D2_VERSION']
+else:
+    # Default version
+    VERSION = '0.0.1'
 
 CLASSIFIERS = """\
 Development Status :: 5 - Production/Stable
@@ -25,7 +32,6 @@ Programming Language :: Python :: 3
 Programming Language :: Python :: 3.7
 Programming Language :: Python :: 3.8
 Programming Language :: Python :: 3.9
-Programming Language :: Python :: 3.10
 Programming Language :: Python :: 3 :: Only
 Programming Language :: Python :: Implementation :: CPython
 Topic :: Scientific/Engineering
@@ -37,7 +43,6 @@ Typing :: Typed
 Operating System :: POSIX
 """
 
-import os
 import shutil
 import pathlib
 import subprocess
@@ -101,16 +106,19 @@ if __name__ == '__main__':
         name='n2d2',
         version=VERSION,
         url='https://github.com/CEA-LIST/N2D2',
+        license='CECILL-2.1',
+        author='N2D2 Team',
+        author_email='n2d2-contact@cea.fr',
+        python_requires='>=3.7',
         description=DOCLINES[0],
         long_description_content_type="text/markdown",
         long_description="\n".join(DOCLINES[2:]),
-        keywords=['python', 'AI', 'neural networks'],
+        keywords=['n2d2', 'machine', 'learning'],
         project_urls={
             "Bug Tracker": "https://github.com/CEA-LIST/N2D2/issues",
             "Documentation": "https://cea-list.github.io/N2D2-docs/",
             "Source Code": "https://github.com/CEA-LIST/N2D2",
         },
-        license='CECILL-2.1',
         classifiers=[c for c in CLASSIFIERS.split('\n') if c],
         platforms=["Linux"],
         packages=packages,
@@ -118,7 +126,6 @@ if __name__ == '__main__':
             "n2d2": "python/n2d2",
 			"pytorch_interoperability": "python/pytorch_interoperability"
         },
-        python_requires='>=3.7',
         ext_modules=[CMakeExtension('N2D2')],
         cmdclass={
             'build_ext': CMakeBuild,

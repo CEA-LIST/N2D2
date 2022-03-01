@@ -33,7 +33,7 @@ endmacro()
 
 function(set_cxx_standard_flags flags)
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
             set(${flags} -std=c++11 PARENT_SCOPE)
         else()
             set(${flags} -std=c++14 PARENT_SCOPE)
@@ -74,7 +74,7 @@ endfunction()
 
 function(add_n2d2_doc source target deps)
     find_package(Doxygen)
-    if(Doxygen_FOUND)
+    if(Doxygen_FOUND AND EXISTS "${CMAKE_CURRENT_LIST_DIR}/docs")
         file(RELATIVE_PATH relname ${PROJECT_SOURCE_DIR} ${source})
 
         # Find all the public headers

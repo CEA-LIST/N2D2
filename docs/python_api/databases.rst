@@ -147,30 +147,14 @@ ChannelExtraction
 Sending data to the Neural Network
 ----------------------------------
 
-With a DataProvider
-~~~~~~~~~~~~~~~~~~~
+Once a database is loaded, n2d2 use :py:class:`n2d2.provider.DataProvider` to provide data to the neural network.
 
-Once a database loaded, n2d2 use :py:class:`n2d2.provider.DataProvider` to provide data to the neural network.
+The :py:class:`n2d2.provider.DataProvider` will automatically apply the :py:class:`n2d2.transform.Transformation` to the dataset. 
+To add a transformation to the provider, you should use the method :py:meth:`n2d2.transform.Transformation.add_transformation`.
 
 .. autoclass:: n2d2.provider.DataProvider
         :members:
         :inherited-members:
-
-Without a DataProvider
-~~~~~~~~~~~~~~~~~~~~~~
-
-You can send a :py:class:`n2d2.Tensor` that doesn't come from a :py:class:`n2d2.provider.DataProvider` to the network. 
-
-By doing so, you create a :py:class:`n2d2.provider.TensorPlaceholder` that will stream your tensor directly to the network.
-
-If you want to do a back propagation, you need to use a :py:class:`n2d2.application.LossFunction` that require a :py:class:`n2d2.provider.DataProvider`.
-
-You can create a :py:class:`n2d2.provider.TensorPlaceholder` and specify the labels associated with the data, this will act as a :py:class:`n2d2.provider.DataProvider`.
-
-.. autoclass:: n2d2.provider.TensorPlaceholder
-        :members:
-        :inherited-members:
-
 
 Example
 -------

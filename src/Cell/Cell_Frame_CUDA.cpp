@@ -960,22 +960,30 @@ N2D2::Cell_Frame_CUDA<T>::~Cell_Frame_CUDA()
     // dtor
 }
 
-template<>
-std::string N2D2::Cell_Frame_CUDA<double>::getPyDataType() {
-    return std::string("double");
+template <class T>
+std::string N2D2::Cell_Frame_CUDA<T>::getPyDataType()
+{
+    if (typeid(T) == typeid(double)) {
+        return std::string("double");
+    }
+    else if (typeid(T) == typeid(float)) {
+        return std::string("float");
+    }
+    else if (typeid(T) == typeid(half_float::half)) {
+        return std::string("half_float");
+    }
+    else {
+        // This case should not happen
+        // If it happens, the type string returned by this function
+        // might be weird
+        return std::string(typeid(T).name());
+    }
 }
 
-template<>
-std::string N2D2::Cell_Frame_CUDA<float>::getPyDataType() {
-    return std::string("float");
-}
-template<>
-std::string N2D2::Cell_Frame_CUDA<half_float::half>::getPyDataType() {
-    return std::string("half_float");
-}
-template<class T>
-std::string N2D2::Cell_Frame_CUDA<T>::getPyModel(){
-    return std::string("Frame_CUDA");
+template <class T>
+std::string N2D2::Cell_Frame_CUDA<T>::getPyModel()
+{
+    return std::string(N2D2::Cell_Frame_Top::FRAME_CUDA_TYPE);
 }
 
 namespace N2D2 {

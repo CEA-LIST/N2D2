@@ -3,12 +3,9 @@ include LICENSE
 include README.md
 include CMakeLists.txt
 include .gitmodules
-include Doxyfile.in
 include exec/n2d2.cpp
 recursive-include cmake *.*
-recursive-include docs *.*
 recursive-include include *.*
 recursive-include python *.*
 recursive-include src *.*
 recursive-include third_party *.*
-recursive-include tools *.*

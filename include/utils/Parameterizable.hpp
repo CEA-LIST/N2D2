@@ -47,9 +47,7 @@ public:
     template <class T> std::ostream& print(std::ostream& os) const;
     template <class T> std::istream& read(std::istream& is) const;
     
-    virtual std::string getPyType() {
-        return std::string("other");
-    }
+    virtual std::string getPyType() {return std::string("other");}
 
     virtual ~Parameter_T() {};
 
@@ -281,14 +279,9 @@ public:
             throw std::runtime_error("Parameter already exists: " + name);
 
         (*p).mParameters[name] = this;
-
-        //mPyType = getPyType();
     }
 
-    // Default is string (notably most complex arguments, like class specific enums)
-    virtual std::string getPyType() {
-        return std::string("string");
-    }
+    virtual std::string getPyType();
 
     Parameter& operator=(const Parameter<T>& param)
     {
@@ -711,5 +704,40 @@ T N2D2::Parameterizable::getParameter(const std::string& name) const
     else
         throw std::runtime_error("Parameter does not exist: " + name);
 }
+
+template <class T>
+std::string N2D2::Parameter<T>::getPyType()
+{
+    if (typeid(T) == typeid(int) ||
+        typeid(T) == typeid(long int) ||
+        typeid(T) == typeid(long long int) ||
+        typeid(T) == typeid(unsigned int) ||
+        typeid(T) == typeid(unsigned long int) ||
+        typeid(T) == typeid(unsigned long long int))
+    {
+        return std::string("integer");
+    }
+    else if (typeid(T) == typeid(float) ||
+             typeid(T) == typeid(double))
+    {
+        return std::string("float");
+    }
+    else if (typeid(T) == typeid(bool))
+    {
+        return std::string("bool");
+    }
+    else if (typeid(T) == typeid(std::vector<int>) ||
+             typeid(T) == typeid(std::vector<float>) ||
+             typeid(T) == typeid(std::vector<double>))
+    {
+        return std::string("list");
+    }
+    else {
+        // Default is string
+        // notably for complex arguments, like class specific enums
+        return std::string("string");
+    }
+}
+
 
 #endif // N2D2_PARAMETERIZABLE_H

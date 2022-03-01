@@ -64,6 +64,11 @@ public:
                                         int memoryAlignment);
     static void addBranchesCells(DeepNet& deepNet);
 
+    static void generateEnvironmentQATHeader(DeepNet& deepNet,
+                                             const std::string& fileName);
+    static void generateNetworkPropagateQATFile(const DeepNet& deepNet, 
+                                                const std::string& filePath);
+
 private:
     static std::string getCellModelType(const Cell& cell);
 
