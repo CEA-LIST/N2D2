@@ -611,7 +611,7 @@ TEST_DATASET(FcCell_Frame_float,
 
     for (unsigned int output = 0; output < outputSize; ++output) {
         for (unsigned int channel = 0; channel < inputSize; ++channel) {
-            Tensor<float> weight({1}, 1.0);
+            Tensor<float> weight({1}, 1.0/inputSize);
             fc1.setWeight(output, channel, weight);
         }
     }
@@ -634,7 +634,7 @@ TEST_DATASET(FcCell_Frame_float,
             }
         }
     }
-
+    sum /= (float) inputSize;
     const Tensor<float>& out = tensor_cast<float>(fc1.getOutputs());
 
     ASSERT_EQUALS(out.dimZ(), fc1.getNbOutputs());
@@ -1244,7 +1244,7 @@ TEST_DATASET(FcCell_Frame_double,
 
     for (unsigned int output = 0; output < outputSize; ++output) {
         for (unsigned int channel = 0; channel < inputSize; ++channel) {
-            Tensor<double> weight({1}, 1.0);
+            Tensor<double> weight({1}, 1.0/inputSize);
             fc1.setWeight(output, channel, weight);
         }
     }
@@ -1267,7 +1267,7 @@ TEST_DATASET(FcCell_Frame_double,
             }
         }
     }
-
+    sum /= (double) inputSize;
     const Tensor<double>& out = tensor_cast<double>(fc1.getOutputs());
 
     ASSERT_EQUALS(out.dimZ(), fc1.getNbOutputs());
@@ -1879,7 +1879,7 @@ TEST_DATASET(FcCell_Frame_half,
 
     for (unsigned int output = 0; output < outputSize; ++output) {
         for (unsigned int channel = 0; channel < inputSize; ++channel) {
-            Tensor<half_float::half> weight({1}, half_float::half(1.0f));
+            Tensor<half_float::half> weight({1}, half_float::half(1.0f) / half_float::half((float) inputSize));
             fc1.setWeight(output, channel, weight);
         }
     }
@@ -1903,7 +1903,7 @@ TEST_DATASET(FcCell_Frame_half,
             }
         }
     }
-
+    sum /= half_float::half((float) inputSize);
     const Tensor<half_float::half>& out
         = tensor_cast<half_float::half>(fc1.getOutputs());
 
