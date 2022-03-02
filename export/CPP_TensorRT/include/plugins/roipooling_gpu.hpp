@@ -24,6 +24,7 @@
 #include "dnn_utils.hpp"
 #include "kernels_gpu.hpp"
 
+#if NV_TENSORRT_MAJOR < 8
 
 /**Plugin Layer implementation**/
 /**ROI Pooling GPU implementation**/
@@ -415,4 +416,5 @@ struct pluginROIPooling_GPU{
       mPluginCount = 0;
     }
 };
+#endif
 #endif

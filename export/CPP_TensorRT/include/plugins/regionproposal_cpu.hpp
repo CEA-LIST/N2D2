@@ -23,6 +23,7 @@
 
 #include "dnn_utils.hpp"
 #include "kernels_cpu.hpp"
+#if NV_TENSORRT_MAJOR < 8
 
 /******************************************************************************/
 /**Plugin Layer implementation**/
@@ -316,4 +317,5 @@ struct pluginRegionProposal_CPU{
       mPluginCount = 0;
     }
 };
+#endif
 #endif

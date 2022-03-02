@@ -246,7 +246,8 @@ extern "C" void cudaS_SSD_output_gathering(     unsigned int batchSize,
                                             const float* inputs_templates,
                                             float* outputs,
                                             const dim3 blocksPerGrid,
-                                            const dim3 threadsPerBlock);
+                                            const dim3 threadsPerBlock,
+                                            cudaStream_t stream);
 
 
                                  
@@ -261,7 +262,8 @@ extern "C" void cudaSReduceIndex(    const unsigned int inputSize,
                                     int* outputMap,
                                     float* scores,
                                     const dim3 blocksPerGrid,
-                                    const dim3 threadsPerBlock);
+                                    const dim3 threadsPerBlock,
+                                    cudaStream_t stream);
 
 extern "C" void cuda_gather_int2int_indices( const int* keys,
                                                     const int* indicesX,
