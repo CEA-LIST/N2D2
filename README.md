@@ -4,7 +4,7 @@
 
 | **Docs** | **`Linux CPU`**<br/><sub>&ge; GCC 4.4.7</sub> | **`Linux GPU`**<br/><sub>&ge; CUDA 6.5 + CuDNN 1.0</sub> | **`Windows CPU`**<br/><sub>&ge; Visual Studio 2015.2</sub> | **`Windows GPU`**<br/><sub>&ge; CUDA 8.0 + CuDNN 5.1</sub>  | [![License](https://img.shields.io/badge/license-CeCILL--C-blue.svg)](LICENSE)  |
 | ---------- | --------------- | ------------------ | ------------------ | ------------------ | ------ |
-| [![Documentation Status](https://readthedocs.org/projects/n2d2/badge/?version=latest)](https://cea-list.github.io/N2D2-docs/) | [![linux-cpu](https://github.com/CEA-LIST/N2D2/actions/workflows/build_linux-cpu.yml/badge.svg)](https://github.com/CEA-LIST/N2D2/actions/workflows/build_linux-cpu.yml) | | | |  |
+| [![Documentation Status](https://readthedocs.org/projects/n2d2/badge/?version=latest)](https://cea-list.github.io/N2D2-docs/) | [![linux-cpu](https://github.com/CEA-LIST/N2D2/actions/workflows/build_linux-cpu.yml/badge.svg)](https://github.com/CEA-LIST/N2D2/actions/workflows/build_linux-cpu.yml) | [![linux-gpu](https://github.com/CEA-LIST/N2D2/actions/workflows/build_linux-gpu.yml/badge.svg)](https://github.com/CEA-LIST/N2D2/actions/workflows/build_linux-gpu.yml) | | |  |
 
 N2D2 (for 'Neural Network Design & Deployment') is a open source CAD framework for
 Deep Neural Network (DNN) simulation and full DNN-based applications building.
