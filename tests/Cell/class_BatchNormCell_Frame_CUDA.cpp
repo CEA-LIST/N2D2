@@ -63,7 +63,7 @@ TEST(BatchNormCell_Frame_CUDA_float, setScales)
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {10, 10, 1});
 
@@ -108,7 +108,7 @@ TEST_DATASET(BatchNormCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -145,7 +145,7 @@ TEST_DATASET(BatchNormCell_Frame_CUDA_float,
 
     const unsigned int nbOutputs = 16;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 

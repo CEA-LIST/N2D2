@@ -599,8 +599,11 @@ __global__ void cudaSAnchorBackPropagateSSD_kernel(
 
     for (unsigned int k = blockIdx.x; k < nbAnchors; k += gridDim.x)
     {
+        // Not used
+        /*
         const int classIdx = (k/nbAnchors)*nbClass;
-        const int classOffset = outputsHeight*outputsWidth*nbAnchors*classIdx;
+        const int classOffset = outputsHeight*outputsWidth*nbAnchors*classIdx; 
+        */
 
         for (unsigned int ya = threadIdx.y; ya < outputsHeight; ya += blockDim.y)
         {
@@ -761,8 +764,8 @@ void N2D2::cudaSAnchorBackPropagate_SSD_NegSamples( const float* inputCls,
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
-
-
+// May be used instead of huberLoss
+/*
 __device__ static float smoothL1(float tx, float x)
 {
     const float error = tx - x;
@@ -771,16 +774,16 @@ __device__ static float smoothL1(float tx, float x)
     if (error >= 0.0f)
         sign = 1.0f;
     
-    /*
-float sign = 1.0f;
+    
+// float sign = 1.0f;
 
 
-    if (error >= 0.0f)
-        sign = 1.0f;
+//     if (error >= 0.0f)
+//         sign = 1.0f;
 
-    if(abs(error) >= 1.0f)
-        return_value = sign;
-        */
+//     if(abs(error) >= 1.0f)
+//         return_value = sign;
+        
     if(abs(error) < 1.0f)
     {
         return_value = sign * 0.5*(abs(error)*abs(error));
@@ -789,6 +792,7 @@ float sign = 1.0f;
         return_value = (abs(error) - 0.5f)*sign;
     return return_value;
 }
+*/
 
 __device__ static float huberLoss(float tx, float x, float sigma= 1.0f)
 {

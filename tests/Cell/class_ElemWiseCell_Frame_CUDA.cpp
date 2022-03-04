@@ -51,7 +51,7 @@ TEST(ElemWiseCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);
@@ -103,7 +103,7 @@ TEST(ElemWiseCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -165,7 +165,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -235,7 +235,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -307,7 +307,7 @@ TEST(ElemWiseCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -361,7 +361,7 @@ TEST(ElemWiseCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -426,7 +426,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(2);
@@ -493,7 +493,7 @@ TEST(ElemWiseCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -548,7 +548,7 @@ TEST(ElemWiseCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -613,7 +613,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -685,7 +685,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(0));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -759,7 +759,7 @@ TEST_DATASET(ElemWiseCell_Frame_CUDA,
              std::make_tuple(0.33, 0.66, 0.99),
              std::make_tuple(0.0, 2.0, -1.0))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -838,7 +838,7 @@ TEST(ElemWiseCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -889,7 +889,7 @@ TEST(ElemWiseCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -946,7 +946,7 @@ TEST(ElemWiseCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -999,7 +999,7 @@ TEST(ElemWiseCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);

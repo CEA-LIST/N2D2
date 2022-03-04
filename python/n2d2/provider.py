@@ -61,6 +61,9 @@ class Provider(N2D2_Interface,ABC):
 
     def dims(self):
         return self._N2D2_object.getData().dims()
+    
+    def shape(self):
+        return [i for i in reversed(self._N2D2_object.getData().dims())]
 
     def get_name(self):
         """
@@ -127,8 +130,7 @@ class DataProvider(Provider):
         :type partition: str 
         """
         if partition not in N2D2.Database.StimuliSet.__members__.keys():
-            raise n2d2.error_handler.WrongValue("partition", partition,
-                                                ", ".join(N2D2.Database.StimuliSet.__members__.keys()))
+            raise n2d2.error_handler.WrongValue("partition", partition, N2D2.Database.StimuliSet.__members__.keys())
         self._partition = partition
 
     def get_partition(self):
@@ -181,7 +183,21 @@ class DataProvider(Provider):
         self._N2D2_object.readRandomBatch(set=self.get_partition())
         return n2d2.Tensor.from_N2D2(self._N2D2_object.getData())._set_cell(self)
 
-    def read_batch(self, idx):
+    def set_batch(self, shuffle=True):
+        """
+        :param shuffle: If true the data will be shuffled, default=True
+        :type shuffle: bool, optional
+        """
+        self._N2D2_object.setBatch(set=self.get_partition(), randShuffle=shuffle)
+
+    def all_batchs_provided(self):
+        """
+        :return: Return True if all batchs have been provided for the current partition.
+        :rtype: bool
+        """
+        return self._N2D2_object.allBatchsProvided(self.get_partition())
+
+    def read_batch(self, idx=None):
         """
         :param idx: Start index to begin reading the stimuli
         :type idx: int
@@ -191,8 +207,10 @@ class DataProvider(Provider):
         self._deepnet = n2d2.deepnet.DeepNet()
         self._deepnet.set_provider(self)
         self._deepnet.N2D2().initialize()
-
-        self._N2D2_object.readBatch(set=self.get_partition(), startIndex=idx)
+        if idx is None: # if idx is not enough as this will be evaluate to false if idx=0
+            self._N2D2_object.readBatch(set=self.get_partition())
+        else:
+            self._N2D2_object.readBatch(set=self.get_partition(), startIndex=idx)
         return n2d2.Tensor.from_N2D2(self._N2D2_object.getData())._set_cell(self)
 
     def add_transformation(self, transformation):
@@ -306,8 +324,7 @@ class TensorPlaceholder(Provider):
         :type partition: str 
         """
         if partition not in N2D2.Database.StimuliSet.__members__.keys():
-            raise n2d2.error_handler.WrongValue("partition", partition,
-                                                ", ".join(N2D2.Database.StimuliSet.__members__.keys()))
+            raise n2d2.error_handler.WrongValue("partition", partition, N2D2.Database.StimuliSet.__members__.keys())
         self._partition = partition
 
     def get_partition(self):

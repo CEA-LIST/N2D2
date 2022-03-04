@@ -61,7 +61,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     SoftmaxCell_Frame_CUDA<float> softmax1(dn, "softmax1", nbOutputs);
 
@@ -127,7 +127,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     SoftmaxCell_Frame_CUDA_Test<float> softmax1(dn, "softmax1", nbOutputs);
 
@@ -191,7 +191,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     SoftmaxCell_Frame_CUDA<double> softmax1(dn, "softmax1", nbOutputs);
 
@@ -257,7 +257,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     SoftmaxCell_Frame_CUDA_Test<double> softmax1(dn, "softmax1", nbOutputs);
 
@@ -321,7 +321,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_half,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     SoftmaxCell_Frame_CUDA<half_float::half> softmax1(dn, "softmax1", nbOutputs);
 
@@ -390,7 +390,7 @@ TEST_DATASET(SoftmaxCell_Frame_CUDA_half,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     SoftmaxCell_Frame_CUDA_Test<half_float::half> softmax1(dn, "softmax1", nbOutputs);
 

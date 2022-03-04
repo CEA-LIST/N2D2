@@ -1,0 +1,11 @@
+generate-docs:
+  extends: 
+    - .before_script_template
+  stage: documentation
+  tags:
+    - ubuntu
+  script:
+    - make docs -j4
+  artifacts:
+    paths:
+      - docs/_build/html

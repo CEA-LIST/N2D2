@@ -57,7 +57,7 @@ TEST_DATASET(SoftmaxCell_Frame_float,
              std::make_tuple(100U, 9U),
              std::make_tuple(1000U, 9U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     SoftmaxCell_Frame<float> softmax1(dn, "softmax1", nbOutputs);
@@ -118,7 +118,7 @@ TEST_DATASET(SoftmaxCell_Frame_float,
              std::make_tuple(100U, 9U),
              std::make_tuple(1000U, 9U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     SoftmaxCell_Frame_Test<float> softmax1(dn, "softmax1", nbOutputs);
@@ -180,7 +180,7 @@ TEST_DATASET(SoftmaxCell_Frame_double,
              std::make_tuple(100U, 9U),
              std::make_tuple(1000U, 9U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     SoftmaxCell_Frame<double> softmax1(dn, "softmax1", nbOutputs);
@@ -241,7 +241,7 @@ TEST_DATASET(SoftmaxCell_Frame_double,
              std::make_tuple(100U, 9U),
              std::make_tuple(1000U, 9U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     SoftmaxCell_Frame_Test<double> softmax1(dn, "softmax1", nbOutputs);
@@ -303,7 +303,7 @@ TEST_DATASET(SoftmaxCell_Frame_half,
              std::make_tuple(100U, 9U),
              std::make_tuple(1000U, 9U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     SoftmaxCell_Frame<half_float::half> softmax1(dn, "softmax1", nbOutputs);
@@ -367,7 +367,7 @@ TEST_DATASET(SoftmaxCell_Frame_half,
              std::make_tuple(100U, 9U),
              std::make_tuple(1000U, 9U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     SoftmaxCell_Frame_Test<half_float::half> softmax1(dn, "softmax1", nbOutputs);

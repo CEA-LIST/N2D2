@@ -127,7 +127,7 @@ TEST_DATASET(ConvCell_Frame_float,
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 2U, 2U),
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 1U, 3U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame<float> conv1(dn, "conv1",
@@ -192,7 +192,7 @@ TEST_DATASET(ConvCell_Frame_float,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -325,7 +325,7 @@ TEST_DATASET(ConvCell_Frame_float,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -432,7 +432,7 @@ TEST_DATASET(ConvCell_Frame_float,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_Test<float> conv1(dn, "conv1",
@@ -471,8 +471,8 @@ TEST_DATASET(ConvCell_Frame_float,
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
-                                                    * output;
+                    kernel(sx, sy) = (1.0 + channel + conv1.getNbChannels()
+                                                    * output)/(in.dimX() * in.dimY());
             }
 
             conv1.setWeight(output, channel, kernel);
@@ -514,12 +514,12 @@ TEST_DATASET(ConvCell_Frame_float,
 
                                 sum += in(ix, iy, channel, batch)
                                        * (1.0f + channel + conv1.getNbChannels()
-                                                           * output);
+                                                           * output) / (in.dimX() * in.dimY());
                             }
                         }
                     }
 
-                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-12);
+                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-6);
                 }
             }
         }
@@ -573,7 +573,7 @@ TEST_DATASET(ConvCell_Frame_float,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_Test<float> conv1(dn, "conv1",
@@ -614,8 +614,8 @@ TEST_DATASET(ConvCell_Frame_float,
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
-                                                    * output;
+                    kernel(sx, sy) = (1.0 + channel + conv1.getNbChannels()
+                                                    * output) / (in.dimX() * in.dimY());
             }
 
             conv1.setWeight(output, channel, kernel);
@@ -657,12 +657,11 @@ TEST_DATASET(ConvCell_Frame_float,
 
                                 sum += in(ix, iy, 0, batch)
                                        * (1.0f + channel + conv1.getNbChannels()
-                                                           * output);
+                                                           * output)/ (in.dimX() * in.dimY());
                             }
                         }
                     }
-
-                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-4);
+                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-6);
                 }
             }
         }
@@ -714,7 +713,7 @@ TEST_DATASET(ConvCell_Frame_float,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -806,7 +805,7 @@ TEST_DATASET(ConvCell_Frame_double,
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 2U, 2U),
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 1U, 3U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame<double> conv1(dn, "conv1",
@@ -871,7 +870,7 @@ TEST_DATASET(ConvCell_Frame_double,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1004,7 +1003,7 @@ TEST_DATASET(ConvCell_Frame_double,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1111,7 +1110,7 @@ TEST_DATASET(ConvCell_Frame_double,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_Test<double> conv1(dn, "conv1",
@@ -1150,8 +1149,8 @@ TEST_DATASET(ConvCell_Frame_double,
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
-                                                    * output;
+                    kernel(sx, sy) = (1.0 + channel + conv1.getNbChannels()
+                                                    * output) / (in.dimX() * in.dimY());
             }
 
             conv1.setWeight(output, channel, kernel);
@@ -1193,12 +1192,11 @@ TEST_DATASET(ConvCell_Frame_double,
 
                                 sum += (double)in(ix, iy, channel, batch)
                                        * (1.0 + channel + conv1.getNbChannels()
-                                                           * output);
+                                                           * output)/ (in.dimX() * in.dimY());
                             }
                         }
                     }
-
-                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-9);
+                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-6);
                 }
             }
         }
@@ -1252,7 +1250,7 @@ TEST_DATASET(ConvCell_Frame_double,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_Test<double> conv1(dn, "conv1",
@@ -1293,8 +1291,8 @@ TEST_DATASET(ConvCell_Frame_double,
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
-                                                    * output;
+                    kernel(sx, sy) = (1.0 + channel + conv1.getNbChannels()
+                                                    * output) / (in.dimX() * in.dimY());
             }
 
             conv1.setWeight(output, channel, kernel);
@@ -1336,12 +1334,11 @@ TEST_DATASET(ConvCell_Frame_double,
 
                                 sum += in(ix, iy, 0, batch)
                                        * (1.0f + channel + conv1.getNbChannels()
-                                                           * output);
+                                                           * output)/ (in.dimX() * in.dimY());
                             }
                         }
                     }
-
-                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-4);
+                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-6);
                 }
             }
         }
@@ -1393,7 +1390,7 @@ TEST_DATASET(ConvCell_Frame_double,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1485,7 +1482,7 @@ TEST_DATASET(ConvCell_Frame_half,
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 2U, 2U),
              std::make_tuple(3U, 3U, 10U, 1U, 1U, 1U, 3U, 1U, 3U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame<half_float::half> conv1(dn, "conv1",
@@ -1550,7 +1547,7 @@ TEST_DATASET(ConvCell_Frame_half,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1683,7 +1680,7 @@ TEST_DATASET(ConvCell_Frame_half,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1790,7 +1787,7 @@ TEST_DATASET(ConvCell_Frame_half,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_Test<half_float::half> conv1(dn, "conv1",
@@ -1829,8 +1826,8 @@ TEST_DATASET(ConvCell_Frame_half,
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
-                                                    * output;
+                    kernel(sx, sy) = (1.0 + channel + conv1.getNbChannels()
+                                                    * output) / (in.dimX() * in.dimY());
             }
 
             conv1.setWeight(output, channel, kernel);
@@ -1872,12 +1869,12 @@ TEST_DATASET(ConvCell_Frame_half,
 
                                 sum += half_float::half(in(ix, iy, channel, batch))
                                        * (1.0f + channel + conv1.getNbChannels()
-                                                           * output);
+                                                           * output)/ half_float::half((float) (in.dimX() * in.dimY()));
                             }
                         }
                     }
 
-                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-1);
+                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-2);
                 }
             }
         }
@@ -1931,7 +1928,7 @@ TEST_DATASET(ConvCell_Frame_half,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_Test<half_float::half> conv1(dn, "conv1",
@@ -1972,8 +1969,8 @@ TEST_DATASET(ConvCell_Frame_half,
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
-                                                    * output;
+                    kernel(sx, sy) = (1.0 + channel + conv1.getNbChannels()
+                                                    * output) / (in.dimX() * in.dimY());
             }
 
             conv1.setWeight(output, channel, kernel);
@@ -2015,12 +2012,12 @@ TEST_DATASET(ConvCell_Frame_half,
 
                                 sum += half_float::half(in(ix, iy, 0, batch))
                                        * (1.0f + channel + conv1.getNbChannels()
-                                                           * output);
+                                                           * output) / half_float::half((float) (in.dimX() * in.dimY()));
                             }
                         }
                     }
 
-                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-0);
+                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-2);
                 }
             }
         }
@@ -2072,7 +2069,7 @@ TEST_DATASET(ConvCell_Frame_half,
 {
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 

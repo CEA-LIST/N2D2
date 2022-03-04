@@ -50,7 +50,7 @@ TEST(C_Export32f, generate) {
     DeepNetExport::mEnvDataUnsigned = true;
     CellExport::mPrecision = static_cast<CellExport::Precision>(-32);
 
-    Network net(SEED);
+    Network net(SEED,false);
     std::shared_ptr<DeepNet> deepNet = DeepNetGenerator::generate(net, testDataDir + "model.ini");
 
     deepNet->initialize();
@@ -88,7 +88,7 @@ TEST(C_Export8i, generate) {
     DeepNetExport::mEnvDataUnsigned = true;
     CellExport::mPrecision = static_cast<CellExport::Precision>(8);
 
-    Network net(SEED);
+    Network net(SEED,false);
     std::shared_ptr<DeepNet> deepNet = DeepNetGenerator::generate(net, testDataDir + "model.ini");
 
     deepNet->initialize();

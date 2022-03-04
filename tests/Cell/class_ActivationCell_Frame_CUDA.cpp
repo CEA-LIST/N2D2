@@ -51,7 +51,7 @@ TEST_DATASET(ActivationCell_Frame_CUDA_float, propagate,
 {
     REQUIRED(UnitTest::CudaDeviceExists(0));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);
@@ -105,7 +105,7 @@ TEST_DATASET(ActivationCell_Frame_CUDA_float, propagate_2_inputs,
 {
     REQUIRED(UnitTest::CudaDeviceExists(0));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);
@@ -206,7 +206,7 @@ TEST_DATASET(ActivationCell_Frame_CUDA_float, propagate_3_inputs,
 {
     REQUIRED(UnitTest::CudaDeviceExists(0));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);
@@ -326,7 +326,7 @@ TEST_DATASET(ActivationCell_Frame_CUDA_float, backpropagate,
 {
     REQUIRED(UnitTest::CudaDeviceExists(0));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);
@@ -396,7 +396,7 @@ TEST_DATASET(ActivationCell_Frame_CUDA_float, backpropagate_2_inputs,
 {
     REQUIRED(UnitTest::CudaDeviceExists(0));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);

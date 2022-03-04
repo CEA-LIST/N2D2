@@ -46,7 +46,7 @@ TEST(NormalizeCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);

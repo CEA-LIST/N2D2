@@ -1733,8 +1733,7 @@ N2D2_ALWAYS_INLINE inline SUM_T N2D2::Network::elemWise(
         iOffset += INPUT_MEM_WRAP_OFFSET - INPUT_MEM_CONT_OFFSET
                     - INPUT_MEM_CONT_SIZE;
     }
-
-    return firstInputs[iOffset + ch]
+    return ((Input_T*)((uint8_t*)firstInputs + iOffset))[ch]
                 + elemWise<ELEM_OP, ARGS...>(pos, ch, inputs...);
 }
 

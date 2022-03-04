@@ -26,7 +26,7 @@ This allow a low level of dependency, only TensorRT, CUDA, cuDNN, cuBLAS and GCC
 We recommended you to ensure the correct compatibility of your installation by referring to the TensorRT archive page:  
 https://docs.nvidia.com/deeplearning/tensorrt/archives/index.html
 Follow the support matrix section of your TensorRT version, notice that TensorRT export 
-have been tested from TensorRT 2.1 to TensorRT 7.2 versions.
+have been tested from TensorRT 2.1 to TensorRT 8.2.3 versions.
 
 The TensorRT library includes implementation for the most common deep learning layers, but strong limitations 
 are known depending of the TensorRT version. For example, TensorRT provide a support to the well-known resize layer since version 6.0.1.

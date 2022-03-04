@@ -24,7 +24,7 @@ using namespace N2D2;
 
 TEST(C_FcCellExport, generate)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {24, 24, 1});
 

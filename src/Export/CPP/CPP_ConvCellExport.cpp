@@ -57,7 +57,16 @@ void N2D2::CPP_ConvCellExport::generate(const ConvCell& cell, const std::string&
     CPP_CellExport::generateHeaderBegin(cell, header);
     CPP_CellExport::generateHeaderIncludes(cell, header);
     generateHeaderConstants(cell, header);
-    generateHeaderFreeParameters(cell, header);
+    
+    // Only the CPP and CPP_STM32 exports can support the tools
+    // for quantization aware training for now
+    if (Utils::match("*CPP_ASMP*", dirName) || Utils::match("*CPP_HLS*", dirName)) {
+        generateHeaderBias(cell, header);
+        generateHeaderWeights(cell, header);
+    } else {
+        generateHeaderFreeParameters(cell, header);
+    }
+
     CPP_CellExport::generateHeaderEnd(cell, header);
 }
 
@@ -347,7 +356,7 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeightsQAT(const ConvCell& cell, st
     Tensor<Float_T> kernel;
     Float_T value;
     uint32_t accumulator = 0;
-    uint32_t accumulatorDW = 0;
+    // uint32_t accumulatorDW = 0;  // Not used for now
     std::size_t wCounter = 0;
     std::size_t i = 0;
 

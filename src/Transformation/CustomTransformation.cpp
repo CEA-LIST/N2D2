@@ -27,7 +27,7 @@ N2D2::CustomTransformation::CustomTransformation()
     //ctor
 }
 
-N2D2::CustomTransformation::CustomTransformation(const CustomTransformation& trans)
+N2D2::CustomTransformation::CustomTransformation(const CustomTransformation& /*other*/)
 {
     // copy-ctor
 }

@@ -27,6 +27,10 @@
 #include <unordered_map>
 #include <vector>
 
+#ifndef MLAS_NO_EXCEPTION
+#include <stdexcept>
+#endif
+
 namespace N2D2 {
 
 enum class ClippingMode {

@@ -191,6 +191,16 @@ class Block(torch.nn.Module):
         return N2D2_computation.apply(inputs)
 
 def wrap(torch_model, input_size):
+    """Function generating a ``torch.nn.Module`` which embed a :py:class:`n2d2.cells.DeepNetCell`.
+    The torch_model is exported to N2D2 via ONNX.
+
+    :param torch_model: Torch model to convert to N2D2.
+    :type torch_model: ``torch.nn.Module``
+    :param input_size: The size of the input of the network, the format required is NCHW.
+    :type input_size: ``list``
+    :return: A custom ``torch.nn.Module`` which embed a :py:class:`n2d2.cells.DeepNetCell`.
+    :rtype: :py:class:`pytorch_interoperability.Block`
+    """
     model_path = './tmp.onnx'
     print("Exporting torch module to ONNX ...")
     dummy_in = torch.randn(input_size)

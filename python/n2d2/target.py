@@ -169,7 +169,7 @@ class Score(Target):
         :type metric: string
         """
         if metric not in N2D2.ConfusionTableMetric.__members__.keys():
-            raise n2d2.error_handler.WrongValue("metric", metric, ", ".join(N2D2.ConfusionTableMetric.__members__.keys()))
+            raise n2d2.error_handler.WrongValue("metric", metric, N2D2.ConfusionTableMetric.__members__.keys())
         return self._N2D2_object.getAverageScore(
             self._provider.get_partition(),
             N2D2.ConfusionTableMetric.__members__[metric])

@@ -75,7 +75,7 @@ TEST_DATASET(ResizeCell_Frame,
      std::make_tuple(32, 32, 96, 96, 1),
      std::make_tuple(32, 32, 96, 96, 4))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);
@@ -126,7 +126,7 @@ TEST_DATASET(ResizeCell_Frame,
             std::make_tuple(32, 32, 96, 96, 4, 3),
             std::make_tuple(49, 31, 73, 85, 9, 5))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     cv::theRNG().state = std::numeric_limits<std::uint64_t>::max();

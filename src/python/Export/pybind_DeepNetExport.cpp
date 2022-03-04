@@ -31,10 +31,7 @@ namespace py = pybind11;
 namespace N2D2 {
     void init_DeepNetExport(py::module &m) {
         py::class_<DeepNetExport>(m, "DeepNetExport")
-        .def_static("generate", &DeepNetExport::generate, 
-            py::arg("deepNet"), 
-            py::arg("dirName"), 
-            py::arg("type"));
+        .def_static("setExportParameters", &DeepNetExport::setExportParameters, py::arg("exportParameters"));
     }
 }
 

@@ -51,6 +51,7 @@ object_dict = {
     "Resize": n2d2.cells.Resize,
     "Transpose": n2d2.cells.Transpose,
     "Activation": n2d2.cells.Activation
+    "Transformation": n2d2.cells.Transformation,
 }
 
 
@@ -69,7 +70,11 @@ def from_N2D2_object(N2D2_object, **kwargs):
                 object_type = "SATCell"
             else:
                 object_type = "SATActivation"
-        n2d2_object = object_dict[object_type].create_from_N2D2_object(N2D2_object, **kwargs)
+        try:
+            n2d2_object = object_dict[object_type].create_from_N2D2_object(N2D2_object, **kwargs)
+        except:
+            print(N2D2_object)
+            exit()
     else:
         n2d2_object = None
 

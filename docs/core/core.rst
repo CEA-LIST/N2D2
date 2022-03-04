@@ -32,8 +32,8 @@ DeepNetGenerator:
 
 .. testcode::
 
-   net - N2D2.Network(seed-1)
-   deepNet - N2D2.DeepNetGenerator.generate(net, "../models/mnist24_16c4s2_24c5s2_150_10.ini")
+   net = N2D2.Network(seed-1)
+   deepNet = N2D2.DeepNetGenerator.generate(net, "../models/mnist24_16c4s2_24c5s2_150_10.ini")
 
 Before executing the model, the network must first be initialized:
 
@@ -46,7 +46,7 @@ StimuliProvider and read the first batch from the test set:
 
 .. testcode::
 
-   sp - deepNet.getStimuliProvider()
+   sp = deepNet.getStimuliProvider()
    sp.readBatch(N2D2.Database.Test, 0)
 
 We can now run the network on this data:
@@ -60,10 +60,10 @@ first and unique target of the model and get the estimated labels and values:
 
 .. testcode::
 
-   target - deepNet.getTargets()[0]
-   labels - numpy.array(target.getEstimatedLabels()).flatten()
-   values - numpy.array(target.getEstimatedLabelsValue()).flatten()
-   results - list(zip(labels, values))
+   target = deepNet.getTargets()[0]
+   labels = numpy.array(target.getEstimatedLabels()).flatten()
+   values = numpy.array(target.getEstimatedLabelsValue()).flatten()
+   results = list(zip(labels, values))
 
    print(results)
 
@@ -824,7 +824,7 @@ Activation functions in N2D2 are passed as arguments to initialize :py:class:`N2
 
 .. testcode::
 
-   tanh - N2D2.TanhActivation_Frame_float()
+   tanh = N2D2.TanhActivation_Frame_float()
 
 Activation
 ~~~~~~~~~~
@@ -957,7 +957,7 @@ Databases
 .. testsetup:: *
 
    import N2D2
-   path - "/nvme0/DATABASE/MNIST/raw/"
+   path = "/nvme0/DATABASE/MNIST/raw/"
 
 
 Introduction: 
@@ -979,7 +979,7 @@ Here is an example of the loading of the MNIST dataset :
 
 .. testcode::
     
-    database - N2D2.MNIST_IDX_Database()
+    database = N2D2.MNIST_IDX_Database()
     database.load(path)
 
 In this example, the data are located in the folder **path**.
@@ -1187,16 +1187,16 @@ Creation of different Transformation object.
 
 .. testcode::
 
-    dist - N2D2.DistortionTransformation()
+    dist = N2D2.DistortionTransformation()
     dist.setParameter("ElasticGaussianSize", "21")
     dist.setParameter("ElasticSigma", "6.0")
     dist.setParameter("ElasticScaling", "36.0")
     dist.setParameter("Scaling", "10.0")
     dist.setParameter("Rotation", "10.0")
 
-    padcrop - N2D2.PadCropTransformation(24, 24)
+    padcrop = N2D2.PadCropTransformation(24, 24)
 
-    ct - N2D2.CompositeTransformation(padcrop)
+    ct = N2D2.CompositeTransformation(padcrop)
     ct.push_back(dist)
 
 To apply Transformation to a dataset, we use an object :py:class:`N2D2.StimuliProvider` which acts as a data loader.
@@ -1439,4 +1439,3 @@ CudaTensor
 
 .. autoclass:: N2D2.CudaTensor_double
    :members:
-s

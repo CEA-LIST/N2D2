@@ -47,7 +47,7 @@ public:
 TEST(ElemWiseCell_Frame,
      propagate_sum2)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -93,7 +93,7 @@ TEST(ElemWiseCell_Frame,
 TEST(ElemWiseCell_Frame,
      propagate_sum3)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -148,7 +148,7 @@ TEST_DATASET(ElemWiseCell_Frame,
              std::make_tuple(0.33, 0.66, 0.99),
              std::make_tuple(0.0, 2.0, -1.0))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -210,7 +210,7 @@ TEST_DATASET(ElemWiseCell_Frame,
              std::make_tuple(0.33, 0.66, 0.99),
              std::make_tuple(0.0, 2.0, -1.0))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -287,7 +287,7 @@ TEST_DATASET(ElemWiseCell_Frame,
              std::make_tuple(0.33, 0.66, 0.99, 0.2, 0.6, 1.0),
              std::make_tuple(0.0, 2.0, -1.0, 3.0, 2.0, -1.0))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -353,7 +353,7 @@ TEST_DATASET(ElemWiseCell_Frame,
 TEST(ElemWiseCell_Frame,
      propagate_abs_sum2)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -401,7 +401,7 @@ TEST(ElemWiseCell_Frame,
 TEST(ElemWiseCell_Frame,
      propagate_abs_sum3)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -459,7 +459,7 @@ TEST_DATASET(ElemWiseCell_Frame,
              std::make_tuple(0.33, 0.66, 0.99),
              std::make_tuple(0.0, 2.0, -1.0))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -519,7 +519,7 @@ TEST_DATASET(ElemWiseCell_Frame,
 TEST(ElemWiseCell_Frame,
      propagate_euclidean_sum2)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -568,7 +568,7 @@ TEST(ElemWiseCell_Frame,
 TEST(ElemWiseCell_Frame,
      propagate_euclidean_sum3)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -626,7 +626,7 @@ TEST_DATASET(ElemWiseCell_Frame,
              std::make_tuple(0.33, 0.66, 0.99),
              std::make_tuple(0.0, 2.0, -1.0))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -692,7 +692,7 @@ TEST_DATASET(ElemWiseCell_Frame,
              std::make_tuple(0.33, 0.66, 0.99, 0.4, 0.67, 1.256),
              std::make_tuple(0.0, 2.0, -1.0, -0.58, 0.39, 4.2))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -758,7 +758,7 @@ TEST_DATASET(ElemWiseCell_Frame,
 TEST(ElemWiseCell_Frame,
      propagate_prod2)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -803,7 +803,7 @@ TEST(ElemWiseCell_Frame,
 TEST(ElemWiseCell_Frame,
      propagate_prod3)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -853,7 +853,7 @@ TEST(ElemWiseCell_Frame,
 TEST(ElemWiseCell_Frame,
      propagate_max2)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);
@@ -900,7 +900,7 @@ TEST(ElemWiseCell_Frame,
 TEST(ElemWiseCell_Frame,
      propagate_max3)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     Random::mtSeed(0);

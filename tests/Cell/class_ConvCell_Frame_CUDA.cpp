@@ -138,7 +138,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     ConvCell_Frame_CUDA<float> conv1(dn, "conv1",
         std::vector<unsigned int>({kernelWidth, kernelHeight}),
@@ -207,7 +207,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
@@ -398,7 +398,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -491,7 +491,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -593,7 +593,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
@@ -643,8 +643,8 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
-                                                    * output;
+                    kernel(sx, sy) = (1.0 + channel + conv1.getNbChannels()
+                                                    * output) / (in.dimX() * in.dimY());
             }
 
             conv1.setWeight(output, channel, kernel);
@@ -690,7 +690,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
                                 sum += in(ix, iy, channel, batch)
                                        * (1.0 + channel + conv1.getNbChannels()
-                                                          * output);
+                                                          * output) / (in.dimX() * in.dimY());
                             }
                         }
                     }
@@ -750,7 +750,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
@@ -806,8 +806,8 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
-                                                    * output;
+                    kernel(sx, sy) = (1.0 + channel + conv1.getNbChannels()
+                                                    * output)  / (in.dimX() * in.dimY());
             }
 
             conv1.setWeight(output, channel, kernel);
@@ -854,7 +854,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
                                 sum += in(ix, iy, 0, batch)
                                        * (1.0 + channel + conv1.getNbChannels()
-                                                          * output);
+                                                          * output) / (in.dimX() * in.dimY());
                             }
                         }
                     }
@@ -914,7 +914,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_CUDA_Test<float> conv1(dn, "conv1",
@@ -932,6 +932,14 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
     env.setCachePath();
 
     env.readRandomBatch(Database::Test);
+    Environment env2(net, getDatabase(), {channelsWidth, channelsHeight, 3}, 2, false);
+    env2.addTransformation(ColorSpaceTransformation(ColorSpaceTransformation::BGR));
+    env2.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
+    env2.setCachePath();
+
+    env2.readRandomBatch(Database::Test);
+
+    Tensor<Float_T>& in = env2.getData();
 
     conv1.addInput(env);
     conv1.addInput(env);
@@ -950,22 +958,14 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
-                                                    * output;
+                    kernel(sx, sy) = (1.0 + channel + conv1.getNbChannels()
+                                                    * output) / (in.dimX() * in.dimY());
             }
 
             conv1.setWeight(output, channel, kernel);
         }
     }
 
-    Environment env2(net, getDatabase(), {channelsWidth, channelsHeight, 3}, 2, false);
-    env2.addTransformation(ColorSpaceTransformation(ColorSpaceTransformation::BGR));
-    env2.addTransformation(RescaleTransformation(channelsWidth, channelsHeight));
-    env2.setCachePath();
-
-    env2.readRandomBatch(Database::Test);
-
-    Tensor<Float_T>& in = env2.getData();
 
     ASSERT_EQUALS(in.dimZ(), 3U);
     ASSERT_EQUALS(in.dimX(), channelsWidth);
@@ -996,8 +996,8 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy) {
-                    const float value = 1.0 + channel + conv1.getNbChannels()
-                                                    * output;
+                    const float value = (1.0 + channel + conv1.getNbChannels()
+                                                    * output) / (in.dimX() * in.dimY());
                     
                     ASSERT_EQUALS(kernel(sx, sy), value);
                 }
@@ -1041,7 +1041,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
                                 sum += in(ix, iy, channel, batch)
                                        * (1.0 + channel + conv1.getNbChannels()
-                                                          * output);
+                                                          * output) / (in.dimX() * in.dimY());
                             }
                         }
                     }
@@ -1100,7 +1100,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_float,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1194,7 +1194,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     ConvCell_Frame_CUDA<double> conv1(dn, "conv1",
@@ -1261,7 +1261,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1354,7 +1354,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1456,7 +1456,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
@@ -1506,8 +1506,8 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
-                                                    * output;
+                    kernel(sx, sy) = (1.0 + channel + conv1.getNbChannels()
+                                                    * output) / (in.dimX() * in.dimY());
             }
 
             conv1.setWeight(output, channel, kernel);
@@ -1553,7 +1553,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 
                                 sum += in(ix, iy, channel, batch)
                                        * (1.0 + channel + conv1.getNbChannels()
-                                                          * output);
+                                                          * output) / (in.dimX() * in.dimY());
                             }
                         }
                     }
@@ -1613,7 +1613,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
@@ -1669,8 +1669,8 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
-                                                    * output;
+                    kernel(sx, sy) = (1.0 + channel + conv1.getNbChannels()
+                                                    * output) / (in.dimX() * in.dimY());
             }
 
             conv1.setWeight(output, channel, kernel);
@@ -1717,7 +1717,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 
                                 sum += in(ix, iy, 0, batch)
                                        * (1.0 + channel + conv1.getNbChannels()
-                                                          * output);
+                                                          * output)/ (in.dimX() * in.dimY());
                             }
                         }
                     }
@@ -1776,7 +1776,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_double,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1870,7 +1870,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 {
     REQUIRED(UnitTest::CudaDeviceExists(5, 3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     ConvCell_Frame_CUDA<half_float::half> conv1(dn, "conv1",
@@ -1938,7 +1938,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -2032,7 +2032,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -2136,7 +2136,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
@@ -2186,8 +2186,8 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
-                                                    * output;
+                    kernel(sx, sy) = (1.0 + channel + conv1.getNbChannels()
+                                                    * output) / (in.dimX() * in.dimY());
             }
 
             conv1.setWeight(output, channel, kernel);
@@ -2234,12 +2234,12 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 
                                 sum += in(ix, iy, channel, batch)
                                        * (1.0 + channel + conv1.getNbChannels()
-                                                          * output);
+                                                          * output) / (in.dimX() * in.dimY());
                             }
                         }
                     }
 
-                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-0);
+                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-2);
                 }
             }
         }
@@ -2296,7 +2296,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 
     const unsigned int nbOutputs = 5;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
 #if CUDNN_VERSION >= 5000
@@ -2352,8 +2352,8 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    kernel(sx, sy) = 1.0 + channel + conv1.getNbChannels()
-                                                    * output;
+                    kernel(sx, sy) = (1.0 + channel + conv1.getNbChannels()
+                                                    * output) / (in.dimX() * in.dimY());
             }
 
             conv1.setWeight(output, channel, kernel);
@@ -2401,12 +2401,12 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 
                                 sum += in(ix, iy, 0, batch)
                                        * (1.0 + channel + conv1.getNbChannels()
-                                                          * output);
+                                                          * output) / half_float::half( (float) (in.dimX() * in.dimY()));
                             }
                         }
                     }
 
-                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 2.0);
+                    ASSERT_EQUALS_DELTA(out(ox, oy, output, batch), sum, 1e-2);
                 }
             }
         }
@@ -2461,7 +2461,7 @@ TEST_DATASET(ConvCell_Frame_CUDA_half,
 
     const unsigned int nbOutputs = 10;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 

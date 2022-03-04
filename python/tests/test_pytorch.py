@@ -38,6 +38,7 @@ weight_value = 0.05
 batch_size = 10
 learning_rate = 0.01 # Learning rate of N2D2 SGD default solver #args.lr
 comparison_precision = 0.001
+absolute_presision = 0.0001
 epochs = 10
 
 class test_tensor_conversion(unittest.TestCase):
@@ -144,7 +145,7 @@ class Test_Networks():
             i = i.item()
             j = j.item()
             if j != 0:
-                if abs(i-j) > comparison_precision * abs(j):
+                if abs(i-j) > comparison_precision * abs(j) + absolute_presision:
                     return -1
         return 0
 

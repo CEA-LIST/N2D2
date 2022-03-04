@@ -27,6 +27,8 @@
 #include "BatchStream.hpp"
 #include "fp16.h"
 
+
+
 #if NV_TENSORRT_MAJOR > 2
 #include "IInt8EntropyCalibrator.hpp"
 #endif
@@ -55,6 +57,9 @@ static struct Profiler : public nvinfer1::IProfiler
     std::vector<Record> mProfile;
 
     virtual void reportLayerTime(const char* layerName, float ms)
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
     {
         auto record = std::find_if(mProfile.begin(), mProfile.end(), [&](const Record& r){ return r.first == layerName; });
         if (record == mProfile.end())
@@ -67,7 +72,11 @@ static struct Profiler : public nvinfer1::IProfiler
 
 static class Logger : public nvinfer1::ILogger
 {
-    void log(Severity severity, const char* msg) override
+    void log(Severity severity, const char* msg) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
     {
         std::cout << msg << std::endl;
     }
@@ -251,7 +260,6 @@ public:
                 << nmsIoU << std::endl;
         mDetectorNMS = nmsIoU;
     };
-
     void useDLA(bool useDla){
         mUseDLA = useDla;
     };
@@ -306,7 +314,6 @@ public:
 #ifndef ONNX
     void setInternalDimensions();
 #endif
-
 
     void add_target(std::vector<nvinfer1::ITensor *> outputs_tensor,
                     unsigned int targetIdx);

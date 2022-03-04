@@ -74,7 +74,7 @@ TEST_DATASET(PaddingCell_Frame,
              std::make_tuple(0, 0, 1, -4, 48, 48, 2),
              std::make_tuple(0, -8, 0, -8, 48, 48, 2))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     const unsigned int nbOutputs = 10;
@@ -142,7 +142,7 @@ TEST_DATASET(PaddingCell_Frame,
              std::make_tuple(0, 0, 1, -4, 12, 12, 2),
              std::make_tuple(0, -8, 0, -8, 12, 12, 2))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     const unsigned int nbOutputs = 10;
@@ -191,7 +191,7 @@ TEST_DATASET(PaddingCell_Frame,
              std::make_tuple(0, 0, 1, -4, 5, 3, 48, 48, 2),
              std::make_tuple(0, -8, 0, -8, 1, 1, 48, 48, 2))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     const unsigned int nbOutputs = nbInputA + nbInputB;
@@ -295,7 +295,7 @@ TEST_DATASET(PaddingCell_Frame,
              std::make_tuple(0, 0, 1, -4, 5, 3, 12, 12, 2),
              std::make_tuple(0, -8, 0, -8, 1, 1, 12, 12, 2))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     
     const unsigned int nbOutputs = nbInputA + nbInputB;
