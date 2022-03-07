@@ -23,6 +23,8 @@
 
 #include "dnn_utils.hpp"
 #include "kernels_cpu.hpp"
+#if NV_TENSORRT_MAJOR < 8
+
 /**Plugin Layer implementation**/
 /**ROI Pooling CPU implementation**/
 class ROIPoolingCPUPlugin: public nvinfer1::IPlugin
@@ -330,5 +332,5 @@ struct pluginROIPooling_CPU{
       mPluginCount = 0;
     }
 };
-
+#endif
 #endif

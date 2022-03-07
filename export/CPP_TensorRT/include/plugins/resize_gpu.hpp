@@ -24,9 +24,10 @@
 #include "dnn_utils.hpp"
 #include "kernels_gpu.hpp"
 
+
 /**Plugin Layer implementation**/
 /**Resize GPU implementation**/
-class ResizeGPUPlugin: public nvinfer1::IPlugin
+class ResizeGPUPlugin: public nvinfer1::IPluginV2Ext
 {
 
 public:
@@ -36,9 +37,10 @@ public:
                         unsigned int outputWidth,
                         unsigned int featureHeight,
                         unsigned int featureWidth,
-                        Pooling_T resizeType,
+                        int resizeType,
                         bool aligCorner)
 	{
+        std::cout << "ResizeGPUPlugin()" << std::endl;
 
         mOutputDims.d[0] = batchSize;
         mOutputDims.d[1] = nbOutputs;
@@ -135,13 +137,10 @@ public:
 	ResizeGPUPlugin(const void* dataFromRuntime, size_t length)
 	{
 		const char* d = reinterpret_cast<const char*>(dataFromRuntime), *a = d;
-        mOutputDims.d[0] = read<int>(d);
-		mOutputDims.d[1] = read<int>(d);
-		mOutputDims.d[2] = read<int>(d);
-		mOutputDims.d[3] = read<int>(d);
+        mOutputDims = read<nvinfer1::Dims>(d);
         mInputHeight = read<int>(d);
         mInputWidth = read<int>(d);
-        mResizeType= read <Pooling_T>(d);
+        mResizeType= read <int>(d);
         mScaleX = read<float>(d);
         mScaleY = read<float>(d);
 
@@ -165,59 +164,73 @@ public:
 
 	~ResizeGPUPlugin()
 	{
+		/*
         checkCudaErrors(cudaFree(mYStrideLowIndex));
         checkCudaErrors(cudaFree(mYStrideHightIndex));
         checkCudaErrors(cudaFree(mYStrideInterpolation));
         checkCudaErrors(cudaFree(mXStrideLowIndex));
         checkCudaErrors(cudaFree(mXStrideHightIndex));
         checkCudaErrors(cudaFree(mXStrideInterpolation));
+		*/
 	}
 
-	virtual int getNbOutputs() const override
+	virtual int getNbOutputs() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
 	{
-        return (int) 1;
+        return 1;
 	}
 
 	virtual nvinfer1::Dims getOutputDimensions(int index,
                                                const nvinfer1::Dims* inputDim,
-                                               int nbInputDims) override
+                                               int nbInputDims)
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
 	{
-        return trt_Dims3(   mOutputDims.d[1],
-                                    mOutputDims.d[2],
-                                    mOutputDims.d[3]);
-
+        return trt_Dims3(mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
 	}
-
-	virtual void configure(const nvinfer1::Dims* inputDims,
-                   int nbInputs,
-                   const nvinfer1::Dims* outputDims,
-                   int nbOutputs,
-                   int maxBatchSize) override
+	virtual int initialize() 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
 	{
-
+		return 0;
 	}
+	virtual void terminate() 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override	{ }
 
-	virtual int initialize() override
+	virtual size_t getWorkspaceSize(int maxBatchSize) const
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
 	{
 		return 0;
 	}
 
-	virtual void terminate() override
-	{
-
-	}
-
-	virtual size_t getWorkspaceSize(int maxBatchSize) const override
-	{
-		return 0;
-	}
-
+#if NV_TENSORRT_MAJOR > 7
+	virtual int enqueue(int batchSize,
+                        const void*const * inputs,
+                        void*const* outputs,
+                        void* workspace,
+                        cudaStream_t stream) noexcept
+#else
 	virtual int enqueue(int batchSize,
                         const void*const * inputs,
                         void** outputs,
                         void* workspace,
-                        cudaStream_t stream) override
-	{
+                        cudaStream_t stream)
+#endif
+    override
+    { 
         const dim3 nbBlocks = {mBlockX, mBlockY, mBlockZ};
         const dim3 nbThreads = {mThreadX, mThreadY, mThreadZ};
 
@@ -248,49 +261,193 @@ public:
         return 0;
 	}
 
-	virtual size_t getSerializationSize() override
+	virtual size_t getSerializationSize() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
 	{
-        size_t intSize = 12*sizeof(int);
+        size_t intSize = 8*sizeof(int);
         size_t floatSize = 2*sizeof(float)
                             + (mOutputDims.d[2] + 1)*sizeof(float)
                             + (mOutputDims.d[3] + 1)*sizeof(float);
         size_t uintSize = (mOutputDims.d[2] + 1)*sizeof(unsigned int)*2
                         + (mOutputDims.d[3] + 1)*sizeof(unsigned int)*2;
-        size_t finalSize = intSize + floatSize + uintSize + sizeof(Pooling_T);
-        mSerializationSize = finalSize;
+        size_t outputDimSize = sizeof(nvinfer1::Dims);
+						
+        size_t finalSize = intSize + floatSize + uintSize + sizeof(int) + outputDimSize;
+        size_t SerializationSize = finalSize;
 
-        return mSerializationSize;
+        return SerializationSize;
 	}
 
-	virtual void serialize(void* buffer) override
+	virtual void serialize(void* buffer) const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
 	{
         char* d = reinterpret_cast<char*>(buffer);
         char* a = d;
-        write<int>(d, (int)mOutputDims.d[0]);
-        write<int>(d, (int)mOutputDims.d[1]);
-        write<int>(d, (int)mOutputDims.d[2]);
-        write<int>(d, (int)mOutputDims.d[3]);
-        write<int>(d, (int)mInputHeight);
-        write<int>(d, (int)mInputWidth);
-        write<Pooling_T>(d, (Pooling_T)mResizeType);
-        write<float>(d, (float)mScaleX);
-        write<float>(d, (float)mScaleY);
+        *reinterpret_cast<nvinfer1::Dims*>(d) = mOutputDims;
+        d += sizeof(nvinfer1::Dims);
+        *reinterpret_cast<int*>(d) = mInputHeight;
+        d += sizeof(int);
+        *reinterpret_cast<int*>(d) = mInputWidth;
+        d += sizeof(int);
+        *reinterpret_cast<int*>(d) = mResizeType;
+        d += sizeof(int);
+        *reinterpret_cast<float*>(d) = mScaleX;
+        d += sizeof(float);
+        *reinterpret_cast<float*>(d) = mScaleY;
+        d += sizeof(float);
 
-        serializeFromDevice<unsigned int>(d, mYStrideLowIndex, mOutputDims.d[2] + 1);
-        serializeFromDevice<unsigned int>(d, mYStrideHightIndex, mOutputDims.d[2] + 1);
-        serializeFromDevice<float>(d, mYStrideInterpolation, mOutputDims.d[2] + 1);
+        d += serializeFromDevice<unsigned int>(d, mYStrideLowIndex, mOutputDims.d[2] + 1);
+        d += serializeFromDevice<unsigned int>(d, mYStrideHightIndex, mOutputDims.d[2] + 1);
+        d += serializeFromDevice<float>(d, mYStrideInterpolation, mOutputDims.d[2] + 1);
 
-        serializeFromDevice<unsigned int>(d, mXStrideLowIndex, mOutputDims.d[3] + 1);
-        serializeFromDevice<unsigned int>(d, mXStrideHightIndex, mOutputDims.d[3] + 1);
-        serializeFromDevice<float>(d, mXStrideInterpolation, mOutputDims.d[3] + 1);
-        write<int>(d, (int)mThreadX);
-        write<int>(d, (int)mThreadY);
-        write<int>(d, (int)mThreadZ);
-        write<int>(d, (int)mBlockX);
-        write<int>(d, (int)mBlockY);
-        write<int>(d, (int)mBlockZ);
+        d += serializeFromDevice<unsigned int>(d, mXStrideLowIndex, mOutputDims.d[3] + 1);
+        d += serializeFromDevice<unsigned int>(d, mXStrideHightIndex, mOutputDims.d[3] + 1);
+        d += serializeFromDevice<float>(d, mXStrideInterpolation, mOutputDims.d[3] + 1);
+
+        *reinterpret_cast<int*>(d) = mThreadX;
+        d += sizeof(int);
+        *reinterpret_cast<int*>(d) = mThreadY;
+        d += sizeof(int);
+        *reinterpret_cast<int*>(d) = mThreadZ;
+        d += sizeof(int);
+        *reinterpret_cast<int*>(d) = mBlockX;
+        d += sizeof(int);
+        *reinterpret_cast<int*>(d) = mBlockY;
+        d += sizeof(int);
+        *reinterpret_cast<int*>(d) = mBlockZ;
+        d += sizeof(int);
         assert(d == a + getSerializationSize());
 	}
+
+    bool supportsFormat(nvinfer1::DataType type, nvinfer1::PluginFormat format) const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
+    {
+#if NV_TENSORRT_MAJOR > 5
+        return (type == nvinfer1::DataType::kFLOAT && format == nvinfer1::PluginFormat::kLINEAR );
+#else
+        return (type == nvinfer1::DataType::kFLOAT && format == nvinfer1::PluginFormat::kNCHW );
+#endif
+    }
+
+    const char* getPluginType() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
+     {
+        const char* RESIZE_GPU_PLUGIN_NAME{"ResizeGPUPlugin"};
+        return RESIZE_GPU_PLUGIN_NAME;
+     }
+    const char* getPluginVersion() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
+    {
+        const char* RESIZE_GPU_PLUGIN_VERSION{"1"};
+        return RESIZE_GPU_PLUGIN_VERSION;
+     }
+    void destroy() 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {    delete this; }
+
+    IPluginV2Ext* clone() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
+    {
+
+        IPluginV2Ext* plugin = new ResizeGPUPlugin( mOutputDims.d[0],
+                                                    mOutputDims.d[1],
+                                                    mOutputDims.d[2],
+                                                    mOutputDims.d[3],
+                                                    mInputHeight,
+                                                    mInputWidth,
+                                                    mResizeType,
+                                                    mAlignCorner);
+
+        plugin->setPluginNamespace("");
+        return plugin;
+     }
+
+    void setPluginNamespace(const char* pluginNamespace) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
+     {
+        std::string mNamespace = pluginNamespace;
+     }
+    const char* getPluginNamespace() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
+     { 
+        return mNamespace.c_str();
+    }
+
+    nvinfer1::DataType getOutputDataType(int index, const nvinfer1::DataType* inputTypes, int nbInputs) const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
+     {
+        return nvinfer1::DataType::kFLOAT;
+     }
+
+    bool isOutputBroadcastAcrossBatch(int outputIndex, const bool* inputIsBroadcasted, int nbInputs) const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
+     {    
+        return false;
+     }
+
+    bool canBroadcastInputAcrossBatch(int inputIndex) const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
+     {
+        return false;
+     }
+
+    void attachToContext(
+        cudnnContext* cudnnContext, cublasContext* cublasContext, nvinfer1::IGpuAllocator* gpuAllocator) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override{ }
+
+    void configurePlugin(const nvinfer1::Dims* inputDims, int nbInputs, const nvinfer1::Dims* outputDims, int nbOutputs,
+        const nvinfer1::DataType* inputTypes, const nvinfer1::DataType* outputTypes, const bool* inputIsBroadcast,
+        const bool* outputIsBroadcast, nvinfer1::PluginFormat floatFormat, int maxBatchSize) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override { }
+
+    void detachFromContext() 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
+     { }
+
 
 private:
     template<typename T> void write(char*& buffer, const T& val)
@@ -317,10 +474,10 @@ private:
     }
 
     template<typename T>
-    void serializeFromDevice(char*& hostBuffer, T* deviceWeights, size_t dataSize)
+    size_t serializeFromDevice(char*& hostBuffer, T* deviceWeights, size_t dataSize) const
     {
         checkCudaErrors(cudaMemcpy(hostBuffer, deviceWeights, dataSize*sizeof(T), cudaMemcpyDeviceToHost));
-        hostBuffer += dataSize*sizeof(T);
+        return (dataSize*sizeof(T));
     }
 
     void gpuThreadAllocation()
@@ -416,58 +573,174 @@ private:
     float* mXStrideInterpolation;
     float mScaleX;
 
-    Pooling_T mResizeType;
+    int mResizeType;
     bool mAlignCorner;
 
-    size_t mSerializationSize;
+    std::string mNamespace;
 };
-struct pluginResize_GPU{
-    std::vector<std::unique_ptr<ResizeGPUPlugin>> mPlugin;
-    int mPluginCount = 0;
 
-    void add(unsigned int batchSize,
-            unsigned int nbOutputs,
-            unsigned int outputHeight,
-            unsigned int outputWidth,
-            unsigned int featureHeight,
-            unsigned int featureWidth,
-            Pooling_T resizeType,
-            bool aligCorner)
+class ResizeGPUPluginCreator : public nvinfer1::IPluginCreator
+{
+public:
+    ResizeGPUPluginCreator() {
 
-    {
-        mPlugin.push_back(std::unique_ptr
-                    <ResizeGPUPlugin>(new ResizeGPUPlugin(batchSize,
-                                                           nbOutputs,
-                                                           outputHeight,
-                                                           outputWidth,
-                                                           featureHeight,
-                                                           featureWidth,
-                                                           resizeType,
-                                                           aligCorner)));
-        ++mPluginCount;
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("batchSize", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("nbOutputs", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("outputHeight", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("outputWidth", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("featureHeight", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("featureWidth", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("resizeType", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("alignCorner", nullptr, nvinfer1::PluginFieldType::kCHAR, 1));
+
+        mFC.nbFields = mPluginAttributes.size();
+        mFC.fields = mPluginAttributes.data();
     }
 
-    void add(const void* serialData, size_t serialLength)
+    ~ResizeGPUPluginCreator() override
     {
-        mPlugin.push_back(std::unique_ptr
-                <ResizeGPUPlugin>(new ResizeGPUPlugin(serialData,
-                                                      serialLength)));
-        ++mPluginCount;
+
     }
 
-    nvinfer1::IPlugin* get()
-    {
-        return mPlugin.back().get();
+    const char* getPluginName() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+        const char* RESIZE_GPU_PLUGIN_NAME{"ResizeGPUPlugin"};
+        return RESIZE_GPU_PLUGIN_NAME;
     }
-    void destroy()
-    {
-      for(int i = mPluginCount - 1; i >= 0; --i)
-      {
-        mPlugin[i].release();
-        mPlugin[i] = nullptr;
-      }
-      mPlugin = std::vector<std::unique_ptr<ResizeGPUPlugin>>();
-      mPluginCount = 0;
+
+    const char* getPluginVersion() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+        const char* RESIZE_GPU_PLUGIN_VERSION{"1"};
+        return RESIZE_GPU_PLUGIN_VERSION;
     }
+
+    const nvinfer1::PluginFieldCollection* getFieldNames() 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+        return &mFC;
+    }
+
+    nvinfer1::IPluginV2Ext* createPlugin(const char* name, const nvinfer1::PluginFieldCollection* fc) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+        const nvinfer1::PluginField* fields = fc->fields;
+        int nbFields = fc->nbFields;
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("featureHeight", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("featureWidth", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("resizeType", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("alignCorner", nullptr, nvinfer1::PluginFieldType::kCHAR, 1));
+
+        for (int i = 0; i < nbFields; ++i)
+        {
+            const char* attrName = fields[i].name;
+            if (!strcmp(attrName, "batchSize"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                batchSize = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "nbOutputs"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                nbOutputs = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "outputHeight"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                outputHeight = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "outputWidth"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                outputWidth = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "featureWidth"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                inputWidth = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "featureHeight"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                inputHeight = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "resizeType"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                resizeType = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "alignCorner"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                alignCorner = *(static_cast<const bool*>(fields[i].data));
+            }
+        }
+
+        // This object will be deleted when the network is destroyed, which will
+        // call RPROIPlugin::terminate()
+        ResizeGPUPlugin* plugin = new ResizeGPUPlugin(    batchSize,
+                                                            nbOutputs,
+                                                            outputHeight,
+                                                            outputWidth,
+                                                            inputHeight,
+                                                            inputWidth,
+                                                            resizeType,
+                                                            alignCorner);
+
+        //plugin->setPluginNamespace(mNamespace.c_str());
+        return plugin;
+
+
+    }
+
+    nvinfer1::IPluginV2Ext* deserializePlugin(const char* name, const void* serialData, size_t serialLength) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+        ResizeGPUPlugin* plugin = new ResizeGPUPlugin(serialData, serialLength);
+        return plugin;
+    }
+    void setPluginNamespace(const char* pluginNamespace) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+        mNamespace = pluginNamespace;
+    }
+    const char* getPluginNamespace() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+        return mNamespace.c_str();
+    }
+
+
+private:
+    nvinfer1::PluginFieldCollection mFC;
+
+    unsigned int batchSize;
+    unsigned int nbOutputs;
+    unsigned int outputHeight;
+    unsigned int outputWidth;
+    unsigned int inputHeight;
+    unsigned int inputWidth;
+    int resizeType;
+    bool alignCorner;
+
+    std::string mNamespace;
+    std::vector<nvinfer1::PluginField> mPluginAttributes;
 };
+
+REGISTER_TENSORRT_PLUGIN(ResizeGPUPluginCreator);
 #endif

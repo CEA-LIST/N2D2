@@ -20,17 +20,21 @@
 
 #ifndef PLUGINLAYERS_HPP
 #define PLUGINLAYERS_HPP
+#include "dnn_utils.hpp"
+
+#if NV_TENSORRT_MAJOR < 8
 #include "plugins/anchor_cpu.hpp"
-#include "plugins/anchor_gpu.hpp"
 #include "plugins/batchnorm_cudnn.hpp"
 #include "plugins/batchnorm_gpu.hpp"
 #include "plugins/objectdetection_cpu.hpp"
-#include "plugins/objectdetection_gpu.hpp"
 #include "plugins/proposal_gpu.hpp"
 #include "plugins/regionproposal_cpu.hpp"
 #include "plugins/resize_gpu.hpp"
 #include "plugins/roipooling_cpu.hpp"
 #include "plugins/roipooling_gpu.hpp"
+
+#include "plugins/objectdetection_gpu.hpp"
+#include "plugins/anchor_gpu.hpp"
 
 class PluginFactory : public nvinfer1::IPluginFactory
 {
@@ -109,7 +113,7 @@ public:
                                     bool alignCorner)
     {
 
-        if(!strncmp(layerName, "Resize_GPU", 10))
+       /* if(!strncmp(layerName, "Resize_GPU", 10))
         {
             mResizeGPUPlugin.add(batchSize,
                                  nbOutputs,
@@ -122,7 +126,7 @@ public:
 
             return mResizeGPUPlugin.get();
         }
-        else
+        else*/
             throw std::runtime_error(
                 "PluginFactory::createPlugin this kind of resize layer is not implemented");
     }
@@ -261,34 +265,6 @@ public:
 
             return mObjectDetCPUPlugin.get();
         }
-        else if(!strncmp(layerName, "ObjectDet_GPU", 13))
-        {
-            mObjectDetGPUPlugin.add(batchSize,
-                                 nbOutputs,
-                                 outputHeight,
-                                 outputWidth,
-                                 channelHeight,
-                                 channelWidth,
-                                 stimuliWidth,
-                                 stimuliHeight,
-                                 featureMapWidth,
-                                 featureMapHeight,
-                                 nbProposals,
-                                 nbCls,
-                                 nbAnchors,
-                                 isCoordinatesAnchors,
-                                 isPixelFormatXY,
-                                 nmsIoU,
-                                 scoreThreshold,
-                                 maxParts,
-                                 maxTemplates,
-                                 numPartsPerClass,
-                                 numTemplatesPerClass,
-                                 anchor);
-
-            return mObjectDetGPUPlugin.get();
-        }
-
         else
             throw std::runtime_error(
                 "PluginFactory::createPlugin this kind of ObjectDetect layer is not implemented");
@@ -326,24 +302,6 @@ public:
                                  anchors);
             return mAnchorCPUPlugin.get();
         }
-        else if(!strncmp(layerName, "Anchor_GPU", 10))
-        {
-            mAnchorGPUPlugin.add(batchSize,
-                                 nbOutputs,
-                                 outputHeight,
-                                 outputWidth,
-                                 stimuliHeight,
-                                 stimuliWidth,
-                                 featureMapWidth,
-                                 featureMapHeight,
-                                 scoreCls,
-                                 isCoordinatesAnchors,
-                                 isFlip,
-                                 nbAnchors,
-                                 anchors);
-            return mAnchorGPUPlugin.get();
-        }
-
         else
             throw std::runtime_error(
                 "PluginFactory::createPlugin this kind of Anchor layer is not implemented");
@@ -412,11 +370,6 @@ public:
 	    	mAnchorCPUPlugin.add(serialData, serialLength);
             return mAnchorCPUPlugin.get();
         }
-        else if(!strncmp(layerName, "Anchor_GPU", 10))
-        {
-	    	mAnchorGPUPlugin.add(serialData, serialLength);
-            return mAnchorGPUPlugin.get();
-        }
         else if(!strncmp(layerName, "RegionProposal_CPU", 18))
         {
 	    	mRegionProposalCPUPlugin.add(serialData, serialLength);
@@ -437,20 +390,15 @@ public:
 	    	mProposalGPUPlugin.add(serialData, serialLength);
             return mProposalGPUPlugin.get();
         }
-        else if(!strncmp(layerName, "Resize_GPU", 10))
-        {
-	    	mResizeGPUPlugin.add(serialData, serialLength);
-            return mResizeGPUPlugin.get();
-        }
+        //else if(!strncmp(layerName, "Resize_GPU", 10))
+        //{
+	    //	mResizeGPUPlugin.add(serialData, serialLength);
+        //    return mResizeGPUPlugin.get();
+        //}
         else if(!strncmp(layerName, "ObjectDet_CPU", 13))
         {
 	    	mObjectDetCPUPlugin.add(serialData, serialLength);
             return mObjectDetCPUPlugin.get();
-        }
-        else if(!strncmp(layerName, "ObjectDet_GPU", 13))
-        {
-	    	mObjectDetGPUPlugin.add(serialData, serialLength);
-            return mObjectDetGPUPlugin.get();
         }
         else
             throw std::runtime_error(
@@ -464,7 +412,6 @@ public:
         mBatchNormCUDNNPlugin.destroy();
         //AnchorPlugin models destroy
         mAnchorCPUPlugin.destroy();
-        mAnchorGPUPlugin.destroy();
         //Proposal models destroy
         mProposalGPUPlugin.destroy();
         //Region Proposal models destroy
@@ -473,15 +420,13 @@ public:
         mROIPoolingCPUPlugin.destroy();
         mROIPoolingGPUPlugin.destroy();
 
-        mResizeGPUPlugin.destroy();
+        //mResizeGPUPlugin.destroy();
 
         mObjectDetCPUPlugin.destroy();
-        mObjectDetGPUPlugin.destroy();
 
     }
 
     pluginAnchor_CPU mAnchorCPUPlugin;
-    pluginAnchor_GPU mAnchorGPUPlugin;
 
     pluginBatchnorm_CUDA mBatchNormCUDAPlugin;
     pluginBatchnorm_CUDNN mBatchNormCUDNNPlugin;
@@ -492,10 +437,15 @@ public:
     pluginROIPooling_CPU mROIPoolingCPUPlugin;
     pluginROIPooling_GPU mROIPoolingGPUPlugin;
 
-    pluginResize_GPU mResizeGPUPlugin;
+    //pluginResize_GPU mResizeGPUPlugin;
 
     pluginObjDet_CPU mObjectDetCPUPlugin;
-    pluginObjDet_GPU mObjectDetGPUPlugin;
 
 };
+#else
+    #include "plugins/objectdetection_gpu.hpp"
+    #include "plugins/anchor_gpu.hpp"
+    #include "plugins/resize_gpu.hpp"
+#endif
+
 #endif // PLUGINLAYERS_HPP

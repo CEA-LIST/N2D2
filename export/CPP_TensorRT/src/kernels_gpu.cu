@@ -1361,37 +1361,38 @@ extern "C" void cudaS_SSD_output_gathering( unsigned int batchSize,
                                             const float* inputs_templates,
                                             float* outputs,
                                             const dim3 blocksPerGrid,
-                                            const dim3 threadsPerBlock)
+                                            const dim3 threadsPerBlock,
+                                            cudaStream_t stream)
 {
 
-    cudaS_ssdToOutput_kernels<<<blocksPerGrid, threadsPerBlock>>>( batchSize,
-                                                                nbClass,
-                                                                nbAnchors,
-                                                                channelWidth,
-                                                                channelHeight,
-                                                                nbProposals,
-                                                                nbValidROIs,
-                                                                cls,
-                                                                totalParts,
-                                                                totalTemplates,
-                                                                maxParts,
-                                                                maxTemplates,
-                                                                cumulParts,
-                                                                cumulTemplates,
-                                                                nbParts,
-                                                                nbTemplates,
-                                                                isCoordinatesAnchors,
-                                                                isPixelFormatXY,
-                                                                xRatio,
-                                                                yRatio,
-                                                                xOutputRatio,
-                                                                yOutputRatio,
-                                                                roi_bbox,
-                                                                roi_anchors,
-                                                                anchors,
-                                                                inputs_parts,
-                                                                inputs_templates,
-                                                                outputs);
+    cudaS_ssdToOutput_kernels<<<blocksPerGrid, threadsPerBlock, 0, stream>>>( batchSize,
+                                                                                nbClass,
+                                                                                nbAnchors,
+                                                                                channelWidth,
+                                                                                channelHeight,
+                                                                                nbProposals,
+                                                                                nbValidROIs,
+                                                                                cls,
+                                                                                totalParts,
+                                                                                totalTemplates,
+                                                                                maxParts,
+                                                                                maxTemplates,
+                                                                                cumulParts,
+                                                                                cumulTemplates,
+                                                                                nbParts,
+                                                                                nbTemplates,
+                                                                                isCoordinatesAnchors,
+                                                                                isPixelFormatXY,
+                                                                                xRatio,
+                                                                                yRatio,
+                                                                                xOutputRatio,
+                                                                                yOutputRatio,
+                                                                                roi_bbox,
+                                                                                roi_anchors,
+                                                                                anchors,
+                                                                                inputs_parts,
+                                                                                inputs_templates,
+                                                                                outputs);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 
 }
@@ -1431,7 +1432,7 @@ __global__ void cudaSReduceIndex_kernel(  const unsigned int inputSize,
         }
         else
         {
-            outputMap[outputIndex] = -255;
+            outputMap[outputIndex] = -1;
             scores[outputIndex] = -255.0;
         }
     }  
@@ -1448,19 +1449,20 @@ extern "C" void cudaSReduceIndex(  const unsigned int inputSize,
                                     int* outputMap,
                                     float* scores,
                                     const dim3 blocksPerGrid,
-                                    const dim3 threadsPerBlock)
+                                    const dim3 threadsPerBlock,
+                                    cudaStream_t stream)
 {
 
-    cudaSReduceIndex_kernel<<<blocksPerGrid, threadsPerBlock>>>( inputSize,
-                                                                 inputBatchOffset,
-                                                                 outputBatchOffset,
-                                                                 channelWidth,
-                                                                 channelHeight,
-                                                                 nbAnchors,
-                                                                 valueThreshold, 
-                                                                 inputs,
-                                                                 outputMap,
-                                                                 scores);
+    cudaSReduceIndex_kernel<<<blocksPerGrid, threadsPerBlock, 0, stream>>>( inputSize,
+                                                                            inputBatchOffset,
+                                                                            outputBatchOffset,
+                                                                            channelWidth,
+                                                                            channelHeight,
+                                                                            nbAnchors,
+                                                                            valueThreshold, 
+                                                                            inputs,
+                                                                            outputMap,
+                                                                            scores);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 
 }
@@ -1479,7 +1481,6 @@ __global__ void cudaSgatherI2I_kernel( const int* keys,
     if(index < nbElements)
     {
         const int key = keys[index];
-        printf("keys[%d]=%d indicesX[%d]:%d  ", index, key, index, indicesX[index] );
         outX[index] = indicesX[key];
         outY[index] = indicesY[key];
         outK[index] = indicesK[key];
@@ -1589,6 +1590,7 @@ extern "C" void cuda_add_weighted(unsigned int batchSize,
                               input_image,
                               workspace,
                               alpha);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 
 }
 
@@ -1602,6 +1604,7 @@ extern "C" int copy_if_int(const int* inputs,
                                                             thrust_data_inputs + nbElements,
                                                             thrust_data_outputs ,
                                                             thrust::placeholders::_1 > -1); 
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
     int nbCpyElements = (int) (return_ptr - thrust_data_outputs);
 
     return nbCpyElements;
@@ -1617,6 +1620,8 @@ extern "C" int copy_if_float(const float* inputs,
                                                             thrust_data_inputs + nbElements,
                                                             thrust_data_outputs ,
                                                             thrust::placeholders::_1 > -1.0);  
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+
 
     int nbCpyElements = (int) (return_ptr - thrust_data_outputs);
 
@@ -1654,6 +1659,7 @@ extern "C" void cuda_region_proposal_split_indexes( unsigned int inputSizeX,
                                                                 minWidth,
                                                                 minHeight,
                                                                 scoreIndex);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
 
 extern "C" void cuda_region_proposal_nms(   unsigned int inputSizeX,
@@ -1689,6 +1695,7 @@ extern "C" void cuda_region_proposal_nms(   unsigned int inputSizeX,
                                                         nms_iou_thresh,
                                                         max_nbBoxes,
                                                         threadsPerBlock.x);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 
 }
 
@@ -1721,6 +1728,7 @@ extern "C" void cuda_region_proposal_gathering( unsigned int inputSizeX,
                                                            outputs,
                                                            topN,
                                                            nbProposals);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 
 }
 
@@ -1918,6 +1926,7 @@ extern "C" void cuda_anchor_propagate(  unsigned int batchSize,
                             inputs,
                             outputs);
     }
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 
 }
 
@@ -2004,6 +2013,8 @@ extern "C" void cuda_roipooling_bilinear_propagate
                               isFlip,
                               ignorePadding);
 
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+
 }
 
 extern "C" void cuda_spatial_outputs(unsigned int nbClass,
@@ -2024,6 +2035,7 @@ extern "C" void cuda_spatial_outputs(unsigned int nbClass,
                                                                         threshold,
                                                                         targetData,
                                                                         outputEstimated);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 
 }
 

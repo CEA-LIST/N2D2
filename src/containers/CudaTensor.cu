@@ -211,6 +211,7 @@ cudaAggregateH_kernel(__half* srcData,
     }
 }
 
+template <>
 void N2D2::thrust_aggregate(half_float::half* srcData,
                             half_float::half* dstData,
                             size_t size)
