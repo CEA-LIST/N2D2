@@ -382,6 +382,9 @@ class DeepNetCell(Block):
         :param ignore_cells: List of cells name to ignore, default=[]
         :type ignore_cells: list, optional
         """
+        if not n2d2.global_variables.onnx_compiled:
+            raise RuntimeError("Cannot load a model from ONNX, you did not compiled N2D2 with protobuf. " \
+                "Install it with 'apt-get install protobuf-compiler' and then recompile N2D2.")
         if not isinstance(provider, n2d2.provider.Provider):
             raise ValueError("Input needs to be of type 'provider'")
         N2D2_deepnet = N2D2.DeepNet(n2d2.global_variables.default_net)
