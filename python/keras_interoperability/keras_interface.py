@@ -37,7 +37,7 @@ class CustomSequential(keras.Sequential):
     """A customSequential model which embedded an N2D2 Network.
     """
     def __init__(self, deepnet_cell: n2d2.cells.DeepNetCell,
-                 batch_size: int, outputs_shape: tf.Tensor, name: int=None, **kwargs) -> None:
+                 batch_size: int, outputs_shape: tf.Tensor, name: int=None, for_export=False, **kwargs) -> None:
         """
         :param deepnet_cell: The network used for propagation and backpropagation.
         :type deepnet_cell: :py:class:`n2d2.cells.DeepNetCell`
@@ -49,6 +49,7 @@ class CustomSequential(keras.Sequential):
         :type name: str, optional
         """
         super(CustomSequential, self).__init__([], name, **kwargs)
+        self._for_export=for_export
         self.deepNet= deepnet_cell._embedded_deepnet.N2D2()
         self._deepnet_cell = deepnet_cell
         self.batch_size = batch_size
@@ -134,6 +135,10 @@ class CustomSequential(keras.Sequential):
         def custom_grad(dy:tf.Tensor):
             """Method to handle backpropagation
             """
+            if self._for_export:
+                raise RuntimeError(f"BackPropagation is not supported for network" \
+                "generated with the option 'for_export=True'. It is recommended " \
+                "to train the network with Keras and then import it to N2D2 for an export.")
             dy_numpy = dy.numpy()
             # Make sure we have a full batch
             if inputs_batch_size < self.batch_size:
@@ -265,13 +270,13 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
                 try:
                     deepnet_cell.remove(previous_cell.get_name(), reconnect=True)
                 except RuntimeError as err:
-                    raise RuntimeError(f'N2D2 could not remove the layer \
-                    "{previous_cell.get_name()}".\n \
-                    If you do not need to export this network, try to set \
-                    "for_export=False"') from err
+                    raise RuntimeError(f'N2D2 could not remove the layer' \
+                    f"\"{previous_cell.get_name()}\".\n" \
+                    "If you do not need to export this network, try to set" \
+                    "\"for_export=False\"") from err
         previous_cell = cell
 
     deepnet_cell._embedded_deepnet.N2D2().initialize()
 
     N2D2.DrawNet.drawGraph(deepnet_cell._embedded_deepnet.N2D2(), "model")
-    return CustomSequential(deepnet_cell, batch_size, outputs_shape, name=model_name)
+    return CustomSequential(deepnet_cell, batch_size, outputs_shape, name=model_name, for_export=for_export)
