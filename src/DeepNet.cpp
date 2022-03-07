@@ -346,7 +346,7 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
             for(const std::string& childName: children) {
                 auto child = mCells.at(childName);
                 const Tensor<bool> mapping = child->getMapping().clone();
-                const bool isMapping = (child->getType() != ReshapeCell::Type);
+                const bool isMapping = (child->getType() != ReshapeCell::Type && child->getType() != FcCell::Type);
                 child->clearInputs();
 
                 unsigned int nbChannels = 0;

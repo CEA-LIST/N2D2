@@ -152,7 +152,7 @@ void N2D2::FcCell_Frame_CUDA<T>::initialize()
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::applyMapping(Cell* cell, const Tensor<bool>&  mapping){
     // Define input-output connections
-    const unsigned int cellNbOutputs = cell->getNbOutputs() * cell->getOutputsHeight() * cell->getOutputsWidth();
+    const unsigned int cellNbOutputs = cell->getNbOutputs(); // * cell->getOutputsHeight() * cell->getOutputsWidth();
 
     if (!mapping.empty() && mapping.dimY() != cellNbOutputs)
         throw std::runtime_error("Cell_Frame::addInput(): number of mapping "
