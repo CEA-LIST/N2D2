@@ -27,6 +27,8 @@
 #include "BatchStream.hpp"
 #include "fp16.h"
 
+
+
 #if NV_TENSORRT_MAJOR > 2
 #include "IInt8EntropyCalibrator.hpp"
 #endif
@@ -55,6 +57,9 @@ static struct Profiler : public nvinfer1::IProfiler
     std::vector<Record> mProfile;
 
     virtual void reportLayerTime(const char* layerName, float ms)
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
     {
         auto record = std::find_if(mProfile.begin(), mProfile.end(), [&](const Record& r){ return r.first == layerName; });
         if (record == mProfile.end())
@@ -67,7 +72,11 @@ static struct Profiler : public nvinfer1::IProfiler
 
 static class Logger : public nvinfer1::ILogger
 {
-    void log(Severity severity, const char* msg) override
+    void log(Severity severity, const char* msg) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
     {
         std::cout << msg << std::endl;
     }
@@ -168,9 +177,9 @@ public:
     void setProfiling();
     void reportProfiling(unsigned int nbIter);
     void setInputDims(unsigned int dimX, unsigned int dimY, unsigned int dimZ) 
-    { mInputDimensions.c() = dimZ;
-      mInputDimensions.h() = dimY;
-      mInputDimensions.w() = dimX; };
+    { mInputDimensions.d[0] = dimZ;
+      mInputDimensions.d[1] = dimY;
+      mInputDimensions.d[2] = dimX; };
 
     void setOutputNbTargets(unsigned int nbTargets) { mTargetsDimensions.resize(nbTargets); };
 
@@ -179,20 +188,20 @@ public:
                         unsigned int dimY, 
                         unsigned int dimX, 
                         unsigned int t) {
-        mTargetsDimensions[t].n() = nbTarget;
-        mTargetsDimensions[t].c() = dimZ;
-        mTargetsDimensions[t].h() = dimY;
-        mTargetsDimensions[t].w() = dimX;
+        mTargetsDimensions[t].d[0] = nbTarget;
+        mTargetsDimensions[t].d[1] = dimZ;
+        mTargetsDimensions[t].d[2] = dimY;
+        mTargetsDimensions[t].d[3] = dimX;
     };
 
     unsigned int getOutputNbTargets(){ return mTargetsDimensions.size(); };
-    unsigned int getOutputTarget(unsigned int target){ return mTargetsDimensions[target].n(); };
-    unsigned int getOutputDimZ(unsigned int target){ return mTargetsDimensions[target].c(); };
-    unsigned int getOutputDimY(unsigned int target){ return mTargetsDimensions[target].h(); };
-    unsigned int getOutputDimX(unsigned int target){ return mTargetsDimensions[target].w(); };
-    unsigned int getInputDimZ(){ return mInputDimensions.c(); };
-    unsigned int getInputDimY(){ return mInputDimensions.h(); };
-    unsigned int getInputDimX(){ return mInputDimensions.w(); };
+    unsigned int getOutputTarget(unsigned int target){ return mTargetsDimensions[target].d[0]; };
+    unsigned int getOutputDimZ(unsigned int target){ return mTargetsDimensions[target].d[1]; };
+    unsigned int getOutputDimY(unsigned int target){ return mTargetsDimensions[target].d[2]; };
+    unsigned int getOutputDimX(unsigned int target){ return mTargetsDimensions[target].d[3]; };
+    unsigned int getInputDimZ(){ return mInputDimensions.d[0]; };
+    unsigned int getInputDimY(){ return mInputDimensions.d[1]; };
+    unsigned int getInputDimX(){ return mInputDimensions.d[2]; };
 
     void setPrecision(int nbBits) { mNbBits = nbBits ; };
 
@@ -251,6 +260,13 @@ public:
                 << nmsIoU << std::endl;
         mDetectorNMS = nmsIoU;
     };
+    void useDLA(bool useDla){
+        mUseDLA = useDla;
+    };
+
+    void setMaxWorkSpaceSize(int64_t maxWorkSpaceSize){
+        mMaxWorkSpaceSize = maxWorkSpaceSize;
+    };
 
     std::size_t mMaxBatchSize = 1;
     std::size_t mDeviceID = 0;
@@ -267,8 +283,8 @@ public:
 #endif
     /// Destructor
     ~Network() { /*free_memory();*/ };
-    nvinfer1::DimsCHW mInputDimensions;
-    std::vector<nvinfer1::DimsNCHW> mTargetsDimensions;
+    trt_Dims3 mInputDimensions;
+    std::vector<trt_Dims4> mTargetsDimensions;
 
     protected :
 
@@ -282,11 +298,16 @@ public:
     nvinfer1::ICudaEngine* mCudaEngine;
     nvinfer1::IExecutionContext* mContext;
     nvinfer1::IBuilder* mNetBuilder;
+#if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 6
+//  Builder Config have been introduce since TensorRT 7.1.0 EA :
+// https://docs.nvidia.com/deeplearning/tensorrt/release-notes/tensorrt-7.html#rel_7-1-0-EA
+    nvinfer1::IBuilderConfig* mNetBuilderConfig;
+#endif
     std::vector<nvinfer1::INetworkDefinition*> mNetDef;
     nvinfer1::DataType mDataType = nvinfer1::DataType::kFLOAT;
     float* mDetectorThresholds = NULL;
     double mDetectorNMS = -1.0;
-
+    int64_t mMaxWorkSpaceSize = 1073741824; // 1GB
     void createContext();
     void setIOMemory();
     void setTensorRTPrecision();
@@ -427,6 +448,18 @@ public:
 
     std::vector<nvinfer1::ITensor *>
                 add_reshape(std::string layerName,
+                            unsigned int nbDims,
+                            const int shape[],
+                            std::vector<nvinfer1::ITensor *> inputs_tensor);
+
+    std::vector<nvinfer1::ITensor *>
+                add_transpose(std::string layerName,
+                            unsigned int nbDims,
+                            const int perm[],
+                            std::vector<nvinfer1::ITensor *> inputs_tensor);
+
+    std::vector<nvinfer1::ITensor *>
+                add_group_reshape(std::string layerName,
                             unsigned int groupSize,
                             bool restoreShape,
                             std::vector<nvinfer1::ITensor *> inputs_tensor);
@@ -554,7 +587,7 @@ void N2D2::Network::asyncExe(Input_T* in_data, unsigned int batchSize) {
 
    CHECK_CUDA_STATUS(cudaMemcpyAsync(mInOutBuffer[0],
                                     in_data,
-                                    batchSize  *mInputDimensions.c() * mInputDimensions.h() * mInputDimensions.w() *sizeof(Input_T),
+                                    batchSize  *mInputDimensions.d[0] * mInputDimensions.d[1] * mInputDimensions.d[2] *sizeof(Input_T),
                                     cudaMemcpyHostToDevice,
                                     mDataStream));
 
@@ -566,7 +599,7 @@ void N2D2::Network::syncExe(Input_T* in_data, unsigned int batchSize) {
 
    CHECK_CUDA_STATUS(cudaMemcpy(mInOutBuffer[0],
                                 in_data,
-                                batchSize  *mInputDimensions.c() * mInputDimensions.h() * mInputDimensions.w() *sizeof(Input_T),
+                                batchSize  *mInputDimensions.d[0] * mInputDimensions.d[1] * mInputDimensions.d[2] *sizeof(Input_T),
                                 cudaMemcpyHostToDevice));
 
    mContext->execute(batchSize, reinterpret_cast<void**>(mInOutBuffer.data()));

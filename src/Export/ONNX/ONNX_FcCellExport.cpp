@@ -128,6 +128,8 @@ void N2D2::ONNX_FcCellExport::generateNode(
     const BaseTensor& weights = (*weightsInterface)[0U];
 
     if (fcInteger) {
+        // Here we use MatMulInteger, so the weights need to be transposed
+        // (there are no transA/transA attributes).
         const Tensor<Float_T>& weightsFloat = tensor_cast<Float_T>(weights);
         Tensor<Float_T> weightsT({weights.dimB(),
                                   weights.size() / weights.dimB()});

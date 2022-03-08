@@ -65,10 +65,10 @@ public:
     std::size_t inputNbChannels() const;
     std::size_t inputSize() const;
 
-    std::size_t outputHeight() const;
-    std::size_t outputWidth() const;
-    std::size_t outputNbOutputs() const;
-    std::size_t outputSize() const;
+    std::size_t outputHeight(std::size_t index = 0) const;
+    std::size_t outputWidth(std::size_t index = 0) const;
+    std::size_t outputNbOutputs(std::size_t index = 0) const;
+    std::size_t outputSize(std::size_t index = 0) const;
 
 private:
     template<// For all inputs
@@ -1733,8 +1733,7 @@ N2D2_ALWAYS_INLINE inline SUM_T N2D2::Network::elemWise(
         iOffset += INPUT_MEM_WRAP_OFFSET - INPUT_MEM_CONT_OFFSET
                     - INPUT_MEM_CONT_SIZE;
     }
-
-    return firstInputs[iOffset + ch]
+    return ((Input_T*)((uint8_t*)firstInputs + iOffset))[ch]
                 + elemWise<ELEM_OP, ARGS...>(pos, ch, inputs...);
 }
 
@@ -1794,7 +1793,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::elemWisePropagate(
                                         INPUT_MEM_STRIDE,
                                         ARGS...>(pos, ch, firstInputs, inputs...);
 
-                outputs[oOffset + ch]
+                ((Output_T*)((uint8_t*)outputs + oOffset))[ch]
                     = sat<Output_T>(val, ch, ACTIVATION, rescaling);
             }
         }
@@ -2719,7 +2718,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::resizeNearestNeighborPropagate(
             }
 
             for (int output = 0; output < NB_OUTPUTS; ++output) {
-                outputs[oOffset + output] = inputs[iOffset + output];
+                ((Output_T*)((uint8_t*)outputs + oOffset))[output] = ((Input_T*)((uint8_t*)inputs + iOffset))[output];
             }
         }
     }
@@ -2773,8 +2772,8 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::scalingPropagate(
             }
 
             for (int ch = 0; ch < NB_OUTPUTS; ++ch) {
-                outputs[oOffset + ch]
-                    = sat<Output_T>(inputs[iOffset + ch], ch, Linear, rescaling);
+                ((Output_T*)((uint8_t*)outputs + oOffset))[ch]
+                    = sat<Output_T>(((Input_T*)((uint8_t*)inputs + iOffset))[ch], ch, Linear, rescaling);
             }
         }
     }

@@ -82,7 +82,7 @@ TEST(DeepNetGenerator, DeepNetGenerator)
 
     UnitTest::FileWriteContent("DeepNetGenerator.ini", data);
 
-    Network net;
+    Network net(0U,false);
     std::shared_ptr<DeepNet> deepNet
         = DeepNetGenerator::generate(net, "DeepNetGenerator.ini");
 

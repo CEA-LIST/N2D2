@@ -552,8 +552,7 @@ class ChannelExtraction(Transformation):
         Transformation.__init__(self, **config_parameters)
         
         if channel not in N2D2.ChannelExtractionTransformation.Channel.__members__.keys():
-            raise n2d2.error_handler.WrongValue("channel", channel,
-                                                ", ".join(N2D2.ChannelExtractionTransformation.Channel.__members__.keys()))
+            raise n2d2.error_handler.WrongValue("channel", channel, N2D2.ChannelExtractionTransformation.Channel.__members__.keys())
 
         self._constructor_arguments.update({
             'channel': N2D2.ChannelExtractionTransformation.Channel.__members__[channel],

@@ -117,7 +117,7 @@ private:
      * 
      * This can be done if the ElemWiseCell is a simple addition multiple inputs.
      */
-    void moveScalingCellAboveParentElemWiseCell(const std::shared_ptr<ScalingCell>& scalingCell, 
+    bool moveScalingCellAboveParentElemWiseCell(const std::shared_ptr<ScalingCell>& scalingCell, 
                                                 const std::shared_ptr<ElemWiseCell>& parentElemWiseCell);
 
 

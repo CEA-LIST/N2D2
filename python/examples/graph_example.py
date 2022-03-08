@@ -43,18 +43,9 @@ n2d2.global_variables.verbosity = n2d2.global_variables.Verbosity.graph_only
 print(fc1)
 print(fc2)
 
-#TODO: The dimensions that are given to the Tensor are inversed with those returned by the dims() function, which is confusing.
-#TODO: They are also inversed with the lists that are given to the Provider constructor.
-#TODO: This code also works with dims=[1, 28, 28]. Should we constrain Tensors that are passed to cells to have exactly 4 dimensions?
-
 x = n2d2.tensor.Tensor(dims=[1, 28, 28], value=0.5)
-print(x.dims())
+print(x.shape())
 
-#TODO: It does not make sense that we have to convert a tensor to cuda only because N2D2 was compiled with it
-#TODO: The cells have the Frame model here, it does not make sense that we need to convert to GPU.
-#TODO: The code should actually trigger and error if we pass a CUDA tensor to a Frame cell
-
-x = x.cuda()
 x = fc1(x)
 x = fc2(x)
 

@@ -24,8 +24,9 @@
 #ifndef ONNX
 #include "../dnn/include/env.hpp"
 #endif
-
+#if NV_TENSORRT_MAJOR < 8
 PluginFactory mPluginFactory;
+#endif
 
 N2D2::Network::Network()
 {
@@ -97,11 +98,42 @@ void N2D2::Network::initialize() {
         setTensorRTPrecision();
         std::cout << "====> Set TensorRT Precision" << std::endl;
         mNetBuilder = nvinfer1::createInferBuilder(gLogger);
+
+#ifndef ONNX
+    #if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+        //To Be Improve : Network Definition FLAGS
+        //nvinfer1::NetworkDefinitionCreationFlags creationFlag;
+        //creationFlag = 1 << int(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_PRECISION);
+        //creationFlag |= 1 << int(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        mNetBuilderConfig = mNetBuilder->createBuilderConfig();
+        mNetDef.push_back(mNetBuilder->createNetworkV2(0));
+    #else
         mNetDef.push_back(mNetBuilder->createNetwork());
-#if NV_TENSORRT_MAJOR > 4
-        if(mDataType == nvinfer1::DataType::kHALF)
-            mNetBuilder->setFp16Mode(true);
+    #endif
+#else
+    #if NV_TENSORRT_MAJOR > 5
+        nvinfer1::NetworkDefinitionCreationFlags creationFlag;
+        creationFlag = 1 << int(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_PRECISION);
+        creationFlag |= 1 << int(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+        mNetDef.push_back(mNetBuilder->createNetworkV2(creationFlag));
+    #else
+        mNetDef.push_back(mNetBuilder->createNetwork());
+    #endif
 #endif
+
+#if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+        if(mDataType == nvinfer1::DataType::kHALF) {
+            mNetBuilderConfig->setFlag(nvinfer1::BuilderFlag::kFP16);
+        }
+#else 
+    #if NV_TENSORRT_MAJOR > 4
+        if(mDataType == nvinfer1::DataType::kHALF) {
+            mNetBuilder->setFp16Mode(true);
+        }
+    #endif
+#endif
+
+
 #ifdef ONNX
         nvonnxparser::IParser* parser = 
             nvonnxparser::createParser(*mNetDef.back(), 
@@ -126,23 +158,24 @@ void N2D2::Network::initialize() {
     }
     createContext();
     std::cout << "====> Set TensorRT context done" << std::endl;
+
 }
 
 void N2D2::Network::setIOMemory() {
     //Add +1 for Input buffer
     mInOutBuffer.resize(1U + mTargetsDimensions.size());
     size_t InputBufferSize 
-        = mInputDimensions.c()*mInputDimensions.h()*mInputDimensions.w()*mMaxBatchSize*sizeof(float);
+        = mInputDimensions.d[0]*mInputDimensions.d[1]*mInputDimensions.d[2]*mMaxBatchSize*sizeof(float);
     CHECK_CUDA_STATUS( cudaMalloc(&mInOutBuffer[0], InputBufferSize) );
 
     for(size_t i = 0; i < mTargetsDimensions.size(); ++i) {
-        size_t buffSize = mMaxBatchSize*mTargetsDimensions[i].c()*mTargetsDimensions[i].h()*mTargetsDimensions[i].w() * sizeof(float);
+        size_t buffSize = mMaxBatchSize*mTargetsDimensions[i].d[1]*mTargetsDimensions[i].d[2]*mTargetsDimensions[i].d[3] * sizeof(float);
         CHECK_CUDA_STATUS( cudaMalloc(&mInOutBuffer[1 + i], buffSize));
     }
 
     //optional, usefull for acceleration of semantic map
     CHECK_CUDA_STATUS( cudaMalloc(&mWorkspaceGPU,
-                                  mMaxBatchSize*mInputDimensions.w()*mInputDimensions.h()*3*sizeof(unsigned char)));
+                                  mMaxBatchSize*mInputDimensions.d[1]*mInputDimensions.d[2]*3*sizeof(unsigned char)));
     CHECK_CUDA_STATUS(cudaStreamCreate(&mDataStream));
 }
 
@@ -154,9 +187,59 @@ void N2D2::Network::createContext()
     std::cout << "Start createContext" << std::endl;
     if(mInputEngine.empty())
     {
+#if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+
+        mNetBuilder->setMaxBatchSize(mMaxBatchSize);
+        mNetBuilderConfig->setMinTimingIterations(mIterBuild);
+        mNetBuilderConfig->setMaxWorkspaceSize(mMaxWorkSpaceSize);
+        if(mUseDLA) {
+            mNetBuilderConfig->setDLACore(0) ;
+            mNetBuilderConfig->setFlag(nvinfer1::BuilderFlag::kGPU_FALLBACK);
+        }
+        if(mDataType == nvinfer1::DataType::kHALF) {
+            mNetBuilderConfig->setFlag(nvinfer1::BuilderFlag::kFP16);
+        }
+        if(mNbBits == 8)
+        {
+            std::string calibDir = mCalibrationFolder.empty() ?  
+                                    "./batches_calib/"
+                                    : mCalibrationFolder;
+            std::vector<std::string> filesCalib;
+            struct dirent* pFile;
+            DIR* pDir = opendir(calibDir.c_str());
+            if (pDir == NULL) {
+                //throw std::runtime_error(
+                //    "Couldn't open the directory for input patterns: " + calibDir);
+                std::cout << "No directory for batches calibration" << std::endl;
+            }
+            else {
+              while ((pFile = readdir(pDir)) != NULL) {
+                  if (pFile->d_name[0] != '.')
+                      filesCalib.push_back(std::string(calibDir + pFile->d_name));
+              }
+              closedir(pDir);
+            }
+            unsigned int nbCalibFiles = filesCalib.size();
+            if(nbCalibFiles == 0)
+                //throw std::runtime_error("Cannot find calibration files in dir " + calibDir);
+                std::cout << "Cannot find calibration files in dir " << calibDir << std::endl;
+
+            std::cout << "Using Entropy Calibrator" << std::endl;
+            BatchStream calibrationStream(  1, //batchsize
+                                            getInputDimZ(), 
+                                            getInputDimY(), 
+                                            getInputDimX(), 
+                                            nbCalibFiles, 
+                                            calibDir + "batch_calibration");
+
+            mCalibrator.reset(new Int8EntropyCalibrator(calibrationStream, 0, mCalibrationCacheName));
+            mNetBuilderConfig->setFlag(nvinfer1::BuilderFlag::kINT8);
+            mNetBuilderConfig->setInt8Calibrator(mCalibrator.get());
+#else
+
         mNetBuilder->setMaxBatchSize(mMaxBatchSize);
         mNetBuilder->setMinFindIterations(mIterBuild);
-        mNetBuilder->setMaxWorkspaceSize(128<<20);
+        mNetBuilder->setMaxWorkspaceSize(mMaxWorkSpaceSize);
 #if NV_TENSORRT_MAJOR < 5
         if(mDataType == nvinfer1::DataType::kHALF)
             mNetBuilder->setHalf2Mode(true);
@@ -203,12 +286,18 @@ void N2D2::Network::createContext()
             mNetBuilder->setInt8Mode(true);
             mNetBuilder->setInt8Calibrator(mCalibrator.get());
 #endif
-        }
+#endif
 
+        }
+#if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+
+        mCudaEngine = mNetBuilder->buildEngineWithConfig(*mNetDef.back(), *mNetBuilderConfig);
+        mNetBuilderConfig->destroy();
+#else
         mCudaEngine = mNetBuilder->buildCudaEngine(*mNetDef.back());
+#endif
         std::cout << "buildCudaEngine done" << std::endl;
         mNetBuilder->destroy();
-        std::cout << "mNetBuilder->destroy" << std::endl;
 
     }
     else
@@ -219,7 +308,6 @@ void N2D2::Network::createContext()
             throw std::runtime_error("Could not open cuda engine file: " + mInputEngine);
 
         nvinfer1::IRuntime* infer = nvinfer1::createInferRuntime(gLogger);
-#if NV_TENSORRT_MAJOR > 1
         // support for stringstream deserialization was deprecated in TensorRT v2
         // instead, read the stringstream into a memory buffer and pass that to TRT.
         cudaEngineStream.seekg(0, std::ios::end);
@@ -230,14 +318,15 @@ void N2D2::Network::createContext()
             throw std::runtime_error("Could not allocate enough memory for load cuda engine file " + mInputEngine);
 
         cudaEngineStream.read((char*)modelMem, modelSize);
+#if NV_TENSORRT_MAJOR > 7
+        mCudaEngine = infer->deserializeCudaEngine(modelMem, 
+                                                  modelSize);
+#else
         mCudaEngine = infer->deserializeCudaEngine(modelMem, 
                                                   modelSize, 
                                                   &mPluginFactory);
-        free(modelMem);
-#else
-       // TensorRT v1 can deserialize directly from stringstream
-       mCudaEngine = infer->deserializeCudaEngine(cudaEngineStream);
 #endif
+        free(modelMem);
     }
         std::cout << "mCudaEngine->serialize" << std::endl;
 
@@ -265,12 +354,30 @@ void N2D2::Network::createContext()
     // Once the engine is built. Its safe to destroy the mCalibrator.
     mCalibrator.reset();
 #endif
-
-    mPluginFactory.destroyPlugin();
+//#if NV_TENSORRT_MAJOR < 8
+//    mPluginFactory.destroyPlugin();
+//#endif
     nvinfer1::IRuntime* runtime = nvinfer1::createInferRuntime(gLogger);
+    int numCreators = 0;
+    nvinfer1::IPluginCreator* const* tmpList = getPluginRegistry()->getPluginCreatorList(&numCreators);
+    for (int k = 0; k < numCreators; ++k)
+    {
+        if (!tmpList[k]) {
+            std::cout << "Plugin Creator for plugin " << k << " is a nullptr." << std::endl;
+            continue;
+        }
+        std::string pluginName = tmpList[k]->getPluginName();
+        std::cout << k << ": " << pluginName << std::endl;
+    }
+#if NV_TENSORRT_MAJOR > 7
+    nvinfer1::ICudaEngine* engine = runtime->deserializeCudaEngine(gieModelStream->data(),
+                                                                   gieModelStream->size());
+#else
     nvinfer1::ICudaEngine* engine = runtime->deserializeCudaEngine(gieModelStream->data(),
                                                                    gieModelStream->size(),
                                                                    &mPluginFactory);
+#endif
+
 #if NV_TENSORRT_MAJOR > 4
     if(runtime->getNbDLACores() > 1)
         runtime->setDLACore(runtime->getNbDLACores() - 1) ;
@@ -282,10 +389,15 @@ void N2D2::Network::createContext()
 
     if (gieModelStream)
         gieModelStream->destroy();
+    std::cout << "gieModelStream destroy done" << std::endl;
 
     mContext = engine->createExecutionContext();
-
+    std::cout << "mContext done" << std::endl;
+    //mCudaEngine->destroy();
+#if NV_TENSORRT_MAJOR < 8
     mPluginFactory.destroyPlugin();
+#endif
+
 }
 
 /*
@@ -304,9 +416,9 @@ void N2D2::Network::output(uint32_t* out_data, unsigned int target) {
 void N2D2::Network::estimated(uint32_t* out_data, unsigned int target, bool useGPU, float threshold) {
 
    spatial_output_generation(mMaxBatchSize,
-                            mTargetsDimensions[target].c(),
-                            mTargetsDimensions[target].h(),
-                            mTargetsDimensions[target].w(),
+                            mTargetsDimensions[target].d[1],
+                            mTargetsDimensions[target].d[2],
+                            mTargetsDimensions[target].d[3],
                             mInOutBuffer[target + 1],
                             out_data,
                             mDataStream,
@@ -316,22 +428,22 @@ void N2D2::Network::estimated(uint32_t* out_data, unsigned int target, bool useG
 
 void N2D2::Network::log_output(float* out_data, unsigned int target) {
 
-   get_output(  mTargetsDimensions[target].c(),
-                mTargetsDimensions[target].h(),
-                mTargetsDimensions[target].w(),
+   get_output(  mTargetsDimensions[target].d[1],
+                mTargetsDimensions[target].d[2],
+                mTargetsDimensions[target].d[3],
                 mInOutBuffer[target + 1],
                 out_data);
 }
 
 void N2D2::Network::addOverlay(unsigned char* overlay_data, unsigned int target, float alpha) {
 
-   add_weighted(mTargetsDimensions[target].c(),
-                mTargetsDimensions[target].h(),
-                mTargetsDimensions[target].w(),
+   add_weighted(mTargetsDimensions[target].d[1],
+                mTargetsDimensions[target].d[2],
+                mTargetsDimensions[target].d[3],
                 reinterpret_cast<float *>(mInOutBuffer[target + 1]),
-                mInputDimensions.c(),
-                mInputDimensions.h(),
-                mInputDimensions.w(),
+                mInputDimensions.d[0],
+                mInputDimensions.d[1],
+                mInputDimensions.d[2],
                 reinterpret_cast<float *>(mInOutBuffer[0]),
                 overlay_data,
                 alpha);
@@ -372,8 +484,13 @@ std::vector<nvinfer1::ITensor *>
         {
             std::string outName = layerName + "_Activation_" + std::to_string(i);
             nvinfer1::ActivationType finalActivation = activation;
+
+
             //Special cases for Clip Relu (Relu6) and Leaky Relu:
             if(activation == nvinfer1::ActivationType::kRELU){
+//Need a special case for TensorRT 5.0.X while clipped Relu and Leaky Relu are only supported since TensorRT 5.1.0 : 
+// ==> https://docs.nvidia.com/deeplearning/tensorrt/release-notes/tensorrt-5.html#rel_5-0-RC
+#if ((NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 5) 
                 //ReluClipped:               
                 if(beta != 0.0 && alpha == 0.0) {
                    finalActivation = nvinfer1::ActivationType::kCLIP;
@@ -381,6 +498,7 @@ std::vector<nvinfer1::ITensor *>
                 if(alpha != 0.0 && beta == 0.0) {
                     finalActivation = nvinfer1::ActivationType::kLEAKY_RELU;
                 }
+#endif
             }
             auto layer = mNetDef.back()->addActivation(*inputs_tensor[i],
                                             finalActivation);
@@ -391,17 +509,33 @@ std::vector<nvinfer1::ITensor *>
 #if NV_TENSORRT_MAJOR > 4
             if(mUseDLA)
             {
-                if(mNetBuilder->canRunOnDLA(layer) 
-                        && (mDataType == nvinfer1::DataType::kHALF || mDataType == nvinfer1::DataType::kINT8))
+                bool devSuccess = false;
+                if((mDataType == nvinfer1::DataType::kHALF 
+                        || mDataType == nvinfer1::DataType::kINT8))
                 {
-                    layer->setPrecision(mDataType);
-                    std::cout << "Layer: " << layer->getName() 
-                                << " will run on DLA (batch size max: " 
-                                <<  mNetBuilder->getMaxDLABatchSize()
-                                << std::endl;
-                    mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+    #if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+                    if(mNetBuilderConfig->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilderConfig->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #else
+                    if(mNetBuilder->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #endif
                 }
-                else
+                if(!devSuccess)
                     throw std::runtime_error("Cannot use DLA for layer " + outName);
             }
 #endif
@@ -534,13 +668,14 @@ std::vector<nvinfer1::ITensor *>
         //delete[] bias_data;
         //delete[] weight_data;
 
-        nvinfer1::DimsHW kernelDims = {(int) kernelH, (int)kernelW};
-        nvinfer1::DimsHW strideDims = {(int)strideY, (int)strideX};
-        nvinfer1::DimsHW paddingDims = {(int)paddingY, (int)paddingX};
+        trt_DimsHW kernelDims = {(int) kernelH, (int)kernelW};
+        trt_DimsHW strideDims = {(int)strideY, (int)strideX};
+        trt_DimsHW paddingDims = {(int)paddingY, (int)paddingX};
 
         for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
         {
             std::string outName = layerName + "_" + std::to_string(i);
+#if NV_TENSORRT_MAJOR < 6
             auto layer = mNetDef.back()->addConvolution(*inputs_tensor[i],
                                              nbOutputs,
                                              kernelDims,
@@ -548,21 +683,46 @@ std::vector<nvinfer1::ITensor *>
                                              bias_trt);
             layer->setStride(strideDims);
             layer->setPadding(paddingDims);
+#else
+            auto layer = mNetDef.back()->addConvolutionNd(*inputs_tensor[i],
+                                                            nbOutputs,
+                                                            kernelDims,
+                                                            weights_trt,
+                                                            bias_trt);
+            layer->setStrideNd(strideDims);
+            layer->setPaddingNd(paddingDims);
+#endif
             layer->setName(outName.c_str());
 #if NV_TENSORRT_MAJOR > 4
             if(mUseDLA)
             {
-                if(mNetBuilder->canRunOnDLA(layer) 
-                        && (mDataType == nvinfer1::DataType::kHALF || mDataType == nvinfer1::DataType::kINT8))
+                bool devSuccess = false;
+                if((mDataType == nvinfer1::DataType::kHALF 
+                        || mDataType == nvinfer1::DataType::kINT8))
                 {
-                    layer->setPrecision(mDataType);
-                    std::cout << "Layer: " << layer->getName() 
-                                << " will run on DLA (batch size max: " 
-                                <<  mNetBuilder->getMaxDLABatchSize()
-                                << std::endl;
-                    mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+    #if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+                    if(mNetBuilderConfig->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilderConfig->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #else
+                    if(mNetBuilder->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #endif
                 }
-                else
+                if(!devSuccess)
                     throw std::runtime_error("Cannot use DLA for layer " + outName);
             }
 #endif
@@ -693,13 +853,14 @@ std::vector<nvinfer1::ITensor *>
         //delete[] bias_data;
         //delete[] weight_data;
 
-        nvinfer1::DimsHW kernelDims = {(int) kernelH, (int)kernelW};
-        nvinfer1::DimsHW strideDims = {(int)strideY, (int)strideX};
-        nvinfer1::DimsHW paddingDims = {(int)paddingY, (int)paddingX};
+        trt_DimsHW kernelDims = {(int) kernelH, (int)kernelW};
+        trt_DimsHW strideDims = {(int)strideY, (int)strideX};
+        trt_DimsHW paddingDims = {(int)paddingY, (int)paddingX};
 
         for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
         {
             std::string outName = layerName + "_" + std::to_string(i);
+#if NV_TENSORRT_MAJOR < 6
             auto layer = mNetDef.back()->addDeconvolution(*inputs_tensor[i],
                                              nbOutputs,
                                              kernelDims,
@@ -707,21 +868,46 @@ std::vector<nvinfer1::ITensor *>
                                              bias_trt);
             layer->setStride(strideDims);
             layer->setPadding(paddingDims);
+#else
+            auto layer = mNetDef.back()->addDeconvolutionNd(*inputs_tensor[i],
+                                             nbOutputs,
+                                             kernelDims,
+                                             weights_trt,
+                                             bias_trt);
+            layer->setStrideNd(strideDims);
+            layer->setPaddingNd(paddingDims);
+#endif
             layer->setName(outName.c_str());
 #if NV_TENSORRT_MAJOR > 4
             if(mUseDLA)
             {
-                if(mNetBuilder->canRunOnDLA(layer) 
-                        && (mDataType == nvinfer1::DataType::kHALF || mDataType == nvinfer1::DataType::kINT8))
+                bool devSuccess = false;
+                if((mDataType == nvinfer1::DataType::kHALF 
+                        || mDataType == nvinfer1::DataType::kINT8))
                 {
-                    layer->setPrecision(mDataType);
-                    std::cout << "Layer: " << layer->getName() 
-                                << " will run on DLA (batch size max: " 
-                                <<  mNetBuilder->getMaxDLABatchSize()
-                                << std::endl;
-                    mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+    #if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+                    if(mNetBuilderConfig->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilderConfig->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #else
+                    if(mNetBuilder->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #endif
                 }
-                else
+                if(!devSuccess)
                     throw std::runtime_error("Cannot use DLA for layer " + outName);
             }
 #endif
@@ -773,15 +959,22 @@ std::vector<nvinfer1::ITensor *>
 {
     std::vector<nvinfer1::ITensor *> output_tensor;
     std::cout << "Add paddinglayer: " << layerName << std::endl;
-    nvinfer1::DimsHW prePad = {pad_top, pad_left};
-    nvinfer1::DimsHW postPad = {pad_bottom, pad_right};
+    trt_DimsHW prePad = {pad_top, pad_left};
+    trt_DimsHW postPad = {pad_bottom, pad_right};
 
     for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
     {
         std::string outName = layerName + "_" + std::to_string(i);
+#if NV_TENSORRT_MAJOR <= 6
         auto layer = mNetDef.back()->addPadding(*inputs_tensor[i],
                                        prePad,
                                        postPad);
+#else 
+        auto layer = mNetDef.back()->addPaddingNd(*inputs_tensor[i],
+                                       prePad,
+                                       postPad);
+#endif
+
         layer->setName(outName.c_str());
         output_tensor.push_back(layer->getOutput(0));
         output_tensor.back()->setType(mDataType);
@@ -833,21 +1026,37 @@ std::vector<nvinfer1::ITensor *>
         layer->setName(outName.c_str());
 
 #if NV_TENSORRT_MAJOR > 4
-        if(mUseDLA)
-        {
-            if(mNetBuilder->canRunOnDLA(layer) 
-                    && (mDataType == nvinfer1::DataType::kHALF || mDataType == nvinfer1::DataType::kINT8))
+            if(mUseDLA)
             {
-                layer->setPrecision(mDataType);
-                std::cout << "Layer: " << layer->getName() 
-                            << " will run on DLA (batch size max: " 
-                            <<  mNetBuilder->getMaxDLABatchSize()
-                            << std::endl;
-                mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                bool devSuccess = false;
+                if((mDataType == nvinfer1::DataType::kHALF 
+                        || mDataType == nvinfer1::DataType::kINT8))
+                {
+    #if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+                    if(mNetBuilderConfig->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilderConfig->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #else
+                    if(mNetBuilder->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #endif
+                }
+                if(!devSuccess)
+                    throw std::runtime_error("Cannot use DLA for layer " + outName);
             }
-            else
-                throw std::runtime_error("Cannot use DLA for layer " + outName);
-        }
 #endif
 
         output_tensor.push_back(layer->getOutput(0));
@@ -1018,17 +1227,33 @@ std::vector<nvinfer1::ITensor *>
 #if NV_TENSORRT_MAJOR > 4
             if(mUseDLA)
             {
-                if(mNetBuilder->canRunOnDLA(layer) 
-                        && (mDataType == nvinfer1::DataType::kHALF || mDataType == nvinfer1::DataType::kINT8))
+                bool devSuccess = false;
+                if((mDataType == nvinfer1::DataType::kHALF 
+                        || mDataType == nvinfer1::DataType::kINT8))
                 {
-                    layer->setPrecision(mDataType);
-                    std::cout << "Layer: " << layer->getName() 
-                                << " will run on DLA (batch size max: " 
-                                <<  mNetBuilder->getMaxDLABatchSize()
-                                << std::endl;
-                    mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+    #if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+                    if(mNetBuilderConfig->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilderConfig->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #else
+                    if(mNetBuilder->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #endif
                 }
-                else
+                if(!devSuccess)
                     throw std::runtime_error("Cannot use DLA for layer " + outName);
             }
 #endif
@@ -1101,8 +1326,8 @@ std::vector<nvinfer1::ITensor *>
             nvinfer1::Weights power_trt;
             const std::size_t coeffIdx =  coeffMode == PerChannel ? 
                                             0 : input;
-            const std::size_t coeffLength =  coeffMode == PerChannel ? 
-                                            nbOutputs : 1;
+            const int64_t coeffLength = (int64_t) (coeffMode == PerChannel ? 
+                                            nbOutputs : 1);
 
             if(mDataType != nvinfer1::DataType::kHALF)
             {
@@ -1138,21 +1363,37 @@ std::vector<nvinfer1::ITensor *>
 
                     layer->setName(outName.c_str());
 #if NV_TENSORRT_MAJOR > 4
-                    if(mUseDLA)
-                    {
-                        if(mNetBuilder->canRunOnDLA(layer) 
-                                && (mDataType == nvinfer1::DataType::kHALF || mDataType == nvinfer1::DataType::kINT8))
-                        {
-                            layer->setPrecision(mDataType);
-                            std::cout << "Layer: " << layer->getName() 
-                                        << " will run on DLA (batch size max: " 
-                                        <<  mNetBuilder->getMaxDLABatchSize()
-                                        << std::endl;
-                            mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
-                        }
-                        else
-                            throw std::runtime_error("Cannot use DLA for layer " + outName);
+            if(mUseDLA)
+            {
+                bool devSuccess = false;
+                if((mDataType == nvinfer1::DataType::kHALF 
+                        || mDataType == nvinfer1::DataType::kINT8))
+                {
+    #if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+                    if(mNetBuilderConfig->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilderConfig->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
                     }
+    #else
+                    if(mNetBuilder->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #endif
+                }
+                if(!devSuccess)
+                    throw std::runtime_error("Cannot use DLA for layer " + outName);
+            }
 #endif
                     scaleVecTensor.push_back(layer->getOutput(0));
                     scaleVecTensor.back()->setType(mDataType);
@@ -1197,21 +1438,37 @@ std::vector<nvinfer1::ITensor *>
                 layer->setName(outName.c_str());
 
 #if NV_TENSORRT_MAJOR > 4
-                if(mUseDLA)
+            if(mUseDLA)
+            {
+                bool devSuccess = false;
+                if((mDataType == nvinfer1::DataType::kHALF 
+                        || mDataType == nvinfer1::DataType::kINT8))
                 {
-                    if(mNetBuilder->canRunOnDLA(layer) 
-                            && (mDataType == nvinfer1::DataType::kHALF || mDataType == nvinfer1::DataType::kINT8))
-                    {
+    #if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+                    if(mNetBuilderConfig->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilderConfig->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #else
+                    if(mNetBuilder->canRunOnDLA(layer)) { 
                         layer->setPrecision(mDataType);
                         std::cout << "Layer: " << layer->getName() 
                                     << " will run on DLA (batch size max: " 
                                     <<  mNetBuilder->getMaxDLABatchSize()
                                     << std::endl;
                         mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
                     }
-                    else
-                        throw std::runtime_error("Cannot use DLA for layer " + outName);
+    #endif
                 }
+                if(!devSuccess)
+                    throw std::runtime_error("Cannot use DLA for layer " + outName);
+            }
 #endif
 
                 output_tensor.push_back(layer->getOutput(0));
@@ -1308,17 +1565,33 @@ std::vector<nvinfer1::ITensor *>
 #if NV_TENSORRT_MAJOR > 4
             if(mUseDLA)
             {
-                if(mNetBuilder->canRunOnDLA(layer) 
-                        && (mDataType == nvinfer1::DataType::kHALF || mDataType == nvinfer1::DataType::kINT8))
+                bool devSuccess = false;
+                if((mDataType == nvinfer1::DataType::kHALF 
+                        || mDataType == nvinfer1::DataType::kINT8))
                 {
-                    layer->setPrecision(mDataType);
-                    std::cout << "Layer: " << layer->getName() 
-                                << " will run on DLA (batch size max: " 
-                                <<  mNetBuilder->getMaxDLABatchSize()
-                                << std::endl;
-                    mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+    #if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+                    if(mNetBuilderConfig->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilderConfig->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #else
+                    if(mNetBuilder->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #endif
                 }
-                else
+                if(!devSuccess)
                     throw std::runtime_error("Cannot use DLA for layer " + outName);
             }
 #endif
@@ -1443,17 +1716,33 @@ std::vector<nvinfer1::ITensor *>
 #if NV_TENSORRT_MAJOR > 4
             if(mUseDLA)
             {
-                if(mNetBuilder->canRunOnDLA(layer) 
-                        && (mDataType == nvinfer1::DataType::kHALF || mDataType == nvinfer1::DataType::kINT8))
+                bool devSuccess = false;
+                if((mDataType == nvinfer1::DataType::kHALF 
+                        || mDataType == nvinfer1::DataType::kINT8))
                 {
-                    layer->setPrecision(mDataType);
-                    std::cout << "Layer: " << layer->getName() 
-                                << " will run on DLA (batch size max: " 
-                                <<  mNetBuilder->getMaxDLABatchSize()
-                                << std::endl;
-                    mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+    #if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+                    if(mNetBuilderConfig->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilderConfig->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #else
+                    if(mNetBuilder->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #endif
                 }
-                else
+                if(!devSuccess)
                     throw std::runtime_error("Cannot use DLA for layer " + outName);
             }
 #endif
@@ -1544,33 +1833,58 @@ std::vector<nvinfer1::ITensor *>
 {
         std::vector<nvinfer1::ITensor *> output_tensor;
         std::cout << "Add pooling layer: " << layerName << std::endl;
-        nvinfer1::DimsHW poolDims = {(int)poolH, (int)poolW};
-        nvinfer1::DimsHW strideDims = {(int)strideY, (int)strideX};
-        nvinfer1::DimsHW paddingDims = {(int)paddingY, (int)paddingX};
+        trt_DimsHW poolDims = {(int)poolH, (int)poolW};
+        trt_DimsHW strideDims = {(int)strideY, (int)strideX};
+        trt_DimsHW paddingDims = {(int)paddingY, (int)paddingX};
 
         for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
         {
             std::string outName = layerName + "_" + std::to_string(i);
+#if NV_TENSORRT_MAJOR < 6
             auto layer = mNetDef.back()->addPooling(*inputs_tensor[i],
                                              poolType,
                                              poolDims);
            layer->setStride(strideDims);
            layer->setPadding(paddingDims);
+#else 
+            auto layer = mNetDef.back()->addPoolingNd(*inputs_tensor[i],
+                                             poolType,
+                                             poolDims);
+           layer->setStrideNd(strideDims);
+           layer->setPaddingNd(paddingDims);
+
+#endif
            layer->setName(outName.c_str());
 #if NV_TENSORRT_MAJOR > 4
             if(mUseDLA)
             {
-                if(mNetBuilder->canRunOnDLA(layer) 
-                        && (mDataType == nvinfer1::DataType::kHALF || mDataType == nvinfer1::DataType::kINT8))
+                bool devSuccess = false;
+                if((mDataType == nvinfer1::DataType::kHALF 
+                        || mDataType == nvinfer1::DataType::kINT8))
                 {
-                    layer->setPrecision(mDataType);
-                    std::cout << "Layer: " << layer->getName() 
-                                << " will run on DLA (batch size max: " 
-                                <<  mNetBuilder->getMaxDLABatchSize()
-                                << std::endl;
-                    mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+    #if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
+                    if(mNetBuilderConfig->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilderConfig->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #else
+                    if(mNetBuilder->canRunOnDLA(layer)) { 
+                        layer->setPrecision(mDataType);
+                        std::cout << "Layer: " << layer->getName() 
+                                    << " will run on DLA (batch size max: " 
+                                    <<  mNetBuilder->getMaxDLABatchSize()
+                                    << std::endl;
+                        mNetBuilder->setDeviceType(layer, nvinfer1::DeviceType::kDLA);
+                        devSuccess = true;
+                    }
+    #endif
                 }
-                else
+                if(!devSuccess)
                     throw std::runtime_error("Cannot use DLA for layer " + outName);
             }
 #endif
@@ -1662,13 +1976,122 @@ std::vector<nvinfer1::ITensor *>
 }
 
 std::vector<nvinfer1::ITensor *>
-          N2D2::Network::add_reshape(std::string layerName,
+      N2D2::Network::add_reshape(std::string layerName,
+                    unsigned int nbDims,
+                    const int shape[],
+                    std::vector<nvinfer1::ITensor *> inputs_tensor)
+{
+    std::vector<nvinfer1::ITensor *> output_tensor;
+    std::cout << "Add reshape layer: " << layerName << std::endl;
+    for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
+    {
+
+        nvinfer1::Dims tensor_dims = inputs_tensor[0]->getDimensions();
+
+        std::string outName = layerName + "_" + std::to_string(i);
+        auto layer = mNetDef.back()->addShuffle(*inputs_tensor[i]);
+        assert(layer != nullptr);
+
+        nvinfer1::Dims reshape_dims;
+        reshape_dims.nbDims = nbDims;
+
+        for (int dim = 0; dim < nbDims; ++dim) {
+            if (shape[nbDims - 1 - dim] != 0)
+                reshape_dims.d[dim] = shape[nbDims - 1 - dim];
+            else
+                reshape_dims.d[dim] = tensor_dims.d[dim];
+        }
+
+        layer->setReshapeDimensions(reshape_dims);
+
+        layer->setName(outName.c_str());
+        output_tensor.push_back(layer->getOutput(0));
+        output_tensor.back()->setName(outName.c_str());
+
+        nvinfer1::Dims tensor_in_dims = inputs_tensor[i]->getDimensions();
+        std::cout << "               " << inputs_tensor[i]->getName()
+                    << "---> " << output_tensor.back()->getName() << std::endl;
+
+        std::cout << "               ";
+        std::cout << "{";
+        for(unsigned int d = 0; d < tensor_in_dims.nbDims; ++d)
+                std::cout << tensor_in_dims.d[d] << " ";
+        std::cout << "} ----> ";
+
+        nvinfer1::Dims tensor_output_dims = output_tensor.back()->getDimensions();
+        std::cout << "{";
+        for(unsigned int d = 0; d < tensor_output_dims.nbDims; ++d)
+                std::cout << tensor_output_dims.d[d] << " ";
+        std::cout << "}" << std::endl;
+    }
+
+    return output_tensor;
+}
+
+std::vector<nvinfer1::ITensor *>
+      N2D2::Network::add_transpose(std::string layerName,
+                    unsigned int nbDims,
+                    const int perm[],
+                    std::vector<nvinfer1::ITensor *> inputs_tensor)
+{
+    std::vector<nvinfer1::ITensor *> output_tensor;
+    std::cout << "Add transpose layer: " << layerName << std::endl;
+    for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
+    {
+
+        nvinfer1::Dims tensor_dims = inputs_tensor[0]->getDimensions();
+
+        std::string outName = layerName + "_" + std::to_string(i);
+        auto layer = mNetDef.back()->addShuffle(*inputs_tensor[i]);
+        assert(layer != nullptr);
+
+        nvinfer1::Dims reshape_dims;
+        nvinfer1::Permutation perm_dims;
+
+        reshape_dims.nbDims = nbDims - 1;
+
+        for (int dim = 1; dim < nbDims; ++dim) {
+            reshape_dims.d[dim - 1] = tensor_dims.d[perm[nbDims - 1 - dim]];
+            perm_dims.order[dim - 1] = perm[nbDims - 1 - dim];
+        }
+
+#if NV_TENSORRT_MAJOR < 4
+        layer->setReshapeDimensions(reshape_dims);
+#endif
+        layer->setFirstTranspose(perm_dims);
+
+        layer->setName(outName.c_str());
+        output_tensor.push_back(layer->getOutput(0));
+        output_tensor.back()->setName(outName.c_str());
+
+        nvinfer1::Dims tensor_in_dims = inputs_tensor[i]->getDimensions();
+        std::cout << "               " << inputs_tensor[i]->getName()
+                    << "---> " << output_tensor.back()->getName() << std::endl;
+
+        std::cout << "               ";
+        std::cout << "{";
+        for(unsigned int d = 0; d < tensor_in_dims.nbDims; ++d)
+                std::cout << tensor_in_dims.d[d] << " ";
+        std::cout << "} ----> ";
+
+        nvinfer1::Dims tensor_output_dims = output_tensor.back()->getDimensions();
+        std::cout << "{";
+        for(unsigned int d = 0; d < tensor_output_dims.nbDims; ++d)
+                std::cout << tensor_output_dims.d[d] << " ";
+        std::cout << "}" << std::endl;
+    }
+
+    return output_tensor;
+}
+
+std::vector<nvinfer1::ITensor *>
+          N2D2::Network::add_group_reshape(std::string layerName,
                         unsigned int groupSize,
                         bool restoreShape,
                         std::vector<nvinfer1::ITensor *> inputs_tensor)
 {
     std::vector<nvinfer1::ITensor *> output_tensor;
-    std::cout << "Add Reshapelayer: " << layerName << std::endl;
+    std::cout << "Add group reshape layer: " << layerName << std::endl;
 
 
     for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
@@ -1685,7 +2108,7 @@ std::vector<nvinfer1::ITensor *>
         assert(layer != nullptr);
         if(tensor_dims.nbDims == 3)
         {
-            nvinfer1::DimsCHW reshape_dims;
+            trt_Dims3 reshape_dims;
             const unsigned int nbOutputs = tensor_dims.d[0];
             const unsigned int dimY = tensor_dims.d[1];
             const unsigned int dimX = tensor_dims.d[2];
@@ -1695,7 +2118,7 @@ std::vector<nvinfer1::ITensor *>
 
             if(!(groupSize % nbOutputs))
                 throw std::runtime_error(
-                    "add_reshape(): groupsize must be divisible by nbOutputs");
+                    "add_group_reshape(): groupsize must be divisible by nbOutputs");
 
             reshape_dims.d[0] = groupSize;
             reshape_dims.d[1] = dimY * (nbOutputs / groupSize);
@@ -1706,7 +2129,7 @@ std::vector<nvinfer1::ITensor *>
         }
         else if(tensor_dims.nbDims == 4)
         {
-            nvinfer1::DimsNCHW reshape_dims;
+            trt_Dims4 reshape_dims;
             const unsigned int batch = tensor_dims.d[0];
             const unsigned int nbOutputs = tensor_dims.d[1];
             const unsigned int dimY = tensor_dims.d[2];
@@ -1717,10 +2140,10 @@ std::vector<nvinfer1::ITensor *>
 
             if(!(groupSize % nbOutputs))
                 throw std::runtime_error(
-                    "add_reshape(): groupsize must be divisible by nbOutputs");
+                    "add_group_reshape(): groupsize must be divisible by nbOutputs");
             if( (dimY > 1 || dimX > 1) && !restoreShape)
                 throw std::runtime_error(
-                    "add_reshape(): can only be applied on 1 dimension tensor");
+                    "add_group_reshape(): can only be applied on 1 dimension tensor");
 
             reshape_dims.d[0] = batch;
             reshape_dims.d[1] = !restoreShape ? groupSize : dimY * nbOutputs;
@@ -1812,31 +2235,41 @@ std::vector<nvinfer1::ITensor *>
                         unsigned int nbAnchors,
                         const float* anchor)
 {
-
         std::vector<nvinfer1::ITensor *> output_tensor;
         std::cout << "Add anchors layer: " << layerName << std::endl;
 
         for(unsigned int i = 0; i < inputs_tensor.size(); ++i)
         {
-            std::string outName = layerName + "_" + std::to_string(i);
-            nvinfer1::IPlugin* pluginAnc = mPluginFactory.createPlugin(outName.c_str(),
-                                                                mMaxBatchSize,
-                                                                nbOutputs,
-                                                                outputHeight,
-                                                                outputWidth,
-                                                                stimuliHeight,
-                                                                stimuliWidth,
-                                                                featureMapWidth,
-                                                                featureMapHeight,
-                                                                scoreCls,
-                                                                isCoordinatesAnchors,
-                                                                isFlip,
-                                                                nbAnchors,
-                                                                anchor);
 
-            auto layer = mNetDef.back()->addPlugin(&inputs_tensor[i],
-                                        1,
-                                        *pluginAnc);
+            std::string outName = layerName + "_" + std::to_string(i);
+
+            nvinfer1::PluginFieldCollection fieldCollection;
+            std::vector<nvinfer1::PluginField> pluginAttributs;
+
+            auto creator = getPluginRegistry()->getPluginCreator("AnchorGPUPlugin", "1");
+            pluginAttributs.emplace_back(nvinfer1::PluginField("batchSize", &mMaxBatchSize, nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nbOutputs", &(nbOutputs), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("outputHeight", &(outputHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("outputWidth", &(outputWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliHeight", &(stimuliHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliWidth", &(stimuliWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapWidth", &(featureMapWidth), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapHeight", &(featureMapHeight), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("scoreCls", &(scoreCls), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("isCoordinatesAnchors", &(isCoordinatesAnchors), nvinfer1::PluginFieldType::kCHAR, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("isFlip", &(isFlip), nvinfer1::PluginFieldType::kCHAR, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("nbAnchors", &(nbAnchors), nvinfer1::PluginFieldType::kINT32, 1));
+            pluginAttributs.emplace_back(nvinfer1::PluginField("anchors", reinterpret_cast<const void *>(anchor), nvinfer1::PluginFieldType::kFLOAT32, 4*nbAnchors));
+
+            fieldCollection.nbFields = pluginAttributs.size();
+            fieldCollection.fields = pluginAttributs.data();
+
+            nvinfer1::IPluginV2* pluginAnchor = creator->createPlugin("AnchorGPUPlugin", &fieldCollection);
+
+            auto layer = mNetDef.back()->addPluginV2(&inputs_tensor[i],
+                                    inputs_tensor.size(),
+                                    *pluginAnchor);
+
 
            layer->setName(outName.c_str());
 
@@ -1860,6 +2293,7 @@ std::vector<nvinfer1::ITensor *>
         }
         return output_tensor;
 
+
 }
 
 
@@ -1881,19 +2315,28 @@ std::vector<nvinfer1::ITensor *>
     {
         std::string outName = layerName + "_" + std::to_string(i);
 #if NV_TENSORRT_MAJOR < 6
-        nvinfer1::IPlugin* pluginResize = mPluginFactory.createPlugin(outName.c_str(),
-                                                                mMaxBatchSize,
-                                                                nbOutputs,
-                                                                outputHeight,
-                                                                outputWidth,
-                                                                featureHeight,
-                                                                featureWidth,
-                                                                resizeType,
-                                                                alignCorner);
+        nvinfer1::PluginFieldCollection fieldCollection;
+        std::vector<nvinfer1::PluginField> pluginAttributs;
 
-        auto layer = mNetDef.back()->addPlugin(&inputs_tensor[i],
-                                    1,
-                                    *pluginResize);
+        auto creator = getPluginRegistry()->getPluginCreator("ResizeGPUPlugin", "1");
+        pluginAttributs.emplace_back(nvinfer1::PluginField("batchSize", &mMaxBatchSize, nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("nbOutputs", &(nbOutputs), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("outputHeight", &(outputHeight), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("outputWidth", &(outputWidth), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("featureHeight", &(featureHeight), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("featureWidth", &(featureWidth), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("resizeType", &(resizeType), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("alignCorner", &(alignCorner), nvinfer1::PluginFieldType::kCHAR, 1));
+
+        fieldCollection.nbFields = pluginAttributs.size();
+        fieldCollection.fields = pluginAttributs.data();
+
+        nvinfer1::IPluginV2* pluginResize = creator->createPlugin("ResizeGPUPlugin", &fieldCollection);
+
+        auto layer = mNetDef.back()->addPluginV2(&inputs_tensor[i],
+                                inputs_tensor.size(),
+                                *pluginResize);
+
         layer->setName(outName.c_str());
         output_tensor.push_back(layer->getOutput(0));
         output_tensor.back()->setType(mDataType);
@@ -1988,74 +2431,58 @@ std::vector<nvinfer1::ITensor *>
 
     for(unsigned int i = 0; i < inputs_tensor[0]->size(); ++i)
     {
-            std::vector<nvinfer1::ITensor *> concat_tensor;
+        std::vector<nvinfer1::ITensor *> concat_tensor;
 
-            for(unsigned int k = 0; k < inputs_tensor.size(); ++k)
-            {
-              nvinfer1::ITensor * input_tensor = (inputs_tensor[k])->data()[i];
-              concat_tensor.push_back(input_tensor);
-            }
+        for(unsigned int k = 0; k < inputs_tensor.size(); ++k)
+        {
+            nvinfer1::ITensor * input_tensor = (inputs_tensor[k])->data()[i];
+            concat_tensor.push_back(input_tensor);
+        }
 
-            std::string outName = layerName + "_" + std::to_string(i);
-            nvinfer1::IPlugin* pluginObjDet = mPluginFactory.createPlugin(outName.c_str(),
-                                                                mMaxBatchSize,
-                                                                nbOutputs,
-                                                                outputHeight,
-                                                                outputWidth,
-                                                                channelHeight,
-                                                                channelWidth,
-                                                                stimuliWidth,
-                                                                stimuliHeight,
-                                                                featureMapWidth,
-                                                                featureMapHeight,
-                                                                nbProposals,
-                                                                nbCls,
-                                                                nbAnchors,
-                                                                isCoordinatesAnchors,
-                                                                isPixelFormatXY,
-                                                                useInternalNMS ? mDetectorNMS : nmsIoU,
-                                                                useInternalThresholds ? mDetectorThresholds : scoreThreshold,
-                                                                maxParts,
-                                                                maxTemplates,
-                                                                numPartsPerClass,
-                                                                numTemplatesPerClass,
-                                                                anchor);
+        std::string outName = layerName + "_" + std::to_string(i);
 
-        auto layer = mNetDef.back()->addPlugin(&concat_tensor[0],
+        nvinfer1::PluginFieldCollection fieldCollection;
+        std::vector<nvinfer1::PluginField> pluginAttributs;
+
+        auto creator = getPluginRegistry()->getPluginCreator("ObjDetGPUPlugin", "1");
+        pluginAttributs.emplace_back(nvinfer1::PluginField("batchSize", &mMaxBatchSize, nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("nbOutputs", &(nbOutputs), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("outputHeight", &(outputHeight), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("outputWidth", &(outputWidth), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("channelHeight", &(channelHeight), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("channelWidth", &(channelWidth), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliWidth", &(stimuliWidth), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("stimuliHeight", &(stimuliHeight), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapWidth", &(featureMapWidth), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("featureMapHeight", &(featureMapHeight), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("nbProposals", &(nbProposals), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("nbCls", &(nbCls), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("nbAnchors", &(nbAnchors), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("isCoordinatesAnchors", &(isCoordinatesAnchors), nvinfer1::PluginFieldType::kCHAR, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("isPixelFormatXY", &(isPixelFormatXY), nvinfer1::PluginFieldType::kCHAR, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("nmsIoU", useInternalNMS ? &mDetectorNMS : &nmsIoU, nvinfer1::PluginFieldType::kFLOAT64, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("scoreThreshold", useInternalThresholds ? reinterpret_cast<const void *>(mDetectorThresholds) : reinterpret_cast<const void *>(scoreThreshold), nvinfer1::PluginFieldType::kFLOAT32, nbCls));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("maxParts", &(maxParts), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("maxTemplates", &(maxTemplates), nvinfer1::PluginFieldType::kINT32, 1));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("numPartsPerClass", reinterpret_cast<const void *>(numPartsPerClass), nvinfer1::PluginFieldType::kINT32, nbCls));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("numTemplatesPerClass", reinterpret_cast<const void *>(numTemplatesPerClass), nvinfer1::PluginFieldType::kINT32, nbCls));
+        pluginAttributs.emplace_back(nvinfer1::PluginField("anchor", reinterpret_cast<const void *>(anchor), nvinfer1::PluginFieldType::kFLOAT32, 4*nbCls*nbAnchors));
+
+        fieldCollection.nbFields = pluginAttributs.size();
+        fieldCollection.fields = pluginAttributs.data();
+
+        nvinfer1::IPluginV2* pluginObjDet = creator->createPlugin("ObjDetGPUPlugin", &fieldCollection);
+        auto layer = mNetDef.back()->addPluginV2(&concat_tensor[0],
                                     inputs_tensor.size(),
                                     *pluginObjDet);
+
         layer->setName(outName.c_str());
         output_tensor.push_back(layer->getOutput(0));
-        nvinfer1::Dims tensor_dims = output_tensor.back()->getDimensions();
-        std::cout << "{";
-
-        for(unsigned int d = 0; d < tensor_dims.nbDims; ++d)
-            std::cout << tensor_dims.d[d] << " ";
-
-        std::cout << "}" << std::endl;
-
-    /*
-        layer->setName(outName.c_str());
-        output_tensor.push_back(layer->getOutput(0));
-        output_tensor.back()->setType(mDataType);
-        output_tensor.back()->setName(outName.c_str());
-
-        nvinfer1::Dims tensor_in_dims = inputs_tensor[i]->getDimensions();
-        std::cout << "               " << inputs_tensor[i]->getName()
-                    << "---> " << output_tensor.back()->getName() << std::endl;
-
-        std::cout << "               ";
-        std::cout << "{";
-        for(unsigned int d = 0; d < tensor_in_dims.nbDims; ++d)
-                std::cout << tensor_in_dims.d[d] << " ";
-        std::cout << "} ----> ";
-
         nvinfer1::Dims tensor_dims = output_tensor.back()->getDimensions();
         std::cout << "{";
         for(unsigned int d = 0; d < tensor_dims.nbDims; ++d)
-                std::cout << tensor_dims.d[d] << " ";
+            std::cout << tensor_dims.d[d] << " ";
         std::cout << "}" << std::endl;
-        */
     }
     return output_tensor;
 }
@@ -2082,6 +2509,7 @@ std::vector<nvinfer1::ITensor *>
                         const float* means,
                         const float* std)
 {
+#if NV_TENSORRT_MAJOR < 8
 
     std::vector<nvinfer1::ITensor *> output_tensor;
     std::cout << "Add Proposals layer: " << layerName << std::endl;
@@ -2155,6 +2583,9 @@ std::vector<nvinfer1::ITensor *>
     }
 
     return output_tensor;
+#else
+    throw std::runtime_error( "add_proposals(): This plugin is not supported with TensorRT-8");
+#endif
 
 }
 
@@ -2175,7 +2606,7 @@ std::vector<nvinfer1::ITensor *>
                             unsigned int scoreIndex,
                             unsigned int iouIndex)
 {
-
+#if NV_TENSORRT_MAJOR < 8
         std::vector<nvinfer1::ITensor *> output_tensor;
         std::cout << "Add RP layer: " << layerName << std::endl;
 
@@ -2225,6 +2656,9 @@ std::vector<nvinfer1::ITensor *>
         }
 
         return output_tensor;
+#else
+    throw std::runtime_error( "add_regionproposal(): This plugin is not supported with TensorRT-8");
+#endif
 }
 
 
@@ -2246,6 +2680,7 @@ std::vector<nvinfer1::ITensor *>
                             bool ignorePadding,
                             bool isFlip)
 {
+#if NV_TENSORRT_MAJOR < 8
 
         std::vector<nvinfer1::ITensor *> output_tensor;
         std::cout << "Add ROIPooling layer: " << layerName << std::endl;
@@ -2330,6 +2765,9 @@ std::vector<nvinfer1::ITensor *>
         }
 
         return output_tensor;
+#else
+    throw std::runtime_error( "add_regionproposal(): This plugin is not supported with TensorRT-8");
+#endif
 }
 
 void N2D2::Network::add_weighted(unsigned int nbOutputs,
@@ -2352,7 +2790,7 @@ void N2D2::Network::add_weighted(unsigned int nbOutputs,
     const unsigned int blockSize = std::ceil((int)image_height * image_width / groupSize);
 
     const dim3 threadsPerBlocks = {groupSize, 1, 1};
-    const dim3 blocksPerGrid = {blockSize, 1, mMaxBatchSize};
+    const dim3 blocksPerGrid = {blockSize, 1, (unsigned int) mMaxBatchSize};
 
     //Use INTERNEAREST resize factor if output image and input image dont have the same size
     const float multy = ((float) outputsHeight)/((float) image_height);
@@ -2660,7 +3098,9 @@ BOOST_PYTHON_MODULE(N2D2)
         .def("setInputDims", &N2D2::Network::setInputDims)
         .def("setOutputNbTargets", &N2D2::Network::setOutputNbTargets)
         .def("setOutputTarget", &N2D2::Network::setOutputTarget)
-           
+        .def("useDLA", &N2D2::Network::useDLA)
+        .def("setMaxWorkSpaceSize", &N2D2::Network::setMaxWorkSpaceSize)
+
         .def("estimated", &N2D2::Network::estimatedPy)
 
         .def("getOutputNbTargets", &N2D2::Network::getOutputNbTargets)

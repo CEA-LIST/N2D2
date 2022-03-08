@@ -47,58 +47,58 @@ public:
     */
 
     virtual void apply_int(
-        Tensor<int>& frame,
-        Tensor<int>& labels,
-        std::vector<std::shared_ptr<ROI> >& labelsROI,
-        int id)
+        Tensor<int>& /*frame*/,
+        Tensor<int>& /*labels*/,
+        std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,
+        int /*id*/)
         {
             std::cout << "int" << std::endl;
         };
     virtual void apply_float(
-        Tensor<float>& frame,
-        Tensor<int>& labels,
-        std::vector<std::shared_ptr<ROI> >& labelsROI,
-        int id)
+        Tensor<float>& /*frame*/,
+        Tensor<int>& /*labels*/,
+        std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,
+        int /*id*/)
         {
             std::cout << "float" << std::endl;
         };  
     virtual void apply_double(
-        Tensor<double>& frame,
-        Tensor<int>& labels,
-        std::vector<std::shared_ptr<ROI> >& labelsROI,
-        int id)
+        Tensor<double>& /*frame*/,
+        Tensor<int>& /*labels*/,
+        std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,
+        int /*id*/)
         {
             std::cout << "double" << std::endl;
         };
     virtual void apply_unsigned_char(
-        Tensor<unsigned char>& frame,
-        Tensor<int>& labels,
-        std::vector<std::shared_ptr<ROI> >& labelsROI,
-        int id)
+        Tensor<unsigned char>& /*frame*/,
+        Tensor<int>& /*labels*/,
+        std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,
+        int /*id*/)
         {
             std::cout << "uchar" << std::endl;
         };
     virtual void apply_char(
-        Tensor<char>& frame,
-        Tensor<int>& labels,
-        std::vector<std::shared_ptr<ROI> >& labelsROI,
-        int id)
+        Tensor<char>& /*frame*/,
+        Tensor<int>& /*labels*/,
+        std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,
+        int /*id*/)
         {
             std::cout << "char" << std::endl;
         };
     virtual void apply_unsigned_short(
-        Tensor<unsigned short>& frame,
-        Tensor<int>& labels,
-        std::vector<std::shared_ptr<ROI> >& labelsROI,
-        int id)
+        Tensor<unsigned short>& /*frame*/,
+        Tensor<int>& /*labels*/,
+        std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,
+        int /*id*/)
         {
             std::cout << "ushort" << std::endl;
         };
     virtual void apply_short(
-        Tensor<short>& frame,
-        Tensor<int>& labels,
-        std::vector<std::shared_ptr<ROI> >& labelsROI,
-        int id)
+        Tensor<short>& /*frame*/,
+        Tensor<int>& /*labels*/,
+        std::vector<std::shared_ptr<ROI> >& /*labelsROI*/,
+        int /*id*/)
         {
             std::cout << "short" << std::endl;
         };

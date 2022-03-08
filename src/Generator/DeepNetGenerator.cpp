@@ -436,6 +436,8 @@ N2D2::DeepNetGenerator::generateFromINI(Network& network,
         }
     }
 
+    deepNet->removeExtraReshape();
+
     if (deepNet->getTargets().empty())
         throw std::runtime_error(
             "Missing target cell (no [*.Target] section found)");
@@ -587,6 +589,10 @@ N2D2::DeepNetGenerator::generateFromONNX(Network& network,
 
     ONNX_processGraph(deepNet, parentCells,
                       onnxModel.graph(), opsetVersion, iniConfig);
+
+    // TF exported ONNX can create extra transpose layers
+    deepNet->removeExtraTranspose();
+    deepNet->removeExtraReshape();
 
     return deepNet;
 }
@@ -796,7 +802,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             ::const_iterator itAttr;
         std::map<std::string, const onnx::TensorProto*>::const_iterator itInit;
         std::map<std::string, std::vector<size_t> >::const_iterator itShape;
-        std::cout << "  ToIgnore ? " << node.output(0) << std::endl;
+
         if (std::find(ignore.begin(), ignore.end(), node.output(0))
             != ignore.end())
         {
@@ -1310,16 +1316,25 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         }
         //BitShift
         else if (node.op_type() == "Cast") {
-            assert(node.attribute_size() > 0);
-
-            std::cout << Utils::cnotice << "  Ignore Cast operation to "
-                << node.attribute(0).GetTypeName()
+            std::cout << Utils::cnotice << "  Ignore Cast operation"
                 << Utils::cdef << std::endl;
 
             std::cout << "  " << node.output(0) << " -> "
                 << redirectName(node.input(0)) << std::endl;
             redirect[node.output(0)] = redirectName(node.input(0));
             continue;
+/*
+            std::cout <<  "  Ignore Cast operation to "
+                << node.attribute(0).GetTypeName()
+                <<  std::endl;
+
+            std::cout << "  " << node.output(0) << " -> "
+                << redirectName(node.input(0)) << std::endl;
+            redirect[node.output(0)] = redirectName(node.input(0));
+            assert(node.attribute_size() > 0);
+
+            continue;
+            */
         }
         //Ceil
         else if (node.op_type() == "Clip") {
@@ -1420,6 +1435,30 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 }
                 else
                     cellFrame->setActivation(activation);
+                std::cout << "  clipping in [" << minVal << ", " << maxVal << "]"
+                    << std::endl;
+            }
+            else if (minVal < 0.0 && maxVal > 0.0) {
+                std::shared_ptr<Cell_Frame_Top> cellFrame
+                    = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+                if (!cellFrame->getActivation()) {
+                    std::shared_ptr<Activation> activation
+                        = Registrar<LinearActivation>::create<Float_T>(model)();
+                    cellFrame->setActivation(activation);
+                }
+                else if (cellFrame->getActivation()->getType()
+                        != LinearActivation::Type) {
+                    std::ostringstream errorStr;
+                    errorStr << "Unsupported ONNX operator: " << node.op_type()
+                        << " with min=" << minVal << " and max=" << maxVal
+                        << " when non linear activation" << std::endl;
+
+                    throw std::runtime_error(errorStr.str());
+                }
+                
+                std::cout << Utils::cnotice << "  Ignore Clip operation when "
+                            << " min is inferior to 0 and max is superior to 0"
+                            << Utils::cdef << std::endl;
             }
             else {
                 std::ostringstream errorStr;
@@ -1430,8 +1469,6 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 throw std::runtime_error(errorStr.str());
             }
 
-            std::cout << "  clipping in [" << minVal << ", " << maxVal << "]"
-                << std::endl;
             std::cout << "  " << node.output(0) << " -> "
                 << redirectName(node.input(0)) << std::endl;
             redirect[node.output(0)] = redirectName(node.input(0));
@@ -1748,8 +1785,44 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     kernelDims.push_back(nbInputs);
                     kernelDims.push_back(convCell->getNbOutputs());
 
-                    const Tensor<Float_T> kernels
-                        = ONNX_unpackTensor<Float_T>((*itInit).second, kernelDims);
+                    Tensor<Float_T> kernels;
+                    if ((*itInit).second->data_type() == onnx::TensorProto_DataType_FLOAT) {
+                        Tensor<Float_T> wTmp 
+                            = ONNX_unpackTensor<Float_T>((*itInit).second, kernelDims);
+                        kernels.resize(wTmp.dims());
+                        kernels 
+                            = ONNX_unpackTensor<Float_T>((*itInit).second, kernelDims);
+                    }
+                    else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_INT8) {
+                        std::cout << Utils::cnotice 
+                            << "  Implicit Cast on Weights from INT8 to Float32 for " 
+                            << node.op_type()
+                            << " for layer type "
+                            << Utils::cdef << std::endl;
+                        Tensor<int8_t> wTmp 
+                            = ONNX_unpackTensor<int8_t>((*itInit).second, kernelDims);
+                        kernels.resize(wTmp.dims());
+                        for(unsigned int i = 0; i < wTmp.size(); ++i) {
+                            kernels(i) = (float) wTmp(i);
+                        }
+                    }
+                    else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_DOUBLE) {
+                        std::cout << Utils::cnotice 
+                            << "  Implicit Cast on Weights from Float64 to Float32 for " 
+                            << node.op_type()
+                            << " for layer type "
+                            << Utils::cdef << std::endl;
+                        Tensor<double> wTmp 
+                            = ONNX_unpackTensor<double>((*itInit).second, kernelDims);
+                        kernels.resize(wTmp.dims());
+                        for(unsigned int i = 0; i < wTmp.size(); ++i) {
+                            kernels(i) = (float) wTmp(i);
+                        }
+                    }
+                    else {
+                        throw std::runtime_error("Unsupported datatype: "
+                            "Conv or ConvInteger Layer only support Float32, Float64 or INT8 Weights");
+                    }
 
                     for (unsigned int output = 0;
                         output < convCell->getNbOutputs(); ++output)
@@ -1801,11 +1874,45 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         && (itInit = initializer.find(node.input(2)))
                             != initializer.end())
                     {
-                        Tensor<Float_T> biases = ONNX_unpackTensor<Float_T>(
-                            (*itInit).second,
-                            {(unsigned int)convCell->getNbOutputs()});
-                        biases.reshape({1, convCell->getNbOutputs()});
-
+                        Tensor<Float_T> biases;
+                        if ((*itInit).second->data_type() == onnx::TensorProto_DataType_FLOAT) {
+                            biases.resize({(unsigned int)convCell->getNbOutputs()});
+                            biases 
+                                = ONNX_unpackTensor<Float_T>((*itInit).second,
+                                                            {(unsigned int)convCell->getNbOutputs()});
+                        }
+                        else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_INT32) {
+                            std::cout << Utils::cnotice 
+                                << "  Implicit Cast on Biases from INT32 to Float32 for " 
+                                << node.op_type()
+                                << " for layer type "
+                                << Utils::cdef << std::endl;
+                            Tensor<int32_t> bTmp 
+                                = ONNX_unpackTensor<int32_t>((*itInit).second,
+                                                            {(unsigned int)convCell->getNbOutputs()});
+                            biases.resize(bTmp.dims());
+                            for(unsigned int i = 0; i < bTmp.size(); ++i) {
+                                biases(i) = (float) bTmp(i);
+                            }
+                        }
+                        else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_DOUBLE) {
+                            std::cout << Utils::cnotice 
+                                << "  Implicit Cast on Biases from Float64 to Float32 for " 
+                                << node.op_type()
+                                << " for layer type "
+                                << Utils::cdef << std::endl;
+                            Tensor<double> bTmp 
+                                = ONNX_unpackTensor<double>((*itInit).second, kernelDims);
+                            biases.resize(bTmp.dims());
+                            for(unsigned int i = 0; i < bTmp.size(); ++i) {
+                                biases(i) = (float) bTmp(i);
+                            }
+                        }
+                        else {
+                            throw std::runtime_error("Unsupported datatype: "
+                                "Conv or ConvInteger Layer only support Float32, Float64 or INT32 Biases");
+                        }
+                        biases.reshape({1, convCell->getNbOutputs()}); // Adding an empty dim to avoid error when accessing bias
                         for (unsigned int output = 0;
                             output < convCell->getNbOutputs(); ++output)
                         {
@@ -1970,7 +2077,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             //bool transA = false;
             bool transB = false;
 
-            if (node.op_type() == "Gemm") {
+            if (node.op_type() == "Gemm" || node.op_type() == "MatMulInteger") {
                 if ((itAttr = attribute.find("alpha")) != attribute.end())
                     alpha = (*itAttr).second->f();
 
@@ -1985,8 +2092,41 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             }
 
             if (!inputData.empty()) {
-                Tensor<Float_T> weights
-                    = ONNX_unpackTensor<Float_T>((*itInit).second);
+                Tensor<Float_T> weights;
+                if ((*itInit).second->data_type() == onnx::TensorProto_DataType_FLOAT) {
+                    Tensor<Float_T> wTmp = ONNX_unpackTensor<Float_T>((*itInit).second);
+                    weights.resize(wTmp.dims());
+                    weights 
+                        = ONNX_unpackTensor<Float_T>((*itInit).second);
+                }
+                else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_INT8) {
+                    std::cout << Utils::cnotice 
+                        << "  Implicit Cast on Weights from INT8 to Float32 for " 
+                        << node.op_type()
+                        << " for layer type "
+                        << Utils::cdef << std::endl;
+                    Tensor<int8_t> wTmp = ONNX_unpackTensor<int8_t>((*itInit).second);
+                    weights.resize(wTmp.dims());
+                    for(unsigned int i = 0; i < wTmp.size(); ++i) {
+                        weights(i) = (float) wTmp(i);
+                    }
+                }
+                else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_DOUBLE) {
+                    std::cout << Utils::cnotice 
+                        << "  Implicit Cast on Weights from Float64 to Float32 for " 
+                        << node.op_type()
+                        << " for layer type "
+                        << Utils::cdef << std::endl;
+                    Tensor<double> wTmp = ONNX_unpackTensor<double>((*itInit).second);
+                    weights.resize(wTmp.dims());
+                    for(unsigned int i = 0; i < wTmp.size(); ++i) {
+                        weights(i) = (float) wTmp(i);
+                    }
+                }
+                else {
+                    throw std::runtime_error("Unsupported datatype: "
+                        "Gemm or MatMul or MatMulInteger Layer only support Float32, Float64 or INT8 Weights");
+                }
 
                 if ((itShape = shape.find((*itInit).first)) != shape.end())
                     weights.reshape((*itShape).second);
@@ -2082,8 +2222,8 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 #else
 #pragma omp parallel for if (weights.size() > 1024)
 #endif
-                    for (unsigned int output = 0;
-                        output < fcCell->getNbOutputs(); ++output)
+                    for (int output = 0;
+                        output < (int)fcCell->getNbOutputs(); ++output)
                     {
                         for (unsigned int ch = 0; ch < fcCell->getNbChannels(); ++ch) {
                             for (unsigned int iy = 0; iy < fcCell->getChannelsHeight(); ++iy) {
@@ -2636,7 +2776,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         << Utils::cdef << std::endl;
                 }
                 else {
-                        std::cout << Utils::cwarning  
+                        std::cout << Utils::cnotice  
                                 << (*itAttr).second->s()
                                 << "   Resize Mode for Coordinate: [" << (*itAttr).second->s() 
                                 << "] not yet supported by N2D2, back to default mode"
@@ -2648,7 +2788,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             }
 
             if ((itAttr = attribute.find("cubic_coeff_a")) != attribute.end()) {
-                std::cout << Utils::cwarning  
+                std::cout << Utils::cnotice  
                         << "   Resize Parameter: [cubic_coeff_a]"  
                         << " not yet supported by N2D2"
                     << Utils::cdef << std::endl;
@@ -2668,17 +2808,19 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         << Utils::cdef << std::endl;
                 }
                 else {
-                    std::cout << Utils::cwarning  
+                    std::cout << Utils::cnotice  
                             << "   Resize Mode for Coordinate: [" << (*itAttr).second->s() 
                             << "] not yet supported by N2D2, back to default mode"
                         << Utils::cdef << std::endl;
-                    std::cout << Utils::cwarning  
+                    std::cout << Utils::cnotice  
                             << (*itAttr).second->s()
                             << "  is not yet supported by N2D2, "
                             << " back to default interpolation resize mode => Nearest Neighbor"
                         << Utils::cdef << std::endl;
                 }
             }
+            std::size_t resizeDimX = 0;
+            std::size_t resizeDimY = 0;
 
             const std::string inputX = redirectName(node.input(0));
             std::shared_ptr<Cell> inputXCell = getCell(inputX);
@@ -2686,54 +2828,75 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             std::map<std::string, std::vector<std::string> >
                 ::const_iterator itConcat;
             std::vector<std::shared_ptr<Cell> > parentCells;
-            if ((itInit = initializer.find(redirectName(node.input(1)))) != initializer.end()) {
+            if (node.input_size() > 1 && (itInit = initializer.find(redirectName(node.input(1)))) != initializer.end()) {
                 const Tensor<float> roiTensor
                             = ONNX_unpackTensor<float>((*itInit).second);
                 if(!roiTensor.empty()) {
+                    std::cout << "   Resize from [scales] " << 
+                                    "===> dimensions X [" << resizeDimX 
+                                    << "] and Y [" << resizeDimY << "]" << std::endl; 
                     throw std::runtime_error("Resize from ROI maps is not yet"
                         " supported by N2D2.");
                 }
             }
-            if ((itInit = initializer.find(redirectName(node.input(2)))) != initializer.end()) {
+            if (node.input_size() > 2 && (itInit = initializer.find(redirectName(node.input(2)))) != initializer.end()) {
                 const Tensor<float> scalesTensor
                             = ONNX_unpackTensor<float>((*itInit).second);
                 if(!scalesTensor.empty()) {
-                    throw std::runtime_error("Resize from Scales ratio per map is not yet"
-                        " supported by N2D2.");
+                    inputsDims = inputXCell->getOutputsDims();
+                    resizeDimX = std::rintf(inputsDims[0]*scalesTensor(3));
+                    resizeDimY = std::rintf(inputsDims[1]*scalesTensor(2));
+                    std::cout << "   Resize from [scales] " << 
+                                    "===> dimensions X [" << resizeDimX 
+                                    << "] and Y [" << resizeDimY << "]" << std::endl; 
                 }
             }
-            const std::string inputSizes 
-                = redirectName(node.input(3));
+            if (node.input_size() > 3) {
+                const std::string inputSizes 
+                    = redirectName(node.input(3));
 
-            //std::vector<size_t>  inputsDims;       
-            std:: size_t nbOutputs  = 0;
-
-            //Todo : Improve the minigraph handling for sizes from input
-            if ((itConcat = concat.find(inputSizes)) != concat.end()) {
-                for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
-                    const std::string input = redirectName((*itConcat).second[i]);
-                    std::map<std::string, std::vector<std::string> >
-                        ::const_iterator itConcat2ndDim;
-                    if ((itConcat2ndDim = concat.find(input)) != concat.end()) {
-                        for (unsigned int i = 0; i < (*itConcat2ndDim).second.size(); ++i) {
-                            const std::string input2nd = redirectName((*itConcat2ndDim).second[i]);
-                            std::map<std::string, std::vector<std::string> >
-                                ::const_iterator itConcat3rddDim;
-                            if ((itConcat3rddDim = concat.find(input2nd)) != concat.end()) {
-                                for (unsigned int i = 0; i < (*itConcat3rddDim).second.size(); ++i) {
-                                    const std::string input3rd 
-                                        = redirectName((*itConcat3rddDim).second[i]);
-                                    std::shared_ptr<Cell> inputCell3rd = getCell(input3rd);
-                                    nbOutputs += inputCell3rd->getNbOutputs();
-                                    inputsDims = inputCell3rd->getOutputsDims();
+                //Todo : Improve the minigraph handling for sizes from input
+                if ((itConcat = concat.find(inputSizes)) != concat.end()) {
+                    for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
+                        const std::string input = redirectName((*itConcat).second[i]);
+                        std::map<std::string, std::vector<std::string> >
+                            ::const_iterator itConcat2ndDim;
+                        if ((itConcat2ndDim = concat.find(input)) != concat.end()) {
+                            for (unsigned int i = 0; i < (*itConcat2ndDim).second.size(); ++i) {
+                                const std::string input2nd = redirectName((*itConcat2ndDim).second[i]);
+                                std::map<std::string, std::vector<std::string> >
+                                    ::const_iterator itConcat3rddDim;
+                                if ((itConcat3rddDim = concat.find(input2nd)) != concat.end()) {
+                                    for (unsigned int i = 0; i < (*itConcat3rddDim).second.size(); ++i) {
+                                        const std::string input3rd 
+                                            = redirectName((*itConcat3rddDim).second[i]);
+                                        std::shared_ptr<Cell> inputCell3rd = getCell(input3rd);
+                                        inputsDims = inputCell3rd->getOutputsDims();
+                                    }
                                 }
                             }
                         }
                     }
+                    resizeDimX = inputsDims[0];
+                    resizeDimY = inputsDims[1];
+                    std::cout << "   Resize from [minigraph] " << 
+                        "===> dimensions X [" << resizeDimX 
+                                    << "] and Y [" << resizeDimY << "]" << std::endl; 
+                } 
+                else {
+                    itInit = initializer.find(redirectName(node.input(3)));
+                    const Tensor<int64_t> sizesTensor
+                                = ONNX_unpackTensor<int64_t>((*itInit).second);
+                    if(!sizesTensor.empty()) {
+                        resizeDimX = sizesTensor(3);
+                        resizeDimY = sizesTensor(2);
+                        std::cout << "   Resize from [sizes] " << 
+                                        "===> dimensions X [" << resizeDimX 
+                                        << "] and Y [" << resizeDimY << "]" << std::endl; 
+
+                    }
                 }
             }
-            std::size_t resizeDimX = inputsDims[0];
-            std::size_t resizeDimY = inputsDims[1];
 
             std::shared_ptr<ResizeCell> resizeCell
                 = Registrar<ResizeCell>::create(model)(*deepNet, 
@@ -3047,8 +3210,28 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 
             // One of the input is constant, cannot use ElemWiseCell
             if (!inputData.empty() && node.input_size() == 2) {
+
                 std::shared_ptr<Cell> dataCell = getCell(inputData);
 
+                // Checking if this layer adds a constant input full of 0.
+                if (node.op_type() == "Add"){
+                    Tensor<Float_T> constant = ONNX_unpackTensor<Float_T>((*itInit).second);
+                    bool removable = true;
+                    for(Tensor<Float_T>::iterator constantIterator = constant.begin(); 
+                        constantIterator != constant.end(); 
+                        constantIterator++){
+                        if ((*constantIterator) != 0){
+                            removable = false;
+                            break;
+                        }
+                    }
+                    if (removable){
+                        std::cout << "  " << node.output(0) << " -> "
+                            << inputData << std::endl;
+                        redirect[node.output(0)] = inputData;
+                        continue;
+                    }
+                }
                 // Special case for bias (CNTK)
                 // In CNTK models, bias is added as constant after the operator
                 // In this case, we try to merge everything in the operator bias
@@ -3069,10 +3252,39 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     {
                         dataCell->setParameter<bool>("NoBias", false);
                         dataCell->initialize(); // Re-init with bias!
-
-                        Tensor<Float_T> biases = ONNX_unpackTensor<Float_T>(
-                            (*itInit).second);
-                        biases.reshape({1, dataCell->getNbOutputs()});
+                        Tensor<Float_T> biases;
+                        if ((*itInit).second->data_type() == onnx::TensorProto_DataType_FLOAT) {
+                            biases.resize({1, dataCell->getNbOutputs()});
+                            biases = ONNX_unpackTensor<Float_T>((*itInit).second);
+                        }
+                        else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_INT32) {
+                            std::cout << Utils::cnotice 
+                                << "  Implicit Cast on Biases from INT32 to Float32 for " 
+                                << node.op_type()
+                                << " for layer type "
+                                << Utils::cdef << std::endl;
+                            Tensor<int32_t> bTmp = ONNX_unpackTensor<int32_t>((*itInit).second);
+                            biases.resize({1, dataCell->getNbOutputs()});
+                            for(unsigned int i = 0; i < bTmp.size(); ++i) {
+                                biases(i) = (float) bTmp(i);
+                            }
+                        }
+                        else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_DOUBLE) {
+                            std::cout << Utils::cnotice 
+                                << "  Implicit Cast on Biases from Float64 to Float32 for " 
+                                << node.op_type()
+                                << " for layer type "
+                                << Utils::cdef << std::endl;
+                            Tensor<double> bTmp = ONNX_unpackTensor<double>((*itInit).second);
+                            biases.resize({1, dataCell->getNbOutputs()});
+                            for(unsigned int i = 0; i < bTmp.size(); ++i) {
+                                biases(i) = (float) bTmp(i);
+                            }
+                        }
+                        else {
+                            throw std::runtime_error("Unsupported datatype: "
+                                "Add or Sum  Layer only support Float32, Float64 or INT32 Weights");
+                        }
 
                         for (unsigned int output = 0;
                             output < dataCell->getNbOutputs(); ++output)
@@ -3191,9 +3403,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                             *deepNet, 
                             node.output(0),
                             nbOutputs,
-                            Scaling::floatingPointScaling(
-                                    std::vector<Float_T>(nbOutputs, 
-                                                         constant(0)), false,std::vector<Float_T>(0.0f)));
+                            Scaling::floatingPointScaling(scaling, false, std::vector<Float_T>(0.0f)));
 
                         if (constant.size() == 1) {
                             std::cout << "  scaling factor = " << constant(0)
@@ -3370,43 +3580,83 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 perm[2] = 1;
                 perm[3] = 0;
             }
-
-            const unsigned int nbOutputs = (inputXCell)
-                ? inputXCell->getOutputsDim(perm[2])
-                : sp->getSize()[perm[2]];
-
+            const std::vector<size_t>& outputDims = (inputXCell)
+                ? inputXCell->getOutputsDims()
+                : sp->getSize();
+            int nbDimEqualOne = 0;
+            for (size_t outputDim : outputDims)
+                nbDimEqualOne += (outputDim == 1) ? 1 : 0;
+            
+            const unsigned int nbOutputs = outputDims[perm[2]];
             std::map<std::string, std::vector<std::string> >
-                ::const_iterator itConcat;
+                    ::const_iterator itConcat;
             std::vector<std::shared_ptr<Cell> > parentCells;
 
             if (globTranspose)
                 std::swap(perm[0], perm[1]);
+            
+            if (nbDimEqualOne == 2){
+                // Only one dimension (except batch size) is nonunary
+                // This transpose is also a reshape which doesn't change the memory layout
+                if (perm[3] != 3){
+                    throw std::domain_error("TransposeCell: "
+                                "permutation of the fourth (batch) dimension "
+                                "is not supported.");
+                }
+                std::vector<int> dims = {};
+                for (int permIdx=0; permIdx<2; ++permIdx) 
+                    dims.push_back(outputDims[perm[permIdx]]);
+                dims.push_back(-1); // Batchsize doesn't change
+                std::shared_ptr<ReshapeCell> reshapeCell
+                    = Registrar<ReshapeCell>::create<Float_T>(model)(*deepNet, 
+                                                                    node.output(0),
+                                                                    nbOutputs,
+                                                                    dims);
+                if ((itConcat = concat.find(inputX)) != concat.end()) {
+                    throw std::runtime_error("Unsupported operation: Concat before "
+                        "Transpose");
+                } else {
+                    std::shared_ptr<Cell> inputXCell = getCell(inputX);
+                    parentCells.push_back(inputXCell);
 
-            std::shared_ptr<TransposeCell> transposeCell
-                = Registrar<TransposeCell>::create<Float_T>(model)(*deepNet, 
-                                                                node.output(0),
-                                                                nbOutputs,
-                                                                perm);
+                    if (inputXCell)
+                        reshapeCell->addInput(inputXCell.get());
+                    else {
+                        reshapeCell->addInput(*sp, 0, 0,
+                                            sp->getSizeX(), sp->getSizeY());
+                    }
+                }
 
-            if ((itConcat = concat.find(inputX)) != concat.end()) {
+                deepNet->addCell(reshapeCell, parentCells);
+                reshapeCell->initialize();
+                cell = reshapeCell;
+            }else{
+                // Normal case, we add the Transpose layer
+                std::shared_ptr<TransposeCell> transposeCell
+                    = Registrar<TransposeCell>::create<Float_T>(model)(*deepNet, 
+                                                                    node.output(0),
+                                                                    nbOutputs,
+                                                                    perm);
+                if ((itConcat = concat.find(inputX)) != concat.end()) {
                 throw std::runtime_error("Unsupported operation: Concat before "
                     "Transpose");
-            }
-            else {
-                std::shared_ptr<Cell> inputXCell = getCell(inputX);
-                parentCells.push_back(inputXCell);
-
-                if (inputXCell)
-                    transposeCell->addInput(inputXCell.get());
-                else {
-                    transposeCell->addInput(*sp, 0, 0,
-                                        sp->getSizeX(), sp->getSizeY());
                 }
-            }
+                else {
+                    std::shared_ptr<Cell> inputXCell = getCell(inputX);
+                    parentCells.push_back(inputXCell);
 
-            deepNet->addCell(transposeCell, parentCells);
-            transposeCell->initialize();
-            cell = transposeCell;
+                    if (inputXCell)
+                        transposeCell->addInput(inputXCell.get());
+                    else {
+                        transposeCell->addInput(*sp, 0, 0,
+                                            sp->getSizeX(), sp->getSizeY());
+                    }
+                }
+
+                deepNet->addCell(transposeCell, parentCells);
+                transposeCell->initialize();
+                cell = transposeCell;
+            }
         }
         //Unique
         //Unsqueeze

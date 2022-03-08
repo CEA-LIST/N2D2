@@ -55,7 +55,7 @@ public:
 /*
 TEST(ActivationCell_Frame, propagate)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);
@@ -102,7 +102,7 @@ TEST_DATASET(ActivationCell_Frame_float, propagate,
     std::make_tuple(10.0, 10U),
     std::make_tuple(30.0, 128U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);
@@ -152,7 +152,7 @@ TEST_DATASET(ActivationCell_Frame_float, propagate_2_inputs,
     ,std::make_tuple(0.0, 10U, 3U, 3U)
     ,std::make_tuple(7034.0, 53U, 128U, 12U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);
@@ -240,7 +240,7 @@ TEST_DATASET(ActivationCell_Frame_float, propagate_3_inputs,
     ,std::make_tuple(0.0, 156U, 32U, 63U, 12U))
 {
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);
@@ -351,7 +351,7 @@ TEST_DATASET(ActivationCell_Frame_float, backpropagate,
     std::make_tuple(10U),
     std::make_tuple(128U))
 {
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);
@@ -412,7 +412,7 @@ TEST_DATASET(ActivationCell_Frame_float, backpropagate_2_inputs,
     )
 {
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);

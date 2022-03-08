@@ -89,7 +89,7 @@ public:
                                        input.dimY(), input.dimX(),
                                        isClipped, mClippingPerOutput,
                                        mScalingPerOutput, 
-                                       qBits, 
+                                       qBits,
                                        DeepNetExport::isCellOutputUnsigned(cell));
     }
 
@@ -97,13 +97,13 @@ public:
     template<typename T>
     void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
         cudaFloatingPointScaling_propagate(CudaContext::getDeviceProp(),
-                                            input.getDevicePtr(), output.getDevicePtr(),
+                                           input.getDevicePtr(), output.getDevicePtr(),
                                            input.dimB(), input.dimZ(), 
                                            input.dimY(), input.dimX(),
                                            isClipped,
                                            mCudaClippingPerOutput.getDevicePtr(),
                                            mCudaScalingPerOutput.getDevicePtr(), 
-                                           qBits, 
+                                           qBits,
                                            DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif
@@ -161,7 +161,7 @@ public:
                                     input.dimY(), input.dimX(),
                                     isClipped, mClippingPerOutput,
                                     mScalingPerOutput, mNbFractionalBits,
-                                    qBits, 
+                                    qBits,
                                     DeepNetExport::isCellOutputUnsigned(cell));
     }
     
@@ -175,7 +175,7 @@ public:
                                         isClipped,
                                         mCudaClippingPerOutput.getDevicePtr(),
                                         mCudaScalingPerOutput.getDevicePtr(), mNbFractionalBits, 
-                                        qBits, 
+                                        qBits,
                                         DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif
@@ -231,10 +231,10 @@ public:
                                      input.dimY(), input.dimX(),
                                      isClipped, mClippingPerOutput,
                                      mScalingPerOutput, 
-                                     qBits, 
+                                     qBits,
                                      DeepNetExport::isCellOutputUnsigned(cell));
     }
-    
+
 #ifdef CUDA
     template<typename T>
     void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
@@ -245,7 +245,7 @@ public:
                                          isClipped,
                                          mCudaClippingPerOutput.getDevicePtr(),
                                          mCudaScalingPerOutput.getDevicePtr(), 
-                                         qBits, 
+                                         qBits,
                                          DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif
@@ -301,10 +301,10 @@ public:
                                      input.dimY(), input.dimX(),
                                      isClipped, mClippingPerOutput,
                                      mScalingPerOutput, 
-                                     qBits, 
+                                     qBits,
                                      DeepNetExport::isCellOutputUnsigned(cell));
     }
-    
+
 #ifdef CUDA
     template<typename T>
     void propagate(const Cell& cell, const CudaTensor<T>& input, CudaTensor<T>& output, const std::size_t qBits) const {
@@ -315,7 +315,7 @@ public:
                                          isClipped,
                                          mCudaClippingPerOutput.getDevicePtr(),
                                          mCudaScalingPerOutput.getDevicePtr(), 
-                                         qBits, 
+                                         qBits,
                                          DeepNetExport::isCellOutputUnsigned(cell));
     }
 #endif

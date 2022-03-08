@@ -83,7 +83,16 @@ public:
             length(length_),
             count(count_)
         {
-            assert(offset < memSpace->size);
+            assert(offset <= memSpace->size);
+            // The preceding assert should allow offset == memSpace->size (see 
+            // issue #63). This means immediate wrapping.
+            // It appends if the final offset computed in reallocate() is at
+            // the end of the previous memPlane and is also at the end of the
+            // memSpace (in case for example of in-place memory op.).
+            // Instead of bringing the offset back to the beginning of the 
+            // memSpace, we stay attached to this offset in case the memSpace
+            // grows when a new memPlane is added.
+
             assert(getContiguousOffset() >= memSpace->offset);
             assert(getWrappedOffset() >= memSpace->offset);
             assert(getContiguousOffset() + getContiguousSize()

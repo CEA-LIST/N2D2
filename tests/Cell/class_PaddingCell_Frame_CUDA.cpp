@@ -77,7 +77,7 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     const unsigned int nbOutputs = 10;
@@ -152,7 +152,7 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     const unsigned int nbOutputs = nbInputA + nbInputB;
@@ -258,7 +258,7 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     const unsigned int nbOutputs = 10;
@@ -307,7 +307,7 @@ TEST_DATASET(PaddingCell_Frame_CUDA,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     const unsigned int nbOutputs = nbInputA + nbInputB;

@@ -36,7 +36,7 @@ using namespace N2D2;
 
 TEST(DeepNet, DeepNet)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet deepNet(net);
 
     ASSERT_EQUALS((bool)deepNet.getDatabase(), false);
@@ -52,7 +52,7 @@ TEST(DeepNet, DeepNet)
 
 TEST(DeepNet, addCell)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet deepNet(net);
 
     std::shared_ptr<ConvCell> convCell(new ConvCell_Frame<Float_T>(deepNet, "conv",
@@ -70,7 +70,7 @@ TEST(DeepNet, addCell)
 
 TEST(DeepNet, addCell_bis)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet deepNet(net);
 
     std::shared_ptr<ConvCell> convCell(new ConvCell_Frame<Float_T>(deepNet, "conv",
@@ -93,7 +93,7 @@ TEST(DeepNet, addCell_bis)
 
 TEST(DeepNet, addCell_ter)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet deepNet(net);
 
     std::shared_ptr<ConvCell> convCell(new ConvCell_Frame<Float_T>(deepNet, "conv",
@@ -117,7 +117,7 @@ TEST(DeepNet, addCell_ter)
 
 TEST(DeepNet, setDatabase)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet deepNet(net);
 
     ASSERT_EQUALS((bool)deepNet.getDatabase(), false);
@@ -130,7 +130,7 @@ TEST(DeepNet, setDatabase)
 
 TEST(DeepNet, setEnvironment)
 {
-    Network net;
+    Network net(0U,false);
     DeepNet deepNet(net);
 
     ASSERT_EQUALS((bool)deepNet.getStimuliProvider(), false);
@@ -150,7 +150,7 @@ TEST(DeepNet, fuseBatchNorm)
     const unsigned int channelsWidth = 24;
     const unsigned int channelsHeight = 24;
 
-    Network net;
+    Network net(0U,false);
     DeepNet deepNet(net);
 
     std::shared_ptr<ConvCell_Frame<double> > conv1(

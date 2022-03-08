@@ -154,6 +154,9 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
 #ifdef JSONCPP
     const std::string anchorsJSONpath = Utils::expandEnvVars(
         iniConfig.getProperty<std::string>("AnchorJSON", ""));
+    const AnchorCell_Frame_Kernels::PixelFormat jsonFormat 
+        = iniConfig.getProperty<AnchorCell_Frame_Kernels::PixelFormat>
+            ("JSONFormat", AnchorCell_Frame_Kernels::PixelFormat::YX);         
     if(!anchorsJSONpath.empty()) {
         std::ifstream jsonData(anchorsJSONpath);
         std::cout << "anchorsJSONpath.empty()" << anchorsJSONpath.empty() << std::endl;
@@ -193,11 +196,27 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
                         << idxAnchors.size() << std::endl;
                     throw std::runtime_error(" file parsing failed");
                 }
-                
-                const double x0 = idxAnchors[1].asDouble();
-                const double y0 = idxAnchors[0].asDouble();
-                const double w = std::abs(x0) + std::abs(idxAnchors[3].asDouble());
-                const double h = std::abs(y0) + std::abs(idxAnchors[2].asDouble());
+
+                double x0 = 0.0;
+                double y0 = 0.0;
+                double w = 0.0;
+                double h = 0.0;
+
+                if(jsonFormat == AnchorCell_Frame_Kernels::PixelFormat::YX) {
+                    x0 = idxAnchors[1].asDouble();
+                    y0 = idxAnchors[0].asDouble();
+                    w = std::abs(x0) + std::abs(idxAnchors[3].asDouble());
+                    h = std::abs(y0) + std::abs(idxAnchors[2].asDouble());
+                }
+                else if (jsonFormat == AnchorCell_Frame_Kernels::PixelFormat::XY) {
+                    y0 = idxAnchors[1].asDouble();
+                    x0 = idxAnchors[0].asDouble();
+                    w = std::abs(x0) + std::abs(idxAnchors[2].asDouble());
+                    h = std::abs(y0) + std::abs(idxAnchors[3].asDouble());
+                }
+                else {
+                    throw std::runtime_error("ini parsing failed");
+                }
 
                 anchors.push_back(AnchorCell_Frame_Kernels::Anchor(x0,
                                                                 y0,

@@ -20,7 +20,9 @@
 */
 
 #include "Export/CPP_TensorRT/CPP_TensorRT_DeepNetExport.hpp"
+#include "Export/CPP_TensorRT/CPP_TensorRT_Config.hpp"
 #include "DeepNet.hpp"
+#include "utils/IniParser.hpp"
 
 N2D2::Registrar<N2D2::DeepNetExport> N2D2::CPP_TensorRT_DeepNetExport::mRegistrar(
     "CPP_TensorRT", N2D2::CPP_TensorRT_DeepNetExport::generate);
@@ -31,6 +33,15 @@ void N2D2::CPP_TensorRT_DeepNetExport::generate(DeepNet& deepNet,
     Utils::createDirectories(dirName + "/dnn/include");
     Utils::createDirectories(dirName + "/dnn/src");
 
+    IniParser exportParams;
+
+    if(!DeepNetExport::mExportParameters.empty())
+        exportParams.load(DeepNetExport::mExportParameters);
+
+    const bool genStimuliCalib = exportParams.getProperty(
+        CPP_TensorRT_Config::GEN_STIMULI_CALIB,
+        CPP_TensorRT_Config::GEN_STIMULI_CALIB_DEFAULT);
+
     DeepNetExport::generateCells(deepNet, dirName, "CPP_TensorRT");
 
     CPP_DeepNetExport::generateParamsHeader(dirName + "/include/params.h");
@@ -39,7 +50,8 @@ void N2D2::CPP_TensorRT_DeepNetExport::generate(DeepNet& deepNet,
     generateDeepNetProgram(
         deepNet, "N2D2::Network::", dirName + "/dnn/src/network.cpp");
 
-    generateStimuliCalib(deepNet, dirName);
+    if (genStimuliCalib)
+        generateStimuliCalib(deepNet, dirName);
 }
 
 
@@ -127,7 +139,7 @@ void N2D2::CPP_TensorRT_DeepNetExport
 
     prog << "   std::vector<nvinfer1::ITensor *> in_tensor;\n";
     prog << "   in_tensor.push_back(mNetDef.back()->addInput(\"ENV_INPUT\","
-         << " nvinfer1::DataType::kFLOAT, nvinfer1::DimsCHW{ENV_NB_OUTPUTS,"
+         << " nvinfer1::DataType::kFLOAT, trt_Dims3{ENV_NB_OUTPUTS,"
          << " ENV_SIZE_Y, ENV_SIZE_X}));\n"
         << "\n\n";
 

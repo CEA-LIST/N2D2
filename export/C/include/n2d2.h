@@ -151,6 +151,11 @@ sat(SUM_T weightedSum, ActivationFunction_T func, int shift)
         weightedSum >>= shift;
     else if (shift < 0)
         weightedSum <<= (-shift);
+#else
+    if (shift > 0)
+        weightedSum /= (1U << shift);
+    else if (shift < 0)
+        weightedSum *= (1U << -shift);
 #endif
 
     switch (func) {

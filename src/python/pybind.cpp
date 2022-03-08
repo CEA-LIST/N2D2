@@ -59,7 +59,9 @@ void init_Caltech256_DIR_Database(py::module&);
 void init_CelebA_Database(py::module&);
 void init_CIFAR_Database(py::module&);
 void init_CKP_Database(py::module&);
+#ifdef JSONCPP
 void init_Cityscapes_Database(py::module&);
+#endif
 void init_GTSDB_DIR_Database(py::module&);
 void init_GTSRB_DIR_Database(py::module&);
 void init_ILSVRC2012_Database(py::module&);
@@ -78,6 +80,7 @@ void init_CaltechPedestrian_Database(py::module&);
 
 void init_Scaling(py::module&);
 void init_ScalingMode(py::module&);
+void init_Histogram(py::module&);
 
 //Activation
 void init_Activation(py::module&);
@@ -291,6 +294,10 @@ void init_N2D2(py::module& m) {
     init_Kernel(m);
     init_IniParser(m);
     
+    init_Scaling(m);
+    init_ScalingMode(m);
+    init_Histogram(m);
+
     init_Tensor(m);
     init_Network(m);
     
@@ -306,13 +313,13 @@ void init_N2D2(py::module& m) {
     init_Actitracker_Database(m);
     init_Caltech101_DIR_Database(m);
     init_Caltech256_DIR_Database(m);
-    init_Scaling(m);
-    init_ScalingMode(m);
     init_CaltechPedestrian_Database(m);
     init_CelebA_Database(m);
     init_CIFAR_Database(m);
     init_CKP_Database(m);
+    #ifdef JSONCPP
     init_Cityscapes_Database(m);
+    #endif    
     init_GTSDB_DIR_Database(m);
     init_GTSRB_DIR_Database(m);
     init_ILSVRC2012_Database(m);
@@ -531,6 +538,12 @@ void init_N2D2(py::module& m) {
     init_QuantizerActivation_Frame_CUDA(m);
     #else
     m.attr("cuda_compiled") = false;
+    #endif
+
+    #ifdef JSONCPP
+    m.attr("json_compiled") = true;
+    #else
+    m.attr("json_compiled") = false;
     #endif
 }
 

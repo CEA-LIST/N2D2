@@ -23,6 +23,7 @@
 
 #include "dnn_utils.hpp"
 #include "kernels_gpu.hpp"
+#if NV_TENSORRT_MAJOR < 8
 
 /**Plugin Layer implementation**/
 /**BatchNormalisation CUDNN implementation**/
@@ -126,7 +127,7 @@ public:
         if(inputDim[0].nbDims == 4)
             batchInput = inputDim[0].d[0];
 
-        return nvinfer1::DimsNCHW(batchInput, mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
+        return trt_Dims4(batchInput, mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
 	}
 
 	virtual void configure(const nvinfer1::Dims* inputDims,
@@ -376,5 +377,5 @@ struct pluginBatchnorm_CUDNN {
       mPluginCount = 0;
     }
 };
-
+#endif
 #endif

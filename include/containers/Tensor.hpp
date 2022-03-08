@@ -281,6 +281,13 @@ protected:
           mSizeM1(sizeM1)
     {
     }
+    BaseTensor(const BaseTensor& other)
+        : mDims(other.mDims),
+          mValid(other.mValid),
+          mSize(other.mSize),
+          mSizeM1(other.mSizeM1)
+    {
+    }
     size_t computeSize()
     {
         mSizeM1 = (!mDims.empty()) ? std::accumulate(mDims.begin(),
@@ -338,6 +345,7 @@ public:
     using BaseTensor::resize;
 
     Tensor();
+    Tensor(const Tensor<T>& other);
     Tensor(std::initializer_list<size_t> dims,
              const T& value = T());
     Tensor(const std::vector<size_t>& dims,

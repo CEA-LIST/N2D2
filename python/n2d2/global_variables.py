@@ -52,6 +52,10 @@ class GlobalVariables:
     +--------------------------+-------------------------------------------------------------------+
     |``cuda_device``           | Device to use for GPU computation with CUDA, default = ``0``      |
     +--------------------------+-------------------------------------------------------------------+
+    |``cuda_compiled``         | Is True if you have compiled N2D2 with the CUDA library.          |
+    |                          | If False, you can install CUDA and reinstall N2D2 ot make CUDA    |
+    |                          | available.                                                        |
+    +--------------------------+-------------------------------------------------------------------+
     """
     def __init__(self):
         self.model_cache = expanduser("~") + "/MODELS"
@@ -60,7 +64,8 @@ class GlobalVariables:
         self.default_datatype = 'float'
         self.default_net = N2D2.Network(self._seed, saveSeed=False, printTimeElapsed=False)
         self._cuda_compiled = N2D2.cuda_compiled
-        self._n2d2_ip_compiled = N2D2.N2D2_IP 
+        self._json_compiled = N2D2.json_compiled
+        self._n2d2_ip_compiled = N2D2.N2D2_IP
         self._cuda_device = 0
         class VerbosityClass:
             graph_only = 0  # Only names, cell types and inputs
@@ -82,11 +87,11 @@ class GlobalVariables:
         return self._cuda_device
     @cuda_device.setter
     def cuda_device(self, value):
-        if isinstance(value, int): 
+        if isinstance(value, int):
             if value > N2D2.CudaContext.nbDevice():
                 raise RuntimeError(f"Cannot set device {value}, you have {N2D2.CudaContext.nbDevice()} devices")
             self._cuda_device = value
-            N2D2.setCudaDeviceOption(value) # Setting this variable is mandatory to use the fit method otherwise, 
+            N2D2.setCudaDeviceOption(value) # Setting this variable is mandatory to use the fit method otherwise,
                                     # the device used for learning would be 0 (default value)
             N2D2.CudaContext.setDevice(value)
         elif isinstance(value, tuple) or isinstance(value, list):
@@ -109,6 +114,13 @@ class GlobalVariables:
     @cuda_compiled.setter
     def cuda_compiled(self, _):
         raise RuntimeError("The parameter cuda_compiled is on read only !")
+
+    @property
+    def json_compiled(self):
+        return self._json_compiled
+    @json_compiled.setter
+    def json_compiled(self, _):
+        raise RuntimeError("The parameter json_compiled is on read only !")
 
     @property
     def n2d2_ip_compiled(self):

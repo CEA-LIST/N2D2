@@ -23,6 +23,7 @@
 #include "StimuliProvider.hpp"
 #include "third_party/half.hpp"
 #include "Cell/ConvCell_Frame_Kernels.hpp"
+#include "Adversarial.hpp"
 
 template <class T>
 N2D2::Cell_Frame<T>::Cell_Frame(const DeepNet& deepNet, const std::string& name,
@@ -82,6 +83,16 @@ void N2D2::Cell_Frame<T>::addInput(StimuliProvider& sp,
     // Define input-output sizes
     setInputsDims(sp.getSize());
     mInputs.push_back(&sp.getDataInput());
+
+    // For some adversarial attacks, it is required to backpropagate
+    // the gradiants to the inputs
+    if (sp.getAdversarialAttack()->getAttackName() != Adversarial::Attack_T::None) {
+        std::vector<size_t> inputsDims(mInputsDims);
+        inputsDims.push_back(sp.getBatchSize());
+        mDiffOutputs.push_back(new Tensor<T>(inputsDims), 0);
+    }
+    else
+        mDiffOutputs.push_back(new Tensor<T>(), 0);
 
     setOutputsDims();
 
@@ -176,9 +187,7 @@ void N2D2::Cell_Frame<T>::addInput(BaseTensor& inputs,
 
     setInputsDims(inputsDims);
     mInputs.push_back(&inputs);
-
-    if (!diffOutputs.empty())
-        mDiffOutputs.push_back(&diffOutputs);
+    mDiffOutputs.push_back(&diffOutputs);
 
     setOutputsDims();
 
@@ -363,6 +372,7 @@ void N2D2::Cell_Frame<T>::linkInput(StimuliProvider& sp,
      // Define input-output sizes
     setInputsDims(sp.getSize());
     mInputs.push_back(&sp.getData());
+    mDiffOutputs.push_back(new Tensor<T>(mInputs[0].dims()), 0);
 
 }
 // END code used exclusively in python API
@@ -662,22 +672,31 @@ unsigned int N2D2::Cell_Frame<T>::getMaxOutput(unsigned int batchPos) const
     return std::distance(output.begin(),
                          std::max_element(output.begin(), output.end()));
 }
-template<>
-std::string N2D2::Cell_Frame<double>::getPyDataType() {
-    return std::string("double");
+
+template <class T>
+std::string N2D2::Cell_Frame<T>::getPyDataType()
+{
+    if (typeid(T) == typeid(double)) {
+        return std::string("double");
+    }
+    else if (typeid(T) == typeid(float)) {
+        return std::string("float");
+    }
+    else if (typeid(T) == typeid(half_float::half)) {
+        return std::string("half_float");
+    }
+    else {
+        // This case should not happen
+        // If it happens, the type string returned by this function
+        // might be weird
+        return std::string(typeid(T).name());
+    }
 }
 
-template<>
-std::string N2D2::Cell_Frame<float>::getPyDataType() {
-    return std::string("float");
-}
-template<>
-std::string N2D2::Cell_Frame<half_float::half>::getPyDataType() {
-    return std::string("half_float");
-}
-template<class T>
-std::string N2D2::Cell_Frame<T>::getPyModel(){
-    return std::string("Frame");
+template <class T>
+std::string N2D2::Cell_Frame<T>::getPyModel()
+{
+    return std::string(N2D2::Cell_Frame_Top::FRAME_TYPE);
 }
 
 namespace N2D2 {

@@ -24,6 +24,8 @@
 #include "dnn_utils.hpp"
 #include "kernels_cpu.hpp"
 
+#if NV_TENSORRT_MAJOR < 8
+
 /**Plugin Layer implementation**/
 /**Anchoring CPU implementation**/
 class AnchorCPUPlugin: public nvinfer1::IPlugin
@@ -108,7 +110,7 @@ public:
                                                const nvinfer1::Dims* inputDim,
                                                int nbInputDims) override
 	{
-        return nvinfer1::DimsCHW(mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
+        return trt_Dims3(mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
 	}
 
 	virtual void configure(const nvinfer1::Dims* inputDims,
@@ -315,4 +317,5 @@ struct pluginAnchor_CPU{
       mPluginCount = 0;
     }
 };
+#endif
 #endif

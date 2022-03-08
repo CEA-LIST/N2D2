@@ -98,6 +98,8 @@ public:
     virtual BaseTensor& getDiffOutputs(unsigned int index = 0) = 0;
     virtual const BaseTensor& getDiffOutputs(unsigned int index = 0) const = 0;
     virtual unsigned int getMaxOutput(unsigned int batchPos = 0) const = 0;
+    virtual std::string getPyDataType() = 0;
+    virtual std::string getPyModel() = 0;
     const std::shared_ptr<Activation>& getActivation() const
     {
         return mActivation;

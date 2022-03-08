@@ -174,7 +174,7 @@ void N2D2::UnpoolCell_Frame_CUDA::propagate(bool inference)
 
 void N2D2::UnpoolCell_Frame_CUDA::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (!mDiffInputs.isValid())
         return;
 
     Cell_Frame_CUDA<Float_T>::backPropagate();
@@ -182,6 +182,9 @@ void N2D2::UnpoolCell_Frame_CUDA::backPropagate()
     const Float_T alpha = 1.0;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
+        if (mDiffOutputs[k].empty())
+            continue;
+
         const Float_T beta = (mDiffOutputs[k].isValid()) ? 1.0 : 0.0;
 
         std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutput
@@ -247,17 +250,19 @@ void N2D2::UnpoolCell_Frame_CUDA::checkGradient(double epsilon, double maxError)
                   std::bind(&UnpoolCell_Frame_CUDA::backPropagate, this),
                   (mPooling == Max));
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << k << "]";
-
-            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

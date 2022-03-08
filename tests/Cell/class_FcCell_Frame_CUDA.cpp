@@ -84,7 +84,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_CUDA<float> fc1(dn, "fc1", nbOutputs);
 
@@ -109,7 +109,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -153,7 +153,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -203,7 +203,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
     REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<float> fc1(
@@ -235,7 +235,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 
     for (unsigned int output = 0; output < outputSize; ++output) {
         for (unsigned int channel = 0; channel < inputSize; ++channel) {
-            Tensor<float> weight({1}, 1.0);
+            Tensor<float> weight({1}, 1.0 / inputSize);
             fc1.setWeight(output, channel, weight);
         }
     }
@@ -252,7 +252,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
     const float sum
         = std::accumulate(in.begin(),
                           in.begin() + inputSize,
-                          0.0f); // Warning: 0.0 leads to wrong results!
+                          0.0f) / inputSize; // Warning: 0.0 leads to wrong results!
 
     for (unsigned int output = 0; output < out.dimZ(); ++output) {
         ASSERT_EQUALS_DELTA(out(output, 0), sum, 1e-4);
@@ -276,7 +276,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_Test_CUDA<float> fc1(
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
@@ -360,7 +360,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
     REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<float> fc1(
@@ -384,7 +384,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 
     for (unsigned int output = 0; output < outputSize; ++output) {
         for (unsigned int channel = 0; channel < inputSize; ++channel) {
-            Tensor<float> weight({1}, 1.0);
+            Tensor<float> weight({1}, 1.0 / inputSize);
             fc1.setWeight(output, channel, weight);
         }
     }
@@ -404,7 +404,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
         for (unsigned int channel = 0; channel < input.dimZ(); ++channel) {
             for (unsigned int y = 0; y < fc1.getChannelsHeight(); ++y) {
                 for (unsigned int x = 0; x < fc1.getChannelsWidth(); ++x)
-                    sum += input(x, y, channel, 0);
+                    sum += input(x, y, channel, 0) / inputSize;
             }
         }
     }
@@ -441,7 +441,7 @@ TEST_DATASET(FcCell_Frame_CUDA_float,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);
@@ -501,7 +501,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_CUDA<double> fc1(dn, "fc1", nbOutputs);
 
@@ -526,7 +526,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -570,7 +570,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -620,7 +620,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
     REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<double> fc1(
@@ -652,7 +652,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 
     for (unsigned int output = 0; output < outputSize; ++output) {
         for (unsigned int channel = 0; channel < inputSize; ++channel) {
-            Tensor<double> weight({1}, 1.0);
+            Tensor<double> weight({1}, 1.0 / inputSize);
             fc1.setWeight(output, channel, weight);
         }
     }
@@ -669,7 +669,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
     const double sum
         = std::accumulate(in.begin(),
                           in.begin() + inputSize,
-                          0.0f); // Warning: 0.0 leads to wrong results!
+                          0.0f) / inputSize; // Warning: 0.0 leads to wrong results!
 
     for (unsigned int output = 0; output < out.dimZ(); ++output) {
         ASSERT_EQUALS_DELTA(out(output, 0), sum, 1e-4);
@@ -693,7 +693,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_Test_CUDA<double> fc1(
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
@@ -777,7 +777,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
     REQUIRED(UnitTest::CudaDeviceExists(3));
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<double> fc1(
@@ -801,7 +801,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 
     for (unsigned int output = 0; output < outputSize; ++output) {
         for (unsigned int channel = 0; channel < inputSize; ++channel) {
-            Tensor<double> weight({1}, 1.0);
+            Tensor<double> weight({1}, 1.0 / inputSize);
             fc1.setWeight(output, channel, weight);
         }
     }
@@ -821,7 +821,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
         for (unsigned int channel = 0; channel < input.dimZ(); ++channel) {
             for (unsigned int y = 0; y < fc1.getChannelsHeight(); ++y) {
                 for (unsigned int x = 0; x < fc1.getChannelsWidth(); ++x)
-                    sum += input(x, y, channel, 0);
+                    sum += input(x, y, channel, 0) / inputSize;
             }
         }
     }
@@ -858,7 +858,7 @@ TEST_DATASET(FcCell_Frame_CUDA_double,
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);
@@ -919,7 +919,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     if (!UnitTest::CudaDeviceExists(5, 3))
         return;     // REQUIRED() not enough (Cublas failure)
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_CUDA<half_float::half> fc1(dn, "fc1", nbOutputs);
 
@@ -945,7 +945,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     if (!UnitTest::CudaDeviceExists(5, 3))
         return;     // REQUIRED() not enough (Cublas failure)
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -990,7 +990,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     if (!UnitTest::CudaDeviceExists(5, 3))
         return;     // REQUIRED() not enough (Cublas failure)
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -1042,7 +1042,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
 
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<half_float::half> fc1(
@@ -1074,7 +1074,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
 
     for (unsigned int output = 0; output < outputSize; ++output) {
         for (unsigned int channel = 0; channel < inputSize; ++channel) {
-            Tensor<half_float::half> weight({1}, half_float::half(1.0f));
+            Tensor<half_float::half> weight({1}, half_float::half(1.0f) / half_float::half(inputSize));
             fc1.setWeight(output, channel, weight);
         }
     }
@@ -1092,10 +1092,10 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     float sum = 0.0f;
 
     for (unsigned int i = 0; i < inputSize; ++i)
-        sum += ((half_float::half)in(i) * half_float::half(1.0f));
+        sum += ((half_float::half)in(i) * half_float::half(1.0f)) / half_float::half(inputSize);
 
     for (unsigned int output = 0; output < out.dimZ(); ++output) {
-        ASSERT_EQUALS_DELTA(out(output, 0), sum, 0.5);
+        ASSERT_EQUALS_DELTA(out(output, 0), sum, 1e-2);
     }
 }
 /*
@@ -1116,7 +1116,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     FcCell_Frame_Test_CUDA<half_float::half> fc1(
         dn, "fc1", nbOutputs, std::shared_ptr<Activation>());
@@ -1202,7 +1202,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
 
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     FcCell_Frame_Test_CUDA<half_float::half> fc1(
@@ -1226,7 +1226,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
 
     for (unsigned int output = 0; output < outputSize; ++output) {
         for (unsigned int channel = 0; channel < inputSize; ++channel) {
-            Tensor<half_float::half> weight({1}, half_float::half(1.0f));
+            Tensor<half_float::half> weight({1}, half_float::half(1.0f) / half_float::half(inputSize));
             fc1.setWeight(output, channel, weight);
         }
     }
@@ -1247,7 +1247,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
         for (unsigned int channel = 0; channel < input.dimZ(); ++channel) {
             for (unsigned int y = 0; y < fc1.getChannelsHeight(); ++y) {
                 for (unsigned int x = 0; x < fc1.getChannelsWidth(); ++x)
-                    sum += ((half_float::half)input(x, y, channel, 0) * half_float::half(1.0f));
+                    sum += ((half_float::half)input(x, y, channel, 0) * half_float::half(1.0f)) / half_float::half(inputSize);
             }
         }
     }
@@ -1263,7 +1263,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     for (unsigned int ox = 0; ox < fc1.getOutputsWidth(); ++ox) {
         for (unsigned int oy = 0; oy < fc1.getOutputsHeight(); ++oy) {
             for (unsigned int output = 0; output < fc1.getNbOutputs(); ++output)
-                ASSERT_EQUALS_DELTA(out(ox, oy, output, 0), sum, 0.5);
+                ASSERT_EQUALS_DELTA(out(ox, oy, output, 0), sum, 1e-2);
         }
     }
 }
@@ -1286,7 +1286,7 @@ TEST_DATASET(FcCell_Frame_CUDA_half,
     if (!UnitTest::CudaDeviceExists(5, 3))
         return;     // REQUIRED() not enough (Cublas failure)
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(
         net, EmptyDatabase, {channelsWidth, channelsHeight, 1}, 2, false);

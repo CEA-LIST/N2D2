@@ -24,7 +24,8 @@
 #include "dnn_utils.hpp"
 #include "kernels_gpu.hpp"
 /**ObjectDet GPU implementation**/
-class ObjDetGPUPlugin: public nvinfer1::IPlugin
+
+class ObjDetGPUPlugin: public nvinfer1::IPluginV2Ext
 {
 public:
 	ObjDetGPUPlugin(unsigned int batchSize,
@@ -61,6 +62,7 @@ public:
         mFeatureMapWidth = featureMapWidth;
         mFeatureMapHeight = featureMapHeight;
 
+
         mNbAnchors = nbAnchors;
         mNbClass= nbCls;
         mNbProposals = nbProposals;
@@ -71,13 +73,15 @@ public:
         mMaxParts = maxParts;
         mMaxTemplates = maxTemplates;
 
-        mPartsPerClass = new unsigned int[mNbClass];
-        for(unsigned int i = 0; i < mNbClass; ++i)
-            mPartsPerClass[i] = numPartsPerClass[i];
+        //mPartsPerClass = new unsigned int[mNbClass];
+        for(unsigned int i = 0; i < mNbClass; ++i) {
+            mPartsPerClass_HOST.push_back(numPartsPerClass[i]);
+        }
 
-        mTemplatesPerClass = new unsigned int[mNbClass];
-        for(unsigned int i = 0; i < mNbClass; ++i)
-            mTemplatesPerClass[i] = numTemplatesPerClass[i];
+        //mTemplatesPerClass = new unsigned int[mNbClass];
+        for(unsigned int i = 0; i < mNbClass; ++i) {
+            mTemplatesPerClass_HOST.push_back(numTemplatesPerClass[i]);
+        }
         /*
         mAnchors.resize(mNbAnchors);
         for(unsigned int i = 0; i < mNbAnchors*4; i += 4)
@@ -88,13 +92,17 @@ public:
             mAnchors[i/4].y1 = anchor[i + 3];
         }
         */
+        //mAnchors_HOST.resize(4 * mNbAnchors * nbCls);
+        for(unsigned int i = 0; i < 4 * mNbAnchors * nbCls; ++i) {
+            mAnchors_HOST.push_back(anchor[i]);
+        }
+
         checkCudaErrors( cudaMalloc((void**)&mAnchors,
                          4 * mNbAnchors * nbCls * sizeof(float)) );
         checkCudaErrors( cudaMemcpy(mAnchors,
-                         anchor,
+                         mAnchors_HOST.data(),
                          4 * mNbAnchors * nbCls *sizeof(float),
                          cudaMemcpyHostToDevice) );
-
         /**Initialize pixels map on GPU **/
         checkCudaErrors( cudaMalloc((void**)&mPixelMap,
                          channelHeight * channelWidth
@@ -172,6 +180,11 @@ public:
         mMwCPUIndex = new float[channelHeight * channelWidth * mNbAnchors * mNbClass * batchSize];
         mMhCPUIndex = new float[channelHeight * channelWidth * mNbAnchors * mNbClass * batchSize];
 
+        //mScoreThreshold_HOST.resize(nbCls);
+        for(unsigned int i = 0; i < nbCls; ++i) {
+            mScoreThreshold_HOST.push_back(scoreThreshold[i]);
+        }
+
         /**Initialize mScoreThreshold parameters on GPU **/
         checkCudaErrors( cudaMalloc((void**)&mScoreThreshold,
                          mNbClass*sizeof(float)) );
@@ -196,10 +209,11 @@ public:
 	ObjDetGPUPlugin(const void* dataFromRuntime, size_t length)
 	{
 		const char* d = reinterpret_cast<const char*>(dataFromRuntime), *a = d;
-        mOutputDims.d[0] = read<int>(d);
-		mOutputDims.d[1] = read<int>(d);
-		mOutputDims.d[2] = read<int>(d);
-		mOutputDims.d[3] = read<int>(d);
+        mOutputDims = read<nvinfer1::Dims>(d);
+        //mOutputDims.d[0] = read<int>(d);
+		//mOutputDims.d[1] = read<int>(d);
+		//mOutputDims.d[2] = read<int>(d);
+		//mOutputDims.d[3] = read<int>(d);
         mChannelHeight = (unsigned int) read<int>(d);
         mChannelWidth = (unsigned int) read<int>(d);
         mStimuliWidth = read<unsigned int>(d);
@@ -246,14 +260,17 @@ public:
             mMhCPUIndex[k] = read<float>(d);
         
         mScoreThreshold = deserializeToDevice<float>(d, mNbClass);
+        mScoreThreshold_HOST.reserve(mNbClass);
+        for(unsigned int k = 0; k <  mNbClass; ++k)
+            mScoreThreshold_HOST[k] = read<float>(d);
 
-        mPartsPerClass = new unsigned int[mNbClass];
+        mPartsPerClass_HOST.reserve(mNbClass);
         for(unsigned int k = 0; k < mNbClass; ++k)
-            mPartsPerClass[k] = read<unsigned int>(d);
+            mPartsPerClass_HOST[k] = read<unsigned int>(d);
 
-        mTemplatesPerClass = new unsigned int[mNbClass];
+        mTemplatesPerClass_HOST.reserve(mNbClass);
         for(unsigned int k = 0; k < mNbClass; ++k)
-            mTemplatesPerClass[k] = read<unsigned int>(d);
+            mTemplatesPerClass_HOST[k] = read<unsigned int>(d);
         /*mAnchors.resize(mNbAnchors);
         for(unsigned int i = 0; i < mNbAnchors; ++i)
         {
@@ -263,22 +280,29 @@ public:
             mAnchors[i].y1 = read<float>(d);
         }*/
         mAnchors = deserializeToDevice<float>(d, 4 * mNbAnchors * mNbClass);
+        mAnchors_HOST.reserve(4 * mNbAnchors * mNbClass);
+        for(unsigned int k = 0; k <  mNbAnchors * mNbClass * 4; ++k)
+            mAnchors_HOST[k] = read<float>(d);
 
         mROIsBBOxFinal = deserializeToDevice<float>(d, mNbProposals*5*mOutputDims.d[0]);
         mROIsMapAnchorsFinal = deserializeToDevice<float>(d, mNbProposals*5*mOutputDims.d[0]);
         mROIsIndexFinal = deserializeToDevice<unsigned int>(d, mOutputDims.d[0]);
-
 		assert(d == a + length);
 
 	}
 
 	~ObjDetGPUPlugin()
 	{
+        /**Initialize pixels map on GPU **/
+
         //mAnchors = std::vector<Anchor>();
 	}
 
-	virtual int getNbOutputs() const override
-	{
+	virtual int getNbOutputs() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
         //return (int)mNbProposals;
         return (int) 1;
 
@@ -286,8 +310,11 @@ public:
 
 	virtual nvinfer1::Dims getOutputDimensions(int index,
                                                const nvinfer1::Dims* inputDim,
-                                               int nbInputDims) override
-	{
+                                               int nbInputDims) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
         //return nvinfer1::DimsCHW(mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
         ///Proposals are store through CHW format with C of size NbProposal*4 (4 for the ROI proposals coordinate)
         unsigned int batchInput = 1;
@@ -296,43 +323,69 @@ public:
             batchInput = inputDim[0].d[0];
 
         //return nvinfer1::DimsNCHW(batchInput, mNbProposals*mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
-        return nvinfer1::DimsNCHW(  mNbProposals*mNbClass,
+        return trt_Dims4(  mNbProposals*mNbClass,
                                     mOutputDims.d[1],
                                     mOutputDims.d[2],
                                     mOutputDims.d[3]);
 
 	}
 
-	virtual void configure(const nvinfer1::Dims* inputDims,
-                   int nbInputs,
-                   const nvinfer1::Dims* outputDims,
-                   int nbOutputs,
-                   int maxBatchSize) override
-	{
-
-	}
-
-	virtual int initialize() override
-	{
+	virtual int initialize() 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override{
 		return 0;
 	}
 
-	virtual void terminate() override
-	{
+	virtual void terminate() 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override	{
+        checkCudaErrors(cudaFree(mMxGPUIndex));
+        checkCudaErrors(cudaFree(mMyGPUIndex));
+        checkCudaErrors(cudaFree(mMwGPUIndex));
+        checkCudaErrors(cudaFree(mMhGPUIndex));
+
+        checkCudaErrors(cudaFree(mScoresFiltered));
+        checkCudaErrors(cudaFree(mScores));
+        checkCudaErrors(cudaFree(mScoresIndex));
+
+        checkCudaErrors(cudaFree(mPixelMap));
+        checkCudaErrors(cudaFree(mPixelMapSorted));
+
+        checkCudaErrors(cudaFree(mAnchors));
+
+        checkCudaErrors(cudaFree(mScoreThreshold));
+        checkCudaErrors(cudaFree(mROIsIndexFinal));
+        checkCudaErrors(cudaFree(mROIsMapAnchorsFinal));
+        checkCudaErrors(cudaFree(mROIsBBOxFinal));
 
 	}
 
-	virtual size_t getWorkspaceSize(int maxBatchSize) const override
-	{
+	virtual size_t getWorkspaceSize(int maxBatchSize) const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override	{
 		return 0;
 	}
 
+#if NV_TENSORRT_MAJOR > 7
+	virtual int enqueue(int batchSize,
+                        const void*const * inputs,
+                        void*const* outputs,
+                        void* workspace,
+                        cudaStream_t stream) noexcept
+#else
 	virtual int enqueue(int batchSize,
                         const void*const * inputs,
                         void** outputs,
                         void* workspace,
-                        cudaStream_t stream) override
-	{
+                        cudaStream_t stream)
+#endif
+    override	{
         //float* outputDataCPU(NULL);
 
         size_t size_output_cpy = mNbProposals*mNbClass*mOutputDims.d[1]
@@ -366,10 +419,10 @@ public:
 
         for(unsigned int c = 0; c < mNbClass; ++c) 
         {
-            nbTotalPart += mPartsPerClass[c];
-            nbTotalTemplate += mTemplatesPerClass[c];
+            nbTotalPart += mPartsPerClass_HOST[c];
+            nbTotalTemplate += mTemplatesPerClass_HOST[c];
         }
-
+/*
         checkCudaErrors( cudaMemset(mPixelMapSorted,
                                     -1,
                                     mChannelHeight * mChannelWidth
@@ -380,7 +433,7 @@ public:
                                     mChannelHeight * mChannelWidth
                                     * mNbAnchors * mNbClass
                                     * batchSize * sizeof(int)) );
-
+*/
 
         dim3 blocksPerGrid = {  (unsigned int) mBlockX,
                                 (unsigned int) mBlockY,
@@ -403,7 +456,8 @@ public:
                         reinterpret_cast<int *>(mPixelMap),
                         reinterpret_cast<float *>(mScores),
                         blocksPerGrid,
-                        threadsPerBlock);
+                        threadsPerBlock,
+                        stream);
 
         std::vector<std::vector <unsigned int> > count(batchSize,
                                                     std::vector<unsigned int>(mNbClass));
@@ -414,8 +468,7 @@ public:
             {
                 const int pixelOffset = cls*mChannelWidth*mChannelHeight*mNbAnchors 
                                             +  mChannelWidth*mChannelHeight*mNbAnchors*mNbClass*batchPos;
-
-                const int nbMapDet = copy_if_int(    reinterpret_cast<int *>(mPixelMap) + pixelOffset,
+                const int nbMapDet = copy_if_int(  reinterpret_cast<int *>(mPixelMap) + pixelOffset,
                                                    reinterpret_cast<int *>(mPixelMapSorted) + pixelOffset,
                                                    mChannelWidth*mChannelHeight*mNbAnchors);
 
@@ -657,8 +710,8 @@ public:
             int mThreadZ = 1;
 
             int mBlockX = std::ceil(mNbProposals/(float) mThreadX);
-            int mBlockY = std::max(mPartsPerClass[cls], mTemplatesPerClass[cls]) > 0 ? 
-                            std::max(mPartsPerClass[cls], mTemplatesPerClass[cls]) : 1 ;
+            int mBlockY = std::max(mPartsPerClass_HOST[cls], mTemplatesPerClass_HOST[cls]) > 0 ? 
+                            std::max(mPartsPerClass_HOST[cls], mTemplatesPerClass_HOST[cls]) : 1 ;
             int mBlockZ = batchSize;
 
             dim3 blocks = {  (unsigned int) mBlockX, (unsigned int) mBlockY, (unsigned int) batchSize};
@@ -674,8 +727,8 @@ public:
 
             for(unsigned int c = 0; c < cls; ++c) 
             {
-                keypointClsOffset += mPartsPerClass[c] * 2;
-                templateClsOffset += mTemplatesPerClass[c] * 3;
+                keypointClsOffset += mPartsPerClass_HOST[c] * 2;
+                templateClsOffset += mTemplatesPerClass_HOST[c] * 3;
             }
 
             if(mIsCoordinatesAnchors) {
@@ -721,8 +774,8 @@ public:
                                         mMaxTemplates,
                                         keypointClsOffset,
                                         templateClsOffset,
-                                        mPartsPerClass[cls],
-                                        mTemplatesPerClass[cls],
+                                        mPartsPerClass_HOST[cls],
+                                        mTemplatesPerClass_HOST[cls],
                                         mIsCoordinatesAnchors,
                                         mIsPixelFormatXY,
                                         xRatio,
@@ -736,7 +789,8 @@ public:
                                         reinterpret_cast<const float *>(inputs[1]),
                                         reinterpret_cast<float*>(outputs[0]),
                                         blocks,
-                                        threads);
+                                        threads,
+                                        stream);
             
 
         }
@@ -760,9 +814,37 @@ public:
         return 0;
     }
 
-	virtual size_t getSerializationSize() override
-	{
-        size_t proposalParamI = 15*sizeof(int) + (4 + 2 + 2*mNbClass)*sizeof(unsigned int); //
+/*
+	ObjDetGPUPlugin(unsigned int batchSize,
+                    unsigned int nbOutputs,
+                    unsigned int outputHeight,
+                    unsigned int outputWidth,
+                    unsigned int channelHeight,
+                    unsigned int channelWidth,
+                    unsigned int stimuliWidth,
+                    unsigned int stimuliHeight,
+                    unsigned int featureMapWidth,
+                    unsigned int featureMapHeight,
+                    unsigned int nbProposals,
+                    unsigned int nbCls,
+                    unsigned int nbAnchors,
+                    bool isCoordinatesAnchors,
+                    bool isPixelFormatXY,
+                    double nmsIoU,
+                    const float* scoreThreshold,
+                    unsigned int maxParts,
+                    unsigned int maxTemplates,
+                    const unsigned int* numPartsPerClass,
+                    const unsigned int* numTemplatesPerClass,
+                    const float* anchor)
+
+*/
+	virtual size_t getSerializationSize() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override	{
+        size_t proposalParamI = 15*sizeof(int) + (2 + 2*mNbClass)*sizeof(unsigned int); //
         size_t proposalParamD = (1)*sizeof(double) + mNbClass*sizeof(float); //RatioX and RatioY
         size_t PixelMapSize = mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]*sizeof(int);
         size_t M_Index = mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]*sizeof(float);
@@ -770,66 +852,117 @@ public:
 
         size_t finalIdxSize = (mNbProposals*5*mOutputDims.d[0])*2*sizeof(float) + mOutputDims.d[0]*sizeof(unsigned int);
         size_t formatSize = (2)*sizeof(bool);
-        mSerializationSize = proposalParamI + proposalParamD + 3*PixelMapSize + 10*M_Index + anchorsSize + finalIdxSize + formatSize;
+        size_t outputDimSize = sizeof(nvinfer1::Dims);
+        size_t scoreThreshold_HOSTSize = mNbClass*sizeof(float);
+        size_t anchor_HOSTSize = 4*mNbAnchors*mNbClass*sizeof(float) ;
+        size_t SerializationSize = proposalParamI + proposalParamD + 3*PixelMapSize 
+                                    + 10*M_Index + anchorsSize + finalIdxSize + formatSize 
+                                    + outputDimSize + scoreThreshold_HOSTSize + anchor_HOSTSize;
 
-        return mSerializationSize;
+        return SerializationSize;
 	}
 
-	virtual void serialize(void* buffer) override
-	{
+	virtual void serialize(void* buffer) const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override	{
         char* d = reinterpret_cast<char*>(buffer);
         char* a = d;
-        write<int>(d, (int)mOutputDims.d[0]);
-        write<int>(d, (int)mOutputDims.d[1]);
-        write<int>(d, (int)mOutputDims.d[2]);
-        write<int>(d, (int)mOutputDims.d[3]);
-        write<int>(d, (int)mChannelHeight);
-        write<int>(d, (int)mChannelWidth);
-        write<unsigned int>(d, mStimuliWidth);
-        write<unsigned int>(d, mStimuliHeight);
-        write<unsigned int>(d, mFeatureMapWidth);
-        write<unsigned int>(d, mFeatureMapHeight);
-        write<int>(d, (int)mNbAnchors);
-        write<int>(d, (int)mNbClass);
-        write<int>(d, (int)mNbProposals);
-        write<int>(d, (unsigned int)mMaxParts);
-        write<int>(d, (unsigned int)mMaxTemplates);
-        write<bool>(d, mIsCoordinatesAnchors);
-        write<bool>(d, mIsPixelFormatXY);
-        write<double>(d, mNMS_IoU);
-        write<int>(d, mThreadX);
-        write<int>(d, mThreadY);
-        write<int>(d, mThreadZ);
-        write<int>(d, mBlockX);
-        write<int>(d, mBlockY);
-        write<int>(d, mBlockZ);
-        serializeFromDevice<int>(d, mPixelMap, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
-        serializeFromDevice<int>(d, mPixelMapSorted, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
-        serializeFromDevice<int>(d, mScoresIndex, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
-        serializeFromDevice<float>(d, mScores, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
-        serializeFromDevice<float>(d, mScoresFiltered, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
+        *reinterpret_cast<nvinfer1::Dims*>(d) = mOutputDims;
+        d += sizeof(nvinfer1::Dims);
 
-        serializeFromDevice<float>(d, mMxGPUIndex, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
-        serializeFromDevice<float>(d, mMyGPUIndex, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
-        serializeFromDevice<float>(d, mMwGPUIndex, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
-        serializeFromDevice<float>(d, mMhGPUIndex, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
-        for(unsigned int k = 0; k < mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]; ++k)
-            write<float>(d, mMxCPUIndex[k]);
-        for(unsigned int k = 0; k < mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]; ++k)
-            write<float>(d, mMyCPUIndex[k]);
-        for(unsigned int k = 0; k < mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]; ++k)
-            write<float>(d, mMwCPUIndex[k]);
-        for(unsigned int k = 0; k < mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]; ++k)
-            write<float>(d, mMhCPUIndex[k]);
+        *reinterpret_cast<int*>(d) = mChannelHeight;
+        d += sizeof(int);
+        *reinterpret_cast<int*>(d) = mChannelWidth;
+        d += sizeof(int);
+
+        *reinterpret_cast<unsigned int*>(d) = mStimuliWidth;
+        d += sizeof(unsigned int);
+        *reinterpret_cast<unsigned int*>(d) = mStimuliHeight;
+        d += sizeof(unsigned int);
+
+        *reinterpret_cast<unsigned int*>(d) = mFeatureMapWidth;
+        d += sizeof(unsigned int);
+        *reinterpret_cast<unsigned int*>(d) = mFeatureMapHeight;
+        d += sizeof(unsigned int);
+
+        *reinterpret_cast<int*>(d) = mNbAnchors;
+        d += sizeof(int);
+        *reinterpret_cast<int*>(d) = mNbClass;
+        d += sizeof(int);
+        *reinterpret_cast<int*>(d) = mNbProposals;
+        d += sizeof(int);
+
+        *reinterpret_cast<unsigned int*>(d) = mMaxParts;
+        d += sizeof(unsigned int);
+        *reinterpret_cast<unsigned int*>(d) = mMaxTemplates;
+        d += sizeof(unsigned int);
+
+        *reinterpret_cast<bool*>(d) = mIsCoordinatesAnchors;
+        d += sizeof(bool);
+        *reinterpret_cast<bool*>(d) = mIsPixelFormatXY;
+        d += sizeof(bool);
+
+        *reinterpret_cast<double*>(d) = mNMS_IoU;
+        d += sizeof(double);
+
+        *reinterpret_cast<int*>(d) = mThreadX;
+        d += sizeof(int);
+        *reinterpret_cast<int*>(d) = mThreadY;
+        d += sizeof(int);
+        *reinterpret_cast<int*>(d) = mThreadZ;
+        d += sizeof(int);
+        *reinterpret_cast<int*>(d) = mBlockX;
+        d += sizeof(int);
+        *reinterpret_cast<int*>(d) = mBlockY;
+        d += sizeof(int);
+        *reinterpret_cast<int*>(d) = mBlockZ;
+        d += sizeof(int);
+
+
+        d += serializeFromDevice<int>(d, mPixelMap, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
+        d += serializeFromDevice<int>(d, mPixelMapSorted, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
+        d += serializeFromDevice<int>(d, mScoresIndex, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
+        d += serializeFromDevice<float>(d, mScores, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
+        d += serializeFromDevice<float>(d, mScoresFiltered, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
+
+        d += serializeFromDevice<float>(d, mMxGPUIndex, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
+        d += serializeFromDevice<float>(d, mMyGPUIndex, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
+        d += serializeFromDevice<float>(d, mMwGPUIndex, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
+        d += serializeFromDevice<float>(d, mMhGPUIndex, mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]);
+        for(unsigned int k = 0; k < mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]; ++k) {
+            *reinterpret_cast<float*>(d) = mMxCPUIndex[k];
+            d += sizeof(float);
+        }
+        for(unsigned int k = 0; k < mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]; ++k){
+            *reinterpret_cast<float*>(d) = mMyCPUIndex[k];
+            d += sizeof(float);
+        }
+        for(unsigned int k = 0; k < mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]; ++k) {
+            *reinterpret_cast<float*>(d) = mMwCPUIndex[k];
+            d += sizeof(float);
+        }
+        for(unsigned int k = 0; k < mChannelHeight * mChannelWidth * mNbAnchors * mNbClass * mOutputDims.d[0]; ++k) {
+            *reinterpret_cast<float*>(d) = mMhCPUIndex[k];
+            d += sizeof(float);
+        }
         
-        serializeFromDevice<float>(d, mScoreThreshold, mNbClass);
+        d += serializeFromDevice<float>(d, mScoreThreshold, mNbClass);
+        for(unsigned int k = 0; k <  mNbClass; ++k) {
+            *reinterpret_cast<float*>(d) = mScoreThreshold_HOST[k];
+            d += sizeof(float);
+        }
 
-        for(unsigned int k = 0; k < mNbClass; ++k)
-            write<unsigned int>(d, mPartsPerClass[k]);
+        for(unsigned int k = 0; k < mNbClass; ++k) {
+            *reinterpret_cast<unsigned int*>(d) = mPartsPerClass_HOST[k];
+            d += sizeof(unsigned int);
+        }
 
-        for(unsigned int k = 0; k < mNbClass; ++k)
-            write<unsigned int>(d, mTemplatesPerClass[k]);
-
+        for(unsigned int k = 0; k < mNbClass; ++k) {
+            *reinterpret_cast<unsigned int*>(d) = mTemplatesPerClass_HOST[k];
+            d += sizeof(unsigned int);
+        }
         /*for(unsigned int i = 0; i < mNbAnchors; ++i)
         {
             write<float>(d, mAnchors[i].x0);
@@ -837,14 +970,148 @@ public:
             write<float>(d, mAnchors[i].x1);
             write<float>(d, mAnchors[i].y1);
         }*/
-        serializeFromDevice<float>(d, mAnchors, 4 * mNbAnchors * mNbClass);
+        d += serializeFromDevice<float>(d, mAnchors, 4 * mNbAnchors * mNbClass);
+        for(unsigned int k = 0; k < 4 * mNbAnchors * mNbClass; ++k) {
+            *reinterpret_cast<float*>(d) = mAnchors_HOST[k];
+            d += sizeof(float);
+        }
 
-        serializeFromDevice<float>(d, mROIsBBOxFinal, mNbProposals*5*mOutputDims.d[0]);
-        serializeFromDevice<float>(d, mROIsMapAnchorsFinal, mNbProposals*5*mOutputDims.d[0]);
-        serializeFromDevice<unsigned int>(d, mROIsIndexFinal, mOutputDims.d[0]);
+        d += serializeFromDevice<float>(d, mROIsBBOxFinal, mNbProposals*5*mOutputDims.d[0]);
+        d += serializeFromDevice<float>(d, mROIsMapAnchorsFinal, mNbProposals*5*mOutputDims.d[0]);
+        d += serializeFromDevice<unsigned int>(d, mROIsIndexFinal, mOutputDims.d[0]);
 
         assert(d == a + getSerializationSize());
 	}
+
+    bool supportsFormat(nvinfer1::DataType type, nvinfer1::PluginFormat format) const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
+    {
+#if NV_TENSORRT_MAJOR > 5
+        return (type == nvinfer1::DataType::kFLOAT && format == nvinfer1::PluginFormat::kLINEAR );
+#else
+        return (type == nvinfer1::DataType::kFLOAT && format == nvinfer1::PluginFormat::kNCHW );
+#endif
+    }
+    
+    const char* getPluginType() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+        const char* ObjDet_GPU_PLUGIN_NAME{"ObjDetGPUPlugin"};
+        return ObjDet_GPU_PLUGIN_NAME;
+     }
+    const char* getPluginVersion() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override { 
+        const char* ObjDet_GPU_PLUGIN_VERSION{"1"};
+        return ObjDet_GPU_PLUGIN_VERSION;
+    }
+    void destroy() 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {     delete this; }
+    IPluginV2Ext* clone() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+
+        IPluginV2Ext* plugin = new ObjDetGPUPlugin( mOutputDims.d[0],
+                                                    mOutputDims.d[1],
+                                                    mOutputDims.d[2],
+                                                    mOutputDims.d[3],
+                                                    mChannelHeight,
+                                                    mChannelWidth,
+                                                    mStimuliWidth,
+                                                    mStimuliHeight,
+                                                    mFeatureMapWidth,
+                                                    mFeatureMapHeight,
+                                                    mNbProposals,
+                                                    mNbClass,
+                                                    mNbAnchors,
+                                                    mIsCoordinatesAnchors,
+                                                    mIsPixelFormatXY,
+                                                    mNMS_IoU,
+                                                    mScoreThreshold_HOST.data(),
+                                                    mMaxParts,
+                                                    mMaxTemplates,
+                                                    mPartsPerClass_HOST.data(),
+                                                    mTemplatesPerClass_HOST.data(),
+                                                    mAnchors_HOST.data());
+
+        plugin->setPluginNamespace("");
+        return plugin;
+     }
+
+
+    void setPluginNamespace(const char* pluginNamespace) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+        std::string mNamespace = pluginNamespace;
+     }
+    const char* getPluginNamespace() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override { 
+        return mNamespace.c_str();
+    }
+
+    nvinfer1::DataType getOutputDataType(int index, const nvinfer1::DataType* inputTypes, int nbInputs) const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+        return nvinfer1::DataType::kFLOAT;
+     }
+
+    bool isOutputBroadcastAcrossBatch(int outputIndex, const bool* inputIsBroadcasted, int nbInputs) const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {    
+        return false;
+     }
+
+    bool canBroadcastInputAcrossBatch(int inputIndex) const
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override
+ {
+        return false;
+     }
+
+    void attachToContext(
+        cudnnContext* cudnnContext, cublasContext* cublasContext, nvinfer1::IGpuAllocator* gpuAllocator) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override { }
+
+    void configurePlugin(const nvinfer1::Dims* inputDims, int nbInputs, const nvinfer1::Dims* outputDims, int nbOutputs,
+        const nvinfer1::DataType* inputTypes, const nvinfer1::DataType* outputTypes, const bool* inputIsBroadcast,
+        const bool* outputIsBroadcast, nvinfer1::PluginFormat floatFormat, int maxBatchSize) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override { }
+
+    void detachFromContext() 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override { }
+
 
 private:
     template<typename T> void write(char*& buffer, const T& val)
@@ -870,10 +1137,10 @@ private:
     }
 
     template<typename T>
-    void serializeFromDevice(char*& hostBuffer, T* deviceWeights, size_t dataSize)
+    size_t serializeFromDevice(char*& hostBuffer, const T* deviceWeights, const size_t dataSize) const
     {
         checkCudaErrors(cudaMemcpy(hostBuffer, deviceWeights, dataSize*sizeof(T), cudaMemcpyDeviceToHost));
-        hostBuffer += dataSize*sizeof(T);
+        return dataSize*sizeof(T);
     }
     void gpuThreadAllocation()
     {
@@ -934,17 +1201,20 @@ private:
     bool mIsPixelFormatXY;
     double mNMS_IoU;
     float* mScoreThreshold;
+    std::vector<float> mScoreThreshold_HOST;
     unsigned int mMaxParts;
     unsigned int mMaxTemplates;
     unsigned int* mPartsPerClass;
+    std::vector<unsigned int> mPartsPerClass_HOST;
     unsigned int* mTemplatesPerClass;
+    std::vector<unsigned int> mTemplatesPerClass_HOST;
+
     float* mAnchors;
+    std::vector<float> mAnchors_HOST;
 
     float* mROIsBBOxFinal;
     float* mROIsMapAnchorsFinal;
     unsigned int* mROIsIndexFinal;
-
-    size_t mSerializationSize;
 
     int* mPixelMapSorted;
     int* mPixelMap;
@@ -969,84 +1239,314 @@ private:
     int mBlockX;
     int mBlockY;
     int mBlockZ;
+    std::string mNamespace;
 };
 
-struct pluginObjDet_GPU{
-    std::vector<std::unique_ptr<ObjDetGPUPlugin>> mPlugin;
-    int mPluginCount = 0;
 
-    void add(unsigned int batchSize,
-            unsigned int nbOutputs,
-            unsigned int outputHeight,
-            unsigned int outputWidth,
-            unsigned int channelHeight,
-            unsigned int channelWidth,
-            unsigned int stimuliWidth,
-            unsigned int stimuliHeight,
-            unsigned int featureMapWidth,
-            unsigned int featureMapHeight,
-            unsigned int nbProposals,
-            unsigned int nbCls,
-            unsigned int nbAnchors,
-            bool isCoordinatesAnchors,
-            bool isPixelFormatXY,
-            double nmsIoU,
-            const float* scoreThreshold,
-            unsigned int maxParts,
-            unsigned int maxTemplates,
-            const unsigned int* numPartsPerClass,
-            const unsigned int* numTemplatesPerClass,
-            const float* anchor)
 
-    {
-        mPlugin.push_back(std::unique_ptr
-                    <ObjDetGPUPlugin>(new ObjDetGPUPlugin(batchSize,
-                                                             nbOutputs,
-                                                             outputHeight,
-                                                             outputWidth,
-                                                             channelHeight,
-                                                             channelWidth,
-                                                             stimuliWidth,
-                                                             stimuliHeight,
-                                                             featureMapWidth,
-                                                             featureMapHeight,
-                                                             nbProposals,
-                                                             nbCls,
-                                                             nbAnchors,
-                                                             isCoordinatesAnchors,
-                                                             isPixelFormatXY,
-                                                             nmsIoU,
-                                                             scoreThreshold,
-                                                             maxParts,
-                                                             maxTemplates,
-                                                             numPartsPerClass,
-                                                             numTemplatesPerClass,
-                                                             anchor )));
-        ++mPluginCount;
+
+class ObjDet_GPUPluginCreator : public nvinfer1::IPluginCreator
+{
+public:
+    ObjDet_GPUPluginCreator() {
+
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("batchSize", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("nbOutputs", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("outputHeight", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("outputWidth", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("channelHeight", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("channelWidth", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("stimuliWidth", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("stimuliHeight", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("featureMapWidth", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("featureMapHeight", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("nbProposals", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("nbCls", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("nbAnchors", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("isCoordinatesAnchors", nullptr, nvinfer1::PluginFieldType::kCHAR, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("isPixelFormatXY", nullptr, nvinfer1::PluginFieldType::kCHAR, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("nmsIoU", nullptr, nvinfer1::PluginFieldType::kFLOAT64, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("scoreThreshold", nullptr, nvinfer1::PluginFieldType::kFLOAT32, nbCls));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("maxParts", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("maxTemplates", nullptr, nvinfer1::PluginFieldType::kINT32, 1));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("numPartsPerClass", nullptr, nvinfer1::PluginFieldType::kINT32, nbCls));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("numTemplatesPerClass", nullptr, nvinfer1::PluginFieldType::kINT32, nbCls));
+        mPluginAttributes.emplace_back(nvinfer1::PluginField("anchor", nullptr, nvinfer1::PluginFieldType::kFLOAT32, 4*nbCls*nbAnchors));
+
+        mFC.nbFields = mPluginAttributes.size();
+        mFC.fields = mPluginAttributes.data();
     }
 
-    void add(const void* serialData, size_t serialLength)
-    {
-        mPlugin.push_back(std::unique_ptr
-                <ObjDetGPUPlugin>(new ObjDetGPUPlugin(serialData,
-                                                      serialLength)));
-        ++mPluginCount;
+    ~ObjDet_GPUPluginCreator() 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override  {
+
     }
 
-    nvinfer1::IPlugin* get()
-    {
-        return mPlugin.back().get();
+    const char* getPluginName() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+        const char* ObjDet_GPU_PLUGIN_NAME{"ObjDetGPUPlugin"};
+        return ObjDet_GPU_PLUGIN_NAME;
     }
-    void destroy()
-    {
-      for(int i = mPluginCount - 1; i >= 0; --i)
-      {
-        mPlugin[i].release();
-        mPlugin[i] = nullptr;
-      }
-      mPlugin = std::vector<std::unique_ptr<ObjDetGPUPlugin>>();
-      mPluginCount = 0;
+
+    const char* getPluginVersion() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+        std::cout << "Create plugin start..." << std::endl;
+        const char* ObjDet_GPU_PLUGIN_VERSION{"1"};
+        return ObjDet_GPU_PLUGIN_VERSION;
     }
+
+    const nvinfer1::PluginFieldCollection* getFieldNames() 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+        return &mFC;
+    }
+
+    nvinfer1::IPluginV2Ext* createPlugin(const char* name, const nvinfer1::PluginFieldCollection* fc) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+        const nvinfer1::PluginField* fields = fc->fields;
+        int nbFields = fc->nbFields;
+
+        for (int i = 0; i < nbFields; ++i)
+        {
+            const char* attrName = fields[i].name;
+            if (!strcmp(attrName, "batchSize"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                batchSize = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "nbOutputs"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                nbOutputs = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "outputHeight"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                outputHeight = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "outputWidth"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                outputWidth = *(static_cast<const int*>(fields[i].data));
+            }
+
+            if (!strcmp(attrName, "channelHeight"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                channelHeight = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "channelWidth"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                channelWidth = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "stimuliWidth"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                stimuliWidth = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "stimuliHeight"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                stimuliHeight = *(static_cast<const int*>(fields[i].data));
+            }
+
+            if (!strcmp(attrName, "featureMapWidth"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                featureMapWidth = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "featureMapHeight"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                featureMapHeight = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "nbProposals"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                nbProposals = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "nbCls"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                nbCls = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "nbAnchors"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                nbAnchors = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "isCoordinatesAnchors"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kCHAR);
+                isCoordinatesAnchors = *(static_cast<const char*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "isPixelFormatXY"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kCHAR);
+                isPixelFormatXY = *(static_cast<const char*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "nmsIoU"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kFLOAT64);
+                nmsIoU = *(static_cast<const double*>(fields[i].data));
+            }
+
+            if (!strcmp(attrName, "scoreThreshold"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kFLOAT32);
+
+                const float* threshold = static_cast<const float*>(fields[i].data);
+                for (int j = 0; j < nbCls; ++j)
+                {
+                    scoreThreshold.push_back(*threshold);
+                    threshold++;
+                }
+            }
+            if (!strcmp(attrName, "maxParts"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                maxParts = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "maxTemplates"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                maxTemplates = *(static_cast<const int*>(fields[i].data));
+            }
+            if (!strcmp(attrName, "numPartsPerClass"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+
+                const int* p = static_cast<const int*>(fields[i].data);
+                for (int j = 0; j < nbCls; ++j)
+                {
+                    numPartsPerClass.push_back(*p);
+                    p++;
+                }
+            }
+            if (!strcmp(attrName, "numTemplatesPerClass"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+
+                const int* t = static_cast<const int*>(fields[i].data);
+                for (int j = 0; j < nbCls; ++j)
+                {
+                    numTemplatesPerClass.push_back(*t);
+                    t++;
+                }
+            }
+
+            if (!strcmp(attrName, "anchor"))
+            {
+                //ASSERT(fields[i].type == nvinfer1::PluginFieldType::kFLOAT32);
+
+                const float* anc = static_cast<const float*>(fields[i].data);
+                for (int j = 0; j < 4*nbAnchors*nbCls; ++j)
+                {
+                    anchor.push_back(*anc);
+                    anc++;
+                }
+            }
+        }
+
+        // This object will be deleted when the network is destroyed, which will
+        // call RPROIPlugin::terminate()
+        ObjDetGPUPlugin* plugin = new ObjDetGPUPlugin(    batchSize,
+                                                            nbOutputs,
+                                                            outputHeight,
+                                                            outputWidth,
+                                                            channelHeight,
+                                                            channelWidth,
+                                                            stimuliWidth,
+                                                            stimuliHeight,
+                                                            featureMapWidth,
+                                                            featureMapHeight,
+                                                            nbProposals,
+                                                            nbCls,
+                                                            nbAnchors,
+                                                            isCoordinatesAnchors,
+                                                            isPixelFormatXY,
+                                                            nmsIoU,
+                                                            scoreThreshold.data(),
+                                                            maxParts,
+                                                            maxTemplates,
+                                                            numPartsPerClass.data(),
+                                                            numTemplatesPerClass.data(),
+                                                            anchor.data());
+
+        //plugin->setPluginNamespace(mNamespace.c_str());
+        return plugin;
+
+
+    }
+
+    nvinfer1::IPluginV2Ext* deserializePlugin(const char* name, const void* serialData, size_t serialLength) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override {
+        ObjDetGPUPlugin* plugin = new ObjDetGPUPlugin(serialData, serialLength);
+        return plugin;
+    }
+    void setPluginNamespace(const char* pluginNamespace) 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override    {
+        mNamespace = pluginNamespace;
+    }
+    const char* getPluginNamespace() const 
+#if NV_TENSORRT_MAJOR > 7
+    noexcept
+#endif
+    override{
+        return mNamespace.c_str();
+    }
+
+
+private:
+    nvinfer1::PluginFieldCollection mFC;
+
+    unsigned int batchSize;
+    unsigned int nbOutputs;
+    unsigned int outputHeight;
+    unsigned int outputWidth;
+    unsigned int channelHeight;
+    unsigned int channelWidth;
+    unsigned int stimuliWidth;
+    unsigned int stimuliHeight;
+    unsigned int featureMapWidth;
+    unsigned int featureMapHeight;
+    unsigned int nbProposals;
+    unsigned int nbCls;
+    unsigned int nbAnchors;
+    bool isCoordinatesAnchors;
+    bool isPixelFormatXY;
+    double nmsIoU;
+    std::vector<float> scoreThreshold;
+    unsigned int maxParts;
+    unsigned int maxTemplates;
+    std::vector<unsigned int> numPartsPerClass;
+    std::vector<unsigned int> numTemplatesPerClass;
+    std::vector<float> anchor;
+    std::string mNamespace;
+    std::vector<nvinfer1::PluginField> mPluginAttributes;
 };
+
+REGISTER_TENSORRT_PLUGIN(ObjDet_GPUPluginCreator);
 
 #endif

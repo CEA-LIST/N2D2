@@ -1,0 +1,24 @@
+name: linux-cpu
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Install required libraries
+      run: |
+        chmod +x ./.github/scripts/install_libraries_ubuntu.sh
+        ./.github/scripts/install_libraries_ubuntu.sh
+
+    - name: Build N2D2
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        make -j2

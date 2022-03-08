@@ -34,7 +34,7 @@ TEST_DATASET(Environment,
              std::make_tuple(3U, 1U),
              std::make_tuple(3U, 3U))
 {
-    Network net;
+    Network net(0U,false);
     Environment env(net, EmptyDatabase, {x, y, 1});
 
     ASSERT_EQUALS(env.getSizeX(), x);
@@ -58,7 +58,7 @@ TEST_DATASET(Environment,
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
-    Network net;
+    Network net(0U,false);
 
     MNIST_IDX_Database database;
     database.load(N2D2_DATA("mnist"));

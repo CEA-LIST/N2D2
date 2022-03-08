@@ -291,13 +291,13 @@ void N2D2::LSTMCell_Frame_CUDA<T>::initialize(){
 		}
 	}
 
-	if(mDiffOutputs.empty()){
-		mDiffOutputs.push_back(new CudaTensor<T>({1, mInputDim, mBatchSize, mSeqLength}));
-	}else {
-		if (mDiffOutputs.back().dimX() != 1 || mDiffOutputs.back().dimY() !=  mInputDim || mDiffOutputs.back().dimZ() != mBatchSize || mDiffOutputs.back().dimB() != mSeqLength){
-			throw std::runtime_error("Cell " + mName + ", wrong size for mDiffOutputs");
-		}
-	}
+	//if(mDiffOutputs.empty()){
+	//	mDiffOutputs.push_back(new CudaTensor<T>({1, mInputDim, mBatchSize, mSeqLength}));
+	//}else {
+	//	if (mDiffOutputs.back().dimX() != 1 || mDiffOutputs.back().dimY() !=  mInputDim || mDiffOutputs.back().dimZ() != mBatchSize || mDiffOutputs.back().dimB() != mSeqLength){
+	//		throw std::runtime_error("Cell " + mName + ", wrong size for mDiffOutputs");
+	//	}
+	//}
 
 
 	//--------------------------------
@@ -721,8 +721,7 @@ void N2D2::LSTMCell_Frame_CUDA<T>::backPropagate(){
 												mReserveSpace,
 												mReserveSize));
 
-	if(!mDiffOutputs.empty())
-		mDiffOutputs.synchronizeDToHBased();
+	mDiffOutputs.synchronizeDToHBased();
 	mDiffhx.synchronizeDToHBased();
 	mDiffcx.synchronizeDToHBased();
 
@@ -965,17 +964,19 @@ void N2D2::LSTMCell_Frame_CUDA<T>::checkGradient(double epsilon, double maxError
                   std::bind(&LSTMCell_Frame_CUDA::backPropagate, this));
 
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int k = 0; k < mInputs.size(); ++k) {
-            std::stringstream name;
-            name << mName + "Frame_CUDA_mDiffOutputs[" << k << "]";
-
-            gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 	/*if (!mDiffhx.empty()) {
 		std::stringstream name;

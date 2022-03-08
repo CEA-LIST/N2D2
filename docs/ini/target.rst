@@ -126,6 +126,7 @@ which need to take into account the scaling factor *S*:
 
 -	Take the majority annotation within the macro-pixel *SxS*: the label attributed to the output pixel is the label which occurs the most often in the *SxS* macro-pixel;
 -	Take the majority annotation within the macro-pixel *SxS*, at the exception of a weak annotation. In this case, any label other than the weak label in the macro-pixel takes precedence over the weak one. In N2D2, this is implemented with the ``WeakTarget`` parameter in ``[*.target]`` sections:
+
   - ``WeakTarget=-1`` means any target other than "ignore" takes precedence. This is useful if the background is ignored. If there is only a few pixels in the macro-pixel that are not background, they take precedence so that the macro-pixel is not considered as background.
   - ``WeakTarget=-2`` means there is no weak label.
 
@@ -236,8 +237,9 @@ Labels to targets parameters:
 | ``WeakTarget``                  | -2              | When attributing a target to an output macropixel, any target other than                  |
 |                                 |                 | ``WeakTarget`` in the macropixel takes precedence over ``WeakTarget``,                    |
 |                                 |                 | regardless of their respective occurrence.                                                |
-|                                 |                 |  - Value can be -1 (meaning any target other than "ignore" takes precedence).             |
-|                                 |                 |  - Default value is -2 (meaning that there is no weak target, as a target is >= -1).      |
+|                                 |                 |                                                                                           |
+|                                 |                 | - Value can be -1 (meaning any target other than "ignore" takes precedence).              |
+|                                 |                 | - Default value is -2 (meaning that there is no weak target, as a target is >= -1).       |
 +---------------------------------+-----------------+-------------------------------------------------------------------------------------------+
 
 

@@ -30,6 +30,7 @@
 #include "Cell/FcCell.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/ElemWiseCell.hpp"
+#include "Cell/ReshapeCell.hpp"
 #include "Cell/ScalingCell.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Target/TargetScore.hpp"
@@ -56,7 +57,13 @@ void N2D2::CPP_DeepNetExport::generate(DeepNet& deepNet,
     Utils::createDirectories(dirName + "/dnn/src");
 
     generateParamsHeader(dirName + "/include/params.h");
-    generateEnvironmentHeader(deepNet, dirName + "/dnn/include/env.hpp");
+    
+    // Only the CPP and CPP_STM32 exports can support the tools
+    // for quantization aware training for now
+    if (Utils::match("*CPP_ASMP*", dirName) || Utils::match("*CPP_HLS*", dirName))
+        generateEnvironmentHeader(deepNet, dirName + "/dnn/include/env.hpp");
+    else 
+        generateEnvironmentQATHeader(deepNet, dirName + "/dnn/include/env.hpp");
 
     deepNet.fusePadding();  // probably already done, but make sure!
     addBranchesCells(deepNet);
@@ -97,8 +104,16 @@ void N2D2::CPP_DeepNetExport::generate(DeepNet& deepNet,
 
     generateMemoryInfoHeader(deepNet, dirName + "/dnn/include/mem_info.hpp", 
                              memManager, memoryAlignment);
-    generateNetworkPropagateFile(deepNet,
-                                 dirName + "/src/NetworkPropagate.cpp");
+    
+    // Only the CPP and CPP_STM32 exports can support the tools
+    // for quantization aware training for now
+    if (Utils::match("*CPP_ASMP*", dirName) || Utils::match("*CPP_HLS*", dirName))
+        generateNetworkPropagateFile(deepNet,
+                                     dirName + "/src/NetworkPropagate.cpp");
+    else 
+        generateNetworkPropagateQATFile(deepNet,
+                                        dirName + "/src/NetworkPropagate.cpp");
+
     printStats(deepNet, memManager);
 }
 
@@ -151,6 +166,7 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                 continue;
             }
 
+            const bool noAlloc = (cell->getType() == ReshapeCell::Type);
             std::vector<std::shared_ptr<Cell> > childs
                 = deepNet.getChildCells(cell->getName());
 
@@ -194,7 +210,8 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                     if (!((*itCell)->getType() == ConvCell::Type
                         || (*itCell)->getType() == PoolCell::Type
                         || (*itCell)->getType() == ElemWiseCell::Type
-                        || (*itCell)->getType() == ScalingCell::Type))
+                        || (*itCell)->getType() == ScalingCell::Type
+                        || (*itCell)->getType() == ReshapeCell::Type))
                     {
                         isWrappable = false;
                     }
@@ -237,7 +254,8 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                 isWrappable = (cell->getType() == ConvCell::Type
                     || cell->getType() == PoolCell::Type
                     || cell->getType() == ElemWiseCell::Type
-                    || cell->getType() == ScalingCell::Type);
+                    || cell->getType() == ScalingCell::Type
+                    || cell->getType() == ReshapeCell::Type);
                 allocableCells.push_back(cell);
             }
 
@@ -350,6 +368,7 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                     }
                     // No margin necessary for ElemWiseCell
                     // No margin necessary for ScalingCell
+                    // No margin necessary for ReshapeCell
 
                     // Take into account memory alignment of the input
                     const size_t nbChannels
@@ -397,7 +416,7 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
             const MemoryManager::MemoryPlane& memPlane
                 = (itConcat != noBranchConcats.end())
                     ? (*itConcat).second :
-                  (wrapAroundBuffer && wrapAroundSize > 0)
+                  ((wrapAroundBuffer || noAlloc) && wrapAroundSize > 0)
                     ? (*wrapAroundMemPlane) :
                        memManager.allocate(size, childs, stride, length, count);
 
@@ -420,7 +439,7 @@ N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
                 }
             }
 
-            if (wrapAroundBuffer && wrapAroundSize > 0) {
+            if ((wrapAroundBuffer && wrapAroundSize > 0) && !noAlloc) {
                 memManager.reallocate(memPlane,
                     cell, concatOffset,
                     size, true, wrapAroundExtra, childs, stride, length, count);
@@ -508,6 +527,136 @@ void N2D2::CPP_DeepNetExport::generateParamsHeader(const std::string& fileName)
 }
 
 void N2D2::CPP_DeepNetExport::generateEnvironmentHeader(DeepNet& deepNet,
+                                                      const std::string
+                                                      & fileName)
+{
+    // Environment
+    std::ofstream envHeader(fileName.c_str());
+
+    if (!envHeader.good())
+        throw std::runtime_error("Could not create CPP header file: " + fileName);
+
+    // Append date & time to the file.
+    const time_t now = std::time(0);
+    tm* localNow = std::localtime(&now);
+
+    envHeader << "// N2D2 auto-generated file.\n"
+                 "// @ " << std::asctime(localNow)
+              << "\n"; // std::asctime() already appends end of line
+
+    envHeader << "#ifndef N2D2_EXPORTCPP_ENV_LAYER_H\n"
+                 "#define N2D2_EXPORTCPP_ENV_LAYER_H\n\n";
+
+    envHeader << "#include <stdint.h>\n\n";
+
+    const std::shared_ptr<StimuliProvider> sp = deepNet.getStimuliProvider();
+
+    // Constants
+    envHeader << "#define ENV_SIZE_X " << sp->getSizeX() << "\n"
+              << "#define ENV_SIZE_Y " << sp->getSizeY() << "\n"
+              << "#define ENV_NB_OUTPUTS " << sp->getNbChannels() << "\n\n"
+              << "#define ENV_DATA_UNSIGNED " << mEnvDataUnsigned << "\n\n"
+              << "#define ENV_OUTPUTS_SIZE (ENV_NB_OUTPUTS*ENV_SIZE_X*ENV_SIZE_Y)\n\n";
+
+    const std::vector<std::shared_ptr<Target> > outputTargets
+                                                    =  deepNet.getTargets();
+
+    const unsigned int nbTarget = outputTargets.size();
+    envHeader << "#define NETWORK_TARGETS " << nbTarget << "\n";
+    envHeader << "//Output targets network dimension definition:\n";
+    envHeader << "static unsigned int OUTPUTS_HEIGHT[NETWORK_TARGETS] = {";
+    for(unsigned int targetIdx = 0; targetIdx < nbTarget; ++targetIdx)
+    {
+        const std::shared_ptr<Cell> cell = deepNet.getTargetCell(targetIdx);
+        if(targetIdx > 0)
+            envHeader << ",";
+
+        envHeader << cell->getOutputsHeight();
+    }
+    envHeader << "};\n";
+
+    envHeader << "static unsigned int OUTPUTS_WIDTH[NETWORK_TARGETS] = {";
+    for(unsigned int targetIdx = 0; targetIdx < nbTarget; ++targetIdx)
+    {
+        const std::shared_ptr<Cell> cell = deepNet.getTargetCell(targetIdx);
+        if(targetIdx > 0)
+            envHeader << ",";
+
+        envHeader << cell->getOutputsWidth();
+    }
+    envHeader << "};\n";
+
+    envHeader << "static unsigned int NB_OUTPUTS[NETWORK_TARGETS] = {";
+    for(unsigned int targetIdx = 0; targetIdx < nbTarget; ++targetIdx)
+    {
+        const std::shared_ptr<Cell> cell = deepNet.getTargetCell(targetIdx);
+        if(targetIdx > 0)
+            envHeader << ",";
+
+        std::shared_ptr<Cell_Frame_Top> targetCellTop = std::dynamic_pointer_cast
+            <Cell_Frame_Top>(cell);
+
+        const BaseTensor& outputsShape = targetCellTop->getOutputs();
+
+        envHeader << cell->getNbOutputs()*(outputsShape.dimB()/sp->getBatchSize());
+    }
+    envHeader << "};\n";
+
+    envHeader << "static unsigned int NB_TARGET[NETWORK_TARGETS] = {";
+    for(unsigned int targetIdx = 0; targetIdx < nbTarget; ++targetIdx)
+    {
+        const std::shared_ptr<Cell> cell = deepNet.getTargetCell(targetIdx);
+        if(targetIdx > 0)
+            envHeader << ",";
+
+        envHeader << ((cell->getNbOutputs() > 1) ? cell->getNbOutputs() : 2);
+    }
+    envHeader << "};\n";
+
+    envHeader << "static unsigned int OUTPUTS_SIZE[NETWORK_TARGETS] = {";
+    for(unsigned int targetIdx = 0; targetIdx < nbTarget; ++targetIdx)
+    {
+        const std::shared_ptr<Cell> cell = deepNet.getTargetCell(targetIdx);
+        if(targetIdx > 0)
+            envHeader << ",";
+
+        envHeader << "(OUTPUTS_WIDTH[" << targetIdx << "]"
+                  << "*OUTPUTS_HEIGHT["<< targetIdx << "]";
+
+        if (outputTargets[targetIdx]->getParameter<bool>("DataAsTarget"))
+            envHeader << "*NB_OUTPUTS["<< targetIdx << "]";
+
+        envHeader << ")";
+    }
+    envHeader << "};\n";
+
+    // Target type
+    for(unsigned int targetIdx = 0; targetIdx < nbTarget; ++targetIdx)
+    {
+        const std::shared_ptr<Cell> cell = deepNet.getTargetCell(targetIdx);
+    
+        if (!outputTargets[targetIdx]->getParameter<bool>("DataAsTarget")) {
+            envHeader << "typedef int32_t Target_" << targetIdx << "_T;\n";
+        }
+        else {
+            std::string dataType = DeepNetExport::isCellOutputUnsigned(*cell)
+                ? "UDATA_T" : "DATA_T";
+
+            envHeader << "typedef " << dataType << " Target_"
+                << targetIdx << "_T;\n";
+        }
+    }
+
+    // Default target type
+    if (nbTarget > 0)
+        envHeader << "typedef Target_0_T Target_T;\n";
+    else
+        envHeader << "typedef int32_t Target_T;\n";
+
+    envHeader << "#endif // N2D2_EXPORTCPP_ENV_LAYER_H" << std::endl;
+}
+
+void N2D2::CPP_DeepNetExport::generateEnvironmentQATHeader(DeepNet& deepNet,
                                                       const std::string
                                                       & fileName)
 {
@@ -817,14 +966,25 @@ void N2D2::CPP_DeepNetExport::generateMemoryInfoHeader(
             memInfo << "#define " << prefix << "_MEM_COUNT "
                 << memPlane.count <<"\n";
 
-            memInfo << "#define " << prefix << "_MEM_CONT_OFFSET "
-                << memPlane.getContiguousOffset() <<"\n";
-            memInfo << "#define " << prefix << "_MEM_CONT_SIZE "
-                << memPlane.getContiguousSize() <<"\n";
-            memInfo << "#define " << prefix << "_MEM_WRAP_OFFSET "
-                << memPlane.getWrappedOffset() <<"\n";
-            memInfo << "#define " << prefix << "_MEM_WRAP_SIZE "
-                << memPlane.getWrappedSize() <<"\n";
+            if (memPlane.getContiguousSize() == 0) {
+                // Simplify immediate wrapping (see issue #63)
+                memInfo << "#define " << prefix << "_MEM_CONT_OFFSET "
+                    << memPlane.getWrappedOffset() <<"\n";
+                memInfo << "#define " << prefix << "_MEM_CONT_SIZE "
+                    << memPlane.getWrappedSize() <<"\n";
+                memInfo << "#define " << prefix << "_MEM_WRAP_OFFSET 0\n";
+                memInfo << "#define " << prefix << "_MEM_WRAP_SIZE 0\n";
+            }
+            else {
+                memInfo << "#define " << prefix << "_MEM_CONT_OFFSET "
+                    << memPlane.getContiguousOffset() <<"\n";
+                memInfo << "#define " << prefix << "_MEM_CONT_SIZE "
+                    << memPlane.getContiguousSize() <<"\n";
+                memInfo << "#define " << prefix << "_MEM_WRAP_OFFSET "
+                    << memPlane.getWrappedOffset() <<"\n";
+                memInfo << "#define " << prefix << "_MEM_WRAP_SIZE "
+                    << memPlane.getWrappedSize() <<"\n";
+            }
         }
     }
 
@@ -834,6 +994,172 @@ void N2D2::CPP_DeepNetExport::generateMemoryInfoHeader(
 }
 
 void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
+    const DeepNet& deepNet, 
+    const std::string& filePath) 
+{
+    std::stringstream includes;
+    std::stringstream buffers;
+    std::stringstream functionCalls;
+
+    // Fill in includes, buffers and functionCalls for each layer
+    buffers << "static DATA_T mem[MEMORY_SIZE]"
+        " N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_MEMORY);\n";
+
+    functionCalls << "#ifdef SAVE_OUTPUTS\n"
+                << "    FILE* env_stream = fopen(\"env_output.txt\", \"w\");\n"
+                << "    saveOutputs("
+                << "ENV_NB_OUTPUTS, "
+                << "ENV_SIZE_Y, " 
+                << "ENV_SIZE_X, "
+                << "ENV_MEM_CONT_OFFSET, "
+                << "ENV_MEM_CONT_SIZE, "
+                << "ENV_MEM_WRAP_OFFSET, "
+                << "ENV_MEM_WRAP_SIZE, "
+                << "ENV_MEM_STRIDE, "
+                << "inputs, "
+                << "env_stream, "
+                << "Network::Format::CHW"
+                << ");\n"
+                << "    fclose(env_stream);\n"
+                << "#endif\n";
+
+    const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
+
+    for (std::vector<std::vector<std::string> >::const_iterator itLayer
+        = layers.begin() + 1,
+        itLayerEnd = layers.end(); itLayer != itLayerEnd; ++itLayer)
+    {
+        for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
+            itEnd = (*itLayer).end();
+            it != itEnd; ++it)
+        {
+            const std::shared_ptr<Cell> cell = deepNet.getCell(*it);
+            const std::string identifier
+                = N2D2::Utils::CIdentifier(cell->getName());
+            const std::string prefix = Utils::upperCase(identifier);
+
+            std::string dataType = DeepNetExport::isCellOutputUnsigned(*cell)
+                ? "UDATA_T" : "DATA_T";
+
+            if (cell->getParentsCells().size() > 1) {
+                dataType = DeepNetExport::isCellInputsUnsigned(*cell)
+                    ? "UDATA_T" : "DATA_T";
+            }
+
+            // functionCalls
+            functionCalls << "    // " << cell->getName() << "\n";
+            functionCalls << "    " << dataType << "* " << identifier
+                << "_output = " << "(" << dataType << "*) mem + " 
+                << prefix << "_MEM_CONT_OFFSET" <<";\n\n";
+
+            CPP_CellExport::getInstance(*cell)->generateCallCode(deepNet, *cell, 
+                includes, buffers, functionCalls);
+
+            functionCalls << "\n\n\n\n";
+        }
+    }
+
+    // Handle network output in functionCalls
+    const std::vector<std::shared_ptr<Target> > outputTargets
+                                                    =  deepNet.getTargets();
+    const unsigned int nbTarget = outputTargets.size();
+
+    for (unsigned int targetIdx = 0; targetIdx < nbTarget; ++targetIdx) {
+        const std::shared_ptr<Cell> targetCell = deepNet.getTargetCell(targetIdx);
+        const std::string targetCellIdentifier = N2D2::Utils::CIdentifier(targetCell->getName());
+        const std::string targetCellPrefix = N2D2::Utils::upperCase(targetCellIdentifier);
+
+        if (!outputTargets[targetIdx]->getParameter<bool>("DataAsTarget")) {
+            functionCalls << "    maxPropagate<"
+                        << targetCellPrefix << "_NB_OUTPUTS, "
+                        << targetCellPrefix << "_OUTPUTS_HEIGHT, " 
+                        << targetCellPrefix << "_OUTPUTS_WIDTH, "
+                        << targetCellPrefix << "_MEM_CONT_OFFSET, "
+                        << targetCellPrefix << "_MEM_CONT_SIZE, "
+                        << targetCellPrefix << "_MEM_WRAP_OFFSET, "
+                        << targetCellPrefix << "_MEM_WRAP_SIZE, "
+                        << targetCellPrefix << "_MEM_STRIDE"
+                    << ">("
+                        << targetCellIdentifier << "_output, "
+                        << "outputs"
+                    << ");\n\n";
+
+            functionCalls << "#ifdef SAVE_OUTPUTS\n"
+                        << "    FILE* max_stream = fopen(\"max_output.txt\", \"w\");\n"
+                        << "    saveOutputs("
+                        << targetCellPrefix << "_NB_OUTPUTS, "
+                        << targetCellPrefix << "_OUTPUTS_HEIGHT, " 
+                        << targetCellPrefix << "_OUTPUTS_WIDTH, "
+                        << targetCellPrefix << "_MEM_CONT_OFFSET, "
+                        << targetCellPrefix << "_MEM_CONT_SIZE, "
+                        << targetCellPrefix << "_MEM_WRAP_OFFSET, "
+                        << targetCellPrefix << "_MEM_WRAP_SIZE, "
+                        << targetCellPrefix << "_MEM_STRIDE, "
+                        << "outputs, "
+                        << "max_stream, "
+                        << "Network::Format::CHW"
+                        << ");\n"
+                        << "    fclose(max_stream);\n"
+                        << "#endif\n";
+        }
+        else {
+            std::string dataType = DeepNetExport::isCellOutputUnsigned(*targetCell)
+                ? "UDATA_T" : "DATA_T";
+
+            functionCalls << "    memcpy(outputs, "
+                        << targetCellIdentifier << "_output, "
+                        << targetCellPrefix << "_NB_OUTPUTS * "
+                        << targetCellPrefix << "_OUTPUTS_HEIGHT * " 
+                        << targetCellPrefix << "_OUTPUTS_WIDTH * "
+                        "sizeof(" << dataType << "));\n";
+        }
+    }
+
+    // Write source file with includes, buffers and functionCalls
+    std::ofstream networkPropagateFile(filePath);
+
+    networkPropagateFile << "#include \"Network.hpp\"\n"
+                         << "#include \"Scaling.hpp\"\n"
+                         << "#include \"env.hpp\"\n"
+                         << "#include \"mem_info.hpp\"\n"
+                         << "\n"
+                         << includes.str()
+                         << "\n\n";
+
+    networkPropagateFile << buffers.str()
+                         << "\n\n";
+
+    const std::string inputType = DeepNetExport::mEnvDataUnsigned?"UDATA_T":"DATA_T";
+    networkPropagateFile << "namespace N2D2 {\n"
+                         << "\n"
+                         << "template<>\n"
+                         << "void Network::propagate(const " << inputType << "* inputs, "
+                                                 << "Target_T* outputs) const \n"
+                         << "{\n"
+                         << functionCalls.str()
+                         << "\n"
+                         << "}\n"
+                         << "\n";
+    networkPropagateFile << "/*template<>\n"
+                         << "float Network::backpropagate(const DATA_T* input, const std::int32_t* labels){\n"
+                         << "   const float loss = 0.0f;\n"
+                         << "   return loss;\n "
+                         << "}\n"
+                         << "\n";
+
+    networkPropagateFile << "int Network::gradientCheck(){\n"
+                         << "   return(0);\n"
+                         << "}*/\n"
+                         << "\n"
+                         << "}\n";
+
+    networkPropagateFile.close();
+    if(!networkPropagateFile) {
+        throw std::runtime_error("Coudln't write file '" + filePath + "'.");
+    }
+}
+
+void N2D2::CPP_DeepNetExport::generateNetworkPropagateQATFile(
     const DeepNet& deepNet, 
     const std::string& filePath) 
 {

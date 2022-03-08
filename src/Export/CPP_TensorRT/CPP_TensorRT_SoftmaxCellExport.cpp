@@ -93,8 +93,8 @@ void N2D2::CPP_TensorRT_SoftmaxCellExport
         prog << "   " << "std::vector< nvinfer1::ITensor *> "
             << identifier << "_reshape_tensor;\n";
 
-        prog << "   " << identifier << "_reshape_tensor = " << "add_reshape("
-            << "       " << "\"Reshape_NATIVE_" << prefix << "\",\n"
+        prog << "   " << identifier << "_reshape_tensor = " << "add_group_reshape("
+            << "       " << "\"GroupReshape_NATIVE_" << prefix << "\",\n"
             << "       " << "GROUP_SIZE_" << prefix << ",\n"
             << "       " << "false,\n"
             << "       " << input_name.str() << "tensor);\n";
@@ -109,8 +109,8 @@ void N2D2::CPP_TensorRT_SoftmaxCellExport
         prog << "   " << "std::vector< nvinfer1::ITensor *> "
             << identifier << "_tensor;\n";
 
-        prog << "   " << identifier << "_tensor = " << "add_reshape("
-            << "       " << "\"RestoreShape_NATIVE_" << prefix << "\",\n"
+        prog << "   " << identifier << "_tensor = " << "add_group_reshape("
+            << "       " << "\"RestoreGroupShape_NATIVE_" << prefix << "\",\n"
             << "       " << "1,\n"
             << "       " << "true,\n"
             << "       " << identifier << "_softmax_tensor);\n";

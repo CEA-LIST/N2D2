@@ -36,6 +36,7 @@ typedef enum {
 typedef enum {
     Max,
     Average,
+    NearestNeighbor,
     Bilinear,
     BilinearTF
 } Pooling_T;
@@ -53,6 +54,7 @@ typedef enum {
     PerChannel
 } CoeffMode_T;
 
+typedef float DATA_T;
 typedef float WDATA_T;
 typedef float BDATA_T;
 typedef float SUM_T;

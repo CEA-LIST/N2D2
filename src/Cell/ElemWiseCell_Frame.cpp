@@ -62,12 +62,12 @@ void N2D2::ElemWiseCell_Frame::initialize()
     }
 
     if(mWeights.empty()) {
-        std::cout << Utils::cwarning << "ElemWiseCell_Frame::initialize(): Empty weights for cell " 
+        std::cout << Utils::cnotice << "ElemWiseCell_Frame::initialize(): Empty weights for cell " 
                     << mName << ": Initialize weights to default value(1.0)" 
                     << Utils::cdef << std::endl;
     }
     if(mShifts.empty()) {
-        std::cout << Utils::cwarning << "ElemWiseCell_Frame::initialize(): Empty shifts for cell " 
+        std::cout << Utils::cnotice << "ElemWiseCell_Frame::initialize(): Empty shifts for cell " 
                     << mName << ": Initialize shifts to default value(0.0)" 
                     << Utils::cdef << std::endl;
     }
@@ -193,7 +193,7 @@ void N2D2::ElemWiseCell_Frame::propagate(bool inference)
 
 void N2D2::ElemWiseCell_Frame::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (!mDiffInputs.isValid())
         return;
 
     const unsigned int nbInputs = mInputs.size();
@@ -208,6 +208,9 @@ void N2D2::ElemWiseCell_Frame::backPropagate()
 
     #pragma omp parallel for
     for (int k = 0; k < (int)nbInputs; ++k) {
+        if (mDiffOutputs[k].empty())
+            continue;
+
         const float beta = (mDiffOutputs[k].isValid()) ? 1.0f : 0.0f;
 
         Tensor<Float_T> diffOutput = (mDiffOutputs[k].isValid())
@@ -291,17 +294,19 @@ void N2D2::ElemWiseCell_Frame::checkGradient(double epsilon, double maxError)
                   std::bind(&ElemWiseCell_Frame::backPropagate, this),
                   (mOperation == Max));
 
-    if (!mDiffOutputs.empty()) {
-        for (unsigned int in = 0; in < mInputs.size(); ++in) {
-            std::stringstream name;
-            name << mName + "_mDiffOutputs[" << in << "]";
-
-            gc.check(name.str(), mInputs[in], mDiffOutputs[in]);
+    for (unsigned int k = 0; k < mInputs.size(); ++k) {
+        if (mDiffOutputs[k].empty()) {
+            std::cout << Utils::cwarning << "Empty diff. outputs #" << k
+                    << " for cell " << mName
+                    << ", could not check the gradient!" << Utils::cdef
+                    << std::endl;
+            continue;
         }
-    } else {
-        std::cout << Utils::cwarning << "Empty diff. outputs for cell " << mName
-                  << ", could not check the gradient!" << Utils::cdef
-                  << std::endl;
+
+        std::stringstream name;
+        name << mName + "_mDiffOutputs[" << k << "]";
+
+        gc.check(name.str(), mInputs[k], mDiffOutputs[k]);
     }
 }
 

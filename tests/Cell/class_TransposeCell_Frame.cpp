@@ -56,7 +56,7 @@ TEST(TransposeCell_Frame, propagate)
     //const std::vector<int> permutation = {1, 2, 0, 3};
     const std::vector<int> permutation = {2, 0, 1, 3};
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);

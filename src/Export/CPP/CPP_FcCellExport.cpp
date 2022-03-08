@@ -51,7 +51,16 @@ void N2D2::CPP_FcCellExport::generate(const FcCell& cell, const std::string& dir
     CPP_CellExport::generateHeaderBegin(cell, header);
     CPP_CellExport::generateHeaderIncludes(cell, header);
     generateHeaderConstants(cell, header);
-    generateHeaderFreeParameters(cell, header);
+    
+    // Only the CPP and CPP_STM32 exports can support the tools
+    // for quantization aware training for now
+    if (Utils::match("*CPP_ASMP*", dirName) || Utils::match("*CPP_HLS*", dirName)) {
+        generateHeaderBias(cell, header);
+        generateHeaderWeights(cell, header);
+    } else {
+        generateHeaderFreeParameters(cell, header);
+    }
+
     CPP_CellExport::generateHeaderEnd(cell, header);
 }
 
@@ -141,6 +150,12 @@ void N2D2::CPP_FcCellExport::generateHeaderWeights(const FcCell & cell, std::ofs
 
     header << "{\n";
 
+    const Cell_Frame_Top* cellFrame
+        = dynamic_cast<const Cell_Frame_Top*>(&cell);
+
+    if (cellFrame != NULL)
+        cellFrame->synchronizeToH(false);
+
     Tensor<Float_T> weight;
     
     // Need it in OHWC order, the order in the weights tensor is OCHW.
@@ -166,6 +181,9 @@ void N2D2::CPP_FcCellExport::generateHeaderWeights(const FcCell & cell, std::ofs
             }
         }
     }
+
+    if (cellFrame != NULL)
+        cellFrame->keepInSync(true);
 
     header << "};\n\n";
 }
@@ -231,14 +249,15 @@ void N2D2::CPP_FcCellExport::generateHeaderWeightsQAT(const FcCell & cell, std::
     Tensor<Float_T> weight;
     Float_T value;
     uint32_t accumulator = 0;
-    int wCounter = 0;
+    std::size_t wCounter = 0;
 
     // Need it in OHWC order, the order in the weights tensor is OCHW.
     std::size_t iweight = 0;
     for (std::size_t output = 0; output < cell.getNbOutputs(); output++) {
-        std::size_t maxHWC = (cell.getNbChannels()-1)*cell.getChannelsHeight()*cell.getChannelsWidth()
-                    + (cell.getChannelsHeight()-1)*cell.getChannelsWidth()
-                    + (cell.getChannelsWidth()-1);
+        // Not used for now but it will in the upcoming features
+        // std::size_t maxHWC = (cell.getNbChannels()-1)*cell.getChannelsHeight()*cell.getChannelsWidth()
+        //             + (cell.getChannelsHeight()-1)*cell.getChannelsWidth()
+        //             + (cell.getChannelsWidth()-1);
 
         for (std::size_t h = 0; h < cell.getChannelsHeight(); h++) {
             for (std::size_t w = 0; w < cell.getChannelsWidth(); w++) {

@@ -43,38 +43,81 @@ Here are the functionalities available with the Python API :
 +------------------------+------------+------------------+
 
 
+Installation of the virtual environment
+---------------------------------------
 
-Installation
-------------
-
-To run the python API, you need to use ``python 3.7``.
-
-We highly recommend that you use a virtual environment, to set one up, you can follow these steps :
+| To run the python API, it’s good practice to use ``python 3.7`` or a newer version in a virtual environment.
+| To set up your environment, please follow these steps:
 
 .. code-block:: bash
 
-        # Creating python virtual environment
+        # Create your python virtual environment
         virtualenv -p python3.7 env
-        # Activating the virtual environment
+
+        # Activate the virtual environment
         source env/bin/activate
-        # Checking versions
+
+        # Check versions
         python --version
         pip --version
-        # Leaving the virtual environment
+
+        # To leave the virtual environment
         deactivate
 
 If everything went well, you should have the version ``3.7`` of python. 
 
-With setup.py
-^^^^^^^^^^^^^
 
-To install n2d2, you can go to the root of the project and use the ``setup.py`` script (with you **virtual environment activated**).
+Installation of the Python API
+------------------------------
+
+| There are multiple methods to install the python API on your device.
+| Feel free to use the method of your choice.
+
+
+With the Python Package Index (Py Pi)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can have access to the last stable version of the python API by using
+``pip`` and importing the package ``n2d2``.
 
 .. code-block:: bash
 
-        python setup.py install
+        pip install n2d2
 
-This should compile the n2d2 libraries and add it to your virtual environnement.
+
+
+From the N2D2 Github repository
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can have access to the developer version by importing the API from
+the N2D2 Github repository via ``pip``.
+
+.. code-block:: bash
+
+        pip install git+https://github.com/CEA-LIST/N2D2  
+
+
+
+If you have already cloned the Github repository  
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  
+
+You can still build the python API with a cloned N2D2 repository.
+Go at the root of the N2D2 projet and follow the following steps 
+(don't forget to activate your virtual environment before).
+
+.. code-block:: bash
+
+        # Build the N2D2 library
+        python setup.py bdist_wheel
+
+        # Install the n2d2 python packages in your virtual environment
+        pip install dist/*
+
+
+Test of the Python API
+----------------------
+
+Whatever the method you chose, it should compile the n2d2 libraries and add them to your virtual environnement.
 
 You can test it by trying to import n2d2 in your python interpreter :
 
@@ -82,46 +125,17 @@ You can test it by trying to import n2d2 in your python interpreter :
 
         python
         >>> import n2d2
+        >>> print(n2d2.Tensor([2,3]))
+        n2d2.Tensor([
+        0 0 0
+        0 0 0
+        ], device=cpu, datatype=float)
         >>> exit()
 
-Manually
-^^^^^^^^
-If the ``setup.py`` script doesn't work, you can try to install manually the librarie.
-When you compile ``N2D2``, the compiler creates a folder ``lib`` which contains the shared library of the binding between C++ and python (the file should be named ``N2D2-*.so``).
-You need to move/copy this file at the root of the python folder ``N2D2-IP/N2D2/python``.
+You can find more examples in the Python API section if you want to test every feature.
 
-You can check that the binding is working by moving to the python folder and typing :
-
-.. code-block:: bash
-
-        python
-        >>> import N2D2
-        >>> exit()
-
-If you have no error while importing ``N2D2``, the binding is working.
-
-If you don't want to always move/copy the library, you can add the path where the library is located to your ``pythonpath``.
-For this, you need to edit your ``.bashrc`` file. You can use any editor, for example : 
-
-.. code-block:: bash
-
-        nano ~/.bashrc
-
-then add the line :
-
-.. code-block:: bash
-
-        export PYTHONPATH=$PYTHONPATH:path_to_build_lib
-
-where ``path_to_build_lib`` is the path to the lib folder. Once this is done, use this command to apply the changes :
-
-.. code-block:: bash
-
-        source ~/.bashrc
-
-You can also add the library n2d2 to you python path, if you don't plan to work on the python directory.
-
-Once this is done, you can use the python library or the binding by importing respectively n2d2 or N2D2 in your python script. 
+| It might be possible you could find some issues by using the API.
+| So please notify us at https://github.com/CEA-LIST/N2D2/issues if you find any problem or any possible improvement.
 
 
 Default values

@@ -95,6 +95,8 @@ void N2D2::Cell_Frame_CUDA<T>::addInput(StimuliProvider& sp,
         inputsDims.push_back(sp.getBatchSize());
         mDiffOutputs.push_back(new CudaTensor<T>(inputsDims), 0);
     }
+    else
+        mDiffOutputs.push_back(new CudaTensor<T>(), 0);
 
     setOutputsDims();
 
@@ -190,9 +192,7 @@ void N2D2::Cell_Frame_CUDA<T>::addInput(BaseTensor& inputs,
 
     setInputsDims(inputsDims);
     mInputs.push_back(&inputs);
-
-    if (!diffOutputs.empty())
-        mDiffOutputs.push_back(&diffOutputs);
+    mDiffOutputs.push_back(&diffOutputs);
 
     setOutputsDims();
 
@@ -375,6 +375,7 @@ void N2D2::Cell_Frame_CUDA<T>::linkInput(StimuliProvider& sp,
      // Define input-output sizes
     setInputsDims(sp.getSize());
     mInputs.push_back(&sp.getData());
+    mDiffOutputs.push_back(new CudaTensor<T>(), 0);
 }
 // END code used exlusively in python API
 
@@ -955,22 +956,30 @@ N2D2::Cell_Frame_CUDA<T>::~Cell_Frame_CUDA()
     // dtor
 }
 
-template<>
-std::string N2D2::Cell_Frame_CUDA<double>::getPyDataType() {
-    return std::string("double");
+template <class T>
+std::string N2D2::Cell_Frame_CUDA<T>::getPyDataType()
+{
+    if (typeid(T) == typeid(double)) {
+        return std::string("double");
+    }
+    else if (typeid(T) == typeid(float)) {
+        return std::string("float");
+    }
+    else if (typeid(T) == typeid(half_float::half)) {
+        return std::string("half_float");
+    }
+    else {
+        // This case should not happen
+        // If it happens, the type string returned by this function
+        // might be weird
+        return std::string(typeid(T).name());
+    }
 }
 
-template<>
-std::string N2D2::Cell_Frame_CUDA<float>::getPyDataType() {
-    return std::string("float");
-}
-template<>
-std::string N2D2::Cell_Frame_CUDA<half_float::half>::getPyDataType() {
-    return std::string("half_float");
-}
-template<class T>
-std::string N2D2::Cell_Frame_CUDA<T>::getPyModel(){
-    return std::string("Frame_CUDA");
+template <class T>
+std::string N2D2::Cell_Frame_CUDA<T>::getPyModel()
+{
+    return std::string(N2D2::Cell_Frame_Top::FRAME_CUDA_TYPE);
 }
 
 namespace N2D2 {

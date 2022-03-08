@@ -506,7 +506,7 @@ void N2D2::AnchorCell_Frame_CUDA::propagate(bool inference)
 
 void N2D2::AnchorCell_Frame_CUDA::backPropagate()
 {
-    if (mDiffOutputs.empty() || !mDiffInputs.isValid())
+    if (mDiffOutputs[0].empty() || !mDiffInputs.isValid())
         return;
 
     Cell_Frame_CUDA<Float_T>::backPropagate();
@@ -522,7 +522,7 @@ void N2D2::AnchorCell_Frame_CUDA::backPropagate()
                                                                     : inputCls;
 
         std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutputsCls = cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[0]);
-        std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutputsCoords = (mDiffOutputs.size() > 1)  ? 
+        std::shared_ptr<CudaDeviceTensor<Float_T> > diffOutputsCoords = (mDiffOutputs.size() > 1 && !mDiffOutputs[1].empty())  ? 
                                                                             cuda_device_tensor_cast_nocopy<Float_T>(mDiffOutputs[1])
                                                                             : diffOutputsCls;
 

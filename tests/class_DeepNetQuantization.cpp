@@ -202,7 +202,7 @@ TEST_DATASET(DeepNetQuantization, quantization,
     CellExport::mPrecision = static_cast<CellExport::Precision>(nbBits);
     DeepNetExport::mEnvDataUnsigned = unsignedEnv;
 
-    Network net(SEED);
+    Network net(SEED,false);
     std::shared_ptr<DeepNet> deepNet = DeepNetGenerator::generate(net, model);
 
     deepNet->initialize();
@@ -298,7 +298,7 @@ TEST_DATASET(DeepNetQuantization, quantization_CUDA,
     CellExport::mPrecision = static_cast<CellExport::Precision>(nbBits);
     DeepNetExport::mEnvDataUnsigned = unsignedEnv;
 
-    Network net(SEED);
+    Network net(SEED,false);
     std::shared_ptr<DeepNet> deepNet = DeepNetGenerator::generate(net, model);
 
     deepNet->initialize();

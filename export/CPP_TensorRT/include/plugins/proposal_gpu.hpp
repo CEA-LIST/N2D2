@@ -24,6 +24,7 @@
 
 #include "dnn_utils.hpp"
 #include "kernels_gpu.hpp"
+#if NV_TENSORRT_MAJOR < 8
 
 /******************************************************************************/
 /**Plugin Layer implementation**/
@@ -194,7 +195,7 @@ public:
 	{
         ///Proposals are store through CHW format with C of size NbProposal*4 (4 for the ROI proposals coordinate)
         //return nvinfer1::DimsCHW(mNbProposals*mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
-        return nvinfer1::DimsNCHW(mNbProposals, mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
+        return trt_Dims4(mNbProposals, mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
 
 	}
 
@@ -734,7 +735,7 @@ public:
             batchInput = inputDim[0].d[0];*/
 
         //return nvinfer1::DimsNCHW(batchInput, mNbProposals*mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
-        return nvinfer1::DimsNCHW(mNbProposals, mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
+        return trt_Dims4(mNbProposals, mOutputDims.d[1], mOutputDims.d[2], mOutputDims.d[3]);
 
 	}
 
@@ -1117,4 +1118,5 @@ struct pluginProposal_GPU{
       mPluginCount = 0;
     }
 };
+#endif
 #endif

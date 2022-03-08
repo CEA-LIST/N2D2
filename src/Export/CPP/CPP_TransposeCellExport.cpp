@@ -70,7 +70,7 @@ void N2D2::CPP_TransposeCellExport::generateHeaderConstants(const TransposeCell&
            << "#define " << prefix << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
            << "#define " << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth() << "\n"
            << "#define " << prefix << "_CHANNELS_HEIGHT " << cell.getChannelsHeight() << "\n"
-           << "int " << prefix << "_PERM[" << perm.size() << "] = {"
+           << "const int " << prefix << "_PERM[" << perm.size() << "] = {"
             << Utils::join(perm.begin(), perm.end(), ',') << "};\n\n";
 
     header << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix << "_NB_OUTPUTS*" 

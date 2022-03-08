@@ -27,6 +27,8 @@ from n2d2.tensor import Interface
 
 
 class Cell(ABC):
+    """Abstract class of the higher level of cells and cells container.
+    """
     @abstractmethod
     def __init__(self, name):
         if not name:
@@ -69,7 +71,8 @@ class Cell(ABC):
 
 
 class Trainable(ABC):
-
+    """Abstract class which regroup the method shared by trainable cells.
+    """
     @abstractmethod
     def __init__(self):
         if "solver" in self._config_parameters:
@@ -84,7 +87,7 @@ class Trainable(ABC):
         pass
 
     @abstractmethod
-    def set_filler(self, solver):
+    def set_filler(self, filler):
         pass
 
     @abstractmethod
@@ -145,14 +148,31 @@ class Block(Cell):
         super().__call__(x)
 
     def set_solver(self, solver):
+        """Set a solver for every optimizable parameters in this Block. Optimizable parameters are weights, biases and quantizers.
+
+        :param solver: Solver to use for every optimizable parameters, default= :py:class:`n2d2.solver.SGD`
+        :type solver: :py:class:`n2d2.solver.Solver`, optional
+        """
+        for cell in self._cells.values():
+            if isinstance(cell, Block):
+                cell.set_solver(solver)
+            else:
+                if isinstance(cell, Trainable):
+                    cell.solver = solver.copy()
+                    if cell.has_quantizer() and isinstance(cell.quantizer, Trainable):
+                        cell.quantizer.solver = solver.copy()
+                if cell.activation and cell.activation.has_quantizer() \
+                        and isinstance(cell.activation.quantizer, Trainable):
+                    cell.activation.quantizer.solver = solver.copy()
+
+    def set_back_propagate(self, value):
+        """Set back_propagate boolean of trainable cells.
+        :param value: If True trainable cell will enable back propagation.
+        :type value: bool
+        """
         for cell in self.get_cells().values():
             if isinstance(cell, Trainable):
-                cell.solver = solver.copy()
-                if cell.has_quantizer() and isinstance(cell.quantizer, Trainable):
-                    cell.quantizer.solver = solver.copy()
-            if cell.activation and cell.activation.has_quantizer() \
-                    and isinstance(cell.activation.quantizer, Trainable):
-                cell.activation.quantizer.solver = solver.copy()
+                cell.back_propagate = value
 
     def import_free_parameters(self, dir_name, ignore_not_exists=False):
         for cell in self._cells.values():
@@ -269,11 +289,18 @@ class Sequence(Iterable):
         """
         if not isinstance(provider, n2d2.provider.DataProvider):
             raise n2d2.error_handler.WrongInputType("provider", type(provider), ["n2d2.provider.DataProvider"])
-        target = n2d2.target.Score(provider)
-        dummy_input = provider.read_random_batch()
-        dummy_output = target(self(dummy_input))
+        # dummy_input = provider.read_random_batch()
+        dummy_input = n2d2.Tensor(provider.shape())
+
+        provider._deepnet = n2d2.deepnet.DeepNet()
+        provider._deepnet.set_provider(provider)
+        provider._deepnet.N2D2().initialize()
+        dummy_input = dummy_input._set_cell(provider)
+
+        dummy_output = self(dummy_input)
         N2D2_deepnet = dummy_output.get_deepnet().N2D2()
-        N2D2_deepnet.addTarget(target.N2D2())
+        N2D2_target =  N2D2.TargetScore("Target", dummy_output.cell.N2D2(), provider.N2D2())
+        N2D2_deepnet.addTarget(N2D2_target)
         N2D2_deepnet.setDatabase(provider.N2D2().getDatabase())
         return DeepNetCell(N2D2_deepnet)
 
@@ -503,7 +530,7 @@ class DeepNetCell(Block):
 
         # Checking inputs
         if valid_metric not in N2D2.ConfusionTableMetric.__members__.keys():
-            raise n2d2.error_handler.WrongValue("metric", valid_metric, ", ".join(N2D2.ConfusionTableMetric.__members__.keys()))
+            raise n2d2.error_handler.WrongValue("metric", valid_metric, N2D2.ConfusionTableMetric.__members__.keys())
         else:
             N2D2_valid_metric = N2D2.ConfusionTableMetric.__members__[valid_metric]
 
@@ -551,20 +578,20 @@ class DeepNetCell(Block):
         :type log_outputs: int, optional
         """
         if wt_round_mode not in N2D2.WeightsApprox.__members__.keys():
-            raise n2d2.error_handler.WrongValue("wt_round_mode", wt_round_mode, ", ".join(N2D2.WeightsApprox.__members__.keys()))
+            raise n2d2.error_handler.WrongValue("wt_round_mode", wt_round_mode, N2D2.WeightsApprox.__members__.keys())
         else:
             N2D2_wt_round_mode = N2D2.WeightsApprox.__members__[wt_round_mode]
         if b_round_mode not in N2D2.WeightsApprox.__members__.keys():
-            raise n2d2.error_handler.WrongValue("b_round_mode", b_round_mode, ", ".join(N2D2.WeightsApprox.__members__.keys()))
+            raise n2d2.error_handler.WrongValue("b_round_mode", b_round_mode, N2D2.WeightsApprox.__members__.keys())
         else:
             N2D2_b_round_mode = N2D2.WeightsApprox.__members__[b_round_mode]
         if c_round_mode not in N2D2.WeightsApprox.__members__.keys():
-            raise n2d2.error_handler.WrongValue("b_round_mode", c_round_mode, ", ".join(N2D2.WeightsApprox.__members__.keys()))
+            raise n2d2.error_handler.WrongValue("b_round_mode", c_round_mode, N2D2.WeightsApprox.__members__.keys())
         else:
             N2D2_c_round_mode = N2D2.WeightsApprox.__members__[c_round_mode]
 
         if act_scaling_mode not in N2D2.ScalingMode.__members__.keys():
-            raise n2d2.error_handler.WrongValue("act_scaling_mode", act_scaling_mode, ", ".join(N2D2.ScalingMode.__members__.keys()))
+            raise n2d2.error_handler.WrongValue("act_scaling_mode", act_scaling_mode, N2D2.ScalingMode.__members__.keys())
         else:
             N2D2_act_scaling_mode = N2D2.ScalingMode.__members__[act_scaling_mode]
 

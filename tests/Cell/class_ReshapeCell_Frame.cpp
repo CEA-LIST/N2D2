@@ -54,9 +54,9 @@ TEST(ReshapeCell_Frame, propagate)
 {
     // NHWC -> NCHW
     const unsigned int nbOutputs = 10;
-    const std::vector<int> shape = {2, 1, (int)nbOutputs, 1};
+    const std::vector<int> shape = {2, 1, (int)nbOutputs};
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
 
     Random::mtSeed(0);
@@ -85,7 +85,7 @@ TEST(ReshapeCell_Frame, propagate)
     ASSERT_EQUALS(outputs.dimX(), (unsigned int)shape[0]);
     ASSERT_EQUALS(outputs.dimY(), (unsigned int)shape[1]);
     ASSERT_EQUALS(outputs.dimZ(), (unsigned int)shape[2]);
-    ASSERT_EQUALS(outputs.dimB(), (unsigned int)shape[3]);
+    ASSERT_EQUALS(outputs.dimB(), 1U);
 
     for (unsigned int index = 0; index < outputs.size(); ++index) {
         ASSERT_EQUALS_DELTA(outputs(index), inputs(index), 1.0e-12);

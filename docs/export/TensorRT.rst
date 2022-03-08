@@ -7,7 +7,7 @@ C++ export using TensorRT.
 
 .. code-block::
 
-    n2d2 MobileNet_ONNX.ini -seed 1 -w /dev/null -export CPP_TensorRT -nbbits 32
+    n2d2 MobileNet_ONNX.ini -seed 1 -w /dev/null -export CPP_TensorRT -nbbits -32
 
 .. Warning::
 
@@ -26,7 +26,7 @@ This allow a low level of dependency, only TensorRT, CUDA, cuDNN, cuBLAS and GCC
 We recommended you to ensure the correct compatibility of your installation by referring to the TensorRT archive page:  
 https://docs.nvidia.com/deeplearning/tensorrt/archives/index.html
 Follow the support matrix section of your TensorRT version, notice that TensorRT export 
-have been tested from TensorRT 2.1 to TensorRT 7.2 versions.
+have been tested from TensorRT 2.1 to TensorRT 8.2.3 versions.
 
 The TensorRT library includes implementation for the most common deep learning layers, but strong limitations 
 are known depending of the TensorRT version. For example, TensorRT provide a support to the well-known resize layer since version 6.0.1.
@@ -37,6 +37,23 @@ https://docs.nvidia.com/deeplearning/tensorrt/developer-guide/index.html#add_cus
 
 The plugin layers that N2D2 TensorRT generator implements are available in the folder ``export/CPP_TensorRT/include/plugins/``. These layers are
 used by the N2D2 TensorRT generator when TensorRT doesn't provide support to a requested layers.
+
+
+Export parameters
+~~~~~~~~~~~~~~~~~
+
+Extra parameters can be passed during export using the 
+``-export-parameters params.ini`` command line argument. The parameters must be 
+saved in an INI-like file.
+
+List of available parameters:
+
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| Argument [default value]                                        | Description                                                                                                              |
++=================================================================+==========================================================================================================================+
+| ``GenStimuliCalib`` [1]                                         | If true (1), generate calibration files, necessary for 8-bits precision.                                                 |
+|                                                                 | Beware that calibration files may take a lot of disk space!                                                              |
++-----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
 
 
 Benchmark your TensorRT Model - C++ Benchmark
@@ -158,6 +175,10 @@ Method accessible through C++ or Python API are listed and detailled here:
 | ``void``    | setDeviceID               | setDeviceID               | ``size_t``                | device(``0``)                                               | Device ID on which run the TensorRT model                                                                                                                                                                                                                      | Use before run initialize()                                 |                          
 +-------------+---------------------------+---------------------------+---------------------------+-------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------+
 | ``void``    | setPrecision              | setPrecision              | ``int``                   | precision(``-32``)                                          | Numerical Precision to use: ``-32`` for float, ``-16`` for half float, ``8`` for int8                                                                                                                                                                          | Use before run initialize()                                 |               
++-------------+---------------------------+---------------------------+---------------------------+-------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------+
+| ``void``    | useDLA                    | useDLA                    | ``bool``                  | useDla(``False``)                                           | If True, use the first DLA core for every possible layers                                                                                                                                                                                                      | Use before run initialize()                                 |                          
++-------------+---------------------------+---------------------------+---------------------------+-------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------+
+| ``void``    | setMaxWorkSpaceSize       | setMaxWorkSpaceSize       | ``int64_t``               | maxWorkSpaceSize(``1073741824``)                            | Size of the workspace, influence the optimisations done by NVIDIA                                                                                                                                                                                              | Use before run initialize()                                 |               
 +-------------+---------------------------+---------------------------+---------------------------+-------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------+
 | ``void``    | setDetectorThresholds     | setDetectorThresholds     | ``float*``, ``uint``      | thresholds, lengthThreshold                                 | Set the confidences thresholds of a detector output. Bypass the internal thresholds from the exported model                                                                                                                                                    | Use before run initialize()                                 |                                
 +-------------+---------------------------+---------------------------+---------------------------+-------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------------------------------------------------+

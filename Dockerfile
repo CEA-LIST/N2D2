@@ -10,7 +10,10 @@ RUN apt-get update && apt-get install -y \
         gnuplot \
         libopencv-dev \
         python-dev \
-        python3-dev
+        python3-dev \
+        protobuf-compiler \
+        libprotoc-dev \
+        libjsoncpp-dev
 
 ENV N2D2_ROOT=/opt/N2D2
 WORKDIR $N2D2_ROOT
@@ -21,7 +24,7 @@ RUN git clone --recursive https://github.com/CEA-LIST/N2D2.git . && \
     make -j"$(nproc)"
 
 ENV N2D2_MODELS $N2D2_ROOT/models
-ENV PATH $N2D2_ROOT/build/bin/exec:$PATH
+ENV PATH $N2D2_ROOT/build/bin:$PATH
 
 WORKDIR /workspace
 

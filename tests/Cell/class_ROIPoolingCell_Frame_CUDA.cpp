@@ -75,7 +75,7 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
 
     StimuliProvider sp(EmptyDatabase, {16, 16, 1}, 5);
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     ROIPoolingCell_Frame_CUDA pool1(dn, "pool1",
                                sp,
@@ -110,7 +110,7 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
 
     const unsigned int nbProposals = 2;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -166,7 +166,7 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
 
     const unsigned int nbProposals = 2;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 
@@ -248,7 +248,7 @@ TEST_DATASET(ROIPoolingCell_Frame_CUDA,
 
     const unsigned int nbProposals = 2;
 
-    Network net;
+    Network net(0U,false);
     DeepNet dn(net);
     Environment env(net, EmptyDatabase, {channelsWidth, channelsHeight, 1});
 

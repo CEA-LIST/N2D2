@@ -129,6 +129,22 @@ N2D2::Tensor<T>::Tensor()
 }
 
 template <class T>
+N2D2::Tensor<T>::Tensor(const Tensor<T>& other)
+    : BaseTensor(other.mDims, other.mValid, other.mSize, other.mSizeM1),
+      mData(other.mData),
+      mDataOffset(other.mDataOffset)
+{
+    // ctor by copy
+    // Warning: a tensor "B" created from another tensor "A" with 
+    // this copy-ctor will share the same mData as "A".
+    // Indeed, this implementation only copies the address of mData
+    // because mData is a shared pointer. Thus if one of the values of B 
+    // is changed, then the value of A is also changed.
+    // If you want to create a tensor from another tensor with different
+    // memory locations, please use Tensor::clone()
+}
+
+template <class T>
 N2D2::Tensor<T>::Tensor(std::initializer_list<size_t> dims,
                             const T& value)
     : BaseTensor(dims),
@@ -711,6 +727,7 @@ const N2D2::Tensor<T> N2D2::Tensor<T>::rows(size_t j0,
 
 template <class T>
 void N2D2::Tensor<T>::synchronizeToH(BaseTensor& tensor) const {
+    tensor.resize(dims());
     tensor = *this;
 }
 
