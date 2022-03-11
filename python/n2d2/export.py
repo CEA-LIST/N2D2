@@ -17,6 +17,7 @@ liability.
 The fact that you are presently reading this means that you have had
 knowledge of the CeCILL-C license and that you accept its terms.
 """
+from numpy import empty
 import n2d2
 import N2D2
 
@@ -48,8 +49,6 @@ def _parse_export_parameters(gen_export=None, nb_bits=8, qat_SAT=False,
         raise n2d2.error_handler.WrongValue("act_scaling_mode", act_scaling_mode, ", ".join(N2D2.ScalingMode.__members__.keys()))
     else:
         N2D2_act_scaling_mode = N2D2.ScalingMode.__members__[act_scaling_mode]
-
-
     if act_clipping_mode not in N2D2.ClippingMode.__members__.keys():
         raise n2d2.error_handler.WrongValue("act_clipping_mode", act_clipping_mode, ", ".join(N2D2.ClippingMode.__members__.keys()))
     else:
@@ -77,12 +76,45 @@ def _parse_export_parameters(gen_export=None, nb_bits=8, qat_SAT=False,
         wt_round_mode=N2D2_wt_round_mode, 
         b_round_mode=N2D2_b_round_mode, 
         c_round_mode=N2D2_c_round_mode, 
-        find_lr=find_lr)
+        find_lr=find_lr).N2D2()
         
+def _export_deepnet_operation(deepnet_cell: n2d2.cells.DeepNetCell, 
+        provider: n2d2.provider.Provider=None,
+        **kwargs) -> None :
+    """Retrieve N2D2 DeepNet and prepare it for an export.
+    """
+
+    N2D2_deepnet = deepnet_cell.get_embedded_deepnet().N2D2()
+    N2D2_deepnet.initialize()
+
+    if provider is not None:
+        N2D2_provider = provider.N2D2()
+        N2D2_database = N2D2_provider.getDatabase()
+        N2D2_deepnet.setDatabase(N2D2_database)
+        N2D2_deepnet.setStimuliProvider(N2D2_provider)
+    
+    if "calibration" in kwargs and kwargs["calibration"] != 0 and \
+    N2D2_deepnet.getDatabase().getNbStimuli() == 0:
+        raise ValueError("Cannot calibrate the network with an empty database,\
+             please add a dataprovider to run the calibration.")
+
+    if len(N2D2_deepnet.getTargets()) == 0:
+        # No target associated to the DeepNet
+        # We create a Target for the last cell of the network
+        last_cell = deepnet_cell[-1].N2D2()
+        N2D2_target =  N2D2.TargetScore("Target", last_cell, provider.N2D2())
+        N2D2_deepnet.addTarget(N2D2_target)
+
+    if (N2D2_deepnet.getDatabase().getNbStimuli(N2D2.Database.StimuliSet.__members__["Validation"]) > 0):
+        N2D2_deepnet.exportNetworkFreeParameters("weights_validation")
+    else:
+        N2D2_deepnet.exportNetworkFreeParameters("weights")
+    return N2D2_deepnet
+
 
 def export_c(deepnet_cell: n2d2.cells.DeepNetCell, 
              provider: n2d2.provider.Provider=None,
-             **kwargs):
+             **kwargs) -> None:
     """Generate a C export of the neural network.
     
     :param deepnet_cell: The Neural network you want to export.
@@ -103,6 +135,8 @@ def export_c(deepnet_cell: n2d2.cells.DeepNetCell,
     :type wt_clipping_mode: str, optional
     :param act_clipping_mode: activation clipping mode on export, can be ``NONE``, ``MSE`` or ``KL-Divergence`` or ``Quantile``, default="MSE"
     :type act_clipping_mode: str, optional
+    :param act_scaling_mode: activation scaling mode on export, can be ``NONE``, ``FIXED_MULT16``, ``SINGLE_SHIFT`` or ``DOUBLE_SHIFT``, default="SINGLE_SHIFT"
+    :type act_scaling_mode: str, optional
     :param act_quantile_value: Quantile value for ``Quantile`` clipping mode, default=0.9999
     :type act_quantile_value: float, optional
     :param act_rescale_per_output: If True, rescale activation per output on export, default=False
@@ -123,34 +157,19 @@ def export_c(deepnet_cell: n2d2.cells.DeepNetCell,
     :type find_lr: int, optional
     """
 
-    if "act_scaling_mode" in kwargs and kwargs["act_scaling_mode"]!="SINGLE_SHIFT":
-        raise ValueError("C export only support single shift scaling for activation")
+    if "act_scaling_mode" in kwargs:
+        if kwargs["act_scaling_mode"]=="FLOAT_MULT":
+            raise ValueError("C export doesn't support FLOAT_MULT scaling.")
     else:
-        kwargs["act_scaling_mode"]="SINGLE_SHIFT"
-    parameters = _parse_export_parameters(gen_export="C", **kwargs)
-    N2D2_deepnet = deepnet_cell.get_embedded_deepnet().N2D2()
-    N2D2_deepnet.initialize()
-    if (N2D2_deepnet.getDatabase().getNbStimuli(N2D2.Database.StimuliSet.__members__["Validation"]) > 0):
-        N2D2_deepnet.exportNetworkFreeParameters("weights_validation")
-    else:
-        N2D2_deepnet.exportNetworkFreeParameters("weights")
+        kwargs["act_scaling_mode"]="SINGLE_SHIFT" # Default value
 
-    if provider is not None:
-        N2D2_provider = provider.N2D2()
-        N2D2_database = N2D2_provider.getDatabase()
-        N2D2_deepnet.setDatabase(N2D2_database)
-        N2D2_deepnet.setStimuliProvider(N2D2_provider)
-    
-    if "calibration" in kwargs and kwargs["calibration"] != 0 and \
-    N2D2_deepnet.getDatabase().getNbStimuli() == 0:
-        raise ValueError("Cannot calibrate the network with an empty database,\
-             please add a dataprovider to run the calibration.")
-
-    N2D2.generateExport(parameters.N2D2(), N2D2_deepnet)
+    N2D2_option = _parse_export_parameters(gen_export="C", **kwargs)
+    N2D2_deepnet = _export_deepnet_operation(deepnet_cell, provider, **kwargs)
+    N2D2.generateExport(N2D2_option, N2D2_deepnet)
 
 def export_cpp(deepnet_cell: n2d2.cells.DeepNetCell, 
-                provider: n2d2.provider.Provider=None,
-                **kwargs):
+               provider: n2d2.provider.Provider=None,
+               **kwargs) -> None:
     """Generate a CPP export of the neural network.
     
     :param deepnet_cell: The Neural network you want to export.
@@ -192,29 +211,16 @@ def export_cpp(deepnet_cell: n2d2.cells.DeepNetCell,
     :param find_lr: Find an appropriate learning rate over a number of iterations, default=0
     :type find_lr: int, optional
     """
-    parameters = _parse_export_parameters(gen_export="CPP", **kwargs)
-    N2D2_deepnet = deepnet_cell.get_embedded_deepnet().N2D2()
-    N2D2_deepnet.initialize()
-    if (N2D2_deepnet.getDatabase().getNbStimuli(N2D2.Database.StimuliSet.__members__["Validation"]) > 0):
-        N2D2_deepnet.exportNetworkFreeParameters("weights_validation")
-    else:
-        N2D2_deepnet.exportNetworkFreeParameters("weights")
-    if provider is not None:
-        N2D2_provider = provider.N2D2()
-        N2D2_database = N2D2_provider.getDatabase()
-        N2D2_deepnet.setDatabase(N2D2_database)
-        N2D2_deepnet.setStimuliProvider(N2D2_provider)
-    if "calibration" in kwargs and kwargs["calibration"] != 0 and \
-    N2D2_deepnet.getDatabase().getNbStimuli() == 0:
-        raise ValueError("Cannot calibrate the network with an empty database,\
-             please add a dataprovider to run the calibration.")
-    N2D2.generateExport(parameters.N2D2(), N2D2_deepnet)
+    N2D2_option = _parse_export_parameters(gen_export="CPP", **kwargs)
+    N2D2_deepnet = _export_deepnet_operation(deepnet_cell, provider, **kwargs)
+
+    N2D2.generateExport(N2D2_option, N2D2_deepnet)
 
 
 
 def export_tensor_rt(deepnet_cell: n2d2.cells.DeepNetCell, 
                 provider: n2d2.provider.Provider=None,
-                **kwargs):
+                **kwargs) -> None:
     """Generate a TensorRT export of the neural network.
     
     :param deepnet_cell: The Neural network you want to export.
@@ -256,20 +262,7 @@ def export_tensor_rt(deepnet_cell: n2d2.cells.DeepNetCell,
     :param find_lr: Find an appropriate learning rate over a number of iterations, default=0
     :type find_lr: int, optional
     """
-    parameters = _parse_export_parameters(gen_export="CPP_TensorRT", **kwargs)
-    N2D2_deepnet = deepnet_cell.get_embedded_deepnet().N2D2()
-    N2D2_deepnet.initialize()
-    if (N2D2_deepnet.getDatabase().getNbStimuli(N2D2.Database.StimuliSet.__members__["Validation"]) > 0):
-        N2D2_deepnet.exportNetworkFreeParameters("weights_validation")
-    else:
-        N2D2_deepnet.exportNetworkFreeParameters("weights")
-    if provider is not None:
-        N2D2_provider = provider.N2D2()
-        N2D2_database = N2D2_provider.getDatabase()
-        N2D2_deepnet.setDatabase(N2D2_database)
-        N2D2_deepnet.setStimuliProvider(N2D2_provider)
-    if "calibration" in kwargs and kwargs["calibration"] != 0 and \
-    N2D2_deepnet.getDatabase().getNbStimuli() == 0:
-        raise ValueError("Cannot calibrate the network with an empty database,\
-             please add a dataprovider to run the calibration.")
-    N2D2.generateExport(parameters.N2D2(), N2D2_deepnet)
+    N2D2_option = _parse_export_parameters(gen_export="CPP_TensorRT", **kwargs)
+    N2D2_deepnet = _export_deepnet_operation(deepnet_cell, provider, **kwargs)
+
+    N2D2.generateExport(N2D2_option, N2D2_deepnet)

@@ -86,7 +86,7 @@ class CustomSequential(keras.Sequential):
         """Method to handle propagation
         """
         x_var = tf.Variable(x)
-
+        
         x_numpy = x.numpy()
         inputs_batch_size = x_numpy.shape[0] # TODO : Check size is the same as input shape of the network ?
         inputs_shape = np.array(x_numpy.shape)
@@ -94,6 +94,10 @@ class CustomSequential(keras.Sequential):
         if inputs_batch_size < self.batch_size:
             inputs_shape[0] = self.batch_size
             x_numpy.resize(inputs_shape)
+
+        if len(inputs_shape) == 2:
+            # Adding two unit dimensions
+            x_numpy = x_numpy.reshape(self.batch_size, 1, 1, -1)
 
         firstCellName = self.deepNet.getLayers()[1][0] # 0 = env
         lastCellName = self.deepNet.getLayers()[-1][-1]
@@ -252,8 +256,15 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
         n2d2.global_variables.cuda_device = 0
 
     database = n2d2.database.Database()
+
+    if len(inputs_shape) == 4:
+        input_dims = [inputs_shape[2], inputs_shape[1], inputs_shape[3]]
+    elif len(inputs_shape) == 2: # Input is a Fc.
+        input_dims = [inputs_shape[1], 1, 1]
+    else:
+        raise RuntimeError(f"Input shape {inputs_shape} is not supported.")
     provider = n2d2.provider.DataProvider(database,
-                                          [inputs_shape[2], inputs_shape[1], inputs_shape[3]],
+                                          input_dims,
                                           batch_size=inputs_shape[0])
 
     deepnet_cell = n2d2.cells.DeepNetCell.load_from_ONNX(provider, model_name + ".onnx")
