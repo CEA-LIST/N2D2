@@ -29,7 +29,8 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_ScalingCell(py::module &m) {
 
-    py::class_<ScalingCell, std::shared_ptr<ScalingCell>, Cell> (m, "ScalingCell", py::multiple_inheritance());
+    py::class_<ScalingCell, std::shared_ptr<ScalingCell>, Cell> (m, "ScalingCell", py::multiple_inheritance())
+    .def("getScaling", (const Scaling& (ScalingCell::*)()const) &ScalingCell::getScaling);
 }
 }
 #endif

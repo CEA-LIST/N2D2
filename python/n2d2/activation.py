@@ -56,10 +56,8 @@ class ActivationFunction(N2D2_Interface, ABC):
         return parameters
 
     def has_quantizer(self):
-        if 'quantizer' in self._config_parameters:
-            return True
-        else:
-            return False
+        return 'quantizer' in self._config_parameters
+
     @deprecated
     def get_quantizer(self):
         if 'quantizer' in self._config_parameters:

@@ -34,19 +34,32 @@ void init_Scaling(py::module &m) {
 
     py::class_<FloatingPointScaling, AbstractScaling> (m, "FloatingPointScaling", py::multiple_inheritance())
     .def(py::init<std::vector<Float_T>, bool, std::vector<Float_T>>(), 
-        py::arg("scalingPerOutput"), py::arg("isclipped"), py::arg("clipping"));
+        py::arg("scalingPerOutput"), py::arg("isclipped"), py::arg("clipping"))
+    .def("getScalingPerOutput", &FloatingPointScaling::getScalingPerOutput)
+    .def("getClippingPerOutput", &FloatingPointScaling::getClippingPerOutput)
+    .def("getIsClipped", &FloatingPointScaling::getIsClipped);
     
     py::class_<FixedPointScaling, AbstractScaling> (m, "FixedPointScaling", py::multiple_inheritance())
     .def(py::init<std::size_t, std::vector<std::int32_t>, bool, std::vector<Float_T>>(),
-        py::arg("nbFractionalBits"), py::arg("scaling"), py::arg("isclipped"), py::arg("clipping"));
+        py::arg("nbFractionalBits"), py::arg("scaling"), py::arg("isclipped"), py::arg("clipping"))
+    .def("getScalingPerOutput", &FixedPointScaling::getScalingPerOutput)
+    .def("getClippingPerOutput", &FixedPointScaling::getClippingPerOutput)
+    .def("getIsClipped", &FixedPointScaling::getIsClipped)
+    .def("getFractionalBits", &FixedPointScaling::getFractionalBits);
     
     py::class_<SingleShiftScaling, AbstractScaling> (m, "SingleShiftScaling", py::multiple_inheritance())
     .def(py::init<std::vector<unsigned char>, bool, std::vector<Float_T>>(),
-        py::arg("scaling"), py::arg("isclipped"), py::arg("clipping"));
+        py::arg("scaling"), py::arg("isclipped"), py::arg("clipping"))
+    .def("getScalingPerOutput", &SingleShiftScaling::getScalingPerOutput)
+    .def("getClippingPerOutput", &SingleShiftScaling::getClippingPerOutput)
+    .def("getIsClipped", &SingleShiftScaling::getIsClipped);
 
     py::class_<DoubleShiftScaling, AbstractScaling> (m, "DoubleShiftScaling", py::multiple_inheritance())
     .def(py::init<std::vector<std::pair<unsigned char, unsigned char>>, bool, std::vector<std::pair<unsigned char, unsigned char>>>(), 
-        py::arg("scaling"), py::arg("isclipped"), py::arg("clipping"));
+        py::arg("scaling"), py::arg("isclipped"), py::arg("clipping"))
+    .def("getScalingPerOutput", &DoubleShiftScaling::getScalingPerOutput)
+    .def("getClippingPerOutput", &DoubleShiftScaling::getClippingPerOutput)
+    .def("getIsClipped", &DoubleShiftScaling::getIsClipped);
 
     py::class_<Scaling, std::shared_ptr<Scaling>> (m, "Scaling", py::multiple_inheritance())
     .def(py::init<>());
