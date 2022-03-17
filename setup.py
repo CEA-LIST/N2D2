@@ -124,7 +124,8 @@ if __name__ == '__main__':
         packages=packages,
         package_dir={
             "n2d2": "python/n2d2",
-			"pytorch_interoperability": "python/pytorch_interoperability"
+            "pytorch_interoperability": "python/pytorch_interoperability",
+            "keras_interoperability": "python/keras_interoperability",
         },
         ext_modules=[CMakeExtension('N2D2')],
         cmdclass={

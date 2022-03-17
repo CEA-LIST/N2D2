@@ -113,6 +113,8 @@ public:
     void processFreeParametersPerChannel(std::function<Float_T(Float_T)> /*func*/,
                                         std::size_t /*channel*/);
     
+    virtual void applyMapping(Cell* cell, const Tensor<bool>&  mapping);
+
     void synchronizeToH(bool keepInSync_) const;
     void synchronizeToD(bool keepInSync_);
     virtual ~FcCell_Frame_CUDA();

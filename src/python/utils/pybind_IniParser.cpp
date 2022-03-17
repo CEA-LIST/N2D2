@@ -24,6 +24,7 @@
 
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
@@ -34,6 +35,11 @@ void init_IniParser(py::module &m) {
     .def(py::init<>())
     .def("load", (void (IniParser::*)(const std::string&)) (&IniParser::load), py::arg("fileName"))
     .def("currentSection", &IniParser::currentSection)
+    .def("setProperty", (void (IniParser::*)(const std::string&, const int&)) (&IniParser::setProperty), py::arg("name"), py::arg("value"))
+    .def("setProperty", (void (IniParser::*)(const std::string&, const float&)) (&IniParser::setProperty), py::arg("name"), py::arg("value"))
+    .def("setProperty", (void (IniParser::*)(const std::string&, const bool&)) (&IniParser::setProperty), py::arg("name"), py::arg("value"))
+    .def("setProperty", (void (IniParser::*)(const std::string&, const std::string&)) (&IniParser::setProperty), py::arg("name"), py::arg("value"))
+    .def("setProperty", (void (IniParser::*)(const std::string&, const std::vector<std::string>&)) (&IniParser::setProperty), py::arg("name"), py::arg("value"))
     ;
 }
 }

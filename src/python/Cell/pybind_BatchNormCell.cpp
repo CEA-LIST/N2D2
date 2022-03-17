@@ -35,6 +35,10 @@ void init_BatchNormCell(py::module &m) {
     .def("getScaleSolver", &BatchNormCell::getScaleSolver)
     .def("setBiasSolver", &BatchNormCell::setBiasSolver, py::arg("solver"))
     .def("getBiasSolver", &BatchNormCell::getBiasSolver)
+    .def("getBiases", &BatchNormCell::getBiases)
+    .def("getScales", &BatchNormCell::getScales)
+    .def("getMeans", &BatchNormCell::getMeans)
+    .def("getVariances", &BatchNormCell::getVariances)
     .def("getMovingAverageMomentum", &BatchNormCell::getMovingAverageMomentum)
     .def("getEpsilon", &BatchNormCell::getEpsilon);
 }

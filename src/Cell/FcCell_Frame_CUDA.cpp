@@ -28,6 +28,7 @@
 #include "Cell/FcCell_Frame_CUDA_Kernels.hpp"
 #include "DeepNet.hpp"
 #include "third_party/half.hpp"
+#include "Adversarial.hpp"
 
 template <>
 N2D2::Registrar<N2D2::FcCell>
@@ -148,8 +149,20 @@ void N2D2::FcCell_Frame_CUDA<T>::initialize()
     }
 }
 
+template <class T>
+void N2D2::FcCell_Frame_CUDA<T>::applyMapping(Cell* cell, const Tensor<bool>&  mapping){
+    // Define input-output connections
+    const unsigned int cellNbOutputs = cell->getNbOutputs(); // * cell->getOutputsHeight() * cell->getOutputsWidth();
 
+    if (!mapping.empty() && mapping.dimY() != cellNbOutputs)
+        throw std::runtime_error("Cell_Frame::addInput(): number of mapping "
+                                 "rows must be equal to the number of input "
+                                 "channels");
 
+    mMapping.append((!mapping.empty())
+        ? mapping
+        : Tensor<bool>({getNbOutputs(), cellNbOutputs}, true));
+}
 
 template <class T>
 void N2D2::FcCell_Frame_CUDA<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)
