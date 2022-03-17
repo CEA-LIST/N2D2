@@ -35,72 +35,74 @@ def conv_config(with_bn):
 class MobileNetv1Extractor(Sequence):
     def __init__(self, alpha, with_bn=False):
 
-        base_nb_outputs = int(32 * alpha)
+        # base_nb_outputs = int(32 * alpha)
+        compute_nb_outputs = lambda x :int(x * 32 * alpha)
 
         self.div2 = Sequence([
-            Conv(3, base_nb_outputs, kernel_dims=[3, 3], stride_dims=[2, 2], padding_dims=[1, 1],
+            Conv(3, compute_nb_outputs(1), kernel_dims=[3, 3], stride_dims=[2, 2], padding_dims=[1, 1],
                  **conv_config(with_bn), name="conv1"),
-            ConvDepthWise(base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv1_3x3_dw",
+            ConvDepthWise(compute_nb_outputs(1), kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv1_3x3_dw",
                           **conv_config(with_bn)),
-            ConvPointWise(base_nb_outputs, 2 * base_nb_outputs, name="conv1_1x1", **conv_config(with_bn))
+            ConvPointWise(compute_nb_outputs(1), compute_nb_outputs(2), name="conv1_1x1", **conv_config(with_bn))
         ], "div2")
 
         self.div4 = Sequence([
-            ConvDepthWise(2 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[2, 2], name="conv2_3x3_dw",
+            ConvDepthWise(compute_nb_outputs(2), kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[2, 2], name="conv2_3x3_dw",
                           **conv_config(with_bn)),
-            ConvPointWise(2 * base_nb_outputs, 4 * base_nb_outputs, name="conv2_1x1", **conv_config(with_bn)),
-            ConvDepthWise(4 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv3_3x3_dw",
+            ConvPointWise(compute_nb_outputs(2), compute_nb_outputs(4), name="conv2_1x1", **conv_config(with_bn)),
+            ConvDepthWise(compute_nb_outputs(4), kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv3_3x3_dw",
                           **conv_config(with_bn)),
-            ConvPointWise(4 * base_nb_outputs, 4 * base_nb_outputs, name="conv3_1x1", **conv_config(with_bn)),
+            ConvPointWise(compute_nb_outputs(4), compute_nb_outputs(4), name="conv3_1x1", **conv_config(with_bn)),
         ], "div4")
 
         self.div8 = Sequence([
-            ConvDepthWise(4 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[2, 2], name="conv4_3x3_dw",
+            ConvDepthWise(compute_nb_outputs(4), kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[2, 2], name="conv4_3x3_dw",
                               **conv_config(with_bn)),
-            ConvPointWise(4 * base_nb_outputs, 8 * base_nb_outputs, name="conv4_1x1", **conv_config(with_bn)),
-            ConvDepthWise(8 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv5_3x3_dw",
+            ConvPointWise(compute_nb_outputs(4), compute_nb_outputs(8), name="conv4_1x1", **conv_config(with_bn)),
+            ConvDepthWise(compute_nb_outputs(8), kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv5_3x3_dw",
                           **conv_config(with_bn)),
-            ConvPointWise(8 * base_nb_outputs, 8 * base_nb_outputs, name="conv5_1x1", **conv_config(with_bn))
+            ConvPointWise(compute_nb_outputs(8), compute_nb_outputs(8), name="conv5_1x1", **conv_config(with_bn))
         ], "div8")
 
         self.div16 = Sequence([
-            ConvDepthWise(8 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[2, 2], name="conv6_3x3_dw",
+            ConvDepthWise(compute_nb_outputs(8), kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[2, 2], name="conv6_3x3_dw",
                               **conv_config(with_bn)),
-            ConvPointWise(8 * base_nb_outputs, 16 * base_nb_outputs, name="conv6_1x1", **conv_config(with_bn)),
-            ConvDepthWise(16 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv7_1_3x3_dw",
+            ConvPointWise(compute_nb_outputs(8), compute_nb_outputs(16), name="conv6_1x1", **conv_config(with_bn)),
+            ConvDepthWise(compute_nb_outputs(16), kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv7_1_3x3_dw",
                               **conv_config(with_bn)),
-            ConvPointWise(16 * base_nb_outputs, 16 * base_nb_outputs, name="conv7_1_1x1", **conv_config(with_bn)),
-            ConvDepthWise(16 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv7_2_3x3_dw",
+            ConvPointWise(compute_nb_outputs(16), compute_nb_outputs(16), name="conv7_1_1x1", **conv_config(with_bn)),
+            ConvDepthWise(compute_nb_outputs(16), kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv7_2_3x3_dw",
                               **conv_config(with_bn)),
-            ConvPointWise(16 * base_nb_outputs, 16 * base_nb_outputs, name="conv7_2_1x1", **conv_config(with_bn)),
-            ConvDepthWise(16 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv7_3_3x3_dw",
+            ConvPointWise(compute_nb_outputs(16), compute_nb_outputs(16), name="conv7_2_1x1", **conv_config(with_bn)),
+            ConvDepthWise(compute_nb_outputs(16), kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv7_3_3x3_dw",
                               **conv_config(with_bn)),
-            ConvPointWise(16 * base_nb_outputs, 16 * base_nb_outputs, name="conv7_3_1x1", **conv_config(with_bn)),
-            ConvDepthWise(16 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv7_4_3x3_dw",
+            ConvPointWise(compute_nb_outputs(16), compute_nb_outputs(16), name="conv7_3_1x1", **conv_config(with_bn)),
+            ConvDepthWise(compute_nb_outputs(16), kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv7_4_3x3_dw",
                               **conv_config(with_bn)),
-            ConvPointWise(16 * base_nb_outputs, 16 * base_nb_outputs, name="conv7_4_1x1", **conv_config(with_bn)),
-            ConvDepthWise(16 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv7_5_3x3_dw",
+            ConvPointWise(compute_nb_outputs(16), compute_nb_outputs(16), name="conv7_4_1x1", **conv_config(with_bn)),
+            ConvDepthWise(compute_nb_outputs(16), kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv7_5_3x3_dw",
                               **conv_config(with_bn)),
-            ConvPointWise(16 * base_nb_outputs, 16 * base_nb_outputs, name="conv7_5_1x1", **conv_config(with_bn))
+            ConvPointWise(compute_nb_outputs(16), compute_nb_outputs(16), name="conv7_5_1x1", **conv_config(with_bn))
         ], "div16")
 
         self.div32 = Sequence([
-            ConvDepthWise(16 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[2, 2], name="conv8_3x3_dw",
+            ConvDepthWise(compute_nb_outputs(16), kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[2, 2], name="conv8_3x3_dw",
                               **conv_config(with_bn)),
-            ConvPointWise(16 * base_nb_outputs, 32 * base_nb_outputs, name="conv8_1x1", **conv_config(with_bn)),
-            ConvDepthWise(32 * base_nb_outputs, kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv9_3x3_dw",
+            ConvPointWise(compute_nb_outputs(16), compute_nb_outputs(32), name="conv8_1x1", **conv_config(with_bn)),
+            ConvDepthWise(compute_nb_outputs(32), kernel_dims=[3, 3], padding_dims=[1, 1], stride_dims=[1, 1], name="conv9_3x3_dw",
                               **conv_config(with_bn)),
-            ConvPointWise(32 * base_nb_outputs, 32 * base_nb_outputs, name="conv9_1x1", **conv_config(with_bn))
+            ConvPointWise(compute_nb_outputs(32), compute_nb_outputs(32), name="conv9_1x1", **conv_config(with_bn))
         ], "div32")
 
         seq = [self.div2, self.div4, self.div8, self.div16, self.div32]
 
-        for scale in seq:
-            for cell in scale:
-                if isinstance(cell, Conv):
-                    bn_name = "bn" + cell.get_name()[4:]
-                    scale.insert(scale.index(cell) + 1,
-                                 BatchNorm2d(cell.get_nb_outputs(), activation=Rectifier(), name=bn_name))
+        if with_bn:
+            for scale in seq:
+                for cell in scale:
+                    if isinstance(cell, Conv):
+                        bn_name = "bn" + cell.get_name()[4:]
+                        scale.insert(scale.index(cell) + 1,
+                                     BatchNorm2d(cell.get_nb_outputs(), activation=Rectifier(), name=bn_name))
 
         Sequence.__init__(self, seq, "extractor")
 
@@ -122,6 +124,7 @@ class MobileNetv1(Sequence):
     def __init__(self, nb_outputs=1000, alpha=1.0, with_bn=False):
 
         self.extractor = MobileNetv1Extractor(alpha, with_bn)
+
         self.head = MobileNetv1Head(nb_outputs, alpha)
 
         Sequence.__init__(self, [self.extractor, self.head], "mobilenet_v1")
