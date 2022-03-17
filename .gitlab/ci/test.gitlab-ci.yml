@@ -22,17 +22,18 @@ test:python_api:
     - virtualenv -p python3.7 venv
     - shopt -s expand_aliases
     - alias python='venv/bin/python3.7'
+    # -> verify env is clean
     - python -m pip freeze
   script:
-    # Show libs installed for debug
+    - python -m pip install -r requirements.txt
+    - python -m pip install -r keras_interoperability/requirements.txt
+    - python -m pip install -r pytorch_interoperability/requirements.txt
+    # -> Cehck installed lib
     - python -m pip freeze
-    - pip install -r requirements.txt
-    - pip install -r keras_interoperability/requirements.txt
-    - pip install -r pytorch_interoperability/requirements.txt
 
     # Run on discovery all tests located in python/tests and discard the stdout 
     # only to show the errors/warnings and the results of the tests
-    - python3.7 -m unittest discover -s tests -v -b 1> /dev/null 
+    - python -m unittest discover -s tests -v -b 1> /dev/null 
 
 static_analysis:python_api:
   stage: test
