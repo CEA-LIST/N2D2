@@ -65,6 +65,7 @@ class GlobalVariables:
         self.default_net = N2D2.Network(self._seed, saveSeed=False, printTimeElapsed=False)
         self._cuda_compiled = N2D2.cuda_compiled
         self._json_compiled = N2D2.json_compiled
+        self._onnx_compiled = N2D2.onnx_compiled
         self._n2d2_ip_compiled = N2D2.N2D2_IP
         self._cuda_device = 0
         class VerbosityClass:
@@ -120,6 +121,13 @@ class GlobalVariables:
         return self._json_compiled
     @json_compiled.setter
     def json_compiled(self, _):
+        raise RuntimeError("The parameter json_compiled is on read only !")
+
+    @property
+    def onnx_compiled(self):
+        return self._onnx_compiled
+    @onnx_compiled.setter
+    def onnx_compiled(self, _):
         raise RuntimeError("The parameter json_compiled is on read only !")
 
     @property

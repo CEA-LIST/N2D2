@@ -346,7 +346,7 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
             for(const std::string& childName: children) {
                 auto child = mCells.at(childName);
                 const Tensor<bool> mapping = child->getMapping().clone();
-                const bool isMapping = (child->getType() != ReshapeCell::Type);
+                const bool isMapping = (child->getType() != ReshapeCell::Type && child->getType() != FcCell::Type);
                 child->clearInputs();
 
                 unsigned int nbChannels = 0;
@@ -1647,11 +1647,12 @@ void N2D2::DeepNet::removeExtraTranspose() {
                 // the tail will be incompatible with the output of the remaining Transpose.
                 removeCell(cell, /*reconnect*/ false);
                 removeCell(childs[0], /*reconnect*/ false);
-
+                
                 // Reconnecting the head and the tail
                 for(std::shared_ptr<Cell> tail : tails){
+                    const Tensor<bool> mapping = tail->getMapping().clone();
                     tail->clearInputs();
-                    for(std::shared_ptr<Cell> head : heads) tail->addInput(head.get());
+                    for(std::shared_ptr<Cell> head : heads) tail->addInput(head.get(), mapping);
                     for(unsigned int indexLayer = 0; indexLayer < mLayers.size(); ++indexLayer){
                         std::vector<std::string>::iterator layerNameIt = std::find(
                             mLayers[indexLayer].begin(), 
@@ -1661,7 +1662,7 @@ void N2D2::DeepNet::removeExtraTranspose() {
                             mLayers[indexLayer].erase(layerNameIt);
                     }
                     addCell(tail, heads);
-                }                
+                }
             }
         }
         

@@ -370,7 +370,7 @@ class DeepNetCell(Block):
 
 
     @classmethod
-    def load_from_ONNX(cls, provider, model_path, ini_file=None):
+    def load_from_ONNX(cls, provider, model_path, ini_file=None, ignore_cells=[]):
         """Load a deepnet from an ONNX file given a provider object.
 
         :param provider: Provider object to base deepnet upon
@@ -379,7 +379,12 @@ class DeepNetCell(Block):
         :type model_path: str
         :param ini_file: Path to an optional .ini file with additional onnx import instructions
         :type ini_file: str
+        :param ignore_cells: List of cells name to ignore, default=[]
+        :type ignore_cells: list, optional
         """
+        if not n2d2.global_variables.onnx_compiled:
+            raise RuntimeError("Cannot load a model from ONNX, you did not compiled N2D2 with protobuf. " \
+                "Install it with 'apt-get install protobuf-compiler' and then recompile N2D2.")
         if not isinstance(provider, n2d2.provider.Provider):
             raise ValueError("Input needs to be of type 'provider'")
         N2D2_deepnet = N2D2.DeepNet(n2d2.global_variables.default_net)
@@ -391,6 +396,8 @@ class DeepNetCell(Block):
         if ini_file is not None:
             ini_parser.load(ini_file)
         ini_parser.currentSection("onnx", True)
+        if ignore_cells:
+            ini_parser.setProperty("Ignore", ignore_cells)
         N2D2_deepnet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, ini_parser,
                                             N2D2_deepnet, [None])
         return cls(N2D2_deepnet)
@@ -475,14 +482,14 @@ class DeepNetCell(Block):
         print("import DeepNetCell '" + self._name + "' weights from " + dir_name)
         self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignoreNotExists=ignore_not_exists)
 
-    def remove(self, name):
+    def remove(self, name, reconnect=False):
         """Remove a cell from the encapsulated deepnet
 
         :param name: Name of cell that shall be removed.
         :type name: str
         """
         cell = self._embedded_deepnet.N2D2().getCells()[name]
-        self._embedded_deepnet.N2D2().removeCell(cell, False)
+        self._embedded_deepnet.N2D2().removeCell(cell, reconnect)
         self._embedded_deepnet = DeepNet.create_from_N2D2_object(self._embedded_deepnet.N2D2())
         self._cells = self._embedded_deepnet.get_cells()
 

@@ -41,6 +41,6 @@ import n2d2.activation
 import n2d2.mapping
 import n2d2.error_handler
 import n2d2.models
-# IP functions
+import n2d2.export
 import n2d2.quantizer
 import n2d2.converter

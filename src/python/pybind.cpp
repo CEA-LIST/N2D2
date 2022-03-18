@@ -545,6 +545,11 @@ void init_N2D2(py::module& m) {
     #else
     m.attr("json_compiled") = false;
     #endif
+    #ifdef ONNX
+    m.attr("onnx_compiled") = true;
+    #else
+    m.attr("onnx_compiled") = false;
+    #endif
 }
 
 }
