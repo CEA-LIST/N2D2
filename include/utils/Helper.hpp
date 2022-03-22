@@ -80,8 +80,8 @@ namespace N2D2_HELPER{
         WeightsApprox cRoundMode = weightsScalingMode("NONE");
         WeightsApprox bRoundMode = weightsScalingMode("NONE");
         WeightsApprox wtRoundMode = weightsScalingMode("NONE");
-        ClippingMode wtClippingMode = parseClippingMode("MSE");
-        ClippingMode actClippingMode = parseClippingMode("None");
+        ClippingMode wtClippingMode = parseClippingMode("None");
+        ClippingMode actClippingMode = parseClippingMode("MSE");
         ScalingMode actScalingMode = parseScalingMode("Floating-point");
         // end TODO 
         bool actRescalePerOutput = false;

@@ -240,6 +240,10 @@ public:
     {
         return mMultiDevicesInfo;
     };
+    int getMasterDevice() 
+    {
+        return mMasterDevice;
+    };
 #endif
 
     // Clear

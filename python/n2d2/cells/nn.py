@@ -162,7 +162,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         n2d2_cell._input_cells = []
 
         n2d2_cell._name = N2D2_object.getName()
-
+        n2d2_cell._inference = True
         if n2d2_deepnet is not None:
             n2d2_cell._deepnet = n2d2_deepnet
             n2d2_cell._sync_inputs_and_parents()
@@ -2176,6 +2176,18 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
         self._config_parameters['scale_solver'] = solver
         self._N2D2_object.setScaleSolver(self._config_parameters['scale_solver'].N2D2())
 
+    def get_biases(self) -> n2d2.Tensor:
+        return n2d2.Tensor.from_N2D2(self.N2D2().getBiases())
+
+    def get_scales(self) -> n2d2.Tensor:
+        return n2d2.Tensor.from_N2D2(self.N2D2().getScales())
+
+    def get_means(self) -> n2d2.Tensor:
+        return n2d2.Tensor.from_N2D2(self.N2D2().getMeans())
+
+    def get_variances(self) -> n2d2.Tensor:
+        return n2d2.Tensor.from_N2D2(self.N2D2().getVariances())
+
     def set_solver_parameter(self, key, value):
         """Set the parameter ``key`` with the value ``value`` for the attribute ``scale`` and ``bias`` solver.
 
@@ -2468,7 +2480,7 @@ class Transpose(NeuralNetworkCell, Datatyped):
 
         return self.get_outputs()
 
-class Transformation(NeuralNetworkCell, Datatyped):
+class Transformation(NeuralNetworkCell):
     _cell_constructors = {
         'Frame': N2D2.TransformationCell_Frame,
     }
@@ -2520,6 +2532,69 @@ class Transformation(NeuralNetworkCell, Datatyped):
                                                                                self._optional_constructor_arguments)))
 
             """Set and initialize here all complex cells members"""
+            for key, value in self._config_parameters.items():
+                self.__setattr__(key, value)
+            self.load_N2D2_parameters(self.N2D2())
+
+        self._add_to_graph(inputs)
+
+        self._N2D2_object.propagate(self._inference)
+
+        return self.get_outputs()
+
+class Scaling(NeuralNetworkCell, Datatyped):
+    """Scaling layer.
+    """
+    _cell_constructors = {
+        'Frame<float>': N2D2.ScalingCell_Frame_float,
+    }
+    if cuda_compiled:
+        _cell_constructors.update({
+            'Frame_CUDA<float>': N2D2.ScalingCell_Frame_CUDA_float,
+        })
+    _parameters = {}
+    _parameters.update(_cell_frame_parameters)
+
+    _convention_converter = n2d2.ConventionConverter(_parameters)
+
+    def __init__(self, scaling, **config_parameters):
+        """
+        :param scaling: Scaling object
+        :type scaling: :py:class:`n2d2.scaling.Scaling`
+        :param name: Cell name, default = ``CellType_id``
+        :type name: str, optional
+        :param datatype: Datatype used by the cell, can only be ``float`` at the moment, default= n2d2.global_variables.default_datatype
+        :type datatype: str, optional
+        """
+        if not isinstance(scaling, n2d2.scaling.Scaling):
+            raise n2d2.error_handler.WrongInputType("outputs_width", type(scaling), ["list"])
+
+        NeuralNetworkCell.__init__(self, **config_parameters)
+        Datatyped.__init__(self, **config_parameters)
+        self._constructor_arguments.update({
+            'scaling': scaling,
+        })
+
+        # No optional parameter
+        self._parse_optional_arguments([])
+
+    def _load_N2D2_constructor_parameters(self, N2D2_object):
+        self._constructor_arguments['scaling'] = N2D2_object.getScaling() # TODO: add Scaling to converter
+
+    def __call__(self, inputs):
+        super().__call__(inputs)
+
+        if self._N2D2_object is None:
+            nb_outputs = inputs.dims()[2]
+
+            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+                                                                           self.get_name(),
+                                                                           nb_outputs,
+                                                                           self._constructor_arguments['scaling'],
+                                                                           **self.n2d2_function_argument_parser(
+                                                                               self._optional_constructor_arguments)))
+
+            # Set and initialize here all complex cells members
             for key, value in self._config_parameters.items():
                 self.__setattr__(key, value)
             self.load_N2D2_parameters(self.N2D2())

@@ -51,6 +51,8 @@ object_dict = {
     "Resize": n2d2.cells.Resize,
     "Transpose": n2d2.cells.Transpose,
     "Transformation": n2d2.cells.Transformation,
+    "Scaling": n2d2.cells.Scaling,
+
 }
 
 
@@ -62,18 +64,18 @@ def from_N2D2_object(N2D2_object, **kwargs):
         Convert a N2D2 activation into a n2d2 activation.
         The _N2D2_object attribute of the generated n2d2 cells is replaced by the N2D2_cell given in entry.
     """
-    if N2D2_object is not None: # Here a simple "if N2D2_object: " condition is dangerous ! An N2D2 object can be evaluate to False/0.
+    if N2D2_object is not None:
         object_type = N2D2_object.getType()
         if object_type == "SAT":
             if "Cell" in str(N2D2_object):
                 object_type = "SATCell"
             else:
                 object_type = "SATActivation"
-        try:
-            n2d2_object = object_dict[object_type].create_from_N2D2_object(N2D2_object, **kwargs)
-        except:
-            print(N2D2_object)
-            exit()
+        if object_type not in object_dict:
+            print(object_type)
+            raise RuntimeError(f"The object {type(N2D2_object)} has not been integrated to the Python API yet." \
+                "\nPlease consider opening an issue at https://github.com/CEA-LIST/N2D2/issues to fix this issue.")
+        n2d2_object = object_dict[object_type].create_from_N2D2_object(N2D2_object, **kwargs)
     else:
         n2d2_object = None
 

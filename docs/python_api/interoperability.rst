@@ -3,6 +3,103 @@ Interoperability
 
 In this section, we will present how you can use n2d2 with other python framework. 
 
+Keras *[experimental feature]*
+------------------------------
+
+Presentation
+~~~~~~~~~~~~
+
+The Keras interoperability allow you to train a model using the N2D2 backend with the TensorFlow/Keras frontend.
+
+The interoperability consist of a wrapper around the N2D2 Network.
+
+In order to integrate N2D2 into the Keras environment, we run TensorFlow in eager mode. 
+
+.. warning::
+        Due to the implementation, n2d2 parameters are not visible to ``Keras`` and thus cannot be optimized by a ``Keras`` optimizer.
+
+
+Documentation
+~~~~~~~~~~~~~
+
+.. autofunction:: keras_interoperability.wrap
+
+.. autoclass:: keras_interoperability.CustomSequential
+        :members:
+
+Example
+~~~~~~~
+
+For this example, we will use an example provided in the Keras documentation : https://keras.io/examples/vision/mnist_convnet/
+
+We begin by importing the same library as in the example plus our interoperability library.
+
+.. code-block:: python
+
+        import numpy as np
+        from tensorflow import keras
+        from tensorflow.keras import layers
+        # Importing the interoperability library
+        import keras_interoperability
+
+We then import the data by following the tutorial.
+
+.. code-block:: python
+
+        # training parameters
+        batch_size = 128
+        epochs = 10
+        # Model / data parameters
+        num_classes = 10
+        input_shape = (28, 28, 1)
+
+        # the data, split between train and test sets
+        (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+
+        # Scale images to the [0, 1] range
+        x_train = x_train.astype("float32") / 255
+        x_test = x_test.astype("float32") / 255
+
+        # Make sure images have shape (28, 28, 1)
+        x_train = np.expand_dims(x_train, -1)
+        x_test = np.expand_dims(x_test, -1)
+        # convert class vectors to binary class matrices
+        y_train = keras.utils.to_categorical(y_train, num_classes)
+        y_test = keras.utils.to_categorical(y_test, num_classes)
+
+When declaring the model, we will use the :py:func:`keras_interoperability.wrap` function to generate an :py:class:`keras_interoperability.CustomSequential` which embedded N2D2.
+
+.. code-block:: python
+
+        tf_model = keras.Sequential([
+                keras.Input(shape=input_shape),
+                layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
+                layers.MaxPooling2D(pool_size=(2, 2)),
+                layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
+                layers.MaxPooling2D(pool_size=(2, 2)),
+                layers.Flatten(),
+                layers.Dense(num_classes, activation="softmax"),
+        ])
+        model = keras_interoperability.wrap(tf_model, batch_size=batch_size, for_export=True)
+
+Once this is done, we can follow again the tutorial and run the training and the evaluation.
+
+.. code-block:: python
+
+        model.compile(loss="categorical_crossentropy", optimizer="SGD", metrics=["accuracy"])
+
+        model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.1)
+        score = model.evaluate(x_test, y_test, verbose=0)
+        print("Test loss:", score[0])
+        print("Test accuracy:", score[1])
+
+And that is it ! You have successfully trained your model with N2D2 using the keras interface.
+
+You can then retrieve the N2D2 model by using the method :py:meth:`keras_interoperability.CustomSequential.get_deepnet_cell` if you want to perform operation on it.
+
+.. code-block:: python
+
+        n2d2_model = model.get_deepnet_cell()
 
 PyTorch *[experimental feature]*
 --------------------------------
