@@ -84,6 +84,18 @@ class DeepNet(N2D2_Interface):
 
     def get_cells(self):
         return self._cells
+    
+    def remove(self, cell_name:str, reconnect:bool=False)->None:
+        """Remove a cell from the encapsulated deepnet.
+
+        :param name: Name of cell that shall be removed.
+        :type name: str
+        :param reconnect: If `True`, reconnects the parents with the child of the removed cell, default=True
+        :type reconnect: bool, optional 
+        """
+        cell = self.N2D2().getCells()[cell_name]
+        self.N2D2().removeCell(cell, reconnect)
+        self._cells.pop(cell_name)
 
     def get_input_cells(self):
         """

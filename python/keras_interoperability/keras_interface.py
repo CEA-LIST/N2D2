@@ -37,7 +37,7 @@ class CustomSequential(keras.Sequential):
     """A customSequential model which embedded an N2D2 Network.
     """
     def __init__(self, deepnet_cell: n2d2.cells.DeepNetCell,
-                 batch_size: int, outputs_shape: tf.Tensor, name: int=None, for_export=False, **kwargs) -> None:
+                 batch_size: int, outputs_shape: tf.Tensor, name: int=None, **kwargs) -> None:
         """
         :param deepnet_cell: The network used for propagation and backpropagation.
         :type deepnet_cell: :py:class:`n2d2.cells.DeepNetCell`
@@ -49,7 +49,6 @@ class CustomSequential(keras.Sequential):
         :type name: str, optional
         """
         super(CustomSequential, self).__init__([], name, **kwargs)
-        self._for_export=for_export
         self.deepNet= deepnet_cell._embedded_deepnet.N2D2()
         self._deepnet_cell = deepnet_cell
         self.batch_size = batch_size
@@ -139,10 +138,6 @@ class CustomSequential(keras.Sequential):
         def custom_grad(dy:tf.Tensor):
             """Method to handle backpropagation
             """
-            if self._for_export:
-                raise RuntimeError(f"BackPropagation is not supported for network" \
-                "generated with the option 'for_export=True'. It is recommended " \
-                "to train the network with Keras and then import it to N2D2 for an export.")
             dy_numpy = dy.numpy()
             # Make sure we have a full batch
             if inputs_batch_size < self.batch_size:
@@ -181,7 +176,7 @@ class CustomSequential(keras.Sequential):
 
         return y, custom_grad
 
-    def call(self, inputs: tf.Tensor, training: bool=False):
+    def call(self, inputs: tf.Tensor, training: bool=False)->tf.Tensor:
         """Method called to run the forward pass.
 
         :param  inputs: Tensor to propagate
@@ -197,8 +192,13 @@ class CustomSequential(keras.Sequential):
                 inputs_var = tf.Variable(inputs)
                 outputs = self.custom_op(inputs_var)
             return outputs
+    def summary(self):
+        """Print model information.
+        """
+        print(self._deepnet_cell)
 
-def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export: bool=False):
+
+def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export: bool=False) -> CustomSequential:
     """Generate a custom model which run with N2D2 on backend.
     The conversion between TensorFlow/Keras and N2D2 is done with ONNX.
 
@@ -270,11 +270,17 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
     deepnet_cell = n2d2.cells.DeepNetCell.load_from_ONNX(provider, model_name + ".onnx")
 
     previous_cell = None
-    for cell in deepnet_cell:
+
+    # Make a copy of the list returned by values, otherwise it would change  in size
+    # when iterating.
+    cells = [cell for cell in deepnet_cell._cells.values()]
+    # /!\ We iterate on a copy of cells, do not remove the next cell /!\ 
+    for cell in cells:
         # Layers modification after the import !
         if isinstance(cell, n2d2.cells.Softmax):
             # ONNX import Softmax with_loss = True supposing we are using a CrossEntropy loss.
             cell.with_loss = False
+            print(cell)
         if for_export:
             # Keras add Reshape before FullyConnected layers, which are not exportable.
             if isinstance(cell, n2d2.cells.Fc) and isinstance(previous_cell, n2d2.cells.Reshape):
@@ -290,4 +296,4 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
     deepnet_cell._embedded_deepnet.N2D2().initialize()
 
     N2D2.DrawNet.drawGraph(deepnet_cell._embedded_deepnet.N2D2(), "model")
-    return CustomSequential(deepnet_cell, batch_size, outputs_shape, name=model_name, for_export=for_export)
+    return CustomSequential(deepnet_cell, batch_size, outputs_shape, name=model_name)

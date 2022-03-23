@@ -69,7 +69,7 @@ tf_model = tf.keras.Sequential(
 model = keras_interoperability.wrap(tf_model, batch_size=batch_size, for_export=True)
 
 
-# model.summary() # TODO : Doesn't work anymore ...
+model.summary()
 
 """
 ## Train the model
