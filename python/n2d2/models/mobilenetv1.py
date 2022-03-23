@@ -36,7 +36,7 @@ class MobileNetv1Extractor(Sequence):
     def __init__(self, alpha, with_bn=False):
 
         # base_nb_outputs = int(32 * alpha)
-        compute_nb_outputs = lambda x :int(x * 32 * alpha)
+        compute_nb_outputs = lambda x: int(x * 32 * alpha)
 
         self.div2 = Sequence([
             Conv(3, compute_nb_outputs(1), kernel_dims=[3, 3], stride_dims=[2, 2], padding_dims=[1, 1],
@@ -104,6 +104,8 @@ class MobileNetv1Extractor(Sequence):
                         scale.insert(scale.index(cell) + 1,
                                      BatchNorm2d(cell.get_nb_outputs(), activation=Rectifier(), name=bn_name))
 
+        # NOTE: When writing you own Block or Sequence, make sure to add give cells to the constructor, otherwise
+        # they are not accessible by Block methods
         Sequence.__init__(self, seq, "extractor")
 
 

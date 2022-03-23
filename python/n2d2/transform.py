@@ -90,6 +90,11 @@ class Composite(Transformation):
         """
         return self._transformations
 
+    def append(self, transformation):
+        if not isinstance(transformation, transformation):
+            raise n2d2.error_handler.WrongInputType("transformations", type(transformations), [str(type(list))])
+        self._transformations.append(transformation)
+
     def __str__(self):
         output = Transformation.__str__(self)
         output += "(\n"

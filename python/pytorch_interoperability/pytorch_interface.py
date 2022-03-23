@@ -25,7 +25,7 @@ except ImportError:
 import n2d2
 
 def _switching_convention(dims):
-    return [dims[3], dims[2], dims[0], dims[1]]
+    return [dims[3], dims[2], dims[1], dims[0]]
 
 
 def _to_n2d2(torch_tensor):
@@ -64,7 +64,7 @@ def _to_n2d2(torch_tensor):
         n2d2_tensor.dtoh()
         dims = n2d2_tensor.dims()
         if n2d2_tensor.nb_dims() == 4:
-            n2d2_tensor.reshape([dims[0], dims[1], dims[3], dims[2]])
+            n2d2_tensor.reshape([dims[0], dims[1], dims[2], dims[3]])
     else:
         numpy_tensor = torch_tensor.cpu().detach().numpy() 
         # This operation create a CPU memory copy.
@@ -209,7 +209,7 @@ def wrap(torch_model, input_size):
     # Importing the ONNX to N2D2
     print("Importing ONNX model to N2D2 ...")
     db = n2d2.database.Database()
-    provider = n2d2.provider.DataProvider(db,[input_size[2], input_size[3], input_size[1]], batch_size=input_size[0])
+    provider = n2d2.provider.DataProvider(db,[input_size[3], input_size[2], input_size[1]], batch_size=input_size[0])
     deepNet = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "./tmp.onnx")
     # print("Cleaning temporary ONNX file.")
     # remove(model_path)
