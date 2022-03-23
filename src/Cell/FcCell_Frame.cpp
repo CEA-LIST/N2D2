@@ -117,20 +117,6 @@ void N2D2::FcCell_Frame<T>::initialize()
 
 }
 
-template <class T>
-void N2D2::FcCell_Frame<T>::applyMapping(Cell* cell, const Tensor<bool>&  mapping){
-    // Define input-output connections
-    const unsigned int cellNbOutputs = cell->getNbOutputs(); // * cell->getOutputsHeight() * cell->getOutputsWidth();
-
-    if (!mapping.empty() && mapping.dimY() != cellNbOutputs)
-        throw std::runtime_error("Cell_Frame::addInput(): number of mapping "
-                                 "rows must be equal to the number of input "
-                                 "channels");
-
-    mMapping.append((!mapping.empty())
-        ? mapping
-        : Tensor<bool>({getNbOutputs(), cellNbOutputs}, true));
-}
 
 template <class T>
 void N2D2::FcCell_Frame<T>::initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs)

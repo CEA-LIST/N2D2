@@ -106,7 +106,6 @@ public:
     void loadFreeParameters(const std::string& fileName,
                             bool ignoreNotExists = false);
     
-    virtual void applyMapping(Cell* cell, const Tensor<bool>&  mapping);
     
     virtual ~FcCell_Frame();
 
