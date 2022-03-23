@@ -15,8 +15,6 @@ The interoperability consist of a wrapper around the N2D2 Network.
 
 In order to integrate N2D2 into the Keras environment, we run TensorFlow in eager mode. 
 
-.. warning::
-        Due to the implementation, n2d2 parameters are not visible to ``Keras`` and thus cannot be optimized by a ``Keras`` optimizer.
 
 
 Documentation
@@ -26,6 +24,22 @@ Documentation
 
 .. autoclass:: keras_interoperability.CustomSequential
         :members:
+
+Changing the optimizer
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. warning::
+        Due to the implementation, n2d2 parameters are not visible to ``Keras`` and thus cannot be optimized by a ``Keras`` optimizer.
+
+When compiling the :py:class:`keras_interoperability.CustomSequential`, you can pass an :py:class:`n2d2.solver.Solver` object to the parameter `optimizer`.
+This will change the method used to optimize the parameters.
+
+.. code-block:: python
+
+        model.summary() # Use the default SGD solver. 
+        model.compile(loss="categorical_crossentropy", optimizer=n2d2.solver.Adam(), metrics=["accuracy"])
+        model.summary() # Use the newly defined Adam solver.
+
 
 Example
 ~~~~~~~
@@ -86,7 +100,7 @@ Once this is done, we can follow again the tutorial and run the training and the
 
 .. code-block:: python
 
-        model.compile(loss="categorical_crossentropy", optimizer="SGD", metrics=["accuracy"])
+        model.compile(loss="categorical_crossentropy", metrics=["accuracy"])
 
         model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.1)
         score = model.evaluate(x_test, y_test, verbose=0)

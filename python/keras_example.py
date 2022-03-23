@@ -16,7 +16,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 import keras_interoperability
-
+from n2d2.solver import Adam
 from time import time
 """
 ## Prepare the data
@@ -69,15 +69,13 @@ tf_model = tf.keras.Sequential(
 model = keras_interoperability.wrap(tf_model, batch_size=batch_size, for_export=True)
 
 
-model.summary()
 
 """
 ## Train the model
 """
 
-
-
-model.compile(loss="categorical_crossentropy", optimizer="SGD", metrics=["accuracy"])
+model.compile(loss="categorical_crossentropy", optimizer=Adam(), metrics=["accuracy"])
+model.summary()
 
 model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.1)
 
