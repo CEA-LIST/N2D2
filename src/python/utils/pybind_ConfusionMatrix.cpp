@@ -37,6 +37,7 @@ void init_ConfusionMatrix(py::module &m) {
     .value("Sensitivity", ConfusionTableMetric::Sensitivity)
     .value("Specificity", ConfusionTableMetric::Specificity)
     .value("Precision", ConfusionTableMetric::Precision)
+    .value("IU", ConfusionTableMetric::IU)
     .value("NegativePredictiveValue", ConfusionTableMetric::NegativePredictiveValue)
     .value("MissRate", ConfusionTableMetric::MissRate)
     .value("FallOut", ConfusionTableMetric::FallOut)

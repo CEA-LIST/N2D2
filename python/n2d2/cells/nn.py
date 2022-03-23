@@ -308,13 +308,15 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             self._N2D2_object.importFreeParameters(filename, ignore_not_exists)
             self._N2D2_object.importActivationParameters(dir_name, ignore_not_exists)
 
-    def export_free_parameters(self, dir_name):
+    def export_free_parameters(self, dir_name, verbose=True):
         if self._N2D2_object:
             filename = dir_name + "/" + self.get_name() + ".syntxt"
-            print("Export to " + filename)
+            if verbose == True:
+                print("Export to " + filename)
             self._N2D2_object.exportFreeParameters(filename)
             filename = dir_name + "/" + self.get_name() + "_quant.syntxt"
-            print("Export to " + filename)
+            if verbose == True:
+                print("Export to " + filename)
             self._N2D2_object.exportQuantFreeParameters(filename)
             self._N2D2_object.exportActivationParameters(dir_name)
 

@@ -60,7 +60,7 @@ class Cell(ABC):
         pass
 
     @abstractmethod
-    def export_free_parameters(self, dir_name):
+    def export_free_parameters(self, dir_name, verbose=True):
         pass
 
     def get_name(self):
@@ -134,6 +134,15 @@ class Block(Cell):
             else:
                 cells[elem.get_name()] = elem
 
+    def get_cell(self, item):
+        """
+           Returns the low level view of a cell.
+        """
+        if isinstance(item, str): 
+            return self.get_cells()[item]
+        else:
+            raise n2d2.error_handler.WrongInputType("item", type(item), ["str"])
+
     def test(self):
         for cell in self._cells.values():
             cell.test()
@@ -178,9 +187,9 @@ class Block(Cell):
         for cell in self._cells.values():
             cell.import_free_parameters(dir_name, ignore_not_exists=ignore_not_exists)
 
-    def export_free_parameters(self, dir_name):
+    def export_free_parameters(self, dir_name, verbose=True):
         for cell in self._cells.values():
-            cell.export_free_parameters(dir_name)
+            cell.export_free_parameters(dir_name, verbose)
 
     def __str__(self):
         """

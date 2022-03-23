@@ -120,7 +120,7 @@ class MobileNetv1(Sequence):
                 for cell in scale:
                     if isinstance(cell, Conv):
                         bn_name = "bn" + cell.get_name()[4:]
-                        scale.insert(scale.index(cell)+1, BatchNorm2d(cell.get_compute_nb_outputs(), activation=Rectifier(), name=bn_name))
+                        scale.insert(scale.index(cell)+1, BatchNorm2d(cell.get_nb_outputs(), activation=Rectifier(), name=bn_name))
 
         self.head = MobileNetv1Head(nb_outputs, alpha)
 
