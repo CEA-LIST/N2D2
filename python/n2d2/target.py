@@ -147,6 +147,9 @@ class Score(Target):
     def clear_success(self):
         self._N2D2_object.clearSuccess(self._provider.get_partition())
 
+    def clear_score(self):
+        self._N2D2_object.clearScore(self._provider.get_partition())
+
     def log_confusion_matrix(self, path):
         self._N2D2_object.logConfusionMatrix(path, self._provider.get_partition())
 
