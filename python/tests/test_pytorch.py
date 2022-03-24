@@ -48,11 +48,11 @@ class test_tensor_conversion(unittest.TestCase):
         self.channel = 2
         self.x = 3
         self.y = 4
-        self.torch_format = [self.batch_size, self.channel, self.x, self.y]
+        self.torch_format = [self.batch_size, self.channel, self.y, self.x]
         self.n2d2_format = [self.x, self.y, self.channel, self.batch_size]
 
     def test_torch_to_n2d2(self):
-        torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y)
+        torch_tensor = torch.ones(self.batch_size, self.channel, self.y, self.x)
         n2d2_tensor = pytorch.pytorch_interface._to_n2d2(torch_tensor)
         self.assertEqual(n2d2_tensor.dims(), self.n2d2_format)
 
@@ -62,7 +62,7 @@ class test_tensor_conversion(unittest.TestCase):
         self.assertEqual(list(torch_tensor.shape), self.torch_format)
     
     def test_torch_to_n2d2_cuda_int(self):
-        a = torch.ones(self.batch_size, self.channel, self.x, self.y, 
+        a = torch.ones(self.batch_size, self.channel, self.y, self.x,
                         dtype=torch.int32, device=torch.device('cuda'))
  
         b = pytorch.pytorch_interface._to_n2d2(a)
@@ -78,28 +78,28 @@ class test_tensor_conversion(unittest.TestCase):
         self.assertEqual(b[0], a[0][0][0][0].data)
 
     def test_torch_to_n2d2_float(self):
-        torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
+        torch_tensor = torch.ones(self.batch_size, self.channel, self.y, self.x,
                         dtype=torch.float, device=torch.device('cuda'))
         float_n2d2_tensor = pytorch.pytorch_interface._to_n2d2(torch_tensor)
         float_n2d2_tensor.dtoh()
         for i in float_n2d2_tensor: 
             self.assertEqual(i, 1)
     def test_torch_to_n2d2_double(self):
-        torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
+        torch_tensor = torch.ones(self.batch_size, self.channel, self.y, self.x,
                         dtype=torch.double, device=torch.device('cuda'))
         double_n2d2_tensor = pytorch.pytorch_interface._to_n2d2(torch_tensor)
         double_n2d2_tensor.dtoh()
         for i in double_n2d2_tensor: 
             self.assertEqual(i, 1)
     def test_torch_to_n2d2__short(self):
-        torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
+        torch_tensor = torch.ones(self.batch_size, self.channel, self.y, self.x,
                         dtype=torch.short, device=torch.device('cuda'))
         short_n2d2_tensor = pytorch.pytorch_interface._to_n2d2(torch_tensor)
         short_n2d2_tensor.dtoh()
         for i in short_n2d2_tensor: 
             self.assertEqual(i, 1)
     def test_torch_to_n2d2_long(self):
-        torch_tensor = torch.ones(self.batch_size, self.channel, self.x, self.y, 
+        torch_tensor = torch.ones(self.batch_size, self.channel, self.y, self.x,
                         dtype=torch.long, device=torch.device('cuda'))
         long_n2d2_tensor = pytorch.pytorch_interface._to_n2d2(torch_tensor)
         long_n2d2_tensor.dtoh()
