@@ -126,6 +126,13 @@ class MobileNetv1(Sequence):
     def __init__(self, nb_outputs=1000, alpha=1.0, with_bn=False):
 
         self.extractor = MobileNetv1Extractor(alpha, with_bn)
+            
+        if with_bn:
+            for scale in self.extractor:
+                for cell in scale:
+                    if isinstance(cell, Conv):
+                        bn_name = "bn" + cell.get_name()[4:]
+                        scale.insert(scale.index(cell)+1, BatchNorm2d(cell.get_nb_outputs(), activation=Rectifier(), name=bn_name))
 
         self.head = MobileNetv1Head(nb_outputs, alpha)
 
