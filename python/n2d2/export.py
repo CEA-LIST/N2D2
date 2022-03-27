@@ -131,9 +131,9 @@ def export_c(deepnet_cell: n2d2.cells.DeepNetCell,
     :type calibration: int, optional
     :param export_no_cross_layer_equalization: If True, disable the use of cross layer equalization in integer exports, default=False
     :type export_no_cross_layer_equalization: bool, optional
-    :param wt_clipping_mode: Weights clipping mode on export, can be ``NONE``, ``MSE`` or ``KL-Diveregence``, default="NONE"
+    :param wt_clipping_mode: Weights clipping mode on export, can be ``NONE``, ``MSE`` or ``KL_DIVERGENCE ``, default="NONE"
     :type wt_clipping_mode: str, optional
-    :param act_clipping_mode: activation clipping mode on export, can be ``NONE``, ``MSE`` or ``KL-Divergence`` or ``Quantile``, default="MSE"
+    :param act_clipping_mode: activation clipping mode on export, can be ``NONE``, ``MSE`` or ``KL_DIVERGENCE `` or ``Quantile``, default="MSE"
     :type act_clipping_mode: str, optional
     :param act_scaling_mode: activation scaling mode on export, can be ``NONE``, ``FIXED_MULT16``, ``SINGLE_SHIFT`` or ``DOUBLE_SHIFT``, default="SINGLE_SHIFT"
     :type act_scaling_mode: str, optional
@@ -186,9 +186,9 @@ def export_cpp(deepnet_cell: n2d2.cells.DeepNetCell,
     :type calibration: int, optional
     :param export_no_cross_layer_equalization: If True, disable the use of cross layer equalization in integer exports, default=False
     :type export_no_cross_layer_equalization: bool, optional
-    :param wt_clipping_mode: Weights clipping mode on export, can be ``NONE``, ``MSE`` or ``KL-Diveregence``, default="NONE"
+    :param wt_clipping_mode: Weights clipping mode on export, can be ``NONE``, ``MSE`` or ``KL_DIVERGENCE ``, default="NONE"
     :type wt_clipping_mode: str, optional
-    :param act_clipping_mode: activation clipping mode on export, can be ``NONE``, ``MSE`` or ``KL-Divergence`` or ``Quantile``, default="MSE"
+    :param act_clipping_mode: activation clipping mode on export, can be ``NONE``, ``MSE`` or ``KL_DIVERGENCE `` or ``Quantile``, default="MSE"
     :type act_clipping_mode: str, optional
     :param act_scaling_mode: activation scaling mode on export, can be ``NONE``, ``FLOAT_MULT``, ``FIXED_MULT16``, ``SINGLE_SHIFT`` or ``DOUBLE_SHIFT``, default="FLOAT_MULT"
     :type act_scaling_mode: str, optional
