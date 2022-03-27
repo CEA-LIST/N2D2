@@ -37,7 +37,10 @@ class Provider(N2D2_Interface,ABC):
     _convention_converter= n2d2.ConventionConverter(_parameters)
     @abstractmethod
     def __init__(self, **config_parameters):
-        
+        """
+        :param name: Provider name, default = ``Provider_id``
+        :type name: str, optional
+        """
         N2D2_Interface.__init__(self, **config_parameters)
 
         if 'name' in config_parameters:
@@ -73,6 +76,7 @@ class Provider(N2D2_Interface,ABC):
         """
         return self._name
 
+@n2d2.utils.inherit_init_docstring()
 class DataProvider(Provider):
     """
     Provide the data to the network.
@@ -274,7 +278,7 @@ class DataProvider(Provider):
             output += "]"
         return output
 
-
+@n2d2.utils.inherit_init_docstring()
 class TensorPlaceholder(Provider):
     """
     A provider used to stream a single tensor through a neural network.

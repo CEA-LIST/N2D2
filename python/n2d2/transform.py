@@ -57,6 +57,7 @@ class Transformation(N2D2_Interface, ABC):
         n2d2_transform._apply_to = N2D2.Database.StimuliSetMask.All 
         return n2d2_transform
 
+@n2d2.utils.inherit_init_docstring()
 class Composite(Transformation):
     """
     A composition of transformations
@@ -69,8 +70,6 @@ class Composite(Transformation):
         """
         :param transformations: List of the transformations to use.
         :type transformations: list
-        :param apply_to: To which partition the transform is applied. One of: ``LearnOnly``, ``ValidationOnly``, ``TestOnly``, ``NoLearn``, ``NoValidation``, ``NoTest``, ``All``, default="All"
-        :type apply_to: str, optional
         """
         Transformation.__init__(self, **config_parameters)
 
@@ -105,7 +104,7 @@ class Composite(Transformation):
         output += ")"
         return output
 
-
+@n2d2.utils.inherit_init_docstring()
 class PadCrop(Transformation):
     """
     Pad/crop the image to a specified size.
@@ -139,8 +138,6 @@ class PadCrop(Transformation):
         :type border_type: str, optional
         :param border_value: Background color used when padding with ``BorderType`` is ``ConstantBorder``,default=[0.0, 0.0, 0.0]
         :type border_value: list, optional
-        :param apply_to: To which partition the transform is applied. One of: ``LearnOnly``, ``ValidationOnly``, ``TestOnly``, ``NoLearn``, ``NoValidation``, ``NoTest``, ``All``, default="All"
-        :type apply_to: str, optional
         """
         Transformation.__init__(self, **config_parameters)
 
@@ -160,6 +157,7 @@ class PadCrop(Transformation):
             'height': N2D2_object.getHeight(),
         })
 
+@n2d2.utils.inherit_init_docstring()
 class Distortion(Transformation):
     """
     Apply elastic distortion to the image. 
@@ -190,8 +188,6 @@ class Distortion(Transformation):
         :type scaling: float, optional
         :param rotation: Maximum random rotation amplitude (+/-, in °), default=0.0
         :type rotation: float, optional
-        :param apply_to: To which partition the transform is applied. One of: ``LearnOnly``, ``ValidationOnly``, ``TestOnly``, ``NoLearn``, ``NoValidation``, ``NoTest``, ``All``, default="All"
-        :type apply_to: str, optional
         """
         Transformation.__init__(self, **config_parameters)
 
@@ -205,6 +201,7 @@ class Distortion(Transformation):
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
+@n2d2.utils.inherit_init_docstring()
 class Rescale(Transformation):
     """
     Rescale the image to a specified size.
@@ -228,8 +225,6 @@ class Rescale(Transformation):
         :type keep_aspect_ratio: bool, optional
         :param resize_to_fit: If true, resize along the longest dimension when ``KeepAspectRatio`` is true, default=True
         :type resize_to_fit: bool, optional
-        :param apply_to: To which partition the transform is applied. One of: ``LearnOnly``, ``ValidationOnly``, ``TestOnly``, ``NoLearn``, ``NoValidation``, ``NoTest``, ``All``, default="All"
-        :type apply_to: str, optional
         """
         Transformation.__init__(self, **config_parameters)
 
@@ -249,6 +244,7 @@ class Rescale(Transformation):
             'height': N2D2_object.getHeight(),
         })
 
+@n2d2.utils.inherit_init_docstring()
 class ColorSpace(Transformation):
 
     _Type = "ColorSpace"
@@ -286,8 +282,6 @@ class ColorSpace(Transformation):
 
         :param color_space: Convert image color.
         :type color_space: str
-        :param apply_to: To which partition the transform is applied. One of: ``LearnOnly``, ``ValidationOnly``, ``TestOnly``, ``NoLearn``, ``NoValidation``, ``NoTest``, ``All``, default="All"
-        :type apply_to: str, optional
         """
         Transformation.__init__(self, **config_parameters)
 
@@ -304,7 +298,7 @@ class ColorSpace(Transformation):
             'color_space': N2D2_object.getColorSpace(),
         })
 
-
+@n2d2.utils.inherit_init_docstring()
 class RangeAffine(Transformation):
     """
     Apply an affine transformation to the values of the image.
@@ -330,8 +324,6 @@ class RangeAffine(Transformation):
         :type second_operator: str, optional
         :param second_value: Second value, default=0.0
         :type second_value: float, optional
-        :param apply_to: To which partition the transform is applied. One of: ``LearnOnly``, ``ValidationOnly``, ``TestOnly``, ``NoLearn``, ``NoValidation``, ``NoTest``, ``All``, default="All"
-        :type apply_to: str, optional
         """
         Transformation.__init__(self, **config_parameters)
 
@@ -364,7 +356,7 @@ class RangeAffine(Transformation):
             'second_value': N2D2_object.getSecondValue(),
         })
 
-
+@n2d2.utils.inherit_init_docstring()
 class SliceExtraction(Transformation):
     """
     Extract a slice from an image.
@@ -420,8 +412,6 @@ class SliceExtraction(Transformation):
         :type allow_padding: bool, optional
         :param border_type: Border type used when padding, default="MinusOneReflectBorder"
         :type border_type: str, optional
-        :param apply_to: To which partition the transform is applied. One of: ``LearnOnly``, ``ValidationOnly``, ``TestOnly``, ``NoLearn``, ``NoValidation``, ``NoTest``, ``All``, default="All"
-        :type apply_to: str, optional
         """
         Transformation.__init__(self, **config_parameters)
 
@@ -448,6 +438,7 @@ class SliceExtraction(Transformation):
             'offset_y':  N2D2_object.getOffsetY(),
         })
 
+@n2d2.utils.inherit_init_docstring()
 class Flip(Transformation):
     """
     Image flip transformation.
@@ -472,8 +463,6 @@ class Flip(Transformation):
         :type random_horizontal_flip: bool, optional
         :param random_vertical_flip: If true, randomly flip the image vertically, default=False
         :type random_vertical_flip: bool, optional
-        :param apply_to: To which partition the transform is applied. One of: ``LearnOnly``, ``ValidationOnly``, ``TestOnly``, ``NoLearn``, ``NoValidation``, ``NoTest``, ``All``, default="All"
-        :type apply_to: str, optional
         """
         Transformation.__init__(self, **config_parameters)
 
@@ -484,8 +473,7 @@ class Flip(Transformation):
         self.load_N2D2_parameters(self.N2D2())
 
 
-
-
+@n2d2.utils.inherit_init_docstring()
 class RandomResizeCrop(Transformation):
 
     _Type = "RandomResizeCrop"
@@ -506,8 +494,6 @@ class RandomResizeCrop(Transformation):
         :type width: int
         :param height: Height of the image to Crop.
         :type height: int
-        :param apply_to: To which partition the transform is applied. One of: ``LearnOnly``, ``ValidationOnly``, ``TestOnly``, ``NoLearn``, ``NoValidation``, ``NoTest``, ``All``, default="All"
-        :type apply_to: str, optional
         """
         Transformation.__init__(self, **config_parameters)
 
@@ -529,6 +515,7 @@ class RandomResizeCrop(Transformation):
             'height': N2D2_object.getHeight(),
         })
 
+@n2d2.utils.inherit_init_docstring()
 class ChannelExtraction(Transformation):
     """
     Extract an image channel.
@@ -555,8 +542,6 @@ class ChannelExtraction(Transformation):
         
         :param channel: channel to extract
         :type channel: str
-        :param apply_to: To which partition the transform is applied. One of: ``LearnOnly``, ``ValidationOnly``, ``TestOnly``, ``NoLearn``, ``NoValidation``, ``NoTest``, ``All``, default="All"
-        :type apply_to: str, optional
         """
         Transformation.__init__(self, **config_parameters)
         

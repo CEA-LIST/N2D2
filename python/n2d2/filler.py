@@ -26,7 +26,12 @@ from abc import ABC, abstractmethod
 class Filler(N2D2_Interface, ABC):
     @abstractmethod
     def __init__(self, **config_parameters):
-
+        """
+        :param model: Can be either ``Frame`` or ``Frame_CUDA``, default=n2d2.global_variables.default_model
+        :type model: str, optional
+        :param datatype: Datatype used by the object, can only be ``float`` at the moment, default=n2d2.global_variables.default_datatype
+        :type datatype: str, optional
+        """
         if 'datatype' in config_parameters:
             self._datatype = config_parameters.pop('datatype')
         else:
@@ -51,6 +56,7 @@ class Filler(N2D2_Interface, ABC):
         n2d2_filler._model_key = "<" + N2D2_object.getDataType() + ">"
         return n2d2_filler
 
+@n2d2.utils.inherit_init_docstring()
 class He(Filler):
     """
     Fill with an normal distribution with normalized variance taking into account the rectifier nonlinearity :cite:`He2015`. This filler is sometimes referred as MSRA filler or Kaiming initialization.
@@ -68,8 +74,6 @@ class He(Filler):
 
     def __init__(self, **config_parameters):
         """
-        :param datatype: datatype, default='float'
-        :type datatype: str, optional
         :param variance_norm: Normalization, can be ``FanIn``, ``Average`` or ``FanOut``, default='FanIn'
         :type variance_norm: str, optional
         :param scaling: Scaling factor, default=1.0
@@ -102,7 +106,7 @@ class He(Filler):
         self._optional_constructor_arguments['mean_norm'] = N2D2_object.getMeanNorm()
         self._optional_constructor_arguments['scaling'] = N2D2_object.getScaling()
 
-
+@n2d2.utils.inherit_init_docstring()
 class Normal(Filler):
     """
     Fill with a normal distribution.
@@ -121,8 +125,6 @@ class Normal(Filler):
 
     def __init__(self, **config_parameters):
         """
-        :param datatype: datatype, default='float'
-        :type datatype: str, optional
         :param mean: Mean value of the distribution, default=0.0
         :type mean: float, optional
         :param std_dev: Standard deviation of the distribution, default=1.0
@@ -144,7 +146,7 @@ class Normal(Filler):
         self._optional_constructor_arguments['mean'] = N2D2_object.getMean()
         self._optional_constructor_arguments['std_dev'] = N2D2_object.getStdDev()
 
-
+@n2d2.utils.inherit_init_docstring()
 class Xavier(Filler):
     """
     Fill with an uniform distribution with normalized variance :cite:`Glorot2010`.
@@ -164,8 +166,6 @@ class Xavier(Filler):
 
     def __init__(self,  **config_parameters):
         """
-        :param datatype: datatype, default='float'
-        :type datatype: str, optional
         :param variance_norm: Normalization, can be ``FanIn``, ``Average`` or ``FanOut``, default='FanIn'
         :type variance_norm: str, optional
         :param distribution: Distribution, can be ``Uniform`` or ``Normal``, default='Uniform'
@@ -201,7 +201,7 @@ class Xavier(Filler):
         self._optional_constructor_arguments['distribution'] = N2D2_object.getDistribution()
         self._optional_constructor_arguments['scaling'] = N2D2_object.getScaling()
 
-
+@n2d2.utils.inherit_init_docstring()
 class Constant(Filler):
     """
     Fill with a constant value.
@@ -219,8 +219,6 @@ class Constant(Filler):
 
     def __init__(self, **config_parameters):
         """
-        :param datatype: datatype, default='float'
-        :type datatype: str, optional
         :param value: Value for the filling, default=0.0
         :type value: float, optional
         """

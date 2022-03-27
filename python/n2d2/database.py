@@ -55,6 +55,10 @@ class Database(N2D2_Interface):
     _convention_converter = n2d2.ConventionConverter(_parameters)
     # This constructor is not called by children, because not abstract class
     def __init__(self, **config_parameters):
+        """
+        :param load_data_in_memory: if `True` cache data in memory, default=False
+        :type load_data_in_memory: boolean, optional
+        """
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['load_data_in_memory'])
@@ -120,7 +124,7 @@ class Database(N2D2_Interface):
         return self._type + N2D2_Interface.__str__(self)
 
 
-
+@n2d2.utils.inherit_init_docstring()
 class DIR(Database):
     """
     Allow you to load your own database.
@@ -226,6 +230,7 @@ class DIR(Database):
     def load(self, data_path, depth=0, label_path="", label_depth=0):
         self._N2D2_object.loadDir(data_path, depth, label_path, label_depth)
 
+@n2d2.utils.inherit_init_docstring()
 class MNIST(Database):
     """
     MNIST database :cite:`LeCun1998`.
@@ -267,7 +272,7 @@ class MNIST(Database):
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
-
+@n2d2.utils.inherit_init_docstring()
 class CIFAR100(Database):
     """
     CIFAR100 database :cite:`Krizhevsky2009`.
@@ -299,6 +304,7 @@ class CIFAR100(Database):
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
+@n2d2.utils.inherit_init_docstring()
 class ILSVRC2012(Database):
     """
     ILSVRC2012 database :cite:`ILSVRC15`.
@@ -332,7 +338,7 @@ class ILSVRC2012(Database):
         self.load_N2D2_parameters(self.N2D2())
 
 
-
+@n2d2.utils.inherit_init_docstring()
 class Cityscapes(Database):
     """
     Cityscapes database :cite:`Cordts2016Cityscapes`.
@@ -372,6 +378,7 @@ class Cityscapes(Database):
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
+@n2d2.utils.inherit_init_docstring()
 class GTSRB(Database):
     """
     The German Traffic Sign Benchmark (https://benchmark.ini.rub.de/) is a multi-class, single-image classification challenge held at the International Joint Conference on Neural Networks (IJCNN) 2011.

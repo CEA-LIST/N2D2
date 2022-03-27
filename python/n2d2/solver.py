@@ -30,7 +30,12 @@ clamping_values = ["min:max", ":max", "min:", ""]
 class Solver(N2D2_Interface, ABC):
     @abstractmethod
     def __init__(self, **config_parameters):
-
+        """
+        :param model: Can be either ``Frame`` or ``Frame_CUDA``, default=n2d2.global_variables.default_model
+        :type model: str, optional
+        :param datatype: Datatype used by the solver, can only be ``float`` at the moment, default=n2d2.global_variables.default_datatype
+        :type datatype: str, optional
+        """
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')
         else:
@@ -62,7 +67,7 @@ class Solver(N2D2_Interface, ABC):
         output += N2D2_Interface.__str__(self)
         return output
 
-
+@n2d2.utils.inherit_init_docstring()
 class SGD(Solver):
 
     _solver_generators = {
@@ -95,10 +100,6 @@ class SGD(Solver):
     _convention_converter= n2d2.ConventionConverter(_parameters)
     def __init__(self, **config_parameters):
         """
-        :param datatype: Datatype of the weights, default=float
-        :type datatype: str, optional
-        :param model: Can be either ``Frame`` or ``Frame_CUDA``, default='Frame'
-        :type model: str, optional 
         :param learning_rate: Learning rate, default=0.01
         :type learning_rate: float, optional
         :param momentum: Momentum, default=0.0
@@ -115,7 +116,6 @@ class SGD(Solver):
         :type learning_rate_decay: float, optional
         :param clamping: Weights clamping, format: ``min:max``, or ``:max``, or ``min:``, or empty, default=""
         :type clamping: str, optional
-
         """
         Solver.__init__(self, **config_parameters)
         if "learning_rate_policy" in config_parameters:
@@ -130,7 +130,7 @@ class SGD(Solver):
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
-
+@n2d2.utils.inherit_init_docstring()
 class Adam(Solver):
 
     _solver_generators = {
@@ -152,10 +152,6 @@ class Adam(Solver):
     _convention_converter= n2d2.ConventionConverter(_parameters)
     def __init__(self, **config_parameters):
         """
-        :param datatype: Datatype of the weights, default=float
-        :type datatype: str, optional
-        :param model: Can be either ``Frame`` or ``Frame_CUDA``, default='Frame'
-        :type model: str, optional 
         :param learning_rate: Learning rate, default=0.01
         :type learning_rate: float, optional
         :param beta1: Exponential decay rate of these moving average of the first moment, default=0.9

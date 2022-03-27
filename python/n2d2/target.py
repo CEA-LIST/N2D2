@@ -46,10 +46,26 @@ class Target(N2D2_Interface, ABC):
 
     _convention_converter = n2d2.ConventionConverter(_target_parameters)
 
-    """Provider is not a parameter in the INI file in the case of Target class,
-    but usually inferred from the deepnet in N2D2. Name and NeuralNetworkCell are parts of the section name"""
+    # Provider is not a parameter in the INI file in the case of Target class,
+    # but usually inferred from the deepnet in N2D2. Name and NeuralNetworkCell are parts of the section name
     @abstractmethod
     def __init__(self, provider, **config_parameters):
+        """
+        :param provider: Provider containing the input and output data.
+        :type provider: :py:class:`n2d2.provider.Provider`
+        :param name: Target name, default= ``Target_id``
+        :type name: str, optional
+        :param target_value: Target value for the target output neuron(s) (for classification), default=1.0
+        :type target_value: float, optional
+        :param default_value: Default value for the non-target output neuron(s) (for classification), default=0.0
+        :type default_value: float, optional
+        :param top_n: The top-N estimated targets per output neuron to save, default=1
+        :type top_n: int, optional
+        :param labels_mapping: Path to the file containing the labels to target mapping, default=`""`
+        :type labels_mapping: str, optional
+        :param create_missing_labels: If ``True``, labels present in the labels mapping file but that are non-existent in the database are created (with 0 associated stimuli), default=False
+        :type create_missing_labels: bool, optional
+        """
 
         if 'name' in config_parameters:
             name = config_parameters.pop('name')
@@ -88,6 +104,7 @@ class Target(N2D2_Interface, ABC):
     def __str__(self):
         return self.get_name()
 
+@n2d2.utils.inherit_init_docstring()
 class Score(Target):
 
     _parameters = {
@@ -101,6 +118,8 @@ class Score(Target):
     _convention_converter = n2d2.ConventionConverter(_parameters)
 
     def __init__(self, provider, **config_parameters):
+        """
+        """
         Target.__init__(self, provider, **config_parameters)
 
     def __call__(self, inputs):

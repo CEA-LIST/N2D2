@@ -69,6 +69,10 @@ class Datatyped(ABC):
     # TODO : use this for solver and filler and not just cell (Maybe move this class elsewhere ?)
     @abstractmethod
     def __init__(self, **config_parameters):
+        """
+        :param datatype: Datatype used by the object, can only be ``float`` at the moment, default=n2d2.global_variables.default_datatype
+        :type datatype: str, optional
+        """
         if "datatype" in config_parameters:
             datatype = config_parameters["datatype"]
             if not isinstance(datatype, str):
@@ -95,6 +99,14 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
     """
     @abstractmethod
     def __init__(self,  **config_parameters):
+        """
+        :param name: Cell name, default = ``CellType_id``
+        :type name: str, optional
+        :param activation: Activation function, default= None
+        :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
+        :param model: Specify the kind of cell to run, can be `Frame` or `Frame_CUDA`, default=n2d2.global_variables.default_model
+        :type model: str, optional
+        """
         if "activation" in config_parameters:
             if not isinstance(config_parameters["activation"], n2d2.activation.ActivationFunction):
                 raise n2d2.error_handler.WrongInputType("activation", str(type(config_parameters["activation"])), [str(n2d2.activation.ActivationFunction)])
@@ -354,7 +366,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             output += ""
         return output
 
-
+@n2d2.utils.inherit_init_docstring()
 class Fc(NeuralNetworkCell, Datatyped, Trainable):
     """Fully connected layer.
     """
@@ -394,10 +406,6 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
         :type nb_outputs: int
         :param nb_input_cells: Number of cell who are an input of this cell, default=1
         :type nb_input_cells: int, optional
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
-        :param activation: Activation function, default= None
-        :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param solver: Set the weights and bias solver, this parameter override parameters ``weights_solver`` and ``bias_solver``, default= :py:class:`n2d2.solver.SGD`
         :type solver: :py:class:`n2d2.solver.Solver`, optional
         :param weights_solver: Solver for weights, default= :py:class:`n2d2.solver.SGD`
@@ -414,8 +422,6 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
         :type mapping: :py:class:`n2d2.Tensor`, optional
         :param no_bias: If ``True``, don’t use bias, default=False
         :type no_bias: bool, optional
-        :param datatype: Datatype used by the cell, can only be ``float`` at the moment, default= n2d2.global_variables.default_datatype
-        :type datatype: str, optional
         """
         NeuralNetworkCell.__init__(self, **config_parameters)
         Datatyped.__init__(self, **config_parameters)
@@ -705,7 +711,7 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
         self.bias_solver = solver.copy()
         self.weights_solver = solver.copy()
 
-
+@n2d2.utils.inherit_init_docstring()
 class Conv(NeuralNetworkCell, Datatyped, Trainable, Mapable):
     """
     Convolutional layer.
@@ -759,8 +765,6 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable, Mapable):
         :type kernel_dims: list
         :param nb_input_cells: Number of cell who are an input of this cell, default=1
         :type nb_input_cells: int, optional
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
         :param sub_sample_dims: Dimension of the subsampling factor of the output feature maps, default= [1, 1]
         :type sub_sample_dims: list, optional
         :param stride_dims: Dimension of the stride of the kernel, default= [1, 1]
@@ -769,8 +773,6 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable, Mapable):
         :type padding_dims: list, optional
         :param dilation_dims: Dimensions of the dilation of the kernels, default= [1, 1]
         :type dilation_dims: list, optional
-        :param activation: Activation function, default= None
-        :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param mapping: Mapping
         :type mapping: :py:class:`n2d2.Tensor`
         :param filler: Set the weights and bias filler, this parameter override parameters ``weights_filler`` and ``bias_filler``, default= :py:class:`n2d2.filler.NormalFiller`
@@ -791,8 +793,6 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable, Mapable):
         :type weights_export_flip: bool, optional
         :param back_propagate: If ``True``, enable backpropagation, default=True
         :type back_propagate: bool, optional
-        :param datatype: Datatype used by the cell, can only be ``float`` at the moment, default= n2d2.global_variables.default_datatype
-        :type datatype: str, optional
         """
         if not isinstance(nb_inputs, int):
             raise n2d2.error_handler.WrongInputType("nb_inputs", str(type(nb_inputs)), ["int"])
@@ -1088,6 +1088,7 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable, Mapable):
             biases.append(n2d2.Tensor.from_N2D2(tensor))
         return biases
 
+@n2d2.utils.inherit_init_docstring()
 class ConvDepthWise(Conv):
     """ConvDepthWise layer.
     """
@@ -1102,7 +1103,7 @@ class ConvDepthWise(Conv):
                 nb_channel, nb_channel)
         Conv.__init__(self, nb_channel, nb_channel, kernel_dims, **config_parameters)
 
-
+@n2d2.utils.inherit_init_docstring()
 class ConvPointWise(Conv):
     """ConvPointWise layer.
     """
@@ -1115,7 +1116,7 @@ class ConvPointWise(Conv):
 
 
 
-
+@n2d2.utils.inherit_init_docstring()
 class Softmax(NeuralNetworkCell, Datatyped):
     """
     Softmax layer.
@@ -1143,14 +1144,10 @@ class Softmax(NeuralNetworkCell, Datatyped):
         r"""
         :param nb_outputs: Number of output channels
         :type nb_outputs: int
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
         :param with_loss: :py:class:`Softmax` followed with a multinomial logistic layer, default=False
         :type with_loss: bool, optional
         :param group_size: :py:class:`Softmax` is applied on groups of outputs. The group size must be a divisor of ``nb_outputs`` parameter, default=0
         :type group_size: int, optional
-        :param datatype: Datatype used by the cell, can only be ``float`` at the moment, default= n2d2.global_variables.default_datatype
-        :type datatype: str, optional
         """
 
         NeuralNetworkCell.__init__(self, **config_parameters)
@@ -1204,7 +1201,7 @@ class Softmax(NeuralNetworkCell, Datatyped):
 
         return self.get_outputs()
 
-
+@n2d2.utils.inherit_init_docstring()
 class Pool(NeuralNetworkCell, Datatyped, Mapable):
     '''
     Pooling layer.
@@ -1235,20 +1232,14 @@ class Pool(NeuralNetworkCell, Datatyped, Mapable):
         """
         :param pool_dims: Pooling area dimensions
         :type pool_dims: list
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
         :param pooling: Type of pooling (``Max`` or ``Average``), default="Max"
         :type pooling: str, optional
         :param stride_dims: Dimension of the stride of the kernel, default= [1, 1]
         :type stride_dims: list, optional
         :param padding_dims: Dimensions of the padding, default= [0, 0]
         :type padding_dims: list, optional
-        :param activation: Activation function, default= None
-        :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param mapping: Mapping
         :type mapping: :py:class:`n2d2.Tensor`, optional
-        :param datatype: Datatype used by the cell, can only be ``float`` at the moment, default= n2d2.global_variables.default_datatype
-        :type datatype: str, optional
         """
         if not isinstance(pool_dims, list):
             raise n2d2.error_handler.WrongInputType("pool_dims", str(type(pool_dims)), ["list"])
@@ -1326,7 +1317,7 @@ class Pool(NeuralNetworkCell, Datatyped, Mapable):
         else:
             return super().__setattr__(key, value)
 
-
+@n2d2.utils.inherit_init_docstring()
 class Pool2d(Pool):
     """'Standard' pooling where all feature maps are pooled independently.
     """
@@ -1355,16 +1346,12 @@ class Pool2d(Pool):
         """
         :param pool_dims: Pooling area dimensions with the format [Height, Width]
         :type pool_dims: list
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
         :param pooling: Type of pooling (``Max`` or ``Average``), default="Max"
         :type pooling: str, optional
         :param stride_dims: Dimension of the stride of the kernel, default= [1, 1]
         :type stride_dims: list, optional
         :param padding_dims: Dimensions of the padding, default= [0, 0]
         :type padding_dims: list, optional
-        :param activation: Activation function, default= None
-        :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
         """
         if 'mapping' in config_parameters:
             raise RuntimeError('Pool2d does not support custom mappings')
@@ -1396,7 +1383,7 @@ class Pool2d(Pool):
 
         return self.get_outputs()
 
-
+@n2d2.utils.inherit_init_docstring()
 class GlobalPool2d(Pool2d):
     """
     Global 2d pooling on full spatial dimension of input. Before the first call, the pooling
@@ -1420,10 +1407,6 @@ class GlobalPool2d(Pool2d):
 
     def __init__(self, **config_parameters):
         """
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
-        :param activation: Activation function, default= None
-        :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
         """
         if 'pool_dims' in config_parameters:
             raise RuntimeError('GlobalPool2d does not support custom pool dims')
@@ -1455,7 +1438,7 @@ class GlobalPool2d(Pool2d):
 
         return self.get_outputs()
 
-
+@n2d2.utils.inherit_init_docstring()
 class Deconv(NeuralNetworkCell, Datatyped, Trainable, Mapable):
     """
     Deconvolution layer.
@@ -1503,16 +1486,12 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable, Mapable):
         :type kernel_dims: list
         :param nb_input_cells: Number of cell who are an input of this cell, default=1
         :type nb_input_cells: int, optional
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
         :param stride_dims: Dimension of the stride of the kernel, default=[1, 1]
         :type stride_dims: list, optional
         :param padding_dims: Dimensions of the padding, default=[0, 0]
         :type padding_dims: list, optional
         :param dilation_dims: Dimensions of the dilation of the kernels, default=[1, 1]
         :type dilation_dims: list, optional
-        :param activation: Activation function, default= None
-        :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
         :param filler: Set the weights and bias filler, this parameter override parameters ``weights_filler`` and ``bias_filler``, default= :py:class:`n2d2.filler.NormalFiller`
         :type filler: :py:class:`n2d2.filler.Filler`, optional
         :param weights_filler: Weights initial values filler, default= :py:class:`n2d2.filler.NormalFiller`
@@ -1533,8 +1512,6 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable, Mapable):
         :type weights_export_flip: bool, optional
         :param mapping: Mapping
         :type mapping: :py:class:`n2d2.Tensor`, optional
-        :param datatype: Datatype used by the cell, can only be ``float`` at the moment, default= n2d2.global_variables.default_datatype
-        :type datatype: str, optional
         """
         if not isinstance(nb_inputs, int):
             raise n2d2.error_handler.WrongInputType("nb_inputs", str(type(nb_inputs)), ["int"])
@@ -1796,6 +1773,7 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable, Mapable):
         """
         return False
 
+@n2d2.utils.inherit_init_docstring()
 class ElemWise(NeuralNetworkCell):
     """Element-wise operation layer.
     """
@@ -1822,8 +1800,6 @@ class ElemWise(NeuralNetworkCell):
 
     def __init__(self, **config_parameters):
         """
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
         :param operation: Type of operation (``Sum``, ``AbsSum``, ``EuclideanSum``, ``Prod``, or ``Max``), default="Sum"
         :type operation: str, optional
         :param mode: (``PerLayer``, ``PerInput``, ``PerChannel``), default="PerLayer"
@@ -1832,8 +1808,6 @@ class ElemWise(NeuralNetworkCell):
         :type weights: list, optional
         :param shifts: Shifts for the ``Sum`` and ``EuclideanSum`` operation, in the same order as the inputs, default=[0.0]
         :type shifts: list, optional
-        :param activation: Activation function, default= :py:class:`n2d2.activation.Linear`
-        :type activation: :py:class:`n2d2.activation.ActivationFunction`, optional
         """
 
         NeuralNetworkCell.__init__(self, **config_parameters)
@@ -1911,6 +1885,7 @@ class ElemWise(NeuralNetworkCell):
 
         return self.get_outputs()
 
+@n2d2.utils.inherit_init_docstring()
 class Dropout(NeuralNetworkCell, Datatyped):
     """Dropout layer :cite:`Srivastava2014`.
     """
@@ -1932,12 +1907,8 @@ class Dropout(NeuralNetworkCell, Datatyped):
 
     def __init__(self, **config_parameters):
         """
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
         :param dropout: The probability with which the value from input would be dropped, default=0.5
         :type dropout: float, optional
-        :param datatype: Datatype used by the cell, can only be ``float`` at the moment, default= n2d2.global_variables.default_datatype
-        :type datatype: str, optional
         """
         NeuralNetworkCell.__init__(self, **config_parameters)
         Datatyped.__init__(self, **config_parameters)
@@ -1972,7 +1943,7 @@ class Dropout(NeuralNetworkCell, Datatyped):
 
 
 
-
+@n2d2.utils.inherit_init_docstring()
 class Padding(NeuralNetworkCell):
     """Padding layer allows to insert asymmetric padding for each layer axes.
     """
@@ -2000,8 +1971,6 @@ class Padding(NeuralNetworkCell):
                  right_pad,
                  **config_parameters):
         """
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
         :param top_pad: Size of the top padding (positive or negative)
         :type top_pad: int
         :param bot_pad: Size of the bottom padding (positive or negative)
@@ -2064,7 +2033,7 @@ class Padding(NeuralNetworkCell):
 
         return self.get_outputs()
 
-
+@n2d2.utils.inherit_init_docstring()
 class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
     """Batch Normalization layer :cite:`Ioffe2015`.
     """
@@ -2093,8 +2062,6 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
         :type nb_inputs: int
         :param nb_input_cells: Number of cell who are an input of this cell, default=1
         :type nb_input_cells: int, optional
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
         :param solver: Set the scale and bias solver, this parameter override parameters ``scale_solver`` and bias_solver``, default= :py:class:`n2d2.solver.SGD`
         :type solver: :py:class:`n2d2.solver.Solver`, optional
         :param scale_solver: Scale solver parameters, default= :py:class:`n2d2.solver.SGD`
@@ -2105,8 +2072,6 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
         :type epsilon: float, optional
         :param moving_average_momentum: Moving average rate: used for the moving average of batch-wise means and standard deviations during training.The closer to ``1.0``, the more it will depend on the last batch.
         :type moving_average_momentum: float, optional
-        :param datatype: Datatype used by the cell, can only be ``float`` at the moment, default= n2d2.global_variables.default_datatype
-        :type datatype: str, optional
         """
         if not isinstance(nb_inputs, int):
             raise n2d2.error_handler.WrongInputType("nb_inputs", str(type(nb_inputs)), ["int"])
@@ -2219,7 +2184,7 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
         # BatchNorm objects don't have a quantizer !
         return False
 
-
+@n2d2.utils.inherit_init_docstring()
 class Activation(NeuralNetworkCell, Datatyped):
     """Activation layer which can apply any activation to a stimuli.
     """
@@ -2239,12 +2204,6 @@ class Activation(NeuralNetworkCell, Datatyped):
 
     def __init__(self, activation, **config_parameters):
         """
-        :param activation: Activation function
-        :type activation: :py:class:`n2d2.activation.ActivationFunction`
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
-        :param datatype: Datatype used by the cell, can only be ``float`` at the moment, default= n2d2.global_variables.default_datatype
-        :type datatype: str, optional
         """
         NeuralNetworkCell.__init__(self, **config_parameters)
         Datatyped.__init__(self, **config_parameters)
@@ -2275,7 +2234,7 @@ class Activation(NeuralNetworkCell, Datatyped):
         return self.get_outputs()
 
 
-
+@n2d2.utils.inherit_init_docstring()
 class Reshape(NeuralNetworkCell, Datatyped):
     """Reshape layer.
     """
@@ -2296,10 +2255,6 @@ class Reshape(NeuralNetworkCell, Datatyped):
         """
         :param dims: dims of the new shape of the layer
         :type dims: list
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
-        :param datatype: Datatype used by the cell, can only be ``float`` at the moment, default= n2d2.global_variables.default_datatype
-        :type datatype: str, optional
         """
         if not isinstance(dims, list):
 
@@ -2339,7 +2294,7 @@ class Reshape(NeuralNetworkCell, Datatyped):
 
         return self.get_outputs()
 
-
+@n2d2.utils.inherit_init_docstring()
 class Resize(NeuralNetworkCell):
     """Resize layer.
     """
@@ -2365,8 +2320,6 @@ class Resize(NeuralNetworkCell):
         :type outputs_height: int
         :param resize_mode: Resize interpolation mode. Can be, ``Bilinear`` or ``BilinearTF`` (TensorFlow implementation)
         :type resize_mode: str
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
         :param align_corners: Corner alignement mode if ``BilinearTF`` is used as interpolation mode, default=True
         :type align_corners: boolean, optional
         """
@@ -2418,7 +2371,7 @@ class Resize(NeuralNetworkCell):
 
         return self.get_outputs()
 
-
+@n2d2.utils.inherit_init_docstring()
 class Transpose(NeuralNetworkCell, Datatyped):
     """Transpose layer.
     """
@@ -2438,10 +2391,6 @@ class Transpose(NeuralNetworkCell, Datatyped):
         """
         :param perm: Permutation
         :type perm: list
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
-        :param datatype: Datatype used by the cell, can only be ``float`` at the moment, default= n2d2.global_variables.default_datatype
-        :type datatype: str, optional
         """
         if not isinstance(perm, list):
             raise n2d2.error_handler.WrongInputType("outputs_width", type(perm), ["list"])
@@ -2482,6 +2431,7 @@ class Transpose(NeuralNetworkCell, Datatyped):
 
         return self.get_outputs()
 
+@n2d2.utils.inherit_init_docstring()
 class Transformation(NeuralNetworkCell):
     _cell_constructors = {
         'Frame': N2D2.TransformationCell_Frame,
@@ -2502,8 +2452,6 @@ class Transformation(NeuralNetworkCell):
         """
         :param transformation: Transformation to apply
         :type transformation: :py:class:`n2d2.transform.Transformation`
-        :param name: Cell name, default=None
-        :type name: str, optional
         """
         if not isinstance(perm, list):
             raise n2d2.error_handler.WrongInputType("outputs_width", type(perm), ["list"])
@@ -2544,6 +2492,7 @@ class Transformation(NeuralNetworkCell):
 
         return self.get_outputs()
 
+@n2d2.utils.inherit_init_docstring()
 class Scaling(NeuralNetworkCell, Datatyped):
     """Scaling layer.
     """
@@ -2563,10 +2512,6 @@ class Scaling(NeuralNetworkCell, Datatyped):
         """
         :param scaling: Scaling object
         :type scaling: :py:class:`n2d2.scaling.Scaling`
-        :param name: Cell name, default = ``CellType_id``
-        :type name: str, optional
-        :param datatype: Datatype used by the cell, can only be ``float`` at the moment, default= n2d2.global_variables.default_datatype
-        :type datatype: str, optional
         """
         if not isinstance(scaling, n2d2.scaling.Scaling):
             raise n2d2.error_handler.WrongInputType("outputs_width", type(scaling), ["list"])

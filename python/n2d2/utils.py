@@ -26,7 +26,7 @@ import urllib.parse
 import tarfile
 import gzip, zipfile
 from collections import UserDict
-
+from inspect import getmro
 
 # At the moment ConfigSection is simply a dictionary
 class ConfigSection(UserDict):
@@ -89,3 +89,28 @@ def model_logger(model, path, log_dict=None):
         for key, value in log_dict.items():
             file.write(key + str(value))
         file.close()
+
+def _get_param_docstring(docstring):
+    header = True
+    param_docstring = ""
+    for line in docstring.split("\n"):
+        if header and ":param" in line:
+            header=False
+        if not header:
+            param_docstring+=line + "\n"
+    return param_docstring
+
+def inherit_init_docstring():
+    """Decorator to inherit the docstring of __init__.
+    """
+    def dec(obj):
+        parents_docstring = "\n"
+        for parent in getmro(obj):
+            if "__init__" in dir(parent) \
+                    and parent.__init__.__doc__ \
+                    and parent is not obj:
+                parents_docstring += _get_param_docstring(parent.__init__.__doc__)
+        docstring = obj.__init__.__doc__ if obj.__init__.__doc__ else ""
+        obj.__init__.__doc__ = docstring + parents_docstring  
+        return obj
+    return dec
