@@ -49,9 +49,10 @@ class Database(N2D2_Interface):
     """
 
     _type = ""
-    _convention_converter = n2d2.ConventionConverter({
+    _parameters={
         "load_data_in_memory": "loadDataInMemory",
-    })
+    }
+    _convention_converter = n2d2.ConventionConverter(_parameters)
     # This constructor is not called by children, because not abstract class
     def __init__(self, **config_parameters):
         N2D2_Interface.__init__(self, **config_parameters)

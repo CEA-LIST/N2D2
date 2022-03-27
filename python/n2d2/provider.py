@@ -26,14 +26,15 @@ from abc import ABC, abstractmethod
 
 
 class Provider(N2D2_Interface,ABC):
-    _convention_converter= n2d2.ConventionConverter({
-            "name": "Name",
-            "batch_size": "batchSize",
-            "composite_stimuli": "compositeStimuli",
-            "database": "Database",
-            "size": "Size",
-            "random_read": "RandomRead",
-    })
+    _parameters={
+        "name": "Name",
+        "batch_size": "batchSize",
+        "composite_stimuli": "compositeStimuli",
+        "database": "Database",
+        "size": "Size",
+        "random_read": "RandomRead",
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
     @abstractmethod
     def __init__(self, **config_parameters):
         
@@ -356,20 +357,21 @@ class TensorPlaceholder(Provider):
     def __str__(self):
         return "'" + self.get_name() + "' TensorPlaceholder"
 
-class MultipleOutputsProvider(Provider):
-    """
-    Provider used to give multiple tensors to the network.
-    """
-    def __init__(self, size, batch_size=1):
-        """
-        :param size: List of ``X``, ``Y`` and ``Z`` dimensions
-        :type size: list
-        :param batch_size: Batch size, default=1
-        :type batch_size: int, optional
-        """
-        self._N2D2_object = N2D2.StimuliProvider(database=N2D2.Database(),
-                                                 size=size,
-                                                 batchSize=batch_size)
-        self._deepnet = n2d2.deepnet.DeepNet()
-        self._deepnet.set_provider(self)
-        self._name = n2d2.generate_name(self)
+# TODO : UNUSED ? remove later
+# class MultipleOutputsProvider(Provider):
+#     """
+#     Provider used to give multiple tensors to the network.
+#     """
+#     def __init__(self, size, batch_size=1):
+#         """
+#         :param size: List of ``X``, ``Y`` and ``Z`` dimensions
+#         :type size: list
+#         :param batch_size: Batch size, default=1
+#         :type batch_size: int, optional
+#         """
+#         self._N2D2_object = N2D2.StimuliProvider(database=N2D2.Database(),
+#                                                  size=size,
+#                                                  batchSize=batch_size)
+#         self._deepnet = n2d2.deepnet.DeepNet()
+#         self._deepnet.set_provider(self)
+#         self._name = n2d2.generate_name(self)

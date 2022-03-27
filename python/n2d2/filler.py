@@ -58,13 +58,13 @@ class He(Filler):
     _filler_generators = {
         '<float>': N2D2.HeFiller_float,
     }
-
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters = {
         "variance_norm": "varianceNorm",
         "mean_norm": "meanNorm",
         "scaling": "scaling",
         "datatype": "Datatype",
-    })
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, **config_parameters):
         """
@@ -112,11 +112,12 @@ class Normal(Filler):
     _filler_generators = {
         '<float>': N2D2.NormalFiller_float,
     }
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters={
         "mean": "mean",
         "std_dev": "stdDev",
         "datatype": "Datatype",
-    })
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, **config_parameters):
         """
@@ -153,13 +154,13 @@ class Xavier(Filler):
     _filler_generators = {
         '<float>': N2D2.XavierFiller_float,
     }
-
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters={
         "variance_norm": "varianceNorm",
         "distribution": "distribution",
         "scaling": "scaling",
         "datatype": "Datatype",
-    })
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self,  **config_parameters):
         """
@@ -210,10 +211,11 @@ class Constant(Filler):
     _filler_generators = {
         '<float>': N2D2.ConstantFiller_float,        
     }
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters={
         "value": "value",
         "datatype": "Datatype",
-    })
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, **config_parameters):
         """

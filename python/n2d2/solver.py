@@ -72,7 +72,7 @@ class SGD(Solver):
         _solver_generators.update({
             'Frame_CUDA<float>': N2D2.SGDSolver_Frame_CUDA_float,
         })
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters={
         "learning_rate": "LearningRate",
         "momentum": "Momentum",
         "decay": "Decay",
@@ -91,7 +91,8 @@ class SGD(Solver):
         "nb_iteration": "NbIteration",
         "datatype": "Datatype",# Pure n2d2
         "model": "Model",# Pure n2d2   
-    })
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
     def __init__(self, **config_parameters):
         """
         :param datatype: Datatype of the weights, default=float
@@ -139,8 +140,7 @@ class Adam(Solver):
         _solver_generators.update({
             'Frame_CUDA<float>': N2D2.AdamSolver_Frame_CUDA_float,
         })
-
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters={
         "learning_rate": "LearningRate",
         "beta1": "Beta1",
         "beta2": "Beta2",
@@ -148,7 +148,8 @@ class Adam(Solver):
         "clamping": "Clamping",
         "datatype": "Datatype",# Pure n2d2
         "model": "Model",# Pure n2d2
-    })
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
     def __init__(self, **config_parameters):
         """
         :param datatype: Datatype of the weights, default=float

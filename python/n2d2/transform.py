@@ -63,7 +63,8 @@ class Composite(Transformation):
     """
 
     _Type = "Composite"
-
+    _parameters={}
+    _convention_converter= n2d2.ConventionConverter(_parameters)
     def __init__(self, transformations, **config_parameters):
         """
         :param transformations: List of the transformations to use.
@@ -91,8 +92,8 @@ class Composite(Transformation):
         return self._transformations
 
     def append(self, transformation):
-        if not isinstance(transformation, transformation):
-            raise n2d2.error_handler.WrongInputType("transformations", type(transformations), [str(type(list))])
+        if not isinstance(transformation, Transformation):
+            raise n2d2.error_handler.WrongInputType("transformation", type(transformation), ["n2d2.transform.Transformation"])
         self._transformations.append(transformation)
 
     def __str__(self):
@@ -111,15 +112,14 @@ class PadCrop(Transformation):
     """
 
     _Type = "PadCrop"
-
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters={
         "width": "Width",
         "height": "Height",
         "additive_wh": "AdditiveWH",
         "border_type": "BorderType",
         "border_value": "BorderValue",
-
-    })
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     # INI file parameters have same upper case name convention
     def __init__(self, width, height, **config_parameters):
@@ -168,16 +168,15 @@ class Distortion(Transformation):
     """
 
     _Type = "Distortion"
-
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters={
         "elastic_gaussian_size": "ElasticGaussianSize",
         "elastic_sigma": "ElasticSigma",
         "elastic_scaling": "ElasticScaling",
         "scaling": "Scaling",
         "rotation": "Rotation",
         "ignore_missing_data": "IgnoreMissingData",
-
-    })
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, **config_parameters):
         """
@@ -211,12 +210,13 @@ class Rescale(Transformation):
     Rescale the image to a specified size.
     """
     _Type = "Rescale"
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters={
         "width": "Width",
         "height": "Height",
         "keep_aspect_ratio": "KeepAspectRatio",
         "resize_to_fit": "ResizeToFit",
-    })
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self,  width, height, **config_parameters):
         """
@@ -252,9 +252,10 @@ class Rescale(Transformation):
 class ColorSpace(Transformation):
 
     _Type = "ColorSpace"
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters={
         "color_space": "ColorSpace",
-    })
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, color_space, **config_parameters):
         """
@@ -310,13 +311,14 @@ class RangeAffine(Transformation):
     """
 
     _Type = "RangeAffine"
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters={
         "first_operator": "FirstOperator",
         "first_value": "FirstValue",
         "second_operator": "secondOperator",
         "second_value": "secondValue",
         "truncate": "Truncate"
-    })
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, first_operator, first_value, **config_parameters):
         """
@@ -368,7 +370,7 @@ class SliceExtraction(Transformation):
     Extract a slice from an image.
     """
     _Type = "SliceExtraction"
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters={
         "width": "width",
         "height": "height",
         "offset_x": "OffsetX",
@@ -382,7 +384,8 @@ class SliceExtraction(Transformation):
         "allow_padding": "AllowPadding",
         "border_type": "BorderType",
         "border_value": "BorderValue",
-    })
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, width, height, **config_parameters):
         """Possible values for border_type parameter
@@ -451,12 +454,13 @@ class Flip(Transformation):
     """
 
     _Type = "Flip"
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters={
         "horizontal_flip": "horizontalFlip",
         "vertical_flip": "verticalFlip",
         "random_horizontal_flip": "RandomHorizontalFlip",
         "random_vertical_flip": "RandomVerticalFlip",
-    })
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     def __init__(self, **config_parameters):
         """
@@ -485,15 +489,15 @@ class Flip(Transformation):
 class RandomResizeCrop(Transformation):
 
     _Type = "RandomResizeCrop"
-
-    _convention_converter= n2d2.ConventionConverter({
+    _parameters={
         "width": "Width",
         "height": "Height",
         "scale_min": "ScaleMin",
         "scale_max": "ScaleMax",
         "ratio_min": "RatioMin",
         "ratio_max": "RatioMax",
-    })
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
     # INI file parameters have same upper case name convention
     def __init__(self, width, height, **config_parameters):
@@ -530,11 +534,11 @@ class ChannelExtraction(Transformation):
     Extract an image channel.
     """
     _Type = "ChannelExtraction"
+    _parameters={
+        "channel": "Channel",   
+    }
+    _convention_converter= n2d2.ConventionConverter(_parameters)
 
-    _convention_converter= n2d2.ConventionConverter({
-        "channel": "Channel",
-        
-    })
     def __init__(self, channel, **config_parameters):
         """
         The ``channel`` parameter can take the following values :
