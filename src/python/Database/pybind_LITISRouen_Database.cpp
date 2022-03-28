@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Database/LITISRouen_Database.hpp"
 
 #include <pybind11/pybind11.h>
@@ -33,4 +32,3 @@ void init_LITISRouen_Database(py::module &m) {
         .def(py::init<double, double>(), py::arg("learn") = 0.4, py::arg("validation") = 4.0);
 }
 }
-#endif

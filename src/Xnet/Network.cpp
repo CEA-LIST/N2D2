@@ -110,9 +110,9 @@ N2D2::Network::Network(unsigned int seed, bool saveSeed, bool printTimeElapsed)
         sigaction(SIGSEGV, &action, NULL);
     }
 
-  #if !defined(PYBIND)
-    feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW /*| FE_UNDERFLOW*/);
-  #endif
+//   #if !defined(PYBIND)
+//     feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW /*| FE_UNDERFLOW*/);
+//   #endif
 #endif
 
 #if defined(_GLIBCXX_PARALLEL)

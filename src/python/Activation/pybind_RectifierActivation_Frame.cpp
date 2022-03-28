@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Activation/RectifierActivation_Frame.hpp"
 
 
@@ -43,4 +42,3 @@ void init_RectifierActivation_Frame(py::module &m) {
 }
 
 }
-#endif

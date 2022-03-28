@@ -21,7 +21,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/ProposalCell_Frame_CUDA.hpp"
 
 #include <pybind11/pybind11.h>
@@ -61,7 +60,6 @@ void init_ProposalCell_Frame_CUDA(py::module &m) {
     );
 }
 }
-#endif
 
 #endif
 

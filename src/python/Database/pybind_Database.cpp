@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Database/Database.hpp"
 
 #include <pybind11/pybind11.h>
@@ -146,4 +145,3 @@ void init_Database(py::module &m) {
 
 }
 }
-#endif

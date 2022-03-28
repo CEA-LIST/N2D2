@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/ObjectDetCell.hpp"
 
 
@@ -32,4 +31,3 @@ void init_ObjectDetCell(py::module &m) {
     py::class_<ObjectDetCell, std::shared_ptr<ObjectDetCell>, Cell> (m, "ObjectDetCell", py::multiple_inheritance());
 }
 }
-#endif

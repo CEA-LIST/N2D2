@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "utils/IniParser.hpp"
 
 
@@ -43,4 +42,3 @@ void init_IniParser(py::module &m) {
     ;
 }
 }
-#endif

@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Generator/MappingGenerator.hpp"
 #include <pybind11/pybind11.h>
 #include "Cell/Cell.hpp"
@@ -46,4 +45,3 @@ void init_MappingGenerator(py::module &m) {
 }
 }
 
-#endif

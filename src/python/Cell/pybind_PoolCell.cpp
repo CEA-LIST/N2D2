@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/PoolCell.hpp"
 
 
@@ -47,4 +46,3 @@ void init_PoolCell(py::module &m) {
 
 }
 }
-#endif

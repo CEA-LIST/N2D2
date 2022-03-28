@@ -21,7 +21,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/ThresholdCell_Frame_CUDA.hpp"
 
 #include <pybind11/pybind11.h>
@@ -44,7 +43,6 @@ void init_ThresholdCell_Frame_CUDA(py::module &m) {
     );
 }
 }
-#endif
 
 #endif
 

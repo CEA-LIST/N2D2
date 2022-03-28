@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Transformation/ChannelExtractionTransformation.hpp"
 
 
@@ -50,4 +49,3 @@ void init_ChannelExtractionTransformation(py::module &m) {
 
 }
 }
-#endif

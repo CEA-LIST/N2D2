@@ -22,7 +22,6 @@
 
 
 
-#ifdef PYBIND
 #include "Filler/Filler.hpp"
 
 
@@ -36,7 +35,6 @@ void init_Filler(py::module &m) {
     .def("getType", &Filler::getType);
 }
 }
-#endif
 
 
 

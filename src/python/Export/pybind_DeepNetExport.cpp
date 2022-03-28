@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "DeepNet.hpp"
 #include "Export/DeepNetExport.hpp"
 
@@ -35,4 +34,3 @@ namespace N2D2 {
     }
 }
 
-#endif

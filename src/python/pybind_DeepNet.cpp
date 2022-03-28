@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Xnet/Monitor.hpp"
 #include "CMonitor.hpp"
 #include "StimuliProvider.hpp"
@@ -109,4 +108,3 @@ void init_DeepNet(py::module &m) {
     ;
 }
 }
-#endif

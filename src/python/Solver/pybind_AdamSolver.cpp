@@ -21,7 +21,6 @@
 */
 
 
-#ifdef PYBIND
 #include "Solver/AdamSolver.hpp"
 
 
@@ -40,4 +39,3 @@ void init_AdamSolver(py::module &m) {
 
 }
 }
-#endif

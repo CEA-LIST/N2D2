@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/ResizeCell_Frame.hpp"
 
 #include <pybind11/pybind11.h>
@@ -46,4 +45,3 @@ void init_ResizeCell_Frame(py::module &m) {
     );
 }
 }
-#endif

@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/UnpoolCell_Frame.hpp"
 
 #include <pybind11/pybind11.h>
@@ -51,4 +50,3 @@ void init_UnpoolCell_Frame(py::module &m) {
     );
 }
 }
-#endif

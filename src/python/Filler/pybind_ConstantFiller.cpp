@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Filler/ConstantFiller.hpp"
 
 
@@ -51,5 +50,4 @@ void init_ConstantFiller(py::module &m) {
 }
 
 
-#endif
 

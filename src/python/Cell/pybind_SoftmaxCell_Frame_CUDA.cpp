@@ -22,7 +22,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/SoftmaxCell_Frame_CUDA.hpp"
 
 #include <pybind11/pybind11.h>
@@ -52,6 +51,5 @@ void init_SoftmaxCell_Frame_CUDA(py::module &m) {
     declare_SoftmaxCell_Frame_CUDA<double>(m, "double");
 }
 }
-#endif
 
 #endif

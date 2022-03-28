@@ -20,7 +20,6 @@
 */
 
 
-#ifdef PYBIND
 #include "Cell/PaddingCell_Frame.hpp"
 
 #include <pybind11/pybind11.h>
@@ -49,5 +48,4 @@ void init_PaddingCell_Frame(py::module &m) {
 }
 
 }
-#endif
 

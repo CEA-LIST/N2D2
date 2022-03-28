@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Transformation/RangeClippingTransformation.hpp"
 
 
@@ -34,4 +33,3 @@ void init_RangeClippingTransformation(py::module &m) {
     .def(py::init<const RangeClippingTransformation&>(), py::arg("trans"));
 }
 }
-#endif

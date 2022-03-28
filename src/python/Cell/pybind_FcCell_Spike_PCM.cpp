@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/FcCell_Spike_PCM.hpp"
 
 
@@ -42,4 +41,3 @@ void init_FcCell_Spike_PCM(py::module &m) {
     ;
 }
 }
-#endif

@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "utils/Parameterizable.hpp"
 
 
@@ -55,4 +54,3 @@ void init_Parameterizable(py::module &m) {
     
 }
 }
-#endif

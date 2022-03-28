@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Transformation/RangeAffineTransformation.hpp"
 
 
@@ -51,4 +50,3 @@ void init_RangeAffineTransformation(py::module &m) {
     ;
 }
 }
-#endif

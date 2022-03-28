@@ -21,7 +21,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/RPCell_Frame_CUDA.hpp"
 
 #include <pybind11/pybind11.h>
@@ -47,7 +46,6 @@ void init_RPCell_Frame_CUDA(py::module &m) {
     );
 }
 }
-#endif
 
 #endif
 

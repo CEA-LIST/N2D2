@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/NormalizeCell_Frame.hpp"
 #include "DeepNet.hpp"
 #include <pybind11/pybind11.h>
@@ -43,4 +42,3 @@ void init_NormalizeCell_Frame(py::module &m) {
 
 }
 }
-#endif

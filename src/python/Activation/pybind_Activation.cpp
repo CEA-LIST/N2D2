@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Activation/Activation.hpp"
 
 
@@ -36,4 +35,3 @@ void init_Activation(py::module &m) {
     a.def("getQuantizer", &Activation::getQuantizer);
 }
 }
-#endif

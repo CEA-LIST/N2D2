@@ -21,7 +21,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/ActivationCell.hpp"
 
 #include <pybind11/pybind11.h>
@@ -34,5 +33,4 @@ void init_ActivationCell(py::module &m) {
     .def("getType", &ActivationCell::getType);
 }
 }
-#endif
 

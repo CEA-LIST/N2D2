@@ -22,7 +22,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/ActivationCell_Frame_CUDA.hpp"
 
 #include <pybind11/pybind11.h>
@@ -45,6 +44,5 @@ void init_ActivationCell_Frame_CUDA(py::module &m) {
     declare_ActivationCell_Frame_CUDA<double>(m, "double");
 }
 }
-#endif
 
 #endif

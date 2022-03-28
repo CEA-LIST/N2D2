@@ -20,7 +20,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "containers/CudaTensor.hpp"
 
 #include <pybind11/pybind11.h>
@@ -184,6 +183,5 @@ void init_CudaTensor(py::module &m) {
     // declare_CudaTensor<unsigned long long>(m, "unsigned_long_long");
 }
 }
-#endif
 
 #endif

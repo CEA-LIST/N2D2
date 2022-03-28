@@ -19,7 +19,6 @@
 */
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/TargetBiasCell_Frame_CUDA.hpp"
 #include "DeepNet.hpp"
 
@@ -42,5 +41,4 @@ void init_TargetBiasCell_Frame_CUDA(py::module &m) {
     declare_TargetBiasCell_Frame_CUDA<double>(m, "double");
 }
 }
-#endif
 #endif

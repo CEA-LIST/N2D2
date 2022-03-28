@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Transformation/DistortionTransformation.hpp"
 #include "Transformation/Transformation.hpp"
 #include "Transformation/PadCropTransformation.hpp"
@@ -113,4 +112,3 @@ void init_CompositeTransformation(py::module &m) {
 
 }
 }
-#endif

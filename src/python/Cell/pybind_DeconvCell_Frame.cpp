@@ -18,7 +18,6 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-#ifdef PYBIND
 #include "Cell/DeconvCell_Frame.hpp"
 #include "Activation/TanhActivation_Frame.hpp"
 
@@ -60,4 +59,3 @@ void init_DeconvCell_Frame(py::module &m) {
     declare_DeconvCell_Frame<double>(m, "double");
 }
 }
-#endif

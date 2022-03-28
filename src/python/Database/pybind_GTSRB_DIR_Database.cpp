@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Database/GTSRB_DIR_Database.hpp"
 
 #include <pybind11/pybind11.h>
@@ -34,4 +33,3 @@ void init_GTSRB_DIR_Database(py::module &m) {
     .def("getValidation", &GTSRB_DIR_Database::getValidation);
 }
 }
-#endif

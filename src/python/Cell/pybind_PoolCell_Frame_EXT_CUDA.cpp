@@ -21,7 +21,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/PoolCell_Frame_EXT_CUDA.hpp"
 
 #include <pybind11/pybind11.h>
@@ -59,7 +58,6 @@ void init_PoolCell_Frame_EXT_CUDA(py::module &m) {
     declare_PoolCell_Frame_EXT_CUDA<double>(m, "double"); 
 }
 }
-#endif
 
 #endif
 

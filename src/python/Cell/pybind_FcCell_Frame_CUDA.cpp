@@ -20,7 +20,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/FcCell_Frame_CUDA.hpp"
 
 #include <pybind11/pybind11.h>
@@ -48,6 +47,5 @@ void init_FcCell_Frame_CUDA(py::module &m) {
     declare_FcCell_Frame_CUDA<double>(m, "double");
 }
 }
-#endif
 
 #endif

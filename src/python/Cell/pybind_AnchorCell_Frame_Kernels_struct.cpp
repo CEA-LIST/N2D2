@@ -20,7 +20,6 @@
 */
 
 
-#ifdef PYBIND
 #include "Cell/AnchorCell_Frame_Kernels_struct.hpp"
 
 
@@ -64,7 +63,6 @@ void init_AnchorCell_Frame_Kernels_struct(py::module &m) {
 }    
 
 }
-#endif
  
  
  

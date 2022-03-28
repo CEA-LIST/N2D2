@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Scaling.hpp"
 
 
@@ -42,4 +41,3 @@ void init_ScalingMode(py::module &m) {
     .value("RINTF", WeightsApprox::RINTF);
 }
 }
-#endif

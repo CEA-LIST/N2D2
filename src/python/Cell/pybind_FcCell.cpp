@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/FcCell.hpp"
 
 #include "Solver/Solver.hpp"
@@ -59,5 +58,4 @@ void init_FcCell(py::module &m) {
 
 }
 }
-#endif
  

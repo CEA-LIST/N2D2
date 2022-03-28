@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "StimuliProvider.hpp"
 
 #include <pybind11/pybind11.h>
@@ -84,4 +83,3 @@ void init_StimuliProvider(py::module &m) {
 
 }
 }
-#endif

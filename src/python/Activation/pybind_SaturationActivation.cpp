@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Activation/SaturationActivation.hpp"
 
 
@@ -33,4 +32,3 @@ void init_SaturationActivation(py::module &m) {
 
 }
 }
-#endif

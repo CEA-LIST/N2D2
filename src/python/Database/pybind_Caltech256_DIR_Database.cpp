@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Database/Caltech256_DIR_Database.hpp"
 
 #include <pybind11/pybind11.h>
@@ -33,4 +32,3 @@ void init_Caltech256_DIR_Database(py::module &m) {
         .def(py::init<double, double, bool>(), py::arg("learn"), py::arg("validation") = 0.0, py::arg("incClutter") = false);
 }
 }
-#endif

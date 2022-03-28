@@ -21,7 +21,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/DropoutCell_Frame_CUDA.hpp"
 #include "Activation/TanhActivation_Frame_CUDA.hpp"
 
@@ -50,6 +49,5 @@ void init_DropoutCell_Frame_CUDA(py::module &m) {
     declare_DropoutCell_Frame_CUDA<double>(m, "double");
 }
 }
-#endif
 
 #endif

@@ -22,7 +22,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Solver/AdamSolver_Frame_CUDA.hpp"
 
 
@@ -52,6 +51,5 @@ void init_AdamSolver_Frame_CUDA(py::module &m) {
 }
 }
 
-#endif
 
 #endif

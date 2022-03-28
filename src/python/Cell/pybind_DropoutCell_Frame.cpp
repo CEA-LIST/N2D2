@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/DropoutCell_Frame.hpp"
 #include "Activation/TanhActivation_Frame.hpp"
 
@@ -47,4 +46,3 @@ void init_DropoutCell_Frame(py::module &m) {
     declare_DropoutCell_Frame<double>(m, "double");
 }
 }
-#endif

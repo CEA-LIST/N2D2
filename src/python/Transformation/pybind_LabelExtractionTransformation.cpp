@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Transformation/LabelExtractionTransformation.hpp"
 
 
@@ -33,4 +32,3 @@ void init_LabelExtractionTransformation(py::module &m) {
     .def(py::init<const std::string&, const std::string&, int, std::string>(), py::arg("widths"), py::arg("heights"), py::arg("label") = -1, py::arg("distributions") = "Auto");
 }
 }
-#endif

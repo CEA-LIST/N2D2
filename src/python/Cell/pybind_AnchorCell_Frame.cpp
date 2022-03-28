@@ -20,7 +20,6 @@
 */
 
 
-#ifdef PYBIND
 #include "Cell/AnchorCell_Frame.hpp"
 #include "Cell/AnchorCell_Frame_Kernels_struct.hpp"
 #include "StimuliProvider.hpp"
@@ -53,5 +52,4 @@ void init_AnchorCell_Frame(py::module &m) {
     ; 
 }
 }
-#endif
 

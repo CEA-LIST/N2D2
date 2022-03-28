@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/TransposeCell_Frame.hpp"
 
 #include <pybind11/pybind11.h>
@@ -50,5 +49,4 @@ void init_TransposeCell_Frame(py::module &m) {
     declare_TransposeCell_Frame<double>(m, "double");
 }
 }
-#endif
 

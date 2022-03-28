@@ -20,7 +20,6 @@
 */
 
 
-#ifdef PYBIND
 #include "Cell/FcCell_Spike.hpp"
 
 
@@ -35,5 +34,4 @@ void init_FcCell_Spike(py::module &m) {
 
 }
 }
-#endif
 

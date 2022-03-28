@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/ResizeCell.hpp"
 
 
@@ -42,4 +41,3 @@ void init_ResizeCell(py::module &m) {
     .export_values();
 }
 }
-#endif

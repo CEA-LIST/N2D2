@@ -21,7 +21,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Database/CIFAR_Database.hpp"
 
 #include <pybind11/pybind11.h>
@@ -42,4 +41,3 @@ void init_CIFAR_Database(py::module &m) {
     ;
 }
 }
-#endif

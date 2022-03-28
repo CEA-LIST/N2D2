@@ -18,7 +18,6 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-#ifdef PYBIND
 #include "Cell/ROIPoolingCell_Frame.hpp"
 #include "StimuliProvider.hpp"
 
@@ -47,4 +46,3 @@ void init_ROIPoolingCell_Frame(py::module &m) {
     );
 }
 }
-#endif

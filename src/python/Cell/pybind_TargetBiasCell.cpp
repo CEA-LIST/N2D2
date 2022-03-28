@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/TargetBiasCell.hpp"
 
 
@@ -34,5 +33,4 @@ void init_TargetBiasCell(py::module &m) {
 
 }
 }
-#endif
 

@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Xnet/Network.hpp"
 
 #include <pybind11/pybind11.h>
@@ -46,4 +45,3 @@ void init_Network(py::module &m) {
     py::class_<NetworkObserver>(m, "NetworkObserver");}
 }
 
-#endif

@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Transformation/Transformation.hpp"
 #include <pybind11/pybind11.h>
 
@@ -31,4 +30,3 @@ void init_Transformation(py::module &m) {
 
 }
 }
-#endif

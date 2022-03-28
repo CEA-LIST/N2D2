@@ -18,7 +18,6 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-#ifdef PYBIND
 #include "Cell/TransformationCell_Frame.hpp"
 
 #include <pybind11/pybind11.h>
@@ -41,5 +40,4 @@ void init_TransformationCell_Frame(py::module &m) {
     );
 }
 }
-#endif
 

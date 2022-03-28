@@ -21,7 +21,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Filler/HeFiller.hpp"
 
 
@@ -63,4 +62,3 @@ void init_HeFiller(py::module &m) {
 }
 }
 
-#endif

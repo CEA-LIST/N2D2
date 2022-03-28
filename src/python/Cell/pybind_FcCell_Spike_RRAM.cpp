@@ -21,7 +21,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/FcCell_Spike_RRAM.hpp"
 
 
@@ -44,6 +43,5 @@ void init_FcCell_Spike_RRAM(py::module &m) {
     ;
 }
 }
-#endif
 
 #endif

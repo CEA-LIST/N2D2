@@ -20,7 +20,6 @@
 */
 
 
-#ifdef PYBIND
 #ifdef CUDA
 #include "Cell/PaddingCell_Frame_CUDA.hpp"
 
@@ -50,6 +49,5 @@ void init_PaddingCell_Frame_CUDA(py::module &m) {
 }
 
 }
-#endif
 #endif
 

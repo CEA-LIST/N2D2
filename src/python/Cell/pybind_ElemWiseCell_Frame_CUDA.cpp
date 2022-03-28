@@ -21,7 +21,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/ElemWiseCell_Frame_CUDA.hpp"
 #include "Activation/TanhActivation_Frame_CUDA.hpp"
 
@@ -54,6 +53,5 @@ void init_ElemWiseCell_Frame_CUDA(py::module &m) {
 }
 
 }
-#endif
 
 #endif

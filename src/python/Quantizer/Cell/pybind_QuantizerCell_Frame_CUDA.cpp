@@ -11,7 +11,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Quantizer/Cell/QuantizerCell_Frame_CUDA.hpp"
 
 #include <pybind11/pybind11.h>
@@ -34,7 +33,6 @@ void init_QuantizerCell_Frame_CUDA(py::module &m) {
 
 }
 
-#endif
 
 #endif
 

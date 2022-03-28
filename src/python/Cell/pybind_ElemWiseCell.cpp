@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/ElemWiseCell.hpp"
 
 #include <pybind11/pybind11.h>
@@ -52,5 +51,4 @@ void init_ElemWiseCell(py::module &m) {
     .def("getShifts", &ElemWiseCell::getShifts);
 }
 }
-#endif
 

@@ -22,7 +22,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Activation/RectifierActivation_Frame_CUDA.hpp"
 
 
@@ -49,6 +48,5 @@ void init_RectifierActivation_Frame_CUDA(py::module &m) {
 }
 
 }
-#endif
 
 #endif

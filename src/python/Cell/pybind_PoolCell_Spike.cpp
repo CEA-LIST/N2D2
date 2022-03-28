@@ -20,7 +20,6 @@
 */
 
 
-#ifdef PYBIND
 #include "Cell/PoolCell_Spike.hpp"
 
 
@@ -53,4 +52,3 @@ void init_PoolCell_Spike(py::module &m) {
     );
 }
 }
-#endif

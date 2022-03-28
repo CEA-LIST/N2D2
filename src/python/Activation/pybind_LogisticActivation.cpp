@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Activation/LogisticActivation.hpp"
 
 
@@ -33,4 +32,3 @@ void init_LogisticActivation(py::module &m) {
 
 }
 }
-#endif

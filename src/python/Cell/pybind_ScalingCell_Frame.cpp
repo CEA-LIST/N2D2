@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 
 #include "Cell/ScalingCell_Frame.hpp"
 #include "Scaling.hpp"
@@ -51,6 +50,5 @@ void init_ScalingCell_Frame(py::module &m) {
     declare_ScalingCell_Frame<double>(m, "double");
 }
 }
-#endif
 
 
