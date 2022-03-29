@@ -74,17 +74,20 @@ model = keras_interoperability.wrap(tf_model, batch_size=batch_size, for_export=
 ## Train the model
 """
 
-model.compile(loss="categorical_crossentropy", optimizer=Adam(), metrics=["accuracy"])
 model.summary()
+model.get_deepnet_cell().export_free_parameters("./test_param")
+model.get_deepnet_cell().import_free_parameters("./test_param")
 
-model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.1)
+# model.compile(loss="categorical_crossentropy", optimizer=Adam(), metrics=["accuracy"])
 
-"""
-## Evaluate the trained model
-"""
+# model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.1)
 
-score = model.evaluate(x_test, y_test, verbose=0)
-print("Test loss:", score[0])
-print("Test accuracy:", score[1])
+# """
+# ## Evaluate the trained model
+# """
 
-print(f"Script time : {time()-start_time}s")
+# score = model.evaluate(x_test, y_test, verbose=0)
+# print("Test loss:", score[0])
+# print("Test accuracy:", score[1])
+
+# print(f"Script time : {time()-start_time}s")

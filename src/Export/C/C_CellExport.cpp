@@ -117,7 +117,7 @@ void N2D2::C_CellExport::generateActivationScaling(const Cell& cell, std::ofstre
                    << "};\n";
         }
         else {
-            throw std::runtime_error("Scaling and ElemWise are the only layers"
+            throw std::runtime_error("Scaling and ElemWise are the only layers "
                                      "supported in Fixed-point scaling mode.");
         }
     }

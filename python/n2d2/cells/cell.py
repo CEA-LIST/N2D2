@@ -478,14 +478,21 @@ class DeepNetCell(Block):
         return self
 
     def import_free_parameters(self, dir_name, ignore_not_exists=False):
-        """Import parameters.
+        """Import deepnet parameters.
         """
-        print("import DeepNetCell '" + self._name + "' weights from " + dir_name)
+        print(f"Importing DeepNetCell '{self._name}' parameters from  {dir_name}")
         self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignoreNotExists=ignore_not_exists)
+
+    
+    def export_free_parameters(self, dir_name):
+        """Export deepnet parameters.
+        """
+        print(f"Exporting DeepNetCell '{self._name}' parameters from {dir_name}")
+        self._deepnet.N2D2().exportNetworkFreeParameters(dir_name)
+
 
     def remove(self, name:str, reconnect:bool=True)->None:
         """Remove a cell from the encapsulated deepnet.
-
         :param name: Name of cell that shall be removed.
         :type name: str
         :param reconnect: If `True`, reconnects the parents with the child of the removed cell, default=True

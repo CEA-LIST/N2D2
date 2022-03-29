@@ -303,7 +303,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
 
     def import_free_parameters(self, dir_name, ignore_not_exists=False):
         if self._N2D2_object:
-            filename = dir_name + "/" + self.get_name() + ".syntxt"
+            filename = dir_name + "/" + self.get_name().replace(":", "_") + ".syntxt"
             print("Import " + filename)
             self._N2D2_object.importFreeParameters(filename, ignore_not_exists)
             self._N2D2_object.importActivationParameters(dir_name, ignore_not_exists)

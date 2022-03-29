@@ -671,6 +671,7 @@ namespace N2D2_HELPER{
                 std::cout << "Stimuli range is: " << stimuliRange << std::endl;
             }
 
+            
 
             Utils::createDirectories(exportDir + "/calibration");
 
@@ -684,7 +685,9 @@ namespace N2D2_HELPER{
             std::ifstream(outputsRangeFile.c_str()).good() && 
             std::ifstream(outputsHistogramFile.c_str()).good())
             {
+                std::cout << "Load range from here : " << outputsRangeFile << std::endl;
                 RangeStats::loadOutputsRange(outputsRangeFile, outputsRange);
+                std::cout << "Load histogram from here : " << outputsHistogramFile << std::endl;
                 Histogram::loadOutputsHistogram(outputsHistogramFile, outputsHistogram);
             }
             else {
