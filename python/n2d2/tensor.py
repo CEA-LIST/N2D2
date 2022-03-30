@@ -462,6 +462,9 @@ class Tensor:
         return is_equal
 
     def __str__(self):
+        if self.is_cuda:
+            # Updating the host before printing the Tensor
+            self.dtoh() 
         output = "n2d2.Tensor([\n"
         output += str(self._tensor)
         output += "], device=" + ("cuda" if self.is_cuda else "cpu")

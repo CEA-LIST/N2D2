@@ -39,7 +39,7 @@ Here are the functionalities available with the Python API :
 +------------------------+------------+------------------+
 | Multi GPU support      | ✔️         |                  |
 +------------------------+------------+------------------+
-| Exporting network      | ❌         |                  |
+| Exporting network      | ✔️         |                  |
 +------------------------+------------+------------------+
 
 
@@ -112,6 +112,34 @@ Go at the root of the N2D2 projet and follow the following steps
 
         # Install the n2d2 python packages in your virtual environment
         pip install dist/*
+
+Frequent issues
+^^^^^^^^^^^^^^^
+
+Module not found N2D2
+~~~~~~~~~~~~~~~~~~~~~
+
+If when you import `n2d2` you get this error :
+
+```
+ModuleNotFoundError: No module named 'N2D2'
+```
+
+This is likely due to your python version not matching with the one used to compile N2D2.
+
+You can find in your `site-packages` (or in your `build/lib` if you have compiled N2D2 with CMake) a `.so` file named like this : `N2D2.cpython-37m-x86_64-linux-gnu.so`.
+
+This file name indicates the python version used to compile N2D2, in this example 3.7.
+
+
+Lib not found when compiling
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If CMake fails to find lib files when compiling, this may be due to the absence of the dependency `python3-dev`.
+
+When generating a new virtualenv after installing the dependency, you should see `include/python3.7m` inside the generated folder.
+
+If not, you may need to reboot in order to update system variables.
 
 
 Test of the Python API
