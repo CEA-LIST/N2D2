@@ -86,17 +86,13 @@ class Datatyped(ABC):
         self._model_key += '<' + self._datatype + '>'
 
 
-class Mapable(ABC):
-
-    @abstractmethod
-    def __init__(self):
-        pass
-
 
 
 class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
     """Abstract class for layer implementation.
     """
+    mappable = False
+
     @abstractmethod
     def __init__(self,  **config_parameters):
         """
@@ -275,7 +271,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         self._deepnet.N2D2().addCell(self._N2D2_object, parents)
         if not initialized:
             self._N2D2_object.initializeDataDependent()
-            if isinstance(self, Mapable):
+            if self.mappable:
                 if self._N2D2_object.getMapping().empty():
                     self._N2D2_object.setMapping(n2d2.Tensor([self.get_nb_outputs(), inputs.dimZ()],
                                                              datatype="bool", dim_format="N2D2").N2D2())
@@ -712,11 +708,11 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
         self.weights_solver = solver.copy()
 
 @n2d2.utils.inherit_init_docstring()
-class Conv(NeuralNetworkCell, Datatyped, Trainable, Mapable):
+class Conv(NeuralNetworkCell, Datatyped, Trainable):
     """
     Convolutional layer.
     """
-
+    mappable = True
 
     _cell_constructors = {
         'Frame<float>': N2D2.ConvCell_Frame_float,
@@ -1202,10 +1198,12 @@ class Softmax(NeuralNetworkCell, Datatyped):
         return self.get_outputs()
 
 @n2d2.utils.inherit_init_docstring()
-class Pool(NeuralNetworkCell, Datatyped, Mapable):
+class Pool(NeuralNetworkCell, Datatyped):
     '''
     Pooling layer.
     '''
+
+    mappable = True
 
     _cell_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
@@ -1439,10 +1437,11 @@ class GlobalPool2d(Pool2d):
         return self.get_outputs()
 
 @n2d2.utils.inherit_init_docstring()
-class Deconv(NeuralNetworkCell, Datatyped, Trainable, Mapable):
+class Deconv(NeuralNetworkCell, Datatyped, Trainable):
     """
     Deconvolution layer.
     """
+    mappable = True
     _cell_constructors = {
         'Frame<float>': N2D2.DeconvCell_Frame_float,
     }
