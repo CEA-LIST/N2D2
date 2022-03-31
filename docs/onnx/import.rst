@@ -175,18 +175,6 @@ image, or a transposed vector for 1D signal inputs), like shown below:
     File=sound_processing_graph.onnx
 
 
-With the Python API
--------------------
-
-The ``DeepNetGenerator`` can be used to load ONNX file as well as INI file.
-
-.. code-block:: python
-
-        net = N2D2.Network(1)
-        deepNet = N2D2.DeepNetGenerator.generate(net, "mobilenet_v1_1.0_224.onnx")
-        deepNet.initialize()
-
-
 
 Supported operators
 -------------------

@@ -40,9 +40,17 @@ The :py:class:`n2d2.cells.DeepNetCell` constructor require an :py:class:`N2D2.De
 
 There are three methods to generate a :py:class:`n2d2.cells.DeepNetCell` : :py:meth:`n2d2.cells.DeepNetCell.load_from_ONNX`, :py:meth:`n2d2.cells.DeepNetCell.load_from_INI`, :py:meth:`n2d2.cells.Sequence.to_deepnet_cell` 
 
-The DeepNetCell can be used to train the neural network in an efficient way.
+The DeepNetCell can be used to train the neural network in an efficient way thanks to :py:meth:`n2d2.cells.DeepNetCell.fit`.
 
-**Example :**
+
+.. autoclass:: n2d2.cells.DeepNetCell
+        :members:
+        :inherited-members:
+
+Example :
+^^^^^^^^^
+
+You can create a DeepNet cell with :py:meth:`n2d2.cells.DeepNetCell.load_from_ONNX` :
 
 .. code-block::
 
@@ -56,7 +64,6 @@ Using :py:meth:`n2d2.cells.DeepNetCell.fit` method will reduce the learning time
 
 If you want to use the dynamic computation graph  provided by the API, you can use the :py:class:`n2d2.cells.DeepNetCell` as a simple cell.
 
-**Example :**
 
 .. code-block::
 
@@ -66,11 +73,6 @@ If you want to use the dynamic computation graph  provided by the API, you can u
         sequence = n2d2.cells.Sequence([model, n2d2.cells.Softmax(with_loss=True)])
         input_tensor = n2d2.Tensor(DIMS)
         output_tensor = sequence(input_tensor)
-
-
-.. autoclass:: n2d2.cells.DeepNetCell
-        :members:
-        :inherited-members:
 
 
 Cells
@@ -328,7 +330,33 @@ Last cell of the network this object computes the loss.
 
 To understand what the Target does, please refer to this part of the documentation : :doc:`Target INI </ini/target>`.
 
+
+
 .. autoclass:: n2d2.target.Score
         :members:
         :inherited-members:
 
+Example
+~~~~~~~
+
+How to use a `Target` to train your model :
+
+.. code-block::
+
+        # Propagation & BackPropagation example
+        output = model(stimuli)
+        loss = target(output)
+        loss.back_propagate()
+        loss.update()
+
+Log performance analysis of your training :
+
+.. code-block::
+
+        ### After validation ###
+        # save computational stats of the network 
+        target.log_stats("name")
+        # save a confusion matrix
+        target.log_confusion_matrix("name")
+        # save a graph of the loss and the validation score as a function of the number of steps
+        target.log_success("name")

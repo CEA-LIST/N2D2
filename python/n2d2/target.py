@@ -177,10 +177,19 @@ class Score(Target):
         Save a graph of the loss and the validation score as a function of the step number.
         """
         self._N2D2_object.logSuccess(path, self._provider.get_partition())
+    
+    def log_stats(self, path):
+        """Export statistics of the graph
 
+        :param dirname: path to the directory where you want to save the data.
+        :type dirname: str
+        """
+        if self._deepnet is None:
+            raise RuntimeError("The target doesn't have stats to log.")
+        self._deepnet.log_stats(path)
 
-    """This only works if TopN > 1, otherwise it returns 0!"""
     def get_average_top_n_success(self, window=0):
+        """This only works if TopN > 1, otherwise it returns 0!"""
         if self._N2D2_object.getTargetTopN() == 1:
             raise RuntimeWarning("Using this function with TopN=1 returns 0. You may want to use get_average_success()?")
         return self._N2D2_object.getAverageTopNSuccess(self._provider.get_partition(), window)
