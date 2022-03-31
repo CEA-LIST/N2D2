@@ -24,27 +24,19 @@ from n2d2.error_handler import deprecated
 from n2d2.n2d2_interface import N2D2_Interface
 from abc import ABC, abstractmethod
 import n2d2.global_variables as gb
+from n2d2.typed import ModelDatatyped
+
 cuda_compiled = gb.cuda_compiled
 
 _activation_parameters = {
         "quantizer": "Quantizer"
 }
-class ActivationFunction(N2D2_Interface, ABC):
+class ActivationFunction(N2D2_Interface, ModelDatatyped, ABC):
     
     # Cell_frame_parameter contains the parameters from cell_parameter
     @abstractmethod
     def __init__(self, **config_parameters):
-        if 'model' in config_parameters:
-            self._model = config_parameters.pop('model')
-        else:
-            self._model = n2d2.global_variables.default_model
-        if 'datatype' in config_parameters:
-            self._datatype = config_parameters.pop('datatype')
-        else:
-            self._datatype = n2d2.global_variables.default_datatype
-
-        self._model_key = self._model + '<' + self._datatype + '>'
-        
+        ModelDatatyped.__init__(self, **config_parameters)
         N2D2_Interface.__init__(self, **config_parameters)
 
     @classmethod

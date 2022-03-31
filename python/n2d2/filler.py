@@ -21,24 +21,15 @@
 import N2D2
 import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
+from n2d2.typed import Datatyped
 from abc import ABC, abstractmethod
 
-class Filler(N2D2_Interface, ABC):
+class Filler(N2D2_Interface, Datatyped, ABC):
     @abstractmethod
     def __init__(self, **config_parameters):
         """
-        :param model: Can be either ``Frame`` or ``Frame_CUDA``, default=n2d2.global_variables.default_model
-        :type model: str, optional
-        :param datatype: Datatype used by the object, can only be ``float`` at the moment, default=n2d2.global_variables.default_datatype
-        :type datatype: str, optional
         """
-        if 'datatype' in config_parameters:
-            self._datatype = config_parameters.pop('datatype')
-        else:
-            self._datatype = n2d2.global_variables.default_datatype
-
-        self._model_key = '<' + self._datatype + '>'
-
+        Datatyped.__init__(self, **config_parameters)
         
         N2D2_Interface.__init__(self, **config_parameters)
 
@@ -68,7 +59,6 @@ class He(Filler):
         "variance_norm": "varianceNorm",
         "mean_norm": "meanNorm",
         "scaling": "scaling",
-        "datatype": "Datatype",
     }
     _convention_converter= n2d2.ConventionConverter(_parameters)
 
@@ -119,7 +109,6 @@ class Normal(Filler):
     _parameters={
         "mean": "mean",
         "std_dev": "stdDev",
-        "datatype": "Datatype",
     }
     _convention_converter= n2d2.ConventionConverter(_parameters)
 
@@ -160,7 +149,6 @@ class Xavier(Filler):
         "variance_norm": "varianceNorm",
         "distribution": "distribution",
         "scaling": "scaling",
-        "datatype": "Datatype",
     }
     _convention_converter= n2d2.ConventionConverter(_parameters)
 
@@ -213,7 +201,6 @@ class Constant(Filler):
     }
     _parameters={
         "value": "value",
-        "datatype": "Datatype",
     }
     _convention_converter= n2d2.ConventionConverter(_parameters)
 

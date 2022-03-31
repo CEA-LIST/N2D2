@@ -22,6 +22,13 @@
 import N2D2
 import n2d2
 from n2d2.error_handler import deprecated
+
+# List of parameters which are only from the PythonAPI and not in the Cpp
+_pure_python_parameters=[
+    "datatype",
+    "model"
+]
+
 class ConventionConverter():
     """
     Bidirectional mapping to translate parameters name from n2d2 convention to N2D2 convention
@@ -117,7 +124,8 @@ class N2D2_Interface:
 
     def _set_N2D2_parameters(self, parameters):
         for key, value in parameters.items():
-            self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+            if key not in _pure_python_parameters:
+                self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
 
     def __setattr__(self, key: str, value) -> None:
         if "_constructor_arguments" in self.__dict__ and \
@@ -127,7 +135,8 @@ class N2D2_Interface:
                 key in self._optional_constructor_arguments:
             raise RuntimeError(key + " is not settable for " + str(type(self)))
         elif "_config_parameters" in self.__dict__ and \
-                key in self._config_parameters:
+                key in self._config_parameters and \
+                key not in _pure_python_parameters:
             self._config_parameters[key] = value
             self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
         else:

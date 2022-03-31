@@ -23,31 +23,21 @@ import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
 from abc import ABC, abstractmethod
 import n2d2.global_variables as gb
+from n2d2.typed import ModelDatatyped
+
 cuda_compiled = gb.cuda_compiled
 
 clamping_values = ["min:max", ":max", "min:", ""]
 
-class Solver(N2D2_Interface, ABC):
+class Solver(N2D2_Interface, ModelDatatyped, ABC):
     @abstractmethod
     def __init__(self, **config_parameters):
         """
         :param model: Can be either ``Frame`` or ``Frame_CUDA``, default=n2d2.global_variables.default_model
         :type model: str, optional
-        :param datatype: Datatype used by the solver, can only be ``float`` at the moment, default=n2d2.global_variables.default_datatype
-        :type datatype: str, optional
         """
-        if 'model' in config_parameters:
-            self._model = config_parameters.pop('model')
-        else:
-            self._model = n2d2.global_variables.default_model
-        if 'datatype' in config_parameters:
-            self._datatype = config_parameters.pop('datatype')
-        else:
-            self._datatype = n2d2.global_variables.default_datatype
-
-        
+        ModelDatatyped.__init__(self, **config_parameters)
         N2D2_Interface.__init__(self, **config_parameters)
-        self._model_key = self._model + '<' + self._datatype + '>'
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object):
