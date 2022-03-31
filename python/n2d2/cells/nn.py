@@ -1138,8 +1138,6 @@ class Softmax(NeuralNetworkCell, Datatyped):
 
     def __init__(self, **config_parameters):
         r"""
-        :param nb_outputs: Number of output channels
-        :type nb_outputs: int
         :param with_loss: :py:class:`Softmax` followed with a multinomial logistic layer, default=False
         :type with_loss: bool, optional
         :param group_size: :py:class:`Softmax` is applied on groups of outputs. The group size must be a divisor of ``nb_outputs`` parameter, default=0
