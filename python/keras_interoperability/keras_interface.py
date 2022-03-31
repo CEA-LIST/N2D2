@@ -287,7 +287,6 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
         if isinstance(cell, n2d2.cells.Softmax):
             # ONNX import Softmax with_loss = True supposing we are using a CrossEntropy loss.
             cell.with_loss = False
-            print(cell)
         if for_export:
             # Keras add Reshape before FullyConnected layers, which are not exportable.
             if isinstance(cell, n2d2.cells.Fc) and isinstance(previous_cell, n2d2.cells.Reshape):
