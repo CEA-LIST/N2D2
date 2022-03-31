@@ -60,7 +60,7 @@ class Solver(N2D2_Interface, ABC):
         return type(self).__name__
 
     def copy(self):
-        return self.create_from_N2D2_object(self._solver_generators[self._model_key](self.N2D2()))
+        return self.create_from_N2D2_object(self._N2D2_constructors[self._model_key](self.N2D2()))
 
     def __str__(self):
         output = self.get_type()
@@ -70,11 +70,11 @@ class Solver(N2D2_Interface, ABC):
 @n2d2.utils.inherit_init_docstring()
 class SGD(Solver):
 
-    _solver_generators = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.SGDSolver_Frame_float,
     }
     if cuda_compiled:
-        _solver_generators.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.SGDSolver_Frame_CUDA_float,
         })
     _parameters={
@@ -120,24 +120,24 @@ class SGD(Solver):
         Solver.__init__(self, **config_parameters)
         if "learning_rate_policy" in config_parameters:
             learning_rate_policy = config_parameters["learning_rate_policy"]
-            if learning_rate_policy not in self._solver_generators[self._model_key].LearningRatePolicy.__members__.keys():
-                raise n2d2.error_handler.WrongValue("learning_rate_policy", learning_rate_policy, self._solver_generators[self._model_key].LearningRatePolicy.__members__.keys())
+            if learning_rate_policy not in self._N2D2_constructors[self._model_key].LearningRatePolicy.__members__.keys():
+                raise n2d2.error_handler.WrongValue("learning_rate_policy", learning_rate_policy, self._N2D2_constructors[self._model_key].LearningRatePolicy.__members__.keys())
         if "clamping" in config_parameters:
             clamping = config_parameters['clamping']
             if clamping not in clamping_values:
                 raise n2d2.error_handler.WrongValue("clamping", clamping, clamping_values)
-        self._set_N2D2_object(self._solver_generators[self._model_key]())
+        self._set_N2D2_object(self._N2D2_constructors[self._model_key]())
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
 @n2d2.utils.inherit_init_docstring()
 class Adam(Solver):
 
-    _solver_generators = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.AdamSolver_Frame_float,
     }
     if cuda_compiled:
-        _solver_generators.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.AdamSolver_Frame_CUDA_float,
         })
     _parameters={
@@ -168,6 +168,6 @@ class Adam(Solver):
             clamping = config_parameters['clamping']
             if clamping not in clamping_values:
                 raise n2d2.error_handler.WrongValue("clamping", clamping, clamping_values)
-        self._set_N2D2_object(self._solver_generators[self._model_key]())
+        self._set_N2D2_object(self._N2D2_constructors[self._model_key]())
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())

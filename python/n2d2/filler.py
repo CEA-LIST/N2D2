@@ -61,7 +61,7 @@ class He(Filler):
     """
     Fill with an normal distribution with normalized variance taking into account the rectifier nonlinearity :cite:`He2015`. This filler is sometimes referred as MSRA filler or Kaiming initialization.
     """
-    _filler_generators = {
+    _N2D2_constructors = {
         '<float>': N2D2.HeFiller_float,
     }
     _parameters = {
@@ -85,9 +85,9 @@ class He(Filler):
 
         if "variance_norm" in self._config_parameters:
             variance_norm = self._config_parameters["variance_norm"]
-            if variance_norm not in self._filler_generators[self._model_key].VarianceNorm.__members__.keys():
-                raise n2d2.error_handler.WrongValue("variance_norm", variance_norm, self._filler_generators[self._model_key].VarianceNorm.__members__.keys())
-            self._config_parameters["variance_norm"] = self._filler_generators[self._model_key].VarianceNorm.__members__[variance_norm]
+            if variance_norm not in self._N2D2_constructors[self._model_key].VarianceNorm.__members__.keys():
+                raise n2d2.error_handler.WrongValue("variance_norm", variance_norm, self._N2D2_constructors[self._model_key].VarianceNorm.__members__.keys())
+            self._config_parameters["variance_norm"] = self._N2D2_constructors[self._model_key].VarianceNorm.__members__[variance_norm]
 
         self._parse_optional_arguments(['variance_norm', 'mean_norm', 'scaling'])
         for k, v in self._optional_constructor_arguments.items():
@@ -96,7 +96,7 @@ class He(Filler):
             if k is 'mean_norm' and not isinstance(v, float):
                 raise n2d2.error_handler.WrongInputType("mean_norm", str(type(v)), ["float"])
         
-        self._set_N2D2_object(self._filler_generators[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
+        self._set_N2D2_object(self._N2D2_constructors[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
@@ -113,7 +113,7 @@ class Normal(Filler):
     """
 
     """Static members"""
-    _filler_generators = {
+    _N2D2_constructors = {
         '<float>': N2D2.NormalFiller_float,
     }
     _parameters={
@@ -138,7 +138,7 @@ class Normal(Filler):
                 raise n2d2.error_handler.WrongInputType("mean", str(type(v)), ["float"])
             if k is 'std_dev' and not isinstance(v, float):
                 raise n2d2.error_handler.WrongInputType("std_dev", str(type(v)), ["float"])
-        self._set_N2D2_object(self._filler_generators[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
+        self._set_N2D2_object(self._N2D2_constructors[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
@@ -153,7 +153,7 @@ class Xavier(Filler):
     """
 
     """Static members"""
-    _filler_generators = {
+    _N2D2_constructors = {
         '<float>': N2D2.XavierFiller_float,
     }
     _parameters={
@@ -181,18 +181,18 @@ class Xavier(Filler):
                 raise n2d2.error_handler.WrongInputType("scaling", str(type(v)), ["float"])
             if k is 'std_dev' and not isinstance(v, float):
                 raise n2d2.error_handler.WrongInputType("std_dev", str(type(v)), ["float"])
-            if k is "variance_norm" and v not in self._filler_generators[self._model_key].VarianceNorm.__members__.keys():
-                raise n2d2.error_handler.WrongValue("variance_norm", v, self._filler_generators[self._model_key].VarianceNorm.__members__.keys())
-            if k is "distribution" and v not in self._filler_generators[self._model_key].Distribution.__members__.keys():
-                raise n2d2.error_handler.WrongValue("distribution", v, self._filler_generators[self._model_key].Distribution.__members__.keys())
+            if k is "variance_norm" and v not in self._N2D2_constructors[self._model_key].VarianceNorm.__members__.keys():
+                raise n2d2.error_handler.WrongValue("variance_norm", v, self._N2D2_constructors[self._model_key].VarianceNorm.__members__.keys())
+            if k is "distribution" and v not in self._N2D2_constructors[self._model_key].Distribution.__members__.keys():
+                raise n2d2.error_handler.WrongValue("distribution", v, self._N2D2_constructors[self._model_key].Distribution.__members__.keys())
 
         if 'variance_norm' in self._optional_constructor_arguments:
             self._optional_constructor_arguments['variance_norm'] = \
-                self._filler_generators[self._model_key].VarianceNorm.__members__[self._optional_constructor_arguments['variance_norm']]
+                self._N2D2_constructors[self._model_key].VarianceNorm.__members__[self._optional_constructor_arguments['variance_norm']]
         if 'distribution' in self._optional_constructor_arguments:
             self._optional_constructor_arguments['distribution'] = \
-                self._filler_generators[self._model_key].Distribution.__members__[self._optional_constructor_arguments['distribution']]
-        self._set_N2D2_object(self._filler_generators[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
+                self._N2D2_constructors[self._model_key].Distribution.__members__[self._optional_constructor_arguments['distribution']]
+        self._set_N2D2_object(self._N2D2_constructors[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
@@ -208,7 +208,7 @@ class Constant(Filler):
     """
 
     """Static members"""
-    _filler_generators = {
+    _N2D2_constructors = {
         '<float>': N2D2.ConstantFiller_float,        
     }
     _parameters={
@@ -228,7 +228,7 @@ class Constant(Filler):
         for k, v in self._optional_constructor_arguments.items():
             if k is 'value' and not isinstance(v, float):
                 raise n2d2.error_handler.WrongInputType("value", str(type(v)), ["float"])
-        self._set_N2D2_object(self._filler_generators[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
+        self._set_N2D2_object(self._N2D2_constructors[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 

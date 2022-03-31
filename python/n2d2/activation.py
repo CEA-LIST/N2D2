@@ -90,11 +90,11 @@ class Linear(ActivationFunction):
     """
     Linear activation function.
     """
-    _linear_activation_generators = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.LinearActivation_Frame_float,
     }
     if cuda_compiled:
-        _linear_activation_generators.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.LinearActivation_Frame_CUDA_float,
         })
     _parameters = {
@@ -110,7 +110,7 @@ class Linear(ActivationFunction):
         """
         ActivationFunction.__init__(self, **config_parameters)
         # No optional constructor arguments
-        self._set_N2D2_object(self._linear_activation_generators[self._model_key]())
+        self._set_N2D2_object(self._N2D2_constructors[self._model_key]())
         for key, value in self._config_parameters.items():
             self.__setattr__(key, value)
         self.load_N2D2_parameters(self.N2D2())
@@ -130,12 +130,12 @@ class Rectifier(ActivationFunction):
     """
     Rectifier or ReLU activation function.
     """
-    _rectifier_activation_generators = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.RectifierActivation_Frame_float,
         
     }
     if cuda_compiled:
-        _rectifier_activation_generators.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.RectifierActivation_Frame_CUDA_float,
         })
     _parameters = {
@@ -156,7 +156,7 @@ class Rectifier(ActivationFunction):
         """
         ActivationFunction.__init__(self, **config_parameters)
         # No optional constructor arguments
-        self._set_N2D2_object(self._rectifier_activation_generators[self._model_key]())
+        self._set_N2D2_object(self._N2D2_constructors[self._model_key]())
         for key, value in self._config_parameters.items():
             self.__setattr__(key, value)
         
@@ -178,11 +178,11 @@ class Tanh(ActivationFunction):
 
     Computes :math:`y = tanh(\alpha.x)`.
     """
-    _tanh_activation_generators = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.TanhActivation_Frame_float,
     }
     if cuda_compiled:
-        _tanh_activation_generators.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.TanhActivation_Frame_CUDA_float,
         })
     _parameters = {
@@ -201,7 +201,7 @@ class Tanh(ActivationFunction):
         ActivationFunction.__init__(self, **config_parameters)
 
         # No optional constructor arguments
-        self._set_N2D2_object(self._tanh_activation_generators[self._model_key]())
+        self._set_N2D2_object(self._N2D2_constructors[self._model_key]())
         for key, value in self._config_parameters.items():
             self.__setattr__(key, value)
         self.load_N2D2_parameters(self.N2D2())

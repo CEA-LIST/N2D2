@@ -367,12 +367,12 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
     """Fully connected layer.
     """
 
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.FcCell_Frame_float,
     }
 
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.FcCell_Frame_CUDA_float,
         })
 
@@ -431,7 +431,7 @@ class Fc(NeuralNetworkCell, Datatyped, Trainable):
             'nb_outputs': nb_outputs,
         })
 
-        self._set_N2D2_object(self._cell_constructors[self._model_key](N2D2.DeepNet(n2d2.global_variables.default_net),
+        self._set_N2D2_object(self._N2D2_constructors[self._model_key](N2D2.DeepNet(n2d2.global_variables.default_net),
                                                                      self.get_name(),
                                                                      self._constructor_arguments['nb_outputs']))
 
@@ -714,12 +714,12 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
     """
     mappable = True
 
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.ConvCell_Frame_float,
     }
 
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.ConvCell_Frame_CUDA_float,
         })
 
@@ -809,7 +809,7 @@ class Conv(NeuralNetworkCell, Datatyped, Trainable):
 
         self._parse_optional_arguments(['sub_sample_dims', 'stride_dims', 'padding_dims', 'dilation_dims'])
 
-        self._set_N2D2_object(self._cell_constructors[self._model_key](N2D2.DeepNet(n2d2.global_variables.default_net),
+        self._set_N2D2_object(self._N2D2_constructors[self._model_key](N2D2.DeepNet(n2d2.global_variables.default_net),
                                                                      self.get_name(),
                                                                      self._constructor_arguments['kernel_dims'],
                                                                      self._constructor_arguments['nb_outputs'],
@@ -1118,13 +1118,13 @@ class Softmax(NeuralNetworkCell, Datatyped):
     Softmax layer.
     """
 
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.SoftmaxCell_Frame_float,
     }
 
 
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.SoftmaxCell_Frame_CUDA_float,
         })
 
@@ -1179,7 +1179,7 @@ class Softmax(NeuralNetworkCell, Datatyped):
         if self._N2D2_object is None:
             nb_outputs = inputs.dims()[2]
 
-            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._N2D2_constructors[self._model_key](self._deepnet.N2D2(),
                                                                          self.get_name(),
                                                                          nb_outputs,
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
@@ -1203,11 +1203,11 @@ class Pool(NeuralNetworkCell, Datatyped):
 
     mappable = True
 
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
     }
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
         })
 
@@ -1285,7 +1285,7 @@ class Pool(NeuralNetworkCell, Datatyped):
             else:
                 raise n2d2.error_handler.WrongInputType("inputs", inputs, [str(type(list)), str(type(n2d2.Tensor))])
 
-            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._N2D2_constructors[self._model_key](self._deepnet.N2D2(),
                                                                          self.get_name(),
                                                                          self._constructor_arguments['pool_dims'],
                                                                          mapping_row,
@@ -1318,11 +1318,11 @@ class Pool2d(Pool):
     """'Standard' pooling where all feature maps are pooled independently.
     """
 
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
     }
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
         })
     _parameters = {
@@ -1358,7 +1358,7 @@ class Pool2d(Pool):
 
         if self._N2D2_object is None:
 
-            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._N2D2_constructors[self._model_key](self._deepnet.N2D2(),
                                                                          self.get_name(),
                                                                          self._constructor_arguments['pool_dims'],
                                                                          inputs.dims()[2],
@@ -1386,11 +1386,11 @@ class GlobalPool2d(Pool2d):
     dimension will be an empty list, which will be filled with the inferred dimensions after
     the first call.
     """
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
     }
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
         })
 
@@ -1414,7 +1414,7 @@ class GlobalPool2d(Pool2d):
 
         if self._N2D2_object is None:
 
-            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._N2D2_constructors[self._model_key](self._deepnet.N2D2(),
                                                                          self.get_name(),
                                                                          [inputs.dims()[0], inputs.dims()[1]],
                                                                          inputs.dims()[2],
@@ -1440,11 +1440,11 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
     Deconvolution layer.
     """
     mappable = True
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.DeconvCell_Frame_float,
     }
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.DeconvCell_Frame_CUDA_float,
         })
     _parameters = {
@@ -1528,7 +1528,7 @@ class Deconv(NeuralNetworkCell, Datatyped, Trainable):
 
         self._parse_optional_arguments(['stride_dims', 'padding_dims', 'dilation_dims'])
 
-        self._set_N2D2_object(self._cell_constructors[self._model_key](N2D2.DeepNet(n2d2.global_variables.default_net),
+        self._set_N2D2_object(self._N2D2_constructors[self._model_key](N2D2.DeepNet(n2d2.global_variables.default_net),
                                                                      self.get_name(),
                                                                      self._constructor_arguments['kernel_dims'],
                                                                      self._constructor_arguments['nb_outputs'],
@@ -1775,12 +1775,12 @@ class ElemWise(NeuralNetworkCell):
     """Element-wise operation layer.
     """
 
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame': N2D2.ElemWiseCell_Frame,
     }
 
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA': N2D2.ElemWiseCell_Frame_CUDA,
         })
     _parameters = {
@@ -1862,7 +1862,7 @@ class ElemWise(NeuralNetworkCell):
                 raise n2d2.error_handler.WrongInputType("inputs", inputs, [str(type(list)), str(type(n2d2.Tensor))])
 
 
-            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._N2D2_constructors[self._model_key](self._deepnet.N2D2(),
                                                                      self.get_name(),
                                                                      mapping_row,
                                                                      **self.n2d2_function_argument_parser(
@@ -1888,11 +1888,11 @@ class Dropout(NeuralNetworkCell, Datatyped):
     """
     _type = "Dropout"
 
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.DropoutCell_Frame_float,
     }
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.DropoutCell_Frame_CUDA_float,
         })
     _parameters = {
@@ -1922,7 +1922,7 @@ class Dropout(NeuralNetworkCell, Datatyped):
         if self._N2D2_object is None:
             nb_outputs = inputs.dims()[2]
 
-            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._N2D2_constructors[self._model_key](self._deepnet.N2D2(),
                                                                          self.get_name(),
                                                                          nb_outputs,
                                                                          **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
@@ -1944,11 +1944,11 @@ class Dropout(NeuralNetworkCell, Datatyped):
 class Padding(NeuralNetworkCell):
     """Padding layer allows to insert asymmetric padding for each layer axes.
     """
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame': N2D2.PaddingCell_Frame,
     }
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA': N2D2.PaddingCell_Frame_CUDA,
         })
     _parameters = {
@@ -2009,7 +2009,7 @@ class Padding(NeuralNetworkCell):
         if self._N2D2_object is None:
             nb_outputs = inputs.dims()[2]
 
-            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._N2D2_constructors[self._model_key](self._deepnet.N2D2(),
                                                                      self.get_name(),
                                                                      nb_outputs,
                                                                      self._constructor_arguments['top_pad'],
@@ -2034,11 +2034,11 @@ class Padding(NeuralNetworkCell):
 class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
     """Batch Normalization layer :cite:`Ioffe2015`.
     """
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.BatchNormCell_Frame_float,
     }
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.BatchNormCell_Frame_CUDA_float,
         })
     _parameters = {
@@ -2077,7 +2077,7 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
         Datatyped.__init__(self, **config_parameters)
         # No optional parameter
         self._parse_optional_arguments([])
-        self._set_N2D2_object(self._cell_constructors[self._model_key](N2D2.DeepNet(n2d2.global_variables.default_net),
+        self._set_N2D2_object(self._N2D2_constructors[self._model_key](N2D2.DeepNet(n2d2.global_variables.default_net),
                                                 self.get_name(),
                                                 nb_inputs,
                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
@@ -2185,11 +2185,11 @@ class BatchNorm2d(NeuralNetworkCell, Datatyped, Trainable):
 class Activation(NeuralNetworkCell, Datatyped):
     """Activation layer which can apply any activation to a stimuli.
     """
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.ActivationCell_Frame_float,
     }
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.ActivationCell_Frame_CUDA_float,
         })
 
@@ -2215,7 +2215,7 @@ class Activation(NeuralNetworkCell, Datatyped):
         if self._N2D2_object is None:
             nb_outputs = inputs.dimZ()
 
-            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._N2D2_constructors[self._model_key](self._deepnet.N2D2(),
                                                                          self.get_name(),
                                                                          nb_outputs,
                                                                          **self._optional_constructor_arguments))
@@ -2235,11 +2235,11 @@ class Activation(NeuralNetworkCell, Datatyped):
 class Reshape(NeuralNetworkCell, Datatyped):
     """Reshape layer.
     """
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.ReshapeCell_Frame_float,
     }
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.ReshapeCell_Frame_CUDA_float,
         })
     _parameters = {
@@ -2274,7 +2274,7 @@ class Reshape(NeuralNetworkCell, Datatyped):
         if self._N2D2_object is None:
             nb_outputs = inputs.dims()[2]
 
-            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._N2D2_constructors[self._model_key](self._deepnet.N2D2(),
                                                                          self.get_name(),
                                                                          nb_outputs,
                                                                          self._constructor_arguments['dims'],
@@ -2295,11 +2295,11 @@ class Reshape(NeuralNetworkCell, Datatyped):
 class Resize(NeuralNetworkCell):
     """Resize layer.
     """
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame': N2D2.ResizeCell_Frame,
     }
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA': N2D2.ResizeCell_Frame_CUDA,
         })
     _parameters = {
@@ -2348,7 +2348,7 @@ class Resize(NeuralNetworkCell):
         if self._N2D2_object is None:
             nb_outputs = inputs.dims()[2]
 
-            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._N2D2_constructors[self._model_key](self._deepnet.N2D2(),
                                                                            self.get_name(),
                                                                            self._constructor_arguments['outputs_width'],
                                                                            self._constructor_arguments['outputs_height'],
@@ -2372,11 +2372,11 @@ class Resize(NeuralNetworkCell):
 class Transpose(NeuralNetworkCell, Datatyped):
     """Transpose layer.
     """
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.TransposeCell_Frame_float,
     }
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.TransposeCell_Frame_CUDA_float,
         })
     _parameters = {}
@@ -2410,7 +2410,7 @@ class Transpose(NeuralNetworkCell, Datatyped):
         if self._N2D2_object is None:
             nb_outputs = inputs.dims()[2]
 
-            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._N2D2_constructors[self._model_key](self._deepnet.N2D2(),
                                                                            self.get_name(),
                                                                            nb_outputs,
                                                                            self._constructor_arguments['perm'],
@@ -2430,11 +2430,11 @@ class Transpose(NeuralNetworkCell, Datatyped):
 
 @n2d2.utils.inherit_init_docstring()
 class Transformation(NeuralNetworkCell):
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame': N2D2.TransformationCell_Frame,
     }
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA': N2D2.TransformationCell_Frame_CUDA,
         })
     _parameters = {
@@ -2471,7 +2471,7 @@ class Transformation(NeuralNetworkCell):
         if self._N2D2_object is None:
             nb_outputs = inputs.dims()[2]
 
-            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._N2D2_constructors[self._model_key](self._deepnet.N2D2(),
                                                                            self.get_name(),
                                                                            nb_outputs,
                                                                            self._constructor_arguments['transformation'],
@@ -2493,11 +2493,11 @@ class Transformation(NeuralNetworkCell):
 class Scaling(NeuralNetworkCell, Datatyped):
     """Scaling layer.
     """
-    _cell_constructors = {
+    _N2D2_constructors = {
         'Frame<float>': N2D2.ScalingCell_Frame_float,
     }
     if cuda_compiled:
-        _cell_constructors.update({
+        _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.ScalingCell_Frame_CUDA_float,
         })
     _parameters = {}
@@ -2531,7 +2531,7 @@ class Scaling(NeuralNetworkCell, Datatyped):
         if self._N2D2_object is None:
             nb_outputs = inputs.dims()[2]
 
-            self._set_N2D2_object(self._cell_constructors[self._model_key](self._deepnet.N2D2(),
+            self._set_N2D2_object(self._N2D2_constructors[self._model_key](self._deepnet.N2D2(),
                                                                            self.get_name(),
                                                                            nb_outputs,
                                                                            self._constructor_arguments['scaling'],

@@ -116,7 +116,7 @@ class Score(Target):
     _parameters.update(Target._target_parameters)
 
     _convention_converter = n2d2.ConventionConverter(_parameters)
-
+    _N2D2_constructors = N2D2.TargetScore
     def __init__(self, provider, **config_parameters):
         """
         """
@@ -124,7 +124,7 @@ class Score(Target):
 
     def __call__(self, inputs):
         if self._N2D2_object is None: # TODO : We allow the user to modify the graph but we do not check if the target is associated with the last cell.
-            self._N2D2_object = N2D2.TargetScore(self._constructor_parameters['name'],
+            self._N2D2_object = self._N2D2_constructors(self._constructor_parameters['name'],
                                                  inputs.cell.N2D2(),
                                                  self._provider.N2D2(),
                                                  **self.n2d2_function_argument_parser(self._optional_constructor_arguments))

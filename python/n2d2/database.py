@@ -52,6 +52,7 @@ class Database(N2D2_Interface):
     _parameters={
         "load_data_in_memory": "loadDataInMemory",
     }
+    _N2D2_constructors = N2D2.Database
     _convention_converter = n2d2.ConventionConverter(_parameters)
     # This constructor is not called by children, because not abstract class
     def __init__(self, **config_parameters):
@@ -62,7 +63,7 @@ class Database(N2D2_Interface):
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['load_data_in_memory'])
-        self._N2D2_object = N2D2.Database(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
+        self._N2D2_object = self._N2D2_constructors(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
 
     def get_nb_stimuli(self, partition):
@@ -139,7 +140,7 @@ class DIR(Database):
     _convention_converter= n2d2.ConventionConverter(_parameters)
 
     _convention_converter.update(_database_parameters)
-
+    _N2D2_constructors = N2D2.DIR_Database
     def __init__(self,
                  data_path,
                  learn,
@@ -188,7 +189,7 @@ class DIR(Database):
         """
         N2D2_Interface.__init__(self, **config_parameters)
         self._parse_optional_arguments(['load_data_in_memory'])
-        self._N2D2_object = N2D2.DIR_Database(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
+        self._N2D2_object = self._N2D2_constructors(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
 
         if ignore_mask:
             self._N2D2_object.setIgnoreMasks(ignore_mask)
@@ -246,6 +247,7 @@ class MNIST(Database):
     }
     _parameters.update(_database_parameters)
     _convention_converter= n2d2.ConventionConverter(_parameters)
+    _N2D2_constructors = N2D2.MNIST_IDX_Database
 
     def __init__(self, data_path, **config_parameters):
         """
@@ -267,7 +269,7 @@ class MNIST(Database):
         self._parse_optional_arguments(['label_path', 'extract_roi', 'validation'])
         
 
-        self._N2D2_object = N2D2.MNIST_IDX_Database(self._constructor_arguments['data_path'],
+        self._N2D2_object = self._N2D2_constructors(self._constructor_arguments['data_path'],
                                                     **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
@@ -287,7 +289,7 @@ class CIFAR100(Database):
     _parameters.update(_database_parameters)
 
     _convention_converter= n2d2.ConventionConverter(_parameters)
-
+    _N2D2_constructors = N2D2.CIFAR100_Database
     def __init__(self, **config_parameters):
         """
         :param data_path: Path to the database, default="``$N2D2_DATA``/cifar-100-binary"
@@ -300,7 +302,7 @@ class CIFAR100(Database):
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['validation', 'use_coarse', "use_test_for_validation"])
-        self._N2D2_object = N2D2.CIFAR100_Database(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
+        self._N2D2_object = self._N2D2_constructors(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
@@ -319,6 +321,7 @@ class ILSVRC2012(Database):
     }
     _parameters.update(_database_parameters)
     _convention_converter= n2d2.ConventionConverter(_parameters)
+    _N2D2_constructors = N2D2.ILSVRC2012_Database
 
     def __init__(self, learn, **config_parameters):
         """
@@ -332,7 +335,7 @@ class ILSVRC2012(Database):
             'learn': learn,
         })
         self._parse_optional_arguments(['use_validation_for_test', 'background_class'])
-        self._N2D2_object = N2D2.ILSVRC2012_Database(self._constructor_arguments['learn'],
+        self._N2D2_object = self._N2D2_constructors(self._constructor_arguments['learn'],
                                                     **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
@@ -356,6 +359,7 @@ class Cityscapes(Database):
     }
     _parameters.update(_database_parameters)
     _convention_converter= n2d2.ConventionConverter(_parameters)
+    _N2D2_constructors = N2D2.Cityscapes_Database
 
     def __init__(self, **config_parameters):
         """
@@ -374,7 +378,7 @@ class Cityscapes(Database):
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['inc_train_extra', 'use_coarse', 'single_instance_labels'])
-        self._N2D2_object = N2D2.Cityscapes_Database(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
+        self._N2D2_object = self._N2D2_constructors(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
@@ -390,7 +394,7 @@ class GTSRB(Database):
     }
     _parameters.update(_database_parameters)
     _convention_converter= n2d2.ConventionConverter(_parameters)
-
+    _N2D2_constructors = N2D2.GTSRB_DIR_Database
     def __init__(self, validation, **config_parameters):
         """
         :param validation: Fraction of the learning set used for validation
@@ -400,6 +404,6 @@ class GTSRB(Database):
 
         # No optional args
         self._parse_optional_arguments([])
-        self._N2D2_object = N2D2.GTSRB_DIR_Database(validation, **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
+        self._N2D2_object = self._N2D2_constructors(validation, **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())

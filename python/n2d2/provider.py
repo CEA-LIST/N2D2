@@ -82,7 +82,7 @@ class DataProvider(Provider):
     Provide the data to the network.
     """
     _type = "DataProvider"
-
+    _N2D2_constructors = N2D2.StimuliProvider
     # Be careful to match default parameters in python and N2D2 constructor
     def __init__(self, database, size, random_read=False, **config_parameters):
         """
@@ -106,7 +106,7 @@ class DataProvider(Provider):
 
         self._parse_optional_arguments(['batch_size', 'composite_stimuli'])
 
-        self._N2D2_object = N2D2.StimuliProvider(database=self._constructor_arguments['database'].N2D2(),
+        self._N2D2_object = self._N2D2_constructors(database=self._constructor_arguments['database'].N2D2(),
                                                  size=self._constructor_arguments['size'],
                                                  **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
@@ -278,10 +278,9 @@ class DataProvider(Provider):
             output += "]"
         return output
 
-@n2d2.utils.inherit_init_docstring()
 class TensorPlaceholder(Provider):
     """
-    A provider used to stream a single tensor through a neural network.
+    A provider used to stream a **single** tensor through a neural network.
     This is automatically used when you pass a Tensor that doesn't come from :py:class:`n2d2.provider.DataProvider`.
     """
     def __init__(self, inputs, labels=None, **config_parameters):
@@ -296,8 +295,7 @@ class TensorPlaceholder(Provider):
         if isinstance(inputs, n2d2.Tensor):
             self._tensor = inputs
         else:
-            raise ValueError("Wrong input of type " + str(type(inputs)))
-            # n2d2.error_handler.wrong_input_type("inputs", type(inputs), [type(list), 'n2d2.Tensor', 'N2D2.BaseTensor'])
+            raise n2d2.error_handler.wrong_input_type("inputs", type(inputs), ['list', 'n2d2.Tensor', 'N2D2.BaseTensor'])
         dims = [self._tensor.N2D2().dimX(), self._tensor.N2D2().dimY(), self._tensor.N2D2().dimZ()]
         self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
                                                  size=dims,
@@ -357,9 +355,8 @@ class TensorPlaceholder(Provider):
         return self._tensor
 
     
-
     def __str__(self):
-        return "'" + self.get_name() + "' TensorPlaceholder"
+        return f"'{self.get_name()}' TensorPlaceholder"
 
 # TODO : UNUSED ? remove later
 # class MultipleOutputsProvider(Provider):
