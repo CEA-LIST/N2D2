@@ -30,7 +30,7 @@ from n2d2.solver import SGD
 from n2d2 import ConfigSection
 import argparse
 
-parser = argparse.ArgumentParser(description="Train LeNet on MNIST dataset")
+parser = argparse.ArgumentParser(description="Train a ConvNet on the GTSRB dataset and run the N2D2 analysis tools to get.")
 parser.add_argument('--epochs', type=int, default=10, metavar='S',
                     help='Nb Epochs. 0 is testing only (default: 120)')
 parser.add_argument('--batch_size', type=int, default=64, metavar='S',
@@ -42,10 +42,10 @@ parser.add_argument("--data_path", type=str, help="Path to MNIST dataset")
 args = parser.parse_args()
 
 
-NB_EPOCH = 1
-BATCH_SIZE = 24
+NB_EPOCH = args.epochs
+BATCH_SIZE = args.batch_size
 n2d2.global_variables.default_model = "Frame_CUDA"
-n2d2.global_variables.set_cuda_device = 0
+n2d2.global_variables.set_cuda_device = args.dev
 
 db = n2d2.database.GTSRB(0.2)
 if args.data_path is None:

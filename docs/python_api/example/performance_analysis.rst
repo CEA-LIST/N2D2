@@ -225,13 +225,18 @@ If you have done the testing loop you can  use the following line to see the res
     # save a graph of the loss and the validation score as a function of the number of steps
     target.log_success("vis_GTSRB")
 
-These methods will create images in a folder ``Score_0``. 
-You will find the confusion matrix :
+These methods will create images in a folder with the name of your Target. 
+In this folder, you will find the confusion matrix :
 
 .. figure:: /_static/gtsrbConfusionMatrix.png
    :alt: Confusion Matrix.
 
-If you want to visualize the performance analysis you can use the following line :
+And the training curve :
+
+.. figure:: /_static/gtsrbSuccessLearning.png
+   :alt: Success learning.
+
+If you want to visualize the performance analysis of your neural network you can use the following line :
 
 .. testcode::
 

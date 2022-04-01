@@ -78,6 +78,13 @@ If you want to use the dynamic computation graph  provided by the API, you can u
 Cells
 -----
 
+NeuralNetworkCell
+~~~~~~~~~~~~~~~~~
+
+.. autoclass:: n2d2.cells.NeuralNetworkCell
+        :members:
+        :inherited-members:
+
 Conv
 ~~~~
 
@@ -142,6 +149,22 @@ Pool
         :members:
         :inherited-members:
 
+Saving parameters
+-----------------
+
+You can save the parameters (weights, biases ...) of your network with the method `export_free_parameters`.
+To load those parameters you can use the method `import_free_parameters`.
+
+With n2d2 you can choose wether you want to save the parameters of a part of your network or of all your graph.
+
++------------------------------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+|            Object                        |                      Save parameters                           |                        Load parameters                         |
++==========================================+================================================================+================================================================+
+| :py:class:`n2d2.cells.NeuralNetworkCell` | :py:meth:`n2d2.cells.NeuralNetworkCell.export_free_parameters` | :py:meth:`n2d2.cells.NeuralNetworkCell.import_free_parameters` |
++------------------------------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+| :py:class:`n2d2.cells.Block`             | :py:meth:`n2d2.cells.Block.import_free_parameters`             |  :py:meth:`n2d2.cells.Block.import_free_parameters`            |
++------------------------------------------+----------------------------------------------------------------+----------------------------------------------------------------+
+
 
 Configuration section
 ---------------------
@@ -149,8 +172,7 @@ Configuration section
 If you want to add the same parameters to multiple cells, you can use a :py:class:`n2d2.ConfigSection`.
 
 .. autoclass:: n2d2.ConfigSection
-        :members:
-        :inherited-members:
+
 
 :py:class:`n2d2.ConfigSection` are used like dictionaries and passes to the constructor of classes like ``kwargs``. 
 
