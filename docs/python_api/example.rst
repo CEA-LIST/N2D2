@@ -10,3 +10,4 @@ If you find an example not up to date, please consider leaving an issue here : h
 
    example/performance_analysis
    example/load_onnx
+   example/graph_manipulation

@@ -113,7 +113,7 @@ class Block(Cell):
         if isinstance(item, int):
             return list(self._cells.values())[item]
         elif isinstance(item, str): 
-            return self._cells[item]
+            return self.get_cell(item)
         else:
             raise n2d2.error_handler.WrongInputType("item", type(item), ["str"])
 

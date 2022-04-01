@@ -29,7 +29,7 @@ print("Short representation: only with compulsory constructor arguments")
 print(fc1)
 print(fc2)
 
-print("Verbose representation: only with compulsory constructor arguments")
+print("Verbose representation: show graph and every arguments")
 n2d2.global_variables.verbosity = n2d2.global_variables.Verbosity.detailed
 print(fc1)
 print(fc2)
@@ -63,5 +63,66 @@ print(fc1)
 print(fc2)
 
 
+"""
+You can plot the new graph with this method :
+"""
+
+x.draw_associated_graph("example_graph")
 
 
+from n2d2.cells import Sequence, Conv, Pool2d, Dropout, Fc  
+from n2d2.activation import Rectifier, Linear
+
+"""
+Creating a LeNet with two separate part.
+"""
+
+extractor = Sequence([
+    Conv(1, 6, kernel_dims=[5, 5]),
+    Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling='Max'),
+    Conv(6, 16, kernel_dims=[5, 5]),
+    Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling='Max'),
+    Conv(16, 120, kernel_dims=[5, 5]),
+], name="extractor")
+
+classifier = Sequence([
+    Fc(120, 84, activation=Rectifier()),
+    Dropout(dropout=0.5),
+    Fc(84, 10, activation=Linear(), name="last_fully"),
+], name="classifier")
+
+"""
+LeNet model with two sequences !
+"""
+network = Sequence([extractor, classifier])
+
+x = n2d2.Tensor([1,32,32], value=0.5)
+
+output = network(x)
+
+"""
+Printing the network 
+"""
+print(network)
+
+"""
+Plotting the resulting graph
+"""
+
+output.draw_associated_graph("full_lenet_graph")
+
+"""
+Getting a cell from the encaspulated Sequence easily ! 
+"""
+first_fully = network["last_fully"]
+print("Accessing the first fully connected layer which is encapsulated in a Sequence")
+print(first_fully)
+
+"""
+Getting the output tensor of the fully !
+"""
+print("Getting the output of the last layer ")
+print(f"Output of the second fully connected : {first_fully.get_outputs()}")
+
+print("\nSaving only the parameters of the convnet :")
+network[0].export_free_parameters("ConvNet_parameters")

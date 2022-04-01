@@ -26,7 +26,6 @@ from n2d2 import error_handler
 from n2d2.provider import TensorPlaceholder
 import n2d2.global_variables as gb
 from functools import reduce
-import random
 try: 
     from numpy import ndarray, array
 except ImportError:
@@ -423,7 +422,7 @@ class Tensor:
         # if self.cuda:
         #     self.htod()
 
-    def __getitem__(self, index):
+    def __getitem__(self, index)->any:
         """
         Get an element of the tensor.
         To select the element to get you can use :
@@ -441,16 +440,16 @@ class Tensor:
             raise error_handler.WrongInputType("index", type(index), [str(list), str(tuple), str(float), str(int)])
         return value
         
-    def __len__(self):
+    def __len__(self)->int:
         return len(self._tensor)
 
     def __iter__(self):
         return self._tensor.__iter__()
 
-    def __contains__(self, value):
+    def __contains__(self, value)->bool:
         return self._tensor.__contains__(value)
 
-    def __eq__(self, other_tensor):
+    def __eq__(self, other_tensor)->bool:
         if not isinstance(other_tensor, Tensor):
             raise TypeError("You can only compare tensor with each other.")
         # Quick initialization of is_equal by checking the tensors have the same dimensions
@@ -461,7 +460,7 @@ class Tensor:
             cpt += 1
         return is_equal
 
-    def __str__(self):
+    def __str__(self)->str:
         if self.is_cuda:
             # Updating the host before printing the Tensor
             self.dtoh() 
@@ -517,13 +516,24 @@ class Tensor:
     def get_deepnet(self):
         """
         Method called by the cells, if the tensor is not part of a graph, it will be linked to an :py:class:`n2d2.provider.Provider` object.
+        
+        :return: The associated deepnet
+        :rtype: :py:class:`n2d2.deepnet.DeepNet`
         """
         if self.cell is None:
             # TensorPlaceholder will set the cell attribute to it self.
             TensorPlaceholder(self) 
         return self.cell.get_deepnet()
 
-    def back_propagate(self):
+    def draw_associated_graph(self, path: str)->None:
+        """Plot the graph in a figure located at `path`.
+
+        :param path: Path were to save the plotted graph.
+        :type path: str
+        """
+        self.get_deepnet().draw_graph(path)
+
+    def back_propagate(self)->None:
         """
         Compute the backpropagation on the deepnet.
         """
@@ -533,7 +543,7 @@ class Tensor:
             raise RuntimeError('This tensor is not part of a graph')
         self.cell.get_deepnet().back_propagate()
     
-    def update(self):
+    def update(self)->None:
         """
         Update weights and biases of the cells.
         """
@@ -543,10 +553,10 @@ class Tensor:
             raise RuntimeError('This tensor is not part of a graph')
         self.cell.get_deepnet().update()
 
-    def is_leaf(self):
+    def is_leaf(self)->bool:
         return self._leaf
 
-    def mean(self):
+    def mean(self)->float:
         return self.N2D2().mean()
 
 class Interface(n2d2.provider.Provider):

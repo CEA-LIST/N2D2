@@ -275,6 +275,36 @@ class MNIST(Database):
         self.load_N2D2_parameters(self.N2D2())
 
 @n2d2.utils.inherit_init_docstring()
+class CIFAR10(Database):
+    """
+    CIFAR10 database :cite:`Krizhevsky2009`.
+    """
+
+    _type = "CIFAR10"
+    _parameters = {
+        "validation": "validation",
+        "use_test_for_validation": "useTestForVal",
+    }  
+    _parameters.update(_database_parameters)
+
+    _convention_converter= n2d2.ConventionConverter(_parameters)
+    _N2D2_constructors = N2D2.CIFAR10_Database
+    def __init__(self, **config_parameters):
+        """
+        :param data_path: Path to the database, default="``$N2D2_DATA``/cifar-10-binary"
+        :type data_path: str, optional
+        :param validation: Fraction of the learning set used for validation, default=0.0
+        :type validation: float, optional
+        """
+        N2D2_Interface.__init__(self, **config_parameters)
+
+        self._parse_optional_arguments(['validation', "use_test_for_validation"])
+        self._N2D2_object = self._N2D2_constructors(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
+        self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
+
+
+@n2d2.utils.inherit_init_docstring()
 class CIFAR100(Database):
     """
     CIFAR100 database :cite:`Krizhevsky2009`.
