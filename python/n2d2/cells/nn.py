@@ -419,32 +419,37 @@ class Fc(NeuralNetworkCell, ModelDatatyped, Trainable):
     def __setattr__(self, key: str, value) -> None:
         if key == 'weights_solver':
             if isinstance(value, n2d2.solver.Solver):
-                self._N2D2_object.resetWeightsSolver(value.N2D2())
+                if self._N2D2_object:
+                    self._N2D2_object.resetWeightsSolver(value.N2D2())
                 self._config_parameters["weights_solver"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("weights_solver", str(type(value)), [str(n2d2.solver.Solver)])
         elif key == 'bias_solver':
             if isinstance(value, n2d2.solver.Solver):
-                self._N2D2_object.setBiasSolver(value.N2D2())
+                if self._N2D2_object:
+                    self._N2D2_object.setBiasSolver(value.N2D2())
                 self._config_parameters["bias_solver"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("bias_solver", str(type(value)), [str(n2d2.solver.Solver)])
         elif key == 'weights_filler':
             if isinstance(value, n2d2.filler.Filler):
-                self._N2D2_object.setWeightsFiller(value.N2D2())
+                if self._N2D2_object:
+                    self._N2D2_object.setWeightsFiller(value.N2D2())
                 self._config_parameters["weights_filler"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("weights_filler", str(type(value)), [str(n2d2.filler.Filler)])
         elif key == 'bias_filler':
             if isinstance(value, n2d2.filler.Filler):
-                self._N2D2_object.setBiasFiller(value.N2D2())
+                if self._N2D2_object:
+                    self._N2D2_object.setBiasFiller(value.N2D2())
                 self._config_parameters["bias_filler"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("bias_filler", str(type(value)), [str(n2d2.filler.Filler)])
         elif key == 'quantizer':
             if isinstance(value, n2d2.quantizer.Quantizer):
-                self._N2D2_object.setQuantizer(value.N2D2())
-                self._N2D2_object.initializeWeightQuantizer()
+                if self._N2D2_object:
+                    self._N2D2_object.setQuantizer(value.N2D2())
+                    self._N2D2_object.initializeWeightQuantizer()
                 self._config_parameters["quantizer"] = value
 
             else:
@@ -800,32 +805,37 @@ class Conv(NeuralNetworkCell, ModelDatatyped, Trainable):
     def __setattr__(self, key: str, value: any) -> None:
         if key == 'weights_solver':
             if isinstance(value, n2d2.solver.Solver):
-                self._N2D2_object.resetWeightsSolver(value.N2D2())
+                if self._N2D2_object:
+                    self._N2D2_object.resetWeightsSolver(value.N2D2())
                 self._config_parameters["weights_solver"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("weights_solver", str(type(value)), [str(n2d2.solver.Solver)])
         elif key == 'bias_solver':
             if isinstance(value, n2d2.solver.Solver):
-                self._N2D2_object.setBiasSolver(value.N2D2())
+                if self._N2D2_object:
+                    self._N2D2_object.setBiasSolver(value.N2D2())
                 self._config_parameters["bias_solver"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("bias_solver", str(type(value)), [str(n2d2.solver.Solver)])
         elif key == 'weights_filler':
             if isinstance(value, n2d2.filler.Filler):
-                self._N2D2_object.setWeightsFiller(value.N2D2())
+                if self._N2D2_object:
+                    self._N2D2_object.setWeightsFiller(value.N2D2())
                 self._config_parameters["weights_filler"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("weights_filler", str(type(value)), [str(n2d2.filler.Filler)])
         elif key == 'bias_filler':
             if isinstance(value, n2d2.filler.Filler):
-                self._N2D2_object.setBiasFiller(value.N2D2())
+                if self._N2D2_object:
+                    self._N2D2_object.setBiasFiller(value.N2D2())
                 self._config_parameters["bias_filler"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("bias_filler", str(type(value)), [str(n2d2.filler.Filler)])
         elif key == 'quantizer':
             if isinstance(value, n2d2.quantizer.Quantizer):
-                self._N2D2_object.setQuantizer(value.N2D2())
-                self._N2D2_object.initializeWeightQuantizer()
+                if self._N2D2_object:
+                    self._N2D2_object.setQuantizer(value.N2D2())
+                    self._N2D2_object.initializeWeightQuantizer()
                 self._config_parameters["quantizer"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("quantizer", str(type(value)), [str(n2d2.quantizer.Quantizer)])
@@ -1120,7 +1130,8 @@ class Softmax(NeuralNetworkCell, ModelDatatyped):
     def __setattr__(self, key: str, value) -> None:
         if key == 'with_loss':
             if isinstance(value, bool):
-                self._N2D2_object.setWithLoss(value)
+                if self._N2D2_object:
+                    self._N2D2_object.setWithLoss(value)
                 self._optional_constructor_arguments["with_loss"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("with_loss", str(type(value)), ["bool"])
@@ -1515,30 +1526,34 @@ class Deconv(NeuralNetworkCell, ModelDatatyped, Trainable):
     def __setattr__(self, key: str, value) -> None:
         if key == 'weights_solver':
             if isinstance(value, n2d2.solver.Solver):
-                self._N2D2_object.resetWeightsSolver(value.N2D2())
+                if self._N2D2_object:
+                    self._N2D2_object.resetWeightsSolver(value.N2D2())
                 self._config_parameters["weights_solver"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("weights_solver", str(type(value)), [str(n2d2.solver.Solver)])
         elif key == 'bias_solver':
             if isinstance(value, n2d2.solver.Solver):
-                self._N2D2_object.setBiasSolver(value.N2D2())
+                if self._N2D2_object:
+                    self._N2D2_object.setBiasSolver(value.N2D2())
                 self._config_parameters["bias_solver"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("bias_solver", str(type(value)), [str(n2d2.solver.Solver)])
         elif key == 'weights_filler':
             if isinstance(value, n2d2.filler.Filler):
-                self._N2D2_object.setWeightsFiller(value.N2D2())
+                if self._N2D2_object:
+                    self._N2D2_object.setWeightsFiller(value.N2D2())
                 self._config_parameters["weights_filler"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("weights_filler", str(type(value)), [str(n2d2.filler.Filler)])
         elif key == 'bias_filler':
             if isinstance(value, n2d2.filler.Filler):
-                self._N2D2_object.setBiasFiller(value.N2D2())
+                if self._N2D2_object:
+                    self._N2D2_object.setBiasFiller(value.N2D2())
                 self._config_parameters["bias_filler"] = value
             else:
                 raise n2d2.error_handler.WrongInputType("bias_filler", str(type(value)), [str(n2d2.filler.Filler)])
         elif key == 'mapping':
-            if isinstance(value, n2d2.Tensor):
+            if isinstance(value, n2d2.Tensor): # TODO : add mapping in parameters
                 self._N2D2_object.setMapping(value.N2D2())
             else:
                 raise n2d2.error_handler.WrongInputType('mapping', type(value), [str(type(n2d2.Tensor))])
@@ -2066,12 +2081,14 @@ class BatchNorm2d(NeuralNetworkCell, ModelDatatyped, Trainable):
         if key == 'scale_solver':
             if not isinstance(value, n2d2.solver.Solver):
                 raise n2d2.error_handler.WrongInputType("scale_solver", str(type(value)), [str(n2d2.solver.Solver)])
-            self._N2D2_object.setScaleSolver(value.N2D2())
+            if self._N2D2_object:
+                self._N2D2_object.setScaleSolver(value.N2D2())
             self._config_parameters["scale_solver"] = value
         elif key == 'bias_solver':
             if not isinstance(value, n2d2.solver.Solver):
                 raise n2d2.error_handler.WrongInputType("bias_solver", str(type(value)), [str(n2d2.solver.Solver)])
-            self._N2D2_object.setBiasSolver(value.N2D2())
+            if self._N2D2_object:
+                self._N2D2_object.setBiasSolver(value.N2D2())
             self._config_parameters["bias_solver"] = value
         elif key == 'solver':
             self.set_solver(value)
