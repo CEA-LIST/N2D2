@@ -16,8 +16,17 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 import keras_interoperability
-
+from n2d2.solver import Adam
 from time import time
+from os.path import exists
+import n2d2
+import argparse
+
+# ARGUMENTS PARSING
+parser = argparse.ArgumentParser()
+parser.add_argument("--data_path", type=str, help='Path to the MNIST Dataset')
+args = parser.parse_args()
+
 """
 ## Prepare the data
 """
@@ -69,24 +78,36 @@ tf_model = tf.keras.Sequential(
 model = keras_interoperability.wrap(tf_model, batch_size=batch_size, for_export=True)
 
 
-# model.summary() # TODO : Doesn't work anymore ...
-
 """
 ## Train the model
 """
 
+model.summary()
+path_saved_param="./test_param"
+if exists(path_saved_param):
+    print(f"Importing model parameters from {path_saved_param}")
+    model.get_deepnet_cell().import_free_parameters(path_saved_param)
+else:
+    model.compile(loss="categorical_crossentropy", optimizer=Adam(), metrics=["accuracy"])
+    model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.1)
+    model.get_deepnet_cell().export_free_parameters(path_saved_param)
+    score = model.evaluate(x_test, y_test, verbose=0)
+    print("Test loss:", score[0])
+    print("Test accuracy:", score[1])
+
+# Importing data for calibration.
+database = n2d2.database.MNIST(data_path=args.data_path, validation=0.1)
+provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size=batch_size)
+provider.add_transformation(n2d2.transform.Rescale(width=28, height=28))
+print(provider)
 
 
-model.compile(loss="categorical_crossentropy", optimizer="SGD", metrics=["accuracy"])
-
-model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.1)
-
-"""
-## Evaluate the trained model
-"""
-
-score = model.evaluate(x_test, y_test, verbose=0)
-print("Test loss:", score[0])
-print("Test accuracy:", score[1])
+# Generating C export
+n2d2.export.export_c(
+    model.get_deepnet_cell(),
+    provider=provider,
+    nb_bits=8,
+    export_nb_stimuli_max=1,
+    calibration=1)
 
 print(f"Script time : {time()-start_time}s")

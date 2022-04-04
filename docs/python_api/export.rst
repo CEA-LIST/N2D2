@@ -22,12 +22,12 @@ Export C
 --------
 
 Documentation
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 .. autofunction:: n2d2.export.export_c
 
 Example
-~~~~~~~
+^^^^^^^
 
 .. code-block:: python
 
@@ -37,13 +37,35 @@ Example
         export_nb_stimuli_max=-1,
         calibration=-1)
 
+Frequently asked question
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Scaling and ElemWise are the only layers supported in Fixed-point scaling mode
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you try to export an untrained model to C in `int8`, you may come across this error : 
+
+.. code-block::
+    
+    RuntimeError: Scaling and ElemWise are the only layers supported in Fixed-point scaling mode.
+
+This is due to the weights parameter being initialized with high value.
+If you look at the log you may see warning lines like this :
+
+.. code-block::
+
+    Scaling (8.78614) > 1 for layer "model/dense/MatMul:0" is not supported with Single/Double-shift scaling. Falling back to Fixed-point scaling for this layer.
+
+Training the model before exporting it will probably solve this issue.
+
+
 Export CPP
 ----------
 
 .. autofunction:: n2d2.export.export_cpp
 
 Example
-~~~~~~~
+^^^^^^^
 
 .. code-block:: python
 
