@@ -5,6 +5,9 @@ In this example, we will see step by step how to load a model from ONNX.
 
 You can find the full python script here :download:`lenet_onnx.py</../python/examples/lenet_onnx.py>` with the associated onnx file here :download:`LeNet.onnx</../python/examples/LeNet.onnx>`.
 
+.. figure:: /_static/python_api/examples/LeNet_onnx_full.png
+   :alt: LeNet_onnx_full.
+
 Loading an ONNX
 ---------------
 
@@ -35,7 +38,7 @@ Once this is done, you can load your ONNX file with one line :
     model = n2d2.cells.DeepNetCell.load_from_ONNX(provider, args.onnx)
     print(model)
 
-you should have here a verbose outputs of the load ONNX method and once you print your model you should see the following result :
+You should observe a verbose output of the loaded ONNX model :
 
 .. testoutput::
 
@@ -48,7 +51,7 @@ you should have here a verbose outputs of the load ONNX method and once you prin
             (5): '18' Softmax(Frame_CUDA<float>)(with_loss=True, group_size=0 | activation=None)(['17'])
     )
 
-The model have been exported successfully !
+The model has been exported successfully !
 
 Training and exporting the model
 --------------------------------
@@ -60,7 +63,8 @@ You can now do what you want with your imported model, like training it :
     model.fit(learn_epoch=nb_epochs, valid_metric='Accuracy')
     model.run_test()
 
-And even exporting it to CPP in int 8 !
+| And even exporting it to CPP in int 8 !
+| (Don't forget to remove the softmax layer first because N2D2 does not export this layer for the CPP export)
 
 .. code-block::
 
