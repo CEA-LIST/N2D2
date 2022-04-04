@@ -35,7 +35,7 @@ Here are the functionalities available with the Python API :
 +------------------------+------------+------------------+
 | Torch interoperability | ✔️         | ✔️               |
 +------------------------+------------+------------------+
-| Keras interoperability | ❌         | ✔️               |
+| Keras interoperability | ✔️         | ✔️               |
 +------------------------+------------+------------------+
 | Multi GPU support      | ✔️         |                  |
 +------------------------+------------+------------------+
@@ -77,6 +77,10 @@ Installation of the Python API
 With the Python Package Index (Py Pi)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. Warning::
+        
+        This method is not supported anymore, we are working on it !
+
 You can have access to the last stable version of the python API by using
 ``pip`` and importing the package ``n2d2``.
 
@@ -111,7 +115,34 @@ Go at the root of the N2D2 projet and follow the following steps
         python setup.py bdist_wheel
 
         # Install the n2d2 python packages in your virtual environment
-        pip install dist/*
+        pip install .
+
+Installation for developer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you want to install n2d2 as seomeone who wants to contribute to n2d2, we recommand the following setup :
+
+Inside your n2d2 project, create a build folder and compile N2D2 inside it :
+
+.. code-block:: bash
+
+        mkdir build && cd build
+        cmake .. && make -j 8
+
+Once this is done, you have generated the shared object : `lib/n2d2.*.so`.
+
+You can add the generated `lib` folder and the python source in your `PYTHONPATH` with the command :
+
+.. code-block:: bash
+
+        export PYTHONPATH=$PYTHONPATH:<N2D2_PATH>/bin/lib:<N2D2_PATH>/python
+
+.. Note::
+
+        Add this line in your bashrc to always have a good `PYTHONPATH` setup !
+
+To check if your PYTHONPATH works properly you can try to import `N2D2` (verify that the compilation went well) 
+and then `n2d2` (verify that your `PYTHONPATH` point the n2d2 python API).
 
 Frequent issues
 ^^^^^^^^^^^^^^^
