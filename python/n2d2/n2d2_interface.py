@@ -84,7 +84,7 @@ class N2D2_Interface:
         self._N2D2_object = None
 
     @classmethod
-    def create_from_N2D2_object(cls, N2D2_object):
+    def create_from_N2D2_object(cls, N2D2_object, **kwargs):
         interface = cls.__new__(cls)
         interface._constructor_arguments = {}
         interface._optional_constructor_arguments = {}

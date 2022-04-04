@@ -19,7 +19,6 @@
 """
 import N2D2
 import n2d2
-from n2d2.error_handler import deprecated
 from n2d2.n2d2_interface import N2D2_Interface
 from abc import ABC, abstractmethod
 import n2d2.global_variables as gb
@@ -28,7 +27,7 @@ from typing import List, Tuple
 cuda_compiled = gb.cuda_compiled
 
 
-class Scaling(N2D2_Interface, ABC):
+class ScalingObject(N2D2_Interface, ABC):
     
     # Cell_frame_parameter contains the parameters from cell_parameter
     @abstractmethod

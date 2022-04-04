@@ -41,19 +41,9 @@ static_analysis:python_api:
   tags:
     - ubuntu
   image: "python:3.7"
-  before_script:
-    # Allow to use aliases in non interactive mode.
-    - shopt -s expand_aliases 
-    ### PyLint Warning to Ignore ###
-    # I1101 c-extension-no-member : C extension not found
-    # C0103 invalid-name : Name doesn't fit python convention (camel)
-    # F0401 import-error : Unable to import
-    # E0611 no-name-in-module : Used when a name cannot be found in a module.
-
-    - alias run_linting='pylint -d I1101 -d C0103 -d F0401 -d C0326'
 
   script:
     - cd python
     - pip install pylint
     - pip install pylint-exit
-    - run_linting n2d2 pytorch_interoperability keras_interoperability || pylint-exit $? 
+    - pylint --rcfile=.pylintrc n2d2 pytorch_interoperability keras_interoperability || pylint-exit $? 
