@@ -147,6 +147,9 @@ class Score(Target):
     def clear_success(self):
         self._N2D2_object.clearSuccess(self._provider.get_partition())
 
+    def clear_score(self):
+        self._N2D2_object.clearScore(self._provider.get_partition())
+
     def log_confusion_matrix(self, path):
         self._N2D2_object.logConfusionMatrix(path, self._provider.get_partition())
 
@@ -165,7 +168,7 @@ class Score(Target):
 
     def get_average_score(self, metric):
         """
-        :param metric: Can be any of : ``Sensitivity``, ``Specificity``, ``Precision``, ``NegativePredictive``, ``Value``, ``MissRate``, ``FallOut``, ``FalseDiscoveryRate``, ``FalseOmissionRate``, ``Accuracy``, ``F1Score``, ``Informedness``, ``Markedness``.
+        :param metric: Can be any of : ``Sensitivity``, ``Specificity``, ``Precision``, ``NegativePredictive``, ``Value``, ``MissRate``, ``FallOut``, ``FalseDiscoveryRate``, ``FalseOmissionRate``, ``Accuracy``, ``F1Score``, ``Informedness``, ``Markedness``, ``IU``.
         :type metric: string
         """
         if metric not in N2D2.ConfusionTableMetric.__members__.keys():

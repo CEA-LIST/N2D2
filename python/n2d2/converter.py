@@ -50,9 +50,9 @@ object_dict = {
     "Reshape": n2d2.cells.Reshape,
     "Resize": n2d2.cells.Resize,
     "Transpose": n2d2.cells.Transpose,
+    "Activation": n2d2.cells.Activation,
     "Transformation": n2d2.cells.Transformation,
     "Scaling": n2d2.cells.Scaling,
-
 }
 
 

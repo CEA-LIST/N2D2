@@ -36,7 +36,7 @@ class MobileNetv1Extractor(Sequence):
     def __init__(self, alpha, with_bn=False):
 
         # base_nb_outputs = int(32 * alpha)
-        compute_nb_outputs = lambda x :int(x * 32 * alpha)
+        compute_nb_outputs = lambda x: int(x * 32 * alpha)
 
         self.div2 = Sequence([
             Conv(3, compute_nb_outputs(1), kernel_dims=[3, 3], stride_dims=[2, 2], padding_dims=[1, 1],
@@ -94,7 +94,19 @@ class MobileNetv1Extractor(Sequence):
             ConvPointWise(compute_nb_outputs(32), compute_nb_outputs(32), name="conv9_1x1", **conv_config(with_bn))
         ], "div32")
 
-        Sequence.__init__(self, [self.div2, self.div4, self.div8, self.div16, self.div32], "extractor")
+        seq = [self.div2, self.div4, self.div8, self.div16, self.div32]
+
+        if with_bn:
+            for scale in seq:
+                for cell in scale:
+                    if isinstance(cell, Conv):
+                        bn_name = "bn" + cell.get_name()[4:]
+                        scale.insert(scale.index(cell) + 1,
+                                     BatchNorm2d(cell.get_nb_outputs(), activation=Rectifier(), name=bn_name))
+
+        # NOTE: When writing you own Block or Sequence, make sure to add give cells to the constructor, otherwise
+        # they are not accessible by Block methods
+        Sequence.__init__(self, seq, "extractor")
 
 
 
@@ -102,11 +114,11 @@ class MobileNetv1Head(Sequence):
 
     def __init__(self, nb_outputs, alpha=None):
 
-        pool = GlobalPool2d(pooling='Average', name="pool1")
-        fc = Fc(32 * int(32 * alpha), nb_outputs, activation=Linear(), weights_filler=Normal(mean=0.0, std_dev=0.01),
+        self.pool = GlobalPool2d(pooling='Average', name="pool1")
+        self.fc = Fc(32 * int(32 * alpha), nb_outputs, activation=Linear(), weights_filler=Normal(mean=0.0, std_dev=0.01),
                 bias_filler=Constant(value=0.0), name="fc")
 
-        Sequence.__init__(self, [pool, fc], "head")
+        Sequence.__init__(self, [self.pool, self.fc], "head")
 
 
 
@@ -120,7 +132,7 @@ class MobileNetv1(Sequence):
                 for cell in scale:
                     if isinstance(cell, Conv):
                         bn_name = "bn" + cell.get_name()[4:]
-                        scale.insert(scale.index(cell)+1, BatchNorm2d(cell.get_compute_nb_outputs(), activation=Rectifier(), name=bn_name))
+                        scale.insert(scale.index(cell)+1, BatchNorm2d(cell.get_nb_outputs(), activation=Rectifier(), name=bn_name))
 
         self.head = MobileNetv1Head(nb_outputs, alpha)
 

@@ -60,7 +60,7 @@ class Cell(ABC):
         pass
 
     @abstractmethod
-    def export_free_parameters(self, dir_name):
+    def export_free_parameters(self, dir_name, verbose=True):
         pass
 
     def get_name(self):
@@ -134,6 +134,15 @@ class Block(Cell):
             else:
                 cells[elem.get_name()] = elem
 
+    def get_cell(self, item):
+        """
+           Returns the low level view of a cell.
+        """
+        if isinstance(item, str): 
+            return self.get_cells()[item]
+        else:
+            raise n2d2.error_handler.WrongInputType("item", type(item), ["str"])
+
     def test(self):
         for cell in self._cells.values():
             cell.test()
@@ -178,9 +187,9 @@ class Block(Cell):
         for cell in self._cells.values():
             cell.import_free_parameters(dir_name, ignore_not_exists=ignore_not_exists)
 
-    def export_free_parameters(self, dir_name):
+    def export_free_parameters(self, dir_name, verbose=True):
         for cell in self._cells.values():
-            cell.export_free_parameters(dir_name)
+            cell.export_free_parameters(dir_name, verbose)
 
     def __str__(self):
         """
@@ -280,11 +289,13 @@ class Sequence(Iterable):
             x = cell(x)
         return x
 
-    def to_deepnet_cell(self, provider):
+    def to_deepnet_cell(self, provider, target=None):
         """Convert a :py:class:`n2d2.cells.Sequence` to a :py:class:`n2d2.cells.DeepNetCell`
 
         :param provider: Data provider used by the neural network
         :type provider: :py:class:`n2d2.provider.DataProvider`
+        :param target: Target object
+        :type target: :py:class:`n2d2.target.Target`
         :return: The corresponding :py:class:`n2d2.cells.DeepNetCell`
         :rtype: :py:class:`n2d2.cells.DeepNetCell`
         """
@@ -299,8 +310,15 @@ class Sequence(Iterable):
         dummy_input = dummy_input._set_cell(provider)
 
         dummy_output = self(dummy_input)
+        if target:
+            if not isinstance(target, n2d2.target.Target):
+                raise n2d2.error_handler.WrongInputType("target", type(target), ["n2d2.target.Target"])
+            dummy_output = target(dummy_output)
         N2D2_deepnet = dummy_output.get_deepnet().N2D2()
-        N2D2_target =  N2D2.TargetScore("Target", dummy_output.cell.N2D2(), provider.N2D2())
+        if target:
+            N2D2_target=target.N2D2()
+        else:
+            N2D2_target =  N2D2.TargetScore("Target", dummy_output.cell.N2D2(), provider.N2D2())
         N2D2_deepnet.addTarget(N2D2_target)
         N2D2_deepnet.setDatabase(provider.N2D2().getDatabase())
         return DeepNetCell(N2D2_deepnet)

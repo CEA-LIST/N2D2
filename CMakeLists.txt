@@ -145,24 +145,17 @@ function(add_n2d2_pybind name source linked_libs)
 
     find_package(Python 3.7 COMPONENTS Interpreter Development)
 
-    find_package(pybind11 CONFIG 2.2)
-    if(NOT pybind11_FOUND)
-        find_package(pybind11 2.2)
-    endif()
+    
+    message(STATUS "Using third_party/pybind11.")
+    add_subdirectory(${N2D2_SOURCE_DIR}/third_party/pybind11)
 
-    if(pybind11_FOUND)
-        message(STATUS "System pybind11 found.")
-    else()
-        message(STATUS "Using third_party/pybind11.")
-        add_subdirectory(${N2D2_SOURCE_DIR}/third_party/pybind11)
-
-        if (NOT EXISTS "${N2D2_SOURCE_DIR}/third_party/pybind11/CMakeLists.txt")
-          message(FATAL_ERROR
-                  "Cannot find third_party/pybind11 directory that's needed to "
-                  "build N2D2. If you use git, make sure you have cloned submodules:\n"
-                  "  git submodule update --init --recursive\n")
-        endif()
+    if (NOT EXISTS "${N2D2_SOURCE_DIR}/third_party/pybind11/CMakeLists.txt")
+      message(FATAL_ERROR
+      "Cannot find third_party/pybind11 directory that's needed to "
+      "build N2D2. If you use git, make sure you have cloned submodules:\n"
+      "  git submodule update --init --recursive\n")
     endif()
+    
 
     pybind11_add_module(${name} MODULE ${source})
     message(STATUS "pybind11 include dirs: " "${pybind11_INCLUDE_DIRS}")
