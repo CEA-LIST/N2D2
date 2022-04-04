@@ -162,7 +162,27 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         return self.get_outputs().dims()
 
     def get_outputs(self):
+        """
+        :return: The output tensor of the cell.
+        :rtype: :py:class:`n2d2.Tensor`
+        """
         return n2d2.Tensor.from_N2D2(self._N2D2_object.getOutputs())._set_cell(self)
+
+    def get_diffoutputs(self, index:int=0)->n2d2.Tensor:
+        """
+        :param index: Index of the input of the cell to consider, default=0
+        :type index: int, optional
+        :return: The gradient computed by the cell.
+        :rtype: :py:class:`n2d2.Tensor`
+        """
+        return n2d2.Tensor.from_N2D2(self._N2D2_object.getDiffOutputs(index))._set_cell(self)
+
+    def get_diffinputs(self):
+        """
+        :return: The gradient given to the cell.
+        :rtype: :py:class:`n2d2.Tensor`
+        """
+        return n2d2.Tensor.from_N2D2(self._N2D2_object.getDiffInputs())._set_cell(self)
 
     def get_deepnet(self):
         return self._deepnet
