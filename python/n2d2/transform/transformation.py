@@ -1,6 +1,6 @@
 """
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -19,29 +19,41 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-from n2d2.n2d2_interface import N2D2_Interface
-from n2d2.typed import Datatyped
-from abc import ABC, abstractmethod
+import N2D2
 
-class Filler(N2D2_Interface, Datatyped, ABC):
+from n2d2.n2d2_interface import N2D2_Interface
+from abc import ABC, abstractmethod
+from n2d2.error_handler import WrongInputType
+
+
+class Transformation(N2D2_Interface, ABC):
+
     @abstractmethod
     def __init__(self, **config_parameters):
         """
+        :param apply_to: To which partition the transform is applied. One of: ``LearnOnly``, ``ValidationOnly``, ``TestOnly``, ``NoLearn``, ``NoValidation``, ``NoTest``, ``All``, default="All"
+        :type apply_to: str, optional
         """
-        Datatyped.__init__(self, **config_parameters)
-        
+        self._apply_to = N2D2.Database.StimuliSetMask.All
+        if 'apply_to' in config_parameters:
+            if not isinstance(config_parameters['apply_to'], str):
+                raise WrongInputType("apply_to", type(config_parameters['apply_to']), ['str'])
+            self._apply_to = N2D2.Database.StimuliSetMask.__members__[config_parameters.pop('apply_to')]
+
         N2D2_Interface.__init__(self, **config_parameters)
 
-    def get_type(self):
-        return type(self).__name__
-
     def __str__(self):
-        output = self.get_type()
+        output = self._Type
         output += N2D2_Interface.__str__(self)
+        if self._apply_to is not N2D2.Database.StimuliSetMask.All:
+            output += "[apply_to=" + str(self._apply_to) + "]"
         return output
+
+    def get_apply_set(self):
+        return self._apply_to
 
     @classmethod
     def create_from_N2D2_object(cls, N2D2_object):
-        n2d2_filler = super().create_from_N2D2_object(N2D2_object)
-        n2d2_filler._model_key = "<" + N2D2_object.getDataType() + ">"
-        return n2d2_filler
+        n2d2_transform = super().create_from_N2D2_object(N2D2_object)
+        n2d2_transform._apply_to = N2D2.Database.StimuliSetMask.All
+        return n2d2_transform
