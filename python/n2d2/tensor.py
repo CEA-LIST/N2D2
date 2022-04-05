@@ -1,6 +1,6 @@
 """
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -26,7 +26,7 @@ from n2d2 import error_handler
 from n2d2.provider import TensorPlaceholder
 import n2d2.global_variables as gb
 from functools import reduce
-try: 
+try:
     from numpy import ndarray, array
 except ImportError:
     numpy_imported=False
@@ -44,12 +44,12 @@ hard_coded_type = {
     "b": bool,
     "bool": bool,
     "d": float,
-    "double": float,  
+    "double": float,
 }
 
 
 class Tensor:
-    
+
     _tensor_generators = {
         "f": N2D2.Tensor_float,
         "float": N2D2.Tensor_float,
@@ -81,10 +81,10 @@ class Tensor:
             "double": N2D2.CudaTensor_double,
             # bool datatype cannot be defined for CudaTensor
         }
-    
+
     _dim_format = {
         "N2D2": lambda x: x,
-        "Numpy": lambda x: [i for i in reversed(x)],
+        "Numpy": lambda x: list(reversed(x)),
     }
 
     def __init__(self, dims, value=None, cuda=False, datatype="float", cell=None, dim_format='Numpy'):
@@ -97,7 +97,8 @@ class Tensor:
         :type datatype: str, optional
         :param cell: A reference to the object that created this tensor, default=None
         :type cell: :py:class:`n2d2.cells.NeuralNetworkCell`, optional
-        :param dim_format: Define the format used when you declare the dimensions of the tensor. The ``N2D2`` convention is the reversed of the ``Numpy`` the numpy one (e.g. a [2, 3] numpy array is equivalent to a [3, 2] N2D2 Tensor), default="Numpy"
+        :param dim_format: Define the format used when you declare the dimensions of the tensor.
+        The ``N2D2`` convention is the reversed of the ``Numpy`` the numpy one (e.g. a [2, 3] numpy array is equivalent to a [3, 2] N2D2 Tensor), default="Numpy"
         :type dim_format: str, optional
         """
         self._leaf = False
@@ -140,7 +141,7 @@ class Tensor:
         else:
             raise TypeError(f"Unrecognized Tensor datatype {str(datatype)}")
 
-        
+
 
     def N2D2(self):
         """
@@ -154,10 +155,10 @@ class Tensor:
 
         .. testcode::
 
-            tensor = n2d2.Tensor([1, 1, 2, 2]) 
+            tensor = n2d2.Tensor([1, 1, 2, 2])
             input_tensor.set_values([[[[1,2],
                                        [3, 4]]]])
- 
+
         :param values: A nested list that represent the tensor.
         :type values: list
         """
@@ -179,11 +180,11 @@ class Tensor:
 
         def flatten(list_to_flatten):
             if len(list_to_flatten) == 1:
-                if type(list_to_flatten[0]) == list:
+                if isinstance(list_to_flatten[0], list):
                     result = flatten(list_to_flatten[0])
                 else:
                     result = list_to_flatten
-            elif type(list_to_flatten[0]) == list:
+            elif isinstance(list_to_flatten[0], list):
                 result = flatten(list_to_flatten[0]) + flatten(list_to_flatten[1:])
             else:
                 result = [list_to_flatten[0]] + flatten(list_to_flatten[1:])
@@ -200,7 +201,7 @@ class Tensor:
         return len(self._tensor.dims())
 
     def dims(self):
-        """Return dimensions with N2D2 convention 
+        """Return dimensions with N2D2 convention
         """
         return self._tensor.dims()
 
@@ -212,15 +213,15 @@ class Tensor:
 
     def dimZ(self):
         return self._tensor.dimZ()
-        
+
     def dimB(self):
         return self._tensor.dimB()
 
     def shape(self):
-        """Return dimensions with python convention 
+        """Return dimensions with python convention
         """
-        return [d for d in reversed(self._tensor.dims())]
-    
+        return list(reversed(self._tensor.dims()))
+
     def data_type(self):
         """Return the data type of the object stored by the tensor.
         """
@@ -235,10 +236,10 @@ class Tensor:
         dims = self.dims()
         coord = [i for i in reversed(coord)]
         if len(dims) != len(coord):
-            raise ValueError(f"{str(len(coord))}D array does not match {str(len(dims))}D tensor.") 
+            raise ValueError(f"{str(len(coord))}D array does not match {str(len(dims))}D tensor.")
         for c, d in zip(coord, dims):
             if not c < d:
-                raise ValueError(f"Coordinate does not fit the dimensions of the tensor, max: {str(d)} got {str(c)}") 
+                raise ValueError(f"Coordinate does not fit the dimensions of the tensor, max: {str(d)} got {str(c)}")
         idx = 0
         for i in range(len(dims)):
             if i == 0:
@@ -246,21 +247,21 @@ class Tensor:
             else:
                 idx += (coord[i] * reduce((lambda x,y: x*y), dims[:i]))
         return idx
-        
+
     def _get_coord(self, index):
         """From the the 1D index, return the coordinate of an element in the tensor.
 
         :param index: index of an element
         :type index: int
-        """ 
+        """
         coord = []
-        for i in self.shapes():
+        for i in self.shape():
             coord.append(int(index%i))
             index = index/i
-        return [i for i in reversed(coord)]
+        return list(reversed(coord))
 
     def reshape(self, new_dims):
-        """Reshape the Tensor to the specified dims (defined by the Numpy convention). 
+        """Reshape the Tensor to the specified dims (defined by the Numpy convention).
 
         :param new_dims: New dimensions
         :type new_dims: list
@@ -312,7 +313,7 @@ class Tensor:
         """
         if not numpy_imported:
             raise ImportError("Numpy is not installed !")
-        return array(self.N2D2(), copy=copy) 
+        return array(self.N2D2(), copy=copy)
 
     @classmethod
     def from_numpy(cls, np_array):
@@ -328,22 +329,22 @@ class Tensor:
         if not isinstance(np_array, ndarray):
             raise error_handler.WrongInputType("np_array", type(np_array), ["numpy.array"])
 
-        # np_array = np_array.reshape([d for d in reversed(np_array.shape)]) 
+        # np_array = np_array.reshape([d for d in reversed(np_array.shape)])
         n2d2_tensor = cls([])
 
         # Retrieving the first element of the numpy array to get dataType.
         try:
             first_element = np_array[0]
-        except IndexError:
-            raise ValueError('Numpy array is empty, you need to have at least one element')
+        except IndexError as err:
+            raise ValueError('Numpy array is empty, you need to have at least one element') from err
         is_first_element = False
         while not is_first_element:
             try:
                 first_element = first_element[0]
-            except:
+            except TypeError:
                 is_first_element = True
         data_type = type(first_element.item())
-        
+
         # convert datatype to string
         data_type = str(data_type).split("'")[1]
 
@@ -351,7 +352,7 @@ class Tensor:
             # Numpy -> N2D2 doesn't work for bool because there is no buffer protocol for it.
             n2d2_tensor._datatype = data_type
             tmp_tensor = n2d2_tensor._tensor_generators["int"](np_array)
-            shape = [d for d in reversed(tmp_tensor.dims())]
+            shape = list(reversed(tmp_tensor.dims()))
             n2d2_tensor._tensor = n2d2_tensor._tensor_generators[data_type](shape)
             for i, value in enumerate(tmp_tensor):
                 n2d2_tensor._tensor[i] = value
@@ -376,7 +377,7 @@ class Tensor:
         n2d2_tensor = cls([])
         n2d2_tensor._tensor = N2D2_Tensor
         n2d2_tensor._datatype = N2D2_Tensor.getTypeName()
-        n2d2_tensor.is_cuda = "CudaTensor" in str(type(N2D2_Tensor)) 
+        n2d2_tensor.is_cuda = "CudaTensor" in str(type(N2D2_Tensor))
         return n2d2_tensor
 
     def __array__(self):
@@ -396,8 +397,8 @@ class Tensor:
         To select the element to modify you can use :
             - the coordinate of the element;
             - the index of the flatten tensor;
-            - a slice index of the flatten tensor. 
-        If the ``value`` type doesn't match datatype, n2d2 tries an autocast. 
+            - a slice index of the flatten tensor.
+        If the ``value`` type doesn't match datatype, n2d2 tries an autocast.
 
         :param index: Indicate the index of the item you want to set
         :type index: tuple, int, float, slice
@@ -407,12 +408,12 @@ class Tensor:
         if not isinstance(value, hard_coded_type[self._datatype]):
             try:
                 value = hard_coded_type[self._datatype](value)
-            except:
-                raise RuntimeError(f"Autocast failed, tried to cast : {str(type(value))} to {self._datatype}")
+            except ValueError as err:
+                raise RuntimeError(f"Autocast failed, tried to cast : {str(type(value))} to {self._datatype}") from err
 
-        if isinstance(index, tuple) or isinstance(index, list):
+        if isinstance(index, (tuple, list)):
             self._tensor[self._get_index(index)] = value
-        elif isinstance(index, int) or isinstance(index, float):
+        elif isinstance(index, (int, float)):
             # Force conversion to int if it's a float
             self._tensor[int(index)] = value
         elif isinstance(index, slice):
@@ -432,14 +433,14 @@ class Tensor:
         # if self.cuda:
         #     self.dtoh()
         value = None
-        if isinstance(index, tuple) or isinstance(index, list):
+        if isinstance(index, (tuple, list)):
             value = self._tensor[self._get_index(index)]
-        elif isinstance(index, int) or isinstance(index, float):
+        elif isinstance(index, (int, float)):
             value = self._tensor[int(index)]
         else:
             raise error_handler.WrongInputType("index", type(index), [str(list), str(tuple), str(float), str(int)])
         return value
-        
+
     def __len__(self)->int:
         return len(self._tensor)
 
@@ -463,7 +464,7 @@ class Tensor:
     def __str__(self)->str:
         if self.is_cuda:
             # Updating the host before printing the Tensor
-            self.dtoh() 
+            self.dtoh()
         output = "n2d2.Tensor([\n"
         output += str(self._tensor)
         output += "], device=" + ("cuda" if self.is_cuda else "cpu")
@@ -516,13 +517,13 @@ class Tensor:
     def get_deepnet(self):
         """
         Method called by the cells, if the tensor is not part of a graph, it will be linked to an :py:class:`n2d2.provider.Provider` object.
-        
+
         :return: The associated deepnet
         :rtype: :py:class:`n2d2.deepnet.DeepNet`
         """
         if self.cell is None:
             # TensorPlaceholder will set the cell attribute to it self.
-            TensorPlaceholder(self) 
+            TensorPlaceholder(self)
         return self.cell.get_deepnet()
 
     def draw_associated_graph(self, path: str)->None:
@@ -542,7 +543,7 @@ class Tensor:
         if self.cell is None:
             raise RuntimeError('This tensor is not part of a graph')
         self.cell.get_deepnet().back_propagate()
-    
+
     def update(self)->None:
         """
         Update weights and biases of the cells.
@@ -581,25 +582,24 @@ class Interface(n2d2.provider.Provider):
             if tensor.cell:
                 self._deepnet = tensor.cell.get_deepnet()
                 break
-        
+
         nb_channels = 0
         for tensor in tensors:
             if not isinstance(tensor, Tensor):
                 raise ValueError(f"The elements of 'tensors' should all be of type {str(type(n2d2.Tensor))}")
-            else:
-                if tensor.dimX() != tensors[0].dimX():
-                    raise ValueError("Tensors should have the same X dimension.")
-                if tensor.dimY() != tensors[0].dimY():
-                    raise ValueError("Tensors should have the same Y dimension.")
-                if tensor.dimB() != tensors[0].dimB():
-                    raise ValueError("Tensors should have the same batch size.")
-                current_deepnet = None if not tensor.cell else tensor.cell.get_deepnet()
-                if current_deepnet is None:
-                    current_deepnet = self._deepnet
-                if current_deepnet is not self._deepnet:
-                    raise ValueError("The tensors used to create the Interface are not linked to the same DeepNet (maybe you want to detach the cell of the tensors ?).")
-                nb_channels += tensor.dimZ()
-                self.tensors.append(tensor)
+            if tensor.dimX() != tensors[0].dimX():
+                raise ValueError("Tensors should have the same X dimension.")
+            if tensor.dimY() != tensors[0].dimY():
+                raise ValueError("Tensors should have the same Y dimension.")
+            if tensor.dimB() != tensors[0].dimB():
+                raise ValueError("Tensors should have the same batch size.")
+            current_deepnet = None if not tensor.cell else tensor.cell.get_deepnet()
+            if current_deepnet is None:
+                current_deepnet = self._deepnet
+            if current_deepnet is not self._deepnet:
+                raise ValueError("The tensors used to create the Interface are not linked to the same DeepNet (maybe you want to detach the cell of the tensors ?).")
+            nb_channels += tensor.dimZ()
+            self.tensors.append(tensor)
         if not self._deepnet:
             size =[tensors[0].dimX(), tensors[0].dimY(), nb_channels]
             self.batch_size = tensors[0].dimB()

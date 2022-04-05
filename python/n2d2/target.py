@@ -71,8 +71,8 @@ class Target(N2D2_Interface, ABC):
             name = config_parameters.pop('name')
         else:
             name = n2d2.generate_name(self)
-            
-        
+
+
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._constructor_parameters = {
@@ -177,7 +177,7 @@ class Score(Target):
         Save a graph of the loss and the validation score as a function of the step number.
         """
         self._N2D2_object.logSuccess(path, self._provider.get_partition())
-    
+
     def log_stats(self, path):
         """Export statistics of the graph
 
@@ -204,5 +204,3 @@ class Score(Target):
         return self._N2D2_object.getAverageScore(
             self._provider.get_partition(),
             N2D2.ConfusionTableMetric.__members__[metric])
-
-

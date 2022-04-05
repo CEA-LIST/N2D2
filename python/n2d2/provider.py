@@ -1,6 +1,6 @@
 """
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -52,7 +52,7 @@ class Provider(N2D2_Interface,ABC):
     def get_deepnet(self):
         """
         :returns: DeepNet object
-        :rtype: :py:class:`n2d2.deepnet.DeepNet` 
+        :rtype: :py:class:`n2d2.deepnet.DeepNet`
         """
         return self._deepnet
 
@@ -65,7 +65,7 @@ class Provider(N2D2_Interface,ABC):
 
     def dims(self):
         return self._N2D2_object.getData().dims()
-    
+
     def shape(self):
         return [i for i in reversed(self._N2D2_object.getData().dims())]
 
@@ -87,7 +87,7 @@ class DataProvider(Provider):
     def __init__(self, database, size, random_read=False, **config_parameters):
         """
         :param database: Database used to read data from
-        :type database: :py:class:`n2d2.database.Database` 
+        :type database: :py:class:`n2d2.database.Database`
         :param size: Size of the data
         :type size: list
         :param batch_size: Batch size, default=1
@@ -132,7 +132,7 @@ class DataProvider(Provider):
     def set_partition(self, partition):
         """
         :param partition: The partition can be  ``Learn``, ``Validation``, ``Test``,  ``Unpartitioned``
-        :type partition: str 
+        :type partition: str
         """
         if partition not in N2D2.Database.StimuliSet.__members__.keys():
             raise n2d2.error_handler.WrongValue("partition", partition, N2D2.Database.StimuliSet.__members__.keys())
@@ -151,7 +151,7 @@ class DataProvider(Provider):
         :returns: Data.
         :rtype: :py:class:`n2d2.Tensor`
         """
-        return n2d2.Tensor.from_N2D2(self._N2D2_object.getData()) 
+        return n2d2.Tensor.from_N2D2(self._N2D2_object.getData())
 
 
     def get_labels(self):
@@ -177,7 +177,7 @@ class DataProvider(Provider):
 
     def read_random_batch(self):
         """
-        :return: Return a random batch 
+        :return: Return a random batch
         :rtype: :py:class:`n2d2.Tensor`
         """
 
@@ -223,7 +223,7 @@ class DataProvider(Provider):
 
         :param transformation: Transformation to apply
         :type transformation: :py:class:`n2d2.transformation.Transformation`
-        """ 
+        """
         if isinstance(transformation, n2d2.transform.Composite):
             for trans in transformation.get_transformations():
                 self._N2D2_object.addTransformation(trans.N2D2(), trans.get_apply_set())
@@ -237,7 +237,7 @@ class DataProvider(Provider):
 
         :param transformation: Transformation to apply
         :type transformation: :py:class:`n2d2.transformation.Transformation`
-        """ 
+        """
         if isinstance(transformation, n2d2.transform.Composite):
             for trans in transformation.get_transformations():
                 self._N2D2_object.addOnTheFlyTransformation(trans.N2D2(), trans.get_apply_set())
@@ -245,7 +245,7 @@ class DataProvider(Provider):
         else:
             self._N2D2_object.addOnTheFlyTransformation(transformation.N2D2(), transformation.get_apply_set())
             self._transformations.append(transformation)
-            
+
     def batch_number(self):
         return self._index
 
@@ -261,13 +261,13 @@ class DataProvider(Provider):
                 return self.read_batch(self._index-1)
         else:
             raise StopIteration
-            
+
 
     def __iter__(self):
         self._index = 0
         return self
 
-    
+
     def __str__(self):
         output = "'" + self.get_name() + "' " + self._type + N2D2_Interface.__str__(self)
         if len(self._transformations) > 0:
@@ -300,7 +300,7 @@ class TensorPlaceholder(Provider):
         self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
                                                  size=dims,
                                                  batchSize=self._tensor.N2D2().dimB())
-        
+
         self._set_streamed_tensor()
         if labels:
             self._labels = labels
@@ -324,7 +324,7 @@ class TensorPlaceholder(Provider):
     def set_partition(self, partition):
         """
         :param partition: The partition can be  ``Learn``, ``Validation``, ``Test``,  ``Unpartitioned``
-        :type partition: str 
+        :type partition: str
         """
         if partition not in N2D2.Database.StimuliSet.__members__.keys():
             raise n2d2.error_handler.WrongValue("partition", partition, N2D2.Database.StimuliSet.__members__.keys())
@@ -336,14 +336,14 @@ class TensorPlaceholder(Provider):
         :rtype: str
         """
         return N2D2.Database.StimuliSet.__members__[self._partition]
-        
-    def _set_streamed_tensor(self): 
+
+    def _set_streamed_tensor(self):
         """
         Streamed a tensor in a data provider to simulate the output of a database.
         The model of the tensor is defined by the compilation of the library.
         """
         if N2D2.cuda_compiled:
-            if not self._tensor.is_cuda: 
+            if not self._tensor.is_cuda:
                 self._tensor.cuda()
             self._tensor.htod()
         if not (self._tensor.data_type() == "f" or self._tensor.data_type() == "float"):
@@ -354,25 +354,25 @@ class TensorPlaceholder(Provider):
     def __call__(self):
         return self._tensor
 
-    
+
     def __str__(self):
         return f"'{self.get_name()}' TensorPlaceholder"
 
 # TODO : UNUSED ? remove later
-# class MultipleOutputsProvider(Provider):
-#     """
-#     Provider used to give multiple tensors to the network.
-#     """
-#     def __init__(self, size, batch_size=1):
-#         """
-#         :param size: List of ``X``, ``Y`` and ``Z`` dimensions
-#         :type size: list
-#         :param batch_size: Batch size, default=1
-#         :type batch_size: int, optional
-#         """
-#         self._N2D2_object = N2D2.StimuliProvider(database=N2D2.Database(),
-#                                                  size=size,
-#                                                  batchSize=batch_size)
-#         self._deepnet = n2d2.deepnet.DeepNet()
-#         self._deepnet.set_provider(self)
-#         self._name = n2d2.generate_name(self)
+class MultipleOutputsProvider(Provider):
+    """
+    Provider used to give multiple tensors to the network.
+    """
+    def __init__(self, size, batch_size=1):
+        """
+        :param size: List of ``X``, ``Y`` and ``Z`` dimensions
+        :type size: list
+        :param batch_size: Batch size, default=1
+        :type batch_size: int, optional
+        """
+        self._N2D2_object = N2D2.StimuliProvider(database=N2D2.Database(),
+                                                 size=size,
+                                                 batchSize=batch_size)
+        self._deepnet = n2d2.deepnet.DeepNet()
+        self._deepnet.set_provider(self)
+        self._name = n2d2.generate_name(self)

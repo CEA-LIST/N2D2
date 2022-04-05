@@ -28,7 +28,7 @@ cuda_compiled = gb.cuda_compiled
 
 
 class ScalingObject(N2D2_Interface, ABC):
-    
+
     # Cell_frame_parameter contains the parameters from cell_parameter
     @abstractmethod
     def __init__(self, **config_parameters):
@@ -37,8 +37,8 @@ class ScalingObject(N2D2_Interface, ABC):
         else:
             self._model = n2d2.global_variables.default_model
 
-        self._model_key = self._model 
-        
+        self._model_key = self._model
+
         N2D2_Interface.__init__(self, **config_parameters)
 
     @classmethod
@@ -65,14 +65,14 @@ class DoubleShiftScaling(ScalingObject):
     def __init__(self, scaling:Tuple[str, str], is_clipped:bool, clipping:Tuple[str, str], **config_parameters)->None:
         # TODO : Add documentation on input parameters
         ScalingObject.__init__(self, **config_parameters)
-        
+
         # No optional constructor arguments
         self._set_N2D2_object(DoubleShiftScaling(scaling, is_clipped, clipping))
 
         for key, value in self._config_parameters.items():
             self.__setattr__(key, value)
         self.load_N2D2_parameters(self.N2D2())
-    
+
     def _load_N2D2_constructor_parameters(self, N2D2_object):
         self._constructor_arguments['scaling'] = N2D2_object.getScalingPerOutput()
         self._constructor_arguments['is_clipped'] = N2D2_object.getIsClipped()
@@ -92,14 +92,14 @@ class SingleShiftScaling(ScalingObject):
     def __init__(self, scaling:str, is_clipped:bool, clipping:str, **config_parameters)->None:
         # TODO : Add documentation on input parameters
         ScalingObject.__init__(self, **config_parameters)
-        
+
         # No optional constructor arguments
         self._set_N2D2_object(N2D2.SingleShiftScaling(scaling, is_clipped, clipping))
 
         for key, value in self._config_parameters.items():
             self.__setattr__(key, value)
         self.load_N2D2_parameters(self.N2D2())
-    
+
     def _load_N2D2_constructor_parameters(self, N2D2_object):
         self._constructor_arguments['scaling'] = N2D2_object.getScalingPerOutput()
         self._constructor_arguments['is_clipped'] = N2D2_object.getIsClipped()
@@ -120,14 +120,14 @@ class FixedPointScaling(ScalingObject):
     def __init__(self, nb_fractional_bits:float, scaling:List[int], is_clipped:bool, clipping:List[float], **config_parameters)->None:
         # TODO : Add documentation on input parameters
         ScalingObject.__init__(self, **config_parameters)
-        
+
         # No optional constructor arguments
         self._set_N2D2_object(N2D2.FixedPointScaling(nb_fractional_bits, scaling, is_clipped, clipping))
 
         for key, value in self._config_parameters.items():
             self.__setattr__(key, value)
         self.load_N2D2_parameters(self.N2D2())
-    
+
     def _load_N2D2_constructor_parameters(self, N2D2_object):
         self._constructor_arguments['scaling'] = N2D2_object.getScalingPerOutput()
         self._constructor_arguments['is_clipped'] = N2D2_object.getIsClipped()

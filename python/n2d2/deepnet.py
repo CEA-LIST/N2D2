@@ -1,6 +1,6 @@
 """
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -29,12 +29,12 @@ from n2d2.n2d2_interface import N2D2_Interface
 """
 """
 class DeepNet(N2D2_Interface):
-    
+
     _convention_converter= n2d2.ConventionConverter({
         "name": "Name",
     })
     def __init__(self, **config_parameters):
-        
+
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._config_parameters['name'] = "DeepNet(id=" + str(id(self)) + ")"
@@ -52,7 +52,7 @@ class DeepNet(N2D2_Interface):
 
         deepnet._N2D2_object = N2D2_object
         deepnet.load_N2D2_parameters(deepnet.N2D2())
-        
+
         cells = deepnet.N2D2().getCells()
         layers = deepnet.N2D2().getLayers()
         if not layers[0][0] == "env":

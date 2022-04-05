@@ -3,7 +3,7 @@
 # A comma-separated list of package or module names from where C extensions may
 # be loaded. Extensions are loading into the active Python interpreter and may
 # run arbitrary code.
-extension-pkg-allow-list= N2D2, torch
+extension-pkg-allow-list= N2D2, torch, tensorflow
 
 # A comma-separated list of package or module names from where C extensions may
 # be loaded. Extensions are loading into the active Python interpreter and may
@@ -475,6 +475,8 @@ ignored-classes=optparse.Values,
                 _thread._local,
                 n2d2.global_variables,
                 n2d2.cells.abstract_cell.Trainable,
+                torch,
+                tensorflow,
 
 # List of module names for which member attributes should not be checked
 # (useful for modules/projects where namespaces are manipulated during runtime

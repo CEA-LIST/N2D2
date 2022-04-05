@@ -1,6 +1,6 @@
 """
     (C) Copyright 2021 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -24,9 +24,9 @@ from functools import wraps
 class WrongInputType(TypeError):
     def __init__(self, input_name, input_type, array_of_possible_type):
         """
-        :param input_name: Name of the input variable that got the wrong type 
+        :param input_name: Name of the input variable that got the wrong type
         :type input_name: str
-        :param input_type: Type of the input, you can get it with the native function type(). 
+        :param input_type: Type of the input, you can get it with the native function type().
         :type input_type: type
         :param array_of_possible_type: list of the possible type the input can take. Must be non empty !
         :type array_of_possible_type: array, tuple
@@ -80,8 +80,8 @@ class IpOnly(NotImplementedError):
 
 def deprecated(version="", reason=""):
     def show_warning(function):
-        
-        @wraps(function) 
+
+        @wraps(function)
         def wrapper(function):
             print(function)
             message = function.__name__ + " is deprecated"

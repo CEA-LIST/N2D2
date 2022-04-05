@@ -86,7 +86,7 @@ class CustomSequential(keras.Sequential):
         """Method to handle propagation
         """
         x_var = tf.Variable(x)
-        
+
         x_numpy = x.numpy()
         inputs_batch_size = x_numpy.shape[0] # TODO : Check size is the same as input shape of the network ?
         inputs_shape = np.array(x_numpy.shape)

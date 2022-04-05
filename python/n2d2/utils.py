@@ -111,6 +111,6 @@ def inherit_init_docstring():
                     and parent is not obj:
                 parents_docstring += _get_param_docstring(parent.__init__.__doc__)
         docstring = obj.__init__.__doc__ if obj.__init__.__doc__ else ""
-        obj.__init__.__doc__ = docstring + parents_docstring  
+        obj.__init__.__doc__ = docstring + parents_docstring
         return obj
     return dec

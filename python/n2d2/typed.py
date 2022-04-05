@@ -50,7 +50,7 @@ class Modeltyped(ABC):
 
         self._model_key = self._model
 
-class ModelDatatyped(Datatyped, ABC):
+class ModelDatatyped(Datatyped, Modeltyped, ABC):
     """Abstract class for object with a datatype and a model.
     """
 

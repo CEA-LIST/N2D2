@@ -23,7 +23,7 @@ from n2d2.n2d2_interface import N2D2_Interface
 import n2d2.global_variables
 from abc import ABC, abstractmethod
 
-class Quantizer(N2D2_Interface, ABC): 
+class Quantizer(N2D2_Interface, ABC):
 
     @abstractmethod
     def __init__(self, **config_parameters):
@@ -38,7 +38,7 @@ class Quantizer(N2D2_Interface, ABC):
 
         self._model_key = self._model + '<' + self._datatype + '>'
 
-        
+
         N2D2_Interface.__init__(self, **config_parameters)
 
     def set_range(self, integer_range):

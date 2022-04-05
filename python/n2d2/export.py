@@ -17,68 +17,62 @@ liability.
 The fact that you are presently reading this means that you have had
 knowledge of the CeCILL-C license and that you accept its terms.
 """
-from numpy import empty
+
 import n2d2
 import N2D2
 
-def _parse_export_parameters(gen_export=None, nb_bits=8, qat_SAT=False, 
-                             export_no_unsigned=False, calibration=0, 
-                             export_no_cross_layer_equalization=False, 
-                             wt_clipping_mode="NONE", act_clipping_mode="MSE", 
+def _parse_export_parameters(gen_export=None, nb_bits=8, qat_SAT=False,
+                             export_no_unsigned=False, calibration=0,
+                             export_no_cross_layer_equalization=False,
+                             wt_clipping_mode="NONE", act_clipping_mode="MSE",
                              act_scaling_mode="FLOAT_MULT", act_quantile_value=0.9999,
-                             act_rescale_per_output=False, calibration_reload=False, report=100, 
-                             export_nb_stimuli_max= -1, wt_round_mode = "NONE", 
+                             act_rescale_per_output=False, calibration_reload=False, report=100,
+                             export_nb_stimuli_max= -1, wt_round_mode = "NONE",
                              b_round_mode="NONE", c_round_mode="NONE", find_lr=0):
     if wt_round_mode not in N2D2.WeightsApprox.__members__.keys():
-            raise n2d2.error_handler.WrongValue("wt_round_mode", wt_round_mode, 
-            ", ".join(N2D2.WeightsApprox.__members__.keys()))
-    else:
-        N2D2_wt_round_mode = N2D2.WeightsApprox.__members__[wt_round_mode]
+        raise n2d2.error_handler.WrongValue("wt_round_mode", wt_round_mode,
+        ", ".join(N2D2.WeightsApprox.__members__.keys()))
+    N2D2_wt_round_mode = N2D2.WeightsApprox.__members__[wt_round_mode]
     if b_round_mode not in N2D2.WeightsApprox.__members__.keys():
-        raise n2d2.error_handler.WrongValue("b_round_mode", b_round_mode, 
+        raise n2d2.error_handler.WrongValue("b_round_mode", b_round_mode,
         ", ".join(N2D2.WeightsApprox.__members__.keys()))
-    else:
-        N2D2_b_round_mode = N2D2.WeightsApprox.__members__[b_round_mode]
+    N2D2_b_round_mode = N2D2.WeightsApprox.__members__[b_round_mode]
     if c_round_mode not in N2D2.WeightsApprox.__members__.keys():
-        raise n2d2.error_handler.WrongValue("c_round_mode", c_round_mode, 
+        raise n2d2.error_handler.WrongValue("c_round_mode", c_round_mode,
         ", ".join(N2D2.WeightsApprox.__members__.keys()))
-    else:
-        N2D2_c_round_mode = N2D2.WeightsApprox.__members__[c_round_mode]
+    N2D2_c_round_mode = N2D2.WeightsApprox.__members__[c_round_mode]
 
     if act_scaling_mode not in N2D2.ScalingMode.__members__.keys():
         raise n2d2.error_handler.WrongValue("act_scaling_mode", act_scaling_mode, ", ".join(N2D2.ScalingMode.__members__.keys()))
-    else:
-        N2D2_act_scaling_mode = N2D2.ScalingMode.__members__[act_scaling_mode]
+    N2D2_act_scaling_mode = N2D2.ScalingMode.__members__[act_scaling_mode]
     if act_clipping_mode not in N2D2.ClippingMode.__members__.keys():
         raise n2d2.error_handler.WrongValue("act_clipping_mode", act_clipping_mode, ", ".join(N2D2.ClippingMode.__members__.keys()))
-    else:
-        N2D2_act_clipping_mode = N2D2.ClippingMode.__members__[act_clipping_mode]
+    N2D2_act_clipping_mode = N2D2.ClippingMode.__members__[act_clipping_mode]
     if wt_clipping_mode not in N2D2.ClippingMode.__members__.keys():
         raise n2d2.error_handler.WrongValue("wt_clipping_mode", wt_clipping_mode, ", ".join(N2D2.ClippingMode.__members__.keys()))
-    else:
-        N2D2_wt_clipping_mode = N2D2.ClippingMode.__members__[wt_clipping_mode]
+    N2D2_wt_clipping_mode = N2D2.ClippingMode.__members__[wt_clipping_mode]
 
     return n2d2.n2d2_interface.Options(
-        gen_export=gen_export, 
-        nb_bits=nb_bits, 
-        qat_SAT=qat_SAT, 
-        export_no_unsigned=export_no_unsigned, 
-        calibration=calibration, 
-        export_no_cross_layer_equalization=export_no_cross_layer_equalization, 
-        wt_clipping_mode=N2D2_wt_clipping_mode, 
-        act_clipping_mode=N2D2_act_clipping_mode, 
-        act_scaling_mode=N2D2_act_scaling_mode, 
+        gen_export=gen_export,
+        nb_bits=nb_bits,
+        qat_SAT=qat_SAT,
+        export_no_unsigned=export_no_unsigned,
+        calibration=calibration,
+        export_no_cross_layer_equalization=export_no_cross_layer_equalization,
+        wt_clipping_mode=N2D2_wt_clipping_mode,
+        act_clipping_mode=N2D2_act_clipping_mode,
+        act_scaling_mode=N2D2_act_scaling_mode,
         act_quantile_value=act_quantile_value,
-        act_rescale_per_output=act_rescale_per_output, 
-        calibration_reload=calibration_reload, 
-        report=report, 
-        export_nb_stimuli_max=export_nb_stimuli_max, 
-        wt_round_mode=N2D2_wt_round_mode, 
-        b_round_mode=N2D2_b_round_mode, 
-        c_round_mode=N2D2_c_round_mode, 
+        act_rescale_per_output=act_rescale_per_output,
+        calibration_reload=calibration_reload,
+        report=report,
+        export_nb_stimuli_max=export_nb_stimuli_max,
+        wt_round_mode=N2D2_wt_round_mode,
+        b_round_mode=N2D2_b_round_mode,
+        c_round_mode=N2D2_c_round_mode,
         find_lr=find_lr).N2D2()
-        
-def _export_deepnet_operation(deepnet_cell: n2d2.cells.DeepNetCell, 
+
+def _export_deepnet_operation(deepnet_cell: n2d2.cells.DeepNetCell,
         provider: n2d2.provider.Provider=None,
         **kwargs) -> None :
     """Retrieve N2D2 DeepNet and prepare it for an export.
@@ -92,7 +86,7 @@ def _export_deepnet_operation(deepnet_cell: n2d2.cells.DeepNetCell,
         N2D2_database = N2D2_provider.getDatabase()
         N2D2_deepnet.setDatabase(N2D2_database)
         N2D2_deepnet.setStimuliProvider(N2D2_provider)
-    
+
     if "calibration" in kwargs and kwargs["calibration"] != 0 and \
     N2D2_deepnet.getDatabase().getNbStimuli() == 0:
         raise ValueError("Cannot calibrate the network with an empty database,\
@@ -112,11 +106,11 @@ def _export_deepnet_operation(deepnet_cell: n2d2.cells.DeepNetCell,
     return N2D2_deepnet
 
 
-def export_c(deepnet_cell: n2d2.cells.DeepNetCell, 
+def export_c(deepnet_cell: n2d2.cells.DeepNetCell,
              provider: n2d2.provider.Provider=None,
              **kwargs) -> None:
     """Generate a C export of the neural network.
-    
+
     :param deepnet_cell: The Neural network you want to export.
     :type deepnet_cell: :py:class:`n2d2.cells.DeepNetCell`
     :param provider: Data provider to use for calibration, default=None
@@ -167,11 +161,11 @@ def export_c(deepnet_cell: n2d2.cells.DeepNetCell,
     N2D2_deepnet = _export_deepnet_operation(deepnet_cell, provider, **kwargs)
     N2D2.generateExport(N2D2_option, N2D2_deepnet)
 
-def export_cpp(deepnet_cell: n2d2.cells.DeepNetCell, 
+def export_cpp(deepnet_cell: n2d2.cells.DeepNetCell,
                provider: n2d2.provider.Provider=None,
                **kwargs) -> None:
     """Generate a CPP export of the neural network.
-    
+
     :param deepnet_cell: The Neural network you want to export.
     :type deepnet_cell: :py:class:`n2d2.cells.DeepNetCell`
     :param provider: Data provider to use for calibration, default=None
@@ -218,11 +212,11 @@ def export_cpp(deepnet_cell: n2d2.cells.DeepNetCell,
 
 
 
-def export_tensor_rt(deepnet_cell: n2d2.cells.DeepNetCell, 
+def export_tensor_rt(deepnet_cell: n2d2.cells.DeepNetCell,
                 provider: n2d2.provider.Provider=None,
                 **kwargs) -> None:
     """Generate a TensorRT export of the neural network.
-    
+
     :param deepnet_cell: The Neural network you want to export.
     :type deepnet_cell: :py:class:`n2d2.cells.DeepNetCell`
     :param provider: Data provider to use for calibration, default=None
