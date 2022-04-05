@@ -3,7 +3,7 @@
 # A comma-separated list of package or module names from where C extensions may
 # be loaded. Extensions are loading into the active Python interpreter and may
 # run arbitrary code.
-extension-pkg-allow-list= N2D2,
+extension-pkg-allow-list= N2D2, torch
 
 # A comma-separated list of package or module names from where C extensions may
 # be loaded. Extensions are loading into the active Python interpreter and may
@@ -164,6 +164,7 @@ disable=print-statement,
         protected-access,
         too-many-branches,
         too-many-ancestors,
+        wrong-import-order,
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
