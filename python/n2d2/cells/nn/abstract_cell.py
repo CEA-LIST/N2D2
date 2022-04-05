@@ -23,8 +23,9 @@ from abc import ABC, abstractmethod
 import n2d2.activation
 import n2d2.filler
 import n2d2.solver
+import n2d2.cells.nn
 from n2d2 import Interface, Tensor
-from n2d2.cells import Fc
+
 from n2d2.cells.cell import Cell
 from n2d2.error_handler import deprecated
 from n2d2.n2d2_interface import N2D2_Interface
@@ -190,9 +191,9 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
 
 
     def _check_tensor(self, inputs):
-        if isinstance(inputs.cell, (n2d2.cells.nn.NeuralNetworkCell, Provider)):
+        if isinstance(inputs.cell, (NeuralNetworkCell, Provider)):
             # Check x-y dimension consistency
-            if not isinstance(self, Fc):
+            if not isinstance(self, n2d2.cells.nn.Fc):
 
                 if not inputs.dims()[0:2] == self.N2D2().getInputsDims()[0:2]:
                     raise RuntimeError("Unmatching dims " + str(inputs.dims()[0:2])

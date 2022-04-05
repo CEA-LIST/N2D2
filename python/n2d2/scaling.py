@@ -59,12 +59,12 @@ class ScalingObject(N2D2_Interface, ABC):
         return output
 
 
-class DoubleShiftScaling(Scaling):
+class DoubleShiftScaling(ScalingObject):
 
     @abstractmethod
-    def __init__(self, scaling:Tuple(str, str), is_clipped:bool, clipping:Tuple(str, str), **config_parameters)->None:
+    def __init__(self, scaling:Tuple[str, str], is_clipped:bool, clipping:Tuple[str, str], **config_parameters)->None:
         # TODO : Add documentation on input parameters
-        Scaling.__init__(self, **config_parameters)
+        ScalingObject.__init__(self, **config_parameters)
         
         # No optional constructor arguments
         self._set_N2D2_object(DoubleShiftScaling(scaling, is_clipped, clipping))
@@ -86,12 +86,12 @@ class DoubleShiftScaling(Scaling):
         output += N2D2_Interface.__str__(self)
         return output
 
-class SingleShiftScaling(Scaling):
+class SingleShiftScaling(ScalingObject):
 
     @abstractmethod
     def __init__(self, scaling:str, is_clipped:bool, clipping:str, **config_parameters)->None:
         # TODO : Add documentation on input parameters
-        Scaling.__init__(self, **config_parameters)
+        ScalingObject.__init__(self, **config_parameters)
         
         # No optional constructor arguments
         self._set_N2D2_object(N2D2.SingleShiftScaling(scaling, is_clipped, clipping))
@@ -114,12 +114,12 @@ class SingleShiftScaling(Scaling):
         return output
 
 
-class FixedPointScaling(Scaling):
+class FixedPointScaling(ScalingObject):
 
     @abstractmethod
-    def __init__(self, nb_fractional_bits:float, scaling:List(int), is_clipped:bool, clipping:List(float), **config_parameters)->None:
+    def __init__(self, nb_fractional_bits:float, scaling:List[int], is_clipped:bool, clipping:List[float], **config_parameters)->None:
         # TODO : Add documentation on input parameters
-        Scaling.__init__(self, **config_parameters)
+        ScalingObject.__init__(self, **config_parameters)
         
         # No optional constructor arguments
         self._set_N2D2_object(N2D2.FixedPointScaling(nb_fractional_bits, scaling, is_clipped, clipping))
@@ -142,13 +142,13 @@ class FixedPointScaling(Scaling):
         output += N2D2_Interface.__str__(self)
         return output
 
-class FloatingPointScaling(Scaling):
+class FloatingPointScaling(ScalingObject):
 
     @abstractmethod
-    def __init__(self, scaling_per_output:List(int), is_clipped:bool, clipping:List(float), **config_parameters)->None:
+    def __init__(self, scaling_per_output:List[int], is_clipped:bool, clipping:List[float], **config_parameters)->None:
         # TODO : Add documentation on input parameters
-        Scaling.__init__(self, **config_parameters)
-        
+        ScalingObject.__init__(self, **config_parameters)
+
         # No optional constructor arguments
         self._set_N2D2_object(N2D2.FloatingPointScaling(scaling_per_output, is_clipped, clipping))
 

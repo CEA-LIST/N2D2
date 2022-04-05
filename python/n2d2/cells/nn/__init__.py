@@ -18,6 +18,7 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
+
 from n2d2.cells.nn.abstract_cell import NeuralNetworkCell
 from n2d2.cells.nn.activation import Activation
 from n2d2.cells.nn.batchnorm import BatchNorm2d
