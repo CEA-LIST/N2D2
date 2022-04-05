@@ -2569,10 +2569,16 @@ inline void N2D2::Network::saveOutputs(
 
                 // if no "+" it is printed always as unsigned!
                 for (int output = 0; output < NB_OUTPUTS_COMPACT; output++) {
-                    if (std::is_floating_point<Output_T>::value)
+                    
+                    if (std::is_floating_point<Output_T>::value) {
                         fprintf(pFile, "%f", +(float)((Output_T*)((uint8_t*)outputs + oOffset))[output]);
-                    else
-                        fprintf(pFile, "%d", +((Output_T*)((uint8_t*)outputs + oOffset))[output]);
+                    } else {
+                        if (std::is_unsigned<Output_T>::value) {
+                            fprintf(pFile, "%d", +((Output_T*)((uint8_t*)outputs + oOffset))[output]);
+                        } else {
+                            fprintf(pFile, "%d", +((Output_T*)((int8_t*)outputs + oOffset))[output]);
+                        }
+                    }
 
                     fprintf(pFile, ", ");
                 }
@@ -2588,7 +2594,7 @@ inline void N2D2::Network::saveOutputs(
     else if (format == Format::CHW) {
         fprintf(pFile, "");
         for(int output = 0; output < NB_OUTPUTS_COMPACT; output++) {
-            fprintf(pFile, "");
+            fprintf(pFile, "%d\n", output);
 
             for(int oy = 0; oy < OUTPUTS_HEIGHT; oy++) {
                 fprintf(pFile, "");
@@ -2605,10 +2611,16 @@ inline void N2D2::Network::saveOutputs(
                     }
 
                     // if no "+" it is printed always as unsigned!
-                    if (std::is_floating_point<Output_T>::value)
+                    if (std::is_floating_point<Output_T>::value) {
                         fprintf(pFile, "%f", +(float)((Output_T*)((uint8_t*)outputs + oOffset))[output]);
-                    else
-                        fprintf(pFile, "%d", ((Output_T*)((uint8_t*)outputs + oOffset))[output]);
+                    } else {
+                        if (std::is_unsigned<Output_T>::value) {
+                            fprintf(pFile, "%d", ((Output_T*)((uint8_t*)outputs + oOffset))[output]);
+                        } else {
+                            fprintf(pFile, "%d", ((Output_T*)((int8_t*)outputs + oOffset))[output]);
+                        }
+                    }
+
                     fprintf(pFile, " ");
                 }
 
