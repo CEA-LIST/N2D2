@@ -358,7 +358,6 @@ class TensorPlaceholder(Provider):
     def __str__(self):
         return f"'{self.get_name()}' TensorPlaceholder"
 
-# TODO : UNUSED ? remove later
 class MultipleOutputsProvider(Provider):
     """
     Provider used to give multiple tensors to the network.

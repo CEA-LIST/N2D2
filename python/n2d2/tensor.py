@@ -341,7 +341,7 @@ class Tensor:
         while not is_first_element:
             try:
                 first_element = first_element[0]
-            except TypeError:
+            except IndexError:
                 is_first_element = True
         data_type = type(first_element.item())
 
