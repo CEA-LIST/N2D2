@@ -2594,7 +2594,7 @@ inline void N2D2::Network::saveOutputs(
     else if (format == Format::CHW) {
         fprintf(pFile, "");
         for(int output = 0; output < NB_OUTPUTS_COMPACT; output++) {
-            fprintf(pFile, "%d\n", output);
+            fprintf(pFile, "%d:\n", output);
 
             for(int oy = 0; oy < OUTPUTS_HEIGHT; oy++) {
                 fprintf(pFile, "");
