@@ -2615,9 +2615,9 @@ inline void N2D2::Network::saveOutputs(
                         fprintf(pFile, "%f", +(float)((Output_T*)((uint8_t*)outputs + oOffset))[output]);
                     } else {
                         if (std::is_unsigned<Output_T>::value) {
-                            fprintf(pFile, "%d", ((Output_T*)((uint8_t*)outputs + oOffset))[output]);
+                            fprintf(pFile, "%d", +((Output_T*)((uint8_t*)outputs + oOffset))[output]);
                         } else {
-                            fprintf(pFile, "%d", ((Output_T*)((int8_t*)outputs + oOffset))[output]);
+                            fprintf(pFile, "%d", +((Output_T*)((int8_t*)outputs + oOffset))[output]);
                         }
                     }
 
