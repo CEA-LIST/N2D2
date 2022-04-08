@@ -20,6 +20,7 @@
 #include <chrono>
 #include <map>
 #include <numeric>
+#include <iostream>
 
 #include "typedefs.h" // old C header, deprecated
 #include "typedefs.hpp"
@@ -2176,7 +2177,8 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
                                 }
                                 else{
                                     weightedSum += ((Input_T*)((uint8_t*)inputs + iOffsetInRange))[channel]
-                                        * weights[wOffset + (iInt8+iInt8_start)];
+                                        * weights[wOffset + (iInt8)];  //TODO check this; related to issue #75
+                                        //* weights[wOffset + (iInt8+iInt8_start)];
                                 }
                             }
                         }
