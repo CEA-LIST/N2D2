@@ -226,6 +226,10 @@ N2D2::AnchorCellGenerator::generate(Network& /*network*/, const DeepNet& deepNet
             }
         }
     }
+#else
+    const std::string anchorsJSONpath = Utils::expandEnvVars(
+        iniConfig.getProperty<std::string>("AnchorJSON", ""));
+    throw std::runtime_error("The library libjsoncpp-dev is not installed, N2D2 failed to read : " + anchorsJSONpath);
 #endif
     // Fourth method: specify a base root area and a list of ratios and scales
     // Both methods can be used simultaneously

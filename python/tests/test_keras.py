@@ -43,7 +43,7 @@ class test_keras(unittest.TestCase):
             MaxPooling2D(pool_size=(1, 1))
         ])
         self.model = wrap(tf_model, batch_size=5)
-        self.model.compile(loss="categorical_crossentropy", optimizer="SGD", metrics=["accuracy"])
+        self.model.compile(loss="categorical_crossentropy", metrics=["accuracy"])
         self.x = tf.random.uniform([4,3,3,2])
         y = self.model.call(self.x)
         for predicted, truth in zip(y.numpy().flatten(), self.x.numpy().flatten()):
@@ -74,7 +74,7 @@ class test_keras(unittest.TestCase):
         self.model = wrap(tf_model, batch_size=5)
         sgd_opt = tf.keras.optimizers.SGD(
             learning_rate=0.01, momentum=0.0, nesterov=False, name='SGD')
-        self.model.compile(loss="categorical_crossentropy", optimizer=sgd_opt, metrics=["accuracy"])
+        self.model.compile(loss="categorical_crossentropy", metrics=["accuracy"])
         tf_model.compile(loss="categorical_crossentropy", optimizer=sgd_opt, metrics=["accuracy"])
         self.x = tf.random.uniform([5,3,3,2])
         self.y = tf.random.uniform([5,3,3,3])
@@ -109,7 +109,7 @@ class test_keras(unittest.TestCase):
             Dense(9)
         ])
         self.model = wrap(tf_model, batch_size=5)
-        self.model.compile(loss="categorical_crossentropy", optimizer="SGD", metrics=["accuracy"])
+        self.model.compile(loss="categorical_crossentropy", metrics=["accuracy"])
         self.x = tf.random.uniform([5,3,3,1])
         n2d2_y = self.model.call(self.x)
         tf_y = tf_model.call(self.x)

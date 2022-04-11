@@ -201,6 +201,7 @@ class Block(Cell):
             if isinstance(value, n2d2.cells.Block):
                 output += ": " + value._generate_str(indent_level + 1)
             else:
+                print(value)
                 output += ": " + value.__str__()
         output += "\n" + ((indent_level - 1) * "\t") + ")"
         return output
@@ -488,21 +489,28 @@ class DeepNetCell(Block):
         return self
 
     def import_free_parameters(self, dir_name, ignore_not_exists=False):
-        """Import parameters.
+        """Import deepnet parameters.
         """
-        print("import DeepNetCell '" + self._name + "' weights from " + dir_name)
+        print(f"Importing DeepNetCell '{self._name}' parameters from  {dir_name}")
         self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignoreNotExists=ignore_not_exists)
 
-    def remove(self, name, reconnect=False):
-        """Remove a cell from the encapsulated deepnet
+    
+    def export_free_parameters(self, dir_name):
+        """Export deepnet parameters.
+        """
+        print(f"Exporting DeepNetCell '{self._name}' parameters from {dir_name}")
+        self._deepnet.N2D2().exportNetworkFreeParameters(dir_name)
 
+
+    def remove(self, name:str, reconnect:bool=True)->None:
+        """Remove a cell from the encapsulated deepnet.
         :param name: Name of cell that shall be removed.
         :type name: str
+        :param reconnect: If `True`, reconnects the parents with the child of the removed cell, default=True
+        :type reconnect: bool, optional 
         """
-        cell = self._embedded_deepnet.N2D2().getCells()[name]
-        self._embedded_deepnet.N2D2().removeCell(cell, reconnect)
-        self._embedded_deepnet = DeepNet.create_from_N2D2_object(self._embedded_deepnet.N2D2())
-        self._cells = self._embedded_deepnet.get_cells()
+        self._embedded_deepnet.remove(name, reconnect)
+        self._cells.pop(name)
 
     def get_deepnet(self):
         """Get the :py:class:`n2d2.deepnet.DeepNet` used for computation.
