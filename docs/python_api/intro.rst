@@ -129,9 +129,9 @@ Inside your n2d2 project, create a build folder and compile N2D2 inside it :
         mkdir build && cd build
         cmake .. && make -j 8
 
-Once this is done, you have generated the shared object : `lib/n2d2.*.so`.
+Once this is done, you have generated the shared object : ``lib/n2d2.*.so``.
 
-You can add the generated `lib` folder and the python source in your `PYTHONPATH` with the command :
+You can add the generated `lib` folder and the python source in your ``PYTHONPATH`` with the command :
 
 .. code-block:: bash
 
@@ -139,10 +139,10 @@ You can add the generated `lib` folder and the python source in your `PYTHONPATH
 
 .. Note::
 
-        Add this line in your bashrc to always have a good `PYTHONPATH` setup !
+        Add this line in your bashrc to always have a good ``PYTHONPATH`` setup !
 
-To check if your PYTHONPATH works properly you can try to import `N2D2` (verify that the compilation went well) 
-and then `n2d2` (verify that your `PYTHONPATH` point the n2d2 python API).
+To check if your PYTHONPATH works properly you can try to import ``N2D2`` (verify that the compilation went well) 
+and then ``n2d2`` (verify that your ``PYTHONPATH`` point the n2d2 python API).
 
 Frequent issues
 ^^^^^^^^^^^^^^^
@@ -150,25 +150,44 @@ Frequent issues
 Module not found N2D2
 ~~~~~~~~~~~~~~~~~~~~~
 
-If when you import `n2d2` you get this error :
+If when you import ``n2d2`` you get this error :
 
-```
-ModuleNotFoundError: No module named 'N2D2'
-```
+.. code-block::
+        
+        ModuleNotFoundError: No module named 'N2D2'
 
 This is likely due to your python version not matching with the one used to compile N2D2.
 
-You can find in your `site-packages` (or in your `build/lib` if you have compiled N2D2 with CMake) a `.so` file named like this : `N2D2.cpython-37m-x86_64-linux-gnu.so`.
+You can find in your ``site-packages`` (or in your ``build/lib`` if you have compiled N2D2 with CMake) a ``.so`` file named like this : ``N2D2.cpython-37m-x86_64-linux-gnu.so``.
 
 This file name indicates the python version used to compile N2D2, in this example 3.7.
+
+You should either make sure to use a virtualenv with the right python version or check the bellow section.
+
+N2D2 doesn't compile with the right version of Python
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When compiling N2D2 you can use an argument to specify the python version you want to compile N2D2 for.
+
+.. code-block::
+
+        cmake -DPYTHON_EXECUTABLE=<path_to_python_binary> <path_to_n2d2_cmakefile>
+
+.. note::
+
+        On linux you can use ``$(which python)`` to  use your default python binary.
+
+You can then check the version of python on the shared object in ``build/lib``. 
+
+For example, this shared object ``N2D2.cpython-37m-x86_64-linux-gnu.so`` have been compiled for python3.7.
 
 
 Lib not found when compiling
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If CMake fails to find lib files when compiling, this may be due to the absence of the dependency `python3-dev`.
+If CMake fails to find lib files when compiling, this may be due to the absence of the dependency ``python3-dev``.
 
-When generating a new virtualenv after installing the dependency, you should see `include/python3.7m` inside the generated folder.
+When generating a new virtualenv after installing the dependency, you should see ``include/python3.7m`` inside the generated folder.
 
 If not, you may need to reboot in order to update system variables.
 
