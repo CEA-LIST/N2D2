@@ -109,6 +109,11 @@ class Deconv(NeuralNetworkCell, ModelDatatyped, Trainable):
         :param mapping: Mapping
         :type mapping: :py:class:`Tensor`, optional
         """
+        # Need to set no_bias before filler parameter !
+        if "no_bias" in config_parameters:
+            self.no_bias = config_parameters["no_bias"]
+        else:
+            self.no_bias = False
         if not isinstance(nb_inputs, int):
             raise n2d2.error_handler.WrongInputType("nb_inputs", str(type(nb_inputs)), ["int"])
         if not isinstance(nb_outputs, int):

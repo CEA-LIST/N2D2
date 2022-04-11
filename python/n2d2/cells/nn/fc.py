@@ -89,6 +89,11 @@ class Fc(NeuralNetworkCell, ModelDatatyped, Trainable):
         :param no_bias: If ``True``, don’t use bias, default=False
         :type no_bias: bool, optional
         """
+        # Need to set no_bias before filler parameter !
+        if "no_bias" in config_parameters:
+            self.no_bias = config_parameters["no_bias"]
+        else:
+            self.no_bias = False
         NeuralNetworkCell.__init__(self, **config_parameters)
         ModelDatatyped.__init__(self, **config_parameters)
         if not isinstance(nb_inputs, int):
