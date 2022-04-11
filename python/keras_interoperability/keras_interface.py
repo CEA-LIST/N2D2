@@ -179,6 +179,15 @@ class CustomSequential(keras.Sequential):
 
             dy_tensor = N2D2.Tensor_float(-dy_numpy * self.batch_size)
             dx = tf.convert_to_tensor(-dx_numpy / self.batch_size, dtype=tf.float32)
+            # print("----- GRAD -----")
+            # for i in self.get_deepnet_cell():
+            #     print(f"CELL  :{i.get_name()}")
+            #     print("----- INPUT -----")
+            #     print(f"{i.get_diffinputs()}")
+            #     print("----- OUTPUT -----")
+            #     print(f"{i.get_diffoutputs()}")
+
+            # exit()
             return dx
 
         return y, custom_grad
@@ -243,6 +252,12 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
 
     spec = [tf.TensorSpec(inputs_shape, tf.float32, name=input_name) for input_name in input_names]
 
+    # Force tf2onnx to not fuse BatchNorm into Conv.
+    # This is a workaround and may not work in future version of tf2onnx.
+    # Related merge request : https://github.com/onnx/tensorflow-onnx/pull/1907
+    #                               |
+    #                               V
+    tf2onnx.optimizer._get_optimizers().pop("remove_back_to_back")
     tf2onnx.convert.from_keras(
         tf_model,
         input_signature=spec,
