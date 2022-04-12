@@ -135,7 +135,7 @@ You can add the generated `lib` folder and the python source in your ``PYTHONPAT
 
 .. code-block:: bash
 
-        export PYTHONPATH=$PYTHONPATH:<N2D2_PATH>/bin/lib:<N2D2_PATH>/python
+        export PYTHONPATH=$PYTHONPATH:<N2D2_BUILD_PATH>/lib:<N2D2_PATH>/python
 
 .. Note::
 

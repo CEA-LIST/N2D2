@@ -29,6 +29,8 @@ from tensorflow.python.framework.convert_to_constants import convert_variables_t
 from warnings import warn
 
 import tf2onnx
+# import onnx
+# from onnxsim import simplify
 
 import N2D2
 import n2d2
@@ -257,7 +259,8 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
     # Related merge request : https://github.com/onnx/tensorflow-onnx/pull/1907
     #                               |
     #                               V
-    tf2onnx.optimizer._get_optimizers().pop("remove_back_to_back")
+    if "remove_back_to_back" in tf2onnx.optimizer._get_optimizers():
+        tf2onnx.optimizer._get_optimizers().pop("remove_back_to_back")
     tf2onnx.convert.from_keras(
         tf_model,
         input_signature=spec,
@@ -267,7 +270,7 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
         # output_path= "raw_" + model_name + ".onnx")
 
     # print("Simplifying the ONNX model ...")
-    # onnx_model = onnx.load("raw_" + model_name + ".onnx")
+    # onnx_model = onnx.load(model_name + ".onnx")
     # model_simp, check = simplify(onnx_model)
     # assert check, "Simplified ONNX model could not be validated"
     # onnx.save(model_simp, model_name + ".onnx")
@@ -275,7 +278,7 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
     # Import ONNX in N2D2
     if n2d2.global_variables.cuda_compiled:
         n2d2.global_variables.default_model = "Frame_CUDA"
-        n2d2.global_variables.cuda_device = 0
+        n2d2.global_variables.cuda_device = 7
 
     database = n2d2.database.Database()
 
