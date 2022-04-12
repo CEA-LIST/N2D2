@@ -546,8 +546,8 @@ class DeepNetCell(Block):
         :type avg_window: int, optional
         :param bench: If ``True``, activate the benchmarking of the learning speed , default=False
         :type bench: bool, optional
-        :param valid_metric: Validation metric to use can be ``Sensitivity``, ``Specificity``,
-        ``Precision``, ``NegativePredictiveValue``, ``MissRate``, ``FallOut``, ``FalseDiscoveryRate``,
+        :param valid_metric: Validation metric to use can be ``Sensitivity``, ``Specificity``, \
+        ``Precision``, ``NegativePredictiveValue``, ``MissRate``, ``FallOut``, ``FalseDiscoveryRate``, \
         ``FalseOmissionRate``, ``Accuracy``, ``F1Score``, ``Informedness``, ``Markedness``, default="Sensitivity"
         :type valid_metric: str, optional
         :param stop_valid: The maximum number of successive lower score validation, default=0

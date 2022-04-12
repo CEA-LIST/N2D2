@@ -69,7 +69,7 @@ class BatchNorm2d(NeuralNetworkCell, ModelDatatyped, Trainable):
         :type bias_solver: :py:class:`n2d2.solver.Solver`, optional
         :param epsilon: Epsilon value used in the batch normalization formula. If ``0.0``, automatically choose the minimum possible value, default=0.0
         :type epsilon: float, optional
-        :param moving_average_momentum: Moving average rate: used for the moving average of batch-wise means and standard deviations during training.The closer to ``1.0``,
+        :param moving_average_momentum: Moving average rate: used for the moving average of batch-wise means and standard deviations during training.The closer to ``1.0``, \
         the more it will depend on the last batch.
         :type moving_average_momentum: float, optional
         """

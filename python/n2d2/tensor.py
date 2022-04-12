@@ -97,7 +97,7 @@ class Tensor:
         :type datatype: str, optional
         :param cell: A reference to the object that created this tensor, default=None
         :type cell: :py:class:`n2d2.cells.NeuralNetworkCell`, optional
-        :param dim_format: Define the format used when you declare the dimensions of the tensor.
+        :param dim_format: Define the format used when you declare the dimensions of the tensor. \
         The ``N2D2`` convention is the reversed of the ``Numpy`` the numpy one (e.g. a [2, 3] numpy array is equivalent to a [3, 2] N2D2 Tensor), default="Numpy"
         :type dim_format: str, optional
         """
