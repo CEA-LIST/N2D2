@@ -1014,23 +1014,6 @@ void N2D2::DeepNet::initialize()
     mMasterDevice = currentDev;
 #endif
 
-    // Enable Peer-to-Peer communications between devices
-#ifdef CUDA
-    for (int i = 0; i < (int)devices.size(); ++i) {
-        for (int j = 0; j < (int)devices.size(); ++j) {
-            if (i != j) {
-                int canAccessPeer = 0;
-                CHECK_CUDA_STATUS(cudaDeviceCanAccessPeer(&canAccessPeer,
-                                              devices[j], devices[i]));
-                if (canAccessPeer) {
-                    CHECK_CUDA_STATUS(cudaSetDevice(devices[j]));
-                    CHECK_CUDA_STATUS(cudaDeviceEnablePeerAccess(devices[i], 0));
-                }
-            }
-        }
-    }
-#endif
-
     // NOT parallelizable
     for (int dev = 0; dev < (int)devices.size(); ++dev) {
 #ifdef CUDA

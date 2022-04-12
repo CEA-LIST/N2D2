@@ -50,4 +50,26 @@ const char* N2D2::Cuda::cublasGetErrorString(cublasStatus_t error)
     return "<unknown>";
 }
 
+void N2D2::Cuda::setMultiDevicePeerAccess(unsigned int size, unsigned int* devices)
+{
+    for (unsigned int i = 0; i < size; ++i) {
+        for (unsigned int j = 0; j < size; ++j) {
+            if (i != j) {
+                int canAccessPeer = 0;
+                CHECK_CUDA_STATUS(cudaDeviceCanAccessPeer(&canAccessPeer,
+                                            devices[j], devices[i]));                     
+                if (canAccessPeer) {
+                    CHECK_CUDA_STATUS(cudaSetDevice(devices[j]));
+                    const cudaError_t e = cudaDeviceEnablePeerAccess(devices[i], 0);
+                    if (e == cudaErrorPeerAccessAlreadyEnabled) {
+                        std::cout << "Peer access already enabled between ";
+                        std::cout << "device " << devices[j] << " and ";
+                        std::cout << "device " << devices[i] << std::endl;
+                    }
+                }
+            }
+        }
+    }
+}
+
 #endif

@@ -86,6 +86,10 @@ namespace N2D2 {
 namespace Cuda {
     const char* cublasGetErrorString(cublasStatus_t error);
 
+    // Enable Peer-to-Peer communications between devices
+    // when it is possible
+    void setMultiDevicePeerAccess(unsigned int size, unsigned int* devices);
+
     template <class T> void printDeviceVector(unsigned int size, T* devVec)
     {
         std::unique_ptr<T[]> vec(new T[size]);
