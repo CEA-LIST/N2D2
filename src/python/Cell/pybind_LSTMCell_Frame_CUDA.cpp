@@ -21,7 +21,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/LSTMCell_Frame_CUDA.hpp"
 #include "Cell/LSTMCell.hpp"
 
@@ -69,7 +68,6 @@ void init_LSTMCell_Frame_CUDA(py::module &m) {
     declare_LSTMCell_Frame_CUDA<double>(m, "double"); 
 }
 }
-#endif
 
 #endif
 

@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Transformation/WallisFilterTransformation.hpp"
 
 
@@ -34,4 +33,3 @@ void init_WallisFilterTransformation(py::module &m) {
     .def(py::init<WallisFilterTransformation&>(), py::arg("trans"));
 }
 }
-#endif

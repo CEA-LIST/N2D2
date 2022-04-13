@@ -21,7 +21,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/DeconvCell_Frame_CUDA.hpp"
 #include "Activation/TanhActivation_Frame_CUDA.hpp"
 
@@ -63,6 +62,5 @@ void init_DeconvCell_Frame_CUDA(py::module &m) {
     declare_DeconvCell_Frame_CUDA<double>(m, "double");
 }
 }
-#endif
 
 #endif

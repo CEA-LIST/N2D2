@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Database/CaltechPedestrian_Database.hpp"
 
 #include <pybind11/pybind11.h>
@@ -33,4 +32,3 @@ void init_CaltechPedestrian_Database(py::module &m) {
         .def(py::init<double, bool, bool>(),  py::arg("validation") = 0.0, py::arg("singleLabel") = true, py::arg("incAmbiguous") = false);
 }
 }
-#endif

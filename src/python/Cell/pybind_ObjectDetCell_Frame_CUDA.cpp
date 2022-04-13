@@ -20,7 +20,6 @@
 */
 
 #ifdef CUDA
-#ifdef PYBIND
 #include "Cell/ObjectDetCell_Frame_CUDA.hpp"
 #include "Cell/AnchorCell_Frame_Kernels_struct.hpp"
 
@@ -64,7 +63,6 @@ void init_ObjectDetCell_Frame_CUDA(py::module &m) {
     );
 }
 }
-#endif
 #endif
 
 

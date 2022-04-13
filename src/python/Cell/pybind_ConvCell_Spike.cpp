@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/ConvCell_Spike.hpp"
 
 
@@ -32,5 +31,4 @@ void init_ConvCell_Spike(py::module &m) {
     py::class_<ConvCell_Spike, std::shared_ptr<ConvCell_Spike>, ConvCell, Cell_Spike> (m, "ConvCell_Spike", py::multiple_inheritance());
 }
 }
-#endif
 

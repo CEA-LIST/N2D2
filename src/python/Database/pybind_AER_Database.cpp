@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Database/AER_Database.hpp"
 
 #include <pybind11/pybind11.h>
@@ -31,4 +30,3 @@ void init_AER_Database(py::module &m) {
     py::class_<AER_Database, std::shared_ptr<AER_Database>, Database>(m, "AER_Database");
 }
 }
-#endif

@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/ProposalCell_Frame.hpp"
 #include "StimuliProvider.hpp"
 
@@ -60,4 +59,3 @@ void init_ProposalCell_Frame(py::module &m) {
     );
 }
 }
-#endif

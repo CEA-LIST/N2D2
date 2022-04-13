@@ -10,7 +10,6 @@
 */
 
 
-#ifdef PYBIND
 #include "Quantizer/Cell/QuantizerCell.hpp"
 #include "containers/Tensor.hpp"
 
@@ -52,5 +51,4 @@ void init_QuantizerCell(py::module &m) {
 }
 }
 
-#endif
 

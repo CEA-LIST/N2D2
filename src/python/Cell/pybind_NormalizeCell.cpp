@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/NormalizeCell.hpp"
 
 
@@ -39,4 +38,3 @@ void init_NormalizeCell(py::module &m) {
 
 }
 }
-#endif

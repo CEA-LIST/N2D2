@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/FMPCell_Frame.hpp"
 #include "Cell/FMPCell.hpp"
 
@@ -45,4 +44,3 @@ void init_FMPCell_Frame(py::module &m) {
 
 }
 }
-#endif

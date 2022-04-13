@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/ProposalCell.hpp"
 
 
@@ -34,4 +33,3 @@ void init_ProposalCell(py::module &m) {
 
 }
 }
-#endif

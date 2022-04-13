@@ -21,7 +21,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/NormalizeCell_Frame_CUDA.hpp"
 #include "DeepNet.hpp"
 #include <pybind11/pybind11.h>
@@ -49,7 +48,6 @@ void init_NormalizeCell_Frame_CUDA(py::module &m) {
     declare_NormalizeCell_Frame_CUDA<double>(m, "double"); 
 }
 }
-#endif
 
 #endif
 

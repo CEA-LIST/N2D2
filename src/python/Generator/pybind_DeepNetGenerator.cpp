@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 
 #include "Xnet/Network.hpp"
 #include "containers/Tensor.hpp"
@@ -51,4 +50,3 @@ void init_DeepNetGenerator(py::module &m) {
 }
 }
 
-#endif

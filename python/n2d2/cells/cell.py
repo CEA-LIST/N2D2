@@ -19,12 +19,13 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
+from abc import ABC, abstractmethod
+
 import N2D2
+
 import n2d2.global_variables
 from n2d2.deepnet import DeepNet
-from abc import ABC, abstractmethod
-from n2d2.tensor import Interface
-
+from n2d2 import Tensor, Interface
 
 class Cell(ABC):
     """Abstract class of the higher level of cells and cells container.
@@ -42,11 +43,10 @@ class Cell(ABC):
         """
         Do the common check on the inputs and infer the deepNet from the inputs.
         """
-        if not (isinstance(x, n2d2.Tensor) or isinstance(x, n2d2.Interface)):
+        if not isinstance(x, (Tensor, Interface)):
             raise TypeError(self.get_name() + " received an input of type " + str(
                 type(x)) + ", input should be of type n2d2.Tensor or n2d2.Interface instead.")
-        else:
-            self._deepnet = x.get_deepnet()
+        self._deepnet = x.get_deepnet()
 
     @abstractmethod
     def test(self):
@@ -87,7 +87,7 @@ class Trainable(ABC):
         pass
 
     @abstractmethod
-    def set_filler(self, filler):
+    def set_filler(self, filler, refill=False):
         pass
 
     @abstractmethod
@@ -103,7 +103,7 @@ class Block(Cell):
     """
 
     def __init__(self, cells, name=None):
-        assert (isinstance(cells, list))
+        assert isinstance(cells, list)
         self._cells = {}
         for cell in cells:
             self._cells[cell.get_name()] = cell
@@ -112,10 +112,9 @@ class Block(Cell):
     def __getitem__(self, item):
         if isinstance(item, int):
             return list(self._cells.values())[item]
-        elif isinstance(item, str): 
-            return self._cells[item]
-        else:
-            raise n2d2.error_handler.WrongInputType("item", type(item), ["str"])
+        if isinstance(item, str):
+            return self.get_cell(item)
+        raise n2d2.error_handler.WrongInputType("item", type(item), ["str"])
 
     def get_cells(self):
         """
@@ -138,10 +137,9 @@ class Block(Cell):
         """
            Returns the low level view of a cell.
         """
-        if isinstance(item, str): 
+        if isinstance(item, str):
             return self.get_cells()[item]
-        else:
-            raise n2d2.error_handler.WrongInputType("item", type(item), ["str"])
+        raise n2d2.error_handler.WrongInputType("item", type(item), ["str"])
 
     def test(self):
         for cell in self._cells.values():
@@ -152,9 +150,6 @@ class Block(Cell):
         for cell in self._cells.values():
             cell.learn()
         return self
-
-    def __call__(self, x):
-        super().__call__(x)
 
     def set_solver(self, solver):
         """Set a solver for every optimizable parameters in this Block. Optimizable parameters are weights, biases and quantizers.
@@ -189,7 +184,7 @@ class Block(Cell):
 
     def export_free_parameters(self, dir_name, verbose=True):
         for cell in self._cells.values():
-            cell.export_free_parameters(dir_name, verbose)
+            cell.export_free_parameters(dir_name, verbose=verbose)
 
     def __str__(self):
         """
@@ -232,8 +227,7 @@ class Iterable(Block, ABC):
 
         if isinstance(item, int):
             return self._seq.__getitem__(item)
-        else:
-            return super().__getitem__(item)
+        return super().__getitem__(item)
 
     def __len__(self):
         return self._seq.__len__()
@@ -357,8 +351,8 @@ class Layer(Iterable):
 class DeepNetCell(Block):
     """
     n2d2 wrapper for a N2D2 deepnet object. Allows chaining a N2D2 deepnet (for example loaded from a ONNX or INI file)
-    into the dynamic computation graph of the n2d2 API. During each use of the  the __call__ method, 
-    the N2D2 deepnet is converted to a n2d2 representation and the N2D2 deepnet is concatenated to the deepnet of the 
+    into the dynamic computation graph of the n2d2 API. During each use of the  the __call__ method,
+    the N2D2 deepnet is converted to a n2d2 representation and the N2D2 deepnet is concatenated to the deepnet of the
     incoming tensor object.
     The object is manipulated with the bound methods of the N2D2 DeepNet object, and its computation graph is
     also exclusively defined by the DeepNet object that is passed to it during construction.
@@ -389,7 +383,7 @@ class DeepNetCell(Block):
 
 
     @classmethod
-    def load_from_ONNX(cls, provider, model_path, ini_file=None, ignore_cells=[]):
+    def load_from_ONNX(cls, provider, model_path, ini_file=None, ignore_cells=None):
         """Load a deepnet from an ONNX file given a provider object.
 
         :param provider: Provider object to base deepnet upon
@@ -398,7 +392,7 @@ class DeepNetCell(Block):
         :type model_path: str
         :param ini_file: Path to an optional .ini file with additional onnx import instructions
         :type ini_file: str
-        :param ignore_cells: List of cells name to ignore, default=[]
+        :param ignore_cells: List of cells name to ignore, default=None
         :type ignore_cells: list, optional
         """
         if not n2d2.global_variables.onnx_compiled:
@@ -424,7 +418,7 @@ class DeepNetCell(Block):
     @classmethod
     def load_from_INI(cls, path):
         """Load a deepnet from an INI file.
-        
+
         :param model_path: Path to the ini file.
         :type model_path: str
         """
@@ -451,8 +445,7 @@ class DeepNetCell(Block):
             outputs.append(cell.get_outputs())
         if len(outputs) == 1:
             return outputs[0]
-        else:
-            return outputs
+        return outputs
 
     def concat_to_deepnet(self, deepnet):
 
@@ -464,7 +457,7 @@ class DeepNetCell(Block):
 
         self._cells = {}
 
-        for idx, layer in enumerate(layers[1:]):
+        for layer in layers[1:]:
 
             for cell in layer:
                 N2D2_cell = cells[cell]
@@ -495,17 +488,18 @@ class DeepNetCell(Block):
         self._inference = False
         return self
 
-    def import_free_parameters(self, dir_name, ignore_not_exists=False):
+    def import_free_parameters(self, dir_name:str, ignore_not_exists:bool=False):
         """Import deepnet parameters.
         """
         print(f"Importing DeepNetCell '{self._name}' parameters from  {dir_name}")
         self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignoreNotExists=ignore_not_exists)
 
-    
-    def export_free_parameters(self, dir_name):
+
+    def export_free_parameters(self, dir_name:str, verbose:bool=True):
         """Export deepnet parameters.
         """
-        print(f"Exporting DeepNetCell '{self._name}' parameters from {dir_name}")
+        if verbose:
+            print(f"Exporting DeepNetCell '{self._name}' parameters from {dir_name}")
         self._deepnet.N2D2().exportNetworkFreeParameters(dir_name)
 
 
@@ -520,12 +514,12 @@ class DeepNetCell(Block):
         self._cells.pop(name)
 
     def get_deepnet(self):
-        """Get the :py:class:`n2d2.deepnet.DeepNet` used for computation. 
+        """Get the :py:class:`n2d2.deepnet.DeepNet` used for computation.
         """
         return self._deepnet
 
     def get_embedded_deepnet(self):
-        """Get the :py:class:`n2d2.deepnet.DeepNet` used to define this cell. 
+        """Get the :py:class:`n2d2.deepnet.DeepNet` used to define this cell.
         """
         return self._embedded_deepnet
 
@@ -544,7 +538,7 @@ class DeepNetCell(Block):
 
     def fit(self, learn_epoch, log_epoch=1000, avg_window=10000, bench=False, ban_multi_device=False, valid_metric="Sensitivity", stop_valid=0, log_kernels=False):
         """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
-        
+
         :param learn_epoch: The number of epochs steps
         :type learn_epoch: int
         :param log_epoch: The number of epochs between logs, default=1000
@@ -553,7 +547,9 @@ class DeepNetCell(Block):
         :type avg_window: int, optional
         :param bench: If ``True``, activate the benchmarking of the learning speed , default=False
         :type bench: bool, optional
-        :param valid_metric: Validation metric to use can be ``Sensitivity``, ``Specificity``, ``Precision``, ``NegativePredictiveValue``, ``MissRate``, ``FallOut``, ``FalseDiscoveryRate, ``FalseOmissionRate``, ``Accuracy``, ``F1Score``, ``Informedness``, ``Markedness``, default="Sensitivity"
+        :param valid_metric: Validation metric to use can be ``Sensitivity``, ``Specificity``, \
+        ``Precision``, ``NegativePredictiveValue``, ``MissRate``, ``FallOut``, ``FalseDiscoveryRate``, \
+        ``FalseOmissionRate``, ``Accuracy``, ``F1Score``, ``Informedness``, ``Markedness``, default="Sensitivity"
         :type valid_metric: str, optional
         :param stop_valid: The maximum number of successive lower score validation, default=0
         :type stop_valid: int, optional
@@ -564,8 +560,7 @@ class DeepNetCell(Block):
         # Checking inputs
         if valid_metric not in N2D2.ConfusionTableMetric.__members__.keys():
             raise n2d2.error_handler.WrongValue("metric", valid_metric, N2D2.ConfusionTableMetric.__members__.keys())
-        else:
-            N2D2_valid_metric = N2D2.ConfusionTableMetric.__members__[valid_metric]
+        N2D2_valid_metric = N2D2.ConfusionTableMetric.__members__[valid_metric]
 
         # Generating the N2D2 DeepNet
         N2D2_deepnet = self._embedded_deepnet.N2D2()
@@ -575,16 +570,16 @@ class DeepNetCell(Block):
         parameters = n2d2.n2d2_interface.Options(
                         avg_window=avg_window, bench=bench, learn_epoch=learn_epoch,
                         log_epoch=log_epoch, ban_multi_device=ban_multi_device,
-                        valid_metric=N2D2_valid_metric, stop_valid=stop_valid, 
+                        valid_metric=N2D2_valid_metric, stop_valid=stop_valid,
                         log_kernels=log_kernels)
         N2D2.learn_epoch(parameters.N2D2(), N2D2_deepnet)
 
-    def run_test(self, log = 1000, report = 100, test_index = -1, test_id = -1, 
-                 qat_sat = False, log_kernels = False, wt_round_mode = "NONE", 
-                 b_round_mode = "NONE", c_round_mode = "NONE", 
+    def run_test(self, log = 1000, report = 100, test_index = -1, test_id = -1,
+                 qat_sat = False, log_kernels = False, wt_round_mode = "NONE",
+                 b_round_mode = "NONE", c_round_mode = "NONE",
                  act_scaling_mode = "FLOAT_MULT", log_JSON = False, log_outputs = 0):
         """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
-        
+
         :param log: The number of steps between logs, default=1000
         :type log: int, optional
         :param report: Number of steps between reportings, default=100
@@ -612,21 +607,17 @@ class DeepNetCell(Block):
         """
         if wt_round_mode not in N2D2.WeightsApprox.__members__.keys():
             raise n2d2.error_handler.WrongValue("wt_round_mode", wt_round_mode, N2D2.WeightsApprox.__members__.keys())
-        else:
-            N2D2_wt_round_mode = N2D2.WeightsApprox.__members__[wt_round_mode]
+        N2D2_wt_round_mode = N2D2.WeightsApprox.__members__[wt_round_mode]
         if b_round_mode not in N2D2.WeightsApprox.__members__.keys():
             raise n2d2.error_handler.WrongValue("b_round_mode", b_round_mode, N2D2.WeightsApprox.__members__.keys())
-        else:
-            N2D2_b_round_mode = N2D2.WeightsApprox.__members__[b_round_mode]
+        N2D2_b_round_mode = N2D2.WeightsApprox.__members__[b_round_mode]
         if c_round_mode not in N2D2.WeightsApprox.__members__.keys():
             raise n2d2.error_handler.WrongValue("b_round_mode", c_round_mode, N2D2.WeightsApprox.__members__.keys())
-        else:
-            N2D2_c_round_mode = N2D2.WeightsApprox.__members__[c_round_mode]
+        N2D2_c_round_mode = N2D2.WeightsApprox.__members__[c_round_mode]
 
         if act_scaling_mode not in N2D2.ScalingMode.__members__.keys():
             raise n2d2.error_handler.WrongValue("act_scaling_mode", act_scaling_mode, N2D2.ScalingMode.__members__.keys())
-        else:
-            N2D2_act_scaling_mode = N2D2.ScalingMode.__members__[act_scaling_mode]
+        N2D2_act_scaling_mode = N2D2.ScalingMode.__members__[act_scaling_mode]
 
         parameters = n2d2.n2d2_interface.Options(log=log, report=report,
                         test_index=test_index, test_id=test_id, qat_SAT=qat_sat,

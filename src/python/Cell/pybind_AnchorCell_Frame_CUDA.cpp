@@ -20,7 +20,6 @@
 */
 
 
-#ifdef PYBIND
 #ifdef CUDA
 #include "Cell/AnchorCell_Frame_CUDA.hpp"
 #include "Cell/AnchorCell_Frame_Kernels_struct.hpp"
@@ -53,6 +52,5 @@ void init_AnchorCell_Frame_CUDA(py::module &m) {
     ; 
 }
 }
-#endif
 #endif
 

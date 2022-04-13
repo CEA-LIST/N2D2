@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Activation/LinearActivation_Frame.hpp"
 
 
@@ -43,4 +42,3 @@ void init_LinearActivation_Frame(py::module &m) {
 }
 
 }
-#endif

@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/AnchorCell.hpp"
 
 #include <pybind11/pybind11.h>
@@ -31,4 +30,3 @@ void init_AnchorCell(py::module &m) {
     py::class_<AnchorCell, std::shared_ptr<AnchorCell>, Cell> (m, "AnchorCell", py::multiple_inheritance());
 }
 }
-#endif

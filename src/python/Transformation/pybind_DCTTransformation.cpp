@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Transformation/DCTTransformation.hpp"
 
 
@@ -33,4 +32,3 @@ void init_DCTTransformation(py::module &m) {
     .def(py::init<bool>(), py::arg("twoDimensional") = true);
 }
 }
-#endif

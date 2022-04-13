@@ -17,7 +17,6 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-#ifdef PYBIND
 #include "Cell/TargetBiasCell_Frame.hpp"
 #include "DeepNet.hpp"
 
@@ -40,4 +39,3 @@ void init_TargetBiasCell_Frame(py::module &m) {
     declare_TargetBiasCell_Frame<double>(m, "double");
 }
 }
-#endif

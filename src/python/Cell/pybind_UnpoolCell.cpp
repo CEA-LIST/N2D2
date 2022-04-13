@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/UnpoolCell.hpp"
 
 
@@ -38,4 +37,3 @@ void init_UnpoolCell(py::module &m) {
 
 }
 }
-#endif

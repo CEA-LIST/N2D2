@@ -18,7 +18,6 @@ s
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/Cell_Frame.hpp"
 
 #include <pybind11/pybind11.h>
@@ -38,6 +37,8 @@ void declare_Cell_Frame(py::module &m, const std::string& typeStr) {
     .def("setDiffInputsValid", &Cell_Frame<T>::setDiffInputsValid)
     .def("getPyDataType", &Cell_Frame<T>::getPyDataType)
     .def("getPyModel", &Cell_Frame<T>::getPyModel)
+    .def("getDiffInputs", (BaseTensor& (Cell_Frame<T>::*)()) &Cell_Frame<T>::getDiffInputs, py::return_value_policy::reference)
+    .def("getDiffOutputs", (BaseTensor& (Cell_Frame<T>::*)(unsigned int)) &Cell_Frame<T>::getDiffOutputs, py::arg("index")=0, py::return_value_policy::reference)
     .def("clearInputTensors", &Cell_Frame<T>::clearInputTensors)
     .def("clearOutputTensors", &Cell_Frame<T>::clearOutputTensors)
     .def("initializeParameters", &Cell_Frame<T>::initializeParameters, py::arg("nbInputChannels"), py::arg("nbInputs"))
@@ -53,4 +54,3 @@ void init_Cell_Frame(py::module &m) {
     declare_Cell_Frame<double>(m, "double");
 }
 }
-#endif

@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Activation/SoftplusActivation.hpp"
 
 
@@ -33,5 +32,4 @@ void init_SoftplusActivation(py::module &m) {
 
 }
 }
-#endif
 

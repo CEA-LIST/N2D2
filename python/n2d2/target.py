@@ -46,17 +46,33 @@ class Target(N2D2_Interface, ABC):
 
     _convention_converter = n2d2.ConventionConverter(_target_parameters)
 
-    """Provider is not a parameter in the INI file in the case of Target class,
-    but usually inferred from the deepnet in N2D2. Name and NeuralNetworkCell are parts of the section name"""
+    # Provider is not a parameter in the INI file in the case of Target class,
+    # but usually inferred from the deepnet in N2D2. Name and NeuralNetworkCell are parts of the section name
     @abstractmethod
     def __init__(self, provider, **config_parameters):
+        """
+        :param provider: Provider containing the input and output data.
+        :type provider: :py:class:`n2d2.provider.Provider`
+        :param name: Target name, default= ``Target_id``
+        :type name: str, optional
+        :param target_value: Target value for the target output neuron(s) (for classification), default=1.0
+        :type target_value: float, optional
+        :param default_value: Default value for the non-target output neuron(s) (for classification), default=0.0
+        :type default_value: float, optional
+        :param top_n: The top-N estimated targets per output neuron to save, default=1
+        :type top_n: int, optional
+        :param labels_mapping: Path to the file containing the labels to target mapping, default=""
+        :type labels_mapping: str, optional
+        :param create_missing_labels: If ``True``, labels present in the labels mapping file but that are non-existent in the database are created (with 0 associated stimuli), default=False
+        :type create_missing_labels: bool, optional
+        """
 
         if 'name' in config_parameters:
             name = config_parameters.pop('name')
         else:
             name = n2d2.generate_name(self)
-            
-        
+
+
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._constructor_parameters = {
@@ -88,6 +104,7 @@ class Target(N2D2_Interface, ABC):
     def __str__(self):
         return self.get_name()
 
+@n2d2.utils.inherit_init_docstring()
 class Score(Target):
 
     _parameters = {
@@ -99,13 +116,15 @@ class Score(Target):
     _parameters.update(Target._target_parameters)
 
     _convention_converter = n2d2.ConventionConverter(_parameters)
-
+    _N2D2_constructors = N2D2.TargetScore
     def __init__(self, provider, **config_parameters):
+        """
+        """
         Target.__init__(self, provider, **config_parameters)
 
     def __call__(self, inputs):
         if self._N2D2_object is None: # TODO : We allow the user to modify the graph but we do not check if the target is associated with the last cell.
-            self._N2D2_object = N2D2.TargetScore(self._constructor_parameters['name'],
+            self._N2D2_object = self._N2D2_constructors(self._constructor_parameters['name'],
                                                  inputs.cell.N2D2(),
                                                  self._provider.N2D2(),
                                                  **self.n2d2_function_argument_parser(self._optional_constructor_arguments))
@@ -159,9 +178,18 @@ class Score(Target):
         """
         self._N2D2_object.logSuccess(path, self._provider.get_partition())
 
+    def log_stats(self, path):
+        """Export statistics of the graph
 
-    """This only works if TopN > 1, otherwise it returns 0!"""
+        :param dirname: path to the directory where you want to save the data.
+        :type dirname: str
+        """
+        if self._deepnet is None:
+            raise RuntimeError("The target doesn't have stats to log.")
+        self._deepnet.log_stats(path)
+
     def get_average_top_n_success(self, window=0):
+        """This only works if TopN > 1, otherwise it returns 0!"""
         if self._N2D2_object.getTargetTopN() == 1:
             raise RuntimeWarning("Using this function with TopN=1 returns 0. You may want to use get_average_success()?")
         return self._N2D2_object.getAverageTopNSuccess(self._provider.get_partition(), window)
@@ -176,5 +204,3 @@ class Score(Target):
         return self._N2D2_object.getAverageScore(
             self._provider.get_partition(),
             N2D2.ConfusionTableMetric.__members__[metric])
-
-

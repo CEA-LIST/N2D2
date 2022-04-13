@@ -22,7 +22,6 @@
 
 
 
-#ifdef PYBIND
 #include "utils/Kernel.hpp"
 
 
@@ -45,6 +44,5 @@ void init_Kernel(py::module &m) {
 }
 
 
-#endif
 
 

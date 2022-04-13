@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "Transformation/CustomTransformation.hpp"
@@ -166,4 +165,3 @@ namespace N2D2 {
         
     }
 }
-#endif

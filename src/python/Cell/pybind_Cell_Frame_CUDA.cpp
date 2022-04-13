@@ -22,7 +22,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/Cell_Frame_CUDA.hpp"
 
 #include <pybind11/pybind11.h>
@@ -44,6 +43,8 @@ void declare_Cell_Frame_CUDA(py::module &m, const std::string& typeStr) {
     .def("setOutputTarget",  &Cell_Frame_CUDA<T>::setOutputTarget, py::arg("targets"))
     .def("getPyDataType", &Cell_Frame_CUDA<T>::getPyDataType)
     .def("getPyModel", &Cell_Frame_CUDA<T>::getPyModel)
+    .def("getDiffInputs", (BaseTensor& (Cell_Frame_CUDA<T>::*)()) &Cell_Frame_CUDA<T>::getDiffInputs, py::return_value_policy::reference)
+    .def("getDiffOutputs", (BaseTensor& (Cell_Frame_CUDA<T>::*)(unsigned int)) &Cell_Frame_CUDA<T>::getDiffOutputs, py::arg("index")=0, py::return_value_policy::reference)
     .def("clearInputTensors", &Cell_Frame_CUDA<T>::clearInputTensors)
     .def("clearOutputTensors", &Cell_Frame_CUDA<T>::clearOutputTensors)
     .def("initializeParameters", &Cell_Frame_CUDA<T>::initializeParameters, py::arg("nbInputChannels"), py::arg("nbInputs"))
@@ -65,6 +66,5 @@ void init_Cell_Frame_CUDA(py::module &m) {
     declare_Cell_Frame_CUDA<double>(m, "double");
 }
 }
-#endif
 
 #endif

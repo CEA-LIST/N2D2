@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/LSTMCell.hpp"
 
 
@@ -33,4 +32,3 @@ void init_LSTMCell(py::module &m) {
 
 }
 }
-#endif

@@ -18,7 +18,6 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-#ifdef PYBIND
 #include "Transformation/TrimTransformation.hpp"
 
 
@@ -34,4 +33,3 @@ void init_TrimTransformation(py::module &m) {
     .def(py::init<TrimTransformation&>(), py::arg("trans"));
 }
 }
-#endif

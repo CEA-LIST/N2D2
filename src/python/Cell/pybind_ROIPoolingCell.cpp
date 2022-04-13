@@ -20,7 +20,6 @@
 */
 
 
-#ifdef PYBIND
 #include "Cell/ROIPoolingCell.hpp"
 
 
@@ -40,4 +39,3 @@ void init_ROIPoolingCell(py::module &m) {
     .export_values();
 }
 }
-#endif

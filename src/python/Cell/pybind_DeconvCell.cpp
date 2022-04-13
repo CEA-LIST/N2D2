@@ -18,7 +18,6 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-#ifdef PYBIND
 #include "Cell/DeconvCell.hpp"
 
 #include "Solver/Solver.hpp"
@@ -60,4 +59,3 @@ void init_DeconvCell(py::module &m) {
     .def("getDilationY", &DeconvCell::getDilationY);
 }
 }
-#endif

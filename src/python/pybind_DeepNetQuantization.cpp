@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 
 #include "StimuliProvider.hpp"
 #include "DeepNet.hpp"
@@ -38,4 +37,3 @@ void init_DeepNetQuantization(py::module &m) {
     ;
 }
 }
-#endif

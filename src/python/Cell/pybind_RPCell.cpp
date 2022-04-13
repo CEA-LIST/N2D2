@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/RPCell.hpp"
 
 
@@ -33,4 +32,3 @@ void init_RPCell(py::module &m) {
     py::class_<RPCell, std::shared_ptr<RPCell>, Cell> (m, "RPCell", py::multiple_inheritance());
 }
 }
-#endif

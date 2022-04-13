@@ -22,7 +22,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Activation/LinearActivation_Frame_CUDA.hpp"
 
 
@@ -46,6 +45,5 @@ void init_LinearActivation_Frame_CUDA(py::module &m) {
 }
 
 }
-#endif
 
 #endif

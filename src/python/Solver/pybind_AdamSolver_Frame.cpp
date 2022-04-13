@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Solver/AdamSolver_Frame.hpp"
 
 
@@ -51,4 +50,3 @@ void init_AdamSolver_Frame(py::module &m) {
 }
 }
 
-#endif

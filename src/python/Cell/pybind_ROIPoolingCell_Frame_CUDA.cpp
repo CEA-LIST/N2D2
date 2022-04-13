@@ -21,7 +21,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/ROIPoolingCell_Frame_CUDA.hpp"
 
 #include <pybind11/pybind11.h>
@@ -49,7 +48,6 @@ void init_ROIPoolingCell_Frame_CUDA(py::module &m) {
     );
 }
 }
-#endif
 
 #endif
 

@@ -21,7 +21,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/LRNCell_Frame_CUDA.hpp"
 #include "Cell/LRNCell.hpp"
 
@@ -48,7 +47,6 @@ void init_LRNCell_Frame_CUDA(py::module &m) {
     declare_LRNCell_Frame_CUDA<double>(m, "double"); 
 }
 }
-#endif
 
 #endif
 

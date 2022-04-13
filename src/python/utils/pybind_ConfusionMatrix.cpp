@@ -21,7 +21,6 @@
 */
 
 
-#ifdef PYBIND
 #include "utils/ConfusionMatrix.hpp"
 
 #include <pybind11/pybind11.h>
@@ -50,7 +49,6 @@ void init_ConfusionMatrix(py::module &m) {
     .export_values();
 }
 }
-#endif
 
 
 

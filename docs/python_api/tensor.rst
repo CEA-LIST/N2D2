@@ -9,6 +9,13 @@ Introduction
 The class :py:class:`n2d2.Tensor` contains a reference to the element which produce it and can be seen as the edge of the computation graph.
 
 
+Tensor
+------
+
+.. autoclass:: n2d2.Tensor
+   :members:
+
+
 Manipulating tensors
 --------------------
 
@@ -177,10 +184,14 @@ You can switch from CPU to GPU at anytime :
     tensor.cuda() # Converting to a CUDA tensor
 
 When working on a ``CUDA`` tensor you have to understand that they are stored in two different places.
+
+
 The host and the device. The device is the GPU. The host correspond to your interface with the tensor that exists in the GPU. 
 You cannot access the device directly, the GPU don't have input/output functions.
 
-This is why you have two methods to synchronized these two versions.
+This is why you have two methods to synchronized these two versions (:py:meth:`n2d2.Tensor.htod` and :py:meth:`n2d2.Tensor.dtoh`).
+
+Synchronizing the device and the host can be an important overhead, it is recommended to compute everything on the device and to synchronize the host at the end.
 
 Synchronization example
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -196,7 +207,7 @@ Let's consider the following ``CUDA`` Tensor :
     0 0
     0 0
 
-We will set the following values :
+We set the following values :
 
 .. testcode::
 
@@ -207,7 +218,7 @@ We will set the following values :
     1 2
     3 4
 
-Then we will synchronized the device with the host
+Then we will synchronized the device with the host. this mean that we send the values to the GPU.
 
 .. testcode::
 
@@ -218,7 +229,8 @@ Then we will synchronized the device with the host
     1 2
     3 4
 
-As you can see nothing change when you print the tensor.
+As you can see, nothing change when printing the tensor. 
+We have updated the GPU with the new values.
 Now let's change the values stored in the tensor :
 
 .. testcode::
@@ -230,7 +242,8 @@ Now let's change the values stored in the tensor :
     2 3
     4 5
 
-Synchronizing the device with the host :
+When printing the tensor we see the new values we just set.
+Now let's synchronize the host with the device !
 
 .. testcode::
 
@@ -241,11 +254,7 @@ Synchronizing the device with the host :
     1 2
     3 4
 
+As you can see when printing the tensor, we now have the old values of the tensor.
 
-Tensor 
-------
-
-.. autoclass:: n2d2.Tensor
-   :members:
 
 

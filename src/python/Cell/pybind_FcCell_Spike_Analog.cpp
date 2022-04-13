@@ -18,7 +18,6 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-#ifdef PYBIND
 #include "Cell/FcCell_Spike_Analog.hpp"
 
 
@@ -41,4 +40,3 @@ void init_FcCell_Spike_Analog(py::module &m) {
     ;
 }
 }
-#endif

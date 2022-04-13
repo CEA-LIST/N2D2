@@ -21,7 +21,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #ifdef JSONCPP
 #include "Database/Cityscapes_Database.hpp"
 
@@ -40,5 +39,4 @@ void init_Cityscapes_Database(py::module &m) {
     ;
 }
 }
-#endif
 #endif

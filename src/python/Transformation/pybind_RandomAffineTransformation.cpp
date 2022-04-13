@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Transformation/RandomAffineTransformation.hpp"
 
 
@@ -47,4 +46,3 @@ void init_RandomAffineTransformation(py::module &m) {
     .def(py::init<const RandomAffineTransformation&>(), py::arg("trans"));
 }
 }
-#endif

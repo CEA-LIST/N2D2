@@ -47,10 +47,11 @@ n2d2.global_variables.default_model = "Frame_CUDA"
 # Change cuda device (default 0)
 n2d2.global_variables.cuda_device = args.device
 nb_epochs = args.epochs
-batch_size = 256
+batch_size = 54
 
 print("\n### Create database ###")
 database = n2d2.database.MNIST(data_path=args.data_path, validation=0.1)
+database.get_partition_summary()
 
 print("\n### Create Provider ###")
 provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size=batch_size)
@@ -129,5 +130,8 @@ else:
     # save a graph of the loss and the validation score as a function of the number of steps
     target.log_success("lenet_success")
 
+print("\n### Generating a CPP export in int8 ###\n")
+model.remove("18") # removing Softmax layer before export !
+n2d2.export.export_cpp(model, nb_bits=8, calibration=1)
 
-print(f"\n{time.time()-t}")
+print(f"\nExceution time : {time.time()-t}s")

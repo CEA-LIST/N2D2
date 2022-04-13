@@ -18,7 +18,6 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-#ifdef PYBIND
 #include "Cell/ScalingCell.hpp"
 
 
@@ -33,5 +32,4 @@ void init_ScalingCell(py::module &m) {
     .def("getScaling", (const Scaling& (ScalingCell::*)()const) &ScalingCell::getScaling);
 }
 }
-#endif
 

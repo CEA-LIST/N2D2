@@ -26,7 +26,7 @@ from time import sleep
 import unittest
 import pytorch_interoperability as pytorch
 
-from n2d2.utils import ConfigSection
+from n2d2 import ConfigSection
 from n2d2.activation import Linear, Rectifier
 from n2d2.solver import SGD
 from n2d2.filler import Constant

@@ -1,6 +1,6 @@
 """
     (C) Copyright 2021 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -18,10 +18,7 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
-try:
-    import torch
-except ImportError:
-    pass
+import torch
 import n2d2
 
 def _switching_convention(dims):
@@ -66,13 +63,13 @@ def _to_n2d2(torch_tensor):
         if n2d2_tensor.nb_dims() == 4:
             n2d2_tensor.reshape([dims[0], dims[1], dims[2], dims[3]])
     else:
-        numpy_tensor = torch_tensor.cpu().detach().numpy() 
+        numpy_tensor = torch_tensor.cpu().detach().numpy()
         # This operation create a CPU memory copy.
-        # torch.Tensor can have a discontiguous memory while n2d2.Tensor need a contiguous memory space. 
+        # torch.Tensor can have a discontiguous memory while n2d2.Tensor need a contiguous memory space.
         # Making the conversion hard to do without copy.
-        n2d2_tensor = n2d2.Tensor.from_numpy(numpy_tensor) 
+        n2d2_tensor = n2d2.Tensor.from_numpy(numpy_tensor)
         if n2d2_tensor.nb_dims() == 4:
-            n2d2_tensor.reshape(_switching_convention(n2d2_tensor.dims())) 
+            n2d2_tensor.reshape(_switching_convention(n2d2_tensor.dims()))
     return n2d2_tensor
 
 
@@ -83,12 +80,12 @@ def _to_torch(N2D2_tensor):
     This method also convert the shape of the tensor to follow torch convention.
     """
     n2d2_tensor = n2d2.Tensor.from_N2D2(N2D2_tensor)
-    numpy_tensor = n2d2_tensor.to_numpy() 
+    numpy_tensor = n2d2_tensor.to_numpy()
     torch_tensor = torch.from_numpy(numpy_tensor)
     if n2d2_tensor.is_cuda:
         torch_tensor = torch_tensor.cuda() # Create GPU memory copy
     if n2d2_tensor.nb_dims() == 4:
-        torch_tensor.resize_(_switching_convention(n2d2_tensor.dims())) 
+        torch_tensor.resize_(_switching_convention(n2d2_tensor.dims()))
     return torch_tensor
 
 
@@ -97,7 +94,7 @@ class Block(torch.nn.Module):
     PyTorch layer used to interface an :py:class:`n2d2.cells.Block` object in a PyTorch Network.
     """
     _initialized = False
-    
+
     def __init__(self, block):
         """
         :param block: n2d2 block object to interface with PyTorch
@@ -123,7 +120,7 @@ class Block(torch.nn.Module):
             @staticmethod
             def forward(ctx, inputs):
                 self.batch_size = inputs.shape[0]
-                
+
                 n2d2_tensor = _to_n2d2(inputs)
 
                 if n2d2.global_variables.cuda_compiled:
@@ -144,7 +141,7 @@ class Block(torch.nn.Module):
                 self.first_cell.clearInputs()
                 self.first_cell.addInputBis(n2d2_tensor.N2D2(), self.diffOutputs.N2D2())
                 n2d2_outputs.N2D2().synchronizeDToH()
-                
+
                 self.output_tensor = n2d2_outputs
                 outputs = _to_torch(n2d2_outputs.N2D2())
                 # The conversion back to pytorch can alter the type so we need to set it back
@@ -152,7 +149,7 @@ class Block(torch.nn.Module):
                 if inputs.is_cuda: # If N2D2 is compiled with CUDA the output Tensor will always be CUDA
                     outputs = outputs.cuda()
                 else:
-                    outputs = outputs.cpu() 
+                    outputs = outputs.cpu()
                 return outputs.clone()
 
             @staticmethod
@@ -167,7 +164,7 @@ class Block(torch.nn.Module):
                 diffInputs = self.deepnet.getCell_Frame_Top(self.deepnet.getLayers()[-1][0]).getDiffInputs()
                 diffInputs.op_assign(t_grad_output)
                 if not diffInputs.isValid():
-                    diffInputs.setValid() 
+                    diffInputs.setValid()
                 diffInputs.synchronizeHToD()
 
                 self.output_tensor._leaf = True
@@ -182,7 +179,7 @@ class Block(torch.nn.Module):
                 if grad_output.is_cuda:
                     outputs = outputs.cuda()
                 else:
-                    outputs = outputs.cpu() 
+                    outputs = outputs.cpu()
                 return outputs.clone()
 
         # If the layer is at the beginning of the network requires grad is False.
@@ -214,7 +211,7 @@ def wrap(torch_model, input_size):
     # print("Cleaning temporary ONNX file.")
     # remove(model_path)
     deepNet.set_solver(n2d2.solver.SGD(
-                decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1, 
+                decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1,
                 learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0,
                 momentum=0.0, polyak_momentum=True, power=0.0, warm_up_duration=0, warm_up_lr_frac=0.25))
     need_to_flatten = False
@@ -228,8 +225,8 @@ def wrap(torch_model, input_size):
             need_to_flatten = True
         else:
             pass
-    # Creating an N2D2 Module specific 
-    class n2d2_module(torch.nn.Module):   
+    # Creating an N2D2 Module specific
+    class n2d2_module(torch.nn.Module):
         def __init__(self):
             super(n2d2_module, self).__init__()
             self.n2d2_block = Block(deepNet)
@@ -243,4 +240,4 @@ def wrap(torch_model, input_size):
     print(deepNet)
 
     converted_model = n2d2_module()
-    return converted_model 
+    return converted_model

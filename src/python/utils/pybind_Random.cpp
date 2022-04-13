@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "utils/Random.hpp"
 
 #include <pybind11/pybind11.h>
@@ -32,4 +31,3 @@ void init_Random(py::module &m) {
 
 }
 }
-#endif

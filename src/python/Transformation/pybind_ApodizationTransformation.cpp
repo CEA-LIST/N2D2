@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Transformation/ApodizationTransformation.hpp"
 
 
@@ -33,4 +32,3 @@ void init_ApodizationTransformation(py::module &m) {
     .def(py::init<const WindowFunction<double>&, unsigned int>(), py::arg("func"), py::arg("size"));
 }
 }
-#endif

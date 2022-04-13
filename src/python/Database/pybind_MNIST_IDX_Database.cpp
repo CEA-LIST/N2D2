@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Database/MNIST_IDX_Database.hpp"
 
 #include <pybind11/pybind11.h>
@@ -33,4 +32,3 @@ void init_MNIST_IDX_Database(py::module &m) {
         .def(py::init<const std::string&, const std::string&, bool, double>(), py::arg("dataPath"), py::arg("labelPath") = "", py::arg("extractROIs") = false, py::arg("validation") = 0.0);
 }
 }
-#endif

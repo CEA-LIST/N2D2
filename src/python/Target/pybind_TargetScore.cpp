@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/Cell.hpp"
 #include "StimuliProvider.hpp"
 #include "Target/Target.hpp"
@@ -64,5 +63,4 @@ void init_TargetScore(py::module &m) {
     .def("logConfusionMatrix", &TargetScore::logConfusionMatrix, py::arg("fileName"), py::arg("set"));
 }
 }
-#endif
 

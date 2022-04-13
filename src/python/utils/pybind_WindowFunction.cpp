@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "utils/WindowFunction.hpp"
 
 
@@ -69,4 +68,3 @@ void init_WindowFunction(py::module &m) {
     declare_WindowFunction<double>(m, "double");
 }
 }
-#endif

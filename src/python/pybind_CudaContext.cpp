@@ -22,7 +22,6 @@
 
 #include "CudaContext.hpp"
 
-#ifdef PYBIND
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
@@ -35,6 +34,5 @@ void init_CudaContext(py::module &m) {
     .def_static("nbDevice", &CudaContext::nbDevice);
 }
 }
-#endif
 
 #endif

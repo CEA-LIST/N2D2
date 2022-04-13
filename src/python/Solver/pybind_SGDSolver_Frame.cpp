@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Solver/SGDSolver_Frame.hpp"
 
 
@@ -50,4 +49,3 @@ void init_SGDSolver_Frame(py::module &m) {
 }
 }
 
-#endif

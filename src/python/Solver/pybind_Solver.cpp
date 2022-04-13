@@ -21,7 +21,6 @@
 */
 
 
-#ifdef PYBIND
 #include "Solver/Solver.hpp"
 
 
@@ -35,5 +34,4 @@ void init_Solver(py::module &m) {
     .def("getType", &Solver::getType);
 }
 }
-#endif
 

@@ -21,7 +21,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Activation/LogisticActivation_Frame_CUDA.hpp"
 
 
@@ -44,6 +43,5 @@ void init_LogisticActivation_Frame_CUDA(py::module &m) {
 }
 
 }
-#endif
 
 #endif

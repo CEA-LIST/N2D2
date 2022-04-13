@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
@@ -556,4 +555,3 @@ void init_N2D2(py::module& m) {
 
 
 
-#endif

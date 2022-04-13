@@ -1,6 +1,6 @@
 """
     (C) Copyright 2021 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and

@@ -188,7 +188,11 @@ Use the following command:
 
 ::
 
-    git clone git@github.com:CEA-LIST/N2D2.git
+    git clone --recursive git@github.com:CEA-LIST/N2D2.git
+
+.. Note::
+
+  You need the recursive option to download the pybind11 submodule.
 
 Compilation
 ~~~~~~~~~~~

@@ -84,8 +84,8 @@ class test_keras(unittest.TestCase):
         #     print(i)
         # for i in self.model._deepnet_cell[0].get_biases():
         #     print(i)
-        tf_model.fit(x=self.x, y=self.y, batch_size=5, validation_split=0, epochs=1)
-        self.model.fit(x=self.xn, y=self.yn, batch_size=5, validation_split=0, epochs=1)
+        tf_model.fit(x=self.x, y=self.y, batch_size=5, validation_split=0, epochs=2)
+        self.model.fit(x=self.xn, y=self.yn, batch_size=5, validation_split=0, epochs=2)
       
         # for i in tf_model.layers[0].weights:
         #     print(i)
@@ -104,15 +104,14 @@ class test_keras(unittest.TestCase):
 
     def test_propagation_fc(self):
         tf_model = keras.Sequential([
-            Input(shape=[3,3,1]),
-            Flatten(),
+            Input(shape=[9,]),
             Dense(9)
         ])
         self.model = wrap(tf_model, batch_size=5)
         self.model.compile(loss="categorical_crossentropy", metrics=["accuracy"])
-        self.x = tf.random.uniform([5,3,3,1])
-        n2d2_y = self.model.call(self.x)
+        self.x = tf.random.uniform([5, 9])
         tf_y = tf_model.call(self.x)
+        n2d2_y = self.model.call(self.x)
         print("N2D2 output : ")
         print(n2d2_y)
         print("TF output : ")

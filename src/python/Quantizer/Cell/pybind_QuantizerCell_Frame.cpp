@@ -10,7 +10,6 @@
 */
 
 
-#ifdef PYBIND
 #include "Quantizer/Cell/QuantizerCell_Frame.hpp"
 
 #include <pybind11/pybind11.h>
@@ -33,4 +32,3 @@ void init_QuantizerCell_Frame(py::module &m) {
 
 }
 
-#endif

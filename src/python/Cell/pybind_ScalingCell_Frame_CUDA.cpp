@@ -20,7 +20,6 @@
 */
 
 #ifdef CUDA
-#ifdef PYBIND
 
 #include "Cell/ScalingCell_Frame_CUDA.hpp"
 #include "Scaling.hpp"
@@ -52,6 +51,5 @@ void init_ScalingCell_Frame_CUDA(py::module &m) {
     declare_ScalingCell_Frame_CUDA<double>(m, "double");
 }
 }
-#endif
 #endif
 

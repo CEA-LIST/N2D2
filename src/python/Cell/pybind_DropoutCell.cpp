@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/DropoutCell.hpp"
 
 
@@ -35,4 +34,3 @@ void init_DropoutCell(py::module &m) {
 
 }
 }
-#endif

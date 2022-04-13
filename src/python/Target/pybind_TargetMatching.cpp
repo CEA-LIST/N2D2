@@ -18,7 +18,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Target/TargetMatching.hpp"
 
 #include <pybind11/pybind11.h>
@@ -31,4 +30,3 @@ void init_TargetMatching(py::module &m) {
     py::class_<TargetMatching, std::shared_ptr<TargetMatching>, Target>(m, "TargetMatching", py::multiple_inheritance());
 }
 }
-#endif

@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 
 #include "DeepNet.hpp"
 #include "DrawNet.hpp"
@@ -36,5 +35,4 @@ void init_DrawNet(py::module &m) {
 }
 }
 
-#endif
 

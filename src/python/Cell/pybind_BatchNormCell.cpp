@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Cell/BatchNormCell.hpp"
 
 #include "Solver/Solver.hpp"
@@ -43,4 +42,3 @@ void init_BatchNormCell(py::module &m) {
     .def("getEpsilon", &BatchNormCell::getEpsilon);
 }
 }
-#endif

@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Database/DOTA_Database.hpp"
 
 #include <pybind11/pybind11.h>
@@ -33,4 +32,3 @@ void init_DOTA_Database(py::module &m) {
         .def(py::init<double, bool>(), py::arg("learn"), py::arg("useValidationForTest") = true);
 }
 }
-#endif

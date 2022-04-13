@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Transformation/MorphologicalReconstructionTransformation.hpp"
 
 
@@ -43,4 +42,3 @@ void init_MorphologicalReconstructionTransformation(py::module &m) {
     .def(py::init<const MorphologicalReconstructionTransformation&>(), py::arg("trans"));
 }
 }
-#endif

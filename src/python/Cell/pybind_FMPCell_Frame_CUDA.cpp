@@ -21,7 +21,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Cell/FMPCell_Frame_CUDA.hpp"
 #include "Cell/FMPCell.hpp"
 
@@ -47,6 +46,5 @@ void init_FMPCell_Frame_CUDA(py::module &m) {
 
 }
 }
-#endif
 
 #endif

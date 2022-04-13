@@ -22,6 +22,13 @@
 import N2D2
 import n2d2
 from n2d2.error_handler import deprecated
+
+# List of parameters which are only from the PythonAPI and not in the Cpp
+_pure_python_parameters=[
+    "datatype",
+    "model"
+]
+
 class ConventionConverter():
     """
     Bidirectional mapping to translate parameters name from n2d2 convention to N2D2 convention
@@ -66,7 +73,7 @@ class N2D2_Interface:
 
         # Arguments that have to be known at N2D2 object creation time. Configurable in python API constructor
         # self._convention_converter = convention_converter
-        
+
         self._constructor_arguments = {}
         self._optional_constructor_arguments = {}
 
@@ -77,7 +84,7 @@ class N2D2_Interface:
         self._N2D2_object = None
 
     @classmethod
-    def create_from_N2D2_object(cls, N2D2_object):
+    def create_from_N2D2_object(cls, N2D2_object, **kwargs):
         interface = cls.__new__(cls)
         interface._constructor_arguments = {}
         interface._optional_constructor_arguments = {}
@@ -117,22 +124,24 @@ class N2D2_Interface:
 
     def _set_N2D2_parameters(self, parameters):
         for key, value in parameters.items():
-            self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+            if key not in _pure_python_parameters:
+                self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
 
     def __setattr__(self, key: str, value) -> None:
         if "_constructor_arguments" in self.__dict__ and \
                 key in self._constructor_arguments:
-            raise RuntimeError("You cannot modify constructor arguments.") 
+            raise RuntimeError("You cannot modify constructor arguments.")
         elif "_optional_constructor_arguments" in self.__dict__ and \
                 key in self._optional_constructor_arguments:
             raise RuntimeError(key + " is not settable for " + str(type(self)))
         elif "_config_parameters" in self.__dict__ and \
-                key in self._config_parameters:
+                key in self._config_parameters and \
+                key not in _pure_python_parameters:
             self._config_parameters[key] = value
             self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
         else:
             super().__setattr__(key, value)
-    
+
     def __getattr__(self, key: str):
         # Using __dict__ attribute to avoid infinite recursion !
         if key in self.__dict__["_constructor_arguments"]:
@@ -143,17 +152,17 @@ class N2D2_Interface:
             return self.__dict__["_config_parameters"][key]
         else:
             return self.__getattribute__(key)
-            
+
     def set_parameter(self, key, value):
         if key in self._constructor_arguments:
-            raise RuntimeError("You cannot modify constructor arguments.") 
+            raise RuntimeError("You cannot modify constructor arguments.")
         elif key in self._optional_constructor_arguments:
-            raise RuntimeError(key + " is not settable for " + self.get_name()) 
+            raise RuntimeError(key + " is not settable for " + self.get_name())
         elif key in self._config_parameters:
             self._config_parameters[key] = value
             self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
         else:
-            raise ValueError(key + " is not a parameter of " + self.get_name()) 
+            raise ValueError(key + " is not a parameter of " + self.get_name())
 
     def get_parameter(self, key):
         """
@@ -167,7 +176,7 @@ class N2D2_Interface:
         elif key in self._config_parameters:
             return self._config_parameters[key]
         else:
-            raise ValueError(key + " is not a parameter of " + self.get_name()) 
+            raise ValueError(key + " is not a parameter of " + self.get_name())
 
     def _parse_optional_arguments(self, optional_argument_keys):
         self.optional_argument_name = optional_argument_keys
@@ -302,23 +311,23 @@ class Options():
     - :py:func:`N2D2.testStdp`
     - :py:func:`N2D2.testCStdp`
     - :py:func:`N2D2.logStats`
-    
+
     This object should not be used directly by the user !
     """
     def __init__(self, **parameters):
         self._N2D2 = N2D2.Options()
         self.set_parameters(**parameters)
-    
+
     def set_parameters(self, **parameters):
         for key, value in parameters.items():
             try:
                 setattr(self._N2D2, key, value)
             except AttributeError as e:
                 e.args = (f"'{key}' is not a valid parameter",)
-                raise 
+                raise
             except TypeError as e:
                 e.args = (f"Parameter '{key}' is of type '{type(value).__name__}' but should be of type '{type(getattr(self.N2D2(), key)).__name__}' instead.",)
-                raise 
+                raise
 
     def N2D2(self):
         return self._N2D2

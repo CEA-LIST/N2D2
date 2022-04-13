@@ -20,7 +20,6 @@
 */
 
 
-#ifdef PYBIND
 #include "Transformation/DistortionTransformation.hpp"
 
 
@@ -44,4 +43,3 @@ void init_DistortionTransformation(py::module &m) {
 
 }
 }
-#endif

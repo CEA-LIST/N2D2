@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Histogram.hpp"
 
 
@@ -37,4 +36,3 @@ void init_Histogram(py::module &m) {
     
 }
 }
-#endif

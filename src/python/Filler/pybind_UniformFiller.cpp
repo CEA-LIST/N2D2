@@ -20,7 +20,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "Filler/UniformFiller.hpp"
 
 
@@ -54,4 +53,3 @@ void init_UniformFiller(py::module &m) {
 }
 }
 
-#endif

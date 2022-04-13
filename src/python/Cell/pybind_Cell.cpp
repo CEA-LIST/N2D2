@@ -19,7 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#ifdef PYBIND
 #include "DeepNet.hpp"
 #include "HeteroStimuliProvider.hpp"
 #include "Cell/Cell.hpp"
@@ -261,5 +260,4 @@ void init_Cell(py::module &m) {
     ;
 }
 }
-#endif
 

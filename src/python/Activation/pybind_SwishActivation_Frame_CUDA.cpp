@@ -21,7 +21,6 @@
 
 #ifdef CUDA
 
-#ifdef PYBIND
 #include "Activation/SwishActivation_Frame_CUDA.hpp"
 
 
@@ -44,6 +43,5 @@ void init_SwishActivation_Frame_CUDA(py::module &m) {
 }
 
 }
-#endif
 
 #endif
