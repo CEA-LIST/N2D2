@@ -61,7 +61,7 @@ class Target(N2D2_Interface, ABC):
         :type default_value: float, optional
         :param top_n: The top-N estimated targets per output neuron to save, default=1
         :type top_n: int, optional
-        :param labels_mapping: Path to the file containing the labels to target mapping, default=`""`
+        :param labels_mapping: Path to the file containing the labels to target mapping, default=""
         :type labels_mapping: str, optional
         :param create_missing_labels: If ``True``, labels present in the labels mapping file but that are non-existent in the database are created (with 0 associated stimuli), default=False
         :type create_missing_labels: bool, optional
