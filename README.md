@@ -16,6 +16,14 @@ N2D2 is developped along with industrial and academic partners and is open sourc
 | [![Documentation Status](https://readthedocs.org/projects/n2d2/badge/?version=latest)](https://cea-list.github.io/N2D2-docs/) | [![linux-cpu](https://github.com/CEA-LIST/N2D2/actions/workflows/build_linux-cpu.yml/badge.svg)](https://github.com/CEA-LIST/N2D2/actions/workflows/build_linux-cpu.yml) | [![linux-gpu](https://github.com/CEA-LIST/N2D2/actions/workflows/build_linux-gpu.yml/badge.svg)](https://github.com/CEA-LIST/N2D2/actions/workflows/build_linux-gpu.yml) | | |
 
 
+## Getting the sources
+
+Use the following command:
+
+> git clone --recursive git@github.com:CEA-LIST/N2D2.git
+
+It is important to specify the recursive option as it will download the PyBind submodule.
+
 ## Usage
 
 To compile and use N2D2, please refer to the

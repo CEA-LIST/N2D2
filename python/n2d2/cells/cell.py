@@ -184,7 +184,7 @@ class Block(Cell):
 
     def export_free_parameters(self, dir_name, verbose=True):
         for cell in self._cells.values():
-            cell.export_free_parameters(dir_name, verbose)
+            cell.export_free_parameters(dir_name, verbose=verbose)
 
     def __str__(self):
         """
@@ -488,17 +488,18 @@ class DeepNetCell(Block):
         self._inference = False
         return self
 
-    def import_free_parameters(self, dir_name, ignore_not_exists=False):
+    def import_free_parameters(self, dir_name:str, ignore_not_exists:bool=False):
         """Import deepnet parameters.
         """
         print(f"Importing DeepNetCell '{self._name}' parameters from  {dir_name}")
         self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignoreNotExists=ignore_not_exists)
 
-    
-    def export_free_parameters(self, dir_name):
+
+    def export_free_parameters(self, dir_name:str, verbose:bool=True):
         """Export deepnet parameters.
         """
-        print(f"Exporting DeepNetCell '{self._name}' parameters from {dir_name}")
+        if verbose:
+            print(f"Exporting DeepNetCell '{self._name}' parameters from {dir_name}")
         self._deepnet.N2D2().exportNetworkFreeParameters(dir_name)
 
 

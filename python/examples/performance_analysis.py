@@ -37,7 +37,7 @@ parser.add_argument('--batch_size', type=int, default=64, metavar='S',
                     help='Batch size')
 parser.add_argument('--dev', type=int, default=0, metavar='S',
                     help='cuda device (default: 0)')
-parser.add_argument("--data_path", type=str, help="Path to MNIST dataset")
+parser.add_argument("--data_path", type=str, help="Path to GTSRB dataset")
 
 args = parser.parse_args()
 
