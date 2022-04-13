@@ -475,6 +475,9 @@ class Tensor:
             output += ")"
         return output
 
+    def __repr__(self)->str:
+        return str(self._tensor)
+
     def dtoh(self):
         """
         Synchronize Device to Host.
