@@ -65,6 +65,8 @@ void N2D2::Cuda::setMultiDevicePeerAccess(unsigned int size, unsigned int* devic
                         std::cout << "Peer access already enabled between ";
                         std::cout << "device " << devices[j] << " and ";
                         std::cout << "device " << devices[i] << std::endl;
+                    } else {
+                        CHECK_CUDA_STATUS(e);
                     }
                 }
             }
