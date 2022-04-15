@@ -94,8 +94,8 @@ namespace N2D2_HELPER{
                 }
             }
             std::copy(devices.begin(),
-                    devices.end(),
-                    std::ostream_iterator<unsigned int>(devString, " "));
+                      devices.end(),
+                      std::ostream_iterator<unsigned int>(devString, " "));
 
     #ifdef WIN32
             _putenv_s("N2D2_GPU_DEVICES", devString.str().c_str());
@@ -103,6 +103,8 @@ namespace N2D2_HELPER{
             setenv("N2D2_GPU_DEVICES", devString.str().c_str(), 1);
     #endif
         }
+
+        Cuda::setMultiDevicePeerAccess(devices.size(), devices.data());
         
         return devices;
     }
