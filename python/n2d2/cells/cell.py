@@ -201,7 +201,6 @@ class Block(Cell):
             if isinstance(value, n2d2.cells.Block):
                 output += ": " + value._generate_str(indent_level + 1)
             else:
-                print(value)
                 output += ": " + value.__str__()
         output += "\n" + ((indent_level - 1) * "\t") + ")"
         return output
