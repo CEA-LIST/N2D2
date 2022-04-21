@@ -113,9 +113,11 @@ class MobileNetv1Extractor(Sequence):
 class MobileNetv1Head(Sequence):
 
     def __init__(self, nb_outputs, alpha=None):
+    
+        compute_nb_outputs = lambda x: int(x * 32 * alpha)
 
         self.pool = GlobalPool2d(pooling='Average', name="pool1")
-        self.fc = Fc(32 * int(32 * alpha), nb_outputs, activation=Linear(), weights_filler=Normal(mean=0.0, std_dev=0.01),
+        self.fc = Fc(compute_nb_outputs(32), nb_outputs, activation=Linear(), weights_filler=Normal(mean=0.0, std_dev=0.01),
                 bias_filler=Constant(value=0.0), name="fc")
 
         Sequence.__init__(self, [self.pool, self.fc], "head")
