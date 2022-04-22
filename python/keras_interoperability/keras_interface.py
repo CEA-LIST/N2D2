@@ -254,13 +254,12 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
 
     spec = [tf.TensorSpec(inputs_shape, tf.float32, name=input_name) for input_name in input_names]
 
-    # Force tf2onnx to not fuse BatchNorm into Conv.
+    # Patch: Force tf2onnx not to fuse BatchNorm into Conv.
     # This is a workaround and may not work in future version of tf2onnx.
-    # Related merge request : https://github.com/onnx/tensorflow-onnx/pull/1907
-    #                               |
-    #                               V
+    # Related merge request: https://github.com/onnx/tensorflow-onnx/pull/1907
     if "remove_back_to_back" in tf2onnx.optimizer._get_optimizers():
-        tf2onnx.optimizer._get_optimizers().pop("remove_back_to_back")
+        tf2onnx.optimizer.back_to_back_optimizer._func_map.pop(('Conv', 'BatchNormalization'))
+        
     tf2onnx.convert.from_keras(
         tf_model,
         input_signature=spec,
