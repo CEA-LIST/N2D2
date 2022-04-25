@@ -258,7 +258,8 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
     # This is a workaround and may not work in future version of tf2onnx.
     # Related merge request: https://github.com/onnx/tensorflow-onnx/pull/1907
     if "remove_back_to_back" in tf2onnx.optimizer._get_optimizers():
-        tf2onnx.optimizer.back_to_back_optimizer._func_map.pop(('Conv', 'BatchNormalization'))
+        if ('Conv', 'BatchNormalization') in tf2onnx.optimizer.back_to_back_optimizer._func_map:
+            tf2onnx.optimizer.back_to_back_optimizer._func_map.pop(('Conv', 'BatchNormalization'))
         
     tf2onnx.convert.from_keras(
         tf_model,
