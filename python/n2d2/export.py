@@ -98,6 +98,9 @@ def _export_deepnet_operation(deepnet_cell: n2d2.cells.DeepNetCell,
         last_cell = deepnet_cell[-1].N2D2()
         N2D2_target =  N2D2.TargetScore("Target", last_cell, provider.N2D2())
         N2D2_deepnet.addTarget(N2D2_target)
+    elif provider is not None:
+        for target in N2D2_deepnet.getTargets():
+            target.setStimuliProvider(provider.N2D2())
 
     if (N2D2_deepnet.getDatabase().getNbStimuli(N2D2.Database.StimuliSet.__members__["Validation"]) > 0):
         N2D2_deepnet.exportNetworkFreeParameters("weights_validation")
