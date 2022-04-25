@@ -215,6 +215,23 @@ class CustomSequential(keras.Sequential):
         """
         print(self._deepnet_cell)
 
+class ContextNoBatchNormFuse:
+    """
+    Patch: Force tf2onnx not to fuse BatchNorm into Conv.
+    This is a workaround and may not work in future version of tf2onnx.
+    Related merge request : https://github.com/onnx/tensorflow-onnx/pull/1907
+    """
+    def __enter__(self):
+        self.fuse_removed=False
+        self.func_map_copy = tf2onnx.optimizer.back_to_back_optimizer._func_map.copy()
+        if "remove_back_to_back" in tf2onnx.optimizer._get_optimizers() and \
+            ('Conv', 'BatchNormalization') in tf2onnx.optimizer.back_to_back_optimizer._func_map:
+            tf2onnx.optimizer.back_to_back_optimizer._func_map.pop(('Conv', 'BatchNormalization'))
+            self.fuse_removed=True
+        return self
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self.fuse_removed:
+            tf2onnx.optimizer.back_to_back_optimizer._func_map = self.func_map_copy
 
 def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export: bool=False) -> CustomSequential:
     """Generate a custom model which run with N2D2 on backend.
@@ -254,20 +271,14 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
 
     spec = [tf.TensorSpec(inputs_shape, tf.float32, name=input_name) for input_name in input_names]
 
-    # Patch: Force tf2onnx not to fuse BatchNorm into Conv.
-    # This is a workaround and may not work in future version of tf2onnx.
-    # Related merge request: https://github.com/onnx/tensorflow-onnx/pull/1907
-    if "remove_back_to_back" in tf2onnx.optimizer._get_optimizers():
-        if ('Conv', 'BatchNormalization') in tf2onnx.optimizer.back_to_back_optimizer._func_map:
-            tf2onnx.optimizer.back_to_back_optimizer._func_map.pop(('Conv', 'BatchNormalization'))
-        
-    tf2onnx.convert.from_keras(
-        tf_model,
-        input_signature=spec,
-        opset=10,
-        inputs_as_nchw=input_names,
-        output_path=model_name + ".onnx")
-        # output_path= "raw_" + model_name + ".onnx")
+    with ContextNoBatchNormFuse() as ctx:    
+        tf2onnx.convert.from_keras(
+            tf_model,
+            input_signature=spec,
+            opset=10,
+            inputs_as_nchw=input_names,
+            output_path=model_name + ".onnx")
+            # output_path= "raw_" + model_name + ".onnx")
 
     # print("Simplifying the ONNX model ...")
     # onnx_model = onnx.load(model_name + ".onnx")
