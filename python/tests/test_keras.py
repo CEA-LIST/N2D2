@@ -31,7 +31,8 @@ import tensorflow.keras as keras
 
 class test_keras(unittest.TestCase):
     def setUp(self):
-        pass
+        n2d2.global_variables.cuda_device = 0
+        n2d2.global_variables.default_model = 'Frame_CUDA'
     def tearDown(self) -> None:
         n2d2.global_variables.cuda_device = 0
         n2d2.global_variables.default_model = 'Frame'
