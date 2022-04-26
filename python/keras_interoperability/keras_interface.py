@@ -222,12 +222,16 @@ class ContextNoBatchNormFuse:
     Related merge request : https://github.com/onnx/tensorflow-onnx/pull/1907
     """
     def __enter__(self):
-        self.fuse_removed=False
         self.func_map_copy = tf2onnx.optimizer.back_to_back_optimizer._func_map.copy()
         if "remove_back_to_back" in tf2onnx.optimizer._get_optimizers() and \
             ('Conv', 'BatchNormalization') in tf2onnx.optimizer.back_to_back_optimizer._func_map:
             tf2onnx.optimizer.back_to_back_optimizer._func_map.pop(('Conv', 'BatchNormalization'))
             self.fuse_removed=True
+        else:
+            raise RuntimeError("N2D2 could not find tf2onnx attributes this error may be due to an update" \
+            " of the tf2onnx library, lowering your version of tf2onnx to 1.9.2 will solve this error. Please make sure to leave an issue at " \
+            f"https://github.com/CEA-LIST/N2D2/issues stating this error message and your version of tf2onnx ({tf2onnx.__version__}) so " \
+            "that we can update N2D2 to the latest version of tf2onnx.")
         return self
     def __exit__(self, exc_type, exc_value, traceback):
         if self.fuse_removed:
