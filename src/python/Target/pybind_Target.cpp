@@ -59,6 +59,7 @@ void init_Target(py::module &m) {
     .def("getTargetValue", &Target::getTargetValue)
     .def("getDefaultValue", &Target::getDefaultValue)
     .def("setMaskLabelTarget", &Target::setMaskLabelTarget, py::arg("target"))
+    .def("setStimuliProvider", &Target::setStimuliProvider, py::arg("sp"))
     .def("labelsMapping", &Target::labelsMapping, py::arg("fileName"), py::arg("createMissingLabels") = false)
     .def("setLabelTarget", &Target::setLabelTarget, py::arg("label"), py::arg("output"))
     .def("setDefaultTarget", &Target::setDefaultTarget, py::arg("output"))

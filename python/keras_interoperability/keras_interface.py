@@ -215,6 +215,27 @@ class CustomSequential(keras.Sequential):
         """
         print(self._deepnet_cell)
 
+class ContextNoBatchNormFuse:
+    """
+    Patch: Force tf2onnx not to fuse BatchNorm into Conv.
+    This is a workaround and may not work in future version of tf2onnx.
+    Related merge request : https://github.com/onnx/tensorflow-onnx/pull/1907
+    """
+    def __enter__(self):
+        self.func_map_copy = tf2onnx.optimizer.back_to_back_optimizer._func_map.copy()
+        if "remove_back_to_back" in tf2onnx.optimizer._get_optimizers() and \
+            ('Conv', 'BatchNormalization') in tf2onnx.optimizer.back_to_back_optimizer._func_map:
+            tf2onnx.optimizer.back_to_back_optimizer._func_map.pop(('Conv', 'BatchNormalization'))
+            self.fuse_removed=True
+        else:
+            raise RuntimeError("N2D2 could not find tf2onnx attributes this error may be due to an update" \
+            " of the tf2onnx library, lowering your version of tf2onnx to 1.9.2 will solve this error. Please make sure to leave an issue at " \
+            f"https://github.com/CEA-LIST/N2D2/issues stating this error message and your version of tf2onnx ({tf2onnx.__version__}) so " \
+            "that we can update N2D2 to the latest version of tf2onnx.")
+        return self
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self.fuse_removed:
+            tf2onnx.optimizer.back_to_back_optimizer._func_map = self.func_map_copy
 
 def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export: bool=False) -> CustomSequential:
     """Generate a custom model which run with N2D2 on backend.
@@ -254,31 +275,20 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
 
     spec = [tf.TensorSpec(inputs_shape, tf.float32, name=input_name) for input_name in input_names]
 
-    # Force tf2onnx to not fuse BatchNorm into Conv.
-    # This is a workaround and may not work in future version of tf2onnx.
-    # Related merge request : https://github.com/onnx/tensorflow-onnx/pull/1907
-    #                               |
-    #                               V
-    if "remove_back_to_back" in tf2onnx.optimizer._get_optimizers():
-        tf2onnx.optimizer._get_optimizers().pop("remove_back_to_back")
-    tf2onnx.convert.from_keras(
-        tf_model,
-        input_signature=spec,
-        opset=10,
-        inputs_as_nchw=input_names,
-        output_path=model_name + ".onnx")
-        # output_path= "raw_" + model_name + ".onnx")
+    with ContextNoBatchNormFuse() as ctx:    
+        tf2onnx.convert.from_keras(
+            tf_model,
+            input_signature=spec,
+            opset=10,
+            inputs_as_nchw=input_names,
+            output_path=model_name + ".onnx")
+            # output_path= "raw_" + model_name + ".onnx")
 
     # print("Simplifying the ONNX model ...")
     # onnx_model = onnx.load(model_name + ".onnx")
     # model_simp, check = simplify(onnx_model)
     # assert check, "Simplified ONNX model could not be validated"
     # onnx.save(model_simp, model_name + ".onnx")
-
-    # Import ONNX in N2D2
-    if n2d2.global_variables.cuda_compiled:
-        n2d2.global_variables.default_model = "Frame_CUDA"
-        n2d2.global_variables.cuda_device = 7
 
     database = n2d2.database.Database()
 

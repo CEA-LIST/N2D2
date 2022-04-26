@@ -138,6 +138,10 @@ public:
     {
         mMaskLabelTarget = target;
     };
+    void setStimuliProvider(const std::shared_ptr<N2D2::StimuliProvider>& sp)
+    {
+        mStimuliProvider = sp;
+    };
     void labelsMapping(const std::string& fileName,
                        bool createMissingLabels = false);
     void setLabelTarget(int label, int output);
@@ -217,11 +221,12 @@ protected:
 
     const std::string mName;
     const std::shared_ptr<Cell> mCell;
-    const std::shared_ptr<StimuliProvider> mStimuliProvider;
     const double mTargetValue;
     const double mDefaultValue;
     const unsigned int mTargetTopN;
 
+    std::shared_ptr<StimuliProvider> mStimuliProvider;
+    
     std::map<int, int> mLabelsMapping;
     int mDefaultTarget;
     std::vector<TargetData> mTargetData;

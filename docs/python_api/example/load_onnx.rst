@@ -63,8 +63,11 @@ You can now do what you want with your imported model, like training it :
     model.fit(learn_epoch=nb_epochs, valid_metric='Accuracy')
     model.run_test()
 
-| And even exporting it to CPP in int 8 !
-| (Don't forget to remove the softmax layer first because N2D2 does not export this layer for the CPP export)
+And even exporting it to CPP in int 8 !
+
+.. warning::
+
+    Don't forget to remove the softmax layer first because N2D2 does not export this layer for the CPP export.
 
 .. code-block::
 
