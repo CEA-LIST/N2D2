@@ -75,6 +75,11 @@ tf_model = tf.keras.Sequential(
         layers.Dense(num_classes, activation="softmax"),
     ]
 )
+
+# Asking N2D2 to use GPU 0
+n2d2.global_variables.cuda_device = 0
+n2d2.global_variables.default_model = 'Frame_CUDA'
+
 model = keras_interoperability.wrap(tf_model, batch_size=batch_size, for_export=True)
 
 

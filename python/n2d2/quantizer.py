@@ -46,6 +46,8 @@ def PTQ(deepnet_cell,
     :param act_clipping_mode: activation clipping mode on calibration, can be ``NONE``, ``MSE`` or ``KL_DIVERGENCE`` or ``Quantile``, default="MSE"
     :type act_clipping_mode: str, optional
     """
+    if "export_no_unsigned" in kwargs:
+        no_unsigned = kwargs["export_no_unsigned"]
     if deepnet_cell.get_embedded_deepnet().calibrated:
         raise RuntimeError("This network have already been calibrated.")
     if act_clipping_mode not in N2D2.ClippingMode.__members__.keys():
