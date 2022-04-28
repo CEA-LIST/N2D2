@@ -290,6 +290,10 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
     # assert check, "Simplified ONNX model could not be validated"
     # onnx.save(model_simp, model_name + ".onnx")
 
+    if n2d2.global_variables.cuda_compiled:
+        # Making sure Keras did not changed the device !
+        n2d2.global_variables.cuda_device = n2d2.global_variables.cuda_device
+
     database = n2d2.database.Database()
 
     if len(inputs_shape) == 4:
