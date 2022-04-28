@@ -20,6 +20,8 @@ knowledge of the CeCILL-C license and that you accept its terms.
 
 import n2d2
 import N2D2
+from os import mkdir
+from os.path import exists
 
 def _parse_export_parameters(gen_export=None, nb_bits=8, qat_SAT=False,
                              export_no_unsigned=False, calibration=0,
@@ -28,7 +30,7 @@ def _parse_export_parameters(gen_export=None, nb_bits=8, qat_SAT=False,
                              act_scaling_mode="FLOAT_MULT", act_quantile_value=0.9999,
                              act_rescale_per_output=False, calibration_reload=False, report=100,
                              export_nb_stimuli_max= -1, wt_round_mode = "NONE",
-                             b_round_mode="NONE", c_round_mode="NONE", find_lr=0):
+                             b_round_mode="NONE", c_round_mode="NONE", find_lr=0, log_kernels=False):
     if wt_round_mode not in N2D2.WeightsApprox.__members__.keys():
         raise n2d2.error_handler.WrongValue("wt_round_mode", wt_round_mode,
         ", ".join(N2D2.WeightsApprox.__members__.keys()))
@@ -70,44 +72,31 @@ def _parse_export_parameters(gen_export=None, nb_bits=8, qat_SAT=False,
         wt_round_mode=N2D2_wt_round_mode,
         b_round_mode=N2D2_b_round_mode,
         c_round_mode=N2D2_c_round_mode,
-        find_lr=find_lr).N2D2()
+        find_lr=find_lr,
+        log_kernels=log_kernels).N2D2()
 
-def _export_deepnet_operation(deepnet_cell: n2d2.cells.DeepNetCell,
-        provider: n2d2.provider.Provider=None,
-        **kwargs) -> None :
-    """Retrieve N2D2 DeepNet and prepare it for an export.
-    """
+def _generate_export(deepnet_cell, provider=None, **kwargs):
 
+    export_folder_name = None if "export_folder_name" not in kwargs else kwargs.pop("export_folder_name")
+
+    N2D2_option = _parse_export_parameters(**kwargs)
     N2D2_deepnet = deepnet_cell.get_embedded_deepnet().N2D2()
-    N2D2_deepnet.initialize()
+    if N2D2_option.calibration == True:
+        if "nb_bits" not in kwargs:
+            kwargs["nb_bits"] = N2D2_option.nb_bits
+        n2d2.quantizer.PTQ(deepnet_cell, provider=provider, **kwargs)
 
-    if provider is not None:
-        N2D2_provider = provider.N2D2()
-        N2D2_database = N2D2_provider.getDatabase()
-        N2D2_deepnet.setDatabase(N2D2_database)
-        N2D2_deepnet.setStimuliProvider(N2D2_provider)
+    # TODO : Refactor for QAT export
+    if not deepnet_cell.get_embedded_deepnet().calibrated:
+        raise RuntimeError(f"You need to calibrate the network to export it in {N2D2_option.nb_bits} " \
+                            "set the 'calibration' option to 1 or calibrate the deepnetcell before export.")
+    if not export_folder_name:
+        export_folder_name = f"export_{N2D2_option.gen_export}_{'int' if N2D2_option.nb_bits > 0 else 'float'}{abs(N2D2_option.nb_bits)}"
 
-    if "calibration" in kwargs and kwargs["calibration"] != 0 and \
-    N2D2_deepnet.getDatabase().getNbStimuli() == 0:
-        raise ValueError("Cannot calibrate the network with an empty database,\
-             please add a dataprovider to run the calibration.")
+    if not exists(export_folder_name):
+        mkdir(export_folder_name)
 
-    if len(N2D2_deepnet.getTargets()) == 0:
-        # No target associated to the DeepNet
-        # We create a Target for the last cell of the network
-        last_cell = deepnet_cell[-1].N2D2()
-        N2D2_target =  N2D2.TargetScore("Target", last_cell, provider.N2D2())
-        N2D2_deepnet.addTarget(N2D2_target)
-    elif provider is not None:
-        for target in N2D2_deepnet.getTargets():
-            target.setStimuliProvider(provider.N2D2())
-
-    if (N2D2_deepnet.getDatabase().getNbStimuli(N2D2.Database.StimuliSet.__members__["Validation"]) > 0):
-        N2D2_deepnet.exportNetworkFreeParameters("weights_validation")
-    else:
-        N2D2_deepnet.exportNetworkFreeParameters("weights")
-    return N2D2_deepnet
-
+    N2D2.generateExportFromCalibration(N2D2_option, N2D2_deepnet, fileName=export_folder_name)
 
 def export_c(deepnet_cell: n2d2.cells.DeepNetCell,
              provider: n2d2.provider.Provider=None,
@@ -160,9 +149,8 @@ def export_c(deepnet_cell: n2d2.cells.DeepNetCell,
     else:
         kwargs["act_scaling_mode"]="SINGLE_SHIFT" # Default value
 
-    N2D2_option = _parse_export_parameters(gen_export="C", **kwargs)
-    N2D2_deepnet = _export_deepnet_operation(deepnet_cell, provider, **kwargs)
-    N2D2.generateExport(N2D2_option, N2D2_deepnet)
+    kwargs["gen_export"] = "C"
+    _generate_export(deepnet_cell, provider, **kwargs)
 
 def export_cpp(deepnet_cell: n2d2.cells.DeepNetCell,
                provider: n2d2.provider.Provider=None,
@@ -208,10 +196,8 @@ def export_cpp(deepnet_cell: n2d2.cells.DeepNetCell,
     :param find_lr: Find an appropriate learning rate over a number of iterations, default=0
     :type find_lr: int, optional
     """
-    N2D2_option = _parse_export_parameters(gen_export="CPP", **kwargs)
-    N2D2_deepnet = _export_deepnet_operation(deepnet_cell, provider, **kwargs)
-
-    N2D2.generateExport(N2D2_option, N2D2_deepnet)
+    kwargs["gen_export"] = "CPP"
+    _generate_export(deepnet_cell, provider, **kwargs)
 
 
 
@@ -259,7 +245,5 @@ def export_tensor_rt(deepnet_cell: n2d2.cells.DeepNetCell,
     :param find_lr: Find an appropriate learning rate over a number of iterations, default=0
     :type find_lr: int, optional
     """
-    N2D2_option = _parse_export_parameters(gen_export="CPP_TensorRT", **kwargs)
-    N2D2_deepnet = _export_deepnet_operation(deepnet_cell, provider, **kwargs)
-
-    N2D2.generateExport(N2D2_option, N2D2_deepnet)
+    kwargs["gen_export"] = "CPP_TensorRT"
+    _generate_export(deepnet_cell, provider, **kwargs)

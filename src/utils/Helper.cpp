@@ -94,8 +94,8 @@ namespace N2D2_HELPER{
                 }
             }
             std::copy(devices.begin(),
-                      devices.end(),
-                      std::ostream_iterator<unsigned int>(devString, " "));
+                    devices.end(),
+                    std::ostream_iterator<unsigned int>(devString, " "));
 
     #ifdef WIN32
             _putenv_s("N2D2_GPU_DEVICES", devString.str().c_str());
@@ -277,6 +277,7 @@ namespace N2D2_HELPER{
                                             "test dataset)");
         calibrationReload = opts.parse("-calib-reload", "reload and reuse the data of a "
                                                         " previous calibration.");
+        calibOnly =     opts.parse("-calibOnly", "perform standalone calibration, no export");
         cRoundMode = weightsScalingMode(
                         opts.parse("-c-round-mode", std::string("NONE"), 
                                         "clip clipping mode on export, "
@@ -375,25 +376,18 @@ namespace N2D2_HELPER{
         if(opt.qatSAT) {
             deepNet->initialize();
             //deepNet->exportNetworkFreeParameters("weights_init");
-            std::cout << "N2D2_IP : " << std::endl;
-    #ifdef N2D2_IP        
-            std::cout << "N2D2_IP is true" << std::endl;
-
+    #ifdef N2D2_IP
             if (opt.logKernels)
                 deepNet->logFreeParameters("kernels_fake_quantized");
 
             DeepNetQAT dnQAT(*deepNet);
-            dnQAT.fuseQATGraph(*sp, opt.actScalingMode, opt.wtRoundMode, opt.wtRoundMode, opt.wtRoundMode);
+            dnQAT.fuseQATGraph(*sp, opt.actScalingMode, opt.wtRoundMode, opt.bRoundMode, opt.cRoundMode);
             DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
 
             if (opt.logKernels)
                 deepNet->logFreeParameters("kernels_quantized");
     #endif            
-            //deepNet->exportNetworkFreeParameters("weights_quantized");           
-
-        } 
-        else {
-            deepNet->initialize();
+            deepNet->exportNetworkFreeParameters("weights_quantized");
         }
 
         startTimeSp = std::chrono::high_resolution_clock::now();
@@ -579,12 +573,9 @@ namespace N2D2_HELPER{
                                 << "% / Informedness: " << (100.0
                         * targetScore->getAverageScore(Database::Test,
                                     ConfusionTableMetric::Informedness))
-                                << "% / IU: " << (100.0
-                        * targetScore->getAverageScore(Database::Test,
-                                    ConfusionTableMetric::IU))
                                 << "%\n" << std::endl;
                 }
-            
+                
                 std::shared_ptr<TargetBBox> targetBBox
                     = std::dynamic_pointer_cast<TargetBBox>(*itTargets);
 
@@ -618,8 +609,7 @@ namespace N2D2_HELPER{
         }
     }
 
-
-    bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
+    bool calibNetwork(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         const std::shared_ptr<Database>& database = deepNet->getDatabase();
         const std::shared_ptr<StimuliProvider>& sp = deepNet->getStimuliProvider();
 
@@ -630,9 +620,18 @@ namespace N2D2_HELPER{
         if(!opt.qatSAT) {
             deepNet->fuseBatchNorm();
         }
-        const std::string exportDir = "export_" + opt.genExport + "_" + 
-                                    ((opt.nbBits > 0) ? "int" : "float") +
-                                    std::to_string(std::abs(opt.nbBits));
+        std::string exportDir;
+        if(opt.genExport.empty()){
+
+            // calibration without export !
+            exportDir = "calib_"+ ((deepNet->getName().empty() ? "network": deepNet->getName())) 
+                        + "_" + ((opt.nbBits > 0) ? "int" : "float") +
+                        std::to_string(std::abs(opt.nbBits));
+        }else{
+            exportDir = "export_" + opt.genExport + "_" + 
+                        ((opt.nbBits > 0) ? "int" : "float") +
+                        std::to_string(std::abs(opt.nbBits));
+        }
 
         Database::StimuliSet dbSet
             = (database->getNbStimuli(Database::Validation) > 0)
@@ -762,6 +761,37 @@ namespace N2D2_HELPER{
             
             afterCalibration = true;
         }
+        if(opt.qatSAT) {
+            deepNet->initialize();
+    #ifdef N2D2_IP
+            if (opt.logKernels)
+                deepNet->logFreeParameters("kernels_fake_quantized");
+
+            DeepNetQAT dnQAT(*deepNet);
+            dnQAT.fuseQATGraph(*sp, opt.actScalingMode, opt.wtRoundMode, opt.bRoundMode, opt.cRoundMode);
+            DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
+
+            StimuliProviderExport::generate(*deepNet, *sp, exportDir + "/stimuli", opt.genExport, Database::Test, 
+                                            DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision,
+                                            opt.exportNbStimuliMax);
+            dnQAT.exportOutputsLayers(*sp, exportDir + "/stimuli", Database::Test, opt.exportNbStimuliMax);
+    #endif
+        }
+        return afterCalibration;
+    }
+
+    void generateExportFromCalibration(const Options& opt, std::shared_ptr<DeepNet>& deepNet, std::string fileName){
+        const std::shared_ptr<Database>& database = deepNet->getDatabase();
+        const std::shared_ptr<StimuliProvider>& sp = deepNet->getStimuliProvider();
+        // TODO : add an option to override export folder name
+        
+        std::string exportDir;
+        if (!fileName.empty())
+            exportDir = fileName;
+        else
+            exportDir = "export_" + opt.genExport + "_" + 
+                                        ((opt.nbBits > 0) ? "int" : "float") +
+                                        std::to_string(std::abs(opt.nbBits));
 
         sp->logTransformations(exportDir + "/transformations.dot", Database::TestOnly);
         if(!opt.qatSAT) {
@@ -771,88 +801,16 @@ namespace N2D2_HELPER{
                                             opt.exportNbStimuliMax);
         }
 
-        if(opt.qatSAT) {
-            deepNet->initialize();
-    #ifdef N2D2_IP
-            if (opt.logKernels)
-                deepNet->logFreeParameters("kernels_fake_quantized");
-
-            DeepNetQAT dnQAT(*deepNet);
-            dnQAT.fuseQATGraph(*sp, opt.actScalingMode, opt.wtRoundMode, opt.wtRoundMode, opt.wtRoundMode);
-            DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
-
-    /*
-            Utils::createDirectories(exportDir + "/range_qat");
-            const std::string outputsRangeFile = exportDir + "/range_qat/outputs_range.bin";
-            const std::string outputsHistogramFile = exportDir + "/range_qat/outputs_histogram.bin";
-            std::unordered_map<std::string, RangeStats> outputsRange;
-            std::unordered_map<std::string, Histogram> outputsHistogram;
-
-
-            const std::size_t batchSize = sp->getMultiBatchSize();
-            const std::size_t nbBatches = std::ceil(1.0*nbStimuli/batchSize);
-
-            std::cout << "Calculating calibration data range and histogram..." << std::endl;
-            std::size_t nextReport = opt.report;
-
-            // Globally disable logistic activation, in order to evaluate the
-            // correct range and shifting required for layers with logistic
-            LogisticActivationDisabled = true;
-
-            sp->readBatch(dbSet, 0);
-            for(std::size_t b = 1; b <= nbBatches; ++b) {
-                const std::size_t istimulus = b * batchSize;
-
-                sp->synchronize();
-
-                // TODO Use a pool of threads
-                auto reportTask = std::async(std::launch::async, [&]() { 
-    #ifdef CUDA
-                    CudaContext::setDevice(cudaDevice);
-    #endif
-                    deepNet->test(dbSet);
-                    dnQAT.reportOutputsRange(outputsRange);
-                    dnQAT.reportOutputsHistogram(outputsHistogram, outputsRange, 
-                                                    4, opt.actClippingMode);
-                });
-
-                if(b < nbBatches) {
-                    sp->future();
-                    sp->readBatch(dbSet, istimulus);
-                }
-
-                reportTask.wait();
-
-                if(istimulus >= nextReport && b < nbBatches) {
-                    nextReport += opt.report;
-                    std::cout << "Calibration data " << istimulus << "/" << nbStimuli << std::endl;
-                }
-            }
-
-            LogisticActivationDisabled = false;
-
-
-            RangeStats::saveOutputsRange(outputsRangeFile, outputsRange);
-            Histogram::saveOutputsHistogram(outputsHistogramFile, outputsHistogram);
-            RangeStats::logOutputsRange(exportDir + "/range_qat/outputs_range.dat", outputsRange);
-            Histogram::logOutputsHistogram(exportDir + "/range_qat/outputs_histogram", outputsHistogram, 
-                                        4, opt.actClippingMode);
-
-            */
-            StimuliProviderExport::generate(*deepNet, *sp, exportDir + "/stimuli", opt.genExport, Database::Test, 
-                                            DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision,
-                                            opt.exportNbStimuliMax);
-            
-            dnQAT.exportOutputsLayers(*sp, exportDir + "/stimuli", Database::Test, opt.exportNbStimuliMax);
-    #endif
-        }
-
         DeepNetExport::generate(*deepNet, exportDir, opt.genExport);
 
         deepNet->exportNetworkFreeParameters("weights_export");
+    }
 
+
+    bool generateExport(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
+        bool afterCalibration = calibNetwork(opt, deepNet);
+        generateExportFromCalibration(opt, deepNet);
         return afterCalibration;
-
     }
 
     void findLearningRate(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
@@ -1346,9 +1304,6 @@ namespace N2D2_HELPER{
                                         << "% / Informedness: " << (100.0
                                 * targetScore->getAverageScore(Database::Validation,
                                             ConfusionTableMetric::Informedness))
-                                        << "% / IU: " << (100.0
-                                * targetScore->getAverageScore(Database::Validation,
-                                            ConfusionTableMetric::IU))
                                         << "%\n" << std::endl;
 
                             if (!bestValidation) {

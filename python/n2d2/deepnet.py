@@ -33,6 +33,9 @@ class DeepNet(N2D2_Interface):
     _convention_converter= n2d2.ConventionConverter({
         "name": "Name",
     })
+
+    calibrated=False
+    
     def __init__(self, **config_parameters):
 
         N2D2_Interface.__init__(self, **config_parameters)
