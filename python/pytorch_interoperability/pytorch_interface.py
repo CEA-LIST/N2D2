@@ -237,7 +237,7 @@ def wrap(torch_model, input_size):
     :return: A custom ``torch.nn.Module`` which embed a :py:class:`n2d2.cells.DeepNetCell`.
     :rtype: :py:class:`pytorch_interoperability.Block`
     """
-    model_path = f'./torch_{torch_model.__class__.__name__}.onnx'
+    model_path = f'./{torch_model.__class__.__name__}.onnx'
     print("Exporting torch module to ONNX ...")
     dummy_in = torch.randn(input_size)
     # Passing the dummy tensor to the first parameter device
@@ -249,7 +249,7 @@ def wrap(torch_model, input_size):
     print("Importing ONNX model to N2D2 ...")
     db = n2d2.database.Database()
     provider = n2d2.provider.DataProvider(db,[input_size[3], input_size[2], input_size[1]], batch_size=input_size[0])
-    deepNet = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "./tmp.onnx")
+    deepNet = n2d2.cells.DeepNetCell.load_from_ONNX(provider, model_path)
     # print("Cleaning temporary ONNX file.")
     # remove(model_path)
     deepNet.set_solver(n2d2.solver.SGD(
