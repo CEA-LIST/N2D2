@@ -282,7 +282,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             return self._config_parameters['activation']
         return None
 
-    def get_inputs(self):
+    def get_input_cells(self):
         return self._input_cells
 
     def clear_input(self):
@@ -334,9 +334,9 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
     def __str__(self):
         output = "\'" + self.get_name() + "\' " + self.get_type() + "(" + self._model_key + ")"
         output += N2D2_Interface.__str__(self)
-        if len(self.get_inputs()) > 0:
+        if len(self.get_input_cells()) > 0:
             output += "(["
-            for idx, name in enumerate(self.get_inputs()):
+            for idx, name in enumerate(self.get_input_cells()):
                 if idx > 0:
                     output += ", "
                 output += "'" + name + "'"
