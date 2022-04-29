@@ -237,7 +237,7 @@ def wrap(torch_model, input_size):
     :return: A custom ``torch.nn.Module`` which embed a :py:class:`n2d2.cells.DeepNetCell`.
     :rtype: :py:class:`pytorch_interoperability.Block`
     """
-    model_path = './tmp.onnx'
+    model_path = f'./torch_{torch_model.__class__.__name__}.onnx'
     print("Exporting torch module to ONNX ...")
     dummy_in = torch.randn(input_size)
     # Passing the dummy tensor to the first parameter device
