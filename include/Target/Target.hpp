@@ -221,11 +221,10 @@ protected:
 
     const std::string mName;
     const std::shared_ptr<Cell> mCell;
+    std::shared_ptr<StimuliProvider> mStimuliProvider;
     const double mTargetValue;
     const double mDefaultValue;
     const unsigned int mTargetTopN;
-
-    std::shared_ptr<StimuliProvider> mStimuliProvider;
     
     std::map<int, int> mLabelsMapping;
     int mDefaultTarget;
