@@ -11,7 +11,7 @@
 
 #ifdef CUDA
 
-#include "Quantizer/Activation/QuantizerActivation_Frame_CUDA.hpp"
+#include "Quantizer/QAT/Activation/QuantizerActivation_Frame_CUDA.hpp"
 
 #include <pybind11/pybind11.h>
 
