@@ -723,6 +723,7 @@ class test_interop(unittest.TestCase):
         self.assertNotEqual(res, -1, msg="CUDA eval failed")
 
     def test_incomplete_batch(self):
+        n2d2.global_variables.default_model = "Frame_CUDA"
         weight_value = 0.01
         learning_rate = 0.01
         first_stimuli = torch.randn((10, 1, 3, 3)) # Stimuli with batch_size = 10
@@ -772,7 +773,7 @@ class test_interop(unittest.TestCase):
                 self.assertFalse(abs(i-j) > comparison_precision * abs(j))
         print(torch_out2)
         print(n2d2_out2)
-
+        n2d2.global_variables.default_model = "Frame"
 
 if __name__ == '__main__':
     unittest.main()

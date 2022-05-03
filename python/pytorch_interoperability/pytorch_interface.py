@@ -18,10 +18,8 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
-from fileinput import filename
 import torch
 import n2d2
-import numpy as np
 
 def _switching_convention(dims):
     return [dims[3], dims[2], dims[1], dims[0]]
@@ -111,6 +109,7 @@ class Block(torch.nn.Module):
         self.need_to_flatten=need_to_flatten
         self.batch_size = batch_size # Batchsize used to define the neural network
         self.current_batch_size = None
+        self.output_tensor = None # "Saved" as an attribute to avoid python garbage collector !
 
     def get_block(self) -> n2d2.cells.Block:
         """
@@ -126,16 +125,23 @@ class Block(torch.nn.Module):
         """
         class N2D2_computation(torch.autograd.Function):
             """
-            An autograd function applied to a Torch tensor that will use the propagation/backpropagation/update of N2D2.
+            Autograd function that will use the propagation/backpropagation/update of N2D2.
             """
             @staticmethod
             def forward(ctx, inputs):
+                n2d2_tensor = _to_n2d2(inputs)
                 self.current_batch_size = inputs.shape[0] # Can be different than self.batch_size
                 # If we don't know batch size during the first propagation we set it to the batch size of the first stimuli, may be dangerous ?
                 if self.batch_size is None:
                     self.batch_size = self.current_batch_size
 
-                n2d2_tensor = _to_n2d2(inputs)
+                if self.current_batch_size != self.batch_size:
+                    # Pad incomplete batch with 0 as N2D2 doesn't support incomplete batch.
+                    new_shape = list(inputs.shape)
+                    new_shape[0] = self.batch_size
+                    n2d2_tensor.resize(new_shape)
+
+
 
                 if n2d2.global_variables.cuda_compiled:
                     n2d2_tensor.cuda()
@@ -144,7 +150,9 @@ class Block(torch.nn.Module):
                     self._block.learn()
                 else:
                     self._block.test()
+
                 n2d2_outputs = self._block(n2d2_tensor) # Propagation
+
                 # Note : It's important to set diffOutputs as an attribute else when exiting this method
                 # Python garbage collector will erase this variable while Cpp will still use it resulting in a SegFault
                 self.diffOutputs = n2d2.Tensor(n2d2_tensor.dims(), value=0, dim_format="N2D2")
@@ -157,18 +165,15 @@ class Block(torch.nn.Module):
                 n2d2_outputs.N2D2().synchronizeDToH()
 
                 self.output_tensor = n2d2_outputs
-                if self.current_batch_size != self.batch_size:
-                    if n2d2_outputs.is_cuda:
-                        raise RuntimeError("Dynamic batch size is not yet supported with CUDA in N2D2 (expected batch size : " \
-                            f"{self.batch_size}, received : {self.current_batch_size}")
-                    # Remove padding due to an incomplete batch
-                    new_shape = list(n2d2_outputs.shape()) # We cast the size object into a list
-                    new_shape[0] = self.current_batch_size
-                    tmp_numpy = n2d2_outputs.to_numpy(copy=True)
-                    tmp_numpy = np.resize(tmp_numpy, new_shape)
-                    n2d2_outputs = n2d2.Tensor.from_numpy(tmp_numpy)
-
                 outputs = _to_torch(n2d2_outputs.N2D2())
+                if self.current_batch_size != self.batch_size:
+                    # Warning for future : do not change the shape of n2d2_outputs !
+                    # Doing so will change the size of the variable mOutputs.
+                    # This will cause a crash when the next full stimuli will come.
+                    new_shape = list(n2d2_outputs.shape())
+                    new_shape[0] = self.current_batch_size
+                    outputs = outputs.resize_(new_shape) # in place operation
+
                 # The conversion back to pytorch can alter the type so we need to set it back
                 outputs = outputs.to(dtype=inputs.dtype)
                 if inputs.is_cuda: # If N2D2 is compiled with CUDA the output Tensor will always be CUDA
@@ -182,7 +187,7 @@ class Block(torch.nn.Module):
                 self.current_batch_size = grad_output.shape[0]
                 if grad_output.is_cuda:
                     grad_output = grad_output.cuda()
-                grad_output = torch.mul(grad_output, -self.current_batch_size)
+                grad_output = torch.mul(grad_output, -self.batch_size)
                 t_grad_output = _to_n2d2(grad_output)
 
                 if self.current_batch_size < self.batch_size:
@@ -206,11 +211,18 @@ class Block(torch.nn.Module):
                 self.output_tensor.back_propagate()
                 self.output_tensor.update()
 
-
                 diffOutput = self.deepnet.getCell_Frame_Top(self.deepnet.getLayers()[1][0]).getDiffOutputs()
 
                 outputs = _to_torch(diffOutput)
-                outputs = torch.mul(outputs, -1/self.current_batch_size)
+                if self.current_batch_size != self.batch_size:
+                    # Warning for future : do not change the shape of n2d2_outputs !
+                    # Doing so will change the size of the variable mOutputs.
+                    # This will cause a crash when the next full stimuli will come.
+                    new_shape = list(outputs.shape)
+                    new_shape[0] = self.current_batch_size
+                    outputs = outputs.resize_(new_shape) # in place operation
+                outputs = torch.mul(outputs, -1/self.batch_size)
+
                 if grad_output.is_cuda:
                     outputs = outputs.cuda()
                 else:
@@ -218,8 +230,7 @@ class Block(torch.nn.Module):
                 return outputs.clone()
 
         # If the layer is at the beginning of the network requires grad is False.
-        if not inputs.requires_grad:
-            inputs.requires_grad = True
+        inputs.requires_grad = True
 
         outputs = N2D2_computation.apply(inputs)
         if self.need_to_flatten:
@@ -240,9 +251,10 @@ def wrap(torch_model, input_size):
     model_path = f'./{torch_model.__class__.__name__}.onnx'
     print("Exporting torch module to ONNX ...")
     dummy_in = torch.randn(input_size)
-    # Passing the dummy tensor to the first parameter device
-    # Hypothesis : one device for the model.
+
+    # Update dummy tensor to the model device 
     dummy_in = dummy_in.to(next(torch_model.parameters()).device)
+
     torch.onnx.export(torch_model, dummy_in, model_path, verbose=True, training=torch.onnx.TrainingMode.TRAINING)
 
     # Importing the ONNX to N2D2
@@ -250,8 +262,7 @@ def wrap(torch_model, input_size):
     db = n2d2.database.Database()
     provider = n2d2.provider.DataProvider(db,[input_size[3], input_size[2], input_size[1]], batch_size=input_size[0])
     deepNet = n2d2.cells.DeepNetCell.load_from_ONNX(provider, model_path)
-    # print("Cleaning temporary ONNX file.")
-    # remove(model_path)
+
     deepNet.set_solver(n2d2.solver.SGD(
                 decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1,
                 learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0,

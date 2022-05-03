@@ -275,6 +275,14 @@ class Tensor:
                 old_dims_str += str(dim) +" "
             raise ValueError(f"new size ({new_dims_str}= {str(reduce((lambda x,y: x*y), new_dims))}) does not match current size ({old_dims_str}= {str(self.__len__())})")
         self._tensor.reshape([int(d) for d in reversed(new_dims)])
+    
+    def resize(self, new_dims):
+        """Reshape the Tensor to the specified dims (defined by the Numpy convention).
+
+        :param new_dims: New dimensions
+        :type new_dims: list
+        """
+        self._tensor.resize([int(d) for d in reversed(new_dims)])
 
     def copy(self):
         """Copy in memory the Tensor object.
