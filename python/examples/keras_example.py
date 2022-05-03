@@ -106,9 +106,9 @@ provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size=batch_si
 provider.add_transformation(n2d2.transform.Rescale(width=28, height=28))
 print(provider)
 
-
-# Generating C export
-n2d2.export.export_c(
+model.get_deepnet_cell().remove("dense")
+# Generating CPP export
+n2d2.export.export_cpp(
     model.get_deepnet_cell(),
     provider=provider,
     nb_bits=8,
