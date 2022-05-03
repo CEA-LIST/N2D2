@@ -1,4 +1,4 @@
-Quantization-Aware Training
+[NEW] Quantization-Aware Training
 ==================================
 .. role:: raw-html(raw)
    :format: html
@@ -146,7 +146,7 @@ full-precision counterparts in some cases. This method exploits DoReFa scheme fo
 
 Example of clamped weights when ``QWeight.ApplyQuantization=false``:
 
-.. figure:: /_static/qat_weights_Clamp.png
+.. figure:: _static/qat_weights_Clamp.png
    :alt: Weights Full-Precision clamped.
 
 
@@ -567,7 +567,253 @@ Congratulations! Your ``resnet-18-v1`` model have now it's weights parameters an
 ONNX model : ResNet-18 Example - Python
 #############################################
 
-Coming soon.
+In this example, we will do the same as in the previous section showcasing the python API.
+
+You can find the complete scrip for this tutorial here :download:`resnet18v1 quantization example<../python/examples/sat_qat_resnet-18.py>`.
+
+Firstly, you need to retrieved the ``resnet18v1.onnx`` file that you can pick-up at https://s3.amazonaws.com/onnx-model-zoo/resnet/resnet18v1/resnet18v1.onnx.
+Or with the N2D2 script ``N2D2/tools/install_onnx_models.py`` that will automatically install a set of pre-trained ONNX models under your ``N2D2_MODELS`` system path.
+
+Once this is done, you can create a data provider for the dataset ``ILSVRC2012``.
+
+.. code-block:: python
+
+  print("Create database")
+  database = n2d2.database.ILSVRC2012(learn=1.0, random_partitioning=True)
+  database.load(args.data_path, label_path=args.label_path)
+  print(database)
+  print("Create provider")
+  provider = n2d2.provider.DataProvider(database=database, size=[224, 224, 3], batch_size=batch_size)
+  print(provider)
+
+We will then do some pre-processing to the data-set.
+
+We use the :py:class:`n2d2.transform.Composite` to have a compact syntax and avoid multiple call to the method ``add_transformation``.
+
+.. code-block:: python
+
+  print("Adding transformations")
+  transformations = n2d2.transform.Composite([
+      n2d2.transform.ColorSpace("RGB"),
+      n2d2.transform.RangeAffine("Divides", 255.0),
+      n2d2.transform.RandomResizeCrop(224, 224, scale_min=0.2, scale_max=1.0, ratio_min=0.75,
+                                      ratio_max=1.33, apply_to="LearnOnly"),
+      n2d2.transform.Rescale(256, 256, keep_aspect_ratio=True, resize_to_fit=False,
+                            apply_to="NoLearn"),
+      n2d2.transform.PadCrop(256, 256, apply_to="NoLearn"),
+      n2d2.transform.SliceExtraction(224, 224, offset_x=16, offset_y=16, apply_to="NoLearn"),
+  ])
+
+  print(transformations)
+
+  flip_trans = n2d2.transform.Flip(apply_to="LearnOnly", random_horizontal_flip=True)
+
+  provider.add_transformation(transformations)
+  provider.add_on_the_fly_transformation(flip_trans)
+  print(provider)
+
+Once this is done, we can import the ``resnet-18-v1`` ONNX model using :py:class:`n2d2.cells.DeepNetCell`.
+
+.. code-block:: python
+
+  model = n2d2.cells.DeepNetCell.load_from_ONNX(provider, path_to_ONNX)
+
+Once the ONNX model is loaded, we will change the configuration of the :py:class:`n2d2.cells.Conv`, :py:class:`n2d2.cells.Fc` and :py:class:`n2d2.cells.BatchNorm2d` layers. 
+To do so, we will iterate through the layer of our model and check the type of the layer.
+Then we will apply the wanted configuration for each cells.
+
+.. code-block:: python
+
+  print("Updating cells ...")
+
+  for cell in model:
+      ### Updating Conv Cells ###
+      if isinstance(cell, n2d2.cells.Conv):
+          # You need to replace weights filler before adding the quantizer.
+          cell.set_weights_filler(
+              n2d2.filler.Xavier(
+                  variance_norm="FanOut",
+                  scaling=1.0,
+          ), refill=True)
+
+          if cell.has_bias():
+              cell.refill_bias()
+          cell.quantizer = SATCell(
+                  apply_scaling=False, 
+                  apply_quantization=False
+          )
+
+          cell.set_solver_parameter("learning_rate_policy", "CosineDecay")
+          cell.set_solver_parameter("learning_rate", 0.05)
+          cell.set_solver_parameter("momentum", 0.9)
+          cell.set_solver_parameter("decay", 0.00004)
+          cell.set_solver_parameter("max_iterations", 192175050)
+
+      ### Updating Fc Cells ###
+      if isinstance(cell, n2d2.cells.Fc):
+          cell.set_weights_filler(
+              n2d2.filler.Xavier(
+                  variance_norm="FanOut",
+                  scaling=1.0,
+          ), refill=True)
+          cell.set_bias_filler(
+              n2d2.filler.Constant(
+                  value=0.0,
+          ), refill=True)
+
+
+          cell.quantizer = SATCell(
+                  apply_scaling=False, 
+                  apply_quantization=False
+          )
+          cell.set_solver_parameter("learning_rate_policy", "CosineDecay")
+          cell.set_solver_parameter("learning_rate", 0.05)
+          cell.set_solver_parameter("momentum", 0.9)
+          cell.set_solver_parameter("decay", 0.00004)
+          cell.set_solver_parameter("max_iterations", 192175050)
+
+      ### Updating BatchNorm Cells ###
+      if isinstance(cell, n2d2.cells.BatchNorm2d):
+          cell.set_solver_parameter("learning_rate_policy", "CosineDecay")
+          cell.set_solver_parameter("learning_rate", 0.05)
+          cell.set_solver_parameter("momentum", 0.9)
+          cell.set_solver_parameter("decay", 0.00004)
+          cell.set_solver_parameter("max_iterations", 192175050)
+          cell.set_solver_parameter("iteration_size", 2)
+    print("AFTER MODIFICATION :")
+    print(model)
+
+Once this is done, we will do a regular training loop and save weights every time we met a new best `precision` during the validation phase.
+The clamped weights will be saved in a folder `resnet_weights_clamped`.
+
+.. code-block:: python
+
+  softmax = n2d2.cells.Softmax(with_loss=True)
+
+  loss_function =  n2d2.target.Score(provider)
+  max_precision = -1
+  print("\n### Training ###")
+  for epoch in range(nb_epochs):
+      provider.set_partition("Learn")
+      model.learn()
+
+      print("\n# Train Epoch: " + str(epoch) + " #")
+
+      for i in range(math.ceil(database.get_nb_stimuli('Learn') / batch_size)):
+          x = provider.read_random_batch()
+          x = model(x)
+          x = softmax(x)
+          x = loss_function(x)
+
+          x.back_propagate()
+          x.update()
+
+          print("Example: " + str(i * batch_size) + ", loss: "
+                + "{0:.3f}".format(x[0]), end='\r')
+
+      print("\n### Validation ###")
+
+      loss_function.clear_success()
+
+      provider.set_partition('Validation')
+      model.test()
+
+      for i in range(math.ceil(database.get_nb_stimuli('Validation') / batch_size)):
+          batch_idx = i * batch_size
+
+          x = provider.read_batch(batch_idx)
+          x = model(x)
+          x = softmax(x)
+          x = loss_function(x)
+
+          print("Validate example: " + str(i * batch_size) + ", val success: "
+                + "{0:.2f}".format(100 * loss_function.get_average_score(metric="Precision")) + "%", end='\r')
+
+  print("\nPloting the network ...")
+  x.get_deepnet().draw_graph("./resnet18v1_clamped")
+  x.get_deepnet().log_stats("./resnet18v1_clamped_stats")
+  print("Saving weights !")
+  model.get_embedded_deepnet().export_network_free_parameters("resnet_weights_clamped")
+
+
+Your `resnet-18-v1` model now have clamped weights !
+
+Now we will change the ``quantizer`` objects to quantize the network et 4 bits (range=15).
+
+.. code-block:: python
+
+  print("Updating cells")
+
+  for cell in model:
+      ### Updating Rectifier ###
+      if isinstance(cell.activation, n2d2.activation.Rectifier):
+          cell.activation = n2d2.activation.Linear(
+                  quantizer=SATAct(
+                      range=15, 
+                      solver=n2d2.solver.SGD(
+                          learning_rate_policy = "CosineDecay",
+                          learning_rate=0.05,
+                          momentum=0.9,
+                          decay=0.00004,
+                          max_iterations=115305030
+          )))
+
+      if isinstance(cell, (n2d2.cells.Conv, n2d2.cells.Fc)):
+          cell.quantizer.set_quantization(True)
+          cell.quantizer.set_range(15)
+
+  # The first and last cell are in 8 bits precision !
+  model["resnetv15_conv0_fwd"].quantizer.set_range(255)
+  model["resnetv15_dense0_fwd"].quantizer.set_range(255)
+
+Once the ``quantizer`` objects have been updated we can run a new training loop to learn the quantized wieghts and activations.
+
+.. code-block:: python
+
+  print("\n### Training ###")
+  for epoch in range(nb_epochs):
+
+      provider.set_partition("Learn")
+      model.learn()
+
+      print("\n# Train Epoch: " + str(epoch) + " #")
+
+      for i in range(math.ceil(database.get_nb_stimuli('Learn') / batch_size)):
+          x = provider.read_random_batch()
+          x = model(x)
+          x = softmax(x)
+          x = loss_function(x)
+
+          x.back_propagate()
+          x.update()
+
+          print("Example: " + str(i * batch_size) + ", loss: "
+                + "{0:.3f}".format(x[0]), end='\r')
+
+      print("\n### Validation ###")
+
+      loss_function.clear_success()
+
+      provider.set_partition('Validation')
+      model.test()
+
+      for i in range(math.ceil(database.get_nb_stimuli('Validation') / batch_size)):
+          batch_idx = i * batch_size
+
+          x = provider.read_batch(batch_idx)
+          x = model(x)
+          x = softmax(x)
+          x = loss_function(x)
+
+          print("Validate example: " + str(i * batch_size) + ", val success: "
+                + "{0:.2f}".format(100 * loss_function.get_average_score(metric="Precision")) + "%", end='\r')
+
+  x.get_deepnet().draw_graph("./resnet18v1_quant")
+  x.get_deepnet().log_stats("./resnet18v1_quant_stats")
+  model.get_embedded_deepnet().export_network_free_parameters("resnet_weights_SAT")
+
+You can look at your quantized weights in the newly created ``resnet_weights_SAT`` folder.
+
 
 Hand-Made model : LeNet Example - INI File
 #############################################
@@ -878,6 +1124,7 @@ Results must be exactly the same than with batch-normalization. Moreover quantiz
 model !
 You can check the results in the newly generated ``LeNet.ini.png`` graph :
 
+.. _QAT without Batchnorm:
 .. figure:: /_static/qat_conv_nobn.png
    :alt: no batchnorm.
 
@@ -886,7 +1133,304 @@ Moreover you can find your quantized weights and biases under the folder ``weigh
 Hand-Made model : LeNet Example - Python
 #############################################
 
-Coming soon.
+Part 1 : Learn with clamped weights
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this section, we will see how to apply the ``SAT`` quantization methodology using the python API.
+We will apply the SAT quantization procedure in a handmade LeNet model. 
+
+You can get the script used in this example by clicking here : :download:`LeNet quantization example<../python/examples/sat_lenet/quantizer_handmade_part1.py>`.
+
+The first step is to learn ``LeNet`` on ``MNIST`` database with clamped weights.
+
+Let's start by importing the folowing libraries and setting some global variables :
+
+.. code-block::
+
+  import n2d2 
+  import n2d2_ip
+  from n2d2.cells.nn import Dropout, Fc, Conv, Pool2d, BatchNorm2d
+  import math
+  
+  nb_epochs = 100
+  batch_size = 256
+  n2d2.global_variables.cuda_device = 2
+  n2d2.global_variables.default_model = "Frame_CUDA"
+
+Let's create a ``database`` driver for MNIST, a ``dataprovider`` and apply ``transformation`` to the data.
+
+.. code-block:: python
+
+  print("\n### Create database ###")
+  database = n2d2.database.MNIST(data_path=data_path, validation=0.1)
+  print(database)
+  print("\n### Create Provider ###")
+  provider = n2d2.provider.DataProvider(database, [32, 32, 1], batch_size=batch_size)
+  provider.add_transformation(n2d2.transform.Rescale(width=32, height=32))
+  print(provider)
+
+In our example we decided to quantize every convolutions and fully-connected layers. 
+We will use the object :py:class:`n2d2.ConfigSection` to provide common parameters to the cells.
+
+.. note::
+  We need to use a function that will generate a new config section object to avoid giving the same objects to the one we are configuring.
+  If we defined ``conv_conf`` as the ``solver_conf`` every ``Conv cells`` would have the same solver and quantizer object ! 
+
+.. code-block:: python
+
+  solver_conf = n2d2.ConfigSection(
+      learning_rate=0.05,
+      learning_rate_policy="None",
+      momentum=0.0,
+      decay=0.0, 
+  )
+  def conv_conf():
+      return n2d2.ConfigSection(
+          activation=n2d2.activation.Linear(),
+          no_bias=True,
+          weights_solver=n2d2.solver.SGD(**solver_conf),
+          bias_solver=n2d2.solver.SGD(**solver_conf),
+          quantizer=n2d2_ip.quantizer.SATCell(
+              apply_scaling=False, # No scaling needed because each conv is followed by batch-normalization layers
+              apply_quantization=False, # Only clamp mode for the 1st step
+      ),)
+  def fc_conf():
+      return n2d2.ConfigSection(
+          activation=n2d2.activation.Linear(),
+          no_bias=True,
+          weights_solver=n2d2.solver.SGD(**solver_conf),
+          bias_solver=n2d2.solver.SGD(**solver_conf),
+          quantizer=n2d2_ip.quantizer.SATCell(
+              apply_scaling=True, # Scaling needed for Full-Connected
+              apply_quantization=False, # Only clamp mode for the 1st step
+          ),
+      )
+  def bn_conf(): 
+      return n2d2.ConfigSection(
+          activation=n2d2.activation.Rectifier(),
+          scale_solver=n2d2.solver.SGD(**solver_conf),
+          bias_solver=n2d2.solver.SGD(**solver_conf),
+      )
+  
+Once we have defined the global parameters for each cell, we can define our ``LeNet`` model.
+
+.. code-block:: python
+
+  print("\n### Loading Model ###")
+  model = n2d2.cells.Sequence([
+      Conv(1, 6, kernel_dims=[5, 5], **conv_conf()),
+      BatchNorm2d(6, **bn_conf()),
+      Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling="Max"),
+      Conv(6, 16, [5, 5], **conv_conf()),
+      BatchNorm2d(16, **bn_conf()),
+      Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling="Max"),
+      Conv(16, 120, [5, 5], **conv_conf()),
+      Dropout(name="Conv3.Dropout"),
+      BatchNorm2d(120, **bn_conf()),
+      Fc(120, 84, **fc_conf()),
+      Dropout(name="Fc1.Dropout"),
+      Fc(84, 10, **fc_conf()),
+  ])
+  print(model)
+
+  softmax = n2d2.cells.Softmax(with_loss=True)
+
+  loss_function =  n2d2.target.Score(provider)
+
+The model defined, we can train it with a classic training loop :
+
+.. code-block:: python
+
+  print("\n### Training ###")
+  for epoch in range(nb_epochs):
+
+      provider.set_partition("Learn")
+      model.learn()
+
+      print("\n# Train Epoch: " + str(epoch) + " #")
+
+      for i in range(math.ceil(database.get_nb_stimuli('Learn')/batch_size)):
+
+          x = provider.read_random_batch()
+          x = model(x)
+          x = softmax(x)
+          x = loss_function(x)
+          x.back_propagate()
+          x.update()
+
+          print("Example: " + str(i * batch_size) + ", loss: "
+                + "{0:.3f}".format(x[0]), end='\r')
+
+
+      print("\n### Validation ###")
+
+      loss_function.clear_success()
+      
+      provider.set_partition('Validation')
+      model.test()
+
+      for i in range(math.ceil(database.get_nb_stimuli('Validation') / batch_size)):
+          batch_idx = i * batch_size
+
+          x = provider.read_batch(batch_idx)
+          x = model(x)
+          x = softmax(x)
+          x = loss_function(x)
+
+          print("Validate example: " + str(i * batch_size) + ", val success: "
+                + "{0:.2f}".format(100 * loss_function.get_average_success()) + "%", end='\r')
+
+
+  print("\n\n### Testing ###")
+
+  provider.set_partition('Test')
+  model.test()
+
+  for i in range(math.ceil(provider.get_database().get_nb_stimuli('Test')/batch_size)):
+      batch_idx = i*batch_size
+
+      x = provider.read_batch(batch_idx)
+      x = model(x)
+      x = softmax(x)
+      x = loss_function(x)
+
+      print("Example: " + str(i * batch_size) + ", test success: "
+            + "{0:.2f}".format(100 * loss_function.get_average_success()) + "%", end='\r')
+
+  print("\n")
+
+Then, we can export the weights we have learned in order to use them for the second step.
+
+.. code-block:: python
+
+  ### Exporting weights ###
+  x.get_deepnet().export_network_free_parameters("./weights_clamped")
+
+If you check the generated file : *conv3_weights_quant.distrib.png* you should see the `clamped weights`_.
+
+Part 2 : Quantized LeNet with SAT
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now that we have learned clamped weights, we will quantize our network.
+
+You can get the script used in this example by clicking here : :download:`LeNet quantization example<../python/examples/sat_lenet/quantizer_handmade_part2.py>`.
+
+To do so, we will create a second script. We can begin by importing the ``MNIST`` database and create a ``dataprovider`` just like in the previous section.
+
+Then we will copy the :py:class:`n2d2.ConfigSection` from the previous section and add a quantizer argument.
+
+.. code-block:: python
+
+  solver_conf = n2d2.ConfigSection(
+      learning_rate=0.05,
+      learning_rate_policy="None",
+      momentum=0.0,
+      decay=0.0, 
+  )
+  def conv_conf():
+      return n2d2.ConfigSection(
+          activation=n2d2.activation.Linear(),
+          no_bias=True,
+          weights_solver=n2d2.solver.SGD(**solver_conf),
+          bias_solver=n2d2.solver.SGD(**solver_conf),
+          quantizer=n2d2_ip.quantizer.SATCell(
+              apply_scaling=False,
+              apply_quantization=True, # ApplyQuantization is now set to True
+              range=15, # Conv is now quantized in 4-bits range (2^4 - 1)
+      ))
+  def fc_conf():
+      return n2d2.ConfigSection(
+          activation=n2d2.activation.Linear(),
+          no_bias=True,
+          weights_solver=n2d2.solver.SGD(**solver_conf),
+          bias_solver=n2d2.solver.SGD(**solver_conf),
+          quantizer=n2d2_ip.quantizer.SATCell(
+              apply_scaling=True, 
+              apply_quantization=True, # ApplyQuantization is now set to True
+              range=15, # Fc is now quantized in 4-bits range (2^4 - 1)
+      ))
+  def bn_conf(): 
+    return n2d2.ConfigSection(
+        activation=n2d2.activation.Linear(
+            quantizer=n2d2_ip.quantizer.SATAct(
+                alpha=6.0,
+                range=15, # -> 15 for 4-bits range (2^4-1)
+        )),
+        scale_solver=n2d2.solver.SGD(**solver_conf),
+        bias_solver=n2d2.solver.SGD(**solver_conf),
+    )
+
+The configuration done, we will defined our new network.
+
+.. note::
+  The first ``Convolution`` and last ``Fully Connected`` layer have differents parameters because we will quantize them in 8-bits instead of 4-bit as it is a common practice.
+
+.. code-block:: python
+
+  ### Creating model ###
+  print("\n### Loading Model ###")
+  model = n2d2.cells.Sequence([
+      Conv(1, 6, kernel_dims=[5, 5], 
+          activation=n2d2.activation.Linear(),
+          no_bias=True,
+          weights_solver=n2d2.solver.SGD(**solver_conf),
+          bias_solver=n2d2.solver.SGD(**solver_conf),
+          quantizer=n2d2_ip.quantizer.SATCell(
+              apply_scaling=False,
+              apply_quantization=True, # ApplyQuantization is now set to True
+              range=255, # Conv_0 is now quantized in 8-bits range (2^8 - 1)
+      )),
+      BatchNorm2d(6, **bn_conf()),
+      Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling="Max"),
+      Conv(6, 16, [5, 5], **conv_conf()),
+      BatchNorm2d(16, **bn_conf()),
+      Pool2d(pool_dims=[2, 2], stride_dims=[2, 2], pooling="Max"),
+      Conv(16, 120, [5, 5], **conv_conf()),
+      Dropout(name="Conv3.Dropout"),
+      BatchNorm2d(120, **bn_conf()),
+      Fc(120, 84, **fc_conf()),
+      Dropout(name="Fc1.Dropout"),
+      Fc(84, 10, 
+          activation=n2d2.activation.Linear(),
+          no_bias=True,
+          weights_solver=n2d2.solver.SGD(**solver_conf),
+          bias_solver=n2d2.solver.SGD(**solver_conf),
+          quantizer=n2d2_ip.quantizer.SATCell(
+              apply_scaling=True, 
+              apply_quantization=True, # ApplyQuantization is now set to True
+              range=255, # Fc_1 is now quantized in 8-bits range (2^8 - 1)
+      )),
+  ])
+  print(model)
+
+The model created we can import the learned parameter.
+
+.. code-block:: python
+
+  # Importing the clamped weights
+  model.import_free_parameters("./weights_clamped", ignore_not_exists=True)
+
+The model is now ready for a training (you can use the training loop presented in the previous section).
+
+The training done, you can save the new quantized weights with the following line :
+
+.. code-block:: python
+
+  ### Exporting weights ###
+  x.get_deepnet().export_network_free_parameters("./new_weights")
+
+If you check the generated file : *conv3_weights_quant.distrib.png* you should see the `quantize weights`_.
+
+You can fuse ``BatchNorm`` and ``Conv`` layers by using the following line : 
+
+.. code-block:: python
+
+  ### Fuse ###
+  n2d2_ip.quantizer.fuse_qat(x.get_deepnet(), provider, "NONE")
+  x.get_deepnet().draw_graph("./lenet_quant.py")
+
+You can check the generated file : *lenet_quant.py.png* which should looks like the fig `QAT without Batchnorm`_.
+
 
 
 Results
