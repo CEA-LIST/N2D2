@@ -45,7 +45,10 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinxcontrib.bibtex',
     'breathe',
+    'sphinx_pyreverse'
 ]
+
+sphinx_pyreverse_ignore="models,error_handler.py,utils.py,scaling.py,typed.py"
 
 bibtex_bibfiles = ['refs.bib']
 

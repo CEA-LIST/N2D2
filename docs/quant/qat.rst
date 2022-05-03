@@ -146,7 +146,7 @@ full-precision counterparts in some cases. This method exploits DoReFa scheme fo
 
 Example of clamped weights when ``QWeight.ApplyQuantization=false``:
 
-.. figure:: _static/qat_weights_Clamp.png
+.. figure:: /_static/qat_weights_Clamp.png
    :alt: Weights Full-Precision clamped.
 
 
@@ -569,7 +569,7 @@ ONNX model : ResNet-18 Example - Python
 
 In this example, we will do the same as in the previous section showcasing the python API.
 
-You can find the complete scrip for this tutorial here :download:`resnet18v1 quantization example<../python/examples/sat_qat_resnet-18.py>`.
+You can find the complete scrip for this tutorial here :download:`resnet18v1 quantization example</../python/examples/sat_qat_resnet-18.py>`.
 
 Firstly, you need to retrieved the ``resnet18v1.onnx`` file that you can pick-up at https://s3.amazonaws.com/onnx-model-zoo/resnet/resnet18v1/resnet18v1.onnx.
 Or with the N2D2 script ``N2D2/tools/install_onnx_models.py`` that will automatically install a set of pre-trained ONNX models under your ``N2D2_MODELS`` system path.
@@ -1006,6 +1006,7 @@ for example *weights_clamped* folder.
 Congratulations! Your ``LeNet`` model have clamped weights now ! You can check the results 
 in your *weights_clamped* folder, for example check your *conv3_weights_quant.distrib.png* file :
 
+.. _clamped weights:
 .. figure:: /_static/qat_lenet_clamp.png
    :alt: Clamp weights.
 
@@ -1099,6 +1100,7 @@ The final test accuracy should be close to 99%:
 Congratulations! Your ``LeNet`` model is now fully-quantized ! You can check the results 
 in your *weights* folder, for example check your *conv3_weights_quant.distrib.png* file :
 
+.. _quantize weights:
 .. figure:: /_static/qat_lenet_conv_q.png
    :alt: Quantized LeNet weights.
 
@@ -1139,7 +1141,7 @@ Part 1 : Learn with clamped weights
 In this section, we will see how to apply the ``SAT`` quantization methodology using the python API.
 We will apply the SAT quantization procedure in a handmade LeNet model. 
 
-You can get the script used in this example by clicking here : :download:`LeNet quantization example<../python/examples/sat_lenet/quantizer_handmade_part1.py>`.
+You can get the script used in this example by clicking here : :download:`LeNet quantization example</../python/examples/sat_lenet/quantizer_handmade_part1.py>`.
 
 The first step is to learn ``LeNet`` on ``MNIST`` database with clamped weights.
 
@@ -1313,7 +1315,7 @@ Part 2 : Quantized LeNet with SAT
 
 Now that we have learned clamped weights, we will quantize our network.
 
-You can get the script used in this example by clicking here : :download:`LeNet quantization example<../python/examples/sat_lenet/quantizer_handmade_part2.py>`.
+You can get the script used in this example by clicking here : :download:`LeNet quantization example</../python/examples/sat_lenet/quantizer_handmade_part2.py>`.
 
 To do so, we will create a second script. We can begin by importing the ``MNIST`` database and create a ``dataprovider`` just like in the previous section.
 

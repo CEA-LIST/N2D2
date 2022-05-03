@@ -275,7 +275,7 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
 
     spec = [tf.TensorSpec(inputs_shape, tf.float32, name=input_name) for input_name in input_names]
 
-    with ContextNoBatchNormFuse() as ctx:    
+    with ContextNoBatchNormFuse() as ctx:
         tf2onnx.convert.from_keras(
             tf_model,
             input_signature=spec,
