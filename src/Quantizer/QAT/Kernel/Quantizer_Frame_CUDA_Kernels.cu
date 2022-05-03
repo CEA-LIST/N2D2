@@ -275,3 +275,32 @@ void N2D2::Quantizer_Frame_CUDA_Kernels::cudaD_copyData(double* input,
     cudaD_copyData_kernel<<< (inputSize + 255) / 256, 256>>> (input, output, inputSize);
     CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
+
+
+struct cudaH_HalfLess : public std::binary_function<__half, __half, bool> 
+{
+    __device__ bool operator()(const __half& left, const __half& right) const
+    {
+#if __CUDA_ARCH__ >= 530
+        return __hlt(left, right);
+#else
+        return (__half2float(left) < __half2float(right));
+#endif
+    }
+};
+
+std::pair<half_float::half, half_float::half>
+N2D2::Quantizer_Frame_CUDA_Kernels::cudaH_MinMax(half_float::half* data,
+                                                 unsigned int size)
+{
+    thrust::device_ptr<__half> thrustPtr(reinterpret_cast<__half*>(data));
+    thrust::pair<thrust::device_vector<__half>::iterator,
+                 thrust::device_vector<__half>::iterator> minMaxPair
+        = thrust::minmax_element(thrustPtr, thrustPtr + size, cudaH_HalfLess());
+
+    const __half minVal = *(minMaxPair.first);
+    const __half maxVal = *(minMaxPair.second);
+
+    return std::make_pair(reinterpret_cast<const half_float::half&>(minVal),
+                          reinterpret_cast<const half_float::half&>(maxVal));
+}
