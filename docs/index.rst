@@ -60,7 +60,6 @@ N2D2
    python_api/interoperability
    python_api/export
    python_api/example
-   python_api/developer
 
 .. toctree::
    :maxdepth: 1
