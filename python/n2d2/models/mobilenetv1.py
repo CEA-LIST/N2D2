@@ -24,7 +24,7 @@ from n2d2.cells.nn import Fc, Conv, ConvDepthWise, ConvPointWise, GlobalPool2d, 
 from n2d2.cells import Sequence
 from n2d2.activation import Rectifier, Linear
 from n2d2.filler import He, Xavier, Constant, Normal
-from n2d2.models.ILSVRC_outils import ILSVRC_preprocessing
+from n2d2.models.ILSVRC_outils import ILSVRC_preprocessing as ILSVRC_preprocessing_tools
 
 # NOTE: This is the filler optimized for quantization. In normal training He might work better
 def conv_config(with_bn):
@@ -101,6 +101,7 @@ class MobileNetv1Extractor(Sequence):
                 for cell in scale:
                     if isinstance(cell, Conv):
                         bn_name = "bn" + cell.get_name()[4:]
+                        print(f"Adding cell (extractor) : {bn_name}")
                         scale.insert(scale.index(cell) + 1,
                                      BatchNorm2d(cell.get_nb_outputs(), activation=Rectifier(), name=bn_name))
 
@@ -128,13 +129,6 @@ class MobileNetv1(Sequence):
     def __init__(self, nb_outputs=1000, alpha=1.0, with_bn=False):
 
         self.extractor = MobileNetv1Extractor(alpha, with_bn)
-            
-        if with_bn:
-            for scale in self.extractor:
-                for cell in scale:
-                    if isinstance(cell, Conv):
-                        bn_name = "bn" + cell.get_name()[4:]
-                        scale.insert(scale.index(cell)+1, BatchNorm2d(cell.get_nb_outputs(), activation=Rectifier(), name=bn_name))
 
         self.head = MobileNetv1Head(nb_outputs, alpha)
 
@@ -143,5 +137,5 @@ class MobileNetv1(Sequence):
 
 
 def ILSVRC_preprocessing(size=224):
-   return ILSVRC_preprocessing(size)
+   return ILSVRC_preprocessing_tools(size)
 
