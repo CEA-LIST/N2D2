@@ -648,6 +648,7 @@ Then we will apply the wanted configuration for each cells.
           cell.set_solver_parameter("momentum", 0.9)
           cell.set_solver_parameter("decay", 0.00004)
           cell.set_solver_parameter("max_iterations", 192175050)
+          cell.set_solver_parameter("iteration_size", 2)
 
       ### Updating Fc Cells ###
       if isinstance(cell, n2d2.cells.Fc):
@@ -671,6 +672,7 @@ Then we will apply the wanted configuration for each cells.
           cell.set_solver_parameter("momentum", 0.9)
           cell.set_solver_parameter("decay", 0.00004)
           cell.set_solver_parameter("max_iterations", 192175050)
+          cell.set_solver_parameter("iteration_size", 2)
 
       ### Updating BatchNorm Cells ###
       if isinstance(cell, n2d2.cells.BatchNorm2d):
