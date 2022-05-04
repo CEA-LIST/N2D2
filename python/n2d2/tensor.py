@@ -472,7 +472,7 @@ class Tensor:
     def __str__(self)->str:
         if self.is_cuda:
             # Updating the host before printing the Tensor
-            self.dtoh()
+            self.N2D2().synchronizeDBasedToH()
         output = "n2d2.Tensor([\n"
         output += str(self._tensor)
         output += "], device=" + ("cuda" if self.is_cuda else "cpu")
