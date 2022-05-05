@@ -127,5 +127,5 @@ class DIR(Database):
             self._N2D2_object.partitionStimuli(int(validation), N2D2.Database.StimuliSet.__members__["Validation"])
             self._N2D2_object.partitionStimuli(int(test), N2D2.Database.StimuliSet.__members__["Test"])
 
-    def load(self, data_path, depth=0, label_path="", label_depth=0):
+    def load(self, data_path, depth=1, label_path="", label_depth=1):
         self._N2D2_object.loadDir(data_path, depth, label_path, label_depth)
