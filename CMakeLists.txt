@@ -197,7 +197,14 @@ foreach(item ${src_files_python})
 endforeach()
 
 add_library(n2d2_lib STATIC ${src_files})
-set(src_files_python_os ${src_files_python} PARENT_SCOPE)
+
+# It is required to set the variable N2D2_EXTRAMODULE in the additional module
+# you are developing in order to compile the Python Binding of N2D2.
+# Without N2D2_EXTRAMODULE, the Python binding won't compile in your module.
+# ==> set(N2D2_EXTRAMODULE 1)
+if(DEFINED N2D2_EXTRAMODULE)
+    set(src_files_python_os ${src_files_python} PARENT_SCOPE)
+endif()
 
 target_include_directories(n2d2_lib PUBLIC "include")
 target_compile_definitions(n2d2_lib PUBLIC N2D2_COMPILE_PATH=\"${CMAKE_SOURCE_DIR}\")

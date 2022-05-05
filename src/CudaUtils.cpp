@@ -60,13 +60,13 @@ void N2D2::Cuda::setMultiDevicePeerAccess(unsigned int size, unsigned int* devic
                                             devices[j], devices[i]));                     
                 if (canAccessPeer) {
                     CHECK_CUDA_STATUS(cudaSetDevice(devices[j]));
-                    const cudaError_t e = cudaDeviceEnablePeerAccess(devices[i], 0);
-                    if (e == cudaErrorPeerAccessAlreadyEnabled) {
+                    const cudaError_t status = cudaDeviceEnablePeerAccess(devices[i], 0);
+                    if (status == cudaErrorPeerAccessAlreadyEnabled) {
                         std::cout << "Peer access already enabled between ";
                         std::cout << "device " << devices[j] << " and ";
                         std::cout << "device " << devices[i] << std::endl;
                     } else {
-                        CHECK_CUDA_STATUS(e);
+                        CHECK_CUDA_STATUS(status);
                     }
                 }
             }
