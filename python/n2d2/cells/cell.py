@@ -294,7 +294,6 @@ class Sequence(Iterable):
         """
         if not isinstance(provider, n2d2.provider.DataProvider):
             raise n2d2.error_handler.WrongInputType("provider", type(provider), ["n2d2.provider.DataProvider"])
-        # dummy_input = provider.read_random_batch()
         dummy_input = n2d2.Tensor(provider.shape())
 
         provider._deepnet = n2d2.deepnet.DeepNet()
