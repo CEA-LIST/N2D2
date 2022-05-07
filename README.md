@@ -16,19 +16,10 @@ N2D2 is developped along with industrial and academic partners and is open sourc
 | [![Documentation Status](https://readthedocs.org/projects/n2d2/badge/?version=latest)](https://cea-list.github.io/N2D2-docs/) | [![linux-cpu](https://github.com/CEA-LIST/N2D2/actions/workflows/build_linux-cpu.yml/badge.svg)](https://github.com/CEA-LIST/N2D2/actions/workflows/build_linux-cpu.yml) | [![linux-gpu](https://github.com/CEA-LIST/N2D2/actions/workflows/build_linux-gpu.yml/badge.svg)](https://github.com/CEA-LIST/N2D2/actions/workflows/build_linux-gpu.yml) | | |
 
 
-## Getting the sources
-
-Use the following command:
-
-> git clone --recursive git@github.com:CEA-LIST/N2D2.git
-
-It is important to specify the recursive option as it will download the PyBind submodule.
-
 ## Usage
 
-To compile and use N2D2, please refer to the
-[online documentation](https://cea-list.github.io/N2D2-docs/), which
-contains the following resources:
+You can discover how to use the framework by visiting our [online documentation](https://cea-list.github.io/N2D2-docs/).
+
 - [General presentation of the framework](https://cea-list.github.io/N2D2-docs/intro/intro.html)
 - [How to compile N2D2 and perform simulations](https://cea-list.github.io/N2D2-docs/intro/simus.html)
 - How to write neural network models
@@ -40,15 +31,41 @@ contains the following resources:
 - [How to export neural network models](https://cea-list.github.io/N2D2-docs/export/CPP.html)
 - Tutorials
 
-The N2D2 executables and **application examples** are located in the [exec](exec) directory.
+The N2D2 executables and **application examples** are located in the [exec/](exec) directory.
 
 
-## Install Dependencies
+## Installation
+
+### Get the N2D2 Source
+
+```
+git clone --recursive git@github.com:CEA-LIST/N2D2.git
+```
+
+Specify the *recursive* option is required as it will download the PyBind submodule.
+
+### Install Dependencies
 
 The only mandatory dependencies for N2D2 are OpenCV and Gnuplot.
 
 Moreover, the NVIDIA CUDA and CuDNN libraries are required to enable GPU-acceleration.
-We highly recommend to use a **CUDA version higher than 10** with a **CuDNN version higher than 7**
+We highly recommend to use a **CUDA version higher than 10** with a **CuDNN version higher than 7**.
+
+If you want to disable CUDA support, export the environment variable `N2D2_NO_CUDA=1`.
+
+### Build on Linux
+
+To compile N2D2 on Linux, please go to the root of the project and run the following:
+
+```
+mkdir build
+cd build
+cmake .. && make
+```
+
+You should have the `n2d2` executable in `build/bin` after the compilation.
+
+To install the Python API in your python environment, follow the tutorial on our [doc](https://cea-list.github.io/N2D2-docs/python_api/intro.html).
 
 
 ## Docker Image
