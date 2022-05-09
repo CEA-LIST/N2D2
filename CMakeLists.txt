@@ -305,61 +305,70 @@ set_target_properties(n2d2_lib PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "${CMAKE
 cotire(n2d2_lib)
 
 
-# n2d2_lib_cuda target
-if(${CMAKE_VERSION} VERSION_LESS "3.9.0")
-    # For CMake < 3.9.0, use our own provided FindCUDA.cmake
-    # in order to support "CUDA_LINK_LIBRARIES_KEYWORD"
-    find_package(CUDA)
+# By default, CMake will try to found CUDA to compile N2D2
+# except if the environment variable N2D2_NO_CUDA exists and is set
+if((DEFINED ENV{N2D2_NO_CUDA}) AND ($ENV{N2D2_NO_CUDA}))
+    # To compile N2D2 without CUDA
+    message(STATUS "CUDA Module disabled")
+
 else()
-    # For CMake >= 3.9.0, use the default FindCUDA provided by CMake
-    # => in this case, we need to prevent find_package() to use our own.
-    list(REMOVE_ITEM CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
-    find_package(CUDA)
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
-endif()
-
-if(CUDA_FOUND)
-    set(CUDA_LINK_LIBRARIES_KEYWORD PUBLIC)
-    find_package(CuDNN REQUIRED)
-
-    file(GLOB_RECURSE src_files_cuda "src/*.cu")
-    set_nvcc_flags()
-    cuda_include_directories("${CMAKE_CURRENT_LIST_DIR}/include/")
-    cuda_add_library(n2d2_lib_cuda STATIC ${src_files_cuda})
-
-    # CUDA
-    target_include_directories(n2d2_lib_cuda SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS})
-    target_link_libraries(n2d2_lib_cuda PUBLIC ${CUDA_LIBRARIES})
-
-    # CuDNN
-    target_include_directories(n2d2_lib_cuda SYSTEM PUBLIC ${CUDNN_INCLUDE_DIRS})
-    target_link_libraries(n2d2_lib_cuda PUBLIC ${CUDNN_LIBRARY})
-
-    # Cublas
-    # Work-around due to a bug in CMake < 3.12.2
-    if(CUDA_VERSION VERSION_GREATER 9.1 AND CMAKE_VERSION VERSION_LESS 3.12.2)
-         list(REMOVE_ITEM CUDA_CUBLAS_LIBRARIES "CUDA_cublas_device_LIBRARY-NOTFOUND")
-    endif()
-
-    target_link_libraries(n2d2_lib_cuda PUBLIC ${CUDA_CUBLAS_LIBRARIES})
-
-    # OpenCV
-    find_package(OpenCV REQUIRED)
-    target_link_libraries(n2d2_lib_cuda PUBLIC ${OpenCV_LIBS})
-
-    # NVML
-    find_package(NVML)
-    if(NVML_FOUND)
-        message(STATUS "NVML Version : ${NVML_API_VERSION}")
-        target_include_directories(n2d2_lib_cuda SYSTEM PUBLIC ${NVML_INCLUDE_DIRS})
-        target_link_libraries(n2d2_lib_cuda PUBLIC ${NVML_LIBRARIES})
-        target_compile_definitions(n2d2_lib_cuda PUBLIC NVML=1)
+    # n2d2_lib_cuda target
+    if(${CMAKE_VERSION} VERSION_LESS "3.9.0")
+        # For CMake < 3.9.0, use our own provided FindCUDA.cmake
+        # in order to support "CUDA_LINK_LIBRARIES_KEYWORD"
+        find_package(CUDA)
     else()
-        message(STATUS "NVML package not found")
+        # For CMake >= 3.9.0, use the default FindCUDA provided by CMake
+        # => in this case, we need to prevent find_package() to use our own.
+        list(REMOVE_ITEM CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
+        find_package(CUDA)
+        list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
     endif()
 
-    target_compile_definitions(n2d2_lib_cuda PUBLIC CUDA=1)
-    target_link_libraries(n2d2_lib PUBLIC n2d2_lib_cuda)
+    if(CUDA_FOUND)
+        set(CUDA_LINK_LIBRARIES_KEYWORD PUBLIC)
+        find_package(CuDNN REQUIRED)
+
+        file(GLOB_RECURSE src_files_cuda "src/*.cu")
+        set_nvcc_flags()
+        cuda_include_directories("${CMAKE_CURRENT_LIST_DIR}/include/")
+        cuda_add_library(n2d2_lib_cuda STATIC ${src_files_cuda})
+
+        # CUDA
+        target_include_directories(n2d2_lib_cuda SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS})
+        target_link_libraries(n2d2_lib_cuda PUBLIC ${CUDA_LIBRARIES})
+
+        # CuDNN
+        target_include_directories(n2d2_lib_cuda SYSTEM PUBLIC ${CUDNN_INCLUDE_DIRS})
+        target_link_libraries(n2d2_lib_cuda PUBLIC ${CUDNN_LIBRARY})
+
+        # Cublas
+        # Work-around due to a bug in CMake < 3.12.2
+        if(CUDA_VERSION VERSION_GREATER 9.1 AND CMAKE_VERSION VERSION_LESS 3.12.2)
+            list(REMOVE_ITEM CUDA_CUBLAS_LIBRARIES "CUDA_cublas_device_LIBRARY-NOTFOUND")
+        endif()
+
+        target_link_libraries(n2d2_lib_cuda PUBLIC ${CUDA_CUBLAS_LIBRARIES})
+
+        # OpenCV
+        find_package(OpenCV REQUIRED)
+        target_link_libraries(n2d2_lib_cuda PUBLIC ${OpenCV_LIBS})
+
+        # NVML
+        find_package(NVML)
+        if(NVML_FOUND)
+            message(STATUS "NVML Version : ${NVML_API_VERSION}")
+            target_include_directories(n2d2_lib_cuda SYSTEM PUBLIC ${NVML_INCLUDE_DIRS})
+            target_link_libraries(n2d2_lib_cuda PUBLIC ${NVML_LIBRARIES})
+            target_compile_definitions(n2d2_lib_cuda PUBLIC NVML=1)
+        else()
+            message(STATUS "NVML package not found")
+        endif()
+
+        target_compile_definitions(n2d2_lib_cuda PUBLIC CUDA=1)
+        target_link_libraries(n2d2_lib PUBLIC n2d2_lib_cuda)
+    endif()
+
 endif()
 
 # The CMake is used directly and not through add_subdirectory
