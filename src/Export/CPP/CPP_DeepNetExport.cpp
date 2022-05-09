@@ -484,7 +484,7 @@ void N2D2::CPP_DeepNetExport::addBranchesCells(DeepNet& deepNet) {
                 throw std::runtime_error("Invalid cell.");
             }
 
-            auto parentsCells = cell->getParentsCells();
+            auto parentsCells = deepNet.getParentCells(cell->getName());
             if(parentsCells.size() > 1) {
                 if(std::string(cell->getType()) != ElemWiseCell::Type) {
                     auto reg = Registrar<CPP_ConcatCell>::create(getCellModelType(*cell));
@@ -1209,7 +1209,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateQATFile(
             std::string dataType = DeepNetExport::isCellOutputUnsigned(*cell)
                 ? "udata" : "data";
 
-            if (cell->getParentsCells().size() > 1) {
+            if (deepNet.getParentCells(cell->getName()).size() > 1) {
                 dataType = DeepNetExport::isCellInputsUnsigned(*cell)
                     ? "udata" : "data";
             }
