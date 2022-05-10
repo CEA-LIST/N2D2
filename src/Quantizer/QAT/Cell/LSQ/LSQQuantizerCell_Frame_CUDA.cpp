@@ -309,13 +309,18 @@ void LSQQuantizerCell_Frame_CUDA<T>::importFreeParameters(const std::string
                                      + alphasWFile);
     }
 
+    mStepSize.synchronizeDToH();
+    if(mStepSize.empty()){
+        mStepSize.resize({1, 1, 1, 1});
+    }
 
     T valueW;
     if (!(alphasW >> valueW))
         throw std::runtime_error( "Error while reading synaptic file: "
                         + alphasWFile);
 
-    mStepSize.resize(mStepSize.dims(), T(valueW));
+    mStepSize(0) = T(valueW);
+    setStepSizeValue(mStepSize(0));
     
     // Discard trailing whitespaces
     while (std::isspace(alphasW.peek()))
@@ -326,7 +331,6 @@ void LSQQuantizerCell_Frame_CUDA<T>::importFreeParameters(const std::string
                                  + alphasWFile);
 
     mStepSize.synchronizeHToD();
-
 }
 
 

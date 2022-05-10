@@ -107,7 +107,7 @@ void LSQQuantizerActivation_Frame_CUDA<float>::propagate(BaseTensor& baseInOut,
         input.synchronizeDToH();
         // Initialisation of the activation step size according to the LSQ paper
         // (https://arxiv.org/pdf/1902.08153.pdf)    
-        if(mSetOptInitStepSize){          
+        if(mSetOptInitStepSize){
             float initialValue = 2 * (float)input.mean(true) / sqrt(mBitRanges.second);
             setStepSizeValue(initialValue);
         }
@@ -117,11 +117,10 @@ void LSQQuantizerActivation_Frame_CUDA<float>::propagate(BaseTensor& baseInOut,
         input.synchronizeHToD();        // TODO: check if this line is really required
     }
 
-    if(!inference && mFullPrecisionActivations.empty()) {
+    if(mFullPrecisionActivations.empty()) {
         mFullPrecisionActivations.resize(baseInOut.dims());
         mFullPrecisionActivations.synchronizeHToD();
     }
-
 
     LSQQuantizer_Frame_CUDA_Kernels::cudaF_quantize_propagate(input.getDevicePtr(),
                                                                 mStepSize.getDevicePtr(),
@@ -252,7 +251,7 @@ void LSQQuantizerActivation_Frame_CUDA<T>::importParameters(const std::string& d
                                                             const std::string& cellName, 
                                                             bool ignoreNotExists)
 {
-    
+
     const std::string stepSizeFile = dirName + "/" 
                                     + cellName + "_QAct_LSQ_StepSize.syntxt";
 
@@ -269,7 +268,6 @@ void LSQQuantizerActivation_Frame_CUDA<T>::importParameters(const std::string& d
                                      + stepSizeFile);
     }
 
-    //Tensor<float> allAlphas(mAlphas.size());
     if(mStepSize.empty()) {
         mStepSize.resize({1, 1, 1, 1});
     }
