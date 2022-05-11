@@ -81,15 +81,14 @@ def _generate_export(deepnet_cell, provider=None, **kwargs):
 
     N2D2_option = _parse_export_parameters(**kwargs)
     N2D2_deepnet = deepnet_cell.get_embedded_deepnet().N2D2()
-    if N2D2_option.calibration == True:
+    if N2D2_option.calibration != 0:
         if "nb_bits" not in kwargs:
             kwargs["nb_bits"] = N2D2_option.nb_bits
         n2d2.quantizer.PTQ(deepnet_cell, provider=provider, **kwargs)
 
-    # TODO : Refactor for QAT export
-    if not deepnet_cell.get_embedded_deepnet().calibrated:
-        raise RuntimeError(f"You need to calibrate the network to export it in {N2D2_option.nb_bits} " \
-                            "set the 'calibration' option to 1 or calibrate the deepnetcell before export.")
+    if not deepnet_cell.is_integral() and N2D2_option.nb_bits > 0:
+        raise RuntimeError(f"You need to calibrate the network to export it in {abs(N2D2_option.nb_bits)} bits integer" \
+                            "set the 'calibration' option to something else than 0 or quantize the deepnetcell before export.")
     if not export_folder_name:
         export_folder_name = f"export_{N2D2_option.gen_export}_{'int' if N2D2_option.nb_bits > 0 else 'float'}{abs(N2D2_option.nb_bits)}"
 

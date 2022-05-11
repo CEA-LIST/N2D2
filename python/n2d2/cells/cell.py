@@ -116,6 +116,16 @@ class Block(Cell):
             return self.get_cell(item)
         raise n2d2.error_handler.WrongInputType("item", type(item), ["str"])
 
+    def is_integral(self):
+        """
+        Check if the parameters of every cell have an integral precision.
+        """
+        for cell in self._cells.values():
+            # mQuantizedNbBits is initialize to 0
+            if cell.N2D2().getQuantizedNbBits() <= 0:
+                return False
+        return True
+
     def get_cells(self):
         """
            Returns dictionary with all cells that are not Blocks (i.e. NeuralNetworkCells). This allows

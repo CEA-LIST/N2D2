@@ -25,6 +25,7 @@ from abc import ABC, abstractmethod
 
 def PTQ(deepnet_cell,
         nb_bits,
+        nb_sitmuli=-1,
         provider=None,
         no_unsigned=False,
         cross_layer_equalization=True,
@@ -35,6 +36,8 @@ def PTQ(deepnet_cell,
     """
     :param nb_bits: Number of bits per weight for exports (can be for example `-16` for float 16 bits or `8` int 8 bits)
     :type nb_bits: int
+    :param nb_sitmuli: The number of stimuli used for the calibration (``0`` = no calibration, ``-1`` = use the full test dataset), default=-1
+    :type nb_sitmuli: int, optional
     :param provider: Data provider to use for calibration, default=None
     :type provider: :py:class:`n2d2.provider.DataProvider`, optional
     :param no_unsigned: If True, disable the use of unsigned data type in integer calibration, default=False
@@ -48,8 +51,10 @@ def PTQ(deepnet_cell,
     """
     if "export_no_unsigned" in kwargs:
         no_unsigned = kwargs["export_no_unsigned"]
-    if deepnet_cell.get_embedded_deepnet().calibrated:
-        raise RuntimeError("This network have already been calibrated.")
+    if "export_no_cross_layer_equalization" in kwargs:
+        cross_layer_equalization = not kwargs["export_no_cross_layer_equalization"]
+    if "calibration" in kwargs:
+        nb_sitmuli=kwargs["calibration"]
     if act_clipping_mode not in N2D2.ClippingMode.__members__.keys():
         raise n2d2.error_handler.WrongValue("act_clipping_mode", act_clipping_mode, ", ".join(N2D2.ClippingMode.__members__.keys()))
     N2D2_act_clipping_mode = N2D2.ClippingMode.__members__[act_clipping_mode]
@@ -62,7 +67,7 @@ def PTQ(deepnet_cell,
     parameters = n2d2.n2d2_interface.Options(
         nb_bits=nb_bits,
         export_no_unsigned=no_unsigned,
-        calibration=True,
+        calibration=nb_sitmuli,
         qat_SAT=False,
         export_no_cross_layer_equalization=not cross_layer_equalization,
         wt_clipping_mode=N2D2_wt_clipping_mode,
@@ -96,7 +101,6 @@ def PTQ(deepnet_cell,
         N2D2_deepnet.exportNetworkFreeParameters("weights")
 
     N2D2.calibNetwork(parameters, N2D2_deepnet)
-    deepnet_cell.get_embedded_deepnet().calibrated = True
 
 class Quantizer(N2D2_Interface, ABC):
 

@@ -25,7 +25,7 @@ import N2D2
 import n2d2.global_variables
 import n2d2.cells.nn
 from n2d2.n2d2_interface import N2D2_Interface
-
+from n2d2.utils import generate_name
 """
 """
 class DeepNet(N2D2_Interface):
@@ -33,14 +33,12 @@ class DeepNet(N2D2_Interface):
     _convention_converter= n2d2.ConventionConverter({
         "name": "Name",
     })
-
-    calibrated=False
-    
+   
     def __init__(self, **config_parameters):
 
         N2D2_Interface.__init__(self, **config_parameters)
 
-        self._config_parameters['name'] = "DeepNet(id=" + str(id(self)) + ")"
+        self._config_parameters['name'] = generate_name(self)
 
         self._set_N2D2_object(N2D2.DeepNet(n2d2.global_variables.default_net))
         self._set_N2D2_parameters(self._config_parameters)
