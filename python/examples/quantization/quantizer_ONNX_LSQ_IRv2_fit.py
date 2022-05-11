@@ -1,7 +1,6 @@
 """
-    (C) Copyright 2021 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
-                    Johannes THIELE (johannes.thiele@cea.fr)
+    (C) Copyright 2022 CEA LIST. All Rights Reserved.
+    Contributor(s): Inna KUCHER (inna.kucher@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -20,9 +19,9 @@
 """
 
 """
-This file contain an example of the usage of the quantization.
-We want to quantize a ResNet-18 ONNX model with 1-bits weights and 4-bits activations using the SAT quantization method.
-Source to the ONNX file :  https://s3.amazonaws.com/onnx-model-zoo/resnet/resnet18v1/resnet18v1.onnx
+This file contains an example of the usage of the quantization.
+Objective: quantize an Inception-ResNetv2 ONNX model with 8-bits weights and 8-bits activations using the LSQ quantization method.
+Source to the ONNX file :  N2D2-Storage (repository to store ONNX models, incoming soon)
 """
 
 ### Import + global var ###
@@ -30,7 +29,7 @@ import n2d2
 from n2d2.quantizer import LSQCell, LSQAct
 import math 
 nb_epochs = 1
-batch_size = 128
+batch_size = 32
 n2d2.global_variables.cuda_device = 2
 n2d2.global_variables.default_model = "Frame_CUDA"
 import time
@@ -41,7 +40,7 @@ database = n2d2.database.ILSVRC2012(learn=1.0, random_partitioning=True)
 database.load("/data1/is156025/DATABASE/ILSVRC2012", label_path="/data1/is156025/DATABASE/ILSVRC2012/synsets.txt")
 print(database)
 print("Create provider")
-provider = n2d2.provider.DataProvider(database=database, size=[224, 224, 3], batch_size=batch_size)
+provider = n2d2.provider.DataProvider(database=database, size=[299, 299, 3], batch_size=batch_size)
 print(provider)
 
 ### Applying Transformations ###
@@ -49,10 +48,9 @@ print("Adding transformations")
 transformations =n2d2.transform.Composite([
     n2d2.transform.ColorSpace("RGB"),
     n2d2.transform.RangeAffine("Divides", 255.0),
-    n2d2.transform.Rescale(256, 256, keep_aspect_ratio=False, resize_to_fit=False), 
-    n2d2.transform.PadCrop(224, 224, apply_to="LearnOnly"),
-    n2d2.transform.SliceExtraction(224, 224, offset_x=16, offset_y=16, apply_to="NoLearn"),
-    n2d2.transform.RangeAffine("Minus", [0.485, 0.456, 0.406], second_operator="Divides", second_value=[0.229,0.224,0.225])
+    n2d2.transform.Rescale(333, 333, keep_aspect_ratio=True, resize_to_fit=False), 
+    n2d2.transform.PadCrop(299, 299),
+    n2d2.transform.RangeAffine("Minus", [0.5, 0.5, 0.5], second_operator="Divides", second_value=[0.5,0.5,0.5])
 ])
 
 print(transformations)
@@ -66,12 +64,10 @@ print(provider)
 
 ### Loading ONNX ###
 
-model = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "./resnet18v1.onnx")
-
+model = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "./inception_resnet_v2_imagenet.onnx")
 
 print("BEFORE MODIFICATION :")
 print(model)
-
 ### Updating DeepNet parameters ###
 
 print("Updating cells with LSQ quantizer for 8 bits ...")
@@ -80,6 +76,7 @@ lr = 0.001
 mom = 0.9
 decay = 0.00001
 max_iter = 1281167
+iter_size = 8
 metric = "Precision"
 q_range = 255
 
@@ -93,13 +90,15 @@ for cell in model:
                         learning_rate=lr,
                         momentum=mom,
                         decay=decay,
-                        max_iterations=max_iter
+                        max_iterations=max_iter,
+                        iteration_size = iter_size
         ))   
         cell.set_solver_parameter("learning_rate_policy", "CosineDecay")
         cell.set_solver_parameter("learning_rate", lr)
         cell.set_solver_parameter("momentum", mom)
         cell.set_solver_parameter("decay", decay)
         cell.set_solver_parameter("max_iterations", max_iter)
+        cell.set_solver_parameter("iteration_size", iter_size)
 
     ### Updating Fc Cells ###
     if isinstance(cell, n2d2.cells.Fc):
@@ -110,7 +109,8 @@ for cell in model:
                         learning_rate=lr,
                         momentum=mom,
                         decay=decay,
-                        max_iterations=max_iter
+                        max_iterations=max_iter,
+                        iteration_size = iter_size
         ))
 
         cell.set_solver_parameter("learning_rate_policy", "CosineDecay")
@@ -118,6 +118,7 @@ for cell in model:
         cell.set_solver_parameter("momentum", mom)
         cell.set_solver_parameter("decay", decay)
         cell.set_solver_parameter("max_iterations", max_iter)
+        cell.set_solver_parameter("iteration_size", iter_size)
 
     ### Updating BatchNorm Cells ###
     if isinstance(cell, n2d2.cells.BatchNorm2d):
@@ -126,6 +127,7 @@ for cell in model:
         cell.set_solver_parameter("momentum", mom)
         cell.set_solver_parameter("decay", decay)
         cell.set_solver_parameter("max_iterations", max_iter)
+        cell.set_solver_parameter("iteration_size", iter_size)
 
 print("Updating ReLu with LSQ quantizer for 8 bits ...")
 
@@ -140,7 +142,8 @@ for cell in model:
                         learning_rate=lr,
                         momentum=mom,
                         decay=decay,
-                        max_iterations=max_iter
+                        max_iterations=max_iter,
+                        iteration_size = iter_size
         )))
 
 print("AFTER MODIFICATION :")
