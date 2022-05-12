@@ -42,6 +42,7 @@
 #include "Cell/Cell.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Cell/ElemWiseCell.hpp"
+#include "Cell/ActivationCell.hpp"
 #include "Cell/PaddingCell.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/ConvCell.hpp"
@@ -797,7 +798,7 @@ double N2D2::DeepNetQuantization::getActivationQuantizationScaling(const Cell& c
     const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
     const std::shared_ptr<Activation>& activation = cellFrame.getActivation();
 
-    if(!activation || cell.getType() == ElemWiseCell::Type) {
+    if(!activation || cell.getType() == ElemWiseCell::Type || cell.getType() == ActivationCell::Type) {
         return 1.0;
     }
 

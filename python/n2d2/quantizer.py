@@ -19,9 +19,59 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 import N2D2
-from n2d2.n2d2_interface import N2D2_Interface
-import n2d2.global_variables
+import n2d2
+
 from abc import ABC, abstractmethod
+
+from n2d2 import ConventionConverter
+from n2d2.cells.cell import Trainable
+from n2d2.n2d2_interface import N2D2_Interface
+
+import n2d2.global_variables as gb
+
+cuda_compiled = gb.cuda_compiled
+
+
+# def fuse_qat(deep_net, provider, act_scaling_mode, w_mode="NONE", b_mode="NONE", c_mode="NONE"):
+#     """This method allow you to fuse BatchNorm parameters into Conv layers once you have trained your model.
+    
+#     :param deep_net: DeepNet to fuse.
+#     :type deep_net: :py:class:`n2d2.DeepNet`
+#     :param provider: Data provider used
+#     :type provider: :py:class:`n2d2.Provider`
+#     :param act_scaling_mode: Scaling mode for activation can be ``NONE``, ``FLOAT_MULT``, ``FIXED_MULT16``, ``FIXED_MULT32``, ``SINGLE_SHIFT``, ``DOUBLE_SHIFT`` 
+#     :type act_scaling_mode: str
+#     :param w_mode: Can be ``NONE`` or ``RINTF``, default="NONE"
+#     :type w_mode: str, optional
+#     :param b_mode: Can be ``NONE`` or ``RINTF``, default="NONE"
+#     :type b_mode: str, optional
+#     :param c_mode: Can be ``NONE`` or ``RINTF``, default="NONE"
+#     :type c_mode: str, optional
+#     """
+#     # Type check
+#     if not isinstance(deep_net, n2d2.deepnet.DeepNet):
+#         raise n2d2.error_handler.WrongInputType("deep_net", type(deep_net), ["n2d2.deepnet.DeepNet"])
+#     if not isinstance(provider, n2d2.provider.Provider):
+#         raise n2d2.error_handler.WrongInputType("provider", type(provider), ["n2d2.provider.Provider"])
+#     if not isinstance(act_scaling_mode, str):
+#         raise n2d2.error_handler.WrongInputType("act_scaling_mode", type(act_scaling_mode), ["str"])
+#     if not isinstance(w_mode, str):
+#         raise n2d2.error_handler.WrongInputType("w_mode", type(w_mode), ["str"])
+#     if not isinstance(b_mode, str):
+#         raise n2d2.error_handler.WrongInputType("b_mode", type(b_mode), ["str"])
+#     if not isinstance(c_mode, str):
+#         raise n2d2.error_handler.WrongInputType("c_mode", type(c_mode), ["str"])
+
+#     deep_net_qat = N2D2.DeepNetQAT(deep_net.N2D2())
+#     deep_net_qat.fuseQATGraph(
+#         provider.N2D2(),
+#         N2D2.ScalingMode.__members__[act_scaling_mode],
+#         N2D2.WeightsApprox.__members__[w_mode],
+#         N2D2.WeightsApprox.__members__[b_mode],
+#         N2D2.WeightsApprox.__members__[c_mode]
+#     )
+#     return deep_net_qat
+
 
 def PTQ(deepnet_cell,
         nb_bits,
@@ -102,6 +152,7 @@ def PTQ(deepnet_cell,
 
     N2D2.calibNetwork(parameters, N2D2_deepnet)
 
+
 class Quantizer(N2D2_Interface, ABC):
 
     @abstractmethod
@@ -167,4 +218,277 @@ class ActivationQuantizer(Quantizer, ABC):
     @abstractmethod
     def __init__(self, **config_parameters):
         Quantizer.__init__(self, **config_parameters)
+
+# class SATCell(CellQuantizer):
+#     """
+#     Scale Adjust Training (SAT) weight quantizer.
+#     """
+#     _quantizer_generators = {
+#         'Frame<float>': N2D2.SATQuantizerCell_Frame_float,
+#     }
+#     if cuda_compiled:
+#         _quantizer_generators.update({
+#             'Frame_CUDA<float>': N2D2.SATQuantizerCell_Frame_CUDA_float
+#         })
+#     _convention_converter = ConventionConverter({
+#         "apply_scaling": "ApplyScaling",
+#         "apply_quantization": "ApplyQuantization",
+#         "quant_mode": "QuantMode",
+#         "range": "Range",
+#     })
+#     def __init__(self, **config_parameters):
+#         """
+#         :param range: Range of Quantization, can be ``1`` for binary, ``255`` for 8-bits etc.., default=255
+#         :type range: int, optional
+#         :param quant_mode: Type of quantization Mode, can be ``Default`` or ``Integer``, default=``Default``
+#         :type quant_mode: string, optional
+#         :param apply_quantization: Use ``True`` to enable quantization, if ``False`` parameters will be clamped between [-1.0,1.0], default=``True``
+#         :type apply_quantization: bool, optional
+#         :param apply_scaling: Use true to scale the parameters as described in the SAT paper, default=``False``
+#         :type apply_scaling: bool, optional
+#         """
+#         CellQuantizer.__init__(self, **config_parameters)
+#         if "quant_mode" in config_parameters:
+#             print(", ".join(self._quantizer_generators[self._model_key].QuantMode.__members__.keys()))
+#             quant_mode = config_parameters["quant_mode"]
+#             if quant_mode not in self._quantizer_generators[self._model_key].QuantMode.__members__.keys():
+#                 raise n2d2.error_handler.WrongValue("quant_mode", quant_mode,
+#                         ", ".join(self._quantizer_generators[self._model_key].QuantMode.__members__.keys()))
+
+#         # No optional constructor arguments
+#         self._set_N2D2_object(self._quantizer_generators[self._model_key]())
+#         self._set_N2D2_parameters(self._config_parameters)
+#         self.load_N2D2_parameters(self.N2D2())
+
+    
+#     def get_quantized_weights(self, input_idx):
+#         """
+#         Access the quantized weights of the cell the quantizer is attached to.
+#         """
+#         return n2d2.Tensor.from_N2D2(self.N2D2().getQuantizedWeights(input_idx))
+
+    
+#     def get_quantized_biases(self):
+#         """
+#         Access the quantized weights of the cell the quantizer is attached to.
+#         """
+#         return n2d2.Tensor.from_N2D2(self.N2D2().getQuantizedBiases())
+
+#     def set_scaling(self, status):
+#         """
+#         :arg status: Status
+#         :param status: boolean
+#         """
+#         if not isinstance(status, bool):
+#             raise n2d2.error_handler("status", type(status) ["bool"])
+#         self.N2D2().setScaling(status)
+
+#     def set_quantization(self, status):
+#         """
+#         :arg status: Status
+#         :param status: boolean
+#         """
+#         if not isinstance(status, bool):
+#             raise n2d2.error_handler("status", type(status) ["bool"])
+#         self.N2D2().setQuantization(status)
+
+
+class LSQCell(CellQuantizer): # TODO : trainable ?
+    """
+    Learned Step size Quantization (LSQ) weight quantizer.
+    """
+    _quantizer_generators = {
+    }
+    if cuda_compiled:
+        _quantizer_generators.update({
+            'Frame_CUDA<float>': N2D2.LSQQuantizerCell_Frame_CUDA_float
+        })
+    _convention_converter = ConventionConverter({
+        "range": "Range",
+        "solver": "Solver",
+        "set_opt_init_step_size":"SetOptInitStepSize",
+        "step_size":"StepSize",
+        "quant_mode": "QuantMode", # To remove later we never use it but we get it from inheritance of QuantizerCell
+    })
+    def __init__(self, **config_parameters):
+        """
+        :param range: Range of Quantization, can be ``1`` for binary, ``255`` for 8-bits etc.., default=255
+        :type range: int, optional
+        :param solver: Type of the Solver for learnable quantization parameters, default= :py:class:`n2d2.solver.SGD`
+        :type solver: :py:class:`n2d2.solver.Solver`, optional
+        """
+        CellQuantizer.__init__(self, **config_parameters)
+        self._N2D2_object = self._quantizer_generators[self._model_key]()
+
+        """Set and initialize here all complex cells members"""
+        for key, value in self._config_parameters.items():
+            if key is 'solver':
+                if isinstance(value, n2d2.solver.Solver):
+                    self._N2D2_object.setSolver(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("solver", str(type(value)),
+                                                            [str(n2d2.solver.Solver)])
+            else:
+                self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+        # No optional constructor arguments
+        
+        self.load_N2D2_parameters(self.N2D2())
+
+    def set_solver(self, solver):
+        self._config_parameters['solver'] = solver
+        self._N2D2_object.setSolver(self._config_parameters['solver'].N2D2())
+
+    def get_solver(self):
+        return self._config_parameters['solver']
+
+    def __setattr__(self, key: str, value) -> None:
+        if key is 'solver':
+            self.set_solver(value)
+        else:
+            return super().__setattr__(key, value)
+
+
+# class SATAct(ActivationQuantizer, Trainable):
+#     """
+#     Scale Adjust Training (SAT) activation quantizer.
+#     """
+#     _quantizer_generators = {
+#         'Frame<float>': N2D2.SATQuantizerActivation_Frame_float,
+#     }
+#     if cuda_compiled:
+#         _quantizer_generators.update({
+#             'Frame_CUDA<float>': N2D2.SATQuantizerActivation_Frame_CUDA_float
+#         })
+#     _convention_converter = ConventionConverter({
+#         "range": "Range",
+#         "alpha": "Alpha",
+#         "desc_rule": "DescRule",
+#         "end_rand_IT": "EndRandIT",
+#         "rand_range": "RandRange",
+#         "start_rand_IT": "StartRandIT"
+#     })
+        
+#     def __init__(self, **config_parameters):
+#         """
+#         :param range: Range of Quantization, can be ``1`` for binary, ``255`` for 8-bits etc.., default=255
+#         :type range: int, optional
+#         :param solver: Type of the Solver for learnable quantization parameters, default= :py:class:`n2d2.solver.SGD`
+#         :type solver: :py:class:`n2d2.solver.Solver`, optional
+#         :param alpha: Initial value of the learnable alpha parameter, default=8.0
+#         :type alpha: float, optional
+#         """
+#         ActivationQuantizer.__init__(self, **config_parameters)
+
+#         # No optional constructor arguments
+#         self._N2D2_object = self._quantizer_generators[self._model_key]()
+
+#         """Set and initialize here all complex cells members"""
+#         for key, value in self._config_parameters.items():
+#             if key is 'solver':
+#                 if isinstance(value, n2d2.solver.Solver):
+#                     self._N2D2_object.setSolver(value.N2D2())
+#                 else:
+#                     raise n2d2.error_handler.WrongInputType("solver", str(type(value)),
+#                                                             [str(n2d2.solver.Solver)])
+#             else:
+#                 self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+#         self.load_N2D2_parameters(self.N2D2())
+
+#     @classmethod
+#     def _get_N2D2_complex_parameters(cls, N2D2_object):
+#         parameters = {}
+#         parameters['solver'] = \
+#             n2d2.converter.from_N2D2_object(N2D2_object.getSolver())
+#         return parameters
+
+#     def __setattr__(self, key: str, value) -> None:
+#         if key is 'filler':
+#             self.set_filler(value)
+#         elif key is 'solver':
+#             self.set_solver(value)
+#         else:
+#             return super().__setattr__(key, value)
+
+#     def set_solver(self, solver):
+#         self._config_parameters['solver'] = solver
+#         self._N2D2_object.setSolver(self._config_parameters['solver'].N2D2())
+
+#     def get_solver(self):
+#         return self._config_parameters['solver']
+    
+#     def set_filler(self, filler, refill=False):
+#         # This method override the virtual one in Trainable
+#         raise RuntimeError("Quantizer does not support Filler")
+
+#     def get_filler(self):
+#         # This method override the virtual one in Trainable
+#         raise RuntimeError("Quantizer does not support Filler")
+
+#     def has_bias(self):
+#         # This method override the virtual one in Trainable
+#         raise RuntimeError("Quantizer does not have a 'bias'")
+    
+#     def has_quantizer(self):
+#         # This method override the virtual one in Trainable
+#         raise RuntimeError("Quantizer does not have a 'quantizer'")
+
+#     """
+#     Access the full precision activations of the activation function.
+#     Note: This may be empty for some Quantizers if they are run exclusively in inference mode
+#     """
+#     def get_full_precision_activations(self):
+#         return n2d2.Tensor.from_N2D2(self.N2D2().getFullPrecisionActivations())
+
+class LSQAct(ActivationQuantizer): # TODO : trainable ?
+    """
+    Learned Step size Quantization (LSQ) activation quantizer.
+    """
+    _quantizer_generators = {
+    }
+    if cuda_compiled:
+        _quantizer_generators.update({
+            'Frame_CUDA<float>': N2D2.LSQQuantizerActivation_Frame_CUDA_float
+        })
+    _convention_converter = ConventionConverter({
+        "range": "Range",
+        "solver": "Solver",
+        "set_opt_init_step_size":"SetOptInitStepSize",
+        "step_size":"StepSize",
+        "quant_mode": "QuantMode", # To remove later we never use it but we get it from inheritance of QuantizerCell
+    })
+    def __init__(self, **config_parameters):
+        """
+        :param range: Range of Quantization, can be ``1`` for binary, ``255`` for 8-bits etc.., default=255
+        :type range: int, optional
+        :param solver: Type of the Solver for learnable quantization parameters, default= :py:class:`n2d2.solver.SGD`
+        :type solver: :py:class:`n2d2.solver.Solver`, optional
+        """
+        ActivationQuantizer.__init__(self, **config_parameters)
+        self._N2D2_object = self._quantizer_generators[self._model_key]()
+
+        """Set and initialize here all complex cells members"""
+        for key, value in self._config_parameters.items():
+            if key is 'solver':
+                if isinstance(value, n2d2.solver.Solver):
+                    self._N2D2_object.setSolver(value.N2D2())
+                else:
+                    raise n2d2.error_handler.WrongInputType("solver", str(type(value)),
+                                                            [str(n2d2.solver.Solver)])
+            else:
+                self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
+        # No optional constructor arguments
+        self.load_N2D2_parameters(self.N2D2())
+
+    def set_solver(self, solver):
+        self._config_parameters['solver'] = solver
+        self._N2D2_object.setSolver(self._config_parameters['solver'].N2D2())
+
+    def get_solver(self):
+        return self._config_parameters['solver']
+
+    def __setattr__(self, key: str, value) -> None:
+        if key is 'solver':
+            self.set_solver(value)
+        else:
+            return super().__setattr__(key, value)
 

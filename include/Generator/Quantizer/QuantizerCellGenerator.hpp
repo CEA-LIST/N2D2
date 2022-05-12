@@ -22,7 +22,7 @@
 #ifndef N2D2_QUANTIZERCELLGENERATOR_H
 #define N2D2_QUANTIZERCELLGENERATOR_H
 
-#include "Quantizer/Cell/QuantizerCell.hpp"
+#include "Quantizer/QAT/Cell/QuantizerCell.hpp"
 #include "Generator/SolverGenerator.hpp"
 #include "utils/IniParser.hpp"
 #include "utils/Registrar.hpp"

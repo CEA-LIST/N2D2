@@ -10,7 +10,7 @@
 */
 
 
-#include "Quantizer/Cell/QuantizerCell.hpp"
+#include "Quantizer/QAT/Cell/QuantizerCell.hpp"
 #include "containers/Tensor.hpp"
 
 #include <pybind11/pybind11.h>

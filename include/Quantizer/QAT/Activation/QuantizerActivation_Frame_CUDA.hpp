@@ -12,7 +12,7 @@
 #define N2D2_QUANTIZERACTIVATION_FRAME_CUDA_H
 #include "containers/CudaTensor.hpp"
 #include "controler/CudaInterface.hpp"
-#include "Quantizer/Activation/QuantizerActivation.hpp"
+#include "Quantizer/QAT/Activation/QuantizerActivation.hpp"
 
 namespace N2D2 {
 

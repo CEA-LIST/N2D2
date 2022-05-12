@@ -20,7 +20,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 */
 
-#include "Generator/QuantizerActivationGenerator.hpp"
+#include "Generator/Quantizer/QuantizerActivationGenerator.hpp"
 
 std::shared_ptr<N2D2::QuantizerActivation>
 N2D2::QuantizerActivationGenerator::generate(IniParser& iniConfig,

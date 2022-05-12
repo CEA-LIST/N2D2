@@ -13,7 +13,7 @@
 
 #include "containers/CudaTensor.hpp"
 #include "controler/CudaInterface.hpp"
-#include "Quantizer/Cell/QuantizerCell.hpp"
+#include "Quantizer/QAT/Cell/QuantizerCell.hpp"
 
 namespace N2D2 {
 

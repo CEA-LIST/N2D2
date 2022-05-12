@@ -13,7 +13,7 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-#include "Quantizer/Activation/QuantizerActivation.hpp"
+#include "Quantizer/QAT/Activation/QuantizerActivation.hpp"
 #include "containers/Tensor.hpp"
 
 namespace N2D2 {

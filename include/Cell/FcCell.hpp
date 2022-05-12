@@ -26,7 +26,7 @@
 
 #include "Cell.hpp"
 #include "utils/Registrar.hpp"
-#include "Quantizer/Cell/QuantizerCell.hpp"
+#include "Quantizer/QAT/Cell/QuantizerCell.hpp"
 #include "controler/Interface.hpp"
 
 

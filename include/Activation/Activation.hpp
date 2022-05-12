@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "Scaling.hpp"
-#include "Quantizer/Activation/QuantizerActivation.hpp"
+#include "Quantizer/QAT/Activation/QuantizerActivation.hpp"
 #include "utils/Parameterizable.hpp"
 
 namespace N2D2 {

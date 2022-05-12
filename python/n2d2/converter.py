@@ -53,6 +53,12 @@ object_dict = {
     "Activation": n2d2.cells.Activation,
     "Transformation": n2d2.cells.Transformation,
     "Scaling": n2d2.cells.Scaling,
+
+    # "SATCell": n2d2.quantizer.SATCell,
+    # "SATActivation": n2d2.quantizer.SATAct,
+    "LSQCell": n2d2.quantizer.LSQCell,
+    "LSQActivation": n2d2.quantizer.LSQAct,
+
 }
 
 
@@ -71,6 +77,13 @@ def from_N2D2_object(N2D2_object, **kwargs):
                 object_type = "SATCell"
             else:
                 object_type = "SATActivation"
+
+        if object_type == "LSQ":
+            if "Cell" in str(N2D2_object):
+                object_type = "LSQCell"
+            else:
+                object_type = "LSQActivation"
+
         if object_type not in object_dict:
             print(object_type)
             raise RuntimeError(f"The object {type(N2D2_object)} has not been integrated to the Python API yet." \
