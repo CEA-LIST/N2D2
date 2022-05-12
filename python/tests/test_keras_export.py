@@ -80,7 +80,8 @@ class test_keras_export(unittest.TestCase):
             n2d2_net_test.get_deepnet_cell(),
             provider=provider,
             nb_bits=8,
-            calibration=1)
+            calibration=1,
+            export_nb_stimuli_max=0)
         export_generated = exists("./export_CPP_int8")
         self.assertTrue(export_generated)
         if not export_generated:
@@ -114,7 +115,8 @@ class test_keras_export(unittest.TestCase):
             deepnet_cell,
             provider=provider,
             nb_bits=8,
-            calibration=1)
+            calibration=1,
+            export_nb_stimuli_max=0)
         export_generated = exists("./export_CPP_int8")
 
         self.assertTrue(export_generated)
@@ -154,6 +156,7 @@ class test_keras_export(unittest.TestCase):
             nb_bits=8,
             calibration=1,
             export_no_unsigned=True,
+            export_nb_stimuli_max=0
             )
         export_generated = exists("./export_CPP_int8")
 
@@ -191,7 +194,8 @@ class test_keras_export(unittest.TestCase):
             deepnet_cell,
             provider=provider,
             nb_bits=8,
-            calibration=1)
+            calibration=1,
+            export_nb_stimuli_max=0)
         export_generated = exists("./export_CPP_int8")
 
         self.assertTrue(export_generated)

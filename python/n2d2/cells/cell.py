@@ -122,7 +122,7 @@ class Block(Cell):
         """
         for cell in self._cells.values():
             # mQuantizedNbBits is initialize to 0
-            if cell.N2D2().getQuantizedNbBits() <= 0:
+            if "quantizer" in cell._parameters.keys() and cell.N2D2().getQuantizedNbBits() <= 0:
                 return False
         return True
 
