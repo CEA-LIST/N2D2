@@ -304,3 +304,23 @@ N2D2::Quantizer_Frame_CUDA_Kernels::cudaH_MinMax(half_float::half* data,
     return std::make_pair(reinterpret_cast<const half_float::half&>(minVal),
                           reinterpret_cast<const half_float::half&>(maxVal));
 }
+
+std::pair<float, float> 
+N2D2::Quantizer_Frame_CUDA_Kernels::cudaF_MinMax(float* data, 
+                                                 unsigned int size)
+{
+    thrust::pair<thrust::device_ptr<float>, thrust::device_ptr<float>> 
+            minMaxPair = thrust::minmax_element(data, data+size);
+
+    return std::make_pair(*minMaxPair.first, *minMaxPair.second);
+}
+
+std::pair<double, double> 
+N2D2::Quantizer_Frame_CUDA_Kernels::cudaD_MinMax(double* data, 
+                                                 unsigned int size)
+{
+    thrust::pair<thrust::device_ptr<float>, thrust::device_ptr<float>> 
+            minMaxPair = thrust::minmax_element(data, data+size);
+            
+    return std::make_pair(*minMaxPair.first, *minMaxPair.second);
+}

@@ -166,6 +166,30 @@ void cudaD_copyData(double* input,
 std::pair<half_float::half, half_float::half> cudaH_MinMax(half_float::half* data,
                                                            unsigned int size);
 
+/**
+ * @brief   CUDA Kernel to find the smallest and largest elements in @p data
+ *          (float version)
+ * 
+ * @param[in]   data    Pointer to the data vector
+ * @param[in]   size    Number of elements in data
+ * @returns             A pair of values (minVal, maxVal) where minVal is the 
+ *                      smallest element and maxVal is the largest element
+ */
+std::pair<float, float> cudaF_MinMax(float* data,
+                                     unsigned int size);
+
+/**
+ * @brief   CUDA Kernel to find the smallest and largest elements in @p data
+ *          (double version)
+ * 
+ * @param[in]   data    Pointer to the data vector
+ * @param[in]   size    Number of elements in data
+ * @returns             A pair of values (minVal, maxVal) where minVal is the 
+ *                      smallest element and maxVal is the largest element
+ */
+std::pair<double, double> cudaD_MinMax(double* data,
+                                       unsigned int size);
+
 }
 
 }
