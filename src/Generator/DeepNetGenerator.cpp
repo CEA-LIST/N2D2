@@ -1476,6 +1476,8 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         }
         //Compress
         else if (node.op_type() == "Concat") {
+            //IK: create concat cell, represented by activation cell with linear activation
+            /*
             bool newInsert;
             std::map<std::string, std::vector<std::string> >::iterator it;
             std::tie(it, newInsert) = concat.insert(
@@ -1487,6 +1489,37 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 (*it).second.push_back(input);
             }
 
+            continue;
+            */
+
+            unsigned int nbOutputs = 0;
+            for (int i = 0; i < node.input_size(); ++i) {
+                const std::string input = redirectName(node.input(i));
+                std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
+                nbOutputs += inputCell->getNbOutputs();
+            }
+
+            std::shared_ptr<Activation> activation
+                = Registrar<LinearActivation>::create<Float_T>(model)();
+
+            std::shared_ptr<ActivationCell> activationCell
+                = Registrar<ActivationCell>::create<Float_T>(model)(*deepNet,
+                                                                    node.output(0),
+                                                                    nbOutputs,
+                                                                    activation);
+
+            std::vector<std::shared_ptr<Cell> > parentCells;
+            for (int i = 0; i < node.input_size(); ++i) {
+                const std::string input = redirectName(node.input(i));
+                std::shared_ptr<Cell> inputCell = deepNet->getCell(input);
+                parentCells.push_back(inputCell);
+
+                activationCell->addInput(inputCell.get());
+            }
+
+            deepNet->addCell(activationCell, parentCells);
+            activationCell->initialize();
+            cell = activationCell;
             continue;
         }
         //ConcatFromSequence
@@ -3389,6 +3422,12 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     std::shared_ptr<Cell> opCell;
                     std::shared_ptr<Transformation> trans;
 
+                    std::vector<Float_T> weights;
+                    std::vector<Float_T> shifts;
+                    const ElemWiseCell::Operation operation = ElemWiseCell::Sum;
+
+                    //IRv2 - replace scaling cell by ElWise to be able to train
+                    /*
                     if (node.op_type() == "Mul"
                         && (constant.size() == 1
                             || constant.size() == nbOutputs))
@@ -3410,33 +3449,38 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                                 << std::endl;
                         }
                     }
-                    else if (constant.size() == 1) {
-                        const RangeAffineTransformation::Operator op
-                            = (node.op_type() == "Sub")
-                                ? RangeAffineTransformation::Minus
-                            : (node.op_type() == "Div")
-                                ? RangeAffineTransformation::Divides
-                                : RangeAffineTransformation::Plus;
-
-                        trans = std::make_shared<RangeAffineTransformation>(
-                            op,
-                            std::vector<double>(1, constant(0)));
+                    */
+                    if (constant.size() == 1) {
+                        if(node.op_type() == "Add"){
+                            std::cout << "Add operation" << std::endl;
+                            shifts.push_back(constant(0));
+                            weights.push_back(1);
+                        }
+                        else if(node.op_type() == "Div"){
+                            std::cout << "Div operation" << std::endl;
+                            shifts.push_back(0);
+                            weights.push_back(1./constant(0));
+                        }
+                        else if(node.op_type() == "Mul"){
+                            std::cout << "Mul operation" << std::endl;
+                            shifts.push_back(0);
+                            weights.push_back(constant(0));
+                        }
+                    }
+                    else if (constant.size() == nbOutputs){
+                        if(node.op_type() == "Add"){
+                            std::cout << "Add operation, constant.size() == nbOutputs" << std::endl;
+                            for (unsigned int output = 0;
+                                    output < nbOutputs; ++output)
+                            {
+                                shifts.push_back(constant.at(output));
+                                weights.push_back(1);
+                                std::cout << "out = " << output << " , shift = " << constant.at(output) << std::endl;
+                            }
+                        }
                     }
                     else {
-                        // May fail because AffineTransformation does not
-                        // support multidirectional broadcasting
-                        const AffineTransformation::Operator op
-                            = (node.op_type() == "Sub")
-                                ? AffineTransformation::Minus
-                            : (node.op_type() == "Mul")
-                                ? AffineTransformation::Multiplies
-                            : (node.op_type() == "Div")
-                                ? AffineTransformation::Divides
-                                : AffineTransformation::Plus;
-
-                        trans = std::make_shared<AffineTransformation>(
-                            op,
-                            (cv::Mat)constant);
+                        throw std::runtime_error("Unsupported constant size! Not 1 and not nbOutputs! ");
                     }
 
                     std::map<std::string, std::vector<std::string> >
@@ -3444,10 +3488,20 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     std::vector<std::shared_ptr<Cell> > parentCells;
 
                     if (!opCell) {
-                        opCell = Registrar<TransformationCell>::create(model)(*deepNet, 
-                                                                            node.output(0),
-                                                                            nbOutputs,
-                                                                            trans);
+                        const ElemWiseCell::CoeffMode coeffMode = ElemWiseCell::PerLayer;
+
+                        std::shared_ptr<Activation> activation
+                                = std::shared_ptr<Activation>();
+
+                        opCell = Registrar<ElemWiseCell>::create(model)(deepNet->getNetwork(),
+                                                            *deepNet,
+                                                            node.output(0),
+                                                            nbOutputs,
+                                                            operation,
+                                                            coeffMode,
+                                                            weights,
+                                                            shifts,
+                                                            activation);
                     }
 
                     if ((itConcat = concat.find(inputData)) != concat.end()) {

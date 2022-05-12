@@ -22,7 +22,7 @@
 #ifndef N2D2_QUANTIZERACTIVATIONGENERATOR_H
 #define N2D2_QUANTIZERACTIVATIONGENERATOR_H
 
-#include "Quantizer/Activation/QuantizerActivation.hpp"
+#include "Quantizer/QAT/Activation/QuantizerActivation.hpp"
 #include "Generator/SolverGenerator.hpp"
 #include "utils/IniParser.hpp"
 #include "utils/Registrar.hpp"
