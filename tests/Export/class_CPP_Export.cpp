@@ -69,6 +69,7 @@ TEST(CPP_Export, generateMemory) {
     UnitTest::FileWriteContent("net_test.ini", data);
 
     Network net(SEED,false);
+    CellExport::mPrecision = static_cast<CellExport::Precision>(8);
     std::shared_ptr<DeepNet> deepNet
         = DeepNetGenerator::generate(net, "net_test.ini");
 
@@ -185,6 +186,7 @@ TEST_DATASET(CPP_Export,
     UnitTest::FileWriteContent("net_test.ini", data);
 
     Network net(SEED,false);
+    CellExport::mPrecision = static_cast<CellExport::Precision>(8);
     std::shared_ptr<DeepNet> deepNet
         = DeepNetGenerator::generate(net, "net_test.ini");
 
@@ -375,6 +377,8 @@ TEST_DATASET(CPP_Export,
              std::make_tuple(true, MemoryManager::OptimizeMaxHoleMaxLifetimeFirst, 112*112*64 + 112*64*2))
 {
     Network net(SEED,false);
+    CellExport::mPrecision = static_cast<CellExport::Precision>(8);
+
     std::shared_ptr<DeepNet> deepNet
         = DeepNetGenerator::generate(net, "tests_data/ResNet-18.ini");
 
