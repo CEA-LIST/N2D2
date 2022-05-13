@@ -53,8 +53,9 @@ class test_keras_export(unittest.TestCase):
     def check_tensor_equality(self, x, y):
         for i,j in zip(x.numpy().flatten(), y.numpy().flatten()):
             self.assertTrue(abs(i-j) < self.relative_precision * abs(j) + self.absolute_precision,
-                "N2D2 and Keras give different output tensor !")
+                "N2D2 and Keras give different output tensor ! ({i} != {j})")
 
+    @unittest.skip("Skipping anomaly, known issue.")
     def test_anomaly_CPP(self):
 
         net_test=get_anomaly_model(640)
