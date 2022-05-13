@@ -19,6 +19,14 @@ Cells are organize with the following logic :
 .. figure:: ../_static/n2d2_cell_diagram.png
    :alt: Cell class diagram
 
+Block
+~~~~~
+
+.. autoclass:: n2d2.cells.Block
+        :members:
+        :inherited-members:
+
+
 Sequence
 ~~~~~~~~
 

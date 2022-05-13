@@ -275,7 +275,7 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
 
     spec = [tf.TensorSpec(inputs_shape, tf.float32, name=input_name) for input_name in input_names]
 
-    with ContextNoBatchNormFuse() as ctx:    
+    with ContextNoBatchNormFuse() as ctx:
         tf2onnx.convert.from_keras(
             tf_model,
             input_signature=spec,
@@ -289,6 +289,10 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
     # model_simp, check = simplify(onnx_model)
     # assert check, "Simplified ONNX model could not be validated"
     # onnx.save(model_simp, model_name + ".onnx")
+
+    if n2d2.global_variables.cuda_compiled:
+        # Making sure Keras did not changed the device !
+        n2d2.global_variables.cuda_device = n2d2.global_variables.cuda_device
 
     database = n2d2.database.Database()
 

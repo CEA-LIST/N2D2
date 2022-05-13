@@ -63,11 +63,18 @@ class Provider(N2D2_Interface,ABC):
     def get_size(self):
         return self._N2D2_object.getSize()
 
+    def get_batch_size(self):
+        """
+        :returns: Batch size
+        :rtype: int
+        """
+        return self._N2D2_object.getBatchSize()
+
     def dims(self):
-        return self._N2D2_object.getData().dims()
+        return self.get_size() + [self.get_batch_size()]
 
     def shape(self):
-        return [i for i in reversed(self._N2D2_object.getData().dims())]
+        return list(reversed(self.dims()))
 
     def get_name(self):
         """
@@ -161,12 +168,6 @@ class DataProvider(Provider):
         """
         return n2d2.Tensor.from_N2D2(self._N2D2_object.getLabelsData())
 
-    def get_batch_size(self):
-        """
-        :returns: Batch size
-        :rtype: int
-        """
-        return self._N2D2_object.getBatchSize()
 
     def get_database(self):
         """

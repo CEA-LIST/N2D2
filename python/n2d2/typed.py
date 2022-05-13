@@ -35,7 +35,7 @@ class Modeltyped(ABC):
     @abstractmethod
     def __init__(self, **config_parameters):
         """
-        :param model: Specify the kind of object to run, can be `Frame` or `Frame_CUDA`, default=n2d2.global_variables.default_model
+        :param model: Specify the kind of object to run, can be ``Frame`` or ``Frame_CUDA``, default=n2d2.global_variables.default_model
         :type model: str, optional
         """
         if 'model' in config_parameters:
@@ -56,12 +56,6 @@ class ModelDatatyped(Datatyped, Modeltyped, ABC):
 
     @abstractmethod
     def __init__(self, **config_parameters):
-        """
-        :param datatype: Datatype used by the object, can only be ``float`` at the moment, default=n2d2.global_variables.default_datatype
-        :type datatype: str, optional
-        :param model: Specify the kind of object to run, can be `Frame` or `Frame_CUDA`, default=n2d2.global_variables.default_model
-        :type model: str, optional
-        """
         Datatyped.__init__(self, **config_parameters)
         datatype = self._model_key
         Modeltyped.__init__(self, **config_parameters)

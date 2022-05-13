@@ -74,3 +74,15 @@ Example
         nb_bits=8,
         export_nb_stimuli_max=-1,
         calibration=-1)
+
+Export CPP TensorRT
+-------------------
+
+.. autofunction:: n2d2.export.export_tensor_rt
+
+Example
+^^^^^^^
+
+.. code-block:: python
+
+    n2d2.export.export_tensor_rt(DEEPNET_CELL)

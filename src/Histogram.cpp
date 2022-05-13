@@ -125,9 +125,10 @@ void N2D2::Histogram::log(const std::string& fileName,
                           const std::unordered_map<std::string, double>& thresholds) const
 {
     const std::string dirName = Utils::dirName(fileName);
-
-    if (!dirName.empty())
+    if (!dirName.empty()){
+        #pragma omp critical(createHistogramDir)
         Utils::createDirectories(dirName);
+    }
 
     std::ofstream histData(fileName.c_str());
 

@@ -116,6 +116,16 @@ class Block(Cell):
             return self.get_cell(item)
         raise n2d2.error_handler.WrongInputType("item", type(item), ["str"])
 
+    def is_integral(self):
+        """
+        Check if the parameters of every cell have an integral precision.
+        """
+        for cell in self._cells.values():
+            # mQuantizedNbBits is initialize to 0
+            if "quantizer" in cell._parameters.keys() and cell.N2D2().getQuantizedNbBits() <= 0:
+                return False
+        return True
+
     def get_cells(self):
         """
            Returns dictionary with all cells that are not Blocks (i.e. NeuralNetworkCells). This allows
@@ -212,7 +222,7 @@ class Block(Cell):
 class Iterable(Block, ABC):
     """
        This abstract class describes a Block object with order, i.e. an array/list-like object.
-       It implements several methods of python lists. The __call__ method is implicitly defined by the order
+       It implements several methods of python lists. The ``__call__`` method is implicitly defined by the order
        of the list.
     """
     @abstractmethod
@@ -294,7 +304,6 @@ class Sequence(Iterable):
         """
         if not isinstance(provider, n2d2.provider.DataProvider):
             raise n2d2.error_handler.WrongInputType("provider", type(provider), ["n2d2.provider.DataProvider"])
-        # dummy_input = provider.read_random_batch()
         dummy_input = n2d2.Tensor(provider.shape())
 
         provider._deepnet = n2d2.deepnet.DeepNet()
@@ -350,7 +359,7 @@ class Layer(Iterable):
 class DeepNetCell(Block):
     """
     n2d2 wrapper for a N2D2 deepnet object. Allows chaining a N2D2 deepnet (for example loaded from a ONNX or INI file)
-    into the dynamic computation graph of the n2d2 API. During each use of the  the __call__ method,
+    into the dynamic computation graph of the n2d2 API. During each use of the  the ``__call__`` method,
     the N2D2 deepnet is converted to a n2d2 representation and the N2D2 deepnet is concatenated to the deepnet of the
     incoming tensor object.
     The object is manipulated with the bound methods of the N2D2 DeepNet object, and its computation graph is
@@ -387,9 +396,9 @@ class DeepNetCell(Block):
 
         :param provider: Provider object to base deepnet upon
         :type provider: :py:class:`n2d2.provider.DataProvider`
-        :param model_path: Path to the model.
+        :param model_path: Path to the ``onnx`` model.
         :type model_path: str
-        :param ini_file: Path to an optional .ini file with additional onnx import instructions
+        :param ini_file: Path to an optional ``.ini`` file with additional onnx import instructions
         :type ini_file: str
         :param ignore_cells: List of cells name to ignore, default=None
         :type ignore_cells: list, optional
@@ -418,7 +427,7 @@ class DeepNetCell(Block):
     def load_from_INI(cls, path):
         """Load a deepnet from an INI file.
 
-        :param model_path: Path to the ini file.
+        :param model_path: Path to the ``ini`` file.
         :type model_path: str
         """
         n2d2_deepnet = N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path)
@@ -506,7 +515,7 @@ class DeepNetCell(Block):
         """Remove a cell from the encapsulated deepnet.
         :param name: Name of cell that shall be removed.
         :type name: str
-        :param reconnect: If `True`, reconnects the parents with the child of the removed cell, default=True
+        :param reconnect: If ``True``, reconnects the parents with the child of the removed cell, default=True
         :type reconnect: bool, optional 
         """
         self._embedded_deepnet.remove(name, reconnect)
@@ -587,17 +596,17 @@ class DeepNetCell(Block):
         :type test_index: int, optional
         :param test_id: Test a single specific stimulus ID (takes precedence over `test_index`), default=-1
         :type test_id: int, optional
-        :param qat_sat: Fuse a QAT trained with SAT method, default=False
+        :param qat_sat: Fuse a QAT trained model with the SAT method, default=False
         :type qat_sat: bool, optional
         :param log_kernels: Log kernels after learning, default=False
         :type log_kernels: bool, optional
-        :param wt_round_mode: Weights clipping mode on export, can be `NONE`,`RINTF`, default="NONE"
+        :param wt_round_mode: Weights clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
         :type wt_round_mode: str, optional
-        :param b_round_mode: Biases clipping mode on export, can be `NONE`,`RINTF`, default="NONE"
+        :param b_round_mode: Biases clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
         :type b_round_mode: str, optional
-        :param c_round_mode: Clip clipping mode on export, can be `NONE`,`RINTF`, default="NONE"
+        :param c_round_mode: Clip clipping mode on export, can be ``NONE``,``RINTF``, default="NONE"
         :type c_round_mode: str, optional
-        :param act_scaling_mode: activation scaling mode on export, can be `NONE`, `FLOAT_MULT`, `FIXED_MULT16`, `SINGLE_SHIFT` or `DOUBLE_SHIFT`, default="FLOAT_MULT"
+        :param act_scaling_mode: activation scaling mode on export, can be ``NONE``, ``FLOAT_MULT``, ``FIXED_MULT16``, ``SINGLE_SHIFT`` or ``DOUBLE_SHIFT``, default="FLOAT_MULT"
         :type act_scaling_mode: str, optional
         :param log_JSON: If ``True``, log JSON annotations, default=False
         :type log_JSON: bool, optional

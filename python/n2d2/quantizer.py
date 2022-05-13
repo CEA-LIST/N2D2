@@ -31,6 +31,7 @@ import n2d2.global_variables as gb
 
 cuda_compiled = gb.cuda_compiled
 
+
 # def fuse_qat(deep_net, provider, act_scaling_mode, w_mode="NONE", b_mode="NONE", c_mode="NONE"):
 #     """This method allow you to fuse BatchNorm parameters into Conv layers once you have trained your model.
     
@@ -70,6 +71,86 @@ cuda_compiled = gb.cuda_compiled
 #         N2D2.WeightsApprox.__members__[c_mode]
 #     )
 #     return deep_net_qat
+
+
+def PTQ(deepnet_cell,
+        nb_bits,
+        nb_sitmuli=-1,
+        provider=None,
+        no_unsigned=False,
+        cross_layer_equalization=True,
+        wt_clipping_mode="NONE",
+        act_clipping_mode="MSE",
+        act_scaling_mode="FLOAT_MULT",
+        **kwargs):
+    """
+    :param nb_bits: Number of bits per weight for exports (can be for example `-16` for float 16 bits or `8` int 8 bits)
+    :type nb_bits: int
+    :param nb_sitmuli: The number of stimuli used for the calibration (``0`` = no calibration, ``-1`` = use the full test dataset), default=-1
+    :type nb_sitmuli: int, optional
+    :param provider: Data provider to use for calibration, default=None
+    :type provider: :py:class:`n2d2.provider.DataProvider`, optional
+    :param no_unsigned: If True, disable the use of unsigned data type in integer calibration, default=False
+    :type no_unsigned: bool, optional
+    :param cross_layer_equalization: If True, disable the use of cross layer equalization in integer calibration, default=False
+    :type cross_layer_equalization: bool, optional
+    :param wt_clipping_mode: Weights clipping mode on calibration, can be ``NONE``, ``MSE`` or ``KL_DIVERGENCE``, default="NONE"
+    :type wt_clipping_mode: str, optional
+    :param act_clipping_mode: activation clipping mode on calibration, can be ``NONE``, ``MSE`` or ``KL_DIVERGENCE`` or ``Quantile``, default="MSE"
+    :type act_clipping_mode: str, optional
+    """
+    if "export_no_unsigned" in kwargs:
+        no_unsigned = kwargs["export_no_unsigned"]
+    if "export_no_cross_layer_equalization" in kwargs:
+        cross_layer_equalization = not kwargs["export_no_cross_layer_equalization"]
+    if "calibration" in kwargs:
+        nb_sitmuli=kwargs["calibration"]
+    if act_clipping_mode not in N2D2.ClippingMode.__members__.keys():
+        raise n2d2.error_handler.WrongValue("act_clipping_mode", act_clipping_mode, ", ".join(N2D2.ClippingMode.__members__.keys()))
+    N2D2_act_clipping_mode = N2D2.ClippingMode.__members__[act_clipping_mode]
+    if wt_clipping_mode not in N2D2.ClippingMode.__members__.keys():
+        raise n2d2.error_handler.WrongValue("wt_clipping_mode", wt_clipping_mode, ", ".join(N2D2.ClippingMode.__members__.keys()))
+    N2D2_wt_clipping_mode = N2D2.ClippingMode.__members__[wt_clipping_mode]
+    if act_scaling_mode not in N2D2.ScalingMode.__members__.keys():
+        raise n2d2.error_handler.WrongValue("act_scaling_mode", act_scaling_mode, ", ".join(N2D2.ScalingMode.__members__.keys()))
+    N2D2_act_scaling_mode = N2D2.ScalingMode.__members__[act_scaling_mode]
+    parameters = n2d2.n2d2_interface.Options(
+        nb_bits=nb_bits,
+        export_no_unsigned=no_unsigned,
+        calibration=nb_sitmuli,
+        qat_SAT=False,
+        export_no_cross_layer_equalization=not cross_layer_equalization,
+        wt_clipping_mode=N2D2_wt_clipping_mode,
+        act_clipping_mode=N2D2_act_clipping_mode,
+        act_scaling_mode=N2D2_act_scaling_mode,
+    ).N2D2()
+
+    N2D2_deepnet = deepnet_cell.get_embedded_deepnet().N2D2()
+    N2D2_deepnet.initialize()
+
+    if provider is not None:
+        N2D2_provider = provider.N2D2()
+        N2D2_database = N2D2_provider.getDatabase()
+        N2D2_deepnet.setDatabase(N2D2_database)
+        N2D2_deepnet.setStimuliProvider(N2D2_provider)
+
+    if len(N2D2_deepnet.getTargets()) == 0:
+        # No target associated to the DeepNet
+        # We create a Target for the last cell of the network
+        last_cell = deepnet_cell[-1].N2D2()
+        N2D2_target =  N2D2.TargetScore("Target", last_cell, provider.N2D2())
+        N2D2_deepnet.addTarget(N2D2_target)
+    elif provider is not None:
+        # We already have a Target, so we attach the new provider to it
+        for target in N2D2_deepnet.getTargets():
+            target.setStimuliProvider(provider.N2D2())
+
+    if N2D2_deepnet.getDatabase().getNbStimuli(N2D2.Database.StimuliSet.__members__["Validation"]) > 0:
+        N2D2_deepnet.exportNetworkFreeParameters("weights_validation")
+    else:
+        N2D2_deepnet.exportNetworkFreeParameters("weights")
+
+    N2D2.calibNetwork(parameters, N2D2_deepnet)
 
 
 class Quantizer(N2D2_Interface, ABC):

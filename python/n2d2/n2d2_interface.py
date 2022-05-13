@@ -317,6 +317,7 @@ class Options():
     def __init__(self, **parameters):
         self._N2D2 = N2D2.Options()
         self.set_parameters(**parameters)
+        self.options = parameters
 
     def set_parameters(self, **parameters):
         for key, value in parameters.items():
@@ -331,3 +332,9 @@ class Options():
 
     def N2D2(self):
         return self._N2D2
+
+    def __str__(self):
+        result = "Option : \n"
+        for option_name, option_value in self.options.items():
+            result += f"{option_name} : {option_value}\n"
+        return result
