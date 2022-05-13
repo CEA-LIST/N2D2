@@ -23,6 +23,51 @@ import N2D2
 from os import mkdir
 from os.path import exists
 
+# This is the default docstring for export.
+# Parameters description can be override by the docstring defined inside the export function.
+# The docstring header is always the one defined in the function !
+export_doc_string = \
+"""
+:param deepnet_cell: The Neural network you want to export.
+:type deepnet_cell: :py:class:`n2d2.cells.DeepNetCell`
+:param provider: Data provider to use for calibration, default=None
+:type provider: :py:class:`n2d2.provider.DataProvider`, optional
+:param nb_bits: Number of bits for the weights and signals. Must be ``8``, ``16``, ``32`` or ``64`` for integer export, or ``-32``, ``-64`` for floating point export, default=8
+:type nb_bits: int, optional
+:param qat_sat: Fuse a QAT trained with SAT method, default=False
+:type qat_sat: bool, optional
+:param export_no_unsigned: If True, disable the use of unsigned data type in integer exports, default=False
+:type export_no_unsigned: bool, optional
+:param calibration: The number of stimuli used for the calibration (``0`` = no calibration, ``-1`` = use the full test dataset), default=0
+:type calibration: int, optional
+:param export_no_cross_layer_equalization: If True, disable the use of cross layer equalization in integer exports, default=False
+:type export_no_cross_layer_equalization: bool, optional
+:param wt_clipping_mode: Weights clipping mode on export, can be ``NONE``, ``MSE`` or ``KL_DIVERGENCE``, default="NONE"
+:type wt_clipping_mode: str, optional
+:param act_clipping_mode: activation clipping mode on export, can be ``NONE``, ``MSE`` or ``KL_DIVERGENCE`` or ``Quantile``, default="MSE"
+:type act_clipping_mode: str, optional
+:param act_scaling_mode: activation scaling mode on export, can be ``NONE``, ``FLOAT_MULT``, ``FIXED_MULT16``, ``SINGLE_SHIFT`` or ``DOUBLE_SHIFT``, default="FLOAT_MULT"
+:type act_scaling_mode: str, optional
+:param act_quantile_value: Quantile value for ``Quantile`` clipping mode, default=0.9999
+:type act_quantile_value: float, optional
+:param act_rescale_per_output: If True, rescale activation per output on export, default=False
+:type act_rescale_per_output: bool, optional
+:param calibration_reload: If True, reload and reuse the data of a previous calibration, default=False
+:type calibration_reload: bool, optional
+:param report: Number of steps between reportings, default=100
+:type report: int, optional
+:param export_nb_stimuli_max: Maximum number of stimuli to export (0 = no dataset export, -1 = unlimited), default=-1
+:type export_nb_stimuli_max: int, optional
+:param wt_round_mode: Weights clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
+:type wt_round_mode: str, optional
+:param b_round_mode: Biases clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
+:type b_round_mode: str, optional
+:param c_round_mode: Clip clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
+:type c_round_mode: str, optional
+:param find_lr: Find an appropriate learning rate over a number of iterations, default=0
+:type find_lr: int, optional
+"""
+
 def _parse_export_parameters(gen_export=None, nb_bits=8, qat_SAT=False,
                              export_no_unsigned=False, calibration=0,
                              export_no_cross_layer_equalization=False,
@@ -97,49 +142,14 @@ def _generate_export(deepnet_cell, provider=None, **kwargs):
 
     N2D2.generateExportFromCalibration(N2D2_option, N2D2_deepnet, fileName=export_folder_name)
 
+@n2d2.utils.add_docstring(export_doc_string)
 def export_c(deepnet_cell: n2d2.cells.DeepNetCell,
              provider: n2d2.provider.Provider=None,
              **kwargs) -> None:
     """Generate a C export of the neural network.
 
-    :param deepnet_cell: The Neural network you want to export.
-    :type deepnet_cell: :py:class:`n2d2.cells.DeepNetCell`
-    :param provider: Data provider to use for calibration, default=None
-    :type provider: :py:class:`n2d2.provider.DataProvider`, optional
-    :param nb_bits: Number of bits per weight for exports, default=8
-    :type nb_bits: int, optional
-    :param qat_sat: Fuse a QAT trained with SAT method, default=False
-    :type qat_sat: bool, optional
-    :param export_no_unsigned: If True, disable the use of unsigned data type in integer exports, default=False
-    :type export_no_unsigned: bool, optional
-    :param calibration: The number of stimuli used for the calibration (``0`` = no calibration, ``-1`` = use the full test dataset), default=0
-    :type calibration: int, optional
-    :param export_no_cross_layer_equalization: If True, disable the use of cross layer equalization in integer exports, default=False
-    :type export_no_cross_layer_equalization: bool, optional
-    :param wt_clipping_mode: Weights clipping mode on export, can be ``NONE``, ``MSE`` or ``KL_DIVERGENCE``, default="NONE"
-    :type wt_clipping_mode: str, optional
-    :param act_clipping_mode: activation clipping mode on export, can be ``NONE``, ``MSE`` or ``KL_DIVERGENCE`` or ``Quantile``, default="MSE"
-    :type act_clipping_mode: str, optional
     :param act_scaling_mode: activation scaling mode on export, can be ``NONE``, ``FIXED_MULT16``, ``SINGLE_SHIFT`` or ``DOUBLE_SHIFT``, default="SINGLE_SHIFT"
     :type act_scaling_mode: str, optional
-    :param act_quantile_value: Quantile value for ``Quantile`` clipping mode, default=0.9999
-    :type act_quantile_value: float, optional
-    :param act_rescale_per_output: If True, rescale activation per output on export, default=False
-    :type act_rescale_per_output: bool, optional
-    :param calibration_reload: If True, reload and reuse the data of a previous calibration, default=False
-    :type calibration_reload: bool, optional
-    :param report: Number of steps between reportings, default=100
-    :type report: int, optional
-    :param export_nb_stimuli_max: Maximum number of stimuli to export (0 = no dataset export, -1 = unlimited), default=-1
-    :type export_nb_stimuli_max: int, optional
-    :param wt_round_mode: Weights clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
-    :type wt_round_mode: str, optional
-    :param b_round_mode: Biases clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
-    :type b_round_mode: str, optional
-    :param c_round_mode: Clip clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
-    :type c_round_mode: str, optional
-    :param find_lr: Find an appropriate learning rate over a number of iterations, default=0
-    :type find_lr: int, optional
     """
 
     if "act_scaling_mode" in kwargs:
@@ -151,98 +161,30 @@ def export_c(deepnet_cell: n2d2.cells.DeepNetCell,
     kwargs["gen_export"] = "C"
     _generate_export(deepnet_cell, provider, **kwargs)
 
+@n2d2.utils.add_docstring(export_doc_string)
 def export_cpp(deepnet_cell: n2d2.cells.DeepNetCell,
                provider: n2d2.provider.Provider=None,
                **kwargs) -> None:
     """Generate a CPP export of the neural network.
-
-    :param deepnet_cell: The Neural network you want to export.
-    :type deepnet_cell: :py:class:`n2d2.cells.DeepNetCell`
-    :param provider: Data provider to use for calibration, default=None
-    :type provider: :py:class:`n2d2.provider.DataProvider`, optional
-    :param nb_bits: Number of bits per weight for exports, default=8
-    :type nb_bits: int, optional
-    :param qat_sat: Fuse a QAT trained with SAT method, default=False
-    :type qat_sat: bool, optional
-    :param export_no_unsigned: If True, disable the use of unsigned data type in integer exports, default=False
-    :type export_no_unsigned: bool, optional
-    :param calibration: The number of stimuli used for the calibration (``0`` = no calibration, ``-1`` = use the full test dataset), default=0
-    :type calibration: int, optional
-    :param export_no_cross_layer_equalization: If True, disable the use of cross layer equalization in integer exports, default=False
-    :type export_no_cross_layer_equalization: bool, optional
-    :param wt_clipping_mode: Weights clipping mode on export, can be ``NONE``, ``MSE`` or ``KL_DIVERGENCE``, default="NONE"
-    :type wt_clipping_mode: str, optional
-    :param act_clipping_mode: activation clipping mode on export, can be ``NONE``, ``MSE`` or ``KL_DIVERGENCE`` or ``Quantile``, default="MSE"
-    :type act_clipping_mode: str, optional
-    :param act_scaling_mode: activation scaling mode on export, can be ``NONE``, ``FLOAT_MULT``, ``FIXED_MULT16``, ``SINGLE_SHIFT`` or ``DOUBLE_SHIFT``, default="FLOAT_MULT"
-    :type act_scaling_mode: str, optional
-    :param act_quantile_value: Quantile value for ``Quantile`` clipping mode, default=0.9999
-    :type act_quantile_value: float, optional
-    :param act_rescale_per_output: If True, rescale activation per output on export, default=False
-    :type act_rescale_per_output: bool, optional
-    :param calibration_reload: If True, reload and reuse the data of a previous calibration, default=False
-    :type calibration_reload: bool, optional
-    :param report: Number of steps between reportings, default=100
-    :type report: int, optional
-    :param export_nb_stimuli_max: Maximum number of stimuli to export (0 = no dataset export, -1 = unlimited), default=-1
-    :type export_nb_stimuli_max: int, optional
-    :param wt_round_mode: Weights clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
-    :type wt_round_mode: str, optional
-    :param b_round_mode: Biases clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
-    :type b_round_mode: str, optional
-    :param c_round_mode: Clip clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
-    :type c_round_mode: str, optional
-    :param find_lr: Find an appropriate learning rate over a number of iterations, default=0
-    :type find_lr: int, optional
     """
     kwargs["gen_export"] = "CPP"
     _generate_export(deepnet_cell, provider, **kwargs)
 
 
-
+@n2d2.utils.add_docstring(export_doc_string)
 def export_tensor_rt(deepnet_cell: n2d2.cells.DeepNetCell,
                 provider: n2d2.provider.Provider=None,
                 **kwargs) -> None:
     """Generate a TensorRT export of the neural network.
 
-    :param deepnet_cell: The Neural network you want to export.
-    :type deepnet_cell: :py:class:`n2d2.cells.DeepNetCell`
-    :param provider: Data provider to use for calibration, default=None
-    :type provider: :py:class:`n2d2.provider.DataProvider`, optional
-    :param nb_bits: Number of bits per weight for exports, default=8
+    :param nb_bits: Only 32 floating point precision is available for this export. You can calibrate your network later with the export tools, default=-32
     :type nb_bits: int, optional
-    :param qat_sat: Fuse a QAT trained with SAT method, default=False
-    :type qat_sat: bool, optional
-    :param export_no_unsigned: If True, disable the use of unsigned data type in integer exports, default=False
-    :type export_no_unsigned: bool, optional
-    :param calibration: The number of stimuli used for the calibration (``0`` = no calibration, ``-1`` = use the full test dataset), default=0
-    :type calibration: int, optional
-    :param export_no_cross_layer_equalization: If True, disable the use of cross layer equalization in integer exports, default=False
-    :type export_no_cross_layer_equalization: bool, optional
-    :param wt_clipping_mode: Weights clipping mode on export, can be ``NONE``, ``MSE`` or ``KL-Diveregence``, default="NONE"
-    :type wt_clipping_mode: str, optional
-    :param act_clipping_mode: activation clipping mode on export, can be ``NONE``, ``MSE`` or ``KL-Divergence`` or ``Quantile``, default="MSE"
-    :type act_clipping_mode: str, optional
-    :param act_scaling_mode: activation scaling mode on export, can be ``NONE``, ``FLOAT_MULT``, ``FIXED_MULT16``, ``SINGLE_SHIFT`` or ``DOUBLE_SHIFT``, default="FLOAT_MULT"
-    :type act_scaling_mode: str, optional
-    :param act_quantile_value: Quantile value for ``Quantile`` clipping mode, default=0.9999
-    :type act_quantile_value: float, optional
-    :param act_rescale_per_output: If True, rescale activation per output on export, default=False
-    :type act_rescale_per_output: bool, optional
-    :param calibration_reload: If True, reload and reuse the data of a previous calibration, default=False
-    :type calibration_reload: bool, optional
-    :param report: Number of steps between reportings, default=100
-    :type report: int, optional
-    :param export_nb_stimuli_max: Maximum number of stimuli to export (0 = no dataset export, -1 = unlimited), default=-1
-    :type export_nb_stimuli_max: int, optional
-    :param wt_round_mode: Weights clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
-    :type wt_round_mode: str, optional
-    :param b_round_mode: Biases clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
-    :type b_round_mode: str, optional
-    :param c_round_mode: Clip clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
-    :type c_round_mode: str, optional
-    :param find_lr: Find an appropriate learning rate over a number of iterations, default=0
-    :type find_lr: int, optional
     """
     kwargs["gen_export"] = "CPP_TensorRT"
+    if "nb_bits" not in kwargs:
+        kwargs["nb_bits"] = -32
+    else:
+        if kwargs["nb_bits"] != -32:
+            raise ValueError("The TensorRT export only support 32 floating point precision.\
+Calibration needs to be done once the export is generated (see : https://cea-list.github.io/N2D2-docs/export/TensorRT.html)")
     _generate_export(deepnet_cell, provider, **kwargs)
