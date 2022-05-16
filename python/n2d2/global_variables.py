@@ -22,6 +22,7 @@
 import N2D2
 from os.path import expanduser
 from inspect import ismethod
+from enum import Enum
 
 class GlobalVariables:
     """
@@ -57,6 +58,12 @@ class GlobalVariables:
     |                          | available.                                                        |
     +--------------------------+-------------------------------------------------------------------+
     """
+
+    class Verbosity(Enum):
+        graph_only = 0  # Only names, cell types and inputs
+        short = 1  # Constructor arguments only
+        detailed = 2  # Config parameters and their parameters
+
     def __init__(self):
         self.model_cache = expanduser("~") + "/MODELS"
         self._seed = 1
@@ -68,11 +75,6 @@ class GlobalVariables:
         self._onnx_compiled = N2D2.onnx_compiled
         self._n2d2_ip_compiled = N2D2.N2D2_IP
         self._cuda_device = 0
-        class VerbosityClass:
-            graph_only = 0  # Only names, cell types and inputs
-            short = 1  # Constructor arguments only
-            detailed = 2  # Config parameters and their parameters
-        self.Verbosity = VerbosityClass()
         self.verbosity = self.Verbosity.detailed
 
     @property
