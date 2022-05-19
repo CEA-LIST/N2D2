@@ -31,7 +31,15 @@
 #include "Solver/SGDSolver_Frame.hpp"
 
 namespace N2D2 {
-    
+
+/**
+ * @brief Implementation of the weights quantization using Learned Step Size Quantization (LSQ) method for CPU
+ * 
+ * @tparam T weights type.
+ * Can be : double (64 bits)
+ *          float (32 bits)
+ *          half_float::half (16 bits)
+ */
 template <class T>
 class LSQQuantizerCell_Frame: public LSQQuantizerCell, public QuantizerCell_Frame<T> {
 public:
@@ -75,6 +83,12 @@ public:
     Tensor<T>& getStepSize()
     {
         return mStepSize;
+    };
+
+    // Essentially used for unit tests
+    Tensor<T>& getDiffStepSize()
+    {
+        return mDiffStepSize;
     };
 
     void exportFreeParameters(const std::string& fileName) const;

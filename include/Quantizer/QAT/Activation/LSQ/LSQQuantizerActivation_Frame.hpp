@@ -32,6 +32,14 @@
 
 namespace N2D2 {
 
+/**
+ * @brief Implementation of the features quantization using Learned Step Size Quantization (LSQ) method for CPU
+ * 
+ * @tparam T weights type.
+ * Can be : double (64 bits)
+ *          float (32 bits)
+ *          half_float::half (16 bits)
+ */
 template <class T>
 class LSQQuantizerActivation_Frame: public LSQQuantizerActivation, public QuantizerActivation_Frame<T> {
 public:

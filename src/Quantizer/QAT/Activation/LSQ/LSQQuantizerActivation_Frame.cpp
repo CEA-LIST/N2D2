@@ -74,25 +74,64 @@ LSQQuantizerActivation_Frame<T>::~LSQQuantizerActivation_Frame()
 // ---------------------------- Forward functions -----------------------------
 // ----------------------------------------------------------------------------
 
-template <>
-void LSQQuantizerActivation_Frame<half_float::half>::propagate(BaseTensor& /*baseInOut*/,
-                                                               bool /*inference*/)  
-{
-    // nothing here for now
-}
-
-template <>
-void LSQQuantizerActivation_Frame<float>::propagate(BaseTensor& /*baseInOut*/,
+/**
+ * @brief Implement the forward pass of the quantization using LSQ method for layer weights.
+ * 
+ * @fn void LSQQuantizerActivation_Frame<T>::propagate(BaseTensor& baseInOut,
+                                                    bool inference)
+ * 
+ * @tparam T weights type.
+ * Can be: double (64 bits)
+ *         float (32 bits)
+ *         half_float::half (16 bits)
+ * 
+ * @param baseInOut Input features tensor.
+ */
+template <typename T>
+void LSQQuantizerActivation_Frame<T>::propagate(BaseTensor& baseInOut,
                                                     bool /*inference*/)  
 {
-    // nothing here for now
-}
+    // Conversion to Tensor to access its values
+    Tensor<T>& input = dynamic_cast<Tensor<T>&>(baseInOut);
+    //init the quantization range for activation
+    if(mBitRanges.first == 0 && mBitRanges.second == 0) {
+        mBitRanges = std::make_pair(0, (int)mRange);
+        /*std::cout << " LSQ activation range: [" << mBitRanges.first << ";" << mBitRanges.second << "]" << std::endl;*/
+    }
 
-template <>
-void LSQQuantizerActivation_Frame<double>::propagate(BaseTensor& /*baseInOut*/,
-                                                     bool /*inference*/)  
-{
-    // nothing here for now
+    unsigned int totElement = baseInOut.size();
+    mGradScaleFactor = T(1.0) / sqrt(T(totElement * mBitRanges.second));
+
+
+    if(mStepSize.empty()) {
+        // Initialisation of the activation step size according to the LSQ paper
+        // (https://arxiv.org/pdf/1902.08153.pdf)    
+        if(mSetOptInitStepSize){
+            float initialValue = 2.0f * float(input.mean(true) / sqrt(mBitRanges.second));
+            setStepSizeValue(initialValue);
+        }
+        mStepSize.resize({1, 1, 1, 1});
+        mStepSize.fill((T)(mStepSizeParameter));
+    }
+
+    if(mFullPrecisionActivations.empty()) {
+        mFullPrecisionActivations.resize(baseInOut.dims());
+    }
+
+    // store activation full value
+    bool saveFpData_ = true;
+    if (saveFpData_) {
+        mFullPrecisionActivations = input;
+    }
+
+    for( T &qData: input) {
+        qData = qData / mStepSize(0);
+        qData = (qData <= (T) mBitRanges.first) ? (T) mBitRanges.first :
+                (qData >= (T) mBitRanges.second) ? (T) mBitRanges.second :
+                qData;
+        qData = rint(qData);
+        qData = qData * mStepSize(0);
+    }
 }
 
 
@@ -100,31 +139,78 @@ void LSQQuantizerActivation_Frame<double>::propagate(BaseTensor& /*baseInOut*/,
 // --------------------------- Backward functions -----------------------------
 // ----------------------------------------------------------------------------
 
-template <>
-void N2D2::LSQQuantizerActivation_Frame<half_float::half>::back_propagate(const BaseTensor& /*baseInput*/,
-                                                                          const BaseTensor& /*baseOutput*/,
-                                                                          const BaseTensor& /*baseDiffInput*/,
-                                                                          BaseTensor& /*baseDiffOutput*/)
+/**
+ * @brief Implement the backward pass of the quantization step using LSQ method for layer features and step size.
+ * @fn void N2D2::LSQQuantizerActivation_Frame<T>::back_propagate(const BaseTensor& baseInput,const BaseTensor& baseOutput, const BaseTensor& baseDiffInput, BaseTensor& baseDiffOutput)
+ * @tparam T features and step size type.
+ * Can be: double (64 bits)
+ *         float (32 bits)
+ *         half_float::half (16 bits)
+ * @param baseInput Input features tensor from forward step.
+ * @param baseOutput Output features tensor from forward step.
+ * @param baseDiffInput Gradient of deeper layer to be propagated.
+ * @param baseDiffOutput Gradient propagated.
+ */
+template <typename T>
+void N2D2::LSQQuantizerActivation_Frame<T>::back_propagate(const BaseTensor& baseInput,
+                                                               const BaseTensor& baseOutput,
+                                                               const BaseTensor& baseDiffInput,
+                                                               BaseTensor& baseDiffOutput)
 {
-    // nothing here for now
-}
+    //init the quantization range, if not done before (e.g. unit test)
+    if(mBitRanges.first == 0 && mBitRanges.second == 0){
+        mBitRanges = std::make_pair( 0, (int) mRange );
+        //std::cout << " LSQ activation range :: [" << mBitRanges.first << ";" << mBitRanges.second << "]"<< std::endl;
+    }
 
-template <>
-void N2D2::LSQQuantizerActivation_Frame<float>::back_propagate(const BaseTensor& /*baseInput*/,
-                                                               const BaseTensor& /*baseOutput*/,
-                                                               const BaseTensor& /*baseDiffInput*/,
-                                                               BaseTensor& /*baseDiffOutput*/)
-{
-    // nothing here for now
-}
+    // Initialize mDiffStepSize at the first backpropagate
+    if(mDiffStepSize.empty()) {
+        mDiffStepSize.resize({1, 1, 1, 1});
+        mDiffStepSize.fill(T(0));
+    }
 
-template <>
-void N2D2::LSQQuantizerActivation_Frame<double>::back_propagate(const BaseTensor& /*baseInput*/,
-                                                                const BaseTensor& /*baseOutput*/,
-                                                                const BaseTensor& /*baseDiffInput*/,
-                                                                BaseTensor& /*baseDiffOutput*/)
-{
-    // nothing here for now
+    // Initialize StepSize tensor at the first propagate
+    if(mStepSize.empty()) {
+        mStepSize.resize({1, 1, 1, 1});
+        mStepSize.fill((T)mStepSizeParameter);
+        //this is done for unit test purpose
+        unsigned int totElement = baseInput.size();
+        mGradScaleFactor = T(1.0) / sqrt((T)(totElement * mBitRanges.second));
+    }
+
+    // Initialize StepSize gradient if it is part of a running iteration
+    T diffStepSize = T(0.0);
+    if(!mSolver->isNewIteration()) {
+        diffStepSize = mDiffStepSize(0,0,0,0);
+    }
+
+    // Converts BaseTensor to Tensor as it is not possible to access BaseTensor values
+    const Tensor<T>& fullPrecInput = tensor_cast<T>(baseInput);
+    const Tensor<T>& fullPrecDiffInput = tensor_cast<T>(baseDiffInput);
+    Tensor<T>& fullPrecDiffOutput = dynamic_cast<Tensor<T>&>(baseDiffOutput);
+
+    for(unsigned int i=0; i<baseInput.size(); i++) {
+        const T fullPrecScale = fullPrecInput(i) / mStepSize(0);
+
+        /*****************Step Size Gradient Computation******************/
+        //1st: clip the gradient in interval [rangeMin, rangeMax] and take account of qError
+        T qData = fullPrecScale;
+        qData = ((qData <= (T) mBitRanges.first) ? (T) mBitRanges.first :
+                (qData >= (T) mBitRanges.second) ? (T) mBitRanges.second :
+                rint(qData) - qData);
+        //2nd: Multiplie backward data with clipped grad
+        qData = qData*fullPrecDiffInput(i);
+        diffStepSize += qData;
+
+
+        /*****************Features Gradient Computation********************/
+        // STE method is simply applied
+        fullPrecDiffOutput(i) = fullPrecDiffInput(i)*( (fullPrecScale <= (T)mBitRanges.first) ? T(0.0) :
+                                                        (fullPrecScale >= (T)mBitRanges.second) ? T(0.0) :
+                                                        T(1.0));
+    }
+    // 3rd: Multiply Step Size gradient with scale factor
+    mDiffStepSize.fill(diffStepSize*mGradScaleFactor);
 }
 
 
