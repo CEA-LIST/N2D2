@@ -399,6 +399,16 @@ class Tensor:
         """
         return self.to_numpy()
 
+
+    def _check_value_coherency(self, value):
+        if not isinstance(value, hard_coded_type[self._datatype]):
+            try:
+                value = hard_coded_type[self._datatype](value)
+            except ValueError as err:
+                raise RuntimeError(f"Autocast failed, tried to cast : {str(type(value))} to {self._datatype}") from err
+
+
+    @n2d2.utils.methdispatch
     def __setitem__(self, index, value):
         """
         Set an element of the tensor.
@@ -413,24 +423,25 @@ class Tensor:
         :param value: The value the item will take
         :type value: same type as self._datatype
         """
-        if not isinstance(value, hard_coded_type[self._datatype]):
-            try:
-                value = hard_coded_type[self._datatype](value)
-            except ValueError as err:
-                raise RuntimeError(f"Autocast failed, tried to cast : {str(type(value))} to {self._datatype}") from err
+        return NotImplemented
 
-        if isinstance(index, (tuple, list)):
-            self._tensor[self._get_index(index)] = value
-        elif isinstance(index, (int, float)):
-            # Force conversion to int if it's a float
-            self._tensor[int(index)] = value
-        elif isinstance(index, slice):
-            self._tensor[index] = value
-        else:
-            raise error_handler.WrongInputType("index", type(index), [str(list), str(tuple), str(float), str(int), str(slice)])
-        # if self.cuda:
-        #     self.htod()
+    @__setitem__.register(tuple)
+    @__setitem__.register(list)
+    def _(self, index, value):
+        self._check_value_coherency(value)
+        self._tensor[self._get_index(index)] = value
 
+    @__setitem__.register(int)
+    @__setitem__.register(float)
+    def _(self, index, value):
+        self._check_value_coherency(value)
+        self._tensor[int(index)] = value
+    @__setitem__.register(slice)
+    def _(self, index, value):
+        self._check_value_coherency(value)
+        self._tensor[index] = value
+
+    @n2d2.utils.methdispatch
     def __getitem__(self, index)->any:
         """
         Get an element of the tensor.
@@ -438,16 +449,17 @@ class Tensor:
             - the coordinate of the element;
             - the index of the flatten tensor.
         """
-        # if self.cuda:
-        #     self.dtoh()
-        value = None
-        if isinstance(index, (tuple, list)):
-            value = self._tensor[self._get_index(index)]
-        elif isinstance(index, (int, float)):
-            value = self._tensor[int(index)]
-        else:
-            raise error_handler.WrongInputType("index", type(index), [str(list), str(tuple), str(float), str(int)])
-        return value
+        return NotImplemented
+
+    @__getitem__.register(tuple)
+    @__getitem__.register(list)
+    def _(self, index):
+        return self._tensor[self._get_index(index)]
+
+    @__getitem__.register(int)
+    @__getitem__.register(float)
+    def _(self, index):
+        return self._tensor[int(index)]
 
     def __len__(self)->int:
         return len(self._tensor)
@@ -458,7 +470,7 @@ class Tensor:
     def __contains__(self, value)->bool:
         return self._tensor.__contains__(value)
 
-    def __eq__(self, other_tensor)->bool:
+    def __eq__(self, other_tensor:bool)->bool:
         if not isinstance(other_tensor, Tensor):
             raise TypeError("You can only compare tensor with each other.")
         # Quick initialization of is_equal by checking the tensors have the same dimensions

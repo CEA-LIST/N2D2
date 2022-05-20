@@ -27,6 +27,8 @@ import tarfile
 import gzip, zipfile
 from collections import UserDict
 from inspect import getmro
+import functools
+
 
 # At the moment ConfigSection is simply a dictionary
 class ConfigSection(UserDict):
@@ -173,3 +175,14 @@ def add_docstring(doc_string):
         func.__doc__ = header + param_doc
         return func
     return dec
+
+def methdispatch(meth):
+    """Mimic the behavior of `functools.singledispatchmethod` which is only available in python >= 3.8.
+    https://docs.python.org/3/library/functools.html#functools.singledispatchmethod
+    """
+    dispatcher = functools.singledispatch(meth)
+    def wrapper(*args, **kw):
+        return dispatcher.dispatch(args[1].__class__)(*args, **kw)
+    wrapper.register = dispatcher.register
+    functools.update_wrapper(wrapper, dispatcher)
+    return wrapper

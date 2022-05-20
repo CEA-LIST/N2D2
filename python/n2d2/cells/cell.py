@@ -20,7 +20,7 @@
 """
 
 from abc import ABC, abstractmethod
-
+import n2d2
 import N2D2
 
 import n2d2.global_variables
@@ -109,12 +109,19 @@ class Block(Cell):
             self._cells[cell.get_name()] = cell
         Cell.__init__(self, name)
 
+    @n2d2.utils.methdispatch
     def __getitem__(self, item):
-        if isinstance(item, int):
-            return list(self._cells.values())[item]
-        if isinstance(item, str):
-            return self.get_cell(item)
-        raise n2d2.error_handler.WrongInputType("item", type(item), ["str"])
+        return NotImplemented
+
+    @__getitem__.register(str)
+    def _(self, item):
+        return self.get_cell(item)
+
+    @__getitem__.register(int)
+    def _(self, item):
+        k = list(self._cells.values())[item]
+        return k
+
 
     def is_integral(self):
         """
