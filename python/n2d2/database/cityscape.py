@@ -43,7 +43,8 @@ class Cityscapes(Database):
     }
     _parameters.update(_database_parameters)
     _convention_converter= ConventionConverter(_parameters)
-    _N2D2_constructors = N2D2.Cityscapes_Database
+    if gb.json_compiled:
+        _N2D2_constructors = N2D2.Cityscapes_Database
 
     def __init__(self, **config_parameters):
         """
