@@ -41,6 +41,22 @@ void cudaMult(unsigned int size,
                const T beta,
                T* result);
 template <class T>
+void cudaMultBroadcast(unsigned int sizeMax,
+              unsigned int mapSize,
+              unsigned int nbOutputs,
+              unsigned int batchSize,
+              unsigned int sizeA,
+              unsigned int sizeB,
+                     T* a,
+                     T* b,
+                     const T beta,
+                     T* result);
+template <class T>
+void cudaReducePerKernel(T* inputToReduce,
+        T* result,
+        unsigned int nbIter,
+        unsigned int kernelSize);
+template <class T>
 void cudaScale(unsigned int size,
                 T* input,
                 const T scale,
