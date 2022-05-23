@@ -88,10 +88,10 @@ int main(int argc, char* argv[]) {
 
     const N2D2::Network network{};
 
-#if NB_BITS > 0 && ENV_DATA_UNSIGNED
-    std::vector<udata<NB_BITS>> inputBuffer(network.inputSize());
+#if ENV_DATA_UNSIGNED
+    std::vector<UDATA_T> inputBuffer(network.inputSize());
 #else
-    std::vector<data<NB_BITS>> inputBuffer(network.inputSize());
+    std::vector<DATA_T> inputBuffer(network.inputSize());
 #endif
 
     std::vector<Target_T> expectedOutputBuffer(OUTPUTS_SIZE[0]);
@@ -140,4 +140,3 @@ int main(int argc, char* argv[]) {
     fclose(f);
 #endif
 }
-
