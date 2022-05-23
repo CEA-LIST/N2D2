@@ -46,7 +46,7 @@
 
 N2D2::Registrar<N2D2::DeepNetExport>
 N2D2::CPP_DeepNetExport::mRegistrar(
-    {"CPP", "CPP_ASMP", "CPP_STM32", "CPP_HLS"},
+    {"CPP", "CPP_ASMP", "CPP_STM32", "CPP_HLS", "CPP_Quantization"},
     N2D2::CPP_DeepNetExport::generate);
 
 void N2D2::CPP_DeepNetExport::generate(DeepNet& deepNet,
@@ -57,13 +57,13 @@ void N2D2::CPP_DeepNetExport::generate(DeepNet& deepNet,
     Utils::createDirectories(dirName + "/dnn/src");
 
     generateParamsHeader(dirName + "/include/params.h");
-    
-    // Only the CPP and CPP_STM32 exports can support the tools
+
+    // Only the CPP_Quantization export can support the tools
     // for quantization aware training for now
-    if (Utils::match("*CPP_ASMP*", dirName) || Utils::match("*CPP_HLS*", dirName))
-        generateEnvironmentHeader(deepNet, dirName + "/dnn/include/env.hpp");
-    else 
+    if (Utils::match("*CPP_Quantization*", dirName))
         generateEnvironmentQATHeader(deepNet, dirName + "/dnn/include/env.hpp");
+    else
+        generateEnvironmentHeader(deepNet, dirName + "/dnn/include/env.hpp");
 
     deepNet.fusePadding();  // probably already done, but make sure!
     addBranchesCells(deepNet);
@@ -104,15 +104,15 @@ void N2D2::CPP_DeepNetExport::generate(DeepNet& deepNet,
 
     generateMemoryInfoHeader(deepNet, dirName + "/dnn/include/mem_info.hpp", 
                              memManager, memoryAlignment);
-    
-    // Only the CPP and CPP_STM32 exports can support the tools
+
+    // Only the CPP_Quantization export can support the tools
     // for quantization aware training for now
-    if (Utils::match("*CPP_ASMP*", dirName) || Utils::match("*CPP_HLS*", dirName))
-        generateNetworkPropagateFile(deepNet,
-                                     dirName + "/src/NetworkPropagate.cpp");
-    else 
+    if (Utils::match("*CPP_Quantization*", dirName))
         generateNetworkPropagateQATFile(deepNet,
                                         dirName + "/src/NetworkPropagate.cpp");
+    else
+        generateNetworkPropagateFile(deepNet,
+                                     dirName + "/src/NetworkPropagate.cpp");
 
     printStats(deepNet, memManager);
 }
