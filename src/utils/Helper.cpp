@@ -632,6 +632,7 @@ namespace N2D2_HELPER{
                         ((opt.nbBits > 0) ? "int" : "float") +
                         std::to_string(std::abs(opt.nbBits));
         }
+        Utils::createDirectories(exportDir);
 
         Database::StimuliSet dbSet
             = (database->getNbStimuli(Database::Validation) > 0)
