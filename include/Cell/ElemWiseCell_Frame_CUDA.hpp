@@ -76,6 +76,8 @@ public:
     
     std::pair<double, double> getOutputsRange() const;
 
+    virtual void setOutputsDims();
+
     virtual ~ElemWiseCell_Frame_CUDA();
 
 protected:
