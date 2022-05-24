@@ -68,6 +68,11 @@ public:
                                              const std::string& fileName);
     static void generateNetworkPropagateQATFile(const DeepNet& deepNet, 
                                                 const std::string& filePath);
+    static MemoryManager generateQATMemory(DeepNet& deepNet,
+                                           bool wrapAroundBuffer,
+                                           bool noBranchConcatOpt,
+                                           bool includeInputInBuffer,
+                                           int memoryAlignment);
 
 private:
     static std::string getCellModelType(const Cell& cell);
