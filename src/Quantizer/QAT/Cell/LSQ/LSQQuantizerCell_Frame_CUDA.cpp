@@ -68,7 +68,7 @@ void LSQQuantizerCell_Frame_CUDA<T>::addWeights(BaseTensor& weights, BaseTensor&
     }
 
     mFullPrecisionWeights.push_back(&weights);
-    mQuantizedWeights.push_back(new CudaTensor<T>(weights.dims()));
+    mQuantizedWeights.push_back(new CudaTensor<T>(weights.dims()), 0);
 
     mDiffQuantizedWeights.push_back(&diffWeights);
     mDiffFullPrecisionWeights.push_back(new CudaTensor<T>(diffWeights.dims()), 0);
