@@ -794,7 +794,13 @@ namespace N2D2_HELPER{
                                         ((opt.nbBits > 0) ? "int" : "float") +
                                         std::to_string(std::abs(opt.nbBits));
 
-        sp->logTransformations(exportDir + "/transformations.dot", Database::TestOnly);
+        // Creation the statistics directory to store every stat of the dnn
+        Utils::createDirectories(exportDir + "/statistics");
+
+        // Creation and display the transformations used by the data processing
+        Utils::createDirectories(exportDir + "/statistics/transformations");
+        sp->logTransformations(exportDir + "/statistics/transformations" + "/transformations.dot", Database::TestOnly);
+
         if(!opt.qatSAT) {
 
             StimuliProviderExport::generate(*deepNet, *sp, exportDir + "/stimuli", opt.genExport, Database::Test, 

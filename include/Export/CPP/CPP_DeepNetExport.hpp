@@ -52,7 +52,7 @@ public:
                                          const std::string& filePath, 
                                          const MemoryManager& memManager,
                                          int memoryAlignment);
-    static void generateNetworkPropagateFile(const DeepNet& deepNet, 
+    static void generateForwardFile(const DeepNet& deepNet, 
                                              const std::string& filePath);
     static void printStats(const DeepNet& deepNet, 
                            const MemoryManager& memManager);
@@ -66,7 +66,7 @@ public:
 
     static void generateEnvironmentQATHeader(DeepNet& deepNet,
                                              const std::string& fileName);
-    static void generateNetworkPropagateQATFile(const DeepNet& deepNet, 
+    static void generateForwardQATFile(const DeepNet& deepNet, 
                                                 const std::string& filePath);
     static MemoryManager generateQATMemory(DeepNet& deepNet,
                                            bool wrapAroundBuffer,

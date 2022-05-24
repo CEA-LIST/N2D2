@@ -102,13 +102,17 @@ void N2D2::CPP_DeepNetExport::generate(DeepNet& deepNet,
                     noBranchConcatOpt, includeInputInBuffer, memoryAlignment);
     }
 
-    DrawNet::drawGraph(deepNet, dirName + "/graph");
+    // Creation and display the graph of the model
+    Utils::createDirectories(dirName + "/statistics/graph");
+    DrawNet::drawGraph(deepNet, dirName + "/statistics/graph" + "/graph");
 
     memManager.optimize(exportParams.getProperty<MemoryManager::OptimizeStrategy>
         (CPP_Config::MEMORY_MANAGER_STRATEGY,
         CPP_Config::MEMORY_MANAGER_STRATEGY_DEFAULT));
 
-    memManager.log(dirName + "/memory_mapping.log");
+    // Creation and display memory logs
+    Utils::createDirectories(dirName + "/statistics/memory");
+    memManager.log(dirName + "/statistics/memory" + "/memory_mapping.log");
 
     DeepNetExport::generateCells(deepNet, dirName, "CPP");
 
@@ -118,11 +122,11 @@ void N2D2::CPP_DeepNetExport::generate(DeepNet& deepNet,
     // Only the CPP_Quantization export can support the tools
     // for quantization aware training for now
     if (Utils::match("*CPP_Quantization*", dirName))
-        generateNetworkPropagateQATFile(deepNet,
-                                        dirName + "/src/NetworkPropagate.cpp");
+        generateForwardQATFile(deepNet,
+                                        dirName + "/dnn/src/forward.cpp");
     else
-        generateNetworkPropagateFile(deepNet,
-                                     dirName + "/src/NetworkPropagate.cpp");
+        generateForwardFile(deepNet,
+                                     dirName + "/dnn/src/forward.cpp");
 
     printStats(deepNet, memManager);
 }
@@ -1331,7 +1335,7 @@ void N2D2::CPP_DeepNetExport::generateMemoryInfoHeader(
     memInfo.close();
 }
 
-void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
+void N2D2::CPP_DeepNetExport::generateForwardFile(
     const DeepNet& deepNet, 
     const std::string& filePath) 
 {
@@ -1508,7 +1512,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
     }
 }
 
-void N2D2::CPP_DeepNetExport::generateNetworkPropagateQATFile(
+void N2D2::CPP_DeepNetExport::generateForwardQATFile(
     const DeepNet& deepNet, 
     const std::string& filePath) 
 {
