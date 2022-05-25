@@ -101,6 +101,9 @@ class Fc(NeuralNetworkCell, ModelDatatyped, Trainable):
         if not isinstance(nb_outputs, int):
             raise n2d2.error_handler.WrongInputType("nb_outputs", str(type(nb_outputs)), ["int"])
 
+        if self.activation == None:
+            self.activation = n2d2.activation.Linear()
+
         self._constructor_arguments.update({
             'nb_inputs': nb_inputs,
             'nb_outputs': nb_outputs,

@@ -124,6 +124,9 @@ class Deconv(NeuralNetworkCell, ModelDatatyped, Trainable):
         NeuralNetworkCell.__init__(self, **config_parameters)
         ModelDatatyped.__init__(self, **config_parameters)
 
+        if self.activation == None:
+            self.activation = n2d2.activation.Linear()
+
         self._constructor_arguments.update({
             'nb_inputs': nb_inputs,
             'nb_outputs': nb_outputs,
