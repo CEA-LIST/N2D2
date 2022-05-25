@@ -87,7 +87,7 @@ void N2D2::CPP_ConcatCellExport::generateCallCode(
     includes << "#include \"" << identifier << ".hpp\"\n";
 
     // functionCalls: input/output buffers
-    const std::string inputType = DeepNetExport::isCellInputsUnsigned(cell)
+    const std::string inputType = DeepNetExport::isCellInputsUnsigned(cell, deepNet)
         ? "UDATA_T" : "DATA_T";
 
     const auto& parents = deepNet.getParentCells(cell.getName());
