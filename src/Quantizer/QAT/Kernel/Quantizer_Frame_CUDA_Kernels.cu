@@ -319,7 +319,7 @@ std::pair<double, double>
 N2D2::Quantizer_Frame_CUDA_Kernels::cudaD_MinMax(double* data, 
                                                  unsigned int size)
 {
-    thrust::pair<thrust::device_ptr<float>, thrust::device_ptr<float>> 
+    thrust::pair<thrust::device_ptr<double>, thrust::device_ptr<double>> 
             minMaxPair = thrust::minmax_element(data, data+size);
             
     return std::make_pair(*minMaxPair.first, *minMaxPair.second);

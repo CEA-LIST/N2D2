@@ -86,7 +86,7 @@ void LSQQuantizerActivation_Frame_CUDA<half_float::half>::propagate(BaseTensor& 
 
 template <>
 void LSQQuantizerActivation_Frame_CUDA<float>::propagate(BaseTensor& baseInOut,
-                                                         bool inference)  
+                                                         bool /*inference*/)  
 {
     const CudaTensor<float>& input = dynamic_cast<const CudaTensor<float>&>(baseInOut);
 
