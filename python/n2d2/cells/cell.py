@@ -20,7 +20,7 @@
 """
 
 from abc import ABC, abstractmethod
-import n2d2
+
 import N2D2
 
 import n2d2.global_variables
@@ -109,29 +109,12 @@ class Block(Cell):
             self._cells[cell.get_name()] = cell
         Cell.__init__(self, name)
 
-    @n2d2.utils.methdispatch
     def __getitem__(self, item):
-        return NotImplemented
-
-    @__getitem__.register(str)
-    def _(self, item):
-        return self.get_cell(item)
-
-    @__getitem__.register(int)
-    def _(self, item):
-        k = list(self._cells.values())[item]
-        return k
-
-
-    def is_integral(self):
-        """
-        Check if the parameters of every cell have an integral precision.
-        """
-        for cell in self._cells.values():
-            # mQuantizedNbBits is initialize to 0
-            if "quantizer" in cell._parameters.keys() and cell.N2D2().getQuantizedNbBits() <= 0:
-                return False
-        return True
+        if isinstance(item, int):
+            return list(self._cells.values())[item]
+        if isinstance(item, str):
+            return self.get_cell(item)
+        raise n2d2.error_handler.WrongInputType("item", type(item), ["str"])
 
     def get_cells(self):
         """
@@ -229,7 +212,7 @@ class Block(Cell):
 class Iterable(Block, ABC):
     """
        This abstract class describes a Block object with order, i.e. an array/list-like object.
-       It implements several methods of python lists. The ``__call__`` method is implicitly defined by the order
+       It implements several methods of python lists. The __call__ method is implicitly defined by the order
        of the list.
     """
     @abstractmethod
@@ -311,6 +294,7 @@ class Sequence(Iterable):
         """
         if not isinstance(provider, n2d2.provider.DataProvider):
             raise n2d2.error_handler.WrongInputType("provider", type(provider), ["n2d2.provider.DataProvider"])
+        # dummy_input = provider.read_random_batch()
         dummy_input = n2d2.Tensor(provider.shape())
 
         provider._deepnet = n2d2.deepnet.DeepNet()
@@ -366,7 +350,7 @@ class Layer(Iterable):
 class DeepNetCell(Block):
     """
     n2d2 wrapper for a N2D2 deepnet object. Allows chaining a N2D2 deepnet (for example loaded from a ONNX or INI file)
-    into the dynamic computation graph of the n2d2 API. During each use of the  the ``__call__`` method,
+    into the dynamic computation graph of the n2d2 API. During each use of the  the __call__ method,
     the N2D2 deepnet is converted to a n2d2 representation and the N2D2 deepnet is concatenated to the deepnet of the
     incoming tensor object.
     The object is manipulated with the bound methods of the N2D2 DeepNet object, and its computation graph is
@@ -403,9 +387,9 @@ class DeepNetCell(Block):
 
         :param provider: Provider object to base deepnet upon
         :type provider: :py:class:`n2d2.provider.DataProvider`
-        :param model_path: Path to the ``onnx`` model.
+        :param model_path: Path to the model.
         :type model_path: str
-        :param ini_file: Path to an optional ``.ini`` file with additional onnx import instructions
+        :param ini_file: Path to an optional .ini file with additional onnx import instructions
         :type ini_file: str
         :param ignore_cells: List of cells name to ignore, default=None
         :type ignore_cells: list, optional
@@ -434,7 +418,7 @@ class DeepNetCell(Block):
     def load_from_INI(cls, path):
         """Load a deepnet from an INI file.
 
-        :param model_path: Path to the ``ini`` file.
+        :param model_path: Path to the ini file.
         :type model_path: str
         """
         n2d2_deepnet = N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path)
@@ -522,7 +506,7 @@ class DeepNetCell(Block):
         """Remove a cell from the encapsulated deepnet.
         :param name: Name of cell that shall be removed.
         :type name: str
-        :param reconnect: If ``True``, reconnects the parents with the child of the removed cell, default=True
+        :param reconnect: If `True`, reconnects the parents with the child of the removed cell, default=True
         :type reconnect: bool, optional 
         """
         self._embedded_deepnet.remove(name, reconnect)
@@ -603,17 +587,17 @@ class DeepNetCell(Block):
         :type test_index: int, optional
         :param test_id: Test a single specific stimulus ID (takes precedence over `test_index`), default=-1
         :type test_id: int, optional
-        :param qat_sat: Fuse a QAT trained model with the SAT method, default=False
+        :param qat_sat: Fuse a QAT trained with SAT method, default=False
         :type qat_sat: bool, optional
         :param log_kernels: Log kernels after learning, default=False
         :type log_kernels: bool, optional
-        :param wt_round_mode: Weights clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
+        :param wt_round_mode: Weights clipping mode on export, can be `NONE`,`RINTF`, default="NONE"
         :type wt_round_mode: str, optional
-        :param b_round_mode: Biases clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
+        :param b_round_mode: Biases clipping mode on export, can be `NONE`,`RINTF`, default="NONE"
         :type b_round_mode: str, optional
-        :param c_round_mode: Clip clipping mode on export, can be ``NONE``,``RINTF``, default="NONE"
+        :param c_round_mode: Clip clipping mode on export, can be `NONE`,`RINTF`, default="NONE"
         :type c_round_mode: str, optional
-        :param act_scaling_mode: activation scaling mode on export, can be ``NONE``, ``FLOAT_MULT``, ``FIXED_MULT16``, ``SINGLE_SHIFT`` or ``DOUBLE_SHIFT``, default="FLOAT_MULT"
+        :param act_scaling_mode: activation scaling mode on export, can be `NONE`, `FLOAT_MULT`, `FIXED_MULT16`, `SINGLE_SHIFT` or `DOUBLE_SHIFT`, default="FLOAT_MULT"
         :type act_scaling_mode: str, optional
         :param log_JSON: If ``True``, log JSON annotations, default=False
         :type log_JSON: bool, optional
@@ -640,3 +624,131 @@ class DeepNetCell(Block):
                         c_round_mode=N2D2_c_round_mode, act_scaling_mode=N2D2_act_scaling_mode,
                         log_JSON=log_JSON, log_outputs=log_outputs, log_kernels=log_kernels)
         N2D2.test(parameters.N2D2(), self._embedded_deepnet.N2D2(), False)
+
+    def summary(self, verbose=False):
+        def converter(liste:list):
+            if sum(liste)/len(liste)==liste[0]: return liste[0]
+            else: return liste
+
+        names = list()
+        headers = list()
+        input_chain = dict()
+        titles = ['Layer (type)', 'Output Shape',
+                  'Param #', ' MAC #', 'Connected to', 'Extra']
+
+        tmp = self.get_embedded_deepnet().N2D2().getStimuliProvider().getSize()
+        tmp.append(1)  # batch size
+        # Input Line
+        input_name = 'Image1'
+        headers.append([input_name + ' (input)', tmp[::-1], 0, 0, '', {}])
+
+        # Headers Line
+        for name, cell in self.items():
+            input_chain[name] = cell.get_inputs()
+            if not verbose and cell.get_type() in ["BatchNorm2d"]:
+                continue
+
+            names.append(name)
+            ctype, params, extra = cell.get_type(), 0, {}
+            if cell.get_type() == "Conv":
+                temp = converter(cell.get_parameter("kernel_dims"))
+                if temp == 1: ctype = "PointWise"
+                elif type(temp) != type(list): ctype += ' ' + str(temp) + 'x' + str(temp)
+                else: extra["k"] = temp
+
+                n = cell.get_nb_outputs()
+                c = cell.get_nb_channels()
+                if n == c:
+                    mapping = self.get_embedded_deepnet().N2D2().getCell(cell.name).getMapping()
+                    if sum(mapping[:c]) == 1:
+                        ctype = "Depthwise"
+                        extra["k"] = str(temp) + 'x' + str(temp)
+
+                tensor = cell.get_weight(0, 0)
+                params = n * c * len(tensor)
+                if cell.has_bias():
+                    params += len(cell.get_biases())
+
+                if converter(cell.get_parameter("stride_dims")) != 1:
+                    extra["stride"] = converter(cell.get_parameter("stride_dims"))
+                if converter(cell.get_parameter("padding_dims")) != 1:
+                    extra["pad"] = converter(cell.get_parameter("padding_dims"))
+                if converter(cell.get_parameter("dilation_dims")) != 1:
+                    extra["dilation"] = converter(cell.get_parameter("dilation_dims"))
+                if cell.get_parameter("activation"):
+                    extra["Act"] = cell.get_parameter("activation").get_type()
+                    if extra["Act"] == "Rectifier": extra["Act"] = "ReLu"
+
+            if cell.get_type() == "Pool":
+                extra["size"] = converter(cell.get_parameter("pool_dims"))
+                if type(extra["size"]) != type(list): extra["size"] = str(extra["size"])+'x'+str(extra["size"])
+                if converter(cell.get_parameter("stride_dims")) != 2:
+                    extra["stride"] = converter(cell.get_parameter("stride_dims"))
+                if converter(cell.get_parameter("padding_dims")) != 0:
+                    extra["pad"] = converter(cell.get_parameter("padding_dims"))
+
+            inputs = list()
+            for input in cell.get_inputs():
+                if input in names:
+                    inputs.append(input)
+                    continue
+                while input not in names:
+                    if input in input_chain.keys():
+                        input = input_chain[input][0]
+                inputs.append(input)
+            if not len(cell.get_inputs()):
+                inputs = [input_name]
+
+            # Get nb MAC of the layer
+            test = n2d2.N2D2.Stats()
+            self.get_embedded_deepnet().N2D2().getCell(cell.name).getStats(test)
+            compute = test.nbVirtualSynapses
+
+            headers.append([name + ' (' + ctype + ')',
+                            cell.dims()[::-1], params, compute,
+                            ", ".join(inputs), extra])
+        # Output Line
+        while name not in names:
+            if name in input_chain.keys():
+                name = input_chain[name][0]
+        headers.append(['Features (output)', cell.dims()[::-1], 0, 0, name, {}])
+        display(titles, headers)
+
+def display(titles, headers):
+	sep, sizes, output = 4, list(), ""
+	for idx, title in enumerate(titles):
+		temp = [len(title)]
+		for h in headers:
+			if idx == 2: temp.append(len(f"{h[idx]:,}"))
+			if idx == 3: temp.append(len(f"{h[idx] // 1000:,}"))
+			if idx == 5: temp.append(len(", ".join([key+': '+str(val) for key,val in h[idx].items()])))
+			else: temp.append(len(str(h[idx])))
+		sizes.append(max(temp))
+
+	output += "-" * (sum(sizes) + (sep * (len(sizes) - 1))) + '\n'
+	for t, s in zip(titles, sizes):
+		output += t + (" " * (sep + (s - len(t))))
+	output += '\n' + ("=" * (sum(sizes) + (sep * (len(sizes) - 1)))) + '\n'
+
+	for i, line in enumerate(headers):
+		for idx, elem in enumerate(line):
+			if idx == 1:
+				string = str(elem).replace('[', '(').replace(']', ')')
+				output += string + " " * (sizes[idx] - len(str(elem))) + (' ' * sep)
+			elif idx == 2:
+				string = f'{elem:,}'
+				output += " " * (sizes[idx] - len(string)) + string + (' ' * sep)
+			elif idx == 3:
+				string = f'{elem // 1000:,}k'
+				output += " " * (sizes[idx] - len(string)) + string + (' ' * sep)
+			elif idx == 5:
+				output += ", ".join([key+': '+str(val) for key, val in elem.items()])
+			else:
+				output += str(elem) + " " * (sizes[idx] - len(str(elem))) + (' ' * sep)
+		output += '\n'
+		if i + 1 < len(headers):
+			output += " " * (sum(sizes) + (sep * (len(sizes) - 1))) + '\n'
+	output += "=" * (sum(sizes) + (sep * (len(sizes) - 1)))
+	print(output)
+	print("Total params: ", f"{sum([p[2] for p in headers]):,}")
+	print("Total computing: ", f"{sum([p[3] for p in headers]):,} MAC")
