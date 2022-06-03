@@ -29,8 +29,6 @@ from tensorflow.python.framework.convert_to_constants import convert_variables_t
 from warnings import warn
 
 import tf2onnx
-# import onnx
-# from onnxsim import simplify
 
 import N2D2
 import n2d2
