@@ -640,9 +640,11 @@ namespace N2D2_HELPER{
 
         // TODO Avoid these global variables.
         DeepNetExport::mUnsignedData = (!opt.exportNoUnsigned);
+        CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
+        
         DeepNetExport::mEnvDataUnsigned = StimuliProviderExport::unsignedStimuli(*sp, 
                                             exportDir + "/stimuli", dbSet);
-        CellExport::mPrecision = static_cast<CellExport::Precision>(opt.nbBits);
+    
 
         const std::size_t nbStimuli = (opt.calibration > 0)? 
                                             std::min(static_cast<unsigned int>(opt.calibration),
