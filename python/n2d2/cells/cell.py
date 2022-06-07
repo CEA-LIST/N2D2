@@ -625,24 +625,78 @@ class DeepNetCell(Block):
                         log_JSON=log_JSON, log_outputs=log_outputs, log_kernels=log_kernels)
         N2D2.test(parameters.N2D2(), self._embedded_deepnet.N2D2(), False)
 
-    def summary(self, verbose=False):
-        def converter(liste:list):
+    def summary(self, verbose: bool = False):
+        """This method synthesize current deepnet's layers in a table.
+
+        :param verbose: display implicit layers like BN
+        :type verbose: bool
+        """
+        def converter(liste: list):
             if sum(liste)/len(liste)==liste[0]: return liste[0]
             else: return liste
 
-        names = list()
-        headers = list()
-        input_chain = dict()
-        titles = ['Layer (type)', 'Output Shape',
-                  'Param #', ' MAC #', 'Connected to', 'Extra']
+        def draw_table(titles, layers):
+            sep, sizes, output = 4, list(), ""
 
-        tmp = self.get_embedded_deepnet().N2D2().getStimuliProvider().getSize()
-        tmp.append(1)  # batch size
+            # Get feature maximum size 
+            for idx, title in enumerate(titles):
+                feaure_size = [len(title)]
+                for h in layers:
+                    if idx == 2:
+                        feaure_size.append(len(f"{h[idx]:,}"))
+                    if idx == 3:
+                        feaure_size.append(len(f"{h[idx] // 1000:,}"))
+                    if idx == 5:
+                        feaure_size.append(len(", ".join([key+': '+str(val)
+                                    for key, val in h[idx].items()])))
+                    else:
+                        feaure_size.append(len(str(h[idx])))
+                sizes.append(max(feaure_size))
+
+            # Display titles
+            output += "-" * (sum(sizes) + (sep * (len(sizes) - 1))) + '\n'
+            for t, s in zip(titles, sizes):
+                output += t + (" " * (sep + (s - len(t))))
+            output += '\n' + ("=" * (sum(sizes) + (sep * (len(sizes) - 1)))) + '\n'
+
+            # Display Layers features
+            for i, line in enumerate(layers):
+                for idx, elem in enumerate(line):
+                    if idx == 1:
+                        string = str(elem).replace('[', '(').replace(']', ')')
+                        output += string + " " * (sizes[idx] - len(str(elem))) + (' ' * sep)
+                    elif idx == 2:
+                        string = f'{elem:,}'
+                        output += " " * (sizes[idx] - len(string)) + string + (' ' * sep)
+                    elif idx == 3:
+                        string = f'{elem // 1000:,}k'
+                        output += " " * (sizes[idx] - len(string)) + string + (' ' * sep)
+                    elif idx == 5:
+                        output += ", ".join([key+': '+str(val) for key, val in elem.items()])
+                    else:
+                        output += str(elem) + " " * (sizes[idx] - len(str(elem))) + (' ' * sep)
+                output += '\n'
+                if i + 1 < len(layers):
+                    output += " " * (sum(sizes) + (sep * (len(sizes) - 1))) + '\n'
+            output += "=" * (sum(sizes) + (sep * (len(sizes) - 1)))
+            print(output)
+            print("Total params: ", f"{sum([p[2] for p in layers]):,}")
+            print("Total computing: ", f"{sum([p[3] for p in layers]):,} MAC")
+
+        names = list()
+        layers = list()
+        input_chain = dict()
+
+        # List of strings display on top of the table 
+        titles = ['Layer (type)', 'Output Shape', 'Param #', ' MAC #', 'Connected to', 'Extra']
+
         # Input Line
         input_name = 'Image1'
-        headers.append([input_name + ' (input)', tmp[::-1], 0, 0, '', {}])
+        input_size = self.get_embedded_deepnet().N2D2().getStimuliProvider().getSize()
+        input_size.append(1)  # batch size
+        layers.append([input_name + ' (input)', input_size[::-1], 0, 0, '', {}])
 
-        # Headers Line
+        # Layers Line
         for name, cell in self.items():
             input_chain[name] = cell.get_inputs()
             if not verbose and cell.get_type() in ["BatchNorm2d"]:
@@ -651,18 +705,19 @@ class DeepNetCell(Block):
             names.append(name)
             ctype, params, extra = cell.get_type(), 0, {}
             if cell.get_type() == "Conv":
-                temp = converter(cell.get_parameter("kernel_dims"))
-                if temp == 1: ctype = "PointWise"
-                elif type(temp) != type(list): ctype += ' ' + str(temp) + 'x' + str(temp)
-                else: extra["k"] = temp
+                k_size = converter(cell.get_parameter("kernel_dims"))
+                if k_size == 1: ctype = "PointWise"
+                elif type(k_size) != type(list): ctype += ' ' + str(k_size) + 'x' + str(k_size)
+                else: extra["k"] = k_size
 
                 n = cell.get_nb_outputs()
                 c = cell.get_nb_channels()
                 if n == c:
+                    # If same input & output channel size: check if Depthwise
                     mapping = self.get_embedded_deepnet().N2D2().getCell(cell.name).getMapping()
                     if sum(mapping[:c]) == 1:
                         ctype = "Depthwise"
-                        extra["k"] = str(temp) + 'x' + str(temp)
+                        extra["k"] = str(k_size) + 'x' + str(k_size)
 
                 tensor = cell.get_weight(0, 0)
                 params = n * c * len(tensor)
@@ -681,12 +736,14 @@ class DeepNetCell(Block):
 
             if cell.get_type() == "Pool":
                 extra["size"] = converter(cell.get_parameter("pool_dims"))
-                if type(extra["size"]) != type(list): extra["size"] = str(extra["size"])+'x'+str(extra["size"])
+                if type(extra["size"]) != type(list):
+                    extra["size"] = str(extra["size"])+'x'+str(extra["size"])
                 if converter(cell.get_parameter("stride_dims")) != 2:
                     extra["stride"] = converter(cell.get_parameter("stride_dims"))
                 if converter(cell.get_parameter("padding_dims")) != 0:
                     extra["pad"] = converter(cell.get_parameter("padding_dims"))
 
+            # Get name of Cell inputs
             inputs = list()
             for input in cell.get_inputs():
                 if input in names:
@@ -700,55 +757,15 @@ class DeepNetCell(Block):
                 inputs = [input_name]
 
             # Get nb MAC of the layer
-            test = n2d2.N2D2.Stats()
-            self.get_embedded_deepnet().N2D2().getCell(cell.name).getStats(test)
-            compute = test.nbVirtualSynapses
+            cell_stat = n2d2.N2D2.Stats()
+            self.get_embedded_deepnet().N2D2().getCell(cell.name).getStats(cell_stat)
 
-            headers.append([name + ' (' + ctype + ')',
-                            cell.dims()[::-1], params, compute,
-                            ", ".join(inputs), extra])
+            layers.append([name + ' (' + ctype + ')', cell.dims()[::-1], params,
+                           cell_stat.nbVirtualSynapses, ", ".join(inputs), extra])
         # Output Line
         while name not in names:
             if name in input_chain.keys():
                 name = input_chain[name][0]
-        headers.append(['Features (output)', cell.dims()[::-1], 0, 0, name, {}])
-        display(titles, headers)
+        layers.append(['Features (output)', cell.dims()[::-1], 0, 0, name, {}])
+        draw_table(titles, layers)
 
-def display(titles, headers):
-	sep, sizes, output = 4, list(), ""
-	for idx, title in enumerate(titles):
-		temp = [len(title)]
-		for h in headers:
-			if idx == 2: temp.append(len(f"{h[idx]:,}"))
-			if idx == 3: temp.append(len(f"{h[idx] // 1000:,}"))
-			if idx == 5: temp.append(len(", ".join([key+': '+str(val) for key,val in h[idx].items()])))
-			else: temp.append(len(str(h[idx])))
-		sizes.append(max(temp))
-
-	output += "-" * (sum(sizes) + (sep * (len(sizes) - 1))) + '\n'
-	for t, s in zip(titles, sizes):
-		output += t + (" " * (sep + (s - len(t))))
-	output += '\n' + ("=" * (sum(sizes) + (sep * (len(sizes) - 1)))) + '\n'
-
-	for i, line in enumerate(headers):
-		for idx, elem in enumerate(line):
-			if idx == 1:
-				string = str(elem).replace('[', '(').replace(']', ')')
-				output += string + " " * (sizes[idx] - len(str(elem))) + (' ' * sep)
-			elif idx == 2:
-				string = f'{elem:,}'
-				output += " " * (sizes[idx] - len(string)) + string + (' ' * sep)
-			elif idx == 3:
-				string = f'{elem // 1000:,}k'
-				output += " " * (sizes[idx] - len(string)) + string + (' ' * sep)
-			elif idx == 5:
-				output += ", ".join([key+': '+str(val) for key, val in elem.items()])
-			else:
-				output += str(elem) + " " * (sizes[idx] - len(str(elem))) + (' ' * sep)
-		output += '\n'
-		if i + 1 < len(headers):
-			output += " " * (sum(sizes) + (sep * (len(sizes) - 1))) + '\n'
-	output += "=" * (sum(sizes) + (sep * (len(sizes) - 1)))
-	print(output)
-	print("Total params: ", f"{sum([p[2] for p in headers]):,}")
-	print("Total computing: ", f"{sum([p[3] for p in headers]):,} MAC")
