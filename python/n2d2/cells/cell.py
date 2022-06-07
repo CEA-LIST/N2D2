@@ -715,8 +715,6 @@ class DeepNetCell(Block):
 
         # Layers Line
         for name, cell in self.items():
-            # print(cell.get_input_cells(), dir(cell))
-            # exit()
             input_chain[name] = cell.get_input_cells()
             if not verbose and cell.get_type() in ["BatchNorm2d"]:
                 continue
