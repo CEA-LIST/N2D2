@@ -266,6 +266,7 @@ void init_Cell(py::module &m) {
     .def("getParentsCells", &Cell::getParentsCells)
     // .def("isConnection", &Cell::isConnection, py::arg("channel"), py::arg("output"))
     .def("getMapping", &Cell::getMapping)
+    .def("getQuantizedNbBits", &Cell::getQuantizedNbBits)
     ;
 }
 }
