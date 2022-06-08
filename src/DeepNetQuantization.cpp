@@ -46,6 +46,7 @@
 #include "Cell/PaddingCell.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/ConvCell.hpp"
+#include "Cell/DeconvCell.hpp"
 #include "Cell/FcCell.hpp"
 #include "Cell/ResizeCell.hpp"
 #include "Cell/ScalingCell.hpp"
@@ -108,7 +109,7 @@ long double N2D2::DeepNetQuantization::getMaxParentsScaling(const std::shared_pt
                                 const std::unordered_map<std::string, long double>& scalingForCells) const 
 {
     long double maxParentsScaling = 0.0;
-    for(const auto& parentCell: cell->getParentsCells()) {
+    for(const auto& parentCell: mDeepNet.getParentCells(cell->getName())) {
         const long double parentScaling = parentCell?scalingForCells.at(parentCell->getName()):1.0;
         maxParentsScaling = std::max(maxParentsScaling, parentScaling);
 
@@ -123,7 +124,7 @@ void N2D2::DeepNetQuantization::rescaleParentsToScaling(const std::shared_ptr<Ce
                                         long double scaling)
 {
     // Get a copy, the loop modify the graph
-    const std::vector<std::shared_ptr<Cell>> parentsCells = cell->getParentsCells();
+    const std::vector<std::shared_ptr<Cell>> parentsCells = mDeepNet.getParentCells(cell->getName());
 
     for(const std::shared_ptr<Cell>& parentCell: parentsCells) {
         const long double parentScaling = parentCell?scalingForCells.at(parentCell->getName()):1.0;
@@ -212,7 +213,7 @@ void N2D2::DeepNetQuantization::reportOutputsHistogram(
                 const auto range = outputsRange.at(*itCell);
                 const bool isCellOutputUnsigned = (itLayer == layers.begin())?
                                             DeepNetExport::mEnvDataUnsigned:
-                                            DeepNetExport::isCellOutputUnsigned(*cells.at(*itCell));
+                                            DeepNetExport::isCellOutputUnsigned(*cells.at(*itCell), mDeepNet);
                 
                 double val = Utils::max_abs(range.minVal(), range.maxVal());
                 // Take 0.1 as minimum value as we don't want a range of [0;0]
@@ -408,14 +409,13 @@ void N2D2::DeepNetQuantization::crossLayerEqualization(
                 if(!cell) {
                     throw std::runtime_error("Invalid cell.");
                 }
-
-                auto parentsCells = cell->getParentsCells();
+                auto parentsCells = mDeepNet.getParentCells(cell->getName());
 
                 if ((cell->getType() == ConvCell::Type
                     || cell->getType() == FcCell::Type)
                     && parentsCells.size() == 1
                     && parentsCells[0]
-                    && parentsCells[0]->getChildrenCells().size() == 1
+                    && mDeepNet.getChildCells(parentsCells[0]->getName()).size() == 1
                     && (parentsCells[0]->getType() == ConvCell::Type
                     || parentsCells[0]->getType() == FcCell::Type))
                 {
@@ -554,7 +554,7 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantize
 
 
             const long double wQuantScaling = std::pow(2, nbBits - 1) - 1;
-            const long double bQuantScaling = DeepNetExport::isCellInputsUnsigned(*cell)?
+            const long double bQuantScaling = DeepNetExport::isCellInputsUnsigned(*cell, mDeepNet)?
                                                   wQuantScaling*(std::pow(2, nbBits) - 1):
                                                   wQuantScaling*(std::pow(2, nbBits - 1) - 1);
 
@@ -607,7 +607,7 @@ std::unordered_map<std::string, long double> N2D2::DeepNetQuantization::quantize
 
 
             const long double wQuantScaling = std::pow(2, nbBits - 1) - 1;
-            const long double bQuantScaling = DeepNetExport::isCellInputsUnsigned(*cell)?
+            const long double bQuantScaling = DeepNetExport::isCellInputsUnsigned(*cell, mDeepNet)?
                                                   wQuantScaling*(std::pow(2, nbBits) - 1):
                                                   wQuantScaling*(std::pow(2, nbBits - 1) - 1);
 
@@ -723,7 +723,7 @@ void N2D2::DeepNetQuantization::quantizeActivations(
                  * When clipping with MSE or KL-Divergence and the next cell is a max pooling cell,
                  * use the histogram of the max pooling to calculate the clipping threshold.
                  */
-                auto childrenCells = cell->getChildrenCells();
+                auto childrenCells = mDeepNet.getChildCells(cell->getName());
                 const bool isNextCellMaxPool = childrenCells.size() == 1 && 
                                                childrenCells[0]->getType() == PoolCell::Type && 
                                                dynamic_cast<const PoolCell&>(*childrenCells[0]).getPooling() == PoolCell::Max;
@@ -807,17 +807,17 @@ double N2D2::DeepNetQuantization::getActivationQuantizationScaling(const Cell& c
     if(activationType == LogisticActivation::Type || 
        activationType == LogisticActivation::TypeWithLoss) 
     {
-        return 2*(DeepNetExport::isCellInputsUnsigned(cell)?
+        return 2*(DeepNetExport::isCellInputsUnsigned(cell, mDeepNet)?
                      signedMax*unsignedMax/signedMax:
                      signedMax*signedMax/signedMax);
     }
-    else if(DeepNetExport::isCellOutputUnsigned(cell)) {
-        return DeepNetExport::isCellInputsUnsigned(cell)?
+    else if(DeepNetExport::isCellOutputUnsigned(cell, mDeepNet)) {
+        return DeepNetExport::isCellInputsUnsigned(cell, mDeepNet)?
                    signedMax*unsignedMax/unsignedMax:
                    signedMax*signedMax/unsignedMax;
     }
     else {
-        return DeepNetExport::isCellInputsUnsigned(cell)?
+        return DeepNetExport::isCellInputsUnsigned(cell, mDeepNet)?
                    signedMax*unsignedMax/signedMax:
                    signedMax*signedMax/signedMax;
     }
@@ -842,9 +842,9 @@ void N2D2::DeepNetQuantization::fuseScalingCells() {
                 continue;
             }
 
-            auto parentsCells = cell->getParentsCells();
+            auto parentsCells = mDeepNet.getParentCells(cell->getName());
             if(parentsCells.size() != 1 || !parentsCells.front() || 
-               parentsCells.front()->getChildrenCells().size() != 1) 
+               mDeepNet.getChildCells(parentsCells.front()->getName()).size() != 1)
             {
                 continue;
             }
@@ -981,7 +981,7 @@ bool N2D2::DeepNetQuantization::moveScalingCellAboveParentElemWiseCell(
             << scalingPerOutput[0] << std::endl;
 #endif
 
-        auto grandParentsCells = parentElemWiseCell->getParentsCells();
+        auto grandParentsCells = mDeepNet.getParentCells(parentElemWiseCell->getName());
         for(auto grandParentCell: grandParentsCells) {
             auto grandParentScalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*grandParentCell))
                                             (mDeepNet, 

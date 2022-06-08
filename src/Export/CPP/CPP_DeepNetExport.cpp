@@ -981,7 +981,7 @@ void N2D2::CPP_DeepNetExport::generateEnvironmentHeader(DeepNet& deepNet,
             envHeader << "typedef int32_t Target_" << targetIdx << "_T;\n";
         }
         else {
-            std::string dataType = DeepNetExport::isCellOutputUnsigned(*cell)
+            std::string dataType = DeepNetExport::isCellOutputUnsigned(*cell, deepNet)
                 ? "UDATA_T" : "DATA_T";
 
             envHeader << "typedef " << dataType << " Target_"
@@ -1113,7 +1113,7 @@ void N2D2::CPP_DeepNetExport::generateEnvironmentQATHeader(DeepNet& deepNet,
         else {
             const int nbBits
                 = CellExport::getQuantizedOutputNbBits(deepNet, *cell);
-            std::string dataType = DeepNetExport::isCellOutputUnsigned(*cell)
+            std::string dataType = DeepNetExport::isCellOutputUnsigned(*cell, deepNet)
                 ? "udata" : "data";
 
             envHeader << "typedef " << dataType << "<" << nbBits << "> Target_"
@@ -1386,11 +1386,11 @@ void N2D2::CPP_DeepNetExport::generateForwardFile(
                 = N2D2::Utils::CIdentifier(cell->getName());
             const std::string prefix = Utils::upperCase(identifier);
 
-            std::string dataType = DeepNetExport::isCellOutputUnsigned(*cell)
+            std::string dataType = DeepNetExport::isCellOutputUnsigned(*cell, deepNet)
                 ? "UDATA_T" : "DATA_T";
 
             if (cell->getParentsCells().size() > 1) {
-                dataType = DeepNetExport::isCellInputsUnsigned(*cell)
+                dataType = DeepNetExport::isCellInputsUnsigned(*cell, deepNet)
                     ? "UDATA_T" : "DATA_T";
             }
 
@@ -1451,7 +1451,7 @@ void N2D2::CPP_DeepNetExport::generateForwardFile(
                         << "#endif\n";
         }
         else {
-            std::string dataType = DeepNetExport::isCellOutputUnsigned(*targetCell)
+            std::string dataType = DeepNetExport::isCellOutputUnsigned(*targetCell, deepNet)
                 ? "UDATA_T" : "DATA_T";
 
             functionCalls << "    memcpy(outputs, "
@@ -1565,11 +1565,11 @@ void N2D2::CPP_DeepNetExport::generateForwardQATFile(
 
             const int nbBits
                 = CellExport::getQuantizedOutputNbBits(deepNet, *cell);
-            std::string dataType = DeepNetExport::isCellOutputUnsigned(*cell)
+            std::string dataType = DeepNetExport::isCellOutputUnsigned(*cell, deepNet)
                 ? "udata" : "data";
 
             if (deepNet.getParentCells(cell->getName()).size() > 1) {
-                dataType = DeepNetExport::isCellInputsUnsigned(*cell)
+                dataType = DeepNetExport::isCellInputsUnsigned(*cell, deepNet)
                     ? "udata" : "data";
             }
 

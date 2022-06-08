@@ -942,6 +942,127 @@ TEST(ElemWiseCell_Frame_CUDA,
 }
 
 TEST(ElemWiseCell_Frame_CUDA,
+     propagate_prod2_broadcasting)
+{
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+
+    Random::mtSeed(1);
+
+    const unsigned int nbOutputs = 2;
+    const unsigned int kernelSize = 3;
+    const unsigned int batchSize = 2;
+
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
+                                     nbOutputs,
+                                     ElemWiseCell::Prod);
+
+    ASSERT_EQUALS(elemWise.getName(), "elemwise");
+    ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
+
+    Tensor<Float_T> inputsA({1, 1, nbOutputs, batchSize});
+    Tensor<Float_T> inputsB({kernelSize, kernelSize, nbOutputs, batchSize});
+    Tensor<Float_T> diffOutputsA({1, 1, nbOutputs, batchSize});
+    Tensor<Float_T> diffOutputsB({kernelSize, kernelSize, nbOutputs, batchSize});
+
+    for (unsigned int index = 0; index < inputsA.size(); ++index) {
+        inputsA(index) = Random::randUniform(-1.0, 1.0);
+    }
+
+    for (unsigned int index = 0; index < inputsB.size(); ++index) {
+        inputsB(index) = Random::randUniform(-1.0, 1.0);
+    }
+
+    inputsA.synchronizeHToD();
+    inputsB.synchronizeHToD();
+
+    elemWise.addInput(inputsB, diffOutputsB);
+    elemWise.addInput(inputsA, diffOutputsA);
+    elemWise.initialize();
+
+    elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
+    const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
+
+    ASSERT_EQUALS(outputs.dimX(), inputsB.dimX());
+    ASSERT_EQUALS(outputs.dimY(), inputsB.dimY());
+    ASSERT_EQUALS(outputs.dimZ(), inputsB.dimZ());
+    ASSERT_EQUALS(outputs.dimB(), inputsB.dimB());
+
+    for (unsigned int o = 0; o < outputs.size(); ++o) {
+        unsigned int inA_ind = std::floor(o/(kernelSize*kernelSize));
+        ASSERT_EQUALS_DELTA(outputs(o), inputsA(inA_ind) * inputsB(o), 1.0e-9);
+    }
+
+    ASSERT_NOTHROW_ANY(elemWise.checkGradient(1.0e-3, 1.0e-2));
+}
+
+
+
+
+TEST(ElemWiseCell_Frame_CUDA,
+     propagate_prod2_broadcasting2)
+{
+    REQUIRED(UnitTest::CudaDeviceExists(3));
+
+    Network net;
+    DeepNet dn(net);
+
+    Random::mtSeed(0);
+
+    const unsigned int nbOutputs = 2;
+    const unsigned int kernelSize = 3;
+    const unsigned int batchSize = 2;
+
+    ElemWiseCell_Frame_CUDA_Test elemWise(dn, "elemwise",
+                                     nbOutputs,
+                                     ElemWiseCell::Prod);
+
+    ASSERT_EQUALS(elemWise.getName(), "elemwise");
+    ASSERT_EQUALS(elemWise.getNbOutputs(), nbOutputs);
+
+    Tensor<Float_T> inputsA({1, 1, nbOutputs, batchSize});
+    Tensor<Float_T> inputsB({kernelSize, kernelSize, nbOutputs, batchSize});
+    Tensor<Float_T> diffOutputsA({1, 1, nbOutputs, batchSize});
+    Tensor<Float_T> diffOutputsB({kernelSize, kernelSize, nbOutputs, batchSize});
+
+    for (unsigned int index = 0; index < inputsA.size(); ++index) {
+        inputsA(index) = Random::randUniform(-1.0, 1.0);
+    }
+
+    for (unsigned int index = 0; index < inputsB.size(); ++index) {
+        inputsB(index) = Random::randUniform(-1.0, 1.0);
+    }
+
+    inputsA.synchronizeHToD();
+    inputsB.synchronizeHToD();
+
+    elemWise.addInput(inputsA, diffOutputsA);
+    elemWise.addInput(inputsB, diffOutputsB);
+    elemWise.initialize();
+
+    elemWise.propagate();
+    elemWise.getOutputs().synchronizeDToH();
+    const Tensor<Float_T>& outputs = tensor_cast<Float_T>(elemWise.getOutputs());
+
+    ASSERT_EQUALS(outputs.dimX(), inputsB.dimX());
+    ASSERT_EQUALS(outputs.dimY(), inputsB.dimY());
+    ASSERT_EQUALS(outputs.dimZ(), inputsB.dimZ());
+    ASSERT_EQUALS(outputs.dimB(), inputsB.dimB());
+
+    inputsA.synchronizeDToH();
+
+    for (unsigned int o = 0; o < outputs.size(); ++o) {
+        unsigned int inA_ind = std::floor(o/(kernelSize*kernelSize));
+        ASSERT_EQUALS_DELTA(outputs(o), inputsA(inA_ind) * inputsB(o), 1.0e-9);
+    }
+
+    ASSERT_NOTHROW_ANY(elemWise.checkGradient(1.0e-3, 1.0e-2));
+}
+
+TEST(ElemWiseCell_Frame_CUDA,
      propagate_max2)
 {
     REQUIRED(UnitTest::CudaDeviceExists(3));

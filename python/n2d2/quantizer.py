@@ -133,6 +133,8 @@ def PTQ(deepnet_cell,
         N2D2_database = N2D2_provider.getDatabase()
         N2D2_deepnet.setDatabase(N2D2_database)
         N2D2_deepnet.setStimuliProvider(N2D2_provider)
+        deepnet_cell[0].N2D2().clearInputTensors()
+        deepnet_cell[0].N2D2().addInput(N2D2_provider, 0, 0, N2D2_provider.getSizeX(), N2D2_provider.getSizeY())
 
     if len(N2D2_deepnet.getTargets()) == 0:
         # No target associated to the DeepNet

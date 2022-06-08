@@ -295,12 +295,39 @@ N2D2::DeepNetExport::getMapLayer(DeepNet& deepNet,
     return mapping;
 }
 
-bool N2D2::DeepNetExport::isCellInputsUnsigned(const Cell& cell) {
+bool N2D2::DeepNetExport::isCellInputsUnsigned(const Cell& cell, const DeepNet& deepNet) {
     if (CellExport::mPrecision <= 0 || !DeepNetExport::mUnsignedData) {
         // Unsigned cells are not allowed
         return false;
     }
 
+    const std::vector<std::shared_ptr<Cell>>& parentsCells = deepNet.getParentCells(cell.getName());
+    
+    bool unsignedInputs = false;
+    for (auto it = parentsCells.begin(); it != parentsCells.end(); ++it) {
+        const bool unsignedInput = (*it)?isCellOutputUnsigned(**it, deepNet):DeepNetExport::mEnvDataUnsigned;
+
+        if (it == parentsCells.begin()) {
+            unsignedInputs = unsignedInput;
+        }
+        else if (unsignedInput != unsignedInputs) {
+            throw std::runtime_error("Unsupported: cell " + cell.getName() + 
+                                     " mixes signed and unsigned inputs. "
+                                     "Try setting DeepNetExport::mUnsignedData to false");
+        }
+    }
+
+    return unsignedInputs;
+}
+
+bool N2D2::DeepNetExport::isCellInputsUnsigned(const Cell& cell) {
+    
+    if (CellExport::mPrecision <= 0 || !DeepNetExport::mUnsignedData) {
+        // Unsigned cells are not allowed
+        return false;
+    }
+    // FIXME : cell.getParentsCells is error prone with the python API as the mDeepNet attribute may not be the same
+    // as the one used for the export.
     const std::vector<std::shared_ptr<Cell>>& parentsCells = cell.getParentsCells();
     
     bool unsignedInputs = false;
@@ -318,6 +345,26 @@ bool N2D2::DeepNetExport::isCellInputsUnsigned(const Cell& cell) {
     }
 
     return unsignedInputs;
+}
+
+bool N2D2::DeepNetExport::isCellOutputUnsigned(const Cell& cell, const DeepNet& deepNet)  {
+    if (CellExport::mPrecision <= 0 || !DeepNetExport::mUnsignedData) {
+        // Unsigned cells are not allowed
+        return false;
+    }
+
+    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+
+    if (cell.getType() == PaddingCell::Type) {
+        // Special case for PaddingCell because getOutputsRange() throw an
+        // exception if the parent cell is the env (which can happen for 
+        // padding).
+        // FIXME: find a better generic alternative...
+        return isCellInputsUnsigned(cell, deepNet);
+    }
+    else {
+        return cellFrame.getOutputsRange().first >= 0.0;
+    }
 }
 
 bool N2D2::DeepNetExport::isCellOutputUnsigned(const Cell& cell)  {
