@@ -278,7 +278,7 @@ void N2D2::CPP_CellExport::generateSaveOutputs(const DeepNet& /*deepNet*/,
 
     // functionCalls: save outputs
     functionCalls << "#ifdef SAVE_OUTPUTS\n";
-    functionCalls << "    FILE* " << identifier << "_stream = fopen(\"" 
+    functionCalls << "    FILE* " << identifier << "_stream = fopen(\"outputs/" 
                                 << identifier << "_output.txt\", \"w\");\n";
     functionCalls << "    saveOutputs("
                 << prefix << "_NB_OUTPUTS, "
