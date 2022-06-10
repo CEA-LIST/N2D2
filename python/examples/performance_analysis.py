@@ -32,7 +32,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description="Train a ConvNet on the GTSRB dataset and run the N2D2 analysis tools to get.")
 parser.add_argument('--epochs', type=int, default=10, metavar='S',
-                    help='Nb Epochs. 0 is testing only (default: 120)')
+                    help='Nb Epochs. 0 is testing only (default: 10)')
 parser.add_argument('--batch_size', type=int, default=64, metavar='S',
                     help='Batch size')
 parser.add_argument('--dev', type=int, default=0, metavar='S',
