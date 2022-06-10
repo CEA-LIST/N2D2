@@ -12,25 +12,13 @@ test:ubuntu:
 
 
 test:python_api:
+  extends: 
+    - .before_script_python
   stage: test
   tags:
     - ubuntu  
-  before_script:  
-    - cd python
-    # Creating a new virtualenv
-    - pip install virtualenv
-    - virtualenv -p python3.7 venv
-    - shopt -s expand_aliases
-    - alias python='venv/bin/python3.7'
-    # -> verify env is clean
-    - python -m pip freeze
+  before_script: 
   script:
-    - python -m pip install -r requirements.txt
-    - python -m pip install -r keras_interoperability/requirements.txt
-    - python -m pip install -r pytorch_interoperability/requirements.txt
-    # -> Cehck installed lib
-    - python -m pip freeze
-
     # Run on discovery all tests located in python/tests and discard the stdout 
     # only to show the errors/warnings and the results of the tests
     - python -m unittest discover -s tests -v -b 1> /dev/null 
