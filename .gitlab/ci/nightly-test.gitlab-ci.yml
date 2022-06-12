@@ -1,7 +1,7 @@
 test_python_examples:
   extends: 
     - .before_script_python
-    - .rules:schedule-python-test
+    - .rules:schedule-python-tests
   stage: nightly-test
   timeout: 4 hours
   tags:
