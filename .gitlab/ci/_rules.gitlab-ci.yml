@@ -6,15 +6,46 @@
 #                                                                                                  #
 ####################################################################################################
 
+##############
+# Conditions #
+##############
+
+.rules-element:if-default-branch: &if-default-branch
+  if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+.rules-element:if-schedule-pipeline: &if-schedule-pipeline
+  if: '$CI_PIPELINE_SOURCE == "schedule"'
+
+.rules-element:if-not-schedule-pipeline: &if-not-schedule-pipeline
+  if: '$CI_PIPELINE_SOURCE != "schedule"'
+
+
+########################
+# Default branch rules #
+########################
+
+.rules:all-branches-not-schedule:
+  rules:
+    - *if-not-schedule-pipeline
 
 # Jobs that run only on the default branch (which should be 'master')
 .rules:default-branch-only:
   rules:
-  - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH' 
+  - *if-default-branch 
+  - *if-not-schedule-pipeline
 
-.rules:schedule-test:
+
+##################
+# Schedule rules #
+##################
+
+.rules:default-branch-only-schedule:
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && 
-           $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH  && 
-           $PY_TEST_NIGHTLY'
-      when: always
+    - *if-default-branch 
+    - *if-schedule-pipeline
+
+.rules:schedule-python-tests:
+  rules:
+    - *if-default-branch 
+    - *if-schedule-pipeline
+    - if: '$PY_TEST_NIGHTLY'
