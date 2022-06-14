@@ -7,14 +7,32 @@
 ####################################################################################################
 
 
+########################
+# Default branch rules #
+########################
+
+.rules:all-branches-not-schedule:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE != "schedule"'
+
 # Jobs that run only on the default branch (which should be 'master')
 .rules:default-branch-only:
   rules:
-  - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH' 
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH &&
+           $CI_PIPELINE_SOURCE != "schedule"'
 
-.rules:schedule-test:
+
+##################
+# Schedule rules #
+##################
+
+.rules:default-branch-only-schedule:
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && 
-           $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH  && 
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH &&
+           $CI_PIPELINE_SOURCE == "schedule"'
+
+.rules:schedule-python-tests:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH &&
+           $CI_PIPELINE_SOURCE == "schedule" && 
            $PY_TEST_NIGHTLY'
-      when: always

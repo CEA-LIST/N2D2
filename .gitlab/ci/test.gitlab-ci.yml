@@ -1,6 +1,7 @@
 test:ubuntu:
   extends: 
     - .before_script_template
+    - .rules:all-branches-not-schedule
   stage: test
   variables:
     CTEST_OUTPUT_ON_FAILURE: 1
@@ -14,6 +15,7 @@ test:ubuntu:
 test:python_api:
   extends: 
     - .before_script_python
+    - .rules:all-branches-not-schedule
   stage: test
   tags:
     - ubuntu  
@@ -23,13 +25,15 @@ test:python_api:
     # only to show the errors/warnings and the results of the tests
     - python -m unittest discover -s tests -v -b 1> /dev/null 
 
+
 static_analysis:python_api:
+  extends:
+    - .rules:all-branches-not-schedule
   stage: test
   allow_failure: true
   tags:
     - ubuntu
   image: "python:3.7"
-
   script:
     - cd python
     - pip install pylint

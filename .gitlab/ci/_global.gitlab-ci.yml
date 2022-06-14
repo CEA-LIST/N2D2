@@ -19,7 +19,8 @@ variables:
     - cd build
     - cmake -DCMAKE_BUILD_TYPE=Debug ..
 
-# Generic before_script to run common jobs
+
+# Before_script used to run python jobs
 .before_script_python:
   before_script:
     - cd python
@@ -36,11 +37,11 @@ variables:
     # -> Check installed lib
     - python -m pip freeze
 
+
 # Before_script used to perform coverage tests
 .before_script_coverage:
   before_script:
     - mkdir build
     - cd build
     - cmake -DCMAKE_BUILD_TYPE=Coverage ..
-
 
