@@ -534,7 +534,7 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
         }
         else if (mOperation == Prod) {
             bool init = false;
-            int initSize = 0;
+            unsigned int initSize = 0;
             CudaTensor<Float_T> diffOutputPart;
 
             for (unsigned int i = 0; i < nbInputs; ++i) {
