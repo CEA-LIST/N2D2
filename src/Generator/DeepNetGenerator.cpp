@@ -1437,7 +1437,15 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     }
                 }
                 else
-                    cellFrame->setActivation(activation);
+                {
+                    if (iniConfig.currentSection(node.output(0), false)) {
+                        ActivationGenerator::generateParams(cellFrame, iniConfig,
+                            node.output(0), model, Float32);
+                    }
+                    else {
+                        cellFrame->setActivation(activation);
+                    }
+                }
                 std::cout << "  clipping in [" << minVal << ", " << maxVal << "]"
                     << std::endl;
             }
