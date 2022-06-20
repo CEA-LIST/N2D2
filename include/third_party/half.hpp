@@ -585,10 +585,10 @@ namespace half_float
 			if(exp > 1038)
 			{
 				if(R == std::round_toward_infinity)
-					return hbits | 0x7C00 - (hbits>>15);
+					return hbits | (0x7C00 - (hbits>>15));
 				if(R == std::round_toward_neg_infinity)
-					return hbits | 0x7BFF + (hbits>>15);
-				return hbits | 0x7BFF + (R!=std::round_toward_zero);
+					return hbits | (0x7BFF + (hbits>>15));
+				return hbits | (0x7BFF + (R!=std::round_toward_zero));
 			}
 			int g, s = lo != 0;
 			if(exp > 1008)
