@@ -1,6 +1,7 @@
 generate-docs:
   extends: 
     - .before_script_template
+    - .rules:all-branches-not-schedule
   stage: documentation
   tags:
     - ubuntu

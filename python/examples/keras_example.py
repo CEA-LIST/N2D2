@@ -25,6 +25,8 @@ import argparse
 # ARGUMENTS PARSING
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_path", type=str, help='Path to the MNIST Dataset')
+parser.add_argument('--dev', '-d', type=int, default=0, help='GPU device (default=0)')
+
 args = parser.parse_args()
 
 """
@@ -77,7 +79,7 @@ tf_model = tf.keras.Sequential(
 )
 
 # Asking N2D2 to use GPU 0
-n2d2.global_variables.cuda_device = 0
+n2d2.global_variables.cuda_device = args.dev
 n2d2.global_variables.default_model = 'Frame_CUDA'
 
 model = keras_interoperability.wrap(tf_model, batch_size=batch_size, for_export=True)

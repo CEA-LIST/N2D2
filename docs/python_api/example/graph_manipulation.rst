@@ -138,7 +138,7 @@ We can concatenate these two sequences into one :
 
     network = Sequence([extractor, classifier])
 
-    x = n2d2.Tensor([1,32,32], value=0.5)
+    x = n2d2.Tensor([1,1,32,32], value=0.5)
     output = network(x)
 
     print(network)
