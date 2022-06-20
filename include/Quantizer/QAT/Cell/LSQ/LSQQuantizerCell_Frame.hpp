@@ -97,10 +97,10 @@ public:
 
 protected:
     Interface<T> mDiffStepSizeInterface;
-    Tensor<T> mStepSize;        
-    Tensor<T> mDiffStepSize;
+    Tensor<T> mStepSize; /**Tensor with the step size value*/
+    Tensor<T> mDiffStepSize; /**Tensor with the step size gradient value of the current iteration*/
 
-    T mGradScaleFactor;
+    T mGradScaleFactor; /**Gradient scale factor aiming at a better convergence during training*/
     bool mInitialized = false;
 
 private:

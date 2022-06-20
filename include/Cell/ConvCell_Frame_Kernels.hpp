@@ -23,16 +23,19 @@
 
 #include <vector>
 #include "containers/Tensor.hpp"
+#include "Cell/Cell.hpp"
 
 namespace N2D2 {
 
 namespace ConvCell_Frame_Kernels {
+    /**
+     * @brief Convolution layer features description
+     */
     struct Descriptor {
-        const std::vector<unsigned int> subSample;
-        const std::vector<unsigned int> stride;
-        // left, top, right, bottom (if 2D)
-        std::vector<int> padding;
-        const std::vector<unsigned int> dilation;
+        const std::vector<unsigned int> subSample; // sub-sampling sizes to apply after the convolution ({subSampleX, subSampleY})
+        const std::vector<unsigned int> stride; // stride value ({strideX, strideY})
+        std::vector<int> padding; // One-value vector or four-value (left, top, right and bottom) if 2D features
+        const std::vector<unsigned int> dilation; // dilatation sizes ({dilatationX, dilatationY})
 
         Descriptor(const std::vector<unsigned int>& subSample_,
                    const std::vector<unsigned int>& stride_,
@@ -51,7 +54,22 @@ namespace ConvCell_Frame_Kernels {
         }
     };
 
-    // Forward
+    /*===================
+            Forward
+    =====================*/
+
+    /**
+     * @brief Convolutional layer forward function.
+     * 
+     * @tparam T Features type.
+     * @param alpha Propagation coefficient applied to the weighted sum.
+     * @param inputs One of the input tensors.
+     * @param sharedSynapses Weight tensor for the expected input.
+     * @param desc Convolutional layer feature description.
+     * @param beta Accumulation coefficient to sum the output from several input tensors.
+     * @param outputs Output tensor.
+     * @param maps Connections from input channels to output channels.
+     */
     template <class T>
     void forward(const T* alpha,
                  const Tensor<T>& inputs,
@@ -60,13 +78,37 @@ namespace ConvCell_Frame_Kernels {
                  const T* beta,
                  Tensor<T>& outputs,
                  const Tensor<bool>& maps = Tensor<bool>());
+
+    /**
+     * @brief Convolutional layer forward function.
+     * 
+     * @tparam T Biais type.
+     * @param alpha Propagation coefficient applied to the biais before summing it with the weighted sum.
+     * @param bias Layer's biais tensor.
+     * @param beta Propagation coefficient applied to the weighted sum before summing with the biais.
+     * @param outputs Output tensor.
+     */
     template <class T>
     void forwardBias(const T* alpha,
                      const Tensor<T>& bias,
                      const T* beta,
                      Tensor<T>& outputs);
 
-    // Backward
+    /*===================
+            Backward
+    =====================*/
+    /**
+     * @brief Implements gradient backpropagation for features.
+     * 
+     * @tparam T Data type
+     * @param alpha Propagation coefficient applied to the computed gradient before being summed and passed on.
+     * @param sharedSynapses Weight tensor for the expected input.
+     * @param diffInputs Input gradient tensor.
+     * @param desc Convolutional layer feature description.
+     * @param beta Accumulation coefficient to sum the output gradient from several input gradient tensors.
+     * @param diffOutputs Output gradient tensor.
+     * @param maps Connections from input channels to output channels.
+     */
     template <class T>
     void backwardData(const T* alpha,
                       const Tensor<T>& sharedSynapses,
@@ -75,6 +117,19 @@ namespace ConvCell_Frame_Kernels {
                       const T* beta,
                       Tensor<T>& diffOutputs,
                       const Tensor<bool>& maps = Tensor<bool>());
+
+    /**
+     * @brief Implements gradient backpropagation for weights.
+     * 
+     * @tparam T Data type
+     * @param alpha Coefficient applied to the computed gradient before being summed.
+     * @param inputs Input tensor computed during the forward step for the current layer.
+     * @param diffInputs Input gradient tensor.
+     * @param desc Convolutional layer feature description.
+     * @param beta Accumulation coefficient to sum the computed weight gradient from several input gradient tensors.
+     * @param diffSharedSynapses Weights gradient tensor for this layer for a single input features tensor.
+     * @param maps Connections from input channels to output channels.
+     */
     template <class T>
     void backwardFilter(const T* alpha,
                         const Tensor<T>& inputs,
@@ -83,6 +138,16 @@ namespace ConvCell_Frame_Kernels {
                         const T* beta,
                         Tensor<T>& diffSharedSynapses,
                         const Tensor<bool>& maps = Tensor<bool>());
+    
+    /**
+     * @brief Implements gradient backpropagation for features.
+     * 
+     * @tparam T Data type
+     * @param alpha Coefficient applied to the computed gradient before being summed.
+     * @param diffInputs Input gradient tensor.
+     * @param beta Accumulation coefficient to sum the bias gradient from several input gradient tensors.
+     * @param diffBias Output bias gradient tensor.
+     */
     template <class T>
     void backwardBias(const T* alpha,
                       const Tensor<T>& diffInputs,
