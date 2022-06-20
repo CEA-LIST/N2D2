@@ -1295,12 +1295,12 @@ inline void N2D2::Network::saveOutputs(
         fprintf(pFile, ")\n");
     }
     else if (format == Format::CHW) {
-        fprintf(pFile, "(");
+        fprintf(pFile, "");
         for(int output = 0; output < NB_OUTPUTS; output++) {
-            fprintf(pFile, "(");
+            fprintf(pFile, "%d:\n", output);
 
             for(int oy = 0; oy < OUTPUTS_HEIGHT; oy++) {
-                fprintf(pFile, "(");
+                fprintf(pFile, "");
 
                 for(int ox = 0; ox < OUTPUTS_WIDTH; ox++) {
                     const int oPos = (ox + OUTPUTS_WIDTH * oy);
@@ -1318,16 +1318,16 @@ inline void N2D2::Network::saveOutputs(
                     else
                         fprintf(pFile, "%d", outputs[oOffset + output]);
 
-                    fprintf(pFile, ", ");
+                    fprintf(pFile, " ");
                 }
 
-                fprintf(pFile, "), \n");
+                fprintf(pFile, "\n");
             }
 
-            fprintf(pFile, "), \n");
+            fprintf(pFile, "\n");
         }
 
-        fprintf(pFile, ")\n");
+        fprintf(pFile, "\n");
     }
     else {
         N2D2_THROW_OR_ABORT(std::runtime_error, "Unknown format.");

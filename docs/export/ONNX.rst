@@ -88,7 +88,7 @@ Example
 
 ::
 
-    n2d2 MobileNet_ONNX.ini -seed 1 -w /dev/null -export ONNX -nbbits 8 -calib -1 -db-export 100 -test
+    n2d2 MobileNet_ONNX.ini -seed 1 -w weights_validation -export ONNX -nbbits 8 -calib -1 -db-export 100 -test
 
 This command generates a 8-bits integer quantized ONNX model in the sub-directory 
 ``export_ONNX_int8``.
