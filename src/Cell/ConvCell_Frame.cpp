@@ -155,6 +155,11 @@ void N2D2::ConvCell_Frame<T>::initialize()
         }
     }
 
+    unsigned int nbChannels = 0;
+
+    mNbGroups.clear();
+    mDiffSharedSynapses.clear();
+
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         if (mInputs[k].size() == 0)
             throw std::runtime_error("Zero-sized input for ConvCell " + mName);
@@ -162,14 +167,20 @@ void N2D2::ConvCell_Frame<T>::initialize()
         if (k < mWeightsSolvers.size())
             continue;  // already initialized, skip!
 
+        mNbGroups.push_back(getNbGroups(mMapping.rows(nbChannels,
+                                                mInputs[k].dimZ())));
         mWeightsSolvers.push_back(mWeightsSolver->clone());
 
         typename std::map<unsigned int,
             std::pair<Interface<T>*, unsigned int> >::iterator
                 it = mExtSharedSynapses.find(k);
 
+        // Computing a kernel dimension adapted to the mapping in case of a depthwise convolution
         std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
-        kernelDims.push_back(mInputs[k].dimZ());
+        if (mNbGroups[k] > 1)
+            kernelDims.push_back(mInputs[k].dimZ() / mNbGroups[k]);
+        else
+            kernelDims.push_back(mInputs[k].dimZ());
         kernelDims.push_back(getNbOutputs());
 
         if (it != mExtSharedSynapses.end()) {
@@ -193,8 +204,23 @@ void N2D2::ConvCell_Frame<T>::initialize()
         else {
             mSharedSynapses.push_back(new Tensor<T>(kernelDims), 0);
             mWeightsFiller->apply(mSharedSynapses.back());
+
+            if (mNbGroups[k] == 0) {
+                // Set the non-connected kernels coefficients to 0
+                for (unsigned int output = 0; output < getNbOutputs(); ++output)
+                {
+                    for (unsigned int channel = 0; channel < mInputs[k].dimZ();
+                        ++channel) {
+                        if (!isConnection(nbChannels + channel, output)) {
+                            mSharedSynapses.back()[output][channel].fill(T(0.0));
+                        }
+                    }
+                }
+            }
         }
 
+        nbChannels += mInputs[k].dimZ();
+        // initialize with tensor filled with value 0
         mDiffSharedSynapses.push_back(new Tensor<T>(kernelDims), 0);
     }
     if (mQuantizer) {
@@ -237,9 +263,19 @@ void N2D2::ConvCell_Frame<T>::initializeParameters(unsigned int nbInputChannels,
         }
     }
 
+    unsigned int nbChannels = 0;
+
     for (unsigned int k = 0, size = nbInputs; k < size; ++k) {
         if (k < mWeightsSolvers.size())
             continue;  // already initialized, skip!
+        
+        if (k < mNbGroups.size()) {
+            nbChannels += nbInputChannels;
+            continue; // already initialized, skip!
+        }
+
+        mNbGroups.push_back(getNbGroups(mMapping.rows(nbChannels,
+                                                    nbInputChannels)));
 
         mWeightsSolvers.push_back(mWeightsSolver->clone());
 
@@ -248,7 +284,10 @@ void N2D2::ConvCell_Frame<T>::initializeParameters(unsigned int nbInputChannels,
                 it = mExtSharedSynapses.find(k);
 
         std::vector<size_t> kernelDims(mKernelDims.begin(), mKernelDims.end());
-        kernelDims.push_back(nbInputChannels);
+        if (mNbGroups[k] > 1)
+            kernelDims.push_back(nbInputChannels / mNbGroups[k]);
+        else
+            kernelDims.push_back(nbInputChannels);
         kernelDims.push_back(getNbOutputs());
 
         if (it != mExtSharedSynapses.end()) {
@@ -272,7 +311,22 @@ void N2D2::ConvCell_Frame<T>::initializeParameters(unsigned int nbInputChannels,
         else {
             mSharedSynapses.push_back(new Tensor<T>(kernelDims), 0);
             mWeightsFiller->apply(mSharedSynapses.back());
+
+            if (mNbGroups[k] == 0) {
+                // Set the non-connected kernels coefficients to 0
+                for (unsigned int output = 0; output < getNbOutputs(); ++output)
+                {
+                    for (unsigned int channel = 0; channel < nbInputChannels;
+                         ++channel) {
+                        if (!isConnection(nbChannels + channel, output)) {
+                            mSharedSynapses.back()[output][channel]
+                                                                .fill(T(0.0));
+                        }
+                    }
+                }
+            }
         }
+        nbChannels += mInputs[k].dimZ();
 
         mDiffSharedSynapses.push_back(new Tensor<T>(kernelDims), 0);
     }
@@ -305,9 +359,11 @@ void N2D2::ConvCell_Frame<T>::check_input()
           " equal to the number of inputs defined for the cell.");
     }
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
-       if (mInputs[k].dimZ() != mSharedSynapses[k].dimZ()){
+        if ((mNbGroups[k] > 0 && mInputs[k].dimZ() != mSharedSynapses[k].dimZ()*mNbGroups[k])
+        || (mNbGroups[k] == 0 && mInputs[k].dimZ() != mSharedSynapses[k].dimZ())){
             std::cout << "mInputs.dimZ(): " << mInputs[k].dimZ() << std::endl;
             std::cout << "mSharedSynapses.dimZ(): " << mSharedSynapses[k].dimZ() << std::endl;
+            std::cout << "mNbGroups: " << mNbGroups[k] << std::endl;
             std::stringstream ss;
             ss << "Unmatching dimension Z"
             " between input and weight " << k << " for cell " + mName;
@@ -360,25 +416,30 @@ void N2D2::ConvCell_Frame<T>::load(const std::string& dirName)
         mBiasSolver->load(dirName + "/BiasSolver");
 }
 
+/**
+ * @brief Wrapper for the forward function
+ * 
+ * @tparam T feature type
+ * @param inference 
+ */
 template <class T>
 void N2D2::ConvCell_Frame<T>::propagate(bool inference)
 {
-    check_input();
-    mInputs.synchronizeDBasedToH();
+    check_input(); // right number and sizes
 
-    if (mInputs.size() < mSharedSynapses.size()) {
-        throw std::runtime_error("ConvCell_Frame<T>::propagate(): multiple "
-            "synapse tensors per input is not supported for ConvCell "
-            + mName);
-    }
+    // if (mInputs.size() < mSharedSynapses.size()) {
+    //     throw std::runtime_error("ConvCell_Frame<T>::propagate(): multiple "
+    //         "synapse tensors per input is not supported for ConvCell "
+    //         + mName);
+    // }
 
-    const T alpha = T(1.0);
-    T beta = T(0.0);
+    const T alpha = T(1.0); // propagation coefficient applied to the weighted sum
+    T beta = T(0.0); // accumultion coefficient to sum the output from several input tensors
 
     unsigned int offset = 0;
 
     if (mQuantizer) {
-        mQuantizer->propagate();
+        mQuantizer->propagate(); // quantify weights
     }
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
@@ -386,7 +447,8 @@ void N2D2::ConvCell_Frame<T>::propagate(bool inference)
             beta = 1.0;
 
         const Tensor<T>& input = tensor_cast<T>(mInputs[k]);
-
+        
+        // Quantize weights if quantizer is on
         const Tensor<T>& sharedSynapses 
             = mQuantizer ? (tensor_cast<T>(mQuantizer->getQuantizedWeights(k))) 
                         : tensor_cast<T>(mSharedSynapses[k]);
@@ -409,7 +471,9 @@ void N2D2::ConvCell_Frame<T>::propagate(bool inference)
         ConvCell_Frame_Kernels::forwardBias<T>(&alpha, biases, &alpha, mOutputs);
     }
 
+    // propagation through the activation function
     Cell_Frame<T>::propagate(inference);
+    // The input gradient needs to be computed to allow backpropagation after the propagation
     mDiffInputs.clearValid();
     mDiffSharedSynapses.clearValid();
     mDiffBias.clearValid();
@@ -419,13 +483,24 @@ template <class T>
 void N2D2::ConvCell_Frame<T>::backPropagate()
 {
     if (!mDiffInputs.isValid())
-        return;
+        return; // the gradient from these tensors has already been passed or is not valid yet
 
+    // activation backpropagation
     Cell_Frame<T>::backPropagate();
 
     const T alpha = T(1.0);
-
+    // Set the non-connected kernels diff to 0
     unsigned int offset = 0;
+
+    const unsigned int kernelSize = (!mKernelDims.empty())
+        ? std::accumulate(mKernelDims.begin(), mKernelDims.end(),
+                          1U, std::multiplies<unsigned int>())
+        : 0U;
+
+    unsigned int nbChannels = 0;
+
+    if(mInputs.size()==0)
+        std::cout << mName << " : no Input" << std::endl;
 
     for (unsigned int k = 0, size = mInputs.size(); k < size; ++k) {
         const T beta = (mWeightsSolvers[k]->isNewIteration())
@@ -433,10 +508,11 @@ void N2D2::ConvCell_Frame<T>::backPropagate()
 
         const Tensor<T>& input = tensor_cast_nocopy<T>(mInputs[k]);
 
+        // 1st: gradient is computed for the quantification layer if any
         Tensor<T> diffSharedSynapses 
             = mQuantizer ? tensor_cast<T>(mQuantizer->getDiffQuantizedWeights(k))
                         : tensor_cast<T>(mDiffSharedSynapses[k]);
-
+        // 2nd: gradient is computed for 
         ConvCell_Frame_Kernels::backwardFilter<T>(&alpha,
                                                input,
                                                mDiffInputs,
@@ -446,7 +522,20 @@ void N2D2::ConvCell_Frame<T>::backPropagate()
                                                mMapping.rows(offset,
                                                           mInputs[k].dimZ()));
 
-        mDiffSharedSynapses[k].setValid();
+        if (mNbGroups[k] == 0) {
+
+            for (unsigned int output = 0; output < getNbOutputs(); ++output) {
+                for (unsigned int channel = 0; channel < mInputs[k].dimZ();
+                     ++channel) {
+                    if (!isConnection(nbChannels + channel, output)) {
+                        diffSharedSynapses[output][channel].fill(T(0.0));
+                    }
+
+                    offset += kernelSize;
+                }
+            }
+        }
+        mDiffSharedSynapses[k].setValid(); // allow synapses to be updated
         offset += mInputs[k].dimZ();
     }
 
@@ -461,7 +550,7 @@ void N2D2::ConvCell_Frame<T>::backPropagate()
         
         mDiffBias.setValid();
     }
-
+    // set to true in the ConvCell constructor
     if (mBackPropagate) {
         offset = 0;
 
@@ -494,7 +583,6 @@ void N2D2::ConvCell_Frame<T>::backPropagate()
             mDiffOutputs[k] = diffOutput;
             mDiffOutputs[k].setValid();
         }
-        mDiffOutputs.synchronizeHToD();
     }
 
     // Calculate full precision weights and activation gradients

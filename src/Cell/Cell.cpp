@@ -167,7 +167,7 @@ size_t N2D2::Cell::groupMap() const
     return mGroupMap;
 }
 
-size_t N2D2::Cell::getNbGroups(const Tensor<bool>& map) const
+size_t N2D2::Cell::getNbGroups(const Tensor<bool>& map)
 {
     const size_t nbOutputs = map.dimX();
     const size_t nbChannels = map.dimY();

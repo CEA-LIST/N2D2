@@ -107,6 +107,13 @@ public:
         value.resize(sharedSynapses[output][channel].dims());
         value = sharedSynapses[output][channel];
     };
+    /**
+     * @brief Get the Quantized Weight applied to a single input channel to compute a single ouput channel.
+     * 
+     * @param output Output channel index.
+     * @param channel Input channel index.
+     * @param value Tensor to be filled with quantized values.
+     */
     inline void getQuantWeight(unsigned int output,
                           unsigned int channel,
                           BaseTensor& value) const
@@ -136,6 +143,10 @@ public:
     {
         return &mSharedSynapses;
     };
+    inline Interface<T> getInterface()
+    {
+        return mSharedSynapses;
+    };
     void setWeights(unsigned int k,
                     BaseInterface* weights,
                     unsigned int offset);
@@ -163,6 +174,37 @@ protected:
                           unsigned int channel,
                           const BaseTensor& value)
     {
+        // 1st: adjust channel value according to the number of groups
+        unsigned int k = 0;
+        unsigned int kChannelOffset = 0;
+
+        for (; k < mSharedSynapses.size(); ++k) {
+            const unsigned int kNbChannels = (mNbGroups[k] > 1)
+                ? mSharedSynapses[k].dimZ() * mNbGroups[k]
+                : mSharedSynapses[k].dimZ();
+
+            if (channel < kChannelOffset + kNbChannels)
+                break;
+            else
+                kChannelOffset += kNbChannels;
+        }
+
+        channel -= kChannelOffset;
+
+        if (mNbGroups[k] > 1) {
+            const size_t outputGroupSize = getNbOutputs() / mNbGroups[k];
+            const size_t channelGroupSize = getNbChannels() / mNbGroups[k];
+
+            const size_t outputGroup = output / outputGroupSize;
+            const size_t channelGroup = channel / channelGroupSize;
+
+            if (outputGroup != channelGroup)
+                return;
+
+            channel = channel % channelGroupSize;
+        }
+
+        // 2nd: set weight value
         Tensor<T>& sharedSynapses
             = mSharedSynapses[mSharedSynapses.getTensorIndex(channel)];
         channel -= mSharedSynapses.getTensorDataOffset(channel);
@@ -189,8 +231,9 @@ protected:
     };
 
     // Internal
+    std::vector<size_t> mNbGroups;
     std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
-    Interface<T> mSharedSynapses;
+    Interface<T> mSharedSynapses; // interface of input tensors expected by the cell for each individual synapse of a layer
     std::map<unsigned int,
         std::pair<Interface<T>*, unsigned int> > mExtSharedSynapses;
     std::shared_ptr<Tensor<T> > mBias;
