@@ -26,6 +26,7 @@
 #include "Quantizer/QAT/Cell/LSQ/LSQQuantizerCell_Frame.hpp"
 #include "containers/Matrix.hpp"
 #include "controler/Interface.hpp"
+#pragma omp declare reduction(+ : half_float::half : omp_out = omp_out + omp_in) initializer(omp_priv=half_float::half(0.0))
 
 /* Only float functions for now */
 
@@ -107,12 +108,12 @@ void LSQQuantizerCell_Frame<T>::initialize()
 {
     //init the quantization range for activation
     // mRange = (nb of bits)^2 - 1
-    mBitRanges = std::make_pair((int) -((mRange + 1)/2), (int) (mRange - 1)/2);
+    mBitRanges = std::make_pair((int) -((mRange + 1) >> 1), (int) ((mRange - 1) >> 1));
 
     //init step size with fake value (needed for quant weight initialization below)
     if(mStepSize.empty()) {
         if(mSetOptInitStepSize){
-            float initialValue = 10000.;
+            const float initialValue = 10000.;
             setStepSizeValue(initialValue);
         }
         mStepSize.resize({1,1,1,1});
@@ -121,7 +122,6 @@ void LSQQuantizerCell_Frame<T>::initialize()
         mDiffStepSize.resize({1,1,1,1});
         mDiffStepSize.fill(T(0.0));
     }
-    mGradScaleFactor = T(0.0);
 
     std::cout << "      " << std::setprecision(8) <<
         "Quantizer::LSQ || " <<  
@@ -130,18 +130,23 @@ void LSQQuantizerCell_Frame<T>::initialize()
         " Range[" << mBitRanges.first << ", " << mBitRanges.second << "]" << std::endl;
 
     //Initialize the quantized weights
-    for (unsigned int k = 0, size = mFullPrecisionWeights.size(); k < size; ++k) {
+    unsigned int totElementW = 0;
+    const T bitRangesLowerBound = ((T)mBitRanges.first) * mStepSize(0);
+    const T bitRangesUpperBound = ((T)mBitRanges.second) * mStepSize(0);
+    for (unsigned int k = 0; k < mFullPrecisionWeights.size(); ++k) {
+        totElementW += mFullPrecisionWeights[k].size();
+        Tensor<T>& fullPrecWeights = dynamic_cast<Tensor<T>&>(mFullPrecisionWeights[k]);
+#pragma omp parallel for schedule(static)
         for (size_t i = 0; i < mFullPrecisionWeights[k].size(); i++) {
-            Tensor<T>& fullPrecWeights = dynamic_cast<Tensor<T>&>(mFullPrecisionWeights[k]);
             T qData = fullPrecWeights(i) / mStepSize(0);
-            qData = (qData <= (T) mBitRanges.first ) ? (T) mBitRanges.first :
-                    (qData >= (T) mBitRanges.second ) ? (T) mBitRanges.second :
-                    qData;
-            qData = rintf(qData);
+            qData = (qData <= (T) mBitRanges.first ) ? (T) bitRangesLowerBound :
+                    (qData >= (T) mBitRanges.second ) ? (T) bitRangesUpperBound :
+                    round(qData)*mStepSize(0);
             // there is no need to save the full precision weights
-            mQuantizedWeights[k](i) = qData*mStepSize(0);
+            mQuantizedWeights[k](i) = qData;
         }
     }
+    mGradScaleFactor = (T)(1.0/sqrt(totElementW * mBitRanges.second));
     mInitialized = true;
 }
 
@@ -167,12 +172,11 @@ void LSQQuantizerCell_Frame<T>::propagate()
     if(mStepSizeVal == 10000.) {
         std::cout << "Initialize the correct LSQ step size ... " << std::endl;
 
-        Tensor<T>& fullPrecWeights = dynamic_cast<Tensor<T>&>(mFullPrecisionWeights[0]);
-
+        Tensor<T> fullPrecWeights = tensor_cast<T>(mFullPrecisionWeights[0]);
         if(mSetOptInitStepSize){
             // Initialisation of the weight step size according to the LSQ paper
             // (https://arxiv.org/pdf/1902.08153.pdf)
-            float initialValue = 2*fullPrecWeights.mean(true) / sqrt((mRange-1)/2);
+            const float initialValue = 2.0f * float(fullPrecWeights.mean(true) / sqrt((mRange-1) >> 1));
             setStepSizeValue(initialValue);
 
             // Initialisation of the weight step size according to the LSQ+ paper
@@ -191,25 +195,22 @@ void LSQQuantizerCell_Frame<T>::propagate()
             " StepInit[" << mSetOptInitStepSize << "] || " <<
             " Range[" << mBitRanges.first << ", " << mBitRanges.second << "]" << std::endl;
     }
-
-    unsigned int totElementW = 0;
-
-    for (unsigned int k = 0, size = mFullPrecisionWeights.size(); k < size; ++k) {
-        for (size_t i = 0; i < mFullPrecisionWeights[k].size(); i++) {
-            Tensor<T>& fullPrecWeights = dynamic_cast<Tensor<T>&>(mFullPrecisionWeights[k]);
+    const T bitRangesLowerBound = ((T)mBitRanges.first) * mStepSize(0);
+    const T bitRangesUpperBound = ((T)mBitRanges.second) * mStepSize(0);
+    for (unsigned int k = 0; k < mFullPrecisionWeights.size(); ++k) {
+        Tensor<T>& fullPrecWeights = dynamic_cast<Tensor<T>&>(mFullPrecisionWeights[k]);
+#pragma omp parallel for schedule(static)
+        for (size_t i = 0; i < mFullPrecisionWeights[k].size(); ++i) {
             T qData = fullPrecWeights(i) / mStepSize(0);
-            qData = (qData <= (T) mBitRanges.first ) ? (T) mBitRanges.first :
-                    (qData >= (T) mBitRanges.second ) ? (T) mBitRanges.second :
-                    qData;
-            qData = rint(qData);
+            qData = (qData <= (T) mBitRanges.first ) ? (T) bitRangesLowerBound :
+                    (qData >= (T) mBitRanges.second ) ? (T) bitRangesUpperBound :
+                    round(qData)*mStepSize(0);
             // there is no need to save the full precision weights
-            mQuantizedWeights[k](i) = qData*mStepSize(0);
+            mQuantizedWeights[k](i) = qData;
         }
-        totElementW += mFullPrecisionWeights[k].size();
     }
 
     // compute for backward step
-    mGradScaleFactor = T(1.0) / sqrt(T(totElementW * mBitRanges.second));
 
 
     if (mFullPrecisionBiases) {
@@ -241,34 +242,73 @@ void LSQQuantizerCell_Frame<T>::back_propagate()
 {
     // Step size gradient
     T diffStepSize = T(0.0);
-
-    // reset the step size gradient if starting a new iteration
-    if(!mSolver->isNewIteration()) {
-        diffStepSize = mDiffStepSize(0,0,0,0);
-    }
-
-    for (unsigned int k = 0, size = mDiffQuantizedWeights.size(); k < size; ++k) {
+//#pragma omp parallel for schedule(dynamic) reduction(+:diffStepSize)
+    for (unsigned int k = 0; k < mDiffQuantizedWeights.size(); ++k) {
         // Converts BaseTensor to Tensor as it is not possible to access BaseTensor values
         Tensor<T>& diffQuantizedWeights = dynamic_cast<Tensor<T>&>(mDiffQuantizedWeights[k]);
         Tensor<T>& fullPrecWeights = dynamic_cast<Tensor<T>&>(mFullPrecisionWeights[k]);
-
+        T diffStepSize_loc = T(0.0);
         // Updating gradient for each weight of the layer
-        for (unsigned int i = 0; i < mFullPrecisionWeights[k].size(); i++) {
-            const T fullPrecScale = fullPrecWeights(i) / mStepSize(0);
+        unsigned int weightsTensorSize = mFullPrecisionWeights[k].size();
+        
+        #pragma omp parallel for schedule(dynamic,256) reduction(+:diffStepSize_loc)
+        for (unsigned int i = 0; i < weightsTensorSize/4; ++i) {
+            const T fullPrecScale_1 = fullPrecWeights(4*i) / mStepSize(0);
+            const T fullPrecScale_2 = fullPrecWeights(4*i+1) / mStepSize(0);
+            const T fullPrecScale_3 = fullPrecWeights(4*i+2) / mStepSize(0);
+            const T fullPrecScale_4 = fullPrecWeights(4*i+3) / mStepSize(0);
+
+            /******************Weight Gradient Computation*********************/
+            mDiffFullPrecisionWeights[k](4*i) = diffQuantizedWeights(4*i)* ((fullPrecScale_1 <= (T) mBitRanges.first) ? T(0.0) :
+                                                                        (fullPrecScale_1 >= (T) mBitRanges.second) ? T(0.0) :
+                                                                        T(1.0));
+            mDiffFullPrecisionWeights[k](4*i+1) = diffQuantizedWeights(4*i+1)* ((fullPrecScale_2 <= (T) mBitRanges.first) ? T(0.0) :
+                                                                        (fullPrecScale_2 >= (T) mBitRanges.second) ? T(0.0) :
+                                                                        T(1.0));
+            mDiffFullPrecisionWeights[k](4*i+2) = diffQuantizedWeights(4*i+2)* ((fullPrecScale_3 <= (T) mBitRanges.first) ? T(0.0) :
+                                                                        (fullPrecScale_3 >= (T) mBitRanges.second) ? T(0.0) :
+                                                                        T(1.0));
+            mDiffFullPrecisionWeights[k](4*i+3) = diffQuantizedWeights(4*i+3)* ((fullPrecScale_4 <= (T) mBitRanges.first) ? T(0.0) :
+                                                                        (fullPrecScale_4 >= (T) mBitRanges.second) ? T(0.0) :
+                                                                        T(1.0));
+
             /*****************Step Size Gradient Computation******************/
             //1st: clip the gradient in interval [rangeMin, rangeMax] and take account of qError
+            T qData_1 = fullPrecScale_1;
+            qData_1 = ((qData_1 <= (T)mBitRanges.first) ? (T)mBitRanges.first :
+                    (qData_1 >= (T)mBitRanges.second) ? (T)mBitRanges.second :
+                    (round(qData_1) - qData_1));
+            T qData_2 = fullPrecScale_2;
+            qData_2 = ((qData_2 <= (T)mBitRanges.first) ? (T)mBitRanges.first :
+                    (qData_2 >= (T)mBitRanges.second) ? (T)mBitRanges.second :
+                    (round(qData_2) - qData_2));
+            T qData_3 = fullPrecScale_3;
+            qData_3 = ((qData_3 <= (T)mBitRanges.first) ? (T)mBitRanges.first :
+                    (qData_3 >= (T)mBitRanges.second) ? (T)mBitRanges.second :
+                    (round(qData_3) - qData_3));
+            T qData_4 = fullPrecScale_4;
+            qData_4 = ((qData_4 <= (T)mBitRanges.first) ? (T)mBitRanges.first :
+                    (qData_4 >= (T)mBitRanges.second) ? (T)mBitRanges.second :
+                    (round(qData_4) - qData_4));
+            //2nd: Multiplie backward data with clipped grad
+            diffStepSize_loc += (qData_1*diffQuantizedWeights(4*i) + qData_2*diffQuantizedWeights(4*i+1)) + (qData_3*diffQuantizedWeights(4*i+2) + qData_4*diffQuantizedWeights(4*i+3));
+        }
+        for (unsigned int i= weightsTensorSize-weightsTensorSize%4; i< weightsTensorSize; ++i) {
+            const T fullPrecScale = fullPrecWeights(i) / mStepSize(0);
+            mDiffFullPrecisionWeights[k](i) = diffQuantizedWeights(i)* ((fullPrecScale <= (T) mBitRanges.first) ? T(0.0) :
+                                                                        (fullPrecScale >= (T) mBitRanges.second) ? T(0.0) :
+                                                                        T(1.0));
             T qData = fullPrecScale;
             qData = ((qData <= (T)mBitRanges.first) ? (T)mBitRanges.first :
                     (qData >= (T)mBitRanges.second) ? (T)mBitRanges.second :
-                    rint(qData) - qData);
-            //2nd: Multiplie backward data with clipped grad
-            diffStepSize += qData*diffQuantizedWeights(i);
-
-            /******************Weight Gradient Computation*********************/
-            mDiffFullPrecisionWeights[k](i) = diffQuantizedWeights(i)* ((qData <= (T) mBitRanges.first) ? T(0.0) :
-                                                                        (qData >= (T) mBitRanges.second) ? T(0.0) :
-                                                                        T(1.0));
+                    (round(qData) - qData));
+            diffStepSize_loc += qData*diffQuantizedWeights(i);
         }
+        diffStepSize+=diffStepSize_loc;
+    }
+    // reset the step size gradient if starting a new iteration
+    if(!mSolver->isNewIteration()) {
+        diffStepSize += mDiffStepSize(0,0,0,0);
     }
     mDiffStepSize.fill(diffStepSize*mGradScaleFactor);
 }
@@ -351,9 +391,6 @@ void LSQQuantizerCell_Frame<T>::importFreeParameters(const std::string& fileName
     if (alphasW.get() != std::fstream::traits_type::eof())
         throw std::runtime_error("Synaptic file size larger than expected: "
                                  + alphasWFile);
-
-    mStepSize.synchronizeHToD();
-
 }
 
 }
