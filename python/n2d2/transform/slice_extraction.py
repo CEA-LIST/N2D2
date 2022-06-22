@@ -1,6 +1,6 @@
 """
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -49,12 +49,12 @@ class SliceExtraction(Transformation):
     _convention_converter= ConventionConverter(_parameters)
 
     def __init__(self, width, height, **config_parameters):
-        """Possible values for border_type parameter
-        ``ConstantBorder``: pad with ``BorderValue``, 
-        ``ReplicateBorder``: last element is replicated throughout, like aaaaaa\|abcdefgh\|hhhhhhh, 
-        ``ReflectBorder``: border will be mirror reflection of the border elements, like fedcba\|abcdefgh\|hgfedcb,
-        ``WrapBorder``: it will look like cdefgh\|abcdefgh\|abcdefg,
-        ``MinusOneReflectBorder``: same as ``ReflectBorder`` but with a slight change, like gfedcb\|abcdefgh\|gfedcba, 
+        """Possible values for border_type  \
+        ``ConstantBorder``: pad with ``BorderValue``, \
+        ``ReplicateBorder``: last element is replicated throughout, like aaaaaa|abcdefgh|hhhhhhh, \
+        ``ReflectBorder``: border will be mirror reflection of the border elements, like fedcba|abcdefgh|hgfedcb, \
+        ``WrapBorder``: it will look like cdefgh|abcdefgh|abcdefg, \
+        ``MinusOneReflectBorder``: same as ``ReflectBorder`` but with a slight change, like gfedcb|abcdefgh|gfedcba, \
         ``MeanBorder``: pad with the mean color of the image
 
         :param width: Width of the slice to extract

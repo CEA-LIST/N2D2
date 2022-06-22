@@ -21,10 +21,9 @@
 
 import n2d2
 
-"""
-All objects that needs convertibility from N2D2 to API object have to be added to this dictionary.
-The key needs to correspond to the result of the getType() method of the N2D2 object
-"""
+# All objects that needs convertibility from N2D2 to API object have to be added to this dictionary.
+# The key needs to correspond to the result of the getType() method of the N2D2 object
+
 object_dict = {
     "Linear": n2d2.activation.Linear,
     "Rectifier": n2d2.activation.Rectifier,

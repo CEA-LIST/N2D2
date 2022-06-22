@@ -1,6 +1,6 @@
 """
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -53,7 +53,7 @@ class Transformation(N2D2_Interface, ABC):
         return self._apply_to
 
     @classmethod
-    def create_from_N2D2_object(cls, N2D2_object):
+    def create_from_N2D2_object(cls, N2D2_object, **_):
         n2d2_transform = super().create_from_N2D2_object(N2D2_object)
         n2d2_transform._apply_to = N2D2.Database.StimuliSetMask.All
         return n2d2_transform

@@ -26,16 +26,15 @@ import n2d2.global_variables
 import n2d2.cells.nn
 from n2d2.n2d2_interface import N2D2_Interface
 from n2d2.utils import generate_name
-"""
-"""
+
 class DeepNet(N2D2_Interface):
 
     _convention_converter= n2d2.ConventionConverter({
         "name": "Name",
     })
-   
-    def __init__(self, **config_parameters):
 
+    def __init__(self, **config_parameters):
+        self._provider = None
         N2D2_Interface.__init__(self, **config_parameters)
 
         self._config_parameters['name'] = generate_name(self)
@@ -46,7 +45,7 @@ class DeepNet(N2D2_Interface):
         self.load_N2D2_parameters(self.N2D2())
 
     @classmethod
-    def create_from_N2D2_object(cls, N2D2_object):
+    def create_from_N2D2_object(cls, N2D2_object, **_):
         deepnet = super().create_from_N2D2_object(N2D2_object)
 
         deepnet._config_parameters['name'] = "DeepNet(id=" + str(id(deepnet)) + ")"
@@ -62,7 +61,7 @@ class DeepNet(N2D2_Interface):
 
         deepnet._cells = {}
 
-        for idx, layer in enumerate(layers[1:]):
+        for layer in layers[1:]:
             for cell in layer:
                 N2D2_cell = cells[cell]
                 n2d2_cell = n2d2.converter.from_N2D2_object(N2D2_cell, n2d2_deepnet=deepnet)
@@ -85,14 +84,14 @@ class DeepNet(N2D2_Interface):
 
     def get_cells(self):
         return self._cells
-    
+
     def remove(self, cell_name:str, reconnect:bool=False)->None:
         """Remove a cell from the encapsulated deepnet.
 
         :param name: Name of cell that shall be removed.
         :type name: str
         :param reconnect: If `True`, reconnects the parents with the child of the removed cell, default=True
-        :type reconnect: bool, optional 
+        :type reconnect: bool, optional
         """
         cell = self.N2D2().getCells()[cell_name]
         self.N2D2().removeCell(cell, reconnect)
@@ -139,12 +138,3 @@ class DeepNet(N2D2_Interface):
         :type dirname: str
         """
         self.N2D2().logStats(dirname)
-
-
-
-
-
-
-
-
-

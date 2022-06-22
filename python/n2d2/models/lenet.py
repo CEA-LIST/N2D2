@@ -68,7 +68,3 @@ class LeNetBN(Sequence):
             Dropout(dropout=0.5),
             Fc(84, nb_outputs, activation=Linear(), **fc_def()),
         ])
-
-
-
-

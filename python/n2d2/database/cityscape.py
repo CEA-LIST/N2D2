@@ -18,15 +18,15 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
-from n2d2.database.database import Database, _database_parameters
+from n2d2.database.database import AbstractDatabase, _database_parameters
 from n2d2.utils import inherit_init_docstring
-from n2d2.n2d2_interface import N2D2_Interface, ConventionConverter
+from n2d2.n2d2_interface import ConventionConverter
 import n2d2.global_variables as gb
 import N2D2
 
 
 @inherit_init_docstring()
-class Cityscapes(Database):
+class Cityscapes(AbstractDatabase):
     """
     Cityscapes database :cite:`Cordts2016Cityscapes`.
 
@@ -51,16 +51,16 @@ class Cityscapes(Database):
         :param inc_train_extra: If ``True``, includes the left 8-bit images - ``trainextra`` set (19,998 images), default=False
         :type inc_train_extra: boolean, optional
         :param use_coarse: If ``True``, only use coarse annotations (which are the only annotations available for the ``trainextra`` set), default=False
-        :type use_coarse: boolean, optional 
+        :type use_coarse: boolean, optional
         :param single_instance_labels: If ``True``, convert group labels to single instance labels (for example, ``cargroup`` becomes ``car``), default=True
-        :type single_instance_labels: boolean, optional 
+        :type single_instance_labels: boolean, optional
         """
         if not gb.json_compiled:
             raise RuntimeError(
                 "JSON for C++ library not installed\n\n"
                 "\tPlease install the libjsoncpp-dev package and reinstall n2d2\n\n")
 
-        N2D2_Interface.__init__(self, **config_parameters)
+        AbstractDatabase.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['inc_train_extra', 'use_coarse', 'single_instance_labels'])
         self._N2D2_object = self._N2D2_constructors(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))

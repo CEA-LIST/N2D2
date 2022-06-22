@@ -1,6 +1,6 @@
 """
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -46,7 +46,7 @@ class RangeAffine(Transformation):
         :param first_operator: First operator, can be ``Plus``, ``Minus``, ``Multiplies``, ``Divides``
         :type first_operator: str
         :param first_value: First value
-        :type first_value: float 
+        :type first_value: float
         :param second_operator: Second operator, can be ``Plus``, ``Minus``, ``Multiplies``, ``Divides``, default="Plus"
         :type second_operator: str, optional
         :param second_value: Second value, default=0.0
@@ -76,7 +76,7 @@ class RangeAffine(Transformation):
             'first_operator': N2D2_object.getFirstOperator(),
             'first_value': N2D2_object.getFirstValue(),
         })
-    
+
     def _load_N2D2_optional_parameters(self, N2D2_object):
         self._optional_constructor_arguments.update({
             'second_operator': N2D2_object.getSecondOperator(),

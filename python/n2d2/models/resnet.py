@@ -19,14 +19,10 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-
-"""
-    For now, only support for ONNX model
-"""
-
 import n2d2.global_variables
 from n2d2.transform import Rescale, PadCrop, ColorSpace, RangeAffine, Composite
 
+# For now, only support for ONNX model
 
 def load_from_ONNX(inputs, resnet_type, version='pre_act', dims=None, batch_size=1, path=None, download=False):
     if dims is None:
@@ -46,9 +42,9 @@ def load_from_ONNX(inputs, resnet_type, version='pre_act', dims=None, batch_size
           " from ONNX with dims " + str(dims) + " and batch size " + str(batch_size))
     if path is None and not download:
         raise RuntimeError("No path specified")
-    elif not path is None and download:
+    if  path is not None and download:
         raise RuntimeError("Specified at same time path and download=True")
-    elif path and not download:
+    if path is not None and not download:
         path = n2d2.global_variables.model_cache + "/ONNX/mobilenetv2/mobilenetv2-1.0.onnx"
     else:
         n2d2.utils.download_model(

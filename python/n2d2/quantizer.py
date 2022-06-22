@@ -34,12 +34,12 @@ cuda_compiled = gb.cuda_compiled
 
 # def fuse_qat(deep_net, provider, act_scaling_mode, w_mode="NONE", b_mode="NONE", c_mode="NONE"):
 #     """This method allow you to fuse BatchNorm parameters into Conv layers once you have trained your model.
-    
+
 #     :param deep_net: DeepNet to fuse.
 #     :type deep_net: :py:class:`n2d2.DeepNet`
 #     :param provider: Data provider used
 #     :type provider: :py:class:`n2d2.Provider`
-#     :param act_scaling_mode: Scaling mode for activation can be ``NONE``, ``FLOAT_MULT``, ``FIXED_MULT16``, ``FIXED_MULT32``, ``SINGLE_SHIFT``, ``DOUBLE_SHIFT`` 
+#     :param act_scaling_mode: Scaling mode for activation can be ``NONE``, ``FLOAT_MULT``, ``FIXED_MULT16``, ``FIXED_MULT32``, ``SINGLE_SHIFT``, ``DOUBLE_SHIFT``
 #     :type act_scaling_mode: str
 #     :param w_mode: Can be ``NONE`` or ``RINTF``, default="NONE"
 #     :type w_mode: str, optional
@@ -99,12 +99,10 @@ def PTQ(deepnet_cell,
     :param act_clipping_mode: activation clipping mode on calibration, can be ``NONE``, ``MSE`` or ``KL_DIVERGENCE`` or ``Quantile``, default="MSE"
     :type act_clipping_mode: str, optional
     """
-    if "export_no_unsigned" in kwargs:
-        no_unsigned = kwargs["export_no_unsigned"]
-    if "export_no_cross_layer_equalization" in kwargs:
-        cross_layer_equalization = not kwargs["export_no_cross_layer_equalization"]
-    if "calibration" in kwargs:
-        nb_sitmuli=kwargs["calibration"]
+    no_unsigned = kwargs.get("export_no_unsigned", no_unsigned)
+    cross_layer_equalization = not kwargs.get("export_no_cross_layer_equalization", not cross_layer_equalization)
+    nb_sitmuli = kwargs.get("calibration", nb_sitmuli)
+
     if act_clipping_mode not in N2D2.ClippingMode.__members__.keys():
         raise n2d2.error_handler.WrongValue("act_clipping_mode", act_clipping_mode, ", ".join(N2D2.ClippingMode.__members__.keys()))
     N2D2_act_clipping_mode = N2D2.ClippingMode.__members__[act_clipping_mode]
@@ -262,14 +260,14 @@ class ActivationQuantizer(Quantizer, ABC):
 #         self._set_N2D2_parameters(self._config_parameters)
 #         self.load_N2D2_parameters(self.N2D2())
 
-    
+
 #     def get_quantized_weights(self, input_idx):
 #         """
 #         Access the quantized weights of the cell the quantizer is attached to.
 #         """
 #         return n2d2.Tensor.from_N2D2(self.N2D2().getQuantizedWeights(input_idx))
 
-    
+
 #     def get_quantized_biases(self):
 #         """
 #         Access the quantized weights of the cell the quantizer is attached to.
@@ -324,7 +322,7 @@ class LSQCell(CellQuantizer): # TODO : trainable ?
 
         """Set and initialize here all complex cells members"""
         for key, value in self._config_parameters.items():
-            if key is 'solver':
+            if key == 'solver':
                 if isinstance(value, n2d2.solver.Solver):
                     self._N2D2_object.setSolver(value.N2D2())
                 else:
@@ -333,7 +331,7 @@ class LSQCell(CellQuantizer): # TODO : trainable ?
             else:
                 self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
         # No optional constructor arguments
-        
+
         self.load_N2D2_parameters(self.N2D2())
 
     def set_solver(self, solver):
@@ -344,10 +342,10 @@ class LSQCell(CellQuantizer): # TODO : trainable ?
         return self._config_parameters['solver']
 
     def __setattr__(self, key: str, value) -> None:
-        if key is 'solver':
+        if key == 'solver':
             self.set_solver(value)
         else:
-            return super().__setattr__(key, value)
+            super().__setattr__(key, value)
 
 
 # class SATAct(ActivationQuantizer, Trainable):
@@ -369,7 +367,7 @@ class LSQCell(CellQuantizer): # TODO : trainable ?
 #         "rand_range": "RandRange",
 #         "start_rand_IT": "StartRandIT"
 #     })
-        
+
 #     def __init__(self, **config_parameters):
 #         """
 #         :param range: Range of Quantization, can be ``1`` for binary, ``255`` for 8-bits etc.., default=255
@@ -417,7 +415,7 @@ class LSQCell(CellQuantizer): # TODO : trainable ?
 
 #     def get_solver(self):
 #         return self._config_parameters['solver']
-    
+
 #     def set_filler(self, filler, refill=False):
 #         # This method override the virtual one in Trainable
 #         raise RuntimeError("Quantizer does not support Filler")
@@ -429,7 +427,7 @@ class LSQCell(CellQuantizer): # TODO : trainable ?
 #     def has_bias(self):
 #         # This method override the virtual one in Trainable
 #         raise RuntimeError("Quantizer does not have a 'bias'")
-    
+
 #     def has_quantizer(self):
 #         # This method override the virtual one in Trainable
 #         raise RuntimeError("Quantizer does not have a 'quantizer'")
@@ -493,4 +491,3 @@ class LSQAct(ActivationQuantizer): # TODO : trainable ?
             self.set_solver(value)
         else:
             return super().__setattr__(key, value)
-

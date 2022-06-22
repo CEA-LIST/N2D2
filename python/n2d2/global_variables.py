@@ -24,7 +24,7 @@ from os.path import expanduser
 from inspect import ismethod
 from enum import Enum
 
-class GlobalVariables:
+class GlobalVariables: # pylint: disable=too-many-instance-attributes
     """
     This class handle global parameters.
 
@@ -97,13 +97,13 @@ class GlobalVariables:
             N2D2.setCudaDeviceOption(value) # Setting this variable is mandatory to use the fit method otherwise,
                                     # the device used for learning would be 0 (default value)
             N2D2.CudaContext.setDevice(value)
-        elif isinstance(value, tuple) or isinstance(value, list):
+        elif isinstance(value, (tuple, list)):
             devices = ""
             first_device = value[0]
             for val in value:
                 if not isinstance(val, int):
                     raise TypeError("Device should be of type 'int'")
-                elif val > N2D2.CudaContext.nbDevice():
+                if val > N2D2.CudaContext.nbDevice():
                     raise RuntimeError(f"Cannot set device {value}, you have {N2D2.CudaContext.nbDevice()} devices")
                 devices += str(val) +","
             devices = devices.strip(",")
@@ -111,38 +111,42 @@ class GlobalVariables:
             N2D2.CudaContext.setDevice(first_device)
         else:
             raise TypeError(f"Device should be of type 'int' or 'tuple' got {type(value).__name__} instead")
+
     @property
     def cuda_compiled(self):
         return self._cuda_compiled
     @cuda_compiled.setter
-    def cuda_compiled(self, _):
+    def cuda_compiled(self, _): # pylint: disable=no-self-use
         raise RuntimeError("The parameter cuda_compiled is on read only !")
 
     @property
     def json_compiled(self):
         return self._json_compiled
+
     @json_compiled.setter
-    def json_compiled(self, _):
+    def json_compiled(self, _): # pylint: disable=no-self-use
         raise RuntimeError("The parameter json_compiled is on read only !")
 
     @property
     def onnx_compiled(self):
         return self._onnx_compiled
+
     @onnx_compiled.setter
-    def onnx_compiled(self, _):
+    def onnx_compiled(self, _): # pylint: disable=no-self-use
         raise RuntimeError("The parameter json_compiled is on read only !")
 
     @property
     def n2d2_ip_compiled(self):
         return self._n2d2_ip_compiled
-    @cuda_compiled.setter
-    def n2d2_ip_compiled(self, _):
+
+    @n2d2_ip_compiled.setter
+    def n2d2_ip_compiled(self, _): # pylint: disable=no-self-use
         raise RuntimeError("The parameter n2d2_ip_compiled is on read only !")
 
     # Legacy : We send a deprecated error if these methods are still used :
-    def set_cuda_device(self, device):
+    def set_cuda_device(self, device): # pylint: disable=no-self-use
         raise RuntimeError(f"set_cuda_device should not be used anymore, please replace it with :\nn2d2.global_variables.cuda_device = {device}")
-    def set_random_seed(self, seed):
+    def set_random_seed(self, seed): # pylint: disable=no-self-use
         raise RuntimeError (f"set_random_seed should not be used anymore, please replace it with :\nn2d2.global_variables.seed = {seed}")
 
     def __str__(self):
