@@ -86,16 +86,46 @@ public:
     };
 
     virtual void setExtendedPadding(const std::vector<int>& paddingDims);
+    /**
+     * @brief Sets the Convolutional layer variables according to the given parameters and input features.
+     */
     virtual void initialize();
     virtual void initializeParameters(unsigned int nbInputChannels, unsigned int nbInputs);
     virtual void initializeWeightQuantizer();
+    /**
+     * @brief Checks whether dimensions of a given input match those expected following the initialization.
+     */
     virtual void check_input();
     virtual void initializeDataDependent();
     virtual void save(const std::string& dirName) const;
     virtual void load(const std::string& dirName);
+
+    /**
+     * @brief Propagates input features through the convolutional layer and passes on processed features to the next layer.
+     * 
+     * @param inference False if the network is training. Input and ouput features are then saved for the backpropagation step.
+     */
     virtual void propagate(bool inference = false);
+
+    /**
+     * @brief Computes gradient value for each parameter of the convolutional layer and passing on gradient to the next layers.
+     * 
+     * @param inference False if the network is training. Input and ouput features are then saved for the backpropagation step.
+     */
     virtual void backPropagate();
+
+    /**
+     * @brief Updates weights and other parameters value following a given algorithm.
+     */
     virtual void update();
+
+    /**
+     * @brief Fills a BaseTensor with the weight map connecting specific input and output channels.
+     * 
+     * @param output    Output channel index.
+     * @param channel   Input channel index.
+     * @param value     BaseTensor to be filled.
+     */
     inline void getWeight(unsigned int output,
                           unsigned int channel,
                           BaseTensor& value) const
@@ -107,6 +137,7 @@ public:
         value.resize(sharedSynapses[output][channel].dims());
         value = sharedSynapses[output][channel];
     };
+
     /**
      * @brief Get the Quantized Weight applied to a single input channel to compute a single ouput channel.
      * 
@@ -135,18 +166,23 @@ public:
         value.resize(std::initializer_list<size_t>({1}));
         value = Tensor<T>({1}, (*mBias)(output));
     };
+
+    /**
+     * @brief Returns a reference to the weight interface of the layer.
+     */
     inline BaseInterface* getWeights()
     {
         return &mSharedSynapses;
     };
+
+    /**
+     * @brief Returns a constant reference to the weight interface of the layer.
+     */
     inline const BaseInterface* getWeights() const
     {
         return &mSharedSynapses;
     };
-    inline Interface<T> getInterface()
-    {
-        return mSharedSynapses;
-    };
+
     void setWeights(unsigned int k,
                     BaseInterface* weights,
                     unsigned int offset);
@@ -170,6 +206,13 @@ public:
     virtual ~ConvCell_Frame();
 
 protected:
+    /**
+     * @brief Set the weight map connecting specific input channel and output according to the given value.
+     * 
+     * @param output    Output channel index.
+     * @param channel   Inpt channel index.
+     * @param value     Weight map.
+     */
     inline void setWeight(unsigned int output,
                           unsigned int channel,
                           const BaseTensor& value)
@@ -205,9 +248,7 @@ protected:
         }
 
         // 2nd: set weight value
-        Tensor<T>& sharedSynapses
-            = mSharedSynapses[mSharedSynapses.getTensorIndex(channel)];
-        channel -= mSharedSynapses.getTensorDataOffset(channel);
+        Tensor<T>& sharedSynapses = mSharedSynapses[k];
 
         if (value.nbDims() < mKernelDims.size()) {
             for (size_t dim = 0; dim < value.nbDims(); ++dim) {
