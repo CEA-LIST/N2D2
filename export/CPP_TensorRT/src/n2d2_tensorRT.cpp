@@ -21,24 +21,24 @@
 #include "PluginLayers.hpp"
 #include "NetworkTensorRT.hpp"
 
-#ifndef ONNX
+#ifndef EXPORT_ONNX
 #include "../dnn/include/env.hpp"
 #endif
 #if NV_TENSORRT_MAJOR < 8
 PluginFactory mPluginFactory;
 #endif
 
-N2D2::Network::Network()
+N2D2_Export::Network::Network()
 {
     //ctor
 }
 
-void N2D2::Network::setProfiling()
+void N2D2_Export::Network::setProfiling()
 {
     mContext->setProfiler(&gProfiler);
 }
 
-void N2D2::Network::setTensorRTPrecision() {
+void N2D2_Export::Network::setTensorRTPrecision() {
     if(mNbBits == -32) {
         mDataType = nvinfer1::DataType::kFLOAT;
         std::cout << "TensorRT DataType is now set to : kFLOAT" << std::endl;
@@ -58,8 +58,8 @@ void N2D2::Network::setTensorRTPrecision() {
 
 }
 
-#ifndef ONNX
-void N2D2::Network::setInternalDimensions() {
+#ifndef EXPORT_ONNX
+void N2D2_Export::Network::setInternalDimensions() {
     std::cout << "INPUTS/OUTPUTS Dimensions set as follow :" << std::endl;
 
     setInputDims(ENV_SIZE_X, ENV_SIZE_Y, ENV_NB_OUTPUTS);
@@ -86,10 +86,10 @@ void N2D2::Network::setInternalDimensions() {
 }
 #endif
 
-void N2D2::Network::initialize() {
+void N2D2_Export::Network::initialize() {
     std::cout << "==== INITIALIZE ==== " << std::endl;
     cudaSetDevice(mDeviceID);
-#ifndef ONNX
+#ifndef EXPORT_ONNX
     setInternalDimensions();
 #endif
     setIOMemory();
@@ -99,7 +99,7 @@ void N2D2::Network::initialize() {
         std::cout << "====> Set TensorRT Precision" << std::endl;
         mNetBuilder = nvinfer1::createInferBuilder(gLogger);
 
-#ifndef ONNX
+#ifndef EXPORT_ONNX
     #if (NV_TENSORRT_MAJOR + NV_TENSORRT_MINOR) > 7
         //To Be Improve : Network Definition FLAGS
         //nvinfer1::NetworkDefinitionCreationFlags creationFlag;
@@ -134,7 +134,7 @@ void N2D2::Network::initialize() {
 #endif
 
 
-#ifdef ONNX
+#ifdef EXPORT_ONNX
         nvonnxparser::IParser* parser = 
             nvonnxparser::createParser(*mNetDef.back(), 
                                             gLogger);
@@ -161,7 +161,7 @@ void N2D2::Network::initialize() {
 
 }
 
-void N2D2::Network::setIOMemory() {
+void N2D2_Export::Network::setIOMemory() {
     //Add +1 for Input buffer
     mInOutBuffer.resize(1U + mTargetsDimensions.size());
     size_t InputBufferSize 
@@ -180,7 +180,7 @@ void N2D2::Network::setIOMemory() {
 }
 
 
-void N2D2::Network::createContext()
+void N2D2_Export::Network::createContext()
 {
     mCudaEngine = nullptr;
 
@@ -401,7 +401,7 @@ void N2D2::Network::createContext()
 }
 
 /*
-void N2D2::Network::output(uint32_t* out_data, unsigned int target) {
+void N2D2_Export::Network::output(uint32_t* out_data, unsigned int target) {
 
    spatial_output_generation(   mMaxBatchSize,
                                 NB_OUTPUTS[target],
@@ -413,7 +413,7 @@ void N2D2::Network::output(uint32_t* out_data, unsigned int target) {
 }
 */
 
-void N2D2::Network::estimated(uint32_t* out_data, unsigned int target, bool useGPU, float threshold) {
+void N2D2_Export::Network::estimated(uint32_t* out_data, unsigned int target, bool useGPU, float threshold) {
 
    spatial_output_generation(mMaxBatchSize,
                             mTargetsDimensions[target].d[1],
@@ -426,7 +426,7 @@ void N2D2::Network::estimated(uint32_t* out_data, unsigned int target, bool useG
                             useGPU);
 }
 
-void N2D2::Network::log_output(float* out_data, unsigned int target) {
+void N2D2_Export::Network::log_output(float* out_data, unsigned int target) {
 
    get_output(  mTargetsDimensions[target].d[1],
                 mTargetsDimensions[target].d[2],
@@ -435,7 +435,7 @@ void N2D2::Network::log_output(float* out_data, unsigned int target) {
                 out_data);
 }
 
-void N2D2::Network::addOverlay(unsigned char* overlay_data, unsigned int target, float alpha) {
+void N2D2_Export::Network::addOverlay(unsigned char* overlay_data, unsigned int target, float alpha) {
 
    add_weighted(mTargetsDimensions[target].d[1],
                 mTargetsDimensions[target].d[2],
@@ -450,14 +450,14 @@ void N2D2::Network::addOverlay(unsigned char* overlay_data, unsigned int target,
 }
 
 
-void* N2D2::Network::getDevicePtr(unsigned int target) {
+void* N2D2_Export::Network::getDevicePtr(unsigned int target) {
 
     return mInOutBuffer[target + 1];
 }
 
 
 
-void N2D2::Network::add_target(std::vector<nvinfer1::ITensor *> outputs_tensor,
+void N2D2_Export::Network::add_target(std::vector<nvinfer1::ITensor *> outputs_tensor,
                 unsigned int targetIdx)
 {
     for(unsigned int i = 0; i < outputs_tensor.size(); ++i)
@@ -472,7 +472,7 @@ void N2D2::Network::add_target(std::vector<nvinfer1::ITensor *> outputs_tensor,
 }
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_activation(std::string layerName,
+      N2D2_Export::Network::add_activation(std::string layerName,
                         nvinfer1::ActivationType activation,
                         double alpha,
                         double beta,
@@ -562,7 +562,7 @@ std::vector<nvinfer1::ITensor *>
 
 }
 std::vector<nvinfer1::ITensor *>
-        N2D2::Network::add_activation_cell(std::string layerName,
+        N2D2_Export::Network::add_activation_cell(std::string layerName,
                                             LayerActivation activation,
                                             std::vector<nvinfer1::ITensor *> inputs_tensor)
 {
@@ -578,7 +578,7 @@ std::vector<nvinfer1::ITensor *>
 }
 
 std::vector<nvinfer1::ITensor *>
-        N2D2::Network::add_convolution(std::string layerName,
+        N2D2_Export::Network::add_convolution(std::string layerName,
                         LayerActivation activation,
                         unsigned int nbOutputs,
                         unsigned int strideX,
@@ -763,7 +763,7 @@ std::vector<nvinfer1::ITensor *>
 }
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_deconvolution(std::string layerName,
+      N2D2_Export::Network::add_deconvolution(std::string layerName,
                         LayerActivation activation,
                         unsigned int nbOutputs,
                         unsigned int strideX,
@@ -949,7 +949,7 @@ std::vector<nvinfer1::ITensor *>
 
 
 std::vector<nvinfer1::ITensor *>
-          N2D2::Network::add_padding(std::string layerName,
+          N2D2_Export::Network::add_padding(std::string layerName,
                         unsigned int nbOutputs,
                         std::vector<nvinfer1::ITensor *> inputs_tensor,
                         const int pad_top,
@@ -1003,7 +1003,7 @@ std::vector<nvinfer1::ITensor *>
 
 
 std::vector<nvinfer1::ITensor *>
-          N2D2::Network::add_lrn(std::string layerName,
+          N2D2_Export::Network::add_lrn(std::string layerName,
                         unsigned int nbOutputs,
                         std::vector<nvinfer1::ITensor *> inputs_tensor,
                         const int windows,
@@ -1084,7 +1084,7 @@ std::vector<nvinfer1::ITensor *>
 
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_fc(std::string layerName,
+      N2D2_Export::Network::add_fc(std::string layerName,
                 LayerActivation activation,
                 unsigned int nbOutputs,
                 std::vector<nvinfer1::ITensor *> inputs_tensor,
@@ -1202,7 +1202,7 @@ std::vector<nvinfer1::ITensor *>
 
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_concat(std::string layerName,
+      N2D2_Export::Network::add_concat(std::string layerName,
                    unsigned int nbInputs,
                     std::vector<std::vector<nvinfer1::ITensor *> *> inputs_tensor)
 {
@@ -1275,7 +1275,7 @@ std::vector<nvinfer1::ITensor *>
 }
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_elementwise(std::string layerName,
+      N2D2_Export::Network::add_elementwise(std::string layerName,
                         LayerActivation activation,
                         unsigned int nbOutputs,
                         unsigned int outputHeight,
@@ -1531,7 +1531,7 @@ std::vector<nvinfer1::ITensor *>
 
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_scale(std::string layerName,
+      N2D2_Export::Network::add_scale(std::string layerName,
                         LayerActivation activation,
                         unsigned int nbOutputs,
                         unsigned int outputHeight,
@@ -1629,7 +1629,7 @@ std::vector<nvinfer1::ITensor *>
 
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_batchnorm(std::string layerName,
+      N2D2_Export::Network::add_batchnorm(std::string layerName,
                         LayerActivation activation,
                         unsigned int nbOutputs,
                         unsigned int outputHeight,
@@ -1820,7 +1820,7 @@ std::vector<nvinfer1::ITensor *>
 }
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_pooling(std::string layerName,
+      N2D2_Export::Network::add_pooling(std::string layerName,
                         LayerActivation activation,
                         unsigned int poolH,
                         unsigned int poolW,
@@ -1919,7 +1919,7 @@ std::vector<nvinfer1::ITensor *>
 
 }
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_HWC2CHW(std::string layerName,
+      N2D2_Export::Network::add_HWC2CHW(std::string layerName,
                     std::vector<nvinfer1::ITensor *> inputs_tensor)
 {
     std::vector<nvinfer1::ITensor *> output_tensor;
@@ -1976,7 +1976,7 @@ std::vector<nvinfer1::ITensor *>
 }
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_reshape(std::string layerName,
+      N2D2_Export::Network::add_reshape(std::string layerName,
                     unsigned int nbDims,
                     const int shape[],
                     std::vector<nvinfer1::ITensor *> inputs_tensor)
@@ -2029,7 +2029,7 @@ std::vector<nvinfer1::ITensor *>
 }
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_transpose(std::string layerName,
+      N2D2_Export::Network::add_transpose(std::string layerName,
                     unsigned int nbDims,
                     const int perm[],
                     std::vector<nvinfer1::ITensor *> inputs_tensor)
@@ -2085,7 +2085,7 @@ std::vector<nvinfer1::ITensor *>
 }
 
 std::vector<nvinfer1::ITensor *>
-          N2D2::Network::add_group_reshape(std::string layerName,
+          N2D2_Export::Network::add_group_reshape(std::string layerName,
                         unsigned int groupSize,
                         bool restoreShape,
                         std::vector<nvinfer1::ITensor *> inputs_tensor)
@@ -2182,7 +2182,7 @@ std::vector<nvinfer1::ITensor *>
 
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_softmax(std::string layerName,
+      N2D2_Export::Network::add_softmax(std::string layerName,
                         std::vector<nvinfer1::ITensor *> inputs_tensor)
 {
     std::vector<nvinfer1::ITensor *> output_tensor;
@@ -2220,7 +2220,7 @@ std::vector<nvinfer1::ITensor *>
 }
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_anchors(std::string layerName,
+      N2D2_Export::Network::add_anchors(std::string layerName,
                         unsigned int nbOutputs,
                         unsigned int outputHeight,
                         unsigned int outputWidth,
@@ -2298,7 +2298,7 @@ std::vector<nvinfer1::ITensor *>
 
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_resize(std::string layerName,
+      N2D2_Export::Network::add_resize(std::string layerName,
                     unsigned int nbOutputs,
                     unsigned int outputHeight,
                     unsigned int outputWidth,
@@ -2395,7 +2395,7 @@ std::vector<nvinfer1::ITensor *>
 }
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_objectdetect(std::string layerName,
+      N2D2_Export::Network::add_objectdetect(std::string layerName,
                             unsigned int nbOutputs,
                             unsigned int outputHeight,
                             unsigned int outputWidth,
@@ -2488,7 +2488,7 @@ std::vector<nvinfer1::ITensor *>
 }
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_proposals( std::string layerName,
+      N2D2_Export::Network::add_proposals( std::string layerName,
                         unsigned int nbOutputs,
                         unsigned int outputHeight,
                         unsigned int outputWidth,
@@ -2590,7 +2590,7 @@ std::vector<nvinfer1::ITensor *>
 }
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_regionproposal(std::string layerName,
+      N2D2_Export::Network::add_regionproposal(std::string layerName,
                             unsigned int nbOutputs,
                             unsigned int outputHeight,
                             unsigned int outputWidth,
@@ -2663,7 +2663,7 @@ std::vector<nvinfer1::ITensor *>
 
 
 std::vector<nvinfer1::ITensor *>
-      N2D2::Network::add_ROIpooling(std::string layerName,
+      N2D2_Export::Network::add_ROIpooling(std::string layerName,
                             unsigned int nbOutputs,
                             unsigned int outputHeight,
                             unsigned int outputWidth,
@@ -2770,7 +2770,7 @@ std::vector<nvinfer1::ITensor *>
 #endif
 }
 
-void N2D2::Network::add_weighted(unsigned int nbOutputs,
+void N2D2_Export::Network::add_weighted(unsigned int nbOutputs,
                                     unsigned int outputsHeight,
                                     unsigned int outputsWidth,
                                     float* estimated_labels,
@@ -2820,7 +2820,7 @@ void N2D2::Network::add_weighted(unsigned int nbOutputs,
 
 
 /****Targets Layers ****/
-void N2D2::Network::output_generation(unsigned int mMaxBatchSize,
+void N2D2_Export::Network::output_generation(unsigned int mMaxBatchSize,
                        unsigned int nbOutputs,
                        void* dataIn,
                        uint32_t* outputEstimated,
@@ -2862,7 +2862,7 @@ void N2D2::Network::output_generation(unsigned int mMaxBatchSize,
     delete[] outputsData;
 }
 
-void N2D2::Network::spatial_output_generation(unsigned int mMaxBatchSize,
+void N2D2_Export::Network::spatial_output_generation(unsigned int mMaxBatchSize,
                                unsigned int nbOutputs,
                                unsigned int outputsHeight,
                                unsigned int outputsWidth,
@@ -2956,7 +2956,7 @@ void N2D2::Network::spatial_output_generation(unsigned int mMaxBatchSize,
     }
 }
 
-void N2D2::Network::get_output( unsigned int nbOutputs,
+void N2D2_Export::Network::get_output( unsigned int nbOutputs,
                                 unsigned int outputsHeight,
                                 unsigned int outputsWidth,
                                 void* dataIn,
@@ -2980,7 +2980,7 @@ void N2D2::Network::get_output( unsigned int nbOutputs,
     
 }
 
-void N2D2::Network::reportProfiling(unsigned int nbIter)
+void N2D2_Export::Network::reportProfiling(unsigned int nbIter)
 {
     double totalProcessTime = 0.0;
 
@@ -3004,7 +3004,7 @@ void N2D2::Network::reportProfiling(unsigned int nbIter)
 
 }
 /**** Debug Function ****/
-void N2D2::Network::dumpMem(int size, float* data, std::string fileName)
+void N2D2_Export::Network::dumpMem(int size, float* data, std::string fileName)
 {
 
     std::ofstream file;
@@ -3044,27 +3044,27 @@ struct VecToList
     }
 };
 
-void N2D2::Network::asyncExePy(np::ndarray const & in_data, unsigned int batchSize)
+void N2D2_Export::Network::asyncExePy(np::ndarray const & in_data, unsigned int batchSize)
 {
     asyncExe<float>(reinterpret_cast<float*>(in_data.get_data()), batchSize);
 }
 
-void N2D2::Network::syncExePy(np::ndarray const & in_data, unsigned int batchSize)
+void N2D2_Export::Network::syncExePy(np::ndarray const & in_data, unsigned int batchSize)
 {
     syncExe<float>(reinterpret_cast<float*>(in_data.get_data()), batchSize);
 }
 
-void N2D2::Network::cpyOutputPy(np::ndarray const & output, unsigned int target)
+void N2D2_Export::Network::cpyOutputPy(np::ndarray const & output, unsigned int target)
 {
     log_output(reinterpret_cast<float*>(output.get_data()), target);
 }
 
-void N2D2::Network::estimatedPy(np::ndarray const & in_data, unsigned int target, bool useGPU, float threshold)
+void N2D2_Export::Network::estimatedPy(np::ndarray const & in_data, unsigned int target, bool useGPU, float threshold)
 {
     estimated(reinterpret_cast<unsigned int*>(in_data.get_data()), target, useGPU, threshold);
 }
 
-void N2D2::Network::addOverlayPy(np::ndarray const & overlay_data, unsigned int target, float threshold)
+void N2D2_Export::Network::addOverlayPy(np::ndarray const & overlay_data, unsigned int target, float threshold)
 {
     addOverlay(reinterpret_cast<unsigned char*>(overlay_data.get_data()), target, threshold);
 }
@@ -3076,49 +3076,49 @@ BOOST_PYTHON_MODULE(N2D2)
 
     np::initialize();
 
-    class_<N2D2::Network>("N2D2_Network")
+    class_<N2D2_Export::Network>("N2D2_Network")
         .def(init<>())
-        .def("initialize", &N2D2::Network::initialize)
+        .def("initialize", &N2D2_Export::Network::initialize)
 
-        .def("setPrecision", &N2D2::Network::setPrecision)
-        .def("reportProfiling", &N2D2::Network::reportProfiling)
-        .def("setProfiling", &N2D2::Network::setProfiling)
-        .def("setMaxBatchSize", &N2D2::Network::setMaxBatchSize)
-        .def("setDeviceID", &N2D2::Network::setDeviceID)
-        .def("setIterBuild", &N2D2::Network::setIterBuild)
-        .def("setInputEngine", &N2D2::Network::setInputEngine)
-        .def("setOutputEngine", &N2D2::Network::setOutputEngine)
-        .def("setCalibCache", &N2D2::Network::setCalibCache)
-        .def("setCalibFolder", &N2D2::Network::setCalibFolder)
-        .def("setParamPath", &N2D2::Network::setParamPath)
-        .def("setDetectorNMS", &N2D2::Network::setDetectorNMS)
-#ifdef ONNX
-        .def("setONNXModel", &N2D2::Network::setONNXModel)
+        .def("setPrecision", &N2D2_Export::Network::setPrecision)
+        .def("reportProfiling", &N2D2_Export::Network::reportProfiling)
+        .def("setProfiling", &N2D2_Export::Network::setProfiling)
+        .def("setMaxBatchSize", &N2D2_Export::Network::setMaxBatchSize)
+        .def("setDeviceID", &N2D2_Export::Network::setDeviceID)
+        .def("setIterBuild", &N2D2_Export::Network::setIterBuild)
+        .def("setInputEngine", &N2D2_Export::Network::setInputEngine)
+        .def("setOutputEngine", &N2D2_Export::Network::setOutputEngine)
+        .def("setCalibCache", &N2D2_Export::Network::setCalibCache)
+        .def("setCalibFolder", &N2D2_Export::Network::setCalibFolder)
+        .def("setParamPath", &N2D2_Export::Network::setParamPath)
+        .def("setDetectorNMS", &N2D2_Export::Network::setDetectorNMS)
+#ifdef EXPORT_ONNX
+        .def("setONNXModel", &N2D2_Export::Network::setONNXModel)
 #endif
-        .def("setInputDims", &N2D2::Network::setInputDims)
-        .def("setOutputNbTargets", &N2D2::Network::setOutputNbTargets)
-        .def("setOutputTarget", &N2D2::Network::setOutputTarget)
-        .def("useDLA", &N2D2::Network::useDLA)
-        .def("setMaxWorkSpaceSize", &N2D2::Network::setMaxWorkSpaceSize)
+        .def("setInputDims", &N2D2_Export::Network::setInputDims)
+        .def("setOutputNbTargets", &N2D2_Export::Network::setOutputNbTargets)
+        .def("setOutputTarget", &N2D2_Export::Network::setOutputTarget)
+        .def("useDLA", &N2D2_Export::Network::useDLA)
+        .def("setMaxWorkSpaceSize", &N2D2_Export::Network::setMaxWorkSpaceSize)
 
-        .def("estimated", &N2D2::Network::estimatedPy)
+        .def("estimated", &N2D2_Export::Network::estimatedPy)
 
-        .def("getOutputNbTargets", &N2D2::Network::getOutputNbTargets)
-        .def("getOutputTarget", &N2D2::Network::getOutputTarget)
-        .def("getOutputDimZ", &N2D2::Network::getOutputDimZ)
-        .def("getOutputDimY", &N2D2::Network::getOutputDimY)
-        .def("getOutputDimX", &N2D2::Network::getOutputDimX)
-        .def("getInputDimZ", &N2D2::Network::getInputDimZ)
-        .def("getInputDimY", &N2D2::Network::getInputDimY)
-        .def("getInputDimX", &N2D2::Network::getInputDimX)
+        .def("getOutputNbTargets", &N2D2_Export::Network::getOutputNbTargets)
+        .def("getOutputTarget", &N2D2_Export::Network::getOutputTarget)
+        .def("getOutputDimZ", &N2D2_Export::Network::getOutputDimZ)
+        .def("getOutputDimY", &N2D2_Export::Network::getOutputDimY)
+        .def("getOutputDimX", &N2D2_Export::Network::getOutputDimX)
+        .def("getInputDimZ", &N2D2_Export::Network::getInputDimZ)
+        .def("getInputDimY", &N2D2_Export::Network::getInputDimY)
+        .def("getInputDimX", &N2D2_Export::Network::getInputDimX)
 
-        .def("cpyOutput", &N2D2::Network::cpyOutputPy)
-        .def("asyncExe", &N2D2::Network::asyncExePy)
-        .def("syncExe", &N2D2::Network::syncExePy)
-        .def("addOverlay", &N2D2::Network::addOverlayPy)
-        .def("setDetectorThresholds", &N2D2::Network::setDetectorThresholdsPy)
+        .def("cpyOutput", &N2D2_Export::Network::cpyOutputPy)
+        .def("asyncExe", &N2D2_Export::Network::asyncExePy)
+        .def("syncExe", &N2D2_Export::Network::syncExePy)
+        .def("addOverlay", &N2D2_Export::Network::addOverlayPy)
+        .def("setDetectorThresholds", &N2D2_Export::Network::setDetectorThresholdsPy)
        
-//        .def("syncExeGPU", &N2D2::Network::syncExeGPUPy)
+//        .def("syncExeGPU", &N2D2_Export::Network::syncExeGPUPy)
     ;
     p::to_python_converter<std::vector<unsigned int, std::allocator<unsigned int> >, VecToList<unsigned int> >();
 

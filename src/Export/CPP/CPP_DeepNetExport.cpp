@@ -1483,7 +1483,7 @@ void N2D2::CPP_DeepNetExport::generateForwardFile(
                          << "\n\n";
 
     const std::string inputType = DeepNetExport::mEnvDataUnsigned?"UDATA_T":"DATA_T";
-    networkPropagateFile << "namespace N2D2 {\n"
+    networkPropagateFile << "namespace N2D2_Export {\n"
                          << "\n"
                          << "template<>\n"
                          << "void Network::propagate(const " << inputType << "* inputs, "
@@ -1667,7 +1667,7 @@ void N2D2::CPP_DeepNetExport::generateForwardQATFile(
         && DeepNetExport::mEnvDataUnsigned) ? "udata" : "data";
     const int inputNbBits = (int)CellExport::mPrecision;
 
-    networkPropagateFile << "namespace N2D2 {\n"
+    networkPropagateFile << "namespace N2D2_Export {\n"
         << "\n"
         << "template<>\n"
         << "void Network::propagate(const " << inputType << "<" << inputNbBits
