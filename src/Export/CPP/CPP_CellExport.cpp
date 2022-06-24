@@ -96,7 +96,7 @@ void N2D2::CPP_CellExport::generateActivationScaling(const Cell& cell, std::ofst
     const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
 
     if (cellFrame.getActivation() == nullptr) {
-        header << "static const N2D2::NoScaling " << prefix << "_SCALING;\n";
+        header << "static const N2D2_Export::NoScaling " << prefix << "_SCALING;\n";
         return;
     }
     
@@ -114,14 +114,14 @@ void N2D2::CPP_CellExport::generateScaling(
     std::ofstream& header)
 {
     if(scaling.getMode() == ScalingMode::NONE) {
-        header << "static const N2D2::NoScaling " << prefix << "_SCALING;\n";
+        header << "static const N2D2_Export::NoScaling " << prefix << "_SCALING;\n";
     }
     else if(scaling.getMode() == ScalingMode::FLOAT_MULT) {
         const auto& scalingPerOutput = scaling.getFloatingPointScaling().getScalingPerOutput();
 
         if(Utils::all_same(scalingPerOutput.begin(), scalingPerOutput.end())) {
             if(!scaling.getFloatingPointScaling().getIsClipped()){
-                header << "static const N2D2::FloatingPointScaling " << prefix << "_SCALING = {"
+                header << "static const N2D2_Export::FloatingPointScaling " << prefix << "_SCALING = {"
                                                                     << scalingPerOutput.front() << "};\n";
             }
             else{
@@ -130,14 +130,14 @@ void N2D2::CPP_CellExport::generateScaling(
                 std::vector<int32_t> clippingPerOutput_INT32(  clippingPerOutput.begin(),
                                                                 clippingPerOutput.end());
                 assert(clippingPerOutput_INT32.size() == scalingPerOutput.size());
-                header << "static const N2D2::FloatingPointClippingAndScaling<1> "
+                header << "static const N2D2_Export::FloatingPointClippingAndScaling<1> "
                                                                             << prefix << "_SCALING = {";
                 header << scalingPerOutput.front() << ", " << clippingPerOutput_INT32.front() << "};\n";
             }
         }
         else {
             if(!scaling.getFloatingPointScaling().getIsClipped()) {
-            header << "static const N2D2::FloatingPointScalingPerChannel<" << scalingPerOutput.size() << "> " 
+            header << "static const N2D2_Export::FloatingPointScalingPerChannel<" << scalingPerOutput.size() << "> " 
                                                                            << prefix << "_SCALING = {";
             header << Utils::join(scalingPerOutput.begin(), scalingPerOutput.end(), ',');
             header << "};\n";
@@ -149,7 +149,7 @@ void N2D2::CPP_CellExport::generateScaling(
                 std::vector<int32_t> clippingPerOutput_INT32(  clippingPerOutput.begin(), 
                                                                 clippingPerOutput.end());
                 assert(clippingPerOutput_INT32.size() == scalingPerOutput.size());
-                header << "static const N2D2::FloatingPointClippingAndScalingPerChannel<" 
+                header << "static const N2D2_Export::FloatingPointClippingAndScalingPerChannel<" 
                                                                             << clippingPerOutput_INT32.size() << "> " 
                                                                             << prefix << "_SCALING = {{";
                 header << Utils::join(scalingPerOutput.begin(), scalingPerOutput.end(), ',');
@@ -166,13 +166,13 @@ void N2D2::CPP_CellExport::generateScaling(
         const auto& scalingPerOutput = fpScaling.getScalingPerOutput();
 
         if(Utils::all_same(scalingPerOutput.begin(), scalingPerOutput.end())) {
-            header << "static const N2D2::FixedPointScaling<" << scalingPerOutput.front() << ", "
+            header << "static const N2D2_Export::FixedPointScaling<" << scalingPerOutput.front() << ", "
                                                               << fpScaling.getFractionalBits() 
                                                         << "> " << prefix << "_SCALING;\n";
         }
         else {
             if(!scaling.getFixedPointScaling().getIsClipped()) {
-                header << "static const N2D2::FixedPointScalingPerChannel<" << scalingPerOutput.size() << ", " 
+                header << "static const N2D2_Export::FixedPointScalingPerChannel<" << scalingPerOutput.size() << ", " 
                                                                                 << fpScaling.getFractionalBits() 
                                                                             << "> " << prefix << "_SCALING = {";
                 header << Utils::join(scalingPerOutput.begin(), scalingPerOutput.end(), ',');
@@ -185,7 +185,7 @@ void N2D2::CPP_CellExport::generateScaling(
                 std::vector<int32_t> clippingPerOutput_INT32(  clippingPerOutput.begin(), 
                                                                 clippingPerOutput.end());
                 assert(clippingPerOutput_INT32.size() == scalingPerOutput.size());
-                header << "static const N2D2::FixedPointClippingAndScalingPerChannel<" 
+                header << "static const N2D2_Export::FixedPointClippingAndScalingPerChannel<" 
                                                                             << clippingPerOutput_INT32.size()  << ", " 
                                                                             << fpScaling.getFractionalBits() 
                                                                             << "> " 
@@ -201,11 +201,11 @@ void N2D2::CPP_CellExport::generateScaling(
     else if(scaling.getMode() == ScalingMode::SINGLE_SHIFT) {
         const auto& scalingPerOutput = scaling.getSingleShiftScaling().getScalingPerOutput();
         if(Utils::all_same(scalingPerOutput.begin(), scalingPerOutput.end())) {
-            header << "static const N2D2::SingleShiftScaling<" << +scalingPerOutput.front() << "> " 
+            header << "static const N2D2_Export::SingleShiftScaling<" << +scalingPerOutput.front() << "> " 
                                                                    << prefix << "_SCALING;\n";
         }
         else {
-            header << "static const N2D2::SingleShiftScalingPerChannel<" << scalingPerOutput.size() << "> " 
+            header << "static const N2D2_Export::SingleShiftScalingPerChannel<" << scalingPerOutput.size() << "> " 
                                                                              << prefix << "_SCALING = {";
             for(const auto& sc: scalingPerOutput) {
                 header << +sc << ", ";
@@ -216,12 +216,12 @@ void N2D2::CPP_CellExport::generateScaling(
     else if(scaling.getMode() == ScalingMode::DOUBLE_SHIFT) {
         const auto& scalingPerOutput = scaling.getDoubleShiftScaling().getScalingPerOutput();
         if(Utils::all_same(scalingPerOutput.begin(), scalingPerOutput.end())) {
-            header << "static const N2D2::DoubleShiftScaling<" << +scalingPerOutput.front().first << ", "
+            header << "static const N2D2_Export::DoubleShiftScaling<" << +scalingPerOutput.front().first << ", "
                                                                << +scalingPerOutput.front().second << "> " 
                                                                    << prefix << "_SCALING;\n";
         }
         else {
-            header << "static const N2D2::DoubleShiftScalingPerChannel" 
+            header << "static const N2D2_Export::DoubleShiftScalingPerChannel" 
                                                 << "<" 
                                                     << scalingPerOutput.size() << ", " 
                                                     << outputUnsigned

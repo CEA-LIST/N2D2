@@ -25,7 +25,7 @@
 #include "Network.hpp"
 
 template<typename Input_T, typename Output_T>
-void readStimulus(const N2D2::Network& network, const std::string& stimulusPath, 
+void readStimulus(const N2D2_Export::Network& network, const std::string& stimulusPath, 
                   std::vector<Input_T>& inputBuffer, 
                   std::vector<Output_T>& expectedOutputBuffer)
 {
@@ -36,7 +36,7 @@ void readStimulus(const N2D2::Network& network, const std::string& stimulusPath,
 }
 
 template<typename Input_T, typename Output_T>
-double processInput(const N2D2::Network& network, std::vector<Input_T>& inputBuffer, 
+double processInput(const N2D2_Export::Network& network, std::vector<Input_T>& inputBuffer, 
                             std::vector<Output_T>& expectedOutputBuffer,
                             std::vector<Output_T>& predictedOutputBuffer) 
 {
@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
     omp_set_num_threads(8);
 #endif
 
-    const N2D2::Network network{};
+    const N2D2_Export::Network network{};
 
 #if NB_BITS > 0 && ENV_DATA_UNSIGNED
     std::vector<udata<NB_BITS>> inputBuffer(network.inputSize());

@@ -37,7 +37,7 @@
 #endif
 #define N2D2_SECTION_ATTRIBUTE(sec) __attribute__((section(sec)))
 
-namespace N2D2 {
+namespace N2D2_Export {
 
 class Network {
 public:
@@ -102,7 +102,7 @@ private:
             int CHANNELS_HEIGHT, int CHANNELS_WIDTH,
             int NB_OUTPUTS,
             int OUTPUTS_HEIGHT, int OUTPUTS_WIDTH,
-            N2D2::Network::ElemWiseOp ELEM_OP,
+            N2D2_Export::Network::ElemWiseOp ELEM_OP,
             ActivationFunction_T ACTIVATION,
             int OUTPUT_MEM_CONT_OFFSET,
             int OUTPUT_MEM_CONT_SIZE,
@@ -484,7 +484,7 @@ private:
 }
 
 template<typename Output_T>
-N2D2_ALWAYS_INLINE inline void N2D2::Network::concatenate(
+N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::concatenate(
     Output_T* __restrict /*outputs*/,
     int /*pos*/) const {}
 
@@ -500,7 +500,7 @@ template<// For first input
          typename... INPUTS,
          // Types
          typename Input_T, typename Output_T>
-N2D2_ALWAYS_INLINE inline void N2D2::Network::concatenate(
+N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::concatenate(
     Output_T* __restrict outputs,
     int pos,
     const Input_T* __restrict firstInputs,
@@ -541,7 +541,7 @@ template<// For all inputs
          typename... INPUTS,
          // Types
          typename Input_T, typename Output_T>
-N2D2_ALWAYS_INLINE inline void N2D2::Network::concatenatePropagate(
+N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::concatenatePropagate(
     Output_T* __restrict outputs,
     const Input_T* __restrict firstInputs,
     INPUTS... inputs) const
@@ -567,15 +567,15 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::concatenatePropagate(
     }
 }
 
-template<N2D2::Network::ElemWiseOp ELEM_OP>
-N2D2_ALWAYS_INLINE inline SUM_T N2D2::Network::elemWise(
+template<N2D2_Export::Network::ElemWiseOp ELEM_OP>
+N2D2_ALWAYS_INLINE inline SUM_T N2D2_Export::Network::elemWise(
     int /*pos*/,
     int /*ch*/) const
 {
     return 0;
 }
 
-template<N2D2::Network::ElemWiseOp ELEM_OP,
+template<N2D2_Export::Network::ElemWiseOp ELEM_OP,
          // For first input
          int INPUT_NB_CHANNELS,
          int INPUT_MEM_CONT_OFFSET,
@@ -588,7 +588,7 @@ template<N2D2::Network::ElemWiseOp ELEM_OP,
          typename... INPUTS,
          // Types
          typename Input_T>
-N2D2_ALWAYS_INLINE inline SUM_T N2D2::Network::elemWise(
+N2D2_ALWAYS_INLINE inline SUM_T N2D2_Export::Network::elemWise(
     int pos,
     int ch,
     const Input_T* __restrict firstInputs,
@@ -610,7 +610,7 @@ template<// For all inputs
          int CHANNELS_HEIGHT, int CHANNELS_WIDTH,
          int NB_OUTPUTS,
          int OUTPUTS_HEIGHT, int OUTPUTS_WIDTH,
-         N2D2::Network::ElemWiseOp ELEM_OP,
+         N2D2_Export::Network::ElemWiseOp ELEM_OP,
          ActivationFunction_T ACTIVATION,
          int OUTPUT_MEM_CONT_OFFSET,
          int OUTPUT_MEM_CONT_SIZE,
@@ -630,7 +630,7 @@ template<// For all inputs
          // Types
          typename Input_T, typename Output_T,
          typename Rescaling_T>
-N2D2_ALWAYS_INLINE inline void N2D2::Network::elemWisePropagate(
+N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::elemWisePropagate(
     Output_T* __restrict outputs,
     const Rescaling_T& __restrict rescaling,
     const Input_T* __restrict firstInputs,
@@ -690,7 +690,7 @@ template<int NB_CHANNELS,
          int OUTPUT_MEM_STRIDE,
          typename Input_T, typename Output_T,
          typename Rescaling_T>
-N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellPropagate(
+N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::convcellPropagate(
     const Input_T* __restrict inputs,
     Output_T* __restrict outputs,
     const BDATA_T* __restrict biasses,
@@ -836,7 +836,7 @@ template<int NB_CHANNELS,
          int OUTPUT_MEM_STRIDE,
          typename Input_T, typename Output_T,
          typename Rescaling_T>
-N2D2_ALWAYS_INLINE inline void N2D2::Network::convcellDWPropagate(
+N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::convcellDWPropagate(
     const Input_T* __restrict inputs,
     Output_T* __restrict outputs,
     const BDATA_T* __restrict biasses,
@@ -983,7 +983,7 @@ template<int NB_CHANNELS,
          int OUTPUT_MEM_WRAP_SIZE,
          int OUTPUT_MEM_STRIDE,
          typename Input_T, typename Output_T>
-N2D2_ALWAYS_INLINE inline void N2D2::Network::poolcellPropagate(
+N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::poolcellPropagate(
     const Input_T* __restrict inputs,
     Output_T* __restrict outputs) const
 {
@@ -1178,7 +1178,7 @@ template<int NB_CHANNELS,
          int OUTPUT_MEM_STRIDE,
          typename Input_T, typename Output_T,
          typename Rescaling_T>
-N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
+N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::fccellPropagate(
     const Input_T* __restrict inputs,
     Output_T* __restrict outputs,
     const BDATA_T* __restrict biasses,
@@ -1247,7 +1247,7 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::fccellPropagate(
 }
 
 template<typename Output_T>
-inline void N2D2::Network::saveOutputs(
+inline void N2D2_Export::Network::saveOutputs(
     int NB_OUTPUTS,
     int OUTPUTS_HEIGHT, int OUTPUTS_WIDTH,
     int OUTPUT_MEM_CONT_OFFSET,
@@ -1343,7 +1343,7 @@ template<int NB_CHANNELS,
          int INPUT_MEM_WRAP_SIZE,
          int INPUT_MEM_STRIDE,
          typename Input_T>
-N2D2_ALWAYS_INLINE inline void N2D2::Network::maxPropagate(
+N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::maxPropagate(
     const Input_T* __restrict inputs,
     int32_t* __restrict outputs) const
 {
@@ -1394,7 +1394,7 @@ template<int NB_CHANNELS,
          int OUTPUT_MEM_WRAP_SIZE,
          int OUTPUT_MEM_STRIDE,
          typename Input_T, typename Output_T>
-N2D2_ALWAYS_INLINE inline void N2D2::Network::resizeNearestNeighborPropagate(
+N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::resizeNearestNeighborPropagate(
     const Input_T* __restrict inputs,
     Output_T* __restrict outputs) const
 {
@@ -1451,7 +1451,7 @@ template<int NB_CHANNELS,
          int OUTPUT_MEM_STRIDE,
          typename Input_T, typename Output_T,
          typename Rescaling_T>
-N2D2_ALWAYS_INLINE inline void N2D2::Network::scalingPropagate(
+N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::scalingPropagate(
     const Input_T* __restrict inputs,
     Output_T* __restrict outputs,
     const Rescaling_T& __restrict rescaling) const
@@ -1505,7 +1505,7 @@ template<int NB_CHANNELS,
          int OUTPUT_MEM_WRAP_SIZE,
          int OUTPUT_MEM_STRIDE,
          typename Input_T, typename Output_T>
-N2D2_ALWAYS_INLINE inline void N2D2::Network::transposePropagate(
+N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::transposePropagate(
     const Input_T* __restrict inputs,
     Output_T* __restrict outputs,
     const int perm[4]) const
@@ -1529,11 +1529,11 @@ N2D2_ALWAYS_INLINE inline void N2D2::Network::transposePropagate(
     }
 }
 
-N2D2_ALWAYS_INLINE inline N2D2::Network::Tick_T N2D2::Network::tick() const {
+N2D2_ALWAYS_INLINE inline N2D2_Export::Network::Tick_T N2D2_Export::Network::tick() const {
     return std::chrono::high_resolution_clock::now();
 }
 
-N2D2_ALWAYS_INLINE inline void N2D2::Network::benchmark(const char* name,
+N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::benchmark(const char* name,
                                                         const Tick_T& start,
                                                         const Tick_T& end,
                                                         RunningMean_T& timing) const
