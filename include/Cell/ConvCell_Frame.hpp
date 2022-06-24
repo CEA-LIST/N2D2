@@ -130,10 +130,48 @@ public:
                           unsigned int channel,
                           BaseTensor& value) const
     {
-        const Tensor<T>& sharedSynapses
-            = mSharedSynapses[mSharedSynapses.getTensorIndex(channel)];
-        channel -= mSharedSynapses.getTensorDataOffset(channel);
+        // const Tensor<T>& sharedSynapses
+        //     = mSharedSynapses[mSharedSynapses.getTensorIndex(channel)];
+        // channel -= mSharedSynapses.getTensorDataOffset(channel);
 
+        // value.resize(sharedSynapses[output][channel].dims());
+        // value = sharedSynapses[output][channel];
+
+        unsigned int k = 0;
+        unsigned int kChannelOffset = 0;
+
+        for (; k < mSharedSynapses.size(); ++k) {
+            const unsigned int kNbChannels = (mNbGroups[k] > 1)
+                ? mSharedSynapses[k].dimZ() * mNbGroups[k]
+                : mSharedSynapses[k].dimZ();
+
+            if (channel < kChannelOffset + kNbChannels)
+                break;
+            else
+                kChannelOffset += kNbChannels;
+        }
+
+        channel -= kChannelOffset;
+
+        if (mNbGroups[k] > 1) {
+            const size_t outputGroupSize = getNbOutputs() / mNbGroups[k];
+            const size_t channelGroupSize = getNbChannels() / mNbGroups[k];
+
+            const size_t outputGroup = output / outputGroupSize;
+            const size_t channelGroup = channel / channelGroupSize;
+
+            if (outputGroup != channelGroup) {
+                const std::vector<size_t> kernelDims(mKernelDims.begin(),
+                                                    mKernelDims.end());
+
+                value.resize(kernelDims);
+                value = Tensor<T>(kernelDims, T(0.0));
+                return;
+            }
+            channel = channel % channelGroupSize;
+        }
+
+        const Tensor<T>& sharedSynapses = mSharedSynapses[k];
         value.resize(sharedSynapses[output][channel].dims());
         value = sharedSynapses[output][channel];
     };
@@ -160,6 +198,13 @@ public:
         value = sharedSynapses[output][channel];
 
     };
+
+    /**
+     * @brief Fills a BaseTensor object with the bias values of the cell.
+     * 
+     * @param output    Output channel index of the cell.
+     * @param value     BaseTensor to be filled.
+     */
     inline void getBias(unsigned int output, BaseTensor& value) const
     {
         // Need to specify std::initializer_list<size_t> for GCC 4.4
@@ -186,10 +231,15 @@ public:
     void setWeights(unsigned int k,
                     BaseInterface* weights,
                     unsigned int offset);
+    
+    /**
+     * @brief Returns a pointer to the bias tensor of the cell.
+     */
     inline const std::shared_ptr<BaseTensor> getBiases() const
     {
         return mBias;
     };
+    
     inline void setBiases(const std::shared_ptr<BaseTensor>& biases)
     {
         mBias = std::dynamic_pointer_cast<Tensor<T> >(biases);
@@ -274,7 +324,8 @@ protected:
     // Internal
     std::vector<size_t> mNbGroups;
     std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
-    Interface<T> mSharedSynapses; // interface of input tensors expected by the cell for each individual synapse of a layer
+    /// interface of input tensors expected by the cell for each individual synapse of a layer
+    Interface<T> mSharedSynapses; 
     std::map<unsigned int,
         std::pair<Interface<T>*, unsigned int> > mExtSharedSynapses;
     std::shared_ptr<Tensor<T> > mBias;
