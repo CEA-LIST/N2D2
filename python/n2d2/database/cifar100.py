@@ -18,14 +18,14 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
-from n2d2.database.database import Database, _database_parameters
+from n2d2.database.database import AbstractDatabase, _database_parameters
 from n2d2.utils import inherit_init_docstring
-from n2d2.n2d2_interface import N2D2_Interface, ConventionConverter
+from n2d2.n2d2_interface import ConventionConverter
 import N2D2
 
 
 @inherit_init_docstring()
-class CIFAR100(Database):
+class CIFAR100(AbstractDatabase):
     """
     CIFAR100 database :cite:`Krizhevsky2009`.
     """
@@ -35,7 +35,7 @@ class CIFAR100(Database):
         "use_coarse": "useCoarse",
         "validation": "validation",
         "use_test_for_validation": "useTestForVal",
-    }  
+    }
     _parameters.update(_database_parameters)
 
     _convention_converter= ConventionConverter(_parameters)
@@ -49,7 +49,7 @@ class CIFAR100(Database):
         :param use_coarse: If ``True``, use the coarse labeling (10 labels instead of 100), default=False
         :type use_coarse: bool, optional
         """
-        N2D2_Interface.__init__(self, **config_parameters)
+        AbstractDatabase.__init__(self, **config_parameters)
 
         self._parse_optional_arguments(['validation', 'use_coarse', "use_test_for_validation"])
         self._N2D2_object = self._N2D2_constructors(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))

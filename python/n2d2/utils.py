@@ -24,7 +24,8 @@ import os
 import urllib.request
 import urllib.parse
 import tarfile
-import gzip, zipfile
+import gzip
+import zipfile
 from collections import UserDict
 from inspect import getmro
 import functools

@@ -1,33 +1,37 @@
 import subprocess
 from time import time
-example_path = "../examples/"
+from os.path import dirname, abspath
+from os.path import join as join_path
+
+
+example_path = join_path(dirname(abspath(__file__)), "..","examples")
 
 commands_to_call = [
-    ["python", example_path + "data_augmentation.py"],
-    ["python", example_path + "graph_example.py"],
-    ["python", example_path + "keras_example.py",
+    ["python", join_path(example_path, "data_augmentation.py")],
+    ["python", join_path(example_path, "graph_example.py")],
+    ["python", join_path(example_path, "keras_example.py"),
             "--data_path=/local/DATABASE/mnist",
             "--dev=4"],
-    ["python", example_path + "torch_example.py",
+    ["python", join_path(example_path, "torch_example.py"),
             "--dev=6",
             "--epochs=2",],
-    ["python", example_path + "lenet_onnx.py",
+    ["python", join_path(example_path, "lenet_onnx.py"),
             "-d=4",
             "--data_path=/local/DATABASE/mnist",
-            f"--onnx={example_path + 'LeNet.onnx'}"],
-    ["python", example_path + "mnist_minimal.py",
+            f"--onnx={join_path(example_path, 'LeNet.onnx')}"],
+    ["python", join_path(example_path, "mnist_minimal.py"),
             "--data_path=/local/DATABASE/mnist"],
-    ["python", example_path + "performance_analysis.py",
+    ["python", join_path(example_path, "performance_analysis.py"),
             "--data_path=/nvme0/DATABASE/GTSRB",
             "--epochs=1"],
-    ["python", example_path + "performance_analysis.py",
+    ["python", join_path(example_path, "performance_analysis.py"),
             "--data_path=/nvme0/DATABASE/GTSRB"],
-    ["python", example_path + "train_mobilenetv1.py",
+    ["python", join_path(example_path, "train_mobilenetv1.py"),
             "--data_path=/nvme0/DATABASE/ILSVRC2012",
             "--label_path=/nvme0/DATABASE/ILSVRC2012/synsets.txt",
             "--dev=3",
             "--epochs=2"],
-    ["python", example_path + "transfer_learning.py",
+    ["python", join_path(example_path, "transfer_learning.py"),
             "--data_path=/nvme0/DATABASE/cifar-100-binary",
             "--dev=3",
             "--epochs=2"],

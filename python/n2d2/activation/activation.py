@@ -57,15 +57,13 @@ class ActivationFunction(N2D2_Interface, ModelDatatyped, ABC):
     def get_quantizer(self):
         if 'quantizer' in self._config_parameters:
             return self._config_parameters['quantizer']
-        else:
-            raise RuntimeError("No Quantizer in activation")
+        raise RuntimeError("No Quantizer in activation")
     @deprecated
     def set_quantizer(self, quantizer):
         if 'quantizer' in self._config_parameters:
             raise RuntimeError("Quantizer already exists in activation")
-        else:
-            self._config_parameters['quantizer'] = quantizer
-            self._N2D2_object.setQuantizer(self._config_parameters['quantizer'].N2D2())
+        self._config_parameters['quantizer'] = quantizer
+        self._N2D2_object.setQuantizer(self._config_parameters['quantizer'].N2D2())
 
     def get_type(self):
         return type(self).__name__
@@ -82,11 +80,11 @@ class ActivationFunction(N2D2_Interface, ModelDatatyped, ABC):
         return parameter
 
     def __setattr__(self, key: str, value) -> None:
-        if key is 'quantizer':
+        if key == 'quantizer':
             if isinstance(value, Quantizer):
                 self._N2D2_object.setQuantizer(value.N2D2())
                 self._config_parameters["quantizer"] = value
             else:
                 raise WrongInputType("quantizer", str(type(value)), [str(Quantizer)])
         else:
-            return super().__setattr__(key, value)
+            super().__setattr__(key, value)

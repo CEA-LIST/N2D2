@@ -54,13 +54,13 @@ class Xavier(Filler):
 
         self._parse_optional_arguments(['variance_norm', 'distribution', 'scaling'])
         for k, v in self._optional_constructor_arguments.items():
-            if k is 'scaling' and not isinstance(v, float):
+            if k == 'scaling' and not isinstance(v, float):
                 raise WrongInputType("scaling", str(type(v)), ["float"])
-            if k is 'std_dev' and not isinstance(v, float):
+            if k == 'std_dev' and not isinstance(v, float):
                 raise WrongInputType("std_dev", str(type(v)), ["float"])
-            if k is "variance_norm" and v not in self._N2D2_constructors[self._model_key].VarianceNorm.__members__.keys():
+            if k == "variance_norm" and v not in self._N2D2_constructors[self._model_key].VarianceNorm.__members__.keys():
                 raise WrongValue("variance_norm", v, self._N2D2_constructors[self._model_key].VarianceNorm.__members__.keys())
-            if k is "distribution" and v not in self._N2D2_constructors[self._model_key].Distribution.__members__.keys():
+            if k == "distribution" and v not in self._N2D2_constructors[self._model_key].Distribution.__members__.keys():
                 raise WrongValue("distribution", v, self._N2D2_constructors[self._model_key].Distribution.__members__.keys())
 
         if 'variance_norm' in self._optional_constructor_arguments:

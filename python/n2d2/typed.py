@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from n2d2 import error_handler, global_variables
 
+ # pylint: disable=too-few-public-methods
+
 _valid_datatype = ["float"]
 _valid_model = ["Frame", "Frame_CUDA"]
 

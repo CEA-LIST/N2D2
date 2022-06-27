@@ -1,6 +1,6 @@
 """
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -28,8 +28,8 @@ import N2D2
 @inherit_init_docstring()
 class Distortion(Transformation):
     """
-    Apply elastic distortion to the image. 
-    This transformation is generally used on-the-fly 
+    Apply elastic distortion to the image.
+    This transformation is generally used on-the-fly
     (so that a different distortion is performed for each image), and for the learning only.
     """
 
@@ -63,7 +63,7 @@ class Distortion(Transformation):
 
         # Scaling parameter is written with an upper case here but with a lower case in other classes
         # Treating this as an exception
-        # if "scaling" in self._config_parameters: 
+        # if "scaling" in self._config_parameters:
         #     self._N2D2_object.setParameter("Scaling", str(self._config_parameters.pop('scaling')))
 
         self._set_N2D2_parameters(self._config_parameters)

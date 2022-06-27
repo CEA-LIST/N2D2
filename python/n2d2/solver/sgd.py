@@ -54,7 +54,7 @@ class SGD(Solver):
         "iteration_pass": "IterationPass",
         "nb_iteration": "NbIteration",
         "datatype": "Datatype",# Pure n2d2
-        "model": "Model",# Pure n2d2   
+        "model": "Model",# Pure n2d2
     }
     _convention_converter= ConventionConverter(_parameters)
     def __init__(self, **config_parameters):

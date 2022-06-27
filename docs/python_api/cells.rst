@@ -157,6 +157,54 @@ Pool
         :members:
         :inherited-members:
 
+
+Activation
+~~~~~~~~~~
+
+.. autoclass:: n2d2.cells.Activation
+        :members:
+        :inherited-members:
+
+
+Reshape
+~~~~~~~
+
+.. autoclass:: n2d2.cells.Reshape
+        :members:
+        :inherited-members:
+
+
+Resize
+~~~~~~
+
+.. autoclass:: n2d2.cells.Resize
+        :members:
+        :inherited-members:
+
+
+Scaling
+~~~~~~~
+
+.. autoclass:: n2d2.cells.Scaling
+        :members:
+        :inherited-members:
+
+
+Transformation
+~~~~~~~~~~~~~~
+
+.. autoclass:: n2d2.cells.Transformation
+        :members:
+        :inherited-members:
+
+
+Transpose
+~~~~~~~~~
+
+.. autoclass:: n2d2.cells.Transpose
+        :members:
+        :inherited-members:
+
 Saving parameters
 -----------------
 
@@ -505,6 +553,13 @@ Constant
 ~~~~~~~~
 
 .. autoclass:: n2d2.filler.Constant
+        :members:
+        :inherited-members:
+
+Xavier
+~~~~~~
+
+.. autoclass:: n2d2.filler.Xavier
         :members:
         :inherited-members:
 

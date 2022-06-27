@@ -20,9 +20,9 @@
 """
 
 from abc import ABC, abstractmethod
-import n2d2
 import N2D2
 
+import n2d2
 import n2d2.global_variables
 from n2d2.deepnet import DeepNet
 from n2d2 import Tensor, Interface
@@ -38,6 +38,7 @@ class Cell(ABC):
             if not isinstance(name, str):
                 raise n2d2.error_handler.WrongInputType("name", str(type(name)), ["str"])
         self._name = name
+        self._deepnet = None
 
     def __call__(self, x):
         """
@@ -75,11 +76,15 @@ class Trainable(ABC):
     """
     @abstractmethod
     def __init__(self):
-        if "solver" in self._config_parameters:
-            solver = self._config_parameters.pop('solver')
+        if "_config_parameters" not in self.__dict__:
+            raise n2d2.error_handler.ImplementationError("Trainable object is not inherited with an N2D2_Interface")
+        # _config_parameters in an attribute of N2D2_Interface so we access it via the __dict__.
+        config_parameters = self.__dict__["_config_parameters"]
+        if "solver" in config_parameters:
+            solver = config_parameters.pop('solver')
             self.set_solver(solver)
-        if "filler" in self._config_parameters:
-            filler = self._config_parameters.pop('filler')
+        if "filler" in config_parameters:
+            filler = config_parameters.pop('filler')
             self.set_filler(filler)
 
     @abstractmethod
@@ -523,7 +528,7 @@ class DeepNetCell(Block):
         :param name: Name of cell that shall be removed.
         :type name: str
         :param reconnect: If ``True``, reconnects the parents with the child of the removed cell, default=True
-        :type reconnect: bool, optional 
+        :type reconnect: bool, optional
         """
         self._embedded_deepnet.remove(name, reconnect)
         self._cells.pop(name)

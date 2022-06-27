@@ -59,12 +59,21 @@ ILSVRC2012
         :inherited-members:
 
 
+CIFAR10
+~~~~~~~
+
+.. autoclass:: n2d2.database.CIFAR10
+        :members:
+        :inherited-members:
+
+
 CIFAR100
 ~~~~~~~~
 
 .. autoclass:: n2d2.database.CIFAR100
         :members:
         :inherited-members:
+
 
 Cityscapes
 ~~~~~~~~~~
@@ -73,6 +82,14 @@ Cityscapes
         :members:
         :inherited-members:
 
+
+
+GTSRB
+~~~~~
+
+.. autoclass:: n2d2.database.GTSRB
+        :members:
+        :inherited-members:
 
 Transformations
 ---------------
@@ -113,6 +130,14 @@ ColorSpace
 ~~~~~~~~~~
 
 .. autoclass:: n2d2.transform.ColorSpace
+        :members:
+        :inherited-members:
+
+
+Flip
+~~~~~~~~~~
+
+.. autoclass:: n2d2.transform.Flip
         :members:
         :inherited-members:
 

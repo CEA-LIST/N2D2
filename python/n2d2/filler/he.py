@@ -46,7 +46,7 @@ class He(Filler):
         :type variance_norm: str, optional
         :param scaling: Scaling factor, default=1.0
         :type scaling: float, optional
-        :param mean_norm: 
+        :param mean_norm:
         :type mean_norm: float, optional
         """
         Filler.__init__(self, **config_parameters)
@@ -59,9 +59,9 @@ class He(Filler):
 
         self._parse_optional_arguments(['variance_norm', 'mean_norm', 'scaling'])
         for k, v in self._optional_constructor_arguments.items():
-            if k is 'scaling' and not isinstance(v, float):
+            if k == 'scaling' and not isinstance(v, float):
                 raise WrongInputType("scaling", str(type(v)), ["float"])
-            if k is 'mean_norm' and not isinstance(v, float):
+            if k == 'mean_norm' and not isinstance(v, float):
                 raise WrongInputType("mean_norm", str(type(v)), ["float"])
 
         self._set_N2D2_object(self._N2D2_constructors[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))

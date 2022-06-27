@@ -137,7 +137,7 @@ class BatchNorm2d(NeuralNetworkCell, ModelDatatyped, Trainable):
 
         return self.get_outputs()
 
-    def has_bias(self):
+    def has_bias(self): # pylint: disable=no-self-use
         return True
 
     @deprecated(reason="You should use scale_solver as an attribute.")

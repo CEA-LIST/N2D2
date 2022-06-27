@@ -25,18 +25,16 @@ import n2d2.global_variables
 from n2d2.transform import Rescale, PadCrop, ColorSpace, RangeAffine, Composite
 
 
-"""
-    For now, only support for ONNX model
-"""
+# For now, only support for ONNX model
 
 
 def load_from_ONNX(inputs, dims=None, batch_size=1, path=None, download=False):
     print("Loading MobileNet_v2 from ONNX with dims " + str(dims) + " and batch size " + str(batch_size))
     if path is None and not download:
         raise RuntimeError("No path specified")
-    elif not path is None and download:
+    if  path is not None and download:
         raise RuntimeError("Specified at same time path and download=True")
-    elif path and not download:
+    if path is not None and not download:
         path = n2d2.global_variables.model_cache + "/ONNX/mobilenetv2/mobilenetv2-1.0.onnx"
     else:
         n2d2.utils.download_model("https://s3.amazonaws.com/onnx-model-zoo/mobilenet/mobilenetv2-1.0/mobilenetv2-1.0.onnx",
@@ -59,6 +57,3 @@ def ONNX_preprocessing(size=224):
     ])
 
     return trans
-
-
-

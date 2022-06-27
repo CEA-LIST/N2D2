@@ -21,7 +21,6 @@
 
 import N2D2
 import n2d2
-from n2d2.error_handler import deprecated
 
 # List of parameters which are only from the PythonAPI and not in the Cpp
 _pure_python_parameters=[
@@ -62,7 +61,7 @@ class N2D2_Interface:
     _N2D2_type_map = {
         "integer": int,
         "float": float,
-        "bool": lambda x: False if x == '0' else True,
+        "bool": (lambda x: x == '1'),
         "string": str,
         "list": list,
     }
@@ -72,19 +71,16 @@ class N2D2_Interface:
     def __init__(self, **config_parameters):
 
         # Arguments that have to be known at N2D2 object creation time. Configurable in python API constructor
-        # self._convention_converter = convention_converter
-
         self._constructor_arguments = {}
+        # Optional arguments used at construction time
         self._optional_constructor_arguments = {}
-
-        """
-        Parameters are set post N2D2 object creation. Reconfigurable
-        """
+        # Parameters are set post N2D2 object creation. Reconfigurable
         self._config_parameters = config_parameters
+
         self._N2D2_object = None
 
     @classmethod
-    def create_from_N2D2_object(cls, N2D2_object, **kwargs):
+    def create_from_N2D2_object(cls, N2D2_object, **_):
         interface = cls.__new__(cls)
         interface._constructor_arguments = {}
         interface._optional_constructor_arguments = {}
@@ -95,8 +91,7 @@ class N2D2_Interface:
     def _set_N2D2_object(self, N2D2_object):
         if self._N2D2_object:
             raise RuntimeError("Error: N2D2_object is already initialized")
-        else:
-            self._N2D2_object = N2D2_object
+        self._N2D2_object = N2D2_object
 
 
     def N2D2(self):
@@ -109,15 +104,13 @@ class N2D2_Interface:
 
     def _set_N2D2_parameter(self, key, value):
         parsed_parameter = self.parse_py_to_ini_(value)
-        returned_parameter, returned_type = self._N2D2_object.getParameterAndType(key)
+        _, returned_type = self._N2D2_object.getParameterAndType(key)
         # Maybe allowing an auto cast for this kind of situations can be a good idea ?
         if returned_type == "bool":
             if not isinstance(value, bool):
                 raise n2d2.error_handler.WrongInputType(self._n2d2_to_python_convention(key), str(type(value)), [str(bool)])
-            else:
-                self._N2D2_object.setParameter(key, parsed_parameter)
+            self._N2D2_object.setParameter(key, parsed_parameter)
         elif not isinstance(value, self._N2D2_type_map[returned_type]):
-
             raise n2d2.error_handler.WrongInputType(self._n2d2_to_python_convention(key), str(type(value)), [str(self._N2D2_type_map[returned_type])])
         else:
             self._N2D2_object.setParameter(key, parsed_parameter)
@@ -131,10 +124,12 @@ class N2D2_Interface:
         if "_constructor_arguments" in self.__dict__ and \
                 key in self._constructor_arguments:
             raise RuntimeError("You cannot modify constructor arguments.")
-        elif "_optional_constructor_arguments" in self.__dict__ and \
+
+        if "_optional_constructor_arguments" in self.__dict__ and \
                 key in self._optional_constructor_arguments:
             raise RuntimeError(key + " is not settable for " + str(type(self)))
-        elif "_config_parameters" in self.__dict__ and \
+
+        if "_config_parameters" in self.__dict__ and \
                 key in self._config_parameters and \
                 key not in _pure_python_parameters:
             self._config_parameters[key] = value
@@ -146,23 +141,21 @@ class N2D2_Interface:
         # Using __dict__ attribute to avoid infinite recursion !
         if key in self.__dict__["_constructor_arguments"]:
             return self.__dict__["_constructor_arguments"][key]
-        elif key in self.__dict__["_optional_constructor_arguments"]:
+        if key in self.__dict__["_optional_constructor_arguments"]:
             return self.__dict__["_optional_constructor_arguments"][key]
-        elif key in self.__dict__["_config_parameters"]:
+        if key in self.__dict__["_config_parameters"]:
             return self.__dict__["_config_parameters"][key]
-        else:
-            return self.__getattribute__(key)
+        return self.__getattribute__(key)
 
     def set_parameter(self, key, value):
         if key in self._constructor_arguments:
             raise RuntimeError("You cannot modify constructor arguments.")
-        elif key in self._optional_constructor_arguments:
+        if key in self._optional_constructor_arguments:
             raise RuntimeError(key + " is not settable for " + self.get_name())
-        elif key in self._config_parameters:
-            self._config_parameters[key] = value
-            self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
-        else:
+        if key not in self._config_parameters:
             raise ValueError(key + " is not a parameter of " + self.get_name())
+        self._config_parameters[key] = value
+        self._set_N2D2_parameter(self._python_to_n2d2_convention(key), value)
 
     def get_parameter(self, key):
         """
@@ -171,15 +164,14 @@ class N2D2_Interface:
         """
         if key in self._constructor_arguments:
             return self._constructor_arguments[key]
-        elif key in self._optional_constructor_arguments:
+        if key in self._optional_constructor_arguments:
             return self._optional_constructor_arguments[key]
-        elif key in self._config_parameters:
+        if key in self._config_parameters:
             return self._config_parameters[key]
-        else:
-            raise ValueError(key + " is not a parameter of " + self.get_name())
+        raise ValueError(key + " is not a parameter of " + self.get_name())
 
     def _parse_optional_arguments(self, optional_argument_keys):
-        self.optional_argument_name = optional_argument_keys
+        # self.optional_argument_name = optional_argument_keys
         for key in optional_argument_keys:
             if key in self._config_parameters:
                 self._optional_constructor_arguments[key] = self._config_parameters.pop(key)
@@ -193,8 +185,8 @@ class N2D2_Interface:
         """
         try:
             new_key = cls._convention_converter.p_to_n(key)
-        except ValueError:
-            raise ValueError(str(cls) + " : " + key + " is not a valid parameter")
+        except ValueError as error:
+            raise ValueError(str(cls) + " : " + key + " is not a valid parameter") from error
         return new_key
 
     @classmethod
@@ -205,8 +197,8 @@ class N2D2_Interface:
         """
         try:
             new_key = cls._convention_converter.n_to_p(key)
-        except ValueError:
-            raise ValueError(str(cls) + " : " + key + " is not a valid parameter")
+        except ValueError as error:
+            raise ValueError(str(cls) + " : " + key + " is not a valid parameter") from error
         return new_key
 
     def n2d2_function_argument_parser(self, arguments):
@@ -234,16 +226,17 @@ class N2D2_Interface:
         self._load_N2D2_optional_parameters(N2D2_object)
         self._load_N2D2_constructor_parameters(N2D2_object)
 
+    # pylint : disable=unused-argument
     def _load_N2D2_constructor_parameters(self, N2D2_object):
         """Method to load constructor paramaters
         """
-        pass
 
+    # pylint : disable=unused-argument
     def _load_N2D2_optional_parameters(self, N2D2_object):
         """Method to load optional paramaters
         """
-        pass
 
+    # pylint : disable=unused-argument
     @classmethod
     def _get_N2D2_complex_parameters(cls, N2D2_object):
         """Method to overwrite in order to get complex parameters (like filler or solver for a cell)

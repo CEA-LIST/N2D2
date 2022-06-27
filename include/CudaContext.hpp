@@ -49,6 +49,20 @@ public:
         CHECK_CUDA_STATUS(cudaSetDevice(device));
     }
 
+    static std::pair<size_t, size_t> getMemInfo(){
+        size_t free;
+        size_t total;
+        CHECK_CUDA_STATUS(cudaMemGetInfo (&free, &total));
+        return std::make_pair(free, total);
+    }
+    
+
+    static int getDevice(){
+        int dev;
+        CHECK_CUDA_STATUS(cudaGetDevice(&dev));
+        return dev;
+    }
+
     static const cudaDeviceProp& getDeviceProp()
     {
         static std::vector<cudaDeviceProp> deviceProp;
