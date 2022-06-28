@@ -614,7 +614,7 @@ TEST_DATASET(ConvCell_Frame_float,
 
             for (unsigned int sx = 0; sx < conv1.getKernelWidth(); ++sx) {
                 for (unsigned int sy = 0; sy < conv1.getKernelHeight(); ++sy)
-                    kernel(sx, sy) = (1.0 + channel + conv1.getNbChannels()
+                    kernel(sx, sy) = (1.0f + channel + conv1.getNbChannels()
                                                     * output) / (in.dimX() * in.dimY());
             }
 

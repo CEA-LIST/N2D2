@@ -77,12 +77,12 @@ LSQQuantizerActivation_Frame<T>::~LSQQuantizerActivation_Frame()
 // ----------------------------------------------------------------------------
 
 /**
- * @brief Implement the forward pass of the quantization using LSQ method for layer weights.
+ * @brief Implement the forward pass of the quantization using LSQ method for layer features.
  * 
  * @fn void LSQQuantizerActivation_Frame<T>::propagate(BaseTensor& baseInOut,
  *                                                  bool inference)
  * 
- * @tparam T weights type.
+ * @tparam T features type.
  * Can be: double (64 bits)
  *         float (32 bits)
  *         half_float::half (16 bits)
@@ -93,17 +93,15 @@ template <typename T>
 void LSQQuantizerActivation_Frame<T>::propagate(BaseTensor& baseInOut,
                                                     bool /*inference*/)  
 {
-    // Conversion to Tensor to access its values
-    Tensor<T>& input = dynamic_cast<Tensor<T>&>(baseInOut);
     //init the quantization range for activation
-    if(mBitRanges.first == 0 && mBitRanges.second == 0) {
+    if(mBitRanges.second == 0) {
         mBitRanges = std::make_pair(0, (int)mRange);
-        /*std::cout << " LSQ activation range: [" << mBitRanges.first << ";" << mBitRanges.second << "]" << std::endl;*/
     }
 
     unsigned int totElement = baseInOut.size();
-    mGradScaleFactor = T(1.0) / sqrt(T(totElement * mBitRanges.second));
-
+    mGradScaleFactor = (T)((1.0) / sqrt(totElement * mBitRanges.second));
+    // Conversion to Tensor to access its values
+    Tensor<T>& input = dynamic_cast<Tensor<T>&>(baseInOut);
 
     if(mStepSize.empty()) {
         // Initialisation of the activation step size according to the LSQ paper
@@ -111,6 +109,7 @@ void LSQQuantizerActivation_Frame<T>::propagate(BaseTensor& baseInOut,
         if(mSetOptInitStepSize){
             const float initialValue = 2.0f * float(input.mean(true) / sqrt(mBitRanges.second));
             setStepSizeValue(initialValue);
+            setOptInitStepSize(false);
         }
         mStepSize.resize({1, 1, 1, 1});
         mStepSize.fill((T)(mStepSizeParameter));
@@ -136,10 +135,6 @@ void LSQQuantizerActivation_Frame<T>::propagate(BaseTensor& baseInOut,
         input(i) = (qData <= (T) mBitRanges.first) ? bitRangesLowerBound :
                 (qData >= (T) mBitRanges.second) ? bitRangesUpperBound :
                 round(qData) * mStepSize(0);
-        // qData = (qData <= (T) mBitRanges.first) ? (T) mBitRanges.first :
-        //         (qData >= (T) mBitRanges.second) ? (T) mBitRanges.second :
-        //         qData;
-        // input(i) = round(qData) * mStepSize(0);
     }
 }
 

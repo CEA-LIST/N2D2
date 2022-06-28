@@ -627,6 +627,14 @@ const N2D2::Tensor<T> N2D2::Tensor<T>::operator[](size_t i) const
                 mSizeM1, (newDims.back() > 0) ? mSizeM1 / newDims.back() : 0);
 }
 
+/**
+ * @brief Getter for sub-Tensor between features j0 and j0+nb of a given dimension
+ * 
+ * @tparam T         Data type.
+ * @param j0         First column.
+ * @param nb         Number of columns.
+ * @param towardsDim Dimension of which the tensor is sliced.
+ */
 template <class T>
 N2D2::Tensor<T> N2D2::Tensor<T>::rows(size_t j0,
                                           size_t nb, int towardsDim)
