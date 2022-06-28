@@ -326,7 +326,7 @@ void N2D2::ConvCell_Frame<T>::initializeParameters(unsigned int nbInputChannels,
                 }
             }
         }
-        nbChannels += mInputs[k].dimZ();
+        nbChannels += nbInputChannels;
 
         mDiffSharedSynapses.push_back(new Tensor<T>(kernelDims), 0);
     }
