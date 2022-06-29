@@ -565,7 +565,7 @@ TEST_DATASET(   LSQQuantizerCell_Frame_HalfFloat,
         ASSERT_EQUALS_DELTA(weightsDiff(i), weightsDiffEstimated(i), 0.001);
 
     const Tensor<half_float::half>& diffStepSizePred = quant.getDiffStepSize();
-    const double coeff = ((stepSizeWGrad < 8)&&(stepSizeWGrad > -8)) ? 0.001 :
+    const double coeff = ((stepSizeWGrad < 8)&&(stepSizeWGrad > -8)) ? 0.002 :
                             (stepSizeWGrad >=8) ? stepSizeWGrad*0.01 : -stepSizeWGrad*0.01;
     if ((stepSizeWGrad > half_float::half_cast<half_float::half>(diffStepSizePred(0,0,0,0))+0.001) || (stepSizeWGrad < half_float::half_cast<half_float::half>(diffStepSizePred(0,0,0,0))-0.001))
         std::cout << "stepSize= " << stepSizeW << " --mRange= " << mRange << " -- s_half= " << stepSizeWGrad << " -- s_pred= " << diffStepSizePred(0,0,0,0) << std::endl;
@@ -818,8 +818,8 @@ TEST_DATASET(   LSQQuantizerCell_Frame_HalfFloat_DoubleComparition,
     
     // if (stepSizeWGrad - half_float::half_cast<half_float::half>(stepSizeWGradfloat) >=0.01)
     //     std::cout << "(" << outputH << ", " << outputW << ", " << nbOutputs << ", " << nbChannel << ", " << kHeight << " ," << kWidth << ", " << mRange << ", " << stepSizeW << ")" << " -> stepSizeWGrad= " << stepSizeWGrad << "\t" << weights.size()/((stepSizeWGradfloat-half_float::half_cast<float>(stepSizeWGrad))/(stepSizeWGradfloat+half_float::half_cast<float>(stepSizeWGrad))) << std::endl;
-    const double coeff = ((stepSizeWGradfloat < 1)&&(stepSizeWGradfloat > -1)) ? 0.04 :
-                            (stepSizeWGradfloat >=1) ? stepSizeWGradfloat*0.04 : -stepSizeWGradfloat*0.04;
+    const double coeff = ((stepSizeWGradfloat < 1)&&(stepSizeWGradfloat > -1)) ? 0.05 :
+                            (stepSizeWGradfloat >=1) ? stepSizeWGradfloat*0.05 : -stepSizeWGradfloat*0.05;
     ASSERT_EQUALS_DELTA(stepSizeWGrad, half_float::half_cast<half_float::half>(stepSizeWGradfloat), coeff);
 }
 
