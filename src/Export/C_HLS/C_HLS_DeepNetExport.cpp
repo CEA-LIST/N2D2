@@ -135,7 +135,7 @@ void N2D2::C_HLS_DeepNetExport::generateProgramPrototypes(DeepNet& deepNet,
                                         deepNet.getParentCells(cell->getName()),
                                         Utils::upperCase(output_size),
                                         prog,
-                                        isCellInputsUnsigned(*cell));
+                                        isCellInputsUnsigned(*cell, deepNet));
         }
     }
 }
@@ -201,7 +201,7 @@ void N2D2::C_HLS_DeepNetExport::generateProgramFunction(DeepNet& deepNet,
                                        output_buff + "data",
                                        Utils::upperCase(output_size),
                                        prog,
-                                       isCellInputsUnsigned(*cell),
+                                       isCellInputsUnsigned(*cell, deepNet),
                                        Utils::CIdentifier(cell->getName()),
                                        "",
                                        !cell->isFullMap());
@@ -284,7 +284,7 @@ void N2D2::C_HLS_DeepNetExport::generateTcl(DeepNet& deepNet,
                 = C_HLS_CellExport::getInstance(cell)
                       ->getTclDirectives(cell,
                                          parentCells,
-                                         isCellInputsUnsigned(cell));
+                                         isCellInputsUnsigned(cell, deepNet));
 
             vivadoTcl << "dict set cells " << directives.funcName << " type "
                       << directives.typeName << "\n"

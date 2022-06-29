@@ -21,4 +21,3 @@
 
 from n2d2.cells.nn import *
 from n2d2.cells.cell import *
-

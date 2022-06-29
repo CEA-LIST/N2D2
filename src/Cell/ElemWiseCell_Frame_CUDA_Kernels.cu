@@ -20,6 +20,14 @@
 
 #include "Cell/ElemWiseCell_Frame_CUDA_Kernels.hpp"
 
+#include "CudaUtils.hpp"
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
+
 template <class T>
 __global__ void cudaZeroInit_kernel(unsigned int size,
                                      T* data)
@@ -59,6 +67,69 @@ __global__ void cudaMult_kernel(unsigned int size,
     else {
         for (unsigned int i = index; i < size; i += stride)
             result[i] = a[i] * b[i];
+    }
+}
+
+template <class T>
+__global__ void cudaMultBroadcast_kernel(unsigned int sizeMax,
+                                         unsigned int mapSize,
+                                         unsigned int nbOutputs,
+                                         unsigned int batchSize,
+                                         unsigned int sizeA,
+                                         unsigned int sizeB,
+                                         T* a,
+                                         T* b,
+                                         const T beta,
+                                         T* result)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    const unsigned int nbElements = nbOutputs*batchSize;
+
+    if (beta != 0.0f) {
+        if(sizeA == nbElements) {
+            for (unsigned int i = index; i < sizeMax; i += stride){
+                const unsigned int map_id = (unsigned int) floor((double)i / (double)mapSize);
+                assert(map_id < nbElements);
+                result[i] = a[map_id] * b[i] + beta * result[i];
+            }
+        }
+        else if(sizeB == nbElements) {
+            for (unsigned int i = index; i < sizeMax; i += stride){
+                const unsigned int map_id = (unsigned int) floor((double)i / (double)mapSize);
+                assert(map_id < nbElements);
+                result[i] = a[i] * b[map_id] + beta * result[i];
+            }
+        }
+    }
+    else {
+        if(sizeA == nbElements) {
+            for (unsigned int i = index; i < sizeMax; i += stride){
+                const unsigned int map_id = (unsigned int) floor((double)i / (double)mapSize);
+                assert(map_id < nbElements);
+                result[i] = a[map_id] * b[i];
+            }
+        }
+        else if(sizeB == nbElements) {
+            for (unsigned int i = index; i < sizeMax; i += stride){
+                const unsigned int map_id = (unsigned int) floor((double)i / (double)mapSize);
+                assert(map_id < nbElements);
+                result[i] = a[i] * b[map_id];
+            }
+        }
+    }
+}
+template <class T>
+__global__ void cudaReducePerKernel_kernel(T* idata, T* odata,
+                                          unsigned int nbIter,
+                                          unsigned int kernelSize)
+{
+    thrust::device_ptr<T> thrustSrcPtr(idata);
+    thrust::device_ptr<T> thrustDstPtr(odata);
+    for (unsigned int i = 0; i < nbIter; ++i) {
+        unsigned int index = i * kernelSize;
+        thrustDstPtr[i] = thrust::reduce(thrust::device, thrustSrcPtr + index, thrustSrcPtr + index + kernelSize);
     }
 }
 
@@ -258,6 +329,38 @@ void cudaMult(unsigned int size,
 }
 
 template <class T>
+void cudaMultBroadcast(unsigned int sizeMax,
+                       unsigned int mapSize,
+                       unsigned int nbOutputs,
+                       unsigned int batchSize,
+                       unsigned int sizeA,
+                       unsigned int sizeB,
+                       T* a,
+                       T* b,
+                       const T beta,
+                       T* result)
+{
+    cudaMultBroadcast_kernel<<<(sizeMax + 255) / 256, 256>>>(sizeMax, mapSize, nbOutputs, batchSize, sizeA, sizeB,
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(a),
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(b),
+        reinterpret_cast<const typename Cuda::cuda_type<T>::type&>(beta),
+        reinterpret_cast<typename Cuda::cuda_type<T>::type*>(result));
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+template <class T>
+void cudaReducePerKernel(T* inputToReduce,
+              T* result,
+              unsigned int nbIter,
+              unsigned int kernelSize)
+{
+    cudaReducePerKernel_kernel<<<1, 1>>>(
+            reinterpret_cast<typename Cuda::cuda_type<T>::type*>(inputToReduce),
+            reinterpret_cast<typename Cuda::cuda_type<T>::type*>(result),nbIter,kernelSize);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+template <class T>
 void cudaScale(unsigned int size,
                       T* input,
                       const T scale,
@@ -385,6 +488,23 @@ template void cudaMult(unsigned int size,
     float* b,
     const float beta,
     float* result);
+
+template void cudaMultBroadcast(unsigned int sizeMax,
+        unsigned int mapSize,
+        unsigned int nbOutputs,
+        unsigned int batchSize,
+        unsigned int sizeA,
+        unsigned int sizeB,
+        float* a,
+        float* b,
+        const float beta,
+        float* result);
+
+template void cudaReducePerKernel(
+            float* inputToReduce,
+            float* result,
+            unsigned int nbIter,
+            unsigned int kernelSize);
 
 template void cudaScale(unsigned int size,
     float* input,

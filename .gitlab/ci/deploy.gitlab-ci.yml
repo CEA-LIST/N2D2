@@ -2,6 +2,8 @@
 # systemctl config file: /etc/systemd/system/simplehttp.service
 # service restart: systemctl restart simplehttp.service
 deploy-docs:
+  extends:
+    - .rules:all-branches-not-schedule
   stage: deploy
   script:
     - mkdir -p /local/is154584/www/N2D2/${CI_COMMIT_REF_NAME}

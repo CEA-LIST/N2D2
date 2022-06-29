@@ -70,7 +70,7 @@ You can plot the new graph with this method :
 x.draw_associated_graph("example_graph")
 
 
-from n2d2.cells import Sequence, Conv, Pool2d, Dropout, Fc  
+from n2d2.cells import Sequence, Conv, Pool2d, Dropout, Fc
 from n2d2.activation import Rectifier, Linear
 
 """
@@ -96,7 +96,7 @@ LeNet model with two sequences !
 """
 network = Sequence([extractor, classifier])
 
-x = n2d2.Tensor([1,32,32], value=0.5)
+x = n2d2.Tensor([1,1,32,32], value=0.5)
 
 output = network(x)
 

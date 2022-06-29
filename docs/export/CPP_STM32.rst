@@ -37,7 +37,7 @@ Usage
 
 ::
 
-    n2d2 MobileNet_ONNX.ini -seed 1 -w /dev/null -export CPP_STM32 -fuse -nbbits 8 -calib -1 -db-export 100 -test
+    n2d2 MobileNet_ONNX.ini -seed 1 -w weights_validation -export CPP_STM32 -fuse -nbbits 8 -calib -1 -db-export 100 -test
 
 This command generates a C++ project in the sub-directory ``export_CPP_STM32_int8``.
 This project is ready to be cross-compiled with a ``Makefile``, using the

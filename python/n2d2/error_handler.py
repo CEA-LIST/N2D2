@@ -59,24 +59,26 @@ class IsEmptyError(ValueError):
         super().__init__(list_name + " is empty, it must contain at least one element")
 
 class NotInitialized(RuntimeError):
-        def __init__(self, obj):
-            """
-            :param obj: name of the object that is not initialized
-            :type obj: str
-            """
-            super().__init__(obj + " is not initialized")
+    def __init__(self, obj):
+        """
+        :param obj: name of the object that is not initialized
+        :type obj: str
+        """
+        super().__init__(obj + " is not initialized")
+
+class ImplementationError(RuntimeError):
+    """Error when an n2d2 object is not well implemented."""
 
 class UndefinedModelError(RuntimeError):
-   def __init__(self, arg):
-      super().__init__(arg)
+    """Error when the binded object is not created"""
 
 class UndefinedParameterError(RuntimeError):
-   def __init__(self, value, obj):
-      super().__init__("Parameter \'" + str(value) + "\' does not exist in object of type " + str(type(obj)))
+    def __init__(self, value, obj):
+        super().__init__("Parameter \'" + str(value) + "\' does not exist in object of type " + str(type(obj)))
 
 class IpOnly(NotImplementedError):
     def __init__(self):
-      super().__init__("This feature is only available in n2d2-ip. (see : https://cea-list.github.io/N2D2-docs/about.html)")
+        super().__init__("This feature is only available in n2d2-ip. (see : https://cea-list.github.io/N2D2-docs/about.html)")
 
 def deprecated(version="", reason=""):
     def show_warning(function):

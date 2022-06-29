@@ -48,7 +48,7 @@ void N2D2::CPP_TensorRT_DeepNetExport::generate(DeepNet& deepNet,
     CPP_DeepNetExport::generateEnvironmentHeader(deepNet, dirName + "/dnn/include/env.hpp");
 
     generateDeepNetProgram(
-        deepNet, "N2D2::Network::", dirName + "/dnn/src/network.cpp");
+        deepNet, "N2D2_Export::Network::", dirName + "/dnn/src/network.cpp");
 
     if (genStimuliCalib)
         generateStimuliCalib(deepNet, dirName);

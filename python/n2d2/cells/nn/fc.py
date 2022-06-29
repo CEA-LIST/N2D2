@@ -101,6 +101,10 @@ class Fc(NeuralNetworkCell, ModelDatatyped, Trainable):
         if not isinstance(nb_outputs, int):
             raise n2d2.error_handler.WrongInputType("nb_outputs", str(type(nb_outputs)), ["int"])
 
+        # activation is set in NeuralNetworkCell
+        if self.activation is None: # pylint : disable=access-member-before-definition
+            self.activation = n2d2.activation.Linear() # pylint : disable=access-member-before-definition
+
         self._constructor_arguments.update({
             'nb_inputs': nb_inputs,
             'nb_outputs': nb_outputs,

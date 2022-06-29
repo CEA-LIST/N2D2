@@ -722,6 +722,58 @@ class test_interop(unittest.TestCase):
         res = tester.test_multiple_step((batch_size, 1, 32, 32), (batch_size, 10))
         self.assertNotEqual(res, -1, msg="CUDA eval failed")
 
+    def test_incomplete_batch(self):
+        n2d2.global_variables.default_model = "Frame_CUDA"
+        weight_value = 0.01
+        learning_rate = 0.01
+        first_stimuli = torch.randn((10, 1, 3, 3)) # Stimuli with batch_size = 10
+        incomplete_stimuli = torch.randn((5, 1, 3, 3)) # Stimuli with batch_size = 5
+        torch_model = TorchConv()
+        n2d2_model = pytorch.wrap(torch_model, (10, 1, 3, 3))
+
+        n2d2_model.get_block().set_solver(n2d2.solver.SGD(learning_rate=learning_rate, momentum=0.0, decay=0.0, learning_rate_decay=0.993))
+
+        torch_out2 = torch_model(incomplete_stimuli)
+        n2d2_out2 = n2d2_model(incomplete_stimuli)
+        # Testing the incomplete batch :
+        for i, j in zip(torch.flatten(torch_out2), torch.flatten(n2d2_out2)):
+            i = i.item()
+            j = j.item()
+            if j != 0:
+                self.assertFalse(abs(i-j) > comparison_precision * abs(j))
+        # # print(torch_out2)
+        # # print(n2d2_out2)
+
+        incomplete_stimuli_label = torch.randn((5, 1, 3, 3)) # Stimuli with batch_size = 5
+        optimizer_torch = torch.optim.SGD(torch_model.parameters(), lr=learning_rate)
+        optimizer_n2d2 = torch.optim.SGD(n2d2_model.parameters(), lr=learning_rate)
+        criterion_torch = torch.nn.MSELoss()
+        criterion_n2d2 = torch.nn.MSELoss()
+
+        loss1 = criterion_torch(torch_out2, incomplete_stimuli_label)
+        optimizer_torch.zero_grad()
+        loss1.backward()
+        optimizer_torch.step()
+
+        loss2 = criterion_n2d2(n2d2_out2, incomplete_stimuli_label)
+        optimizer_n2d2.zero_grad()
+        loss2.backward()
+        optimizer_n2d2.step()
+        # print(loss1)
+        # print(loss2)
+        self.assertEqual(loss1.item(), loss2.item())
+        # Testing a complete batch after backpropagation
+        torch_out2 = torch_model(first_stimuli)
+        n2d2_out2 = n2d2_model(first_stimuli)
+
+        for i, j in zip(torch.flatten(torch_out2), torch.flatten(n2d2_out2)):
+            i = i.item()
+            j = j.item()
+            if j != 0:
+                self.assertFalse(abs(i-j) > comparison_precision * abs(j))
+        print(torch_out2)
+        print(n2d2_out2)
+        n2d2.global_variables.default_model = "Frame"
 
 if __name__ == '__main__':
     unittest.main()

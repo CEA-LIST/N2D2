@@ -13,6 +13,10 @@ stages:
   - documentation
   # Deploy N2D2 code to other web interfaces
   - deploy
+  # Nightly build stage
+  - nightly-build
+  # Nightly test stage
+  - nightly-test
 
 
 include:
@@ -22,3 +26,5 @@ include:
   - local: '/.gitlab/ci/test.gitlab-ci.yml'
   - local: '/.gitlab/ci/documentation.gitlab-ci.yml'
   - local: '/.gitlab/ci/deploy.gitlab-ci.yml'
+  - local: '/.gitlab/ci/nightly-build.gitlab-ci.yml'
+  - local: '/.gitlab/ci/nightly-test.gitlab-ci.yml'

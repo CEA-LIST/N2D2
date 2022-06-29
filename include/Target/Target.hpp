@@ -117,6 +117,10 @@ public:
     {
         return mCell;
     }
+    void setCell(std::shared_ptr<Cell> cell)
+    {
+        mCell = cell;
+    }
     std::shared_ptr<StimuliProvider> getStimuliProvider() const
     {
         return mStimuliProvider;
@@ -220,7 +224,7 @@ protected:
     Parameter<int> mWeakTarget;
 
     const std::string mName;
-    const std::shared_ptr<Cell> mCell;
+    std::shared_ptr<Cell> mCell;
     std::shared_ptr<StimuliProvider> mStimuliProvider;
     const double mTargetValue;
     const double mDefaultValue;

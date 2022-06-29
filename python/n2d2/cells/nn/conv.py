@@ -130,6 +130,9 @@ class Conv(NeuralNetworkCell, ModelDatatyped, Trainable):
         NeuralNetworkCell.__init__(self, **config_parameters)
         ModelDatatyped.__init__(self, **config_parameters)
 
+        # activation is set in NeuralNetworkCell
+        if self.activation is None: # pylint : disable=access-member-before-definition
+            self.activation = n2d2.activation.Linear() # pylint : disable=access-member-before-definition
 
         self._constructor_arguments.update({
             'nb_inputs': nb_inputs,

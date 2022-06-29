@@ -57,16 +57,23 @@ LSQQuantizerCell_Frame_CUDA<float>::LSQQuantizerCell_Frame_CUDA()
 template<class T>
 void LSQQuantizerCell_Frame_CUDA<T>::addWeights(BaseTensor& weights, BaseTensor& diffWeights)
 {
-    if(mInitialized)
+    if(mInitialized){
+        //reset all refs, as they were changed by calling initialize() again
+        mFullPrecisionWeights.clear();
+        mDiffQuantizedWeights.clear();
+
+        mFullPrecisionWeights.push_back(&weights);
+        mDiffQuantizedWeights.push_back(&diffWeights);
         return;
+    }
 
     mFullPrecisionWeights.push_back(&weights);
-    mQuantizedWeights.push_back(new CudaTensor<T>(weights.dims()));
+    mQuantizedWeights.push_back(new CudaTensor<T>(weights.dims()), 0);
 
     mDiffQuantizedWeights.push_back(&diffWeights);
-    mDiffFullPrecisionWeights.push_back(new CudaTensor<T>(diffWeights.dims()));
+    mDiffFullPrecisionWeights.push_back(new CudaTensor<T>(diffWeights.dims()), 0);
 
-    mDiffStepSizeInterface.push_back(new CudaTensor<T>(diffWeights.dims()));
+    mDiffStepSizeInterface.push_back(new CudaTensor<T>(diffWeights.dims()), 0);
     mDiffStepSizeInterface.back().fill(0.0);
 
     //mDiffStepSizeTensor.resize(diffWeights.dims(), T(0.0));

@@ -24,9 +24,12 @@ import os
 import urllib.request
 import urllib.parse
 import tarfile
-import gzip, zipfile
+import gzip
+import zipfile
 from collections import UserDict
 from inspect import getmro
+import functools
+
 
 # At the moment ConfigSection is simply a dictionary
 class ConfigSection(UserDict):
@@ -114,3 +117,73 @@ def inherit_init_docstring():
         obj.__init__.__doc__ = docstring + parents_docstring
         return obj
     return dec
+
+def add_docstring(doc_string):
+    """Decorator to inherit the docstring of another function.
+    The docstring header is conserved.
+    A dictionnary of the parameter is made by parsing, the docstring of the function and the docstring to add.
+    The docstring available in the function override the docstring to add.
+    """
+    def dec(func):
+        header = ""
+        flag_header=True
+        param_dic = {}
+        for line in doc_string.split("\n"):
+            if flag_header:
+                if ":param" in line:
+                    flag_header = False
+                else:
+                    continue
+            if ":param" in line:
+                param_name = line.split(":")[1].replace("param ", "")
+                param_desc = line.split(":")[2].lstrip(" ")
+                if param_name not in param_dic:
+                    param_dic[param_name] = [param_desc, ""]
+                else:
+                    param_dic[param_name][0] = param_desc
+            if ":type" in line:
+                param_name = line.split(":")[1].replace("type ", "")
+                param_desc = line.split(":")[2].lstrip(" ")
+                if param_name not in param_dic:
+                    param_dic[param_name] = ["", param_desc]
+                else:
+                    param_dic[param_name][1] = param_desc
+        flag_header = True
+        for line in func.__doc__.split("\n"):
+            if flag_header:
+                if ":param" in line:
+                    flag_header = False
+                else:
+                    header += line + "\n"
+            if ":param" in line:
+                param_name = line.split(":")[1].replace("param ", "")
+                param_desc = line.split(":")[2].lstrip(" ")
+                if param_name not in param_dic:
+                    param_dic[param_name] = [param_desc, ""]
+                else:
+                    param_dic[param_name][0] = param_desc
+            if ":type" in line:
+                param_name = line.split(":")[1].replace("type ", "")
+                param_desc = line.split(":")[2].lstrip(" ")
+                if param_name not in param_dic:
+                    param_dic[param_name] = ["", param_desc]
+                else:
+                    param_dic[param_name][1] = param_desc
+
+        param_doc = ""
+        for param_name, param_desc in param_dic.items():
+            param_doc += f":param {param_name}: {param_desc[0]}\n:type {param_name}: {param_desc[1]}\n"
+        func.__doc__ = header + param_doc
+        return func
+    return dec
+
+def methdispatch(meth):
+    """Mimic the behavior of `functools.singledispatchmethod` which is only available in python >= 3.8.
+    https://docs.python.org/3/library/functools.html#functools.singledispatchmethod
+    """
+    dispatcher = functools.singledispatch(meth)
+    def wrapper(*args, **kw):
+        return dispatcher.dispatch(args[1].__class__)(*args, **kw)
+    wrapper.register = dispatcher.register
+    functools.update_wrapper(wrapper, dispatcher)
+    return wrapper

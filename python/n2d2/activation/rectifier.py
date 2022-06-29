@@ -34,7 +34,6 @@ class Rectifier(ActivationFunction):
     """
     _N2D2_constructors = {
         'Frame<float>': N2D2.RectifierActivation_Frame_float,
-        
     }
     if gb.cuda_compiled:
         _N2D2_constructors.update({

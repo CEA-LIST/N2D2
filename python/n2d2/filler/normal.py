@@ -51,9 +51,9 @@ class Normal(Filler):
 
         self._parse_optional_arguments(['mean', 'std_dev'])
         for k, v in self._optional_constructor_arguments.items():
-            if k is 'mean' and not isinstance(v, float):
+            if k == 'mean' and not isinstance(v, float):
                 raise WrongInputType("mean", str(type(v)), ["float"])
-            if k is 'std_dev' and not isinstance(v, float):
+            if k == 'std_dev' and not isinstance(v, float):
                 raise WrongInputType("std_dev", str(type(v)), ["float"])
         self._set_N2D2_object(self._N2D2_constructors[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
         self._set_N2D2_parameters(self._config_parameters)

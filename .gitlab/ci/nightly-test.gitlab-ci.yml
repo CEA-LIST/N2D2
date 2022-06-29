@@ -1,0 +1,10 @@
+test_python_examples:
+  extends: 
+    - .before_script_python
+    - .rules:schedule-python-tests
+  stage: nightly-test
+  timeout: 4 hours
+  tags:
+    - ubuntu
+  script:
+    - python tests/run_examples.py

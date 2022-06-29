@@ -664,6 +664,9 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
     const bool globTranspose
         = iniConfig.getProperty<bool>("Transpose", false);
 
+    const bool globCNTK
+        = iniConfig.getProperty<bool>("CNTK", false);
+
     // Map the ONNX graph inputs to the graphParentCells
     std::map<std::string, std::shared_ptr<Cell> > inputsMapping;
     std::shared_ptr<StimuliProvider> sp;
@@ -1434,9 +1437,51 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     }
                 }
                 else
-                    cellFrame->setActivation(activation);
+                {
+                    if (iniConfig.currentSection(node.output(0), false)) {
+                        ActivationGenerator::generateParams(cellFrame, iniConfig,
+                            node.output(0), model, Float32);
+                    }
+                    else {
+                        cellFrame->setActivation(activation);
+                    }
+                }
                 std::cout << "  clipping in [" << minVal << ", " << maxVal << "]"
                     << std::endl;
+            }
+            else if (minVal == std::numeric_limits<Float_T>::lowest() && maxVal > 0.0){
+                std::shared_ptr<Activation> activation
+                    = Registrar<RectifierActivation>::create<Float_T>(model)();
+
+                if (maxVal != std::numeric_limits<Float_T>::max())
+                    activation->setParameter<double>("Clipping", maxVal);
+
+                std::shared_ptr<Cell_Frame_Top> cellFrame
+                    = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+
+                if (cellFrame->getActivation()
+                    && cellFrame->getActivation()->getType()
+                        != LinearActivation::Type)
+                {
+                    if (cellFrame->getActivation()->getType()
+                        == RectifierActivation::Type)
+                    {
+                        const double oldClipping = cellFrame->getActivation()
+                            ->getParameter<double>("Clipping");
+
+                        if (oldClipping == 0.0 || oldClipping > maxVal){
+                            cellFrame->setActivation(activation);
+                            minVal = 0.0;
+                            std::cout << "  clipped ReLu will be set instead of ReLu"  << std::endl;
+                        }
+                    }
+                    else {
+                        throw std::runtime_error("Cell " + cell->getName()
+                            + " already has an activation!");
+                    }
+                }
+                else
+                    cellFrame->setActivation(activation);
             }
             else if (minVal < 0.0 && maxVal > 0.0) {
                 std::shared_ptr<Cell_Frame_Top> cellFrame
@@ -3268,7 +3313,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 // Special case for bias (CNTK)
                 // In CNTK models, bias is added as constant after the operator
                 // In this case, we try to merge everything in the operator bias
-                if (dataCell
+                if (globCNTK && dataCell
                     && (node.op_type() == "Add" || node.op_type() == "Sum"
                         || (node.op_type() == "Sub" && inputData == inputData1))
                     && (dataCell->getType() == ConvCell::Type
@@ -3286,8 +3331,13 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         dataCell->setParameter<bool>("NoBias", false);
                         dataCell->initialize(); // Re-init with bias!
                         Tensor<Float_T> biases;
+
+                        std::vector<unsigned int> biasDims;
+                        biasDims.push_back(1);
+                        biasDims.push_back(dataCell->getNbOutputs());
+
                         if ((*itInit).second->data_type() == onnx::TensorProto_DataType_FLOAT) {
-                            biases.resize({1, dataCell->getNbOutputs()});
+                            biases.resize({dataCell->getNbOutputs()});
                             biases = ONNX_unpackTensor<Float_T>((*itInit).second);
                         }
                         else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_INT32) {
@@ -3317,6 +3367,10 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         else {
                             throw std::runtime_error("Unsupported datatype: "
                                 "Add or Sum  Layer only support Float32, Float64 or INT32 Weights");
+                        }
+
+                        if(biases.nbDims() == 1){
+                            biases.reshape({1, biases.dimB()});
                         }
 
                         for (unsigned int output = 0;

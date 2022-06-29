@@ -26,11 +26,7 @@ from tensorflow import keras
 from tensorflow.python.eager import backprop
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 
-from warnings import warn
-
 import tf2onnx
-# import onnx
-# from onnxsim import simplify
 
 import N2D2
 import n2d2
@@ -61,6 +57,7 @@ class CustomSequential(keras.Sequential):
         self._transpose_input = n2d2.cells.Transpose([1, 2, 0, 3])
         # transpose_grad is the inverse operation of transpose_input
         self._transpose_grad = n2d2.cells.Transpose([2, 0, 1, 3])
+        self.keras_device = None # GPU device set by Keras
 
     def get_deepnet_cell(self) -> n2d2.cells.DeepNetCell:
         """
@@ -93,9 +90,13 @@ class CustomSequential(keras.Sequential):
     def custom_op(self, x: tf.Tensor):
         """Method to handle propagation
         """
-        x_var = tf.Variable(x)
 
         x_numpy = x.numpy()
+        if n2d2.global_variables.cuda_compiled:
+            # Keras can change the device to access x value, changing it back for N2D2.
+            self.keras_device = N2D2.CudaContext.getDevice()
+            N2D2.CudaContext.setDevice(n2d2.global_variables.cuda_device)
+
         inputs_batch_size = x_numpy.shape[0] # TODO : Check size is the same as input shape of the network ?
         inputs_shape = np.array(x_numpy.shape)
         # Make sure we have a full batch
@@ -141,6 +142,12 @@ class CustomSequential(keras.Sequential):
             y_numpy = np.copy(y_numpy)
             y_numpy.resize(outputs_shape)
 
+        if n2d2.global_variables.cuda_compiled and self.keras_device is not None:
+            # Keras can change the device used by CUDA during back propagation.
+            # Setting the device back to its previous value.
+            N2D2.CudaContext.setDevice(self.keras_device)
+            self.keras_device = None
+
         y = tf.convert_to_tensor(y_numpy, dtype=tf.float32)
 
 
@@ -148,6 +155,11 @@ class CustomSequential(keras.Sequential):
             """Method to handle backpropagation
             """
             dy_numpy = dy.numpy()
+            if n2d2.global_variables.cuda_compiled:
+                # Keras can change the device to access dy value, changing it back.
+                self.keras_device = N2D2.CudaContext.getDevice()
+                N2D2.CudaContext.setDevice(n2d2.global_variables.cuda_device)
+
             # Make sure we have a full batch
             if inputs_batch_size < self.batch_size:
                 diffInputs_shape = np.array(dy_numpy.shape)
@@ -180,16 +192,15 @@ class CustomSequential(keras.Sequential):
             dx_numpy = np.array(dx_tensor)
 
             dy_tensor = N2D2.Tensor_float(-dy_numpy * self.batch_size)
-            dx = tf.convert_to_tensor(-dx_numpy / self.batch_size, dtype=tf.float32)
-            # print("----- GRAD -----")
-            # for i in self.get_deepnet_cell():
-            #     print(f"CELL  :{i.get_name()}")
-            #     print("----- INPUT -----")
-            #     print(f"{i.get_diffinputs()}")
-            #     print("----- OUTPUT -----")
-            #     print(f"{i.get_diffoutputs()}")
 
-            # exit()
+            if n2d2.global_variables.cuda_compiled and self.keras_device is not None:
+                # Keras can change the device used by CUDA during back propagation.
+                # Setting the device back to its previous value.
+                N2D2.CudaContext.setDevice(self.keras_device)
+                self.keras_device = None
+
+            dx = tf.convert_to_tensor(-dx_numpy / self.batch_size, dtype=tf.float32)
+
             return dx
 
         return y, custom_grad
@@ -203,13 +214,11 @@ class CustomSequential(keras.Sequential):
         :type training: bool, optional
         """
         self.training=training
-        if self.quant_model is not None:
-            return self.quant_model(inputs=inputs)
-        else:
-            with backprop.GradientTape() as tape:
-                inputs_var = tf.Variable(inputs)
-                outputs = self.custom_op(inputs_var)
-            return outputs
+        with backprop.GradientTape() as tape:
+            inputs_var = tf.Variable(inputs)
+            outputs = self.custom_op(inputs_var)
+        return outputs
+
     def summary(self):
         """Print model information.
         """
@@ -275,20 +284,17 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
 
     spec = [tf.TensorSpec(inputs_shape, tf.float32, name=input_name) for input_name in input_names]
 
-    with ContextNoBatchNormFuse() as ctx:    
+    with ContextNoBatchNormFuse() as ctx:
         tf2onnx.convert.from_keras(
             tf_model,
             input_signature=spec,
             opset=10,
             inputs_as_nchw=input_names,
             output_path=model_name + ".onnx")
-            # output_path= "raw_" + model_name + ".onnx")
 
-    # print("Simplifying the ONNX model ...")
-    # onnx_model = onnx.load(model_name + ".onnx")
-    # model_simp, check = simplify(onnx_model)
-    # assert check, "Simplified ONNX model could not be validated"
-    # onnx.save(model_simp, model_name + ".onnx")
+    if n2d2.global_variables.cuda_compiled:
+        # tf2onnx can change the device used by CUDA
+        N2D2.CudaContext.setDevice(n2d2.global_variables.cuda_device)
 
     database = n2d2.database.Database()
 
@@ -299,8 +305,8 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
     else:
         raise RuntimeError(f"Input shape {inputs_shape} is not supported.")
     provider = n2d2.provider.DataProvider(database,
-                                          input_dims,
-                                          batch_size=inputs_shape[0])
+                                        input_dims,
+                                        batch_size=inputs_shape[0])
 
     deepnet_cell = n2d2.cells.DeepNetCell.load_from_ONNX(provider, model_name + ".onnx")
 
@@ -330,4 +336,5 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
     deepnet_cell._embedded_deepnet.N2D2().initialize()
 
     N2D2.DrawNet.drawGraph(deepnet_cell._embedded_deepnet.N2D2(), "model")
+
     return CustomSequential(deepnet_cell, batch_size, outputs_shape, name=model_name)

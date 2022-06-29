@@ -145,11 +145,19 @@ void N2D2::Cell::setInputsDims(const std::vector<size_t>& dims)
     else {
         for (unsigned int n = 0, size = dims.size() - 1; n < size; ++n) {
             if (dims[n] != mInputsDims[n]) {
-                std::stringstream msgStr;
-                msgStr << "Cell::setInputsDims(): trying to connect an input of"
-                    " dims (" << dims << "), but another input already exists"
-                    " with dims (" << mInputsDims << ")" << std::endl;
-                throw std::runtime_error(msgStr.str());
+                if((dims[n] == 1) || (mInputsDims[n] == 1)){
+                    std::cout << "Cell::setInputsDims(): trying to connect an input of"
+                        " dims (" << dims << "), but another input already exists"
+                        " with dims (" << mInputsDims << "), will broadcast tensor with dimensions = 1" << std::endl;
+                    if(mInputsDims[n] == 1 && dims[n] > 1) mInputsDims[n] = dims[n];
+                }
+                else{
+                    std::stringstream msgStr;
+                    msgStr << "Cell::setInputsDims(): trying to connect an input of"
+                        " dims (" << dims << "), but another input already exists"
+                        " with dims (" << mInputsDims << ")" << std::endl;
+                    throw std::runtime_error(msgStr.str());
+                }
             }
         }
 

@@ -213,6 +213,12 @@ int main(int argc, char* argv[]) try
             std::exit(0);
     }
 
+    if(opt.calibOnly>0){
+        afterCalibration = calibNetwork(opt, deepNet);
+        if (!afterCalibration)
+            std::exit(0);
+    }
+
     if (!afterCalibration) {
         logStats(opt, deepNet);
     }

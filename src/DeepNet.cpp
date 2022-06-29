@@ -332,6 +332,15 @@ void N2D2::DeepNet::removeCell(const std::shared_ptr<Cell>& cell,
         }
     }
 
+
+    for (std::shared_ptr<Target> target: mTargets) {
+        if (target->getCell() == cell){
+            if (parents.size() != 1)
+                throw std::runtime_error("N2D2 does not support removing a targeted cell with multiple parents.");
+            target->setCell(mCells.at(parents[0]));
+        }
+    }
+
     if (reconnect) {
         /**
          * Each child of 'cell' has only 'cell' as parent. 

@@ -150,7 +150,10 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
     }
 
     char header;
-    fread(&header, sizeof(header), 1, fileStream);
+    if (!fread(&header, sizeof(header), 1, fileStream)) {
+        N2D2_THROW_OR_ABORT(std::runtime_error,
+            "Cannot read header from fileStream");
+    }
 
     if(header != 'P') {
         N2D2_THROW_OR_ABORT(std::runtime_error,
@@ -158,17 +161,30 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
     }
 
     std::size_t format; 
-    fread(&format, sizeof(format), 1, fileStream);
+    if (!fread(&format, sizeof(format), 1, fileStream)) {
+        N2D2_THROW_OR_ABORT(std::runtime_error,
+            "Cannot read format from fileStream");
+    }
     
     std::size_t width;
-    fread(&width, sizeof(width), 1, fileStream);
+    if (!fread(&width, sizeof(width), 1, fileStream)) {
+        N2D2_THROW_OR_ABORT(std::runtime_error,
+            "Cannot read width from fileStream");
+    }
     
     std::size_t height;
-    fread(&height, sizeof(height), 1, fileStream);
+    if (!fread(&height, sizeof(height), 1, fileStream)) {
+        N2D2_THROW_OR_ABORT(std::runtime_error,
+            "Cannot read height from fileStream");
+    }
 
     std::size_t maxValue = 1;
     if(format == PGM_ASCII || format == PPM_ASCII || format == PGM_BINARY || format == PPM_BINARY) {
-        fread(&maxValue, sizeof(maxValue), 1, fileStream);
+
+        if (!fread(&maxValue, sizeof(maxValue), 1, fileStream)) {
+            N2D2_THROW_OR_ABORT(std::runtime_error,
+                "Cannot read maxValue from fileStream");
+        }
     }
     
     std::size_t nbChannels = 1;
@@ -194,7 +210,10 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
         case PBM_ASCII:{
             char value;
             for(std::size_t i = 0; i < height*width*nbChannels; i++) {
-                fread(&value, sizeof(value), 1, fileStream);
+                if (!fread(&value, sizeof(value), 1, fileStream)) {
+                    N2D2_THROW_OR_ABORT(std::runtime_error,
+                        "Cannot read value from fileStream at " + std::to_string(i));
+                }
                 dataOut[i] = (value == '1');
                 
             }
@@ -205,7 +224,10 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
             for(std::size_t y = 0; y < height; y++) {
                 for(std::size_t x = 0; x < width; x += 8) {
                     unsigned char value;
-                    fread((char*) &value, sizeof(value), 1, fileStream);
+                    if (!fread((char*) &value, sizeof(value), 1, fileStream)) {
+                        N2D2_THROW_OR_ABORT(std::runtime_error,
+                            "Cannot read value from fileStream at " + std::to_string(y * height + x));
+                    }
                     
                     for(std::size_t xi = 0; xi < std::min(width - x, (std::size_t) 8); xi++) {
                         dataOut[i] = !((value >> (7 - xi)) & 1);
@@ -218,11 +240,17 @@ void readNetpbmFile(const std::string& file, std::vector<unsigned char>& dataOut
         case PGM_ASCII:
         case PPM_ASCII:
             for (std::size_t i = 0; i < dataOut.size(); ++i)
-                fscanf(fileStream, "%c", &dataOut[i]);
+                if(fscanf(fileStream, "%c", &dataOut[i]) != 1) {
+                    N2D2_THROW_OR_ABORT(std::runtime_error,
+                        "Cannot get dataOut value from fileStream");
+                }
             break;
         case PGM_BINARY:
         case PPM_BINARY:
-            fread((char*) dataOut.data(), dataOut.size(), 1, fileStream);
+            if (!fread((char*) dataOut.data(), dataOut.size(), 1, fileStream)) {
+                N2D2_THROW_OR_ABORT(std::runtime_error,
+                        "Cannot read dataOut values from fileStream");
+            }
             break;
         default:
             N2D2_THROW_OR_ABORT(std::runtime_error,

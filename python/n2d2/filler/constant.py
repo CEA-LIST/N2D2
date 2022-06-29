@@ -32,12 +32,12 @@ class Constant(Filler):
     """
 
     _N2D2_constructors = {
-        '<float>': N2D2.ConstantFiller_float,        
+        '<float>': N2D2.ConstantFiller_float,
     }
     _parameters={
         "value": "value",
     }
-    _convention_converter= ConventionConverter(_parameters)
+    _convention_converter = ConventionConverter(_parameters)
 
     def __init__(self, **config_parameters):
         """
@@ -48,7 +48,7 @@ class Constant(Filler):
 
         self._parse_optional_arguments(['value'])
         for k, v in self._optional_constructor_arguments.items():
-            if k is 'value' and not isinstance(v, float):
+            if k == 'value' and not isinstance(v, float):
                 raise WrongInputType("value", str(type(v)), ["float"])
         self._set_N2D2_object(self._N2D2_constructors[self._model_key](**self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
         self._set_N2D2_parameters(self._config_parameters)
