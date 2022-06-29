@@ -126,10 +126,31 @@ def _generate_export(deepnet_cell, provider=None, **kwargs):
 
     N2D2_option = _parse_export_parameters(**kwargs)
     N2D2_deepnet = deepnet_cell.get_embedded_deepnet().N2D2()
+
+    if provider is not None:
+        N2D2_provider = provider.N2D2()
+        N2D2_database = N2D2_provider.getDatabase()
+        N2D2_deepnet.setDatabase(N2D2_database)
+        N2D2_deepnet.setStimuliProvider(N2D2_provider)
+        deepnet_cell[0].N2D2().clearInputTensors()
+        deepnet_cell[0].N2D2().addInput(N2D2_provider, 0, 0, N2D2_provider.getSizeX(), N2D2_provider.getSizeY())
+
+    if len(N2D2_deepnet.getTargets()) == 0:
+        # No target associated to the DeepNet
+        # We create a Target for the last cell of the network
+        last_cell = deepnet_cell[-1].N2D2()
+        N2D2_target =  N2D2.TargetScore("Target", last_cell, provider.N2D2())
+        N2D2_deepnet.addTarget(N2D2_target)
+    elif provider is not None:
+        # We already have a Target, so we attach the new provider to it
+        for target in N2D2_deepnet.getTargets():
+            target.setStimuliProvider(provider.N2D2())
+
     if N2D2_option.calibration != 0:
         if "nb_bits" not in kwargs:
             kwargs["nb_bits"] = N2D2_option.nb_bits
-        n2d2.quantizer.PTQ(deepnet_cell, provider=provider, **kwargs)
+        # Provider = None because we already attach the new provider !
+        n2d2.quantizer.PTQ(deepnet_cell, provider=None, **kwargs)
 
     if not deepnet_cell.is_integral() and N2D2_option.nb_bits > 0:
         raise RuntimeError(f"You need to calibrate the network to export it in {abs(N2D2_option.nb_bits)} bits integer" \
