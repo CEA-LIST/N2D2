@@ -138,6 +138,7 @@ def _generate_export(deepnet_cell, provider=None, **kwargs):
     if len(N2D2_deepnet.getTargets()) == 0:
         # No target associated to the DeepNet
         # We create a Target for the last cell of the network
+        print("Adding target !")
         last_cell = deepnet_cell[-1].N2D2()
         N2D2_target =  N2D2.TargetScore("Target", last_cell, provider.N2D2())
         N2D2_deepnet.addTarget(N2D2_target)
@@ -151,10 +152,16 @@ def _generate_export(deepnet_cell, provider=None, **kwargs):
             kwargs["nb_bits"] = N2D2_option.nb_bits
         # Provider = None because we already attach the new provider !
         n2d2.quantizer.PTQ(deepnet_cell, provider=None, **kwargs)
+    else:
+        # Graph otpimisations are done during calibration.
+        # If we do not call calibration, we do graph optimisation now !
+        N2D2_deepnet.fuseBatchNorm()
+        N2D2_deepnet.removeDropout()
 
     if not deepnet_cell.is_integral() and N2D2_option.nb_bits > 0:
         raise RuntimeError(f"You need to calibrate the network to export it in {abs(N2D2_option.nb_bits)} bits integer" \
                             "set the 'calibration' option to something else than 0 or quantize the deepnetcell before export.")
+
     if not export_folder_name:
         export_folder_name = f"export_{N2D2_option.gen_export}_{'int' if N2D2_option.nb_bits > 0 else 'float'}{abs(N2D2_option.nb_bits)}"
 
