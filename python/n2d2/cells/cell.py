@@ -709,8 +709,9 @@ class DeepNetCell(Block):
 
         # Input Line
         input_name = 'Image1'
-        input_size = self.get_embedded_deepnet().N2D2().getStimuliProvider().getSize()
-        input_size.append(1)  # batch size
+        stimuli = self.get_embedded_deepnet().N2D2().getStimuliProvider()
+        input_size = stimuli.getSize()
+        input_size.append(stimuli.getBatchSize())  # batch size
         layers.append([input_name + ' (input)', input_size[::-1], 0, 0, '', {}])
 
         # Layers Line
