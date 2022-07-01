@@ -24,14 +24,14 @@ import keras_interoperability
 
 from tensorflow.random import uniform
 from os.path import exists
-from os import remove
-
+from os import getcwd, chdir
+from shutil import rmtree
 from tiny_ml_keras.anomaly_model import get_model as get_anomaly_model
 from tiny_ml_keras.kws_model import kws_dscnn as get_kws_model
 from tiny_ml_keras.resnet_model import resnet_v1_eembc as get_resnet_model
 from tiny_ml_keras.vww_model import mobilenet_v1 as get_mobilenet_model
 
-
+import subprocess
 DATA_PATH="/local/DATABASE/"
 
 
@@ -46,6 +46,8 @@ class test_keras_export(unittest.TestCase):
         n2d2.global_variables.cuda_device = 0
         n2d2.global_variables.default_model = 'Frame_CUDA'
 
+        # n2d2.global_variables.default_model = 'Frame_CUDA'
+
     def tearDown(self):
         n2d2.global_variables.cuda_device = 0
         n2d2.global_variables.default_model = 'Frame'
@@ -55,7 +57,19 @@ class test_keras_export(unittest.TestCase):
             self.assertTrue(abs(i-j) < self.relative_precision * abs(j) + self.absolute_precision,
                 "N2D2 and Keras give different output tensor ! ({i} != {j})")
 
-    @unittest.skip("Skipping anomaly, known issue.")
+    def compile_run_clean_export(self):
+        export_generated = exists("./export_CPP_int8")
+        self.assertTrue(export_generated, msg="Export generation failed !")
+        wd = getcwd()
+        chdir("./export_CPP_int8")
+        call_output = subprocess.run(["make", "save_outputs"], capture_output=True)
+        self.assertTrue(call_output.returncode == 0, msg="Export compilation failed !")
+        call_output = subprocess.run("./bin/run_export", capture_output=True)
+        self.assertTrue(call_output.returncode == 0, msg="Export run failed !")
+        # Change back to old directory
+        chdir(wd)
+        rmtree("./export_CPP_int8")
+
     def test_anomaly_CPP(self):
 
         net_test=get_anomaly_model(640)
@@ -83,10 +97,8 @@ class test_keras_export(unittest.TestCase):
             nb_bits=8,
             calibration=1,
             export_nb_stimuli_max=0)
-        export_generated = exists("./export_CPP_int8")
-        self.assertTrue(export_generated)
-        if not export_generated:
-            remove("./export_CPP_int8")
+
+        self.compile_run_clean_export()
 
     def test_kws_CPP(self):
 
@@ -111,6 +123,7 @@ class test_keras_export(unittest.TestCase):
         deepnet_cell = n2d2_net_test.get_deepnet_cell()
         # remove SoftMax
         deepnet_cell.remove(deepnet_cell[-1].get_name())
+        print(deepnet_cell)
         # Generating CPP export
         n2d2.export.export_cpp(
             deepnet_cell,
@@ -118,11 +131,7 @@ class test_keras_export(unittest.TestCase):
             nb_bits=8,
             calibration=1,
             export_nb_stimuli_max=0)
-        export_generated = exists("./export_CPP_int8")
-
-        self.assertTrue(export_generated)
-        if not export_generated:
-            remove("./export_CPP_int8")
+        self.compile_run_clean_export()
 
     def test_resnet_CPP(self):
 
@@ -150,6 +159,7 @@ class test_keras_export(unittest.TestCase):
         deepnet_cell = n2d2_net_test.get_deepnet_cell()
         # remove SoftMax
         deepnet_cell.remove(deepnet_cell[-1].get_name())
+        print(deepnet_cell)
         # Generating CPP export
         n2d2.export.export_cpp(
             deepnet_cell,
@@ -159,11 +169,7 @@ class test_keras_export(unittest.TestCase):
             export_no_unsigned=True,
             export_nb_stimuli_max=0
             )
-        export_generated = exists("./export_CPP_int8")
-
-        self.assertTrue(export_generated)
-        if not export_generated:
-            remove("./export_CPP_int8")
+        self.compile_run_clean_export()
 
     def test_mobilenet_CPP(self):
 
@@ -197,11 +203,7 @@ class test_keras_export(unittest.TestCase):
             nb_bits=8,
             calibration=1,
             export_nb_stimuli_max=0)
-        export_generated = exists("./export_CPP_int8")
-
-        self.assertTrue(export_generated)
-        if not export_generated:
-            remove("./export_CPP_int8")
+        self.compile_run_clean_export()
 
 if __name__ == '__main__':
     """

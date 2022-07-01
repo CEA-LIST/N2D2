@@ -3418,6 +3418,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                             ->getScaling();
                     const auto& scales = scaling.getFloatingPointScaling()
                                                         .getScalingPerOutput();
+                    
                     // Remove original "Mul" scaling cell
                     deepNet->removeCell(dataCell);
 
@@ -3519,19 +3520,23 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                             std::cout << "Mul operation" << std::endl;
                             shifts.push_back(0);
                             weights.push_back(constant(0));
+                        }else{
+                            throw std::runtime_error("Unsupported operation : " + node.op_type() + " for constant size = 1.");
                         }
                     }
                     else if (constant.size() == nbOutputs){
-                        if(node.op_type() == "Add"){
-                            std::cout << "Add operation, constant.size() == nbOutputs" << std::endl;
-                            for (unsigned int output = 0;
-                                    output < nbOutputs; ++output)
-                            {
-                                shifts.push_back(constant.at(output));
-                                weights.push_back(1);
-                                std::cout << "out = " << output << " , shift = " << constant.at(output) << std::endl;
-                            }
-                        }
+                        if(node.op_type() == "Mul"){
+                            // Use ScalingCell for Mul
+                            const std::vector<Float_T> scaling = constant.data();
+
+                            opCell = Registrar<ScalingCell>::create<Float_T>(model)(
+                                *deepNet, 
+                                node.output(0),
+                                nbOutputs,
+                                Scaling::floatingPointScaling(scaling, false, std::vector<Float_T>(0.0f)));
+
+                        }else
+                            throw std::runtime_error("Unsupported operation : " + node.op_type() + " for constant size = nbOutputs.");
                     }
                     else {
                         throw std::runtime_error("Unsupported constant size! Not 1 and not nbOutputs! ");

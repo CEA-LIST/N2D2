@@ -19,7 +19,6 @@ test:python_api:
   stage: test
   tags:
     - ubuntu  
-  before_script: 
   script:
     # Run on discovery all tests located in python/tests and discard the stdout 
     # only to show the errors/warnings and the results of the tests

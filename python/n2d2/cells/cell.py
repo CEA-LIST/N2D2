@@ -431,6 +431,7 @@ class DeepNetCell(Block):
         ini_parser.currentSection("onnx", True)
         if ignore_cells:
             ini_parser.setProperty("Ignore", ignore_cells)
+        ini_parser.setProperty("CNTK", True) # Enable Bias fusion !
         N2D2_deepnet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, ini_parser,
                                             N2D2_deepnet, [None])
         return cls(N2D2_deepnet)
