@@ -36,7 +36,7 @@ class Scaling(NeuralNetworkCell, ModelDatatyped):
     _N2D2_constructors = {
         'Frame<float>': N2D2.ScalingCell_Frame_float,
     }
-    if gb.cuda_compiled:
+    if gb.cuda_available:
         _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.ScalingCell_Frame_CUDA_float,
         })

@@ -36,7 +36,7 @@ class Resize(NeuralNetworkCell, Modeltyped):
     _N2D2_constructors = {
         'Frame': N2D2.ResizeCell_Frame,
     }
-    if gb.cuda_compiled:
+    if gb.cuda_available:
         _N2D2_constructors.update({
             'Frame_CUDA': N2D2.ResizeCell_Frame_CUDA,
         })

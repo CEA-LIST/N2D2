@@ -343,7 +343,7 @@ class TensorPlaceholder(Provider):
         Streamed a tensor in a data provider to simulate the output of a database.
         The model of the tensor is defined by the compilation of the library.
         """
-        if N2D2.cuda_compiled:
+        if n2d2.global_variables.cuda_available:
             if not self._tensor.is_cuda:
                 self._tensor.cuda()
             self._tensor.htod()

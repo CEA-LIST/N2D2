@@ -41,7 +41,7 @@ class Fc(NeuralNetworkCell, ModelDatatyped, Trainable):
         'Frame<float>': N2D2.FcCell_Frame_float,
     }
 
-    if gb.cuda_compiled:
+    if gb.cuda_available:
         _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.FcCell_Frame_CUDA_float,
         })

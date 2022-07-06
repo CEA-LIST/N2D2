@@ -29,8 +29,6 @@ from n2d2.n2d2_interface import N2D2_Interface
 
 import n2d2.global_variables as gb
 
-cuda_compiled = gb.cuda_compiled
-
 
 # def fuse_qat(deep_net, provider, act_scaling_mode, w_mode="NONE", b_mode="NONE", c_mode="NONE"):
 #     """This method allow you to fuse BatchNorm parameters into Conv layers once you have trained your model.
@@ -226,7 +224,7 @@ class ActivationQuantizer(Quantizer, ABC):
 #     _quantizer_generators = {
 #         'Frame<float>': N2D2.SATQuantizerCell_Frame_float,
 #     }
-#     if cuda_compiled:
+#     if gb.cuda_available:
 #         _quantizer_generators.update({
 #             'Frame_CUDA<float>': N2D2.SATQuantizerCell_Frame_CUDA_float
 #         })
@@ -299,7 +297,7 @@ class LSQCell(CellQuantizer): # TODO : trainable ?
     """
     _quantizer_generators = {
     }
-    if cuda_compiled:
+    if gb.cuda_available:
         _quantizer_generators.update({
             'Frame_CUDA<float>': N2D2.LSQQuantizerCell_Frame_CUDA_float
         })
@@ -355,7 +353,7 @@ class LSQCell(CellQuantizer): # TODO : trainable ?
 #     _quantizer_generators = {
 #         'Frame<float>': N2D2.SATQuantizerActivation_Frame_float,
 #     }
-#     if cuda_compiled:
+#     if gb.cuda_available:
 #         _quantizer_generators.update({
 #             'Frame_CUDA<float>': N2D2.SATQuantizerActivation_Frame_CUDA_float
 #         })
@@ -445,7 +443,7 @@ class LSQAct(ActivationQuantizer): # TODO : trainable ?
     """
     _quantizer_generators = {
     }
-    if cuda_compiled:
+    if gb.cuda_available:
         _quantizer_generators.update({
             'Frame_CUDA<float>': N2D2.LSQQuantizerActivation_Frame_CUDA_float
         })
