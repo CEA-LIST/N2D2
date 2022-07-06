@@ -24,8 +24,6 @@ from abc import ABC, abstractmethod
 import n2d2.global_variables as gb
 from typing import List, Tuple
 
-cuda_compiled = gb.cuda_compiled
-
 
 class ScalingObject(N2D2_Interface, ABC):
 

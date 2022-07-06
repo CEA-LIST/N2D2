@@ -33,7 +33,7 @@ class Transformation(NeuralNetworkCell, Modeltyped):
     _N2D2_constructors = {
         'Frame': N2D2.TransformationCell_Frame,
     }
-    if gb.cuda_compiled:
+    if gb.cuda_available:
         _N2D2_constructors.update({
             'Frame_CUDA': N2D2.TransformationCell_Frame_CUDA,
         })

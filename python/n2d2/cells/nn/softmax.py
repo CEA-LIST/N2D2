@@ -39,7 +39,7 @@ class Softmax(NeuralNetworkCell, ModelDatatyped):
     }
 
 
-    if gb.cuda_compiled:
+    if gb.cuda_available:
         _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.SoftmaxCell_Frame_CUDA_float,
         })

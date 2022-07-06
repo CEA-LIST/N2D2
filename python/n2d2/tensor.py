@@ -33,7 +33,7 @@ except ImportError:
 else:
     numpy_imported=True
 
-cuda_compiled = gb.cuda_compiled
+cuda_available = gb.cuda_available
 
 
 hard_coded_type = {
@@ -67,7 +67,7 @@ class Tensor:
         "char": N2D2.Tensor_char,
 
     }
-    if cuda_compiled:
+    if cuda_available:
         _cuda_tensor_generators = {
             "f": N2D2.CudaTensor_float,
             "float": N2D2.CudaTensor_float,
@@ -108,7 +108,7 @@ class Tensor:
             raise error_handler.WrongInputType("cuda", type(cuda), [str(bool)])
         self.is_cuda = cuda
         if cuda:
-            if not cuda_compiled:
+            if not cuda_available:
                 raise RuntimeError("You did not compiled N2D2 with CUDA !")
             generators = self._cuda_tensor_generators
         else:
@@ -304,7 +304,7 @@ class Tensor:
     def cuda(self):
         """Convert the tensor to a cuda tensor
         """
-        if not cuda_compiled:
+        if not cuda_available:
             raise RuntimeError("You did not compiled N2D2 with CUDA !")
         if not self.is_cuda:
             self.is_cuda = True
@@ -504,7 +504,7 @@ class Tensor:
         CUDA tensor are stored and computed in the GPU (Device).
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         """
-        if not n2d2.global_variables.cuda_compiled:
+        if not n2d2.global_variables.cuda_available:
             raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeDToH()
@@ -518,7 +518,7 @@ class Tensor:
         CUDA tensor are stored and computed in the GPU (Device).
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         """
-        if not n2d2.global_variables.cuda_compiled:
+        if not n2d2.global_variables.cuda_available:
             raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeHToD()
