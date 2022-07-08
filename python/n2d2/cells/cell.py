@@ -305,11 +305,8 @@ class Sequence(Iterable):
 
     def __call__(self, x: Union[Tensor, Interface]):
         super().__call__(x)
-        print(f"{self._name}")
         for cell in self:
-            print(f"{cell._name}, \tinput dims -> {x.dims()}")
             x = cell(x)
-            print(f"{cell._name}, \toutput dims -> {x.dims()}")
         return x
 
     def to_deepnet_cell(self, provider:Provider, target:Optional[Target] =None):

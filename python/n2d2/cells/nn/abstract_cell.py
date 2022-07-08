@@ -263,20 +263,6 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             self._input_cells.append(cell.get_name())
 
         self._deepnet.N2D2().addCell(self._N2D2_object, parents)
-        # caract = N2D2.CudaContext.getMemInfo()
-        # s_util= ""
-        # s_free = ""
-        # memUtil = str(caract[1]-caract[0])
-        # memFree = str(caract[0])
-        # for i in range(len(memUtil)):
-        #     if i%3==0 and i>0:
-        #         s_util = " " + s_util
-        #     s_util = memUtil[len(memUtil)-1-i]+s_util
-        # for i in range(len(memFree)):
-        #     if i%3==0 and i>0:
-        #         s_free = " " + s_free
-        #     s_free = memFree[len(memFree)-1-i]+s_free
-        # print(f"Memoire utilisee sur le GPU : {s_util} Bytes\nMemoire libre sur le GPU : {s_free} Bytes")
         if (self.dims()==[]): #not initialized
             self._N2D2_object.initializeDataDependent()
 
