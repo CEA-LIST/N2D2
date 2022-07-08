@@ -136,5 +136,5 @@ class MobileNetv1(Sequence):
 
 
 
-def ILSVRC_preprocessing(size=224):
-    return ILSVRC_preprocessing_tools(size)
+def ILSVRC_preprocessing(size=224, margin=32):
+    return ILSVRC_preprocessing_tools(size, margin)
