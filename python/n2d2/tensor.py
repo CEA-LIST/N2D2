@@ -20,12 +20,14 @@
 """
 
 
+from ast import Slice
 import N2D2
 import n2d2 # To remove if interface is moved to provider
 from n2d2 import error_handler
 from n2d2.provider import TensorPlaceholder
 import n2d2.global_variables as gb
 from functools import reduce
+from typing import Tuple, Union, Optional
 try:
     from numpy import ndarray, array
 except ImportError:
@@ -87,7 +89,8 @@ class Tensor:
         "Numpy": lambda x: list(reversed(x)),
     }
 
-    def __init__(self, dims, value=None, cuda=False, datatype="float", cell=None, dim_format='Numpy'):
+    def __init__(self, dims:list, value=None, cuda:bool =False, datatype:str ="float", 
+                    cell =None, dim_format:str ='Numpy'):
         """
         :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (the convention used depends of the ``dim_format`` argument, by default it's the same as ``Numpy``)
         :type dims: list
@@ -260,7 +263,7 @@ class Tensor:
             index = index/i
         return list(reversed(coord))
 
-    def reshape(self, new_dims):
+    def reshape(self, new_dims: list):
         """Reshape the Tensor to the specified dims (defined by the Numpy convention).
 
         :param new_dims: New dimensions
@@ -276,7 +279,7 @@ class Tensor:
             raise ValueError(f"new size ({new_dims_str}= {str(reduce((lambda x,y: x*y), new_dims))}) does not match current size ({old_dims_str}= {str(self.__len__())})")
         self._tensor.reshape([int(d) for d in reversed(new_dims)])
 
-    def resize(self, new_dims):
+    def resize(self, new_dims: list):
         """Reshape the Tensor to the specified dims (defined by the Numpy convention).
 
         :param new_dims: New dimensions
@@ -313,7 +316,7 @@ class Tensor:
             self._tensor = new_tensor
         return self
 
-    def to_numpy(self, copy=False):
+    def to_numpy(self, copy:bool =False):
         """Create a numpy array equivalent to the tensor.
 
         :param copy: if false, memory is shared between :py:class:`n2d2.Tensor` and ``numpy.array``, else data are copied in memory, default=True
@@ -409,7 +412,7 @@ class Tensor:
 
 
     @n2d2.utils.methdispatch
-    def __setitem__(self, index, value):
+    def __setitem__(self, index: Union[tuple, int, float, slice], value):
         """
         Set an element of the tensor.
         To select the element to modify you can use :
@@ -537,6 +540,9 @@ class Tensor:
         self.cell = cell
         return self
 
+    def get_tensors(self):
+        return [self]
+
     def get_deepnet(self):
         """
         Method called by the cells, if the tensor is not part of a graph, it will be linked to an :py:class:`n2d2.provider.Provider` object.
@@ -624,10 +630,10 @@ class Interface(n2d2.provider.Provider):
             nb_channels += tensor.dimZ()
             self.tensors.append(tensor)
         if not self._deepnet:
-            size =[tensors[0].dimX(), tensors[0].dimY(), nb_channels]
             self.batch_size = tensors[0].dimB()
-            cell = n2d2.provider.MultipleOutputsProvider(size, self.batch_size)
             for tensor in self.tensors:
+                size =[tensor.dimX(), tensor.dimY(), tensor.dimZ()]
+                cell = n2d2.provider.MultipleOutputsProvider(size, self.batch_size)
                 tensor.cell = cell
         # The dimZ of the interface correspond to the sum of the dimZ of the tensor that composed it.
         self.dim_z = nb_channels
