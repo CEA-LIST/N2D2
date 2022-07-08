@@ -20,10 +20,7 @@
 """
 
 from abc import ABC, abstractmethod
-from re import S
 from typing import Union, Optional
-
-from numpy import unsignedinteger
 import N2D2
 
 import n2d2

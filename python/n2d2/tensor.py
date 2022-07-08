@@ -20,14 +20,13 @@
 """
 
 
-from ast import Slice
 import N2D2
 import n2d2 # To remove if interface is moved to provider
 from n2d2 import error_handler
 from n2d2.provider import TensorPlaceholder
 import n2d2.global_variables as gb
 from functools import reduce
-from typing import Tuple, Union, Optional
+from typing import Union
 try:
     from numpy import ndarray, array
 except ImportError:
@@ -263,7 +262,7 @@ class Tensor:
             index = index/i
         return list(reversed(coord))
 
-    def reshape(self, new_dims: list):
+    def reshape(self, new_dims:list):
         """Reshape the Tensor to the specified dims (defined by the Numpy convention).
 
         :param new_dims: New dimensions
@@ -279,7 +278,7 @@ class Tensor:
             raise ValueError(f"new size ({new_dims_str}= {str(reduce((lambda x,y: x*y), new_dims))}) does not match current size ({old_dims_str}= {str(self.__len__())})")
         self._tensor.reshape([int(d) for d in reversed(new_dims)])
 
-    def resize(self, new_dims: list):
+    def resize(self, new_dims:list):
         """Reshape the Tensor to the specified dims (defined by the Numpy convention).
 
         :param new_dims: New dimensions
@@ -412,7 +411,7 @@ class Tensor:
 
 
     @n2d2.utils.methdispatch
-    def __setitem__(self, index: Union[tuple, int, float, slice], value):
+    def __setitem__(self, index:Union[tuple, int, float, slice], value):
         """
         Set an element of the tensor.
         To select the element to modify you can use :
