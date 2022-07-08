@@ -29,7 +29,7 @@ from n2d2.cells.nn.abstract_cell import (NeuralNetworkCell,
                                          _cell_frame_parameters)
 from n2d2.error_handler import deprecated
 from n2d2.typed import ModelDatatyped
-from n2d2.utils import inherit_init_docstring
+from n2d2.utils import inherit_init_docstring, check_types
 
 
 @inherit_init_docstring()
@@ -70,12 +70,12 @@ class Conv(NeuralNetworkCell, ModelDatatyped, Trainable):
 
     _convention_converter= ConventionConverter(_parameters)
 
-
+    @check_types
     def __init__(self,
-                 nb_inputs,
-                 nb_outputs,
-                 kernel_dims,
-                 nb_input_cells=1,
+                 nb_inputs: int,
+                 nb_outputs: int,
+                 kernel_dims: list,
+                 nb_input_cells: int = 1,
                  **config_parameters):
         """
         :param nb_inputs: Number of input channels.
@@ -120,12 +120,12 @@ class Conv(NeuralNetworkCell, ModelDatatyped, Trainable):
             self.no_bias = config_parameters["no_bias"]
         else:
             self.no_bias = False
-        if not isinstance(nb_inputs, int):
-            raise n2d2.error_handler.WrongInputType("nb_inputs", str(type(nb_inputs)), ["int"])
-        if not isinstance(nb_outputs, int):
-            raise n2d2.error_handler.WrongInputType("nb_outputs", str(type(nb_outputs)), ["int"])
-        if not isinstance(kernel_dims, list):
-            raise n2d2.error_handler.WrongInputType("kernel_dims", str(type(kernel_dims)), ["list"])
+        # if not isinstance(nb_inputs, int):
+        #     raise n2d2.error_handler.WrongInputType("nb_inputs", str(type(nb_inputs)), ["int"])
+        # if not isinstance(nb_outputs, int):
+        #     raise n2d2.error_handler.WrongInputType("nb_outputs", str(type(nb_outputs)), ["int"])
+        # if not isinstance(kernel_dims, list):
+        #     raise n2d2.error_handler.WrongInputType("kernel_dims", str(type(kernel_dims)), ["list"])
 
         NeuralNetworkCell.__init__(self, **config_parameters)
         ModelDatatyped.__init__(self, **config_parameters)

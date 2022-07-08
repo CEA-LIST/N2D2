@@ -27,9 +27,9 @@ import tarfile
 import gzip
 import zipfile
 from collections import UserDict
-from inspect import getmro
+from inspect import getmro, signature
 import functools
-
+from n2d2.error_handler import WrongInputType
 
 # At the moment ConfigSection is simply a dictionary
 class ConfigSection(UserDict):
@@ -187,3 +187,31 @@ def methdispatch(meth):
     wrapper.register = dispatcher.register
     functools.update_wrapper(wrapper, dispatcher)
     return wrapper
+
+
+
+def check_types(f):
+    """
+    Decorator used to automatically check type of functions/methods.
+    To do so we use type annoation avaialble since Python 3.5 https://docs.python.org/3/library/typing.html.
+    """
+    sig = signature(f)
+
+    # Dictionary key : param name, value : annotation
+    args_types = {p.name: p.annotation \
+            for p in sig.parameters.values()}
+
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        bind = sig.bind(*args, **kwargs)
+        obj_name = ""
+
+        # Check if we are in a method !
+        if "self" in sig.parameters:
+            obj_name = f"{bind.args[0].__class__.__name__}."
+
+        for value, typ in zip(bind.args, args_types.items()):
+            if typ[1] != sig.empty and not isinstance(value, typ[1]):
+                raise TypeError(f'In {obj_name}{f.__name__} : \"{typ[0]}\" parameter must be of type <{typ[1].__name__}> but is of type <{type(value).__name__}> instead.')
+        return f(*args, **kwargs)
+    return decorated
