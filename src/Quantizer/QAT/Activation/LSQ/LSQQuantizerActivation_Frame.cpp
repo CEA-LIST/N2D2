@@ -157,7 +157,7 @@ void LSQQuantizerActivation_Frame<T>::propagate(BaseTensor& baseInOut,
  */
 template <typename T>
 void N2D2::LSQQuantizerActivation_Frame<T>::back_propagate(const BaseTensor& baseInput,
-                                                               const BaseTensor& baseOutput,
+                                                               const BaseTensor& /*baseOutput*/,
                                                                const BaseTensor& baseDiffInput,
                                                                BaseTensor& baseDiffOutput)
 {
