@@ -36,7 +36,7 @@ class Cell(ABC):
     """Abstract class of the higher level of cells and cells container.
     """
     @abstractmethod
-    def __init__(self, name: Optional[str]):
+    def __init__(self, name:str):
         if not name:
             name = n2d2.generate_name(self)
         else:
