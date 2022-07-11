@@ -126,14 +126,14 @@ class StackedBlocks(Sequence):
 
 class ResNet_N2D2(Sequence):
     def __init__(self, size:int =18, version:int =1, name:Optional[str] =None):
-        nb_blocks = {18:[2, 2, 2, 2],
-                    34:[3, 4, 6, 3],
-                    50:[3, 4, 6, 3],
-                    101:[3, 4, 23, 4],
-                    152:[3, 8, 38, 3]}
-        if size not in nb_blocks:
+        map_size_to_blocks_per_layer = {18:[2, 2, 2, 2],
+                                        34:[3, 4, 6, 3],
+                                        50:[3, 4, 6, 3],
+                                        101:[3, 4, 23, 4],
+                                        152:[3, 8, 38, 3]}
+        if size not in map_size_to_blocks_per_layer:
             raise ValueError("ResNet size must be one of these: '18', '34', '50', '101', '152'.")
-        self.blocks = nb_blocks[size]
+        self.blocks = map_size_to_blocks_per_layer[size]
         self.bottleneck = (size > 34)
         last_conv_channel = 512
         if (self.bottleneck):
