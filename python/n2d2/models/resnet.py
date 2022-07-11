@@ -23,6 +23,7 @@
 from typing import Optional
 import n2d2.global_variables
 from n2d2.utils import ConfigSection
+from n2d2.provider import Provider
 from n2d2.cells.nn import Fc, Conv, Pool2d, BatchNorm2d, ElemWise, Activation
 from n2d2.transform import Rescale, PadCrop, ColorSpace, RangeAffine, Composite
 from n2d2.cells import Sequence, Layer
@@ -52,10 +53,12 @@ def fc_def():
 
 
 class MainBlock(Sequence):
+    """Main block which structure changes according to the number of layers in te model.
+    """
     def __init__(self, in_channels:int, out_channels:int, bottleneck:bool =False, downsample:bool =False, first_layer:bool =False):
-        st_dims = [1,1]
-        if(downsample):
-            st_dims=[2,2]
+
+        st_dims=[2,2] if downsample else [1,1]
+        # size 50, 101 and 152
         if (bottleneck):
             bottleneck_channels = out_channels*4
             in_channels = in_channels*(1+3*(1-first_layer))
@@ -67,6 +70,7 @@ class MainBlock(Sequence):
                 Conv(out_channels, bottleneck_channels, stride_dims=[1,1], **conv1x1_def()),
                 BatchNorm2d(bottleneck_channels, activation=Linear()),
             ], name='mainBlock')
+        # size 18 and 34    
         else:
             Sequence.__init__(self, cells=[
                 Conv(in_channels, out_channels, stride_dims=st_dims, **conv3x3_def()),
@@ -77,6 +81,9 @@ class MainBlock(Sequence):
 
 
 class BuildingBlock(Sequence):
+    """Basic Block for the generation of ResNet models.
+    It is made of a main block and a shortcut for the residual connection.
+    """
     def __init__(self, in_channels: int, out_channels: int, downsample: bool = False, 
                     bottleneck: bool = False, first_layer:bool = False, name: Optional[str] = None):
 
@@ -84,14 +91,15 @@ class BuildingBlock(Sequence):
         self.shortcut = Sequence([], name='shortcut')
         out_channels_shortcut = out_channels*(1+3*int(bottleneck))
         in_channels_shortcut = in_channels*(1+3*int(bottleneck)*(1-int(first_layer)))
-        if (downsample or ((downsample==False) and (first_layer==True))):
+        if (downsample or first_layer):
             self.shortcut.append(Conv(in_channels_shortcut, out_channels_shortcut, stride_dims=[1+int(downsample),1+int(downsample)], **conv1x1_def()))
 
         # Main block
         self.mainBlock = MainBlock(in_channels, out_channels, bottleneck=bottleneck, downsample=downsample, first_layer=first_layer)
 
         # Combining into one residual block
-        self.structure = Layer([self.mainBlock, self.shortcut], name='structure')
+        # Using a Layer() instance taking here one input and ouputing an interface of two tensors
+        self.structure = Layer([self.mainBlock, self.shortcut], mapping=[[1,1]], name='structure')
         
         # Addition
         Sequence.__init__(self, [
@@ -102,12 +110,18 @@ class BuildingBlock(Sequence):
 
 
 class StackedBlocks(Sequence):
+    """Stack of basic block of the ResNet model. The numbe of stacked layers depends on the size of the model.
+
+    For ResNet-18, the first stack of layer is
+        | 3x3, 64 |
+        | 3x3, 64 | x 2
+
+    """
     def __init__(self, in_channels: int, out_channels: int, nb_blocks: int = 2, downsample: bool = True,
                     bottleneck: bool = False, have_first_layer=False, name: Optional[str] = None):
         layers = [BuildingBlock(in_channels, out_channels, downsample=downsample, bottleneck=bottleneck, first_layer=have_first_layer)]
         layers += [BuildingBlock(out_channels, out_channels, downsample=False, bottleneck=bottleneck ,first_layer=False) for i in range (nb_blocks-1)]
-        print(layers)
-        Sequence.__init__(self, cells=layers, name=None)
+        Sequence.__init__(self, cells=layers, name=name)
 
 
 class ResNet_N2D2(Sequence):
@@ -117,7 +131,7 @@ class ResNet_N2D2(Sequence):
                     50:[3, 4, 6, 3],
                     101:[3, 4, 23, 4],
                     152:[3, 8, 38, 3]}
-        if size not in nb_blocks.keys():
+        if size not in nb_blocks:
             raise ValueError("ResNet size must be one of these: '18', '34', '50', '101', '152'.")
         self.blocks = nb_blocks[size]
         self.bottleneck = (size > 34)
@@ -150,11 +164,11 @@ class ResNet():
     def __init__(self) -> None:
         pass
     
-    def generate(self,  size:int =18, version:int =1, name:Optional[str] =None):
+    def generate(self,  size:int, version:int =1, name:Optional[str] =None) -> n2d2.cells.cell.DeepNetCell:
         """Generates a ResNet model with the given parameters
-        Implemented from https://arxiv.org/pdf/1512.03385.pdf
+        For now, only version 1 is supported (Implemented from https://arxiv.org/pdf/1512.03385.pdf)
 
-        :param size: Number of layers in the network, default=`18`.
+        :param size: Number of layers in the network, can be 18, 34, 50, 101 or 152. Default=`18`.
         :param type: int
         :param version: Architecture version ofr the network, default=`1`.
         :param type: int, optional
@@ -162,9 +176,27 @@ class ResNet():
         :param type: str, optional
         """
         return ResNet_N2D2(size=size, version=version, name=name)
-    
-    def load_from_ONNX(self, inputs, resnet_type:int, version:str ='pre_act', dims:Optional[list] =None,
-                        batch_size:int =1, path:Optional[str] =None, download:bool =False):
+
+    @classmethod
+    def load_from_ONNX(cls, inputs:Provider, resnet_type:int, version:str ='pre_act', dims:Optional[list] =None,
+                        batch_size:int =1, path:Optional[str] =None, download:bool =False) -> n2d2.cells.cell.DeepNetCell:
+        """Load a ResNet model with given features from an ONNX file.
+
+        :param inputs: Data provider for the model
+        :param type: `n2d2.provider.Provider`
+        :param resnet_type: Number of layers in the network, can be 18, 34, 50, 101 or 152.
+        :param type: int
+        :param version: Version of the ResNet model in [`pre_act`,`post_act`] (version 1 and 2). Default=`pre_act`.
+        :param type: list, optional
+        :param dims: Dimension of input images. Default=`[224, 224, 3]`
+        :param type: list, optional
+        :param batch_size: Batch size for the model. Dafault=`1`.
+        :param batch_size: int, optional
+        :param path: Path to the model. Default=`None`.
+        :param type:str, optional
+        :param download: Wether or not the model architecture should be downloaded. Default=`False`.
+        :param type: bool, optional
+        """
         if dims is None:
             dims = [224, 224, 3]
         allowed_types = ['18', '34', '50', '101', '152']
@@ -192,11 +224,11 @@ class ResNet():
                 n2d2.global_variables.model_cache + "/ONNX/",
                 resnet_name)
             path = n2d2.global_variables.model_cache + "/ONNX/"+resnet_name+"/"+"resnet"+resnet_type+v+".onnx"
-        model = n2d2.cells.DeepNetCell.load_from_ONNX(inputs, path)
+        model = n2d2.cells.cell.DeepNetCell.load_from_ONNX(inputs, path)
         return model
 
 
-    def ONNX_preprocessing(self, size:int =224, margin:int =32):
+    def ONNX_preprocessing(self, size:int =224, margin:int =32) -> Composite:
 
         trans = Composite([
             Rescale(width=size+margin, height=size+margin, keep_aspect_ratio=False, resize_to_fit=False),
@@ -207,3 +239,198 @@ class ResNet():
         ])
 
         return trans
+
+class ResNet18(n2d2.cells.cell.Sequence):
+    def __init__(self, version:int =1, name:Optional[str] =None):
+        """Generates a ResNet-18 model with the given parameters
+        For now, only version 1 is supported (Implemented from https://arxiv.org/pdf/1512.03385.pdf)
+
+        :param version: Architecture version ofr the network, default=`1`.
+        :param type: int, optional
+        :param name: Customed name for the given model, default=`None`.
+        :param type: str, optional
+
+        example
+        -------
+        >>> model = n2d2.models.ResNet18()
+        >>> x = model(Tensor[2,3,224,224])
+        """
+        Sequence.__init__(self, cells=[ResNet_N2D2(size=18, version=version)], name=name)
+
+    @classmethod
+    def load_from_ONNX(cls, inputs, version:str ='pre_act', dims:Optional[list] =None,
+                        batch_size:int =1, path:Optional[str] =None, download:bool =False):
+        """Load a ResNet-18 model with given features from an ONNX file.
+
+        :param inputs: Data provider for the model
+        :param type: `n2d2.provider.Provider`
+        :param version: Version of the ResNet model in [`pre_act`,`post_act`] (version 1 and 2). Default=`pre_act`.
+        :param type: list, optional
+        :param dims: Dimension of input images. Default=`[224, 224, 3]`
+        :param type: list, optional
+        :param batch_size: Batch size for the model. Dafault=`1`.
+        :param batch_size: int, optional
+        :param path: Path to the model. Default=`None`.
+        :param type:str, optional
+        :param download: Wether or not the model architecture should be downloaded. Default=`False`.
+        :param type: bool, optional
+        """
+        model = ResNet.load_from_ONNX(inputs=inputs, resnet_type=18, version=version, dims=dims, 
+                            batch_size=batch_size, path=path, download=download)
+        return model
+
+class ResNet34():
+    def __init__(self, version:int =1, name:Optional[str] =None):
+        """Generates a ResNet-34 model with the given parameters
+        For now, only version 1 is supported (Implemented from https://arxiv.org/pdf/1512.03385.pdf)
+
+        :param version: Architecture version ofr the network, default=`1`.
+        :param type: int, optional
+        :param name: Customed name for the given model, default=`None`.
+        :param type: str, optional
+        
+        example
+        -------
+        >>> model = n2d2.models.ResNet34()
+        >>> x = model(Tensor[2,3,224,224])
+        """
+        Sequence.__init__(self, cells=[ResNet_N2D2(size=34, version=version)], name=name)
+
+    @classmethod
+    def load_from_ONNX(cls, inputs, version:str ='pre_act', dims:Optional[list] =None,
+                        batch_size:int =1, path:Optional[str] =None, download:bool =False):
+        """Load a ResNet-34 model with given features from an ONNX file.
+
+        :param inputs: Data provider for the model
+        :param type: `n2d2.provider.Provider`
+        :param version: Version of the ResNet model in [`pre_act`,`post_act`] (version 1 and 2). Default=`pre_act`.
+        :param type: list, optional
+        :param dims: Dimension of input images. Default=`[224, 224, 3]`
+        :param type: list, optional
+        :param batch_size: Batch size for the model. Dafault=`1`.
+        :param batch_size: int, optional
+        :param path: Path to the model. Default=`None`.
+        :param type:str, optional
+        :param download: Wether or not the model architecture should be downloaded. Default=`False`.
+        :param type: bool, optional
+        """
+        model = ResNet.load_from_ONNX(inputs=inputs, resnet_type=34, version=version, dims=dims, 
+                            batch_size=batch_size, path=path, download=download)
+        return model
+
+class ResNet50():
+    def __init__(self, version:int =1, name:Optional[str] =None):
+        """Generates a ResNet-50 model with the given parameters
+        For now, only version 1 is supported (Implemented from https://arxiv.org/pdf/1512.03385.pdf)
+
+        :param version: Architecture version ofr the network, default=`1`.
+        :param type: int, optional
+        :param name: Customed name for the given model, default=`None`.
+        :param type: str, optional
+        
+        example
+        -------
+        >>> model = n2d2.models.ResNet50()
+        >>> x = model(Tensor[2,3,224,224])
+        """
+        Sequence.__init__(self, cells=[ResNet_N2D2(size=50, version=version)], name=name)
+
+    @classmethod
+    def load_from_ONNX(cls, inputs, version:str ='pre_act', dims:Optional[list] =None, 
+                        batch_size:int =1, path:Optional[str] =None, download:bool =False) -> n2d2.cells.cell.DeepNetCell:
+        """Load a ResNet-50 model with given features from an ONNX file.
+
+        :param inputs: Data provider for the model
+        :param type: `n2d2.provider.Provider`
+        :param version: Version of the ResNet model in [`pre_act`,`post_act`] (version 1 and 2). Default=`pre_act`.
+        :param type: list, optional
+        :param dims: Dimension of input images. Default=`[224, 224, 3]`
+        :param type: list, optional
+        :param batch_size: Batch size for the model. Dafault=`1`.
+        :param batch_size: int, optional
+        :param path: Path to the model. Default=`None`.
+        :param type:str, optional
+        :param download: Wether or not the model architecture should be downloaded. Default=`False`.
+        :param type: bool, optional
+        """   
+        model = ResNet.load_from_ONNX(inputs=inputs, resnet_type=50, version=version, 
+                        dims=dims, batch_size=batch_size, path=path, download=download)
+        return model
+
+class ResNet101():
+    def __init__(self, version:int =1, name:Optional[str] =None):
+        """Generates a ResNet-101 model with the given parameters
+        For now, only version 1 is supported (Implemented from https://arxiv.org/pdf/1512.03385.pdf)
+
+        :param version: Architecture version ofr the network, default=`1`.
+        :param type: int, optional
+        :param name: Customed name for the given model, default=`None`.
+        :param type: str, optional
+        
+        example
+        -------
+        >>> model = n2d2.models.ResNet101()
+        >>> x = model(Tensor[2,3,224,224])
+        """
+        Sequence.__init__(self, cells=[ResNet_N2D2(size=101, version=version)], name=name)
+
+    @classmethod
+    def load_from_ONNX(cls, inputs, version:str ='pre_act', dims:Optional[list] =None,
+                        batch_size:int =1, path:Optional[str] =None, download:bool =False):
+        """Load a ResNet-101 model with given features from an ONNX file.
+
+        :param inputs: Data provider for the model
+        :param type: `n2d2.provider.Provider`
+        :param version: Version of the ResNet model in [`pre_act`,`post_act`] (version 1 and 2). Default=`pre_act`.
+        :param type: list, optional
+        :param dims: Dimension of input images. Default=`[224, 224, 3]`
+        :param type: list, optional
+        :param batch_size: Batch size for the model. Dafault=`1`.
+        :param batch_size: int, optional
+        :param path: Path to the model. Default=`None`.
+        :param type:str, optional
+        :param download: Wether or not the model architecture should be downloaded. Default=`False`.
+        :param type: bool, optional
+        """
+        model = ResNet.load_from_ONNX(inputs=inputs, resnet_type=101, version=version, dims=dims, 
+                            batch_size=batch_size, path=path, download=download)
+        return model
+
+class ResNet152():
+    def __init__(self, version:int =1, name:Optional[str] =None):
+        """Generates a ResNet-152 model with the given parameters
+        For now, only version 1 is supported (Implemented from https://arxiv.org/pdf/1512.03385.pdf)
+
+        :param version: Architecture version ofr the network, default=`1`.
+        :param type: int, optional
+        :param name: Customed name for the given model, default=`None`.
+        :param type: str, optional
+        
+        example
+        -------
+        >>> model = n2d2.models.ResNet152()
+        >>> x = model(Tensor[2,3,224,224])
+        """
+        Sequence.__init__(self, cells=[ResNet_N2D2(size=152, version=version)], name=name)
+
+    @classmethod
+    def load_from_ONNX(cls, inputs, version:str ='pre_act', dims:Optional[list] =None,
+                        batch_size:int =1, path:Optional[str] =None, download:bool =False):
+        """Load a ResNet-152 model with given features from an ONNX file.
+
+        :param inputs: Data provider for the model
+        :param type: `n2d2.provider.Provider`
+        :param version: Version of the ResNet model in [`pre_act`,`post_act`] (version 1 and 2). Default=`pre_act`.
+        :param type: list, optional
+        :param dims: Dimension of input images. Default=`[224, 224, 3]`
+        :param type: list, optional
+        :param batch_size: Batch size for the model. Dafault=`1`.
+        :param batch_size: int, optional
+        :param path: Path to the model. Default=`None`.
+        :param type:str, optional
+        :param download: Wether or not the model architecture should be downloaded. Default=`False`.
+        :param type: bool, optional
+        """
+        model = ResNet.load_from_ONNX(inputs=inputs, resnet_type=152, version=version, dims=dims, 
+                            batch_size=batch_size, path=path, download=download)
+        return model
