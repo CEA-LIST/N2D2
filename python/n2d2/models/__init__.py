@@ -19,7 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 # TODO : load_from_ONNX is used multiple time, we should make it a class method.
-from n2d2.models.resnet import ResNet
+from n2d2.models.resnet import ResNet, ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 from n2d2.models.mobilenetv1 import MobileNetv1
 from n2d2.models.mobilenetv2 import load_from_ONNX, ONNX_preprocessing
 from n2d2.models.lenet import *

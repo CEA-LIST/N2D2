@@ -169,11 +169,11 @@ class ResNet():
         For now, only version 1 is supported (Implemented from https://arxiv.org/pdf/1512.03385.pdf)
 
         :param size: Number of layers in the network, can be 18, 34, 50, 101 or 152. Default=`18`.
-        :param type: int
+        :type size: int
         :param version: Architecture version ofr the network, default=`1`.
-        :param type: int, optional
+        :type version: int, optional
         :param name: Customed name for the given model, default=`None`.
-        :param type: str, optional
+        :type name: str, optional
         """
         return ResNet_N2D2(size=size, version=version, name=name)
 
@@ -183,19 +183,19 @@ class ResNet():
         """Load a ResNet model with given features from an ONNX file.
 
         :param inputs: Data provider for the model
-        :param type: `n2d2.provider.Provider`
+        :type inputs: `n2d2.provider.Provider`
         :param resnet_type: Number of layers in the network, can be 18, 34, 50, 101 or 152.
-        :param type: int
+        :type resnet_type: int
         :param version: Version of the ResNet model in [`pre_act`,`post_act`] (version 1 and 2). Default=`pre_act`.
-        :param type: list, optional
+        :type version: list, optional
         :param dims: Dimension of input images. Default=`[224, 224, 3]`
-        :param type: list, optional
+        :type dims: list, optional
         :param batch_size: Batch size for the model. Dafault=`1`.
-        :param batch_size: int, optional
+        :type batch_size: int, optional
         :param path: Path to the model. Default=`None`.
-        :param type:str, optional
+        :type path:str, optional
         :param download: Wether or not the model architecture should be downloaded. Default=`False`.
-        :param type: bool, optional
+        :type download: bool, optional
         """
         if dims is None:
             dims = [224, 224, 3]
@@ -246,9 +246,9 @@ class ResNet18(n2d2.cells.cell.Sequence):
         For now, only version 1 is supported (Implemented from https://arxiv.org/pdf/1512.03385.pdf)
 
         :param version: Architecture version ofr the network, default=`1`.
-        :param type: int, optional
+        :type version: int, optional
         :param name: Customed name for the given model, default=`None`.
-        :param type: str, optional
+        :type name: str, optional
 
         example
         -------
@@ -263,17 +263,17 @@ class ResNet18(n2d2.cells.cell.Sequence):
         """Load a ResNet-18 model with given features from an ONNX file.
 
         :param inputs: Data provider for the model
-        :param type: `n2d2.provider.Provider`
+        :type inputs: `n2d2.provider.Provider`
         :param version: Version of the ResNet model in [`pre_act`,`post_act`] (version 1 and 2). Default=`pre_act`.
-        :param type: list, optional
+        :type version: list, optional
         :param dims: Dimension of input images. Default=`[224, 224, 3]`
-        :param type: list, optional
+        :type dims: list, optional
         :param batch_size: Batch size for the model. Dafault=`1`.
-        :param batch_size: int, optional
+        :type batch_size: int, optional
         :param path: Path to the model. Default=`None`.
-        :param type:str, optional
+        :type path:str, optional
         :param download: Wether or not the model architecture should be downloaded. Default=`False`.
-        :param type: bool, optional
+        :type download: bool, optional
         """
         model = ResNet.load_from_ONNX(inputs=inputs, resnet_type=18, version=version, dims=dims, 
                             batch_size=batch_size, path=path, download=download)
@@ -302,17 +302,17 @@ class ResNet34():
         """Load a ResNet-34 model with given features from an ONNX file.
 
         :param inputs: Data provider for the model
-        :param type: `n2d2.provider.Provider`
+        :type inputs: `n2d2.provider.Provider`
         :param version: Version of the ResNet model in [`pre_act`,`post_act`] (version 1 and 2). Default=`pre_act`.
-        :param type: list, optional
+        :type version: list, optional
         :param dims: Dimension of input images. Default=`[224, 224, 3]`
-        :param type: list, optional
+        :type dims: list, optional
         :param batch_size: Batch size for the model. Dafault=`1`.
-        :param batch_size: int, optional
+        :type batch_size: int, optional
         :param path: Path to the model. Default=`None`.
-        :param type:str, optional
+        :type path:str, optional
         :param download: Wether or not the model architecture should be downloaded. Default=`False`.
-        :param type: bool, optional
+        :type download: bool, optional
         """
         model = ResNet.load_from_ONNX(inputs=inputs, resnet_type=34, version=version, dims=dims, 
                             batch_size=batch_size, path=path, download=download)
@@ -341,17 +341,17 @@ class ResNet50():
         """Load a ResNet-50 model with given features from an ONNX file.
 
         :param inputs: Data provider for the model
-        :param type: `n2d2.provider.Provider`
+        :type inputs: `n2d2.provider.Provider`
         :param version: Version of the ResNet model in [`pre_act`,`post_act`] (version 1 and 2). Default=`pre_act`.
-        :param type: list, optional
+        :type version: list, optional
         :param dims: Dimension of input images. Default=`[224, 224, 3]`
-        :param type: list, optional
+        :type dims: list, optional
         :param batch_size: Batch size for the model. Dafault=`1`.
-        :param batch_size: int, optional
+        :type batch_size: int, optional
         :param path: Path to the model. Default=`None`.
-        :param type:str, optional
+        :type path:str, optional
         :param download: Wether or not the model architecture should be downloaded. Default=`False`.
-        :param type: bool, optional
+        :type download: bool, optional
         """   
         model = ResNet.load_from_ONNX(inputs=inputs, resnet_type=50, version=version, 
                         dims=dims, batch_size=batch_size, path=path, download=download)
@@ -380,17 +380,17 @@ class ResNet101():
         """Load a ResNet-101 model with given features from an ONNX file.
 
         :param inputs: Data provider for the model
-        :param type: `n2d2.provider.Provider`
+        :type inputs: `n2d2.provider.Provider`
         :param version: Version of the ResNet model in [`pre_act`,`post_act`] (version 1 and 2). Default=`pre_act`.
-        :param type: list, optional
+        :type version: list, optional
         :param dims: Dimension of input images. Default=`[224, 224, 3]`
-        :param type: list, optional
+        :type dims: list, optional
         :param batch_size: Batch size for the model. Dafault=`1`.
-        :param batch_size: int, optional
+        :type batch_size: int, optional
         :param path: Path to the model. Default=`None`.
-        :param type:str, optional
+        :type path:str, optional
         :param download: Wether or not the model architecture should be downloaded. Default=`False`.
-        :param type: bool, optional
+        :type download: bool, optional
         """
         model = ResNet.load_from_ONNX(inputs=inputs, resnet_type=101, version=version, dims=dims, 
                             batch_size=batch_size, path=path, download=download)
@@ -419,17 +419,17 @@ class ResNet152():
         """Load a ResNet-152 model with given features from an ONNX file.
 
         :param inputs: Data provider for the model
-        :param type: `n2d2.provider.Provider`
+        :type inputs: `n2d2.provider.Provider`
         :param version: Version of the ResNet model in [`pre_act`,`post_act`] (version 1 and 2). Default=`pre_act`.
-        :param type: list, optional
+        :type version: list, optional
         :param dims: Dimension of input images. Default=`[224, 224, 3]`
-        :param type: list, optional
+        :type dims: list, optional
         :param batch_size: Batch size for the model. Dafault=`1`.
-        :param batch_size: int, optional
+        :type batch_size: int, optional
         :param path: Path to the model. Default=`None`.
-        :param type:str, optional
+        :type path:str, optional
         :param download: Wether or not the model architecture should be downloaded. Default=`False`.
-        :param type: bool, optional
+        :type download: bool, optional
         """
         model = ResNet.load_from_ONNX(inputs=inputs, resnet_type=152, version=version, dims=dims, 
                             batch_size=batch_size, path=path, download=download)
