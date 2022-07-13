@@ -7,4 +7,6 @@ test_python_examples:
   tags:
     - ubuntu
   script:
+    - python -m pip install matplotlib==3.3.4
+    - export PYTHONPATH=$PWD
     - python tests/run_examples.py
