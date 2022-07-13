@@ -1,6 +1,6 @@
 """
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -23,22 +23,26 @@ global_variables = GlobalVariables()
 
 # It's better to access these methods without mentioning utils in the path
 from n2d2.utils import *
+import n2d2.error_handler
 
 from n2d2.n2d2_interface import ConventionConverter
 
 from n2d2.tensor import *
-import n2d2.database 
-import n2d2.cells
-import n2d2.provider
+
+import n2d2.database
 import n2d2.transform
-import n2d2.deepnet
+import n2d2.provider
+
 import n2d2.solver
+import n2d2.quantizer
 import n2d2.filler
-import n2d2.target
 import n2d2.activation
 import n2d2.mapping
-import n2d2.error_handler
-import n2d2.models
+import n2d2.cells
+import n2d2.target
+import n2d2.deepnet
+
+
 import n2d2.export
-import n2d2.quantizer
+# import n2d2.models
 import n2d2.converter

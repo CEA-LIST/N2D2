@@ -21,9 +21,8 @@
 
 
 import N2D2
-import n2d2 # To remove if interface is moved to provider
-from n2d2 import error_handler
-from n2d2.provider import TensorPlaceholder
+from n2d2 import methdispatch, error_handler, generate_name
+from n2d2.provider import TensorPlaceholder, Provider, MultipleOutputsProvider
 import n2d2.global_variables as gb
 from functools import reduce
 try:
@@ -408,7 +407,7 @@ class Tensor:
                 raise RuntimeError(f"Autocast failed, tried to cast : {str(type(value))} to {self._datatype}") from err
 
 
-    @n2d2.utils.methdispatch
+    @methdispatch
     def __setitem__(self, index, value):
         """
         Set an element of the tensor.
@@ -441,7 +440,7 @@ class Tensor:
         self._check_value_coherency(value)
         self._tensor[index] = value
 
-    @n2d2.utils.methdispatch
+    @methdispatch
     def __getitem__(self, index)->any:
         """
         Get an element of the tensor.
@@ -504,7 +503,7 @@ class Tensor:
         CUDA tensor are stored and computed in the GPU (Device).
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         """
-        if not n2d2.global_variables.cuda_available:
+        if not gb.cuda_available:
             raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeDToH()
@@ -518,7 +517,7 @@ class Tensor:
         CUDA tensor are stored and computed in the GPU (Device).
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         """
-        if not n2d2.global_variables.cuda_available:
+        if not gb.cuda_available:
             raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeHToD()
@@ -583,17 +582,17 @@ class Tensor:
     def mean(self)->float:
         return self.N2D2().mean()
 
-class Interface(n2d2.provider.Provider):
+class Interface(Provider):
     """
     An :py:class:`n2d2.Interface` is used to feed multiple tensors to a cell.
     """
     def __init__(self, tensors):
-        self._name = n2d2.generate_name(self)
+        self._name = generate_name(self)
         self.tensors = []
         if not isinstance(tensors, list):
             raise ValueError("'tensors' parameter should be a list !")
         if not tensors:
-            raise n2d2.error_handler.IsEmptyError('Tensors')
+            raise error_handler.IsEmptyError('Tensors')
 
         #if not tensors[0].cell: # Check if the first tensor is linked to a deepnet
         #    self._deepnet = None
@@ -609,7 +608,7 @@ class Interface(n2d2.provider.Provider):
         nb_channels = 0
         for tensor in tensors:
             if not isinstance(tensor, Tensor):
-                raise ValueError(f"The elements of 'tensors' should all be of type {str(type(n2d2.Tensor))}")
+                raise ValueError(f"The elements of 'tensors' should all be of type {str(type(Tensor))}")
             if tensor.dimX() != tensors[0].dimX():
                 raise ValueError("Tensors should have the same X dimension.")
             if tensor.dimY() != tensors[0].dimY():
@@ -626,7 +625,7 @@ class Interface(n2d2.provider.Provider):
         if not self._deepnet:
             size =[tensors[0].dimX(), tensors[0].dimY(), nb_channels]
             self.batch_size = tensors[0].dimB()
-            cell = n2d2.provider.MultipleOutputsProvider(size, self.batch_size)
+            cell = MultipleOutputsProvider(size, self.batch_size)
             for tensor in self.tensors:
                 tensor.cell = cell
         # The dimZ of the interface correspond to the sum of the dimZ of the tensor that composed it.

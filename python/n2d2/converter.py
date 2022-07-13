@@ -18,47 +18,63 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
+object_dict = {}
 
-import n2d2
+def fill_object_dict():
+    """
+    This function is there to prevent cyclic import !
+    n2d2 object needs to be able to convert Binded object to the Python API.
+    So they need to import this module which need to import these objects ...
 
-# All objects that needs convertibility from N2D2 to API object have to be added to this dictionary.
-# The key needs to correspond to the result of the getType() method of the N2D2 object
+    To prevent this cyclic import, we only import the n2d2 objects at runtime instead of definition time.
+    """
+    # pylint: disable=import-outside-toplevel
+    from n2d2.activation import Linear, Rectifier, Tanh
+    from n2d2.solver import SGD, Adam
+    from n2d2.filler import He, Normal, Xavier, Constant
+    from n2d2.cells import Fc, Conv, Deconv, ElemWise, Softmax, \
+    Dropout, Padding, Pool, BatchNorm2d, Reshape, Resize, Transpose, \
+    Activation, Transformation, Scaling
+    from n2d2.quantizer import LSQCell, LSQAct #, SATCell, SATAct
 
-object_dict = {
-    "Linear": n2d2.activation.Linear,
-    "Rectifier": n2d2.activation.Rectifier,
-    "Tanh": n2d2.activation.Tanh,
+    # All objects that needs convertibility from N2D2 to API object have to be added to this dictionary.
+    # The key needs to correspond to the result of the getType() method of the N2D2 object
 
-    "SGD": n2d2.solver.SGD,
-    "Adam": n2d2.solver.Adam,
+    object_dict.update({
+        "Linear": Linear,
+        "Rectifier": Rectifier,
+        "Tanh": Tanh,
 
-    "He": n2d2.filler.He,
-    "Normal": n2d2.filler.Normal,
-    "Xavier": n2d2.filler.Xavier,
-    "Constant": n2d2.filler.Constant,
+        "SGD": SGD,
+        "Adam": Adam,
 
-    "Fc": n2d2.cells.Fc,
-    "Conv": n2d2.cells.Conv,
-    "Deconv": n2d2.cells.Deconv,
-    "ElemWise": n2d2.cells.ElemWise,
-    "Softmax": n2d2.cells.Softmax,
-    "Dropout": n2d2.cells.Dropout,
-    "Padding": n2d2.cells.Padding,
-    "Pool": n2d2.cells.Pool,
-    "BatchNorm": n2d2.cells.BatchNorm2d,
-    "Reshape": n2d2.cells.Reshape,
-    "Resize": n2d2.cells.Resize,
-    "Transpose": n2d2.cells.Transpose,
-    "Activation": n2d2.cells.Activation,
-    "Transformation": n2d2.cells.Transformation,
-    "Scaling": n2d2.cells.Scaling,
+        "He": He,
+        "Normal": Normal,
+        "Xavier": Xavier,
+        "Constant": Constant,
 
-    # "SATCell": n2d2.quantizer.SATCell,
-    # "SATActivation": n2d2.quantizer.SATAct,
-    "LSQCell": n2d2.quantizer.LSQCell,
-    "LSQActivation": n2d2.quantizer.LSQAct,
+        "Fc": Fc,
+        "Conv": Conv,
+        "Deconv": Deconv,
+        "ElemWise": ElemWise,
+        "Softmax": Softmax,
+        "Dropout": Dropout,
+        "Padding": Padding,
+        "Pool": Pool,
+        "BatchNorm": BatchNorm2d,
+        "Reshape": Reshape,
+        "Resize": Resize,
+        "Transpose": Transpose,
+        "Activation": Activation,
+        "Transformation": Transformation,
+        "Scaling": Scaling,
 
-}
+        # "SATCell": SATCell,
+        # "SATActivation": SATAct,
+        "LSQCell": LSQCell,
+        "LSQActivation": LSQAct,
+
+    })
 
 
 def from_N2D2_object(N2D2_object, **kwargs):
@@ -69,6 +85,9 @@ def from_N2D2_object(N2D2_object, **kwargs):
         Convert a N2D2 activation into a n2d2 activation.
         The _N2D2_object attribute of the generated n2d2 cells is replaced by the N2D2_cell given in entry.
     """
+    if not object_dict: # If empty, fill it
+        fill_object_dict()
+
     if N2D2_object is not None:
         object_type = N2D2_object.getType()
         if object_type == "SAT":

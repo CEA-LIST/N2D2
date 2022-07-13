@@ -20,8 +20,9 @@
 """
 
 import N2D2
-import n2d2
-
+from n2d2 import error_handler
+from n2d2 import global_variables
+from typing import Any
 # List of parameters which are only from the PythonAPI and not in the Cpp
 _pure_python_parameters=[
     "datatype",
@@ -99,7 +100,7 @@ class N2D2_Interface:
         Return the N2D2 object.
         """
         if self._N2D2_object is None:
-            raise n2d2.error_handler.UndefinedModelError("N2D2 object member has not been created")
+            raise error_handler.UndefinedModelError("N2D2 object member has not been created")
         return self._N2D2_object
 
     def _set_N2D2_parameter(self, key, value):
@@ -108,10 +109,10 @@ class N2D2_Interface:
         # Maybe allowing an auto cast for this kind of situations can be a good idea ?
         if returned_type == "bool":
             if not isinstance(value, bool):
-                raise n2d2.error_handler.WrongInputType(self._n2d2_to_python_convention(key), str(type(value)), [str(bool)])
+                raise error_handler.WrongInputType(self._n2d2_to_python_convention(key), str(type(value)), [str(bool)])
             self._N2D2_object.setParameter(key, parsed_parameter)
         elif not isinstance(value, self._N2D2_type_map[returned_type]):
-            raise n2d2.error_handler.WrongInputType(self._n2d2_to_python_convention(key), str(type(value)), [str(self._N2D2_type_map[returned_type])])
+            raise error_handler.WrongInputType(self._n2d2_to_python_convention(key), str(type(value)), [str(self._N2D2_type_map[returned_type])])
         else:
             self._N2D2_object.setParameter(key, parsed_parameter)
 
@@ -210,16 +211,15 @@ class N2D2_Interface:
 
 
     @staticmethod
-    def parse_py_to_ini_(value):
+    def parse_py_to_ini_(value:Any):
         if isinstance(value, bool):
             return str(int(value))
-        elif isinstance(value, list):
+        if isinstance(value, list):
             list_string = ""
             for elem in value:
                 list_string += str(elem) + " "
             return list_string
-        else:
-            return str(value)
+        return str(value)
 
     def load_N2D2_parameters(self, N2D2_object):
         self._config_parameters = self._get_N2D2_parameters(N2D2_object)
@@ -236,9 +236,9 @@ class N2D2_Interface:
         """Method to load optional paramaters
         """
 
-    # pylint : disable=unused-argument
+
     @classmethod
-    def _get_N2D2_complex_parameters(cls, N2D2_object):
+    def _get_N2D2_complex_parameters(cls, N2D2_object): # pylint : disable=unused-argument
         """Method to overwrite in order to get complex parameters (like filler or solver for a cell)
         """
         return {}
@@ -256,7 +256,7 @@ class N2D2_Interface:
         return parameters
 
     def __str__(self):
-        if n2d2.global_variables.verbosity == n2d2.global_variables.Verbosity.graph_only:
+        if global_variables.verbosity == global_variables.Verbosity.graph_only:
             return ""
 
         def add_delimiter(condition, delimiter):
@@ -274,10 +274,10 @@ class N2D2_Interface:
         for idx, (key, value) in enumerate(self._optional_constructor_arguments.items()):
             output += key + "=" + str(value) + \
                       add_delimiter(not idx == opt_constructor_arg_len-1, ",")
-        if n2d2.global_variables.verbosity == n2d2.global_variables.Verbosity.detailed:
+        if global_variables.verbosity == global_variables.Verbosity.detailed:
             output += add_delimiter(config_param_len > 0 and (constructor_arg_len > 0 or opt_constructor_arg_len > 0), " |")
             for idx, (key, value) in enumerate(self._config_parameters.items()):
-                if key is 'mapping':
+                if key == 'mapping':
                     output += key + "=n2d2.Tensor(dims=" + str(value.dims()) + ")" + add_delimiter(not idx == config_param_len - 1, ",")
                 else:
                     output += key + "=" + str(value) + add_delimiter(not idx == config_param_len-1, ",")

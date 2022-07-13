@@ -21,7 +21,7 @@
 
 from abc import ABC, abstractmethod
 
-import n2d2
+from n2d2 import converter
 from n2d2.error_handler import WrongInputType, deprecated
 from n2d2.n2d2_interface import N2D2_Interface
 from n2d2.quantizer import Quantizer
@@ -47,7 +47,7 @@ class ActivationFunction(N2D2_Interface, ModelDatatyped, ABC):
         parameters = {}
         if N2D2_object.getQuantizer():
             parameters['quantizer'] = \
-                n2d2.converter.from_N2D2_object(N2D2_object.getQuantizer())
+                converter.from_N2D2_object(N2D2_object.getQuantizer())
         return parameters
 
     def has_quantizer(self):
@@ -76,7 +76,7 @@ class ActivationFunction(N2D2_Interface, ModelDatatyped, ABC):
     def _get_N2D2_complex_parameters(cls, N2D2_object):
         parameter = super()._get_N2D2_complex_parameters(N2D2_object)
         parameter['quantizer'] = \
-            n2d2.converter.from_N2D2_object(N2D2_object.getQuantizer())
+            converter.from_N2D2_object(N2D2_object.getQuantizer())
         return parameter
 
     def __setattr__(self, key: str, value) -> None:

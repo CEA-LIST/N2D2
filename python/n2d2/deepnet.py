@@ -22,14 +22,14 @@
 
 
 import N2D2
-import n2d2.global_variables
-import n2d2.cells.nn
+# import n2d2.cells.nn
 from n2d2.n2d2_interface import N2D2_Interface
 from n2d2.utils import generate_name
+from n2d2 import converter, ConventionConverter, global_variables
 
 class DeepNet(N2D2_Interface):
 
-    _convention_converter= n2d2.ConventionConverter({
+    _convention_converter= ConventionConverter({
         "name": "Name",
     })
 
@@ -39,7 +39,7 @@ class DeepNet(N2D2_Interface):
 
         self._config_parameters['name'] = generate_name(self)
 
-        self._set_N2D2_object(N2D2.DeepNet(n2d2.global_variables.default_net))
+        self._set_N2D2_object(N2D2.DeepNet(global_variables.default_net))
         self._set_N2D2_parameters(self._config_parameters)
 
         self.load_N2D2_parameters(self.N2D2())
@@ -64,7 +64,7 @@ class DeepNet(N2D2_Interface):
         for layer in layers[1:]:
             for cell in layer:
                 N2D2_cell = cells[cell]
-                n2d2_cell = n2d2.converter.from_N2D2_object(N2D2_cell, n2d2_deepnet=deepnet)
+                n2d2_cell = converter.from_N2D2_object(N2D2_cell, n2d2_deepnet=deepnet)
                 deepnet._cells[n2d2_cell.get_name()] = n2d2_cell
 
         return deepnet
