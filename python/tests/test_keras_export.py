@@ -24,7 +24,7 @@ import keras_interoperability
 
 from tensorflow.random import uniform
 from os.path import exists
-from os import getcwd, chdir
+from os import getcwd, chdir, getenv
 from shutil import rmtree
 from tiny_ml_keras.anomaly_model import get_model as get_anomaly_model
 from tiny_ml_keras.kws_model import kws_dscnn as get_kws_model
@@ -32,7 +32,10 @@ from tiny_ml_keras.resnet_model import resnet_v1_eembc as get_resnet_model
 from tiny_ml_keras.vww_model import mobilenet_v1 as get_mobilenet_model
 
 import subprocess
-DATA_PATH="/local/DATABASE/"
+
+DATA_PATH = getenv("N2D2_DATA")
+if DATA_PATH is None:
+    DATA_PATH="/local/DATABASE/"
 
 
 class test_keras_export(unittest.TestCase):

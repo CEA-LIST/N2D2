@@ -22,6 +22,11 @@ import unittest
 import n2d2
 from n2d2.cells import Sequence
 from random import randint
+from os import getenv
+
+DATA_PATH = getenv("N2D2_DATA")
+if DATA_PATH is None:
+    DATA_PATH="/local/DATABASE/"
 
 class fit_FRAME(unittest.TestCase):
     """This test the method fit and checks if it produces the same result as a learning loop we can manually do with the API.
@@ -38,7 +43,7 @@ class fit_FRAME(unittest.TestCase):
     def test_weights_equality(self):
         batch_size = 256
         epochs = 1
-        database = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw")
+        database = n2d2.database.MNIST(data_path=f"{DATA_PATH}mnist")
         provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size=batch_size)
         n2d2.global_variables.seed = self.seed # reset seed before defining each model to have the same weights !
         model = Sequence([n2d2.cells.Fc(28*28, 50, activation=n2d2.activation.Rectifier(), no_bias=True, weights_filler=n2d2.filler.Constant(value=0.01)),
@@ -104,7 +109,7 @@ class fit_FRAME_CUDA(unittest.TestCase):
     def test_weights_equality(self):
         batch_size = 256
         epochs = 1
-        database = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw")
+        database = n2d2.database.MNIST(data_path=f"{DATA_PATH}mnist")
         provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size=batch_size)
         n2d2.global_variables.seed = self.seed # reset seed before defining each model to have the same weights !
         model = Sequence([n2d2.cells.Fc(28*28, 50, activation=n2d2.activation.Rectifier(), no_bias=True, weights_filler=n2d2.filler.Constant(value=0.01)),

@@ -28,11 +28,9 @@
 
 .rules:default-branch-only-schedule:
   rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH &&
-           $CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
 
 .rules:schedule-python-tests:
   rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH &&
-           $CI_PIPELINE_SOURCE == "schedule" && 
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && 
            $PY_TEST_NIGHTLY'
