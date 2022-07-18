@@ -211,7 +211,8 @@ def check_types(f):
             obj_name = f"{bind.args[0].__class__.__name__}."
 
         for value, typ in zip(bind.args, args_types.items()):
-            if typ[1] != sig.empty and not isinstance(value, typ[1]):
+            if typ[1] != sig.empty and  value is not None \
+                and not isinstance(value, typ[1]):
                 raise TypeError(f'In {obj_name}{f.__name__} : \"{typ[0]}\" parameter must be of type <{typ[1].__name__}> but is of type <{type(value).__name__}> instead.')
         return f(*args, **kwargs)
     return decorated
