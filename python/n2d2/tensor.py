@@ -21,7 +21,8 @@
 
 
 import N2D2
-from n2d2 import methdispatch, error_handler, generate_name
+from n2d2 import methdispatch, error_handler, generate_name, check_types
+from typing import Union, Any
 import n2d2.global_variables as gb
 from functools import reduce
 try:
@@ -84,8 +85,9 @@ class Tensor:
         "N2D2": lambda x: x,
         "Numpy": lambda x: list(reversed(x)),
     }
-
-    def __init__(self, dims, value=None, cuda=False, datatype="float", cell=None, dim_format='Numpy'):
+    @check_types
+    def __init__(self, dims:Union[list, tuple], value:Any=None, cuda:bool=False, datatype:str="float",
+                 cell:Any=None, dim_format:str='Numpy'):
         """
         :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (the convention used depends of the ``dim_format`` argument, by default it's the same as ``Numpy``)
         :type dims: list
@@ -112,15 +114,10 @@ class Tensor:
         else:
             generators = self._tensor_generators
 
-        if isinstance(dims, list):
-            if not isinstance(dim_format, str):
-                raise error_handler.WrongInputType("dim_format", type(dim_format), [str(str)])
-            if dim_format in self._dim_format:
-                dims = self._dim_format[dim_format](dims)
-            else:
-                raise error_handler.WrongValue('dim_format', dim_format, self._dim_format.keys())
+        if dim_format in self._dim_format:
+            dims = self._dim_format[dim_format](dims)
         else:
-            raise error_handler.WrongInputType("dims", type(dims), [str(list)])
+            raise error_handler.WrongValue('dim_format', dim_format, self._dim_format.keys())
 
         if value and not isinstance(value, hard_coded_type[datatype]):
             raise TypeError(f"You want to fill the tensor with '{str(type(value).__name__)}' but datatype is set to : '{str(datatype)}'.")
