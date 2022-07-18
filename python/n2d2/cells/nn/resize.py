@@ -21,8 +21,7 @@
 
 import N2D2
 
-import n2d2.global_variables as gb
-from n2d2 import ConventionConverter
+from n2d2 import ConventionConverter, global_variables
 from n2d2.cells.nn.abstract_cell import (NeuralNetworkCell,
                                          _cell_frame_parameters)
 from n2d2.typed import Modeltyped
@@ -36,7 +35,7 @@ class Resize(NeuralNetworkCell, Modeltyped):
     _N2D2_constructors = {
         'Frame': N2D2.ResizeCell_Frame,
     }
-    if gb.cuda_available:
+    if global_variables.cuda_available:
         _N2D2_constructors.update({
             'Frame_CUDA': N2D2.ResizeCell_Frame_CUDA,
         })

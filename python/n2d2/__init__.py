@@ -38,11 +38,12 @@ import n2d2.quantizer
 import n2d2.filler
 import n2d2.activation
 import n2d2.mapping
-import n2d2.cells
 import n2d2.target
 import n2d2.deepnet
 
+import n2d2.cells
+
 
 import n2d2.export
-# import n2d2.models
 import n2d2.converter
+import n2d2.models

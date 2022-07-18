@@ -29,7 +29,6 @@ import zipfile
 from collections import UserDict
 from inspect import getmro, signature
 import functools
-from n2d2.error_handler import WrongInputType
 
 # At the moment ConfigSection is simply a dictionary
 class ConfigSection(UserDict):

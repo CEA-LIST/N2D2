@@ -21,8 +21,9 @@
 import N2D2
 from n2d2.n2d2_interface import N2D2_Interface
 from abc import ABC, abstractmethod
-from n2d2 import ConventionConverter, generate_name, inherit_init_docstring, Tensor
+from n2d2 import ConventionConverter, generate_name, inherit_init_docstring, Tensor, check_types
 from n2d2.error_handler import WrongValue
+from n2d2.provider import Provider
 
 class Target(N2D2_Interface, ABC):
 
@@ -49,7 +50,8 @@ class Target(N2D2_Interface, ABC):
     # Provider is not a parameter in the INI file in the case of Target class,
     # but usually inferred from the deepnet in N2D2. Name and NeuralNetworkCell are parts of the section name
     @abstractmethod
-    def __init__(self, provider, **config_parameters):
+    @check_types
+    def __init__(self, provider:Provider, **config_parameters):
         """
         :param provider: Provider containing the input and output data.
         :type provider: :py:class:`n2d2.provider.Provider`
@@ -88,11 +90,11 @@ class Target(N2D2_Interface, ABC):
 
     def get_name(self):
         return self._constructor_parameters['name']
-
-    def log_estimated_labels(self, path):
+    @check_types
+    def log_estimated_labels(self, path:str):
         self._N2D2_object.logEstimatedLabels(path)
-
-    def log_estimated_labels_json(self, dir_name, **kwargs):
+    @check_types
+    def log_estimated_labels_json(self, dir_name:str, **kwargs):
         self._N2D2_object.logEstimatedLabelsJSON(dir_name, **kwargs)
 
     def get_current_loss(self):

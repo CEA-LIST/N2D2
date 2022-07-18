@@ -22,7 +22,6 @@
 
 import N2D2
 from n2d2 import methdispatch, error_handler, generate_name
-from n2d2.provider import TensorPlaceholder, Provider, MultipleOutputsProvider
 import n2d2.global_variables as gb
 from functools import reduce
 try:
@@ -545,6 +544,7 @@ class Tensor:
         """
         if self.cell is None:
             # TensorPlaceholder will set the cell attribute to it self.
+            from n2d2.provider import TensorPlaceholder
             TensorPlaceholder(self)
         return self.cell.get_deepnet()
 
@@ -582,7 +582,7 @@ class Tensor:
     def mean(self)->float:
         return self.N2D2().mean()
 
-class Interface(Provider):
+class Interface:
     """
     An :py:class:`n2d2.Interface` is used to feed multiple tensors to a cell.
     """
@@ -625,6 +625,7 @@ class Interface(Provider):
         if not self._deepnet:
             size =[tensors[0].dimX(), tensors[0].dimY(), nb_channels]
             self.batch_size = tensors[0].dimB()
+            from n2d2.provider import MultipleOutputsProvider
             cell = MultipleOutputsProvider(size, self.batch_size)
             for tensor in self.tensors:
                 tensor.cell = cell
