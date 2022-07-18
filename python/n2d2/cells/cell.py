@@ -99,7 +99,7 @@ class Trainable(ABC):
         pass
 
 
-class Block(Cell, ABC):
+class Block(Cell):
     """
         The Block class is the most general type of cell container, from which all other containers are derived.
         It saves its cells internally with a dictionary. The Block class has no implicit structure for propagation,
