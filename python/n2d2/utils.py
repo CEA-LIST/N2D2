@@ -216,6 +216,8 @@ def check_types(f):
             # Simpler way may exist in future version of Python (>3.7) ...
             if type(annotation_type) is _SpecialForm and annotation_type._name == "Any": # check if Any
                 continue
+            if value is None: # None value is always accepted
+                continue
             if hasattr(typ[1], "__origin__") and typ[1].__origin__ is Union: # check if Union
                     # Types are contained in the __args__ attribute which is a list
                     # isinstance only support type or tuple, so we convert to tuple 
