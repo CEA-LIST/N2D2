@@ -141,7 +141,7 @@ class Block(Cell):
         """
         dummy_input = Tensor(provider.shape())
 
-        provider._deepnet = n2d2.deepnet.DeepNet()
+        provider._deepnet = DeepNet()
         provider._deepnet.set_provider(provider)
         provider._deepnet.N2D2().initialize()
         dummy_input = dummy_input._set_cell(provider)
