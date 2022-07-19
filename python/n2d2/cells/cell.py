@@ -40,7 +40,7 @@ class Cell(ABC):
             name = generate_name(self)
         self._name = name
         self._deepnet = None
-
+    
     def __call__(self, x):
         """
         Do the common check on the inputs and infer the deepNet from the inputs.
@@ -128,6 +128,41 @@ class Block(Cell):
         k = list(self._cells.values())[item]
         return k
 
+    def to_deepnet_cell(self, provider, target=None):
+        """Convert a :py:class:`n2d2.cells.Block` to a :py:class:`n2d2.cells.DeepNetCell`
+
+        :param provider: Data provider used by the neural network
+        :type provider: :py:class:`n2d2.provider.DataProvider`
+        :param target: Target object
+        :type target: :py:class:`n2d2.target.Target`
+        :return: The corresponding :py:class:`n2d2.cells.DeepNetCell`
+        :rtype: :py:class:`n2d2.cells.DeepNetCell`
+        """
+        if not isinstance(provider, n2d2.provider.DataProvider):
+            raise n2d2.error_handler.WrongInputType("provider", type(provider), ["n2d2.provider.DataProvider"])
+        dummy_input = n2d2.Tensor(provider.shape())
+
+        provider._deepnet = n2d2.deepnet.DeepNet()
+        provider._deepnet.set_provider(provider)
+        provider._deepnet.N2D2().initialize()
+        dummy_input = dummy_input._set_cell(provider)
+
+        dummy_output = self(dummy_input)
+        if not isinstance(dummy_output, n2d2.Tensor):
+            raise RuntimeError(f"{self.__class__.__name__}.__call__() should return an n2d2.Tensor object !")
+
+        if target:
+            if not isinstance(target, n2d2.target.Target):
+                raise n2d2.error_handler.WrongInputType("target", type(target), ["n2d2.target.Target"])
+            dummy_output = target(dummy_output)
+        N2D2_deepnet = dummy_output.get_deepnet().N2D2()
+        if target:
+            N2D2_target=target.N2D2()
+        else:
+            N2D2_target =  N2D2.TargetScore("Target", dummy_output.cell.N2D2(), provider.N2D2())
+        N2D2_deepnet.addTarget(N2D2_target)
+        N2D2_deepnet.setDatabase(provider.N2D2().getDatabase())
+        return DeepNetCell(N2D2_deepnet)
 
     def is_integral(self):
         """
@@ -303,35 +338,7 @@ class Sequence(Iterable):
             x = cell(x)
         return x
 
-    @check_types
-    def to_deepnet_cell(self, provider: DataProvider, target:Target=None):
-        """Convert a :py:class:`n2d2.cells.Sequence` to a :py:class:`n2d2.cells.DeepNetCell`
 
-        :param provider: Data provider used by the neural network
-        :type provider: :py:class:`n2d2.provider.DataProvider`
-        :param target: Target object
-        :type target: :py:class:`n2d2.target.Target`
-        :return: The corresponding :py:class:`n2d2.cells.DeepNetCell`
-        :rtype: :py:class:`n2d2.cells.DeepNetCell`
-        """
-        dummy_input = Tensor(provider.shape())
-
-        provider._deepnet = DeepNet()
-        provider._deepnet.set_provider(provider)
-        provider._deepnet.N2D2().initialize()
-        dummy_input = dummy_input._set_cell(provider)
-
-        dummy_output = self(dummy_input)
-        if target:
-            dummy_output = target(dummy_output)
-        N2D2_deepnet = dummy_output.get_deepnet().N2D2()
-        if target:
-            N2D2_target=target.N2D2()
-        else:
-            N2D2_target =  N2D2.TargetScore("Target", dummy_output.cell.N2D2(), provider.N2D2())
-        N2D2_deepnet.addTarget(N2D2_target)
-        N2D2_deepnet.setDatabase(provider.N2D2().getDatabase())
-        return DeepNetCell(N2D2_deepnet)
 
 class Layer(Iterable):
     """
