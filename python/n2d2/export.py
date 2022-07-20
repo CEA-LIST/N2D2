@@ -18,10 +18,14 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-import n2d2
 import N2D2
 from os import mkdir
 from os.path import exists
+from n2d2 import error_handler, add_docstring, check_types
+from n2d2.n2d2_interface import Options
+from n2d2.quantizer import PTQ
+from n2d2.cells import DeepNetCell
+from n2d2.provider import Provider
 
 # This is the default docstring for export.
 # Parameters description can be override by the docstring defined inside the export function.
@@ -68,38 +72,38 @@ export_doc_string = \
 :type find_lr: int, optional
 """
 
-def _parse_export_parameters(gen_export=None, nb_bits=8, qat_SAT=False,
-                             export_no_unsigned=False, calibration=0,
-                             export_no_cross_layer_equalization=False,
-                             wt_clipping_mode="NONE", act_clipping_mode="MSE",
-                             act_scaling_mode="FLOAT_MULT", act_quantile_value=0.9999,
-                             act_rescale_per_output=False, calibration_reload=False, report=100,
-                             export_nb_stimuli_max= -1, wt_round_mode = "NONE",
-                             b_round_mode="NONE", c_round_mode="NONE", find_lr=0, log_kernels=False):
+def _parse_export_parameters(gen_export:str=None, nb_bits:int=8, qat_SAT:bool=False,
+                             export_no_unsigned:bool=False, calibration:int=0,
+                             export_no_cross_layer_equalization:bool=False,
+                             wt_clipping_mode:str="NONE", act_clipping_mode:str="MSE",
+                             act_scaling_mode:str="FLOAT_MULT", act_quantile_value:float=0.9999,
+                             act_rescale_per_output:bool=False, calibration_reload:bool=False, report:int=100,
+                             export_nb_stimuli_max:int= -1, wt_round_mode:str= "NONE",
+                             b_round_mode:str="NONE", c_round_mode:str="NONE", find_lr:int=0, log_kernels:bool=False):
     if wt_round_mode not in N2D2.WeightsApprox.__members__.keys():
-        raise n2d2.error_handler.WrongValue("wt_round_mode", wt_round_mode,
+        raise error_handler.WrongValue("wt_round_mode", wt_round_mode,
         ", ".join(N2D2.WeightsApprox.__members__.keys()))
     N2D2_wt_round_mode = N2D2.WeightsApprox.__members__[wt_round_mode]
     if b_round_mode not in N2D2.WeightsApprox.__members__.keys():
-        raise n2d2.error_handler.WrongValue("b_round_mode", b_round_mode,
+        raise error_handler.WrongValue("b_round_mode", b_round_mode,
         ", ".join(N2D2.WeightsApprox.__members__.keys()))
     N2D2_b_round_mode = N2D2.WeightsApprox.__members__[b_round_mode]
     if c_round_mode not in N2D2.WeightsApprox.__members__.keys():
-        raise n2d2.error_handler.WrongValue("c_round_mode", c_round_mode,
+        raise error_handler.WrongValue("c_round_mode", c_round_mode,
         ", ".join(N2D2.WeightsApprox.__members__.keys()))
     N2D2_c_round_mode = N2D2.WeightsApprox.__members__[c_round_mode]
 
     if act_scaling_mode not in N2D2.ScalingMode.__members__.keys():
-        raise n2d2.error_handler.WrongValue("act_scaling_mode", act_scaling_mode, ", ".join(N2D2.ScalingMode.__members__.keys()))
+        raise error_handler.WrongValue("act_scaling_mode", act_scaling_mode, ", ".join(N2D2.ScalingMode.__members__.keys()))
     N2D2_act_scaling_mode = N2D2.ScalingMode.__members__[act_scaling_mode]
     if act_clipping_mode not in N2D2.ClippingMode.__members__.keys():
-        raise n2d2.error_handler.WrongValue("act_clipping_mode", act_clipping_mode, ", ".join(N2D2.ClippingMode.__members__.keys()))
+        raise error_handler.WrongValue("act_clipping_mode", act_clipping_mode, ", ".join(N2D2.ClippingMode.__members__.keys()))
     N2D2_act_clipping_mode = N2D2.ClippingMode.__members__[act_clipping_mode]
     if wt_clipping_mode not in N2D2.ClippingMode.__members__.keys():
-        raise n2d2.error_handler.WrongValue("wt_clipping_mode", wt_clipping_mode, ", ".join(N2D2.ClippingMode.__members__.keys()))
+        raise error_handler.WrongValue("wt_clipping_mode", wt_clipping_mode, ", ".join(N2D2.ClippingMode.__members__.keys()))
     N2D2_wt_clipping_mode = N2D2.ClippingMode.__members__[wt_clipping_mode]
 
-    return n2d2.n2d2_interface.Options(
+    return Options(
         gen_export=gen_export,
         nb_bits=nb_bits,
         qat_SAT=qat_SAT,
@@ -119,8 +123,8 @@ def _parse_export_parameters(gen_export=None, nb_bits=8, qat_SAT=False,
         c_round_mode=N2D2_c_round_mode,
         find_lr=find_lr,
         log_kernels=log_kernels).N2D2()
-
-def _generate_export(deepnet_cell, provider=None, **kwargs):
+@check_types
+def _generate_export(deepnet_cell:DeepNetCell, provider:Provider=None, **kwargs):
 
     export_folder_name = None if "export_folder_name" not in kwargs else kwargs.pop("export_folder_name")
 
@@ -151,7 +155,7 @@ def _generate_export(deepnet_cell, provider=None, **kwargs):
         if "nb_bits" not in kwargs:
             kwargs["nb_bits"] = N2D2_option.nb_bits
         # Provider = None because we already attach the new provider !
-        n2d2.quantizer.PTQ(deepnet_cell, provider=None, **kwargs)
+        PTQ(deepnet_cell, provider=None, **kwargs)
     else:
         # Graph otpimisations are done during calibration.
         # If we do not call calibration, we do graph optimisation now !
@@ -170,9 +174,10 @@ def _generate_export(deepnet_cell, provider=None, **kwargs):
 
     N2D2.generateExportFromCalibration(N2D2_option, N2D2_deepnet, fileName=export_folder_name)
 
-@n2d2.utils.add_docstring(export_doc_string)
-def export_c(deepnet_cell: n2d2.cells.DeepNetCell,
-             provider: n2d2.provider.Provider=None,
+@add_docstring(export_doc_string)
+@check_types
+def export_c(deepnet_cell: DeepNetCell,
+             provider: Provider=None,
              **kwargs) -> None:
     """Generate a C export of the neural network.
 
@@ -189,9 +194,10 @@ def export_c(deepnet_cell: n2d2.cells.DeepNetCell,
     kwargs["gen_export"] = "C"
     _generate_export(deepnet_cell, provider, **kwargs)
 
-@n2d2.utils.add_docstring(export_doc_string)
-def export_cpp(deepnet_cell: n2d2.cells.DeepNetCell,
-               provider: n2d2.provider.Provider=None,
+@add_docstring(export_doc_string)
+@check_types
+def export_cpp(deepnet_cell: DeepNetCell,
+               provider: Provider=None,
                **kwargs) -> None:
     """Generate a CPP export of the neural network.
     """
@@ -199,9 +205,10 @@ def export_cpp(deepnet_cell: n2d2.cells.DeepNetCell,
     _generate_export(deepnet_cell, provider, **kwargs)
 
 
-@n2d2.utils.add_docstring(export_doc_string)
-def export_tensor_rt(deepnet_cell: n2d2.cells.DeepNetCell,
-                provider: n2d2.provider.Provider=None,
+@add_docstring(export_doc_string)
+@check_types
+def export_tensor_rt(deepnet_cell: DeepNetCell,
+                provider: Provider=None,
                 **kwargs) -> None:
     """Generate a TensorRT export of the neural network.
 

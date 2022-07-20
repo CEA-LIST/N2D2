@@ -29,7 +29,7 @@ import zipfile
 from collections import UserDict
 from inspect import getmro, signature
 import functools
-from n2d2.error_handler import WrongInputType
+from typing import Union, Any, _SpecialForm
 
 # At the moment ConfigSection is simply a dictionary
 class ConfigSection(UserDict):
@@ -211,8 +211,18 @@ def check_types(f):
             obj_name = f"{bind.args[0].__class__.__name__}."
 
         for value, typ in zip(bind.args, args_types.items()):
-            if typ[1] != sig.empty and  value is not None \
-                and not isinstance(value, typ[1]):
-                raise TypeError(f'In {obj_name}{f.__name__} : \"{typ[0]}\" parameter must be of type <{typ[1].__name__}> but is of type <{type(value).__name__}> instead.')
+            annotation_type = typ[1]
+            # NOTE : typing.Union and typing.Any does not support isinstance so we use other checks.
+            # Simpler way may exist in future version of Python (>3.7) ...
+            if type(annotation_type) is _SpecialForm and annotation_type._name == "Any": # check if Any
+                continue
+            if value is None: # None value is always accepted
+                continue
+            if hasattr(typ[1], "__origin__") and typ[1].__origin__ is Union: # check if Union
+                    # Types are contained in the __args__ attribute which is a list
+                    # isinstance only support type or tuple, so we convert to tuple 
+                    annotation_type = tuple(typ[1].__args__)
+            if typ[1] != sig.empty and not isinstance(value, annotation_type):
+                raise TypeError(f'In {obj_name}{f.__name__} : \"{typ[0]}\" parameter must be of type <{annotation_type.__name__}> but is of type <{type(value).__name__}> instead.')
         return f(*args, **kwargs)
     return decorated

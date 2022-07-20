@@ -20,14 +20,11 @@
 """
 import N2D2
 
-import n2d2.activation
-import n2d2.global_variables as gb
-from n2d2 import ConventionConverter
+from n2d2 import ConventionConverter, error_handler, global_variables
 from n2d2.cells.nn.abstract_cell import (NeuralNetworkCell,
                                          _cell_frame_parameters)
 from n2d2.typed import Modeltyped
 from n2d2.utils import inherit_init_docstring
-
 
 @inherit_init_docstring()
 class Padding(NeuralNetworkCell, Modeltyped):
@@ -36,7 +33,7 @@ class Padding(NeuralNetworkCell, Modeltyped):
     _N2D2_constructors = {
         'Frame': N2D2.PaddingCell_Frame,
     }
-    if gb.cuda_available:
+    if global_variables.cuda_available:
         _N2D2_constructors.update({
             'Frame_CUDA': N2D2.PaddingCell_Frame_CUDA,
         })
@@ -67,13 +64,13 @@ class Padding(NeuralNetworkCell, Modeltyped):
         :type right_pad: int
         """
         if not isinstance(top_pad, int):
-            raise n2d2.error_handler.WrongInputType("top_pad", str(type(top_pad)), ["int"])
+            raise error_handler.WrongInputType("top_pad", str(type(top_pad)), ["int"])
         if not isinstance(bot_pad, int):
-            raise n2d2.error_handler.WrongInputType("bot_pad", str(type(bot_pad)), ["int"])
+            raise error_handler.WrongInputType("bot_pad", str(type(bot_pad)), ["int"])
         if not isinstance(left_pad, int):
-            raise n2d2.error_handler.WrongInputType("left_pad", str(type(left_pad)), ["int"])
+            raise error_handler.WrongInputType("left_pad", str(type(left_pad)), ["int"])
         if not isinstance(right_pad, int):
-            raise n2d2.error_handler.WrongInputType("right_pad", str(type(right_pad)), ["int"])
+            raise error_handler.WrongInputType("right_pad", str(type(right_pad)), ["int"])
 
         NeuralNetworkCell.__init__(self, **config_parameters)
         Modeltyped.__init__(self, **config_parameters)

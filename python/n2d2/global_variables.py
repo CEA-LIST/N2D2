@@ -92,7 +92,7 @@ class GlobalVariables: # pylint: disable=too-many-instance-attributes
     @cuda_device.setter
     def cuda_device(self, value):
         if not self.cuda_available:
-            raise RuntimeError(f"N2D2 is not compiled with CUDA.")
+            raise RuntimeError("N2D2 is not compiled with CUDA.")
         if isinstance(value, int):
             if value > N2D2.CudaContext.nbDevice():
                 raise RuntimeError(f"Cannot set device {value}, N2D2 detected only {N2D2.CudaContext.nbDevice()} devices")
