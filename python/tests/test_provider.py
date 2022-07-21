@@ -23,10 +23,15 @@ import n2d2
 import unittest
 
 
+from os import getenv
+
+DATA_PATH = getenv("N2D2_DATA")
+if DATA_PATH is None:
+    DATA_PATH="/local/DATABASE/"
 
 class test_provider(unittest.TestCase):
     def setUp(self):
-        self.db = n2d2.database.MNIST(data_path="/nvme0/DATABASE/MNIST/raw/")       
+        self.db = n2d2.database.MNIST(data_path=f"{DATA_PATH}mnist")       
         self.size = [28, 28, 1]
         self.batch_size = 1
         self.provider = n2d2.provider.DataProvider(self.db, self.size, batch_size=self.batch_size)        

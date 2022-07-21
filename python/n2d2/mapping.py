@@ -19,7 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-import n2d2
+from n2d2 import Tensor
 
 
 class Mapping:
@@ -51,15 +51,14 @@ class Mapping:
         output_group_offset = 0
         channel_group_offset = 0
 
-        map = n2d2.Tensor([nb_outputs, nb_channels], datatype="bool", dim_format="N2D2")
+        map_tensor = Tensor([nb_outputs, nb_channels], datatype="bool", dim_format="N2D2")
         for group in range(int(nb_groups)):
             outputGroupSize = (nb_outputs - output_group_offset) / (nb_groups - group)
             if outputGroupSize < 1:
                 raise RuntimeError("outputGroupSize < 1")
             for output in range(int(output_group_offset), int(output_group_offset + outputGroupSize)):
                 for channel in range(int(channel_group_offset), int(channel_group_offset + nb_channels_per_group)):
-                    map[output, channel] = True
+                    map_tensor[output, channel] = True
             output_group_offset += outputGroupSize
             channel_group_offset += nb_channels_per_group
-        return map
-
+        return map_tensor

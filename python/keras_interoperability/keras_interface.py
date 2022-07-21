@@ -92,7 +92,7 @@ class CustomSequential(keras.Sequential):
         """
 
         x_numpy = x.numpy()
-        if n2d2.global_variables.cuda_compiled:
+        if n2d2.global_variables.cuda_available:
             # Keras can change the device to access x value, changing it back for N2D2.
             self.keras_device = N2D2.CudaContext.getDevice()
             N2D2.CudaContext.setDevice(n2d2.global_variables.cuda_device)
@@ -142,7 +142,7 @@ class CustomSequential(keras.Sequential):
             y_numpy = np.copy(y_numpy)
             y_numpy.resize(outputs_shape)
 
-        if n2d2.global_variables.cuda_compiled and self.keras_device is not None:
+        if n2d2.global_variables.cuda_available and self.keras_device is not None:
             # Keras can change the device used by CUDA during back propagation.
             # Setting the device back to its previous value.
             N2D2.CudaContext.setDevice(self.keras_device)
@@ -155,7 +155,7 @@ class CustomSequential(keras.Sequential):
             """Method to handle backpropagation
             """
             dy_numpy = dy.numpy()
-            if n2d2.global_variables.cuda_compiled:
+            if n2d2.global_variables.cuda_available:
                 # Keras can change the device to access dy value, changing it back.
                 self.keras_device = N2D2.CudaContext.getDevice()
                 N2D2.CudaContext.setDevice(n2d2.global_variables.cuda_device)
@@ -193,7 +193,7 @@ class CustomSequential(keras.Sequential):
 
             dy_tensor = N2D2.Tensor_float(-dy_numpy * self.batch_size)
 
-            if n2d2.global_variables.cuda_compiled and self.keras_device is not None:
+            if n2d2.global_variables.cuda_available and self.keras_device is not None:
                 # Keras can change the device used by CUDA during back propagation.
                 # Setting the device back to its previous value.
                 N2D2.CudaContext.setDevice(self.keras_device)
@@ -292,7 +292,7 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
             inputs_as_nchw=input_names,
             output_path=model_name + ".onnx")
 
-    if n2d2.global_variables.cuda_compiled:
+    if n2d2.global_variables.cuda_available:
         # tf2onnx can change the device used by CUDA
         N2D2.CudaContext.setDevice(n2d2.global_variables.cuda_device)
 

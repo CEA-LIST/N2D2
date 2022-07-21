@@ -18,11 +18,12 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
-
-import n2d2
 import N2D2
 from n2d2.n2d2_interface import N2D2_Interface
 from abc import ABC, abstractmethod
+from n2d2 import ConventionConverter, generate_name, inherit_init_docstring, Tensor, check_types
+from n2d2.error_handler import WrongValue
+from n2d2.provider import Provider
 
 class Target(N2D2_Interface, ABC):
 
@@ -44,12 +45,13 @@ class Target(N2D2_Interface, ABC):
         'weak_target': 'WeakTarget'
     }
 
-    _convention_converter = n2d2.ConventionConverter(_target_parameters)
+    _convention_converter = ConventionConverter(_target_parameters)
 
     # Provider is not a parameter in the INI file in the case of Target class,
     # but usually inferred from the deepnet in N2D2. Name and NeuralNetworkCell are parts of the section name
     @abstractmethod
-    def __init__(self, provider, **config_parameters):
+    @check_types
+    def __init__(self, provider:Provider, **config_parameters):
         """
         :param provider: Provider containing the input and output data.
         :type provider: :py:class:`n2d2.provider.Provider`
@@ -70,7 +72,7 @@ class Target(N2D2_Interface, ABC):
         if 'name' in config_parameters:
             name = config_parameters.pop('name')
         else:
-            name = n2d2.generate_name(self)
+            name = generate_name(self)
 
 
         N2D2_Interface.__init__(self, **config_parameters)
@@ -88,11 +90,11 @@ class Target(N2D2_Interface, ABC):
 
     def get_name(self):
         return self._constructor_parameters['name']
-
-    def log_estimated_labels(self, path):
+    @check_types
+    def log_estimated_labels(self, path:str):
         self._N2D2_object.logEstimatedLabels(path)
-
-    def log_estimated_labels_json(self, dir_name, **kwargs):
+    @check_types
+    def log_estimated_labels_json(self, dir_name:str, **kwargs):
         self._N2D2_object.logEstimatedLabelsJSON(dir_name, **kwargs)
 
     def get_current_loss(self):
@@ -104,7 +106,7 @@ class Target(N2D2_Interface, ABC):
     def __str__(self):
         return self.get_name()
 
-@n2d2.utils.inherit_init_docstring()
+@inherit_init_docstring()
 class Score(Target):
 
     _parameters = {
@@ -115,7 +117,7 @@ class Score(Target):
 
     _parameters.update(Target._target_parameters)
 
-    _convention_converter = n2d2.ConventionConverter(_parameters)
+    _convention_converter = ConventionConverter(_parameters)
     _N2D2_constructors = N2D2.TargetScore
     def __init__(self, provider, **config_parameters):
         """
@@ -134,7 +136,7 @@ class Score(Target):
         self.provide_targets()
         self.process()
         self._deepnet = inputs.get_deepnet()
-        loss = n2d2.Tensor(dims=[1], value=self.get_current_loss(), cell=self)
+        loss = Tensor(dims=[1], value=self.get_current_loss(), cell=self)
         loss._leaf = True
         return loss
 
@@ -196,11 +198,12 @@ class Score(Target):
 
     def get_average_score(self, metric):
         """
-        :param metric: Can be any of : ``Sensitivity``, ``Specificity``, ``Precision``, ``NegativePredictive``, ``Value``, ``MissRate``, ``FallOut``, ``FalseDiscoveryRate``, ``FalseOmissionRate``, ``Accuracy``, ``F1Score``, ``Informedness``, ``Markedness``, ``IU``.
+        :param metric: Can be any of : ``Sensitivity``, ``Specificity``, ``Precision``, ``NegativePredictive``, ``Value``, \
+        ``MissRate``, ``FallOut``, ``FalseDiscoveryRate``, ``FalseOmissionRate``, ``Accuracy``, ``F1Score``, ``Informedness``, ``Markedness``, ``IU``.
         :type metric: string
         """
         if metric not in N2D2.ConfusionTableMetric.__members__.keys():
-            raise n2d2.error_handler.WrongValue("metric", metric, N2D2.ConfusionTableMetric.__members__.keys())
+            raise WrongValue("metric", metric, N2D2.ConfusionTableMetric.__members__.keys())
         return self._N2D2_object.getAverageScore(
             self._provider.get_partition(),
             N2D2.ConfusionTableMetric.__members__[metric])

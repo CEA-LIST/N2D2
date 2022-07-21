@@ -20,7 +20,7 @@
 """
 import N2D2
 
-import n2d2.global_variables as gb
+from n2d2 import global_variables
 from n2d2 import ConventionConverter
 from n2d2.cells.nn.abstract_cell import (NeuralNetworkCell,
                                          _cell_frame_parameters)
@@ -38,7 +38,7 @@ class Dropout(NeuralNetworkCell, ModelDatatyped):
     _N2D2_constructors = {
         'Frame<float>': N2D2.DropoutCell_Frame_float,
     }
-    if gb.cuda_compiled:
+    if global_variables.cuda_available:
         _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.DropoutCell_Frame_CUDA_float,
         })

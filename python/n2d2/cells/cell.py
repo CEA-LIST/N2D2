@@ -20,28 +20,29 @@
 """
 
 from abc import ABC, abstractmethod
-from typing import Union, Optional
+from typing import Union, Optional, List
 import N2D2
 
-import n2d2
-import n2d2.global_variables
+from n2d2 import global_variables
 from n2d2.deepnet import DeepNet
 from n2d2.solver import Solver
 from n2d2.filler import Filler
 from n2d2.target import Target
 from n2d2 import Tensor, Interface
 from n2d2.provider import Provider
+from n2d2 import Tensor, Interface, generate_name, methdispatch, check_types, error_handler
+from n2d2.provider import DataProvider
+from n2d2.target import Target
+from n2d2.n2d2_interface import Options
 
 class Cell(ABC):
     """Abstract class of the higher level of cells and cells container.
     """
     @abstractmethod
+    @check_types
     def __init__(self, name:str):
         if not name:
-            name = n2d2.generate_name(self)
-        else:
-            if not isinstance(name, str):
-                raise n2d2.error_handler.WrongInputType("name", str(type(name)), ["str"])
+            name = generate_name(self)
         self._name = name
         self._deepnet = None
 
@@ -82,7 +83,7 @@ class Trainable(ABC):
     @abstractmethod
     def __init__(self):
         if "_config_parameters" not in self.__dict__:
-            raise n2d2.error_handler.ImplementationError("Trainable object is not inherited with an N2D2_Interface")
+            raise error_handler.ImplementationError("Trainable object is not inherited with an N2D2_Interface")
         # _config_parameters in an attribute of N2D2_Interface so we access it via the __dict__.
         config_parameters = self.__dict__["_config_parameters"]
         if "solver" in config_parameters:
@@ -112,14 +113,14 @@ class Block(Cell):
         the __call__ method therefore has to be defined explicitly.
     """
 
-    def __init__(self, cells: list[Cell], name: Optional[str]=None):
+    def __init__(self, cells: List[Cell], name: Optional[str]=None):
         assert isinstance(cells, list)
         self._cells = {}
         for cell in cells:
             self._cells[cell.get_name()] = cell
         Cell.__init__(self, name)
 
-    @n2d2.utils.methdispatch
+    @methdispatch
     def __getitem__(self, item):
         return NotImplemented
 
@@ -132,6 +133,41 @@ class Block(Cell):
         k = list(self._cells.values())[item]
         return k
 
+    @check_types
+    def to_deepnet_cell(self, provider:DataProvider, target:Target=None):
+        """Convert a :py:class:`n2d2.cells.Block` to a :py:class:`n2d2.cells.DeepNetCell`
+
+        :param provider: Data provider used by the neural network
+        :type provider: :py:class:`n2d2.provider.DataProvider`
+        :param target: Target object
+        :type target: :py:class:`n2d2.target.Target`
+        :return: The corresponding :py:class:`n2d2.cells.DeepNetCell`
+        :rtype: :py:class:`n2d2.cells.DeepNetCell`
+        """
+        dummy_input = Tensor(provider.shape())
+
+        provider._deepnet = DeepNet()
+        provider._deepnet.set_provider(provider)
+        provider._deepnet.N2D2().initialize()
+        dummy_input = dummy_input._set_cell(provider)
+
+        dummy_output = self(dummy_input)
+        if not isinstance(dummy_output, Tensor):
+            raise RuntimeError(f"{self.__class__.__name__}.__call__() should return an n2d2.Tensor object !")
+
+        if target:
+            dummy_output = target(dummy_output)
+
+        N2D2_deepnet = dummy_output.get_deepnet().N2D2()
+
+        if target:
+            N2D2_target = target.N2D2()
+        else:
+            N2D2_target =  N2D2.TargetScore("Target", dummy_output.cell.N2D2(), provider.N2D2())
+
+        N2D2_deepnet.addTarget(N2D2_target) # TODO : Add the target twice ?
+        N2D2_deepnet.setDatabase(provider.N2D2().getDatabase())
+        return DeepNetCell(N2D2_deepnet)
 
     def is_integral(self):
         """
@@ -153,20 +189,18 @@ class Block(Cell):
         self._get_cells(cells)
         return cells
 
-    def _get_cells(self, cells: list[Cell]):
+    def _get_cells(self, cells: List[Cell]):
         for elem in self._cells.values():
             if isinstance(elem, Block):
                 elem._get_cells(cells)
             else:
                 cells[elem.get_name()] = elem
-
-    def get_cell(self, item):
+    @check_types
+    def get_cell(self, item: str):
         """
            Returns the low level view of a cell.
         """
-        if isinstance(item, str):
-            return self.get_cells()[item]
-        raise n2d2.error_handler.WrongInputType("item", type(item), ["str"])
+        return self.get_cells()[item]
 
     def test(self):
         for cell in self._cells.values():
@@ -178,6 +212,7 @@ class Block(Cell):
             cell.learn()
         return self
 
+    @check_types
     def set_solver(self, solver:Solver):
         """Set a solver for every optimizable parameters in this Block. Optimizable parameters are weights, biases and quantizers.
 
@@ -225,7 +260,7 @@ class Block(Cell):
 
         for idx, value in enumerate(self._cells.values()):
             output += "\n" + (indent_level * "\t") + "(" + str(idx) + ")"
-            if isinstance(value, n2d2.cells.Block):
+            if isinstance(value, Block):
                 output += ": " + value._generate_str(indent_level + 1)
             else:
                 output += ": " + value.__str__()
@@ -243,7 +278,7 @@ class Iterable(Block, ABC):
        of the list.
     """
     @abstractmethod
-    def __init__(self, cells: list[Cell], name: Optional[str]=None):
+    def __init__(self, cells: List[Cell], name: Optional[str]=None):
         Block.__init__(self, cells, name)
         # This is the sequential representation of the cells, since the self._cells object is a dictionary and therefore
         # does not guarantee order
@@ -263,19 +298,19 @@ class Iterable(Block, ABC):
 
     def insert(self, index:int, cell:Cell):
         if not isinstance(cell, Cell):
-            raise n2d2.error_handler.WrongInputType("cell", type(cell), ["n2d2.cells.Cell"])
+            raise error_handler.WrongInputType("cell", type(cell), ["n2d2.cells.Cell"])
         if index < 0:
             raise ValueError("Negative index are not supported.")
         self._seq.insert(index, cell)
         self._cells[cell.get_name()] = cell
 
+    @check_types
     def append(self, cell:Cell):
         """Append a cell at the end of the sequence."""
-        if not isinstance(cell, Cell):
-            raise n2d2.error_handler.WrongInputType("cell", type(cell), ["n2d2.cells.Cell"])
         self._seq.append(cell)
         self._cells[cell.get_name()] = cell
 
+    @check_types
     def remove(self, cell:Cell):
         self._seq.remove(cell)
         del self._cells[cell.get_name()]
@@ -288,7 +323,7 @@ class Iterable(Block, ABC):
 
         for idx, value in enumerate(self._seq):
             output += "\n" + (indent_level * "\t") + "(" + str(idx) + ")"
-            if isinstance(value, n2d2.cells.Block):
+            if isinstance(value, Block):
                 output += ": " + value._generate_str(indent_level + 1)
             else:
                 output += ": " + value.__str__()
@@ -300,7 +335,7 @@ class Sequence(Iterable):
     """
          This implementation of the Iterable class describes a sequential (vertical) ordering of cells.
     """
-    def __init__(self, cells: list[Cell], name: Optional[str]=None):
+    def __init__(self, cells: List[Cell], name: Optional[str]=None):
         Iterable.__init__(self, cells, name)
 
     def __call__(self, x: Union[Tensor, Interface]):
@@ -309,58 +344,29 @@ class Sequence(Iterable):
             x = cell(x)
         return x
 
-    def to_deepnet_cell(self, provider:Provider, target:Optional[Target] =None):
-        """Convert a :py:class:`n2d2.cells.Sequence` to a :py:class:`n2d2.cells.DeepNetCell`
 
-        :param provider: Data provider used by the neural network
-        :type provider: :py:class:`n2d2.provider.DataProvider`
-        :param target: Target object
-        :type target: :py:class:`n2d2.target.Target`
-        :return: The corresponding :py:class:`n2d2.cells.DeepNetCell`
-        :rtype: :py:class:`n2d2.cells.DeepNetCell`
-        """
-        if not isinstance(provider, n2d2.provider.DataProvider):
-            raise n2d2.error_handler.WrongInputType("provider", type(provider), ["n2d2.provider.DataProvider"])
-        dummy_input = n2d2.Tensor(provider.shape())
-
-        provider._deepnet = n2d2.deepnet.DeepNet()
-        provider._deepnet.set_provider(provider)
-        provider._deepnet.N2D2().initialize()
-        dummy_input = dummy_input._set_cell(provider)
-
-        dummy_output = self(dummy_input)
-        if target:
-            if not isinstance(target, n2d2.target.Target):
-                raise n2d2.error_handler.WrongInputType("target", type(target), ["n2d2.target.Target"])
-            dummy_output = target(dummy_output)
-        N2D2_deepnet = dummy_output.get_deepnet().N2D2()
-        if target:
-            N2D2_target=target.N2D2()
-        else:
-            N2D2_target =  N2D2.TargetScore("Target", dummy_output.cell.N2D2(), provider.N2D2())
-        N2D2_deepnet.addTarget(N2D2_target)
-        N2D2_deepnet.setDatabase(provider.N2D2().getDatabase())
-        return DeepNetCell(N2D2_deepnet)
 
 class Layer(Iterable):
     """
         This implementation of the Iterable class describes a layered (horizontal) ordering of cells.
         An optional mapping can be given to define connectivity with preceding input cell
     """
-
-    def __init__(self, cells: list[Cell], mapping: Optional[list]=None, name: Optional[str]=None):
+    @check_types
+    def __init__(self, cells:list, mapping:list =None, name:str=None):
         Iterable.__init__(self, cells, name)
         self._mapping = None
         if mapping:
-            if isinstance(mapping, list):
-                self._mapping = mapping
-            else:
-                raise n2d2.error_handler.WrongInputType('mapping', type(mapping), [str(type(list))])
+            self._mapping = mapping
 
     def __call__(self, x: Union[Tensor, Interface]):
         super().__call__(x)
         out = []
-        x = x.get_tensors()
+        if isinstance(x, Interface):
+            x = x.get_tensors()
+        elif isinstance(x, Tensor):
+            x = [x]
+        else:
+            raise TypeError("x should be a Tensor or an interface !")
         for out_idx, cell in enumerate(self):
             cell_inputs = []
             for in_idx, ipt in enumerate(x):
@@ -408,7 +414,8 @@ class DeepNetCell(Block):
 
 
     @classmethod
-    def load_from_ONNX(cls, provider:Provider, model_path:str, ini_file:Optional[str] =None, ignore_cells:Optional[bool] =None):
+    @check_types
+    def load_from_ONNX(cls, provider:DataProvider, model_path:str, ini_file:str=None, ignore_cells:list=None):
         """Load a deepnet from an ONNX file given a provider object.
 
         :param provider: Provider object to base deepnet upon
@@ -420,23 +427,22 @@ class DeepNetCell(Block):
         :param ignore_cells: List of cells name to ignore, default=None
         :type ignore_cells: list, optional
         """
-        if not n2d2.global_variables.onnx_compiled:
+        if not global_variables.onnx_compiled:
             raise RuntimeError("Cannot load a model from ONNX, you did not compiled N2D2 with protobuf. " \
                 "Install it with 'apt-get install protobuf-compiler' and then recompile N2D2.")
-        if not isinstance(provider, n2d2.provider.Provider):
-            raise ValueError("Input needs to be of type 'provider'")
-        N2D2_deepnet = N2D2.DeepNet(n2d2.global_variables.default_net)
+
+        N2D2_deepnet = N2D2.DeepNet(global_variables.default_net)
         N2D2_deepnet.setStimuliProvider(provider.N2D2())
-        if isinstance(provider, n2d2.provider.DataProvider):
-            N2D2_deepnet.setDatabase(provider.get_database().N2D2())
-        N2D2.CellGenerator.defaultModel = n2d2.global_variables.default_model
+        N2D2_deepnet.setDatabase(provider.get_database().N2D2())
+        N2D2.CellGenerator.defaultModel = global_variables.default_model
         ini_parser = N2D2.IniParser()
         if ini_file is not None:
             ini_parser.load(ini_file)
         ini_parser.currentSection("onnx", True)
-        if ignore_cells:
+        if ignore_cells is not None:
             ini_parser.setProperty("Ignore", ignore_cells)
-        N2D2_deepnet = N2D2.DeepNetGenerator.generateFromONNX(n2d2.global_variables.default_net, model_path, ini_parser,
+        ini_parser.setProperty("CNTK", True) # Enable Bias fusion !
+        N2D2_deepnet = N2D2.DeepNetGenerator.generateFromONNX(global_variables.default_net, model_path, ini_parser,
                                             N2D2_deepnet, [None])
         return cls(N2D2_deepnet)
 
@@ -447,13 +453,13 @@ class DeepNetCell(Block):
         :param model_path: Path to the ``ini`` file.
         :type model_path: str
         """
-        n2d2_deepnet = N2D2.DeepNetGenerator.generateFromINI(n2d2.global_variables.default_net, path)
+        n2d2_deepnet = N2D2.DeepNetGenerator.generateFromINI(global_variables.default_net, path)
         return cls(n2d2_deepnet)
 
     def __call__(self, x):
         super().__call__(x)
         # NOTE: This currently only supports a provider output as input
-        if not isinstance(x, n2d2.Tensor):
+        if not isinstance(x, Tensor):
             raise ValueError("Needs tensor with provider output as input")
 
         # Concatenate existing deepnet graph on deepnet of input
@@ -586,7 +592,7 @@ class DeepNetCell(Block):
 
         # Checking inputs
         if valid_metric not in N2D2.ConfusionTableMetric.__members__.keys():
-            raise n2d2.error_handler.WrongValue("metric", valid_metric, N2D2.ConfusionTableMetric.__members__.keys())
+            raise error_handler.WrongValue("metric", valid_metric, N2D2.ConfusionTableMetric.__members__.keys())
         N2D2_valid_metric = N2D2.ConfusionTableMetric.__members__[valid_metric]
 
         # Generating the N2D2 DeepNet
@@ -594,7 +600,7 @@ class DeepNetCell(Block):
         N2D2_deepnet.initialize()
 
         # Calling learn function
-        parameters = n2d2.n2d2_interface.Options(
+        parameters = Options(
                         avg_window=avg_window, bench=bench, learn_epoch=learn_epoch,
                         log_epoch=log_epoch, ban_multi_device=ban_multi_device,
                         valid_metric=N2D2_valid_metric, stop_valid=stop_valid,
@@ -633,20 +639,20 @@ class DeepNetCell(Block):
         :type log_outputs: int, optional
         """
         if wt_round_mode not in N2D2.WeightsApprox.__members__.keys():
-            raise n2d2.error_handler.WrongValue("wt_round_mode", wt_round_mode, N2D2.WeightsApprox.__members__.keys())
+            raise error_handler.WrongValue("wt_round_mode", wt_round_mode, N2D2.WeightsApprox.__members__.keys())
         N2D2_wt_round_mode = N2D2.WeightsApprox.__members__[wt_round_mode]
         if b_round_mode not in N2D2.WeightsApprox.__members__.keys():
-            raise n2d2.error_handler.WrongValue("b_round_mode", b_round_mode, N2D2.WeightsApprox.__members__.keys())
+            raise error_handler.WrongValue("b_round_mode", b_round_mode, N2D2.WeightsApprox.__members__.keys())
         N2D2_b_round_mode = N2D2.WeightsApprox.__members__[b_round_mode]
         if c_round_mode not in N2D2.WeightsApprox.__members__.keys():
-            raise n2d2.error_handler.WrongValue("b_round_mode", c_round_mode, N2D2.WeightsApprox.__members__.keys())
+            raise error_handler.WrongValue("b_round_mode", c_round_mode, N2D2.WeightsApprox.__members__.keys())
         N2D2_c_round_mode = N2D2.WeightsApprox.__members__[c_round_mode]
 
         if act_scaling_mode not in N2D2.ScalingMode.__members__.keys():
-            raise n2d2.error_handler.WrongValue("act_scaling_mode", act_scaling_mode, N2D2.ScalingMode.__members__.keys())
+            raise error_handler.WrongValue("act_scaling_mode", act_scaling_mode, N2D2.ScalingMode.__members__.keys())
         N2D2_act_scaling_mode = N2D2.ScalingMode.__members__[act_scaling_mode]
 
-        parameters = n2d2.n2d2_interface.Options(log=log, report=report,
+        parameters = Options(log=log, report=report,
                         test_index=test_index, test_id=test_id, qat_SAT=qat_sat,
                         wt_round_mode=N2D2_wt_round_mode, b_round_mode=N2D2_b_round_mode,
                         c_round_mode=N2D2_c_round_mode, act_scaling_mode=N2D2_act_scaling_mode,

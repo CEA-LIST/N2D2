@@ -21,12 +21,12 @@
 
 
 import N2D2
-import n2d2 # To remove if interface is moved to provider
-from n2d2 import error_handler
-from n2d2.provider import TensorPlaceholder
+from n2d2 import methdispatch, error_handler, generate_name, check_types
+from n2d2.provider import MultipleOutputsProvider
+from typing import Union, Any
 import n2d2.global_variables as gb
 from functools import reduce
-from typing import Union
+from typing import Union, Any
 try:
     from numpy import ndarray, array
 except ImportError:
@@ -34,7 +34,7 @@ except ImportError:
 else:
     numpy_imported=True
 
-cuda_compiled = gb.cuda_compiled
+cuda_available = gb.cuda_available
 
 
 hard_coded_type = {
@@ -68,7 +68,7 @@ class Tensor:
         "char": N2D2.Tensor_char,
 
     }
-    if cuda_compiled:
+    if cuda_available:
         _cuda_tensor_generators = {
             "f": N2D2.CudaTensor_float,
             "float": N2D2.CudaTensor_float,
@@ -87,9 +87,9 @@ class Tensor:
         "N2D2": lambda x: x,
         "Numpy": lambda x: list(reversed(x)),
     }
-
-    def __init__(self, dims:list, value=None, cuda:bool =False, datatype:str ="float", 
-                    cell =None, dim_format:str ='Numpy'):
+    @check_types
+    def __init__(self, dims:Union[list, tuple], value:Any=None, cuda:bool=False, datatype:str="float",
+                 cell:Any=None, dim_format:str='Numpy'):
         """
         :param dims: Dimensions of the :py:class:`n2d2.Tensor` object. (the convention used depends of the ``dim_format`` argument, by default it's the same as ``Numpy``)
         :type dims: list
@@ -110,21 +110,16 @@ class Tensor:
             raise error_handler.WrongInputType("cuda", type(cuda), [str(bool)])
         self.is_cuda = cuda
         if cuda:
-            if not cuda_compiled:
+            if not cuda_available:
                 raise RuntimeError("You did not compiled N2D2 with CUDA !")
             generators = self._cuda_tensor_generators
         else:
             generators = self._tensor_generators
 
-        if isinstance(dims, list):
-            if not isinstance(dim_format, str):
-                raise error_handler.WrongInputType("dim_format", type(dim_format), [str(str)])
-            if dim_format in self._dim_format:
-                dims = self._dim_format[dim_format](dims)
-            else:
-                raise error_handler.WrongValue('dim_format', dim_format, self._dim_format.keys())
+        if dim_format in self._dim_format:
+            dims = self._dim_format[dim_format](dims)
         else:
-            raise error_handler.WrongInputType("dims", type(dims), [str(list)])
+            raise error_handler.WrongValue('dim_format', dim_format, self._dim_format.keys())
 
         if value and not isinstance(value, hard_coded_type[datatype]):
             raise TypeError(f"You want to fill the tensor with '{str(type(value).__name__)}' but datatype is set to : '{str(datatype)}'.")
@@ -306,7 +301,7 @@ class Tensor:
     def cuda(self):
         """Convert the tensor to a cuda tensor
         """
-        if not cuda_compiled:
+        if not cuda_available:
             raise RuntimeError("You did not compiled N2D2 with CUDA !")
         if not self.is_cuda:
             self.is_cuda = True
@@ -409,9 +404,9 @@ class Tensor:
             except ValueError as err:
                 raise RuntimeError(f"Autocast failed, tried to cast : {str(type(value))} to {self._datatype}") from err
 
-
-    @n2d2.utils.methdispatch
-    def __setitem__(self, index:Union[tuple, int, float, slice], value):
+    @methdispatch
+    @check_types
+    def __setitem__(self, index:Union[tuple, int, float, slice], value:Any):
         """
         Set an element of the tensor.
         To select the element to modify you can use :
@@ -443,7 +438,7 @@ class Tensor:
         self._check_value_coherency(value)
         self._tensor[index] = value
 
-    @n2d2.utils.methdispatch
+    @methdispatch
     def __getitem__(self, index)->any:
         """
         Get an element of the tensor.
@@ -506,7 +501,7 @@ class Tensor:
         CUDA tensor are stored and computed in the GPU (Device).
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         """
-        if not n2d2.global_variables.cuda_compiled:
+        if not gb.cuda_available:
             raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeDToH()
@@ -520,7 +515,7 @@ class Tensor:
         CUDA tensor are stored and computed in the GPU (Device).
         You cannot read directly the GPU. A copy of the tensor exist in the CPU (Host)
         """
-        if not n2d2.global_variables.cuda_compiled:
+        if not gb.cuda_available:
             raise RuntimeError("CUDA is not enabled, you need to compile N2D2 with CUDA.")
         if self.is_cuda:
             self._tensor.synchronizeHToD()
@@ -551,6 +546,7 @@ class Tensor:
         """
         if self.cell is None:
             # TensorPlaceholder will set the cell attribute to it self.
+            from n2d2.provider import TensorPlaceholder
             TensorPlaceholder(self)
         return self.cell.get_deepnet()
 
@@ -588,17 +584,17 @@ class Tensor:
     def mean(self)->float:
         return self.N2D2().mean()
 
-class Interface(n2d2.provider.Provider):
+class Interface:
     """
     An :py:class:`n2d2.Interface` is used to feed multiple tensors to a cell.
     """
     def __init__(self, tensors):
-        self._name = n2d2.generate_name(self)
+        self._name = generate_name(self)
         self.tensors = []
         if not isinstance(tensors, list):
             raise ValueError("'tensors' parameter should be a list !")
         if not tensors:
-            raise n2d2.error_handler.IsEmptyError('Tensors')
+            raise error_handler.IsEmptyError('Tensors')
 
         #if not tensors[0].cell: # Check if the first tensor is linked to a deepnet
         #    self._deepnet = None
@@ -614,7 +610,7 @@ class Interface(n2d2.provider.Provider):
         nb_channels = 0
         for tensor in tensors:
             if not isinstance(tensor, Tensor):
-                raise ValueError(f"The elements of 'tensors' should all be of type {str(type(n2d2.Tensor))}")
+                raise ValueError(f"The elements of 'tensors' should all be of type {str(type(Tensor))}")
             if tensor.dimX() != tensors[0].dimX():
                 raise ValueError("Tensors should have the same X dimension.")
             if tensor.dimY() != tensors[0].dimY():
@@ -630,9 +626,10 @@ class Interface(n2d2.provider.Provider):
             self.tensors.append(tensor)
         if not self._deepnet:
             self.batch_size = tensors[0].dimB()
+
             for tensor in self.tensors:
                 size =[tensor.dimX(), tensor.dimY(), tensor.dimZ()]
-                cell = n2d2.provider.MultipleOutputsProvider(size, self.batch_size)
+                cell = MultipleOutputsProvider(size, self.batch_size)
                 tensor.cell = cell
         # The dimZ of the interface correspond to the sum of the dimZ of the tensor that composed it.
         self.dim_z = nb_channels

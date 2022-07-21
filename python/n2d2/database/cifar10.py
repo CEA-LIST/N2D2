@@ -18,7 +18,7 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
-from n2d2.database.database import AbstractDatabase, _database_parameters
+from n2d2.database import AbstractDatabase, _database_parameters
 from n2d2.utils import inherit_init_docstring
 from n2d2.n2d2_interface import ConventionConverter
 import N2D2

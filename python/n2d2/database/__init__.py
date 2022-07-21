@@ -19,7 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-from n2d2.database.database import Database
+from n2d2.database.database import Database, AbstractDatabase, _database_parameters
 from n2d2.database.cifar10 import CIFAR10
 from n2d2.database.cifar100 import CIFAR100
 from n2d2.database.cityscapes import Cityscapes
