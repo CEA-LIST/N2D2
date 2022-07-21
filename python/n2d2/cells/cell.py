@@ -756,6 +756,9 @@ class DeepNetCell(Block):
                     if extra["Act"] == "Rectifier": extra["Act"] = "ReLu"
 
             if cell.get_type() == "Pool":
+                if cell.pooling.name == "Max": ctype = 'MaxPool'
+                else: ctype = 'AvgPool'
+
                 extra["size"] = converter(cell.get_parameter("pool_dims"))
                 if type(extra["size"]) != type(list):
                     extra["size"] = str(extra["size"])+'x'+str(extra["size"])
