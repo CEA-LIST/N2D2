@@ -279,7 +279,7 @@ def wrap(torch_model, input_size):
         else:
             pass
 
-    print(deepNet)
+    deepNet.summary()
     converted_model = Block(deepNet, need_to_flatten=need_to_flatten, batch_size=input_size[0])
 
     return converted_model

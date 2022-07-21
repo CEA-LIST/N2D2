@@ -679,17 +679,20 @@ class DeepNetCell(Block):
             # Display Layers features
             for i, line in enumerate(layers):
                 for idx, elem in enumerate(line):
-                    if idx == 1:
+                    if idx == 1: # Dimensions
                         string = str(elem).replace('[', '(').replace(']', ')')
                         output += string + " " * (sizes[idx] - len(str(elem))) + (' ' * sep)
-                    elif idx == 2:
+                    elif idx == 2: # # Params
                         string = f'{elem:,}'
                         output += " " * (sizes[idx] - len(string)) + string + (' ' * sep)
                     elif idx == 3:
                         string = f'{elem // 1000:,}k'
                         output += " " * (sizes[idx] - len(string)) + string + (' ' * sep)
                     elif idx == 5:
-                        output += ", ".join([key+': '+str(val) for key, val in elem.items()])
+                        liste = [key + ': ' + str(val) for key, val in elem.items()]
+                        output += ", ".join(liste) + (' ' * (sizes[idx] - len(", ".join(liste)) + sep))
+                    elif idx == 6:
+                        output += elem
                     else:
                         output += str(elem) + " " * (sizes[idx] - len(str(elem))) + (' ' * sep)
                 output += '\n'
@@ -705,14 +708,14 @@ class DeepNetCell(Block):
         input_chain = dict()
 
         # List of strings display on top of the table 
-        titles = ['Layer (type)', 'Output Shape', 'Param #', ' MAC #', 'Connected to', 'Extra']
+        titles = ['Layer (type)', 'Output Shape', 'Param #', ' MAC #', 'Connected to', 'Extra', 'Grad']
 
         # Input Line
         input_name = 'Image1'
         stimuli = self.get_embedded_deepnet().N2D2().getStimuliProvider()
         input_size = stimuli.getSize()
         input_size.append(stimuli.getBatchSize())  # batch size
-        layers.append([input_name + ' (input)', input_size[::-1], 0, 0, '', {}])
+        layers.append([input_name + ' (input)', input_size[::-1], 0, 0, '', {}, '-'])
 
         # Layers Line
         for name, cell in self.items():
@@ -743,7 +746,7 @@ class DeepNetCell(Block):
                     params += len(cell.get_biases())
 
                 if converter(cell.get_parameter("stride_dims")) != 1:
-                    extra["stride"] = converter(cell.get_parameter("stride_dims"))
+                    extra["str"] = converter(cell.get_parameter("stride_dims"))
                 if converter(cell.get_parameter("padding_dims")) != 1:
                     extra["pad"] = converter(cell.get_parameter("padding_dims"))
                 if converter(cell.get_parameter("dilation_dims")) != 1:
@@ -757,7 +760,7 @@ class DeepNetCell(Block):
                 if type(extra["size"]) != type(list):
                     extra["size"] = str(extra["size"])+'x'+str(extra["size"])
                 if converter(cell.get_parameter("stride_dims")) != 2:
-                    extra["stride"] = converter(cell.get_parameter("stride_dims"))
+                    extra["str"] = converter(cell.get_parameter("stride_dims"))
                 if converter(cell.get_parameter("padding_dims")) != 0:
                     extra["pad"] = converter(cell.get_parameter("padding_dims"))
 
@@ -778,12 +781,15 @@ class DeepNetCell(Block):
             cell_stat = n2d2.N2D2.Stats()
             self.get_embedded_deepnet().N2D2().getCell(cell.name).getStats(cell_stat)
 
+            # Get value of cell mode (training or not)
+            if hasattr(cell, 'back_propagate'): grad = str(cell.back_propagate)
+            else: grad = '-'
+        
             layers.append([name + ' (' + ctype + ')', cell.dims()[::-1], params,
-                           cell_stat.nbVirtualSynapses, ", ".join(inputs), extra])
+                           cell_stat.nbVirtualSynapses, ", ".join(inputs), extra, grad])
         # Output Line
         while name not in names:
             if name in input_chain.keys():
                 name = input_chain[name][0]
-        layers.append(['Features (output)', cell.dims()[::-1], 0, 0, name, {}])
+        layers.append(['Features (output)', cell.dims()[::-1], 0, 0, name, {}, '-'])
         draw_table(titles, layers)
-
