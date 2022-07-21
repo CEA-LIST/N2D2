@@ -22,7 +22,6 @@
 
 import N2D2
 from n2d2 import methdispatch, error_handler, generate_name, check_types
-from n2d2.provider import MultipleOutputsProvider
 from typing import Union, Any
 import n2d2.global_variables as gb
 from functools import reduce
@@ -626,7 +625,7 @@ class Interface:
             self.tensors.append(tensor)
         if not self._deepnet:
             self.batch_size = tensors[0].dimB()
-
+            from n2d2.provider import MultipleOutputsProvider
             for tensor in self.tensors:
                 size =[tensor.dimX(), tensor.dimY(), tensor.dimZ()]
                 cell = MultipleOutputsProvider(size, self.batch_size)
