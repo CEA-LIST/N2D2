@@ -10,7 +10,7 @@ import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import pytorch_interoperability
+import pytorch_to_n2d2
 import n2d2
 from time import time
 import argparse
@@ -95,7 +95,7 @@ if not args.no_n2d2:
     # specify that we want to use CUDA.
     n2d2.global_variables.default_model = "Frame_CUDA"
     # creating a model which run with N2D2 backend.
-    net = pytorch_interoperability.wrap(net, (batch_size, 3, 32, 32))
+    net = pytorch_to_n2d2.wrap(net, (batch_size, 3, 32, 32))
 net.to(device)
 criterion = nn.CrossEntropyLoss()
 

@@ -15,7 +15,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-import keras_interoperability
+import keras_to_n2d2
 from n2d2.solver import Adam
 from time import time
 from os.path import exists
@@ -82,7 +82,7 @@ tf_model = tf.keras.Sequential(
 n2d2.global_variables.cuda_device = args.dev
 n2d2.global_variables.default_model = 'Frame_CUDA'
 
-model = keras_interoperability.wrap(tf_model, batch_size=batch_size, for_export=True)
+model = keras_to_n2d2.wrap(tf_model, batch_size=batch_size, for_export=True)
 
 
 """

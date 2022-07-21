@@ -22,7 +22,7 @@
 import unittest
 import n2d2
 import tensorflow as tf
-from keras_interoperability import wrap
+from keras_to_n2d2 import wrap
 from tensorflow.keras.layers import MaxPooling2D, Conv2D, Dense, Flatten, BatchNormalization
 from tensorflow.keras import Input
 import tensorflow.keras as keras
