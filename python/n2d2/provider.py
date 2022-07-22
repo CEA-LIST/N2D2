@@ -20,10 +20,14 @@
 """
 
 import N2D2
-import n2d2
-from n2d2.n2d2_interface import N2D2_Interface
-from abc import ABC, abstractmethod
 
+from abc import ABC, abstractmethod
+from n2d2 import ConventionConverter, generate_name, inherit_init_docstring, check_types, Tensor, global_variables
+from n2d2.error_handler import WrongValue
+from n2d2.deepnet import DeepNet
+from n2d2.transform import Transformation, Composite
+from n2d2.database import Database
+from n2d2.n2d2_interface import N2D2_Interface
 
 class Provider(N2D2_Interface,ABC):
     _parameters={
@@ -34,7 +38,7 @@ class Provider(N2D2_Interface,ABC):
         "size": "Size",
         "random_read": "RandomRead",
     }
-    _convention_converter= n2d2.ConventionConverter(_parameters)
+    _convention_converter= ConventionConverter(_parameters)
     @abstractmethod
     def __init__(self, **config_parameters):
         """
@@ -46,7 +50,7 @@ class Provider(N2D2_Interface,ABC):
         if 'name' in config_parameters:
             self._name = config_parameters.pop['name']
         else:
-            self._name = n2d2.generate_name(self)
+            self._name = generate_name(self)
         self._deepnet = None
 
     def get_deepnet(self):
@@ -56,7 +60,8 @@ class Provider(N2D2_Interface,ABC):
         """
         return self._deepnet
 
-    def set_deepnet(self, deepnet):
+    @check_types
+    def set_deepnet(self, deepnet:DeepNet):
         self._deepnet = deepnet
         deepnet.set_provider(self)
 
@@ -83,7 +88,7 @@ class Provider(N2D2_Interface,ABC):
         """
         return self._name
 
-@n2d2.utils.inherit_init_docstring()
+@inherit_init_docstring()
 class DataProvider(Provider):
     """
     Provide the data to the network.
@@ -142,7 +147,7 @@ class DataProvider(Provider):
         :type partition: str
         """
         if partition not in N2D2.Database.StimuliSet.__members__.keys():
-            raise n2d2.error_handler.WrongValue("partition", partition, N2D2.Database.StimuliSet.__members__.keys())
+            raise WrongValue("partition", partition, N2D2.Database.StimuliSet.__members__.keys())
         self._partition = partition
 
     def get_partition(self):
@@ -158,7 +163,7 @@ class DataProvider(Provider):
         :returns: Data.
         :rtype: :py:class:`n2d2.Tensor`
         """
-        return n2d2.Tensor.from_N2D2(self._N2D2_object.getData())
+        return Tensor.from_N2D2(self._N2D2_object.getData())
 
 
     def get_labels(self):
@@ -166,7 +171,7 @@ class DataProvider(Provider):
         :returns: Labels associated with the current batch.
         :rtype: :py:class:`n2d2.Tensor`
         """
-        return n2d2.Tensor.from_N2D2(self._N2D2_object.getLabelsData())
+        return Tensor.from_N2D2(self._N2D2_object.getLabelsData())
 
 
     def get_database(self):
@@ -182,12 +187,12 @@ class DataProvider(Provider):
         :rtype: :py:class:`n2d2.Tensor`
         """
 
-        self._deepnet = n2d2.deepnet.DeepNet()
+        self._deepnet = DeepNet()
         self._deepnet.set_provider(self)
         self._deepnet.N2D2().initialize()
 
         self._N2D2_object.readRandomBatch(set=self.get_partition())
-        return n2d2.Tensor.from_N2D2(self._N2D2_object.getData())._set_cell(self)
+        return Tensor.from_N2D2(self._N2D2_object.getData())._set_cell(self)
 
     def set_batch(self, shuffle=True):
         """
@@ -203,29 +208,31 @@ class DataProvider(Provider):
         """
         return self._N2D2_object.allBatchsProvided(self.get_partition())
 
-    def read_batch(self, idx=None):
+    @check_types
+    def read_batch(self, idx:int=None):
         """
         :param idx: Start index to begin reading the stimuli
         :type idx: int
         :return: Return a batch of data
         :rtype: :py:class:`n2d2.Tensor`
         """
-        self._deepnet = n2d2.deepnet.DeepNet()
+        self._deepnet = DeepNet()
         self._deepnet.set_provider(self)
         self._deepnet.N2D2().initialize()
         if idx is None: # if idx is not enough as this will be evaluate to false if idx=0
             self._N2D2_object.readBatch(set=self.get_partition())
         else:
             self._N2D2_object.readBatch(set=self.get_partition(), startIndex=idx)
-        return n2d2.Tensor.from_N2D2(self._N2D2_object.getData())._set_cell(self)
+        return Tensor.from_N2D2(self._N2D2_object.getData())._set_cell(self)
 
-    def add_transformation(self, transformation):
+    @check_types
+    def add_transformation(self, transformation:Transformation):
         """Apply transformation to the dataset.
 
         :param transformation: Transformation to apply
         :type transformation: :py:class:`n2d2.transformation.Transformation`
         """
-        if isinstance(transformation, n2d2.transform.Composite):
+        if isinstance(transformation, Composite):
             for trans in transformation.get_transformations():
                 self._N2D2_object.addTransformation(trans.N2D2(), trans.get_apply_set())
                 self._transformations.append(trans)
@@ -239,7 +246,7 @@ class DataProvider(Provider):
         :param transformation: Transformation to apply
         :type transformation: :py:class:`n2d2.transformation.Transformation`
         """
-        if isinstance(transformation, n2d2.transform.Composite):
+        if isinstance(transformation, Composite):
             for trans in transformation.get_transformations():
                 self._N2D2_object.addOnTheFlyTransformation(trans.N2D2(), trans.get_apply_set())
                 self._transformations.append(transformation)
@@ -258,10 +265,8 @@ class DataProvider(Provider):
             self._index += 1
             if self._random_read:
                 return self.read_random_batch()
-            else:
-                return self.read_batch(self._index-1)
-        else:
-            raise StopIteration
+            return self.read_batch(self._index-1)
+        raise StopIteration
 
 
     def __iter__(self):
@@ -284,7 +289,8 @@ class TensorPlaceholder(Provider):
     A provider used to stream a **single** tensor through a neural network.
     This is automatically used when you pass a Tensor that doesn't come from :py:class:`n2d2.provider.DataProvider`.
     """
-    def __init__(self, inputs, labels=None, **config_parameters):
+    @check_types
+    def __init__(self, inputs:Tensor, labels:Tensor =None, **config_parameters):
         """
         :param inputs: The data tensor you want to stream, if N2D2 is compiled with CUDA it must be CUDA, the datatype used should be `float`.
         :type inputs: :py:class:`n2d2.Tensor`
@@ -293,12 +299,9 @@ class TensorPlaceholder(Provider):
         """
         Provider.__init__(self, **config_parameters)
 
-        if isinstance(inputs, n2d2.Tensor):
-            self._tensor = inputs
-        else:
-            raise n2d2.error_handler.wrong_input_type("inputs", type(inputs), ['list', 'n2d2.Tensor', 'N2D2.BaseTensor'])
+        self._tensor = inputs
         dims = [self._tensor.N2D2().dimX(), self._tensor.N2D2().dimY(), self._tensor.N2D2().dimZ()]
-        self._N2D2_object = N2D2.StimuliProvider(database=n2d2.database.Database().N2D2(),
+        self._N2D2_object = N2D2.StimuliProvider(database=Database().N2D2(),
                                                  size=dims,
                                                  batchSize=self._tensor.N2D2().dimB())
 
@@ -307,7 +310,7 @@ class TensorPlaceholder(Provider):
             self._labels = labels
             self._set_streamed_label()
 
-        self._deepnet = n2d2.deepnet.DeepNet()
+        self._deepnet = DeepNet()
         self._deepnet.set_provider(self)
         self._deepnet.N2D2().initialize()
 
@@ -315,8 +318,6 @@ class TensorPlaceholder(Provider):
         self.set_partition("Learn")
 
     def _set_streamed_label(self):
-        if not isinstance(self._labels, n2d2.Tensor):
-            raise n2d2.error_handler.WrongInputType("labels", type(self._labels), [str(n2d2.Tensor)])
         if not (self._labels.data_type() == 'int' or self._labels.data_type() == 'i'):
             raise RuntimeError("Labels datatype must be int, is " + self._labels.data_type() + "instead.")
         self._set_N2D2_parameter('StreamLabel', True)
@@ -328,7 +329,7 @@ class TensorPlaceholder(Provider):
         :type partition: str
         """
         if partition not in N2D2.Database.StimuliSet.__members__.keys():
-            raise n2d2.error_handler.WrongValue("partition", partition, N2D2.Database.StimuliSet.__members__.keys())
+            raise WrongValue("partition", partition, N2D2.Database.StimuliSet.__members__.keys())
         self._partition = partition
 
     def get_partition(self):
@@ -343,7 +344,7 @@ class TensorPlaceholder(Provider):
         Streamed a tensor in a data provider to simulate the output of a database.
         The model of the tensor is defined by the compilation of the library.
         """
-        if N2D2.cuda_compiled:
+        if global_variables.cuda_available:
             if not self._tensor.is_cuda:
                 self._tensor.cuda()
             self._tensor.htod()
@@ -373,6 +374,6 @@ class MultipleOutputsProvider(Provider):
         self._N2D2_object = N2D2.StimuliProvider(database=N2D2.Database(),
                                                  size=size,
                                                  batchSize=batch_size)
-        self._deepnet = n2d2.deepnet.DeepNet()
+        self._deepnet = DeepNet()
         self._deepnet.set_provider(self)
-        self._name = n2d2.generate_name(self)
+        self._name = generate_name(self)

@@ -19,18 +19,14 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 import N2D2
-
-import n2d2.filler
-import n2d2.global_variables as gb
-import n2d2.solver
-from n2d2 import ConventionConverter, Tensor
+from n2d2 import ConventionConverter, Tensor, error_handler, global_variables
+from n2d2.solver import Solver
 from n2d2.cells.cell import Trainable
 from n2d2.cells.nn.abstract_cell import (NeuralNetworkCell,
                                          _cell_frame_parameters)
-from n2d2.error_handler import deprecated
 from n2d2.typed import ModelDatatyped
 from n2d2.utils import inherit_init_docstring
-
+from n2d2.converter import from_N2D2_object
 
 @inherit_init_docstring()
 class BatchNorm2d(NeuralNetworkCell, ModelDatatyped, Trainable):
@@ -39,7 +35,7 @@ class BatchNorm2d(NeuralNetworkCell, ModelDatatyped, Trainable):
     _N2D2_constructors = {
         'Frame<float>': N2D2.BatchNormCell_Frame_float,
     }
-    if gb.cuda_compiled:
+    if global_variables.cuda_available:
         _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.BatchNormCell_Frame_CUDA_float,
         })
@@ -74,13 +70,13 @@ class BatchNorm2d(NeuralNetworkCell, ModelDatatyped, Trainable):
         :type moving_average_momentum: float, optional
         """
         if not isinstance(nb_inputs, int):
-            raise n2d2.error_handler.WrongInputType("nb_inputs", str(type(nb_inputs)), ["int"])
+            raise error_handler.WrongInputType("nb_inputs", str(type(nb_inputs)), ["int"])
 
         NeuralNetworkCell.__init__(self, **config_parameters)
         ModelDatatyped.__init__(self, **config_parameters)
         # No optional parameter
         self._parse_optional_arguments([])
-        self._set_N2D2_object(self._N2D2_constructors[self._model_key](N2D2.DeepNet(n2d2.global_variables.default_net),
+        self._set_N2D2_object(self._N2D2_constructors[self._model_key](N2D2.DeepNet(global_variables.default_net),
                                                 self.get_name(),
                                                 nb_inputs,
                                                 **self.n2d2_function_argument_parser(self._optional_constructor_arguments)))
@@ -96,14 +92,14 @@ class BatchNorm2d(NeuralNetworkCell, ModelDatatyped, Trainable):
 
     def __setattr__(self, key: str, value) -> None:
         if key == 'scale_solver':
-            if not isinstance(value, n2d2.solver.Solver):
-                raise n2d2.error_handler.WrongInputType("scale_solver", str(type(value)), [str(n2d2.solver.Solver)])
+            if not isinstance(value, Solver):
+                raise error_handler.WrongInputType("scale_solver", str(type(value)), ["n2d2.solver.Solver"])
             if self._N2D2_object:
                 self._N2D2_object.setScaleSolver(value.N2D2())
             self._config_parameters["scale_solver"] = value
         elif key == 'bias_solver':
-            if not isinstance(value, n2d2.solver.Solver):
-                raise n2d2.error_handler.WrongInputType("bias_solver", str(type(value)), [str(n2d2.solver.Solver)])
+            if not isinstance(value, Solver):
+                raise error_handler.WrongInputType("bias_solver", str(type(value)), ["n2d2.solver.Solver"])
             if self._N2D2_object:
                 self._N2D2_object.setBiasSolver(value.N2D2())
             self._config_parameters["bias_solver"] = value
@@ -121,9 +117,9 @@ class BatchNorm2d(NeuralNetworkCell, ModelDatatyped, Trainable):
     def _get_N2D2_complex_parameters(cls, N2D2_object):
         parameter =  super()._get_N2D2_complex_parameters(N2D2_object)
         parameter['scale_solver'] = \
-            n2d2.converter.from_N2D2_object(N2D2_object.getScaleSolver())
+            from_N2D2_object(N2D2_object.getScaleSolver())
         parameter['bias_solver'] = \
-            n2d2.converter.from_N2D2_object(N2D2_object.getBiasSolver())
+            from_N2D2_object(N2D2_object.getBiasSolver())
         return parameter
 
     def __call__(self, inputs):
@@ -137,10 +133,10 @@ class BatchNorm2d(NeuralNetworkCell, ModelDatatyped, Trainable):
 
         return self.get_outputs()
 
-    def has_bias(self):
+    def has_bias(self): # pylint: disable=no-self-use
         return True
 
-    @deprecated(reason="You should use scale_solver as an attribute.")
+    @error_handler.deprecated(reason="You should use scale_solver as an attribute.")
     def set_scale_solver(self, solver):
         self._config_parameters['scale_solver'] = solver
         self._N2D2_object.setScaleSolver(self._config_parameters['scale_solver'].N2D2())
@@ -177,8 +173,8 @@ class BatchNorm2d(NeuralNetworkCell, ModelDatatyped, Trainable):
         :param solver: Solver object
         :type solver: :py:class:`n2d2.solver.Solver`
         """
-        if not isinstance(solver, n2d2.solver.Solver):
-            raise n2d2.error_handler.WrongInputType("solver", str(type(solver)), ["n2d2.solver.Solver"])
+        if not isinstance(solver, Solver):
+            raise error_handler.WrongInputType("solver", str(type(solver)), ["n2d2.solver.Solver"])
         self.bias_solver = solver.copy()
         self.scale_solver = solver.copy()
 

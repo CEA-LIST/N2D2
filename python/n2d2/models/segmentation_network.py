@@ -19,9 +19,6 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-
-
-from n2d2.utils import ConfigSection
 from n2d2.cells.nn import Conv, Deconv, Padding, ElemWise
 from n2d2.cells import Block
 from n2d2.activation import Linear, Tanh
@@ -120,4 +117,3 @@ class SegmentationNetwork(Block):
         x = self.decoder["out_adapt"](x)
 
         return x
-

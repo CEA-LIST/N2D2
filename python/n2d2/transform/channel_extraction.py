@@ -1,6 +1,6 @@
 """
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -32,14 +32,14 @@ class ChannelExtraction(Transformation):
     """
     _Type = "ChannelExtraction"
     _parameters={
-        "channel": "Channel",   
+        "channel": "Channel",
     }
     _convention_converter= ConventionConverter(_parameters)
 
     def __init__(self, channel, **config_parameters):
         """
         The ``channel`` parameter can take the following values :
-        ``Blue``: blue channel in the BGR colorspace, or first channel of any colorspace, 
+        ``Blue``: blue channel in the BGR colorspace, or first channel of any colorspace,
         ``Green``: green channel in the BGR colorspace, or second channel of any colorspace,
         ``Red``: red channel in the BGR colorspace, or third channel of any colorspace,
         ``Hue``: hue channel in the HSV colorspace,
@@ -49,12 +49,12 @@ class ChannelExtraction(Transformation):
         ``Y``: Y channel in the YCbCr colorspace,
         ``Cb``: Cb channel in the YCbCr colorspace,
         ``Cr``: Cr channel in the YCbCr colorspace
-        
+
         :param channel: channel to extract
         :type channel: str
         """
         Transformation.__init__(self, **config_parameters)
-        
+
         if channel not in N2D2.ChannelExtractionTransformation.Channel.__members__.keys():
             raise WrongValue("channel", channel, N2D2.ChannelExtractionTransformation.Channel.__members__.keys())
 

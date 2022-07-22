@@ -32,6 +32,14 @@
 
 namespace N2D2 {
 
+/**
+ * @brief Implementation of the features quantization using Learned Step Size Quantization (LSQ) method for CPU
+ * 
+ * @tparam T weights type.
+ * Can be : double (64 bits)
+ *          float (32 bits)
+ *          half_float::half (16 bits)
+ */
 template <class T>
 class LSQQuantizerActivation_Frame: public LSQQuantizerActivation, public QuantizerActivation_Frame<T> {
 public:
@@ -81,11 +89,11 @@ public:
 
 protected:
     // Has to be saved for forward pass
-    Tensor<T> mStepSize;
-    Tensor<T> mDiffStepSize;
-    Tensor<T> mDiffStepSizeTensor;
+    Tensor<T> mStepSize; /**Tensor with the step size value*/
+    Tensor<T> mDiffStepSize; /**Tensor with the step size gradient value of the current iteration*/
+    Tensor<T> mDiffStepSizeTensor; /**Tensor containing the step size gradient*/
 
-    T mGradScaleFactor;
+    T mGradScaleFactor; /**Gradient scale factor aiming at a better convergence during training*/
 
     bool mInitialized = false;
 

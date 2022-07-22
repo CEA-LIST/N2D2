@@ -72,11 +72,11 @@ class test_cells(unittest.TestCase):
             n2d2.cells.Fc(1, 1, quantizer=1)
 
     def test_Conv(self):
-        with self.assertRaises(n2d2.error_handler.WrongInputType):
+        with self.assertRaises(TypeError):
             n2d2.cells.Conv("1", 1, [1, 1])
-        with self.assertRaises(n2d2.error_handler.WrongInputType):
+        with self.assertRaises(TypeError):
             n2d2.cells.Conv(1, "1", [1, 1])
-        with self.assertRaises(n2d2.error_handler.WrongInputType):
+        with self.assertRaises(TypeError):
             n2d2.cells.Conv(1, 1, 1)
         with self.assertRaises(n2d2.error_handler.WrongInputType):
             n2d2.cells.Conv(1, 1, [1, 1], activation=1)

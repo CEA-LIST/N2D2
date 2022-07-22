@@ -435,7 +435,7 @@ TEST(CPP_Export_32f, generate) {
                                     DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision, 
                                     nbTestStimuli);
 
-    ASSERT_EQUALS(system(("cd " + exportDir + " && CXXFLAGS=\"-DOUTPUTFILE\" make && ./run_export").c_str()), 0);
+    ASSERT_EQUALS(system(("cd " + exportDir + " && CXXFLAGS=\"-DOUTPUTFILE\" make && ./bin/run_export").c_str()), 0);
 
 
     // Check success rate
@@ -485,7 +485,7 @@ TEST(CPP_Export_8i, generate) {
                                     nbTestStimuli);
 
     ASSERT_EQUALS(system(("cd " + exportDir + " && CXXFLAGS=\"-DOUTPUTFILE\" make && "
-                          "./run_export").c_str()), 0);
+                          "./bin/run_export").c_str()), 0);
 
 
     // Check success rate

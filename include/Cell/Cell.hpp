@@ -112,6 +112,7 @@ public:
     {
         return mInputsDims[1];
     };
+    static size_t getNbGroups(const Tensor<bool>& map);
     size_t getInputsDim(unsigned int dim) const
     {
         assert(dim < mInputsDims.size());
@@ -183,7 +184,7 @@ public:
      *
      * @param channel       Input channel number
      * @param output        Output map number
-     * @return true if the output map if connected to input channel
+     * @return true if the output map is connected to input channel
     */
     bool isConnection(unsigned int channel, unsigned int output) const
     {
@@ -283,6 +284,13 @@ public:
     /// Initialize the state of the cell (e.g. weights random initialization)
     virtual void initialize() {};
 
+    /**
+     * @brief Set the Mapping object.
+     * 
+     * @param mapping Tensor of connections between input and output channels.
+     * @throws std::runtime_error Mapping is already set.
+     * @throws std::runtime_error mapping parameter is empty.
+     */
     virtual void setMapping(const Tensor<bool>& mapping)
     {   
         if (!mMapping.empty()){
@@ -425,7 +433,6 @@ protected:
     void setInputsDims(std::initializer_list<size_t> dims);
     virtual void setInputsDims(const std::vector<size_t>& dims);
     virtual void setOutputsDims() = 0;
-    size_t getNbGroups(const Tensor<bool>& map) const;
 
     std::pair<double, double> getOutputsRangeParents() const;
 

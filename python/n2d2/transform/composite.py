@@ -1,6 +1,6 @@
 """
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -23,8 +23,6 @@ from n2d2.n2d2_interface import ConventionConverter
 from n2d2.error_handler import WrongInputType, IsEmptyError
 from n2d2.transform.transformation import Transformation
 from n2d2.utils import inherit_init_docstring
-
-import N2D2
 
 @inherit_init_docstring()
 class Composite(Transformation):

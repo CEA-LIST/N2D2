@@ -36,7 +36,7 @@ class Solver(N2D2_Interface, ModelDatatyped, ABC):
         N2D2_Interface.__init__(self, **config_parameters)
 
     @classmethod
-    def create_from_N2D2_object(cls, N2D2_object):
+    def create_from_N2D2_object(cls, N2D2_object, **_):
         n2d2_solver = super().create_from_N2D2_object(N2D2_object)
         n2d2_solver._model_key = N2D2_object.getModel() + "<" \
             + N2D2_object.getDataType() + ">"

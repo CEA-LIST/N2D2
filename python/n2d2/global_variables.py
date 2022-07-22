@@ -24,7 +24,7 @@ from os.path import expanduser
 from inspect import ismethod
 from enum import Enum
 
-class GlobalVariables:
+class GlobalVariables: # pylint: disable=too-many-instance-attributes
     """
     This class handle global parameters.
 
@@ -53,7 +53,7 @@ class GlobalVariables:
     +--------------------------+-------------------------------------------------------------------+
     |``cuda_device``           | Device to use for GPU computation with CUDA, default = ``0``      |
     +--------------------------+-------------------------------------------------------------------+
-    |``cuda_compiled``         | Is True if you have compiled N2D2 with the CUDA library.          |
+    |``cuda_available``         | Is True if you have compiled N2D2 with the CUDA library.          |
     |                          | If False, you can install CUDA and reinstall N2D2 ot make CUDA    |
     |                          | available.                                                        |
     +--------------------------+-------------------------------------------------------------------+
@@ -70,7 +70,8 @@ class GlobalVariables:
         self.default_model = 'Frame'
         self.default_datatype = 'float'
         self.default_net = N2D2.Network(self._seed, saveSeed=False, printTimeElapsed=False)
-        self._cuda_compiled = N2D2.cuda_compiled
+        # check if N2D2 is cuda compiled and if there is devices available
+        self._cuda_available = N2D2.cuda_compiled and (N2D2.CudaContext.nbDevice() > 0)
         self._json_compiled = N2D2.json_compiled
         self._onnx_compiled = N2D2.onnx_compiled
         self._n2d2_ip_compiled = N2D2.N2D2_IP
@@ -90,59 +91,65 @@ class GlobalVariables:
         return self._cuda_device
     @cuda_device.setter
     def cuda_device(self, value):
+        if not self.cuda_available:
+            raise RuntimeError("N2D2 is not compiled with CUDA.")
         if isinstance(value, int):
             if value > N2D2.CudaContext.nbDevice():
-                raise RuntimeError(f"Cannot set device {value}, you have {N2D2.CudaContext.nbDevice()} devices")
+                raise RuntimeError(f"Cannot set device {value}, N2D2 detected only {N2D2.CudaContext.nbDevice()} devices")
             self._cuda_device = value
             N2D2.setCudaDeviceOption(value) # Setting this variable is mandatory to use the fit method otherwise,
                                     # the device used for learning would be 0 (default value)
             N2D2.CudaContext.setDevice(value)
-        elif isinstance(value, tuple) or isinstance(value, list):
+        elif isinstance(value, (tuple, list)):
             devices = ""
             first_device = value[0]
             for val in value:
                 if not isinstance(val, int):
                     raise TypeError("Device should be of type 'int'")
-                elif val > N2D2.CudaContext.nbDevice():
-                    raise RuntimeError(f"Cannot set device {value}, you have {N2D2.CudaContext.nbDevice()} devices")
+                if val > N2D2.CudaContext.nbDevice():
+                    raise RuntimeError(f"Cannot set device {val}, N2D2 detected only {N2D2.CudaContext.nbDevice()} devices")
                 devices += str(val) +","
             devices = devices.strip(",")
             N2D2.setMultiDevices(devices)
             N2D2.CudaContext.setDevice(first_device)
         else:
             raise TypeError(f"Device should be of type 'int' or 'tuple' got {type(value).__name__} instead")
+
     @property
-    def cuda_compiled(self):
-        return self._cuda_compiled
-    @cuda_compiled.setter
-    def cuda_compiled(self, _):
-        raise RuntimeError("The parameter cuda_compiled is on read only !")
+    def cuda_available(self):
+        return self._cuda_available
+    @cuda_available.setter
+    def cuda_available(self, _): # pylint: disable=no-self-use
+        raise RuntimeError("The parameter cuda_available is on read only !")
 
     @property
     def json_compiled(self):
         return self._json_compiled
+
     @json_compiled.setter
-    def json_compiled(self, _):
+    def json_compiled(self, _): # pylint: disable=no-self-use
         raise RuntimeError("The parameter json_compiled is on read only !")
 
     @property
     def onnx_compiled(self):
         return self._onnx_compiled
+
     @onnx_compiled.setter
-    def onnx_compiled(self, _):
+    def onnx_compiled(self, _): # pylint: disable=no-self-use
         raise RuntimeError("The parameter json_compiled is on read only !")
 
     @property
     def n2d2_ip_compiled(self):
         return self._n2d2_ip_compiled
-    @cuda_compiled.setter
-    def n2d2_ip_compiled(self, _):
+
+    @n2d2_ip_compiled.setter
+    def n2d2_ip_compiled(self, _): # pylint: disable=no-self-use
         raise RuntimeError("The parameter n2d2_ip_compiled is on read only !")
 
     # Legacy : We send a deprecated error if these methods are still used :
-    def set_cuda_device(self, device):
+    def set_cuda_device(self, device): # pylint: disable=no-self-use
         raise RuntimeError(f"set_cuda_device should not be used anymore, please replace it with :\nn2d2.global_variables.cuda_device = {device}")
-    def set_random_seed(self, seed):
+    def set_random_seed(self, seed): # pylint: disable=no-self-use
         raise RuntimeError (f"set_random_seed should not be used anymore, please replace it with :\nn2d2.global_variables.seed = {seed}")
 
     def __str__(self):

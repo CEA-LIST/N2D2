@@ -22,8 +22,7 @@
 
 from n2d2.transform import Rescale, PadCrop, ColorSpace, RangeAffine, SliceExtraction, Flip, Composite
 
-def ILSVRC_preprocessing(size=224):
-    margin = 32
+def ILSVRC_preprocessing(size=224, margin=32):
 
     trans = Composite([
         Rescale(width=size+margin, height=size+margin, keep_aspect_ratio=True, resize_to_fit=False),

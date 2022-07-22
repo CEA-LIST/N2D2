@@ -112,7 +112,7 @@ Example
 
 ::
 
-    n2d2 MobileNet_ONNX.ini -seed 1 -w /dev/null -export CPP -fuse -nbbits 8 -calib -1 -db-export 100 -test
+    n2d2 MobileNet_ONNX.ini -seed 1 -w weights_validation -export CPP -fuse -nbbits 8 -calib -1 -db-export 100 -test
 
 This command generates a C++ project in the sub-directory ``export_CPP_int8``.
 This project is ready to be compiled with a ``Makefile``.

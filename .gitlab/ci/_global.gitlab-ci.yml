@@ -9,8 +9,6 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   OMP_NUM_THREADS: 4
   GIT_SSL_NO_VERIFY: 1
-  N2D2_DATA: /nvme0/DATABASE
-
 
 # Generic before_script to run common jobs
 .before_script_template:
@@ -20,11 +18,28 @@ variables:
     - cmake -DCMAKE_BUILD_TYPE=Debug ..
 
 
+# Before_script used to run python jobs
+.before_script_python:
+  before_script:
+    - cd python
+    # Creating a new virtualenv
+    - pip install virtualenv
+    - virtualenv -p python3.7 venv
+    - shopt -s expand_aliases
+    - alias python='venv/bin/python3.7'
+    # -> verify env is clean
+    - python -m pip freeze
+    - python -m pip install -r requirements.txt
+    - python -m pip install -r keras_interoperability/requirements.txt
+    - python -m pip install -r pytorch_interoperability/requirements.txt
+    # -> Check installed lib
+    - python -m pip freeze
+
+
 # Before_script used to perform coverage tests
 .before_script_coverage:
   before_script:
     - mkdir build
     - cd build
     - cmake -DCMAKE_BUILD_TYPE=Coverage ..
-
 

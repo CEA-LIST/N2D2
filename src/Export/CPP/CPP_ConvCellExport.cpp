@@ -36,7 +36,7 @@
 #include <cmath>
 
 N2D2::Registrar<N2D2::ConvCellExport> N2D2::CPP_ConvCellExport::mRegistrar(
-    {"CPP", "CPP_ASMP", "CPP_STM32", "CPP_HLS"},
+    {"CPP", "CPP_ASMP", "CPP_STM32", "CPP_HLS", "CPP_Quantization"},
     N2D2::CPP_ConvCellExport::generate);
 
 N2D2::Registrar<N2D2::CPP_CellExport>
@@ -57,14 +57,14 @@ void N2D2::CPP_ConvCellExport::generate(const ConvCell& cell, const std::string&
     CPP_CellExport::generateHeaderBegin(cell, header);
     CPP_CellExport::generateHeaderIncludes(cell, header);
     generateHeaderConstants(cell, header);
-    
-    // Only the CPP and CPP_STM32 exports can support the tools
+
+    // Only the CPP_Quantization export can support the tools
     // for quantization aware training for now
-    if (Utils::match("*CPP_ASMP*", dirName) || Utils::match("*CPP_HLS*", dirName)) {
+    if (Utils::match("*CPP_Quantization*", dirName)) {
+        generateHeaderFreeParameters(cell, header);
+    } else {
         generateHeaderBias(cell, header);
         generateHeaderWeights(cell, header);
-    } else {
-        generateHeaderFreeParameters(cell, header);
     }
 
     CPP_CellExport::generateHeaderEnd(cell, header);

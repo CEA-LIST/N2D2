@@ -171,7 +171,7 @@ int main(int argc, char* argv[])
         throw std::runtime_error("Cannot run the TensorRT network with a numerical precision of : " + bitPrecision);
 
 
-    N2D2::Network n2d2_dnn;
+    N2D2_Export::Network n2d2_dnn;
     n2d2_dnn.setPrecision(bitPrecision);
     n2d2_dnn.setDeviceID(device);
 

@@ -18,10 +18,14 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-import n2d2
 import N2D2
 from os import mkdir
 from os.path import exists
+from n2d2 import error_handler, add_docstring, check_types
+from n2d2.n2d2_interface import Options
+from n2d2.quantizer import PTQ
+from n2d2.cells import DeepNetCell
+from n2d2.provider import Provider
 
 # This is the default docstring for export.
 # Parameters description can be override by the docstring defined inside the export function.
@@ -68,38 +72,38 @@ export_doc_string = \
 :type find_lr: int, optional
 """
 
-def _parse_export_parameters(gen_export=None, nb_bits=8, qat_SAT=False,
-                             export_no_unsigned=False, calibration=0,
-                             export_no_cross_layer_equalization=False,
-                             wt_clipping_mode="NONE", act_clipping_mode="MSE",
-                             act_scaling_mode="FLOAT_MULT", act_quantile_value=0.9999,
-                             act_rescale_per_output=False, calibration_reload=False, report=100,
-                             export_nb_stimuli_max= -1, wt_round_mode = "NONE",
-                             b_round_mode="NONE", c_round_mode="NONE", find_lr=0, log_kernels=False):
+def _parse_export_parameters(gen_export:str=None, nb_bits:int=8, qat_SAT:bool=False,
+                             export_no_unsigned:bool=False, calibration:int=0,
+                             export_no_cross_layer_equalization:bool=False,
+                             wt_clipping_mode:str="NONE", act_clipping_mode:str="MSE",
+                             act_scaling_mode:str="FLOAT_MULT", act_quantile_value:float=0.9999,
+                             act_rescale_per_output:bool=False, calibration_reload:bool=False, report:int=100,
+                             export_nb_stimuli_max:int= -1, wt_round_mode:str= "NONE",
+                             b_round_mode:str="NONE", c_round_mode:str="NONE", find_lr:int=0, log_kernels:bool=False):
     if wt_round_mode not in N2D2.WeightsApprox.__members__.keys():
-        raise n2d2.error_handler.WrongValue("wt_round_mode", wt_round_mode,
+        raise error_handler.WrongValue("wt_round_mode", wt_round_mode,
         ", ".join(N2D2.WeightsApprox.__members__.keys()))
     N2D2_wt_round_mode = N2D2.WeightsApprox.__members__[wt_round_mode]
     if b_round_mode not in N2D2.WeightsApprox.__members__.keys():
-        raise n2d2.error_handler.WrongValue("b_round_mode", b_round_mode,
+        raise error_handler.WrongValue("b_round_mode", b_round_mode,
         ", ".join(N2D2.WeightsApprox.__members__.keys()))
     N2D2_b_round_mode = N2D2.WeightsApprox.__members__[b_round_mode]
     if c_round_mode not in N2D2.WeightsApprox.__members__.keys():
-        raise n2d2.error_handler.WrongValue("c_round_mode", c_round_mode,
+        raise error_handler.WrongValue("c_round_mode", c_round_mode,
         ", ".join(N2D2.WeightsApprox.__members__.keys()))
     N2D2_c_round_mode = N2D2.WeightsApprox.__members__[c_round_mode]
 
     if act_scaling_mode not in N2D2.ScalingMode.__members__.keys():
-        raise n2d2.error_handler.WrongValue("act_scaling_mode", act_scaling_mode, ", ".join(N2D2.ScalingMode.__members__.keys()))
+        raise error_handler.WrongValue("act_scaling_mode", act_scaling_mode, ", ".join(N2D2.ScalingMode.__members__.keys()))
     N2D2_act_scaling_mode = N2D2.ScalingMode.__members__[act_scaling_mode]
     if act_clipping_mode not in N2D2.ClippingMode.__members__.keys():
-        raise n2d2.error_handler.WrongValue("act_clipping_mode", act_clipping_mode, ", ".join(N2D2.ClippingMode.__members__.keys()))
+        raise error_handler.WrongValue("act_clipping_mode", act_clipping_mode, ", ".join(N2D2.ClippingMode.__members__.keys()))
     N2D2_act_clipping_mode = N2D2.ClippingMode.__members__[act_clipping_mode]
     if wt_clipping_mode not in N2D2.ClippingMode.__members__.keys():
-        raise n2d2.error_handler.WrongValue("wt_clipping_mode", wt_clipping_mode, ", ".join(N2D2.ClippingMode.__members__.keys()))
+        raise error_handler.WrongValue("wt_clipping_mode", wt_clipping_mode, ", ".join(N2D2.ClippingMode.__members__.keys()))
     N2D2_wt_clipping_mode = N2D2.ClippingMode.__members__[wt_clipping_mode]
 
-    return n2d2.n2d2_interface.Options(
+    return Options(
         gen_export=gen_export,
         nb_bits=nb_bits,
         qat_SAT=qat_SAT,
@@ -119,21 +123,49 @@ def _parse_export_parameters(gen_export=None, nb_bits=8, qat_SAT=False,
         c_round_mode=N2D2_c_round_mode,
         find_lr=find_lr,
         log_kernels=log_kernels).N2D2()
-
-def _generate_export(deepnet_cell, provider=None, **kwargs):
+@check_types
+def _generate_export(deepnet_cell:DeepNetCell, provider:Provider=None, **kwargs):
 
     export_folder_name = None if "export_folder_name" not in kwargs else kwargs.pop("export_folder_name")
 
     N2D2_option = _parse_export_parameters(**kwargs)
     N2D2_deepnet = deepnet_cell.get_embedded_deepnet().N2D2()
+
+    if provider is not None:
+        N2D2_provider = provider.N2D2()
+        N2D2_database = N2D2_provider.getDatabase()
+        N2D2_deepnet.setDatabase(N2D2_database)
+        N2D2_deepnet.setStimuliProvider(N2D2_provider)
+        deepnet_cell[0].N2D2().clearInputTensors()
+        deepnet_cell[0].N2D2().addInput(N2D2_provider, 0, 0, N2D2_provider.getSizeX(), N2D2_provider.getSizeY())
+
+    if len(N2D2_deepnet.getTargets()) == 0:
+        # No target associated to the DeepNet
+        # We create a Target for the last cell of the network
+        print("Adding target !")
+        last_cell = deepnet_cell[-1].N2D2()
+        N2D2_target =  N2D2.TargetScore("Target", last_cell, provider.N2D2())
+        N2D2_deepnet.addTarget(N2D2_target)
+    elif provider is not None:
+        # We already have a Target, so we attach the new provider to it
+        for target in N2D2_deepnet.getTargets():
+            target.setStimuliProvider(provider.N2D2())
+
     if N2D2_option.calibration != 0:
         if "nb_bits" not in kwargs:
             kwargs["nb_bits"] = N2D2_option.nb_bits
-        n2d2.quantizer.PTQ(deepnet_cell, provider=provider, **kwargs)
+        # Provider = None because we already attach the new provider !
+        PTQ(deepnet_cell, provider=None, **kwargs)
+    else:
+        # Graph otpimisations are done during calibration.
+        # If we do not call calibration, we do graph optimisation now !
+        N2D2_deepnet.fuseBatchNorm()
+        N2D2_deepnet.removeDropout()
 
     if not deepnet_cell.is_integral() and N2D2_option.nb_bits > 0:
         raise RuntimeError(f"You need to calibrate the network to export it in {abs(N2D2_option.nb_bits)} bits integer" \
                             "set the 'calibration' option to something else than 0 or quantize the deepnetcell before export.")
+
     if not export_folder_name:
         export_folder_name = f"export_{N2D2_option.gen_export}_{'int' if N2D2_option.nb_bits > 0 else 'float'}{abs(N2D2_option.nb_bits)}"
 
@@ -142,9 +174,10 @@ def _generate_export(deepnet_cell, provider=None, **kwargs):
 
     N2D2.generateExportFromCalibration(N2D2_option, N2D2_deepnet, fileName=export_folder_name)
 
-@n2d2.utils.add_docstring(export_doc_string)
-def export_c(deepnet_cell: n2d2.cells.DeepNetCell,
-             provider: n2d2.provider.Provider=None,
+@add_docstring(export_doc_string)
+@check_types
+def export_c(deepnet_cell: DeepNetCell,
+             provider: Provider=None,
              **kwargs) -> None:
     """Generate a C export of the neural network.
 
@@ -161,9 +194,10 @@ def export_c(deepnet_cell: n2d2.cells.DeepNetCell,
     kwargs["gen_export"] = "C"
     _generate_export(deepnet_cell, provider, **kwargs)
 
-@n2d2.utils.add_docstring(export_doc_string)
-def export_cpp(deepnet_cell: n2d2.cells.DeepNetCell,
-               provider: n2d2.provider.Provider=None,
+@add_docstring(export_doc_string)
+@check_types
+def export_cpp(deepnet_cell: DeepNetCell,
+               provider: Provider=None,
                **kwargs) -> None:
     """Generate a CPP export of the neural network.
     """
@@ -171,9 +205,10 @@ def export_cpp(deepnet_cell: n2d2.cells.DeepNetCell,
     _generate_export(deepnet_cell, provider, **kwargs)
 
 
-@n2d2.utils.add_docstring(export_doc_string)
-def export_tensor_rt(deepnet_cell: n2d2.cells.DeepNetCell,
-                provider: n2d2.provider.Provider=None,
+@add_docstring(export_doc_string)
+@check_types
+def export_tensor_rt(deepnet_cell: DeepNetCell,
+                provider: Provider=None,
                 **kwargs) -> None:
     """Generate a TensorRT export of the neural network.
 

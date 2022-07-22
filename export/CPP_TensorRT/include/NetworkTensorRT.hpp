@@ -84,7 +84,7 @@ static class Logger : public nvinfer1::ILogger
 
 
 
-namespace N2D2 {
+namespace N2D2_Export {
 
 class Network {
 public:
@@ -229,7 +229,7 @@ public:
     void setParamPath(std::string path) {
         mParametersPath = path;
     };
-#ifdef ONNX
+#ifdef EXPORT_ONNX
     void setONNXModel(std::string path) {
         mONNXmodel = path;
     };
@@ -278,7 +278,7 @@ public:
     std::string mCalibrationCacheName = "";
     std::string mCalibrationFolder = "";
     std::string mParametersPath = "dnn/";
-#ifdef ONNX
+#ifdef EXPORT_ONNX
     std::string mONNXmodel = "";
 #endif
     /// Destructor
@@ -311,7 +311,7 @@ public:
     void createContext();
     void setIOMemory();
     void setTensorRTPrecision();
-#ifndef ONNX
+#ifndef EXPORT_ONNX
     void setInternalDimensions();
 #endif
 
@@ -583,7 +583,7 @@ public:
 
 
 template<typename Input_T>
-void N2D2::Network::asyncExe(Input_T* in_data, unsigned int batchSize) {
+void N2D2_Export::Network::asyncExe(Input_T* in_data, unsigned int batchSize) {
 
    CHECK_CUDA_STATUS(cudaMemcpyAsync(mInOutBuffer[0],
                                     in_data,
@@ -595,7 +595,7 @@ void N2D2::Network::asyncExe(Input_T* in_data, unsigned int batchSize) {
 }
 
 template<typename Input_T>
-void N2D2::Network::syncExe(Input_T* in_data, unsigned int batchSize) {
+void N2D2_Export::Network::syncExe(Input_T* in_data, unsigned int batchSize) {
 
    CHECK_CUDA_STATUS(cudaMemcpy(mInOutBuffer[0],
                                 in_data,
@@ -606,7 +606,7 @@ void N2D2::Network::syncExe(Input_T* in_data, unsigned int batchSize) {
 }
 
 template<typename Input_T>
-void N2D2::Network::syncExeGPU(Input_T** externalInOut, unsigned int batchSize) {
+void N2D2_Export::Network::syncExeGPU(Input_T** externalInOut, unsigned int batchSize) {
    mContext->execute(batchSize, reinterpret_cast<void**>(externalInOut));
 }
 

@@ -46,7 +46,7 @@
 
 N2D2::Registrar<N2D2::DeepNetExport>
 N2D2::CPP_DeepNetExport::mRegistrar(
-    {"CPP", "CPP_ASMP", "CPP_STM32", "CPP_HLS"},
+    {"CPP", "CPP_ASMP", "CPP_STM32", "CPP_HLS", "CPP_Quantization"},
     N2D2::CPP_DeepNetExport::generate);
 
 void N2D2::CPP_DeepNetExport::generate(DeepNet& deepNet,
@@ -57,13 +57,13 @@ void N2D2::CPP_DeepNetExport::generate(DeepNet& deepNet,
     Utils::createDirectories(dirName + "/dnn/src");
 
     generateParamsHeader(dirName + "/include/params.h");
-    
-    // Only the CPP and CPP_STM32 exports can support the tools
+
+    // Only the CPP_Quantization export can support the tools
     // for quantization aware training for now
-    if (Utils::match("*CPP_ASMP*", dirName) || Utils::match("*CPP_HLS*", dirName))
-        generateEnvironmentHeader(deepNet, dirName + "/dnn/include/env.hpp");
-    else 
+    if (Utils::match("*CPP_Quantization*", dirName))
         generateEnvironmentQATHeader(deepNet, dirName + "/dnn/include/env.hpp");
+    else
+        generateEnvironmentHeader(deepNet, dirName + "/dnn/include/env.hpp");
 
     deepNet.fusePadding();  // probably already done, but make sure!
     addBranchesCells(deepNet);
@@ -89,35 +89,377 @@ void N2D2::CPP_DeepNetExport::generate(DeepNet& deepNet,
         CPP_Config::MEMORY_ALIGNMENT,
         CPP_Config::MEMORY_ALIGNMENT_DEFAULT);
 
-    MemoryManager memManager = generateMemory(deepNet, wrapAroundBuffer,
-                    noBranchConcatOpt, includeInputInBuffer, memoryAlignment);
 
-    DrawNet::drawGraph(deepNet, dirName + "/graph");
+    MemoryManager memManager;
+    
+    // Only the CPP_Quantization export can support the tools
+    // for quantization aware training for now
+    if (Utils::match("*CPP_Quantization*", dirName)) {
+        memManager = generateQATMemory(deepNet, wrapAroundBuffer,
+                    noBranchConcatOpt, includeInputInBuffer, memoryAlignment);
+    } else {
+        memManager = generateMemory(deepNet, wrapAroundBuffer,
+                    noBranchConcatOpt, includeInputInBuffer, memoryAlignment);
+    }
+
+    // Creation and display the graph of the model
+    Utils::createDirectories(dirName + "/statistics/graph");
+    DrawNet::drawGraph(deepNet, dirName + "/statistics/graph" + "/graph");
 
     memManager.optimize(exportParams.getProperty<MemoryManager::OptimizeStrategy>
         (CPP_Config::MEMORY_MANAGER_STRATEGY,
         CPP_Config::MEMORY_MANAGER_STRATEGY_DEFAULT));
 
-    memManager.log(dirName + "/memory_mapping.log");
+    // Creation and display memory logs
+    Utils::createDirectories(dirName + "/statistics/memory");
+    memManager.log(dirName + "/statistics/memory" + "/memory_mapping.log");
 
     DeepNetExport::generateCells(deepNet, dirName, "CPP");
 
     generateMemoryInfoHeader(deepNet, dirName + "/dnn/include/mem_info.hpp", 
                              memManager, memoryAlignment);
-    
-    // Only the CPP and CPP_STM32 exports can support the tools
+
+    // Only the CPP_Quantization export can support the tools
     // for quantization aware training for now
-    if (Utils::match("*CPP_ASMP*", dirName) || Utils::match("*CPP_HLS*", dirName))
-        generateNetworkPropagateFile(deepNet,
-                                     dirName + "/src/NetworkPropagate.cpp");
-    else 
-        generateNetworkPropagateQATFile(deepNet,
-                                        dirName + "/src/NetworkPropagate.cpp");
+    if (Utils::match("*CPP_Quantization*", dirName))
+        generateForwardQATFile(deepNet,
+                                        dirName + "/dnn/src/forward.cpp");
+    else
+        generateForwardFile(deepNet,
+                                     dirName + "/dnn/src/forward.cpp");
 
     printStats(deepNet, memManager);
 }
 
 N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateMemory(
+    DeepNet& deepNet,
+    bool wrapAroundBuffer,
+    bool noBranchConcatOpt,
+    bool includeInputInBuffer,
+    int memoryAlignment)
+{
+    MemoryManager memManager;
+
+    if (includeInputInBuffer) {
+        // Create memory manager and allocate input channels
+        const std::shared_ptr<StimuliProvider>& sp = deepNet.getStimuliProvider();
+        const unsigned int nbChannelsAligned = (sp->getNbChannels() > 1)
+            ? memoryAlignment * (unsigned int)std::ceil(sp->getNbChannels()
+                                                    / (double)memoryAlignment) : 1;
+
+        memManager.allocate(std::shared_ptr<Cell>(),
+            nbChannelsAligned,
+            deepNet.getChildCells("env"),
+            nbChannelsAligned,
+            sp->getSizeX(),
+            sp->getSizeY());
+        memManager.tick();
+    }
+
+    const std::vector<std::vector<std::string> >& layers = deepNet.getLayers();
+
+    std::map<std::shared_ptr<Cell>, MemoryManager::MemoryPlane> noBranchConcats;
+    std::vector<std::shared_ptr<Cell> > excludedAllocableCells;
+
+    for (std::vector<std::vector<std::string> >::const_iterator itLayer
+        = layers.begin() + 1,
+        itLayerEnd = layers.end(); itLayer != itLayerEnd; ++itLayer)
+    {
+        for (std::vector<std::string>::const_iterator it = (*itLayer).begin(),
+            itEnd = (*itLayer).end();
+            it != itEnd; ++it)
+        {
+            const std::shared_ptr<Cell> cell = deepNet.getCell(*it);
+
+            if (cell->getType() == CPP_ConcatCell::Type
+                && noBranchConcats.find(cell) != noBranchConcats.end())
+            {
+                continue;
+            }
+
+            std::vector<std::shared_ptr<Cell> > childs
+                = deepNet.getChildCells(cell->getName());
+
+            unsigned int size = (cell->getNbOutputs() > 1)
+                ? memoryAlignment * (unsigned int)std::ceil(cell->getNbOutputs()
+                                                / (double)memoryAlignment) : 1;
+            unsigned int stride = size;
+            unsigned int length = cell->getOutputsWidth();
+            unsigned int count = cell->getOutputsHeight();
+
+            bool isWrappable = true;
+            std::vector<std::shared_ptr<Cell> > allocableCells;
+            std::shared_ptr<Cell> concatCell;
+
+            // Check if next layer is concatenation without branch
+            // => if it is the case, allocate the concatenated memory directly
+            // to avoid memory copies
+            if (noBranchConcatOpt && childs.size() == 1
+                && childs.back()->getType() == CPP_ConcatCell::Type)
+            {
+                bool noBranchConcat = true;
+
+                std::vector<std::shared_ptr<Cell> > concatParents
+                    = deepNet.getParentCells(childs.back()->getName());
+
+                for (std::vector<std::shared_ptr<Cell> >::const_iterator
+                    itCell = concatParents.begin(),
+                    itCellEnd = concatParents.end();
+                    itCell != itCellEnd; ++itCell)
+                {
+                    const std::vector<std::shared_ptr<Cell> > parentChilds
+                        = deepNet.getChildCells((*itCell)->getName());
+
+                    if (parentChilds.size() > 1)
+                        noBranchConcat = false;
+
+                    if (!((*itCell)->getType() == ConvCell::Type
+                        || (*itCell)->getType() == PoolCell::Type
+                        || (*itCell)->getType() == ElemWiseCell::Type
+                        || (*itCell)->getType() == ScalingCell::Type))
+                    {
+                        isWrappable = false;
+                    }
+                }
+
+                if (noBranchConcat) {
+                    concatCell = childs.back();
+                    allocableCells.swap(concatParents);
+
+                    // In this case, the memory alignment is on the concatenated
+                    // size (stride), not each cell size
+                    size = cell->getNbOutputs();
+                    stride = (concatCell->getNbOutputs() > 1)
+                            ? memoryAlignment * (unsigned int)
+                                std::ceil(concatCell->getNbOutputs()
+                                / (double)memoryAlignment)
+                            : 1;
+
+                    assert(concatCell->getNbOutputs() > cell->getNbOutputs());
+                    assert(concatCell->getOutputsWidth()
+                        == cell->getOutputsWidth());
+                    assert(concatCell->getOutputsHeight()
+                        == cell->getOutputsHeight());
+                }
+            }
+            else {
+                isWrappable = (cell->getType() == ConvCell::Type
+                    || cell->getType() == PoolCell::Type
+                    || cell->getType() == ElemWiseCell::Type
+                    || cell->getType() == ScalingCell::Type);
+                allocableCells.push_back(cell);
+            }
+
+            const size_t fullSize = stride * length * count;
+
+            // Check if wrap around buffer is possible for this cell
+            // (re-using previous cell outputs memory for this cell outputs).
+            // => only if this cell is the only child of its parent(s)
+            size_t wrapAroundSize = 0;
+            size_t wrapAroundExtra = 0;
+            const MemoryManager::MemoryPlane* wrapAroundMemPlane = NULL;
+
+            for (std::vector<std::shared_ptr<Cell> >::const_iterator
+                itCell = allocableCells.begin(),
+                itCellEnd = allocableCells.end();
+                itCell != itCellEnd; ++itCell)
+            {
+                if (std::find(excludedAllocableCells.begin(),
+                    excludedAllocableCells.end(), *itCell)
+                        != excludedAllocableCells.end())
+                {
+                    continue;
+                }
+
+                // Select the best parent among all allocable cells for 
+                // reallocation, which is the one with most memory (in order
+                // to minimize the reallocation size).
+                std::vector<std::shared_ptr<Cell> > parents
+                    = deepNet.getParentCells((*itCell)->getName());
+
+                for (std::vector<std::shared_ptr<Cell> >::const_iterator
+                    itParent = parents.begin(), itParentEnd = parents.end();
+                    itParent != itParentEnd; ++itParent)
+                {
+                    const std::vector<std::shared_ptr<Cell> > parentChilds
+                        = deepNet.getChildCells(((*itParent))
+                            ? (*itParent)->getName() : "env");
+
+                    if (parentChilds.size() == 1) {
+                        const std::map<std::shared_ptr<Cell>,
+                            MemoryManager::MemoryPlane>::iterator itConcat
+                                = noBranchConcats.find((*itParent));
+
+                        // Reminder: there can be multiple allocable cells only
+                        // for concatenation. In this case, we want all the
+                        // allocable cells to be allocated on the same memory
+                        // space with striding to avoid a concat operation.
+
+                        // Nb planes may be 0 if the parent cell was not yet 
+                        // processed.
+                        // In this case, this allocable cell cannot be the
+                        // current cell, and an other allocable cell will be
+                        // allocated in this round. Therefore, for the next
+                        // rounds, the memory of this allocable cell's parent
+                        // cannot be used for wrapping as at least one other
+                        // allocable cell was already allocated on a different
+                        // memory space (using it would prevent concatenation
+                        // with stride).
+                        // TODO: depending on the processing order of the graph,
+                        // this may lead to sub-optimal memory mapping!
+                        if (itConcat == noBranchConcats.end()
+                            && memManager.getNbPlanes((*itParent)) == 0)
+                        {
+                            excludedAllocableCells.push_back(*itCell);
+                            continue;
+                        }
+
+                        const MemoryManager::MemoryPlane& memPlane
+                            = (itConcat != noBranchConcats.end())
+                                ? (*itConcat).second
+                                : memManager.getPlanes((*itParent)).back();
+
+                        if (isWrappable || !memManager.isWrapAround(
+                                    memPlane.memSpace,
+                                    memPlane.getFinalOffset()
+                                        - memPlane.memSpace->offset,
+                                    fullSize))
+                        {
+                            if (memPlane.getSize() > wrapAroundSize) {
+                                wrapAroundSize = memPlane.getSize();
+                                wrapAroundMemPlane = &memPlane;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Compute the extra memory needed for wrapping
+            if (isWrappable && wrapAroundSize > 0) {
+                for (std::vector<std::shared_ptr<Cell> >::const_iterator
+                    itCell = allocableCells.begin(),
+                    itCellEnd = allocableCells.end();
+                    itCell != itCellEnd; ++itCell)
+                {
+                    // Compute the minimum number of lines that must be retained
+                    // at the input before overwriting by the ouput.
+                    std::size_t marginLines = 0;
+
+                    if ((*itCell)->getType() == ConvCell::Type) {
+                        const auto convCell
+                            = std::dynamic_pointer_cast<ConvCell>((*itCell));
+                        marginLines = convCell->getPaddingY()
+                            / (double)convCell->getStrideY();
+                    }
+                    else if ((*itCell)->getType() == PoolCell::Type) {
+                        const auto poolCell
+                            = std::dynamic_pointer_cast<PoolCell>((*itCell));
+                        marginLines = poolCell->getPaddingY()
+                            / (double)poolCell->getStrideY();
+                    }
+                    // No margin necessary for ElemWiseCell
+                    // No margin necessary for ScalingCell
+
+                    // Take into account memory alignment of the input
+                    const size_t nbChannels
+                        = ((*itCell)->getType() == ElemWiseCell::Type)
+                            // Specific case for ElemWise: each input has the
+                            // same number of channels and we are overwriting 
+                            // only one of them
+                            ? (*itCell)->getNbOutputs()
+                            : (*itCell)->getNbChannels();
+                    const size_t inputSize = (nbChannels > 1)
+                            ? memoryAlignment * (unsigned int)std::ceil(
+                                nbChannels / (double)memoryAlignment) : 1;
+                    const size_t inputFullSize = inputSize
+                        * (*itCell)->getChannelsWidth()
+                        * (*itCell)->getChannelsHeight();
+
+                    // The extra space must accomodate for (marginLines + 1)
+                    // ouput lines (+1 because the full input line has not 
+                    // necessarily been read before the writing starts).
+                    const size_t outputLineSize = stride * length;
+                    const size_t wrapAroundCellExtra
+                        = (std::max(inputFullSize, fullSize)
+                            + outputLineSize * (marginLines + 1)) - fullSize;
+
+                    if (wrapAroundCellExtra > wrapAroundExtra)
+                        wrapAroundExtra = wrapAroundCellExtra;
+                }
+            }
+
+            // Dependencies should be concat cell childs, not concat cell
+            if (concatCell)
+                childs = deepNet.getChildCells(concatCell->getName());
+
+            std::map<std::shared_ptr<Cell>, MemoryManager::MemoryPlane>
+                ::iterator itConcat = (concatCell)
+                    ? noBranchConcats.find(concatCell)
+                    : noBranchConcats.end();
+
+            // MemoryPlane to (re)use
+            const MemoryManager::MemoryPlane& memPlane
+                = (itConcat != noBranchConcats.end())
+                    ? (*itConcat).second :
+                  (wrapAroundBuffer && wrapAroundSize > 0)
+                    ? (*wrapAroundMemPlane) :
+                       memManager.allocate(size, childs, stride, length, count);
+
+            // Compute concatOffset
+            unsigned int concatOffset = 0;
+
+            if (concatCell) {
+                std::vector<std::shared_ptr<Cell> > concatParents
+                    = deepNet.getParentCells(concatCell->getName());
+
+                for (std::vector<std::shared_ptr<Cell> >::const_iterator
+                    itCell = concatParents.begin(),
+                    itCellEnd = concatParents.end();
+                    itCell != itCellEnd; ++itCell)
+                {
+                    if ((*itCell) == cell)
+                        break;
+                    else
+                        concatOffset += (*itCell)->getNbOutputs();
+                }
+            }
+
+            if (wrapAroundBuffer && wrapAroundSize > 0) {
+                memManager.reallocate(memPlane,
+                    cell, concatOffset,
+                    size, true, wrapAroundExtra, childs,
+                    stride, length, count);
+            }
+            else {
+                memManager.reallocate(memPlane.memSpace,
+                    cell, memPlane.offset + concatOffset,
+                    size, false, 0, childs, stride, length, count);
+            }
+
+            if (concatCell && itConcat == noBranchConcats.end()) {
+                std::tie(itConcat, std::ignore)
+                    = noBranchConcats.emplace(concatCell, memPlane);
+            }
+
+            memManager.releaseDependencies(cell);
+        }
+
+        memManager.tick();
+    }
+
+    // Remove noBranchConcats cells
+    for (std::map<std::shared_ptr<Cell>, MemoryManager::MemoryPlane>
+        ::const_iterator itConcat = noBranchConcats.begin(),
+        itConcatEnd = noBranchConcats.end();
+        itConcat != itConcatEnd; ++itConcat)
+    {
+        deepNet.removeCell((*itConcat).first);
+    }
+
+    return memManager;
+}
+
+N2D2::MemoryManager N2D2::CPP_DeepNetExport::generateQATMemory(
     DeepNet& deepNet,
     bool wrapAroundBuffer,
     bool noBranchConcatOpt,
@@ -993,7 +1335,7 @@ void N2D2::CPP_DeepNetExport::generateMemoryInfoHeader(
     memInfo.close();
 }
 
-void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
+void N2D2::CPP_DeepNetExport::generateForwardFile(
     const DeepNet& deepNet, 
     const std::string& filePath) 
 {
@@ -1006,7 +1348,13 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
         " N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_MEMORY);\n";
 
     functionCalls << "#ifdef SAVE_OUTPUTS\n"
-                << "    FILE* env_stream = fopen(\"env_output.txt\", \"w\");\n"
+                << "    // Creation of the outputs directory\n"
+                << "    struct stat st = {0};\n"
+                << "    if (stat(\"outputs\", &st) == -1) {\n"
+                << "        mkdir(\"outputs\", 0700);\n"
+                << "    }\n"
+                << "\n"
+                << "    FILE* env_stream = fopen(\"outputs/env_output.txt\", \"w\");\n"
                 << "    saveOutputs("
                 << "ENV_NB_OUTPUTS, "
                 << "ENV_SIZE_Y, " 
@@ -1085,7 +1433,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                     << ");\n\n";
 
             functionCalls << "#ifdef SAVE_OUTPUTS\n"
-                        << "    FILE* max_stream = fopen(\"max_output.txt\", \"w\");\n"
+                        << "    FILE* max_stream = fopen(\"outputs/max_output.txt\", \"w\");\n"
                         << "    saveOutputs("
                         << targetCellPrefix << "_NB_OUTPUTS, "
                         << targetCellPrefix << "_OUTPUTS_HEIGHT, " 
@@ -1123,6 +1471,11 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                          << "#include \"env.hpp\"\n"
                          << "#include \"mem_info.hpp\"\n"
                          << "\n"
+                         << "#ifdef SAVE_OUTPUTS\n"
+                         << "#include <sys/types.h>\n"
+                         << "#include <sys/stat.h>\n"
+                         << "#endif\n"
+                         << "\n"
                          << includes.str()
                          << "\n\n";
 
@@ -1130,7 +1483,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
                          << "\n\n";
 
     const std::string inputType = DeepNetExport::mEnvDataUnsigned?"UDATA_T":"DATA_T";
-    networkPropagateFile << "namespace N2D2 {\n"
+    networkPropagateFile << "namespace N2D2_Export {\n"
                          << "\n"
                          << "template<>\n"
                          << "void Network::propagate(const " << inputType << "* inputs, "
@@ -1159,7 +1512,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateFile(
     }
 }
 
-void N2D2::CPP_DeepNetExport::generateNetworkPropagateQATFile(
+void N2D2::CPP_DeepNetExport::generateForwardQATFile(
     const DeepNet& deepNet, 
     const std::string& filePath) 
 {
@@ -1172,7 +1525,13 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateQATFile(
         " N2D2_SECTION_ATTRIBUTE(N2D2_SECTION_NN_MEMORY);\n";
 
     functionCalls << "#ifdef SAVE_OUTPUTS\n"
-                << "    FILE* env_stream = fopen(\"env_output.txt\", \"w\");\n"
+                << "    // Creation of the outputs directory\n"
+                << "    struct stat st = {0};\n"
+                << "    if (stat(\"outputs\", &st) == -1) {\n"
+                << "        mkdir(\"outputs\", 0700);\n"
+                << "    }\n"
+                << "\n"
+                << "    FILE* env_stream = fopen(\"outputs/env_output.txt\", \"w\");\n"
                 << "    saveOutputs("
                 << "ENV_NB_OUTPUTS, "
                 << "ENV_SIZE_Y, " 
@@ -1253,7 +1612,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateQATFile(
                     << ");\n\n";
 
             functionCalls << "#ifdef SAVE_OUTPUTS\n"
-                        << "    FILE* max_stream = fopen(\"max_output.txt\", \"w\");\n"
+                        << "    FILE* max_stream = fopen(\"outputs/max_output.txt\", \"w\");\n"
                         << "    saveOutputs("
                         << targetCellPrefix << "_NB_OUTPUTS, "
                         << targetCellPrefix << "_OUTPUTS_HEIGHT, " 
@@ -1290,6 +1649,11 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateQATFile(
                          << "#include \"env.hpp\"\n"
                          << "#include \"mem_info.hpp\"\n"
                          << "\n"
+                         << "#ifdef SAVE_OUTPUTS\n"
+                         << "#include <sys/types.h>\n"
+                         << "#include <sys/stat.h>\n"
+                         << "#endif\n"
+                         << "\n"
                          << includes.str()
                          << "\n\n";
 
@@ -1303,7 +1667,7 @@ void N2D2::CPP_DeepNetExport::generateNetworkPropagateQATFile(
         && DeepNetExport::mEnvDataUnsigned) ? "udata" : "data";
     const int inputNbBits = (int)CellExport::mPrecision;
 
-    networkPropagateFile << "namespace N2D2 {\n"
+    networkPropagateFile << "namespace N2D2_Export {\n"
         << "\n"
         << "template<>\n"
         << "void Network::propagate(const " << inputType << "<" << inputNbBits

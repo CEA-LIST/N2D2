@@ -960,6 +960,7 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRange(F
     Float_T wMax = 0.0;
 
     for (int output = 0; output < (int)getNbOutputs(); ++output) {
+        // compare MinMax of weights
         if (type == All || type == Multiplicative) {
             for (unsigned int channel = 0; channel < getNbChannels(); ++channel)
             {
@@ -977,7 +978,7 @@ std::pair<N2D2::Float_T, N2D2::Float_T> N2D2::ConvCell::getFreeParametersRange(F
                 }
             }
         }
-
+        // compare MinMax values with bias
         if ((type == All || type == Additive) && !mNoBias) {
             Tensor<Float_T> bias;
             getBias(output, bias);

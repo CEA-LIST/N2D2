@@ -23,7 +23,7 @@ from n2d2.utils import ConfigSection
 from n2d2.cells.nn import Fc, Conv, ConvDepthWise, ConvPointWise, GlobalPool2d, BatchNorm2d
 from n2d2.cells import Sequence
 from n2d2.activation import Rectifier, Linear
-from n2d2.filler import He, Xavier, Constant, Normal
+from n2d2.filler import Xavier, Constant, Normal
 from n2d2.models.ILSVRC_outils import ILSVRC_preprocessing as ILSVRC_preprocessing_tools
 
 # NOTE: This is the filler optimized for quantization. In normal training He might work better
@@ -114,7 +114,7 @@ class MobileNetv1Extractor(Sequence):
 class MobileNetv1Head(Sequence):
 
     def __init__(self, nb_outputs, alpha=None):
-    
+
         compute_nb_outputs = lambda x: int(x * 32 * alpha)
 
         self.pool = GlobalPool2d(pooling='Average', name="pool1")
@@ -136,6 +136,5 @@ class MobileNetv1(Sequence):
 
 
 
-def ILSVRC_preprocessing(size=224):
-   return ILSVRC_preprocessing_tools(size)
-
+def ILSVRC_preprocessing(size=224, margin=32):
+    return ILSVRC_preprocessing_tools(size, margin)
