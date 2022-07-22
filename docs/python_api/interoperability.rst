@@ -20,9 +20,9 @@ In order to integrate N2D2 into the Keras environment, we run TensorFlow in eage
 Documentation
 ~~~~~~~~~~~~~
 
-.. autofunction:: keras_interoperability.wrap
+.. autofunction:: keras_to_n2d2.wrap
 
-.. autoclass:: keras_interoperability.CustomSequential
+.. autoclass:: keras_to_n2d2.CustomSequential
         :members:
 
 Changing the optimizer
@@ -31,7 +31,7 @@ Changing the optimizer
 .. warning::
         Due to the implementation, n2d2 parameters are not visible to ``Keras`` and thus cannot be optimized by a ``Keras`` optimizer.
 
-When compiling the :py:class:`keras_interoperability.CustomSequential`, you can pass an :py:class:`n2d2.solver.Solver` object to the parameter `optimizer`.
+When compiling the :py:class:`keras_to_n2d2.CustomSequential`, you can pass an :py:class:`n2d2.solver.Solver` object to the parameter `optimizer`.
 This will change the method used to optimize the parameters.
 
 .. code-block:: python
@@ -77,9 +77,9 @@ If you work with ``CUDA`` tensor, the conversion ``Torch`` to ``n2d2`` is also d
 Documentation
 ~~~~~~~~~~~~~
 
-.. autofunction:: pytorch_interoperability.wrap
+.. autofunction:: pytorch_to_n2d2.wrap
 
-.. autoclass:: pytorch_interoperability.Block
+.. autoclass:: pytorch_to_n2d2.Block
         :members:
 
 Example
