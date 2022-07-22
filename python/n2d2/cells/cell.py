@@ -20,11 +20,16 @@
 """
 
 from abc import ABC, abstractmethod
+from typing import Union, Optional, List
 import N2D2
 
 from n2d2 import global_variables
 from n2d2.deepnet import DeepNet
 from n2d2.solver import Solver
+from n2d2.filler import Filler
+from n2d2.target import Target
+from n2d2 import Tensor, Interface
+from n2d2.provider import Provider
 from n2d2 import Tensor, Interface, generate_name, methdispatch, check_types, error_handler
 from n2d2.provider import DataProvider
 from n2d2.target import Target
@@ -40,8 +45,8 @@ class Cell(ABC):
             name = generate_name(self)
         self._name = name
         self._deepnet = None
-    
-    def __call__(self, x):
+
+    def __call__(self, x: Union[Tensor, Interface]):
         """
         Do the common check on the inputs and infer the deepNet from the inputs.
         """
@@ -58,11 +63,11 @@ class Cell(ABC):
         pass
 
     @abstractmethod
-    def import_free_parameters(self, dir_name, ignore_not_exists=False):
+    def import_free_parameters(self, dir_name:str, ignore_not_exists:bool =False):
         pass
 
     @abstractmethod
-    def export_free_parameters(self, dir_name, verbose=True):
+    def export_free_parameters(self, dir_name:str, verbose:bool =True):
         pass
 
     def get_name(self):
@@ -89,11 +94,11 @@ class Trainable(ABC):
             self.set_filler(filler)
 
     @abstractmethod
-    def set_solver(self, solver):
+    def set_solver(self, solver:Solver):
         pass
 
     @abstractmethod
-    def set_filler(self, filler, refill=False):
+    def set_filler(self, filler:Filler, refill: bool=False):
         pass
 
     @abstractmethod
@@ -108,7 +113,7 @@ class Block(Cell):
         the __call__ method therefore has to be defined explicitly.
     """
 
-    def __init__(self, cells, name=None):
+    def __init__(self, cells: List[Cell], name: Optional[str]=None):
         assert isinstance(cells, list)
         self._cells = {}
         for cell in cells:
@@ -184,7 +189,7 @@ class Block(Cell):
         self._get_cells(cells)
         return cells
 
-    def _get_cells(self, cells):
+    def _get_cells(self, cells: List[Cell]):
         for elem in self._cells.values():
             if isinstance(elem, Block):
                 elem._get_cells(cells)
@@ -206,6 +211,7 @@ class Block(Cell):
         for cell in self._cells.values():
             cell.learn()
         return self
+
     @check_types
     def set_solver(self, solver:Solver):
         """Set a solver for every optimizable parameters in this Block. Optimizable parameters are weights, biases and quantizers.
@@ -234,11 +240,11 @@ class Block(Cell):
             if isinstance(cell, Trainable):
                 cell.back_propagate = value
 
-    def import_free_parameters(self, dir_name, ignore_not_exists=False):
+    def import_free_parameters(self, dir_name:str, ignore_not_exists:bool =False):
         for cell in self._cells.values():
             cell.import_free_parameters(dir_name, ignore_not_exists=ignore_not_exists)
 
-    def export_free_parameters(self, dir_name, verbose=True):
+    def export_free_parameters(self, dir_name:str, verbose:bool =True):
         for cell in self._cells.values():
             cell.export_free_parameters(dir_name, verbose=verbose)
 
@@ -249,7 +255,7 @@ class Block(Cell):
         """
         return self._generate_str(1)
 
-    def _generate_str(self, indent_level):
+    def _generate_str(self, indent_level:int):
         output = "\'" + self.get_name() + "\' " + self.get_type() + "("
 
         for idx, value in enumerate(self._cells.values()):
@@ -272,7 +278,7 @@ class Iterable(Block, ABC):
        of the list.
     """
     @abstractmethod
-    def __init__(self, cells, name=None):
+    def __init__(self, cells: List[Cell], name: Optional[str]=None):
         Block.__init__(self, cells, name)
         # This is the sequential representation of the cells, since the self._cells object is a dictionary and therefore
         # does not guarantee order
@@ -290,7 +296,7 @@ class Iterable(Block, ABC):
     def __iter__(self):
         return self._seq.__iter__()
 
-    def insert(self, index, cell):
+    def insert(self, index:int, cell:Cell):
         if not isinstance(cell, Cell):
             raise error_handler.WrongInputType("cell", type(cell), ["n2d2.cells.Cell"])
         if index < 0:
@@ -312,7 +318,7 @@ class Iterable(Block, ABC):
     def index(self, item):
         return self._seq.index(item)
 
-    def _generate_str(self, indent_level):
+    def _generate_str(self, indent_level:int):
         output = "\'" + self.get_name() + "\' " + self.get_type() + "("
 
         for idx, value in enumerate(self._seq):
@@ -329,10 +335,10 @@ class Sequence(Iterable):
     """
          This implementation of the Iterable class describes a sequential (vertical) ordering of cells.
     """
-    def __init__(self, cells, name=None):
+    def __init__(self, cells: List[Cell], name: Optional[str]=None):
         Iterable.__init__(self, cells, name)
 
-    def __call__(self, x):
+    def __call__(self, x: Union[Tensor, Interface]):
         super().__call__(x)
         for cell in self:
             x = cell(x)
@@ -348,10 +354,11 @@ class Layer(Iterable):
     @check_types
     def __init__(self, cells:list, mapping:list =None, name:str=None):
         Iterable.__init__(self, cells, name)
+        self._mapping = None
         if mapping:
             self._mapping = mapping
 
-    def __call__(self, x):
+    def __call__(self, x: Union[Tensor, Interface]):
         super().__call__(x)
         out = []
         if isinstance(x, Interface):
@@ -366,8 +373,10 @@ class Layer(Iterable):
                 # Default is all-to-all
                 if self._mapping is None or self._mapping[in_idx][out_idx]:
                     cell_inputs.append(ipt)
-            out.append(cell(Interface(cell_inputs)))
-        return Interface([out])
+            # if the cell is identity, then the output is an interface and must be converted to tensor
+            for tensor in cell(Interface(cell_inputs)).get_tensors():
+                out.append(tensor)
+        return Interface(out)
 
 
 class DeepNetCell(Block):
@@ -438,7 +447,7 @@ class DeepNetCell(Block):
         return cls(N2D2_deepnet)
 
     @classmethod
-    def load_from_INI(cls, path):
+    def load_from_INI(cls, path:str):
         """Load a deepnet from an INI file.
 
         :param model_path: Path to the ``ini`` file.
@@ -469,7 +478,7 @@ class DeepNetCell(Block):
             return outputs[0]
         return outputs
 
-    def concat_to_deepnet(self, deepnet):
+    def concat_to_deepnet(self, deepnet:DeepNet):
 
         cells = self._embedded_deepnet.N2D2().getCells()
         layers = self._embedded_deepnet.N2D2().getLayers()
@@ -525,7 +534,7 @@ class DeepNetCell(Block):
         self._deepnet.N2D2().exportNetworkFreeParameters(dir_name)
 
 
-    def remove(self, name:str, reconnect:bool=True)->None:
+    def remove(self, name:str, reconnect:bool =True)->None:
         """Remove a cell from the encapsulated deepnet.
         :param name: Name of cell that shall be removed.
         :type name: str
@@ -558,7 +567,9 @@ class DeepNetCell(Block):
         """
         return self._embedded_deepnet.get_output_cells()
 
-    def fit(self, learn_epoch, log_epoch=1000, avg_window=10000, bench=False, ban_multi_device=False, valid_metric="Sensitivity", stop_valid=0, log_kernels=False):
+    def fit(self, learn_epoch:int, log_epoch:int =1000, avg_window:int =10000, bench:bool =False, 
+                ban_multi_device:bool =False, valid_metric:str ="Sensitivity", stop_valid:int =0, 
+                log_kernels:bool =False):
         """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
 
         :param learn_epoch: The number of epochs steps
@@ -596,10 +607,10 @@ class DeepNetCell(Block):
                         log_kernels=log_kernels)
         N2D2.learn_epoch(parameters.N2D2(), N2D2_deepnet)
 
-    def run_test(self, log = 1000, report = 100, test_index = -1, test_id = -1,
-                 qat_sat = False, log_kernels = False, wt_round_mode = "NONE",
-                 b_round_mode = "NONE", c_round_mode = "NONE",
-                 act_scaling_mode = "FLOAT_MULT", log_JSON = False, log_outputs = 0):
+    def run_test(self, log:int = 1000, report:int = 100, test_index:int = -1, test_id:int = -1,
+                 qat_sat:bool = False, log_kernels:bool = False, wt_round_mode:str = "NONE",
+                 b_round_mode:str = "NONE", c_round_mode:str = "NONE",
+                 act_scaling_mode:str = "FLOAT_MULT", log_JSON:bool = False, log_outputs:int = 0):
         """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
 
         :param log: The number of steps between logs, default=1000

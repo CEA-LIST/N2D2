@@ -117,6 +117,10 @@ public:
 /**
  * @class   Interface
  * @brief   Merge virtually several Tensor through an unified data interface.
+ * @tparam T Tensor value type. Default to void links to a BaseTensor
+ * @tparam STACKING_DIM Dimension over which tensors are stacked. Default to -2
+ *                      for an interface of 4-dimension tensors means they will
+ *                      stack over there channels (3rd dimension).
 */
 template <class T = void, int STACKING_DIM = -2>
 class Interface : public BaseInterface,
@@ -134,6 +138,7 @@ public:
     {
         mMatchingDim = matchingDims_;
     }
+    /// Returns True if the interface instance doesn't contain any tensor.
     bool empty() const
     {
         return mData.empty();
@@ -166,11 +171,13 @@ public:
         return (!mData.empty() && mData.back()->nbDims() > 0)
             ? dataDim(mData.back()->nbDims() - 1) : 0;
     }
+    /// Number of elements in the interface instance.
     size_t size() const
     {
         return mData.size();
     }
     size_t dataSize() const;
+    /// Returns an iterator pointing to the first element of the interface instance.
     iterator begin()
     {
         return mData.begin();
@@ -179,6 +186,7 @@ public:
     {
         return mData.begin();
     }
+    /// Returns an iterator pointing right after the last element of the interface instance.
     iterator end()
     {
         return mData.end();
@@ -261,8 +269,10 @@ protected:
     }
 
     std::vector<bool> mMatchingDim;
+    /// Vector of tensors
     std::vector<tensor_type*> mData;
     std::vector<size_t> mDataRefs;
+    /// For each channel over the stacking dimension, stores informations on the tensor it belongs to (ranking and offset on the stacking dimension) 
     std::vector<std::pair<unsigned int, unsigned int> > mDataOffset;
 
     friend class TypedInterface<Interface<T, STACKING_DIM>, STACKING_DIM, T>;
@@ -374,8 +384,8 @@ void N2D2::Interface<T, STACKING_DIM>::push_back(tensor_type* tensor,
     if (!tensor->empty()) {
         const unsigned int stackingDim = (STACKING_DIM >= 0)
             ? STACKING_DIM : tensor->nbDims() + STACKING_DIM;
-        const size_t tensorOffset = mData.size();
-        const size_t indexOffset = mDataOffset.size();
+        const size_t tensorOffset = mData.size(); // number of tensor already stacked in the interface
+        const size_t indexOffset = mDataOffset.size(); // number of layers on the stacking layer
 
         for (size_t index = 0; index < tensor->dims()[stackingDim]; ++index)
             mDataOffset.push_back(std::make_pair(tensorOffset, indexOffset));
@@ -628,6 +638,17 @@ void N2D2::Interface<T, STACKING_DIM>::replace(unsigned int t,
     mDataRefs[t] = refs;
 }
 
+/**
+ * @brief Index of the tensor the k-th layer belongs to over the interface staking dimension
+ * 
+ * @tparam T            Tensor values type. Default to void links to a BaseTensor
+ * @tparam STACKING_DIM Dimension over which tensors are stacked. Default to -2
+ *                      for an interface of 4-dimension tensors means they will
+ *                      stack over there channels (3rd dimension).
+ * 
+ * @param k             Index of the layer to be linked to its original tensor.
+ * @returns             Index of the tensor.
+ */
 template <class T, int STACKING_DIM>
 unsigned int N2D2::Interface<T, STACKING_DIM>::getTensorIndex(unsigned int k)
     const
@@ -636,6 +657,10 @@ unsigned int N2D2::Interface<T, STACKING_DIM>::getTensorIndex(unsigned int k)
     return dataOffset.first;
 }
 
+/**
+ * @brief Index of the first layer of the associated tensor over the interface staking dimension
+ * @param k Index of the layer over the staking dimension.
+ */
 template <class T, int STACKING_DIM>
 unsigned int N2D2::Interface<T, STACKING_DIM>::getTensorDataOffset(
     unsigned int k) const

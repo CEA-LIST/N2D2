@@ -575,6 +575,7 @@ void N2D2::Cell_Frame<T>::setOutputTargets(const BaseTensor& baseTargets)
 template <class T>
 double N2D2::Cell_Frame<T>::applyLoss()
 {
+    mDiffInputs.setValid();
     return Cell_Frame_Top::applyLoss<T>(mDiffInputs, mOutputs);
 }
 
