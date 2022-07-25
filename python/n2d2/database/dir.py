@@ -70,9 +70,9 @@ class DIR(AbstractDatabase):
         :type validation: float, optional
         :param depth: Number of sub-directory levels to include, defaults=1
         :type depth: int, optional
-        :param label_path: Path to the label file, defaults=""
+        :param label_path: Path to the label file, if not empty ``label_path`` should be set to ``0``, defaults=""
         :type label_path: str, optional
-        :param label_depth: Number of sub-directory name levels used to form the data labels, defaults=0
+        :param label_depth: Number of sub-directory name levels used to form the data labels, defaults=1
         :type label_depth: int, optional
         :param roi_file: File containing the stimuli ROIs. If a ROI file is specified, ``label_depth`` should be set to ``-1``, default=""
         :type roi_file: str, optional
@@ -120,8 +120,11 @@ class DIR(AbstractDatabase):
                     "Validation (" + str(validation) + ") cannot be > 1.0")
             if test is None:
                 test = 1.0 - learn - validation
-                self._N2D2_object.partitionStimuliPerLabel(learn, validation, test, equiv_label_partitioning)
-                self._N2D2_object.partitionStimuli(0.0, 0.0, 1.0)
+            elif learn + validation + test > 1.0:
+                raise RuntimeError("DIR Databse: Learn (" + str(learn) + ") + "
+                    "Validation (" + str(validation) + ") cannot be > 1.0")
+            self._N2D2_object.partitionStimuliPerLabel(learn, validation, test, equiv_label_partitioning)
+            self._N2D2_object.partitionStimuli(0.0, 0.0, 1.0)
         else:
             if self._N2D2_object.getNbStimuli() < learn + validation:
                 raise RuntimeError("DIR Databse: Learn (" + str(learn) + ") + "
