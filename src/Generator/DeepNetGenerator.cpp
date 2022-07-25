@@ -2523,12 +2523,30 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 
             std::vector<int> paddingDimsBegin;
             std::vector<int> paddingDimsEnd;
-            if (node.input_size() > 1) {
-                if ((itInit = initializer.find(node.input(1))) != initializer.end())
-                {
-                    Tensor<int64_t> pad
-                        = ONNX_unpackTensor<int64_t>((*itInit).second);
-
+            if (node.input_size() >= 1) {
+                Tensor<int64_t> pad;
+                // See changelog opsetVersion 11 : https://github.com/onnx/onnx/blob/main/docs/Changelog.md#Pad-11
+                // TLDR : pads changed from an attribute to an input.
+                if (opsetVersion < 11) {
+                    if ((itAttr = attribute.find("pads")) != attribute.end()){
+                        for (int dim = 0; dim < (*itAttr).second->ints_size(); ++dim)
+                            pad.push_back((*itAttr).second->ints(dim));
+                    }else {
+                        std::stringstream msgStr;
+                        msgStr << "  No \"pads\" attributes for \"" << node.input(1) 
+                            << "\"" << std::endl;
+                        throw std::runtime_error(msgStr.str());
+                    }
+                }else{
+                    if ((itInit = initializer.find(node.input(1))) != initializer.end())
+                        pad = ONNX_unpackTensor<int64_t>((*itInit).second);
+                    else{
+                        std::stringstream msgStr;
+                        msgStr << "  No initializer for \"" << node.input(1)
+                            << "\"" << std::endl;
+                        throw std::runtime_error(msgStr.str());
+                    }
+                }
                 assert(pad.size() % 2 == 0);
                 const int offset = pad.size() / 2;
 
@@ -2536,71 +2554,58 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     paddingDimsBegin.push_back(pad(dim));
                     paddingDimsEnd.push_back(pad(offset + dim));
                 }
-            }
-            else {
-                std::stringstream msgStr;
-                msgStr << "  No initializer for \"" << node.input(1)
-                    << "\"" << std::endl;
 
-                throw std::runtime_error(msgStr.str());
-            }
+                std::reverse(paddingDimsBegin.begin(), paddingDimsBegin.end());
+                std::reverse(paddingDimsEnd.begin(), paddingDimsEnd.end());
 
-            //assert(pad.size() % 2 == 0);
-            //const int offset = pad.size() / 2;
-
-            //for (int dim = 0; dim < offset; ++dim) {
-            //    paddingDimsBegin.push_back(pad(dim));
-            //    paddingDimsEnd.push_back(pad(offset + dim));
-           // }
-            std::reverse(paddingDimsBegin.begin(), paddingDimsBegin.end());
-            std::reverse(paddingDimsEnd.begin(), paddingDimsEnd.end());
-
-            const std::string inputX = redirectName(node.input(0));
-            std::shared_ptr<Cell> inputXCell = getCell(inputX);
-
-            std::map<std::string, std::vector<std::string> >
-                ::const_iterator itConcat;
-            std::vector<std::shared_ptr<Cell> > parentCells;
-
-            if (globTranspose) {
-                std::swap(paddingDimsBegin[0], paddingDimsBegin[1]);
-                std::swap(paddingDimsEnd[0], paddingDimsEnd[1]);
-            }
-
-            std::shared_ptr<PaddingCell> paddingCell = Registrar
-                <PaddingCell>::create(model)(*deepNet,
-                                            node.output(0),
-                                            inputXCell->getNbOutputs(),
-                                            paddingDimsBegin[1],
-                                            paddingDimsEnd[1],
-                                            paddingDimsBegin[0],
-                                            paddingDimsEnd[0]);
-
-            if ((itConcat = concat.find(inputX)) != concat.end()) {
-                for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
-                    const std::string input = (*itConcat).second[i];
-                    std::shared_ptr<Cell> inputCell = getCell(input);
-                    parentCells.push_back(inputCell);
-
-                    paddingCell->addInput(inputCell.get());
-                }
-            }
-            else {
+                const std::string inputX = redirectName(node.input(0));
                 std::shared_ptr<Cell> inputXCell = getCell(inputX);
-                parentCells.push_back(inputXCell);
 
-                if (inputXCell)
-                    paddingCell->addInput(inputXCell.get());
-                else {
-                    paddingCell->addInput(*sp, 0, 0,
-                                        sp->getSizeX(), sp->getSizeY());
+                std::map<std::string, std::vector<std::string> >
+                    ::const_iterator itConcat;
+                std::vector<std::shared_ptr<Cell> > parentCells;
+
+                if (globTranspose) {
+                    std::swap(paddingDimsBegin[0], paddingDimsBegin[1]);
+                    std::swap(paddingDimsEnd[0], paddingDimsEnd[1]);
                 }
-            }
+                const unsigned int nbOutputs = (cell)
+                        ? cell->getNbOutputs()
+                        : sp->getNbChannels();
+                std::shared_ptr<PaddingCell> paddingCell = Registrar
+                    <PaddingCell>::create(model)(*deepNet,
+                                                node.output(0),
+                                                nbOutputs,
+                                                paddingDimsBegin[1],
+                                                paddingDimsEnd[1],
+                                                paddingDimsBegin[0],
+                                                paddingDimsEnd[0]);
 
-            deepNet->addCell(paddingCell, parentCells);
-            paddingCell->initialize();
-            cell = paddingCell;
-            continue;
+                if ((itConcat = concat.find(inputX)) != concat.end()) {
+                    for (unsigned int i = 0; i < (*itConcat).second.size(); ++i) {
+                        const std::string input = (*itConcat).second[i];
+                        std::shared_ptr<Cell> inputCell = getCell(input);
+                        parentCells.push_back(inputCell);
+
+                        paddingCell->addInput(inputCell.get());
+                    }
+                }
+                else {
+                    std::shared_ptr<Cell> inputXCell = getCell(inputX);
+                    parentCells.push_back(inputXCell);
+
+                    if (inputXCell)
+                        paddingCell->addInput(inputXCell.get());
+                    else {
+                        paddingCell->addInput(*sp, 0, 0,
+                                            sp->getSizeX(), sp->getSizeY());
+                    }
+                }
+
+                deepNet->addCell(paddingCell, parentCells);
+                paddingCell->initialize();
+                cell = paddingCell;
+                continue;
                // }
            }
             std::cout << "  No initializer for Padding operation, it will be ignored" << std::endl;
