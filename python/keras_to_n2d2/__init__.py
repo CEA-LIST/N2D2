@@ -19,4 +19,4 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 
-from keras_interoperability.keras_interface import wrap, CustomSequential
+from keras_to_n2d2.keras_interface import wrap, CustomSequential

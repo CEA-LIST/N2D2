@@ -30,8 +30,8 @@ variables:
     # -> verify env is clean
     - python -m pip freeze
     - python -m pip install -r requirements.txt
-    - python -m pip install -r keras_interoperability/requirements.txt
-    - python -m pip install -r pytorch_interoperability/requirements.txt
+    - python -m pip install -r keras_to_n2d2/requirements.txt
+    - python -m pip install -r pytorch_to_n2d2/requirements.txt
     # -> Check installed lib
     - python -m pip freeze
 

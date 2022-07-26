@@ -17,7 +17,7 @@ We begin by importing the same library as in the example plus our interoperabili
         from tensorflow import keras
         from tensorflow.keras import layers
         # Importing the interoperability library
-        import keras_interoperability
+        import keras_to_n2d2
 
 We then import the data by following the tutorial.
 
@@ -44,7 +44,7 @@ We then import the data by following the tutorial.
         y_train = keras.utils.to_categorical(y_train, num_classes)
         y_test = keras.utils.to_categorical(y_test, num_classes)
 
-When declaring the model, we will use the :py:func:`keras_interoperability.wrap` function to generate an :py:class:`keras_interoperability.CustomSequential` which embedded N2D2.
+When declaring the model, we will use the :py:func:`keras_to_n2d2.wrap` function to generate an :py:class:`keras_to_n2d2.CustomSequential` which embedded N2D2.
 
 .. code-block:: python
 
@@ -57,7 +57,7 @@ When declaring the model, we will use the :py:func:`keras_interoperability.wrap`
                 layers.Flatten(),
                 layers.Dense(num_classes, activation="softmax"),
         ])
-        model = keras_interoperability.wrap(tf_model, batch_size=batch_size, for_export=True)
+        model = keras_to_n2d2.wrap(tf_model, batch_size=batch_size, for_export=True)
 
 Once this is done, we can follow again the tutorial and run the training and the evaluation.
 
@@ -72,7 +72,7 @@ Once this is done, we can follow again the tutorial and run the training and the
 
 And that is it ! You have successfully trained your model with N2D2 using the keras interface.
 
-You can then retrieve the N2D2 model by using the method :py:meth:`keras_interoperability.CustomSequential.get_deepnet_cell` if you want to perform operation on it.
+You can then retrieve the N2D2 model by using the method :py:meth:`keras_to_n2d2.CustomSequential.get_deepnet_cell` if you want to perform operation on it.
 
 .. code-block:: python
 

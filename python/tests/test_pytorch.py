@@ -24,7 +24,7 @@ import N2D2
 import n2d2
 from time import sleep
 import unittest
-import pytorch_interoperability as pytorch
+import pytorch_to_n2d2 as pytorch
 
 from n2d2 import ConfigSection
 from n2d2.activation import Linear, Rectifier

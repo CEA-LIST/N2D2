@@ -10,7 +10,7 @@ You can find the full python script here :download:`torch_example.py</../python/
 Example
 -------
 
-Firstly, we import the same libraries as in the tutorial plus our ``pytorch_interoperability`` and ``n2d2`` libraries.
+Firstly, we import the same libraries as in the tutorial plus our ``pytorch_to_n2d2`` and ``n2d2`` libraries.
 
 .. code-block:: python
 
@@ -23,7 +23,7 @@ Firstly, we import the same libraries as in the tutorial plus our ``pytorch_inte
         import torch.nn.functional as F
         import torch.optim as optim
         import n2d2
-        import pytorch_interoperability
+        import pytorch_to_n2d2
 
 
 We then still follow the tutorial and add the code to load the data and we define the Network.
@@ -84,7 +84,7 @@ We then still follow the tutorial and add the code to load the data and we defin
                 x = self.fc3(x)
                 return x
 
-Here we begin to add our code, we intialize the Torch Network and we pass it to the :py:func:`pytorch_interoperability.wrap` method.
+Here we begin to add our code, we intialize the Torch Network and we pass it to the :py:func:`pytorch_to_n2d2.wrap` method.
 This will give us a ``torch.nn.Module`` which run N2D2 and that we will use instead of the Torch Network.
 
 .. code-block:: python
@@ -93,7 +93,7 @@ This will give us a ``torch.nn.Module`` which run N2D2 and that we will use inst
         # specify that we want to use CUDA.
         n2d2.global_variables.default_model = "Frame_CUDA" 
         # creating a model which run with N2D2 backend.
-        net = pytorch_interoperability.wrap(torch_net, (batch_size, 3, 32, 32)) 
+        net = pytorch_to_n2d2.wrap(torch_net, (batch_size, 3, 32, 32)) 
 
         criterion = nn.CrossEntropyLoss()
         # Reminder : We define an optimizer, but it will not be used to optimized N2D2 parameters.

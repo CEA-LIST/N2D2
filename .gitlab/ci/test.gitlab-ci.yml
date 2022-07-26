@@ -37,4 +37,4 @@ static_analysis:python_api:
     - cd python
     - pip install pylint
     - pip install pylint-exit
-    - pylint --rcfile=.pylintrc n2d2 pytorch_interoperability keras_interoperability || pylint-exit $? 
+    - pylint --rcfile=.pylintrc n2d2 keras_to_n2d2 pytorch_to_n2d2 || pylint-exit $? 

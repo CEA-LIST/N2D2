@@ -33,6 +33,7 @@ You can discover how to use the framework by visiting our [online documentation]
 
 The N2D2 executables and **application examples** are located in the [exec/](exec) directory.
 
+You can find examples of the N2D2 Python API [here](https://cea-list.github.io/N2D2-docs/python_api/example.html).
 
 ## Installation
 

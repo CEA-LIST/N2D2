@@ -20,7 +20,7 @@
 
 import unittest
 import n2d2
-import keras_interoperability
+import keras_to_n2d2
 
 from tensorflow.random import uniform
 from os.path import exists
@@ -76,7 +76,7 @@ class test_keras_export(unittest.TestCase):
     def test_anomaly_CPP(self):
 
         net_test=get_anomaly_model(640)
-        n2d2_net_test = keras_interoperability.wrap(net_test, batch_size=5, for_export=True)
+        n2d2_net_test = keras_to_n2d2.wrap(net_test, batch_size=5, for_export=True)
         input_test= uniform([5, 640])
         keras_out = net_test(input_test)
         n2d2_out = n2d2_net_test(input_test)
@@ -106,7 +106,7 @@ class test_keras_export(unittest.TestCase):
     def test_kws_CPP(self):
 
         net_test=get_kws_model(49,10,12, for_tflite=True, BNorm=True)
-        n2d2_net_test = keras_interoperability.wrap(net_test, batch_size=5, for_export=True)
+        n2d2_net_test = keras_to_n2d2.wrap(net_test, batch_size=5, for_export=True)
         input_test= uniform([5, 49, 10, 1])
         keras_out = net_test(input_test)
         n2d2_out = n2d2_net_test(input_test)
@@ -139,7 +139,7 @@ class test_keras_export(unittest.TestCase):
     def test_resnet_CPP(self):
 
         net_test=get_resnet_model()
-        n2d2_net_test = keras_interoperability.wrap(net_test, batch_size=5, for_export=True)
+        n2d2_net_test = keras_to_n2d2.wrap(net_test, batch_size=5, for_export=True)
         input_test= uniform([5, 32, 32, 3])
         keras_out = net_test(input_test)
         n2d2_out = n2d2_net_test(input_test)
@@ -177,7 +177,7 @@ class test_keras_export(unittest.TestCase):
     def test_mobilenet_CPP(self):
 
         net_test=get_mobilenet_model()
-        n2d2_net_test = keras_interoperability.wrap(net_test, batch_size=5, for_export=True)
+        n2d2_net_test = keras_to_n2d2.wrap(net_test, batch_size=5, for_export=True)
         input_test= uniform([5, 96, 96, 3])
         keras_out = net_test(input_test)
         n2d2_out = n2d2_net_test(input_test)

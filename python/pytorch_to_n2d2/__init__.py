@@ -18,4 +18,4 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
-from pytorch_interoperability.pytorch_interface import wrap, Block
+from pytorch_to_n2d2.pytorch_interface import wrap, Block
