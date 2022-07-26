@@ -160,7 +160,7 @@ public:
 protected:
     // Internal
     // Forward
-    Interface<> mInputs;
+    Interface<> mInputs; // Interface of input tensors given to the cell
     Tensor<T> mOutputs;
 
     // Backward

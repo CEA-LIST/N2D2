@@ -237,7 +237,7 @@ class Block(torch.nn.Module):
             outputs = outputs.view(self.current_batch_size, -1)
         return outputs
 
-def wrap(torch_model, input_size):
+def wrap(torch_model, input_size, opset_version=None):
     """Function generating a ``torch.nn.Module`` which embed a :py:class:`n2d2.cells.DeepNetCell`.
     The torch_model is exported to N2D2 via ONNX.
 
@@ -255,7 +255,7 @@ def wrap(torch_model, input_size):
     # Update dummy tensor to the model device 
     dummy_in = dummy_in.to(next(torch_model.parameters()).device)
 
-    torch.onnx.export(torch_model, dummy_in, model_path, verbose=True, training=torch.onnx.TrainingMode.TRAINING)
+    torch.onnx.export(torch_model, dummy_in, model_path, verbose=True, opset_version=opset_version, training=torch.onnx.TrainingMode.TRAINING)
 
     # Importing the ONNX to N2D2
     print("Importing ONNX model to N2D2 ...")
@@ -279,7 +279,7 @@ def wrap(torch_model, input_size):
         else:
             pass
 
-    print(deepNet)
+    deepNet.summary()
     converted_model = Block(deepNet, need_to_flatten=need_to_flatten, batch_size=input_size[0])
 
     return converted_model

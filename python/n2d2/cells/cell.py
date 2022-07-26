@@ -20,11 +20,16 @@
 """
 
 from abc import ABC, abstractmethod
+from typing import Union, Optional, List
 import N2D2
 
 from n2d2 import global_variables
 from n2d2.deepnet import DeepNet
 from n2d2.solver import Solver
+from n2d2.filler import Filler
+from n2d2.target import Target
+from n2d2 import Tensor, Interface
+from n2d2.provider import Provider
 from n2d2 import Tensor, Interface, generate_name, methdispatch, check_types, error_handler
 from n2d2.provider import DataProvider
 from n2d2.target import Target
@@ -40,8 +45,8 @@ class Cell(ABC):
             name = generate_name(self)
         self._name = name
         self._deepnet = None
-    
-    def __call__(self, x):
+
+    def __call__(self, x: Union[Tensor, Interface]):
         """
         Do the common check on the inputs and infer the deepNet from the inputs.
         """
@@ -58,11 +63,11 @@ class Cell(ABC):
         pass
 
     @abstractmethod
-    def import_free_parameters(self, dir_name, ignore_not_exists=False):
+    def import_free_parameters(self, dir_name:str, ignore_not_exists:bool =False):
         pass
 
     @abstractmethod
-    def export_free_parameters(self, dir_name, verbose=True):
+    def export_free_parameters(self, dir_name:str, verbose:bool =True):
         pass
 
     def get_name(self):
@@ -89,11 +94,11 @@ class Trainable(ABC):
             self.set_filler(filler)
 
     @abstractmethod
-    def set_solver(self, solver):
+    def set_solver(self, solver:Solver):
         pass
 
     @abstractmethod
-    def set_filler(self, filler, refill=False):
+    def set_filler(self, filler:Filler, refill: bool=False):
         pass
 
     @abstractmethod
@@ -108,7 +113,7 @@ class Block(Cell):
         the __call__ method therefore has to be defined explicitly.
     """
 
-    def __init__(self, cells, name=None):
+    def __init__(self, cells: List[Cell], name: Optional[str]=None):
         assert isinstance(cells, list)
         self._cells = {}
         for cell in cells:
@@ -174,6 +179,7 @@ class Block(Cell):
                 return False
         return True
 
+
     def get_cells(self):
         """
            Returns dictionary with all cells that are not Blocks (i.e. NeuralNetworkCells). This allows
@@ -184,7 +190,7 @@ class Block(Cell):
         self._get_cells(cells)
         return cells
 
-    def _get_cells(self, cells):
+    def _get_cells(self, cells: List[Cell]):
         for elem in self._cells.values():
             if isinstance(elem, Block):
                 elem._get_cells(cells)
@@ -206,6 +212,7 @@ class Block(Cell):
         for cell in self._cells.values():
             cell.learn()
         return self
+
     @check_types
     def set_solver(self, solver:Solver):
         """Set a solver for every optimizable parameters in this Block. Optimizable parameters are weights, biases and quantizers.
@@ -234,11 +241,11 @@ class Block(Cell):
             if isinstance(cell, Trainable):
                 cell.back_propagate = value
 
-    def import_free_parameters(self, dir_name, ignore_not_exists=False):
+    def import_free_parameters(self, dir_name:str, ignore_not_exists:bool =False):
         for cell in self._cells.values():
             cell.import_free_parameters(dir_name, ignore_not_exists=ignore_not_exists)
 
-    def export_free_parameters(self, dir_name, verbose=True):
+    def export_free_parameters(self, dir_name:str, verbose:bool =True):
         for cell in self._cells.values():
             cell.export_free_parameters(dir_name, verbose=verbose)
 
@@ -249,7 +256,7 @@ class Block(Cell):
         """
         return self._generate_str(1)
 
-    def _generate_str(self, indent_level):
+    def _generate_str(self, indent_level:int):
         output = "\'" + self.get_name() + "\' " + self.get_type() + "("
 
         for idx, value in enumerate(self._cells.values()):
@@ -272,7 +279,7 @@ class Iterable(Block, ABC):
        of the list.
     """
     @abstractmethod
-    def __init__(self, cells, name=None):
+    def __init__(self, cells: List[Cell], name: Optional[str]=None):
         Block.__init__(self, cells, name)
         # This is the sequential representation of the cells, since the self._cells object is a dictionary and therefore
         # does not guarantee order
@@ -290,7 +297,7 @@ class Iterable(Block, ABC):
     def __iter__(self):
         return self._seq.__iter__()
 
-    def insert(self, index, cell):
+    def insert(self, index:int, cell:Cell):
         if not isinstance(cell, Cell):
             raise error_handler.WrongInputType("cell", type(cell), ["n2d2.cells.Cell"])
         if index < 0:
@@ -312,7 +319,7 @@ class Iterable(Block, ABC):
     def index(self, item):
         return self._seq.index(item)
 
-    def _generate_str(self, indent_level):
+    def _generate_str(self, indent_level:int):
         output = "\'" + self.get_name() + "\' " + self.get_type() + "("
 
         for idx, value in enumerate(self._seq):
@@ -329,10 +336,10 @@ class Sequence(Iterable):
     """
          This implementation of the Iterable class describes a sequential (vertical) ordering of cells.
     """
-    def __init__(self, cells, name=None):
+    def __init__(self, cells: List[Cell], name: Optional[str]=None):
         Iterable.__init__(self, cells, name)
 
-    def __call__(self, x):
+    def __call__(self, x: Union[Tensor, Interface]):
         super().__call__(x)
         for cell in self:
             x = cell(x)
@@ -348,10 +355,11 @@ class Layer(Iterable):
     @check_types
     def __init__(self, cells:list, mapping:list =None, name:str=None):
         Iterable.__init__(self, cells, name)
+        self._mapping = None
         if mapping:
             self._mapping = mapping
 
-    def __call__(self, x):
+    def __call__(self, x: Union[Tensor, Interface]):
         super().__call__(x)
         out = []
         if isinstance(x, Interface):
@@ -366,8 +374,10 @@ class Layer(Iterable):
                 # Default is all-to-all
                 if self._mapping is None or self._mapping[in_idx][out_idx]:
                     cell_inputs.append(ipt)
-            out.append(cell(Interface(cell_inputs)))
-        return Interface([out])
+            # if the cell is identity, then the output is an interface and must be converted to tensor
+            for tensor in cell(Interface(cell_inputs)).get_tensors():
+                out.append(tensor)
+        return Interface(out)
 
 
 class DeepNetCell(Block):
@@ -438,7 +448,7 @@ class DeepNetCell(Block):
         return cls(N2D2_deepnet)
 
     @classmethod
-    def load_from_INI(cls, path):
+    def load_from_INI(cls, path:str):
         """Load a deepnet from an INI file.
 
         :param model_path: Path to the ``ini`` file.
@@ -469,7 +479,7 @@ class DeepNetCell(Block):
             return outputs[0]
         return outputs
 
-    def concat_to_deepnet(self, deepnet):
+    def concat_to_deepnet(self, deepnet:DeepNet):
 
         cells = self._embedded_deepnet.N2D2().getCells()
         layers = self._embedded_deepnet.N2D2().getLayers()
@@ -525,7 +535,7 @@ class DeepNetCell(Block):
         self._deepnet.N2D2().exportNetworkFreeParameters(dir_name)
 
 
-    def remove(self, name:str, reconnect:bool=True)->None:
+    def remove(self, name:str, reconnect:bool =True)->None:
         """Remove a cell from the encapsulated deepnet.
         :param name: Name of cell that shall be removed.
         :type name: str
@@ -558,7 +568,9 @@ class DeepNetCell(Block):
         """
         return self._embedded_deepnet.get_output_cells()
 
-    def fit(self, learn_epoch, log_epoch=1000, avg_window=10000, bench=False, ban_multi_device=False, valid_metric="Sensitivity", stop_valid=0, log_kernels=False):
+    def fit(self, learn_epoch:int, log_epoch:int =1000, avg_window:int =10000, bench:bool =False, 
+                ban_multi_device:bool =False, valid_metric:str ="Sensitivity", stop_valid:int =0, 
+                log_kernels:bool =False):
         """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
 
         :param learn_epoch: The number of epochs steps
@@ -596,10 +608,10 @@ class DeepNetCell(Block):
                         log_kernels=log_kernels)
         N2D2.learn_epoch(parameters.N2D2(), N2D2_deepnet)
 
-    def run_test(self, log = 1000, report = 100, test_index = -1, test_id = -1,
-                 qat_sat = False, log_kernels = False, wt_round_mode = "NONE",
-                 b_round_mode = "NONE", c_round_mode = "NONE",
-                 act_scaling_mode = "FLOAT_MULT", log_JSON = False, log_outputs = 0):
+    def run_test(self, log:int = 1000, report:int = 100, test_index:int = -1, test_id:int = -1,
+                 qat_sat:bool = False, log_kernels:bool = False, wt_round_mode:str = "NONE",
+                 b_round_mode:str = "NONE", c_round_mode:str = "NONE",
+                 act_scaling_mode:str = "FLOAT_MULT", log_JSON:bool = False, log_outputs:int = 0):
         """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
 
         :param log: The number of steps between logs, default=1000
@@ -614,9 +626,9 @@ class DeepNetCell(Block):
         :type qat_sat: bool, optional
         :param log_kernels: Log kernels after learning, default=False
         :type log_kernels: bool, optional
-        :param wt_round_mode: Weights clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
+        :param wt_round_mode: Weights clipping mode on export, can be ``NONE``,``RINTF``, default="NONE"
         :type wt_round_mode: str, optional
-        :param b_round_mode: Biases clipping mode on export, can be ``NONE``, ``RINTF``, default="NONE"
+        :param b_round_mode: Biases clipping mode on export, can be ``NONE``,``RINTF``, default="NONE"
         :type b_round_mode: str, optional
         :param c_round_mode: Clip clipping mode on export, can be ``NONE``,``RINTF``, default="NONE"
         :type c_round_mode: str, optional
@@ -647,3 +659,159 @@ class DeepNetCell(Block):
                         c_round_mode=N2D2_c_round_mode, act_scaling_mode=N2D2_act_scaling_mode,
                         log_JSON=log_JSON, log_outputs=log_outputs, log_kernels=log_kernels)
         N2D2.test(parameters.N2D2(), self._embedded_deepnet.N2D2(), False)
+
+    def summary(self, verbose: bool = False):
+        """This method synthesize current deepnet's layers in a table.
+
+        :param verbose: display implicit layers like BN
+        :type verbose: bool
+        """
+        def converter(liste: list):
+            if sum(liste)/len(liste)==liste[0]: return liste[0]
+            else: return liste
+
+        def draw_table(titles, layers):
+            sep, sizes, output = 4, list(), ""
+
+            # Get feature maximum size 
+            for idx, title in enumerate(titles):
+                feaure_size = [len(title)]
+                for h in layers:
+                    if idx == 2:
+                        feaure_size.append(len(f"{h[idx]:,}"))
+                    if idx == 3:
+                        feaure_size.append(len(f"{h[idx] // 1000:,}"))
+                    if idx == 5:
+                        feaure_size.append(len(", ".join([key+': '+str(val)
+                                    for key, val in h[idx].items()])))
+                    else:
+                        feaure_size.append(len(str(h[idx])))
+                sizes.append(max(feaure_size))
+
+            # Display titles
+            output += "-" * (sum(sizes) + (sep * (len(sizes) - 1))) + '\n'
+            for t, s in zip(titles, sizes):
+                output += t + (" " * (sep + (s - len(t))))
+            output += '\n' + ("=" * (sum(sizes) + (sep * (len(sizes) - 1)))) + '\n'
+
+            # Display Layers features
+            for i, line in enumerate(layers):
+                for idx, elem in enumerate(line):
+                    if idx == 1: # Dimensions
+                        string = str(elem).replace('[', '(').replace(']', ')')
+                        output += string + " " * (sizes[idx] - len(str(elem))) + (' ' * sep)
+                    elif idx == 2: # # Params
+                        string = f'{elem:,}'
+                        output += " " * (sizes[idx] - len(string)) + string + (' ' * sep)
+                    elif idx == 3:
+                        string = f'{elem // 1000:,}k'
+                        output += " " * (sizes[idx] - len(string)) + string + (' ' * sep)
+                    elif idx == 5:
+                        liste = [key + ': ' + str(val) for key, val in elem.items()]
+                        output += ", ".join(liste) + (' ' * (sizes[idx] - len(", ".join(liste)) + sep))
+                    elif idx == 6:
+                        output += elem
+                    else:
+                        output += str(elem) + " " * (sizes[idx] - len(str(elem))) + (' ' * sep)
+                output += '\n'
+                if i + 1 < len(layers):
+                    output += " " * (sum(sizes) + (sep * (len(sizes) - 1))) + '\n'
+            output += "=" * (sum(sizes) + (sep * (len(sizes) - 1)))
+            print(output)
+            print("Total params: ", f"{sum([p[2] for p in layers]):,}")
+            print("Total computing: ", f"{sum([p[3] for p in layers]):,} MAC")
+
+        names = list()
+        layers = list()
+        input_chain = dict()
+
+        # List of strings display on top of the table 
+        titles = ['Layer (type)', 'Output Shape', 'Param #', ' MAC #', 'Connected to', 'Extra', 'Grad']
+
+        # Input Line
+        input_name = 'Image1'
+        stimuli = self.get_embedded_deepnet().N2D2().getStimuliProvider()
+        input_size = stimuli.getSize()
+        input_size.append(stimuli.getBatchSize())  # batch size
+        layers.append([input_name + ' (input)', input_size[::-1], 0, 0, '', {}, '-'])
+
+        # Layers Line
+        for name, cell in self.items():
+            input_chain[name] = cell.get_input_cells()
+            if not verbose and cell.get_type() in ["BatchNorm2d"]:
+                continue
+
+            names.append(name)
+            ctype, params, extra = cell.get_type(), 0, {}
+            if cell.get_type() == "Conv":
+                k_size = converter(cell.get_parameter("kernel_dims"))
+                if k_size == 1: ctype = "PointWise"
+                elif type(k_size) != type(list): ctype += ' ' + str(k_size) + 'x' + str(k_size)
+                else: extra["k"] = k_size
+
+                n = cell.get_nb_outputs()
+                c = cell.get_nb_channels()
+                if n == c:
+                    # If same input & output channel size: check if Depthwise
+                    mapping = self.get_embedded_deepnet().N2D2().getCell(cell.name).getMapping()
+                    if sum(mapping[:c]) == 1:
+                        ctype = "Depthwise"
+                        extra["k"] = str(k_size) + 'x' + str(k_size)
+
+                tensor = cell.get_weight(0, 0)
+                params = n * c * len(tensor)
+                if cell.has_bias():
+                    params += len(cell.get_biases())
+
+                if converter(cell.get_parameter("stride_dims")) != 1:
+                    extra["str"] = converter(cell.get_parameter("stride_dims"))
+                if converter(cell.get_parameter("padding_dims")) != 1:
+                    extra["pad"] = converter(cell.get_parameter("padding_dims"))
+                if converter(cell.get_parameter("dilation_dims")) != 1:
+                    extra["dilation"] = converter(cell.get_parameter("dilation_dims"))
+                if cell.get_parameter("activation"):
+                    extra["Act"] = cell.get_parameter("activation").get_type()
+                    if extra["Act"] == "Rectifier": extra["Act"] = "ReLu"
+
+            if cell.get_type() == "Pool":
+                if cell.pooling.name == "Average": ctype = 'AvgPool'
+                elif cell.pooling.name == "Max": ctype = 'MaxPool'
+                else: raise RuntimeError(f"cell.summary() : Unknown pooling type {cell.pooling.name}")
+
+                extra["size"] = converter(cell.get_parameter("pool_dims"))
+                if type(extra["size"]) != type(list):
+                    extra["size"] = str(extra["size"])+'x'+str(extra["size"])
+                if converter(cell.get_parameter("stride_dims")) != 2:
+                    extra["str"] = converter(cell.get_parameter("stride_dims"))
+                if converter(cell.get_parameter("padding_dims")) != 0:
+                    extra["pad"] = converter(cell.get_parameter("padding_dims"))
+
+            # Get name of Cell inputs
+            inputs = list()
+            for input in cell.get_input_cells():
+                if input in names:
+                    inputs.append(input)
+                    continue
+                while input not in names:
+                    if input in input_chain.keys():
+                        input = input_chain[input][0]
+                inputs.append(input)
+            if not len(cell.get_input_cells()):
+                inputs = [input_name]
+
+            # Get nb MAC of the layer
+            cell_stat = N2D2.Stats()
+            self.get_embedded_deepnet().N2D2().getCell(cell.name).getStats(cell_stat)
+
+            # Get value of cell mode (training or not)
+            if hasattr(cell, 'back_propagate'): grad = str(cell.back_propagate)
+            else: grad = '-'
+        
+            layers.append([name + ' (' + ctype + ')', cell.dims()[::-1], params,
+                           cell_stat.nbVirtualSynapses, ", ".join(inputs), extra, grad])
+        # Output Line
+        while name not in names:
+            if name in input_chain.keys():
+                name = input_chain[name][0]
+        layers.append(['Features (output)', cell.dims()[::-1], 0, 0, name, {}, '-'])
+        draw_table(titles, layers)

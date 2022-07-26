@@ -242,22 +242,30 @@ public:
 
     virtual BaseTensor& operator=(const BaseTensor& base) = 0;
 
+    /// Number of dimensions in the tensor
     size_t nbDims() const
     {
         return mDims.size();
     };
+    /**
+     * @brief Returns a vector containing the tensor dimensions
+     * @return const std::vector<size_t>& 
+     */
     const std::vector<size_t>& dims() const
     {
         return mDims;
     };
+    /// Getter for mValid variable
     virtual bool isValid(int /*dev*/ = -1) const
     {
         return (*mValid)[0];
     };
+    /// Sets mValid variable to true
     virtual void setValid(int /*dev*/ = -1)
     {
         (*mValid)[0] = true;
     };
+    /// Sets mValid variable to false
     virtual void clearValid(int /*dev*/ = -1)
     {
         (*mValid)[0] = false;
@@ -321,12 +329,12 @@ protected:
 
 
 protected:
-    std::vector<size_t> mDims;
-    const std::shared_ptr<std::vector<char> > mValid;
+    std::vector<size_t> mDims; // Dimensions of the Tensor
+    const std::shared_ptr<std::vector<char> > mValid; // Indicate if the tensor is ready to be used for operations such as backpropagation or feature update
 
     // Cached data
-    size_t mSize;
-    size_t mSizeM1;
+    size_t mSize; // number of elements in the tensor
+    size_t mSizeM1; // for a tensor of N dimensions, number of elements in the N-1 first dimensions
 
     mutable std::map<const std::type_info*,
              std::shared_ptr<BaseDataTensor> > mDataTensors;

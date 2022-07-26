@@ -625,6 +625,11 @@ bool N2D2::Utils::isAbsolutePath(const std::string& path) {
     return false;
 }
 
+/**
+ * @brief Returns the path without its filename and extention if any at the end of the path.
+ * 
+ * @param[in] filePath Input path string with directories and an optional filename.
+ */
 std::string N2D2::Utils::dirName(const std::string& filePath, bool stripSlash)
 {
     const size_t slashPos = filePath.find_last_of("/\\");
@@ -633,6 +638,11 @@ std::string N2D2::Utils::dirName(const std::string& filePath, bool stripSlash)
         : filePath.substr(0, (stripSlash) ? slashPos : (slashPos + 1));
 }
 
+/**
+ * @brief Returns the optional filename if any at the end of the path with its extention.
+ * 
+ * @param[in] filePath Input path string with directories and an optional filename.
+ */
 std::string N2D2::Utils::baseName(const std::string& filePath)
 {
     const size_t slashPos = filePath.find_last_of("/\\");
@@ -640,6 +650,13 @@ std::string N2D2::Utils::baseName(const std::string& filePath)
                                            : filePath.substr(slashPos + 1);
 }
 
+/**
+ * @brief   Returns the input path without the file extention if any is found 
+ *          at the end of the optional filename.
+ * 
+ * @param[in] filePath  Path at the end of which an extension will be searched.
+ * @param[in] sep       String marking the limit between the optional filename and its extention.
+ */
 std::string N2D2::Utils::fileBaseName(const std::string& filePath,
                                       const std::string& sep)
 {
@@ -653,6 +670,12 @@ std::string N2D2::Utils::fileBaseName(const std::string& filePath,
                : filePath.substr(0, dotPos);
 }
 
+/**
+ * @brief Returns extention of the last path element if any.
+ * 
+ * @param[in] filePath  Path at the end of which an extension will be searched.
+ * @param[in] sep       String marking the limit between the optional filename and its extention.
+ */
 std::string N2D2::Utils::fileExtension(const std::string& filePath,
                                        const std::string& sep)
 {
