@@ -24,7 +24,7 @@ macro(set_globals)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/Modules/")
     set(CMAKE_CXX_FLAGS_COVERAGE "${CMAKE_CXX_FLAGS_DEBUG} --coverage")
     set(CMAKE_EXE_LINKER_FLAGS_COVERAGE "${CMAKE_EXE_LINKER_FLAGS_DEBUG} --coverage")
     set(CMAKE_SHARED_LINKER_FLAGS_COVERAGE "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} --coverage")
@@ -72,7 +72,7 @@ function(add_n2d2_executable file_path target linked_libs)
     add_dependencies(${target} ${file_name})
 endfunction()
 
-function(add_n2d2_doc source target deps)
+function(add_n2d2_doc source build_dir target deps)
     find_package(Doxygen)
     if(Doxygen_FOUND AND EXISTS "${CMAKE_CURRENT_LIST_DIR}/docs")
         file(RELATIVE_PATH relname ${PROJECT_SOURCE_DIR} ${source})
@@ -90,7 +90,7 @@ function(add_n2d2_doc source target deps)
         set(DOXYGEN_OUTPUT_DIR ${source}/docs/doxygen)
         set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/html/index.html)
         set(DOXYFILE_IN ${source}/Doxyfile.in)
-        set(DOXYFILE_OUT ${source}/Doxyfile)
+        set(DOXYFILE_OUT ${build_dir}/Doxyfile)
 
         #Replace variables inside @@ with the current values
         configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
@@ -179,7 +179,7 @@ endmacro()
 
 
 set_globals()
-include("${CMAKE_CURRENT_LIST_DIR}/cmake/modules/cotire.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/cotire.cmake")
 project(N2D2)
 
 
@@ -320,9 +320,9 @@ else()
     else()
         # For CMake >= 3.9.0, use the default FindCUDA provided by CMake
         # => in this case, we need to prevent find_package() to use our own.
-        list(REMOVE_ITEM CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
+        list(REMOVE_ITEM CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/Modules/")
         find_package(CUDA)
-        list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
+        list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/Modules/")
     endif()
 
     if(CUDA_FOUND)
@@ -392,7 +392,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
     # docs target
     add_custom_target(docs)
-    add_n2d2_doc(${CMAKE_CURRENT_SOURCE_DIR} docs n2d2_lib)
+    add_n2d2_doc(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR} docs n2d2_lib)
     
 
     # tests target
