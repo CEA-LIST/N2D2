@@ -18,8 +18,20 @@ If you have used another way to train your model such as the interoperability wi
     When using ``interoperability``, you do not associate a :py:class:`n2d2.provider.DataProvider` to the :py:class:`n2d2.cells.DeepNetCell`. 
     So if you want to calibrate your network, you need ot specify a data provider otherwise N2D2 will fail to generate the export.
 
+Listing available cells for an export
+-------------------------------------
+
+If you want to get the list available cells for an export you can use the function :py:func:`n2d2.export.list_exportable_cell`.
+
+.. autofunction:: n2d2.export.list_exportable_cell
+
+
+
 Export C
 --------
+
+Exportable cells
+^^^^^^^^^^^^^^^^
 
 Documentation
 ^^^^^^^^^^^^^
@@ -62,6 +74,12 @@ Training the model before exporting it will probably solve this issue.
 Export CPP
 ----------
 
+Exportable cells
+^^^^^^^^^^^^^^^^
+
+Documentation
+^^^^^^^^^^^^^
+
 .. autofunction:: n2d2.export.export_cpp
 
 Example
@@ -77,6 +95,12 @@ Example
 
 Export CPP TensorRT
 -------------------
+
+Exportable cells
+^^^^^^^^^^^^^^^^
+
+Documentation
+^^^^^^^^^^^^^
 
 .. autofunction:: n2d2.export.export_tensor_rt
 

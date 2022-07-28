@@ -30,7 +30,7 @@ from n2d2.cells.nn.abstract_cell import (NeuralNetworkCell,
 from n2d2.converter import from_N2D2_object
 from n2d2.error_handler import deprecated
 from n2d2.typed import ModelDatatyped
-from n2d2.utils import inherit_init_docstring
+from n2d2.utils import inherit_init_docstring, check_types
 from n2d2.activation import Linear
 
 @inherit_init_docstring()
@@ -381,3 +381,17 @@ class Deconv(NeuralNetworkCell, ModelDatatyped, Trainable):
         :rtype: bool
         """
         return False
+
+    @staticmethod
+    @check_types
+    def is_exportable_to(export_name:str) -> bool:
+        """
+        :param export_name: Name of the export 
+        :type export_name: str
+        :return: ``True`` if the cell is exportable to the ``export_name`` export. 
+        :rtype: bool
+        """
+        from n2d2.export import available_export
+        if export_name not in available_export:
+            raise error_handler.WrongValue("export_name", export_name, available_export)
+        return N2D2.DeconvCellExport.isExportableTo(export_name)
