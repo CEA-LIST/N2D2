@@ -19,6 +19,7 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 object_dict = {}
+filled_obj_dict = False
 
 def fill_object_dict():
     """
@@ -85,7 +86,7 @@ def from_N2D2_object(N2D2_object, **kwargs):
         Convert a N2D2 activation into a n2d2 activation.
         The _N2D2_object attribute of the generated n2d2 cells is replaced by the N2D2_cell given in entry.
     """
-    if not object_dict: # If empty, fill it
+    if not filled_obj_dict: # If empty, fill it
         fill_object_dict()
 
     if N2D2_object is not None:
@@ -103,7 +104,6 @@ def from_N2D2_object(N2D2_object, **kwargs):
                 object_type = "LSQActivation"
 
         if object_type not in object_dict:
-            print(object_type)
             raise RuntimeError(f"The object {type(N2D2_object)} has not been integrated to the Python API yet." \
                 "\nPlease consider opening an issue at https://github.com/CEA-LIST/N2D2/issues to fix this issue.")
         n2d2_object = object_dict[object_type].create_from_N2D2_object(N2D2_object, **kwargs)
