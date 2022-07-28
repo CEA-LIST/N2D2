@@ -350,3 +350,13 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         else:
             output += ""
         return output
+
+    @staticmethod
+    def is_exportable_to(export_name:str) -> bool:
+        """
+        :param export_name: Name of the export 
+        :type export_name: str
+        :return: ``True`` if the cell is exportable to the ``export_name`` export. 
+        :rtype: bool
+        """
+        return False

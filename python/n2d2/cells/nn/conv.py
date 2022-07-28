@@ -419,6 +419,20 @@ class Conv(NeuralNetworkCell, ModelDatatyped, Trainable):
             biases.append(Tensor.from_N2D2(tensor))
         return biases
 
+    @staticmethod
+    @check_types
+    def is_exportable_to(export_name:str) -> bool:
+        """
+        :param export_name: Name of the export 
+        :type export_name: str
+        :return: ``True`` if the cell is exportable to the ``export_name`` export. 
+        :rtype: bool
+        """
+        from n2d2.export import available_export
+        if export_name not in available_export:
+            raise error_handler.WrongValue("export_name", export_name, available_export)
+        return N2D2.ConvCellExport.isExportableTo(export_name)
+
 @inherit_init_docstring()
 class ConvDepthWise(Conv):
     """ConvDepthWise layer.

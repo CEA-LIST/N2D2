@@ -30,7 +30,7 @@ from n2d2.cells.nn.abstract_cell import (NeuralNetworkCell,
                                          _cell_frame_parameters)
 from n2d2.error_handler import deprecated
 from n2d2.typed import ModelDatatyped
-from n2d2.utils import inherit_init_docstring
+from n2d2.utils import inherit_init_docstring, check_types
 from n2d2.converter import from_N2D2_object
 
 @inherit_init_docstring()
@@ -252,12 +252,13 @@ class Fc(NeuralNetworkCell, ModelDatatyped, Trainable):
             weights.append(chan)
         return weights
 
-    def set_bias(self, output_index, value):
+    @check_types
+    def set_bias(self, output_index: int, value: Tensor):
         """
         :param output_index:
         :type output_index: int
         :param value:
-        :type value: :py:class:`Tensor`
+        :type value: :py:class:`n2d2.Tensor`
         """
         if "no_bias" in self._config_parameters and self._config_parameters["no_bias"]:
             raise RuntimeError("You try to set a bias on " + self.get_name() +" but no_bias=True")
@@ -272,7 +273,8 @@ class Fc(NeuralNetworkCell, ModelDatatyped, Trainable):
         """
         return not self.no_bias
 
-    def get_bias(self, output_index):
+    @check_types
+    def get_bias(self, output_index:int):
         """
         :param output_index:
         :type output_index: int
@@ -319,6 +321,7 @@ class Fc(NeuralNetworkCell, ModelDatatyped, Trainable):
 
     def set_bias_filler(self, filler, refill=False):
         """Set a filler for the bias.
+
        :param filler: Filler object
        :type filler: :py:class:`Filler`
        """
@@ -380,14 +383,26 @@ class Fc(NeuralNetworkCell, ModelDatatyped, Trainable):
     def set_weights_solver(self, solver):
         self._config_parameters['weights_solver'] = solver
         self._N2D2_object.resetWeightsSolver(self._config_parameters['weights_solver'].N2D2())
-
-    def set_solver(self, solver):
+    @check_types
+    def set_solver(self, solver: Solver):
         """"Set the weights and bias solver with the same solver.
 
         :param solver: Solver object
         :type solver: :py:class:`Solver`
         """
-        if not isinstance(solver, Solver):
-            raise error_handler.WrongInputType("solver", str(type(solver)), ["Solver"])
         self.bias_solver = solver.copy()
         self.weights_solver = solver.copy()
+
+    @staticmethod
+    @check_types
+    def is_exportable_to(export_name:str) -> bool:
+        """
+        :param export_name: Name of the export 
+        :type export_name: str
+        :return: ``True`` if the cell is exportable to the ``export_name`` export. 
+        :rtype: bool
+        """
+        from n2d2.export import available_export
+        if export_name not in available_export:
+            raise error_handler.WrongValue("export_name", export_name, available_export)
+        return N2D2.FcCellExport.isExportableTo(export_name)

@@ -177,6 +177,22 @@ def add_docstring(doc_string):
         return func
     return dec
 
+
+def template_docstring(template, text_to_replace):
+    """Method to template docstring
+
+    :param template: Template keyword to replace, in the documentation you template word must be between `{` `}`
+    :type template: str
+    :param text_to_replace: Text to replace your template with.
+    :type text_to_replace: str
+    """
+    def dec(func):
+        if "{"+template+"}" not in func.__doc__:
+            raise RuntimeError(f"The function {function.__name__} docstring does not contain the template.")
+        func.__doc__ = func.__doc__.replace("{"+template+"}", text_to_replace)
+        return func
+    return dec
+
 def methdispatch(meth):
     """Mimic the behavior of `functools.singledispatchmethod` which is only available in python >= 3.8.
     https://docs.python.org/3/library/functools.html#functools.singledispatchmethod

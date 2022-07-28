@@ -21,11 +21,55 @@ knowledge of the CeCILL-C license and that you accept its terms.
 import N2D2
 from os import mkdir
 from os.path import exists
-from n2d2 import error_handler, add_docstring, check_types
+from n2d2 import error_handler, add_docstring, check_types, template_docstring
 from n2d2.n2d2_interface import Options
 from n2d2.quantizer import PTQ
-from n2d2.cells import DeepNetCell
+from n2d2.cells import DeepNetCell, NeuralNetworkCell
 from n2d2.provider import Provider
+
+available_export = ["C", "CPP", "CPP_TensorRT"]
+
+@check_types
+def _gen_exportable_cell_matrix(export_name: str)-> str:
+    if export_name not in available_export:
+            raise error_handler.WrongValue("export_name", export_name, available_export)
+
+    map_cell_exportable =  {}
+
+    for cell in NeuralNetworkCell.__subclasses__():
+        if hasattr(cell, "is_exportable_to"):
+            map_cell_exportable[cell.__name__] = cell.is_exportable_to(export_name)
+        else:
+            print(f'Warning : {cell.__name__} does not have is_exportable_to method')
+
+    max_len = max([(len(cell_name)) for cell_name in map_cell_exportable.keys()])
+    
+    # Configurable variables 
+    title_1 = " Cell Name "
+    title_2 = " Available "
+    str_exportable = "Yes" + " "*(len(title_2)-4)
+    str_not_exportable = "No"+ " "*(len(title_2)-3)
+    max_len = max(max_len, len(title_1)) + 2
+    sep_line = '+' + '-'*max_len + "+" + "-"*len(title_2) +"+\n"
+    # Generating the matrix !
+    matrix = sep_line
+    matrix += '|' + title_1 + " " * (max_len-(len(title_1))) + "|" + title_2 + "|\n"
+    matrix += '+' + '='*max_len + "+" + "="*len(title_2) +"+\n"
+    for cell_name, exportable in map_cell_exportable.items():
+        matrix += '| ' + cell_name + " " * (max_len-(len(cell_name)+1))
+        matrix += "| " + (str_exportable if exportable else str_not_exportable) + "|\n"
+        matrix += sep_line
+    return matrix
+
+@check_types
+@template_docstring("export_list", ", ".join(available_export))
+def list_exportable_cell(export_name: str)-> None:
+    """Print a list of exportable cells.
+
+    :param export_name: Can be one of : {export_list}.
+    :type export_name: str
+    """
+    print(_gen_exportable_cell_matrix(export_name))
 
 # This is the default docstring for export.
 # Parameters description can be override by the docstring defined inside the export function.
@@ -123,6 +167,7 @@ def _parse_export_parameters(gen_export:str=None, nb_bits:int=8, qat_SAT:bool=Fa
         c_round_mode=N2D2_c_round_mode,
         find_lr=find_lr,
         log_kernels=log_kernels).N2D2()
+
 @check_types
 def _generate_export(deepnet_cell:DeepNetCell, provider:Provider=None, **kwargs):
 
@@ -174,12 +219,15 @@ def _generate_export(deepnet_cell:DeepNetCell, provider:Provider=None, **kwargs)
 
     N2D2.generateExportFromCalibration(N2D2_option, N2D2_deepnet, fileName=export_folder_name)
 
+@template_docstring("exportable_cells", "\n"+_gen_exportable_cell_matrix("C"))
 @add_docstring(export_doc_string)
 @check_types
 def export_c(deepnet_cell: DeepNetCell,
              provider: Provider=None,
              **kwargs) -> None:
     """Generate a C export of the neural network.
+
+    List of exportable cells :{exportable_cells}
 
     :param act_scaling_mode: activation scaling mode on export, can be ``NONE``, ``FIXED_MULT16``, ``SINGLE_SHIFT`` or ``DOUBLE_SHIFT``, default="SINGLE_SHIFT"
     :type act_scaling_mode: str, optional
@@ -194,23 +242,28 @@ def export_c(deepnet_cell: DeepNetCell,
     kwargs["gen_export"] = "C"
     _generate_export(deepnet_cell, provider, **kwargs)
 
+@template_docstring("exportable_cells", "\n"+_gen_exportable_cell_matrix("CPP"))
 @add_docstring(export_doc_string)
 @check_types
 def export_cpp(deepnet_cell: DeepNetCell,
                provider: Provider=None,
                **kwargs) -> None:
     """Generate a CPP export of the neural network.
+
+    List of exportable cells :{exportable_cells}
     """
     kwargs["gen_export"] = "CPP"
     _generate_export(deepnet_cell, provider, **kwargs)
 
-
+@template_docstring("exportable_cells", "\n"+_gen_exportable_cell_matrix("CPP_TensorRT"))
 @add_docstring(export_doc_string)
 @check_types
 def export_tensor_rt(deepnet_cell: DeepNetCell,
                 provider: Provider=None,
                 **kwargs) -> None:
     """Generate a TensorRT export of the neural network.
+
+    List of exportable cells :{exportable_cells}
 
     :param nb_bits: Only 32 floating point precision is available for this export. You can calibrate your network later with the export tools, default=-32
     :type nb_bits: int, optional

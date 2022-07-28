@@ -24,7 +24,7 @@ from n2d2 import ConventionConverter, Interface, Tensor, global_variables
 from n2d2.cells.nn.abstract_cell import (NeuralNetworkCell,
                                          _cell_frame_parameters)
 from n2d2.typed import ModelDatatyped
-from n2d2.utils import inherit_init_docstring
+from n2d2.utils import inherit_init_docstring, check_types
 from n2d2.mapping import Mapping
 from n2d2.error_handler import WrongInputType, WrongValue
 
@@ -146,6 +146,20 @@ class Pool(NeuralNetworkCell, ModelDatatyped):
             self._N2D2_object.setMapping(value.N2D2())
         else:
             super().__setattr__(key, value)
+
+    @staticmethod
+    @check_types
+    def is_exportable_to(export_name:str) -> bool:
+        """
+        :param export_name: Name of the export 
+        :type export_name: str
+        :return: ``True`` if the cell is exportable to the ``export_name`` export. 
+        :rtype: bool
+        """
+        from n2d2.export import available_export
+        if export_name not in available_export:
+            raise WrongValue("export_name", export_name, available_export)
+        return N2D2.ReshapeCellExport.isExportableTo(export_name)
 
 @inherit_init_docstring()
 class Pool2d(Pool):
