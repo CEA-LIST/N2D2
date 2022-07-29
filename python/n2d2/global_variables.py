@@ -70,13 +70,17 @@ class GlobalVariables: # pylint: disable=too-many-instance-attributes
         self.default_model = 'Frame'
         self.default_datatype = 'float'
         self.default_net = N2D2.Network(self._seed, saveSeed=False, printTimeElapsed=False)
-        # check if N2D2 is cuda compiled and if there is devices available
-        self._cuda_available = N2D2.cuda_compiled and (N2D2.CudaContext.nbDevice() > 0)
         self._json_compiled = N2D2.json_compiled
         self._onnx_compiled = N2D2.onnx_compiled
         self._n2d2_ip_compiled = N2D2.N2D2_IP
         self._cuda_device = 0
         self.verbosity = self.Verbosity.detailed
+
+        # check if N2D2 is cuda compiled and if there are devices available
+        try:
+            self._cuda_available = N2D2.cuda_compiled and (N2D2.CudaContext.nbDevice() > 0)
+        except:
+            self._cuda_available = False
 
     @property
     def seed(self):
@@ -92,7 +96,9 @@ class GlobalVariables: # pylint: disable=too-many-instance-attributes
     @cuda_device.setter
     def cuda_device(self, value):
         if not self.cuda_available:
-            raise RuntimeError("N2D2 is not compiled with CUDA.")
+            raise RuntimeError("N2D2 cannot use CUDA with your configuration. \
+                                \n Be sure you have compiled N2D2 with CUDA \
+                                \n or your GPUs can be used in your current environment")
         if isinstance(value, int):
             if value > N2D2.CudaContext.nbDevice():
                 raise RuntimeError(f"Cannot set device {value}, N2D2 detected only {N2D2.CudaContext.nbDevice()} devices")
