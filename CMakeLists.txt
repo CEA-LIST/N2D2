@@ -270,8 +270,8 @@ endif()
 INCLUDE(FindProtobuf)
 FIND_PACKAGE(Protobuf QUIET)
 if (Protobuf_FOUND)
-    file(DOWNLOAD https://raw.githubusercontent.com/onnx/onnx/master/onnx/onnx.proto3
-        ${CMAKE_BINARY_DIR}/onnx.proto)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/third_party/onnx/onnx.proto
+        DESTINATION ${CMAKE_BINARY_DIR})
 
     INCLUDE_DIRECTORIES(${PROTOBUF_INCLUDE_DIR})
     PROTOBUF_GENERATE_CPP(PROTO_SRC PROTO_HEADER ${CMAKE_BINARY_DIR}/onnx.proto)
