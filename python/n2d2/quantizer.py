@@ -27,7 +27,8 @@ from n2d2.n2d2_interface import N2D2_Interface, Options
 from n2d2.error_handler import WrongValue, WrongInputType
 import n2d2.global_variables as gb
 from n2d2.solver import Solver
-
+from n2d2.deepnet import associate_provider_to_deepnet
+import n2d2
 # def fuse_qat(deep_net, provider, act_scaling_mode, w_mode="NONE", b_mode="NONE", c_mode="NONE"):
 #     """This method allow you to fuse BatchNorm parameters into Conv layers once you have trained your model.
 
@@ -68,16 +69,16 @@ from n2d2.solver import Solver
 #     )
 #     return deep_net_qat
 
-
+@check_types
 def PTQ(deepnet_cell,
-        nb_bits,
-        nb_sitmuli=-1,
-        provider=None,
-        no_unsigned=False,
-        cross_layer_equalization=True,
-        wt_clipping_mode="NONE",
-        act_clipping_mode="MSE",
-        act_scaling_mode="FLOAT_MULT",
+        nb_bits:int,
+        nb_sitmuli:int=-1,
+        provider:n2d2.provider.Provider=None,
+        no_unsigned:bool=False,
+        cross_layer_equalization:bool=True,
+        wt_clipping_mode:str="NONE",
+        act_clipping_mode:str="MSE",
+        act_scaling_mode:str="FLOAT_MULT",
         **kwargs):
     """
     :param nb_bits: Number of bits per weight for exports (can be for example `-16` for float 16 bits or `8` int 8 bits)
@@ -123,23 +124,10 @@ def PTQ(deepnet_cell,
     N2D2_deepnet.initialize()
 
     if provider is not None:
-        N2D2_provider = provider.N2D2()
-        N2D2_database = N2D2_provider.getDatabase()
-        N2D2_deepnet.setDatabase(N2D2_database)
-        N2D2_deepnet.setStimuliProvider(N2D2_provider)
-        deepnet_cell[0].N2D2().clearInputTensors()
-        deepnet_cell[0].N2D2().addInput(N2D2_provider, 0, 0, N2D2_provider.getSizeX(), N2D2_provider.getSizeY())
-
-    if len(N2D2_deepnet.getTargets()) == 0:
-        # No target associated to the DeepNet
-        # We create a Target for the last cell of the network
-        last_cell = deepnet_cell[-1].N2D2()
-        N2D2_target =  N2D2.TargetScore("Target", last_cell, provider.N2D2())
-        N2D2_deepnet.addTarget(N2D2_target)
-    elif provider is not None:
-        # We already have a Target, so we attach the new provider to it
-        for target in N2D2_deepnet.getTargets():
-            target.setStimuliProvider(provider.N2D2())
+        associate_provider_to_deepnet(N2D2_deepnet, provider.N2D2())
+    
+    if N2D2_deepnet.getStimuliProvider().getDatabase().getNbStimuli() == 0:
+        raise RuntimeError("cannot calibrate a network without data, use a provider with data.")
 
     if N2D2_deepnet.getDatabase().getNbStimuli(N2D2.Database.StimuliSet.__members__["Validation"]) > 0:
         N2D2_deepnet.exportNetworkFreeParameters("weights_validation")

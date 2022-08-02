@@ -52,7 +52,7 @@ void init_StimuliProvider(py::module &m) {
     // .def("readRawData", (Tensor<Float_T> (StimuliProvider::*)(Database::StimuliSet, unsigned int) const) &StimuliProvider::readRawData, py::arg("set"), py::arg("index"))
     // .def("setBatchSize", &StimuliProvider::setBatchSize, py::arg("batchSize"))
     // .def("setCachePath", &StimuliProvider::setCachePath, py::arg("path") = "")
-    .def("getDatabase", (Database& (StimuliProvider::*)()) &StimuliProvider::getDatabase)
+    .def("getDatabase", (Database& (StimuliProvider::*)()) &StimuliProvider::getDatabase, py::return_value_policy::reference)
     .def("getSize", &StimuliProvider::getSize)
     .def("getSizeX", &StimuliProvider::getSizeX)
     .def("getSizeY", &StimuliProvider::getSizeY)
