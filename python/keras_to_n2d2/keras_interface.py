@@ -248,7 +248,7 @@ class ContextNoBatchNormFuse:
             tf2onnx.optimizer.back_to_back_optimizer._func_map = self.func_map_copy
 
 @n2d2.check_types
-def wrap(tf_model: Union[keras.Sequential, keras.Functional],
+def wrap(tf_model: Union[keras.Sequential, keras.models.Model],
         batch_size: int,
         name: str=None,
         for_export: bool=False,
@@ -257,7 +257,7 @@ def wrap(tf_model: Union[keras.Sequential, keras.Functional],
     The conversion between TensorFlow/Keras and N2D2 is done with ONNX.
 
     :param tf_model: The TensorFlow/Keras model to transfert to N2D2.
-    :type tf_model: Union[``keras.Sequential``, ``keras.Functional``]
+    :type tf_model: Union[``keras.Sequential``, ``keras.models.Model``]
     :param batch_size: Batch size used.
     :type batch_size: int
     :param name: Name of the model, default=tf_model.name
