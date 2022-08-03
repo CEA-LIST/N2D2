@@ -22,7 +22,7 @@ import torch
 import n2d2
 import onnx
 from onnxsim import simplify
-
+from typing import Union
 
 def _switching_convention(dims):
     return [dims[3], dims[2], dims[1], dims[0]]
@@ -268,7 +268,7 @@ class Block(torch.nn.Module):
 
 @n2d2.check_types
 def wrap(torch_model:torch.nn.Module,
-        input_size: list,
+        input_size: Union[list, tuple],
         opset_version:int=11,
         verbose:bool=False) -> Block:
     """Function generating a ``torch.nn.Module`` which embed a :py:class:`n2d2.cells.DeepNetCell`.

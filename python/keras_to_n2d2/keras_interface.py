@@ -20,6 +20,7 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL-C license and that you accept its terms.
 """
 import numpy as np
+from typing import Union
 
 import tensorflow as tf
 from tensorflow import keras
@@ -247,7 +248,7 @@ class ContextNoBatchNormFuse:
             tf2onnx.optimizer.back_to_back_optimizer._func_map = self.func_map_copy
 
 @n2d2.check_types
-def wrap(tf_model: keras.Sequential,
+def wrap(tf_model: Union[keras.Sequential, keras.Functional],
         batch_size: int,
         name: str=None,
         for_export: bool=False,
@@ -256,7 +257,7 @@ def wrap(tf_model: keras.Sequential,
     The conversion between TensorFlow/Keras and N2D2 is done with ONNX.
 
     :param tf_model: The TensorFlow/Keras model to transfert to N2D2.
-    :type tf_model: ``keras.Sequential``
+    :type tf_model: Union[``keras.Sequential``, ``keras.Functional``]
     :param batch_size: Batch size used.
     :type batch_size: int
     :param name: Name of the model, default=tf_model.name
