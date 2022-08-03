@@ -189,6 +189,10 @@ def _generate_export(deepnet_cell:DeepNetCell, provider:Provider=None, **kwargs)
         N2D2_deepnet.fuseBatchNorm()
         N2D2_deepnet.removeDropout()
 
+    if N2D2_deepnet.getStimuliProvider().getDatabase().getNbStimuli() == 0 \
+            and N2D2_option.export_nb_stimuli_max != 0:
+        print("Warning : The export generated has no stimuli associated to it.")
+
     if not deepnet_cell.is_integral() and N2D2_option.nb_bits > 0:
         raise RuntimeError(f"You need to calibrate the network to export it in {abs(N2D2_option.nb_bits)} bits integer" \
                             "set the 'calibration' option to something else than 0 or quantize the deepnetcell before export.")
