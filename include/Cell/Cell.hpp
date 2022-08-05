@@ -112,6 +112,7 @@ public:
     {
         return mInputsDims[1];
     };
+    static size_t getNbGroupsHandMade(const Tensor<bool>& map);
     static size_t getNbGroups(const Tensor<bool>& map);
     size_t getInputsDim(unsigned int dim) const
     {
