@@ -82,41 +82,42 @@ void N2D2::ConvCell_Frame_Kernels::forward(const T* alpha,
 
                     // For each output, compute the weighted sum
                     T weightedSum(0.0);
+                    unsigned int packedChannel = 0;
                     for (unsigned int channel = 0; channel < inputs.dimZ();
                          ++channel) {
                         if (!maps.empty() && !maps(output, channel))
                             continue;
 
-                        unsigned int groupedChannel = channel/(unsigned int)nbGroups;
+                        unsigned int accessedChannel = (nbGroups>1) ? packedChannel : channel;
                         if (sxMin == 0 && syMin == 0
                             && sxMax == 3 && syMax == 3)
                         {
                             // Loop unrolling for 3x3 conv
                             weightedSum = weightedSum
-                                  + (sharedSynapses(0, 0, groupedChannel, output)
+                                  + (sharedSynapses(0, 0, accessedChannel, output)
                                     * inputs(ix + 0, iy + 0, channel, batchPos)
-                                  + sharedSynapses(1, 0, groupedChannel, output)
+                                  + sharedSynapses(1, 0, accessedChannel, output)
                                     * inputs(ix + 1, iy + 0, channel, batchPos)
-                                  + sharedSynapses(2, 0, groupedChannel, output)
+                                  + sharedSynapses(2, 0, accessedChannel, output)
                                     * inputs(ix + 2, iy + 0, channel, batchPos))
-                                  + (sharedSynapses(0, 1, groupedChannel, output)
+                                  + (sharedSynapses(0, 1, accessedChannel, output)
                                     * inputs(ix + 0, iy + 1, channel, batchPos)
-                                  + sharedSynapses(1, 1, groupedChannel, output)
+                                  + sharedSynapses(1, 1, accessedChannel, output)
                                     * inputs(ix + 1, iy + 1, channel, batchPos)
-                                  + sharedSynapses(2, 1, groupedChannel, output)
+                                  + sharedSynapses(2, 1, accessedChannel, output)
                                     * inputs(ix + 2, iy + 1, channel, batchPos))
-                                  + (sharedSynapses(0, 2, groupedChannel, output)
+                                  + (sharedSynapses(0, 2, accessedChannel, output)
                                     * inputs(ix + 0, iy + 2, channel, batchPos)
-                                  + sharedSynapses(1, 2, groupedChannel, output)
+                                  + sharedSynapses(1, 2, accessedChannel, output)
                                     * inputs(ix + 1, iy + 2, channel, batchPos)
-                                  + sharedSynapses(2, 2, groupedChannel, output)
+                                  + sharedSynapses(2, 2, accessedChannel, output)
                                     * inputs(ix + 2, iy + 2, channel, batchPos));
                         } else {
                             for (unsigned int sy = syMin; sy < syMax; ++sy) {
                                 for (unsigned int sx = sxMin; sx < sxMax;
                                      ++sx) {
                                     weightedSum += sharedSynapses(
-                                                       sx, sy, groupedChannel, output)
+                                                       sx, sy, accessedChannel, output)
                                                    * inputs(ix + sx,
                                                             iy + sy,
                                                             channel,
@@ -124,6 +125,7 @@ void N2D2::ConvCell_Frame_Kernels::forward(const T* alpha,
                                 }
                             }
                         }
+                        packedChannel++;
                     }
 
                     if (subSample) {
@@ -220,6 +222,7 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const T* alpha,
                         = std::min<unsigned int>(sharedSynapses.dimY(), iyPad + 1);
 
                     T gradient(0.0);
+                    unsigned int packedChannel = 0;
 
                     for (unsigned int output = 0;
                             output < diffInputs.dimZ();
@@ -228,7 +231,7 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const T* alpha,
                         if (!maps.empty() && !maps(output, channel))
                             continue;
                         
-                        unsigned int groupedChannel = channel/(unsigned int)nbGroups;
+                        unsigned int accessedChannel = (nbGroups>1) ? packedChannel : channel;
 
                         if (noSubSample
                             && syMax - syMin == 3 && desc.stride[1] == 1
@@ -239,47 +242,47 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const T* alpha,
                             const unsigned int oy = (iyPad - syMin);
 
                             gradient = gradient
-                                + sharedSynapses(sxMin + 0, syMin + 0, groupedChannel, output)
+                                + sharedSynapses(sxMin + 0, syMin + 0, accessedChannel, output)
                                     * diffInputs((ox - 0),
                                                 (oy - 0),
                                                 output,
                                                 batchPos)
-                                + sharedSynapses(sxMin + 1, syMin + 0, groupedChannel, output)
+                                + sharedSynapses(sxMin + 1, syMin + 0, accessedChannel, output)
                                     * diffInputs((ox - 1),
                                                 (oy - 0),
                                                 output,
                                                 batchPos)
-                                + sharedSynapses(sxMin + 2, syMin + 0, groupedChannel, output)
+                                + sharedSynapses(sxMin + 2, syMin + 0, accessedChannel, output)
                                     * diffInputs((ox - 2),
                                                 (oy - 0),
                                                 output,
                                                 batchPos)
-                                + sharedSynapses(sxMin + 0, syMin + 1, groupedChannel, output)
+                                + sharedSynapses(sxMin + 0, syMin + 1, accessedChannel, output)
                                     * diffInputs((ox - 0),
                                                 (oy - 1),
                                                 output,
                                                 batchPos)
-                                + sharedSynapses(sxMin + 1, syMin + 1, groupedChannel, output)
+                                + sharedSynapses(sxMin + 1, syMin + 1, accessedChannel, output)
                                     * diffInputs((ox - 1),
                                                 (oy - 1),
                                                 output,
                                                 batchPos)
-                                + sharedSynapses(sxMin + 2, syMin + 1, groupedChannel, output)
+                                + sharedSynapses(sxMin + 2, syMin + 1, accessedChannel, output)
                                     * diffInputs((ox - 2),
                                                 (oy - 1),
                                                 output,
                                                 batchPos)
-                                + sharedSynapses(sxMin + 0, syMin + 2, groupedChannel, output)
+                                + sharedSynapses(sxMin + 0, syMin + 2, accessedChannel, output)
                                     * diffInputs((ox - 0),
                                                 (oy - 2),
                                                 output,
                                                 batchPos)
-                                + sharedSynapses(sxMin + 1, syMin + 2, groupedChannel, output)
+                                + sharedSynapses(sxMin + 1, syMin + 2, accessedChannel, output)
                                     * diffInputs((ox - 1),
                                                 (oy - 2),
                                                 output,
                                                 batchPos)
-                                + sharedSynapses(sxMin + 2, syMin + 2, groupedChannel, output)
+                                + sharedSynapses(sxMin + 2, syMin + 2, accessedChannel, output)
                                     * diffInputs((ox - 2),
                                                 (oy - 2),
                                                 output,
@@ -298,7 +301,7 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const T* alpha,
 
                                     if (noSubSample) {
                                         gradient
-                                            += sharedSynapses(sx, sy, groupedChannel, output)
+                                            += sharedSynapses(sx, sy, accessedChannel, output)
                                                 * diffInputs(ox,
                                                             oy,
                                                             output,
@@ -306,7 +309,7 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const T* alpha,
                                     }
                                     else {
                                         gradient
-                                            += sharedSynapses(sx, sy, groupedChannel, output)
+                                            += sharedSynapses(sx, sy, accessedChannel, output)
                                                 * diffInputs(ox / desc.subSample[0],
                                                             oy / desc.subSample[1],
                                                             output,
@@ -315,6 +318,7 @@ void N2D2::ConvCell_Frame_Kernels::backwardData(const T* alpha,
                                 }
                             }
                         }
+                        packedChannel++;
                     }
 
                     diffOutputs(ix, iy, channel, batchPos)
@@ -353,15 +357,17 @@ void N2D2::ConvCell_Frame_Kernels::backwardFilter(const T* alpha,
     const size_t nbGroups = (!maps.empty()) ? N2D2::Cell::getNbGroups(maps) : 1;
 
 #if defined(_OPENMP) && _OPENMP >= 200805
-#pragma omp parallel for collapse(2) if (size > 16)
+#pragma omp parallel for if (size > 16)
 #else
 #pragma omp parallel for if (diffInputs.dimZ() > 4 && size > 16)
 #endif
     for (int output = 0; output < (int)diffInputs.dimZ(); ++output) {
+        unsigned int packedChannel = 0;
         for (unsigned int channel = 0; channel < inputs.dimZ(); ++channel) {
             if (!maps.empty() && !maps(output, channel))
                 continue;
 
+            unsigned int accessedChannel = (nbGroups>1) ? packedChannel : channel;
             for (unsigned int sy = 0; sy < diffSharedSynapses.dimY(); ++sy) {
                 for (unsigned int sx = 0; sx < diffSharedSynapses.dimX();
                      ++sx) {
@@ -413,13 +419,13 @@ void N2D2::ConvCell_Frame_Kernels::backwardFilter(const T* alpha,
                         }
                     }
 
-                    unsigned int groupedChannel = channel/(unsigned int)nbGroups;
-                    diffSharedSynapses(sx, sy, groupedChannel, output)
+                    diffSharedSynapses(sx, sy, accessedChannel, output)
                         = (*alpha) * gradient
                           + (*beta)
-                            * diffSharedSynapses(sx, sy, groupedChannel, output);
+                            * diffSharedSynapses(sx, sy, accessedChannel, output);
                 }
             }
+            packedChannel++;
         }
     }
 }
