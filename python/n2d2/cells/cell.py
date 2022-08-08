@@ -592,8 +592,15 @@ class DeepNetCell(Block):
         :param reconnect: If ``True``, reconnects the parents with the child of the removed cell, default=True
         :type reconnect: bool, optional
         """
+        child_cells = self._embedded_deepnet.N2D2().getChildCells(name)
         self._embedded_deepnet.remove(name, reconnect)
         self._cells.pop(name)
+        if reconnect:
+            for child in child_cells:
+                child_name = child.getName()
+                new_parents = self._embedded_deepnet.N2D2().getParentCells(child_name)
+                n2d2_child = self._cells[child_name]
+                n2d2_child._input_cells = [parent.getName() for parent in new_parents]
 
     def get_deepnet(self):
         """Get the :py:class:`n2d2.deepnet.DeepNet` used for computation.
@@ -845,6 +852,8 @@ class DeepNetCell(Block):
                 while input not in names:
                     if input in input_chain.keys():
                         input = input_chain[input][0]
+                    else:
+                        raise ValueError(f"N2D2 Graph is broken : cell '{name}' does not exist")
                 inputs.append(input)
             if not len(cell.get_input_cells()):
                 inputs = [input_name]
@@ -863,5 +872,7 @@ class DeepNetCell(Block):
         while name not in names:
             if name in input_chain.keys():
                 name = input_chain[name][0]
+            else:
+                raise ValueError(f"N2D2 Graph is broken : cell '{name}' does not exist")
         layers.append(['Features (output)', cell.dims()[::-1], 0, 0, name, {}, '-'])
         draw_table(titles, layers)
