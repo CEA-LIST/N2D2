@@ -1,4 +1,4 @@
-[NEW] Quantization-Aware Training
+Quantization-Aware Training
 ==================================
 .. role:: raw-html(raw)
    :format: html
