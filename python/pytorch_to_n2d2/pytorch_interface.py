@@ -35,9 +35,9 @@ def _to_n2d2(torch_tensor):
     This method also convert the shape of the tensor to follow N2D2 convention.
     """
     n2d2_tensor = None
-    if torch_tensor.is_cuda:
-        if torch_tensor._is_view():
-            # If torch_tensor is a view then we need to do a copy !
+    if torch_tensor.is_cuda:        
+        if not torch_tensor.is_contiguous():
+            # If torch_tensor is not contiguous then we need to do a copy !
             numpy_tensor = torch_tensor.cpu().detach().numpy()
             n2d2_tensor = n2d2.Tensor.from_numpy(numpy_tensor)
 
@@ -46,6 +46,7 @@ def _to_n2d2(torch_tensor):
             if n2d2_tensor.nb_dims() == 4:
                 n2d2_tensor.reshape(_switching_convention(n2d2_tensor.dims()))            
         else:
+            # We avoid a copy on GPU !
             dtype = torch_tensor.dtype
 
             if dtype is torch.float32:
@@ -75,18 +76,6 @@ def _to_n2d2(torch_tensor):
             if n2d2_tensor.nb_dims() == 4:
                 n2d2_tensor.reshape([dims[0], dims[1], dims[2], dims[3]])
 
-            # /!\ Beware _is_view method can be broken
-            # --- Example :
-            # a = torch.rand(1,2,3)
-            # b = a.view(3,2,1).cuda()
-            # print(b._is_view())
-            # Output : False
-            # ---
-            # To catch this we test if the shape is the same once converted.
-            if list(torch_tensor.shape) != n2d2_tensor.shape():
-                print("Warning : Torch tensor is a view but \'_is_view()\' is False. Reconverting torch tensor !")
-                # Recursive call on the Tensor and forcing it to be a view
-                n2d2_tensor = _to_n2d2(torch_tensor.view(torch_tensor.shape))
     else:
         numpy_tensor = torch_tensor.cpu().detach().numpy()
         # This operation creates a CPU memory copy.
@@ -329,7 +318,7 @@ def wrap(torch_model:torch.nn.Module,
             need_to_flatten = True
         else:
             pass
-
+    deepNet._embedded_deepnet.N2D2().initialize()
     # deepNet.summary()
     converted_model = Block(deepNet, need_to_flatten=need_to_flatten, batch_size=input_size[0])
 
