@@ -219,7 +219,7 @@ class ResNet():
         if path is not None and not download:
             path = n2d2.global_variables.model_cache + "/ONNX/mobilenetv2/mobilenetv2-1.0.onnx"
         else:
-            n2d2.utils.download_model(
+            n2d2.utils.download(
                 "https://s3.amazonaws.com/onnx-model-zoo/resnet/"+"resnet"+resnet_type+v+"/"+"resnet"+resnet_type+v+".onnx",
                 n2d2.global_variables.model_cache + "/ONNX/",
                 resnet_name)

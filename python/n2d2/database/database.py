@@ -25,6 +25,10 @@ from n2d2.n2d2_interface import N2D2_Interface
 from n2d2 import ConventionConverter
 from abc import ABC, abstractmethod
 
+from n2d2.utils import check_types, download as download_file
+from os import getenv
+from os.path import expanduser
+
 # At the moment, this class is rather superfluous, and servers mainly for hiding
 # the raw N2D2 binding class. However, in the long term it could serve as a
 # canvas for defining datasets without the need to write a N2D2 database driver.
@@ -46,6 +50,12 @@ _database_parameters = {
 
 class AbstractDatabase(N2D2_Interface, ABC):
 
+    # Name of the database
+    _type = ""
+
+    # List of links ot download database from.
+    _download_links = []
+
     @abstractmethod
     def __init__(self, **config_parameters):
         """
@@ -53,6 +63,31 @@ class AbstractDatabase(N2D2_Interface, ABC):
         :type load_data_in_memory: boolean, optional
         """
         N2D2_Interface.__init__(self, **config_parameters)
+
+    @classmethod
+    def is_downloadable(cls)->bool:
+        """
+        :return: ``True`` if the database is downloadable.
+        :rtype: bool
+        """
+        return cls._download_links != []
+
+    
+    @classmethod
+    def download(cls, path:str=None)->None:
+        """Download the dataset at the defined path
+
+        :param path: Path where to download the dataset, default=$(N2D2_DATA)
+        :type path: str, optional
+        """
+        if path is None:
+            path = getenv("N2D2_DATA")
+            if path is None:
+                path=f"{expanduser('~')}+/DATABASE/"
+        if not cls.is_downloadable():
+            raise NotImplementedError(f"Database {cls.__name__} does not support download !")
+        for url in cls._download_links:
+            download_file(url, path, cls._type)
 
     def get_nb_stimuli(self, partition):
         """
@@ -91,7 +126,8 @@ class AbstractDatabase(N2D2_Interface, ABC):
         """
         return self._N2D2_object.getLabelName(label_idx)
 
-    def partition_stimuli(self, learn, validation, test):
+    @check_types
+    def partition_stimuli(self, learn:float, validation:float, test:float):
         """Partition the ``Unpartitioned`` data with the given ratio (the sum of the given ratio must be equal to 1).
 
         :param learn: Ratio for the ``Learn`` partition.
