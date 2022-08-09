@@ -237,7 +237,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             if not dim_z == self.get_nb_channels():
                 raise RuntimeError("Total number of input dimZ != cell '" + self.get_name() + "' number channels")
         elif self.mappable and self._N2D2_object.getMapping().empty():
-                self._N2D2_object.setMapping(Tensor([self.get_nb_outputs(), inputs.dimZ()],
+                self._N2D2_object.setMapping(Tensor([self.get_nb_outputs(), inputs.dimZ()], value=True,
                                                              datatype="bool", dim_format="N2D2").N2D2())
 
         parents = []
