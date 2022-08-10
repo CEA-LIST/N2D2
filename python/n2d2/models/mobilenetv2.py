@@ -26,7 +26,7 @@ import n2d2.global_variables
 from n2d2.transform import Rescale, PadCrop, ColorSpace, RangeAffine, Composite
 from n2d2.mapping import Mapping
 from n2d2.utils import ConfigSection
-from n2d2.cells import Conv, Pool2d, BatchNorm2d, ElemWise
+from n2d2.cells import Conv, Pool2d, BatchNorm2d, ElemWise, ConvDepthWise
 from n2d2.activation import Rectifier, Linear
 from n2d2.cells.cell import Sequence, Layer
 from n2d2.filler import He
@@ -48,20 +48,36 @@ def conv3x3_def() -> ConfigSection:
         weights_filler=weights_filler
     )
 
+def convdepthwise3x3_def() -> ConfigSection:
+    weights_filler = He(variance_norm='FanIn', scaling=1.0, mean_norm=0.0)
+    return ConfigSection(
+        padding_dims=[1,1], dilation_dims=[1,1], 
+        no_bias=True, weights_filler=weights_filler
+    )
+    
 class MainBlock(Sequence):
-    def __init__(self, in_channels:int, out_channels:int, expansion_ratio:int =6, st_dims:list =[1,1]):
+    def __init__(self, in_channels:int, out_channels:int, expansion_ratio:int =6, st_dims:Optional[list] =None):
+        """Main sequence of the inverted bottleneck.
+
+        :param in_channels: number of input channels.
+        :type in_channels: int
+        :param out_channels: number of output channels.
+        :type out_channels: int
+        :param expansion_ratio: expansion ratio of the inverted bottleneck block. Default `6`
+        :type expansion_ratio: int, optional
+        :param st_dims: stride dimensions for the depthwise convolution. Can be [1,1] or [2,2] to downsample.
+        :type st_dims: list, optional
+        """
         bottleneck_channels = expansion_ratio*in_channels
-        print(bottleneck_channels)
-        map_obj = Mapping(nb_groups=bottleneck_channels)
-        map = map_obj.create_mapping(nb_channels=bottleneck_channels, nb_outputs=bottleneck_channels)
+        # map_obj = Mapping(nb_groups=bottleneck_channels)
+        # map = map_obj.create_mapping(nb_channels=bottleneck_channels, nb_outputs=bottleneck_channels)
 
         Sequence.__init__(self, cells=[
             Conv(nb_inputs=in_channels, nb_outputs=bottleneck_channels,
                 **conv1x1_def()),
             BatchNorm2d(nb_inputs=bottleneck_channels, activation=Linear()),
-            Conv(bottleneck_channels, bottleneck_channels, 
-                stride_dims=st_dims, mapping=map,
-                **conv3x3_def()),
+            ConvDepthWise(bottleneck_channels, kernel_dims=[3,3],
+                stride_dims=st_dims,**convdepthwise3x3_def()),
             BatchNorm2d(bottleneck_channels, activation=Rectifier()),
             Conv(bottleneck_channels, out_channels, 
                 **conv1x1_def()),
@@ -69,8 +85,20 @@ class MainBlock(Sequence):
         ])
 
 
-class Bottleneck(Sequence):
+class InvertedBottleneck(Sequence):
     def __init__(self, in_channels:int, out_channels:int, stride:int =1, expansion_ratio:int =6):
+        """Each inverted bottleneck block is made of a main part and sometimes a
+        shortcut linking the beginning to the end of the main part.
+
+        :param in_channels: number of input channels.
+        :type in_channels: int
+        :param out_channels: number of output channels.
+        :type out_channels: int
+        :param st_dims: stride dimensions for the depthwise convolution. Can be 1 or 2 to downsample.
+        :type st_dims: int, optional
+        :param expansion_ratio: expansion ratio of the inverted bottleneck block. Default `6`
+        :type expansion_ratio: int, optional
+        """
         if (stride==2 or (in_channels!=out_channels)):
             Sequence.__init__(self, cells=[
                 MainBlock(in_channels, out_channels, expansion_ratio=expansion_ratio, st_dims=[stride, stride])
@@ -85,28 +113,33 @@ class Bottleneck(Sequence):
             ])
             
 
-class StackedBottlenecks(Sequence):
+class StackedInvertedBottlenecks(Sequence):
     def __init__(self, in_channels:int, out_channels:int, nb_bottleneck_in_layer:int =1, 
                     expansion_ratio:int =6, first_stride:int =1):
-
-        print(in_channels, out_channels, expansion_ratio, first_stride)
-        seq = [Bottleneck(in_channels, out_channels, expansion_ratio=expansion_ratio, stride=first_stride)]
+        seq = [InvertedBottleneck(in_channels, out_channels, expansion_ratio=expansion_ratio, stride=first_stride)]
         stride = 1
-        print("\tBottleneck")
         for i in range(1, nb_bottleneck_in_layer):
-            print(in_channels, out_channels, expansion_ratio, stride)
-            seq.append(Bottleneck(out_channels, out_channels, expansion_ratio=expansion_ratio, stride=stride))
-            print("\tBottleneck")
+            seq.append(InvertedBottleneck(out_channels, out_channels, expansion_ratio=expansion_ratio, stride=stride))
         Sequence.__init__(self, cells=seq)
         
 
 class MobileNetV2(Sequence):
     def __init__(self, name: Optional[str] =None):
-        if name:
-            self.name=name
-        else:
-            self.name="MobileNetV2"
+        """MobileNet V2 network as described by Saldler et al.
+        in their article: https://arxiv.org/pdf/1801.04381.pdf
 
+        :param name: name of the model. Default `None`.
+        :type name: str, optional
+
+        example
+        -------
+
+        >>> A = n2d2.Tensor([2,3,224,224])
+        >>> model = n2d2.models.MobileNetV2()
+        >>> model(A)
+        """
+
+        self.name=name if name else "MobileNetV2"
         architecture_features = [
             [1, 16, 1, 1],
             [6, 24, 2, 2],
@@ -116,7 +149,6 @@ class MobileNetV2(Sequence):
             [6, 160, 3, 2],
             [6, 320, 1, 1]
         ]
-
         main_sequence = Sequence(cells=[
             Conv(nb_inputs=3, nb_outputs=32,
                 stride_dims=[2,2], **conv3x3_def()),
@@ -125,7 +157,7 @@ class MobileNetV2(Sequence):
 
         in_channels=32
         for id_stack in range(len(architecture_features)):
-            main_sequence.append(StackedBottlenecks(in_channels=in_channels, 
+            main_sequence.append(StackedInvertedBottlenecks(in_channels=in_channels, 
                                                     out_channels=architecture_features[id_stack][1],
                                                     nb_bottleneck_in_layer = architecture_features[id_stack][2], 
                                                     expansion_ratio = architecture_features[id_stack][0],
@@ -142,7 +174,23 @@ class MobileNetV2(Sequence):
         
     
     @classmethod
-    def load_from_ONNX(inputs, dims:Optional[tuple]=None, batch_size:int =1, path:str =None, download:bool =False) -> n2d2.cells.cell.DeepNetCell:
+    def load_from_ONNX(cls, inputs, dims:Optional[tuple]=None, batch_size:int =1, 
+                        path:Optional[str] =None, download:bool =False) -> n2d2.cells.cell.DeepNetCell:
+        """Load a MobileNetV2 model with given features from an ONNX file.
+
+        :param inputs: Data provider for the model
+        :type inputs: `n2d2.provider.DataProvider`
+        :param dims: Dimension of input images. Default=`[224, 224, 3]`
+        :type dims: list, optional
+        :param batch_size: Batch size for the model. Dafault=`1`.
+        :type batch_size: int, optional
+        :param path: Path to the model. Default=`None`.
+        :type path:str, optional
+        :param download: Whether or not the model architecture should be downloaded. Default=`False`.
+        :type download: bool, optional
+        """
+        if dims is None:
+            dims = [224,224,3]
         print("Loading MobileNet_v2 from ONNX with dims " + str(dims) + " and batch size " + str(batch_size))
         if path is None and not download:
             raise RuntimeError("No path specified")

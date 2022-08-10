@@ -185,7 +185,7 @@ class ResNet():
         """Load a ResNet model with given features from an ONNX file.
 
         :param inputs: Data provider for the model
-        :type inputs: `n2d2.provider.Provider`
+        :type inputs: `n2d2.provider.DataProvider`
         :param resnet_type: Number of layers in the network, can be 18, 34, 50, 101 or 152.
         :type resnet_type: int
         :param version: Version of the ResNet model in [`pre_act`,`post_act`] (version 1 and 2). Default=`pre_act`.
@@ -196,7 +196,7 @@ class ResNet():
         :type batch_size: int, optional
         :param path: Path to the model. Default=`None`.
         :type path:str, optional
-        :param download: Wether or not the model architecture should be downloaded. Default=`False`.
+        :param download: Whether or not the model architecture should be downloaded. Default=`False`.
         :type download: bool, optional
         """
         if dims is None:

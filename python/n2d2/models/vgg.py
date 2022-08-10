@@ -23,8 +23,8 @@
 from typing import Optional
 
 from n2d2.utils import ConfigSection
-from n2d2.cells import Conv, Fc, Pool2d, BatchNorm2d, Dropout, Activation
-from n2d2.activation import Rectifier, Linear
+from n2d2.cells import Conv, Fc, Pool2d, BatchNorm2d, Dropout
+from n2d2.activation import Rectifier
 from n2d2.cells.cell import Sequence
 from n2d2.filler import He
 
@@ -65,6 +65,16 @@ class BasicBlock(Sequence):
     
 class VGGBackbone(Sequence):
     def __init__(self, size:int =16, batchnorm:bool =False):
+        """Backbone of the VGG network described by Karen Simonyan and 
+        Andrew Zisserman in their article: https://arxiv.org/pdf/1409.1556.pdf
+
+        :param size: Number of cells in the network. Can be 11,13,16 or 19.
+        Default `16`.
+        :type size: int, optional
+        :param batchnorm: Whether or not batchnorm cells should be added after
+        each convolutional cell of the network. Default `False`.
+        :type batchnorm: bool, optional
+        """
         # managing number of layers in each block
         map_size_to_blocks_per_layer = {11:[1,1,2,2,2],
                                         13:[2,2,2,2,2],
@@ -74,9 +84,9 @@ class VGGBackbone(Sequence):
         blocks = map_size_to_blocks_per_layer[size]
         in_channels=3
         out_channels=64
-        for block in range(len(blocks)):
+        for nb_block in blocks:
             seq += [BasicBlock(in_channels=in_channels, out_channels=out_channels, batchnorm=batchnorm)]
-            for i in range(blocks[block]-1):
+            for _ in range(nb_block-1):
                 seq += [BasicBlock(in_channels=out_channels, out_channels=out_channels, batchnorm=batchnorm)]
             seq += [Pool2d(pool_dims=[2,2], stride_dims=[2,2])]
             in_channels=out_channels
@@ -86,6 +96,9 @@ class VGGBackbone(Sequence):
 
 class VGGHead(Sequence):
     def __init__(self):
+        """Head of the VGG networks described by Karen Simonyan and 
+        Andrew Zisserman in their article: https://arxiv.org/pdf/1409.1556.pdf
+        """
         Sequence.__init__(self, cells=[
             Fc(7*7*512, 4096, **fc_def()),
             Dropout(dropout=0.5),
@@ -97,16 +110,30 @@ class VGGHead(Sequence):
 
 class VGG(Sequence):
     def __init__(self, size:int =16, batchnorm:bool =False, name:Optional[str] =None):
-        if size not in [11,13,16,19]:
-            raise ValueError("VGG size must be one of these: '11', '13', '16', '19'.")
+        """VGG network based on Karen Simonyan and Andrew Zisserman article: 
+        https://arxiv.org/pdf/1409.1556.pdf
 
-        if name:
-            self.name=name
-        else:
-            bn = ""
-            if batchnorm:
-                bn = "_batchnorm"
-            self.name = "VGG"+str(size)+bn
+        :param size: Number of cells in the network. Can be 11,13,16 or 19.
+        Default `16`.
+        :type size: int, optional
+        :param batchnorm: Whether or not batchnorm cells should be added after
+        each convolutional cell of the network. Default `False`.
+        :type batchnorm: bool, optional
+        :param name: name of the model. Default `None`.
+        :type name: str
+
+        example
+        -------
+
+        >>> A = n2d2.Tensor([10,3,224,224])
+        >>> model = n2d2.models.VGG(16, batchnorm=True)
+        >>> model(A)
+        """
+        supported_vgg_sizes = [11,13,16,19]
+        if size not in supported_vgg_sizes:
+            raise ValueError(f"VGG size must be one of these: {', '.join(supported_vgg_sizes)}.")
+
+        self.name =name if name else f"VGG{size}{'_bn' if batchnorm else ''}"
 
         self.backbone = VGGBackbone(size=size, batchnorm=batchnorm)
         self.head = VGGHead()
@@ -117,16 +144,80 @@ class VGG(Sequence):
 
 class VGG11(VGG):
     def __init__(self, batchnorm:bool =False, name:Optional[str] =None):
+        """VGG network with 11 cells, based on Karen Simonyan and 
+        Andrew Zisserman article: https://arxiv.org/pdf/1409.1556.pdf
+
+        :param batchnorm: Whether or not batchnorm cells should be added after
+        each convolutional cell of the network. Default `False`.
+        :type batchnorm: bool, optional
+        :param name: name of the model. Default `None`.
+        :type name: str
+
+        example
+        -------
+
+        >>> A = n2d2.Tensor([10,3,224,224])
+        >>> model = n2d2.models.VGG11(batchnorm=True)
+        >>> model(A)
+        """
         super().__init__(size=11, batchnorm=batchnorm, name=name)
 
 class VGG13(VGG):
     def __init__(self, batchnorm:bool =False, name:Optional[str] =None):
+        """VGG network with 13 cells, based on Karen Simonyan and 
+        Andrew Zisserman article: https://arxiv.org/pdf/1409.1556.pdf
+
+        :param batchnorm: Whether or not batchnorm cells should be added after
+        each convolutional cell of the network. Default `False`.
+        :type batchnorm: bool, optional
+        :param name: name of the model. Default `None`.
+        :type name: str
+
+        example
+        -------
+
+        >>> A = n2d2.Tensor([10,3,224,224])
+        >>> model = n2d2.models.VGG13(batchnorm=True)
+        >>> model(A)
+        """
         super().__init__(size=13, batchnorm=batchnorm, name=name)
 
 class VGG16(VGG):
     def __init__(self, batchnorm:bool =False, name:Optional[str] =None):
+        """VGG network with 16 cells, based on Karen Simonyan and 
+        Andrew Zisserman article: https://arxiv.org/pdf/1409.1556.pdf
+
+        :param batchnorm: Whether or not batchnorm cells should be added after
+        each convolutional cell of the network. Default `False`.
+        :type batchnorm: bool, optional
+        :param name: name of the model. Default `None`.
+        :type name: str
+
+        example
+        -------
+
+        >>> A = n2d2.Tensor([10,3,224,224])
+        >>> model = n2d2.models.VGG16(batchnorm=True)
+        >>> model(A)
+        """
         super().__init__(size=16, batchnorm=batchnorm, name=name)
         
 class VGG19(VGG):
-    def __init__(self, batchnorm:bool =False, name:Optional[str] =None):
+    def __init__(self, batchnorm:bool =False, name:Optional[str] =None)
+        """VGG network with 19 cells, based on Karen Simonyan and 
+        Andrew Zisserman article: https://arxiv.org/pdf/1409.1556.pdf
+
+        :param batchnorm: Whether or not batchnorm cells should be added after
+        each convolutional cell of the network. Default `False`.
+        :type batchnorm: bool, optional
+        :param name: name of the model. Default `None`.
+        :type name: str
+
+        example
+        -------
+
+        >>> A = n2d2.Tensor([10,3,224,224])
+        >>> model = n2d2.models.VGG19(batchnorm=True)
+        >>> model(A)
+        """
         super().__init__(size=19, batchnorm=batchnorm, name=name)
