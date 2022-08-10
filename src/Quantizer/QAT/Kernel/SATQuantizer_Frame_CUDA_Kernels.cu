@@ -179,7 +179,7 @@ void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaD_quantize_weight_default_propag
 
 void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaH_weight_default_propagate(half_float::half* weights,
                                                                            half_float::half* weightsQ,
-                                                                           float range,
+                                                                           float /*range*/,
                                                                            half_float::half* tanh_max_value,
                                                                            unsigned int size)
 {
@@ -194,7 +194,7 @@ void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaH_weight_default_propagate(half_
 
 void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaF_weight_default_propagate(float* weights,
                                                                            float* weightsQ,
-                                                                           float range,
+                                                                           float /*range*/,
                                                                            float* tanh_max_value,
                                                                            unsigned int size)
 {
@@ -209,7 +209,7 @@ void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaF_weight_default_propagate(float
 
 void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaD_weight_default_propagate(double* weights,
                                                                            double* weightsQ,
-                                                                           float range,
+                                                                           float /*range*/,
                                                                            double* tanh_max_value,
                                                                            unsigned int size)
 {
