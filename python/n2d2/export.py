@@ -26,6 +26,7 @@ from n2d2.n2d2_interface import Options
 from n2d2.quantizer import PTQ
 from n2d2.cells import DeepNetCell, NeuralNetworkCell
 from n2d2.provider import Provider
+from n2d2.deepnet import associate_provider_to_deepnet
 
 available_export = ["C", "CPP", "CPP_TensorRT"]
 
@@ -176,36 +177,21 @@ def _generate_export(deepnet_cell:DeepNetCell, provider:Provider=None, **kwargs)
     N2D2_option = _parse_export_parameters(**kwargs)
     N2D2_deepnet = deepnet_cell.get_embedded_deepnet().N2D2()
 
-    if provider is not None:
-        N2D2_provider = provider.N2D2()
-        N2D2_database = N2D2_provider.getDatabase()
-        N2D2_deepnet.setDatabase(N2D2_database)
-        N2D2_deepnet.setStimuliProvider(N2D2_provider)
-        deepnet_cell[0].N2D2().clearInputTensors()
-        deepnet_cell[0].N2D2().addInput(N2D2_provider, 0, 0, N2D2_provider.getSizeX(), N2D2_provider.getSizeY())
-
-    if len(N2D2_deepnet.getTargets()) == 0:
-        # No target associated to the DeepNet
-        # We create a Target for the last cell of the network
-        print("Adding target !")
-        last_cell = deepnet_cell[-1].N2D2()
-        N2D2_target =  N2D2.TargetScore("Target", last_cell, provider.N2D2())
-        N2D2_deepnet.addTarget(N2D2_target)
-    elif provider is not None:
-        # We already have a Target, so we attach the new provider to it
-        for target in N2D2_deepnet.getTargets():
-            target.setStimuliProvider(provider.N2D2())
-
     if N2D2_option.calibration != 0:
         if "nb_bits" not in kwargs:
             kwargs["nb_bits"] = N2D2_option.nb_bits
-        # Provider = None because we already attach the new provider !
-        PTQ(deepnet_cell, provider=None, **kwargs)
+        PTQ(deepnet_cell, provider=provider, **kwargs)
     else:
         # Graph otpimisations are done during calibration.
         # If we do not call calibration, we do graph optimisation now !
+        if provider is not None:
+            associate_provider_to_deepnet(N2D2_deepnet, provider.N2D2())
         N2D2_deepnet.fuseBatchNorm()
         N2D2_deepnet.removeDropout()
+
+    if N2D2_deepnet.getStimuliProvider().getDatabase().getNbStimuli() == 0 \
+            and N2D2_option.export_nb_stimuli_max != 0:
+        print("Warning : The export generated has no stimuli associated to it.")
 
     if not deepnet_cell.is_integral() and N2D2_option.nb_bits > 0:
         raise RuntimeError(f"You need to calibrate the network to export it in {abs(N2D2_option.nb_bits)} bits integer" \

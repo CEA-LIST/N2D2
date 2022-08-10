@@ -37,7 +37,7 @@ def load_from_ONNX(inputs, dims=None, batch_size=1, path=None, download=False):
     if path is not None and not download:
         path = n2d2.global_variables.model_cache + "/ONNX/mobilenetv2/mobilenetv2-1.0.onnx"
     else:
-        n2d2.utils.download_model("https://s3.amazonaws.com/onnx-model-zoo/mobilenet/mobilenetv2-1.0/mobilenetv2-1.0.onnx",
+        n2d2.utils.download("https://s3.amazonaws.com/onnx-model-zoo/mobilenet/mobilenetv2-1.0/mobilenetv2-1.0.onnx",
             n2d2.global_variables.model_cache+"/ONNX/",
             "mobilenetv2")
         path = n2d2.global_variables.model_cache+"/ONNX/mobilenetv2/mobilenetv2-1.0.onnx"
