@@ -125,7 +125,22 @@ half_float::half N2D2::Quantizer_Frame_CUDA_Kernels::cudaH_mean(half_float::half
                                                                 half_float::half* partialSum, 
                                                                 const unsigned int size)
 {
-    return cudaH_accumulate(data, partialSum, size) / half_float::half(size);
+    // return cudaH_accumulate(data, partialSum, size) / half_float::half(size);
+    return half_float::half(size);
+}
+
+
+float N2D2::Quantizer_Frame_CUDA_Kernels::cudaF_mean(float* data, 
+                                                     const unsigned int size)
+{
+    return cudaF_accumulate(data, size) / (float)size;
+}
+
+
+double N2D2::Quantizer_Frame_CUDA_Kernels::cudaD_mean(double* data, 
+                                                      const unsigned int size)
+{
+    return cudaD_accumulate(data, size) / (double)size;
 }
 
 
@@ -153,10 +168,75 @@ half_float::half N2D2::Quantizer_Frame_CUDA_Kernels::cudaH_variance(half_float::
     for (int i = 0; i<blocksPerGrid; i++){
         sum_var += hostPartSumVar[i];
     }
-    half_float::half variance = sum_var/(half_float::half)(size - 1.0f);
+    half_float::half variance = sum_var/(half_float::half)(size - 1);
 
     free(hostPartSumVar);
     return variance;
+}
+
+// Calculate Variance var(w)
+// https://stackoverflow.com/questions/12380966/standard-deviation-using-cuda
+struct thrustF_meanSquare
+    : std::unary_function<float, float>
+{
+    thrustF_meanSquare(float m)
+        : mean(m)
+    { /* no-op */ }
+    const float mean;
+    __device__ float operator()(float data) const
+    {
+        return ::pow(data - mean, 2.0f);
+    }
+};
+
+float N2D2::Quantizer_Frame_CUDA_Kernels::cudaF_variance(float* data, 
+                                                         float mean, 
+                                                         const unsigned int size)
+{
+    thrust::device_ptr<float> dataPtr(data);
+    float result = thrust::transform_reduce(dataPtr,
+                                            dataPtr+size,
+                                            thrustF_meanSquare(mean),
+                                            0.0f,
+                                            thrust::plus<float>());
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+
+    // To improve the result of the variance, it is recommended 
+    // to apply the Bessel’s Correction
+    // https://towardsdatascience.com/why-sample-variance-is-divided-by-n-1-89821b83ef6d
+    return result / (float)(size - 1);
+}
+
+
+struct thrustD_meanSquare
+: std::unary_function<double, double>
+{
+    thrustD_meanSquare(double m)
+    : mean(m)
+    { /* no-op */ }
+    const double mean;
+    __device__ double operator()(double data) const
+    {
+        return ::pow(data - mean, 2.0);
+    }
+};
+
+double N2D2::Quantizer_Frame_CUDA_Kernels::cudaD_variance(double* data, 
+                                                          double mean, 
+                                                          const unsigned int size)
+{
+    thrust::device_ptr<double> dataPtr(data);
+    double result = thrust::transform_reduce(dataPtr,
+                                             dataPtr+size,
+                                             thrustF_meanSquare(mean),
+                                             0.0,
+                                             thrust::plus<double>());
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+
+    // To improve the result of the variance, it is recommended 
+    // to apply the Bessel’s Correction
+    // https://towardsdatascience.com/why-sample-variance-is-divided-by-n-1-89821b83ef6d
+    return result / (double)(size - 1);
 }
 
 
@@ -185,6 +265,35 @@ half_float::half N2D2::Quantizer_Frame_CUDA_Kernels::cudaH_accumulate(half_float
     free(hostPartSum); 
     return sum;
 }
+
+
+// half_float::half N2D2::Quantizer_Frame_CUDA_Kernels::cudaH_accumulate(half_float::half* data, 
+//                                                                       const unsigned int size)
+// {
+//     int threadsPerBlock = 256;  // Should not be changed
+//     int blocksPerGrid = imin(32, (size + threadsPerBlock-1) / threadsPerBlock);
+
+//     __half* partialSum;
+//     cudaMalloc(&partialSum, blocksPerGrid*sizeof(__half));
+
+//     cudaH_sum_kernel<<< (size + threadsPerBlock-1) / threadsPerBlock, threadsPerBlock>>>(reinterpret_cast<__half*>(data),
+//                                                                                          partialSum,
+//                                                                                          size);
+//     CHECK_CUDA_STATUS(cudaPeekAtLastError());
+
+//     half_float::half* hostPartSum = (half_float::half*)malloc(blocksPerGrid*sizeof(half_float::half));
+//     CHECK_CUDA_STATUS(cudaMemcpy(hostPartSum,
+//                                  partialSum,
+//                                  blocksPerGrid*sizeof(half_float::half),
+//                                  cudaMemcpyDeviceToHost));
+
+//     half_float::half sum = (half_float::half)0.0f;
+//     for (int i = 0; i<blocksPerGrid; ++i){
+//         sum += hostPartSum[i];
+//     }   
+//     free(hostPartSum); 
+//     return sum;
+// }
 
 
 float N2D2::Quantizer_Frame_CUDA_Kernels::cudaF_accumulate(float* data, 
@@ -309,18 +418,145 @@ std::pair<float, float>
 N2D2::Quantizer_Frame_CUDA_Kernels::cudaF_MinMax(float* data, 
                                                  unsigned int size)
 {
+    thrust::device_ptr<float> thrustPtr(data);
     thrust::pair<thrust::device_ptr<float>, thrust::device_ptr<float>> 
-            minMaxPair = thrust::minmax_element(data, data+size);
+            minMaxPair = thrust::minmax_element(thrustPtr, thrustPtr+size);
 
-    return std::make_pair(*minMaxPair.first, *minMaxPair.second);
+    return std::make_pair(*(minMaxPair.first), *(minMaxPair.second));
 }
 
 std::pair<double, double> 
 N2D2::Quantizer_Frame_CUDA_Kernels::cudaD_MinMax(double* data, 
                                                  unsigned int size)
 {
+    thrust::device_ptr<double> thrustPtr(data);
     thrust::pair<thrust::device_ptr<double>, thrust::device_ptr<double>> 
-            minMaxPair = thrust::minmax_element(data, data+size);
+            minMaxPair = thrust::minmax_element(thrustPtr, thrustPtr+size);
             
-    return std::make_pair(*minMaxPair.first, *minMaxPair.second);
+    return std::make_pair(*(minMaxPair.first), *(minMaxPair.second));
+}
+
+
+__global__ void cudaDivH_kernel(__half* data,
+                                size_t size,
+                                __half value)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+    float div_value = 1/(float)value;
+
+    for (unsigned int i = index; i < size; i += stride) {
+#if __CUDA_ARCH__ >= 530 && defined(CUDART_VERSION) && CUDART_VERSION >= 8000
+        data[i] = __hmul(data[i], __float2half(div_value));
+#else
+        data[i] = __float2half(__half2float(data[i]) * div_value);
+#endif
+    }
+}
+
+void N2D2::Quantizer_Frame_CUDA_Kernels::cudaH_div(half_float::half* data,
+                                                   unsigned int size, 
+                                                   half_float::half value)
+{
+    cudaDivH_kernel<<<(size + 255) / 256, 256>>>(reinterpret_cast<__half*>(data), 
+                                                 size, 
+                                                 reinterpret_cast<__half&>(value));
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+void N2D2::Quantizer_Frame_CUDA_Kernels::cudaF_div(float* data, 
+                                                   unsigned int size, 
+                                                   float value)
+{
+    thrust::device_ptr<float> thrustPtr(data);
+    thrust::transform(thrustPtr, 
+                      thrustPtr + size,
+                      thrust::make_constant_iterator((float)value), 
+                      thrustPtr,
+                      thrust::divides<float>());
+}
+
+
+void N2D2::Quantizer_Frame_CUDA_Kernels::cudaD_div(double* data, 
+                                                   unsigned int size, 
+                                                   double value)
+{
+    thrust::device_ptr<double> thrustPtr(data);
+    thrust::transform(thrustPtr, 
+                      thrustPtr + size,
+                      thrust::make_constant_iterator((double)value), 
+                      thrustPtr,
+                      thrust::divides<double>());
+}
+
+
+__global__ void cudaH_tanh_kernel(__half* x, 
+                                  __half* y, 
+                                  unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 530)
+        float value_f = __half2float(x[i]);
+        y[i] = __float2half(tanh(value_f));
+#elif defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 530) 
+        float value_f = __half2float(x[i]);
+        y[i] = __float2half(tanh(value_f));
+#endif
+    }
+}
+
+void N2D2::Quantizer_Frame_CUDA_Kernels::cudaH_tanh(half_float::half* input,
+                                                    half_float::half* output,
+                                                    unsigned int size)
+{
+    cudaH_tanh_kernel<<< (size + 255) / 256, 256>>>(reinterpret_cast<__half*>(input), 
+                                                    reinterpret_cast<__half*>(output), 
+                                                    size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+__global__ void cudaF_tanh_kernel(float* x,
+                                  float* y,
+                                  unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        y[i] = tanh(x[i]);
+    }
+}
+
+void N2D2::Quantizer_Frame_CUDA_Kernels::cudaF_tanh(float* input,
+                                                    float* output,
+                                                    unsigned int size)
+{
+    cudaF_tanh_kernel<<< (size + 255) / 256, 256>>>(input, output, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+__global__ void cudaD_tanh_kernel(double* x,
+                                  double* y,
+                                  unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        y[i] = tanh(x[i]);
+    }
+}
+
+void N2D2::Quantizer_Frame_CUDA_Kernels::cudaD_tanh(double* input,
+                                                    double* output,
+                                                    unsigned int size)
+{
+    cudaD_tanh_kernel<<< (size + 255) / 256, 256>>>(input, output, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
 }
