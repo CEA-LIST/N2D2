@@ -30,6 +30,421 @@
 #include <stdlib.h>
 #include <math.h>
 
+using namespace N2D2::Quantizer_Frame_CUDA_Kernels;
+
+__global__ void cudaH_DorefaQ_kernel(__half* data,
+                                     __half factor,
+                                     float range,
+                                     unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+#if __CUDA_ARCH__ >= 530
+    for (unsigned int i = index; i < size; i += stride) {
+        __half q = __hmul(__float2half(0.5f), __hadd(__hdiv(data[i], factor),__float2half(1.0f)));
+
+        // Check if q is between 0 and 1
+        assert(__hge(q, __float2half(0.0f)) &&  __hle(q, __float2half(1.0f)));
+
+        q = __hmul(__float2half(1.0f/range),hrint(__hmul(q,__float2half(range))));
+
+        // Check if q is between 0 and 1
+        assert(__hge(q, __float2half(0.0f)) &&  __hle(q, __float2half(1.0f)));
+
+        data[i] =__hsub(__hmul(q,__float2half(2.0f)),__float2half(1.0f));
+    }
+#else
+    for (unsigned int i = index; i < size; i += stride) {
+        float q = 0.5f * (__half2float(data[i])/__half2float(factor) + 1.0f);
+
+        // Check if q is between 0 and 1
+        assert(q >= 0.0f && q <= 1.0f);
+
+        q = (1.0f / range) * rintf(q * range);
+
+        // Check if q is between 0 and 1
+        assert(q >= 0.0f && q <= 1.0f);
+
+        data[i] = __float2half(q * 2.0f - 1.0f);
+    }
+#endif
+}
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaH_quantize_weight_default_propagate(half_float::half* weights,
+                                                                                    half_float::half* weightsQ,
+                                                                                    float range,
+                                                                                    half_float::half* tanh_max_value,
+                                                                                    unsigned int size)
+{
+    cudaH_tanh(weights, weightsQ, size);
+
+    std::pair<half_float::half, half_float::half> tanh_minmax = cudaH_MinMax(weightsQ, size);
+    *tanh_max_value = max(abs(tanh_minmax.first), abs(tanh_minmax.second));
+
+    cudaH_DorefaQ_kernel<<< (size + 255) / 256, 256>>>(reinterpret_cast<__half*>(weightsQ),
+                                                       reinterpret_cast<__half&>(*tanh_max_value),
+                                                       range,
+                                                       size);
+
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+__global__ void cudaF_DorefaQ_kernel(float* data,
+                                     float factor,
+                                     float range,
+                                     unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        float q = 0.5f * ((data[i] / factor) + 1.0f);
+
+        // Check if q is between 0 and 1
+        assert(q >= 0.0f && q <= 1.0f);
+
+        q = (1.0f / range) * rintf(q * range);
+
+        // Check if q is between 0 and 1
+        assert(q >= 0.0f && q <= 1.0f);
+
+        data[i] = q * 2.0f - 1.0f;
+    }
+}
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaF_quantize_weight_default_propagate(float* weights,
+                                                                                    float* weightsQ,
+                                                                                    float range,
+                                                                                    float* tanh_max_value,
+                                                                                    unsigned int size)
+{
+    cudaF_tanh(weights, weightsQ, size);
+
+    std::pair<float, float> tanh_minmax = cudaF_MinMax(weightsQ, size);
+    *tanh_max_value = max(abs(tanh_minmax.first), abs(tanh_minmax.second));
+
+    cudaF_DorefaQ_kernel<<< (size + 255) / 256, 256>>>(weightsQ,
+                                                       *tanh_max_value,
+                                                       range,
+                                                       size);
+
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+__global__ void cudaD_DorefaQ_kernel(double* data,
+                                     double factor,
+                                     float range,
+                                     unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        double q = 0.5 * ((data[i] / factor) + 1.0);
+
+        // Check if q is between 0 and 1
+        assert(q >= 0.0 && q <= 1.0);
+
+        q = (1.0 / range) * llrint(q * range);
+
+        // Check if q is between 0 and 1
+        assert(q >= 0.0 && q <= 1.0);
+
+        data[i] = q * 2.0 - 1.0;
+    }
+}
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaD_quantize_weight_default_propagate(double* weights,
+                                                                                    double* weightsQ,
+                                                                                    float range,
+                                                                                    double* tanh_max_value,
+                                                                                    unsigned int size)
+{
+    cudaD_tanh(weights, weightsQ, size);
+
+    std::pair<double, double> tanh_minmax = cudaD_MinMax(weightsQ, size);
+    *tanh_max_value = max(abs(tanh_minmax.first), abs(tanh_minmax.second));
+
+    cudaD_DorefaQ_kernel<<< (size + 255) / 256, 256>>>(weightsQ,
+                                                       *tanh_max_value,
+                                                       range,
+                                                       size);
+
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaH_weight_default_propagate(half_float::half* weights,
+                                                                           half_float::half* weightsQ,
+                                                                           float range,
+                                                                           half_float::half* tanh_max_value,
+                                                                           unsigned int size)
+{
+    cudaH_tanh(weights, weightsQ, size);
+
+    std::pair<half_float::half, half_float::half> tanh_minmax = cudaH_MinMax(weightsQ, size);
+    *tanh_max_value = max(abs(tanh_minmax.first), abs(tanh_minmax.second));
+
+    cudaH_div(weightsQ, size, *tanh_max_value);
+}
+
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaF_weight_default_propagate(float* weights,
+                                                                           float* weightsQ,
+                                                                           float range,
+                                                                           float* tanh_max_value,
+                                                                           unsigned int size)
+{
+    cudaF_tanh(weights, weightsQ, size);
+
+    std::pair<float, float> tanh_minmax = cudaF_MinMax(weightsQ, size);
+    *tanh_max_value = max(abs(tanh_minmax.first), abs(tanh_minmax.second));
+
+    cudaF_div(weightsQ, size, *tanh_max_value);
+}
+
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaD_weight_default_propagate(double* weights,
+                                                                           double* weightsQ,
+                                                                           float range,
+                                                                           double* tanh_max_value,
+                                                                           unsigned int size)
+{
+    cudaD_tanh(weights, weightsQ, size);
+
+    std::pair<double, double> tanh_minmax = cudaD_MinMax(weightsQ, size);
+    *tanh_max_value = max(abs(tanh_minmax.first), abs(tanh_minmax.second));
+
+    cudaD_div(weightsQ, size, *tanh_max_value);
+}
+
+
+__global__ void cudaF_DorefaQ_fullrange_kernel(float* data,
+                                               float factor,
+                                               float range,
+                                               unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        float q = 0.5f * ((data[i] / factor) + 1.0f);
+
+        // Check if q is between 0 and 1
+        assert(q >= 0.0f && q <= 1.0f);
+
+        q = (1.0f + 0.9998f / range) * q - (0.4999f / range);
+        q = (1.0f / range) * rintf(q * range);
+
+        // Check if q is between 0 and 1
+        assert(q >= 0.0f && q <= 1.0f);
+
+        data[i] = q * 2.0f - 1.0f;
+    }
+}
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaF_quantize_weight_fullrange_propagate(float* weights,
+                                                                                      float* weightsQ,
+                                                                                      float range,
+                                                                                      float* tanh_max_value,
+                                                                                      unsigned int size)
+{
+    cudaF_tanh(weights, weightsQ, size);
+
+    std::pair<float, float> tanh_minmax = cudaF_MinMax(weightsQ, size);
+    *tanh_max_value = max(abs(tanh_minmax.first), abs(tanh_minmax.second));
+
+    cudaF_DorefaQ_fullrange_kernel<<< (size + 255) / 256, 256>>>(weightsQ,
+                                                                 *tanh_max_value,
+                                                                 range,
+                                                                 size);
+
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+__global__ void cudaF_DorefaQ_symrange_kernel(float* data,
+                                              float factor,
+                                              float range,
+                                              unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    range = floor(range / 2);
+
+    for (unsigned int i = index; i < size; i += stride) {
+        float q = data[i] / factor;
+
+        // Check if q is between -1 and 1
+        assert(q >= -1.0f && q <= 1.0f);
+
+        q = (1.0f / range) * rintf(q * range);
+
+        // Check if q is between -1 and 1
+        assert(q >= -1.0f && q <= 1.0f);
+
+        data[i] = q;
+    }
+}
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaF_quantize_weight_symrange_propagate(float* weights,
+                                                                                     float* weightsQ,
+                                                                                     float range,
+                                                                                     float* tanh_max_value,
+                                                                                     unsigned int size)
+{
+    cudaF_tanh(weights, weightsQ, size);
+
+    std::pair<float, float> tanh_minmax = cudaF_MinMax(weightsQ, size);
+    *tanh_max_value = max(abs(tanh_minmax.first), abs(tanh_minmax.second));
+
+    cudaF_DorefaQ_symrange_kernel<<< (size + 255) / 256, 256>>>(weightsQ,
+                                                                *tanh_max_value,
+                                                                range,
+                                                                size);
+
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+__global__ void cudaF_DorefaQ_asymrange_kernel(float* data,
+                                               float factor,
+                                               float range,
+                                               unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    range = floor(range / 2);
+
+    for (unsigned int i = index; i < size; i += stride) {
+        float q = data[i] / factor;
+
+        // Check if q is between -1 and 1
+        assert(q >= -1.0f && q <= 1.0f);
+
+        q = (1.0 + 1.0/(2.0 * range)) * q - (1.0/(2.0 * range));
+        q = (1.0f / range) * rintf(q * range);
+
+        // Check if q is between (-1 - 1/range) and 1
+        assert(q >= -1.0f-(1.0f/range) && q <= 1.0f);
+
+        data[i] = q;
+    }
+}
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaF_quantize_weight_asymrange_propagate(float* weights,
+                                                                                      float* weightsQ,
+                                                                                      float range,
+                                                                                      float* tanh_max_value,
+                                                                                      unsigned int size)
+{
+    cudaF_tanh(weights, weightsQ, size);
+
+    std::pair<float, float> tanh_minmax = cudaF_MinMax(weightsQ, size);
+    *tanh_max_value = max(abs(tanh_minmax.first), abs(tanh_minmax.second));
+
+    cudaF_DorefaQ_asymrange_kernel<<< (size + 255) / 256, 256>>>(weightsQ,
+                                                                 *tanh_max_value,
+                                                                 range,
+                                                                 size);
+
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+__global__ void cudaF_asymrange_kernel(float* data,
+                                       float factor,
+                                       float range,
+                                       unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    range = floor(range / 2);
+
+    for (unsigned int i = index; i < size; i += stride) {
+        float q = data[i] / factor;
+
+        // Check if q is between -1 and 1
+        assert(q >= -1.0f && q <= 1.0f);
+
+        q = (1.0 + 1.0/(2.0 * range)) * q - (1.0/(2.0 * range));
+
+        data[i] = q;
+    }
+}
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaF_weight_asymrange_propagate(float* weights,
+                                                                             float* weightsQ,
+                                                                             float range,
+                                                                             float* tanh_max_value,
+                                                                             unsigned int size)
+{
+    cudaF_tanh(weights, weightsQ, size);
+
+    std::pair<float, float> tanh_minmax = cudaF_MinMax(weightsQ, size);
+    *tanh_max_value = max(abs(tanh_minmax.first), abs(tanh_minmax.second));
+
+    cudaF_asymrange_kernel<<< (size + 255) / 256, 256>>>(weightsQ,
+                                                         *tanh_max_value,
+                                                         range,
+                                                         size);
+
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+// ----------------------------------------------------------------------------
+// ---------------------------- SAT SCALING KERNEL ----------------------------
+// ----------------------------------------------------------------------------
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaH_apply_scaling(half_float::half* data,
+                                                                half_float::half* scaling_value,
+                                                                half_float::half* partial_sum,
+                                                                unsigned int scaling_factor,
+                                                                unsigned int size)
+{
+    half_float::half mean = Quantizer_Frame_CUDA_Kernels::cudaH_mean(data, partial_sum, size);
+    half_float::half variance = Quantizer_Frame_CUDA_Kernels::cudaH_variance(data, partial_sum, mean, size);
+
+    *scaling_value = sqrt(variance * scaling_factor);
+
+    cudaH_div(data, size, *scaling_value);
+}
+
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaF_apply_scaling(float* data,
+                                                                float* scaling_value,
+                                                                unsigned int scaling_factor,
+                                                                unsigned int size)
+{
+    float mean = Quantizer_Frame_CUDA_Kernels::cudaF_mean(data, size);
+    float variance = Quantizer_Frame_CUDA_Kernels::cudaF_variance(data, mean, size);
+
+    *scaling_value = sqrtf(variance * scaling_factor);
+
+    cudaF_div(data, size, *scaling_value);
+}
+
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaD_apply_scaling(double* data,
+                                                                double* scaling_value,
+                                                                unsigned int scaling_factor,
+                                                                unsigned int size)
+{
+    double mean = Quantizer_Frame_CUDA_Kernels::cudaD_mean(data, size);
+    double variance = Quantizer_Frame_CUDA_Kernels::cudaD_variance(data, mean, size);
+
+    *scaling_value = sqrt(variance * scaling_factor);
+
+    cudaD_div(data, size, *scaling_value);
+}
+
 
 // ----------------------------------------------------------------------------
 // --------------------- SAT ACTIVATION FORWARD KERNEL ------------------------
@@ -343,7 +758,187 @@ void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaD_quantize_activation_propagate(
 }
 
 
+// ----------------------------------------------------------------------------
+// ---------------- WEIGHT DEFAULT/SYMRANGE BACKWARD KERNEL -------------------
+// -------------------------- HALF FLOAT VERSION ------------------------------
+// ----------------------------------------------------------------------------
 
+__global__ void cudaH_SATGrad_kernel(__half* diffInputs,
+                                     __half* diffOutputs,
+                                     __half* x,
+                                     __half factor,
+                                     unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+#if __CUDA_ARCH__ >= 530
+    for (unsigned int i = index; i < size; i += stride) {
+        __half inv_cosh = __float2half(1/std::cosh(__half2float(x[i])));
+        __half grad = __hdiv(__hmul(inv_cosh, inv_cosh), factor);
+        diffOutputs[i] = __hmul(diffInputs[i], grad);
+    }
+#else
+    for (unsigned int i = index; i < size; i += stride) {
+        float inv_cosh = 1/std::cosh(__half2float(x[i]));
+        float grad = inv_cosh * inv_cosh * (1/__half2float(factor));
+        diffOutputs[i] = __float2half(__half2float(diffInputs[i]) * grad);
+    }
+#endif
+}                                     
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaH_quantize_weight_default_back_propagate(half_float::half* diffInputs,
+                                                                                         half_float::half* diffOutputs,
+                                                                                         half_float::half* fpWeights,
+                                                                                         half_float::half factor,
+                                                                                         unsigned int size)
+{
+    cudaH_SATGrad_kernel<<< (size + 255) / 256, 256>>> (reinterpret_cast<__half*>(diffInputs),
+                                                        reinterpret_cast<__half*>(diffOutputs),
+                                                        reinterpret_cast<__half*>(fpWeights),
+                                                        reinterpret_cast<__half&>(factor),
+                                                        size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+// ----------------------------------------------------------------------------
+// ---------------- WEIGHT DEFAULT/SYMRANGE BACKWARD KERNEL -------------------
+// ----------------------------- FLOAT VERSION --------------------------------
+// ----------------------------------------------------------------------------
+
+__global__ void cudaF_SATGrad_kernel(float* diffInputs,
+                                     float* diffOutputs,
+                                     float* x,
+                                     float factor,
+                                     unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        float inv_cosh = 1/std::cosh(x[i]);
+        float grad = inv_cosh * inv_cosh * (1/factor);
+        diffOutputs[i] = diffInputs[i] * grad;
+    }
+}
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaF_quantize_weight_default_back_propagate(float* diffInputs,
+                                                                                         float* diffOutputs,
+                                                                                         float* fpWeights,
+                                                                                         float factor,
+                                                                                         unsigned int size)
+{
+    cudaF_SATGrad_kernel<<< (size + 255) / 256, 256>>> (diffInputs, diffOutputs, fpWeights, factor, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+// ----------------------------------------------------------------------------
+// ---------------- WEIGHT DEFAULT/SYMRANGE BACKWARD KERNEL -------------------
+// ----------------------------- DOUBLE VERSION -------------------------------
+// ----------------------------------------------------------------------------
+
+__global__ void cudaD_SATGrad_kernel(double* diffInputs,
+                                     double* diffOutputs,
+                                     double* x,
+                                     double factor,
+                                     unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    for (unsigned int i = index; i < size; i += stride) {
+        double inv_cosh = 1/std::cosh(x[i]);
+        double grad = inv_cosh * inv_cosh * (1/factor);
+        diffOutputs[i] = diffInputs[i] * grad;
+    }
+}
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaD_quantize_weight_default_back_propagate(double* diffInputs,
+                                                                                         double* diffOutputs,
+                                                                                         double* fpWeights,
+                                                                                         double factor,
+                                                                                         unsigned int size)
+{
+    cudaD_SATGrad_kernel<<< (size + 255) / 256, 256>>> (diffInputs, diffOutputs, fpWeights, factor, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}
+
+
+// ----------------------------------------------------------------------------
+// -------------------- WEIGHT FULLRANGE BACKWARD KERNEL ----------------------
+// ----------------------------- FLOAT VERSION --------------------------------
+// ----------------------------------------------------------------------------
+
+__global__ void cudaF_SATGrad_FullRange_kernel(float* diffInputs,
+                                               float* diffOutputs,
+                                               float* x,
+                                               float range,
+                                               float factor,
+                                               unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    float fullrange_factor = (1.0f + 0.9998f/range);
+
+    for (unsigned int i = index; i < size; i += stride) {
+        float inv_cosh = 1/std::cosh(x[i]);
+        float grad = inv_cosh * inv_cosh * (1/factor) * fullrange_factor;
+        diffOutputs[i] = diffInputs[i] * grad;
+    }
+}
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaF_quantize_weight_fullrange_back_propagate(float* diffInputs,
+                                                                                           float* diffOutputs,
+                                                                                           float* fpWeights,
+                                                                                           float range,
+                                                                                           float factor,
+                                                                                           unsigned int size)
+{
+    cudaF_SATGrad_FullRange_kernel<<< (size + 255) / 256, 256>>> (diffInputs, diffOutputs, fpWeights, 
+                                                                  range, factor, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}  
+
+
+// ----------------------------------------------------------------------------
+// -------------------- WEIGHT ASYMRANGE BACKWARD KERNEL ----------------------
+// ----------------------------- FLOAT VERSION --------------------------------
+// ----------------------------------------------------------------------------
+
+__global__ void cudaF_SATGrad_AsymRange_kernel(float* diffInputs,
+                                               float* diffOutputs,
+                                               float* x,
+                                               float range,
+                                               float factor,
+                                               unsigned int size)
+{
+    const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int stride = blockDim.x * gridDim.x;
+
+    range = floor(range / 2);
+    float asymm_factor = 1.0f + 1.0f/(2.0f * range);
+
+    for (unsigned int i = index; i < size; i += stride) {
+        float inv_cosh = 1/std::cosh(x[i]);
+        float grad = inv_cosh * inv_cosh * (1/factor) * asymm_factor;
+        diffOutputs[i] = diffInputs[i] * grad;
+    }
+}
+
+void N2D2::SATQuantizer_Frame_CUDA_Kernels::cudaF_quantize_weight_asymrange_back_propagate(float* diffInputs,
+                                                                                           float* diffOutputs,
+                                                                                           float* fpWeights,
+                                                                                           float range,
+                                                                                           float factor,
+                                                                                           unsigned int size)
+{
+    cudaF_SATGrad_AsymRange_kernel<<< (size + 255) / 256, 256>>> (diffInputs, diffOutputs, fpWeights, 
+                                                                  range, factor, size);
+    CHECK_CUDA_STATUS(cudaPeekAtLastError());
+}  
 
 
 // ----------------------------------------------------------------------------

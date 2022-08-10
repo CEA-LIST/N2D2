@@ -49,6 +49,106 @@ namespace SATQuantizer_Frame_CUDA_Kernels {
     // ----------------------------- FORWARD KERNELS ------------------------------
     // ----------------------------------------------------------------------------
 
+    // ---------------------- WEIGHT DEFAULT FORWARD KERNEL -----------------------
+
+    void cudaH_quantize_weight_default_propagate(half_float::half* weights,
+                                                 half_float::half* weightsQ,
+                                                 float range,
+                                                 half_float::half* tanh_max_value,
+                                                 unsigned int size);
+
+    void cudaF_quantize_weight_default_propagate(float* weights,
+                                                 float* weightsQ,
+                                                 float range,
+                                                 float* tanh_max_value,
+                                                 unsigned int size);
+
+    void cudaD_quantize_weight_default_propagate(double* weights,
+                                                 double* weightsQ,
+                                                 float range,
+                                                 double* tanh_max_value,
+                                                 unsigned int size);
+
+
+    void cudaH_weight_default_propagate(half_float::half* weights,
+                                        half_float::half* weightsQ,
+                                        float range,
+                                        half_float::half* tanh_max_value,
+                                        unsigned int size);
+
+    void cudaF_weight_default_propagate(float* weights,
+                                        float* weightsQ,
+                                        float range,
+                                        float* tanh_max_value,
+                                        unsigned int size);
+
+    void cudaD_weight_default_propagate(double* weights,
+                                        double* weightsQ,
+                                        float range,
+                                        double* tanh_max_value,
+                                        unsigned int size);
+
+    // ----------------------------------------------------------------------------
+
+    // --------------------- WEIGHT FULLRANGE FORWARD KERNEL ----------------------
+
+    void cudaF_quantize_weight_fullrange_propagate(float* weights,
+                                                   float* weightsQ,
+                                                   float range,
+                                                   float* tanh_max_value,
+                                                   unsigned int size);
+
+    // ----------------------------------------------------------------------------
+
+    // ---------------------- WEIGHT SYMRANGE FORWARD KERNEL ----------------------
+
+    void cudaF_quantize_weight_symrange_propagate(float* weights,
+                                                  float* weightsQ,
+                                                  float range,
+                                                  float* tanh_max_value,
+                                                  unsigned int size);
+
+    // ----------------------------------------------------------------------------
+
+    // --------------------- WEIGHT ASYMRANGE FORWARD KERNEL ----------------------
+
+    void cudaF_quantize_weight_asymrange_propagate(float* weights,
+                                                   float* weightsQ,
+                                                   float range,
+                                                   float* tanh_max_value,
+                                                   unsigned int size);
+
+    void cudaF_weight_asymrange_propagate(float* weights,
+                                          float* weightsQ,
+                                          float range,
+                                          float* tanh_max_value,
+                                          unsigned int size);
+
+    // ----------------------------------------------------------------------------
+
+    // ------------------------- SCALING FORWARD KERNELS --------------------------
+
+    void cudaH_apply_scaling(half_float::half* data,
+                             half_float::half* scaling_value,
+                             half_float::half* partial_sum,
+                             unsigned int scaling_factor,
+                             unsigned int size);
+
+    void cudaF_apply_scaling(float* data,
+                             float* scaling_value,
+                             unsigned int scaling_factor,
+                             unsigned int size);
+
+    void cudaD_apply_scaling(double* data,
+                             double* scaling_value,
+                             unsigned int scaling_factor,
+                             unsigned int size);
+
+    // ----------------------------------------------------------------------------
+
+
+    // ----------------------- ACTIVATION FORWARD KERNELS -------------------------
+
     void cudaH_quantize_activation_propagate(half_float::half* activations,
                                              float range,
                                              const half_float::half* alpha,
@@ -69,12 +169,60 @@ namespace SATQuantizer_Frame_CUDA_Kernels {
                                              double* fpActivations,
                                              unsigned int size,
                                              bool inference);
+    
+    // ----------------------------------------------------------------------------
 
 
 
     // ----------------------------------------------------------------------------
     // ---------------------------- BACKWARD KERNELS ------------------------------
     // ----------------------------------------------------------------------------
+
+    // ---------------- WEIGHT DEFAULT/SYMRANGE BACKWARD KERNEL -------------------
+
+    void cudaH_quantize_weight_default_back_propagate(half_float::half* diffInputs,
+                                                      half_float::half* diffOutputs,
+                                                      half_float::half* fpWeights,
+                                                      half_float::half factor,
+                                                      unsigned int size);
+
+    void cudaF_quantize_weight_default_back_propagate(float* diffInputs,
+                                                      float* diffOutputs,
+                                                      float* fpWeights,
+                                                      float factor,
+                                                      unsigned int size);
+
+    void cudaD_quantize_weight_default_back_propagate(double* diffInputs,
+                                                      double* diffOutputs,
+                                                      double* fpWeights,
+                                                      double factor,
+                                                      unsigned int size);
+
+    // ----------------------------------------------------------------------------
+
+    // -------------------- WEIGHT FULLRANGE BACKWARD KERNEL ----------------------
+
+    void cudaF_quantize_weight_fullrange_back_propagate(float* diffInputs,
+                                                        float* diffOutputs,
+                                                        float* fpWeights,
+                                                        float range,
+                                                        float factor,
+                                                        unsigned int size);
+
+    // ----------------------------------------------------------------------------
+
+    // -------------------- WEIGHT ASYMRANGE BACKWARD KERNEL ----------------------
+
+    void cudaF_quantize_weight_asymrange_back_propagate(float* diffInputs,
+                                                        float* diffOutputs,
+                                                        float* fpWeights,
+                                                        float range,
+                                                        float factor,
+                                                        unsigned int size);
+
+    // ----------------------------------------------------------------------------
+
+    // ----------------------- ACTIVATION BACKWARD KERNELS ------------------------
 
     void cudaH_quantize_activation_back_propagate(half_float::half* diffInput,
                                                   half_float::half* diffOutput,
@@ -99,6 +247,8 @@ namespace SATQuantizer_Frame_CUDA_Kernels {
                                                   float range,
                                                   const double* alpha,
                                                   unsigned int size);
+
+    // ----------------------------------------------------------------------------
 
 }
 
