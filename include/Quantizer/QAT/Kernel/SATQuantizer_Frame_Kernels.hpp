@@ -38,7 +38,69 @@ namespace SATQuantizer_Frame_Kernels {
     // ----------------------------- FORWARD KERNELS ------------------------------
     // ----------------------------------------------------------------------------
 
-    // In-place method
+    // ---------------------- WEIGHT DEFAULT FORWARD KERNEL -----------------------
+
+    template <class T>
+    void quantize_weight_default_propagate(Tensor<T>& weights,
+                                           Tensor<T>& weightsQ,
+                                           float range,
+                                           T* tanh_max_value);
+
+    template <class T>
+    void no_quantize_weight_default_propagate(Tensor<T>& weights,
+                                              Tensor<T>& weightsQ,
+                                              float range,
+                                              T* tanh_max_value);                                
+
+    // ----------------------------------------------------------------------------
+
+    // --------------------- WEIGHT FULLRANGE FORWARD KERNEL ----------------------
+
+    template <class T>
+    void quantize_weight_fullrange_propagate(Tensor<T>& weights,
+                                             Tensor<T>& weightsQ,
+                                             float range,
+                                             T* tanh_max_value);
+
+    // ----------------------------------------------------------------------------
+
+    // ---------------------- WEIGHT SYMRANGE FORWARD KERNEL ----------------------
+
+    template <class T>
+    void quantize_weight_symrange_propagate(Tensor<T>& weights,
+                                            Tensor<T>& weightsQ,
+                                            float range,
+                                            T* tanh_max_value);
+
+    // ----------------------------------------------------------------------------
+
+    // --------------------- WEIGHT ASYMRANGE FORWARD KERNEL ----------------------
+
+    template <class T>
+    void quantize_weight_asymrange_propagate(Tensor<T>& weights,
+                                             Tensor<T>& weightsQ,
+                                             float range,
+                                             T* tanh_max_value);
+
+    template <class T>
+    void no_quantize_weight_asymrange_propagate(Tensor<T>& weights,
+                                                Tensor<T>& weightsQ,
+                                                float range,
+                                                T* tanh_max_value);
+
+    // ----------------------------------------------------------------------------
+
+    // ------------------------- SCALING FORWARD KERNEL ---------------------------
+
+    template <class T>
+    void apply_scaling(Tensor<T>& data,
+                       T* scaling_value,
+                       unsigned int scaling_factor);
+
+    // ----------------------------------------------------------------------------
+
+    // ----------------------- ACTIVATION FORWARD KERNELS -------------------------
+
     template <class T>
     void quantize_activation_propagate(Tensor<T>& activations,
                                        const float range,
@@ -46,11 +108,54 @@ namespace SATQuantizer_Frame_Kernels {
                                        Tensor<T>& fpActivations,
                                        bool inference);
 
+    // ----------------------------------------------------------------------------
+
+    // ------------------------- BIASES FORWARD KERNELS ---------------------------
+
+    template <class T>
+    void quantize_bias_propagate(Tensor<T>& biases,
+                                 Tensor<T>& biasesQ);
+
+    // ----------------------------------------------------------------------------
 
 
     // ----------------------------------------------------------------------------
     // ---------------------------- BACKWARD KERNELS ------------------------------
     // ----------------------------------------------------------------------------
+
+    // ---------------- WEIGHT DEFAULT/SYMRANGE BACKWARD KERNEL -------------------
+
+    template <class T>
+    void quantize_weight_default_back_propagate(Tensor<T>& diffWeightsQ,
+                                                Tensor<T>& diffWeights,
+                                                Tensor<T>& weights,
+                                                T factor);
+
+    // ----------------------------------------------------------------------------
+
+    // -------------------- WEIGHT FULLRANGE BACKWARD KERNEL ----------------------
+
+    template <class T>
+    void quantize_weight_fullrange_back_propagate(Tensor<T>& diffWeightsQ,
+                                                  Tensor<T>& diffWeights,
+                                                  Tensor<T>& weights,
+                                                  float range,
+                                                  T factor);
+
+    // ----------------------------------------------------------------------------
+
+    // -------------------- WEIGHT ASYMRANGE BACKWARD KERNEL ----------------------
+
+    template <class T>
+    void quantize_weight_asymrange_back_propagate(Tensor<T>& diffWeightsQ,
+                                                  Tensor<T>& diffWeights,
+                                                  Tensor<T>& weights,
+                                                  float range,
+                                                  T factor);
+
+    // ----------------------------------------------------------------------------
+
+    // ----------------------- ACTIVATION BACKWARD KERNELS ------------------------
 
     template <class T>
     void quantize_activation_back_propagate(const Tensor<T>& diffInput,
@@ -59,6 +164,16 @@ namespace SATQuantizer_Frame_Kernels {
                                             const Tensor<T>& fpActivations,
                                             const float range,
                                             const Tensor<T>& Alpha);
+
+    // ----------------------------------------------------------------------------
+
+    // ------------------------- BIASES BACKWARD KERNELS --------------------------
+
+    template <class T>
+    void quantize_biases_back_propagate(Tensor<T>& diffBiasesQ,
+                                        Tensor<T>& diffBiases);
+
+    // ----------------------------------------------------------------------------
 
 }
 
