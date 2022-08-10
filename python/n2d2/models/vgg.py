@@ -203,7 +203,7 @@ class VGG16(VGG):
         super().__init__(size=16, batchnorm=batchnorm, name=name)
         
 class VGG19(VGG):
-    def __init__(self, batchnorm:bool =False, name:Optional[str] =None)
+    def __init__(self, batchnorm:bool =False, name:Optional[str] =None):
         """VGG network with 19 cells, based on Karen Simonyan and 
         Andrew Zisserman article: https://arxiv.org/pdf/1409.1556.pdf
 
