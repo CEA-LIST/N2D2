@@ -18,14 +18,14 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
-from n2d2.database.database import Database, _database_parameters
+from n2d2.database import AbstractDatabase, _database_parameters
 from n2d2.utils import inherit_init_docstring
-from n2d2.n2d2_interface import N2D2_Interface, ConventionConverter
+from n2d2.n2d2_interface import ConventionConverter
 import N2D2
 
 
 @inherit_init_docstring()
-class ILSVRC2012(Database):
+class ILSVRC2012(AbstractDatabase):
     """
     ILSVRC2012 database :cite:`ILSVRC15`.
     """
@@ -48,7 +48,7 @@ class ILSVRC2012(Database):
         :param use_validation_for_test: If ``True``, use the validation partition for test, default=False
         :type use_validation_for_test: bool, optional
         """
-        N2D2_Interface.__init__(self, **config_parameters)
+        AbstractDatabase.__init__(self, **config_parameters)
         self._constructor_arguments.update({
             'learn': learn,
         })

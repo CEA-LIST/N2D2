@@ -1,6 +1,7 @@
 build:ubuntu:
   extends: 
     - .before_script_template
+    - .rules:all-branches-not-schedule
   stage: build
   tags:
     - ubuntu

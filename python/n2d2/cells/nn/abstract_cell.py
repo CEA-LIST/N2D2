@@ -19,7 +19,9 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 from abc import ABC, abstractmethod
+from typing import Union
 
+import N2D2
 import n2d2.activation
 import n2d2.filler
 import n2d2.solver
@@ -29,7 +31,7 @@ from n2d2 import Interface, Tensor
 from n2d2.cells.cell import Cell
 from n2d2.error_handler import deprecated
 from n2d2.n2d2_interface import N2D2_Interface
-from n2d2.provider import Provider
+from n2d2.provider import MultipleOutputsProvider, Provider
 from n2d2.typed import ModelDatatyped, Modeltyped
 
 _cell_parameters = {
@@ -99,7 +101,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             return self.get_name()
         return N2D2_Interface.__getattr__(self, key)
 
-    def __setattr__(self, key: str, value) -> None:
+    def __setattr__(self, key: str, value: n2d2.activation.ActivationFunction) -> None:
 
         if key == 'activation':
             if not (isinstance(value, n2d2.activation.ActivationFunction) or value is None):
@@ -190,7 +192,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         self._N2D2_object.clearInputTensors()
 
 
-    def _check_tensor(self, inputs):
+    def _check_tensor(self, inputs: Tensor):
         if isinstance(inputs.cell, (NeuralNetworkCell, Provider)):
             # Check x-y dimension consistency
             if not isinstance(self, n2d2.cells.nn.Fc):
@@ -208,7 +210,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         return False
 
 
-    def add_input(self, inputs):
+    def add_input(self, inputs: Union[Interface, Tensor]):
 
         initialized = (self.dims() != [])
 
@@ -234,15 +236,23 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             # Check for z dimension consistency
             if not dim_z == self.get_nb_channels():
                 raise RuntimeError("Total number of input dimZ != cell '" + self.get_name() + "' number channels")
+        elif self.mappable and self._N2D2_object.getMapping().empty():
+                self._N2D2_object.setMapping(Tensor([self.get_nb_outputs(), inputs.dimZ()], value=True,
+                                                             datatype="bool", dim_format="N2D2").N2D2())
 
         parents = []
-
         # Clear old input tensors of cell to connect new inputs
         self.clear_input_tensors()
         for ipt in tensor_inputs:
             cell = ipt.cell
-            self._N2D2_object.linkInput(cell.N2D2())
-
+            # cells created by Interfaces out of any deepnet at initialization have an empty 
+            # getData() method so data are manually passed to the input tensor
+            if isinstance(cell, MultipleOutputsProvider) or isinstance(inputs, Interface):
+                diffOutput = Tensor(ipt.dims(), value=0, dim_format="N2D2")
+                self._N2D2_object.addInputBis(ipt.N2D2(), diffOutput.N2D2())
+                self._N2D2_object.initialize()
+            else:
+                self._N2D2_object.linkInput(cell.N2D2())
             if not initialized:
                 self.nb_input_cells += 1
 
@@ -253,18 +263,14 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             self._input_cells.append(cell.get_name())
 
         self._deepnet.N2D2().addCell(self._N2D2_object, parents)
-        if not initialized:
+        if (self.dims()==[]): #not initialized
             self._N2D2_object.initializeDataDependent()
-            if self.mappable:
-                if self._N2D2_object.getMapping().empty():
-                    self._N2D2_object.setMapping(Tensor([self.get_nb_outputs(), inputs.dimZ()],
-                                                             datatype="bool", dim_format="N2D2").N2D2())
 
-    def _add_to_graph(self, inputs):
+    def _add_to_graph(self, inputs: Union[Tensor, Interface]):
         self.add_input(inputs)
 
     @deprecated(reason="You should use activation as a python attribute.")
-    def set_activation(self, activation):
+    def set_activation(self, activation: n2d2.activation.ActivationFunction):
         """Set an activation function to the N2D2 object and update config parameter of the n2d2 object.
 
         :param activation: The activation function to set.
@@ -282,7 +288,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             return self._config_parameters['activation']
         return None
 
-    def get_inputs(self):
+    def get_input_cells(self):
         return self._input_cells
 
     def clear_input(self):
@@ -292,7 +298,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
     def update(self):
         self._N2D2_object.update()
 
-    def import_free_parameters(self, dir_name, ignore_not_exists=False):
+    def import_free_parameters(self, dir_name:str, ignore_not_exists:bool =False):
         if self._N2D2_object:
             filename = dir_name + "/" + self.get_name() + ".syntxt"
             print("Import " + filename)
@@ -334,9 +340,9 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
     def __str__(self):
         output = "\'" + self.get_name() + "\' " + self.get_type() + "(" + self._model_key + ")"
         output += N2D2_Interface.__str__(self)
-        if len(self.get_inputs()) > 0:
+        if len(self.get_input_cells()) > 0:
             output += "(["
-            for idx, name in enumerate(self.get_inputs()):
+            for idx, name in enumerate(self.get_input_cells()):
                 if idx > 0:
                     output += ", "
                 output += "'" + name + "'"
@@ -344,3 +350,13 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         else:
             output += ""
         return output
+
+    @staticmethod
+    def is_exportable_to(export_name:str) -> bool:
+        """
+        :param export_name: Name of the export 
+        :type export_name: str
+        :return: ``True`` if the cell is exportable to the ``export_name`` export. 
+        :rtype: bool
+        """
+        return False

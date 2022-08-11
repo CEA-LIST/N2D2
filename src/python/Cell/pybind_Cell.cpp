@@ -34,6 +34,15 @@ void init_Cell(py::module &m) {
 
     py::class_<Cell, std::shared_ptr<Cell>, Parameterizable> cell(m, "Cell", py::multiple_inheritance());
 
+    py::class_<Cell::Stats>(m, "Stats")
+    .def(py::init<>())
+        .def_readwrite("nbNeurons", &Cell::Stats::nbNeurons)
+        .def_readwrite("nbNodes", &Cell::Stats::nbNodes)
+        .def_readwrite("nbSynapses", &Cell::Stats::nbSynapses)
+        .def_readwrite("nbVirtualSynapses", &Cell::Stats::nbVirtualSynapses)
+        .def_readwrite("nbConnections", &Cell::Stats::nbConnections)
+    ;
+
     py::enum_<Cell::FreeParametersType>(cell, "FreeParametersType")
     .value("Additive", Cell::FreeParametersType::Additive)
     .value("Multiplicative", Cell::FreeParametersType::Multiplicative)
@@ -250,13 +259,14 @@ void init_Cell(py::module &m) {
     // .def("getOutputsDim", &Cell::getOutputsDim, py::arg("dim"))
     // .def("getOutputsDims", &Cell::getOutputsDims)
     // .def("getOutputsSize", &Cell::getOutputsSize)
-    // .def("getStats", &Cell::getStats)
+    .def("getStats", &Cell::getStats, py::arg("stats"))
     // .def("getReceptiveField", &Cell::getReceptiveField, py::arg("outputField") = std::vector<unsigned int>())
     .def("getAssociatedDeepNet", &Cell::getAssociatedDeepNet)
     .def("getChildrenCells", &Cell::getChildrenCells)
     .def("getParentsCells", &Cell::getParentsCells)
     // .def("isConnection", &Cell::isConnection, py::arg("channel"), py::arg("output"))
     .def("getMapping", &Cell::getMapping)
+    .def("getQuantizedNbBits", &Cell::getQuantizedNbBits)
     ;
 }
 }

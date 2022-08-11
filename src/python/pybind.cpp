@@ -45,6 +45,29 @@ void init_TargetScore(py::module&);
 // DeepNet
 void init_DeepNet(py::module&);
 void init_DeepNetQuantization(py::module&);
+
+
+// Export
+void init_ProposalCellExport(py::module&);
+void init_ROIPoolingCellExport(py::module&);
+void init_LRNCellExport(py::module&);
+void init_DeconvCellExport(py::module&);
+void init_PoolCellExport(py::module&);
+void init_ActivationCellExport(py::module&);
+void init_ScalingCellExport(py::module&);
+void init_AnchorCellExport(py::module&);
+void init_ConvCellExport(py::module&);
+void init_ReshapeCellExport(py::module&);
+void init_ResizeCellExport(py::module&);
+void init_FMPCellExport(py::module&);
+void init_FcCellExport(py::module&);
+void init_SoftmaxCellExport(py::module&);
+void init_RPCellExport(py::module&);
+void init_ElemWiseCellExport(py::module&);
+void init_TransposeCellExport(py::module&);
+void init_PaddingCellExport(py::module&);
+void init_BatchNormCellExport(py::module&);
+void init_ObjectDetCellExport(py::module&);
 void init_DeepNetExport(py::module&);
 void init_DrawNet(py::module&);
 //Database
@@ -355,6 +378,29 @@ void init_N2D2(py::module& m) {
 
     init_DeepNet(m);
     init_DeepNetQuantization(m);
+
+
+    // Export
+    init_ProposalCellExport(m);
+    init_ROIPoolingCellExport(m);
+    init_LRNCellExport(m);
+    init_DeconvCellExport(m);
+    init_PoolCellExport(m);
+    init_ActivationCellExport(m);
+    init_ScalingCellExport(m);
+    init_AnchorCellExport(m);
+    init_ConvCellExport(m);
+    init_ReshapeCellExport(m);
+    init_ResizeCellExport(m);
+    init_FMPCellExport(m);
+    init_FcCellExport(m);
+    init_SoftmaxCellExport(m);
+    init_RPCellExport(m);
+    init_ElemWiseCellExport(m);
+    init_TransposeCellExport(m);
+    init_PaddingCellExport(m);
+    init_BatchNormCellExport(m);
+    init_ObjectDetCellExport(m);
     init_DeepNetExport(m);
 
     init_DrawNet(m);

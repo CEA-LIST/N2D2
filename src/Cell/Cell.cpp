@@ -145,11 +145,19 @@ void N2D2::Cell::setInputsDims(const std::vector<size_t>& dims)
     else {
         for (unsigned int n = 0, size = dims.size() - 1; n < size; ++n) {
             if (dims[n] != mInputsDims[n]) {
-                std::stringstream msgStr;
-                msgStr << "Cell::setInputsDims(): trying to connect an input of"
-                    " dims (" << dims << "), but another input already exists"
-                    " with dims (" << mInputsDims << ")" << std::endl;
-                throw std::runtime_error(msgStr.str());
+                if((dims[n] == 1) || (mInputsDims[n] == 1)){
+                    std::cout << "Cell::setInputsDims(): trying to connect an input of"
+                        " dims (" << dims << "), but another input already exists"
+                        " with dims (" << mInputsDims << "), will broadcast tensor with dimensions = 1" << std::endl;
+                    if(mInputsDims[n] == 1 && dims[n] > 1) mInputsDims[n] = dims[n];
+                }
+                else{
+                    std::stringstream msgStr;
+                    msgStr << "Cell::setInputsDims(): trying to connect an input of"
+                        " dims (" << dims << "), but another input already exists"
+                        " with dims (" << mInputsDims << ")" << std::endl;
+                    throw std::runtime_error(msgStr.str());
+                }
             }
         }
 
@@ -167,7 +175,80 @@ size_t N2D2::Cell::groupMap() const
     return mGroupMap;
 }
 
-size_t N2D2::Cell::getNbGroups(const Tensor<bool>& map) const
+size_t N2D2::Cell::getNbGroupsHandMade(const Tensor<bool>& map)
+{
+    size_t nbGroups = 0;
+    const size_t nbOutputs = map.dimX();
+    const size_t nbChannels = map.dimY();
+
+    // finding the first line with non-zero values
+    unsigned int firstConnectedOutput = 0;
+    bool foundOne = false;
+    while (!foundOne && firstConnectedOutput<nbOutputs) {
+        for (size_t i=0; i<nbChannels; ++i) {
+            if (map(firstConnectedOutput, i))
+                foundOne = true;
+        }
+        if (!foundOne)
+            firstConnectedOutput++;
+    }
+    if (firstConnectedOutput==nbOutputs) {
+        std::cout << "Warning, the cell got zero Mapping Tensor. Input an output are not connected." << std::endl;
+        return 0;
+    }
+    
+
+    std::vector<size_t> classifiedChannels;
+    std::vector<size_t> classifiedOutputs;
+    std::vector<size_t> bufferChannels;
+
+    size_t firstCurrentGroup = firstConnectedOutput;
+
+    while (firstCurrentGroup<nbOutputs) {
+
+        // check the line is not empty
+        bool lineEmpty = true;
+        for (unsigned int i=0; i<nbChannels; ++i) {
+                if (map(firstCurrentGroup, i))
+                    lineEmpty = false;
+        }
+        if (lineEmpty) {
+            classifiedOutputs.push_back(firstCurrentGroup);
+            continue;
+        }
+
+        std::vector<size_t> bufferOutputs(1, firstCurrentGroup);
+
+        while (!bufferOutputs.empty()) {
+            size_t line = bufferOutputs.back();
+            bufferOutputs.pop_back();
+            classifiedOutputs.push_back(line);
+
+            for (unsigned int i=0; i<nbChannels; ++i) {
+                if (map(line, i))
+                    if (std::find(classifiedChannels.begin(), classifiedChannels.end(), i)==classifiedChannels.end())
+                        bufferChannels.push_back(i);
+            }
+            for (size_t channel : bufferChannels) {
+                for (unsigned int i=firstConnectedOutput; i<nbOutputs; ++i) {
+                    if (map(i, channel)) {
+                        if (std::find(classifiedOutputs.begin(), classifiedOutputs.end(), i)==classifiedOutputs.end()
+                                && std::find(bufferOutputs.begin(), bufferOutputs.end(), i)==bufferOutputs.end())
+                            bufferOutputs.push_back(i);
+                    }
+                }
+            }
+            bufferChannels.clear();
+        }
+        nbGroups++;
+        firstCurrentGroup++;
+        while (std::find(classifiedOutputs.begin(), classifiedOutputs.end(), firstCurrentGroup)!=classifiedOutputs.end())
+            firstCurrentGroup++;
+    }
+    return nbGroups;
+}
+
+size_t N2D2::Cell::getNbGroups(const Tensor<bool>& map)
 {
     const size_t nbOutputs = map.dimX();
     const size_t nbChannels = map.dimY();
@@ -177,13 +258,16 @@ size_t N2D2::Cell::getNbGroups(const Tensor<bool>& map) const
     for (; nbChannelsPerGroup < nbChannels && map(0, nbChannelsPerGroup);
         ++nbChannelsPerGroup) {}
 
-    if (nbChannelsPerGroup == 0 || nbChannels % nbChannelsPerGroup != 0)
+    if (nbChannelsPerGroup == 0)
         return 0;
+
+    if (nbChannels % nbChannelsPerGroup != 0)
+        return getNbGroupsHandMade(map);
 
     const size_t nbGroups = nbChannels / nbChannelsPerGroup;
 
     if (nbOutputs % nbGroups != 0)
-        return 0;
+        return getNbGroupsHandMade(map);
 
     const size_t nbOutputsPerGroup = nbOutputs / nbGroups;
 
@@ -199,20 +283,20 @@ size_t N2D2::Cell::getNbGroups(const Tensor<bool>& map) const
 
             for (; channel < channelGroupOffset; ++channel) {
                 if (map(output, channel))
-                    return 0;
+                    return getNbGroupsHandMade(map);
             }
 
             for (; channel < channelGroupOffset + nbChannelsPerGroup;
                 ++channel)
             {
                 if (!map(output, channel))
-                    return 0;
+                    return getNbGroupsHandMade(map);
             }
 
             for (; channel < nbChannels; ++channel)
             {
                 if (map(output, channel))
-                    return 0;
+                    return getNbGroupsHandMade(map);
             }
         }
 

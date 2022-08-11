@@ -18,19 +18,25 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
-from n2d2.database.database import Database, _database_parameters
+from n2d2.database import AbstractDatabase, _database_parameters
 from n2d2.utils import inherit_init_docstring
-from n2d2.n2d2_interface import N2D2_Interface, ConventionConverter
+from n2d2.n2d2_interface import ConventionConverter
 import N2D2
 
 
 @inherit_init_docstring()
-class GTSRB(Database):
+class GTSRB(AbstractDatabase):
     """
-    The German Traffic Sign Benchmark (https://benchmark.ini.rub.de/) is a multi-class, single-image classification challenge held at the International Joint Conference on Neural Networks (IJCNN) 2011.
+    The German Traffic Sign Benchmark (https://benchmark.ini.rub.de/) is a multi-class, \
+    single-image classification challenge held at the International Joint Conference on Neural Networks (IJCNN) 2011.
     """
 
     _type = "GTSRB"
+    _download_links = [
+        "https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/GTSRB_Final_Training_Images.zip",
+        "https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/GTSRB_Final_Test_Images.zip",
+        "https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/GTSRB_Final_Test_GT.zip"
+    ]
     _parameters = {
         "validation": "validation",
     }
@@ -42,7 +48,7 @@ class GTSRB(Database):
         :param validation: Fraction of the learning set used for validation
         :type validation: float
         """
-        N2D2_Interface.__init__(self, **config_parameters)
+        AbstractDatabase.__init__(self, **config_parameters)
 
         # No optional args
         self._parse_optional_arguments([])

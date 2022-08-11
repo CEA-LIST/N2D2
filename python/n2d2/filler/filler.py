@@ -29,7 +29,7 @@ class Filler(N2D2_Interface, Datatyped, ABC):
         """
         """
         Datatyped.__init__(self, **config_parameters)
-        
+
         N2D2_Interface.__init__(self, **config_parameters)
 
     def get_type(self):
@@ -41,7 +41,7 @@ class Filler(N2D2_Interface, Datatyped, ABC):
         return output
 
     @classmethod
-    def create_from_N2D2_object(cls, N2D2_object):
+    def create_from_N2D2_object(cls, N2D2_object, **_):
         n2d2_filler = super().create_from_N2D2_object(N2D2_object)
         n2d2_filler._model_key = "<" + N2D2_object.getDataType() + ">"
         return n2d2_filler

@@ -1,6 +1,6 @@
 """
     (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr) 
+    Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
                     Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
@@ -36,30 +36,31 @@ class ColorSpace(Transformation):
 
     def __init__(self, color_space, **config_parameters):
         """
-        Possible values for color_space parameter :
-        ``BGR``: convert any gray, BGR or BGRA image to BGR,
-        ``RGB``: convert any gray, BGR or BGRA image to RGB,
-        ``HSV``: convert BGR image to HSV,
-        ``HLS``: convert BGR image to HLS,
-        ``YCrCb``: convert BGR image to YCrCb,
-        ``CIELab``: convert BGR image to CIELab,
-        ``CIELuv``: convert BGR image to CIELuv,
-        ``RGB_to_BGR``: convert RGB image to BGR,
-        ``RGB_to_HSV``: convert RGB image to HSV,
-        ``RGB_to_HLS``: convert RGB image to HLS,
-        ``RGB_to_YCrCb``: convert RGB image to YCrCb,
-        ``RGB_to_CIELab``: convert RGB image to CIELab,
-        ``RGB_to_CIELuv``: convert RGB image to CIELuv,
-        ``HSV_to_BGR``: convert HSV image to BGR,
-        ``HSV_to_RGB``: convert HSV image to RGB,
-        ``HLS_to_BGR``: convert HLS image to BGR,
-        ``HLS_to_RGB``: convert HLS image to RGB,
-        ``YCrCb_to_BGR``: convert YCrCb image to BGR,
-        ``YCrCb_to_RGB``: convert YCrCb image to RGB,
-        ``CIELab_to_BGR``: convert CIELab image to BGR,
-        ``CIELab_to_RGB``: convert CIELab image to RGB,
-        ``CIELuv_to_BGR``: convert CIELuv image to BGR,
-        ``CIELuv_to_RGB``: convert CIELuv image to RGB.
+        Possible values for ``color_space`` parameter :
+
+        - ``BGR``: convert any gray, BGR or BGRA image to BGR,
+        - ``RGB``: convert any gray, BGR or BGRA image to RGB,
+        - ``HSV``: convert BGR image to HSV,
+        - ``HLS``: convert BGR image to HLS,
+        - ``YCrCb``: convert BGR image to YCrCb,
+        - ``CIELab``: convert BGR image to CIELab,
+        - ``CIELuv``: convert BGR image to CIELuv,
+        - ``RGB_to_BGR``: convert RGB image to BGR,
+        - ``RGB_to_HSV``: convert RGB image to HSV,
+        - ``RGB_to_HLS``: convert RGB image to HLS,
+        - ``RGB_to_YCrCb``: convert RGB image to YCrCb,
+        - ``RGB_to_CIELab``: convert RGB image to CIELab,
+        - ``RGB_to_CIELuv``: convert RGB image to CIELuv,
+        - ``HSV_to_BGR``: convert HSV image to BGR,
+        - ``HSV_to_RGB``: convert HSV image to RGB,
+        - ``HLS_to_BGR``: convert HLS image to BGR,
+        - ``HLS_to_RGB``: convert HLS image to RGB,
+        - ``YCrCb_to_BGR``: convert YCrCb image to BGR,
+        - ``YCrCb_to_RGB``: convert YCrCb image to RGB,
+        - ``CIELab_to_BGR``: convert CIELab image to BGR,
+        - ``CIELab_to_RGB``: convert CIELab image to RGB,
+        - ``CIELuv_to_BGR``: convert CIELuv image to BGR,
+        - ``CIELuv_to_RGB``: convert CIELuv image to RGB.
 
         :param color_space: Convert image color.
         :type color_space: str

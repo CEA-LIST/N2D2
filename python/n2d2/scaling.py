@@ -18,13 +18,10 @@
     knowledge of the CeCILL-C license and that you accept its terms.
 """
 import N2D2
-import n2d2
 from n2d2.n2d2_interface import N2D2_Interface
 from abc import ABC, abstractmethod
 import n2d2.global_variables as gb
 from typing import List, Tuple
-
-cuda_compiled = gb.cuda_compiled
 
 
 class ScalingObject(N2D2_Interface, ABC):
@@ -35,7 +32,7 @@ class ScalingObject(N2D2_Interface, ABC):
         if 'model' in config_parameters:
             self._model = config_parameters.pop('model')
         else:
-            self._model = n2d2.global_variables.default_model
+            self._model = gb.default_model
 
         self._model_key = self._model
 

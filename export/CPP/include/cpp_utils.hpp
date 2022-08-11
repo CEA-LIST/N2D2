@@ -56,7 +56,10 @@ void envRead(const std::string& fileName,
     }
 
     char header[2];
-    fread(&header[0], sizeof(header[0]), 2, stimuli);
+    if (!fread(&header[0], sizeof(header[0]), 2, stimuli)) {
+        N2D2_THROW_OR_ABORT(std::runtime_error,
+            "Cannot read header from stimuli");
+    }
 
     if (header[0] != 'P' || (header[1] != '5' && header[1] != '6')) {
         N2D2_THROW_OR_ABORT(std::runtime_error,
@@ -66,7 +69,10 @@ void envRead(const std::string& fileName,
     int pixelWidth;
     int pixelHeight;
     int maxValue;
-    fscanf(stimuli, "%d %d %d", &pixelWidth, &pixelHeight, &maxValue);
+    if (fscanf(stimuli, "%d %d %d", &pixelWidth, &pixelHeight, &maxValue) != 3) {
+        N2D2_THROW_OR_ABORT(std::runtime_error,
+            "Cannot get pixelWidth, pixelHeight and maxValue from stimuli");
+    }
     fgetc(stimuli);
 
     if (pixelWidth != (int)channelsWidth || pixelHeight != (int)channelsHeight)

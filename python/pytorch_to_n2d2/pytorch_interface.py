@@ -20,6 +20,9 @@
 """
 import torch
 import n2d2
+import onnx
+from onnxsim import simplify
+from typing import Union
 
 def _switching_convention(dims):
     return [dims[3], dims[2], dims[1], dims[0]]
@@ -32,41 +35,51 @@ def _to_n2d2(torch_tensor):
     This method also convert the shape of the tensor to follow N2D2 convention.
     """
     n2d2_tensor = None
+    if torch_tensor.is_cuda:        
+        if not torch_tensor.is_contiguous():
+            # If torch_tensor is not contiguous then we need to do a copy !
+            numpy_tensor = torch_tensor.cpu().detach().numpy()
+            n2d2_tensor = n2d2.Tensor.from_numpy(numpy_tensor)
 
-    if torch_tensor.is_cuda:
-        dtype = torch_tensor.dtype
-
-        if dtype is torch.float32:
-            data_type = "float"
-        elif dtype is torch.float:
-            data_type = "float"
-        elif dtype is torch.float64:
-            data_type = "double"
-        elif dtype is torch.int16:
-            data_type = "short"
-        elif dtype is torch.short:
-            data_type = "short"
-        elif dtype is torch.int32:
-            data_type = "int"
-        elif dtype is torch.int:
-            data_type = "int"
-        elif dtype is torch.int64:
-            data_type = "long"
-        elif dtype is torch.long:
-            data_type = "long"
+            n2d2_tensor = n2d2_tensor.cuda()
+            n2d2_tensor.htod()
+            if n2d2_tensor.nb_dims() == 4:
+                n2d2_tensor.reshape(_switching_convention(n2d2_tensor.dims()))            
         else:
-            raise ValueError("Could not convert " + type(dtype) + " to a known n2d2.Tensor datatype !")
-        N2D2_tensor = n2d2.Tensor._cuda_tensor_generators[data_type]([i for i in torch_tensor.size()], torch_tensor.data_ptr(), torch_tensor.get_device())
-        n2d2_tensor  = n2d2.Tensor.from_N2D2(N2D2_tensor)
-        n2d2_tensor.dtoh()
-        dims = n2d2_tensor.dims()
-        if n2d2_tensor.nb_dims() == 4:
-            n2d2_tensor.reshape([dims[0], dims[1], dims[2], dims[3]])
+            # We avoid a copy on GPU !
+            dtype = torch_tensor.dtype
+
+            if dtype is torch.float32:
+                data_type = "float"
+            elif dtype is torch.float:
+                data_type = "float"
+            elif dtype is torch.float64:
+                data_type = "double"
+            elif dtype is torch.int16:
+                data_type = "short"
+            elif dtype is torch.short:
+                data_type = "short"
+            elif dtype is torch.int32:
+                data_type = "int"
+            elif dtype is torch.int:
+                data_type = "int"
+            elif dtype is torch.int64:
+                data_type = "long"
+            elif dtype is torch.long:
+                data_type = "long"
+            else:
+                raise ValueError("Could not convert " + type(dtype) + " to a known n2d2.Tensor datatype !")
+            N2D2_tensor = n2d2.Tensor._cuda_tensor_generators[data_type](list(torch_tensor.size()), torch_tensor.data_ptr(), torch_tensor.get_device())
+            n2d2_tensor  = n2d2.Tensor.from_N2D2(N2D2_tensor)
+            n2d2_tensor.dtoh()
+            dims = n2d2_tensor.dims()
+            if n2d2_tensor.nb_dims() == 4:
+                n2d2_tensor.reshape([dims[0], dims[1], dims[2], dims[3]])
+
     else:
         numpy_tensor = torch_tensor.cpu().detach().numpy()
-        # This operation create a CPU memory copy.
+        # This operation creates a CPU memory copy.
         # torch.Tensor can have a discontiguous memory while n2d2.Tensor need a contiguous memory space.
-        # Making the conversion hard to do without copy.
         n2d2_tensor = n2d2.Tensor.from_numpy(numpy_tensor)
         if n2d2_tensor.nb_dims() == 4:
             n2d2_tensor.reshape(_switching_convention(n2d2_tensor.dims()))
@@ -95,18 +108,33 @@ class Block(torch.nn.Module):
     """
     _initialized = False
 
-    def __init__(self, block):
+    def __init__(self, block, need_to_flatten=False, batch_size=None):
         """
         :param block: n2d2 block object to interface with PyTorch
         :type block: :py:class:`n2d2.cells.Block`
         """
         super().__init__()
         if not isinstance(block, n2d2.cells.Block):
-            raise TypeError("sequence should be of type n2d2.cells.Block got " + str(type(block)) + " instead")
-        self._N2D2 = block
+            raise TypeError("Parameter block should be of type n2d2.cells.Block got " + str(type(block)) + " instead")
+        self._block = block
         # We need to add a random parameter to the module else pytorch refuse to compute gradient
         self.register_parameter(name='random_parameter', param=torch.nn.Parameter(torch.ones(1)))
+        self.need_to_flatten=need_to_flatten
+        self.batch_size = batch_size # Batchsize used to define the neural network
+        self.current_batch_size = None
+        self.output_tensor = None # "Saved" as an attribute to avoid python garbage collector !
 
+    def get_block(self) -> n2d2.cells.Block:
+        """
+        :return: The Block used by the custom sequential
+        :rtype: :py:class:`n2d2.cells.Block`
+        """
+        return self._block
+
+    def summary(self)->None:
+        """Print model information. 
+        """
+        self._block.summary()
 
     def forward(self, inputs):
         """
@@ -115,22 +143,34 @@ class Block(torch.nn.Module):
         """
         class N2D2_computation(torch.autograd.Function):
             """
-            An autograd function applied to a Torch tensor that will use the propagation/backpropagation/update of N2D2.
+            Autograd function that will use the propagation/backpropagation/update of N2D2.
             """
             @staticmethod
             def forward(ctx, inputs):
-                self.batch_size = inputs.shape[0]
-
                 n2d2_tensor = _to_n2d2(inputs)
+                self.current_batch_size = inputs.shape[0] # Can be different than self.batch_size
+                # If we don't know batch size during the first propagation we set it to the batch size of the first stimuli, may be dangerous ?
+                if self.batch_size is None:
+                    self.batch_size = self.current_batch_size
 
-                if n2d2.global_variables.cuda_compiled:
+                if self.current_batch_size != self.batch_size:
+                    # Pad incomplete batch with 0 as N2D2 doesn't support incomplete batch.
+                    new_shape = list(inputs.shape)
+                    new_shape[0] = self.batch_size
+                    n2d2_tensor.resize(new_shape)
+
+                if n2d2.global_variables.cuda_available:
                     n2d2_tensor.cuda()
                     n2d2_tensor.htod()
-                if self.training: # training is  a torch.nn.Module attribute (cf. https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module)
-                    self._N2D2.learn()
+
+                # training is a torch.nn.Module attribute (cf. https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module)
+                if self.training: 
+                    self._block.learn()
                 else:
-                    self._N2D2.test()
-                n2d2_outputs = self._N2D2(n2d2_tensor) # Propagation
+                    self._block.test()
+
+                n2d2_outputs = self._block(n2d2_tensor) # Propagation
+
                 # Note : It's important to set diffOutputs as an attribute else when exiting this method
                 # Python garbage collector will erase this variable while Cpp will still use it resulting in a SegFault
                 self.diffOutputs = n2d2.Tensor(n2d2_tensor.dims(), value=0, dim_format="N2D2")
@@ -144,6 +184,14 @@ class Block(torch.nn.Module):
 
                 self.output_tensor = n2d2_outputs
                 outputs = _to_torch(n2d2_outputs.N2D2())
+                if self.current_batch_size != self.batch_size:
+                    # Warning for future : do not change the shape of n2d2_outputs !
+                    # Doing so will change the size of the variable mOutputs.
+                    # This will cause a crash when the next full stimuli will come.
+                    new_shape = list(n2d2_outputs.shape())
+                    new_shape[0] = self.current_batch_size
+                    outputs = outputs.resize_(new_shape) # in place operation
+
                 # The conversion back to pytorch can alter the type so we need to set it back
                 outputs = outputs.to(dtype=inputs.dtype)
                 if inputs.is_cuda: # If N2D2 is compiled with CUDA the output Tensor will always be CUDA
@@ -154,11 +202,21 @@ class Block(torch.nn.Module):
 
             @staticmethod
             def backward(ctx, grad_output):
+                self.current_batch_size = grad_output.shape[0]
                 if grad_output.is_cuda:
                     grad_output = grad_output.cuda()
                 grad_output = torch.mul(grad_output, -self.batch_size)
-                t_grad_output = _to_n2d2(grad_output).N2D2()
+                t_grad_output = _to_n2d2(grad_output)
 
+                if self.current_batch_size < self.batch_size:
+                    # Making sure we have a full batch
+                    new_shape = list(grad_output.shape) 
+                    new_shape[0] = self.batch_size
+                    tmp_numpy = t_grad_output.to_numpy(copy=True)
+                    tmp_numpy.resize(new_shape)
+                    t_grad_output = n2d2.Tensor.from_numpy(tmp_numpy) 
+
+                t_grad_output=t_grad_output.N2D2()
                 if len(self.deepnet.getLayers()[-1]) > 1:
                     raise RuntimeError("Deepnet has more than one output cell")
                 diffInputs = self.deepnet.getCell_Frame_Top(self.deepnet.getLayers()[-1][0]).getDiffInputs()
@@ -171,11 +229,18 @@ class Block(torch.nn.Module):
                 self.output_tensor.back_propagate()
                 self.output_tensor.update()
 
-
                 diffOutput = self.deepnet.getCell_Frame_Top(self.deepnet.getLayers()[1][0]).getDiffOutputs()
 
                 outputs = _to_torch(diffOutput)
+                if self.current_batch_size != self.batch_size:
+                    # Warning for future : do not change the shape of n2d2_outputs !
+                    # Doing so will change the size of the variable mOutputs.
+                    # This will cause a crash when the next full stimuli will come.
+                    new_shape = list(outputs.shape)
+                    new_shape[0] = self.current_batch_size
+                    outputs = outputs.resize_(new_shape) # in place operation
                 outputs = torch.mul(outputs, -1/self.batch_size)
+
                 if grad_output.is_cuda:
                     outputs = outputs.cuda()
                 else:
@@ -183,11 +248,18 @@ class Block(torch.nn.Module):
                 return outputs.clone()
 
         # If the layer is at the beginning of the network requires grad is False.
-        if not inputs.requires_grad:
-            inputs.requires_grad = True
-        return N2D2_computation.apply(inputs)
+        inputs.requires_grad = True
 
-def wrap(torch_model, input_size):
+        outputs = N2D2_computation.apply(inputs)
+        if self.need_to_flatten:
+            outputs = outputs.view(self.current_batch_size, -1)
+        return outputs
+
+@n2d2.check_types
+def wrap(torch_model:torch.nn.Module,
+        input_size: Union[list, tuple],
+        opset_version:int=11,
+        verbose:bool=False) -> Block:
     """Function generating a ``torch.nn.Module`` which embed a :py:class:`n2d2.cells.DeepNetCell`.
     The torch_model is exported to N2D2 via ONNX.
 
@@ -195,21 +267,42 @@ def wrap(torch_model, input_size):
     :type torch_model: ``torch.nn.Module``
     :param input_size: The size of the input of the network, the format required is NCHW.
     :type input_size: ``list``
+    :param opset_version: Opset version used to generate the intermediate ONNX file, default=11
+    :type opset_version: int, optional
+    :param verbose: Enable the verbose output of torch onnx export, default=False
+    :type verbose: bool, optional
     :return: A custom ``torch.nn.Module`` which embed a :py:class:`n2d2.cells.DeepNetCell`.
     :rtype: :py:class:`pytorch_interoperability.Block`
     """
-    model_path = './tmp.onnx'
+    raw_model_path = f'./{torch_model.__class__.__name__}_raw.onnx'
+    model_path = f'./{torch_model.__class__.__name__}.onnx'
     print("Exporting torch module to ONNX ...")
     dummy_in = torch.randn(input_size)
-    torch.onnx.export(torch_model, dummy_in, model_path, verbose=True, training=torch.onnx.TrainingMode.TRAINING)
+
+    # Update dummy tensor to the model device 
+    dummy_in = dummy_in.to(next(torch_model.parameters()).device)
+
+    torch.onnx.export(torch_model,
+        dummy_in,
+        raw_model_path,
+        verbose=verbose,
+        opset_version=opset_version,
+        training=torch.onnx.TrainingMode.TRAINING,
+        do_constant_folding=False
+    )
+
+    print("Simplifying the ONNX model ...")
+    onnx_model = onnx.load(raw_model_path)
+    model_simp, check = simplify(onnx_model)
+    assert check, "Simplified ONNX model could not be validated"
+    onnx.save(model_simp, model_path)
 
     # Importing the ONNX to N2D2
     print("Importing ONNX model to N2D2 ...")
     db = n2d2.database.Database()
     provider = n2d2.provider.DataProvider(db,[input_size[3], input_size[2], input_size[1]], batch_size=input_size[0])
-    deepNet = n2d2.cells.DeepNetCell.load_from_ONNX(provider, "./tmp.onnx")
-    # print("Cleaning temporary ONNX file.")
-    # remove(model_path)
+    deepNet = n2d2.cells.DeepNetCell.load_from_ONNX(provider, model_path)
+
     deepNet.set_solver(n2d2.solver.SGD(
                 decay=0.0, iteration_size=1, learning_rate=0.01, learning_rate_decay=0.1,
                 learning_rate_policy="None", learning_rate_step_size=1, max_iterations=0, min_decay=0.0,
@@ -225,19 +318,8 @@ def wrap(torch_model, input_size):
             need_to_flatten = True
         else:
             pass
-    # Creating an N2D2 Module specific
-    class n2d2_module(torch.nn.Module):
-        def __init__(self):
-            super(n2d2_module, self).__init__()
-            self.n2d2_block = Block(deepNet)
-        def forward(self, x):
-            x = self.n2d2_block(x)
-            if need_to_flatten:
-                x = x.view(input_size[0], -1)
-            return x
-        def __str__(self):
-            return self.n2d2_block()
-    print(deepNet)
+    deepNet._embedded_deepnet.N2D2().initialize()
+    # deepNet.summary()
+    converted_model = Block(deepNet, need_to_flatten=need_to_flatten, batch_size=input_size[0])
 
-    converted_model = n2d2_module()
     return converted_model

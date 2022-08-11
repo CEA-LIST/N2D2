@@ -134,4 +134,4 @@ print("\n### Generating a CPP export in int8 ###\n")
 model.remove("18") # removing Softmax layer before export !
 n2d2.export.export_cpp(model, nb_bits=8, calibration=1)
 
-print(f"\nExceution time : {time.time()-t}s")
+print(f"\nExecution time : {time.time()-t}s")

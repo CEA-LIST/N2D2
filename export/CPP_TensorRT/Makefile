@@ -89,8 +89,8 @@ else
 endif
 endif
 
-ifdef ONNX
-		CPPFLAGS:=$(CPPFLAGS) -DONNX=1
+ifdef EXPORT_ONNX
+		CPPFLAGS:=$(CPPFLAGS) -DEXPORT_ONNX=1
 		LIBS:=$(LIBS) -lnvonnxparser
 endif
 

@@ -48,6 +48,32 @@ N2D2::ElemWiseCell_Frame_CUDA::ElemWiseCell_Frame_CUDA(
       Cell_Frame_CUDA<Float_T>(deepNet, name, nbOutputs, activation)
 {
     // ctor
+    // ElemWise can have inputs w/ different dims, if one of them is 1*1 as
+    // e.g. : 1 1 nbOutputs1 batchSize, 3 3 nbOutputs2 batchSize
+    mInputs.matchingDims({false,false,false,true});
+    mDiffOutputs.matchingDims({false,false,false,true});
+}
+
+void N2D2::ElemWiseCell_Frame_CUDA::setOutputsDims()
+{
+    ElemWiseCell::setOutputsDims();
+
+    if (mOutputs.empty()) {
+        std::vector<size_t> outputsDims(mOutputsDims);
+        outputsDims.push_back(mInputs.dimB());
+
+        mOutputs.resize(outputsDims);
+        mDiffInputs.resize(outputsDims);
+    }
+    else{
+        if(mOutputs.dimX() < mOutputsDims[0] && mOutputs.dimY() < mOutputsDims[1]){
+            std::vector<size_t> outputsDims(mOutputsDims);
+            outputsDims.push_back(mInputs.dimB());
+
+            mOutputs.resize(outputsDims);
+            mDiffInputs.resize(outputsDims);
+        }
+    }
 }
 
 void N2D2::ElemWiseCell_Frame_CUDA::initialize()
@@ -110,6 +136,23 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
 {
     const unsigned int nbInputs = mInputs.size();
     const unsigned int nbElems = mInputs[0].size();
+
+    //broadcasting for operation::Prod
+    unsigned int nbElemsMax = mInputs[0].size();
+    unsigned int nbOutputs = mInputs[0].dimZ();
+    unsigned int batchSize = mInputs[0].dimB();
+    unsigned int mapSize = mInputs[0].dimX()*mInputs[0].dimY();
+
+    for(unsigned int j = 1; j < nbInputs; ++j){
+        if(mInputs[j].size() > nbElemsMax){
+            nbElemsMax = mInputs[j].size();
+            nbOutputs = mInputs[j].dimZ();
+            mapSize = mInputs[j].dimX()*mInputs[j].dimY();
+            batchSize = mInputs[j].dimB();
+        }
+    }
+
+    const unsigned int nbElements = nbOutputs*batchSize;
 
     mInputs.synchronizeHBasedToD();
 
@@ -264,22 +307,53 @@ void N2D2::ElemWiseCell_Frame_CUDA::propagate(bool inference)
                 std::shared_ptr<CudaDeviceTensor<Float_T> > input1
                     = cuda_device_tensor_cast<Float_T>(mInputs[1]);
 
-                cudaMult(nbElems,
+                if ( (mInputs[0].size() == nbElements
+                        || mInputs[1].size() == nbElements)
+                    && mInputs[1].size() != mInputs[0].size())
+                {
+                    cudaMultBroadcast(nbElemsMax,
+                            mapSize,
+                            nbOutputs,
+                            batchSize,
+                            mInputs[0].size(),
+                            mInputs[1].size(),
+                            input0->getDevicePtr(),
+                            input1->getDevicePtr(),
+                            0.0f,
+                            mOutputs.getDevicePtr());
+                }
+                else{
+                    cudaMult(nbElemsMax,
                         input0->getDevicePtr(),
                         input1->getDevicePtr(),
                         0.0f,
                         mOutputs.getDevicePtr());
+                }
 
                 for (unsigned int k = 2; k < nbInputs; ++k) {
                     // mOutputs <- mInputs[k] * mOutputs
                     std::shared_ptr<CudaDeviceTensor<Float_T> > input
                         = cuda_device_tensor_cast<Float_T>(mInputs[k]);
 
-                    cudaMult(nbElems,
+                    if(mInputs[k].size() == nbElements){
+                        cudaMultBroadcast(nbElemsMax,
+                            mapSize,
+                            nbOutputs,
+                            batchSize,
+                            mInputs[k].size(),
+                            nbElemsMax,
                             mOutputs.getDevicePtr(),
                             input->getDevicePtr(),
                             0.0f,
                             mOutputs.getDevicePtr());
+                    }
+                    else{
+                        cudaMult(nbElemsMax,
+                            mOutputs.getDevicePtr(),
+                            input->getDevicePtr(),
+                            0.0f,
+                            mOutputs.getDevicePtr());
+                    }
                 }
             }
             else {
@@ -348,6 +422,23 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
 
     const unsigned int nbInputs = mInputs.size();
     const unsigned int nbElems = mInputs[0].size();
+
+    //broadcasting for operation::Prod
+    unsigned int nbElemsMax = mInputs[0].size();
+    unsigned int nbOutputs = mInputs[0].dimZ();
+    unsigned int mapSize = mInputs[0].dimX()*mInputs[0].dimY();
+    unsigned int batchSize = mInputs[0].dimB();
+
+    for(unsigned int j = 1; j < nbInputs; ++j){
+        if(mInputs[j].size() > nbElemsMax){
+            nbElemsMax = mInputs[j].size();
+            nbOutputs = mInputs[j].dimZ();
+            mapSize = mInputs[j].dimX()*mInputs[j].dimY();
+            batchSize = mInputs[j].dimB();
+        }
+    }
+
+    const unsigned int nbElements = nbOutputs*batchSize;
 
     Cell_Frame_CUDA<Float_T>::backPropagate();
 
@@ -443,10 +534,18 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
         }
         else if (mOperation == Prod) {
             bool init = false;
+            unsigned int initSize = 0;
+            CudaTensor<Float_T> diffOutputPart;
 
             for (unsigned int i = 0; i < nbInputs; ++i) {
                 if (i == k)
                     continue;
+
+                if(mInputs[i].size() != mInputs[k].size()
+                    && mInputs[k].size() == nbElements)
+                {
+                    diffOutputPart.resize(mInputs[i].dims());
+                }
 
                 std::shared_ptr<CudaDeviceTensor<Float_T> > input_i
                     = cuda_device_tensor_cast_nocopy<Float_T>(mInputs[i]);
@@ -454,31 +553,85 @@ void N2D2::ElemWiseCell_Frame_CUDA::backPropagate()
                 if (!init) {
                     // mInterTerm <- mInputs[i]
                     CHECK_CUBLAS_STATUS(cublasScopy(CudaContext::cublasHandle(),
-                                                    nbElems,
+                                                    nbElemsMax,
                                                     input_i->getDevicePtr(),
                                                     1,
                                                     mInterTerm.getDevicePtr(),
                                                     1));
                     init = true;
+                    initSize = mInputs[i].size();
                 }
                 else {
                     // mInterTerm <- mInputs[i] * mInterTerm
-                    cudaMult(nbElems,
+                    if ( (mInputs[i].size() == nbElements
+                            || initSize == nbElements)
+                        && mInputs[i].size() != initSize)
+                    {
+                        cudaMultBroadcast(nbElemsMax,
+                                mapSize,
+                                nbOutputs,
+                                batchSize,
+                                initSize,
+                                mInputs[i].size(),
+                                mInterTerm.getDevicePtr(),
+                                input_i->getDevicePtr(),
+                                0.0f,
+                                mInterTerm.getDevicePtr());
+                    }
+                    else{
+                        cudaMult(nbElems,
                               mInterTerm.getDevicePtr(),
                               input_i->getDevicePtr(),
                               0.0f,
                               mInterTerm.getDevicePtr());
+                    }
 
                 }
             }
 
             // mDiffOutputs[k] <- mDiffInputs * mInterTerm
             //                      + beta * mDiffOutputs[k]
-            cudaMult(nbElems,
+            //mDiffOut[0] = input[1]*diffInput
+           //if mDiffOut is size 1*1 reduce dims after mult
+            if ( mInputs[k].size() == nbElements
+                && mInterTerm.size() != mInputs[k].size())
+            {
+                cudaMult(nbElemsMax,
+                      mInterTerm.getDevicePtr(),
+                      mDiffInputs.getDevicePtr(),
+                      beta,
+                      diffOutputPart.getDevicePtr());
+
+                cudaReducePerKernel(diffOutputPart.getDevicePtr(),
+                      diffOutput->getDevicePtr(),
+                      nbOutputs*batchSize,
+                      mapSize);
+            }
+            //if there is an input with 1*1 dims and it's the only one, broadcast it!
+            //if it's not the only one, it was already broadcasted above
+            //if it's not 1*1 we do not need broadcasting in the first place
+            else if(initSize == nbElements
+                    && initSize != mInputs[k].size()
+                    && nbInputs == 2 ){
+                    cudaMultBroadcast(nbElemsMax,
+                        mapSize,
+                        nbOutputs,
+                        batchSize,
+                        initSize,
+                        mDiffInputs.size(),
+                        mInterTerm.getDevicePtr(),
+                        mDiffInputs.getDevicePtr(),
+                        beta,
+                        diffOutput->getDevicePtr());
+            }
+            //else do as usual
+            else{
+                cudaMult(nbElemsMax,
                       mInterTerm.getDevicePtr(),
                       mDiffInputs.getDevicePtr(),
                       beta,
                       diffOutput->getDevicePtr());
+            }
         }
         else if (mOperation == Max) {
             cudaMaxBackward(nbElems,

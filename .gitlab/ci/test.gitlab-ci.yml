@@ -1,6 +1,7 @@
 test:ubuntu:
   extends: 
     - .before_script_template
+    - .rules:all-branches-not-schedule
   stage: test
   variables:
     CTEST_OUTPUT_ON_FAILURE: 1
@@ -12,38 +13,28 @@ test:ubuntu:
 
 
 test:python_api:
+  extends: 
+    - .before_script_python
+    - .rules:all-branches-not-schedule
   stage: test
   tags:
     - ubuntu  
-  before_script:  
-    - cd python
-    # Creating a new virtualenv
-    - pip install virtualenv
-    - virtualenv -p python3.7 venv
-    - shopt -s expand_aliases
-    - alias python='venv/bin/python3.7'
-    # -> verify env is clean
-    - python -m pip freeze
   script:
-    - python -m pip install -r requirements.txt
-    - python -m pip install -r keras_interoperability/requirements.txt
-    - python -m pip install -r pytorch_interoperability/requirements.txt
-    # -> Cehck installed lib
-    - python -m pip freeze
-
     # Run on discovery all tests located in python/tests and discard the stdout 
     # only to show the errors/warnings and the results of the tests
     - python -m unittest discover -s tests -v -b 1> /dev/null 
 
+
 static_analysis:python_api:
+  extends:
+    - .rules:all-branches-not-schedule
   stage: test
   allow_failure: true
   tags:
     - ubuntu
   image: "python:3.7"
-
   script:
     - cd python
     - pip install pylint
     - pip install pylint-exit
-    - pylint --rcfile=.pylintrc n2d2 pytorch_interoperability keras_interoperability || pylint-exit $? 
+    - pylint --rcfile=.pylintrc n2d2 keras_to_n2d2 pytorch_to_n2d2 || pylint-exit $? 

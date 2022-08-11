@@ -18,19 +18,27 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 """
-from n2d2.database.database import Database, _database_parameters
+from n2d2.database import AbstractDatabase, _database_parameters
 from n2d2.utils import inherit_init_docstring
-from n2d2.n2d2_interface import N2D2_Interface, ConventionConverter
+from n2d2.n2d2_interface import ConventionConverter
 import N2D2
 
 
 @inherit_init_docstring()
-class MNIST(Database):
+class MNIST(AbstractDatabase):
     """
     MNIST database :cite:`LeCun1998`.
     Label are hard coded, you don't need to specify a path to the label file.
     """
     _type = "MNIST"
+
+    _download_links = [
+        "http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz",
+        "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz",
+        "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz",
+        "http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz"
+    ]
+
     _parameters = {
         "extract_roi": "extractROIs",
         "validation": "validation",
@@ -53,7 +61,7 @@ class MNIST(Database):
         :param validation: Fraction of the learning set used for validation, default=0.0
         :type validation: float, optional
         """
-        N2D2_Interface.__init__(self, **config_parameters)
+        AbstractDatabase.__init__(self, **config_parameters)
 
         self._constructor_arguments.update({
             'data_path': data_path,

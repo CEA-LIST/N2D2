@@ -22,30 +22,30 @@
 
 
 import N2D2
-import n2d2.global_variables
-import n2d2.cells.nn
+# import n2d2.cells.nn
 from n2d2.n2d2_interface import N2D2_Interface
+from n2d2.utils import generate_name, check_types
+from n2d2 import converter, ConventionConverter, global_variables
 
-"""
-"""
 class DeepNet(N2D2_Interface):
 
-    _convention_converter= n2d2.ConventionConverter({
+    _convention_converter= ConventionConverter({
         "name": "Name",
     })
-    def __init__(self, **config_parameters):
 
+    def __init__(self, **config_parameters):
+        self._provider = None
         N2D2_Interface.__init__(self, **config_parameters)
 
-        self._config_parameters['name'] = "DeepNet(id=" + str(id(self)) + ")"
+        self._config_parameters['name'] = generate_name(self)
 
-        self._set_N2D2_object(N2D2.DeepNet(n2d2.global_variables.default_net))
+        self._set_N2D2_object(N2D2.DeepNet(global_variables.default_net))
         self._set_N2D2_parameters(self._config_parameters)
 
         self.load_N2D2_parameters(self.N2D2())
 
     @classmethod
-    def create_from_N2D2_object(cls, N2D2_object):
+    def create_from_N2D2_object(cls, N2D2_object, **_):
         deepnet = super().create_from_N2D2_object(N2D2_object)
 
         deepnet._config_parameters['name'] = "DeepNet(id=" + str(id(deepnet)) + ")"
@@ -61,10 +61,10 @@ class DeepNet(N2D2_Interface):
 
         deepnet._cells = {}
 
-        for idx, layer in enumerate(layers[1:]):
+        for layer in layers[1:]:
             for cell in layer:
                 N2D2_cell = cells[cell]
-                n2d2_cell = n2d2.converter.from_N2D2_object(N2D2_cell, n2d2_deepnet=deepnet)
+                n2d2_cell = converter.from_N2D2_object(N2D2_cell, n2d2_deepnet=deepnet)
                 deepnet._cells[n2d2_cell.get_name()] = n2d2_cell
 
         return deepnet
@@ -84,14 +84,14 @@ class DeepNet(N2D2_Interface):
 
     def get_cells(self):
         return self._cells
-    
+
     def remove(self, cell_name:str, reconnect:bool=False)->None:
         """Remove a cell from the encapsulated deepnet.
 
         :param name: Name of cell that shall be removed.
         :type name: str
         :param reconnect: If `True`, reconnects the parents with the child of the removed cell, default=True
-        :type reconnect: bool, optional 
+        :type reconnect: bool, optional
         """
         cell = self.N2D2().getCells()[cell_name]
         self.N2D2().removeCell(cell, reconnect)
@@ -139,11 +139,41 @@ class DeepNet(N2D2_Interface):
         """
         self.N2D2().logStats(dirname)
 
+@check_types
+def associate_provider_to_deepnet(N2D2_deepnet: N2D2.DeepNet, N2D2_provider:N2D2.StimuliProvider)->None:
+    """Associate a new provider to a DeepNet object.
+    This function also handle target issues !
 
+    :param deepnet: DeepNet object
+    :type deepnet: N2D2.DeepNet
+    :param provider: Provider object
+    :type provider: N2D2.Provider
+    """
+    N2D2_database = N2D2_provider.getDatabase()
+    N2D2_deepnet.setDatabase(N2D2_database)
+    N2D2_deepnet.setStimuliProvider(N2D2_provider)
+    for cell_name in N2D2_deepnet.getLayers()[1]: # Layer 0 is env
+        N2D2_cell = N2D2_deepnet.getCell_Frame_Top(cell_name)
+        N2D2_cell.clearInputTensors()
+        x_offset, y_offset = 0, 0
+        N2D2_cell.addInput(
+            N2D2_provider, 
+            x_offset,
+            y_offset,
+            N2D2_provider.getSizeX(),
+            N2D2_provider.getSizeY())
 
-
-
-
-
-
-
+    if len(N2D2_deepnet.getTargets()) == 0:
+        # No target associated to the DeepNet
+        # We create a Target for the last cells of the network
+        target_id = 0
+        for cell_name in N2D2_deepnet.getLayers()[-1]:
+            N2D2_cell = N2D2_deepnet.getCell_Frame_Top(cell_name)
+            N2D2_target =  N2D2.TargetScore(f"Target_{target_id}", N2D2_cell, N2D2_deepnet.getStimuliProvider())
+            N2D2_deepnet.addTarget(N2D2_target)
+            target_id += 1
+    else:
+        # We already have Target, but we have a new provider
+        # We attach the new provider to it/them
+        for target in N2D2_deepnet.getTargets():
+            target.setStimuliProvider(N2D2_provider)

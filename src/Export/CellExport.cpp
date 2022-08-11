@@ -26,7 +26,7 @@
 #include "Export/DeepNetExport.hpp"
 #include "utils/Utils.hpp"
 
-N2D2::CellExport::Precision N2D2::CellExport::mPrecision = Int8;
+N2D2::CellExport::Precision N2D2::CellExport::mPrecision = Float64;
 N2D2::CellExport::IntApprox N2D2::CellExport::mIntApprox = Round;
 
 void N2D2::CellExport::generate(Cell& cell,

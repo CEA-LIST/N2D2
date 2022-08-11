@@ -13,12 +13,7 @@ import os
 if sys.version_info[:2] < (3, 7):
     raise RuntimeError("Python version >= 3.7 required.")
 
-# Check N2D2 version
-if 'N2D2_VERSION' in os.environ:
-    VERSION = os.environ['N2D2_VERSION']
-else:
-    # Default version
-    VERSION = '0.0.1'
+
 
 CLASSIFIERS = """\
 Development Status :: 5 - Production/Stable
@@ -84,9 +79,9 @@ class CMakeBuild(build_ext):
         self.spawn(['cmake', str(cwd)])
         if not self.dry_run:
             self.spawn(['make', '-j', max_jobs])
-                
-        os.chdir(str(cwd)) 
-            
+  
+        os.chdir(str(cwd))
+
         ext_lib = build_temp / "lib"
 
         # Copy all shared object files from build_temp/lib to build_lib
@@ -104,7 +99,11 @@ if __name__ == '__main__':
 
     setup(
         name='n2d2',
-        version=VERSION,
+        setuptools_git_versioning={
+            "enabled": True,
+            "template": "{tag}",
+        },
+        setup_requires=["setuptools-git-versioning"],
         url='https://github.com/CEA-LIST/N2D2',
         license='CECILL-2.1',
         author='N2D2 Team',
@@ -124,8 +123,8 @@ if __name__ == '__main__':
         packages=packages,
         package_dir={
             "n2d2": "python/n2d2",
-            "pytorch_interoperability": "python/pytorch_interoperability",
-            "keras_interoperability": "python/keras_interoperability",
+            "pytorch_to_n2d2": "python/pytorch_to_n2d2",
+            "keras_to_n2d2": "python/keras_to_n2d2",
         },
         ext_modules=[CMakeExtension('N2D2')],
         cmdclass={

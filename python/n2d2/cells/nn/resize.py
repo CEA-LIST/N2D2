@@ -21,13 +21,12 @@
 
 import N2D2
 
-import n2d2.global_variables as gb
-from n2d2 import ConventionConverter
+from n2d2 import ConventionConverter, global_variables
 from n2d2.cells.nn.abstract_cell import (NeuralNetworkCell,
                                          _cell_frame_parameters)
 from n2d2.typed import Modeltyped
-from n2d2.utils import inherit_init_docstring
-from n2d2.error_handler import WrongInputType
+from n2d2.utils import inherit_init_docstring, check_types
+from n2d2.error_handler import WrongInputType, WrongValue
 
 @inherit_init_docstring()
 class Resize(NeuralNetworkCell, Modeltyped):
@@ -36,7 +35,7 @@ class Resize(NeuralNetworkCell, Modeltyped):
     _N2D2_constructors = {
         'Frame': N2D2.ResizeCell_Frame,
     }
-    if gb.cuda_compiled:
+    if global_variables.cuda_available:
         _N2D2_constructors.update({
             'Frame_CUDA': N2D2.ResizeCell_Frame_CUDA,
         })
@@ -106,3 +105,17 @@ class Resize(NeuralNetworkCell, Modeltyped):
         self._N2D2_object.propagate(self._inference)
 
         return self.get_outputs()
+
+    @staticmethod
+    @check_types
+    def is_exportable_to(export_name:str) -> bool:
+        """
+        :param export_name: Name of the export 
+        :type export_name: str
+        :return: ``True`` if the cell is exportable to the ``export_name`` export. 
+        :rtype: bool
+        """
+        from n2d2.export import available_export
+        if export_name not in available_export:
+            raise WrongValue("export_name", export_name, available_export)
+        return N2D2.ResizeCellExport.isExportableTo(export_name)

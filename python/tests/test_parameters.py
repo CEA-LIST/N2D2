@@ -83,7 +83,7 @@ class test_Conv(test_params):
             "no_bias": False,
             "back_propagate": True,
             "weights_export_flip": True,
-            "mapping": n2d2.Tensor([5, 5],  datatype="bool"),
+            "mapping": n2d2.Tensor([10, 5],  datatype="bool"),
         }
         self.object = n2d2.cells.Conv(10, 5, [2, 2], **self.parameters)
 

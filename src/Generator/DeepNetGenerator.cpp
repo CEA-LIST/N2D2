@@ -664,6 +664,9 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
     const bool globTranspose
         = iniConfig.getProperty<bool>("Transpose", false);
 
+    const bool globCNTK
+        = iniConfig.getProperty<bool>("CNTK", false);
+
     // Map the ONNX graph inputs to the graphParentCells
     std::map<std::string, std::shared_ptr<Cell> > inputsMapping;
     std::shared_ptr<StimuliProvider> sp;
@@ -1434,9 +1437,51 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                     }
                 }
                 else
-                    cellFrame->setActivation(activation);
+                {
+                    if (iniConfig.currentSection(node.output(0), false)) {
+                        ActivationGenerator::generateParams(cellFrame, iniConfig,
+                            node.output(0), model, Float32);
+                    }
+                    else {
+                        cellFrame->setActivation(activation);
+                    }
+                }
                 std::cout << "  clipping in [" << minVal << ", " << maxVal << "]"
                     << std::endl;
+            }
+            else if (minVal == std::numeric_limits<Float_T>::lowest() && maxVal > 0.0){
+                std::shared_ptr<Activation> activation
+                    = Registrar<RectifierActivation>::create<Float_T>(model)();
+
+                if (maxVal != std::numeric_limits<Float_T>::max())
+                    activation->setParameter<double>("Clipping", maxVal);
+
+                std::shared_ptr<Cell_Frame_Top> cellFrame
+                    = std::dynamic_pointer_cast<Cell_Frame_Top>(cell);
+
+                if (cellFrame->getActivation()
+                    && cellFrame->getActivation()->getType()
+                        != LinearActivation::Type)
+                {
+                    if (cellFrame->getActivation()->getType()
+                        == RectifierActivation::Type)
+                    {
+                        const double oldClipping = cellFrame->getActivation()
+                            ->getParameter<double>("Clipping");
+
+                        if (oldClipping == 0.0 || oldClipping > maxVal){
+                            cellFrame->setActivation(activation);
+                            minVal = 0.0;
+                            std::cout << "  clipped ReLu will be set instead of ReLu"  << std::endl;
+                        }
+                    }
+                    else {
+                        throw std::runtime_error("Cell " + cell->getName()
+                            + " already has an activation!");
+                    }
+                }
+                else
+                    cellFrame->setActivation(activation);
             }
             else if (minVal < 0.0 && maxVal > 0.0) {
                 std::shared_ptr<Cell_Frame_Top> cellFrame
@@ -2478,35 +2523,49 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
 
             std::vector<int> paddingDimsBegin;
             std::vector<int> paddingDimsEnd;
-            if (node.input_size() > 1) {
+
+            Tensor<int64_t> pad;
+            // See changelog opsetVersion 11 : https://github.com/onnx/onnx/blob/main/docs/Changelog.md#Pad-11
+            // TLDR : pads changed from an attribute to an input.
+            if (opsetVersion < 11) {
+                if(node.input_size() > 1){
+                    if ((itAttr = attribute.find("pads")) != attribute.end()){
+                        for (int dim = 0; dim < (*itAttr).second->ints_size(); ++dim)
+                            pad.push_back((*itAttr).second->ints(dim));
+                    }else {
+                        std::stringstream msgStr;
+                        msgStr << "  No \"pads\" attributes for \"" << node.input(1) 
+                            << "\"" << std::endl;
+                        throw std::runtime_error(msgStr.str());
+                    }
+                }else{
+                    std::cout << "  No initializer for Padding operation, it will be ignored" << std::endl;
+                    std::cout << Utils::cnotice << "  Ignore Padding operation"
+                        << Utils::cdef << std::endl;
+                    std::cout << "  " << node.output(0) << " -> "
+                        << redirectName(node.input(0)) << std::endl;
+                    redirect[node.output(0)] = redirectName(node.input(0));
+                    continue;
+                }
+            }else{ // opsetVersion > 11
                 if ((itInit = initializer.find(node.input(1))) != initializer.end())
-                {
-                    Tensor<int64_t> pad
-                        = ONNX_unpackTensor<int64_t>((*itInit).second);
-
-                assert(pad.size() % 2 == 0);
-                const int offset = pad.size() / 2;
-
-                for (int dim = 0; dim < offset; ++dim) {
-                    paddingDimsBegin.push_back(pad(dim));
-                    paddingDimsEnd.push_back(pad(offset + dim));
+                    pad.push_back(ONNX_unpackTensor<int64_t>((*itInit).second));
+                else{
+                    std::stringstream msgStr;
+                    msgStr << "  No initializer for \"" << node.input(1)
+                        << "\"" << std::endl;
+                    throw std::runtime_error(msgStr.str());
                 }
             }
-            else {
-                std::stringstream msgStr;
-                msgStr << "  No initializer for \"" << node.input(1)
-                    << "\"" << std::endl;
 
-                throw std::runtime_error(msgStr.str());
+            assert(pad.size() % 2 == 0);
+            const int offset = pad.size() / 2;
+
+            for (int dim = 0; dim < offset; ++dim) {
+                paddingDimsBegin.push_back(pad(dim));
+                paddingDimsEnd.push_back(pad(offset + dim));
             }
 
-            //assert(pad.size() % 2 == 0);
-            //const int offset = pad.size() / 2;
-
-            //for (int dim = 0; dim < offset; ++dim) {
-            //    paddingDimsBegin.push_back(pad(dim));
-            //    paddingDimsEnd.push_back(pad(offset + dim));
-           // }
             std::reverse(paddingDimsBegin.begin(), paddingDimsBegin.end());
             std::reverse(paddingDimsEnd.begin(), paddingDimsEnd.end());
 
@@ -2521,11 +2580,13 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 std::swap(paddingDimsBegin[0], paddingDimsBegin[1]);
                 std::swap(paddingDimsEnd[0], paddingDimsEnd[1]);
             }
-
+            const unsigned int nbOutputs = (cell)
+                    ? cell->getNbOutputs()
+                    : sp->getNbChannels();
             std::shared_ptr<PaddingCell> paddingCell = Registrar
                 <PaddingCell>::create(model)(*deepNet,
                                             node.output(0),
-                                            inputXCell->getNbOutputs(),
+                                            nbOutputs,
                                             paddingDimsBegin[1],
                                             paddingDimsEnd[1],
                                             paddingDimsBegin[0],
@@ -2556,17 +2617,9 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
             paddingCell->initialize();
             cell = paddingCell;
             continue;
-               // }
-           }
-            std::cout << "  No initializer for Padding operation, it will be ignored" << std::endl;
-
-            std::cout << Utils::cnotice << "  Ignore Padding operation"
-                << Utils::cdef << std::endl;
-
-            std::cout << "  " << node.output(0) << " -> "
-                << redirectName(node.input(0)) << std::endl;
-            redirect[node.output(0)] = redirectName(node.input(0));
-            continue;
+            // }
+        
+        
         }
         //Pow
         //QLinearConv
@@ -3268,7 +3321,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                 // Special case for bias (CNTK)
                 // In CNTK models, bias is added as constant after the operator
                 // In this case, we try to merge everything in the operator bias
-                if (dataCell
+                if (globCNTK && dataCell
                     && (node.op_type() == "Add" || node.op_type() == "Sum"
                         || (node.op_type() == "Sub" && inputData == inputData1))
                     && (dataCell->getType() == ConvCell::Type
@@ -3286,8 +3339,13 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         dataCell->setParameter<bool>("NoBias", false);
                         dataCell->initialize(); // Re-init with bias!
                         Tensor<Float_T> biases;
+
+                        std::vector<unsigned int> biasDims;
+                        biasDims.push_back(1);
+                        biasDims.push_back(dataCell->getNbOutputs());
+
                         if ((*itInit).second->data_type() == onnx::TensorProto_DataType_FLOAT) {
-                            biases.resize({1, dataCell->getNbOutputs()});
+                            biases.resize({dataCell->getNbOutputs()});
                             biases = ONNX_unpackTensor<Float_T>((*itInit).second);
                         }
                         else if ((*itInit).second->data_type() == onnx::TensorProto_DataType_INT32) {
@@ -3317,6 +3375,10 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                         else {
                             throw std::runtime_error("Unsupported datatype: "
                                 "Add or Sum  Layer only support Float32, Float64 or INT32 Weights");
+                        }
+
+                        if(biases.nbDims() == 1){
+                            biases.reshape({1, biases.dimB()});
                         }
 
                         for (unsigned int output = 0;
@@ -3364,6 +3426,7 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                             ->getScaling();
                     const auto& scales = scaling.getFloatingPointScaling()
                                                         .getScalingPerOutput();
+                    
                     // Remove original "Mul" scaling cell
                     deepNet->removeCell(dataCell);
 
@@ -3465,19 +3528,23 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
                             std::cout << "Mul operation" << std::endl;
                             shifts.push_back(0);
                             weights.push_back(constant(0));
+                        }else{
+                            throw std::runtime_error("Unsupported operation : " + node.op_type() + " for constant size = 1.");
                         }
                     }
                     else if (constant.size() == nbOutputs){
-                        if(node.op_type() == "Add"){
-                            std::cout << "Add operation, constant.size() == nbOutputs" << std::endl;
-                            for (unsigned int output = 0;
-                                    output < nbOutputs; ++output)
-                            {
-                                shifts.push_back(constant.at(output));
-                                weights.push_back(1);
-                                std::cout << "out = " << output << " , shift = " << constant.at(output) << std::endl;
-                            }
-                        }
+                        if(node.op_type() == "Mul"){
+                            // Use ScalingCell for Mul
+                            const std::vector<Float_T> scaling = constant.data();
+
+                            opCell = Registrar<ScalingCell>::create<Float_T>(model)(
+                                *deepNet, 
+                                node.output(0),
+                                nbOutputs,
+                                Scaling::floatingPointScaling(scaling, false, std::vector<Float_T>(0.0f)));
+
+                        }else
+                            throw std::runtime_error("Unsupported operation : " + node.op_type() + " for constant size = nbOutputs.");
                     }
                     else {
                         throw std::runtime_error("Unsupported constant size! Not 1 and not nbOutputs! ");

@@ -42,7 +42,9 @@ public:
 
     static void
     generate(Cell& cell, const std::string& dirName, const std::string& type);
-
+    static bool isExportableTo(const std::string& type){
+        return Registrar<PaddingCellExport>::exists(type);
+    };
 private:
     static Registrar<CellExport> mRegistrar;
 };

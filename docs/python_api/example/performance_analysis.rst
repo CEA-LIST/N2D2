@@ -8,7 +8,7 @@ You can see the full script of this example here : :download:`performance_analys
 
     import N2D2
     import n2d2
-    from n2d2.cells.nn import Conv, Pool, Fc, Dropout
+    from n2d2.cells.nn import Conv, Pool2d, Fc, Dropout
     from n2d2.activation import Linear, Rectifier
     from n2d2.filler import He, Xavier
     from n2d2.solver import SGD
@@ -107,16 +107,16 @@ To define the network, we will use :py:class:`n2d2.cells.Sequence` that take a l
 
     model = n2d2.cells.Sequence([
         Conv(1, 32, [4, 4], **conv_config),
-        Pool([2, 2], stride_dims=[2, 2], pooling='Max'),
+        Pool2d([2, 2], stride_dims=[2, 2], Pooling='Max'),
         Conv(32, 48, [5, 5], mapping=conv2_mapping, **conv_config),
-        Pool([3, 3], stride_dims=[3, 3], pooling='Max'),
+        Pool2d([3, 3], stride_dims=[3, 3], Pooling='Max'),
         Fc(48*3*3, 200, activation=Rectifier(), **fc_config),
         Dropout(),
         Fc(200, 43, activation=Linear(), **fc_config),
         Softmax(with_loss=True)
     ])
 
-Note that in LeNet, the ``conv2`` layer is not fully connected to the pooling layer. 
+Note that in LeNet, the ``conv2`` layer is not fully connected to the Pooling layer. 
 In n2d2, a custom mapping can be defined for each input connection. 
 We can do this with the mapping argument by passing a :py:class:`n2d2.Tensor`.
 The connection of n-th output map to the inputs is defined by the n-th column of the matrix below, where the rows correspond to the inputs.

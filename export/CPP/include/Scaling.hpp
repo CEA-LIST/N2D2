@@ -12,7 +12,7 @@
 
 #include "params.h"
 
-namespace N2D2 {
+namespace N2D2_Export {
 
 int64_t toInt64(uint32_t lo, uint32_t hi) {
     return (int64_t) (((uint64_t) hi) << 32ull) | ((uint64_t) lo);

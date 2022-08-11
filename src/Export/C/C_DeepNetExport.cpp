@@ -422,7 +422,7 @@ void N2D2::C_DeepNetExport::generateProgramFunction(DeepNet& deepNet,
                                        output_buff + "data",
                                        Utils::upperCase(output_size),
                                        prog,
-                                       isCellInputsUnsigned(*cell));
+                                       isCellInputsUnsigned(*cell, deepNet));
         }
         if (itLayer == itLayerEnd - 1) {
             const std::shared_ptr<Cell> cell

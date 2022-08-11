@@ -8,6 +8,7 @@ If you find an example not up to date, please consider leaving an issue here : h
 .. toctree::
    :maxdepth: 1
 
+   example/data_augmentation
    example/performance_analysis
    example/load_onnx
    example/graph_manipulation

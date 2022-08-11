@@ -20,12 +20,11 @@
 """
 import N2D2
 
-import n2d2.global_variables as gb
-from n2d2 import ConventionConverter, Interface, Tensor
+from n2d2 import ConventionConverter, Interface, Tensor, global_variables
 from n2d2.cells.nn.abstract_cell import (NeuralNetworkCell,
                                          _cell_frame_parameters)
 from n2d2.typed import ModelDatatyped
-from n2d2.utils import inherit_init_docstring
+from n2d2.utils import inherit_init_docstring, check_types
 from n2d2.mapping import Mapping
 from n2d2.error_handler import WrongInputType, WrongValue
 
@@ -41,7 +40,7 @@ class Pool(NeuralNetworkCell, ModelDatatyped):
     _N2D2_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
     }
-    if gb.cuda_compiled:
+    if global_variables.cuda_available:
         _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
         })
@@ -148,6 +147,20 @@ class Pool(NeuralNetworkCell, ModelDatatyped):
         else:
             super().__setattr__(key, value)
 
+    @staticmethod
+    @check_types
+    def is_exportable_to(export_name:str) -> bool:
+        """
+        :param export_name: Name of the export 
+        :type export_name: str
+        :return: ``True`` if the cell is exportable to the ``export_name`` export. 
+        :rtype: bool
+        """
+        from n2d2.export import available_export
+        if export_name not in available_export:
+            raise WrongValue("export_name", export_name, available_export)
+        return N2D2.PoolCellExport.isExportableTo(export_name)
+
 @inherit_init_docstring()
 class Pool2d(Pool):
     """'Standard' pooling where all feature maps are pooled independently.
@@ -156,7 +169,7 @@ class Pool2d(Pool):
     _N2D2_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
     }
-    if gb.cuda_compiled:
+    if global_variables.cuda_available:
         _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
         })
@@ -224,7 +237,7 @@ class GlobalPool2d(Pool2d):
     _N2D2_constructors = {
         'Frame<float>': N2D2.PoolCell_Frame_float,
     }
-    if gb.cuda_compiled:
+    if global_variables.cuda_available:
         _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.PoolCell_Frame_CUDA_float,
         })

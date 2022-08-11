@@ -32,7 +32,7 @@ class SGD(Solver):
     _N2D2_constructors = {
         'Frame<float>': N2D2.SGDSolver_Frame_float,
     }
-    if gb.cuda_compiled:
+    if gb.cuda_available:
         _N2D2_constructors.update({
             'Frame_CUDA<float>': N2D2.SGDSolver_Frame_CUDA_float,
         })
@@ -54,7 +54,7 @@ class SGD(Solver):
         "iteration_pass": "IterationPass",
         "nb_iteration": "NbIteration",
         "datatype": "Datatype",# Pure n2d2
-        "model": "Model",# Pure n2d2   
+        "model": "Model",# Pure n2d2
     }
     _convention_converter= ConventionConverter(_parameters)
     def __init__(self, **config_parameters):
