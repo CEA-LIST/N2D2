@@ -65,10 +65,12 @@ public:
     void exportFreeParameters(const std::string& fileName) const;
     void importFreeParameters(const std::string& fileName, bool ignoreNoExists);
     void initializeQWeights();
+
+    T getSAT_scaling(unsigned int k){return mSAT_scaling[k];};
    
 protected:
-    std::vector<T*> mSAT_tanh_max;
-    std::vector<T*> mSAT_scaling;
+    std::vector<T> mSAT_tanh_max;
+    std::vector<T> mSAT_scaling;
     CudaTensor<T> mDeviceWorkspace;
 
     // Solvers for learning alpha

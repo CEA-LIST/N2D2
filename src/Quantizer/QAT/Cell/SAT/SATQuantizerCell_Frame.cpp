@@ -73,8 +73,8 @@ void N2D2::SATQuantizerCell_Frame<T>::addWeights(BaseTensor& weights, BaseTensor
     mDiffQuantizedWeights.push_back(&diffWeights);
     mDiffFullPrecisionWeights.push_back(new Tensor<T>(diffWeights.dims()));
 
-    mSAT_tanh_max.push_back(new T(0.0f));
-    mSAT_scaling.push_back(new T(0.0f));
+    mSAT_tanh_max.push_back(T(0.0f));
+    mSAT_scaling.push_back(T(1.0f));
 
     mOutputsSize += weights.dimB()*weights.dimY()*weights.dimX();
 }
@@ -132,42 +132,42 @@ void N2D2::SATQuantizerCell_Frame<T>::initializeQWeights()
             sat_cpu::no_quantize_weight_default_propagate(fpW,
                                                           mQuantizedWeights[k],
                                                           mRange,
-                                                          mSAT_tanh_max[k]);
+                                                          &mSAT_tanh_max[k]);
             break;
 
         case 1:
             sat_cpu::quantize_weight_default_propagate(fpW,
                                                        mQuantizedWeights[k],
                                                        mRange,
-                                                       mSAT_tanh_max[k]);
+                                                       &mSAT_tanh_max[k]);
             break;
 
         case 2:
             sat_cpu::quantize_weight_fullrange_propagate(fpW,
                                                          mQuantizedWeights[k],
                                                          mRange,
-                                                         mSAT_tanh_max[k]);
+                                                         &mSAT_tanh_max[k]);
             break;
 
         case 3:
             sat_cpu::quantize_weight_symrange_propagate(fpW,
                                                         mQuantizedWeights[k],
                                                         mRange,
-                                                        mSAT_tanh_max[k]);
+                                                        &mSAT_tanh_max[k]);
             break;
 
         case 4:
             sat_cpu::quantize_weight_asymrange_propagate(fpW,
                                                          mQuantizedWeights[k],
                                                          mRange,
-                                                         mSAT_tanh_max[k]);
+                                                         &mSAT_tanh_max[k]);
             break;
 
         case 5:
             sat_cpu::no_quantize_weight_asymrange_propagate(fpW,
                                                             mQuantizedWeights[k],
                                                             mRange,
-                                                            mSAT_tanh_max[k]);
+                                                            &mSAT_tanh_max[k]);
             break;
 
         default:
@@ -177,7 +177,7 @@ void N2D2::SATQuantizerCell_Frame<T>::initializeQWeights()
 
         if (mApplyScaling)
                 sat_cpu::apply_scaling(mQuantizedWeights[k],
-                                       mSAT_scaling[k],
+                                       &mSAT_scaling[k],
                                        mOutputsSize);
     }
 
@@ -187,14 +187,6 @@ void N2D2::SATQuantizerCell_Frame<T>::initializeQWeights()
 
         sat_cpu::quantize_bias_propagate(fpBiases, quantBiases);
     }
-
-    // //set SAT scaling (preparation for export)
-    // if(mApplyScaling){
-    //     setSATScaling((double)(*mSAT_scaling[k]));
-    // }
-    // else{
-    //     setSATScaling(1.0);
-    // }
 }
 
 template<class T>
@@ -220,27 +212,27 @@ void N2D2::SATQuantizerCell_Frame<T>::propagate()
 
         switch (mode) {
         case 0:
-            sat_cpu::no_quantize_weight_default_propagate(fpW, qW, mRange, mSAT_tanh_max[k]);
+            sat_cpu::no_quantize_weight_default_propagate(fpW, qW, mRange, &mSAT_tanh_max[k]);
             break;
 
         case 1:
-            sat_cpu::quantize_weight_default_propagate(fpW, qW, mRange, mSAT_tanh_max[k]);
+            sat_cpu::quantize_weight_default_propagate(fpW, qW, mRange, &mSAT_tanh_max[k]);
             break;
 
         case 2:
-            sat_cpu::quantize_weight_fullrange_propagate(fpW, qW, mRange, mSAT_tanh_max[k]);
+            sat_cpu::quantize_weight_fullrange_propagate(fpW, qW, mRange, &mSAT_tanh_max[k]);
             break;
 
         case 3:
-            sat_cpu::quantize_weight_symrange_propagate(fpW, qW, mRange, mSAT_tanh_max[k]);
+            sat_cpu::quantize_weight_symrange_propagate(fpW, qW, mRange, &mSAT_tanh_max[k]);
             break;
 
         case 4:
-            sat_cpu::quantize_weight_asymrange_propagate(fpW, qW, mRange, mSAT_tanh_max[k]);
+            sat_cpu::quantize_weight_asymrange_propagate(fpW, qW, mRange, &mSAT_tanh_max[k]);
             break;
 
         case 5:
-            sat_cpu::no_quantize_weight_asymrange_propagate(fpW, qW, mRange, mSAT_tanh_max[k]);
+            sat_cpu::no_quantize_weight_asymrange_propagate(fpW, qW, mRange, &mSAT_tanh_max[k]);
             break;
 
         default:
@@ -249,7 +241,7 @@ void N2D2::SATQuantizerCell_Frame<T>::propagate()
         }
 
         if (mApplyScaling)
-                sat_cpu::apply_scaling(qW, mSAT_scaling[k], mOutputsSize);
+                sat_cpu::apply_scaling(qW, &mSAT_scaling[k], mOutputsSize);
     }
 
     if (mFullPrecisionBiases) {
@@ -258,14 +250,6 @@ void N2D2::SATQuantizerCell_Frame<T>::propagate()
 
         sat_cpu::quantize_bias_propagate(fpBiases, quantBiases);
     }
-
-    // //set SAT scaling (preparation for export)
-    // if(mApplyScaling){
-    //     setSATScaling((double)(*mSAT_scaling[k]));
-    // }
-    // else{
-    //     setSATScaling(1.0);
-    // }
 }
 
 template<class T>
@@ -276,8 +260,8 @@ void N2D2::SATQuantizerCell_Frame<T>::back_propagate()
         Tensor<T> fullPrecisionWeights = tensor_cast<T>(mFullPrecisionWeights[k]);
         Tensor<T> diffFullPrecisionWeights = tensor_cast<T>(mDiffFullPrecisionWeights[k]);
 
-        T scale = mApplyScaling ? *(mSAT_scaling[k]) : T(1.0);
-        T factor = *(mSAT_tanh_max[k]) * scale;
+        T scale = mApplyScaling ? mSAT_scaling[k] : T(1.0);
+        T factor = mSAT_tanh_max[k] * scale;
 
         if (mQuantMode == QuantizerCell::Asymmetric) {
             sat_cpu::quantize_weight_asymrange_back_propagate(diffQuantWeights,

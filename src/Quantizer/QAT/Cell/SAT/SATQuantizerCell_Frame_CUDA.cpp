@@ -79,8 +79,8 @@ void SATQuantizerCell_Frame_CUDA<T>::addWeights(BaseTensor& weights, BaseTensor&
     mDiffQuantizedWeights.push_back(&diffWeights);
     mDiffFullPrecisionWeights.push_back(new CudaTensor<T>(diffWeights.dims()));
 
-    mSAT_tanh_max.push_back(new T(0.0f));
-    mSAT_scaling.push_back(new T(0.0f));
+    mSAT_tanh_max.push_back(T(0.0f));
+    mSAT_scaling.push_back(T(1.0f));
 
     mOutputsSize += weights.dimB() * weights.dimY() * weights.dimX();
 }
@@ -123,13 +123,13 @@ void SATQuantizerCell_Frame_CUDA<half_float::half>::initializeQWeights()
             sat_cuda::cudaH_quantize_weight_default_propagate(fullPrecWeights->getDevicePtr(),
                                                               mQuantizedWeights[k].getDevicePtr(),
                                                               mRange,
-                                                              mSAT_tanh_max[k],
+                                                              &mSAT_tanh_max[k],
                                                               mFullPrecisionWeights[k].size());
         } else {
             sat_cuda::cudaH_weight_default_propagate(fullPrecWeights->getDevicePtr(),
                                                      mQuantizedWeights[k].getDevicePtr(),
                                                      mRange,
-                                                     mSAT_tanh_max[k],
+                                                     &mSAT_tanh_max[k],
                                                      mFullPrecisionWeights[k].size());
         }
 
@@ -143,7 +143,7 @@ void SATQuantizerCell_Frame_CUDA<half_float::half>::initializeQWeights()
             }
 
             sat_cuda::cudaH_apply_scaling(mQuantizedWeights[k].getDevicePtr(),
-                                          mSAT_scaling[k],
+                                          &mSAT_scaling[k],
                                           mDeviceWorkspace.getDevicePtr(),
                                           mOutputsSize,
                                           mQuantizedWeights[k].size());
@@ -162,19 +162,19 @@ void SATQuantizerCell_Frame_CUDA<double>::initializeQWeights()
             sat_cuda::cudaD_quantize_weight_default_propagate(fullPrecWeights->getDevicePtr(),
                                                               mQuantizedWeights[k].getDevicePtr(),
                                                               mRange,
-                                                              mSAT_tanh_max[k],
+                                                              &mSAT_tanh_max[k],
                                                               mFullPrecisionWeights[k].size());
         } else {
             sat_cuda::cudaD_weight_default_propagate(fullPrecWeights->getDevicePtr(),
                                                      mQuantizedWeights[k].getDevicePtr(),
                                                      mRange,
-                                                     mSAT_tanh_max[k],
+                                                     &mSAT_tanh_max[k],
                                                      mFullPrecisionWeights[k].size());
         }
 
         if (mApplyScaling)
             sat_cuda::cudaD_apply_scaling(mQuantizedWeights[k].getDevicePtr(),
-                                          mSAT_scaling[k],
+                                          &mSAT_scaling[k],
                                           mOutputsSize,
                                           mQuantizedWeights[k].size());
 
@@ -207,7 +207,7 @@ void SATQuantizerCell_Frame_CUDA<float>::initializeQWeights()
             sat_cuda::cudaF_weight_default_propagate(fullPrecWeights->getDevicePtr(),
                                                      mQuantizedWeights[k].getDevicePtr(),
                                                      mRange,
-                                                     mSAT_tanh_max[k],
+                                                     &mSAT_tanh_max[k],
                                                      mFullPrecisionWeights[k].size());
             break;
 
@@ -215,7 +215,7 @@ void SATQuantizerCell_Frame_CUDA<float>::initializeQWeights()
             sat_cuda::cudaF_quantize_weight_default_propagate(fullPrecWeights->getDevicePtr(),
                                                               mQuantizedWeights[k].getDevicePtr(),
                                                               mRange,
-                                                              mSAT_tanh_max[k],
+                                                              &mSAT_tanh_max[k],
                                                               mFullPrecisionWeights[k].size());
             break;
 
@@ -223,7 +223,7 @@ void SATQuantizerCell_Frame_CUDA<float>::initializeQWeights()
             sat_cuda::cudaF_quantize_weight_fullrange_propagate(fullPrecWeights->getDevicePtr(),
                                                                 mQuantizedWeights[k].getDevicePtr(),
                                                                 mRange,
-                                                                mSAT_tanh_max[k],
+                                                                &mSAT_tanh_max[k],
                                                                 mFullPrecisionWeights[k].size());
             break;
 
@@ -231,7 +231,7 @@ void SATQuantizerCell_Frame_CUDA<float>::initializeQWeights()
             sat_cuda::cudaF_quantize_weight_symrange_propagate(fullPrecWeights->getDevicePtr(),
                                                                mQuantizedWeights[k].getDevicePtr(),
                                                                mRange,
-                                                               mSAT_tanh_max[k],
+                                                               &mSAT_tanh_max[k],
                                                                mFullPrecisionWeights[k].size());
             break;
 
@@ -239,7 +239,7 @@ void SATQuantizerCell_Frame_CUDA<float>::initializeQWeights()
             sat_cuda::cudaF_quantize_weight_asymrange_propagate(fullPrecWeights->getDevicePtr(),
                                                                 mQuantizedWeights[k].getDevicePtr(),
                                                                 mRange,
-                                                                mSAT_tanh_max[k],
+                                                                &mSAT_tanh_max[k],
                                                                 mFullPrecisionWeights[k].size());
             break;
 
@@ -247,7 +247,7 @@ void SATQuantizerCell_Frame_CUDA<float>::initializeQWeights()
             sat_cuda::cudaF_weight_asymrange_propagate(fullPrecWeights->getDevicePtr(),
                                                        mQuantizedWeights[k].getDevicePtr(),
                                                        mRange,
-                                                       mSAT_tanh_max[k],
+                                                       &mSAT_tanh_max[k],
                                                        mFullPrecisionWeights[k].size());
             break;
 
@@ -258,7 +258,7 @@ void SATQuantizerCell_Frame_CUDA<float>::initializeQWeights()
 
         if (mApplyScaling)
             sat_cuda::cudaF_apply_scaling(mQuantizedWeights[k].getDevicePtr(),
-                                          mSAT_scaling[k],
+                                          &mSAT_scaling[k],
                                           mOutputsSize,
                                           mQuantizedWeights[k].size());
     }
@@ -271,14 +271,6 @@ void SATQuantizerCell_Frame_CUDA<float>::initializeQWeights()
                                                      mQuantizedBiases.getDevicePtr(),
                                                      mFullPrecisionBiases->size());
     }
-
-    // //set SAT scaling (preparation for export)
-    // if(mApplyScaling){
-    //     setSATScaling((double)(*mSAT_scaling[k]));
-    // }
-    // else{
-    //     setSATScaling(1.0);
-    // }
 }
 
 template<>
@@ -295,13 +287,13 @@ void SATQuantizerCell_Frame_CUDA<half_float::half>::propagate()
             sat_cuda::cudaH_quantize_weight_default_propagate(fullPrecWeights->getDevicePtr(),
                                                               quantizedWeights->getDevicePtr(),
                                                               mRange,
-                                                              mSAT_tanh_max[k],
+                                                              &mSAT_tanh_max[k],
                                                               mFullPrecisionWeights[k].size());
         } else {
             sat_cuda::cudaH_weight_default_propagate(fullPrecWeights->getDevicePtr(),
                                                      quantizedWeights->getDevicePtr(),
                                                      mRange,
-                                                     mSAT_tanh_max[k],
+                                                     &mSAT_tanh_max[k],
                                                      mFullPrecisionWeights[k].size());
         }
 
@@ -315,7 +307,7 @@ void SATQuantizerCell_Frame_CUDA<half_float::half>::propagate()
             }
 
             sat_cuda::cudaH_apply_scaling(quantizedWeights->getDevicePtr(),
-                                          mSAT_scaling[k],
+                                          &mSAT_scaling[k],
                                           mDeviceWorkspace.getDevicePtr(),
                                           mOutputsSize,
                                           mQuantizedWeights[k].size());
@@ -361,7 +353,7 @@ void SATQuantizerCell_Frame_CUDA<float>::propagate()
             sat_cuda::cudaF_weight_default_propagate(fullPrecWeights->getDevicePtr(),
                                                      quantizedWeights->getDevicePtr(),
                                                      mRange,
-                                                     mSAT_tanh_max[k],
+                                                     &mSAT_tanh_max[k],
                                                      mFullPrecisionWeights[k].size());
             break;
 
@@ -369,7 +361,7 @@ void SATQuantizerCell_Frame_CUDA<float>::propagate()
             sat_cuda::cudaF_quantize_weight_default_propagate(fullPrecWeights->getDevicePtr(),
                                                               quantizedWeights->getDevicePtr(),
                                                               mRange,
-                                                              mSAT_tanh_max[k],
+                                                              &mSAT_tanh_max[k],
                                                               mFullPrecisionWeights[k].size());
             break;
 
@@ -377,7 +369,7 @@ void SATQuantizerCell_Frame_CUDA<float>::propagate()
             sat_cuda::cudaF_quantize_weight_fullrange_propagate(fullPrecWeights->getDevicePtr(),
                                                                 quantizedWeights->getDevicePtr(),
                                                                 mRange,
-                                                                mSAT_tanh_max[k],
+                                                                &mSAT_tanh_max[k],
                                                                 mFullPrecisionWeights[k].size());
             break;
 
@@ -385,7 +377,7 @@ void SATQuantizerCell_Frame_CUDA<float>::propagate()
             sat_cuda::cudaF_quantize_weight_symrange_propagate(fullPrecWeights->getDevicePtr(),
                                                                quantizedWeights->getDevicePtr(),
                                                                mRange,
-                                                               mSAT_tanh_max[k],
+                                                               &mSAT_tanh_max[k],
                                                                mFullPrecisionWeights[k].size());
             break;
 
@@ -393,7 +385,7 @@ void SATQuantizerCell_Frame_CUDA<float>::propagate()
             sat_cuda::cudaF_quantize_weight_asymrange_propagate(fullPrecWeights->getDevicePtr(),
                                                                 quantizedWeights->getDevicePtr(),
                                                                 mRange,
-                                                                mSAT_tanh_max[k],
+                                                                &mSAT_tanh_max[k],
                                                                 mFullPrecisionWeights[k].size());
             break;
 
@@ -401,7 +393,7 @@ void SATQuantizerCell_Frame_CUDA<float>::propagate()
             sat_cuda::cudaF_weight_asymrange_propagate(fullPrecWeights->getDevicePtr(),
                                                        quantizedWeights->getDevicePtr(),
                                                        mRange,
-                                                       mSAT_tanh_max[k],
+                                                       &mSAT_tanh_max[k],
                                                        mFullPrecisionWeights[k].size());
             break;
 
@@ -412,7 +404,7 @@ void SATQuantizerCell_Frame_CUDA<float>::propagate()
 
         if (mApplyScaling)
             sat_cuda::cudaF_apply_scaling(quantizedWeights->getDevicePtr(),
-                                          mSAT_scaling[k],
+                                          &mSAT_scaling[k],
                                           mOutputsSize,
                                           mQuantizedWeights[k].size());
     }
@@ -442,19 +434,19 @@ void SATQuantizerCell_Frame_CUDA<double>::propagate()
             sat_cuda::cudaD_quantize_weight_default_propagate(fullPrecWeights->getDevicePtr(),
                                                               quantizedWeights->getDevicePtr(),
                                                               mRange,
-                                                              mSAT_tanh_max[k],
+                                                              &mSAT_tanh_max[k],
                                                               mFullPrecisionWeights[k].size());
         } else {
             sat_cuda::cudaD_weight_default_propagate(fullPrecWeights->getDevicePtr(),
                                                      quantizedWeights->getDevicePtr(),
                                                      mRange,
-                                                     mSAT_tanh_max[k],
+                                                     &mSAT_tanh_max[k],
                                                      mFullPrecisionWeights[k].size());
         }
 
         if (mApplyScaling)
             sat_cuda::cudaD_apply_scaling(quantizedWeights->getDevicePtr(),
-                                          mSAT_scaling[k],
+                                          &mSAT_scaling[k],
                                           mOutputsSize,
                                           mQuantizedWeights[k].size());
     }
@@ -481,8 +473,8 @@ void SATQuantizerCell_Frame_CUDA<half_float::half>::back_propagate()
         std::shared_ptr<CudaDeviceTensor<half_float::half> > fullPrecWeights
             = cuda_device_tensor_cast<half_float::half>(mFullPrecisionWeights[k]);
 
-        half_float::half scale = mApplyScaling ? *(mSAT_scaling[k]) : (half_float::half)1.0f;
-        half_float::half factor = *(mSAT_tanh_max[k]) * scale;
+        half_float::half scale = mApplyScaling ? mSAT_scaling[k] : (half_float::half)1.0f;
+        half_float::half factor = mSAT_tanh_max[k] * scale;
 
         sat_cuda::cudaH_quantize_weight_default_back_propagate(diffQuantizedWeights->getDevicePtr(),
                                                                mDiffFullPrecisionWeights[k].getDevicePtr(),
@@ -513,8 +505,8 @@ void SATQuantizerCell_Frame_CUDA<float>::back_propagate()
         std::shared_ptr<CudaDeviceTensor<float> > fullPrecWeights
             = cuda_device_tensor_cast<float>(mFullPrecisionWeights[k]);
 
-        float scale = mApplyScaling ? *(mSAT_scaling[k]) : 1.0f;
-        float factor = *(mSAT_tanh_max[k]) * scale;
+        float scale = mApplyScaling ? mSAT_scaling[k] : 1.0f;
+        float factor = mSAT_tanh_max[k] * scale;
 
         if (mQuantMode == QuantizerCell::Asymmetric) {
             sat_cuda::cudaF_quantize_weight_asymrange_back_propagate(diffQuantizedWeights->getDevicePtr(),
@@ -561,8 +553,8 @@ void SATQuantizerCell_Frame_CUDA<double>::back_propagate()
         std::shared_ptr<CudaDeviceTensor<double> > fullPrecWeights
             = cuda_device_tensor_cast<double>(mFullPrecisionWeights[k]);
 
-        double scale = mApplyScaling ? *(mSAT_scaling[k]) : 1.0;
-        double factor = *(mSAT_tanh_max[k]) * scale;
+        double scale = mApplyScaling ? mSAT_scaling[k] : 1.0;
+        double factor = mSAT_tanh_max[k] * scale;
 
         sat_cuda::cudaD_quantize_weight_default_back_propagate(diffQuantizedWeights->getDevicePtr(),
                                                                mDiffFullPrecisionWeights[k].getDevicePtr(),

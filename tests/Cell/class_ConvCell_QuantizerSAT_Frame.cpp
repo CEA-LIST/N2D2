@@ -477,7 +477,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_float,
 
         loss = softmax1.applyLoss();
 
-        if(iter_index==9999){
+    if(iter_index==9999){
             std::cout << "Loss: " << loss << std::endl;
         }
 

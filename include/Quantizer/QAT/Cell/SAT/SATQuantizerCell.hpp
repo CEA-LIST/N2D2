@@ -59,14 +59,6 @@ public:
         mApplyScaling=status;
     };
 
-    //SAT scaling for export
-    void setSATScaling(double scaling){
-        mSAT_scaling = scaling;
-    };
-    double getSATScaling(){
-        return mSAT_scaling;
-    };
-
     bool getApplyQuantization(){
         return mApplyQuantization;
     };
@@ -85,8 +77,6 @@ protected:
     Parameter<bool> mApplyQuantization;
     Parameter<bool> mApplyScaling;
     unsigned int mOutputsSize = 0;
-    //SAT scaling for export
-    double mSAT_scaling;
 
 private:
 };
