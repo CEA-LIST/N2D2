@@ -109,7 +109,7 @@ class InvertedBottleneck(Sequence):
             bottleneck = Layer(cells=[main_block, shortcut])
             Sequence.__init__(self, cells=[
                 bottleneck,
-                ElemWise(operation='Sum', mode='PerInput', weights=[1.0]),
+                ElemWise(operation='Sum', mode='PerInput', weights=[1.0], shifts=[0.0]),
             ])
             
 
@@ -188,6 +188,13 @@ class MobileNetV2(Sequence):
         :type path:str, optional
         :param download: Whether or not the model architecture should be downloaded. Default=`False`.
         :type download: bool, optional
+        
+        example
+        -------
+
+        >>> db = n2d2.database.Database()
+        >>> pro = n2d2.provider.DataProvider(db, size=[224,224,3], batch_size=10)
+        >>> model = n2d2.models.MobileNetV2.load_from_ONNX(pro, batch_size=10, download=True)
         """
         if dims is None:
             dims = [224,224,3]

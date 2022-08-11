@@ -105,7 +105,7 @@ class BuildingBlock(Sequence):
         # Addition
         Sequence.__init__(self, [
             self.structure,
-            ElemWise(operation='Sum', mode='PerInput', weights=[1.0]), # input [56,56,128,256]
+            ElemWise(operation='Sum', mode='PerInput', weights=[1.0], shifts=[0.0]), # input [56,56,128,256]
             Activation(activation=Rectifier())
             ])
 
@@ -187,7 +187,7 @@ class ResNet():
         :param inputs: Data provider for the model
         :type inputs: `n2d2.provider.DataProvider`
         :param resnet_type: Number of layers in the network, can be 18, 34, 50, 101 or 152.
-        :type resnet_type: int
+        :type resnet_type: str
         :param version: Version of the ResNet model in [`pre_act`,`post_act`] (version 1 and 2). Default=`pre_act`.
         :type version: list, optional
         :param dims: Dimension of input images. Default=`[224, 224, 3]`
@@ -198,12 +198,19 @@ class ResNet():
         :type path:str, optional
         :param download: Whether or not the model architecture should be downloaded. Default=`False`.
         :type download: bool, optional
+        
+        example
+        -------
+
+        >>> db = n2d2.database.Database()
+        >>> pro = n2d2.provider.DataProvider(db, size=[224,224,3], batch_size=10)
+        >>> model = n2d2.models.ResNet.load_from_ONNX(pro, resnet_type='50', batch_size=10, download=True)
         """
         if dims is None:
             dims = [224, 224, 3]
         allowed_types = ['18', '34', '50', '101', '152']
         if not resnet_type in allowed_types:
-            raise ValueError("ResNet type must be one of these: '18', '34', '50', '101', '152'!")
+            raise ValueError(f"ResNet type must be one of [{', '.join(allowed_types)}]!")
         if version == 'pre_act':
             v = "v1"
         elif version == 'post_act':
@@ -274,6 +281,13 @@ class ResNet18(n2d2.cells.cell.Sequence):
         :type path:str, optional
         :param download: Wether or not the model architecture should be downloaded. Default=`False`.
         :type download: bool, optional
+        
+        example
+        -------
+
+        >>> db = n2d2.database.Database()
+        >>> pro = n2d2.provider.DataProvider(db, size=[224,224,3], batch_size=10)
+        >>> model = n2d2.models.ResNet18.load_from_ONNX(pro, batch_size=10, download=True)
         """
         model = ResNet.load_from_ONNX(inputs=inputs, resnet_type='18', version=version, dims=dims, 
                             batch_size=batch_size, path=path, download=download)
@@ -313,6 +327,13 @@ class ResNet34(Sequence):
         :type path:str, optional
         :param download: Wether or not the model architecture should be downloaded. Default=`False`.
         :type download: bool, optional
+        
+        example
+        -------
+
+        >>> db = n2d2.database.Database()
+        >>> pro = n2d2.provider.DataProvider(db, size=[224,224,3], batch_size=10)
+        >>> model = n2d2.models.ResNet34.load_from_ONNX(pro, batch_size=10, download=True)
         """
         model = ResNet.load_from_ONNX(inputs=inputs, resnet_type='34', version=version, dims=dims, 
                             batch_size=batch_size, path=path, download=download)
@@ -352,6 +373,13 @@ class ResNet50(Sequence):
         :type path:str, optional
         :param download: Wether or not the model architecture should be downloaded. Default=`False`.
         :type download: bool, optional
+        
+        example
+        -------
+
+        >>> db = n2d2.database.Database()
+        >>> pro = n2d2.provider.DataProvider(db, size=[224,224,3], batch_size=10)
+        >>> model = n2d2.models.ResNet50.load_from_ONNX(pro, batch_size=10, download=True)
         """   
         model = ResNet.load_from_ONNX(inputs=inputs, resnet_type='50', version=version, 
                         dims=dims, batch_size=batch_size, path=path, download=download)
@@ -391,6 +419,13 @@ class ResNet101(Sequence):
         :type path:str, optional
         :param download: Wether or not the model architecture should be downloaded. Default=`False`.
         :type download: bool, optional
+        
+        example
+        -------
+
+        >>> db = n2d2.database.Database()
+        >>> pro = n2d2.provider.DataProvider(db, size=[224,224,3], batch_size=10)
+        >>> model = n2d2.models.ResNet101.load_from_ONNX(pro, batch_size=10, download=True)
         """
         model = ResNet.load_from_ONNX(inputs=inputs, resnet_type='101', version=version, dims=dims, 
                             batch_size=batch_size, path=path, download=download)
@@ -430,6 +465,13 @@ class ResNet152(Sequence):
         :type path:str, optional
         :param download: Wether or not the model architecture should be downloaded. Default=`False`.
         :type download: bool, optional
+        
+        example
+        -------
+
+        >>> db = n2d2.database.Database()
+        >>> pro = n2d2.provider.DataProvider(db, size=[224,224,3], batch_size=10)
+        >>> model = n2d2.models.ResNet152.load_from_ONNX(pro, batch_size=10, download=True)
         """
         model = ResNet.load_from_ONNX(inputs=inputs, resnet_type='152', version=version, dims=dims, 
                             batch_size=batch_size, path=path, download=download)

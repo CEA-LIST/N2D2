@@ -22,10 +22,13 @@
 
 from typing import Optional
 
+import n2d2.deepnet
+import n2d2.global_variables
 from n2d2.utils import ConfigSection
+from n2d2.provider import Provider
 from n2d2.cells import Conv, Fc, Pool2d, BatchNorm2d, Dropout
 from n2d2.activation import Rectifier
-from n2d2.cells.cell import Sequence
+from n2d2.cells.cell import Sequence, DeepNetCell
 from n2d2.filler import He
 
 def conv3x3_def() -> ConfigSection:
@@ -142,6 +145,57 @@ class VGG(Sequence):
             self.head
         ], name=self.name)
 
+    @classmethod
+    def load_from_ONNX(cls, inputs:Provider, vgg_type:str, batchnorm:bool =False, dims:Optional[list] =None,
+                        batch_size:int =1, path:Optional[str] =None, download:bool =False) -> DeepNetCell:
+        """Load a VGG model with given features from an ONNX file.
+
+        :param inputs: Data provider for the model
+        :type inputs: `n2d2.provider.DataProvider`
+        :param resnet_type: Number of layers in the network, can be 11, 13, 16 or 19.
+        :type resnet_type: str
+        :param batchnorm: Whether or not a batch-normalization cell should be added after each convolution. Default `False`.
+        :type batchnorm: bool, optional
+        :param dims: Dimension of input images. Default=`[224, 224, 3]`
+        :type dims: list, optional
+        :param batch_size: Batch size for the model. Dafault=`1`.
+        :type batch_size: int, optional
+        :param path: Path to the model. Default=`None`.
+        :type path:str, optional
+        :param download: Whether or not the model architecture should be downloaded. Default=`False`.
+        :type download: bool, optional
+
+        example
+        -------
+
+        >>> db = n2d2.database.Database()
+        >>> pro = n2d2.provider.DataProvider(db, size=[224,224,3], batch_size=10)
+        >>> model = n2d2.models.VGG.load_from_ONNX(pro, vgg_type='16', batch_size=10, download=True)
+        """
+        if dims is None:
+            dims = [224, 224, 3]
+        allowed_types = ['16', '19']
+        if not vgg_type in allowed_types:
+            raise ValueError(f"VGG type must be one of allowed sizes: {', '.join(allowed_types)}!")
+        b = '-bn' if batchnorm else ''
+        vgg_name = "vgg" + vgg_type + b
+
+        print("Loading VGG" + vgg_type + " from ONNX with dims " 
+                + str(dims) + " and batch size " + str(batch_size))
+        if path is None and not download:
+            raise RuntimeError("No path specified")
+        elif  path is not None and download:
+            raise RuntimeError("Specified at same time path and download=True")
+        elif path is None and download:
+            print("https://s3.amazonaws.com/onnx-model-zoo/vgg/" + vgg_name + "/"+ vgg_name + ".onnx")
+            n2d2.utils.download_model(
+                "https://s3.amazonaws.com/onnx-model-zoo/vgg/" + vgg_name + "/"+ vgg_name + ".onnx",
+                n2d2.global_variables.model_cache + "/ONNX/",
+                vgg_name)
+            path = n2d2.global_variables.model_cache + "/ONNX/"+vgg_name+"/"+vgg_name+".onnx"
+        model = n2d2.cells.cell.DeepNetCell.load_from_ONNX(inputs, path)
+        return model
+
 class VGG11(VGG):
     def __init__(self, batchnorm:bool =False, name:Optional[str] =None):
         """VGG network with 11 cells, based on Karen Simonyan and 
@@ -161,6 +215,36 @@ class VGG11(VGG):
         >>> model(A)
         """
         super().__init__(size=11, batchnorm=batchnorm, name=name)
+    
+    @classmethod
+    def load_from_ONNX(cls, inputs:Provider, batchnorm:bool =False, dims:Optional[list] =None,
+                        batch_size:int =1, path:Optional[str] =None, download:bool =False) -> DeepNetCell:
+        """Load a VGG11 model with given features from an ONNX file.
+
+        :param inputs: Data provider for the model
+        :type inputs: `n2d2.provider.DataProvider`
+        :param resnet_type: Number of layers in the network, can be 11, 13, 16 or 19.
+        :type resnet_type: str
+        :param batchnorm: Whether or not a batch-normalization cell should be added after each convolution. Default `False`.
+        :type batchnorm: bool, optional
+        :param dims: Dimension of input images. Default=`[224, 224, 3]`
+        :type dims: list, optional
+        :param batch_size: Batch size for the model. Dafault=`1`.
+        :type batch_size: int, optional
+        :param path: Path to the model. Default=`None`.
+        :type path:str, optional
+        :param download: Whether or not the model architecture should be downloaded. Default=`False`.
+        :type download: bool, optional
+        
+        example
+        -------
+
+        >>> db = n2d2.database.Database()
+        >>> pro = n2d2.provider.DataProvider(db, size=[224,224,3], batch_size=10)
+        >>> model = n2d2.models.VGG11.load_from_ONNX(pro, batch_size=10, download=True)
+        """
+        return VGG.load_from_ONNX(inputs=inputs, vgg_type='11', batchnorm=batchnorm, dims=dims,
+                        batch_size=batch_size, path=path, download=download)
 
 class VGG13(VGG):
     def __init__(self, batchnorm:bool =False, name:Optional[str] =None):
@@ -182,6 +266,34 @@ class VGG13(VGG):
         """
         super().__init__(size=13, batchnorm=batchnorm, name=name)
 
+    @classmethod
+    def load_from_ONNX(cls, inputs:Provider, batchnorm:bool =False, dims:Optional[list] =None,
+                        batch_size:int =1, path:Optional[str] =None, download:bool =False) -> DeepNetCell:
+        """Load a VGG13 model with given features from an ONNX file.
+
+        :param inputs: Data provider for the model
+        :type inputs: `n2d2.provider.DataProvider`
+        :param batchnorm: Whether or not a batch-normalization cell should be added after each convolution. Default `False`.
+        :type batchnorm: bool, optional
+        :param dims: Dimension of input images. Default=`[224, 224, 3]`
+        :type dims: list, optional
+        :param batch_size: Batch size for the model. Dafault=`1`.
+        :type batch_size: int, optional
+        :param path: Path to the model. Default=`None`.
+        :type path:str, optional
+        :param download: Whether or not the model architecture should be downloaded. Default=`False`.
+        :type download: bool, optional
+        
+        example
+        -------
+
+        >>> db = n2d2.database.Database()
+        >>> pro = n2d2.provider.DataProvider(db, size=[224,224,3], batch_size=10)
+        >>> model = n2d2.models.VGG13.load_from_ONNX(pro, batch_size=10, download=True)
+        """
+        return VGG.load_from_ONNX(inputs=inputs, vgg_type='13', batchnorm=batchnorm, dims=dims,
+                        batch_size=batch_size, path=path, download=download)
+
 class VGG16(VGG):
     def __init__(self, batchnorm:bool =False, name:Optional[str] =None):
         """VGG network with 16 cells, based on Karen Simonyan and 
@@ -201,6 +313,34 @@ class VGG16(VGG):
         >>> model(A)
         """
         super().__init__(size=16, batchnorm=batchnorm, name=name)
+    
+    @classmethod
+    def load_from_ONNX(cls, inputs:Provider, batchnorm:bool =False, dims:Optional[list] =None,
+                        batch_size:int =1, path:Optional[str] =None, download:bool =False) -> DeepNetCell:
+        """Load a VGG16 model with given features from an ONNX file.
+
+        :param inputs: Data provider for the model
+        :type inputs: `n2d2.provider.DataProvider`
+        :param batchnorm: Whether or not a batch-normalization cell should be added after each convolution. Default `False`.
+        :type batchnorm: bool, optional
+        :param dims: Dimension of input images. Default=`[224, 224, 3]`
+        :type dims: list, optional
+        :param batch_size: Batch size for the model. Dafault=`1`.
+        :type batch_size: int, optional
+        :param path: Path to the model. Default=`None`.
+        :type path:str, optional
+        :param download: Whether or not the model architecture should be downloaded. Default=`False`.
+        :type download: bool, optional
+        
+        example
+        -------
+
+        >>> db = n2d2.database.Database()
+        >>> pro = n2d2.provider.DataProvider(db, size=[224,224,3], batch_size=10)
+        >>> model = n2d2.models.VGG16.load_from_ONNX(pro, batch_size=10, download=True)
+        """
+        return VGG.load_from_ONNX(inputs=inputs, vgg_type='16', batchnorm=batchnorm, dims=dims,
+                        batch_size=batch_size, path=path, download=download)
         
 class VGG19(VGG):
     def __init__(self, batchnorm:bool =False, name:Optional[str] =None):
@@ -221,3 +361,31 @@ class VGG19(VGG):
         >>> model(A)
         """
         super().__init__(size=19, batchnorm=batchnorm, name=name)
+
+    @classmethod
+    def load_from_ONNX(cls, inputs:Provider, batchnorm:bool =False, dims:Optional[list] =None,
+                        batch_size:int =1, path:Optional[str] =None, download:bool =False) -> DeepNetCell:
+        """Load a VGG19 model with given features from an ONNX file.
+
+        :param inputs: Data provider for the model
+        :type inputs: `n2d2.provider.DataProvider`
+        :param batchnorm: Whether or not a batch-normalization cell should be added after each convolution. Default `False`.
+        :type batchnorm: bool, optional
+        :param dims: Dimension of input images. Default=`[224, 224, 3]`
+        :type dims: list, optional
+        :param batch_size: Batch size for the model. Dafault=`1`.
+        :type batch_size: int, optional
+        :param path: Path to the model. Default=`None`.
+        :type path:str, optional
+        :param download: Whether or not the model architecture should be downloaded. Default=`False`.
+        :type download: bool, optional
+        
+        example
+        -------
+
+        >>> db = n2d2.database.Database()
+        >>> pro = n2d2.provider.DataProvider(db, size=[224,224,3], batch_size=10)
+        >>> model = n2d2.models.VGG19.load_from_ONNX(pro, batch_size=10, download=True)
+        """
+        return VGG.load_from_ONNX(inputs=inputs, vgg_type='19', batchnorm=batchnorm, dims=dims,
+                        batch_size=batch_size, path=path, download=download)
