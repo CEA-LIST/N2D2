@@ -101,7 +101,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
 
     bool doQuant = true;
 
-    CudaContext::setDevice(3);
+    CudaContext::setDevice(0);
     const unsigned int nbOutputs_conv1 = 1;
     const unsigned int nbOutputs_conv2 = 4;
     const unsigned int nbOutputs_conv3 = 4;
@@ -539,6 +539,10 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_CUDA_float,
         softmax1.mDiffInputs.synchronizeHToD();
         softmax1.getOutputs().synchronizeHToD();
         loss = softmax1.applyLoss();
+
+        if(iter_index==9999){
+            std::cout << "Loss: " << loss << std::endl;
+        }
 
         //backpropagate 
         softmax1.backPropagate();  
