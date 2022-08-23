@@ -477,7 +477,7 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_float,
 
         loss = softmax1.applyLoss();
 
-    if(iter_index==9999){
+        if(iter_index==9999){
             std::cout << "Loss: " << loss << std::endl;
         }
 
@@ -497,16 +497,16 @@ TEST_DATASET(ConvCell_QuantizerSAT_Frame_float,
         if(doQuant && iter_index==9999) {
             Tensor<float> alphaEstimated2 = qAct3_ptr->getAlpha();
             std::cout << "conv2 :: alphaEstimated = " << alphaEstimated2 << std::endl;
-            ASSERT_EQUALS_DELTA(alphaEstimated2(0), alphaEstimated2_pytorch, 0.001);
+            ASSERT_EQUALS_DELTA(alphaEstimated2(0), alphaEstimated2_pytorch, 0.01);
 
             Tensor<float> alphaEstimated1 = qAct2_ptr->getAlpha();
             std::cout << "conv1 :: alphaEstimated = " << alphaEstimated1 << std::endl;
-            ASSERT_EQUALS_DELTA(alphaEstimated1(0), alphaEstimated1_pytorch, 0.001);
+            ASSERT_EQUALS_DELTA(alphaEstimated1(0), alphaEstimated1_pytorch, 0.01);
 
 
             Tensor<float> alphaEstimated0 = qAct1_ptr->getAlpha();
             std::cout << "activation1_cell :: alphaEstimated = " << alphaEstimated0 << std::endl;
-            ASSERT_EQUALS_DELTA(alphaEstimated0(0), alphaEstimated0_pytorch, 0.001);
+            ASSERT_EQUALS_DELTA(alphaEstimated0(0), alphaEstimated0_pytorch, 0.01);
         }
     }
 
