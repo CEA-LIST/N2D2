@@ -22,7 +22,7 @@ import N2D2
 from abc import ABC, abstractmethod
 
 from n2d2 import ConventionConverter, check_types, Tensor
-# from n2d2.cells.cell import Trainable
+from n2d2.cells.cell import Trainable
 from n2d2.n2d2_interface import N2D2_Interface, Options
 from n2d2.error_handler import WrongValue, WrongInputType
 import n2d2.global_variables as gb
