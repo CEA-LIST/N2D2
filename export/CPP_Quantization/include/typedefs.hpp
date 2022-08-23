@@ -105,71 +105,71 @@ namespace std {
 // ----------------------------------------------------------------------------
 
 // data
-template<int BITWIDTH, typename T>
-constexpr data<BITWIDTH>& operator+=(data<BITWIDTH>& d, T rhs)
-    {d.value += decltype(data<BITWIDTH>::value)(rhs); return d;}
+// template<int BITWIDTH, typename T>
+// constexpr data<BITWIDTH> operator+=(data<BITWIDTH> d, T rhs)
+//     {return d.value += decltype(data<BITWIDTH>::value)(rhs);}
 
-template<int BITWIDTH, typename T>
-constexpr data<BITWIDTH> operator+(data<BITWIDTH> d, T rhs)
-    {d += rhs; return d;}
+// template<int BITWIDTH, typename T>
+// constexpr data<BITWIDTH> operator+(data<BITWIDTH> d, T rhs)
+//     {return d += rhs;}
 
-template<int BITWIDTH, typename T>
-constexpr data<BITWIDTH>& operator-=(data<BITWIDTH>& d, T rhs)
-    {d.value -= decltype(data<BITWIDTH>::value)(rhs); return d;}
+// template<int BITWIDTH, typename T>
+// constexpr data<BITWIDTH>& operator-=(data<BITWIDTH> d, T rhs)
+//     {return d.value -= decltype(data<BITWIDTH>::value)(rhs);}
 
-template<int BITWIDTH, typename T>
-constexpr data<BITWIDTH> operator-(data<BITWIDTH> d, T rhs)
-    {d -= rhs; return d;}
+// template<int BITWIDTH, typename T>
+// constexpr data<BITWIDTH> operator-(data<BITWIDTH> d, T rhs)
+//     {return d -= rhs;}
 
-template<int BITWIDTH, typename T>
-constexpr data<BITWIDTH>& operator*=(data<BITWIDTH>& d, T rhs)
-    {d.value *= decltype(data<BITWIDTH>::value)(rhs); return d;}
+// template<int BITWIDTH, typename T>
+// constexpr data<BITWIDTH> operator*=(data<BITWIDTH> d, T rhs)
+//     {return d.value *= decltype(data<BITWIDTH>::value)(rhs);}
 
-template<int BITWIDTH, typename T>
-constexpr data<BITWIDTH> operator*(data<BITWIDTH> d, T rhs)
-    {d *= rhs; return d;}
+// template<int BITWIDTH, typename T>
+// constexpr data<BITWIDTH> operator*(data<BITWIDTH> d, T rhs)
+//     {return d *= rhs;}
 
-template<int BITWIDTH, typename T>
-constexpr data<BITWIDTH>& operator/=(data<BITWIDTH>& d, T rhs)
-    {d.value /= decltype(data<BITWIDTH>::value)(rhs); return d;}
+// template<int BITWIDTH, typename T>
+// constexpr data<BITWIDTH> operator/=(data<BITWIDTH> d, T rhs)
+//     {return d.value /= decltype(data<BITWIDTH>::value)(rhs);}
 
-template<int BITWIDTH, typename T>
-constexpr data<BITWIDTH> operator/(data<BITWIDTH> d, T rhs)
-    {d /= rhs; return d;}
+// template<int BITWIDTH, typename T>
+// constexpr data<BITWIDTH> operator/(data<BITWIDTH> d, T rhs)
+//     {return d /= rhs;}
 
 
 // udata
-template<int BITWIDTH, typename T>
-constexpr udata<BITWIDTH>& operator+=(udata<BITWIDTH>& d, T rhs)
-    {d.value += decltype(udata<BITWIDTH>::value)(rhs); return d;}
+// template<int BITWIDTH, typename T>
+// constexpr udata<BITWIDTH> operator+=(udata<BITWIDTH> d, T rhs)
+//     {return d.value += decltype(udata<BITWIDTH>::value)(rhs);}
 
-template<int BITWIDTH, typename T>
-constexpr udata<BITWIDTH> operator+(udata<BITWIDTH> d, T rhs)
-    {d += rhs; return d;}
+// template<int BITWIDTH, typename T>
+// constexpr udata<BITWIDTH> operator+(udata<BITWIDTH> d, T rhs)
+//     {return d += rhs;}
 
-template<int BITWIDTH, typename T>
-constexpr udata<BITWIDTH>& operator-=(udata<BITWIDTH>& d, T rhs)
-    {d.value -= decltype(udata<BITWIDTH>::value)(rhs); return d;}
+// template<int BITWIDTH, typename T>
+// constexpr udata<BITWIDTH> operator-=(udata<BITWIDTH> d, T rhs)
+//     {return d.value -= decltype(udata<BITWIDTH>::value)(rhs);}
 
-template<int BITWIDTH, typename T>
-constexpr udata<BITWIDTH> operator-(udata<BITWIDTH> d, T rhs)
-    {d -= rhs; return d;}
+// template<int BITWIDTH, typename T>
+// constexpr udata<BITWIDTH> operator-(udata<BITWIDTH> d, T rhs)
+//     {return d -= rhs;}
 
-template<int BITWIDTH, typename T>
-constexpr udata<BITWIDTH>& operator*=(udata<BITWIDTH>& d, T rhs)
-    {d.value *= decltype(udata<BITWIDTH>::value)(rhs); return d;}
+// template<int BITWIDTH, typename T>
+// constexpr udata<BITWIDTH> operator*=(udata<BITWIDTH> d, T rhs)
+//     {return d.value *= decltype(udata<BITWIDTH>::value)(rhs);}
 
-template<int BITWIDTH, typename T>
-constexpr udata<BITWIDTH> operator*(udata<BITWIDTH> d, T rhs)
-    {d *= rhs; return d;}
+// template<int BITWIDTH, typename T>
+// constexpr udata<BITWIDTH> operator*(udata<BITWIDTH> d, T rhs)
+//     {return d *= rhs;}
 
-template<int BITWIDTH, typename T>
-constexpr udata<BITWIDTH>& operator/=(udata<BITWIDTH>& d, T rhs)
-    {d.value /= decltype(udata<BITWIDTH>::value)(rhs); return d;}
+// template<int BITWIDTH, typename T>
+// constexpr udata<BITWIDTH> operator/=(udata<BITWIDTH> d, T rhs)
+//     {return d.value /= decltype(udata<BITWIDTH>::value)(rhs);}
 
-template<int BITWIDTH, typename T>
-constexpr udata<BITWIDTH> operator/(udata<BITWIDTH> d, T rhs)
-    {d /= rhs; return d;}
+// template<int BITWIDTH, typename T>
+// constexpr udata<BITWIDTH> operator/(udata<BITWIDTH> d, T rhs)
+//     {return d /= rhs;}
 
 
 // ----------------------------------------------------------------------------
