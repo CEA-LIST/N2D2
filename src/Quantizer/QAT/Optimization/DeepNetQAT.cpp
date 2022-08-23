@@ -1,12 +1,25 @@
-/*
-    (C) Copyright 2021 CEA LIST. All Rights Reserved.
-    Contributor(s): David BRIAND (david.briand@cea.fr)
-                    Inna KUCHER (inna.kucher@cea.fr)
-
-    This file is not part of the open source version of N2D2 and is NOT under
-    the CeCILL-C license. This code is the property of the CEA. It can not be
-    copied or disseminated without its authorization.
-*/
+/**
+ * (C) Copyright 2021 CEA LIST. All Rights Reserved.
+ *  Contributor(s): David BRIAND (david.briand@cea.fr)
+ *                  Inna KUCHER (inna.kucher@cea.fr)
+ *                  Vincent TEMPLIER (vincent.templier@cea.fr)
+ * 
+ * This software is governed by the CeCILL-C license under French law and
+ * abiding by the rules of distribution of free software.  You can  use,
+ * modify and/ or redistribute the software under the terms of the CeCILL-C
+ * license as circulated by CEA, CNRS and INRIA at the following URL
+ * "http://www.cecill.info".
+ * 
+ * As a counterpart to the access to the source code and  rights to copy,
+ * modify and redistribute granted by the license, users are provided only
+ * with a limited warranty  and the software's author,  the holder of the
+ * economic rights,  and the successive licensors  have only  limited
+ * liability.
+ * 
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL-C license and that you accept its terms.
+ * 
+ */
 
 #include <cmath>
 #include <cstdint>
@@ -41,6 +54,7 @@
 #include "Cell/ScalingCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
 #include "Export/DeepNetExport.hpp"
+#include "Export/CellExport.hpp"
 #include "Transformation/RangeAffineTransformation.hpp"
 #include "StimuliData.hpp"
 #include "Quantizer/QAT/Activation/QuantizerActivation.hpp"
@@ -68,6 +82,10 @@ void N2D2::DeepNetQAT::fuseQATGraph(StimuliProvider& sp,
                                     WeightsApprox wMode,
                                     WeightsApprox bMode,
                                     WeightsApprox cMode) {
+
+    // FIXME : Temporary fix, we should try to remove the use of mPrecision variable !
+    // This variable is necessary for DeepNetExport::isCellOutputUnsigned and DeepNetExport::isCellInputUnsigned method.
+    CellExport::mPrecision = static_cast<CellExport::Precision>(8);
 
     std::cout << "[DeepNetQAT] Fuse the QAT Graph for hardware compatibility..." << std::endl;
     
@@ -715,13 +733,13 @@ bool N2D2::DeepNetQAT::QuantizeFC(  std::pair <size_t, size_t>& rangeOpFc,
                     #ifdef CUDA
                     const auto quantizerCellSAT
                             = std::dynamic_pointer_cast<SATQuantizerCell_Frame_CUDA<float>>(quantizerCell);
-                    SAT_scaling = quantizerCellSAT->getSAT_scaling();
+                    SAT_scaling = quantizerCellSAT->getSAT_scaling(0);
                     #endif
                 }
                 else{
                     const auto quantizerCellSAT
                             = std::dynamic_pointer_cast<SATQuantizerCell_Frame<float>>(quantizerCell);
-                    SAT_scaling = quantizerCellSAT->getSAT_scaling();
+                    SAT_scaling = quantizerCellSAT->getSAT_scaling(0);
                 }
             }
         }
@@ -1052,10 +1070,10 @@ bool N2D2::DeepNetQAT::QuantizeAndfuseBatchNormWithConv(std::pair <size_t, size_
     std::vector<Float_T> scalingPerOutput 
         = std::vector<Float_T>(convCell->getNbOutputs(), 0.0f);
 
-    const size_t inputX = convCell->getChannelsWidth();
-    const size_t inputY = convCell->getChannelsHeight();
-    const size_t strideX = convCell->getStrideX();
-    const size_t strideY = convCell->getStrideY();
+    // const size_t inputX = convCell->getChannelsWidth();
+    // const size_t inputY = convCell->getChannelsHeight();
+    // const size_t strideX = convCell->getStrideX();
+    // const size_t strideY = convCell->getStrideY();
     // double nbMultPerChannel = 0;
     std::pair<double, double> mScalingMinMax = std::make_pair(100.0, 0.0);
     std::pair<double, double> mBiasMinMax = std::make_pair(10000.0, -10000.0);

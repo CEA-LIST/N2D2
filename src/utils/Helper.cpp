@@ -762,7 +762,6 @@ namespace N2D2_HELPER{
         }
         if(opt.qatSAT) {
             deepNet->initialize();
-    #ifdef N2D2_IP
             if (opt.logKernels)
                 deepNet->logFreeParameters("kernels_fake_quantized");
 
@@ -774,7 +773,6 @@ namespace N2D2_HELPER{
                                             DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision,
                                             opt.exportNbStimuliMax);
             dnQAT.exportOutputsLayers(*sp, exportDir + "/stimuli", Database::Test, opt.exportNbStimuliMax);
-    #endif
         }
         return afterCalibration;
     }
