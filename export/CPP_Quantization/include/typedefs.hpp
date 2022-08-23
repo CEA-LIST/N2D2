@@ -106,7 +106,7 @@ namespace std {
 
 // data
 // template<int BITWIDTH, typename T>
-// constexpr data<BITWIDTH> operator+=(data<BITWIDTH> d, T rhs)
+// constexpr data<BITWIDTH>& operator+=(data<BITWIDTH>& d, T rhs)
 //     {return d.value += decltype(data<BITWIDTH>::value)(rhs);}
 
 // template<int BITWIDTH, typename T>
@@ -114,7 +114,7 @@ namespace std {
 //     {return d += rhs;}
 
 // template<int BITWIDTH, typename T>
-// constexpr data<BITWIDTH>& operator-=(data<BITWIDTH> d, T rhs)
+// constexpr data<BITWIDTH>& operator-=(data<BITWIDTH>& d, T rhs)
 //     {return d.value -= decltype(data<BITWIDTH>::value)(rhs);}
 
 // template<int BITWIDTH, typename T>
@@ -122,7 +122,7 @@ namespace std {
 //     {return d -= rhs;}
 
 // template<int BITWIDTH, typename T>
-// constexpr data<BITWIDTH> operator*=(data<BITWIDTH> d, T rhs)
+// constexpr data<BITWIDTH>& operator*=(data<BITWIDTH>& d, T rhs)
 //     {return d.value *= decltype(data<BITWIDTH>::value)(rhs);}
 
 // template<int BITWIDTH, typename T>
@@ -130,7 +130,7 @@ namespace std {
 //     {return d *= rhs;}
 
 // template<int BITWIDTH, typename T>
-// constexpr data<BITWIDTH> operator/=(data<BITWIDTH> d, T rhs)
+// constexpr data<BITWIDTH>& operator/=(data<BITWIDTH>& d, T rhs)
 //     {return d.value /= decltype(data<BITWIDTH>::value)(rhs);}
 
 // template<int BITWIDTH, typename T>
@@ -140,7 +140,7 @@ namespace std {
 
 // udata
 // template<int BITWIDTH, typename T>
-// constexpr udata<BITWIDTH> operator+=(udata<BITWIDTH> d, T rhs)
+// constexpr udata<BITWIDTH>& operator+=(udata<BITWIDTH>& d, T rhs)
 //     {return d.value += decltype(udata<BITWIDTH>::value)(rhs);}
 
 // template<int BITWIDTH, typename T>
@@ -148,7 +148,7 @@ namespace std {
 //     {return d += rhs;}
 
 // template<int BITWIDTH, typename T>
-// constexpr udata<BITWIDTH> operator-=(udata<BITWIDTH> d, T rhs)
+// constexpr udata<BITWIDTH>& operator-=(udata<BITWIDTH>& d, T rhs)
 //     {return d.value -= decltype(udata<BITWIDTH>::value)(rhs);}
 
 // template<int BITWIDTH, typename T>
@@ -156,7 +156,7 @@ namespace std {
 //     {return d -= rhs;}
 
 // template<int BITWIDTH, typename T>
-// constexpr udata<BITWIDTH> operator*=(udata<BITWIDTH> d, T rhs)
+// constexpr udata<BITWIDTH>& operator*=(udata<BITWIDTH>& d, T rhs)
 //     {return d.value *= decltype(udata<BITWIDTH>::value)(rhs);}
 
 // template<int BITWIDTH, typename T>
@@ -164,7 +164,7 @@ namespace std {
 //     {return d *= rhs;}
 
 // template<int BITWIDTH, typename T>
-// constexpr udata<BITWIDTH> operator/=(udata<BITWIDTH> d, T rhs)
+// constexpr udata<BITWIDTH>& operator/=(udata<BITWIDTH>& d, T rhs)
 //     {return d.value /= decltype(udata<BITWIDTH>::value)(rhs);}
 
 // template<int BITWIDTH, typename T>
