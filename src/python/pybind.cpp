@@ -552,17 +552,14 @@ void init_N2D2(py::module& m) {
     init_QuantizerActivation(m);
     init_QuantizerActivation_Frame(m);
 
-    // TODO : Uncoment when SAT in OS
-    // init_SATQuantizerCell(m);
-    // init_SATQuantizerCell_Frame(m);
+    init_SATQuantizerCell(m);
+    init_SATQuantizerCell_Frame(m);
     init_LSQQuantizerCell(m);
 
-    // TODO : Uncoment when SAT in OS
-    // init_SATQuantizerActivation(m);
-    // init_SATQuantizerActivation_Frame(m);
+    init_SATQuantizerActivation(m);
+    init_SATQuantizerActivation_Frame(m);
     init_LSQQuantizerActivation(m);
-    // TODO : Uncoment when DeepNetQAT in OS
-    // init_DeepNetQAT(m);
+    init_DeepNetQAT(m);
     
     init_DeepNetGenerator(m);
     init_helper(m);
