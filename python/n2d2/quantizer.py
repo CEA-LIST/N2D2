@@ -22,7 +22,6 @@ import N2D2
 from abc import ABC, abstractmethod
 
 from n2d2 import ConventionConverter, check_types, Tensor
-from n2d2.cells.cell import Trainable
 from n2d2.n2d2_interface import N2D2_Interface, Options
 from n2d2.error_handler import WrongValue, WrongInputType
 import n2d2.global_variables as gb
@@ -273,7 +272,7 @@ class SATCell(CellQuantizer):
         self.N2D2().setQuantization(status)
 
 
-class LSQCell(CellQuantizer): # TODO : trainable ?
+class LSQCell(CellQuantizer):
     """
     Learned Step size Quantization (LSQ) weight quantizer.
     """
@@ -328,7 +327,7 @@ class LSQCell(CellQuantizer): # TODO : trainable ?
             super().__setattr__(key, value)
 
 
-class SATAct(ActivationQuantizer, Trainable):
+class SATAct(ActivationQuantizer):
     """
     Scale Adjust Training (SAT) activation quantizer.
     """
@@ -396,22 +395,6 @@ class SATAct(ActivationQuantizer, Trainable):
     def get_solver(self):
         return self._config_parameters['solver']
 
-    def set_filler(self, filler, refill=False):
-        # This method override the virtual one in Trainable
-        raise RuntimeError("Quantizer does not support Filler")
-
-    def get_filler(self):
-        # This method override the virtual one in Trainable
-        raise RuntimeError("Quantizer does not support Filler")
-
-    def has_bias(self):
-        # This method override the virtual one in Trainable
-        raise RuntimeError("Quantizer does not have a 'bias'")
-
-    def has_quantizer(self):
-        # This method override the virtual one in Trainable
-        raise RuntimeError("Quantizer does not have a 'quantizer'")
-
     """
     Access the full precision activations of the activation function.
     Note: This may be empty for some Quantizers if they are run exclusively in inference mode
@@ -420,7 +403,7 @@ class SATAct(ActivationQuantizer, Trainable):
         return n2d2.Tensor.from_N2D2(self.N2D2().getFullPrecisionActivations())
 
 
-class LSQAct(ActivationQuantizer): # TODO : trainable ?
+class LSQAct(ActivationQuantizer):
     """
     Learned Step size Quantization (LSQ) activation quantizer.
     """
