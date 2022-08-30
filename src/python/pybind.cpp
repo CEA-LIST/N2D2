@@ -608,9 +608,8 @@ void init_N2D2(py::module& m) {
     init_ActivationCell_Frame_CUDA(m);
     init_QuantizerCell_Frame_CUDA(m);
     init_QuantizerActivation_Frame_CUDA(m);
-    // TODO : Uncoment when SAT in OS
-    // init_SATQuantizerActivation_Frame_CUDA(m);
-    // init_SATQuantizerCell_Frame_CUDA(m);
+    init_SATQuantizerActivation_Frame_CUDA(m);
+    init_SATQuantizerCell_Frame_CUDA(m);
     init_LSQQuantizerActivation_Frame_CUDA(m);
     init_LSQQuantizerCell_Frame_CUDA(m);
     #else
