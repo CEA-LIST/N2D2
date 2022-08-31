@@ -1692,9 +1692,9 @@ void N2D2::StimuliProvider::setBatch(Database::StimuliSet set,
         // The following loop is to complete that batch
         unsigned int ind = 0;
         while (batchs.size() < batchSize * nbBatchs) {
-            unsigned int index = randShuffle 
-                                ? getRandomID(set)
-                                : mDatabase.getStimulusID(set, ind++);
+            unsigned int index = randShuffle
+                                 ? getRandomIndex(set)
+                                 : ind++;
             batchs.push_back(index);
         }
     }

@@ -39,7 +39,7 @@
 #endif
 #define N2D2_SECTION_ATTRIBUTE(sec) __attribute__((section(sec)))
 
-namespace N2D2 {
+namespace N2D2_Export {
 
 class Network {
 public:
