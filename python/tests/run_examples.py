@@ -28,7 +28,12 @@ DATA_PATH = getenv("N2D2_DATA")
 if DATA_PATH is None:
     DATA_PATH="/local/DATABASE/"
 
-example_path = join_path(dirname(abspath(__file__)), "..","examples")
+DEVICE=0
+EPOCHS=1
+EXAMPLE_PATH = join_path(dirname(abspath(__file__)), "..","examples")
+
+def path_to(script_name:str)->str:
+    return join_path(EXAMPLE_PATH, script_name)
 
 # Define the python binary to use
 # We use the environment variable set by git lab (see: https://docs.gitlab.com/ee/ci/variables/predefined_variables.html)
@@ -40,34 +45,32 @@ else:
     python_path = "python"
 
 commands_to_call = [
-    [python_path, join_path(example_path, "data_augmentation.py")],
-    [python_path, join_path(example_path, "graph_example.py")],
-    [python_path, join_path(example_path, "keras_example.py"),
+    [python_path, path_to("data_augmentation.py"), f"--data_path={DATA_PATH}/mnist"],
+    [python_path, path_to("graph_example.py")],
+    [python_path, path_to("keras_example.py"),
             f"--data_path={DATA_PATH}/mnist",
-            "--dev=0"],
-    [python_path, join_path(example_path, "torch_example.py"),
-            "--dev=0",
-            "--epochs=2",],
-    [python_path, join_path(example_path, "lenet_onnx.py"),
-            "-d=4",
+            f"--dev={DEVICE}"],
+    [python_path, path_to("torch_example.py"),
+           f"--dev={DEVICE}",
+            f"--epochs={EPOCHS}",],
+    [python_path, path_to("lenet_onnx.py"),
+            f"--device={DEVICE}",
             f"--data_path={DATA_PATH}/mnist",
-            f"--onnx={join_path(example_path, 'LeNet.onnx')}"],
-    [python_path, join_path(example_path, "mnist_minimal.py"),
+            f"--onnx={path_to('LeNet.onnx')}"],
+    [python_path, path_to("mnist_minimal.py"),
             f"--data_path={DATA_PATH}/mnist"],
-    [python_path, join_path(example_path, "performance_analysis.py"),
+    [python_path, path_to("performance_analysis.py"),
             f"--data_path={DATA_PATH}/GTSRB",
-            "--epochs=1"],
-    [python_path, join_path(example_path, "performance_analysis.py"),
-            f"--data_path={DATA_PATH}/GTSRB"],
-    [python_path, join_path(example_path, "train_mobilenetv1.py"),
+            f"--epochs={EPOCHS}"],
+    [python_path, path_to("train_mobilenetv1.py"),
             f"--data_path={DATA_PATH}/ILSVRC2012",
             f"--label_path={DATA_PATH}/ILSVRC2012/synsets.txt",
-            "--dev=0",
-            "--epochs=2"],
-    [python_path, join_path(example_path, "transfer_learning.py"),
+            f"--dev={DEVICE}",
+            f"--epochs={EPOCHS}"],
+    [python_path, path_to("transfer_learning.py"),
             f"--data_path={DATA_PATH}/cifar-100-binary",
-            "--dev=0",
-            "--epochs=2"],
+            f"--dev={DEVICE}",
+            f"--epochs={EPOCHS}"],
 ]
 
 nb_faillure = 0

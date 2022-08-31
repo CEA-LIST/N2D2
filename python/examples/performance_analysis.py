@@ -23,7 +23,7 @@
 This script reproduce "models/GTSRB29_32c4s1_32mp2_48c5s1_48mp3_200_43.ini"
 """
 import n2d2
-from n2d2.cells.nn import Conv, Pool, Fc, Dropout, Softmax
+from n2d2.cells.nn import Conv, Pool2d, Fc, Dropout, Softmax
 from n2d2.activation import Linear, Rectifier
 from n2d2.filler import He, Xavier
 from n2d2.solver import SGD
@@ -114,9 +114,9 @@ conv2_mapping.set_values([
 
 model = n2d2.cells.Sequence([
     Conv(1, 32, [4, 4], **conv_config),
-    Pool([2, 2], stride_dims=[2, 2], pooling='Max'),
+    Pool2d([2, 2], stride_dims=[2, 2], pooling='Max'),
     Conv(32, 48, [5, 5], mapping=conv2_mapping, **conv_config),
-    Pool([3, 3], stride_dims=[3, 3], pooling='Max'),
+    Pool2d([3, 3], stride_dims=[3, 3], pooling='Max'),
     Fc(48*3*3, 200, activation=Rectifier(), **fc_config),
     Dropout(),
     Fc(200, 43, activation=Linear(), **fc_config),

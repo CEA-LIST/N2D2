@@ -106,6 +106,19 @@ class test_tensor_conversion(unittest.TestCase):
         for i in long_n2d2_tensor: 
             self.assertEqual(i, 1)
 
+    def test_contiguous_tensor(self):
+        """After the permute and the unsqueeze the b tensor is a view of a.
+        However .cuda() set _is_a_view to false.
+        This can cause a bug in N2D2 where c the converted tensor use the memory layout of a.
+        If this is the case when iterating over flatten tensor we have b!=c=a.
+        This test verify that this weird case is well handled.
+        """
+        a = torch.rand(2,2,3)
+        b = a.permute(2,0,1).unsqueeze(0).cuda()
+        c = pytorch.pytorch_interface._to_n2d2(b)
+        for i, j in zip(torch.flatten(b), c):
+            self.assertFalse(abs(i.item() - j) > 0.00001)
+
 weight_value = 0.1
 batch_size = 2
 device = torch.device('cpu')

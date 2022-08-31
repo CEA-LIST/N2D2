@@ -36,11 +36,11 @@ class ConfigSection(UserDict):
     pass
 
 
-def download_model(url, install_dir, dir_name):
+def download(url, install_dir, dir_name):
 
     def progress(chunks_so_far, chunk_size, total_size):
         size_so_far = min(total_size, chunks_so_far * chunk_size)
-        print("Downloaded %d of %d bytes (%3.1f%%)\r" % (size_so_far, total_size, 100.0 * float(size_so_far) / total_size), end="r")
+        print(f"Downloaded {size_so_far} of {total_size} bytes ({round(100.0 * float(size_so_far) / total_size,2)}%)", end="\r")
         if size_so_far == total_size:
             sys.stdout.write("\n")
         sys.stdout.flush()

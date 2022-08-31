@@ -285,9 +285,10 @@ protected:
         channel -= kChannelOffset;
 
         if (mNbGroups[k] > 1) {
+            // assumption that all groups have the same size
             const size_t outputGroupSize = getNbOutputs() / mNbGroups[k];
             const size_t channelGroupSize = getNbChannels() / mNbGroups[k];
-
+            // assumption that mapping is in the right order
             const size_t outputGroup = output / outputGroupSize;
             const size_t channelGroup = channel / channelGroupSize;
 

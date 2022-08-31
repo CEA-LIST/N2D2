@@ -1,11 +1,18 @@
 import n2d2
 import matplotlib.pyplot as plt
+import argparse
+
+
+# ARGUMENTS PARSING
+parser = argparse.ArgumentParser()
+parser.add_argument("--data_path", type=str, help='Path to the MNIST Dataset')
+args = parser.parse_args()
 
 def plot_tensor(tensor, path):
     plt.imshow(tensor[0,0,:], cmap='gray', vmin=0, vmax=255)
     plt.savefig(path)
 
-database = n2d2.database.MNIST(data_path="/local/DATABASE/mnist", validation=0.1)
+database = n2d2.database.MNIST(data_path=args.data_path, validation=0.1)
 provider = n2d2.provider.DataProvider(database, [28, 28, 1], batch_size=1)
 
 database.get_partition_summary()

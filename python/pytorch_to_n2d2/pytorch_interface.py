@@ -20,6 +20,9 @@
 """
 import torch
 import n2d2
+import onnx
+from onnxsim import simplify
+from typing import Union
 
 def _switching_convention(dims):
     return [dims[3], dims[2], dims[1], dims[0]]
@@ -32,9 +35,9 @@ def _to_n2d2(torch_tensor):
     This method also convert the shape of the tensor to follow N2D2 convention.
     """
     n2d2_tensor = None
-    if torch_tensor.is_cuda:
-        if torch_tensor._is_view():
-            # If torch_tensor is a view then we need to do a copy !
+    if torch_tensor.is_cuda:        
+        if not torch_tensor.is_contiguous():
+            # If torch_tensor is not contiguous then we need to do a copy !
             numpy_tensor = torch_tensor.cpu().detach().numpy()
             n2d2_tensor = n2d2.Tensor.from_numpy(numpy_tensor)
 
@@ -43,6 +46,7 @@ def _to_n2d2(torch_tensor):
             if n2d2_tensor.nb_dims() == 4:
                 n2d2_tensor.reshape(_switching_convention(n2d2_tensor.dims()))            
         else:
+            # We avoid a copy on GPU !
             dtype = torch_tensor.dtype
 
             if dtype is torch.float32:
@@ -72,18 +76,6 @@ def _to_n2d2(torch_tensor):
             if n2d2_tensor.nb_dims() == 4:
                 n2d2_tensor.reshape([dims[0], dims[1], dims[2], dims[3]])
 
-            # /!\ Beware _is_view method can be broken
-            # --- Example :
-            # a = torch.rand(1,2,3)
-            # b = a.view(3,2,1).cuda()
-            # print(b._is_view())
-            # Output : False
-            # ---
-            # To catch this we test if the shape is the same once converted.
-            if list(torch_tensor.shape) != n2d2_tensor.shape():
-                print("Warning : Torch tensor is a view but \'_is_view()\' is False. Reconverting torch tensor !")
-                # Recursive call on the Tensor and forcing it to be a view
-                n2d2_tensor = _to_n2d2(torch_tensor.view(torch_tensor.shape))
     else:
         numpy_tensor = torch_tensor.cpu().detach().numpy()
         # This operation creates a CPU memory copy.
@@ -139,6 +131,11 @@ class Block(torch.nn.Module):
         """
         return self._block
 
+    def summary(self)->None:
+        """Print model information. 
+        """
+        self._block.summary()
+
     def forward(self, inputs):
         """
         Use a custom ``torch.autograd.Function`` that use, on forward the ``Propagation`` of n2d2.
@@ -162,12 +159,12 @@ class Block(torch.nn.Module):
                     new_shape[0] = self.batch_size
                     n2d2_tensor.resize(new_shape)
 
-
-
                 if n2d2.global_variables.cuda_available:
                     n2d2_tensor.cuda()
                     n2d2_tensor.htod()
-                if self.training: # training is  a torch.nn.Module attribute (cf. https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module)
+
+                # training is a torch.nn.Module attribute (cf. https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module)
+                if self.training: 
                     self._block.learn()
                 else:
                     self._block.test()
@@ -258,7 +255,11 @@ class Block(torch.nn.Module):
             outputs = outputs.view(self.current_batch_size, -1)
         return outputs
 
-def wrap(torch_model, input_size, opset_version=None):
+@n2d2.check_types
+def wrap(torch_model:torch.nn.Module,
+        input_size: Union[list, tuple],
+        opset_version:int=11,
+        verbose:bool=False) -> Block:
     """Function generating a ``torch.nn.Module`` which embed a :py:class:`n2d2.cells.DeepNetCell`.
     The torch_model is exported to N2D2 via ONNX.
 
@@ -266,9 +267,14 @@ def wrap(torch_model, input_size, opset_version=None):
     :type torch_model: ``torch.nn.Module``
     :param input_size: The size of the input of the network, the format required is NCHW.
     :type input_size: ``list``
+    :param opset_version: Opset version used to generate the intermediate ONNX file, default=11
+    :type opset_version: int, optional
+    :param verbose: Enable the verbose output of torch onnx export, default=False
+    :type verbose: bool, optional
     :return: A custom ``torch.nn.Module`` which embed a :py:class:`n2d2.cells.DeepNetCell`.
     :rtype: :py:class:`pytorch_interoperability.Block`
     """
+    raw_model_path = f'./{torch_model.__class__.__name__}_raw.onnx'
     model_path = f'./{torch_model.__class__.__name__}.onnx'
     print("Exporting torch module to ONNX ...")
     dummy_in = torch.randn(input_size)
@@ -276,7 +282,20 @@ def wrap(torch_model, input_size, opset_version=None):
     # Update dummy tensor to the model device 
     dummy_in = dummy_in.to(next(torch_model.parameters()).device)
 
-    torch.onnx.export(torch_model, dummy_in, model_path, verbose=True, opset_version=opset_version, training=torch.onnx.TrainingMode.TRAINING)
+    torch.onnx.export(torch_model,
+        dummy_in,
+        raw_model_path,
+        verbose=verbose,
+        opset_version=opset_version,
+        training=torch.onnx.TrainingMode.TRAINING,
+        do_constant_folding=False
+    )
+
+    print("Simplifying the ONNX model ...")
+    onnx_model = onnx.load(raw_model_path)
+    model_simp, check = simplify(onnx_model)
+    assert check, "Simplified ONNX model could not be validated"
+    onnx.save(model_simp, model_path)
 
     # Importing the ONNX to N2D2
     print("Importing ONNX model to N2D2 ...")
@@ -299,8 +318,8 @@ def wrap(torch_model, input_size, opset_version=None):
             need_to_flatten = True
         else:
             pass
-
-    deepNet.summary()
+    deepNet._embedded_deepnet.N2D2().initialize()
+    # deepNet.summary()
     converted_model = Block(deepNet, need_to_flatten=need_to_flatten, batch_size=input_size[0])
 
     return converted_model
