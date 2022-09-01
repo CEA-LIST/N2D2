@@ -302,6 +302,15 @@ def wrap(torch_model:torch.nn.Module,
         training=torch.onnx.TrainingMode.TRAINING,
         do_constant_folding=False
     )
+    tmp_bn_idx = 0
+    for module in torch_model.modules():
+        if isinstance(module, torch.nn.modules.batchnorm._BatchNorm):
+            means, variances, biases, weights = batchnorm_stats[tmp_bn_idx]
+            module.running_mean.copy_(torch.nn.Parameter(means).requires_grad_(False))
+            module.running_var.copy_(torch.nn.Parameter(variances).requires_grad_(False))
+            module.bias = (torch.nn.Parameter(biases))
+            module.weight = (torch.nn.Parameter(weights))
+            tmp_bn_idx +=1
 
     print("Simplifying the ONNX model ...")
     onnx_model = onnx.load(raw_model_path)
