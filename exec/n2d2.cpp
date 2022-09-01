@@ -20,7 +20,7 @@
 
 /** @file
  * This program simulates the learning of static images with a convolutional NN.
- * Do not forget to run ./tools/install_stimuli.py to automatically download and
+ * Do not forget to run ./tools/install/install_dataset.py to automatically download and
  *install the stimuli databases.
  *
  * The 101_ObjectCategories database

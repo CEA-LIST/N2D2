@@ -36,7 +36,7 @@ def fill_object_dict():
     from n2d2.cells import Fc, Conv, Deconv, ElemWise, Softmax, \
     Dropout, Padding, Pool, BatchNorm2d, Reshape, Resize, Transpose, \
     Activation, Transformation, Scaling
-    from n2d2.quantizer import LSQCell, LSQAct #, SATCell, SATAct
+    from n2d2.quantizer import LSQCell, LSQAct, SATCell, SATAct
 
     # All objects that needs convertibility from N2D2 to API object have to be added to this dictionary.
     # The key needs to correspond to the result of the getType() method of the N2D2 object
@@ -70,8 +70,8 @@ def fill_object_dict():
         "Transformation": Transformation,
         "Scaling": Scaling,
 
-        # "SATCell": SATCell,
-        # "SATActivation": SATAct,
+        "SATCell": SATCell,
+        "SATActivation": SATAct,
         "LSQCell": LSQCell,
         "LSQActivation": LSQAct,
 
