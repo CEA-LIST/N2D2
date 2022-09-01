@@ -35,6 +35,14 @@ void declare_BatchNormCell_Frame_CUDA(py::module &m, const std::string& typeStr)
     py::class_<BatchNormCell_Frame_CUDA<T>, std::shared_ptr<BatchNormCell_Frame_CUDA<T>>, BatchNormCell, Cell_Frame_CUDA<T>> (m, pyClassName.c_str(), py::multiple_inheritance())
     .def(py::init<const DeepNet&, const std::string&, unsigned int, const std::shared_ptr<Activation>&>(),
          py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("activation") = std::shared_ptr<Activation>())
+    // .def("setVariances", (void (BatchNormCell_Frame_CUDA<T>::*)(const std::shared_ptr<BaseTensor>&)) &BatchNormCell_Frame_CUDA<T>::setVariances, py::arg("variances"))
+    // .def("setMeans", (void (BatchNormCell_Frame_CUDA<T>::*)(const std::shared_ptr<BaseTensor>&)) &BatchNormCell_Frame_CUDA<T>::setMeans, py::arg("means"))
+    // .def("setScales", (void (BatchNormCell_Frame_CUDA<T>::*)(const std::shared_ptr<BaseTensor>&)) &BatchNormCell_Frame_CUDA<T>::setScales, py::arg("scales"))
+    // .def("setBiases", (void (BatchNormCell_Frame_CUDA<T>::*)(const std::shared_ptr<BaseTensor>&)) &BatchNormCell_Frame_CUDA<T>::setBiases, py::arg("biases"))
+    // .def("setVariances", &BatchNormCell_Frame_CUDA<T>::setVariances, py::arg("variances"))
+    // .def("setMeans", &BatchNormCell_Frame_CUDA<T>::setMeans, py::arg("means"))
+    // .def("setScales", &BatchNormCell_Frame_CUDA<T>::setScales, py::arg("scales"))
+    // .def("setBiases", &BatchNormCell_Frame_CUDA<T>::setBiases, py::arg("biases"))
     ;
 
 }
