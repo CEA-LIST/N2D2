@@ -20,6 +20,7 @@
 """
 import torch
 import n2d2
+import N2D2
 import onnx
 from onnxsim import simplify
 from typing import Union
@@ -28,7 +29,7 @@ def _switching_convention(dims):
     return [dims[3], dims[2], dims[1], dims[0]]
 
 
-def _to_n2d2(torch_tensor):
+def _to_n2d2(torch_tensor:torch.Tensor)->n2d2.Tensor:
     """
     Convert torch.Tensor -> n2d2.Tensor.
     The conversion always creates a CPU memory copy but not a GPU one if the tensor is CUDA.
@@ -86,7 +87,7 @@ def _to_n2d2(torch_tensor):
     return n2d2_tensor
 
 
-def _to_torch(N2D2_tensor):
+def _to_torch(N2D2_tensor: N2D2.BaseTensor)->torch.Tensor:
     """
     Convert N2D2.Tensor -> torch.Tensor
     The conversion creates a GPU memory copy if the tensor is CUDA.
@@ -136,7 +137,7 @@ class Block(torch.nn.Module):
         """
         self._block.summary()
 
-    def forward(self, inputs):
+    def forward(self, inputs:torch.Tensor):
         """
         Use a custom ``torch.autograd.Function`` that use, on forward the ``Propagation`` of n2d2.
         And on backward the ``BackPropagation`` and ``Update`` of n2d2.
@@ -277,15 +278,26 @@ def wrap(torch_model:torch.nn.Module,
     raw_model_path = f'./{torch_model.__class__.__name__}_raw.onnx'
     model_path = f'./{torch_model.__class__.__name__}.onnx'
     print("Exporting torch module to ONNX ...")
-    dummy_in = torch.randn(input_size)
 
-    # Update dummy tensor to the model device 
-    dummy_in = dummy_in.to(next(torch_model.parameters()).device)
+    # Note : To keep batchnorm we export model in train mode.
+    # However we cannot freeze batchnorm stats in pytorch < 12 (see : https://github.com/pytorch/pytorch/issues/75252).
+    # To deal with this issue we save stats before export and update the N2D2 BatchNorm.
+    batchnorm_stats = [] # Queue of batchnorm stats (means, vars, biases, weights)
+    for module in torch_model.modules():
+        if isinstance(module, torch.nn.modules.batchnorm._BatchNorm):
+            batchnorm_stats.append((
+                module.running_mean.detach().clone(), 
+                module.running_var.detach().clone(),
+                module.bias.detach().clone(),
+                module.weight.detach().clone()))
+
+    dummy_in = torch.zeros(input_size).to(next(torch_model.parameters()).device)
 
     torch.onnx.export(torch_model,
         dummy_in,
         raw_model_path,
         verbose=verbose,
+        export_params=True,
         opset_version=opset_version,
         training=torch.onnx.TrainingMode.TRAINING,
         do_constant_folding=False
@@ -310,7 +322,21 @@ def wrap(torch_model:torch.nn.Module,
     need_to_flatten = False
 
     for cell in deepNet:
-        if isinstance(cell, n2d2.cells.Softmax):
+        if isinstance(cell, n2d2.cells.BatchNorm2d):
+            # Note : We make the asumption that the pytorch and N2D2 graph are brwosed in the same way.
+            # If accuracy drastically drop after export this part of the code may be the problem !
+            # PyTorch and ONNX names are not the same.
+            means, variances, biases, weights = batchnorm_stats.pop(0)
+            for idx, mean in enumerate(means):
+                cell.N2D2().setMean(idx, n2d2.Tensor([1], value=mean.item()).N2D2())
+            for idx, variance in enumerate(variances):
+                cell.N2D2().setVariance(idx, n2d2.Tensor([1], value=variance.item()).N2D2())
+            for idx, bias in enumerate(biases):
+                cell.N2D2().setBias(idx, n2d2.Tensor([1], value=bias.item()).N2D2())
+            for idx, weight in enumerate(weights):
+                cell.N2D2().setScale(idx, n2d2.Tensor([1], value=weight.item()).N2D2())
+
+        elif isinstance(cell, n2d2.cells.Softmax):
             # ONNX import Softmax with_loss = True supposing we are using a CrossEntropy loss.
             cell.with_loss = False
         elif isinstance(cell, n2d2.cells.Fc):
@@ -318,8 +344,11 @@ def wrap(torch_model:torch.nn.Module,
             need_to_flatten = True
         else:
             pass
+    if len(batchnorm_stats) != 0:
+        raise RuntimeError("Something went wrong when converting the torch model to N2D2, not the same number of BatchNorm layer !")
+
     deepNet._embedded_deepnet.N2D2().initialize()
-    # deepNet.summary()
+
     converted_model = Block(deepNet, need_to_flatten=need_to_flatten, batch_size=input_size[0])
 
     return converted_model
