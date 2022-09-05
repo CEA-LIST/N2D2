@@ -969,7 +969,7 @@ This can be done suing Database objects.
 Download datasets:
 ~~~~~~~~~~~~~~~~~~
 
-To import Data you can use a python Script situated in ``./tools/install_stimuli_gui.py``.
+To import Data you can use a python Script situated in ``./tools/install/install_dataset.py``.
 
 This script will download the data in ``/local/$USER/n2d2_data/``. 
 You can change this path with the environment variable ``N2D2_data``.

@@ -3,9 +3,7 @@
 #include "N2D2.hpp"
 #include "DeepNet.hpp"
 #include "DeepNetQuantization.hpp"
-#ifdef N2D2_IP
-#include "Quantizer/DeepNetQAT.hpp"
-#endif
+#include "Quantizer/QAT/Optimization/DeepNetQAT.hpp"
 #include "DrawNet.hpp"
 #include "CEnvironment.hpp"
 #include "Xnet/Environment.hpp"
