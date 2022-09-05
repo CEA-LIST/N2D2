@@ -38,6 +38,10 @@ void init_BatchNormCell(py::module &m) {
     .def("getScales", &BatchNormCell::getScales)
     .def("getMeans", &BatchNormCell::getMeans)
     .def("getVariances", &BatchNormCell::getVariances)
+    .def("setVariance", &BatchNormCell::setVariance, py::arg("index"), py::arg("variance"))
+    .def("setMean", &BatchNormCell::setMean, py::arg("index"), py::arg("mean"))
+    .def("setScale", &BatchNormCell::setScale, py::arg("index"), py::arg("scale"))
+    .def("setBias", &BatchNormCell::setBias, py::arg("index"), py::arg("bias"))
     .def("getMovingAverageMomentum", &BatchNormCell::getMovingAverageMomentum)
     .def("getEpsilon", &BatchNormCell::getEpsilon);
 }

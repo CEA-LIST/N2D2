@@ -22,7 +22,7 @@ from os import remove
 import torch
 import N2D2
 import n2d2
-from time import sleep
+
 import unittest
 import pytorch_to_n2d2 as pytorch
 
@@ -31,6 +31,7 @@ from n2d2.activation import Linear, Rectifier
 from n2d2.solver import SGD
 from n2d2.filler import Constant
 import n2d2.global_variables
+from tiny_ml_torch.resnet_model import ResNetV1
 
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
@@ -144,7 +145,9 @@ class Test_Networks():
         if eval_mode:
             self.model1.eval()
             self.model2.eval()
-        
+        else:
+            self.model1.train()
+            self.model2.train()
         self.name = name
         
         if self.test_backward:
@@ -171,7 +174,7 @@ class Test_Networks():
         output2 = self.model2(torch_tensor2)
 
         if self.compare_tensor(output1, output2) != 0:
-            print("The test " + self.name + " failed, the following output tensor are different :\nOutput1")
+            print("The test " + self.name + " failed, the following output tensor are different :\nOutput 1")
             print(output1)
             print("Output 2")
             print(output2)
@@ -788,6 +791,21 @@ class test_interop(unittest.TestCase):
         print(n2d2_out2)
         n2d2.global_variables.default_model = "Frame"
 
+
+    def test_resnet_GPU(self):
+        print('=== Testing resnet GPU ===')
+        n2d2.global_variables.default_model = "Frame_CUDA"
+        torch_model = ResNetV1(input_shape=(3, 32, 32), num_classes=10, num_filters=16)
+        n2d2_model = pytorch.wrap(torch_model, input_size=[batch_size, 3, 32, 32])
+        
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, cuda=True, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 3, 32, 32), (batch_size, 10))
+        self.assertNotEqual(res, -1, msg="CUDA eval failed")
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs, cuda=True)
+        res = tester.test_multiple_step((batch_size, 3, 32, 32), (batch_size, 10))
+        self.assertNotEqual(res, -1, msg="CUDA train failed")
 if __name__ == '__main__':
     unittest.main()
     
