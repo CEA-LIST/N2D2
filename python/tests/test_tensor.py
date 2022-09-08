@@ -145,6 +145,19 @@ class test_cudatensor(test_tensor):
         self.tensor[0] = 1
         self.tensor.htod() # Synchronizing the device with the host
         self.assertNotEqual(self.tensor, copy_tensor)
+
+class test_interface(unittest.TestCase):
+    def setUp(self):
+        self.cuda = False
+        self.x, self.y, self.z, self.b = (10,10,4,1)
+        self.tensor1 = n2d2.Tensor([self.b, self.z, self.y, self.x], datatype="int", value=1, cuda=self.cuda)
+        self.tensor2 = n2d2.Tensor([self.b, self.z, self.y, self.x], datatype="int", value=2, cuda=self.cuda)
+        self.interface = n2d2.Interface([self.tensor1,self.tensor2])
+        self.activation = n2d2.cells.nn.Activation(activation=n2d2.activation.Linear())
+    
+    def test_initialization(self):
+        # operation successful only if activation cell input is well initialized for interfaces
+        out = self.activation(self.interface)
     
 if __name__ == '__main__':
     unittest.main()
