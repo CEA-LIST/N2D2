@@ -21,9 +21,15 @@
 
 #include "Export/CPP/CPP_ActivationCellExport.hpp"
 
+#include "Export/CPP/Cells/CPP_ConcatCell.hpp"
+#include "Export/CPP/CPP_ConcatCellExport.hpp"
+
 N2D2::Registrar<N2D2::ActivationCellExport>
 N2D2::CPP_ActivationCellExport::mRegistrar(
     "CPP", N2D2::CPP_ActivationCellExport::generate);
+
+N2D2::Registrar<N2D2::CPP_CellExport> N2D2::CPP_ActivationCellExport::mRegistrarType(
+    N2D2::ActivationCell::Type, N2D2::CPP_ActivationCellExport::getInstance);
 
 void N2D2::CPP_ActivationCellExport::generate(ActivationCell& cell,
                                              const std::string& dirName)
@@ -57,4 +63,53 @@ void N2D2::CPP_ActivationCellExport::generateHeaderConstants(ActivationCell& cel
               "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels()
            << "\n\n";
 
+    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+
+    std::string type = (cellFrame.getActivation())
+                    ? cellFrame.getActivation()->getType() : "Linear";
+
+    if(type == "Linear"){
+        //adding info from concat
+        const auto parentsCells = cell.getParentsCells();
+        header << "#define " << prefix << "_NB_INPUTS " << parentsCells.size() << "\n";
+
+        header << "#define " << prefix << "_CHANNELS_WIDTH " << cell.getChannelsWidth() << "\n"
+            << "#define " << prefix << "_CHANNELS_HEIGHT " << cell.getChannelsHeight() << "\n"
+            << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs() << "\n"
+            << "#define " << prefix << "_OUTPUTS_WIDTH " << cell.getOutputsWidth() << "\n"
+            << "#define " << prefix << "_OUTPUTS_HEIGHT " << cell.getOutputsHeight() << "\n"
+
+            << "#define " << prefix << "_OUTPUTS_SIZE (" << prefix << "_NB_OUTPUTS*"
+                                                            << prefix << "_OUTPUTS_WIDTH*"
+                                                            << prefix << "_OUTPUTS_HEIGHT)" << "\n"
+            << "#define " << prefix << "_CHANNELS_SIZE (" << prefix  << "_NB_CHANNELS*"
+                                                            << prefix << "_CHANNELS_WIDTH*"
+                                                            << prefix << "_CHANNELS_HEIGHT)" << "\n"
+            << "\n";
+    }
+}
+
+std::unique_ptr<N2D2::CPP_ActivationCellExport>
+N2D2::CPP_ActivationCellExport::getInstance(Cell& /*cell*/)
+{
+    return std::unique_ptr<CPP_ActivationCellExport>(new CPP_ActivationCellExport);
+}
+
+void N2D2::CPP_ActivationCellExport::generateCallCode(
+    const DeepNet& deepNet,
+    const Cell& cell,
+    std::stringstream& includes,
+    std::stringstream& /*buffers*/,
+    std::stringstream& functionCalls)
+{
+    const Cell_Frame_Top& cellFrame = dynamic_cast<const Cell_Frame_Top&>(cell);
+
+    std::string type = (cellFrame.getActivation())
+                    ? cellFrame.getActivation()->getType() : "Linear";
+
+    if(type == "Linear"){
+        std::stringstream buffers;
+
+        std::unique_ptr<CPP_ConcatCellExport>(new CPP_ConcatCellExport)->CPP_ConcatCellExport::generateCallCode(deepNet, cell, includes, buffers, functionCalls);
+    }
 }

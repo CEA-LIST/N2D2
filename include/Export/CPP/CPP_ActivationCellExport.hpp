@@ -24,19 +24,29 @@
 #include "Export/CPP/CPP_CellExport.hpp"
 #include "Cell/Cell_Frame_Top.hpp"
 #include "Export/ActivationCellExport.hpp"
+#include "Export/CPP/CPP_CellExport.hpp"
 
 namespace N2D2 {
 /**
  * Class for methods of ActivationCell for all CPP exports type
  * ActivationCell, CPP_EXPORT
 **/
-class CPP_ActivationCellExport : public ActivationCellExport {
+class CPP_ActivationCellExport : public ActivationCellExport, public CPP_CellExport {
 public:
     static void generate(ActivationCell& cell, const std::string& dirName);
     static void generateHeaderConstants(ActivationCell& cell,
                                         std::ofstream& header);
+
+    static std::unique_ptr<CPP_ActivationCellExport>getInstance(Cell& cell);
+    void generateCallCode(const DeepNet& deepNet,
+                          const Cell& cell,
+                          std::stringstream& includes,
+                          std::stringstream& /*buffers*/,
+                          std::stringstream& functionCalls);
+
 private:
     static Registrar<ActivationCellExport> mRegistrar;
+    static Registrar<CPP_CellExport> mRegistrarType;
 };
 }
 
