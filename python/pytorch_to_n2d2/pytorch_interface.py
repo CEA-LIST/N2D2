@@ -321,7 +321,13 @@ def wrap(torch_model:torch.nn.Module,
     # Importing the ONNX to N2D2
     print("Importing ONNX model to N2D2 ...")
     db = n2d2.database.Database()
-    provider = n2d2.provider.DataProvider(db,[input_size[3], input_size[2], input_size[1]], batch_size=input_size[0])
+    if len(input_size) == 4:
+        input_dims = [input_size[3], input_size[2], input_size[1]]
+    elif len(input_size) == 2: # Input is a Fc.
+        input_dims = [input_size[1], 1, 1]
+    else:
+        raise RuntimeError(f"Input size {input_size} is not supported.")
+    provider = n2d2.provider.DataProvider(db, input_dims, batch_size=input_size[0])
     deepNet = n2d2.cells.DeepNetCell.load_from_ONNX(provider, model_path)
 
     deepNet.set_solver(n2d2.solver.SGD(
