@@ -759,7 +759,9 @@ void N2D2::DeepNetGenerator::ONNX_processGraph(
         auto it = inputsMapping.find(name);
         return (it != inputsMapping.end())
             ? (*it).second  // Input
-            : deepNet->getCell(name);
+            : deepNet->hasCell(name) 
+            ? deepNet->getCell(name)
+            : NULL; // The cell has been ignored
     };
 
     // Cells
