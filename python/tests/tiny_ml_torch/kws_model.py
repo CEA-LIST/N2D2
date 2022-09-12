@@ -15,12 +15,14 @@ class depthwise_pointwise_separable_conv(nn.Module):
         # DW: cin=cout
         cout_dw=cin
         self.dw = nn.Conv2d(cin, cout_dw, kernel_size=(3,3), stride=1, padding=1, padding_mode='zeros', bias=True, groups=cin)
-        self.dw_bn = nn.BatchNorm2d(cout_dw)
+        if self.BNorm:
+            self.dw_bn = nn.BatchNorm2d(cout_dw)
         self.dw_relu = nn.ReLU()
         
         # PW: cin=cout_dw
         self.pw = nn.Conv2d(cout_dw, cout, kernel_size=(1,1), stride=1, bias=True)
-        self.pw_bn = nn.BatchNorm2d(cout)
+        if self.BNorm:
+            self.pw_bn = nn.BatchNorm2d(cout)
         self.pw_relu = nn.ReLU()
 
     def forward(self, x):

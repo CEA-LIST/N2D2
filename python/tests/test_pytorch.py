@@ -32,6 +32,9 @@ from n2d2.solver import SGD
 from n2d2.filler import Constant
 import n2d2.global_variables
 from tiny_ml_torch.resnet_model import ResNetV1
+from tiny_ml_torch.anomaly_model import get_model as get_anomaly_model
+from tiny_ml_torch.kws_model import KWS_Net as kws_model
+from tiny_ml_torch.mobilenet_model import mobilenet_v1 as get_mobilenet_model
 
 torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = True
@@ -806,6 +809,53 @@ class test_interop(unittest.TestCase):
         tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs, cuda=True)
         res = tester.test_multiple_step((batch_size, 3, 32, 32), (batch_size, 10))
         self.assertNotEqual(res, -1, msg="CUDA train failed")
+
+    def test_kws_GPU(self):
+        print('=== Testing KWS GPU ===')
+        n2d2.global_variables.default_model = "Frame_CUDA"
+        torch_model = kws_model(12, image_size=(49, 10))
+        n2d2_model = pytorch.wrap(torch_model, input_size=[batch_size, 1, 49, 10])
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, cuda=True, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 1, 49, 10), (batch_size, 12))
+        self.assertNotEqual(res, -1, msg="CUDA eval failed")
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs, cuda=True)
+        res = tester.test_multiple_step((batch_size, 1, 49, 10), (batch_size, 12))
+        self.assertNotEqual(res, -1, msg="CUDA train failed")
+        
+        
+
+    def test_mobilenetv1_GPU(self):
+        print('=== Testing MobilNetV1 GPU ===')
+        n2d2.global_variables.default_model = "Frame_CUDA"
+        torch_model = get_mobilenet_model().to("cuda")
+        n2d2_model = pytorch.wrap(torch_model, input_size=[batch_size, 3, 96, 96])
+        
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, cuda=True, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 3, 96, 96), (batch_size, 2))
+        self.assertNotEqual(res, -1, msg="CUDA eval failed")
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs, cuda=True)
+        res = tester.test_multiple_step((batch_size, 3, 96, 96), (batch_size, 2))
+        self.assertNotEqual(res, -1, msg="CUDA train failed")
+
+    def test_anomaly_GPU(self):
+        print('=== Testing anomaly GPU ===')
+        n2d2.global_variables.default_model = "Frame_CUDA"
+        torch_model=get_anomaly_model(640)
+        n2d2_model = pytorch.wrap(torch_model, input_size=[5, 640])
+        
+        print("Eval ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=True, epochs=epochs, cuda=True, test_backward=False)
+        res = tester.test_multiple_step((batch_size, 640), (batch_size, 640))
+        self.assertNotEqual(res, -1, msg="CUDA eval failed")
+        print("Train ...")
+        tester = Test_Networks(torch_model, n2d2_model, eval_mode=False, epochs=epochs, cuda=True)
+        res = tester.test_multiple_step((batch_size, 640), (batch_size, 640))
+        self.assertNotEqual(res, -1, msg="CUDA train failed")
+
 if __name__ == '__main__':
     unittest.main()
     
