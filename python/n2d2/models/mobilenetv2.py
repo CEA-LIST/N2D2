@@ -26,7 +26,7 @@ import n2d2.global_variables
 from n2d2.transform import Rescale, PadCrop, ColorSpace, RangeAffine, Composite
 from n2d2.mapping import Mapping
 from n2d2.utils import ConfigSection
-from n2d2.cells import Conv, Pool2d, BatchNorm2d, ElemWise, ConvDepthWise
+from n2d2.cells import Conv, Pool2d, BatchNorm2d, ElemWise, ConvDepthWise, ConvPointWise
 from n2d2.activation import Rectifier, Linear
 from n2d2.cells.cell import Sequence, Layer
 from n2d2.filler import He
@@ -35,7 +35,6 @@ from n2d2.filler import He
 def conv1x1_def() -> ConfigSection:
     weights_filler = He(variance_norm='FanIn', scaling=1.0, mean_norm=0.0)
     return ConfigSection(
-        kernel_dims=[1,1], stride_dims=[1,1],
         padding_dims=[0,0], dilation_dims=[1,1],
         no_bias=True, weights_filler=weights_filler
     )
@@ -59,6 +58,8 @@ class MainBlock(Sequence):
     def __init__(self, in_channels:int, out_channels:int, expansion_ratio:int =6, st_dims:Optional[list] =None):
         """Main sequence of the inverted bottleneck.
 
+        Parameters
+        ----------
         :param in_channels: number of input channels.
         :type in_channels: int
         :param out_channels: number of output channels.
@@ -73,13 +74,13 @@ class MainBlock(Sequence):
         # map = map_obj.create_mapping(nb_channels=bottleneck_channels, nb_outputs=bottleneck_channels)
 
         Sequence.__init__(self, cells=[
-            Conv(nb_inputs=in_channels, nb_outputs=bottleneck_channels,
+            ConvPointWise(nb_inputs=in_channels, nb_outputs=bottleneck_channels,
                 **conv1x1_def()),
             BatchNorm2d(nb_inputs=bottleneck_channels, activation=Linear()),
             ConvDepthWise(bottleneck_channels, kernel_dims=[3,3],
                 stride_dims=st_dims,**convdepthwise3x3_def()),
             BatchNorm2d(bottleneck_channels, activation=Rectifier()),
-            Conv(bottleneck_channels, out_channels, 
+            ConvPointWise(bottleneck_channels, out_channels, 
                 **conv1x1_def()),
             BatchNorm2d(out_channels, activation=Rectifier())
         ])
@@ -90,6 +91,8 @@ class InvertedBottleneck(Sequence):
         """Each inverted bottleneck block is made of a main part and sometimes a
         shortcut linking the beginning to the end of the main part.
 
+        Parameters
+        ----------
         :param in_channels: number of input channels.
         :type in_channels: int
         :param out_channels: number of output channels.
@@ -128,12 +131,13 @@ class MobileNetV2(Sequence):
         """MobileNet V2 network as described by Saldler et al.
         in their article: https://arxiv.org/pdf/1801.04381.pdf
 
+        Parameters
+        ----------
         :param name: name of the model. Default `None`.
         :type name: str, optional
 
-        example
+        Example
         -------
-
         >>> A = n2d2.Tensor([2,3,224,224])
         >>> model = n2d2.models.MobileNetV2()
         >>> model(A)
@@ -167,9 +171,9 @@ class MobileNetV2(Sequence):
 
         Sequence.__init__(self, cells=[
             main_sequence,
-            Conv(320, 1280, **conv1x1_def()),
+            ConvPointWise(320, 1280, **conv1x1_def()),
             Pool2d(pool_dims=[7,7], pooling='Average', stride_dims=[1,1], padding_dims=[0,0]),
-            Conv(1280, 1000, **conv1x1_def())
+            ConvPointWise(1280, 1000, **conv1x1_def())
         ])
         
     
@@ -178,6 +182,8 @@ class MobileNetV2(Sequence):
                         path:Optional[str] =None, download:bool =False) -> n2d2.cells.cell.DeepNetCell:
         """Load a MobileNetV2 model with given features from an ONNX file.
 
+        Parameters
+        ----------
         :param inputs: Data provider for the model
         :type inputs: `n2d2.provider.DataProvider`
         :param dims: Dimension of input images. Default=`[224, 224, 3]`
@@ -189,9 +195,8 @@ class MobileNetV2(Sequence):
         :param download: Whether or not the model architecture should be downloaded. Default=`False`.
         :type download: bool, optional
         
-        example
+        Example
         -------
-
         >>> db = n2d2.database.Database()
         >>> pro = n2d2.provider.DataProvider(db, size=[224,224,3], batch_size=10)
         >>> model = n2d2.models.MobileNetV2.load_from_ONNX(pro, batch_size=10, download=True)
