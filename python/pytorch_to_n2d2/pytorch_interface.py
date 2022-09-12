@@ -154,11 +154,18 @@ class Block(torch.nn.Module):
                 if self.batch_size is None:
                     self.batch_size = self.current_batch_size
 
+                input_shape = list(inputs.shape)
+                n2d2_input_shape = list(inputs.shape)
+                if len(input_shape) == 2:
+                    # Handling 1D input
+                    n2d2_input_shape = [input_shape[0], 1, 1, input_shape[1]]
+
                 if self.current_batch_size != self.batch_size:
                     # Pad incomplete batch with 0 as N2D2 doesn't support incomplete batch.
-                    new_shape = list(inputs.shape)
-                    new_shape[0] = self.batch_size
-                    n2d2_tensor.resize(new_shape)
+                    n2d2_input_shape[0] = self.batch_size
+                
+                n2d2_tensor.resize(n2d2_input_shape)
+
 
                 if n2d2.global_variables.cuda_available:
                     n2d2_tensor.cuda()
