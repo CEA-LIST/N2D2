@@ -20,7 +20,7 @@
 
 /** @file
  * This program simulates the learning of static images with a convolutional NN.
- * Do not forget to run ./tools/install_stimuli.py to automatically download and
+ * Do not forget to run ./tools/install/install_dataset.py to automatically download and
  *install the stimuli databases.
  *
  * The 101_ObjectCategories database
@@ -49,9 +49,7 @@
 #include "N2D2.hpp"
 #include "DeepNet.hpp"
 #include "DeepNetQuantization.hpp"
-#ifdef N2D2_IP
-#include "Quantizer/DeepNetQAT.hpp"
-#endif
+#include "Quantizer/QAT/Optimization/DeepNetQAT.hpp"
 #include "DrawNet.hpp"
 #include "CEnvironment.hpp"
 #include "Xnet/Environment.hpp"

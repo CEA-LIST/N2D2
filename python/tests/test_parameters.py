@@ -798,6 +798,43 @@ class DataProvider(test_params):
         self.assertEqual(self.parameters["composite_stimuli"], self.object.N2D2().isCompositeStimuli())
         super().test_parameters()
 
+### Quantizer ###
+
+class SATAct(test_params):
+    def setUp(self):
+        self.parameters = {
+            "solver": n2d2.solver.SGD(),
+            "range": 1,
+            "alpha": 1.0,
+        }
+        self.object = n2d2.quantizer.SATAct(**self.parameters)
+
+    def test_parameters(self):
+        self.assertIs(self.parameters["solver"].N2D2(), self.object.N2D2().getSolver())
+        self.assertEqual(self.parameters["range"], self.object.N2D2().getRange())
+        self.assertEqual(self.parameters["alpha"], self.object.N2D2().getAlphaParameter())
+
+        # TODO : test getRange getAlpha
+        super().test_parameters()
+
+class SATCell(test_params):
+    def setUp(self):
+        self.parameters = {
+            "apply_scaling": True,
+            "apply_quantization": False,
+            "range": 1,
+            "quant_mode": "Symmetric",
+        }
+        self.object = n2d2.quantizer.SATCell(**self.parameters)
+
+    def test_parameters(self):
+        self.assertEqual(self.parameters["range"], self.object.N2D2().getRange())
+        self.assertEqual(self.object.N2D2().QuantMode.__members__[self.parameters["quant_mode"]],  
+                        self.object.N2D2().getQuantMode())
+        self.assertEqual(self.parameters["apply_quantization"], self.object.N2D2().getApplyQuantization())
+        self.assertEqual(self.parameters["apply_scaling"], self.object.N2D2().getApplyScaling())
+        
+        super().test_parameters()
 
 # print(self.object.N2D2().getParameters()) 
 if __name__ == '__main__':

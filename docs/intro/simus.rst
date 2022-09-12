@@ -225,7 +225,7 @@ package):
 
 ::
 
-    ./tools/install_stimuli_gui.py
+    ./tools/install/install_dataset.py
 
 By default, the datasets are downloaded in the path specified in the
 ``N2D2_DATA`` environment variable, which is the root path used by the

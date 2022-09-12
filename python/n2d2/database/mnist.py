@@ -31,6 +31,14 @@ class MNIST(AbstractDatabase):
     Label are hard coded, you don't need to specify a path to the label file.
     """
     _type = "MNIST"
+
+    _download_links = [
+        "http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz",
+        "http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz",
+        "http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz",
+        "http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz"
+    ]
+
     _parameters = {
         "extract_roi": "extractROIs",
         "validation": "validation",

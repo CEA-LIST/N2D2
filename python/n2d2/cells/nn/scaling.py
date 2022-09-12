@@ -100,4 +100,4 @@ class Scaling(NeuralNetworkCell, ModelDatatyped):
         from n2d2.export import available_export
         if export_name not in available_export:
             raise WrongValue("export_name", export_name, available_export)
-        return N2D2.TransposeCellExport.isExportableTo(export_name)
+        return N2D2.ScalingCellExport.isExportableTo(export_name)

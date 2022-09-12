@@ -29,9 +29,7 @@
 #include "N2D2.hpp"
 #include "DeepNet.hpp"
 #include "DeepNetQuantization.hpp"
-#ifdef N2D2_IP
-#include "Quantizer/DeepNetQAT.hpp"
-#endif
+#include "Quantizer/QAT/Optimization/DeepNetQAT.hpp"
 #include "DrawNet.hpp"
 #include "CEnvironment.hpp"
 #include "Xnet/Environment.hpp"
@@ -376,7 +374,6 @@ namespace N2D2_HELPER{
         if(opt.qatSAT) {
             deepNet->initialize();
             //deepNet->exportNetworkFreeParameters("weights_init");
-    #ifdef N2D2_IP
             if (opt.logKernels)
                 deepNet->logFreeParameters("kernels_fake_quantized");
 
@@ -385,8 +382,7 @@ namespace N2D2_HELPER{
             DrawNet::drawGraph(*deepNet, Utils::baseName(opt.iniConfig));
 
             if (opt.logKernels)
-                deepNet->logFreeParameters("kernels_quantized");
-    #endif            
+                deepNet->logFreeParameters("kernels_quantized");           
             deepNet->exportNetworkFreeParameters("weights_quantized");
         }
 
@@ -766,7 +762,6 @@ namespace N2D2_HELPER{
         }
         if(opt.qatSAT) {
             deepNet->initialize();
-    #ifdef N2D2_IP
             if (opt.logKernels)
                 deepNet->logFreeParameters("kernels_fake_quantized");
 
@@ -778,7 +773,6 @@ namespace N2D2_HELPER{
                                             DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision,
                                             opt.exportNbStimuliMax);
             dnQAT.exportOutputsLayers(*sp, exportDir + "/stimuli", Database::Test, opt.exportNbStimuliMax);
-    #endif
         }
         return afterCalibration;
     }

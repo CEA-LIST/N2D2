@@ -20,6 +20,7 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL-C license and that you accept its terms.
 """
 import numpy as np
+from typing import Union
 
 import tensorflow as tf
 from tensorflow import keras
@@ -222,7 +223,7 @@ class CustomSequential(keras.Sequential):
     def summary(self):
         """Print model information.
         """
-        print(self._deepnet_cell)
+        self._deepnet_cell.summary()
 
 class ContextNoBatchNormFuse:
     """
@@ -246,18 +247,25 @@ class ContextNoBatchNormFuse:
         if self.fuse_removed:
             tf2onnx.optimizer.back_to_back_optimizer._func_map = self.func_map_copy
 
-def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export: bool=False) -> CustomSequential:
+@n2d2.check_types
+def wrap(tf_model: Union[keras.Sequential, keras.models.Model],
+        batch_size: int,
+        name: str=None,
+        for_export: bool=False,
+        opset_version: int=10) -> CustomSequential:
     """Generate a custom model which run with N2D2 on backend.
     The conversion between TensorFlow/Keras and N2D2 is done with ONNX.
 
     :param tf_model: The TensorFlow/Keras model to transfert to N2D2.
-    :type tf_model: ``keras.Sequential``
+    :type tf_model: Union[``keras.Sequential``, ``keras.models.Model``]
     :param batch_size: Batch size used.
     :type batch_size: int
     :param name: Name of the model, default=tf_model.name
     :type name: str, optional
     :param for_export: If True, remove some layers to make the model exportable, default=False
     :type for_export: bool, optional
+    :param opset_version: Opset version used to generate the intermediate ONNX file., default=10
+    :type opset_version: int, optional
     :return: Custom sequential
     :rtype: ``keras.Sequential``
     """
@@ -288,7 +296,7 @@ def wrap(tf_model: keras.Sequential, batch_size: int, name: str=None, for_export
         tf2onnx.convert.from_keras(
             tf_model,
             input_signature=spec,
-            opset=10,
+            opset=opset_version,
             inputs_as_nchw=input_names,
             output_path=model_name + ".onnx")
 

@@ -24,7 +24,7 @@ from typing import Union, Optional, List
 import N2D2
 
 from n2d2 import global_variables
-from n2d2.deepnet import DeepNet
+from n2d2.deepnet import DeepNet, associate_provider_to_deepnet
 from n2d2.solver import Solver
 from n2d2.filler import Filler
 from n2d2.target import Target
@@ -448,6 +448,7 @@ class DeepNetCell(Block):
         return cls(N2D2_deepnet)
 
     @classmethod
+    @check_types
     def load_from_INI(cls, path:str):
         """Load a deepnet from an INI file.
 
@@ -479,6 +480,7 @@ class DeepNetCell(Block):
             return outputs[0]
         return outputs
 
+    @check_types
     def concat_to_deepnet(self, deepnet:DeepNet):
 
         cells = self._embedded_deepnet.N2D2().getCells()
@@ -520,12 +522,60 @@ class DeepNetCell(Block):
         self._inference = False
         return self
 
-    def import_free_parameters(self, dir_name:str, ignore_not_exists:bool=False):
+    @check_types
+    def set_provider(self, provider:Provider)->None:
+        """Set a data provider to the deepnetcell
+
+        :param provider: Data provider to use.
+        :type provider: Provider
+        """
+        associate_provider_to_deepnet(self._embedded_deepnet.N2D2(), provider.N2D2())
+
+    @check_types
+    def import_free_parameters(self, dir_name:str, ignore_not_exists:bool=False)->None:
         """Import deepnet parameters.
         """
         print(f"Importing DeepNetCell '{self._name}' parameters from  {dir_name}")
         self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignoreNotExists=ignore_not_exists)
 
+    @check_types
+    def log_confusion_matrix(self, path:str, partition:str="Test")->None:
+        """Log a confusion matrix of the given data partition.
+
+        :param path: Path to the directory where you want to save the data.
+        :type path: str
+        :param partition: The partition can be  ``Learn``, ``Validation``, ``Test``,  ``Unpartitioned``, default="Test"
+        :type partition: str, otpionnal
+        """
+        if partition not in N2D2.Database.StimuliSet.__members__.keys():
+            raise error_handler.WrongValue("partition", partition, N2D2.Database.StimuliSet.__members__.keys())
+        for target in self._deepnet.N2D2().getTargets():
+            target.logConfusionMatrix(path, N2D2.Database.StimuliSet.__members__[partition])
+
+    @check_types
+    def log_success(self, path:str, partition:str="Test")->None:
+        """Save a graph of the loss and the validation score as a function of the step number.
+        
+        :param path: Path to the directory where you want to save the data.
+        :type path: str
+        :param partition: The partition can be  ``Learn``, ``Validation``, ``Test``,  ``Unpartitioned``, default="Test"
+        :type partition: str, otpionnal
+        """
+        if partition not in N2D2.Database.StimuliSet.__members__.keys():
+            raise error_handler.WrongValue("partition", partition, N2D2.Database.StimuliSet.__members__.keys())
+        for target in self._deepnet.N2D2().getTargets():
+            target.logSuccess(path, N2D2.Database.StimuliSet.__members__[partition])
+
+    @check_types
+    def log_stats(self, path:str)->None:
+        """Export statistics of the graph
+
+        :param dirname: path to the directory where you want to save the data.
+        :type dirname: str
+        """
+        if self._deepnet is None:
+            raise RuntimeError("The target doesn't have stats to log.")
+        self._deepnet.log_stats(path)
 
     def export_free_parameters(self, dir_name:str, verbose:bool=True):
         """Export deepnet parameters.
@@ -542,8 +592,15 @@ class DeepNetCell(Block):
         :param reconnect: If ``True``, reconnects the parents with the child of the removed cell, default=True
         :type reconnect: bool, optional
         """
+        child_cells = self._embedded_deepnet.N2D2().getChildCells(name)
         self._embedded_deepnet.remove(name, reconnect)
         self._cells.pop(name)
+        if reconnect:
+            for child in child_cells:
+                child_name = child.getName()
+                new_parents = self._embedded_deepnet.N2D2().getParentCells(child_name)
+                n2d2_child = self._cells[child_name]
+                n2d2_child._input_cells = [parent.getName() for parent in new_parents]
 
     def get_deepnet(self):
         """Get the :py:class:`n2d2.deepnet.DeepNet` used for computation.
@@ -795,6 +852,8 @@ class DeepNetCell(Block):
                 while input not in names:
                     if input in input_chain.keys():
                         input = input_chain[input][0]
+                    else:
+                        raise ValueError(f"N2D2 Graph is broken : cell '{name}' does not exist")
                 inputs.append(input)
             if not len(cell.get_input_cells()):
                 inputs = [input_name]
@@ -813,5 +872,7 @@ class DeepNetCell(Block):
         while name not in names:
             if name in input_chain.keys():
                 name = input_chain[name][0]
+            else:
+                raise ValueError(f"N2D2 Graph is broken : cell '{name}' does not exist")
         layers.append(['Features (output)', cell.dims()[::-1], 0, 0, name, {}, '-'])
         draw_table(titles, layers)
