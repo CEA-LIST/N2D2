@@ -26,6 +26,7 @@
 #include "DeepNet.hpp"
 #include "DrawNet.hpp"
 #include "StimuliProvider.hpp"
+#include "Cell/ActivationCell.hpp"
 #include "Cell/ConvCell.hpp"
 #include "Cell/FcCell.hpp"
 #include "Cell/PoolCell.hpp"
@@ -828,7 +829,13 @@ void N2D2::CPP_DeepNetExport::addBranchesCells(DeepNet& deepNet) {
 
             auto parentsCells = deepNet.getParentCells(cell->getName());
             if(parentsCells.size() > 1) {
-                if(std::string(cell->getType()) != ElemWiseCell::Type) {
+
+                Cell_Frame_Top& cellFrame = dynamic_cast<Cell_Frame_Top&>(*cell);
+                std::string type = (cellFrame.getActivation())
+                    ? cellFrame.getActivation()->getType() : "Linear";
+
+                if(std::string(cell->getType()) != ElemWiseCell::Type
+                    && !(std::string(cell->getType()) == ActivationCell::Type && type == "Linear") ) {
                     auto reg = Registrar<CPP_ConcatCell>::create(getCellModelType(*cell));
                     auto concatCell = reg(deepNet, 
                                           deepNet.generateNewCellName(cell->getName() + "_concat"), 

@@ -1627,7 +1627,8 @@ void N2D2::DeepNet::removeExtraTranspose() {
 
                 // When imported from ONNX the activation is placed on the Transpose layer instead of the head
                 // So we move the activation back to the head !
-                if (cellFrame->getActivation()->getType() != LinearActivation::Type){
+                if (cellFrame->getActivation() &&
+                    cellFrame->getActivation()->getType() != LinearActivation::Type){
                     for(std::shared_ptr<Cell> head : heads){
                         std::shared_ptr<Cell_Frame_Top> headFrame = std::dynamic_pointer_cast<Cell_Frame_Top>(head);
                         if (headFrame->getActivation()->getType() != LinearActivation::Type)

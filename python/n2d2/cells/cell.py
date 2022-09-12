@@ -416,7 +416,7 @@ class DeepNetCell(Block):
 
     @classmethod
     @check_types
-    def load_from_ONNX(cls, provider:DataProvider, model_path:str, ini_file:str=None, ignore_cells:list=None):
+    def load_from_ONNX(cls, provider:DataProvider, model_path:str, ini_file:str=None, ignore_cells:list=None, ignore_input_size:bool=False):
         """Load a deepnet from an ONNX file given a provider object.
 
         :param provider: Provider object to base deepnet upon
@@ -427,6 +427,8 @@ class DeepNetCell(Block):
         :type ini_file: str
         :param ignore_cells: List of cells name to ignore, default=None
         :type ignore_cells: list, optional
+        :param ignore_input_size: if ``True``, the input size specified in the ONNXmodle is ignored and the ``n2d2.provider.Provider`` size is used, default=False
+        :type ignore_input_size: bool, optional
         """
         if not global_variables.onnx_compiled:
             raise RuntimeError("Cannot load a model from ONNX, you did not compiled N2D2 with protobuf. " \
@@ -442,6 +444,7 @@ class DeepNetCell(Block):
         ini_parser.currentSection("onnx", True)
         if ignore_cells is not None:
             ini_parser.setProperty("Ignore", ignore_cells)
+        ini_parser.setProperty("IgnoreInputSize", ignore_input_size)
         ini_parser.setProperty("CNTK", True) # Enable Bias fusion !
         N2D2_deepnet = N2D2.DeepNetGenerator.generateFromONNX(global_variables.default_net, model_path, ini_parser,
                                             N2D2_deepnet, [None])
@@ -585,7 +588,7 @@ class DeepNetCell(Block):
         self._deepnet.N2D2().exportNetworkFreeParameters(dir_name)
 
 
-    def remove(self, name:str, reconnect:bool =True)->None:
+    def remove(self, name:str, reconnect:bool = True)->None:
         """Remove a cell from the encapsulated deepnet.
         :param name: Name of cell that shall be removed.
         :type name: str
@@ -625,9 +628,10 @@ class DeepNetCell(Block):
         """
         return self._embedded_deepnet.get_output_cells()
 
-    def fit(self, learn_epoch:int, log_epoch:int =1000, avg_window:int =10000, bench:bool =False, 
-                ban_multi_device:bool =False, valid_metric:str ="Sensitivity", stop_valid:int =0, 
-                log_kernels:bool =False):
+    @check_types
+    def fit(self, learn_epoch:int, log_epoch:int = 1000, avg_window:int = 10000, bench:bool = False, 
+                ban_multi_device:bool = False, valid_metric:str = "Sensitivity", stop_valid:int = 0, 
+                log_kernels:bool = False):
         """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
 
         :param learn_epoch: The number of epochs steps
@@ -665,6 +669,7 @@ class DeepNetCell(Block):
                         log_kernels=log_kernels)
         N2D2.learn_epoch(parameters.N2D2(), N2D2_deepnet)
 
+    @check_types
     def run_test(self, log:int = 1000, report:int = 100, test_index:int = -1, test_id:int = -1,
                  qat_sat:bool = False, log_kernels:bool = False, wt_round_mode:str = "NONE",
                  b_round_mode:str = "NONE", c_round_mode:str = "NONE",
