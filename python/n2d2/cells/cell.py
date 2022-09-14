@@ -23,6 +23,9 @@ from abc import ABC, abstractmethod
 from typing import Union, Optional, List
 import N2D2
 
+from operator import mul as op_mul
+from functools import reduce
+
 from n2d2 import global_variables
 from n2d2.deepnet import DeepNet, associate_provider_to_deepnet
 from n2d2.solver import Solver
@@ -803,7 +806,7 @@ class DeepNetCell(Block):
             if cell.get_type() == "Conv":
                 k_size = converter(cell.get_parameter("kernel_dims"))
                 if k_size == 1: ctype = "PointWise"
-                elif type(k_size) != type(list): ctype += ' ' + str(k_size) + 'x' + str(k_size)
+                elif not isinstance(k_size, list): ctype += ' ' + str(k_size) + 'x' + str(k_size)
                 else: extra["k"] = k_size
 
                 n = cell.get_nb_outputs()
@@ -815,8 +818,9 @@ class DeepNetCell(Block):
                         ctype = "Depthwise"
                         extra["k"] = str(k_size) + 'x' + str(k_size)
 
-                tensor = cell.get_weight(0, 0)
-                params = n * c * len(tensor)
+                k_nb_params = reduce(op_mul, k_size) if isinstance(k_size, list) else k_size**2
+
+                params = n * c * k_nb_params
                 if cell.has_bias():
                     params += len(cell.get_biases())
 
@@ -826,9 +830,14 @@ class DeepNetCell(Block):
                     extra["pad"] = converter(cell.get_parameter("padding_dims"))
                 if converter(cell.get_parameter("dilation_dims")) != 1:
                     extra["dilation"] = converter(cell.get_parameter("dilation_dims"))
-                if cell.get_parameter("activation"):
-                    extra["Act"] = cell.get_parameter("activation").get_type()
-                    if extra["Act"] == "Rectifier": extra["Act"] = "ReLu"
+                
+
+            if cell.get_type() == "Fc":
+                n = cell.get_nb_outputs()
+                c = cell.N2D2().getInputsSize()
+                params = n * c
+                if cell.has_bias():
+                    params += n
 
             if cell.get_type() == "Pool":
                 if cell.pooling.name == "Average": ctype = 'AvgPool'
@@ -842,6 +851,11 @@ class DeepNetCell(Block):
                     extra["str"] = converter(cell.get_parameter("stride_dims"))
                 if converter(cell.get_parameter("padding_dims")) != 0:
                     extra["pad"] = converter(cell.get_parameter("padding_dims"))
+
+            # Rename activations
+            if cell.get_parameter("activation"):
+                extra["Act"] = cell.get_parameter("activation").get_type()
+                if extra["Act"] == "Rectifier": extra["Act"] = "ReLu"
 
             # Get name of Cell inputs
             inputs = list()
