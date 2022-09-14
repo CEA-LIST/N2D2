@@ -21,7 +21,8 @@
 # TODO : load_from_ONNX is used multiple time, we should make it a class method.
 from n2d2.models.resnet import ResNet, ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 from n2d2.models.mobilenetv1 import MobileNetv1
-from n2d2.models.mobilenetv2 import load_from_ONNX, ONNX_preprocessing
+from n2d2.models.mobilenetv2 import MobileNetV2
+from n2d2.models.vgg import VGGBackbone, VGGHead, VGG, VGG11, VGG13, VGG16, VGG19
 from n2d2.models.lenet import *
 from n2d2.models.segmentation_network import *
 from n2d2.models.ILSVRC_outils import *

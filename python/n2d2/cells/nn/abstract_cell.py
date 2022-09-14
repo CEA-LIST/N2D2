@@ -250,7 +250,6 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             if isinstance(cell, MultipleOutputsProvider) or isinstance(inputs, Interface):
                 diffOutput = Tensor(ipt.dims(), value=0, dim_format="N2D2")
                 self._N2D2_object.addInputBis(ipt.N2D2(), diffOutput.N2D2())
-                self._N2D2_object.initialize()
             else:
                 self._N2D2_object.linkInput(cell.N2D2())
             if not initialized:
@@ -261,7 +260,8 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             else:
                 parents.append(None)
             self._input_cells.append(cell.get_name())
-
+        if isinstance(inputs, Interface):
+            self._N2D2_object.initialize()
         self._deepnet.N2D2().addCell(self._N2D2_object, parents)
         if (self.dims()==[]): #not initialized
             self._N2D2_object.initializeDataDependent()
