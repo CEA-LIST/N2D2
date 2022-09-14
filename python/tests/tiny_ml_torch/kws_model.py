@@ -84,7 +84,8 @@ class KWS_Net(nn.Module):
         x=self.dwpw4(x)
         x= self.avgpool(x)
         x= self.flatten(x)
-        x= self.DO(x)
+        # Remove random drop out for Torch/N2D2 comparison.
+        # x= self.DO(x)
         x=self.fc(x)
         
 

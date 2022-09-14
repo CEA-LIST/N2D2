@@ -154,11 +154,11 @@ class Block(torch.nn.Module):
                 if self.batch_size is None:
                     self.batch_size = self.current_batch_size
 
-                input_shape = list(inputs.shape)
+                self.input_shape = list(inputs.shape)
                 n2d2_input_shape = list(inputs.shape)
-                if len(input_shape) == 2:
+                if len(self.input_shape) == 2:
                     # Handling 1D input
-                    n2d2_input_shape = [input_shape[0], 1, 1, input_shape[1]]
+                    n2d2_input_shape = [self.input_shape[0], 1, 1, self.input_shape[1]]
 
                 if self.current_batch_size != self.batch_size:
                     # Pad incomplete batch with 0 as N2D2 doesn't support incomplete batch.
@@ -240,13 +240,8 @@ class Block(torch.nn.Module):
                 diffOutput = self.deepnet.getCell_Frame_Top(self.deepnet.getLayers()[1][0]).getDiffOutputs()
 
                 outputs = _to_torch(diffOutput)
-                if self.current_batch_size != self.batch_size:
-                    # Warning for future : do not change the shape of n2d2_outputs !
-                    # Doing so will change the size of the variable mOutputs.
-                    # This will cause a crash when the next full stimuli will come.
-                    new_shape = list(outputs.shape)
-                    new_shape[0] = self.current_batch_size
-                    outputs = outputs.resize_(new_shape) # in place operation
+                
+                outputs = outputs.resize_(self.input_shape) # in place operation
                 outputs = torch.mul(outputs, -1/self.batch_size)
 
                 if grad_output.is_cuda:
