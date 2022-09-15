@@ -154,11 +154,18 @@ class Block(torch.nn.Module):
                 if self.batch_size is None:
                     self.batch_size = self.current_batch_size
 
+                self.input_shape = list(inputs.shape)
+                n2d2_input_shape = list(inputs.shape)
+                if len(self.input_shape) == 2:
+                    # Handling 1D input
+                    n2d2_input_shape = [self.input_shape[0], 1, 1, self.input_shape[1]]
+
                 if self.current_batch_size != self.batch_size:
                     # Pad incomplete batch with 0 as N2D2 doesn't support incomplete batch.
-                    new_shape = list(inputs.shape)
-                    new_shape[0] = self.batch_size
-                    n2d2_tensor.resize(new_shape)
+                    n2d2_input_shape[0] = self.batch_size
+                
+                n2d2_tensor.resize(n2d2_input_shape)
+
 
                 if n2d2.global_variables.cuda_available:
                     n2d2_tensor.cuda()
@@ -233,13 +240,8 @@ class Block(torch.nn.Module):
                 diffOutput = self.deepnet.getCell_Frame_Top(self.deepnet.getLayers()[1][0]).getDiffOutputs()
 
                 outputs = _to_torch(diffOutput)
-                if self.current_batch_size != self.batch_size:
-                    # Warning for future : do not change the shape of n2d2_outputs !
-                    # Doing so will change the size of the variable mOutputs.
-                    # This will cause a crash when the next full stimuli will come.
-                    new_shape = list(outputs.shape)
-                    new_shape[0] = self.current_batch_size
-                    outputs = outputs.resize_(new_shape) # in place operation
+                
+                outputs = outputs.resize_(self.input_shape) # in place operation
                 outputs = torch.mul(outputs, -1/self.batch_size)
 
                 if grad_output.is_cuda:
@@ -321,7 +323,13 @@ def wrap(torch_model:torch.nn.Module,
     # Importing the ONNX to N2D2
     print("Importing ONNX model to N2D2 ...")
     db = n2d2.database.Database()
-    provider = n2d2.provider.DataProvider(db,[input_size[3], input_size[2], input_size[1]], batch_size=input_size[0])
+    if len(input_size) == 4:
+        input_dims = [input_size[3], input_size[2], input_size[1]]
+    elif len(input_size) == 2: # Input is a Fc.
+        input_dims = [input_size[1], 1, 1]
+    else:
+        raise RuntimeError(f"Input size {input_size} is not supported.")
+    provider = n2d2.provider.DataProvider(db, input_dims, batch_size=input_size[0])
     deepNet = n2d2.cells.DeepNetCell.load_from_ONNX(provider, model_path)
 
     deepNet.set_solver(n2d2.solver.SGD(
