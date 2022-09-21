@@ -24,7 +24,7 @@ import sys
 import shutil
 import argparse
 import requests
-import tarfile, zipfile 
+import tarfile, zipfile, gzip
 
 ###############################################################################
 
@@ -221,10 +221,8 @@ def extract_file(target_path, filename):
         tarf.close()
     elif filename.endswith(GZ_EXTENSION):
         print("Extracting gz file.")
-        out_file = file_location[:-3]
-        with open(file_location, "rb") as f_in:
-            with open(out_file, "wb") as f_out:
-                shutil.copyfileobj(f_in, f_out)
+        raw = gzip.open(file_location, 'rb').read()
+        open(os.path.splitext(file_location)[0], 'wb').write(raw)
     elif filename.endswith(DAT_EXTENSION):
         print("No extraction for dat files.")
     else:

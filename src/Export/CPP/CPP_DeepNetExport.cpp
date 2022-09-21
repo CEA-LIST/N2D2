@@ -821,27 +821,43 @@ void N2D2::CPP_DeepNetExport::addBranchesCells(DeepNet& deepNet) {
     const std::vector<std::vector<std::string>> layers = deepNet.getLayers();
 
     for(auto itLayer = layers.begin() + 1; itLayer != layers.end(); itLayer++) {
-        for(auto itCell = itLayer->begin(); itCell != itLayer->end(); ++itCell) {
+        for(auto itCell = itLayer->begin(); itCell != itLayer->end(); ) {
             std::shared_ptr<Cell> cell = deepNet.getCell(*itCell);
             if(!cell) {
                 throw std::runtime_error("Invalid cell.");
             }
+            ++itCell; // increase itCell before being potentially invalided by removeCell()
 
             auto parentsCells = deepNet.getParentCells(cell->getName());
+
             if(parentsCells.size() > 1) {
 
                 Cell_Frame_Top& cellFrame = dynamic_cast<Cell_Frame_Top&>(*cell);
-                std::string type = (cellFrame.getActivation())
-                    ? cellFrame.getActivation()->getType() : "Linear";
 
-                if(std::string(cell->getType()) != ElemWiseCell::Type
-                    && !(std::string(cell->getType()) == ActivationCell::Type && type == "Linear") ) {
+                if (std::string(cell->getType()) != ElemWiseCell::Type) {
+
+                    std::string type = (cellFrame.getActivation()) 
+                                        ? cellFrame.getActivation()->getType() 
+                                        : "Linear";
+
                     auto reg = Registrar<CPP_ConcatCell>::create(getCellModelType(*cell));
-                    auto concatCell = reg(deepNet, 
+
+                    // If ActivationCell detected with Linear type, replace it by ConcatCell
+                    if (std::string(cell->getType()) == ActivationCell::Type && type == "Linear") {
+                        auto concatCell = reg(deepNet, 
+                                          deepNet.generateNewCellName(cell->getName()), 
+                                          cell->getNbChannels());
+
+                        deepNet.addCellBefore(concatCell, cell);
+                        deepNet.removeCell(cell, true);
+                    }
+                    else {  // Otherwise, just add ConcatCell
+                        auto concatCell = reg(deepNet, 
                                           deepNet.generateNewCellName(cell->getName() + "_concat"), 
                                           cell->getNbChannels());
 
-                    deepNet.addCellBefore(concatCell, cell);
+                        deepNet.addCellBefore(concatCell, cell);
+                    }
                 }
             }
         }
