@@ -49,6 +49,7 @@
 #include "Cell/DeconvCell.hpp"
 #include "Cell/FcCell.hpp"
 #include "Cell/ResizeCell.hpp"
+#include "Cell/ReshapeCell.hpp"
 #include "Cell/ScalingCell.hpp"
 #include "Cell/SoftmaxCell.hpp"
 #include "Cell/TransposeCell.hpp"
@@ -707,7 +708,8 @@ void N2D2::DeepNetQuantization::quantizeActivations(
                     cell->getType() == ResizeCell::Type || 
                     cell->getType() == ScalingCell::Type || 
                     cell->getType() == SoftmaxCell::Type || 
-                    cell->getType() == TransposeCell::Type)
+                    cell->getType() == TransposeCell::Type ||
+                    cell->getType() == ReshapeCell::Type)
             {
                 activationScalings[cell->getName()] = prevActivationScaling;
                 continue;
