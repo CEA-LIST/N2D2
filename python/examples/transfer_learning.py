@@ -20,9 +20,13 @@
 """
 
 
-
-
-import n2d2
+import n2d2.global_variables
+from n2d2.database import CIFAR100
+from n2d2.models import MobileNetV2, ResNet
+from n2d2.provider import DataProvider
+from n2d2.cells import Fc, Softmax
+from n2d2.target import Score
+from n2d2.solver import SGD
 
 import math
 import argparse
@@ -48,36 +52,36 @@ avg_window = 10000//args.batch_size
 nb_outputs = 100
 
 print("Create database")
-database = n2d2.database.CIFAR100(validation=0.05)
+database = CIFAR100(validation=0.05)
 database.load(args.data_path)
 print(database)
 
 print("Create provider")
-provider = n2d2.provider.DataProvider(database=database, size=[224, 224, 3], batch_size=args.batch_size)
+provider = DataProvider(database=database, size=[224, 224, 3], batch_size=args.batch_size)
 
 
 if args.arch == 'MobileNetv2-onnx': # Load pretrained weights
-    extractor = n2d2.models.mobilenetv2.load_from_ONNX(provider, download=True, batch_size=args.batch_size)
+    extractor = MobileNetV2.load_from_ONNX(provider, download=True, batch_size=args.batch_size)
     extractor.remove("mobilenetv20_output_pred_fwd")
     extractor.remove("mobilenetv20_output_flatten0_reshape0")
-    provider.add_transformation(n2d2.models.mobilenetv2.ONNX_preprocessing(size=224))
-    head = n2d2.cells.Fc(1280, nb_outputs, name="fc")
+    provider.add_transformation(MobileNetV2.ONNX_preprocessing(size=224))
+    head = Fc(1280, nb_outputs, name="fc")
 elif args.arch == 'ResNet-onnx': # Load pretrained weights
-    extractor = n2d2.models.resnet.load_from_ONNX(provider, '34', 'post_act', download=True, batch_size=args.batch_size)
+    extractor = ResNet.load_from_ONNX(provider, '34', 'post_act', download=True, batch_size=args.batch_size)
     extractor.remove("resnetv23_flatten0_reshape0")
     extractor.remove("resnetv23_dense0_fwd")
-    head = n2d2.cells.Fc(512, nb_outputs, name="fc")
-    provider.add_transformation(n2d2.models.resnet.ONNX_preprocessing(size=224))
+    head = Fc(512, nb_outputs, name="fc")
+    provider.add_transformation(ResNet.ONNX_preprocessing(size=224))
 else:
     raise ValueError("Invalid architecture: " + args.arch)
 
 
 #extractor.set_solver(n2d2.solver.SGD(learning_rate=0.01))
-head.set_solver(n2d2.solver.SGD(learning_rate=0.01, momentum=0.9))
+head.set_solver(SGD(learning_rate=0.01, momentum=0.9))
 
 print("Create classifier")
-softmax = n2d2.cells.nn.Softmax(with_loss=True)
-target = n2d2.target.Score(provider, top_n=1)
+softmax = Softmax(with_loss=True)
+target = Score(provider, top_n=1)
 
 # To prevent batchnorm updates in frozen extractor
 extractor.test()
