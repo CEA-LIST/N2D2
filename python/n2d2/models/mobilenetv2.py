@@ -175,9 +175,8 @@ class MobileNetV2(Sequence):
             Pool2d(pool_dims=[7,7], pooling='Average', stride_dims=[1,1], padding_dims=[0,0]),
             ConvPointWise(1280, 1000, **conv1x1_def())
         ])
-        
-    
-    @classmethod
+
+    @classmethod 
     def load_from_ONNX(cls, inputs, dims:Optional[tuple]=None, batch_size:int =1, 
                         path:Optional[str] =None, download:bool =False) -> n2d2.cells.cell.DeepNetCell:
         """Load a MobileNetV2 model with given features from an ONNX file.
@@ -209,21 +208,21 @@ class MobileNetV2(Sequence):
         elif  path is not None and download:
             raise RuntimeError("Specified at same time path and download=True")
         elif path is None and download:
-            n2d2.utils.download_model("https://s3.amazonaws.com/onnx-model-zoo/mobilenet/mobilenetv2-1.0/mobilenetv2-1.0.onnx",
+            n2d2.utils.download("https://s3.amazonaws.com/onnx-model-zoo/mobilenet/mobilenetv2-1.0/mobilenetv2-1.0.onnx",
                 n2d2.global_variables.model_cache+"/ONNX/",
                 "mobilenetv2")
             path = n2d2.global_variables.model_cache+"/ONNX/mobilenetv2/mobilenetv2-1.0.onnx"
         model = n2d2.cells.DeepNetCell.load_from_ONNX(inputs, path)
         return model
 
-    # @classmethod
-    # def ONNX_preprocessing(size=224):
-    #     margin = 32
-    #     trans = Composite([
-    #         Rescale(width=size+margin, height=size+margin),
-    #         PadCrop(width=size, height=size),
-    #         RangeAffine(first_operator='Divides', first_value=[255.0]),
-    #         ColorSpace(color_space='RGB'),
-    #         RangeAffine(first_operator='Minus', first_value=[0.485, 0.456, 0.406], second_operator='Divides', second_value=[0.229, 0.224, 0.225]),
-    #     ])
-    #     return trans
+    @classmethod
+    def ONNX_preprocessing(cls, size=224):
+        margin = 32
+        trans = Composite([
+            Rescale(width=size+margin, height=size+margin),
+            PadCrop(width=size, height=size),
+            RangeAffine(first_operator='Divides', first_value=[255.0]),
+            ColorSpace(color_space='RGB'),
+            RangeAffine(first_operator='Minus', first_value=[0.485, 0.456, 0.406], second_operator='Divides', second_value=[0.229, 0.224, 0.225]),
+        ])
+        return trans

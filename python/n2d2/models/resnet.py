@@ -204,7 +204,7 @@ class ResNet():
 
         >>> db = n2d2.database.Database()
         >>> pro = n2d2.provider.DataProvider(db, size=[224,224,3], batch_size=10)
-        >>> model = n2d2.models.ResNet.load_from_ONNX(pro, resnet_type='50', batch_size=10, download=True)
+        >>> model = n2d2.models.load_from_ONNX(pro, resnet_type='50', batch_size=10, download=True)
         """
         if dims is None:
             dims = [224, 224, 3]
@@ -226,7 +226,7 @@ class ResNet():
         elif  path is not None and download:
             raise RuntimeError("Specified at same time path and download=True")
         elif path is None and download:
-            n2d2.utils.download_model(
+            n2d2.utils.download(
                 "https://s3.amazonaws.com/onnx-model-zoo/resnet/"+"resnet"+resnet_type+v+"/"+"resnet"+resnet_type+v+".onnx",
                 n2d2.global_variables.model_cache + "/ONNX/",
                 resnet_name)
@@ -234,8 +234,8 @@ class ResNet():
         model = n2d2.cells.cell.DeepNetCell.load_from_ONNX(inputs, path)
         return model
 
-
-    def ONNX_preprocessing(self, size:int =224, margin:int =32) -> Composite:
+    @classmethod
+    def ONNX_preprocessing(cls, size:int =224, margin:int =32) -> Composite:
 
         trans = Composite([
             Rescale(width=size+margin, height=size+margin, keep_aspect_ratio=False, resize_to_fit=False),
@@ -244,7 +244,6 @@ class ResNet():
             ColorSpace(color_space='RGB'),
             RangeAffine(first_operator='Minus', first_value=[0.485, 0.456, 0.406], second_operator='Divides', second_value=[0.229, 0.224, 0.225]),
         ])
-
         return trans
 
 class ResNet18(n2d2.cells.cell.Sequence):
