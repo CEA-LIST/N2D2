@@ -208,6 +208,11 @@ class DataProvider(Provider):
         """
         return self._N2D2_object.allBatchsProvided(self.get_partition())
 
+    def normalize_sitmuli(self):
+        """Normalize the stimuli of the database between [0,1]
+        """
+        self._N2D2_object.normalizeIntegersStimuli(self._N2D2_object.getDatabase().getStimuliDepth())
+
     @check_types
     def read_batch(self, idx:int=None):
         """
