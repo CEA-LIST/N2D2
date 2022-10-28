@@ -19,7 +19,7 @@ knowledge of the CeCILL-C license and that you accept its terms.
 """
 
 import N2D2
-from os import mkdir
+from os import mkdir, remove
 from os.path import exists
 from n2d2 import error_handler, add_docstring, check_types, template_docstring
 from n2d2.n2d2_interface import Options
@@ -233,12 +233,24 @@ def export_c(deepnet_cell: DeepNetCell,
 @check_types
 def export_cpp(deepnet_cell: DeepNetCell,
                provider: Provider=None,
+               optimize_buffer_memory: bool=True,
                **kwargs) -> None:
     """Generate a CPP export of the neural network.
 
     List of exportable cells :{exportable_cells}
+
+    :param optimize_buffer_memory: If False deactivate memory optimization, default=True
+    :type optimize_buffer_memory: bool, optional
     """
     kwargs["gen_export"] = "CPP"
+
+    if not optimize_buffer_memory:
+        extra_params_path = "./tmp.ini"
+        with open(extra_params_path, "w") as param_file:
+            param_file.write("OptimizeBufferMemory=0\n")
+        N2D2.DeepNetExport.setExportParameters(extra_params_path)
+        remove(extra_params_path)
+
     _generate_export(deepnet_cell, provider, **kwargs)
 
 @template_docstring("exportable_cells", "\n"+_gen_exportable_cell_matrix("CPP_TensorRT"))

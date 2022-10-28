@@ -79,6 +79,7 @@ void init_StimuliProvider(py::module &m) {
     .def("getDataChannel", (const StimuliProvider::TensorData_T (StimuliProvider::*)(unsigned int, unsigned int, int) const) &StimuliProvider::getDataChannel, py::arg("channel"), py::arg("batchPos") = 0, py::arg("dev") = -1)
     .def("getLabelsDataChannel", (const Tensor<int> (StimuliProvider::*)(unsigned int, unsigned int, int) const) &StimuliProvider::getLabelsDataChannel, py::arg("channel"), py::arg("batchPos") = 0, py::arg("dev") = -1)
     .def("getLabelsROIs", (const std::vector<std::shared_ptr<ROI> >& (StimuliProvider::*)(unsigned int, int) const) &StimuliProvider::getLabelsROIs, py::arg("batchPos") = 0, py::arg("dev") = -1)
+    .def("normalizeIntegersStimuli", &StimuliProvider::normalizeIntegersStimuli, py::arg("envCvDepth"))
     ;
 
 }

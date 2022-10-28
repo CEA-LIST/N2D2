@@ -140,7 +140,7 @@ void init_Database(py::module &m) {
      :rtype: int
     )mydelimiter")
     .def("getLoadDataInMemory", (bool (Database::*)())(&Database::getLoadDataInMemory))
-    // .def("getLoadDataInMemory", Database::getLoadDataInMemory)
+    .def("getStimuliDepth", &Database::getStimuliDepth)
     ;
 
 }

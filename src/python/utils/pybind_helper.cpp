@@ -90,7 +90,8 @@ namespace N2D2 {
         #ifdef CUDA
         m.def("setCudaDeviceOption", &setCudaDeviceOption, py::arg("value"));
         m.def("setMultiDevices", &setMultiDevices, py::arg("cudaDev"));
-		#endif        
+		#endif
+        m.def("setVerboseLevel", &setVerboseLevel, py::arg("value"));
     }
 }
 
