@@ -68,7 +68,10 @@
 using namespace N2D2;
 
 namespace N2D2_HELPER{
-    
+    unsigned int verbosity = 0;
+    void setVerboseLevel(unsigned int value){
+        verbosity = value;
+    }
     #ifdef CUDA
     unsigned int cudaDevice = 0;
     void setCudaDeviceOption(unsigned int value){
@@ -333,7 +336,7 @@ namespace N2D2_HELPER{
         if (!cudaDevices.empty())
             cudaDevice = cudaDevices[0];
 #endif
-
+        verbosity = opts.parse("-verbose", 0, "verbose level"); // Not used in N2D2
         version =     opts.parse("-v", "display version information");
         if (version) {
             printVersionInformation();
@@ -349,6 +352,7 @@ namespace N2D2_HELPER{
         if (seed == 0 && learn == 0 && learnEpoch == 0 && learnStdp == 0) {
             seed = Network::readSeed("seed.dat");
         }
+        
     }
  
     void test(const Options& opt, std::shared_ptr<DeepNet>& deepNet, bool afterCalibration) {

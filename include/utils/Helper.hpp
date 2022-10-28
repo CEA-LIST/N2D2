@@ -99,6 +99,8 @@ namespace N2D2_HELPER{
         std::string iniConfig;
 
     };
+    extern unsigned int verbosity;
+    void setVerboseLevel(unsigned int value);
     #ifdef CUDA
     extern unsigned int cudaDevice;
     void setCudaDeviceOption(unsigned int value);
