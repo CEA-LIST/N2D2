@@ -80,6 +80,7 @@ def PTQ(deepnet_cell,
         wt_clipping_mode:str="NONE",
         act_clipping_mode:str="MSE",
         act_scaling_mode:str="FLOAT_MULT",
+        act_rescale_per_output:bool=False,
         **kwargs):
     """
     :param nb_bits: Number of bits per weight for exports (can be for example `-16` for float 16 bits or `8` int 8 bits)
@@ -96,6 +97,8 @@ def PTQ(deepnet_cell,
     :type wt_clipping_mode: str, optional
     :param act_clipping_mode: activation clipping mode on calibration, can be ``NONE``, ``MSE`` or ``KL_DIVERGENCE`` or ``Quantile``, default="MSE"
     :type act_clipping_mode: str, optional
+    :param act_rescale_per_output: rescale activation per output on export, default=False
+    :type act_rescale_per_output: bool, optional
     """
     no_unsigned = kwargs.get("export_no_unsigned", no_unsigned)
     cross_layer_equalization = not kwargs.get("export_no_cross_layer_equalization", not cross_layer_equalization)
@@ -119,6 +122,7 @@ def PTQ(deepnet_cell,
         wt_clipping_mode=N2D2_wt_clipping_mode,
         act_clipping_mode=N2D2_act_clipping_mode,
         act_scaling_mode=N2D2_act_scaling_mode,
+        act_rescale_per_output=act_rescale_per_output,
     ).N2D2()
 
     N2D2_deepnet = deepnet_cell.get_embedded_deepnet().N2D2()
