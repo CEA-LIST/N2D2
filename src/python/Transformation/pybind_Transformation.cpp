@@ -26,7 +26,8 @@ namespace py = pybind11;
 
 namespace N2D2 {
 void init_Transformation(py::module &m) {
-    py::class_<Transformation, std::shared_ptr<Transformation>, Parameterizable> (m, "Transformation", py::multiple_inheritance());
+    py::class_<Transformation, std::shared_ptr<Transformation>, Parameterizable> (m, "Transformation", py::multiple_inheritance())
+    .def("getType", &Transformation::getType);
 
 }
 }
