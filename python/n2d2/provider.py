@@ -28,6 +28,7 @@ from n2d2.deepnet import DeepNet
 from n2d2.transform import Transformation, Composite
 from n2d2.database import Database
 from n2d2.n2d2_interface import N2D2_Interface
+from n2d2.converter import from_N2D2_object
 
 class Provider(N2D2_Interface,ABC):
     _parameters={
@@ -209,9 +210,14 @@ class DataProvider(Provider):
         return self._N2D2_object.allBatchsProvided(self.get_partition())
 
     def normalize_stimuli(self):
-        """Normalize the stimuli of the database between [0,1]
+        """Normalize the integer value range of stimuli between [0,1]
         """
         self._N2D2_object.normalizeIntegersStimuli(self._N2D2_object.getDatabase().getStimuliDepth())
+        # Updating Transformations
+        composite_trans = self._N2D2_object.getOnTheFlyTransformation(self.get_partition())
+        for i in range(composite_trans.size()):
+            if composite_trans[i] not in [t.N2D2() for t in self._transformations]:
+                self._transformations.append(from_N2D2_object(composite_trans[i]))
 
     @check_types
     def read_batch(self, idx:int=None):
@@ -258,6 +264,9 @@ class DataProvider(Provider):
         else:
             self._N2D2_object.addOnTheFlyTransformation(transformation.N2D2(), transformation.get_apply_set())
             self._transformations.append(transformation)
+    
+    def get_transformations(self):
+        return self._transformations
 
     def batch_number(self):
         return self._index

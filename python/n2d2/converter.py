@@ -37,7 +37,9 @@ def fill_object_dict():
     Dropout, Padding, Pool, BatchNorm2d, Reshape, Resize, Transpose, \
     Activation, Transformation, Scaling
     from n2d2.quantizer import LSQCell, LSQAct, SATCell, SATAct
-
+    from n2d2.transform import Composite, ChannelExtraction, \
+    ColorSpace, Distortion, Flip, PadCrop, RandomResizeCrop, RangeAffine, \
+    Rescale, SliceExtraction
     # All objects that needs convertibility from N2D2 to API object have to be added to this dictionary.
     # The key needs to correspond to the result of the getType() method of the N2D2 object
 
@@ -53,6 +55,17 @@ def fill_object_dict():
         "Normal": Normal,
         "Xavier": Xavier,
         "Constant": Constant,
+
+        "Composite" : Composite,
+        "ChannelExtraction" : ChannelExtraction,
+        "ColorSpace" : ColorSpace,
+        "Distortion" : Distortion,
+        "Flip" : Flip,
+        "PadCrop" : PadCrop,
+        "RandomResizeCrop" : RandomResizeCrop,
+        "RangeAffine" : RangeAffine,
+        "Rescale" : Rescale,
+        "SliceExtraction" : SliceExtraction,
 
         "Fc": Fc,
         "Conv": Conv,

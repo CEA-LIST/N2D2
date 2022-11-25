@@ -76,8 +76,9 @@ void init_CompositeTransformation(py::module &m) {
     py::class_<CompositeTransformation, std::shared_ptr<CompositeTransformation>, Transformation> ct(m, "CompositeTransformation", py::multiple_inheritance());
     
     ct.def(py::init<const CompositeTransformation&>(), py::arg("transformation"))
-    .def("push_back", (void (CompositeTransformation::*)(const CompositeTransformation&))(&CompositeTransformation::push_back), "Add a transformation to the list of transformation.");
-
+    .def("push_back", (void (CompositeTransformation::*)(const CompositeTransformation&))(&CompositeTransformation::push_back), "Add a transformation to the list of transformation.")
+    .def("__getitem__", (std::shared_ptr<N2D2::Transformation> (CompositeTransformation::*)(unsigned int))(&CompositeTransformation::operator[]), "Get a transformation to the list of transformation.")
+    .def("size", &CompositeTransformation::size);
     make_compositable<DistortionTransformation>(ct);
     make_compositable<PadCropTransformation>(ct);
     make_compositable<AffineTransformation>(ct);
