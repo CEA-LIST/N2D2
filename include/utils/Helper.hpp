@@ -64,6 +64,7 @@ namespace N2D2_HELPER{
         int testIndex = -1;
         int testId = -1;
         std::string testAdv = std::string();
+        std::string pruningMethod = std::string();
         bool check = false;
         unsigned int logOutputs = 0U;
         bool logJSON = false;
@@ -123,6 +124,7 @@ namespace N2D2_HELPER{
     void test(const Options&, std::shared_ptr<DeepNet>&, bool);
     void importFreeParameters(const Options& opt, DeepNet& deepNet);
     bool generateExport(const Options&, std::shared_ptr<DeepNet>&);
+    void pruneDeepnet(const Options&, std::shared_ptr<DeepNet>&);
     bool calibNetwork(const Options&, std::shared_ptr<DeepNet>&);
     void generateExportFromCalibration(const Options&, std::shared_ptr<DeepNet>&, std::string="");
     void findLearningRate(const Options&, std::shared_ptr<DeepNet>&);

@@ -324,6 +324,11 @@ int main(int argc, char* argv[]) try
         testCStdp(opt, deepNet);
     }
 
+    // Pruning testing section
+    if (!opt.pruningMethod.empty()) {
+        pruneDeepnet(opt, deepNet);
+    }
+
     // Adversararial testing section
     if (!opt.testAdv.empty()) {
         std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();

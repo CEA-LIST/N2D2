@@ -264,6 +264,7 @@ namespace N2D2_HELPER{
                                                 " precedence over -test-index)");
         testAdv =     opts.parse("-testAdv", testAdv, "performs an adversarial study "
                                                             "only options: Solo or Multi");
+        pruningMethod = opts.parse("-pruning", pruningMethod, "performs a pruning algorithm on the model");
         check =       opts.parse("-check", "enable gradient computation checking");
         logOutputs =  opts.parse("-log-outputs", logOutputs, "log layers outputs for the n-th "
                                                     "stimulus (0 = no log)");
@@ -606,6 +607,30 @@ namespace N2D2_HELPER{
             else {
                 deepNet.importNetworkFreeParameters("weights", opt.ignoreNoExist);
             }
+        }
+    }
+
+    void pruneDeepnet(const Options& opt, std::shared_ptr<DeepNet>& deepNet)
+    {
+        std::cout << "Coucou " << opt.pruningMethod << std::endl;
+
+        if (opt.pruningMethod == "Random") {
+
+            // Get first layer
+            // Check if first layer is Conv
+            std::shared_ptr<Cell> cell = deepNet->getCell(deepNet->getLayers()[1][0]);
+            const std::string cellType = cell->getType();
+
+            if (cell->getType() == "Conv") {
+                std::shared_ptr<ConvCell> convcell = std::dynamic_pointer_cast<ConvCell>(cell);
+                const BaseInterface* weightsInterface = convCell.getWeights();
+                const BaseTensor& weights = (*weightsInterface)[0U];
+                Tensor<float> weights = tensor_cast<float>(convcell->getWeights()[0]);
+                std::cout << weights << std::endl;
+            }
+
+            std::cout << "Type 1st layer: " << cellType << std::endl;
+
         }
     }
 
