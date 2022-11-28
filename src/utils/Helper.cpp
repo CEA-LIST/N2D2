@@ -622,11 +622,16 @@ namespace N2D2_HELPER{
             const std::string cellType = cell->getType();
 
             if (cell->getType() == "Conv") {
-                std::shared_ptr<ConvCell> convcell = std::dynamic_pointer_cast<ConvCell>(cell);
+                //std::shared_ptr<ConvCell> convCell = std::dynamic_pointer_cast<ConvCell>(cell);
+                auto convCell = std::dynamic_pointer_cast<ConvCell>(cell);
+                const auto& weights = convCell->getWeights();
+                std::cout << weights << std::endl;
+
+                /*
                 const BaseInterface* weightsInterface = convCell.getWeights();
                 const BaseTensor& weights = (*weightsInterface)[0U];
                 Tensor<float> weights = tensor_cast<float>(convcell->getWeights()[0]);
-                std::cout << weights << std::endl;
+                */
             }
 
             std::cout << "Type 1st layer: " << cellType << std::endl;
