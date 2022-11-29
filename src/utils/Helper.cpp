@@ -632,10 +632,12 @@ namespace N2D2_HELPER{
                 std::cout << weights << std::endl;
 
                 //loop over tensor and multiply by 0 in random places with frequency e.g. 20%
-                float eps = 0.2;
+                float eps = 1.0;
                 std::cout << "making random weights 0..." << std::endl;
                 for (unsigned int i = 0; i < weights.size(); ++i) {
-                    weights(i) *= eps * Random::randNormal(0.0, 1.0);
+                    float factor = eps * Random::randNormal(0.0, 1.0);
+                    std::cout << factor << " , " << std::endl;
+                    weights(i) *= factor;
                     weights(i) = std::max(-1.0f, std::min(weights(i), 1.0f));
                 }
 
