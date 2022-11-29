@@ -30,6 +30,7 @@
 #include "Transformation/RangeAffineTransformation.hpp"
 #include "utils/ProgramOptions.hpp"
 #include "Adversarial.hpp"
+#include "Pruning.hpp"
 #ifdef CUDA
 #include <cudnn.h>
 
@@ -124,7 +125,6 @@ namespace N2D2_HELPER{
     void test(const Options&, std::shared_ptr<DeepNet>&, bool);
     void importFreeParameters(const Options& opt, DeepNet& deepNet);
     bool generateExport(const Options&, std::shared_ptr<DeepNet>&);
-    void pruneDeepnet(const Options&, std::shared_ptr<DeepNet>&);
     bool calibNetwork(const Options&, std::shared_ptr<DeepNet>&);
     void generateExportFromCalibration(const Options&, std::shared_ptr<DeepNet>&, std::string="");
     void findLearningRate(const Options&, std::shared_ptr<DeepNet>&);

@@ -610,48 +610,6 @@ namespace N2D2_HELPER{
         }
     }
 
-    void pruneDeepnet(const Options& opt, std::shared_ptr<DeepNet>& deepNet)
-    {
-        std::cout << "Coucou " << opt.pruningMethod << std::endl;
-
-        if (opt.pruningMethod == "Random") {
-
-            // Get first layer
-            // Check if first layer is Conv
-            std::shared_ptr<Cell> cell = deepNet->getCell(deepNet->getLayers()[1][0]);
-            const std::string cellType = cell->getType();
-
-            if (cell->getType() == "Conv") {
-
-                //get init weights
-                auto convCell = std::dynamic_pointer_cast<ConvCell>(cell);
-                const BaseInterface* weightsInterface = convCell->getWeights();
-                const BaseTensor& weights_bt = (*weightsInterface)[0U];
-                Tensor<float> weights = tensor_cast<float>(weights_bt);
-                std::cout << "init weights" << std::endl;
-                std::cout << weights << std::endl;
-
-                //loop over tensor and multiply by 0 in random places with frequency e.g. 20%
-                float eps = 1.0;
-                std::cout << "making random weights 0..." << std::endl;
-                for (unsigned int i = 0; i < weights.size(); ++i) {
-                    float factor = eps * Random::randNormal(0.0, 1.0);
-                    std::cout << factor << " , " << std::endl;
-                    weights(i) *= factor;
-                    weights(i) = std::max(-1.0f, std::min(weights(i), 1.0f));
-                }
-
-                //set those new weights to conv and check
-                //not good multiplication factor for now, just testing
-                std::cout << "weights after random pruning" << std::endl;
-                std::cout << weights << std::endl;
-            }
-
-            std::cout << "Type 1st layer: " << cellType << std::endl;
-
-        }
-    }
-
     bool calibNetwork(const Options& opt, std::shared_ptr<DeepNet>& deepNet) {
         const std::shared_ptr<Database>& database = deepNet->getDatabase();
         const std::shared_ptr<StimuliProvider>& sp = deepNet->getStimuliProvider();

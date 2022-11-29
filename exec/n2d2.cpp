@@ -326,7 +326,15 @@ int main(int argc, char* argv[]) try
 
     // Pruning testing section
     if (!opt.pruningMethod.empty()) {
-        pruneDeepnet(opt, deepNet);
+        Pruning prune = Pruning(opt.pruningMethod);
+
+        // Options for pruning
+        std::vector<float> pruneOpt;
+        // Add threshold
+        pruneOpt.push_back(0.2f);
+
+        // Apply pruning algorithm to deepNet
+        prune.apply(deepNet, pruneOpt);
     }
 
     // Adversararial testing section
