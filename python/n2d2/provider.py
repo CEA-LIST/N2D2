@@ -213,11 +213,6 @@ class DataProvider(Provider):
         """Normalize the integer value range of stimuli between [0,1]
         """
         self._N2D2_object.normalizeIntegersStimuli(self._N2D2_object.getDatabase().getStimuliDepth())
-        # Updating Transformations
-        composite_trans = self._N2D2_object.getOnTheFlyTransformation(self.get_partition())
-        for i in range(composite_trans.size()):
-            if composite_trans[i] not in [t.N2D2() for t in self._transformations]:
-                self._transformations.append(from_N2D2_object(composite_trans[i]))
 
     @check_types
     def read_batch(self, idx:int=None):
@@ -266,7 +261,16 @@ class DataProvider(Provider):
             self._transformations.append(transformation)
     
     def get_transformations(self):
-        return self._transformations
+        """Return the transformation (``OnTheFly`` or not) associated to the provider object.
+        """
+        transformations = []
+        composite_trans = self._N2D2_object.getOnTheFlyTransformation(self.get_partition())
+        for i in range(composite_trans.size()):
+            transformations.append(from_N2D2_object(composite_trans[i]))
+        trans = self._N2D2_object.getTransformation(self.get_partition())
+        for i in range(trans.size()):
+            transformations.append(from_N2D2_object(trans[i]))
+        return transformations
 
     def batch_number(self):
         return self._index
