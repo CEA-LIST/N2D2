@@ -622,10 +622,26 @@ namespace N2D2_HELPER{
             const std::string cellType = cell->getType();
 
             if (cell->getType() == "Conv") {
+
+                //get init weights
                 auto convCell = std::dynamic_pointer_cast<ConvCell>(cell);
                 const BaseInterface* weightsInterface = convCell->getWeights();
                 const BaseTensor& weights_bt = (*weightsInterface)[0U];
                 Tensor<float> weights = tensor_cast<float>(weights_bt);
+                std::cout << "init weights" << std::endl;
+                std::cout << weights << std::endl;
+
+                //loop over tensor and multiply by 0 in random places with frequency e.g. 20%
+                float eps = 0.2;
+                std::cout << "making random weights 0..." << std::endl;
+                for (unsigned int i = 0; i < weights.size(); ++i) {
+                    weights(i) *= eps * Random::randNormal(0.0, 1.0);
+                    weights(i) = std::max(-1.0f, std::min(weights(i), 1.0f));
+                }
+
+                //set those new weights to conv and check
+                //not good multiplication factor for now, just testing
+                std::cout << "weights after random pruning" << std::endl;
                 std::cout << weights << std::endl;
             }
 
