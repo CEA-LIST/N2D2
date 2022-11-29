@@ -22,6 +22,7 @@
 #include "utils/Utils.hpp"
 
 #include "Cell/ConvCell.hpp"
+#include "Cell/FcCell.hpp"
 
 N2D2::Pruning::Pruning(const N2D2::Pruning::Prune_T pruneName)
     : // Variables
@@ -63,8 +64,15 @@ void N2D2::Pruning::apply(std::shared_ptr<N2D2::DeepNet>& deepNet,
 void N2D2::prune_random(std::shared_ptr<DeepNet>& deepNet, 
                         const float threshold)
 {
-    std::shared_ptr<Cell> cell = deepNet->getCell(deepNet->getLayers()[1][0]);
-    prune_random(cell, threshold);
+    for (std::map<std::string, std::shared_ptr<Cell> >::iterator
+            itCells = deepNet->getCells().begin(),
+            itCellsEnd = deepNet->getCells().end();
+            itCells != itCellsEnd;
+            ++itCells)
+    {
+        std::cout << "Pruning " << (*itCells).first << "..." << std::endl;
+        prune_random((*itCells).second, threshold);
+    }
 }
 
 void N2D2::prune_random(std::shared_ptr<Cell>& cell, 
@@ -74,22 +82,24 @@ void N2D2::prune_random(std::shared_ptr<Cell>& cell,
 
     if (cellType == "Conv") {
 
-        // Get weights from 1st layer
         std::shared_ptr<ConvCell> convCell = std::dynamic_pointer_cast<ConvCell>(cell);
-        Tensor<float> weights = tensor_cast<float>((*convCell->getWeights())[0]);
-        std::cout << "Weights before random pruning" << std::endl;
-        std::cout << weights << std::endl;
 
-        for (unsigned int i = 0; i < weights.size(); ++i) {
-            weights(i) = (Random::randUniform(0.0, 1.0) > threshold) ? weights(i) : 0.0f;
+        for (unsigned int output = 0; output < convCell->getNbOutputs(); ++output) {
+            for (unsigned int channel = 0; channel < convCell->getNbChannels(); ++channel) {
+                Tensor<float> kernel;
+                convCell->getWeight(output, channel, kernel);
+
+                for (unsigned int sx = 0; sx < convCell->getKernelWidth(); ++sx) {
+                    for (unsigned int sy = 0; sy < convCell->getKernelHeight(); ++sy)
+                        kernel(sx, sy) = (Random::randUniform(0.0, 1.0) > threshold) ? kernel(sx, sy) : 0.0f;
+                }
+
+                convCell->setWeight(output, channel, kernel);
+            }
         }
-
-        //set those new weights to conv and check
-        //not good multiplication factor for now, just testing
-        std::cout << "Weights after random pruning" << std::endl;
-        std::cout << weights << std::endl;
     } 
     else {
-        throw std::runtime_error("No parameters to prune in that cell");
+        std::cout << "No need to prune this " << cellType << " cell" << std::endl;
+        // throw std::runtime_error("No parameters to prune in that cell");
     }
 }
