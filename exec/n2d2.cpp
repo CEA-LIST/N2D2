@@ -335,6 +335,9 @@ int main(int argc, char* argv[]) try
 
         // Apply pruning algorithm to deepNet
         prune.apply(deepNet, pruneOpt);
+
+        // Save network parameters
+        deepNet->exportNetworkFreeParameters("weights_pruned");
     }
 
     // Adversararial testing section
