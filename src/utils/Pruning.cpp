@@ -90,8 +90,9 @@ void N2D2::prune_random(std::shared_ptr<Cell>& cell,
                 convCell->getWeight(output, channel, kernel);
 
                 for (unsigned int sx = 0; sx < convCell->getKernelWidth(); ++sx) {
-                    for (unsigned int sy = 0; sy < convCell->getKernelHeight(); ++sy)
-                        kernel(sx, sy) = (Random::randUniform(0.0, 1.0) > threshold) ? kernel(sx, sy) : 0.0f;
+                    for (unsigned int sy = 0; sy < convCell->getKernelHeight(); ++sy){
+                        kernel(sx, sy) *= Random::randBernoulli(threshold);
+                    }
                 }
 
                 convCell->setWeight(output, channel, kernel);
