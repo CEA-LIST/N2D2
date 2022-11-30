@@ -125,39 +125,33 @@ void N2D2::prune_iter_nonstruct(std::shared_ptr<DeepNet>& deepNet,
     }
 }
 
+/*
+TODO in this method:
+we need 2 params : sparsity thershold (set by user) and delta for a step from 0
+
+get all weights in layer
+loop over each weight and if weight is < 0 +/- delta, set 0 in mask tensor
+!!! note : mask tensor has to be accessible during the fine-tuning procedure (when we call learn-epoch)
+
+when we are done with all weights in the layer, check if number of 0th is >= the sparsity threshold
+if it is smaller, we add increase the range to 2*delta and we repeat the procedure in a range 0 +/- 2*delta
+etc till the criterion on sparsity level is met
+
+here we need to fill the mask with 0th in right places
+
+the last step is a fine-tuning, need to access and apply mask on weights at each iteration
+*/
+
 void N2D2::prune_iter_nonstruct(std::shared_ptr<Cell>& cell,
                         const float threshold)
 {
     const std::string cellType = cell->getType();
 
     if (cellType == "Conv") {
-
         std::shared_ptr<ConvCell> convCell = std::dynamic_pointer_cast<ConvCell>(cell);
-
-        for (unsigned int output = 0; output < convCell->getNbOutputs(); ++output) {
-            for (unsigned int channel = 0; channel < convCell->getNbChannels(); ++channel) {
-                Tensor<float> kernel;
-                convCell->getWeight(output, channel, kernel);
-
-                for (unsigned int sx = 0; sx < convCell->getKernelWidth(); ++sx) {
-                    for (unsigned int sy = 0; sy < convCell->getKernelHeight(); ++sy){
-                        //random for now
-                        kernel(sx, sy) *= Random::randBernoulli(threshold);
-                        //TODO in this method: 
-
-                        //we need 2 params : sparsity thershold (set by user) and delta for a step from 0
-
-                        //get all weights in layer (maybe no need to use 4 loops as when we wanted to access kernel-per-kernel, the loop by size would be enough)
-                        //loop over them and if weight is < 0 +/- delta, set 0 in mask tensor
-                        //note : mask tensor has to be accessible during the fine-tuning procedure 
-
-                        //when we are done with all weights in the layer, check if number of 0th is >= the sparsity threshold
-                        //if it is smaller, we add increase the range to 2*delta and we repeat the procedure in a range 0 +/- 2*delta
-                    }
-                }
-
-                convCell->setWeight(output, channel, kernel);
-            }
+        Tensor<float> weights = tensor_cast<float>((*convCell->getWeights())[0]);
+        for (unsigned int i = 0; i < weights.size(); ++i) {
+            weights(i) *= Random::randBernoulli(threshold);
         }
     } 
     else {
