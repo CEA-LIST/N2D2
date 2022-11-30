@@ -35,6 +35,7 @@ public:
     enum Prune_T {
         None,
         Random,
+        Iter,
     };
 
     Pruning(const Prune_T pruneName = None);
@@ -55,19 +56,24 @@ private:
 // ----------------------------- Pruning methods ------------------------------
 // ----------------------------------------------------------------------------
 
-void prune_random(std::shared_ptr<DeepNet>& deepNet, 
+void prune_random(std::shared_ptr<DeepNet>& deepNet,
                   const float threshold);
 
-void prune_random(std::shared_ptr<Cell>& cell, 
+void prune_random(std::shared_ptr<Cell>& cell,
                   const float threshold);
 
+void prune_iter_nonstruct(std::shared_ptr<DeepNet>& deepNet,
+                  const float threshold);
+
+void prune_iter_nonstruct(std::shared_ptr<Cell>& cell,
+                  const float threshold);
 
 }   // N2D2
 
 namespace {
 template <>
 const char* const EnumStrings<N2D2::Pruning::Prune_T>::data[]
-    = {"None", "Random"};
+    = {"None", "Random", "Iter"};
 }
 
 #endif  // N2D2_PRUNING_H
