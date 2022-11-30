@@ -121,9 +121,18 @@ public:
     {
         return &mSharedSynapses;
     };
+    //to be used and changed when pruning is called
+    inline BaseInterface* getMaskWeights()
+    {
+        return &mMaskSharedSynapses;
+    };
     void setWeights(unsigned int k,
                     BaseInterface* weights,
                     unsigned int offset);
+    //to set up new mask for pruning
+    void setMaskWeights(unsigned int k,
+                        BaseInterface* maskWeights,
+                        unsigned int offset);
     inline const std::shared_ptr<BaseTensor> getBiases() const
     {
         return mBias;
@@ -184,6 +193,8 @@ protected:
     std::vector<size_t> mNbGroups;
     std::vector<std::shared_ptr<Solver> > mWeightsSolvers;
     CudaInterface<T> mSharedSynapses;
+    //mask for weights when pruning is applied
+    CudaInterface<T> mMaskSharedSynapses;
     std::map<unsigned int,
         std::pair<CudaInterface<T>*, unsigned int> > mExtSharedSynapses;
     std::shared_ptr<CudaTensor<T> > mBias;
