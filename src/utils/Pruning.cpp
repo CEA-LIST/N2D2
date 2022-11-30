@@ -150,8 +150,30 @@ void N2D2::prune_iter_nonstruct(std::shared_ptr<Cell>& cell,
     if (cellType == "Conv") {
         std::shared_ptr<ConvCell> convCell = std::dynamic_pointer_cast<ConvCell>(cell);
         Tensor<float> weights = tensor_cast<float>((*convCell->getWeights())[0]);
-        for (unsigned int i = 0; i < weights.size(); ++i) {
-            weights(i) *= Random::randBernoulli(threshold);
+
+        float delta_step = 0.01;
+        float sparsity_threshold = 90;
+        int num_iter_max = 1./delta_step;
+        int zero_count= 0;
+
+        for(unsigned int iter_delta = 0; iter_delta < num_iter_max; ++iter_delta){
+            if((float)zero_count*100/weights.size() < sparsity_threshold){
+                zero_count = 0;
+                for (unsigned int i = 0; i < weights.size(); ++i) {
+                    if (abs(weights(i)) < delta_step*iter_delta) {
+                        zero_count++;
+                    }
+                }
+            }
+            else{
+                //sparsity is ok, save the mask
+                for (unsigned int i = 0; i < weights.size(); ++i) {
+                    if (abs(weights(i)) < delta_step*iter_delta) {
+                        //save the mask here
+                        //use the method setMaskWeights from convCell_Frame_CUDA ?
+                    }
+                }
+            }
         }
     } 
     else {
