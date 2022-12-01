@@ -545,18 +545,18 @@ class DeepNetCell(Block):
         self._deepnet.N2D2().importNetworkFreeParameters(dir_name, ignoreNotExists=ignore_not_exists)
 
     @check_types
-    def log_confusion_matrix(self, path:str, partition:str="Test")->None:
-        """Log a confusion matrix of the given data partition.
+    def log_confusion_matrix(self, file_name:str, partition:str="Test")->None:
+        """Log the confusion matrix of the previous inference done on a data partition.
 
-        :param path: Path to the directory where you want to save the data.
-        :type path: str
+        :param file_name: File name of the confusion matrix, it will be saved in `<TargetName>.Target/ConfusionMatrix_<file_name>_score.png`.
+        :type file_name: str
         :param partition: The partition can be  ``Learn``, ``Validation``, ``Test``,  ``Unpartitioned``, default="Test"
         :type partition: str, otpionnal
         """
         if partition not in N2D2.Database.StimuliSet.__members__.keys():
             raise error_handler.WrongValue("partition", partition, N2D2.Database.StimuliSet.__members__.keys())
         for target in self._deepnet.N2D2().getTargets():
-            target.logConfusionMatrix(path, N2D2.Database.StimuliSet.__members__[partition])
+            target.logConfusionMatrix(file_name, N2D2.Database.StimuliSet.__members__[partition])
 
     @check_types
     def log_success(self, path:str, partition:str="Test")->None:
@@ -635,7 +635,7 @@ class DeepNetCell(Block):
     def fit(self, learn_epoch:int, log_epoch:int = 1000, avg_window:int = 10000, bench:bool = False, 
                 ban_multi_device:bool = False, valid_metric:str = "Sensitivity", stop_valid:int = 0, 
                 log_kernels:bool = False):
-        """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
+        """Train the :py:class:`n2d2.cells.DeepNetCell` object.
 
         :param learn_epoch: The number of epochs steps
         :type learn_epoch: int
@@ -677,7 +677,8 @@ class DeepNetCell(Block):
                  qat_sat:bool = False, log_kernels:bool = False, wt_round_mode:str = "NONE",
                  b_round_mode:str = "NONE", c_round_mode:str = "NONE",
                  act_scaling_mode:str = "FLOAT_MULT", log_JSON:bool = False, log_outputs:int = 0):
-        """This method is used to train the :py:class:`n2d2.cells.DeepNetCell` object.
+        """Test the :py:class:`n2d2.cells.DeepNetCell` object.
+        This method will also log the confusion matrix and the success curve.
 
         :param log: The number of steps between logs, default=1000
         :type log: int, optional
