@@ -166,13 +166,23 @@ class Score(Target):
         return self._N2D2_object.getAverageSuccess(self._provider.get_partition(), window)
 
     def clear_success(self):
+        """Clear the cached success.
+        """
         self._N2D2_object.clearSuccess(self._provider.get_partition())
 
     def clear_score(self):
+        """Clear the cached scores.
+        """
         self._N2D2_object.clearScore(self._provider.get_partition())
 
-    def log_confusion_matrix(self, path):
-        self._N2D2_object.logConfusionMatrix(path, self._provider.get_partition())
+    def log_confusion_matrix(self, file_name):
+        """Log the confusion matrix of the previous inference done on a data partition selected by the provider
+        (see :py:meth:`n2d2.provider.get_partition`).
+
+        :param file_name: File name of the confusion matrix, it will be saved in `<self.name>.Target/ConfusionMatrix_<file_name>_score.png`.
+        :type file_name: str
+        """
+        self._N2D2_object.logConfusionMatrix(file_name, self._provider.get_partition())
 
     def log_success(self, path):
         """
