@@ -114,12 +114,17 @@ void N2D2::prune_random(std::shared_ptr<Cell>& cell,
 void N2D2::prune_iter_nonstruct(std::shared_ptr<DeepNet>& deepNet,
                         const float threshold)
 {
+    int count = 0;
     for (std::map<std::string, std::shared_ptr<Cell> >::iterator
             itCells = deepNet->getCells().begin(),
             itCellsEnd = deepNet->getCells().end();
             itCells != itCellsEnd;
             ++itCells)
     {
+        count++;
+        if(count > 1){
+            break;
+        }
         std::cout << "Pruning " << (*itCells).first << "..." << std::endl;
         prune_iter_nonstruct((*itCells).second, threshold);
     }
@@ -152,29 +157,48 @@ void N2D2::prune_iter_nonstruct(std::shared_ptr<Cell>& cell,
         Tensor<float> weights = tensor_cast<float>((*convCell->getWeights())[0]);
 
         float delta_step = 0.01;
-        float sparsity_threshold = 90;
-        int num_iter_max = 1./delta_step;
         int zero_count= 0;
+        unsigned int iter_delta = 0;
+        Tensor<float> mask(weights.dims());
+        bool maskFilled = false;
 
-        for(unsigned int iter_delta = 0; iter_delta < num_iter_max; ++iter_delta){
-            if((float)zero_count*100/weights.size() < sparsity_threshold){
+        while(!maskFilled){
+            //check if the sparsity (within the range) is equal or above the requested thershold
+            if( ((float)zero_count)/weights.size() < threshold){
                 zero_count = 0;
                 for (unsigned int i = 0; i < weights.size(); ++i) {
+                    //check if the weight is inside the range
                     if (abs(weights(i)) < delta_step*iter_delta) {
                         zero_count++;
                     }
                 }
             }
             else{
-                //sparsity is ok, save the mask
+                //sparsity is ok, fill the mask
                 for (unsigned int i = 0; i < weights.size(); ++i) {
                     if (abs(weights(i)) < delta_step*iter_delta) {
-                        //save the mask here
-                        //use the method setMaskWeights from convCell_Frame_CUDA ?
+                        mask(i) = 0;
+                    }
+                    else{
+                        mask(i) = 1;
                     }
                 }
+                //TODO :: here save the mask into right tensor (using method setMaskWeights from convCell_Frame_CUDA?)
+                maskFilled = true;
             }
+            //increase the range for sparsity
+            iter_delta++;
         }
+
+        std::cout << "original weights = " << weights << std::endl;
+        std::cout << "weights mask = " << mask << std::endl;
+
+        // apply the mask to weights
+        for (unsigned int i = 0; i < weights.size(); ++i) {
+            weights(i) *= mask(i);
+        }
+
+        std::cout << "weights with mask applied = " << weights << std::endl;
     } 
     else {
         std::cout << "No need to prune this " << cellType << " cell" << std::endl;
