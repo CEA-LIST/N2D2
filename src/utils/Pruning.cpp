@@ -144,7 +144,7 @@ etc till the criterion on sparsity level is met
 
 here we need to fill the mask with 0th in right places
 
-the last step is a fine-tuning, need to access and apply mask on weights at each iteration
+the last step is a fine-tuning, need to access and apply mask on weights and their gradients at each iteration
 */
 
 void N2D2::prune_iter_nonstruct(std::shared_ptr<Cell>& cell,
@@ -155,6 +155,8 @@ void N2D2::prune_iter_nonstruct(std::shared_ptr<Cell>& cell,
     if (cellType == "Conv") {
         std::shared_ptr<ConvCell> convCell = std::dynamic_pointer_cast<ConvCell>(cell);
         Tensor<float> weights = tensor_cast<float>((*convCell->getWeights())[0]);
+
+        std::cout << "weights init = " << weights << std::endl;
 
         float delta_step = 0.01;
         int zero_count= 0;
@@ -190,15 +192,34 @@ void N2D2::prune_iter_nonstruct(std::shared_ptr<Cell>& cell,
             iter_delta++;
         }
 
-        std::cout << "original weights = " << weights << std::endl;
-        std::cout << "weights mask = " << mask << std::endl;
+        std::cout << "mask = " << mask << std::endl;
 
         // apply the mask to weights
         for (unsigned int i = 0; i < weights.size(); ++i) {
             weights(i) *= mask(i);
         }
 
-        std::cout << "weights with mask applied = " << weights << std::endl;
+        Tensor<float> weights_pruned = tensor_cast<float>((*convCell->getWeights())[0]);
+        std::cout << "weights pruned = " << weights_pruned << std::endl;
+
+        //have to set weight for conv, if not pruned weights = init weights when we export them
+        int i = 0;
+        for (unsigned int output = 0; output < convCell->getNbOutputs(); ++output) {
+            for (unsigned int channel = 0; channel < convCell->getNbChannels(); ++channel) {
+                Tensor<float> kernel;
+                convCell->getWeight(output, channel, kernel);
+
+                for (unsigned int sy = 0; sy < convCell->getKernelHeight(); ++sy){
+                    for (unsigned int sx = 0; sx < convCell->getKernelWidth(); ++sx) {
+                        std::cout << "output, channel, sy, sx, i = " << output << "," << channel << "," << sy << ","<< sx << "," << i << ": kernel, mask = " <<  kernel(sx, sy) << " ,  " << mask(i) << std::endl;
+                        //here the swap sx and sy is correct, we need to do it to get correct matching between indexes
+                        kernel(sx, sy) *= mask(i);
+                        i++;
+                    }
+                }
+                convCell->setWeight(output, channel, kernel);
+            }
+        }
     } 
     else {
         std::cout << "No need to prune this " << cellType << " cell" << std::endl;

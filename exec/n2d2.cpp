@@ -233,6 +233,21 @@ int main(int argc, char* argv[]) try
         learn(opt, deepNet);
     }
 
+    // Pruning testing section
+    if (!opt.pruningMethod.empty()) {
+        Pruning prune = Pruning(opt.pruningMethod);
+
+        // Options for pruning
+        std::vector<float> pruneOpt;
+        // Add threshold
+        pruneOpt.push_back(0.2f);
+        // Apply pruning algorithm to deepNet
+        prune.apply(deepNet, pruneOpt);
+
+        // Save network parameters
+        deepNet->exportNetworkFreeParameters("weights_pruned");
+    }
+
     if (!afterCalibration) {
         if (opt.learn > 0) {
             // Reload best state after learning
@@ -253,7 +268,12 @@ int main(int argc, char* argv[]) try
         else if (opt.learnStdp == 0 && opt.load.empty() && opt.weights.empty())
         {
             if (database.getNbStimuli(Database::Validation) > 0){
-                deepNet->importNetworkFreeParameters("weights_validation", opt.ignoreNoExist);
+                if(!opt.pruningMethod.empty()){
+                    deepNet->importNetworkFreeParameters("weights_pruned", opt.ignoreNoExist);
+                }
+                else{
+                    deepNet->importNetworkFreeParameters("weights_validation", opt.ignoreNoExist);
+                }
             }
             else
                 deepNet->importNetworkFreeParameters("weights", opt.ignoreNoExist);
@@ -324,22 +344,6 @@ int main(int argc, char* argv[]) try
         testCStdp(opt, deepNet);
     }
 
-    // Pruning testing section
-    if (!opt.pruningMethod.empty()) {
-        Pruning prune = Pruning(opt.pruningMethod);
-
-        // Options for pruning
-        std::vector<float> pruneOpt;
-        // Add threshold
-        pruneOpt.push_back(0.2f);
-
-        // Apply pruning algorithm to deepNet
-        prune.apply(deepNet, pruneOpt);
-
-        // Save network parameters
-        deepNet->exportNetworkFreeParameters("weights_pruned");
-    }
-
     // Adversararial testing section
     if (!opt.testAdv.empty()) {
         std::shared_ptr<StimuliProvider> sp = deepNet->getStimuliProvider();
@@ -379,7 +383,6 @@ int main(int argc, char* argv[]) try
     if (opt.learnStdp > 0) {
         learnStdp(opt, deepNet, env, net, monitorEnv, monitorOut);
     }
-
 
     //testStdp(opt, deepNet, env, net, monitorEnv, monitorOut);
 

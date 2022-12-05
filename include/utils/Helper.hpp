@@ -66,6 +66,7 @@ namespace N2D2_HELPER{
         int testId = -1;
         std::string testAdv = std::string();
         std::string pruningMethod = std::string();
+        unsigned int fineTune = 0U;
         bool check = false;
         unsigned int logOutputs = 0U;
         bool logJSON = false;
