@@ -240,7 +240,7 @@ int main(int argc, char* argv[]) try
         // Options for pruning
         std::vector<float> pruneOpt;
         // Add threshold
-        pruneOpt.push_back(0.2f);
+        pruneOpt.push_back(0.5f);
         // Apply pruning algorithm to deepNet
         prune.apply(deepNet, pruneOpt);
 
@@ -260,7 +260,6 @@ int main(int argc, char* argv[]) try
         {
             if (database.getNbStimuli(Database::Validation) > 0){
                 deepNet->importNetworkFreeParameters("weights_validation", opt.ignoreNoExist);
-                std::cout << "Loading weights_validation for testing" << std::endl;
             }
             else
                 deepNet->importNetworkFreeParameters("weights", opt.ignoreNoExist);

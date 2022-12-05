@@ -121,10 +121,12 @@ void N2D2::prune_iter_nonstruct(std::shared_ptr<DeepNet>& deepNet,
             itCells != itCellsEnd;
             ++itCells)
     {
+        /*
         count++;
         if(count > 1){
             break;
         }
+        */
         std::cout << "Pruning " << (*itCells).first << "..." << std::endl;
         prune_iter_nonstruct((*itCells).second, threshold);
     }
@@ -156,7 +158,7 @@ void N2D2::prune_iter_nonstruct(std::shared_ptr<Cell>& cell,
         std::shared_ptr<ConvCell> convCell = std::dynamic_pointer_cast<ConvCell>(cell);
         Tensor<float> weights = tensor_cast<float>((*convCell->getWeights())[0]);
 
-        std::cout << "weights init = " << weights << std::endl;
+        //std::cout << "weights init = " << weights << std::endl;
 
         float delta_step = 0.01;
         int zero_count= 0;
@@ -192,7 +194,7 @@ void N2D2::prune_iter_nonstruct(std::shared_ptr<Cell>& cell,
             iter_delta++;
         }
 
-        std::cout << "mask = " << mask << std::endl;
+        //std::cout << "mask = " << mask << std::endl;
 
         // apply the mask to weights
         for (unsigned int i = 0; i < weights.size(); ++i) {
@@ -200,7 +202,7 @@ void N2D2::prune_iter_nonstruct(std::shared_ptr<Cell>& cell,
         }
 
         Tensor<float> weights_pruned = tensor_cast<float>((*convCell->getWeights())[0]);
-        std::cout << "weights pruned = " << weights_pruned << std::endl;
+        //std::cout << "weights pruned = " << weights_pruned << std::endl;
 
         //have to set weight for conv, if not pruned weights = init weights when we export them
         int i = 0;
@@ -211,7 +213,7 @@ void N2D2::prune_iter_nonstruct(std::shared_ptr<Cell>& cell,
 
                 for (unsigned int sy = 0; sy < convCell->getKernelHeight(); ++sy){
                     for (unsigned int sx = 0; sx < convCell->getKernelWidth(); ++sx) {
-                        std::cout << "output, channel, sy, sx, i = " << output << "," << channel << "," << sy << ","<< sx << "," << i << ": kernel, mask = " <<  kernel(sx, sy) << " ,  " << mask(i) << std::endl;
+                        //std::cout << "output, channel, sy, sx, i = " << output << "," << channel << "," << sy << ",//"<< sx << "," << i << ": kernel, mask = " <<  kernel(sx, sy) << " ,  " << mask(i) << std::endl;
                         //here the swap sx and sy is correct, we need to do it to get correct matching between indexes
                         kernel(sx, sy) *= mask(i);
                         i++;
