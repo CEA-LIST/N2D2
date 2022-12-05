@@ -240,7 +240,7 @@ int main(int argc, char* argv[]) try
         // Options for pruning
         std::vector<float> pruneOpt;
         // Add threshold
-        pruneOpt.push_back(0.5f);
+        pruneOpt.push_back(opt.pruningThreshold);
         // Apply pruning algorithm to deepNet
         prune.apply(deepNet, pruneOpt);
 
