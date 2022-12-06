@@ -66,6 +66,10 @@ public:
     {
         return mSolver;
     };
+    virtual BaseTensor& getMasksWeights(unsigned int k)
+    {
+        return mMasksWeights[k];
+    };
 
     void exportFreeParameters(const std::string& fileName) const;
     void importFreeParameters(const std::string& fileName, bool ignoreNoExists);
@@ -73,7 +77,9 @@ public:
     virtual ~PruneQuantizerCell_Frame_CUDA();
 
 protected:
-    CudaInterface<unsigned int> mMasks;
+    CudaInterface<unsigned int> mMasksWeights;
+    unsigned int mNbZeroWeights = 0U;
+    unsigned int mNbZeroMaxWeights = 0U;
     
     bool mInitialized = false;
 
