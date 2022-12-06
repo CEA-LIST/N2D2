@@ -65,7 +65,7 @@ TEST_DATASET(   PruneQuantizerCell_Frame_Float,
 
     PruneQuantizerCell_Frame<float> quant;
 
-    quant.addWeights(weights, weights);
+    quant.addWeights(weights, weightsDiff);
     quant.setPruningMode(N2D2::PruneQuantizerCell::PruningMode::Static);
     quant.setThreshold(threshold);
     quant.initialize();
@@ -87,6 +87,14 @@ TEST_DATASET(   PruneQuantizerCell_Frame_Float,
 
     float zero_ratio = (float)count_zero / masks.size();
     ASSERT_EQUALS_DELTA(zero_ratio, threshold, 0.1);
+
+
+    quant.back_propagate();
+
+    Tensor<float> weightsDiffEstimated = tensor_cast<float>(quant.getDiffFullPrecisionWeights(0));
+
+    for(unsigned int i = 0; i < weights.size(); ++i)
+        ASSERT_EQUALS_DELTA(weightsDiff(i) * masks(i), weightsDiffEstimated(i), 0.001);
 }
 
 RUN_TESTS()
