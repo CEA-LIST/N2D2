@@ -226,42 +226,51 @@ void N2D2::prune_iter_nonstruct(std::shared_ptr<Cell>& cell,
     else if (cellType == "Fc"){
         std::cout << "fc cell pruning start" << std::endl;
         std::shared_ptr<FcCell> fcCell = std::dynamic_pointer_cast<FcCell>(cell);
-        //Tensor<float> weights = tensor_cast<float>((*fcCell->getWeights())[0]);
-        std::cout << "fc cell OK" << std::endl;
-        const BaseInterface* weightsInterface = fcCell->getWeights();
-        assert(weightsInterface->size() == 1);
-        const BaseTensor& weightsInt = (*weightsInterface)[0U];
-        std::cout << "fc cell interface OK" << std::endl;
 
-        const Tensor<Float_T>& weights = tensor_cast<Float_T>(weightsInt);
-        std::cout << "fc cell tensor OK" << std::endl;
-        std::cout << "weights init = " << weights << std::endl;
+        const unsigned int inputSize = fcCell->getNbChannels() * fcCell->getChannelsWidth()
+                                   * fcCell->getChannelsHeight();
+        const unsigned int outputSize = fcCell->getNbOutputs() * fcCell->getOutputsWidth()
+                                    * fcCell->getOutputsHeight();
 
         float delta_step = 0.001;
         int zero_count= 0;
         unsigned int iter_delta = 0;
-        Tensor<float> mask(weights.dims());
+        Tensor<float> mask({outputSize*inputSize});
         bool maskFilled = false;
+
+        int i=0;
 
         while(!maskFilled){
             //check if the sparsity (within the range) is equal or above the requested thershold
-            if( ((float)zero_count)/weights.size() <= threshold){
+            if( ((float)zero_count)/(outputSize*inputSize) <= threshold){
                 zero_count = 0;
-                for (unsigned int i = 0; i < weights.size(); ++i) {
-                    //check if the weight is inside the range
-                    if (abs(weights(i)) < delta_step*iter_delta) {
-                        zero_count++;
+                for (unsigned int output = 0; output < outputSize; ++output) {
+                    for (unsigned int channel = 0; channel < inputSize; ++channel) {
+                        Tensor<float> weight;
+                        fcCell->getWeight(output, channel, weight);
+                        if(abs(weight(0)) < delta_step*iter_delta){
+                            zero_count++;
+                        }
                     }
                 }
             }
             else{
                 //sparsity is ok, fill the mask
-                for (unsigned int i = 0; i < weights.size(); ++i) {
-                    if (abs(weights(i)) < delta_step*iter_delta) {
-                        mask(i) = 0;
-                    }
-                    else{
-                        mask(i) = 1;
+                i = 0;
+                std::cout << "sparsity is ok, filling the mask" << std::endl;
+                for (unsigned int output = 0; output < outputSize; ++output) {
+                    for (unsigned int channel = 0; channel < inputSize; ++channel) {
+                        Tensor<float> weight;
+                        fcCell->getWeight(output, channel, weight);
+
+                        if(abs(weight(0)) < delta_step*iter_delta){
+                            mask(i) = 0;
+                        }
+                        else{
+                            mask(i) = 1;
+                        }
+
+                        i++;
                     }
                 }
                 //TODO :: here save the mask into right tensor (using method setMaskWeights from convCell_Frame_CUDA?)
@@ -271,34 +280,18 @@ void N2D2::prune_iter_nonstruct(std::shared_ptr<Cell>& cell,
             iter_delta++;
         }
 
-        std::cout << "mask = " << mask << std::endl;
-
-        // apply the mask to weights
-        //just testing fc get weight for now 
-        /*
-        for (unsigned int i = 0; i < weights.size(); ++i) {
-            weights(i) *= mask(i);
-        }
-
-        Tensor<float> weights_pruned = tensor_cast<float>((*fcCell->getWeights())[0]);
-        std::cout << "weights pruned = " << weights_pruned << std::endl;
-        */
-
-        //have to set weight, if not pruned weights = init weights when we export them
-        int i = 0;
-        const unsigned int inputSize = fcCell->getNbChannels() * fcCell->getChannelsWidth()
-                                   * fcCell->getChannelsHeight();
-        const unsigned int outputSize = fcCell->getNbOutputs() * fcCell->getOutputsWidth()
-                                    * fcCell->getOutputsHeight();
-
+        i=0;
+        std::cout << "changing the weights in fc " << std::endl;
         for (unsigned int output = 0; output < outputSize; ++output) {
             for (unsigned int channel = 0; channel < inputSize; ++channel) {
                 Tensor<float> weight;
                 fcCell->getWeight(output, channel, weight);
                 float w = weight(0)*mask(i);
-                std::cout << "output, channel, i = " << output << "," << channel << "," << i << ": w_init, mask, w_pruned = " <<  weight(0) << " ,  " << mask(i) << " , " << w << std::endl;
                 Tensor<float> weight_pruned({1}, w);
                 fcCell->setWeight(output, channel, weight_pruned);
+
+                std::cout << "output, channel, i = " << output << "," << channel << "," << i << ": w_init, mask, w_pruned = " <<  weight(0) << " ,  " << mask(i) << " , " << weight_pruned(0) << std::endl;
+
                 i++;
             }
         }
