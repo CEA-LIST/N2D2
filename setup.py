@@ -43,6 +43,8 @@ import pathlib
 import subprocess
 import multiprocessing
 
+from math import ceil
+
 from setuptools import setup, Extension
 from setuptools import find_packages
 from setuptools.command.build_ext import build_ext
@@ -62,7 +64,7 @@ class CMakeBuild(build_ext):
 
         # This lists the number of processors available on the machine
         # The compilation will use half of them
-        max_jobs = str(int(multiprocessing.cpu_count() / 2))
+        max_jobs = str(ceil(multiprocessing.cpu_count() / 2))
 
         cwd = pathlib.Path().absolute()
 
