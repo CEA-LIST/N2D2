@@ -25,7 +25,10 @@ const char* N2D2::PruneQuantizerCell::Type = "Prune";
 N2D2::PruneQuantizerCell::PruneQuantizerCell()                      
     : mPruningMode(this, "PruningMode", N2D2::PruneQuantizerCell::PruningMode::Identity),
       mThreshold(this, "Threshold", 0.2),
-      mDelta(this, "Delta", 0.001)
+      mDelta(this, "Delta", 0.001),
+      mStartThreshold(this, "StartThreshold", 0.1),
+      mStepSizeThreshold(this, "StepSizeThreshold", 0),
+      mGammaThreshold(this, "GammaThreshold", 0.05)
 {
     // ctor
 }

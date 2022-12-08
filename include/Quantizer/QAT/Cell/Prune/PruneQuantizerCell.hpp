@@ -96,6 +96,11 @@ protected:
     Parameter<float> mThreshold;
     Parameter<float> mDelta;
 
+    // For Gradual mode
+    Parameter<float> mStartThreshold;
+    Parameter<unsigned int> mStepSizeThreshold;
+    Parameter<float> mGammaThreshold;
+
 private:
 };
 
