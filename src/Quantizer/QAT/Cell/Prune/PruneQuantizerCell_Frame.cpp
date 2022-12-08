@@ -175,16 +175,71 @@ PruneQuantizerCell_Frame<T>::~PruneQuantizerCell_Frame()
 
 
 template <class T>
-void PruneQuantizerCell_Frame<T>::exportFreeParameters(const std::string& /*fileName*/) const 
+void PruneQuantizerCell_Frame<T>::exportFreeParameters(const std::string& fileName) const 
 {
+    const std::string dirName = Utils::dirName(fileName);
 
+    if (!dirName.empty())
+        Utils::createDirectories(dirName);
+
+    const std::string fileBase = Utils::fileBaseName(fileName);
+    std::string fileExt = Utils::fileExtension(fileName);
+
+    if (!fileExt.empty())
+        fileExt = "." + fileExt;
+
+    const std::string masksWFile = fileBase + "_masks" + fileExt;
+    std::ofstream masksW(masksWFile.c_str());
+
+    if (!masksW.good())
+        throw std::runtime_error("Could not create synaptic file: "
+                                 + masksWFile);
+
+    for (unsigned int k = 0; k < mMasksWeights.size(); ++k) {
+        Tensor<unsigned int> mask = tensor_cast<unsigned int>(mMasksWeights[k]);
+        for (unsigned int output = 0; output < mask.dimB(); ++output) {
+
+            for (unsigned int i = 0; i < mask[output].size(); ++i) {
+                masksW << mask[output](i) << " ";
+            }
+            masksW << "\n";
+        }
+    }
 }
 
 template <class T>
-void PruneQuantizerCell_Frame<T>::importFreeParameters(const std::string& /*fileName*/, 
-                                                       bool /*ignoreNotExists*/)
+void PruneQuantizerCell_Frame<T>::importFreeParameters(const std::string& fileName, 
+                                                       bool ignoreNotExists)
 {
+    const std::string fileBase = Utils::fileBaseName(fileName);
+    std::string fileExt = Utils::fileExtension(fileName);
 
+    if (!fileExt.empty())
+        fileExt = "." + fileExt;
+
+    const std::string masksWFile = fileBase + "_masks" + fileExt;
+    std::ifstream masksW(masksWFile.c_str());
+
+    if (!masksW.good()) {
+        if (ignoreNotExists) {
+            std::cout << Utils::cnotice
+                      << "Notice: Could not open synaptic file: " << masksWFile
+                      << Utils::cdef << std::endl;
+            return;
+        } else
+            throw std::runtime_error("Could not open synaptic file: "
+                                     + masksWFile);
+    }
+
+    std::vector<unsigned int> out;
+    std::copy(std::istream_iterator<unsigned int>(masksW), 
+              std::istream_iterator<unsigned int>(), 
+              std::back_inserter(out));
+
+    Tensor<unsigned int> mask = tensor_cast<unsigned int>(mMasksWeights[0]);
+    for (unsigned int i = 0; i < mask.size(); ++i) {
+        mask(i) = out[i];
+    }
 }
 
 }

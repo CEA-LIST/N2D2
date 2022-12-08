@@ -23,6 +23,7 @@
 
 #include "Quantizer/QAT/Cell/QuantizerCell.hpp"
 #include "utils/Registrar.hpp"
+#include "containers/Tensor.hpp"
 
 namespace N2D2 {
 
@@ -65,6 +66,8 @@ public:
 
 
     // Getters
+
+    virtual BaseTensor& getMasksWeights(unsigned int k) = 0;
 
     virtual const char* getType() const
     {
