@@ -459,3 +459,62 @@ class LSQAct(ActivationQuantizer):
             self.set_solver(value)
         else:
             super().__setattr__(key, value)
+
+
+class PruneCell(CellQuantizer):
+    """
+    Finetune Pruning
+    """
+    _quantizer_generators = {
+        'Frame<float>': N2D2.PruneQuantizerCell_Frame_float,
+    }
+    if gb.cuda_available:
+        _quantizer_generators.update({
+            'Frame_CUDA<float>': N2D2.PruneQuantizerCell_Frame_CUDA_float
+        })
+    _convention_converter = ConventionConverter({
+        "delta": "Delta",
+        "threshold": "Threshold",
+        "prune_mode": "PruningMode"
+    })
+    def __init__(self, **config_parameters):
+        CellQuantizer.__init__(self, **config_parameters)
+        if "prune_mode" in config_parameters:
+            print(", ".join(self._quantizer_generators[self._model_key].PruningMode.__members__.keys()))
+            prune_mode = config_parameters["prune_mode"]
+            if prune_mode not in self._quantizer_generators[self._model_key].PruningMode.__members__.keys():
+                raise WrongValue("prune_mode", prune_mode,
+                        ", ".join(self._quantizer_generators[self._model_key].PruningMode.__members__.keys()))
+
+        # No optional constructor arguments
+        self._set_N2D2_object(self._quantizer_generators[self._model_key]())
+        self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
+
+
+    def get_quantized_weights(self, input_idx):
+        """
+        Access the quantized weights of the cell the quantizer is attached to.
+        """
+        return n2d2.Tensor.from_N2D2(self.N2D2().getQuantizedWeights(input_idx))
+
+    def get_pruned_masks(self, input_idx):
+        return n2d2.Tensor.from_N2D2(self.N2D2().getMasksWeights(input_idx))
+
+    def set_threshold(self, threshold):
+        """
+        :arg threshold: Threshold
+        :param threshold: float
+        """
+        if not isinstance(threshold, float):
+            raise n2d2.error_handler("threshold", type(threshold) ["float"])
+        self.N2D2().setThreshold(threshold)
+
+    def set_delta(self, delta):
+        """
+        :arg delta: Delta
+        :param delta: float
+        """
+        if not isinstance(delta, float):
+            raise n2d2.error_handler("delta", type(delta) ["float"])
+        self.N2D2().setDelta(delta)
