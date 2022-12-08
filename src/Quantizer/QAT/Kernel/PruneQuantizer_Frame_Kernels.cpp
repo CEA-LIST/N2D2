@@ -39,14 +39,12 @@ void apply_pruning_with_masks(Tensor<T>& data,
 
 void update_masks_random(Tensor<unsigned int>& masks,
                          unsigned int& nbzero,
-                         unsigned int nbzeromax)
+                         unsigned int nbzero_to_add)
 {
-    assert(nbzeromax < masks.size());
+    assert(nbzero_to_add < masks.size());
     assert(nbzero < masks.size());
 
-    unsigned int diff = nbzeromax - nbzero;
-
-    for (unsigned int i = 0; i < diff; ++i) {
+    for (unsigned int i = 0; i < nbzero_to_add; ++i) {
 
         bool isZeroAdded = false;
 

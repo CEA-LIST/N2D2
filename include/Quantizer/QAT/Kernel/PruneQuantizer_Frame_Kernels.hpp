@@ -34,7 +34,7 @@ namespace PruneQuantizer_Frame_Kernels {
 
     void update_masks_random(Tensor<unsigned int>& masks,
                              unsigned int& nbzero,
-                             unsigned int nbzeromax);
+                             unsigned int nbzero_to_add);
 
 }
 
