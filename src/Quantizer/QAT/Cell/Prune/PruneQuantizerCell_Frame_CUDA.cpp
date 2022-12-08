@@ -103,17 +103,24 @@ void PruneQuantizerCell_Frame_CUDA<T>::initialize()
         break;
     case Static:
     {
-        unsigned int nbZeroMax = std::floor(mNbZeroMaxWeights / mMasksWeights.size());
+        unsigned int nbZeroToAdd = std::floor(mNbZeroMaxWeights / mMasksWeights.size());
 
         for (unsigned int k = 0, size = mMasksWeights.size(); k < size; ++k) {
             CudaTensor<unsigned int> mask = cuda_tensor_cast<unsigned int>(mMasksWeights[k]);
-            PruneQuantizer_Frame_Kernels::update_masks_random(mask, mNbZeroWeights, nbZeroMax);
+            PruneQuantizer_Frame_Kernels::update_masks_random(mask, mNbZeroWeights, nbZeroToAdd);
             mask.synchronizeHToD();
         }
         break;
     }
     case Gradual:
     {
+        unsigned int nbZeroStart = std::floor(std::ceil(mStartThreshold * mMasksWeights.dataSize()) / mMasksWeights.size());
+
+        for (unsigned int k = 0, size = mMasksWeights.size(); k < size; ++k) {
+            CudaTensor<unsigned int> mask = cuda_tensor_cast<unsigned int>(mMasksWeights[k]);
+            PruneQuantizer_Frame_Kernels::update_masks_random(mask, mNbZeroWeights, nbZeroStart);
+            mask.synchronizeHToD();
+        }
         break;
     }
     default:
@@ -204,11 +211,30 @@ void PruneQuantizerCell_Frame_CUDA<double>::back_propagate()
 
 
 template<class T>
-void PruneQuantizerCell_Frame_CUDA<T>::update(unsigned int /*batchSize*/)
+void PruneQuantizerCell_Frame_CUDA<T>::update(unsigned int batchSize)
 {
-    // Nothing to update
 
-    //Solver.getLearningRate
+    if (mPruningMode == PruningMode::Gradual) {
+        if (!mScheduler) {
+            unsigned int stepSize = (mStepSizeThreshold > 0) ? mStepSizeThreshold : SGDSolver::mLogSteps;
+            mScheduler = std::make_shared<Scheduler>(stepSize, batchSize);
+        }
+        if(mScheduler->step()) {
+            std::cout << "\nUpdate masks" << std::endl;
+
+            unsigned int nbZeroToAdd = 
+                std::floor((std::ceil(mGammaThreshold * mMasksWeights.dataSize())) / mMasksWeights.size());
+
+            if (mNbZeroMaxWeights >= mNbZeroWeights + nbZeroToAdd*mMasksWeights.size()) {
+
+                for (unsigned int k = 0, size = mMasksWeights.size(); k < size; ++k) {
+                    CudaTensor<unsigned int> mask = cuda_tensor_cast<unsigned int>(mMasksWeights[k]);
+                    PruneQuantizer_Frame_Kernels::update_masks_random(mask, mNbZeroWeights, nbZeroToAdd);
+                    mask.synchronizeHToD();
+                }
+            }
+        }
+    }
 }
 
 
