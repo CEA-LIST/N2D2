@@ -474,6 +474,7 @@ class PruneCell(CellQuantizer):
     _convention_converter = ConventionConverter({
         "threshold": "Threshold",
         "prune_mode": "PruningMode",
+        "prune_filler": "PruningFiller",
         "delta": "Delta",
         "start": "StartThreshold",
         "stepsize": "StepSizeThreshold",
@@ -487,6 +488,8 @@ class PruneCell(CellQuantizer):
         :type threshold: float, optional
         :param prune_mode: Type of pruning mode, can be ``Identity``, ``Static`` or ``Gradual``, default=``Identity``
         :type prune_mode: string, optional
+        :param prune_filler: Type of pruning filler, can be ``Random`` or ``IterNonStruct``, default=``Random``
+        :type prune_filler: string, optional
         :param delta: 
         :type delta: float, optional
         :param start: For Gradual mode, start value for threshold 
@@ -502,6 +505,11 @@ class PruneCell(CellQuantizer):
             if prune_mode not in self._pruning_generators[self._model_key].PruningMode.__members__.keys():
                 raise WrongValue("prune_mode", prune_mode,
                         ", ".join(self._pruning_generators[self._model_key].PruningMode.__members__.keys()))
+        if "prune_filler" in config_parameters:
+            prune_filler = config_parameters["prune_filler"]
+            if prune_filler not in self._pruning_generators[self._model_key].PruningFiller.__members__.keys():
+                raise WrongValue("prune_filler", prune_filler,
+                        ", ".join(self._pruning_generators[self._model_key].PruningFiller.__members__.keys()))
 
         # No optional constructor arguments
         self._set_N2D2_object(self._pruning_generators[self._model_key]())
