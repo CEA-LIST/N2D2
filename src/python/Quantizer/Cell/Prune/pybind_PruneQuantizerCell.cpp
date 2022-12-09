@@ -32,6 +32,7 @@ void init_PruneQuantizerCell(py::module &m) {
         PruneQuantizerCell, 
         std::shared_ptr<PruneQuantizerCell>> q(m, "PruneQuantizerCell", py::multiple_inheritance());
     q.def("setPruningMode", &PruneQuantizerCell::setPruningMode, py::arg("prune_mode"));
+    q.def("setPruningFiller", &PruneQuantizerCell::setPruningFiller, py::arg("prune_filler"));
     q.def("setThreshold", &PruneQuantizerCell::setThreshold, py::arg("threshold"));
     q.def("setDelta", &PruneQuantizerCell::setDelta, py::arg("delta"));
     q.def("setStartThreshold", &PruneQuantizerCell::setStartThreshold, py::arg("start"));
@@ -46,6 +47,11 @@ void init_PruneQuantizerCell(py::module &m) {
     .value("Identity", PruneQuantizerCell::PruningMode::Identity)
     .value("Static", PruneQuantizerCell::PruningMode::Static)
     .value("Gradual", PruneQuantizerCell::PruningMode::Gradual)
+    .export_values();
+
+    py::enum_<PruneQuantizerCell::PruningFiller>(q, "PruningFiller")
+    .value("Random", PruneQuantizerCell::PruningFiller::Random)
+    .value("IterNonStruct", PruneQuantizerCell::PruningFiller::IterNonStruct)
     .export_values();
 }
 

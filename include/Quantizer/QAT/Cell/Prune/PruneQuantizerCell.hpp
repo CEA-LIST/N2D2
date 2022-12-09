@@ -36,6 +36,11 @@ public:
         Gradual
     };
 
+    enum PruningFiller{
+        Random,
+        IterNonStruct
+    };
+
     typedef std::function<std::shared_ptr<PruneQuantizerCell>()> RegistryCreate_T;
 
     static RegistryMap_T& registry()
@@ -54,6 +59,10 @@ public:
     void setPruningMode(PruningMode mode)
     {
         mPruningMode = mode;
+    };
+    void setPruningFiller(PruningFiller filler)
+    {
+        mPruningFiller = filler;
     };
     void setThreshold(float threshold)
     {
@@ -105,7 +114,10 @@ public:
 
 protected:
     Parameter<PruningMode> mPruningMode;
+    Parameter<PruningFiller> mPruningFiller;
     Parameter<float> mThreshold;
+
+    // For IterNonStruct filler
     Parameter<float> mDelta;
 
     // For Gradual mode
@@ -122,6 +134,10 @@ namespace {
 template <>
 const char* const EnumStrings<N2D2::PruneQuantizerCell::PruningMode>::data[]
     = {"Identity", "Static", "Gradual"};
+
+template <>
+const char* const EnumStrings<N2D2::PruneQuantizerCell::PruningFiller>::data[]
+    = {"Random", "IterNonStruct"};
 }
 
 #endif  // N2D2_PRUNEQUANTIZERCELL_H

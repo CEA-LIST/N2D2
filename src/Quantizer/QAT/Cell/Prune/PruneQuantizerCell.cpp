@@ -24,6 +24,7 @@ const char* N2D2::PruneQuantizerCell::Type = "Prune";
 
 N2D2::PruneQuantizerCell::PruneQuantizerCell()                      
     : mPruningMode(this, "PruningMode", N2D2::PruneQuantizerCell::PruningMode::Identity),
+      mPruningFiller(this, "PruningFiller", N2D2::PruneQuantizerCell::PruningFiller::Random),
       mThreshold(this, "Threshold", 0.2),
       mDelta(this, "Delta", 0.001),
       mStartThreshold(this, "StartThreshold", 0.1),
