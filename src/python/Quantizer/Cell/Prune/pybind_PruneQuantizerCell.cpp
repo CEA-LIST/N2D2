@@ -34,6 +34,9 @@ void init_PruneQuantizerCell(py::module &m) {
     q.def("setPruningMode", &PruneQuantizerCell::setPruningMode, py::arg("prune_mode"));
     q.def("setThreshold", &PruneQuantizerCell::setThreshold, py::arg("threshold"));
     q.def("setDelta", &PruneQuantizerCell::setDelta, py::arg("delta"));
+    q.def("setStartThreshold", &PruneQuantizerCell::setStartThreshold, py::arg("start"));
+    q.def("setStepSizeThreshold", &PruneQuantizerCell::setStepSizeThreshold, py::arg("stepsize"));
+    q.def("setGammaThreshold", &PruneQuantizerCell::setGammaThreshold, py::arg("gamma"));
     q.def("getMasksWeights", &PruneQuantizerCell::getMasksWeights);
     q.def("getPruningMode", &PruneQuantizerCell::getPruningMode);
     q.def("getThreshold", &PruneQuantizerCell::getThreshold);

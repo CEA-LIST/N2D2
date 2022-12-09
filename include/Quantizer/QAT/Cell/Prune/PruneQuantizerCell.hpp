@@ -63,6 +63,18 @@ public:
     {
         mDelta = delta;
     };
+    void setStartThreshold(float start)
+    {
+        mStartThreshold = start;
+    };
+    void setStepSizeThreshold(unsigned int stepsize)
+    {
+        mStepSizeThreshold = stepsize;
+    };
+    void setGammaThreshold(float gamma)
+    {
+        mGammaThreshold = gamma;
+    }
 
 
     // Getters
