@@ -43,7 +43,7 @@ void update_masks_random(Tensor<unsigned int>& masks,
     unsigned int nbzero = (masks.eq(0)).sum();
 
     // Possible not to add 0 if threshold already satisfied
-    unsigned int nbzero_to_add = std::max(0U, (unsigned int)std::ceil(threshold * masks.size()) - nbzero);
+    unsigned int nbzero_to_add = (unsigned int)std::max((int)0, (int)std::ceil(threshold * masks.size()) - (int)nbzero);
 
     for (unsigned int i = 0; i < nbzero_to_add; ++i) {
         bool isZeroAdded = false;
