@@ -36,7 +36,7 @@ def fill_object_dict():
     from n2d2.cells import Fc, Conv, Deconv, ElemWise, Softmax, \
     Dropout, Padding, Pool, BatchNorm2d, Reshape, Resize, Transpose, \
     Activation, Transformation, Scaling
-    from n2d2.quantizer import LSQCell, LSQAct, SATCell, SATAct
+    from n2d2.quantizer import LSQCell, LSQAct, SATCell, SATAct, PruneCell
     from n2d2.transform import Composite, ChannelExtraction, \
     ColorSpace, Distortion, Flip, PadCrop, RandomResizeCrop, RangeAffine, \
     Rescale, SliceExtraction
@@ -87,6 +87,7 @@ def fill_object_dict():
         "SATActivation": SATAct,
         "LSQCell": LSQCell,
         "LSQActivation": LSQAct,
+        "PruneCell": PruneCell,
 
     })
 
@@ -115,6 +116,9 @@ def from_N2D2_object(N2D2_object, **kwargs):
                 object_type = "LSQCell"
             else:
                 object_type = "LSQActivation"
+        if object_type == "Prune":
+            if "Cell" in str(N2D2_object):
+                object_type = "PruneCell"
 
         if object_type not in object_dict:
             raise RuntimeError(f"The object {type(N2D2_object)} has not been integrated to the Python API yet." \
