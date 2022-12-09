@@ -490,7 +490,7 @@ class PruneCell(CellQuantizer):
         :type prune_mode: string, optional
         :param prune_filler: Type of pruning filler, can be ``Random`` or ``IterNonStruct``, default=``Random``
         :type prune_filler: string, optional
-        :param delta: 
+        :param delta: For IterNonStruct filler, factor to iteractively prune the data
         :type delta: float, optional
         :param start: For Gradual mode, start value for threshold 
         :type start: float, optional
