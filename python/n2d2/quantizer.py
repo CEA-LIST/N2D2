@@ -232,7 +232,6 @@ class SATCell(CellQuantizer):
         """
         CellQuantizer.__init__(self, **config_parameters)
         if "quant_mode" in config_parameters:
-            print(", ".join(self._quantizer_generators[self._model_key].QuantMode.__members__.keys()))
             quant_mode = config_parameters["quant_mode"]
             if quant_mode not in self._quantizer_generators[self._model_key].QuantMode.__members__.keys():
                 raise WrongValue("quant_mode", quant_mode,
@@ -475,12 +474,28 @@ class PruneCell(CellQuantizer):
     _convention_converter = ConventionConverter({
         "delta": "Delta",
         "threshold": "Threshold",
-        "prune_mode": "PruningMode"
+        "prune_mode": "PruningMode",
+        "start": "StartThresold",
+        "stepsize": "StepSizeThreshold",
+        "gamma": "GammaThreshold"
     })
     def __init__(self, **config_parameters):
+        """
+        :param threshold: Range of Quantization, can be ``1`` for binary, ``255`` for 8-bits etc.., default=255
+        :type threshold: float, optional
+        :param prune_mode: Type of pruning mode, can be ``Identity``, ``Static`` or ``Gradual``, default=``Identity``
+        :type prune_mode: string, optional
+        :param delta: 
+        :type delta: float, optional
+        :param start: For Gradual mode, start value for threshold 
+        :type start: float, optional
+        :param stepsize: For Gradual mode, size of the steps before update the masks
+        :type stepsize: int, optional
+        :param gamma: For Gradual mode, adding threshold value when updating masks
+        :type gamma: float, optional
+        """
         CellQuantizer.__init__(self, **config_parameters)
         if "prune_mode" in config_parameters:
-            print(", ".join(self._quantizer_generators[self._model_key].PruningMode.__members__.keys()))
             prune_mode = config_parameters["prune_mode"]
             if prune_mode not in self._quantizer_generators[self._model_key].PruningMode.__members__.keys():
                 raise WrongValue("prune_mode", prune_mode,
@@ -501,20 +516,47 @@ class PruneCell(CellQuantizer):
     def get_pruned_masks(self, input_idx):
         return n2d2.Tensor.from_N2D2(self.N2D2().getMasksWeights(input_idx))
 
-    def set_threshold(self, threshold):
-        """
-        :arg threshold: Threshold
-        :param threshold: float
-        """
-        if not isinstance(threshold, float):
-            raise n2d2.error_handler("threshold", type(threshold) ["float"])
-        self.N2D2().setThreshold(threshold)
+    # def set_threshold(self, threshold):
+    #     """
+    #     :arg threshold: Threshold
+    #     :param threshold: float
+    #     """
+    #     if not isinstance(threshold, float):
+    #         raise n2d2.error_handler("threshold", type(threshold) ["float"])
+    #     self.N2D2().setThreshold(threshold)
 
-    def set_delta(self, delta):
-        """
-        :arg delta: Delta
-        :param delta: float
-        """
-        if not isinstance(delta, float):
-            raise n2d2.error_handler("delta", type(delta) ["float"])
-        self.N2D2().setDelta(delta)
+    # def set_delta(self, delta):
+    #     """
+    #     :arg delta: Delta
+    #     :param delta: float
+    #     """
+    #     if not isinstance(delta, float):
+    #         raise n2d2.error_handler("delta", type(delta) ["float"])
+    #     self.N2D2().setDelta(delta)
+
+    # def set_startThreshold(self, start):
+    #     """
+    #     :arg start: StartThresold
+    #     :param start: float
+    #     """
+    #     if not isinstance(start, float):
+    #         raise n2d2.error_handler("start", type(start) ["float"])
+    #     self.N2D2().setStartThreshold(start)
+    
+    # def set_stepSizeThreshold(self, stepsize):
+    #     """
+    #     :arg stepsize: StepSizeThreshold
+    #     :param stepsize: int
+    #     """
+    #     if not isinstance(stepsize, int):
+    #         raise n2d2.error_handler("stepsize", type(stepsize) ["int"])
+    #     self.N2D2().setStepSizeThreshold(stepsize)
+
+    # def set_gammaThreshold(self, gamma):
+    #     """
+    #     :arg gamma: GammaThreshold
+    #     :param gamma: float
+    #     """
+    #     if not isinstance(gamma, float):
+    #         raise n2d2.error_handler("gamma", type(gamma) ["float"])
+    #     self.N2D2().setGammaThreshold(gamma)
