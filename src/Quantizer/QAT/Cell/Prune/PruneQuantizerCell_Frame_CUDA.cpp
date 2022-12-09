@@ -93,39 +93,38 @@ void PruneQuantizerCell_Frame_CUDA<T>::addBiases(BaseTensor& /*biases*/, BaseTen
 template<class T>
 void PruneQuantizerCell_Frame_CUDA<T>::initialize()
 {
-    mNbZeroMaxWeights = std::ceil(mThreshold * mMasksWeights.dataSize());
+    // Initialize masks
+    for (unsigned int k = 0, size = mMasksWeights.size(); k < size; ++k) {
+        CudaTensor<T> weights = cuda_tensor_cast<T>(mFullPrecisionWeights[k]);
+        CudaTensor<unsigned int> mask = cuda_tensor_cast<unsigned int>(mMasksWeights[k]);
 
-    // initialize masks
-    switch (mPruningMode) {
+        mCurrentThreshold = 0.0f;
 
-    case Identity:
-        // Nothing to do
-        break;
-    case Static:
-    {
-        unsigned int nbZeroToAdd = std::floor(mNbZeroMaxWeights / mMasksWeights.size());
-
-        for (unsigned int k = 0, size = mMasksWeights.size(); k < size; ++k) {
-            CudaTensor<unsigned int> mask = cuda_tensor_cast<unsigned int>(mMasksWeights[k]);
-            PruneQuantizer_Frame_Kernels::update_masks_random(mask, mNbZeroWeights, nbZeroToAdd);
-            mask.synchronizeHToD();
+        switch (mPruningMode) {
+        case Identity:
+            // Nothing to do
+            break;
+        case Static:
+        {
+            mCurrentThreshold = mThreshold;
+            break;
         }
-        break;
-    }
-    case Gradual:
-    {
-        unsigned int nbZeroStart = std::floor(std::ceil(mStartThreshold * mMasksWeights.dataSize()) / mMasksWeights.size());
-
-        for (unsigned int k = 0, size = mMasksWeights.size(); k < size; ++k) {
-            CudaTensor<unsigned int> mask = cuda_tensor_cast<unsigned int>(mMasksWeights[k]);
-            PruneQuantizer_Frame_Kernels::update_masks_random(mask, mNbZeroWeights, nbZeroStart);
-            mask.synchronizeHToD();
+        case Gradual:
+        {
+            mCurrentThreshold = mStartThreshold;
+            break;
         }
-        break;
-    }
-    default:
-        // Should never be here
-        break;
+        default:
+            // Should never be here
+            break;
+        }
+
+        if (mPruningFiller == Random) {
+            PruneQuantizer_Frame_Kernels::update_masks_random(mask, mCurrentThreshold);
+        } else if (mPruningFiller == IterNonStruct) {
+            PruneQuantizer_Frame_Kernels::update_masks_iter_nonstruct(weights, mask, mCurrentThreshold, mDelta);
+        }
+        mask.synchronizeHToD();
     }
 
     mInitialized = true;
@@ -213,23 +212,31 @@ void PruneQuantizerCell_Frame_CUDA<double>::back_propagate()
 template<class T>
 void PruneQuantizerCell_Frame_CUDA<T>::update(unsigned int batchSize)
 {
-
     if (mPruningMode == PruningMode::Gradual) {
         if (!mScheduler) {
             unsigned int stepSize = (mStepSizeThreshold > 0) ? mStepSizeThreshold : SGDSolver::mLogSteps;
             mScheduler = std::make_shared<Scheduler>(stepSize, batchSize);
         }
         if(mScheduler->step()) {
-            std::cout << "\nUpdate masks" << std::endl;
+            if (mCurrentThreshold < mThreshold) {
+                std::cout << "\nUpdate masks" << std::endl;
 
-            unsigned int nbZeroToAdd = 
-                std::floor((std::ceil(mGammaThreshold * mMasksWeights.dataSize())) / mMasksWeights.size());
+                // Update threshold
+                mCurrentThreshold += mGammaThreshold;
 
-            if (mNbZeroMaxWeights >= mNbZeroWeights + nbZeroToAdd*mMasksWeights.size()) {
+                float maxthreshold = mThreshold;
+                mCurrentThreshold = std::min(mCurrentThreshold, maxthreshold);
 
                 for (unsigned int k = 0, size = mMasksWeights.size(); k < size; ++k) {
+                    CudaTensor<T> weights = cuda_tensor_cast<T>(mFullPrecisionWeights[k]);
                     CudaTensor<unsigned int> mask = cuda_tensor_cast<unsigned int>(mMasksWeights[k]);
-                    PruneQuantizer_Frame_Kernels::update_masks_random(mask, mNbZeroWeights, nbZeroToAdd);
+
+                    if (mPruningFiller == Random) {
+                        PruneQuantizer_Frame_Kernels::update_masks_random(mask, mCurrentThreshold);
+                    } else if (mPruningFiller == IterNonStruct) {
+                        PruneQuantizer_Frame_Kernels::update_masks_iter_nonstruct(weights, mask, mCurrentThreshold, mDelta);
+                    }
+
                     mask.synchronizeHToD();
                 }
             }
