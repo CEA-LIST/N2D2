@@ -24,6 +24,7 @@
 #include "Quantizer/QAT/Cell/QuantizerCell_Frame.hpp"
 #include "Quantizer/QAT/Cell/Prune/PruneQuantizerCell.hpp"
 #include "Solver/SGDSolver_Frame.hpp"
+#include "utils/Scheduler.hpp"
 
 namespace N2D2 {
 
@@ -82,6 +83,9 @@ protected:
     unsigned int mNbZeroMaxWeights = 0U;
     
     bool mInitialized = false;
+
+    // Variables for Gradual pruning mode
+    std::shared_ptr<Scheduler> mScheduler;
 
 private:
     static Registrar<PruneQuantizerCell> mRegistrar;

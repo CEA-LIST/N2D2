@@ -91,16 +91,22 @@ void PruneQuantizerCell_Frame<T>::initialize()
         break;
     case Static:
     {
-        unsigned int nbZeroMax = std::floor(mNbZeroMaxWeights / mMasksWeights.size());
+        unsigned int nbZeroToAdd = std::floor(mNbZeroMaxWeights / mMasksWeights.size());
 
         for (unsigned int k = 0, size = mMasksWeights.size(); k < size; ++k) {
             Tensor<unsigned int> mask = tensor_cast<unsigned int>(mMasksWeights[k]);
-            PruneQuantizer_Frame_Kernels::update_masks_random(mask, mNbZeroWeights, nbZeroMax);
+            PruneQuantizer_Frame_Kernels::update_masks_random(mask, mNbZeroWeights, nbZeroToAdd);
         }
         break;
     }
     case Gradual:
     {
+        unsigned int nbZeroStart = std::floor(std::ceil(mStartThreshold * mMasksWeights.dataSize()) / mMasksWeights.size());
+
+        for (unsigned int k = 0, size = mMasksWeights.size(); k < size; ++k) {
+            Tensor<unsigned int> mask = tensor_cast<unsigned int>(mMasksWeights[k]);
+            PruneQuantizer_Frame_Kernels::update_masks_random(mask, mNbZeroWeights, nbZeroStart);
+        }
         break;
     }
     default:
@@ -161,9 +167,28 @@ void PruneQuantizerCell_Frame<T>::back_propagate()
 
 
 template<typename T>
-void PruneQuantizerCell_Frame<T>::update(unsigned int /*batchSize*/)
+void PruneQuantizerCell_Frame<T>::update(unsigned int batchSize)
 {
-    // Nothing to update
+    if (mPruningMode == PruningMode::Gradual) {
+        if (!mScheduler) {
+            unsigned int stepSize = (mStepSizeThreshold > 0) ? mStepSizeThreshold : SGDSolver::mLogSteps;
+            mScheduler = std::make_shared<Scheduler>(stepSize, batchSize);
+        }
+        if(mScheduler->step()) {
+            std::cout << "\nUpdate masks" << std::endl;
+
+            unsigned int nbZeroToAdd = 
+                std::floor((std::ceil(mGammaThreshold * mMasksWeights.dataSize())) / mMasksWeights.size());
+
+            if (mNbZeroMaxWeights >= mNbZeroWeights + nbZeroToAdd*mMasksWeights.size()) {
+
+                for (unsigned int k = 0, size = mMasksWeights.size(); k < size; ++k) {
+                    Tensor<unsigned int> mask = tensor_cast<unsigned int>(mMasksWeights[k]);
+                    PruneQuantizer_Frame_Kernels::update_masks_random(mask, mNbZeroWeights, nbZeroToAdd);
+                }
+            }
+        }
+    }
 }
 
 
