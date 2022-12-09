@@ -464,20 +464,22 @@ class PruneCell(CellQuantizer):
     """
     Finetune Pruning
     """
-    _quantizer_generators = {
+    _pruning_generators = {
         'Frame<float>': N2D2.PruneQuantizerCell_Frame_float,
     }
     if gb.cuda_available:
-        _quantizer_generators.update({
+        _pruning_generators.update({
             'Frame_CUDA<float>': N2D2.PruneQuantizerCell_Frame_CUDA_float
         })
     _convention_converter = ConventionConverter({
-        "delta": "Delta",
         "threshold": "Threshold",
         "prune_mode": "PruningMode",
-        "start": "StartThresold",
+        "delta": "Delta",
+        "start": "StartThreshold",
         "stepsize": "StepSizeThreshold",
-        "gamma": "GammaThreshold"
+        "gamma": "GammaThreshold",
+        "quant_mode": "QuantMode",
+        "range": "Range"
     })
     def __init__(self, **config_parameters):
         """
@@ -497,12 +499,12 @@ class PruneCell(CellQuantizer):
         CellQuantizer.__init__(self, **config_parameters)
         if "prune_mode" in config_parameters:
             prune_mode = config_parameters["prune_mode"]
-            if prune_mode not in self._quantizer_generators[self._model_key].PruningMode.__members__.keys():
+            if prune_mode not in self._pruning_generators[self._model_key].PruningMode.__members__.keys():
                 raise WrongValue("prune_mode", prune_mode,
-                        ", ".join(self._quantizer_generators[self._model_key].PruningMode.__members__.keys()))
+                        ", ".join(self._pruning_generators[self._model_key].PruningMode.__members__.keys()))
 
         # No optional constructor arguments
-        self._set_N2D2_object(self._quantizer_generators[self._model_key]())
+        self._set_N2D2_object(self._pruning_generators[self._model_key]())
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
@@ -515,48 +517,3 @@ class PruneCell(CellQuantizer):
 
     def get_pruned_masks(self, input_idx):
         return n2d2.Tensor.from_N2D2(self.N2D2().getMasksWeights(input_idx))
-
-    # def set_threshold(self, threshold):
-    #     """
-    #     :arg threshold: Threshold
-    #     :param threshold: float
-    #     """
-    #     if not isinstance(threshold, float):
-    #         raise n2d2.error_handler("threshold", type(threshold) ["float"])
-    #     self.N2D2().setThreshold(threshold)
-
-    # def set_delta(self, delta):
-    #     """
-    #     :arg delta: Delta
-    #     :param delta: float
-    #     """
-    #     if not isinstance(delta, float):
-    #         raise n2d2.error_handler("delta", type(delta) ["float"])
-    #     self.N2D2().setDelta(delta)
-
-    # def set_startThreshold(self, start):
-    #     """
-    #     :arg start: StartThresold
-    #     :param start: float
-    #     """
-    #     if not isinstance(start, float):
-    #         raise n2d2.error_handler("start", type(start) ["float"])
-    #     self.N2D2().setStartThreshold(start)
-    
-    # def set_stepSizeThreshold(self, stepsize):
-    #     """
-    #     :arg stepsize: StepSizeThreshold
-    #     :param stepsize: int
-    #     """
-    #     if not isinstance(stepsize, int):
-    #         raise n2d2.error_handler("stepsize", type(stepsize) ["int"])
-    #     self.N2D2().setStepSizeThreshold(stepsize)
-
-    # def set_gammaThreshold(self, gamma):
-    #     """
-    #     :arg gamma: GammaThreshold
-    #     :param gamma: float
-    #     """
-    #     if not isinstance(gamma, float):
-    #         raise n2d2.error_handler("gamma", type(gamma) ["float"])
-    #     self.N2D2().setGammaThreshold(gamma)
