@@ -38,14 +38,14 @@ void apply_pruning_with_masks(Tensor<T>& data,
 }
 
 void update_masks_random(Tensor<unsigned int>& masks,
-                         unsigned int& nbzero,
-                         unsigned int nbzero_to_add)
+                         float threshold)
 {
-    assert(nbzero_to_add < masks.size());
-    assert(nbzero < masks.size());
+    unsigned int nbzero = (masks.eq(0)).sum();
+
+    // Possible not to add 0 if threshold already satisfied
+    unsigned int nbzero_to_add = std::max(0U, (unsigned int)std::ceil(threshold * masks.size()) - nbzero);
 
     for (unsigned int i = 0; i < nbzero_to_add; ++i) {
-
         bool isZeroAdded = false;
 
         while (!isZeroAdded) {
@@ -59,7 +59,6 @@ void update_masks_random(Tensor<unsigned int>& masks,
 
             if (ind != masks.size() && masks(ind) == 1U) {
                 masks(ind) = 0U;
-                ++nbzero;
                 isZeroAdded = true;
             }
 
@@ -67,6 +66,31 @@ void update_masks_random(Tensor<unsigned int>& masks,
     }
 }
 
+template <class T>
+void update_masks_iter_nonstruct(Tensor<T>& data,
+                                 Tensor<unsigned int>& masks,
+                                 float threshold,
+                                 float delta)
+{
+    unsigned int zero_counter = 0;
+    unsigned int iter_delta = 0;
+
+    // Find the correct iter delta
+    while ((float)zero_counter / data.size() < threshold) {
+        ++iter_delta;
+        zero_counter = 0;
+        for (unsigned int i = 0; i < data.size(); ++i) {
+            if (abs(data(i)) <= delta * iter_delta) {
+                ++zero_counter;
+            }
+        }
+    }
+
+    // Fill the mask tensor
+    for (unsigned int i = 0; i < data.size(); ++i) {
+        masks(i) = (abs(data(i)) <= delta * iter_delta) ? 0U : 1U;
+    }
+}
 
 }
 
@@ -84,6 +108,20 @@ template void PruneQuantizer_Frame_Kernels::apply_pruning_with_masks<float>(Tens
 template void PruneQuantizer_Frame_Kernels::apply_pruning_with_masks<double>(Tensor<double>& data,
                                                                              Tensor<double>& dataPruned,
                                                                              Tensor<unsigned int>& masks);
+
+
+template void PruneQuantizer_Frame_Kernels::update_masks_iter_nonstruct<half_float::half>(Tensor<half_float::half>& data,
+                                                                                          Tensor<unsigned int>& masks,
+                                                                                          float threshold,
+                                                                                          float delta);
+template void PruneQuantizer_Frame_Kernels::update_masks_iter_nonstruct<float>(Tensor<float>& data,
+                                                                               Tensor<unsigned int>& masks,
+                                                                               float threshold,
+                                                                               float delta);
+template void PruneQuantizer_Frame_Kernels::update_masks_iter_nonstruct<double>(Tensor<double>& data,
+                                                                                Tensor<unsigned int>& masks,
+                                                                                float threshold,
+                                                                                float delta);
 
 
 }

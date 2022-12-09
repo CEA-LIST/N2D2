@@ -33,8 +33,13 @@ namespace PruneQuantizer_Frame_Kernels {
                                   Tensor<unsigned int>& masks);
 
     void update_masks_random(Tensor<unsigned int>& masks,
-                             unsigned int& nbzero,
-                             unsigned int nbzero_to_add);
+                             float threshold);
+
+    template <class T>
+    void update_masks_iter_nonstruct(Tensor<T>& data,
+                                     Tensor<unsigned int>& masks,
+                                     float threshold,
+                                     float delta);
 
 }
 
