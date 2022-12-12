@@ -71,10 +71,16 @@ void PruneQuantizerCell_Frame<T>::addWeights(BaseTensor& weights, BaseTensor& di
 }
 
 template<class T>
-void PruneQuantizerCell_Frame<T>::addBiases(BaseTensor& /*biases*/, BaseTensor& /*diffBiases*/)
+void PruneQuantizerCell_Frame<T>::addBiases(BaseTensor& biases, BaseTensor& diffBiases)
 {
     if(mInitialized)
         return;
+
+    mFullPrecisionBiases = &(dynamic_cast<BaseTensor&>(biases));
+    mQuantizedBiases.resize(biases.dims());
+
+    mDiffQuantizedBiases = &(dynamic_cast<BaseTensor&>(diffBiases));
+    mDiffFullPrecisionBiases.resize(diffBiases.dims());
 }
 
 
@@ -140,6 +146,13 @@ void PruneQuantizerCell_Frame<T>::propagate()
         // Should never be here
         break;
     }
+
+    if (mFullPrecisionBiases) {
+        Tensor<T>& fullPrecBiases = dynamic_cast<Tensor<T>&>(*mFullPrecisionBiases);
+        for (unsigned int i = 0; i < fullPrecBiases.size(); ++i) {
+            mQuantizedBiases(i) = fullPrecBiases(i);
+        }
+    }
 }
 
 
@@ -163,6 +176,13 @@ void PruneQuantizerCell_Frame<T>::back_propagate()
     default:
         // Should never be here
         break;
+    }
+
+    if (mDiffQuantizedBiases) {
+        Tensor<T>& diffQuantBiases = dynamic_cast<Tensor<T>&>(*mDiffQuantizedBiases);
+        for (unsigned int i = 0; i < diffQuantBiases.size(); ++i) {
+            mDiffFullPrecisionBiases(i) = diffQuantBiases(i);
+        }
     }
 }
 
