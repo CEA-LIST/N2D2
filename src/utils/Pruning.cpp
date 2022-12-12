@@ -114,7 +114,7 @@ void N2D2::prune_random(std::shared_ptr<Cell>& cell,
 void N2D2::prune_iter_nonstruct(std::shared_ptr<DeepNet>& deepNet,
                         const float threshold)
 {
-    int count = 0;
+    // int count = 0;
     for (std::map<std::string, std::shared_ptr<Cell> >::iterator
             itCells = deepNet->getCells().begin(),
             itCellsEnd = deepNet->getCells().end();

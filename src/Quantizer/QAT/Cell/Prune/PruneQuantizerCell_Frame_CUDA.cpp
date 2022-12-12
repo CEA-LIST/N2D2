@@ -24,6 +24,7 @@
 #include "Quantizer/QAT/Cell/Prune/PruneQuantizerCell_Frame_CUDA.hpp"
 #include "Quantizer/QAT/Kernel/PruneQuantizer_Frame_CUDA_Kernels.hpp"
 #include "Quantizer/QAT/Kernel/PruneQuantizer_Frame_Kernels.hpp"
+#include "Quantizer/QAT/Kernel/Quantizer_Frame_CUDA_Kernels.hpp"
 
 
 template<>
@@ -84,10 +85,16 @@ void PruneQuantizerCell_Frame_CUDA<T>::addWeights(BaseTensor& weights, BaseTenso
 }
 
 template<class T>
-void PruneQuantizerCell_Frame_CUDA<T>::addBiases(BaseTensor& /*biases*/, BaseTensor& /*diffBiases*/)
+void PruneQuantizerCell_Frame_CUDA<T>::addBiases(BaseTensor& biases, BaseTensor& diffBiases)
 {
     if(mInitialized)
         return;
+
+    mFullPrecisionBiases = &(dynamic_cast<CudaBaseTensor&>(biases));
+    mQuantizedBiases.resize(biases.dims());
+
+    mDiffQuantizedBiases = &(dynamic_cast<CudaBaseTensor&>(diffBiases));
+    mDiffFullPrecisionBiases.resize(diffBiases.dims());
 }
 
 template<class T>
@@ -161,6 +168,16 @@ void PruneQuantizerCell_Frame_CUDA<float>::propagate()
         // Should never be here
         break;
     }
+
+    if (mFullPrecisionBiases) {
+        std::shared_ptr<CudaDeviceTensor<float> > fullPrecBiases
+            = cuda_device_tensor_cast<float>(
+                cuda_tensor_cast<float>(*mFullPrecisionBiases));
+
+        Quantizer_Frame_CUDA_Kernels::cudaF_copyData(
+            fullPrecBiases->getDevicePtr(), mQuantizedBiases.getDevicePtr(),
+            mFullPrecisionBiases->size());
+    }
 }
 
 template<>
@@ -199,6 +216,17 @@ void PruneQuantizerCell_Frame_CUDA<float>::back_propagate()
     default:
         // Should never be here
         break;
+    }
+    if (mDiffQuantizedBiases) {
+
+        std::shared_ptr<CudaDeviceTensor<float> > diffQuantBiases
+            = cuda_device_tensor_cast<float>(
+                cuda_tensor_cast<float>(*mDiffQuantizedBiases));
+
+        Quantizer_Frame_CUDA_Kernels::cudaF_copyData(
+            diffQuantBiases->getDevicePtr(),
+            mDiffFullPrecisionBiases.getDevicePtr(),
+            mDiffQuantizedBiases->size());
     }
 }
 
