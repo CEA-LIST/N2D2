@@ -37,6 +37,7 @@ public:
     };
 
     enum PruningFiller{
+        None,
         Random,
         IterNonStruct
     };
@@ -106,6 +107,10 @@ public:
     {
         return mDelta;
     };  
+    float getCurrentThreshold()
+    {
+        return mCurrentThreshold;
+    }
 
     virtual void exportFreeParameters(const std::string& /*fileName*/) const {};
     virtual void importFreeParameters(const std::string& /*fileName*/, bool /*ignoreNoExists*/) {};
@@ -125,6 +130,8 @@ protected:
     Parameter<unsigned int> mStepSizeThreshold;
     Parameter<float> mGammaThreshold;
 
+    float mCurrentThreshold;
+
 private:
 };
 
@@ -137,7 +144,7 @@ const char* const EnumStrings<N2D2::PruneQuantizerCell::PruningMode>::data[]
 
 template <>
 const char* const EnumStrings<N2D2::PruneQuantizerCell::PruningFiller>::data[]
-    = {"Random", "IterNonStruct"};
+    = {"None", "Random", "IterNonStruct"};
 }
 
 #endif  // N2D2_PRUNEQUANTIZERCELL_H

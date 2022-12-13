@@ -42,6 +42,7 @@ void init_PruneQuantizerCell(py::module &m) {
     q.def("getPruningMode", &PruneQuantizerCell::getPruningMode);
     q.def("getThreshold", &PruneQuantizerCell::getThreshold);
     q.def("getDelta", &PruneQuantizerCell::getDelta);
+    q.def("getCurrentThreshold", &PruneQuantizerCell::getCurrentThreshold);
 
     py::enum_<PruneQuantizerCell::PruningMode>(q, "PruningMode")
     .value("Identity", PruneQuantizerCell::PruningMode::Identity)
@@ -50,6 +51,7 @@ void init_PruneQuantizerCell(py::module &m) {
     .export_values();
 
     py::enum_<PruneQuantizerCell::PruningFiller>(q, "PruningFiller")
+    .value("None", PruneQuantizerCell::PruningFiller::None)
     .value("Random", PruneQuantizerCell::PruningFiller::Random)
     .value("IterNonStruct", PruneQuantizerCell::PruningFiller::IterNonStruct)
     .export_values();

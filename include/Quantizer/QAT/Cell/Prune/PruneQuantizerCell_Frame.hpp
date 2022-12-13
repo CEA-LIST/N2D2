@@ -79,7 +79,6 @@ public:
 
 protected:
     Interface<unsigned int> mMasksWeights;
-    float mCurrentThreshold;
     
     bool mInitialized = false;
 

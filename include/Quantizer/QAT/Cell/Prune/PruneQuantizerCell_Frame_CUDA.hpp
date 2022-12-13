@@ -79,7 +79,6 @@ public:
 
 protected:
     CudaInterface<unsigned int> mMasksWeights;
-    float mCurrentThreshold;
     
     bool mInitialized = false;
 

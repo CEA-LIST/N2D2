@@ -87,40 +87,42 @@ void PruneQuantizerCell_Frame<T>::addBiases(BaseTensor& biases, BaseTensor& diff
 template<typename T>
 void PruneQuantizerCell_Frame<T>::initialize()
 {
-    // Initialize masks
-    for (unsigned int k = 0, size = mMasksWeights.size(); k < size; ++k) {
-        Tensor<T> weights = tensor_cast<T>(mFullPrecisionWeights[k]);
-        Tensor<unsigned int> mask = tensor_cast<unsigned int>(mMasksWeights[k]);
+    // Initialize masks if PruningFiller not None
+    if (mPruningFiller != None) {
+        for (unsigned int k = 0, size = mMasksWeights.size(); k < size; ++k) {
+            Tensor<T> weights = tensor_cast<T>(mFullPrecisionWeights[k]);
+            Tensor<unsigned int> mask = tensor_cast<unsigned int>(mMasksWeights[k]);
 
-        mCurrentThreshold = 0.0f;
+            mCurrentThreshold = 0.0f;
 
-        switch (mPruningMode) {
-        case Identity:
-            // Nothing to do
-            break;
-        case Static:
-        {
-            mCurrentThreshold = mThreshold;
-            break;
-        }
-        case Gradual:
-        {
-            mCurrentThreshold = mStartThreshold;
-            break;
-        }
-        default:
-            // Should never be here
-            break;
-        }
+            switch (mPruningMode) {
+            case Identity:
+                // Nothing to do
+                break;
+            case Static:
+            {
+                mCurrentThreshold = mThreshold;
+                break;
+            }
+            case Gradual:
+            {
+                mCurrentThreshold = mStartThreshold;
+                break;
+            }
+            default:
+                // Should never be here
+                break;
+            }
 
-        if (mPruningFiller == Random) {
-            PruneQuantizer_Frame_Kernels::update_masks_random(mask, mCurrentThreshold);
-        } else if (mPruningFiller == IterNonStruct) {
-            PruneQuantizer_Frame_Kernels::update_masks_iter_nonstruct(weights, mask, mCurrentThreshold, mDelta);
+            if (mPruningFiller == Random) {
+                PruneQuantizer_Frame_Kernels::update_masks_random(mask, mCurrentThreshold);
+            } else if (mPruningFiller == IterNonStruct) {
+                PruneQuantizer_Frame_Kernels::update_masks_iter_nonstruct(weights, mask, mCurrentThreshold, mDelta);
+            }
+            mask.synchronizeHToD();
         }
-        mask.synchronizeHToD();
     }
-    
+
     mInitialized = true;
 }
 
@@ -296,6 +298,8 @@ void PruneQuantizerCell_Frame<T>::importFreeParameters(const std::string& fileNa
     for (unsigned int i = 0; i < mask.size(); ++i) {
         mask(i) = out[i];
     }
+
+    mCurrentThreshold = (float)((mask.eq(0)).sum()) / mask.size();
 }
 
 }

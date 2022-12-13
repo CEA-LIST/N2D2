@@ -32,4 +32,5 @@ N2D2::PruneQuantizerCell::PruneQuantizerCell()
       mGammaThreshold(this, "GammaThreshold", 0.05)
 {
     // ctor
+    mCurrentThreshold = 0.0f;
 }
