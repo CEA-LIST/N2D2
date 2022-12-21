@@ -274,69 +274,42 @@ class ContextNoBatchNormFuse:
         for module in self.model.modules():
             if isinstance(module, torch.nn.modules.batchnorm._BatchNorm):
                 def fake_forward(inputs,
-                                running_mean=module.running_mean,
-                                running_var=module.running_var,
-                                bias=module.bias,
-                                weight=module.weight,
-                                momentum=module.momentum,
-                                num_batches_tracked=module.num_batches_tracked,
-                                eps=module.eps):
+                                current_bn=module):
                     """New batchnorm forward which save statistics and restore them after propagation
                     """
-                    if momentum is None:
+                    if current_bn.momentum is None:
                         eaf = 0.0
                     else:
-                        eaf = momentum
-                    assert num_batches_tracked is not None
-                    num_batches_tracked.add_(1)
-                    if momentum is None:  # use cumulative moving average
-                        eaf = 1.0 / num_batches_tracked.item()
+                        eaf = current_bn.momentum
+                    assert current_bn.num_batches_tracked is not None
+                    current_bn.num_batches_tracked.add_(1)
+                    if current_bn.momentum is None:  # use cumulative moving average
+                        eaf = 1.0 / current_bn.num_batches_tracked.item()
                     else:  # use exponential moving average
-                        eaf = momentum
+                        eaf = current_bn.momentum
 
-                    # Recquires grad set to False to avoid adding operator to these parameters in the ONNX graph.
-                    running_mean.requires_grad = False
-                    running_var.requires_grad = False
-                    bias.requires_grad = False
-                    weight.requires_grad = False
                     # Save copy of values before propagation
-                    saved_run_mean = running_mean.detach().clone()
-                    saved_run_var = running_var.detach().clone()
-                    saved_bias = bias.detach().clone()
-                    saved_weight = weight.detach().clone()
-                    # print('---')
-                    # print(saved_run_mean) 
-                    # print(saved_run_var) 
-                    # print(running_mean) 
-                    # print(running_var)
-                    # print('FORWARD')
+                    saved_run_mean = current_bn.running_mean.detach().clone()
+                    saved_run_var  = current_bn.running_var.detach().clone()
+                    saved_bias     = current_bn.bias.detach().clone()
+                    saved_weight   = current_bn.weight.detach().clone()
+
                     # Real batchnorm forward
                     output_tensor = torch.nn.functional.batch_norm(
                         inputs,
-                        running_mean, # running_mean
-                        running_var,  # running_var
-                        weight,         # weight
-                        bias,       # bias
-                        True,         # bn training
-                        eaf,          # exponential_average_factor
-                        eps,          # epsilon
+                        current_bn.running_mean, # running_mean
+                        current_bn.running_var,  # running_var
+                        current_bn.weight,       # weight
+                        current_bn.bias,         # bias
+                        True,                    # bn training
+                        eaf,                     # exponential_average_factor
+                        current_bn.eps,          # epsilon
                     )
-                    # Restore stats to their previous values
-                    # print(saved_run_mean) 
-                    # print(saved_run_var) 
-                    # print(running_mean) 
-                    # print(running_var)
-                    # print('---')
 
-                    running_mean.copy_(saved_run_mean)
-                    running_var.copy_(saved_run_var)
-                    bias.copy_(saved_bias)
-                    weight.copy_(saved_weight)
-
-                    # running_mean = (torch.nn.Parameter(saved_run_mean))
-                    # running_var = (torch.nn.Parameter(saved_run_var))
-                    # weight = (torch.nn.Parameter(saved_weight))
-                    # bias = (torch.nn.Parameter(saved_bias))
+                    current_bn.running_mean.copy_(torch.nn.Parameter(saved_run_mean).requires_grad_(False))
+                    current_bn.running_var.copy_(torch.nn.Parameter(saved_run_var).requires_grad_(False))
+                    current_bn.bias = (torch.nn.Parameter(saved_bias))
+                    current_bn.weight = (torch.nn.Parameter(saved_weight))
 
                     return output_tensor
                 # Update Batchnorm forward with the fake forward !
@@ -378,14 +351,6 @@ def wrap(torch_model:torch.nn.Module,
     print("Exporting torch module to ONNX ...")
 
     dummy_in = torch.zeros(input_size).to(next(torch_model.parameters()).device)
-    batchnorm_stats = [] # Queue of batchnorm stats (means, vars, biases, weights)
-    for module in torch_model.modules():
-        if isinstance(module, torch.nn.modules.batchnorm._BatchNorm):
-            batchnorm_stats.append((
-                module.running_mean.detach().clone(), 
-                module.running_var.detach().clone(),
-                module.bias.detach().clone(),
-                module.weight.detach().clone()))
 
     # Note : To keep batchnorm we export model in train mode.
     # However we cannot freeze batchnorm stats in pytorch < 12 (see : https://github.com/pytorch/pytorch/issues/75252).
@@ -401,15 +366,6 @@ def wrap(torch_model:torch.nn.Module,
             training=torch.onnx.TrainingMode.TRAINING,
             do_constant_folding=False)
 
-    tmp_bn_idx = 0
-    for module in torch_model.modules():
-        if isinstance(module, torch.nn.modules.batchnorm._BatchNorm):
-            means, variances, biases, weights = batchnorm_stats[tmp_bn_idx]
-            module.running_mean.copy_(torch.nn.Parameter(means).requires_grad_(False))
-            module.running_var.copy_(torch.nn.Parameter(variances).requires_grad_(False))
-            module.bias = (torch.nn.Parameter(biases))
-            module.weight = (torch.nn.Parameter(weights))
-            tmp_bn_idx +=1
 
     print("Simplifying the ONNX model ...")
     onnx_model = onnx.load(raw_model_path)
