@@ -28,6 +28,10 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_ReshapeTransformation(py::module &m) {
     py::class_<ReshapeTransformation, std::shared_ptr<ReshapeTransformation>, Transformation> (m, "ReshapeTransformation", py::multiple_inheritance())
-    .def(py::init<unsigned int, unsigned int, unsigned int>(), py::arg("nbRows"), py::arg("nbCols") = 0, py::arg("nbChannels") = 0);
+    .def(py::init<unsigned int, unsigned int, unsigned int>(), py::arg("nbRows"), py::arg("nbCols") = 0, py::arg("nbChannels") = 0)
+    .def("getNbRows", &ReshapeTransformation::getNbRows)
+    .def("getNbCols", &ReshapeTransformation::getNbCols)
+    .def("getNbChannels", &ReshapeTransformation::getNbChannels)
+    ;
 }
 }

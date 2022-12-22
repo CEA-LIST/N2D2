@@ -30,3 +30,5 @@ from n2d2.transform.random_resize_crop import RandomResizeCrop
 from n2d2.transform.range_affine import RangeAffine
 from n2d2.transform.rescale import Rescale
 from n2d2.transform.slice_extraction import SliceExtraction
+from n2d2.transform.reshape import Reshape
+
