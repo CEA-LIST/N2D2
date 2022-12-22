@@ -213,6 +213,13 @@ Rescale
         :members:
         :inherited-members:
 
+Reshape
+~~~~~~~
+
+.. autoclass:: n2d2.transform.Reshape
+        :members:
+        :inherited-members:
+
 ColorSpace
 ~~~~~~~~~~
 
