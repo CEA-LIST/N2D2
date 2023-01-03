@@ -9,8 +9,6 @@ Quantization-Aware Training
 .. |ccheck| replace:: :raw-html:`<font color="green">` |check| :raw-html:`</font>`
 .. |ccross| replace:: :raw-html:`<font color="red">` |cross| :raw-html:`</font>`
 
-**N2D2-IP only: available upon request.**
-
 
 Getting Started
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
