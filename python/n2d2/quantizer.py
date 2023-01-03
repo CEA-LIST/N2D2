@@ -524,7 +524,13 @@ class PruneCell(CellQuantizer):
         return n2d2.Tensor.from_N2D2(self.N2D2().getQuantizedWeights(input_idx))
 
     def get_pruned_masks(self, input_idx):
+        """
+        Access the masks of the pruner.
+        """
         return n2d2.Tensor.from_N2D2(self.N2D2().getMasksWeights(input_idx))
 
     def get_current_threshold(self):
+        """
+        Get the current threshold of the cell.
+        """
         return self.N2D2().getCurrentThreshold()

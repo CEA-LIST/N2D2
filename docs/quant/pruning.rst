@@ -30,9 +30,10 @@ Pruning mode
 ^^^^^^^^^^^^
 
 3 modes are possible:
-* Identity: no pruning is applied to the cell
-* Static: all weights of the cell are pruned to the requested ``threshold`` at initialization
-* Gradual: the weights are pruned to the ``start`` threshold at initialization and at each update of the current threshold, it is increased by ``gamma`` until it reaches ``threshold``. By default, the update is performed at the end of each epoch (possible to change it with ``stepsize``)
+
+- Identity: no pruning is applied to the cell
+- Static: all weights of the cell are pruned to the requested ``threshold`` at initialization
+- Gradual: the weights are pruned to the ``start`` threshold at initialization and at each update of the current threshold, it is increased by ``gamma`` until it reaches ``threshold``. By default, the update is performed at the end of each epoch (possible to change it with ``stepsize``)
 
 **Warning**: if you use ``stepsize``, please indicate the number of steps and not the number of epochs.
 For example, to update each two epochs, write:
@@ -47,8 +48,9 @@ Pruning filler
 ^^^^^^^^^^^^^^
 
 2 fillers are available to fill the masks:
-* Random: The masks are filled randomly
-* IterNonStruct: all weights below than the ``delta`` factor are pruned. If this is not enough to reach ``threshold``, all the weights below 2 "delta" are pruned and so on...
+
+- Random: The masks are filled randomly
+- IterNonStruct: all weights below than the ``delta`` factor are pruned. If this is not enough to reach ``threshold``, all the weights below 2 "delta" are pruned and so on...
 
 
 **Important**: With *PruneCell*, ``quant_mode`` and ``range`` are not used.
