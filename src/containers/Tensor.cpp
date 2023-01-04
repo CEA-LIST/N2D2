@@ -166,6 +166,7 @@ N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims,
     // ctor
 }
 
+#if SIZE_MAX != 0xFFFFFFFF
 template <class T>
 N2D2::Tensor<T>::Tensor(const std::vector<unsigned int>& dims,
                             const T& value)
@@ -176,6 +177,7 @@ N2D2::Tensor<T>::Tensor(const std::vector<unsigned int>& dims,
 {
     // ctor
 }
+#endif
 
 template <class T>
 N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims,

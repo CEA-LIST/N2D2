@@ -358,8 +358,12 @@ public:
              const T& value = T());
     Tensor(const std::vector<size_t>& dims,
              const T& value = T());
+
+#if SIZE_MAX != 0xFFFFFFFF
     Tensor(const std::vector<unsigned int>& dims,
              const T& value = T());
+#endif
+
     template <typename InputIterator>
     Tensor(std::initializer_list<size_t> dims,
              InputIterator first,
