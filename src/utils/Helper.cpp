@@ -264,6 +264,9 @@ namespace N2D2_HELPER{
                                                 " precedence over -test-index)");
         testAdv =     opts.parse("-testAdv", testAdv, "performs an adversarial study "
                                                             "only options: Solo or Multi");
+        pruningMethod = opts.parse("-pruning", pruningMethod, "performs a pruning algorithm on the model");
+        pruningThreshold = opts.parse("-pruning-threshold", pruningThreshold, "sparsity threshold for weights");
+        fineTune = opts.parse("-finetuning", fineTune, "finetune after pruning during nb epochs");
         check =       opts.parse("-check", "enable gradient computation checking");
         logOutputs =  opts.parse("-log-outputs", logOutputs, "log layers outputs for the n-th "
                                                     "stimulus (0 = no log)");

@@ -30,6 +30,7 @@
 #include "Transformation/RangeAffineTransformation.hpp"
 #include "utils/ProgramOptions.hpp"
 #include "Adversarial.hpp"
+#include "Pruning.hpp"
 #ifdef CUDA
 #include <cudnn.h>
 
@@ -64,6 +65,9 @@ namespace N2D2_HELPER{
         int testIndex = -1;
         int testId = -1;
         std::string testAdv = std::string();
+        std::string pruningMethod = std::string();
+        float pruningThreshold = 0.0;
+        unsigned int fineTune = 0U;
         bool check = false;
         unsigned int logOutputs = 0U;
         bool logJSON = false;

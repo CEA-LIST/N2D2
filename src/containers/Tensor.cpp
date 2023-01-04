@@ -899,6 +899,18 @@ double N2D2::Tensor<T>::std() const
     return sqrt(var);
 }
 
+template<class T>
+N2D2::Tensor<size_t> N2D2::Tensor<T>::eq(const T& value) const
+{
+    Tensor<size_t> binary = Tensor<size_t>(mDims);
+
+    for (unsigned int i = 0; i < binary.size(); ++i) {
+        binary(i) = ((*mData)()[i] == value) ? (size_t)1 : (size_t)0;
+    }
+
+    return binary;
+}
+
 template <class T>
 bool N2D2::Tensor<T>::operator==(const Tensor& other) const {
     if(mDims != other.mDims) {

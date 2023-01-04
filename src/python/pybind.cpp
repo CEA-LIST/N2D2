@@ -262,6 +262,9 @@ void init_SATQuantizerCell_Frame(py::module&);
 
 void init_LSQQuantizerCell(py::module&);
 
+void init_PruneQuantizerCell(py::module&);
+void init_PruneQuantizerCell_Frame(py::module&);
+
 void init_SATQuantizerActivation(py::module&);
 void init_SATQuantizerActivation_Frame(py::module&);
 void init_LSQQuantizerActivation(py::module&);
@@ -271,6 +274,7 @@ void init_SATQuantizerCell_Frame_CUDA(py::module&);
 void init_SATQuantizerActivation_Frame_CUDA(py::module&);
 void init_LSQQuantizerCell_Frame_CUDA(py::module&);
 void init_LSQQuantizerActivation_Frame_CUDA(py::module&);
+void init_PruneQuantizerCell_Frame_CUDA(py::module&);
 #endif 
 
 void init_DeepNetQAT(py::module&);
@@ -555,6 +559,8 @@ void init_N2D2(py::module& m) {
     init_SATQuantizerCell(m);
     init_SATQuantizerCell_Frame(m);
     init_LSQQuantizerCell(m);
+    init_PruneQuantizerCell(m);
+    init_PruneQuantizerCell_Frame(m);
 
     init_SATQuantizerActivation(m);
     init_SATQuantizerActivation_Frame(m);
@@ -612,6 +618,7 @@ void init_N2D2(py::module& m) {
     init_SATQuantizerCell_Frame_CUDA(m);
     init_LSQQuantizerActivation_Frame_CUDA(m);
     init_LSQQuantizerCell_Frame_CUDA(m);
+    init_PruneQuantizerCell_Frame_CUDA(m);
     #else
     m.attr("cuda_compiled") = false;
     #endif

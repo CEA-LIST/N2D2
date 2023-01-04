@@ -422,6 +422,7 @@ public:
     double sum(bool valAbs = false) const;
     double mean(bool valAbs = false) const;
     double std() const;
+    Tensor<size_t> eq(const T& value) const;
     virtual void synchronizeToH(BaseTensor& tensor) const;
     BaseTensor& operator=(const BaseTensor& base);
     Tensor<T>& operator=(const Tensor<T>& tensor);
