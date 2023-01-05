@@ -34,7 +34,7 @@ cudaPruneMasks_kernel(__half* srcData,
     const unsigned int stride = blockDim.x * gridDim.x;
 
     for (unsigned int i = index; i < size; i += stride) {
-        dstData[i] = srcData[i] * __float2half(masks[i]);
+        dstData[i] = srcData[i] * __uint2half_ru(masks[i]);
     }
 }
 
