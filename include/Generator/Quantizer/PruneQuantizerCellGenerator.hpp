@@ -1,7 +1,6 @@
 /*
-    (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
-                    Cyril MOINEAU (cyril.moineau@cea.fr)
+    (C) Copyright 2022 CEA LIST. All Rights Reserved.
+    Contributor(s): N2D2 Team (n2d2-contact@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -18,20 +17,27 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-#include "Transformation/ReshapeTransformation.hpp"
 
+#ifndef N2D2_PRUNEQUANTIZERCELLGENERATOR_H
+#define N2D2_PRUNEQUANTIZERCELLGENERATOR_H
 
-#include <pybind11/pybind11.h>
-
-namespace py = pybind11;
+#include "Quantizer/QAT/Cell/Prune/PruneQuantizerCell.hpp"
+#include "Generator/Quantizer/QuantizerCellGenerator.hpp"
+#include "third_party/half.hpp"
 
 namespace N2D2 {
-void init_ReshapeTransformation(py::module &m) {
-    py::class_<ReshapeTransformation, std::shared_ptr<ReshapeTransformation>, Transformation> (m, "ReshapeTransformation", py::multiple_inheritance())
-    .def(py::init<unsigned int, unsigned int, unsigned int>(), py::arg("nbRows"), py::arg("nbCols") = 0, py::arg("nbChannels") = 0)
-    .def("getNbRows", &ReshapeTransformation::getNbRows)
-    .def("getNbCols", &ReshapeTransformation::getNbCols)
-    .def("getNbChannels", &ReshapeTransformation::getNbChannels)
-    ;
+class PruneQuantizerCellGenerator : public QuantizerCellGenerator {
+public:
+    static std::shared_ptr<PruneQuantizerCell>
+    generate(IniParser& iniConfig,
+             const std::string& section,
+             const std::string& model,
+             const DataType& dataType,
+             const std::string& name);
+
+private:
+    static Registrar<QuantizerCellGenerator> mRegistrar;
+};
 }
-}
+
+#endif // N2D2_PRUNEQUANTIZERCELLGENERATOR_H

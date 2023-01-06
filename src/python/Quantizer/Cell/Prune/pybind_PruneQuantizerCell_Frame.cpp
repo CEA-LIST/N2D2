@@ -1,7 +1,6 @@
 /*
-    (C) Copyright 2020 CEA LIST. All Rights Reserved.
-    Contributor(s): Olivier BICHLER (olivier.bichler@cea.fr)
-                    Cyril MOINEAU (cyril.moineau@cea.fr)
+    (C) Copyright 2022 CEA LIST. All Rights Reserved.
+    Contributor(s): N2D2 Team (n2d2-contact@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -18,20 +17,29 @@
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
 */
-#include "Transformation/ReshapeTransformation.hpp"
+
+#include "Quantizer/QAT/Cell/Prune/PruneQuantizerCell_Frame.hpp"
 
 
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
+
 namespace N2D2 {
-void init_ReshapeTransformation(py::module &m) {
-    py::class_<ReshapeTransformation, std::shared_ptr<ReshapeTransformation>, Transformation> (m, "ReshapeTransformation", py::multiple_inheritance())
-    .def(py::init<unsigned int, unsigned int, unsigned int>(), py::arg("nbRows"), py::arg("nbCols") = 0, py::arg("nbChannels") = 0)
-    .def("getNbRows", &ReshapeTransformation::getNbRows)
-    .def("getNbCols", &ReshapeTransformation::getNbCols)
-    .def("getNbChannels", &ReshapeTransformation::getNbChannels)
-    ;
+template<typename T>
+void declare_PruneQuantizerCell_Frame(py::module &m, const std::string& typeStr) {
+    const std::string pyClassName("PruneQuantizerCell_Frame_" + typeStr);
+    py::class_<
+        PruneQuantizerCell_Frame<T>, 
+        std::shared_ptr<PruneQuantizerCell_Frame<T>>, 
+        PruneQuantizerCell,
+        QuantizerCell_Frame<T>> (m, pyClassName.c_str(), py::multiple_inheritance()) 
+    .def(py::init());
+}
+
+void init_PruneQuantizerCell_Frame(py::module &m) {
+    declare_PruneQuantizerCell_Frame<float>(m, "float");
+    declare_PruneQuantizerCell_Frame<double>(m, "double");
 }
 }

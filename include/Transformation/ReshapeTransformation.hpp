@@ -49,6 +49,18 @@ public:
     {
         return depth;
     };
+    int getNbRows() const
+    {
+        return mNbRows;
+    };
+    int getNbCols() const
+    {
+        return mNbCols;
+    };
+    int getNbChannels() const
+    {
+        return mNbChannels;
+    };
     virtual ~ReshapeTransformation() {};
 
 private:

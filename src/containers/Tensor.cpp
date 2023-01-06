@@ -166,6 +166,7 @@ N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims,
     // ctor
 }
 
+#if SIZE_MAX != 0xFFFFFFFF
 template <class T>
 N2D2::Tensor<T>::Tensor(const std::vector<unsigned int>& dims,
                             const T& value)
@@ -176,6 +177,7 @@ N2D2::Tensor<T>::Tensor(const std::vector<unsigned int>& dims,
 {
     // ctor
 }
+#endif
 
 template <class T>
 N2D2::Tensor<T>::Tensor(const std::vector<size_t>& dims,
@@ -897,6 +899,18 @@ double N2D2::Tensor<T>::std() const
     var = var/(*mData)().size();
 
     return sqrt(var);
+}
+
+template<class T>
+N2D2::Tensor<size_t> N2D2::Tensor<T>::eq(const T& value) const
+{
+    Tensor<size_t> binary = Tensor<size_t>(mDims);
+
+    for (unsigned int i = 0; i < binary.size(); ++i) {
+        binary(i) = ((*mData)()[i] == value) ? (size_t)1 : (size_t)0;
+    }
+
+    return binary;
 }
 
 template <class T>

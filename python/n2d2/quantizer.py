@@ -232,7 +232,6 @@ class SATCell(CellQuantizer):
         """
         CellQuantizer.__init__(self, **config_parameters)
         if "quant_mode" in config_parameters:
-            print(", ".join(self._quantizer_generators[self._model_key].QuantMode.__members__.keys()))
             quant_mode = config_parameters["quant_mode"]
             if quant_mode not in self._quantizer_generators[self._model_key].QuantMode.__members__.keys():
                 raise WrongValue("quant_mode", quant_mode,
@@ -459,3 +458,79 @@ class LSQAct(ActivationQuantizer):
             self.set_solver(value)
         else:
             super().__setattr__(key, value)
+
+
+class PruneCell(CellQuantizer):
+    """
+    Finetune Pruning
+    """
+    _pruning_generators = {
+        'Frame<float>': N2D2.PruneQuantizerCell_Frame_float,
+    }
+    if gb.cuda_available:
+        _pruning_generators.update({
+            'Frame_CUDA<float>': N2D2.PruneQuantizerCell_Frame_CUDA_float
+        })
+    _convention_converter = ConventionConverter({
+        "threshold": "Threshold",
+        "prune_mode": "PruningMode",
+        "prune_filler": "PruningFiller",
+        "delta": "Delta",
+        "start": "StartThreshold",
+        "stepsize": "StepSizeThreshold",
+        "gamma": "GammaThreshold",
+        "quant_mode": "QuantMode",
+        "range": "Range"
+    })
+    def __init__(self, **config_parameters):
+        """
+        :param threshold: Range of Quantization, can be ``1`` for binary, ``255`` for 8-bits etc.., default=255
+        :type threshold: float, optional
+        :param prune_mode: Type of pruning mode, can be ``Identity``, ``Static`` or ``Gradual``, default=``Identity``
+        :type prune_mode: string, optional
+        :param prune_filler: Type of pruning filler, can be ``Random`` or ``IterNonStruct``, default=``Random``
+        :type prune_filler: string, optional
+        :param delta: For IterNonStruct filler, factor to iteractively prune the data
+        :type delta: float, optional
+        :param start: For Gradual mode, start value for threshold 
+        :type start: float, optional
+        :param stepsize: For Gradual mode, size of the steps before update the masks
+        :type stepsize: int, optional
+        :param gamma: For Gradual mode, adding threshold value when updating masks
+        :type gamma: float, optional
+        """
+        CellQuantizer.__init__(self, **config_parameters)
+        if "prune_mode" in config_parameters:
+            prune_mode = config_parameters["prune_mode"]
+            if prune_mode not in self._pruning_generators[self._model_key].PruningMode.__members__.keys():
+                raise WrongValue("prune_mode", prune_mode,
+                        ", ".join(self._pruning_generators[self._model_key].PruningMode.__members__.keys()))
+        if "prune_filler" in config_parameters:
+            prune_filler = config_parameters["prune_filler"]
+            if prune_filler not in self._pruning_generators[self._model_key].PruningFiller.__members__.keys():
+                raise WrongValue("prune_filler", prune_filler,
+                        ", ".join(self._pruning_generators[self._model_key].PruningFiller.__members__.keys()))
+
+        # No optional constructor arguments
+        self._set_N2D2_object(self._pruning_generators[self._model_key]())
+        self._set_N2D2_parameters(self._config_parameters)
+        self.load_N2D2_parameters(self.N2D2())
+
+
+    def get_quantized_weights(self, input_idx):
+        """
+        Access the quantized weights of the cell the quantizer is attached to.
+        """
+        return n2d2.Tensor.from_N2D2(self.N2D2().getQuantizedWeights(input_idx))
+
+    def get_pruned_masks(self, input_idx):
+        """
+        Access the masks of the pruner.
+        """
+        return n2d2.Tensor.from_N2D2(self.N2D2().getMasksWeights(input_idx))
+
+    def get_current_threshold(self):
+        """
+        Get the current threshold of the cell.
+        """
+        return self.N2D2().getCurrentThreshold()

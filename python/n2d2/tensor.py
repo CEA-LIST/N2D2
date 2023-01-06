@@ -59,6 +59,8 @@ class Tensor:
         "l": N2D2.Tensor_long,
         "i": N2D2.Tensor_int,
         "int": N2D2.Tensor_int,
+        "j": N2D2.Tensor_unsigned_int,
+        "uint": N2D2.Tensor_unsigned_int,
         "b": N2D2.Tensor_bool,
         "bool": N2D2.Tensor_bool,
         "d": N2D2.Tensor_double,
@@ -77,6 +79,8 @@ class Tensor:
             "l": N2D2.CudaTensor_long,
             "i": N2D2.CudaTensor_int,
             "int": N2D2.CudaTensor_int,
+            "j": N2D2.CudaTensor_unsigned_int,
+            "uint": N2D2.CudaTensor_unsigned_int,
             "d": N2D2.CudaTensor_double,
             "double": N2D2.CudaTensor_double,
             # bool datatype cannot be defined for CudaTensor

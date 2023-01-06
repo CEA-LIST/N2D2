@@ -358,8 +358,12 @@ public:
              const T& value = T());
     Tensor(const std::vector<size_t>& dims,
              const T& value = T());
+
+#if SIZE_MAX != 0xFFFFFFFF
     Tensor(const std::vector<unsigned int>& dims,
              const T& value = T());
+#endif
+
     template <typename InputIterator>
     Tensor(std::initializer_list<size_t> dims,
              InputIterator first,
@@ -422,6 +426,7 @@ public:
     double sum(bool valAbs = false) const;
     double mean(bool valAbs = false) const;
     double std() const;
+    Tensor<size_t> eq(const T& value) const;
     virtual void synchronizeToH(BaseTensor& tensor) const;
     BaseTensor& operator=(const BaseTensor& base);
     Tensor<T>& operator=(const Tensor<T>& tensor);

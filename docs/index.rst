@@ -8,7 +8,7 @@ N2D2
 
 .. toctree::
    :maxdepth: 1
-   :caption: Introduction:
+   :caption: Introduction
 
    intro/intro
    intro/about
@@ -18,7 +18,7 @@ N2D2
 
 .. toctree::
    :maxdepth: 1
-   :caption: ONNX Import:
+   :caption: ONNX Import
 
    onnx/convert
    onnx/import
@@ -26,10 +26,11 @@ N2D2
 
 .. toctree::
    :maxdepth: 1
-   :caption: Quantization and Export:
+   :caption: Quantization and Export
 
    quant/post
    quant/qat
+   quant/pruning
    export/CPP
    export/CPP_STM32
    export/TensorRT
@@ -39,7 +40,7 @@ N2D2
 
 .. toctree::
    :maxdepth: 1
-   :caption: INI File Interface:
+   :caption: INI File Interface
 
    ini/intro
    ini/databases
@@ -51,7 +52,7 @@ N2D2
 
 .. toctree::
    :maxdepth: 1
-   :caption: Python API:
+   :caption: Python API
 
    python_api/intro
    python_api/databases
@@ -63,14 +64,14 @@ N2D2
 
 .. toctree::
    :maxdepth: 1
-   :caption: C++/Python core:
+   :caption: C++/Python core
    
    core/core
    core/example
 
 .. toctree::
    :maxdepth: 1
-   :caption: C++ API / Developer:
+   :caption: C++ API / Developer
 
    dev_intro
 

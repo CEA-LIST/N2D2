@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       USE_CUDA: 1
     steps:
@@ -15,8 +15,8 @@ jobs:
 
     - name: Install required libraries
       run: |
-        chmod +x ./.github/scripts/install_libraries_ubuntu.sh
-        ./.github/scripts/install_libraries_ubuntu.sh
+        chmod +x ./.github/scripts/install_libraries_ubuntu_20_04.sh
+        ./.github/scripts/install_libraries_ubuntu_20_04.sh
 
     - name: Build N2D2
       run: |
