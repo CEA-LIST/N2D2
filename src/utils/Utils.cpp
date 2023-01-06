@@ -336,7 +336,7 @@ std::string N2D2::Utils::searchAndReplace(const std::string& value,
 {
     std::string newValue(value);
 
-    for (std::string::size_type next = newValue.find(search);
+    for (size_t next = newValue.find(search);
          next != std::string::npos;
          next = newValue.find(search, next)) {
         newValue.replace(next, search.length(), replace);
@@ -371,8 +371,8 @@ std::vector<std::string> N2D2::Utils::split(const std::string& value,
                                             bool trimEmpty)
 {
     std::vector<std::string> result;
-    std::string::size_type current = 0;
-    std::string::size_type next;
+    size_t current = 0;
+    size_t next;
 
     do {
         next = value.find_first_of(delimiters, current);
@@ -411,7 +411,7 @@ unsigned int N2D2::Utils::countSubstring(const std::string& str,
                                          const std::string& sub)
 {
     unsigned int occurrences = 0;
-    std::string::size_type pos = 0;
+    size_t pos = 0;
 
     while ((pos = str.find(sub, pos)) != std::string::npos) {
         ++occurrences;

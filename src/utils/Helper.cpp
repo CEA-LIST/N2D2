@@ -688,12 +688,13 @@ namespace N2D2_HELPER{
                 std::cout << "Stimuli range is: " << stimuliRange << std::endl;
             }
 
-            
+            // Creation the statistics directory to store every stat of the dnn
+            Utils::createDirectories(exportDir + "/statistics");
 
-            Utils::createDirectories(exportDir + "/calibration");
+            Utils::createDirectories(exportDir + "/statistics/calibration");
 
-            const std::string outputsRangeFile = exportDir + "/calibration/outputs_range.bin";
-            const std::string outputsHistogramFile = exportDir + "/calibration/outputs_histogram.bin";
+            const std::string outputsRangeFile = exportDir + "/statistics/calibration/outputs_range.bin";
+            const std::string outputsHistogramFile = exportDir + "/statistics/calibration/outputs_histogram.bin";
 
             std::unordered_map<std::string, RangeStats> outputsRange;
             std::unordered_map<std::string, Histogram> outputsHistogram;
@@ -753,8 +754,8 @@ namespace N2D2_HELPER{
                 Histogram::saveOutputsHistogram(outputsHistogramFile, outputsHistogram);
             }
 
-            RangeStats::logOutputsRange(exportDir + "/calibration/outputs_range.dat", outputsRange);
-            Histogram::logOutputsHistogram(exportDir + "/calibration/outputs_histogram", outputsHistogram, 
+            RangeStats::logOutputsRange(exportDir + "/statistics/calibration/outputs_range.dat", outputsRange);
+            Histogram::logOutputsHistogram(exportDir + "/statistics/calibration/outputs_histogram", outputsHistogram, 
                                         opt.nbBits, opt.actClippingMode,
                                         opt.actQuantileValue);
 
