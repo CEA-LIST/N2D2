@@ -33,9 +33,15 @@ cudaPruneMasks_kernel(__half* srcData,
     const unsigned int index = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned int stride = blockDim.x * gridDim.x;
 
+#if __CUDA_ARCH__ >= 530
     for (unsigned int i = index; i < size; i += stride) {
-        dstData[i] = srcData[i] * __uint2half_ru(masks[i]);
+        dstData[i] = __hmul(srcData[i], __uint2half_ru(masks[i]));
     }
+#else
+    for (unsigned int i = index; i < size; i += stride) {
+        dstData[i] = __float2half(__half2float(srcData[i]) * (float)(masks[i]));
+    }
+#endif
 }
 
 void N2D2::PruneQuantizer_Frame_CUDA_Kernels::apply_pruning_with_masks_H(half_float::half* data,
