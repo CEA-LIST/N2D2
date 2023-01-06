@@ -41,7 +41,7 @@ You should have a binary named `n2d2_stm32_h7.elf` in the `/bin` folder.
 
 ### For STM32L4
 
-To compile the export for STM32H7, run
+To compile the export for STM32L4, run
 ```
 make export_l4
 ```
