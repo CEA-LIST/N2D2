@@ -66,11 +66,11 @@ TEST(CPP_STM32_Export_Emulator32f, generate) {
                                     DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision, 
                                     nbTestStimuli);
 
-    ASSERT_EQUALS(system(("cd " + exportDir + "/emulator && CXXFLAGS=\"-DOUTPUTFILE\" make && ./stm32_emulator").c_str()), 0);
-
+    ASSERT_EQUALS(system(("cd " + exportDir + " && CXXFLAGS=\"-DOUTPUTFILE\" make emulator && "
+                          "./bin/n2d2_stm32_emulator").c_str()), 0);
 
     // Check success rate
-    ASSERT_EQUALS_DELTA(readSuccessRateFile(exportDir + "/emulator/success_rate.txt"), 98.50, 0.01);
+    ASSERT_EQUALS_DELTA(readSuccessRateFile(exportDir + "/success_rate.txt"), 98.50, 0.01);
 }
 
 TEST(CPP_STM32_Export_Emulator8i, generate) {
@@ -113,12 +113,12 @@ TEST(CPP_STM32_Export_Emulator8i, generate) {
                                     DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision, 
                                     nbTestStimuli);
 
-    ASSERT_EQUALS(system(("cd " + exportDir + "/emulator && CXXFLAGS=\"-DOUTPUTFILE\" make && "
-                          "./stm32_emulator").c_str()), 0);
+    ASSERT_EQUALS(system(("cd " + exportDir + " && CXXFLAGS=\"-DOUTPUTFILE\" make emulator && "
+                          "./bin/n2d2_stm32_emulator").c_str()), 0);
 
 
     // Check success rate
-    ASSERT_EQUALS_DELTA(readSuccessRateFile(exportDir + "/emulator/success_rate.txt"), 98.50, 0.01);
+    ASSERT_EQUALS_DELTA(readSuccessRateFile(exportDir + "/success_rate.txt"), 98.50, 0.01);
 }
 
 TEST(CPP_STM32_Export_8i, generate) {
@@ -161,8 +161,9 @@ TEST(CPP_STM32_Export_8i, generate) {
                                     DeepNetExport::mEnvDataUnsigned, CellExport::mPrecision, 
                                     nbTestStimuli);
 
-    ASSERT_EQUALS(system(("cd " + exportDir + "/stm32_h7 && make").c_str()), 0);
-    ASSERT_EQUALS(system(("cd " + exportDir + "/stm32_l4 && make").c_str()), 0);
+    ASSERT_EQUALS(system(("cd " + exportDir + " && make export_h7").c_str()), 0);
+    ASSERT_EQUALS(system(("make clean")), 0);
+    ASSERT_EQUALS(system(("cd " + exportDir + " && make export_l4").c_str()), 0);
 }
 
 RUN_TESTS()
