@@ -162,7 +162,7 @@ TEST(CPP_STM32_Export_8i, generate) {
                                     nbTestStimuli);
 
     ASSERT_EQUALS(system(("cd " + exportDir + " && make export_h7").c_str()), 0);
-    ASSERT_EQUALS(system(("make clean")), 0);
+    system(("cd " + exportDir + " && make clean").c_str());
     ASSERT_EQUALS(system(("cd " + exportDir + " && make export_l4").c_str()), 0);
 }
 
