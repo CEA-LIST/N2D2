@@ -331,6 +331,8 @@ class ContextNoBatchNormFuse:
 def wrap(torch_model:torch.nn.Module,
         input_size: Union[list, tuple],
         opset_version:int=11,
+        in_names:list=None,
+        out_names:list=None,
         verbose:bool=False) -> Block:
     """Function generating a ``torch.nn.Module`` which embed a :py:class:`n2d2.cells.DeepNetCell`.
     The torch_model is exported to N2D2 via ONNX.
@@ -341,6 +343,10 @@ def wrap(torch_model:torch.nn.Module,
     :type input_size: ``list``
     :param opset_version: Opset version used to generate the intermediate ONNX file, default=11
     :type opset_version: int, optional
+    :param in_names: Specify specific names for the network inputs
+    :type in_names: list, optional
+    :param out_names: Specify specific names for the network outputs
+    :type in_names: list, optional
     :param verbose: Enable the verbose output of torch onnx export, default=False
     :type verbose: bool, optional
     :return: A custom ``torch.nn.Module`` which embed a :py:class:`n2d2.cells.DeepNetCell`.
@@ -361,6 +367,8 @@ def wrap(torch_model:torch.nn.Module,
             dummy_in,
             raw_model_path,
             verbose=verbose,
+            input_names=in_names,
+            output_names=out_names,
             export_params=True,
             opset_version=opset_version,
             training=torch.onnx.TrainingMode.TRAINING,
