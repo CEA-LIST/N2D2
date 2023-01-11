@@ -15,16 +15,16 @@ Example with Python
         :members:
         :inherited-members:
 
-Example of code to use the *PruneCell* in your scripts:
+Example of code to use the :py:class:`n2d2.quantizer.PruneCell` in your scripts:
 
 .. code-block:: python
 
     for cell in model:
-    ### Add Pruning ###
-    if isinstance(cell, n2d2.cells.Conv) or isinstance(cell, n2d2.cells.Fc):
-        cell.quantizer = n2d2.quantizer.PruneCell(prune_mode="Static", threshold=0.3, prune_filler="IterNonStruct")
+        ### Add Pruning ###
+        if isinstance(cell, n2d2.cells.Conv) or isinstance(cell, n2d2.cells.Fc):
+            cell.quantizer = n2d2.quantizer.PruneCell(prune_mode="Static", threshold=0.3, prune_filler="IterNonStruct")
 
-Some explanations with the differents options of the *PruneCell*:
+Some explanations with the differents options of the :py:class:`n2d2.quantizer.PruneCell` :
 
 Pruning mode
 ^^^^^^^^^^^^
@@ -42,7 +42,7 @@ For example, to update each two epochs, write:
 
     n2d2.quantizer.PruneCell(prune_mode="Gradual", threshold=0.3, stepsize=2*DATASET_SIZE)
 
-Where *DATASET_SIZE* is the size of the dataset you are using.
+Where ``DATASET_SIZE`` is the size of the dataset you are using.
 
 Pruning filler
 ^^^^^^^^^^^^^^
@@ -53,7 +53,7 @@ Pruning filler
 - IterNonStruct: all weights below than the ``delta`` factor are pruned. If this is not enough to reach ``threshold``, all the weights below 2 "delta" are pruned and so on...
 
 
-**Important**: With *PruneCell*, ``quant_mode`` and ``range`` are not used.
+**Important**: With :py:class:`n2d2.quantizer.PruneCell`, ``quant_mode`` and ``range`` are not used.
 
 
 Example with INI file
