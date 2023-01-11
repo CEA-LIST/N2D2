@@ -1,8 +1,6 @@
 Export: C++/STM32
 =================
 
-**N2D2-IP only: available upon request.**
-
 Export type: ``CPP_STM32``
  C++ export for STM32.
 
