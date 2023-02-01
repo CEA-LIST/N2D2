@@ -27,3 +27,4 @@ from n2d2.database.dir import DIR
 from n2d2.database.gtsrb import GTSRB
 from n2d2.database.ilsvrc2012 import ILSVRC2012
 from n2d2.database.mnist import MNIST
+from n2d2.database.numpy import Numpy
