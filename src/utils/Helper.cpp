@@ -262,6 +262,8 @@ namespace N2D2_HELPER{
                                                     " in the Test set");
         testId =      opts.parse("-test-id", testId, "test a single specific stimulus ID (takes"
                                                 " precedence over -test-index)");
+        nbTest =      opts.parse("-nb-test", nbTest, "number of stimuli to use for test (-1 = use the full "
+                                            "test dataset");
         testAdv =     opts.parse("-testAdv", testAdv, "performs an adversarial study "
                                                             "only options: Solo or Multi");
         pruningMethod = opts.parse("-pruning", pruningMethod, "performs a pruning algorithm on the model");
@@ -371,12 +373,28 @@ namespace N2D2_HELPER{
         unsigned int nextReport = opt.report;
         std::chrono::high_resolution_clock::time_point startTimeSp,
                                                         endTimeSp;
-
-        const unsigned int nbTest = (opt.testIndex >= 0 || opt.testId >= 0)
-            ? 1 : database->getNbStimuli(Database::Test);
-
         const unsigned int batchSize = sp->getMultiBatchSize();
+         
+        unsigned int nbTest = 0;
+        if (opt.nbTest >= 0){
+            if(opt.testIndex >= 0 || opt.testId >= 0){
+                std::stringstream msgStr;
+                msgStr << "-nb-test = " << opt.nbTest
+                    << " yet -test-index or -test-id are != -1, these two options are mutually exclusive.";
+                throw std::runtime_error(msgStr.str());
+            }else{
+                nbTest = opt.nbTest;
+            }
+        }
+        else{
+            nbTest = (opt.testIndex >= 0 || opt.testId >= 0)
+                ? 1 : database->getNbStimuli(Database::Test);
+
+        }
+        assert(nbTest != 0);
         const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
+
+        std::cout << "Testing on " << nbTest << "stimuli ~ " << nbBatch << " batch" << std::endl;
 
         if(opt.qatSAT) {
             deepNet->initialize();
