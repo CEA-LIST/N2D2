@@ -20,8 +20,10 @@
 
 #include "Database/Tensor_Database.hpp"
 
-N2D2::Tensor_Database::Tensor_Database()
+N2D2::Tensor_Database::Tensor_Database(int stimuliDepth=-16):
+    mStimuliDepth(stimuliDepth)
 {
+    // TODO : maybe -16 is not the best default value ...
     // ctor
 }
 

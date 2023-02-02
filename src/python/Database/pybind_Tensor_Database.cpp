@@ -28,7 +28,7 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_Tensor_Database(py::module &m) {
     py::class_<Tensor_Database, std::shared_ptr<Tensor_Database>, Database>(m, "Tensor_Database")
-    .def(py::init<>())
+    .def(py::init<int>(), py::arg("stimuliDepth") = -16)
     .def("load", (void (Tensor_Database::*)(std::vector<Tensor<float>>&, std::vector<int>&)) &Tensor_Database::load, py::arg("inputs"), py::arg("labels"))
 
     ;

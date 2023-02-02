@@ -20,6 +20,7 @@
 from n2d2.database import AbstractDatabase, _database_parameters
 from n2d2.utils import inherit_init_docstring
 from n2d2.n2d2_interface import ConventionConverter
+from n2d2 import Tensor
 import N2D2
 from numpy import ndarray
 from typing import List
@@ -46,9 +47,10 @@ class Numpy(AbstractDatabase):
         self._N2D2_object = self._N2D2_constructors(**self.n2d2_function_argument_parser(self._optional_constructor_arguments))
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
-
+    
     def load(self, inputs:List[ndarray], labels:List[int]):
         """
         TODO : write doc string
         """
-        self._N2D2_object.load(inputs, labels)
+        # TODO : add type check
+        self._N2D2_object.load([Tensor.from_numpy(i).N2D2() for i in inputs], labels)

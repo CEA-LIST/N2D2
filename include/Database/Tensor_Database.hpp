@@ -25,12 +25,14 @@
 namespace N2D2 {
 class Tensor_Database : public Database {
 public:
-    Tensor_Database();
+    Tensor_Database(int stimuliDepth);
     void load(
         std::vector<Tensor<float>>& inputs,
         std::vector<int>& labels);
 
     virtual ~Tensor_Database() {};
+protected:
+    int mStimuliDepth;
 };
 }
 
