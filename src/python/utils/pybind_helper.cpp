@@ -50,6 +50,7 @@ namespace N2D2 {
         .def_readwrite("avg_window", &Options::avgWindow)
         .def_readwrite("test_index", &Options::testIndex)
         .def_readwrite("test_id", &Options::testId)
+        .def_readwrite("nb_test", &Options::nbTest)
         .def_readwrite("test_adv", &Options::testAdv)
         .def_readwrite("check", &Options::check)
         .def_readwrite("log_outputs", &Options::logOutputs)

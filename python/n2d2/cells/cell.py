@@ -673,7 +673,7 @@ class DeepNetCell(Block):
         N2D2.learn_epoch(parameters.N2D2(), N2D2_deepnet)
 
     @check_types
-    def run_test(self, log:int = 1000, report:int = 100, test_index:int = -1, test_id:int = -1,
+    def run_test(self, log:int = 1000, report:int = 100, nb_test:int = -1, test_index:int = -1, test_id:int = -1,
                  qat_sat:bool = False, log_kernels:bool = False, wt_round_mode:str = "NONE",
                  b_round_mode:str = "NONE", c_round_mode:str = "NONE",
                  act_scaling_mode:str = "FLOAT_MULT", log_JSON:bool = False, log_outputs:int = 0):
@@ -684,6 +684,8 @@ class DeepNetCell(Block):
         :type log: int, optional
         :param report: Number of steps between reportings, default=100
         :type report: int, optional
+        :param nb_test: number of stimuli to use for test , default=-1
+        :type nb_test: int, optional
         :param test_index: Test a single specific stimulus index in the Test set, default=-1
         :type test_index: int, optional
         :param test_id: Test a single specific stimulus ID (takes precedence over `test_index`), default=-1
@@ -719,7 +721,7 @@ class DeepNetCell(Block):
             raise error_handler.WrongValue("act_scaling_mode", act_scaling_mode, N2D2.ScalingMode.__members__.keys())
         N2D2_act_scaling_mode = N2D2.ScalingMode.__members__[act_scaling_mode]
 
-        parameters = Options(log=log, report=report,
+        parameters = Options(log=log, report=report, nb_test=nb_test,
                         test_index=test_index, test_id=test_id, qat_SAT=qat_sat,
                         wt_round_mode=N2D2_wt_round_mode, b_round_mode=N2D2_b_round_mode,
                         c_round_mode=N2D2_c_round_mode, act_scaling_mode=N2D2_act_scaling_mode,
