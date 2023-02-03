@@ -825,12 +825,15 @@ class DeepNetCell(Block):
                     if sum(mapping[:c]) == 1:
                         ctype = "Depthwise"
                         extra["k"] = str(k_size) + 'x' + str(k_size)
+                        c = 1
 
                 k_nb_params = reduce(op_mul, k_size) if isinstance(k_size, list) else k_size**2
 
                 params = n * c * k_nb_params
                 if cell.has_bias():
                     params += len(cell.get_biases())
+
+                # print(f"{cell.get_name()} :  {n} * {c} * {k_nb_params} ({len(tensor)}) = {params}")
 
                 if converter(cell.get_parameter("stride_dims")) != 1:
                     extra["str"] = converter(cell.get_parameter("stride_dims"))
