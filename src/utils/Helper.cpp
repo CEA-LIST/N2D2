@@ -383,7 +383,16 @@ namespace N2D2_HELPER{
                     << " yet -test-index or -test-id are != -1, these two options are mutually exclusive.";
                 throw std::runtime_error(msgStr.str());
             }else{
-                nbTest = opt.nbTest;
+                if ((int)database->getNbStimuli(Database::Test) < opt.nbTest){
+                    nbTest = database->getNbStimuli(Database::Test);
+                    std::cout << Utils::cwarning
+                        << "Warning: test partition only has " << database->getNbStimuli(Database::Test)
+                        << " stimuli but -nb-test = " << opt.nbTest << ", using the whole test partition"
+                        << " (" << nbTest << ")."
+                        << Utils::cdef << std::endl;
+                }else{
+                    nbTest = opt.nbTest;
+                }
             }
         }
         else{
@@ -393,8 +402,6 @@ namespace N2D2_HELPER{
         }
         assert(nbTest != 0);
         const unsigned int nbBatch = std::ceil(nbTest / (double)batchSize);
-
-        std::cout << "Testing on " << nbTest << "stimuli ~ " << nbBatch << " batch" << std::endl;
 
         if(opt.qatSAT) {
             deepNet->initialize();
