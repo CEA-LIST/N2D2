@@ -26,6 +26,7 @@
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
+#if SIZE_MAX != 0xFFFFFFFF
 
 namespace N2D2 {
 void init_ILSVRC2012_Database(py::module &m) {
@@ -35,5 +36,6 @@ void init_ILSVRC2012_Database(py::module &m) {
     .def("getLearn", &ILSVRC2012_Database::getLearn)
     .def("getUseValidationForTest", &ILSVRC2012_Database::getUseValidationForTest)
     ;
+#endif
 }
 }

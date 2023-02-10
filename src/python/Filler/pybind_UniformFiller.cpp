@@ -49,7 +49,9 @@ void declare_UniformFiller(py::module &m, const std::string& typeStr) {
 
 void init_UniformFiller(py::module &m) {
     declare_UniformFiller<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_UniformFiller<double>(m, "double");
+#endif
 }
 }
 

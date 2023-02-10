@@ -192,7 +192,9 @@ void init_Tensor(py::module &m) {
     ;
 
     declare_Tensor<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_Tensor<double>(m, "double");
+#endif
     declare_Tensor<char>(m, "char");
     declare_Tensor<unsigned char>(m, "unsigned_char");
     declare_Tensor<short>(m, "short");

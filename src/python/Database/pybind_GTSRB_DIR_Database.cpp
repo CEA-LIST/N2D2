@@ -25,11 +25,13 @@
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
+#if SIZE_MAX != 0xFFFFFFFF
 
 namespace N2D2 {
 void init_GTSRB_DIR_Database(py::module &m) {
     py::class_<GTSRB_DIR_Database, std::shared_ptr<GTSRB_DIR_Database>, DIR_Database>(m, "GTSRB_DIR_Database")
     .def(py::init<double>(), py::arg("validation") = 0.0)
     .def("getValidation", &GTSRB_DIR_Database::getValidation);
+#endif
 }
 }

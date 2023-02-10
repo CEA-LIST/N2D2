@@ -27,7 +27,9 @@ void declare_QuantizerActivation_Frame(py::module &m, const std::string& typeStr
 
 void init_QuantizerActivation_Frame(py::module &m) {
     declare_QuantizerActivation_Frame<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_QuantizerActivation_Frame<double>(m, "double");
+#endif
 }
 
 }

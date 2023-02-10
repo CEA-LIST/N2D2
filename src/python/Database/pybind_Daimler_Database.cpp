@@ -25,10 +25,12 @@
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
+#if SIZE_MAX != 0xFFFFFFFF
 
 namespace N2D2 {
 void init_Daimler_Database(py::module &m) {
     py::class_<Daimler_Database, std::shared_ptr<Daimler_Database>, DIR_Database>(m, "Daimler_Database")
         .def(py::init<double, double, double, bool>(), py::arg("learn"), py::arg("validation"), py::arg("test"), py::arg("fully"));
+#endif
 }
 }

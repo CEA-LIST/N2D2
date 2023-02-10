@@ -45,7 +45,9 @@ void declare_ConstantFiller(py::module &m, const std::string& typeStr) {
 
 void init_ConstantFiller(py::module &m) {
     declare_ConstantFiller<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_ConstantFiller<double>(m, "double");
+#endif
 }
 }
 

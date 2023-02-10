@@ -46,7 +46,9 @@ void declare_TransposeCell_Frame(py::module &m, const std::string& typeStr) {
 
 void init_TransposeCell_Frame(py::module &m) {
     declare_TransposeCell_Frame<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_TransposeCell_Frame<double>(m, "double");
+#endif
 }
 }
 

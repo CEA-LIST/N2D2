@@ -46,7 +46,9 @@ void declare_AdamSolver_Frame(py::module &m, const std::string& typeStr) {
 
 void init_AdamSolver_Frame(py::module &m) {
     declare_AdamSolver_Frame<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_AdamSolver_Frame<double>(m, "double");
+#endif
 }
 }
 

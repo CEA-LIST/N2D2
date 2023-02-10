@@ -37,7 +37,9 @@ void declare_TanhActivation_Frame(py::module &m, const std::string& typeStr) {
 
 void init_TanhActivation_Frame(py::module &m) {
     declare_TanhActivation_Frame<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_TanhActivation_Frame<double>(m, "double");
+#endif
 }
 
 }

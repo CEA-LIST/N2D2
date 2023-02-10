@@ -59,7 +59,9 @@ void declare_DeconvCell_Frame_CUDA(py::module &m, const std::string& typeStr) {
 
 void init_DeconvCell_Frame_CUDA(py::module &m) {
     declare_DeconvCell_Frame_CUDA<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_DeconvCell_Frame_CUDA<double>(m, "double");
+#endif
 }
 }
 

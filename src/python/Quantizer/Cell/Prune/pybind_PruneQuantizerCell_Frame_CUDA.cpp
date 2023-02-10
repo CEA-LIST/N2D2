@@ -42,7 +42,9 @@ void declare_PruneQuantizerCell_Frame_CUDA(py::module &m, const std::string& typ
 
 void init_PruneQuantizerCell_Frame_CUDA(py::module &m) {
     declare_PruneQuantizerCell_Frame_CUDA<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_PruneQuantizerCell_Frame_CUDA<double>(m, "double");
+#endif
 }
 }
 
