@@ -25,10 +25,12 @@
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
+#if SIZE_MAX != 0xFFFFFFFF
 
 namespace N2D2 {
 void init_N_MNIST_Database(py::module &m) {
     py::class_<N_MNIST_Database, std::shared_ptr<N_MNIST_Database>, AER_Database>(m, "N_MNIST_Database")
         .def(py::init<double>(), py::arg("validation") = 0.0);
+#endif
 }
 }

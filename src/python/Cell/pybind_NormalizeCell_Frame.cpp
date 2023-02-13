@@ -33,11 +33,13 @@ void declare_NormalizeCell_Frame(py::module &m, const std::string& typeStr) {
     py::class_<NormalizeCell_Frame<T>, std::shared_ptr<NormalizeCell_Frame<T>>, NormalizeCell, Cell_Frame<T>> (m, pyClassName.c_str(), py::multiple_inheritance()) 
     .def(py::init<const DeepNet&, const std::string&, unsigned int, NormalizeCell::Norm>(),
          py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("norm"));
+#if SIZE_MAX != 0xFFFFFFFF
 
 }
 
 void init_NormalizeCell_Frame(py::module &m) {
     declare_NormalizeCell_Frame<double>(m, "double"); 
+#endif
     declare_NormalizeCell_Frame<float>(m, "float"); 
 
 }

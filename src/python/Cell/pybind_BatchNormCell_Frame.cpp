@@ -45,6 +45,8 @@ void declare_BatchNormCell_Frame(py::module &m, const std::string& typeStr) {
 
 void init_BatchNormCell_Frame(py::module &m) {
     declare_BatchNormCell_Frame<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_BatchNormCell_Frame<double>(m, "double");
+#endif
 }
 }

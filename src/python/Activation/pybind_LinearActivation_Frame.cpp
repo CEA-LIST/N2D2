@@ -38,7 +38,9 @@ void declare_LinearActivation_Frame(py::module &m, const std::string& typeStr) {
 
 void init_LinearActivation_Frame(py::module &m) {
     declare_LinearActivation_Frame<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_LinearActivation_Frame<double>(m, "double");
+#endif
 }
 
 }

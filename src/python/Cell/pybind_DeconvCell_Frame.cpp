@@ -56,6 +56,8 @@ void declare_DeconvCell_Frame(py::module &m, const std::string& typeStr) {
 
 void init_DeconvCell_Frame(py::module &m) {
     declare_DeconvCell_Frame<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_DeconvCell_Frame<double>(m, "double");
+#endif
 }
 }

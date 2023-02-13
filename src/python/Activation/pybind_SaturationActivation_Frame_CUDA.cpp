@@ -39,7 +39,9 @@ void declare_SaturationActivation_Frame_CUDA(py::module &m, const std::string& t
 
 void init_SaturationActivation_Frame_CUDA(py::module &m) {
     declare_SaturationActivation_Frame_CUDA<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_SaturationActivation_Frame_CUDA<double>(m, "double");
+#endif
 }
 
 }

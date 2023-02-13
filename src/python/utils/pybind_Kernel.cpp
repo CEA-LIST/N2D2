@@ -39,7 +39,9 @@ void declare_Kernel(py::module &m, const std::string& typeStr) {
 
 void init_Kernel(py::module &m) {
     declare_Kernel<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_Kernel<double>(m, "double");
+#endif
 }
 }
 

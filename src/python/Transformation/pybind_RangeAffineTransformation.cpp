@@ -37,6 +37,7 @@ void init_RangeAffineTransformation(py::module &m) {
     .value("Multiplies", RangeAffineTransformation::Operator::Multiplies)
     .value("Divides", RangeAffineTransformation::Operator::Divides)
     .export_values();
+#if SIZE_MAX != 0xFFFFFFFF
 
     rat
     .def(py::init<RangeAffineTransformation::Operator, const std::vector<double>&, RangeAffineTransformation::Operator, const std::vector<double>&>(), py::arg("firstOperator"), py::arg("firstValue"), py::arg("secondOperator") = RangeAffineTransformation::Operator::Plus, py::arg("secondValue") = std::vector<double>())
@@ -48,5 +49,6 @@ void init_RangeAffineTransformation(py::module &m) {
     .def("getSecondValue", &RangeAffineTransformation::getSecondValue)
     .def("getTruncate", &RangeAffineTransformation::getTruncate)
     ;
+#endif
 }
 }

@@ -55,7 +55,9 @@ void declare_PoolCell_Frame_EXT_CUDA(py::module &m, const std::string& typeStr) 
 }
 void init_PoolCell_Frame_EXT_CUDA(py::module &m) {
     declare_PoolCell_Frame_EXT_CUDA<float>(m, "float"); 
+#if SIZE_MAX != 0xFFFFFFFF
     declare_PoolCell_Frame_EXT_CUDA<double>(m, "double"); 
+#endif
 }
 }
 

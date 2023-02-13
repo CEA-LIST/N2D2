@@ -27,6 +27,7 @@
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
+#if SIZE_MAX != 0xFFFFFFFF
 
 namespace N2D2 {
 void init_FMPCell_Frame_CUDA(py::module &m) {
@@ -43,6 +44,7 @@ void init_FMPCell_Frame_CUDA(py::module &m) {
          py::arg("nbOutputs"),
          py::arg("activation") = std::shared_ptr<Activation>()
          );
+#endif
 
 }
 }

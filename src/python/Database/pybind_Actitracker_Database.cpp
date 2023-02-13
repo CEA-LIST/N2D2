@@ -24,10 +24,12 @@
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
+#if SIZE_MAX != 0xFFFFFFFF
 
 namespace N2D2 {
 void init_Actitracker_Database(py::module &m) {
     py::class_<Actitracker_Database, std::shared_ptr<Actitracker_Database>, Database>(m, "Actitracker_Database")
         .def(py::init<double, double, bool>(), py::arg("learn") = 0.6, py::arg("validation") = 0.2, py::arg("useUnlabeledForTest") = false);
+#endif
 }
 }

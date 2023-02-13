@@ -46,6 +46,8 @@ void declare_ConvCell_Frame(py::module &m, const std::string& typeStr) {
 
 void init_ConvCell_Frame(py::module &m) {
     declare_ConvCell_Frame<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_ConvCell_Frame<double>(m, "double");
+#endif
 }
 }

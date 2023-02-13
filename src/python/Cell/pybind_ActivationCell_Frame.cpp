@@ -38,6 +38,8 @@ void declare_ActivationCell_Frame(py::module &m, const std::string& typeStr) {
 
 void init_ActivationCell_Frame(py::module &m) {
     declare_ActivationCell_Frame<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_ActivationCell_Frame<double>(m, "double");
+#endif
 }
 }

@@ -52,6 +52,8 @@ void declare_PoolCell_Frame(py::module &m, const std::string& typeStr) {
 }
 void init_PoolCell_Frame(py::module &m) {
     declare_PoolCell_Frame<float>(m, "float"); 
+#if SIZE_MAX != 0xFFFFFFFF
     declare_PoolCell_Frame<double>(m, "double"); 
+#endif
 }
 }

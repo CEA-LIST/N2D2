@@ -61,10 +61,12 @@ void declare_WindowFunction(py::module &m, const std::string& typeStr) {
     const std::string pykaiser("Kaiser_" + typeStr);
     py::class_<Kaiser<T>, std::shared_ptr<Kaiser<T>>, WindowFunction<T>> (m, pykaiser.c_str(), py::multiple_inheritance())
     .def(py::init<T>(), py::arg("beta") = 5.0);
+#if SIZE_MAX != 0xFFFFFFFF
 
 }
 
 void init_WindowFunction(py::module &m) {
     declare_WindowFunction<double>(m, "double");
+#endif
 }
 }

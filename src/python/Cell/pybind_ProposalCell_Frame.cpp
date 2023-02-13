@@ -26,6 +26,7 @@
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
+#if SIZE_MAX != 0xFFFFFFFF
 
 namespace N2D2 {
 void init_ProposalCell_Frame(py::module &m) {
@@ -57,5 +58,6 @@ void init_ProposalCell_Frame(py::module &m) {
     py::arg("numParts") = std::vector<unsigned int>(),
     py::arg("numTemplates") = std::vector<unsigned int>()
     );
+#endif
 }
 }

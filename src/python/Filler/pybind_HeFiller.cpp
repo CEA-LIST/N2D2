@@ -58,7 +58,9 @@ void declare_HeFiller(py::module &m, const std::string& typeStr) {
 
 void init_HeFiller(py::module &m) {
     declare_HeFiller<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_HeFiller<double>(m, "double");
+#endif
 }
 }
 
