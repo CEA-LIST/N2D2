@@ -20,19 +20,19 @@
 
 #ifndef N2D2_TENSOR_DATABASE_H
 #define N2D2_TENSOR_DATABASE_H
+
 #include "Database/Database.hpp"
 #include "containers/Tensor.hpp"
+
 namespace N2D2 {
 class Tensor_Database : public Database {
 public:
-    Tensor_Database(int stimuliDepth);
+    Tensor_Database();
     void load(
         std::vector<Tensor<float>>& inputs,
         std::vector<int>& labels);
 
     virtual ~Tensor_Database() {};
-protected:
-    int mStimuliDepth;
 };
 }
 
