@@ -25,12 +25,15 @@
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
+
 #if SIZE_MAX != 0xFFFFFFFF
 
 namespace N2D2 {
 void init_CKP_Database(py::module &m) {
     py::class_<CKP_Database, std::shared_ptr<CKP_Database>, Database>(m, "CKP_Database")
         .def(py::init<double, double>(), py::arg("learn"), py::arg("validation") = 0.0);
-#endif
+
 }
 }
+
+#endif  // SIZE_MAX

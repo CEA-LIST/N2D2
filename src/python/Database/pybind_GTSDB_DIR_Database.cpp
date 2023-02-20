@@ -25,12 +25,15 @@
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
+
 #if SIZE_MAX != 0xFFFFFFFF
 
 namespace N2D2 {
 void init_GTSDB_DIR_Database(py::module &m) {
     py::class_<GTSDB_DIR_Database, std::shared_ptr<GTSDB_DIR_Database>, DIR_Database>(m, "GTSDB_DIR_Database")
         .def(py::init<double, double>(), py::arg("learn"), py::arg("validation") = 0.0);
-#endif
+
 }
 }
+
+#endif  // SIZE_MAX

@@ -25,12 +25,15 @@
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
+
 #if SIZE_MAX != 0xFFFFFFFF
 
 namespace N2D2 {
 void init_DOTA_Database(py::module &m) {
     py::class_<DOTA_Database, std::shared_ptr<DOTA_Database>, DIR_Database>(m, "DOTA_Database")
         .def(py::init<double, bool>(), py::arg("learn"), py::arg("useValidationForTest") = true);
-#endif
+
 }
 }
+
+#endif  // SIZE_MAX
