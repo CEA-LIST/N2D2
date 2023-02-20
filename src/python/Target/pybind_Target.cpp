@@ -28,6 +28,7 @@
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
+
 #if SIZE_MAX != 0xFFFFFFFF
 
 
@@ -94,6 +95,7 @@ void init_Target(py::module &m) {
     .def("log", &Target::log, py::arg("fileName"), py::arg("set"))
     .def("clear", &Target::clear, py::arg("set"))
     ;
-#endif
 }
 }
+
+#endif  // SIZE_MAX

@@ -24,6 +24,7 @@
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
+
 #if SIZE_MAX != 0xFFFFFFFF
 
 namespace N2D2 {
@@ -31,6 +32,8 @@ void init_ThresholdTransformation(py::module &m) {
     py::class_<ThresholdTransformation, std::shared_ptr<ThresholdTransformation>, Transformation> (m, "ThresholdTransformation", py::multiple_inheritance())
     .def(py::init<double, bool>(), py::arg("threshold"), py::arg("otsuMethod") = false)
     .def(py::init<ThresholdTransformation&>(), py::arg("trans"));
-#endif
+
 }
 }
+
+#endif  // SIZE_MAX

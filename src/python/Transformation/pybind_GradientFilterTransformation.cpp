@@ -25,6 +25,7 @@
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
+
 #if SIZE_MAX != 0xFFFFFFFF
 
 namespace N2D2 {
@@ -32,7 +33,8 @@ void init_GradientFilterTransformation(py::module &m) {
     py::class_<GradientFilterTransformation, std::shared_ptr<GradientFilterTransformation>, Transformation> (m, "GradientFilterTransformation", py::multiple_inheritance())
     .def(py::init<double, double, bool>(), py::arg("scsale") = 1.0, py::arg("delta") = 0.0, py::arg("applyToLabels") = false)
     .def(py::init<const GradientFilterTransformation&>(), py::arg("trans"));
-#endif
 
 }
 }
+
+#endif  // SIZE_MAX
