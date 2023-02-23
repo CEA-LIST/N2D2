@@ -164,8 +164,7 @@ namespace N2D2 {
         .def("apply_char", &CustomTransformation::apply_char, py::arg("frame"), py::arg("labels"), py::arg("labelsROI"), py::arg("id"))
         .def("apply_unsigned_short", &CustomTransformation::apply_unsigned_short, py::arg("frame"), py::arg("labels"), py::arg("labelsROI"), py::arg("id"))
         .def("apply_short", &CustomTransformation::apply_short, py::arg("frame"), py::arg("labels"), py::arg("labelsROI"), py::arg("id"))
-        ;
-#endif
-        
+        ;   
     }
+#endif
 }

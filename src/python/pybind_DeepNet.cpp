@@ -31,8 +31,6 @@
 
 namespace py = pybind11;
 
-#if SIZE_MAX != 0xFFFFFFFF
-
 namespace N2D2 {
 void init_DeepNet(py::module &m) {
     py::class_<DeepNet, std::shared_ptr<DeepNet>, Parameterizable>(m, "DeepNet", py::multiple_inheritance())
@@ -112,4 +110,3 @@ void init_DeepNet(py::module &m) {
 }
 }
 
-#endif  // SIZE_MAX
