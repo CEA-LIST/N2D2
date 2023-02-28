@@ -27,8 +27,6 @@
 
 namespace py = pybind11;
 
-#if SIZE_MAX != 0xFFFFFFFF
-
 namespace N2D2 {
 void init_ProposalCell_Frame(py::module &m) {
     py::class_<ProposalCell_Frame, std::shared_ptr<ProposalCell_Frame>, ProposalCell,  Cell_Frame<Float_T>> (m, "ProposalCell_Frame", py::multiple_inheritance()) 
@@ -62,5 +60,3 @@ void init_ProposalCell_Frame(py::module &m) {
 
 }
 }
-
-#endif  // SIZE_MAX

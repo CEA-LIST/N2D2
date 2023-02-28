@@ -26,8 +26,6 @@
 
 namespace py = pybind11;
 
-#if SIZE_MAX != 0xFFFFFFFF
-
 namespace N2D2 {
 void init_Caltech256_DIR_Database(py::module &m) {
     py::class_<Caltech256_DIR_Database, std::shared_ptr<Caltech256_DIR_Database>, Database>(m, "Caltech256_DIR_Database")
@@ -35,5 +33,3 @@ void init_Caltech256_DIR_Database(py::module &m) {
 
 }
 }
-
-#endif  // SIZE_MAX

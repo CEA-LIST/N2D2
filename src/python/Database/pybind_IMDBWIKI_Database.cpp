@@ -26,8 +26,6 @@
 
 namespace py = pybind11;
 
-#if SIZE_MAX != 0xFFFFFFFF
-
 namespace N2D2 {
 void init_IMDBWIKI_Database(py::module &m) {
     py::class_<IMDBWIKI_Database, std::shared_ptr<IMDBWIKI_Database>, DIR_Database>(m, "IMDBWIKI_Database")
@@ -42,5 +40,3 @@ void init_IMDBWIKI_Database(py::module &m) {
 
 }
 }
-
-#endif  // SIZE_MAX

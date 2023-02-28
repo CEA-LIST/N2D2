@@ -25,8 +25,6 @@
 
 namespace py = pybind11;
 
-#if SIZE_MAX != 0xFFFFFFFF
-
 namespace N2D2 {
 void init_MNIST_IDX_Database(py::module &m) {
     py::class_<MNIST_IDX_Database, std::shared_ptr<MNIST_IDX_Database>, Database>(m, "MNIST_IDX_Database")
@@ -35,5 +33,3 @@ void init_MNIST_IDX_Database(py::module &m) {
 
 }
 }
-
-#endif  // SIZE_MAX

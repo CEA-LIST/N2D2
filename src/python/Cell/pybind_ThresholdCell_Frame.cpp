@@ -24,8 +24,6 @@
 
 namespace py = pybind11;
 
-#if SIZE_MAX != 0xFFFFFFFF
-
 namespace N2D2 {
 void init_ThresholdCell_Frame(py::module &m) {
     py::class_<ThresholdCell_Frame, std::shared_ptr<ThresholdCell_Frame>, ThresholdCell,  Cell_Frame<Float_T>> (m, "ThresholdCell_Frame", py::multiple_inheritance()) 
@@ -43,5 +41,3 @@ void init_ThresholdCell_Frame(py::module &m) {
 
 }
 }
-
-#endif  // SIZE_MAX
