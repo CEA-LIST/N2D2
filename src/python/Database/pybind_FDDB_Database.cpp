@@ -26,8 +26,6 @@
 
 namespace py = pybind11;
 
-#if SIZE_MAX != 0xFFFFFFFF
-
 namespace N2D2 {
 void init_FDDB_Database(py::module &m) {
     py::class_<FDDB_Database, std::shared_ptr<FDDB_Database>, DIR_Database>(m, "FDDB_Database")
@@ -35,5 +33,3 @@ void init_FDDB_Database(py::module &m) {
 
 }
 }
-
-#endif  // SIZE_MAX

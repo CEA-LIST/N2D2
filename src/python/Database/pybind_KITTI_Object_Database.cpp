@@ -26,8 +26,6 @@
 
 namespace py = pybind11;
 
-#if SIZE_MAX != 0xFFFFFFFF
-
 namespace N2D2 {
 void init_KITTI_Object_Database(py::module &m) {
     py::class_<KITTI_Object_Database, std::shared_ptr<KITTI_Object_Database>, DIR_Database>(m, "KITTI_Object_Database")
@@ -35,5 +33,3 @@ void init_KITTI_Object_Database(py::module &m) {
 
 }
 }
-
-#endif  // SIZE_MAX

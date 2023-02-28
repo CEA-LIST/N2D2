@@ -98,15 +98,11 @@ void init_Database(py::module &m) {
     options.disable_function_signatures(); // Apply only on this scope so no need to enable function signature again.
 
     db.def("partitionStimuli", (void (Database::*)(unsigned int, Database::StimuliSet))(&Database::partitionStimuli), py::arg("nbStimuli"), py::arg("set"));
-#if SIZE_MAX != 0xFFFFFFFF
     db.def("partitionStimuli", (void (Database::*)(double, double, double))(&Database::partitionStimuli), py::arg("learn"), py::arg("validation"), py::arg("test"));
-#endif
 
     db.def("partitionStimuliPerLabel", (void (Database::*)(unsigned int, Database::StimuliSet))(&Database::partitionStimuliPerLabel), py::arg("nbStimuliPerLabel"), py::arg("set"));
-#if SIZE_MAX != 0xFFFFFFFF
     db.def("partitionStimuliPerLabel", (void (Database::*)(double, double, double, bool))(&Database::partitionStimuliPerLabel), py::arg("learnPerLabel"), py::arg("validationPerLabel"), py::arg("testPerLabel"),  py::arg("equiLabel") = false);
-#endif
-
+https://git-dscin.intra.cea.fr/n2d2/n2d2/-/blob/master/src/python/Database/pybind_Database.cpp
     db.def("getNbStimuli", (unsigned int (Database::*)() const)(&Database::getNbStimuli),
     R"mydelimiter(
     Returns the total number of loaded stimuli.

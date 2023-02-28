@@ -25,8 +25,6 @@
 
 namespace py = pybind11;
 
-#if SIZE_MAX != 0xFFFFFFFF
-
 namespace N2D2 {
 void init_ThresholdTransformation(py::module &m) {
     py::class_<ThresholdTransformation, std::shared_ptr<ThresholdTransformation>, Transformation> (m, "ThresholdTransformation", py::multiple_inheritance())
@@ -35,5 +33,3 @@ void init_ThresholdTransformation(py::module &m) {
 
 }
 }
-
-#endif  // SIZE_MAX

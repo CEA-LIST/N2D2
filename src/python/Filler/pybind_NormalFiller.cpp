@@ -32,8 +32,6 @@ namespace N2D2 {
 template<typename T>
 void declare_NormalFiller(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("NormalFiller_" + typeStr);
-#if SIZE_MAX != 0xFFFFFFFF
-
     py::class_<NormalFiller<T>, std::shared_ptr<NormalFiller<T>>, Filler> (
             m, pyClassName.c_str(), py::multiple_inheritance()
     )
@@ -42,8 +40,6 @@ void declare_NormalFiller(py::module &m, const std::string& typeStr) {
     .def("getMean", &NormalFiller<T>::getMean)
     .def("getStdDev", &NormalFiller<T>::getStdDev)
     .def("getDataType", [typeStr](NormalFiller<T>){return typeStr;})
-#endif
-
     ;
 }
 

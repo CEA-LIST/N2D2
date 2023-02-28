@@ -30,18 +30,14 @@ namespace py = pybind11;
 namespace N2D2 {
 void init_CIFAR_Database(py::module &m) {
     py::class_<CIFAR_Database, std::shared_ptr<CIFAR_Database>, Database>(m, "CIFAR_Database");
-#if SIZE_MAX != 0xFFFFFFFF
     
     py::class_<CIFAR10_Database, std::shared_ptr<CIFAR10_Database>, CIFAR_Database>(m, "CIFAR10_Database")
     .def(py::init< double, bool>(), py::arg("validation") = 0.0, py::arg("useTestForVal")=false)
     .def("getUseTestForValidation", &CIFAR10_Database::getUseTestForValidation);
-#endif
-#if SIZE_MAX != 0xFFFFFFFF
     py::class_<CIFAR100_Database, std::shared_ptr<CIFAR100_Database>, CIFAR_Database>(m, "CIFAR100_Database")
     .def(py::init<double, bool, bool>(), py::arg("validation") = 0.0, py::arg("useCoarse") = false, py::arg("useTestForVal")=false)
     .def("getUseTestForValidation", &CIFAR100_Database::getUseTestForValidation)
     .def("getUseCoarse", &CIFAR100_Database::getUseCoarse)
     ;
-#endif
 }
 }

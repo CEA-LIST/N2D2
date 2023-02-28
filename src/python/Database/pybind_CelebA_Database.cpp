@@ -26,8 +26,6 @@
 
 namespace py = pybind11;
 
-#if SIZE_MAX != 0xFFFFFFFF
-
 namespace N2D2 {
 void init_CelebA_Database(py::module &m) {
     py::class_<CelebA_Database, std::shared_ptr<CelebA_Database>, Database>(m, "CelebA_Database")
@@ -35,5 +33,3 @@ void init_CelebA_Database(py::module &m) {
 
 }
 }
-
-#endif  // SIZE_MAX

@@ -51,7 +51,6 @@ void init_AnchorCell_Frame_Kernels_struct(py::module &m) {
     .value("XY", AnchorCell_Frame_Kernels::PixelFormat::XY)
     .value("YX", AnchorCell_Frame_Kernels::PixelFormat::YX)
     .export_values();
-#if SIZE_MAX != 0xFFFFFFFF
 
 
     anchor
@@ -60,7 +59,6 @@ void init_AnchorCell_Frame_Kernels_struct(py::module &m) {
     .def(py::init<float, float, AnchorCell_Frame_Kernels::Anchor::Anchoring>(), py::arg("width"), py::arg("height"), py::arg("anchoring") = AnchorCell_Frame_Kernels::Anchor::Anchoring::TopLeft)
     .def(py::init<unsigned int, double, double, AnchorCell_Frame_Kernels::Anchor::Anchoring>(), py::arg("area"), py::arg("ratio"), py::arg("scale") = 1.0, py::arg("anchoring") = AnchorCell_Frame_Kernels::Anchor::Anchoring::TopLeft)
     ;
-#endif
 
 }    
 
