@@ -25,10 +25,15 @@
 
 namespace py = pybind11;
 
+#if SIZE_MAX != 0xFFFFFFFF
+
 namespace N2D2 {
 void init_MNIST_IDX_Database(py::module &m) {
     py::class_<MNIST_IDX_Database, std::shared_ptr<MNIST_IDX_Database>, Database>(m, "MNIST_IDX_Database")
         .def(py::init<double>(), py::arg("validation") = 0.0)
         .def(py::init<const std::string&, const std::string&, bool, double>(), py::arg("dataPath"), py::arg("labelPath") = "", py::arg("extractROIs") = false, py::arg("validation") = 0.0);
+
 }
 }
+
+#endif  // SIZE_MAX

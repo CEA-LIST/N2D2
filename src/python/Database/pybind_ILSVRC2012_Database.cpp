@@ -27,6 +27,8 @@
 
 namespace py = pybind11;
 
+#if SIZE_MAX != 0xFFFFFFFF
+
 namespace N2D2 {
 void init_ILSVRC2012_Database(py::module &m) {
     py::class_<ILSVRC2012_Database, std::shared_ptr<ILSVRC2012_Database>, DIR_Database>(m, "ILSVRC2012_Database")
@@ -35,5 +37,8 @@ void init_ILSVRC2012_Database(py::module &m) {
     .def("getLearn", &ILSVRC2012_Database::getLearn)
     .def("getUseValidationForTest", &ILSVRC2012_Database::getUseValidationForTest)
     ;
+
 }
 }
+
+#endif  // SIZE_MAX

@@ -39,7 +39,9 @@ void declare_SoftplusActivation_Frame_CUDA(py::module &m, const std::string& typ
 
 void init_SoftplusActivation_Frame_CUDA(py::module &m) {
     declare_SoftplusActivation_Frame_CUDA<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_SoftplusActivation_Frame_CUDA<double>(m, "double");
+#endif
 }
 
 }

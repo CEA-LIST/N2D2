@@ -43,7 +43,9 @@ void declare_SATQuantizerActivation_Frame(py::module &m, const std::string& type
 
 void init_SATQuantizerActivation_Frame(py::module &m) {
     declare_SATQuantizerActivation_Frame<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_SATQuantizerActivation_Frame<double>(m, "double");
+#endif
 }
 }
 

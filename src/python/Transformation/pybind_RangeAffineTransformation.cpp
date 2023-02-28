@@ -48,5 +48,6 @@ void init_RangeAffineTransformation(py::module &m) {
     .def("getSecondValue", &RangeAffineTransformation::getSecondValue)
     .def("getTruncate", &RangeAffineTransformation::getTruncate)
     ;
+
 }
 }

@@ -165,7 +165,9 @@ void init_CudaTensor(py::module &m) {
     .def("getCudaTensor", &CudaBaseDeviceTensor::getCudaTensor);
 
     declare_CudaDeviceTensor<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_CudaDeviceTensor<double>(m, "double");
+#endif
 
     py::class_<CudaBaseTensor>(m, "CudaBaseTensor")
     .def("deviceTensor", (CudaBaseDeviceTensor& (CudaBaseTensor::*)()) &CudaBaseTensor::deviceTensor, py::return_value_policy::reference)
@@ -173,7 +175,9 @@ void init_CudaTensor(py::module &m) {
     ;
 
     declare_CudaTensor<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_CudaTensor<double>(m, "double");
+#endif
     declare_CudaTensor<char>(m, "char");
     declare_CudaTensor<unsigned char>(m, "unsigned_char");
     declare_CudaTensor<short>(m, "short");

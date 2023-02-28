@@ -40,6 +40,8 @@ void declare_PruneQuantizerCell_Frame(py::module &m, const std::string& typeStr)
 
 void init_PruneQuantizerCell_Frame(py::module &m) {
     declare_PruneQuantizerCell_Frame<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_PruneQuantizerCell_Frame<double>(m, "double");
+#endif
 }
 }

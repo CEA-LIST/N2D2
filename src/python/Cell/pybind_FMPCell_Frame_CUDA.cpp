@@ -28,6 +28,8 @@
 
 namespace py = pybind11;
 
+#if SIZE_MAX != 0xFFFFFFFF
+
 namespace N2D2 {
 void init_FMPCell_Frame_CUDA(py::module &m) {
     py::class_<FMPCell_Frame_CUDA, std::shared_ptr<FMPCell_Frame_CUDA>, FMPCell, Cell_Frame_CUDA<Float_T>> (m, "FMPCell_Frame_CUDA", py::multiple_inheritance()) 
@@ -46,5 +48,7 @@ void init_FMPCell_Frame_CUDA(py::module &m) {
 
 }
 }
+
+#endif  // SIZE_MAX
 
 #endif

@@ -66,6 +66,7 @@ namespace N2D2 {
                 labelsROI,
                 id
             );
+#if SIZE_MAX != 0xFFFFFFFF
         }
         void apply_double(
             Tensor<double>& frame,
@@ -82,6 +83,7 @@ namespace N2D2 {
                 labelsROI,
                 id
             );
+#endif
         }
         void apply_unsigned_char(
             Tensor<unsigned char>& frame,
@@ -149,6 +151,7 @@ namespace N2D2 {
             );
         }
     };
+#if SIZE_MAX != 0xFFFFFFFF
         
 
     void init_CustomTransformation(py::module &m) {
@@ -161,7 +164,7 @@ namespace N2D2 {
         .def("apply_char", &CustomTransformation::apply_char, py::arg("frame"), py::arg("labels"), py::arg("labelsROI"), py::arg("id"))
         .def("apply_unsigned_short", &CustomTransformation::apply_unsigned_short, py::arg("frame"), py::arg("labels"), py::arg("labelsROI"), py::arg("id"))
         .def("apply_short", &CustomTransformation::apply_short, py::arg("frame"), py::arg("labels"), py::arg("labelsROI"), py::arg("id"))
-        ;
-        
+        ;   
     }
+#endif
 }

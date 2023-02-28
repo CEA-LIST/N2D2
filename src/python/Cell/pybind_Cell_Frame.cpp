@@ -51,6 +51,8 @@ void declare_Cell_Frame(py::module &m, const std::string& typeStr) {
  
 void init_Cell_Frame(py::module &m) {
     declare_Cell_Frame<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_Cell_Frame<double>(m, "double");
+#endif
 }
 }

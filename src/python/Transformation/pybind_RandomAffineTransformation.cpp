@@ -27,6 +27,8 @@
 
 namespace py = pybind11;
 
+#if SIZE_MAX != 0xFFFFFFFF
+
 namespace N2D2 {
 void init_RandomAffineTransformation(py::module &m) {
     py::class_<RandomAffineTransformation, std::shared_ptr<RandomAffineTransformation>, Transformation> (m, "RandomAffineTransformation", py::multiple_inheritance())
@@ -44,5 +46,8 @@ void init_RandomAffineTransformation(py::module &m) {
                 py::arg("gammaVarProb")= std::vector<double>()
                 )
     .def(py::init<const RandomAffineTransformation&>(), py::arg("trans"));
+
 }
 }
+
+#endif  // SIZE_MAX

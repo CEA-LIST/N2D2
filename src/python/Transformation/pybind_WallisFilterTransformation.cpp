@@ -26,10 +26,15 @@
 
 namespace py = pybind11;
 
+#if SIZE_MAX != 0xFFFFFFFF
+
 namespace N2D2 {
 void init_WallisFilterTransformation(py::module &m) {
     py::class_<WallisFilterTransformation, std::shared_ptr<WallisFilterTransformation>, Transformation> (m, "WallisFilterTransformation", py::multiple_inheritance())
     .def(py::init<unsigned int, double, double>(), py::arg("size"), py::arg("mean") = 0.0, py::arg("stdDev") = 1.0)
     .def(py::init<WallisFilterTransformation&>(), py::arg("trans"));
+
 }
 }
+
+#endif  // SIZE_MAX

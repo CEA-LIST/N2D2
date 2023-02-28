@@ -27,7 +27,9 @@ void declare_QuantizerCell_Frame(py::module &m, const std::string& typeStr) {
 
 void init_QuantizerCell_Frame(py::module &m) {
     declare_QuantizerCell_Frame<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_QuantizerCell_Frame<double>(m, "double");
+#endif
 }
 
 }

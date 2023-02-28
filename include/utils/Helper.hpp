@@ -64,6 +64,7 @@ namespace N2D2_HELPER{
         unsigned int avgWindow = 10000U;
         int testIndex = -1;
         int testId = -1;
+        int nbTest = -1;
         std::string testAdv = std::string();
         std::string pruningMethod = std::string();
         float pruningThreshold = 0.0;

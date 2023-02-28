@@ -26,9 +26,14 @@
 
 namespace py = pybind11;
 
+#if SIZE_MAX != 0xFFFFFFFF
+
 namespace N2D2 {
 void init_CaltechPedestrian_Database(py::module &m) {
     py::class_<CaltechPedestrian_Database, std::shared_ptr<CaltechPedestrian_Database>, Database>(m, "CaltechPedestrian_Database")
         .def(py::init<double, bool, bool>(),  py::arg("validation") = 0.0, py::arg("singleLabel") = true, py::arg("incAmbiguous") = false);
+
 }
 }
+
+#endif  // SIZE_MAX

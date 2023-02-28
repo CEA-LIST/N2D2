@@ -26,9 +26,14 @@
 
 namespace py = pybind11;
 
+#if SIZE_MAX != 0xFFFFFFFF
+
 namespace N2D2 {
 void init_KITTI_Road_Database(py::module &m) {
     py::class_<KITTI_Road_Database, std::shared_ptr<KITTI_Road_Database>, DIR_Database>(m, "KITTI_Road_Database")
         .def(py::init<double>(), py::arg("learn"));
+
 }
 }
+
+#endif  // SIZE_MAX

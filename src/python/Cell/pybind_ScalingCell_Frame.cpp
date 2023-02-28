@@ -47,7 +47,9 @@ void declare_ScalingCell_Frame(py::module &m, const std::string& typeStr) {
 
 void init_ScalingCell_Frame(py::module &m) {
     declare_ScalingCell_Frame<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_ScalingCell_Frame<double>(m, "double");
+#endif
 }
 }
 

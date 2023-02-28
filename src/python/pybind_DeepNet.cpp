@@ -106,5 +106,7 @@ void init_DeepNet(py::module &m) {
     .def("logReceptiveFields", &DeepNet::logReceptiveFields, py::arg("fileName"))
     .def("exportNetworkFreeParameters", &DeepNet::exportNetworkFreeParameters, py::arg("dirName"))
     ;
+
 }
 }
+

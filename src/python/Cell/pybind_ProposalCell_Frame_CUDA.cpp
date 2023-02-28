@@ -28,6 +28,8 @@
 
 namespace py = pybind11;
 
+#if SIZE_MAX != 0xFFFFFFFF
+
 namespace N2D2 {
 void init_ProposalCell_Frame_CUDA(py::module &m) {
     py::class_<ProposalCell_Frame_CUDA, std::shared_ptr<ProposalCell_Frame_CUDA>, ProposalCell,  Cell_Frame_CUDA<Float_T>> (m, "ProposalCell_Frame_CUDA", py::multiple_inheritance()) 
@@ -58,8 +60,11 @@ void init_ProposalCell_Frame_CUDA(py::module &m) {
     py::arg("numParts") = std::vector<unsigned int>(),
     py::arg("numTemplates") = std::vector<unsigned int>()
     );
+
 }
 }
+
+#endif  // SIZE_MAX
 
 #endif
 

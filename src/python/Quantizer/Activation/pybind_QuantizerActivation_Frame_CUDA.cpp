@@ -28,7 +28,9 @@ void declare_QuantizerActivation_Frame_CUDA(py::module &m, const std::string& ty
 
 void init_QuantizerActivation_Frame_CUDA(py::module &m) {
     declare_QuantizerActivation_Frame_CUDA<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_QuantizerActivation_Frame_CUDA<double>(m, "double");
+#endif
 }
 
 }

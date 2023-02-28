@@ -65,6 +65,9 @@ void declare_WindowFunction(py::module &m, const std::string& typeStr) {
 }
 
 void init_WindowFunction(py::module &m) {
+    declare_WindowFunction<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_WindowFunction<double>(m, "double");
+#endif  // SIZE_MAX
 }
 }

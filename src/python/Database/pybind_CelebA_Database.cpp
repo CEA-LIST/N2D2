@@ -26,9 +26,14 @@
 
 namespace py = pybind11;
 
+#if SIZE_MAX != 0xFFFFFFFF
+
 namespace N2D2 {
 void init_CelebA_Database(py::module &m) {
     py::class_<CelebA_Database, std::shared_ptr<CelebA_Database>, Database>(m, "CelebA_Database")
         .def(py::init<bool, bool, bool, double, double>(), py::arg("inTheWild"), py::arg("withLandmarks"), py::arg("withPartitioning") = true, py::arg("learn") = 1.0, py::arg("validation") = 0.0);
+
 }
 }
+
+#endif  // SIZE_MAX

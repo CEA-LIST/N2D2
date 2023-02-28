@@ -37,7 +37,9 @@ void declare_SaturationActivation_Frame(py::module &m, const std::string& typeSt
 
 void init_SaturationActivation_Frame(py::module &m) {
     declare_SaturationActivation_Frame<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_SaturationActivation_Frame<double>(m, "double");
+#endif
 }
 
 }

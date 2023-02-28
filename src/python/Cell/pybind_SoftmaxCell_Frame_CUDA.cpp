@@ -48,7 +48,9 @@ void declare_SoftmaxCell_Frame_CUDA(py::module &m, const std::string& typeStr) {
 
 void init_SoftmaxCell_Frame_CUDA(py::module &m) {
     declare_SoftmaxCell_Frame_CUDA<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_SoftmaxCell_Frame_CUDA<double>(m, "double");
+#endif
 }
 }
 

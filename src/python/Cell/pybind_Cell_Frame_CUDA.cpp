@@ -39,6 +39,7 @@ void declare_Cell_Frame_CUDA(py::module &m, const std::string& typeStr) {
     .def("setDiffInputs", &Cell_Frame_CUDA<T>::setDiffInputs, py::arg("diffInput"))
     .def("setDiffInputsValid", &Cell_Frame_CUDA<T>::setDiffInputsValid)
     //.def("addInput", (void (Cell_Frame_CUDA<T>::*)(BaseTensor&, BaseTensor&)) &Cell_Frame_CUDA<T>::addInput, py::arg("inputs"), py::arg("diffOutputs"));
+#if SIZE_MAX != 0xFFFFFFFF
     .def("applyLoss", (double (Cell_Frame_CUDA<T>::*)(double, double)) &Cell_Frame_CUDA<T>::applyLoss, py::arg("targetVal"), py::arg("defaultVal"))
     .def("setOutputTarget",  &Cell_Frame_CUDA<T>::setOutputTarget, py::arg("targets"))
     .def("getPyDataType", &Cell_Frame_CUDA<T>::getPyDataType)
@@ -53,6 +54,7 @@ void declare_Cell_Frame_CUDA(py::module &m, const std::string& typeStr) {
         py::arg("sp"), py::arg("x0")=0, py::arg("y0")=0, py::arg("width")=0, py::arg("height")=0)
 
     ;
+#endif
 
 
 }
@@ -63,7 +65,9 @@ void declare_Cell_Frame_CUDA(py::module &m, const std::string& typeStr) {
 
 void init_Cell_Frame_CUDA(py::module &m) {
     declare_Cell_Frame_CUDA<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_Cell_Frame_CUDA<double>(m, "double");
+#endif
 }
 }
 

@@ -63,7 +63,9 @@ void declare_XavierFiller(py::module &m, const std::string& typeStr) {
 
 void init_XavierFiller(py::module &m) {
     declare_XavierFiller<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_XavierFiller<double>(m, "double");
+#endif
 }
 }
 

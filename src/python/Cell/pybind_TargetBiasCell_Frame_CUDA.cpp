@@ -30,15 +30,19 @@ namespace N2D2 {
 template<typename T>
 void declare_TargetBiasCell_Frame_CUDA(py::module &m, const std::string& typeStr) {
     const std::string pyClassName("TargetBiasCell_Frame_CUDA_" + typeStr);
+#if SIZE_MAX != 0xFFFFFFFF
     py::class_<TargetBiasCell_Frame_CUDA<T>, std::shared_ptr<TargetBiasCell_Frame_CUDA<T>>, TargetBiasCell, Cell_Frame_CUDA<T>> (m, pyClassName.c_str(), py::multiple_inheritance())
     .def(py::init<const DeepNet&, const std::string&, unsigned int, double>(),
         py::arg("deepNet"), py::arg("name"), py::arg("nbOutputs"), py::arg("bias"));
+#endif
     ;
 }
 
 void init_TargetBiasCell_Frame_CUDA(py::module &m) {
     declare_TargetBiasCell_Frame_CUDA<float>(m, "float");
+#if SIZE_MAX != 0xFFFFFFFF
     declare_TargetBiasCell_Frame_CUDA<double>(m, "double");
+#endif
 }
 }
 #endif

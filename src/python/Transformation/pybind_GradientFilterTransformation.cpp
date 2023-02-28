@@ -26,6 +26,8 @@
 
 namespace py = pybind11;
 
+#if SIZE_MAX != 0xFFFFFFFF
+
 namespace N2D2 {
 void init_GradientFilterTransformation(py::module &m) {
     py::class_<GradientFilterTransformation, std::shared_ptr<GradientFilterTransformation>, Transformation> (m, "GradientFilterTransformation", py::multiple_inheritance())
@@ -34,3 +36,5 @@ void init_GradientFilterTransformation(py::module &m) {
 
 }
 }
+
+#endif  // SIZE_MAX

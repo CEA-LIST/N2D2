@@ -26,9 +26,14 @@
 
 namespace py = pybind11;
 
+#if SIZE_MAX != 0xFFFFFFFF
+
 namespace N2D2 {
 void init_Fashion_MNIST_IDX_Database(py::module &m) {
     py::class_<Fashion_MNIST_IDX_Database, std::shared_ptr<Fashion_MNIST_IDX_Database>, IDX_Database>(m, "Fashion_MNIST_IDX_Database")
         .def(py::init<double>(), py::arg("validation") = 0.0);
+
 }
 }
+
+#endif  // SIZE_MAX
