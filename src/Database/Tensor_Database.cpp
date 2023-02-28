@@ -37,8 +37,6 @@ void N2D2::Tensor_Database::load(
                               mStimuliSets(Test).size() + 
                               mStimuliSets(Validation).size() + 
                               mStimuliSets(Learn).size());
-    // assert(mStimuli.size() == mStimuliLabelsData.size());
-    // assert(mStimuli.size() == mStimuliTargetData.size());
 
     unsigned int nbStimuliToLoad = inputs.size();
     unsigned int oldNbStimuli = mStimuli.size();
@@ -46,14 +44,12 @@ void N2D2::Tensor_Database::load(
     mStimuli.reserve(mStimuli.size() + nbStimuliToLoad);
     mStimuliData.reserve(mStimuliData.size() + nbStimuliToLoad);
     mStimuliSets(Unpartitioned).reserve(mStimuliSets(Unpartitioned).size() + nbStimuliToLoad);
-    // mStimuliLabelsData.reserve(mStimuliLabelsData.size() + nbStimuliToLoad);
-    // mStimuliTargetData.reserve(mStimuliTargetData.size() + nbStimuliToLoad);
 
-    // TODO : for loop to fill mStimuliData, mStimuli, mStimulilabel, mStimuliTarget
+
     for(unsigned int i = 0; i < nbStimuliToLoad; ++i){
-        mStimuliData.push_back((cv::Mat)inputs[i]); // TODO : Clone the cv mat ?
+        mStimuliData.push_back((cv::Mat)inputs[i]); 
         std::ostringstream nameStr;
-        nameStr << "RandomName[" << mStimuli.size() << "]";
+        nameStr << "Tensor[" << mStimuli.size() << "]";
         mStimuli.push_back(Stimulus(nameStr.str(), labels[i]));
         mStimuliSets(Unpartitioned).push_back(mStimuli.size() - 1);
     }
@@ -65,6 +61,4 @@ void N2D2::Tensor_Database::load(
                               mStimuliSets(Test).size() + 
                               mStimuliSets(Validation).size() + 
                               mStimuliSets(Learn).size());
-    // assert(mStimuli.size() == mStimuliLabelsData.size());
-    // assert(mStimuli.size() == mStimuliTargetData.size());
 }

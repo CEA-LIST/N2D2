@@ -48,9 +48,25 @@ class Numpy(AbstractDatabase):
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
     
-    def load(self, inputs:List[ndarray], labels:List[int]):
-        """
+    def load(self, stimuli_list:List[ndarray], labels_list:List[int]):
+        """Load numpy array as input and int as labels. 
+        The loaded stimuli are stored in the ``Unpartitioned`` partition.
+
+        :param stimuli_list: List of stimulus, they must respect the format [C, H, W].
+        :type stimuli_list: List[ndarray]
+        :param labels_list: List of label
+        :type labels_list: List[int]
         TODO : write doc string
         """
         # TODO : add type check
-        self._N2D2_object.load([Tensor.from_numpy(i).N2D2() for i in inputs], labels)
+        if len(stimuli_list) != len(labels_list):
+            raise RuntimeError(f"stimuli_list and labels_list have different lengths ({len(stimuli_list)}, {len(labels_list)}), every stimuli need to have a corresponding label")
+        self._N2D2_object.load([Tensor.from_numpy(i).N2D2() for i in stimuli_list], labels_list)
+
+    def transpose_load(self, inputs:List[ndarray], labels:List[int], perm:List[int]=None):
+        """
+        TODO : write doc string
+        """
+        if len(perm) != 3:
+            raise RuntimeError(f"perm list should be of size 3, but is of size {len(perm)} instead.")
+        self.load([np.transpose(i, perm) for i in inputs], labels)
