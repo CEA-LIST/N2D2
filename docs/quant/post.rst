@@ -151,6 +151,12 @@ model:
 
     n2d2 MobileNet_ONNX.ini -seed 1 -w /dev/null -export CPP -fuse -calib -1 -act-clipping-mode KL-Divergence
 
+With the python API 
+~~~~~~~~~~~~~~~~~~~
+
+
+.. autofunction:: n2d2.quantizer.PTQ
+
 
 Examples and results
 --------------------

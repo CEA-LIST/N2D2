@@ -130,6 +130,49 @@ Then to load the database we will use :
         :members:
         :inherited-members:
 
+Numpy
+~~~~~
+
+The :py:class:`n2d2.database.Numpy` allows to create a database using Numpy array.
+This can be especially usefull if you already have a dataloader written in Python.
+
+.. note::
+
+        The labels are optional, this can be usefull if you have previously trained your model and only need data to calibrate you model using the :py:func:`n2d2.quantizer.PTQ` function. 
+
+Usage example
+^^^^^^^^^^^^^
+
+.. code-block:: python
+
+        import n2d2
+        import numpy as np
+
+        db = n2d2.database.Numpy()
+        db.load([
+                np.ones([1,2,3]),
+                np.zeros([1,2,3]),
+                np.ones([1,2,3]),
+                np.zeros([1,2,3]),
+        ], 
+        [
+                0,
+                1,
+                0,
+                1
+        ])
+        db.partition_stimuli(1., 0., 0.) # Learn Validation Test
+
+        provider = n2d2.provider.DataProvider(db, [3, 2, 1], batch_size=2)
+        provider.set_partition("Learn")
+        print("First stimuli :")
+        print(next(provider))
+
+
+.. autoclass:: n2d2.database.Numpy
+        :members:
+        :inherited-members:
+
 MNIST
 ~~~~~
 
