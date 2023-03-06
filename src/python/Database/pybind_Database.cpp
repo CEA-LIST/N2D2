@@ -102,7 +102,6 @@ void init_Database(py::module &m) {
 
     db.def("partitionStimuliPerLabel", (void (Database::*)(unsigned int, Database::StimuliSet))(&Database::partitionStimuliPerLabel), py::arg("nbStimuliPerLabel"), py::arg("set"));
     db.def("partitionStimuliPerLabel", (void (Database::*)(double, double, double, bool))(&Database::partitionStimuliPerLabel), py::arg("learnPerLabel"), py::arg("validationPerLabel"), py::arg("testPerLabel"),  py::arg("equiLabel") = false);
-https://git-dscin.intra.cea.fr/n2d2/n2d2/-/blob/master/src/python/Database/pybind_Database.cpp
     db.def("getNbStimuli", (unsigned int (Database::*)() const)(&Database::getNbStimuli),
     R"mydelimiter(
     Returns the total number of loaded stimuli.
