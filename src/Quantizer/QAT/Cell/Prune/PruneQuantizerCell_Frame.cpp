@@ -95,7 +95,7 @@ void PruneQuantizerCell_Frame<T>::initialize()
 
             mCurrentThreshold = 0.0f;
 
-            switch (mPruningMode) {
+            switch (getPruningMode()) {
             case Identity:
                 // Nothing to do
                 break;
@@ -130,7 +130,7 @@ void PruneQuantizerCell_Frame<T>::initialize()
 template<typename T>
 void PruneQuantizerCell_Frame<T>::propagate()
 {
-    switch (mPruningMode) {
+    switch (getPruningMode()) {
     case Identity:
     case Static:
     case Gradual:
@@ -161,7 +161,7 @@ void PruneQuantizerCell_Frame<T>::propagate()
 template<typename T>
 void PruneQuantizerCell_Frame<T>::back_propagate()
 {
-    switch (mPruningMode) {
+    switch (getPruningMode()) {
     case Identity:
     case Static:
     case Gradual:
@@ -192,7 +192,7 @@ void PruneQuantizerCell_Frame<T>::back_propagate()
 template<typename T>
 void PruneQuantizerCell_Frame<T>::update(unsigned int batchSize)
 {
-    if (mPruningMode == PruningMode::Gradual) {
+    if (getPruningMode() == PruningMode::Gradual) {
         if (!mScheduler) {
             unsigned int stepSize = (mStepSizeThreshold > 0) ? mStepSizeThreshold : SGDSolver::mLogSteps;
             mScheduler = std::make_shared<Scheduler>(stepSize, batchSize);
