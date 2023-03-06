@@ -559,8 +559,11 @@ void init_N2D2(py::module& m) {
     init_SATQuantizerCell(m);
     init_SATQuantizerCell_Frame(m);
     init_LSQQuantizerCell(m);
+
+    #if SIZE_MAX != 0xFFFFFFFF
     init_PruneQuantizerCell(m);
     init_PruneQuantizerCell_Frame(m);
+    #endif
 
     init_SATQuantizerActivation(m);
     init_SATQuantizerActivation_Frame(m);
@@ -618,7 +621,9 @@ void init_N2D2(py::module& m) {
     init_SATQuantizerCell_Frame_CUDA(m);
     init_LSQQuantizerActivation_Frame_CUDA(m);
     init_LSQQuantizerCell_Frame_CUDA(m);
+    #if SIZE_MAX != 0xFFFFFFFF
     init_PruneQuantizerCell_Frame_CUDA(m);
+    #endif
     #else
     m.attr("cuda_compiled") = false;
     #endif
