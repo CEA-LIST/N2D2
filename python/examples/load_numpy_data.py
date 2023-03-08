@@ -46,7 +46,7 @@ EPOCH = args.epochs
 
 if n2d2.global_variables.cuda_available:
     n2d2.global_variables.default_model = "Frame_CUDA"
-    n2d2.global_variables.cuda_device = args.device
+    n2d2.global_variables.cuda_device = args.dev
 else:
     print("CUDA is not available")
 (x_train, y_train), (x_test, y_test) = load_data()
@@ -60,25 +60,26 @@ db.load([a for a in x_train], [(int)(i.item()) for i in y_train])
 db.partition_stimuli(1., 0., 0.) # Learn Validation Test
 
 # Using test set for validation
-db.load([a for a in x_test], [(int)(i.item()) for i in y_test])
-db.partition_stimuli(0., 1., 0.) # Learn Validation Test
+db.load([a for a in x_test], [(int)(i.item()) for i in y_test], partition="Validation")
 
 db.get_partition_summary()
-provider = n2d2.provider.DataProvider(db, [28, 28, 1], batch_size=BATCH_SIZE)
-
-provider.set_partition("Learn")
 
 model = Sequence([
         Fc(28*28, 128, activation=Rectifier()),
         Fc(128, 10, activation=Linear()),
     ])
-
 softmax = Softmax(with_loss=True)
-target = n2d2.target.Score(provider)
 model.set_solver(SGD(learning_rate=0.001))
 
-print("LeNet model :")
+print("Model :")
 print(model)
+
+
+provider = n2d2.provider.DataProvider(db, [28, 28, 1], batch_size=BATCH_SIZE)
+
+provider.set_partition("Learn")
+
+target = n2d2.target.Score(provider)
 
 print("\n### Training ###")
 for epoch in range(EPOCH):

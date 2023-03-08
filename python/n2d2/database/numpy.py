@@ -47,15 +47,18 @@ class Numpy(AbstractDatabase):
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
-    def load(self, stimuli_list:List[ndarray], labels_list:List[int]=None):
+    def load(self, stimuli_list:List[ndarray], labels_list:List[int]=None, partition:str=None):
         """Load numpy array as input and int as labels. 
-        The loaded stimuli are stored in the ``Unpartitioned`` partition.
-        At the moment only 
+        By default, the loaded stimuli are stored in the ``Unpartitioned`` partition.
+        At the moment only integers labels are supported.
+        If ``label_list`` is not filled, all labels are set to ``0``.
 
         :param stimuli_list: List of stimulus, they must respect the format [C, H, W].
         :type stimuli_list: List[ndarray]
         :param labels_list: List of label, if ``None``, every label are set to 0, default=None
         :type labels_list: List[int], optional
+        :param partition: The partition can be  ``Learn``, ``Validation``, ``Test``,  ``Unpartitioned``, by default data are stored in the``Unpartitioned`` partition (see :py:meth:`n2d2.database.numpy.partition_stimuli`) , default=None
+        :type partition: str, optional
         """
         if labels_list is None:
             # No lable provided case, every label is set to 0
@@ -67,3 +70,12 @@ class Numpy(AbstractDatabase):
         if len(stimuli_list) != len(labels_list):
             raise RuntimeError(f"stimuli_list and labels_list have different lengths ({len(stimuli_list)}, {len(labels_list)}), every stimuli need to have a corresponding label")
         self._N2D2_object.load([Tensor.from_numpy(i).N2D2() for i in stimuli_list], labels_list)
+        if partition:
+            if partition == "Learn":
+                self.partition_stimuli(1., 0., 0.) # Learn Validation Test
+            elif partition == "Validation":
+                self.partition_stimuli(0., 1., 0.) # Learn Validation Test
+            elif partition == "Test":
+                self.partition_stimuli(0., 0., 1.) # Learn Validation Test
+            else:
+                raise ValueError(f"Unknown partition : {partition}, available partitions are \"Learn\", \"Validation\" or \"Test\".")
