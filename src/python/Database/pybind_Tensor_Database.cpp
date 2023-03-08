@@ -29,8 +29,22 @@ namespace N2D2 {
 void init_Tensor_Database(py::module &m) {
     py::class_<Tensor_Database, std::shared_ptr<Tensor_Database>, Database>(m, "Tensor_Database")
     .def(py::init<>())
-    .def("load", (void (Tensor_Database::*)(std::vector<Tensor<float>>&, std::vector<int>&)) &Tensor_Database::load, py::arg("inputs"), py::arg("labels"))
-
+    // INT
+    .def("load", (void (Tensor_Database::*)(std::vector<Tensor<int>>&, std::vector<int>&)) &Tensor_Database::load<int>, py::arg("inputs"), py::arg("labels"))
+    // UNSIGNED INT
+    .def("load", (void (Tensor_Database::*)(std::vector<Tensor<unsigned int>>&, std::vector<int>&)) &Tensor_Database::load<unsigned int>, py::arg("inputs"), py::arg("labels"))
+    // FLOAT
+    .def("load", (void (Tensor_Database::*)(std::vector<Tensor<float>>&, std::vector<int>&)) &Tensor_Database::load<float>, py::arg("inputs"), py::arg("labels"))
+    // DOUBLE
+#if SIZE_MAX != 0xFFFFFFFF
+    .def("load", (void (Tensor_Database::*)(std::vector<Tensor<double>>&, std::vector<int>&)) &Tensor_Database::load<double>, py::arg("inputs"), py::arg("labels"))
+#endif
+    // CHAR
+    .def("load", (void (Tensor_Database::*)(std::vector<Tensor<char>>&, std::vector<int>&)) &Tensor_Database::load<char>, py::arg("inputs"), py::arg("labels"))
+    // UNSIGNED CHAR
+    .def("load", (void (Tensor_Database::*)(std::vector<Tensor<unsigned char>>&, std::vector<int>&)) &Tensor_Database::load<unsigned char>, py::arg("inputs"), py::arg("labels"))
+    // SHORT
+    .def("load", (void (Tensor_Database::*)(std::vector<Tensor<short>>&, std::vector<int>&)) &Tensor_Database::load<short>, py::arg("inputs"), py::arg("labels"))
     ;
 }
 }

@@ -28,9 +28,43 @@ namespace N2D2 {
 class Tensor_Database : public Database {
 public:
     Tensor_Database();
+    template <class T>
     void load(
-        std::vector<Tensor<float>>& inputs,
-        std::vector<int>& labels);
+        std::vector<Tensor<T>>& inputs,
+        std::vector<int>& labels)
+    {
+        assert(inputs.size() == labels.size());
+        // Check there is no disperency with stimuli before method
+        assert(mStimuli.size() == mStimuliData.size());
+        assert(mStimuli.size() == mStimuliSets(Unpartitioned).size() + 
+                                mStimuliSets(Test).size() + 
+                                mStimuliSets(Validation).size() + 
+                                mStimuliSets(Learn).size());
+
+        unsigned int nbStimuliToLoad = inputs.size();
+        unsigned int oldNbStimuli = mStimuli.size();
+
+        mStimuli.reserve(mStimuli.size() + nbStimuliToLoad);
+        mStimuliData.reserve(mStimuliData.size() + nbStimuliToLoad);
+        mStimuliSets(Unpartitioned).reserve(mStimuliSets(Unpartitioned).size() + nbStimuliToLoad);
+
+
+        for(unsigned int i = 0; i < nbStimuliToLoad; ++i){
+            mStimuliData.push_back((cv::Mat)inputs[i].clone());
+            std::ostringstream nameStr;
+            nameStr << "Tensor[" << mStimuli.size() << "]";
+            mStimuli.push_back(Stimulus(nameStr.str(), labels[i]));
+            mStimuliSets(Unpartitioned).push_back(mStimuli.size() - 1);
+        }
+
+        // Check there is no disperency with stimuli after method
+        assert(mStimuli.size() == nbStimuliToLoad + oldNbStimuli);
+        assert(mStimuli.size() == mStimuliData.size());
+        assert(mStimuli.size() == mStimuliSets(Unpartitioned).size() + 
+                                mStimuliSets(Test).size() + 
+                                mStimuliSets(Validation).size() + 
+                                mStimuliSets(Learn).size());
+    }
 
     virtual ~Tensor_Database() {};
 };
