@@ -196,6 +196,7 @@ class Block(Cell):
     def _get_cells(self, cells: List[Cell]):
         for elem in self._cells.values():
             if isinstance(elem, Block):
+                cells[elem.get_name()] = elem
                 elem._get_cells(cells)
             else:
                 cells[elem.get_name()] = elem
