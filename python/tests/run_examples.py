@@ -71,6 +71,9 @@ commands_to_call = [
             f"--data_path={DATA_PATH}/cifar-100-binary",
             f"--dev={DEVICE}",
             f"--epochs={EPOCHS}"],
+    [python_path, path_to("load_numpy_data.py"),
+            f"--dev={DEVICE}",
+            f"--epochs={EPOCHS}"],
 ]
 
 nb_faillure = 0
