@@ -185,9 +185,7 @@ class Block(Cell):
 
     def get_cells(self):
         """
-           Returns dictionary with all cells that are not Blocks (i.e. NeuralNetworkCells). This allows
-           therefore to access all cells by a dictionary without having to consider the recursive block
-           structure of the model
+        Returns dictionary with all cells inside the current Block.
         """
         cells = {}
         self._get_cells(cells)
@@ -195,15 +193,13 @@ class Block(Cell):
 
     def _get_cells(self, cells: List[Cell]):
         for elem in self._cells.values():
+            cells[elem.get_name()] = elem
             if isinstance(elem, Block):
-                cells[elem.get_name()] = elem
                 elem._get_cells(cells)
-            else:
-                cells[elem.get_name()] = elem
     @check_types
     def get_cell(self, item: str):
         """
-           Returns the low level view of a cell.
+        Returns the low level view of a cell.
         """
         return self.get_cells()[item]
 
