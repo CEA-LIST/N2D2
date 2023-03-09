@@ -101,7 +101,7 @@ class DataProvider(Provider):
         """
         :param database: Database used to read data from
         :type database: :py:class:`n2d2.database.Database`
-        :param size: Size of the data
+        :param size: Size of the data, in the format [W, H, C].
         :type size: list
         :param batch_size: Batch size, default=1
         :type batch_size: int, optional

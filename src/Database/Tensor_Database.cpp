@@ -1,7 +1,6 @@
-"""
-    (C) Copyright 2020 CEA LIST. All Rights Reserved.
+/*
+    (C) Copyright 2023 CEA LIST. All Rights Reserved.
     Contributor(s): Cyril MOINEAU (cyril.moineau@cea.fr)
-                    Johannes THIELE (johannes.thiele@cea.fr)
 
     This software is governed by the CeCILL-C license under French law and
     abiding by the rules of distribution of free software.  You can  use,
@@ -17,14 +16,13 @@
 
     The fact that you are presently reading this means that you have had
     knowledge of the CeCILL-C license and that you accept its terms.
-"""
+*/
 
-from n2d2.database.database import Database, AbstractDatabase, _database_parameters
-from n2d2.database.cifar10 import CIFAR10
-from n2d2.database.cifar100 import CIFAR100
-from n2d2.database.cityscapes import Cityscapes
-from n2d2.database.dir import DIR
-from n2d2.database.gtsrb import GTSRB
-from n2d2.database.ilsvrc2012 import ILSVRC2012
-from n2d2.database.mnist import MNIST
-from n2d2.database.numpy import Numpy
+#include "Database/Tensor_Database.hpp"
+
+N2D2::Tensor_Database::Tensor_Database()
+    : Database(true)
+{
+    // ctor
+}
+

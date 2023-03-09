@@ -72,6 +72,7 @@ void init_DeepNetExport(py::module&);
 void init_DrawNet(py::module&);
 //Database
 void init_Database(py::module&);
+void init_Tensor_Database(py::module&);
 void init_DIR_Database(py::module&);
 void init_AER_Database(py::module&);
 void init_MNIST_IDX_Database(py::module&);
@@ -351,6 +352,7 @@ void init_N2D2(py::module& m) {
 
     // Database
     init_Database(m);
+    init_Tensor_Database(m);
     init_DIR_Database(m);
     init_AER_Database(m);
     init_MNIST_IDX_Database(m);

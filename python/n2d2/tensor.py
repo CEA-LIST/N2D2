@@ -27,7 +27,8 @@ import n2d2.global_variables as gb
 from functools import reduce
 from typing import Union, Any
 try:
-    from numpy import ndarray, array
+    import numpy
+    # from numpy import ndarray, array
 except ImportError:
     numpy_imported=False
 else:
@@ -35,6 +36,17 @@ else:
 
 cuda_available = gb.cuda_available
 
+if numpy_imported:
+    numpy_to_cpp = {
+        numpy.int8 : "char",
+        numpy.uint8 : "uchar",
+        numpy.int16 : "short",
+        numpy.int32 : "int",
+        numpy.uint32 : "uint",
+        numpy.float32 : "float",
+        numpy.float64 : "double",
+        numpy.bool_ : "bool",
+    }
 
 hard_coded_type = {
     "f": float,
@@ -321,7 +333,7 @@ class Tensor:
         """
         if not numpy_imported:
             raise ImportError("Numpy is not installed !")
-        return array(self.N2D2(), copy=copy)
+        return numpy.array(self.N2D2(), copy=copy)
 
     @classmethod
     def from_numpy(cls, np_array):
@@ -334,28 +346,15 @@ class Tensor:
         """
         if not numpy_imported:
             raise ImportError("Numpy is not installed !")
-        if not isinstance(np_array, ndarray):
+        if not isinstance(np_array, numpy.ndarray):
             raise error_handler.WrongInputType("np_array", type(np_array), ["numpy.array"])
 
-        # np_array = np_array.reshape([d for d in reversed(np_array.shape)])
         n2d2_tensor = cls([])
 
-        # Retrieving the first element of the numpy array to get dataType.
-        try:
-            first_element = np_array[0]
-        except IndexError as err:
-            raise ValueError('Numpy array is empty, you need to have at least one element') from err
-        is_first_element = False
-        while not is_first_element:
-            try:
-                first_element = first_element[0]
-            except IndexError:
-                is_first_element = True
-        data_type = type(first_element.item())
-
-        # convert datatype to string
-        data_type = str(data_type).split("'")[1]
-
+        if np_array.dtype.type in list(numpy_to_cpp.keys()):
+            data_type = numpy_to_cpp[np_array.dtype.type]
+        else:
+            raise TypeError(f"Tensor : Unsupported Numpy dtype {np_array.dtype}.\nSupported dtype are : [{', '.join([str(i) for i in numpy_to_cpp.keys()])}]")
         if data_type == "bool":
             # Numpy -> N2D2 doesn't work for bool because there is no buffer protocol for it.
             n2d2_tensor._datatype = data_type
@@ -367,7 +366,7 @@ class Tensor:
             del tmp_tensor
         else:
             n2d2_tensor._datatype = data_type
-            n2d2_tensor._tensor = n2d2_tensor._tensor_generators[data_type](np_array)
+            n2d2_tensor._tensor = n2d2_tensor._tensor_generators[data_type](np_array)            
         n2d2_tensor.reshape(np_array.shape)
         return n2d2_tensor
 
