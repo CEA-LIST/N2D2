@@ -23,3 +23,4 @@ from n2d2.activation.activation import ActivationFunction
 from n2d2.activation.linear import Linear
 from n2d2.activation.rectifier import Rectifier
 from n2d2.activation.tanh import Tanh
+from n2d2.activation.softplus import Softplus

@@ -30,7 +30,7 @@ def fill_object_dict():
     To prevent this cyclic import, we only import the n2d2 objects at runtime instead of definition time.
     """
     # pylint: disable=import-outside-toplevel
-    from n2d2.activation import Linear, Rectifier, Tanh
+    from n2d2.activation import Linear, Rectifier, Tanh, Softplus
     from n2d2.solver import SGD, Adam
     from n2d2.filler import He, Normal, Xavier, Constant
     from n2d2.cells import Fc, Conv, Deconv, ElemWise, Softmax, \
@@ -47,6 +47,7 @@ def fill_object_dict():
         "Linear": Linear,
         "Rectifier": Rectifier,
         "Tanh": Tanh,
+        "Softplus": Softplus,
 
         "SGD": SGD,
         "Adam": Adam,
