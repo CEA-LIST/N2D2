@@ -345,15 +345,22 @@ def wrap(tf_model: Union[keras.Sequential, keras.models.Model],
                 if isinstance(previous_cell, n2d2.cells.Transpose):
                     if previous_cell.get_parameter('perm') == [2,0,1,3]:
                         print("Transpose layer param: {}, remove this layer...".format(previous_cell.get_parameter('perm')))
-                        weights = np.array(cell.get_weights())
-                        shape = weights.shape
+                        weights = cell.get_weights() # (o,i,1)
                         in_dims = previous_cell.N2D2().getInputsDims()
-                        weights_transposed = weights.reshape(shape[0], in_dims[0]*in_dims[1], in_dims[2], shape[2]).transpose([0,2,1,3]).reshape(shape)
-                        # for input_dim in range()
-                        weights_transposed = n2d2.Tensor.from_numpy(weights_transposed)
-                        for o in range(shape[0]):
-                            for i in range(shape[1]):
-                                cell.set_weight(o,i,n2d2.Tensor(dims=[1], value = weights_transposed[o,i,0]))
+                        len_weights = in_dims[0]*in_dims[1]*in_dims[2]
+                        for o in range(len(weights)):
+                            for i in range(len_weights):
+                                cell.set_weight(o,i,weights[o][(i%(in_dims[0]*in_dims[1]))*in_dims[2] + i//(in_dims[0]*in_dims[1])])
+                        # weights = np.array(cell.get_weights())
+                        # print(len(cell.get_weights()))
+                        # shape = weights.shape
+                        # in_dims = previous_cell.N2D2().getInputsDims()
+                        # weights_transposed = weights.reshape(shape[0], in_dims[0]*in_dims[1], in_dims[2], shape[2]).transpose([0,2,1,3]).reshape(shape)
+                        # # for input_dim in range()
+                        # weights_transposed = n2d2.Tensor.from_numpy(weights_transposed)
+                        # for o in range(shape[0]):
+                        #     for i in range(shape[1]):
+                        #         cell.set_weight(o,i,n2d2.Tensor(dims=[1], value = weights_transposed[o,i,0]))
                         deepnet_cell.remove(previous_cell.get_name(), reconnect=True)
 
         previous_cell = cell
