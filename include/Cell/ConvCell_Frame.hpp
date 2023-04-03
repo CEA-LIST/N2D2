@@ -191,8 +191,8 @@ public:
             return;
 
         const Tensor<T>& sharedSynapses
-            = tensor_cast<T>(mQuantizer->getQuantizedWeights(mSharedSynapses.getTensorIndex(channel)));
-        channel -= mSharedSynapses.getTensorDataOffset(channel);
+            = tensor_cast<T>(mQuantizer->getQuantizedWeights(mInputs.getTensorIndex(channel)));
+        channel -= mInputs.getTensorDataOffset(channel);
 
         value.resize(sharedSynapses[output][channel].dims());
         value = sharedSynapses[output][channel];
