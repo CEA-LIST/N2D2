@@ -207,7 +207,7 @@ void cudaFloatingPointScaling_propagate<half_float::half>(const cudaDeviceProp& 
 
 
 template<typename T>
-void cudaFloatingPointScaling_propagate(const cudaDeviceProp& deviceProp,
+void cudaFloatingPointScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
                                               const T* input, T* output,
                                               std::size_t batchSize, std::size_t nbChannels,
                                               std::size_t height, std::size_t width,
@@ -216,7 +216,13 @@ void cudaFloatingPointScaling_propagate(const cudaDeviceProp& deviceProp,
                                               Float_T* scalingFactorPerChannel,
                                               std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
-
+    // Dynamic determination of kernel attributes may lead to bad behaviours
+    // https://stackoverflow.com/questions/26201172/cuda-too-many-resources-requested-for-launch
+    // 
+    // "interestingly, I found with a particular kernel (quite large, with lots of nested calls) 
+    // I could launch with 512 threads in debug, but when compiled for release, that failed, 
+    // and it would only work with 256. A release build had heavier register usage it seems"
+/*
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -230,8 +236,11 @@ void cudaFloatingPointScaling_propagate(const cudaDeviceProp& deviceProp,
 
     const dim3 blocksPerGrid = {(unsigned int)nbChannels, 1, (unsigned int)batchSize};
     const dim3 threadsPerBlock = {groupWidth, groupSize / groupWidth, 1};
+*/
 
-    cudaFloatingPointScaling_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, 
+    const unsigned int size = (unsigned int)nbChannels * (unsigned int)batchSize;
+
+    cudaFloatingPointScaling_kernel<<<(size + 255) / 256, 256>>>(input, output, 
                                                                         batchSize, nbChannels, 
                                                                         height, width, 
                                                                         isClipped,
@@ -259,7 +268,7 @@ void cudaFixedPointScaling_propagate<half_float::half>(const cudaDeviceProp& dev
 }
 
 template<typename T>
-void cudaFixedPointScaling_propagate(const cudaDeviceProp& deviceProp,
+void cudaFixedPointScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
                                            const T* input, T* output,
                                            std::size_t batchSize, std::size_t nbChannels,
                                            std::size_t height, std::size_t width,
@@ -267,6 +276,13 @@ void cudaFixedPointScaling_propagate(const cudaDeviceProp& deviceProp,
                                            std::int32_t* scalingFactorPerChannel, std::size_t nbFractionalBits,
                                            std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
+    // Dynamic determination of kernel attributes may lead to bad behaviours
+    // https://stackoverflow.com/questions/26201172/cuda-too-many-resources-requested-for-launch
+    // 
+    // "interestingly, I found with a particular kernel (quite large, with lots of nested calls) 
+    // I could launch with 512 threads in debug, but when compiled for release, that failed, 
+    // and it would only work with 256. A release build had heavier register usage it seems"
+/*
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -280,8 +296,10 @@ void cudaFixedPointScaling_propagate(const cudaDeviceProp& deviceProp,
 
     const dim3 blocksPerGrid = {(unsigned int)nbChannels, 1, (unsigned int)batchSize};
     const dim3 threadsPerBlock = {groupWidth, groupSize / groupWidth, 1};
+*/
+    const unsigned int size = (unsigned int)nbChannels * (unsigned int)batchSize;
 
-    cudaFixedPointScaling_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, 
+    cudaFixedPointScaling_kernel<<<(size + 255) / 256, 256>>>(input, output, 
                                                                      batchSize, nbChannels, 
                                                                      height, width, 
                                                                      isClipped, clippingFactorPerChannel,
@@ -309,7 +327,7 @@ void cudaSingleShiftScaling_propagate<half_float::half>(const cudaDeviceProp& de
 }
 
 template<typename T>
-void cudaSingleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
+void cudaSingleShiftScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
                                             const T* input, T* output,
                                             std::size_t batchSize, std::size_t nbChannels,
                                             std::size_t height, std::size_t width,
@@ -317,6 +335,13 @@ void cudaSingleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
                                             unsigned char* scalingFactorPerChannel,
                                             std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
+    // Dynamic determination of kernel attributes may lead to bad behaviours
+    // https://stackoverflow.com/questions/26201172/cuda-too-many-resources-requested-for-launch
+    // 
+    // "interestingly, I found with a particular kernel (quite large, with lots of nested calls) 
+    // I could launch with 512 threads in debug, but when compiled for release, that failed, 
+    // and it would only work with 256. A release build had heavier register usage it seems"
+/*
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -330,8 +355,10 @@ void cudaSingleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
 
     const dim3 blocksPerGrid = {(unsigned int)nbChannels, 1, (unsigned int)batchSize};
     const dim3 threadsPerBlock = {groupWidth, groupSize / groupWidth, 1};
+*/
+    const unsigned int size = (unsigned int)nbChannels * (unsigned int)batchSize;
 
-    cudaSingleShiftScaling_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, 
+    cudaSingleShiftScaling_kernel<<<(size + 255) / 256, 256>>>(input, output, 
                                                                       batchSize, nbChannels, 
                                                                       height, width, 
                                                                       isClipped, clippingFactorPerChannel,
@@ -358,7 +385,7 @@ void cudaDoubleShiftScaling_propagate<half_float::half>(const cudaDeviceProp& de
 }
 
 template<typename T>
-void cudaDoubleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
+void cudaDoubleShiftScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
                                             const T* input, T* output,
                                             std::size_t batchSize, std::size_t nbChannels,
                                             std::size_t height, std::size_t width,
@@ -366,6 +393,13 @@ void cudaDoubleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
                                             std::pair<unsigned char, unsigned char>* scalingFactorPerChannel,
                                             std::size_t quantizedNbBits, bool isOutputUnsigned)
 {
+    // Dynamic determination of kernel attributes may lead to bad behaviours
+    // https://stackoverflow.com/questions/26201172/cuda-too-many-resources-requested-for-launch
+    // 
+    // "interestingly, I found with a particular kernel (quite large, with lots of nested calls) 
+    // I could launch with 512 threads in debug, but when compiled for release, that failed, 
+    // and it would only work with 256. A release build had heavier register usage it seems"
+/*
     const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
@@ -379,8 +413,10 @@ void cudaDoubleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
 
     const dim3 blocksPerGrid = {(unsigned int)nbChannels, 1, (unsigned int)batchSize};
     const dim3 threadsPerBlock = {groupWidth, groupSize / groupWidth, 1};
+*/
+    const unsigned int size = (unsigned int)nbChannels * (unsigned int)batchSize;
 
-    cudaDoubleShiftScaling_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, 
+    cudaDoubleShiftScaling_kernel<<<(size + 255) / 256, 256>>>(input, output, 
                                                                       batchSize, nbChannels, 
                                                                       height, width, 
                                                                       isClipped, clippingFactorPerChannel,
