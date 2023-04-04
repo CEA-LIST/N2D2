@@ -207,7 +207,7 @@ void cudaFloatingPointScaling_propagate<half_float::half>(const cudaDeviceProp& 
 
 
 template<typename T>
-void cudaFloatingPointScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
+void cudaFloatingPointScaling_propagate(const cudaDeviceProp& deviceProp,
                                               const T* input, T* output,
                                               std::size_t batchSize, std::size_t nbChannels,
                                               std::size_t height, std::size_t width,
@@ -225,7 +225,7 @@ void cudaFloatingPointScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
 
     // const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
     const unsigned int maxSize = 256U;
-    
+
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
     const unsigned int groupSize = (width * height < maxSize)
@@ -267,7 +267,7 @@ void cudaFixedPointScaling_propagate<half_float::half>(const cudaDeviceProp& dev
 }
 
 template<typename T>
-void cudaFixedPointScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
+void cudaFixedPointScaling_propagate(const cudaDeviceProp& deviceProp,
                                            const T* input, T* output,
                                            std::size_t batchSize, std::size_t nbChannels,
                                            std::size_t height, std::size_t width,
@@ -326,7 +326,7 @@ void cudaSingleShiftScaling_propagate<half_float::half>(const cudaDeviceProp& de
 }
 
 template<typename T>
-void cudaSingleShiftScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
+void cudaSingleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
                                             const T* input, T* output,
                                             std::size_t batchSize, std::size_t nbChannels,
                                             std::size_t height, std::size_t width,
@@ -384,7 +384,7 @@ void cudaDoubleShiftScaling_propagate<half_float::half>(const cudaDeviceProp& de
 }
 
 template<typename T>
-void cudaDoubleShiftScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
+void cudaDoubleShiftScaling_propagate(const cudaDeviceProp& deviceProp,
                                             const T* input, T* output,
                                             std::size_t batchSize, std::size_t nbChannels,
                                             std::size_t height, std::size_t width,
