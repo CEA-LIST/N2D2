@@ -222,8 +222,10 @@ void cudaFloatingPointScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
     // "interestingly, I found with a particular kernel (quite large, with lots of nested calls) 
     // I could launch with 512 threads in debug, but when compiled for release, that failed, 
     // and it would only work with 256. A release build had heavier register usage it seems"
-/*
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+
+    // const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int maxSize = 256U;
+    
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
     const unsigned int groupSize = (width * height < maxSize)
@@ -236,11 +238,8 @@ void cudaFloatingPointScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
 
     const dim3 blocksPerGrid = {(unsigned int)nbChannels, 1, (unsigned int)batchSize};
     const dim3 threadsPerBlock = {groupWidth, groupSize / groupWidth, 1};
-*/
 
-    const unsigned int size = (unsigned int)nbChannels * (unsigned int)batchSize;
-
-    cudaFloatingPointScaling_kernel<<<(size + 255) / 256, 256>>>(input, output, 
+    cudaFloatingPointScaling_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, 
                                                                         batchSize, nbChannels, 
                                                                         height, width, 
                                                                         isClipped,
@@ -282,8 +281,10 @@ void cudaFixedPointScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
     // "interestingly, I found with a particular kernel (quite large, with lots of nested calls) 
     // I could launch with 512 threads in debug, but when compiled for release, that failed, 
     // and it would only work with 256. A release build had heavier register usage it seems"
-/*
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+
+    // const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int maxSize = 256U;
+
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
     const unsigned int groupSize = (width * height < maxSize)
@@ -296,10 +297,8 @@ void cudaFixedPointScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
 
     const dim3 blocksPerGrid = {(unsigned int)nbChannels, 1, (unsigned int)batchSize};
     const dim3 threadsPerBlock = {groupWidth, groupSize / groupWidth, 1};
-*/
-    const unsigned int size = (unsigned int)nbChannels * (unsigned int)batchSize;
 
-    cudaFixedPointScaling_kernel<<<(size + 255) / 256, 256>>>(input, output, 
+    cudaFixedPointScaling_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, 
                                                                      batchSize, nbChannels, 
                                                                      height, width, 
                                                                      isClipped, clippingFactorPerChannel,
@@ -341,8 +340,10 @@ void cudaSingleShiftScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
     // "interestingly, I found with a particular kernel (quite large, with lots of nested calls) 
     // I could launch with 512 threads in debug, but when compiled for release, that failed, 
     // and it would only work with 256. A release build had heavier register usage it seems"
-/*
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+
+    //const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int maxSize = 256U;
+
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
     const unsigned int groupSize = (width * height < maxSize)
@@ -355,10 +356,8 @@ void cudaSingleShiftScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
 
     const dim3 blocksPerGrid = {(unsigned int)nbChannels, 1, (unsigned int)batchSize};
     const dim3 threadsPerBlock = {groupWidth, groupSize / groupWidth, 1};
-*/
-    const unsigned int size = (unsigned int)nbChannels * (unsigned int)batchSize;
 
-    cudaSingleShiftScaling_kernel<<<(size + 255) / 256, 256>>>(input, output, 
+    cudaSingleShiftScaling_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, 
                                                                       batchSize, nbChannels, 
                                                                       height, width, 
                                                                       isClipped, clippingFactorPerChannel,
@@ -399,8 +398,10 @@ void cudaDoubleShiftScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
     // "interestingly, I found with a particular kernel (quite large, with lots of nested calls) 
     // I could launch with 512 threads in debug, but when compiled for release, that failed, 
     // and it would only work with 256. A release build had heavier register usage it seems"
-/*
-    const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+
+    // const unsigned int maxSize = (unsigned int)deviceProp.maxThreadsPerBlock;
+    const unsigned int maxSize = 256U;
+
     const unsigned int prefMultiple = (unsigned int)deviceProp.warpSize;
 
     const unsigned int groupSize = (width * height < maxSize)
@@ -413,10 +414,8 @@ void cudaDoubleShiftScaling_propagate(const cudaDeviceProp& /*deviceProp*/,
 
     const dim3 blocksPerGrid = {(unsigned int)nbChannels, 1, (unsigned int)batchSize};
     const dim3 threadsPerBlock = {groupWidth, groupSize / groupWidth, 1};
-*/
-    const unsigned int size = (unsigned int)nbChannels * (unsigned int)batchSize;
 
-    cudaDoubleShiftScaling_kernel<<<(size + 255) / 256, 256>>>(input, output, 
+    cudaDoubleShiftScaling_kernel<<<blocksPerGrid, threadsPerBlock>>>(input, output, 
                                                                       batchSize, nbChannels, 
                                                                       height, width, 
                                                                       isClipped, clippingFactorPerChannel,
