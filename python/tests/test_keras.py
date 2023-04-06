@@ -137,7 +137,7 @@ class test_keras(unittest.TestCase):
             self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))))
 
 
-    def test_remove_translation_layer(self):
+    def test_remove_transpose_layer(self):
         tf_model = keras.Sequential([
             Input(shape = (9,9,3)),
             Conv2D(4, 3, activation=tf.keras.activations.linear, use_bias=False),
