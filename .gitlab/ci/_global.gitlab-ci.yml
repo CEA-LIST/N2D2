@@ -9,6 +9,7 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   OMP_NUM_THREADS: 4
   GIT_SSL_NO_VERIFY: 1
+  GIT_SSH_COMMAND: "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 
 # Generic before_script to run common jobs
 .before_script_template:
