@@ -151,7 +151,7 @@ class test_keras(unittest.TestCase):
 
         # tf_model.compile(loss="categorical_crossentropy", optimizer=sgd_opt, metrics=["accuracy"])
 
-        wrapped_model = wrap(tf_model, batch_size=10, name="model_without_transpose", for_export=False)
+        wrapped_model = wrap(tf_model, batch_size=10, name="model_without_transpose", for_export=True)
         # wrapped_model.compile(loss="categorical_crossentropy", optimizer=n2d2.solver.SGD(learning_rate=0.02, momentum=0.0), metrics=["accuracy"])
 
         x = tf.random.uniform([10,9,9,3])
