@@ -37,104 +37,104 @@ class test_keras(unittest.TestCase):
         n2d2.global_variables.cuda_device = 0
         n2d2.global_variables.default_model = 'Frame'
 
-    # @unittest.skip("This test is deprecated due to N2D2 not supporting a Pool Layer as an input.")
-    # def test_propagation(self):
-    #     tf_model = keras.Sequential([
-    #         Input(shape=[3, 3, 2]),
-    #         MaxPooling2D(pool_size=(1, 1))
-    #     ])
-    #     self.model = wrap(tf_model, batch_size=5)
-    #     self.model.compile(loss="categorical_crossentropy", metrics=["accuracy"])
-    #     self.x = tf.random.uniform([4,3,3,2])
-    #     y = self.model.call(self.x)
-    #     for predicted, truth in zip(y.numpy().flatten(), self.x.numpy().flatten()):
-    #         self.assertEqual(predicted, truth)
+    @unittest.skip("This test is deprecated due to N2D2 not supporting a Pool Layer as an input.")
+    def test_propagation(self):
+        tf_model = keras.Sequential([
+            Input(shape=[3, 3, 2]),
+            MaxPooling2D(pool_size=(1, 1))
+        ])
+        self.model = wrap(tf_model, batch_size=5)
+        self.model.compile(loss="categorical_crossentropy", metrics=["accuracy"])
+        self.x = tf.random.uniform([4,3,3,2])
+        y = self.model.call(self.x)
+        for predicted, truth in zip(y.numpy().flatten(), self.x.numpy().flatten()):
+            self.assertEqual(predicted, truth)
 
-    # def test_propagation_conv(self):
-    #     tf_model = keras.Sequential([
-    #         Input(shape=[1, 3, 3]),
-    #         Conv2D(3, kernel_size=(1, 1))
-    #     ])
-    #     self.model = wrap(tf_model, batch_size=5)
-    #     self.x = tf.random.uniform([5,1,3,3])
-    #     n2d2_y = self.model.call(self.x)
-    #     tf_y = tf_model.call(self.x)
-    #     print("N2D2 output : ")
-    #     print(n2d2_y)
-    #     print("TF output : ")
-    #     print(tf_y)
-    #     for predicted, truth in zip(n2d2_y.numpy().flatten(), tf_y.numpy().flatten()):
-    #         self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))))
+    def test_propagation_conv(self):
+        tf_model = keras.Sequential([
+            Input(shape=[1, 3, 3]),
+            Conv2D(3, kernel_size=(1, 1))
+        ])
+        self.model = wrap(tf_model, batch_size=5)
+        self.x = tf.random.uniform([5,1,3,3])
+        n2d2_y = self.model.call(self.x)
+        tf_y = tf_model.call(self.x)
+        print("N2D2 output : ")
+        print(n2d2_y)
+        print("TF output : ")
+        print(tf_y)
+        for predicted, truth in zip(n2d2_y.numpy().flatten(), tf_y.numpy().flatten()):
+            self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))))
 
 
-    # def test_backpropagation_conv(self):
-    #     tf_model = keras.Sequential([
-    #         Input(shape=[3, 3, 2]),
-    #         Conv2D(3, kernel_size=(1, 1), use_bias=False)
-    #     ])
-    #     self.model = wrap(tf_model, batch_size=5)
-    #     sgd_opt = tf.keras.optimizers.SGD(
-    #         learning_rate=0.01, momentum=0.0, nesterov=False, name='SGD')
-    #     self.model.compile(loss="categorical_crossentropy", metrics=["accuracy"])
-    #     tf_model.compile(loss="categorical_crossentropy", optimizer=sgd_opt, metrics=["accuracy"])
-    #     self.x = tf.random.uniform([5,3,3,2])
-    #     self.y = tf.random.uniform([5,3,3,3])
-    #     self.xn = tf.identity(self.x)
-    #     self.yn = tf.identity(self.y)
-    #     # for i in tf_model.layers[0].weights:
-    #     #     print(i)
-    #     # for i in self.model._deepnet_cell[0].get_biases():
-    #     #     print(i)
-    #     tf_model.fit(x=self.x, y=self.y, batch_size=5, validation_split=0, epochs=2)
-    #     self.model.fit(x=self.xn, y=self.yn, batch_size=5, validation_split=0, epochs=2)
+    def test_backpropagation_conv(self):
+        tf_model = keras.Sequential([
+            Input(shape=[3, 3, 2]),
+            Conv2D(3, kernel_size=(1, 1), use_bias=False)
+        ])
+        self.model = wrap(tf_model, batch_size=5)
+        sgd_opt = tf.keras.optimizers.SGD(
+            learning_rate=0.01, momentum=0.0, nesterov=False, name='SGD')
+        self.model.compile(loss="categorical_crossentropy", metrics=["accuracy"])
+        tf_model.compile(loss="categorical_crossentropy", optimizer=sgd_opt, metrics=["accuracy"])
+        self.x = tf.random.uniform([5,3,3,2])
+        self.y = tf.random.uniform([5,3,3,3])
+        self.xn = tf.identity(self.x)
+        self.yn = tf.identity(self.y)
+        # for i in tf_model.layers[0].weights:
+        #     print(i)
+        # for i in self.model._deepnet_cell[0].get_biases():
+        #     print(i)
+        tf_model.fit(x=self.x, y=self.y, batch_size=5, validation_split=0, epochs=2)
+        self.model.fit(x=self.xn, y=self.yn, batch_size=5, validation_split=0, epochs=2)
       
-    #     # for i in tf_model.layers[0].weights:
-    #     #     print(i)
-    #     # for i in self.model._deepnet_cell[0].get_biases():
-    #     #     print(i)
-    #     self.x = tf.random.uniform([25,3,3,2])
-    #     n2d2_y = self.model.call(self.x)
-    #     tf_y = tf_model.call(self.x)
-    #     # print("N2D2 output : ")
-    #     # print(n2d2_y)
-    #     # print("TF output : ")
-    #     # print(tf_y)
-    #     for predicted, truth in zip(n2d2_y.numpy().flatten(), tf_y.numpy().flatten()):
-    #         self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))), 
-    #         f"After training, N2D2 and Keras weights diverge.")
+        # for i in tf_model.layers[0].weights:
+        #     print(i)
+        # for i in self.model._deepnet_cell[0].get_biases():
+        #     print(i)
+        self.x = tf.random.uniform([25,3,3,2])
+        n2d2_y = self.model.call(self.x)
+        tf_y = tf_model.call(self.x)
+        # print("N2D2 output : ")
+        # print(n2d2_y)
+        # print("TF output : ")
+        # print(tf_y)
+        for predicted, truth in zip(n2d2_y.numpy().flatten(), tf_y.numpy().flatten()):
+            self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))), 
+            f"After training, N2D2 and Keras weights diverge.")
 
-    # def test_propagation_fc(self):
-    #     tf_model = keras.Sequential([
-    #         Input(shape=[9,]),
-    #         Dense(9)
-    #     ])
-    #     self.model = wrap(tf_model, batch_size=5)
-    #     self.model.compile(loss="categorical_crossentropy", metrics=["accuracy"])
-    #     self.x = tf.random.uniform([5, 9])
-    #     tf_y = tf_model.call(self.x)
-    #     n2d2_y = self.model.call(self.x)
-    #     print("N2D2 output : ")
-    #     print(n2d2_y)
-    #     print("TF output : ")
-    #     print(tf_y)
-    #     for predicted, truth in zip(n2d2_y.numpy().flatten(), tf_y.numpy().flatten()):
-    #         self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))))
+    def test_propagation_fc(self):
+        tf_model = keras.Sequential([
+            Input(shape=[9,]),
+            Dense(9)
+        ])
+        self.model = wrap(tf_model, batch_size=5)
+        self.model.compile(loss="categorical_crossentropy", metrics=["accuracy"])
+        self.x = tf.random.uniform([5, 9])
+        tf_y = tf_model.call(self.x)
+        n2d2_y = self.model.call(self.x)
+        print("N2D2 output : ")
+        print(n2d2_y)
+        print("TF output : ")
+        print(tf_y)
+        for predicted, truth in zip(n2d2_y.numpy().flatten(), tf_y.numpy().flatten()):
+            self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))))
 
-    # def test_propagation_BN(self):
-    #     tf_model = keras.Sequential([
-    #         Input(shape=[1, 3, 3]),
-    #         BatchNormalization()
-    #     ])
-    #     self.model = wrap(tf_model, batch_size=5)
-    #     self.x = tf.random.uniform([5,1,3,3])
-    #     n2d2_y = self.model.call(self.x)
-    #     tf_y = tf_model.call(self.x)
-    #     print("N2D2 output : ")
-    #     print(n2d2_y)
-    #     print("TF output : ")
-    #     print(tf_y)
-    #     for predicted, truth in zip(n2d2_y.numpy().flatten(), tf_y.numpy().flatten()):
-    #         self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))))
+    def test_propagation_BN(self):
+        tf_model = keras.Sequential([
+            Input(shape=[1, 3, 3]),
+            BatchNormalization()
+        ])
+        self.model = wrap(tf_model, batch_size=5)
+        self.x = tf.random.uniform([5,1,3,3])
+        n2d2_y = self.model.call(self.x)
+        tf_y = tf_model.call(self.x)
+        print("N2D2 output : ")
+        print(n2d2_y)
+        print("TF output : ")
+        print(tf_y)
+        for predicted, truth in zip(n2d2_y.numpy().flatten(), tf_y.numpy().flatten()):
+            self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))))
 
 
     def test_remove_transpose_layer(self):
