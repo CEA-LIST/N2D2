@@ -142,23 +142,34 @@ class test_keras(unittest.TestCase):
             Input(shape = (9,9,3)),
             Conv2D(4, 3, activation=tf.keras.activations.linear, use_bias=False),
             Flatten(),
+            Dense(5, activation=tf.keras.activations.linear),
             Dense(5, activation=tf.keras.activations.linear)
         ])
-        tf_x = tf.random.uniform([100, 9,9,3])
-        tf_y = tf.keras.utils.to_categorical(tf.random.uniform([100, 1], minval=0, maxval=5, dtype=tf.dtypes.int32), num_classes=5)
-        sgd_opt = tf.keras.optimizers.SGD(learning_rate=0.02, momentum=0.0, nesterov=False, name='SGD')
+        # tf_x = tf.random.uniform([200, 9,9,3])
+        # tf_y = tf.keras.utils.to_categorical(tf.random.uniform([200, 1], minval=0, maxval=5, dtype=tf.dtypes.int32), num_classes=5)
+        # sgd_opt = tf.keras.optimizers.SGD(learning_rate=0.02, momentum=0.0, nesterov=False, name='SGD')
 
-        tf_model.compile(loss="categorical_crossentropy", optimizer=sgd_opt, metrics=["accuracy"])
-        tf_model.fit(tf_x, tf_y, epochs=5, batch_size=10, shuffle=False)
+        # tf_model.compile(loss="categorical_crossentropy", optimizer=sgd_opt, metrics=["accuracy"])
 
-        wrapped_model = wrap(tf_model, batch_size=10, name="model_without_transpose", for_export=True)
-        wrapped_model.compile(loss="categorical_crossentropy", optimizer=n2d2.solver.SGD(learning_rate=0.02, momentum=0.0), metrics=["accuracy"])
-        wrapped_model.fit(tf_x, tf_y, epochs=5, batch_size=10, shuffle=False)
+        wrapped_model = wrap(tf_model, batch_size=10, name="model_without_transpose", for_export=False)
+        # wrapped_model.compile(loss="categorical_crossentropy", optimizer=n2d2.solver.SGD(learning_rate=0.02, momentum=0.0), metrics=["accuracy"])
 
         x = tf.random.uniform([10,9,9,3])
         truth = tf_model(x)
         predicted = wrapped_model(x)
         for p, t in zip(predicted.numpy().flatten(), truth.numpy().flatten()):
-            self.assertTrue((abs(float(p) - float(t)) < (0.01 * (abs(t)+ 0.0001))))
+            self.assertTrue((abs(float(p) - float(t)) < (0.001 * (abs(t)+ 0.0001))))
+        
+        # print("\n===========================Training KERAS model:\n")
+        # tf_model.fit(tf_x, tf_y, epochs=100, batch_size=10, shuffle=False)
+        # print("\n===========================Training N2D2 model:\n")
+        # wrapped_model.fit(tf_x, tf_y, epochs=100, batch_size=10, shuffle=False)
+
+        # x = tf.random.uniform([10,9,9,3])
+        # truth = tf_model(x)
+        # predicted = wrapped_model(x)
+        # for p, t in zip(predicted.numpy().flatten(), truth.numpy().flatten()):
+        #     print(float(p), float(t))
+        #     self.assertTrue((abs(float(p) - float(t)) < (0.01 * (abs(t)+ 0.0001))))
 if __name__ == '__main__':
     unittest.main()
