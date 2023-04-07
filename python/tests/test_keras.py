@@ -20,13 +20,13 @@
 """
 
 import unittest
-import n2d2
+
 import tensorflow as tf
 from keras_to_n2d2 import wrap
 from tensorflow.keras.layers import MaxPooling2D, Conv2D, Dense, Flatten, BatchNormalization
 from tensorflow.keras import Input
 import tensorflow.keras as keras
-
+import n2d2
 
 
 class test_keras(unittest.TestCase):
@@ -137,7 +137,7 @@ class test_keras(unittest.TestCase):
             self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))))
 
 
-    def test_remove_translation_layer(self):
+    def test_remove_transpose_layer(self):
         tf_model = keras.Sequential([
             Input(shape = (9,9,3)),
             Conv2D(4, 3, activation=tf.keras.activations.linear, use_bias=False),

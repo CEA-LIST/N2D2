@@ -22,7 +22,7 @@ from n2d2.utils import inherit_init_docstring, check_types
 from n2d2.n2d2_interface import ConventionConverter
 from n2d2 import Tensor
 import N2D2
-from numpy import ndarray
+from numpy import ndarray, transpose, ascontiguousarray
 from typing import List
 
 @inherit_init_docstring()
@@ -47,18 +47,20 @@ class Numpy(AbstractDatabase):
         self._set_N2D2_parameters(self._config_parameters)
         self.load_N2D2_parameters(self.N2D2())
 
-    def load(self, stimuli_list:List[ndarray], labels_list:List[int]=None, partition:str=None):
+    def load(self, stimuli_list:List[ndarray], labels_list:List[int]=None, partition:str=None, channels_first:bool=True):
         """Load numpy array as input and int as labels. 
         By default, the loaded stimuli are stored in the ``Unpartitioned`` partition.
         At the moment only integers labels are supported.
         If ``label_list`` is not filled, all labels are set to ``0``.
 
-        :param stimuli_list: List of stimulus, they must respect the format [C, H, W].
+        :param stimuli_list: List of stimulus, stimulus must respect the format [C, H, W], if ``channel_first`` is ``False`` the format is [H, W, C].
         :type stimuli_list: List[ndarray]
         :param labels_list: List of label, if ``None``, every label are set to 0, default=None
         :type labels_list: List[int], optional
         :param partition: The partition can be  ``Learn``, ``Validation``, ``Test``,  ``Unpartitioned``, by default data are stored in the``Unpartitioned`` partition (see :py:meth:`n2d2.database.numpy.partition_stimuli`) , default=None
         :type partition: str, optional
+        :param channels_first: If True, the stimuli format is [C, H, W], else [H, W, C], default=True
+        :type channels_first: bool, optional
         """
         if labels_list is None:
             # No lable provided case, every label is set to 0
@@ -69,7 +71,16 @@ class Numpy(AbstractDatabase):
                 raise RuntimeError(f"labels_list should be a list of integer.")
         if len(stimuli_list) != len(labels_list):
             raise RuntimeError(f"stimuli_list and labels_list have different lengths ({len(stimuli_list)}, {len(labels_list)}), every stimuli need to have a corresponding label")
-        self._N2D2_object.load([Tensor.from_numpy(i).N2D2() for i in stimuli_list], labels_list)
+
+        stimulus = []
+        if channels_first:
+            stimulus = stimuli_list
+        else:
+            for i in stimuli_list:
+                stimulus.append(ascontiguousarray(transpose(i, axes=[2,0,1])))
+        assert stimulus != []
+
+        self._N2D2_object.load([Tensor.from_numpy(i).N2D2() for i in stimulus], labels_list)
         if partition:
             if partition == "Learn":
                 self.partition_stimuli(1., 0., 0.) # Learn Validation Test
