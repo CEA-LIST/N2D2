@@ -124,6 +124,8 @@ class Block(torch.nn.Module):
         self.batch_size = batch_size # Batchsize used to define the neural network
         self.current_batch_size = None
         self.output_tensor = None # "Saved" as an attribute to avoid python garbage collector !
+        # Flag used to prevent users to backward their model with multi-outputs models
+        self.multi_outputs_flag = False
 
     def get_block(self) -> n2d2.cells.Block:
         """
@@ -179,6 +181,22 @@ class Block(torch.nn.Module):
 
                 n2d2_outputs = self._block(n2d2_tensor) # Propagation
 
+                # If n2d2_outputs is a tuple, that means we have a multi-outputs model in which we do not
+                # need to do backpropagation so we can just convert the output tensors and return them
+                if type(n2d2_outputs) is tuple:
+                    self.multi_outputs_flag = True
+                    torch_outputs = []
+                    for n2d2_output in n2d2_outputs:
+                        n2d2_output.dtoh()
+                        torch_output = _to_torch(n2d2_output.N2D2())
+                        torch_output = torch_output.to(dtype=inputs.dtype)
+                        if inputs.is_cuda:
+                            torch_output = torch_output.cuda()
+                        else:
+                            torch_output = torch_output.cpu()
+                        torch_outputs.append(torch_output)
+                    return tuple(torch_outputs)
+
                 # Note : It's important to set diffOutputs as an attribute else when exiting this method
                 # Python garbage collector will erase this variable while Cpp will still use it resulting in a SegFault
                 self.diffOutputs = n2d2.Tensor(n2d2_tensor.dims(), value=0, dim_format="N2D2")
@@ -210,6 +228,10 @@ class Block(torch.nn.Module):
 
             @staticmethod
             def backward(ctx, grad_output):
+
+                if self.multi_outputs_flag:
+                    raise RuntimeError("Backward is not possible if the model has multi-outputs")
+
                 self.current_batch_size = grad_output.shape[0]
                 if grad_output.is_cuda:
                     grad_output = grad_output.cuda()
