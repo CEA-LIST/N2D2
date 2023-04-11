@@ -20,13 +20,13 @@
 """
 
 import unittest
-import n2d2
+
 import tensorflow as tf
 from keras_to_n2d2 import wrap
 from tensorflow.keras.layers import MaxPooling2D, Conv2D, Dense, Flatten, BatchNormalization
 from tensorflow.keras import Input
 import tensorflow.keras as keras
-
+import n2d2
 
 
 class test_keras(unittest.TestCase):
@@ -135,5 +135,41 @@ class test_keras(unittest.TestCase):
         print(tf_y)
         for predicted, truth in zip(n2d2_y.numpy().flatten(), tf_y.numpy().flatten()):
             self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))))
+
+
+    def test_remove_transpose_layer(self):
+        tf_model = keras.Sequential([
+            Input(shape = (9,9,3)),
+            Conv2D(4, 3, activation=tf.keras.activations.linear, use_bias=False),
+            Flatten(),
+            Dense(5, activation=tf.keras.activations.linear),
+            Dense(5, activation=tf.keras.activations.linear)
+        ])
+        # tf_x = tf.random.uniform([200, 9,9,3])
+        # tf_y = tf.keras.utils.to_categorical(tf.random.uniform([200, 1], minval=0, maxval=5, dtype=tf.dtypes.int32), num_classes=5)
+        # sgd_opt = tf.keras.optimizers.SGD(learning_rate=0.02, momentum=0.0, nesterov=False, name='SGD')
+
+        # tf_model.compile(loss="categorical_crossentropy", optimizer=sgd_opt, metrics=["accuracy"])
+
+        wrapped_model = wrap(tf_model, batch_size=10, name="model_without_transpose", for_export=True)
+        # wrapped_model.compile(loss="categorical_crossentropy", optimizer=n2d2.solver.SGD(learning_rate=0.02, momentum=0.0), metrics=["accuracy"])
+
+        x = tf.random.uniform([10,9,9,3])
+        truth = tf_model(x)
+        predicted = wrapped_model(x)
+        for p, t in zip(predicted.numpy().flatten(), truth.numpy().flatten()):
+            self.assertTrue((abs(float(p) - float(t)) < (0.001 * (abs(t)+ 0.0001))))
+        
+        # print("\n===========================Training KERAS model:\n")
+        # tf_model.fit(tf_x, tf_y, epochs=100, batch_size=10, shuffle=False)
+        # print("\n===========================Training N2D2 model:\n")
+        # wrapped_model.fit(tf_x, tf_y, epochs=100, batch_size=10, shuffle=False)
+
+        # x = tf.random.uniform([10,9,9,3])
+        # truth = tf_model(x)
+        # predicted = wrapped_model(x)
+        # for p, t in zip(predicted.numpy().flatten(), truth.numpy().flatten()):
+        #     print(float(p), float(t))
+        #     self.assertTrue((abs(float(p) - float(t)) < (0.01 * (abs(t)+ 0.0001))))
 if __name__ == '__main__':
     unittest.main()

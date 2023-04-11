@@ -324,21 +324,34 @@ def wrap(tf_model: Union[keras.Sequential, keras.models.Model],
     # when iterating.
     cells = [cell for cell in deepnet_cell._cells.values()]
     # /!\ We iterate on a copy of cells, do not remove the next cell /!\ 
-    for cell in cells:
+    for c, cell in enumerate(cells):
         # Layers modification after the import !
         if isinstance(cell, n2d2.cells.Softmax):
             # ONNX import Softmax with_loss = True supposing we are using a CrossEntropy loss.
             cell.with_loss = False
         if for_export:
             # Keras add Reshape before FullyConnected layers, which are not exportable.
-            if isinstance(cell, n2d2.cells.Fc) and isinstance(previous_cell, n2d2.cells.Reshape):
-                try:
-                    deepnet_cell.remove(previous_cell.get_name(), reconnect=True)
-                except RuntimeError as err:
-                    raise RuntimeError(f'N2D2 could not remove the layer' \
-                    f"\"{previous_cell.get_name()}\".\n" \
-                    "If you do not need to export this network, try to set" \
-                    "\"for_export=False\"") from err
+            if isinstance(cell, n2d2.cells.Fc):
+                if isinstance(previous_cell, n2d2.cells.Reshape):
+                    try:
+                        deepnet_cell.remove(previous_cell.get_name(), reconnect=True)
+                    except RuntimeError as err:
+                        raise RuntimeError(f'N2D2 could not remove the layer' \
+                        f"\"{previous_cell.get_name()}\".\n" \
+                        "If you do not need to export this network, try to set" \
+                        "\"for_export=False\"") from err
+                    if c>1:
+                        previous_cell = cells[c-2]
+                if isinstance(previous_cell, n2d2.cells.Transpose):
+                    if previous_cell.get_parameter('perm') == [2,0,1,3]:
+                        print(f"Tranpose layer with perm={previous_cell.get_parameter('perm')} before a Fc layer detected.\nFusing Transpose and Fc.")
+                        weights = cell.get_weights() # (o,i,1)
+                        in_dims = previous_cell.N2D2().getInputsDims()
+                        for o in range(len(weights)):
+                            for i in range(in_dims[0]*in_dims[1]*in_dims[2]):
+                                cell.set_weight(o,i,weights[o][(i%(in_dims[0]*in_dims[1]))*in_dims[2] + i//(in_dims[0]*in_dims[1])])
+                        deepnet_cell.remove(previous_cell.get_name(), reconnect=True)
+
         previous_cell = cell
 
     deepnet_cell._embedded_deepnet.N2D2().initialize()
