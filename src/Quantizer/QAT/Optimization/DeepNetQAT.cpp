@@ -73,7 +73,7 @@
 
 
 #ifndef NDEBUG
-    #define PRINTDEBUG(debugString) std::cout << (debugString) << std::endl;
+    #define PRINTDEBUG(debugString) std::cout << debugString << std::endl;
 #else
     #define PRINTDEBUG(debugString)
 #endif
