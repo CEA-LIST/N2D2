@@ -28,7 +28,7 @@ from n2d2.cells import DeepNetCell, NeuralNetworkCell
 from n2d2.provider import Provider
 from n2d2.deepnet import associate_provider_to_deepnet
 
-available_export = ["C", "CPP", "CPP_TensorRT"]
+available_export = ["C", "CPP", "CPP_TensorRT", "CPP_STM32"]
 
 @check_types
 def _gen_exportable_cell_matrix(export_name: str)-> str:
@@ -273,4 +273,29 @@ def export_tensor_rt(deepnet_cell: DeepNetCell,
         if kwargs["nb_bits"] != -32:
             raise ValueError("The TensorRT export only support 32 floating point precision.\
 Calibration needs to be done once the export is generated (see : https://cea-list.github.io/N2D2-docs/export/TensorRT.html)")
+    _generate_export(deepnet_cell, provider, **kwargs)
+
+@template_docstring("exportable_cells", "\n"+_gen_exportable_cell_matrix("CPP_STM32"))
+@add_docstring(export_doc_string)
+@check_types
+def export_cpp_stm32(deepnet_cell: DeepNetCell,
+                    provider: Provider=None,
+                    optimize_buffer_memory: bool=True,
+                    **kwargs) -> None:
+    """Generate a CPP export for STM32 of the neural network.
+
+    List of exportable cells :{exportable_cells}
+
+    :param optimize_buffer_memory: If False deactivate memory optimization, default=True
+    :type optimize_buffer_memory: bool, optional
+    """
+    kwargs["gen_export"] = "CPP_STM32"
+
+    if not optimize_buffer_memory:
+        extra_params_path = "./tmp.ini"
+        with open(extra_params_path, "w") as param_file:
+            param_file.write("OptimizeBufferMemory=0\n")
+        N2D2.DeepNetExport.setExportParameters(extra_params_path)
+        remove(extra_params_path)
+
     _generate_export(deepnet_cell, provider, **kwargs)
