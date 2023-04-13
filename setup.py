@@ -50,6 +50,11 @@ from setuptools import find_packages
 from setuptools.command.build_ext import build_ext
 
 
+def get_n2d2_version() -> str:
+    n2d2_root = pathlib.Path().absolute()
+    version = open(n2d2_root / "version.txt", "r").read().strip()
+    return version
+
 class CMakeExtension(Extension):
     def __init__(self, name):
         super().__init__(name, sources=[])
@@ -101,11 +106,7 @@ if __name__ == '__main__':
 
     setup(
         name='n2d2',
-        setuptools_git_versioning={
-            "enabled": True,
-            "template": "{tag}",
-        },
-        setup_requires=["setuptools-git-versioning"],
+        version=get_n2d2_version(),
         url='https://github.com/CEA-LIST/N2D2',
         license='CECILL-2.1',
         author='N2D2 Team',
