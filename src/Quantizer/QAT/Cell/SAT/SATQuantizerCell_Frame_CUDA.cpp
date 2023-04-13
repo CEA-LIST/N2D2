@@ -100,14 +100,7 @@ void SATQuantizerCell_Frame_CUDA<T>::addBiases(BaseTensor& biases, BaseTensor& d
 
 template<class T>
 void SATQuantizerCell_Frame_CUDA<T>::initialize()
-{
-    std::cout << "      " << std::setprecision(8)
-              << "Quantizer::SAT || "  
-              << " Quantization[" << mApplyQuantization << "] || "
-              << " Clamping[" << !mApplyQuantization << "] || " 
-              << " AdjustedVariance[" << mApplyScaling << "]" 
-              << std::endl;
-    
+{    
     initializeQWeights();
     mInitialized = true;
 }

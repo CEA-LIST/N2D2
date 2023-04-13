@@ -96,13 +96,6 @@ void N2D2::SATQuantizerCell_Frame<T>::addBiases(BaseTensor& biases, BaseTensor& 
 template<class T>
 void N2D2::SATQuantizerCell_Frame<T>::initialize()
 {
-    std::cout << "      " << std::setprecision(8)
-              << "Quantizer::SAT || "  
-              << " Quantization[" << mApplyQuantization << "] || "
-              << " Clamping[" << !mApplyQuantization << "] || " 
-              << " AdjustedVariance[" << mApplyScaling << "]" 
-              << std::endl;
-    
     initializeQWeights();
     mInitialized = true;
 }

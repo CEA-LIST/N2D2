@@ -116,12 +116,6 @@ void LSQQuantizerCell_Frame_CUDA<T>::initialize()
     }
     mGradScaleFactor = T(0.0);
 
-    std::cout << "      " << std::setprecision(8) <<
-        "Quantizer::LSQ || " <<  
-        " StepSizeVal[" << mStepSizeVal << "] || " <<
-        " StepInit[" << mSetOptInitStepSize << "] || " << 
-        " Range[" << mBitRanges.first << ", " << mBitRanges.second << "]" << std::endl;
-
     //Initialize the quantized weights
     for (unsigned int k = 0, size = mFullPrecisionWeights.size(); k < size; ++k) {
         std::shared_ptr<CudaDeviceTensor<float> > fullPrecWeights
@@ -166,11 +160,6 @@ void LSQQuantizerCell_Frame_CUDA<float>::propagate()
         mStepSize.fill(float(mStepSizeVal));
         mStepSize.synchronizeHToD();
 
-        std::cout << "      " << std::setprecision(8) <<
-            "Quantizer::LSQ || " <<
-            " StepSizeVal[" << mStepSizeVal << "] || " <<
-            " StepInit[" << mSetOptInitStepSize << "] || " <<
-            " Range[" << mBitRanges.first << ", " << mBitRanges.second << "]" << std::endl;
     }
 
 

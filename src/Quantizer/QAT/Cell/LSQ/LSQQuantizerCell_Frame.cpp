@@ -123,12 +123,6 @@ void LSQQuantizerCell_Frame<T>::initialize()
         mDiffStepSize.fill(T(0.0));
     }
 
-    std::cout << "      " << std::setprecision(8) <<
-        "Quantizer::LSQ || " <<  
-        " StepSizeVal[" << mStepSizeVal << "] || " <<
-        " StepInit[" << mSetOptInitStepSize << "] || " << 
-        " Range[" << mBitRanges.first << ", " << mBitRanges.second << "]" << std::endl;
-
     //Initialize the quantized weights
     unsigned int totElementW = 0;
     const T bitRangesLowerBound = ((T)mBitRanges.first) * mStepSize(0);
@@ -189,11 +183,6 @@ void LSQQuantizerCell_Frame<T>::propagate()
         mStepSize.resize({1,1,1,1});
         mStepSize.fill(T(mStepSizeVal));
 
-        std::cout << "      " << std::setprecision(8) <<
-            "Quantizer::LSQ || " <<
-            " StepSizeVal[" << mStepSizeVal << "] || " <<
-            " StepInit[" << mSetOptInitStepSize << "] || " <<
-            " Range[" << mBitRanges.first << ", " << mBitRanges.second << "]" << std::endl;
     }
     const T bitRangesLowerBound = ((T)mBitRanges.first) * mStepSize(0);
     const T bitRangesUpperBound = ((T)mBitRanges.second) * mStepSize(0);
