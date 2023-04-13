@@ -42,7 +42,10 @@ public:
                                 mStimuliSets(Learn).size());
 
         unsigned int nbStimuliToLoad = inputs.size();
+
+#ifndef	NDEBUG
         unsigned int oldNbStimuli = mStimuli.size();
+#endif
 
         mStimuli.reserve(mStimuli.size() + nbStimuliToLoad);
         mStimuliData.reserve(mStimuliData.size() + nbStimuliToLoad);
