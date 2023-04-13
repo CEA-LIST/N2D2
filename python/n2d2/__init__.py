@@ -21,6 +21,10 @@
 from n2d2.global_variables import GlobalVariables
 global_variables = GlobalVariables()
 
+# Set up N2D2_PATH for exports
+import os
+os.environ["N2D2_PATH"] = os.path.dirname(__file__)
+
 # It's better to access these methods without mentioning utils in the path
 from n2d2.utils import *
 import n2d2.error_handler

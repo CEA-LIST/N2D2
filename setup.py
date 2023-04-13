@@ -96,13 +96,17 @@ class CMakeBuild(build_ext):
             for file in files:
                 if file.endswith('.so'):
                     currentFile=os.path.join(root, file)
-                    shutil.copy(currentFile, str(build_lib.absolute()))           
+                    shutil.copy(currentFile, str(build_lib.absolute()))   
+
+        # Copy export folder in "n2d2"
+        shutil.copytree(
+            str(cwd / "export"), 
+            str(build_lib.absolute() / "n2d2" / "export")
+        )        
 
 
 if __name__ == '__main__':
-    print("Looking for packages ...")
     n2d2_packages = find_packages(where="./python")
-    packages = n2d2_packages
 
     setup(
         name='n2d2',
@@ -123,7 +127,7 @@ if __name__ == '__main__':
         },
         classifiers=[c for c in CLASSIFIERS.split('\n') if c],
         platforms=["Linux"],
-        packages=packages,
+        packages=n2d2_packages,
         package_dir={
             "n2d2": "python/n2d2",
             "pytorch_to_n2d2": "python/pytorch_to_n2d2",
