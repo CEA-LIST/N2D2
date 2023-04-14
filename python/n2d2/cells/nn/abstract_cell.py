@@ -79,8 +79,8 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             if not isinstance(config_parameters["activation"], n2d2.activation.ActivationFunction):
                 raise n2d2.error_handler.WrongInputType("activation", str(type(config_parameters["activation"])), [str(n2d2.activation.ActivationFunction)])
         else:
-            #config_parameters["activation"] = None
-            config_parameters["activation"] = n2d2.activation.Linear()
+            config_parameters["activation"] = None
+            #config_parameters["activation"] = n2d2.activation.Linear()
         if 'name' in config_parameters:
             name = config_parameters.pop('name')
         else:
@@ -254,7 +254,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             if isinstance(cell, MultipleOutputsProvider) or isinstance(inputs, Interface):
                 diffOutput = Tensor(ipt.dims(), value=0, dim_format="N2D2")
                 self._N2D2_object.addInputBis(ipt.N2D2(), diffOutput.N2D2())
-                self._N2D2_object.linkInput(cell.N2D2())
+                #self._N2D2_object.linkInput(cell.N2D2())
             else:
                 self._N2D2_object.linkInput(cell.N2D2())
             if not initialized:
