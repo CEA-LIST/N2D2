@@ -72,6 +72,13 @@
 #include "Quantizer/QAT/Cell/SAT/SATQuantizerCell_Frame.hpp"
 
 
+#ifndef NDEBUG
+    #define PRINTDEBUG(debugString) std::cout << debugString << std::endl;
+#else
+    #define PRINTDEBUG(debugString)
+#endif
+
+
 N2D2::DeepNetQAT::DeepNetQAT(DeepNet& deepNet)
     : DeepNetQuantization(deepNet)
 {
@@ -87,35 +94,39 @@ void N2D2::DeepNetQAT::fuseQATGraph(StimuliProvider& sp,
     // This variable is necessary for DeepNetExport::isCellOutputUnsigned and DeepNetExport::isCellInputUnsigned method.
     CellExport::mPrecision = static_cast<CellExport::Precision>(8);
 
-    std::cout << "[DeepNetQAT] Fuse the QAT Graph for hardware compatibility..." << std::endl;
+    std::cout << "Fuse the QAT Graph for hardware compatibility..." << std::endl;
     
-    std::cout << "[DeepNetQAT] ==> StimuliData analysis to pass in full-range " << std::endl;
+    PRINTDEBUG("[DeepNetQAT] ==> StimuliData analysis to pass in full-range ")
+
     const Database::StimuliSetMask applyTo = Database::TestOnly;
     StimuliData stimuliData("stimuli_stats", sp);
     stimuliData.generate(applyTo, true);
     stimuliData.logValueRange();
-    StimuliData::Value globalValue = stimuliData.getGlobalValue();
     const double databaseFirstAlpha = 1.0;
     const double databaseMaxRange = 255.0;
  
+#if !defined(NDEBUG)  
+    StimuliData::Value globalValue = stimuliData.getGlobalValue();
     const double databaseMaxVal = std::max(   std::abs(globalValue.minVal), 
                                         std::abs(globalValue.maxVal));
+                                   
     std::cout << "[DeepNetQAT] ==> Database Max Value = " << databaseMaxVal << std::endl;
     if(databaseMaxVal > 1.0) {
         std::cout << Utils::cwarning << "[DeepNetQAT] ==> No support max alpha value superior to 1.0 ! "
         << "First Max Alpha is set to 1.0, a potential loss can appears..." 
         << Utils::cdef << std::endl;
     }
+#endif
 
-    std::cout << "[DeepNetQAT] ==> Rescale stimuli"
-            << " in unsigned range [0.0 to " << databaseMaxRange << "] " << std::endl;
+    PRINTDEBUG("[DeepNetQAT] ==> Rescale stimuli" << " in unsigned range [0.0 to " << databaseMaxRange << "] ")
+
     sp.addTopTransformation(
         RangeAffineTransformation(RangeAffineTransformation::Multiplies, databaseMaxRange),
         Database::All
     );
-    std::cout << "[DeepNetQAT] ==> Rescale first Alpha to [" 
-            << databaseFirstAlpha << "] and first Range to [" <<  databaseMaxRange << "]\n"
-            << std::endl;
+
+    PRINTDEBUG("[DeepNetQAT] ==> Rescale first Alpha to [" 
+        << databaseFirstAlpha << "] and first Range to [" <<  databaseMaxRange << "]\n")
 
     std::pair <size_t, size_t> ranges(databaseMaxRange, 255);
     std::pair <double, double> alphas(databaseFirstAlpha, 1.0);
@@ -139,9 +150,10 @@ void N2D2::DeepNetQAT::fuseQATGraph(StimuliProvider& sp,
         nLayer++;
         for (auto itCell = it->begin(); itCell != it->end(); ++itCell) {
             nCell++;
-            //std::cout << "[DeepNetQAT] ==> nLayer = " << nLayer << " , nCell = " << nCell << std::endl;
 
             if(nLayer > lastCell) continue;
+
+#if !defined(NDEBUG)
             if(nLayer == lastCell-1){
                 std::cout << "[DeepNetQAT] ==> VAR = 0 in BatchNorm layers : " << std::endl;
                 for(std::size_t it = 0; it < mVarNulName.size(); ++it){
@@ -152,9 +164,12 @@ void N2D2::DeepNetQAT::fuseQATGraph(StimuliProvider& sp,
                     std::cout << mVarNul[it] << std::endl;
                 }
             }
+#endif
 
             std::shared_ptr<Cell> cell = mDeepNet.getCell(*itCell);
-            std::cout << "[DeepNetQAT] ==> " << cell->getName() << " is type " << cell->getType() << std::endl;
+
+            PRINTDEBUG("[DeepNetQAT] ==> " << cell->getName() << " is type " << cell->getType())
+
             //Not sure that it will be used as it for QAT fusion...
             //++it; // increase it before being potentially invalided by removeCell()
             if (cell->getType() != BatchNormCell::Type && cell->getType() != FcCell::Type && cell->getType() != ElemWiseCell::Type) {
@@ -192,26 +207,26 @@ void N2D2::DeepNetQAT::fuseQATGraph(StimuliProvider& sp,
                     = mDeepNet.getParentCells(parents[0]->getName());
 
             if(parents.size() > 1 && cell->getType() != ElemWiseCell::Type) {
-                std::cout << Utils::cnotice << "[DeepNetQAT] ==> cannot fuse QAT cell \""
+                PRINTDEBUG(Utils::cnotice << "[DeepNetQAT] ==> cannot fuse QAT cell \""
                     << cell->getName() << "\" because it has multiple "
-                    "parents (not supported)" << Utils::cdef << std::endl;
+                    "parents (not supported)" << Utils::cdef)
                 continue;
             }
 
             if(grandParents.empty() || (!grandParents[0])) {
                 ranges.first = 255.0;
                 //alphas.first = 255.0;
-                std::cout << Utils::cnotice << "[DeepNetQAT] ==> Fusion of the QAT Graph on cell \""
+                PRINTDEBUG(Utils::cnotice << "[DeepNetQAT] ==> Fusion of the QAT Graph on cell \""
                     << cell->getName() << "\" will use range 255 (8-bits) for the input stimuli (default range) " 
-                    << Utils::cdef << std::endl;
+                    << Utils::cdef)
             }
 
             if(cell->getType() == BatchNormCell::Type) {
                 if(!parents[0] || parents[0]->getType() != ConvCell::Type) {
-                    std::cout << Utils::cnotice << "[DeepNetQAT] ==> cannot fuse BatchNorm \""
+                    PRINTDEBUG(Utils::cnotice << "[DeepNetQAT] ==> cannot fuse BatchNorm \""
                         << cell->getName() << "\" because parent cell (\""
                         << ((parents[0]) ? parents[0]->getName() : "env")
-                        << "\") is not a Conv" << Utils::cdef << std::endl;
+                        << "\") is not a Conv" << Utils::cdef)
 
                     continue;
                 }
@@ -222,10 +237,10 @@ void N2D2::DeepNetQAT::fuseQATGraph(StimuliProvider& sp,
                     = mDeepNet.getChildCells(parents[0]->getName());
 
                 if (convChilds.size() != 1) {
-                    std::cout << Utils::cnotice << "[DeepNetQAT] ==> cannot fuse BatchNorm \""
+                    PRINTDEBUG(Utils::cnotice << "[DeepNetQAT] ==> cannot fuse BatchNorm \""
                         << cell->getName() << "\" because parent Conv "
                         "(\"" << parents[0]->getName() << "\") has multiple "
-                        "childs" << Utils::cdef << std::endl;
+                        "childs" << Utils::cdef)
                     
                     continue;
                 }
@@ -234,7 +249,8 @@ void N2D2::DeepNetQAT::fuseQATGraph(StimuliProvider& sp,
 
                 //if it's the last cell, insert rescaling cell after it
                 if(nLayer == lastCell){
-                    std::cout << "[DeepNetQAT] ==> Last layer to be fused..." << std::endl;
+                    PRINTDEBUG("[DeepNetQAT] ==> Last layer to be fused...")
+
                     std::shared_ptr<BatchNormCell> bnCell0 =
                     std::dynamic_pointer_cast<BatchNormCell>(cell);
 
@@ -270,15 +286,12 @@ void N2D2::DeepNetQAT::fuseQATGraph(StimuliProvider& sp,
                     for (std::size_t output = 0; output < bnCell0->getNbOutputs(); ++output) {
                         //scalingPerOutput[output] = alphaCurrent/rangeCurrent;
                         scalingPerOutput[output] = alphaCurrent/(double)rangeCurrent;
-                        std::cout << "[DeepNetQAT] ==> rescaling factor for Cell :: "
-                        << "\"  scalingPerOutput[output] = " << scalingPerOutput[output] << "\""
-                        << std::endl;
+                        PRINTDEBUG("[DeepNetQAT] ==> rescaling factor for Cell :: "
+                        << "\"  scalingPerOutput[output] = " << scalingPerOutput[output] << "\"")
                     }
-
-                    std::cout << "[DeepNetQAT] ==> rescaling factor for Cell :: "
+                    PRINTDEBUG("[DeepNetQAT] ==> rescaling factor for Cell :: "
                         << "\"  alphaCurrent = " << alphaCurrent << "\""
-                        << "\"  rangeCurrent = " << rangeCurrent << "\""
-                        << std::endl;
+                        << "\"  rangeCurrent = " << rangeCurrent << "\"")
 
                     bool isClipped = false;
                     auto scalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*bnCell0))
@@ -300,16 +313,16 @@ void N2D2::DeepNetQAT::fuseQATGraph(StimuliProvider& sp,
                     = mDeepNet.getChildCells(cell->getName());
 
                 for(unsigned int iChild = 0; iChild < bnChilds.size(); iChild++){
-                    std::cout << "[DeepNetQAT] ==> BatchNorm child[" << iChild
-                              << "]->" << bnChilds[iChild]->getName()
-                        << std::endl;
+                    PRINTDEBUG("[DeepNetQAT] ==> BatchNorm child[" << iChild
+                              << "]->" << bnChilds[iChild]->getName())
 
                     //parent 0 (before the split into 2 branches)
                     if(bnChilds[iChild]->getType() == ElemWiseCell::Type && bnChilds.size() > 1){
 
-                        std::cout << Utils::cnotice << "[DeepNetQAT] ==> Will save \""
+                        PRINTDEBUG(Utils::cnotice << "[DeepNetQAT] ==> Will save \""
                             << cell->getName() << "\" activation alpha and range for ElementWise quantization !"
-                            << Utils::cdef << std::endl;
+                            << Utils::cdef)
+
                         elemWiseParent0Name = cell->getName();
 
                         std::shared_ptr<Cell_Frame_Top> bnCellTop =
@@ -347,10 +360,9 @@ void N2D2::DeepNetQAT::fuseQATGraph(StimuliProvider& sp,
                         //(range_ElWiseParent0/alpha_ElWiseParent0 * alphaCurrent/rangeCurrent)
                         //before passing it to the elementWise for Sum
                         //insert scaling cell after BN to rescale the outputs
-                        std::cout << "[DeepNetQAT] ==> Adding rescaling cell after \"" << cell->getName()
+                        PRINTDEBUG("[DeepNetQAT] ==> Adding rescaling cell after \"" << cell->getName()
                         << "\" with rescaling factor levels from \"" << cell->getName() << "\""
-                        << "\" and \"" << elemWiseParent0Name << "\""
-                        << std::endl;
+                        << "\" and \"" << elemWiseParent0Name << "\"")
 
                         std::shared_ptr<BatchNormCell> currentBnCell =
                         std::dynamic_pointer_cast<BatchNormCell>(cell);
@@ -388,16 +400,15 @@ void N2D2::DeepNetQAT::fuseQATGraph(StimuliProvider& sp,
                         std::vector<Float_T> scalingPerOutput
                         = std::vector<Float_T>(currentBnCell->getNbOutputs(), 0.0f);
 
-                        std::cout << "[DeepNetQAT] ==> Scaling factor is computed using :: "
+                        PRINTDEBUG("[DeepNetQAT] ==> Scaling factor is computed using :: "
                         << "\"  range_ElWiseParent0 = " << range_ElWiseParent0 << "\""
                         << "\"  alpha_ElWiseParent0 = " << alpha_ElWiseParent0 << "\""
                         << "\"  alphaCurrent = " << alphaCurrent << "\""
-                        << "\"  rangeCurrent = " << rangeCurrent << "\""
-                        << std::endl;
+                        << "\"  rangeCurrent = " << rangeCurrent << "\"")
 
                         for (std::size_t output = 0; output < currentBnCell->getNbOutputs(); ++output) {
                             scalingPerOutput[output] = ((float)range_ElWiseParent0/alpha_ElWiseParent0)*(alphaCurrent/(float)rangeCurrent);
-                            std::cout << "[DeepNetQAT] ==> scalingPerOutput: " << scalingPerOutput[output] << std::endl;
+                            PRINTDEBUG("[DeepNetQAT] ==> scalingPerOutput: " << scalingPerOutput[output])
                         }
                         auto scalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*currentBnCell))
                                 (mDeepNet,
@@ -425,45 +436,43 @@ void N2D2::DeepNetQAT::fuseQATGraph(StimuliProvider& sp,
                 if(QuantizeAndfuseBatchNormWithConv( ranges, alphas, convCell, bnCell, actScalingMode, wMode, bMode, cMode)) {
                     mDeepNet.removeCell(cell, true);
                     --it;
-                    std::cout << "[DeepNetQAT] ==> " << convCell->getName() 
+                    PRINTDEBUG("[DeepNetQAT] ==> " << convCell->getName() 
                         << " have been properly quantized and fused with " 
-                        << bnCell->getName() << "\n"
-                        << std::endl;
+                        << bnCell->getName() << "\n")
                     break;
                 }
             }
             else if(cell->getType() == FcCell::Type) {
                 if(!parents[0]) {
-                    std::cout << Utils::cnotice << "[DeepNetQAT] ==> cannot optimize Fc \""
+                    PRINTDEBUG(Utils::cnotice << "[DeepNetQAT] ==> cannot optimize Fc \""
                         << cell->getName() << "\" because parent cell (\""
                         << ((parents[0]) ? parents[0]->getName() : "env")
-                        << "\") is not a layer" << Utils::cdef << std::endl;
+                        << "\") is not a layer" << Utils::cdef)
 
                     continue;
                 }
-                std::cout << "[DeepNetQAT] ==> Quantized fully-connected \"" << cell->getName()
-                    << "\" with activation levels from \"" << parents[0]->getName() << "\""
-                    << std::endl;
+                PRINTDEBUG("[DeepNetQAT] ==> Quantized fully-connected \"" << cell->getName()
+                    << "\" with activation levels from \"" << parents[0]->getName() << "\"")
                 std::shared_ptr<FcCell> fcCell =
                     std::dynamic_pointer_cast<FcCell>(cell);
 
                 if(QuantizeFC( ranges, alphas, fcCell, wMode, bMode, cMode)) {
-                    std::cout <<"[DeepNetQAT] ==> " <<  cell->getName() << " have been properly quantized\n" << std::endl;
+                    PRINTDEBUG("[DeepNetQAT] ==> " <<  cell->getName() << " have been properly quantized\n")
                 } 
             }
             else if(cell->getType() == ElemWiseCell::Type) {
                 isParent0 = false;
                 if(!parents[0]) {
-                    std::cout << Utils::cnotice << "[DeepNetQAT] ==> cannot optimize ElemWiseCell \""
+                    PRINTDEBUG(Utils::cnotice << "[DeepNetQAT] ==> cannot optimize ElemWiseCell \""
                         << cell->getName() << "\" because parent cell (\""
                         << ((parents[0]) ? parents[0]->getName() : "env")
-                        << "\") is not a layer" << Utils::cdef << std::endl;
+                        << "\") is not a layer" << Utils::cdef)
 
                     continue;
                 }
-                std::cout << "[DeepNetQAT] ==> Quantizing element-wise \"" << cell->getName()
-                    << "\" with activation levels from \"" << elemWiseParent0Name << "\""
-                    << std::endl;
+
+                PRINTDEBUG("[DeepNetQAT] ==> Quantizing element-wise \"" << cell->getName()
+                    << "\" with activation levels from \"" << elemWiseParent0Name << "\"")
 
                 std::shared_ptr<ElemWiseCell> elemWiseCell =
                     std::dynamic_pointer_cast<ElemWiseCell>(cell);
@@ -473,27 +482,24 @@ void N2D2::DeepNetQAT::fuseQATGraph(StimuliProvider& sp,
                     = mDeepNet.getChildCells(cell->getName());
 
                 for(unsigned int iChild = 0; iChild < elWiseChilds.size(); iChild++){
-                    std::cout << "[DeepNetQAT] ==> ElementWise child[" << iChild
-                              << "]->" << elWiseChilds[iChild]->getName()
-                        << std::endl;
-                    std::cout  << std::endl;
+                    PRINTDEBUG("[DeepNetQAT] ==> ElementWise child[" << iChild
+                              << "]->" << elWiseChilds[iChild]->getName())
                     //this is parent 0 (before the split into 2 branches)
                     if(elWiseChilds[iChild]->getType() == ElemWiseCell::Type && elWiseChilds.size() > 1){
-                        std::cout << Utils::cnotice << "[DeepNetQAT] ==> Will save \""
+                        PRINTDEBUG(Utils::cnotice << "[DeepNetQAT] ==> Will save \""
                             << cell->getName() << "\" activation alpha and range for the next ElementWise quantization !"
-                            << Utils::cdef << std::endl;
+                            << Utils::cdef)
                         elemWiseParent0Name = cell->getName();
                         isParent0 = true;
                     }
                 }
 
-                std::cout << "[DeepNetQAT] ==> Parent0 parameters : "
+                PRINTDEBUG("[DeepNetQAT] ==> Parent0 parameters : "
                 << "\"  range_ElWiseParent0 = " << range_ElWiseParent0 << "\""
-                << "\"  alpha_ElWiseParent0 = " << alpha_ElWiseParent0 << "\""
-                << std::endl;
+                << "\"  alpha_ElWiseParent0 = " << alpha_ElWiseParent0 << "\"")
 
                 if(QuantizeElemWise( ranges, alphas, range_ElWiseParent0, alpha_ElWiseParent0, elemWiseCell)) {
-                    std::cout << "[DeepNetQAT] ==> " << cell->getName() << " have been properly quantized " << std::endl;
+                    PRINTDEBUG("[DeepNetQAT] ==> " << cell->getName() << " have been properly quantized ")
                 }
 
                 //set new Parent0 parameters for the next elementWise cell
@@ -501,10 +507,9 @@ void N2D2::DeepNetQAT::fuseQATGraph(StimuliProvider& sp,
                     range_ElWiseParent0 = ranges.first;
                     alpha_ElWiseParent0 = alphas.first;
 
-                    std::cout << "[DeepNetQAT] ==> Parent0 parameters : "
+                    PRINTDEBUG("[DeepNetQAT] ==> Parent0 parameters : "
                     << "\"  range_ElWiseParent0 = " << range_ElWiseParent0 << "\""
-                    << "\"  alpha_ElWiseParent0 = " << alpha_ElWiseParent0 << "\""
-                    << std::endl;
+                    << "\"  alpha_ElWiseParent0 = " << alpha_ElWiseParent0 << "\"")
                 }
 
             }
@@ -520,7 +525,7 @@ bool N2D2::DeepNetQAT::QuantizeElemWise( std::pair <size_t, size_t>& rangeElWise
                                         const std::shared_ptr<ElemWiseCell>& elemWiseCell)
 {
 
-    std::cout << "[DeepNetQAT] ==> Quantized Layer \"" << elemWiseCell->getName() << "\"" << std::endl;
+    PRINTDEBUG("[DeepNetQAT] ==> Quantized Layer \"" << elemWiseCell->getName() << "\"")
 
     std::shared_ptr<Cell_Frame_Top> elemWiseCellTop =
         std::dynamic_pointer_cast<Cell_Frame_Top>(elemWiseCell);
@@ -533,10 +538,10 @@ bool N2D2::DeepNetQAT::QuantizeElemWise( std::pair <size_t, size_t>& rangeElWise
     if(elemWiseCellTop->getActivation()) {
         if(elemWiseCellTop->getActivation()->getQuantizer()) {
             if(std::string(elemWiseCellTop->getActivation()->getQuantizer()->getType()) != "SAT") {
-                std::cout << Utils::cnotice
+                PRINTDEBUG(Utils::cnotice
                 <<  "[DeepNetQAT] ==> quantization only support SAT QAT method for cell "
                 << elemWiseCell->getName()
-                << Utils::cdef << std::endl;
+                << Utils::cdef)
                 return false;
             }
 
@@ -560,11 +565,10 @@ bool N2D2::DeepNetQAT::QuantizeElemWise( std::pair <size_t, size_t>& rangeElWise
             }
             rangeElWise.second
                     = elemWiseCellTop->getActivation()->getQuantizer()->getRange();
-            std::cout << Utils::cnotice
+            PRINTDEBUG(Utils::cnotice
                 << "[DeepNetQAT] ==> Dynamic range: [" << rangeElWise.first << "->"  << rangeElWise.second << "]\n"
                 << "[DeepNetQAT] ==> Activation thresholds: [" << alphaElWise.first << "->"  << alphaElWise.second << "]"
-                << Utils::cdef
-                << std::endl;
+                << Utils::cdef)
         }
     }
 
@@ -580,8 +584,8 @@ bool N2D2::DeepNetQAT::QuantizeElemWise( std::pair <size_t, size_t>& rangeElWise
         scalingPerOutput[output] = scaleFactorOutput / scaleFactorInput;
         clipPerOutput[output] = alphaElWise.second * scaleFactorInput;
 
-        std::cout   << "[DeepNetQAT] ==> clipPerOutput: " << clipPerOutput[output] << "\n"
-                    << "    scalingPerOutput: " << scalingPerOutput[output] << std::endl;
+        PRINTDEBUG("[DeepNetQAT] ==> clipPerOutput: " << clipPerOutput[output] << "\n"
+                    << "    scalingPerOutput: " << scalingPerOutput[output])
     }
 
     std::shared_ptr<Activation> elemWiseCellActivation = elemWiseCellTop->getActivation();
@@ -589,19 +593,19 @@ bool N2D2::DeepNetQAT::QuantizeElemWise( std::pair <size_t, size_t>& rangeElWise
 
     if(elemWiseCellActivation) {
         if(elemWiseCellActivation->getQuantizer()) {
-            std::cout << Utils::cnotice
+            PRINTDEBUG(Utils::cnotice
             <<  "[DeepNetQAT] ==> Quantization is also apply on outputs activations for cell "
             << elemWiseCell->getName()
-            << Utils::cdef << std::endl;
+            << Utils::cdef)
             elemWiseCell->setQuantized(rintf(log2(rangeElWise.second)) );
             isClipped = true;
         }
         else {
-            std::cout << Utils::cnotice <<  "[DeepNetQAT] ==> "
+            PRINTDEBUG(Utils::cnotice <<  "[DeepNetQAT] ==> "
                 << elemWiseCell->getName()
                 <<  "   activation doesn't have quantizer "
                 << elemWiseCell->getName()
-            << Utils::cdef << std::endl;
+            << Utils::cdef)
         }
     }
     else {
@@ -610,11 +614,11 @@ bool N2D2::DeepNetQAT::QuantizeElemWise( std::pair <size_t, size_t>& rangeElWise
                 = std::make_shared<LinearActivation_Frame_CUDA<float> >();
         elemWiseCellTop->setActivation(activation);
 
-        std::cout << Utils::cnotice << "[DeepNetQAT] ==> "
+        PRINTDEBUG(Utils::cnotice << "[DeepNetQAT] ==> "
         << elemWiseCell->getName()
         <<  "   doesn't have output activation and quantizer "
         << elemWiseCell->getName()
-        << Utils::cdef << std::endl;
+        << Utils::cdef)
         #endif
     }
 
@@ -656,7 +660,7 @@ bool N2D2::DeepNetQAT::QuantizeFC(  std::pair <size_t, size_t>& rangeOpFc,
                                     WeightsApprox cMode)
 {
     // OK, Conv's only child is BatchNorm, fuse them...
-    std::cout << "[DeepNetQAT] ==> Quantized Layer \"" << fcCell->getName() << "\"" << std::endl;
+    PRINTDEBUG("[DeepNetQAT] ==> Quantized Layer \"" << fcCell->getName() << "\"")
     const bool noBias = fcCell->getParameter<bool>("NoBias");
 
     std::shared_ptr<Cell_Frame_Top> fcCellTop =
@@ -665,10 +669,10 @@ bool N2D2::DeepNetQAT::QuantizeFC(  std::pair <size_t, size_t>& rangeOpFc,
     if(fcCellTop->getActivation()) {
         if(fcCellTop->getActivation()->getQuantizer()) {
             if(std::string(fcCellTop->getActivation()->getQuantizer()->getType()) != "SAT") {
-                std::cout << Utils::cnotice 
+                PRINTDEBUG(Utils::cnotice 
                 <<  "[DeepNetQAT] ==> quantization only support SAT QAT method for cell "
                 << fcCell->getName()
-                << Utils::cdef << std::endl;
+                << Utils::cdef)
                 return false;
             }
 
@@ -692,11 +696,10 @@ bool N2D2::DeepNetQAT::QuantizeFC(  std::pair <size_t, size_t>& rangeOpFc,
             }
             rangeOpFc.second 
                     = fcCellTop->getActivation()->getQuantizer()->getRange();
-            std::cout << Utils::cnotice 
+            PRINTDEBUG(Utils::cnotice 
                 << "[DeepNetQAT] ==> Dynamic range: [" << rangeOpFc.first << "->"  << rangeOpFc.second << "]\n" 
                 << "[DeepNetQAT] ==> Activation thresholds: [" << alphaOpFC.first << "->"  << alphaOpFC.second << "]" 
-                << Utils::cdef 
-                << std::endl;
+                << Utils::cdef)
         }
     }
     /*
@@ -791,9 +794,9 @@ bool N2D2::DeepNetQAT::QuantizeFC(  std::pair <size_t, size_t>& rangeOpFc,
         if (!noBias)
             biasPerOutput[output]  = bias(0) * scaleFactorInput * (biasScaleFactor);
         if(clipPerOutput[output] < 0.0) {
-            std::cout << Utils::cwarning << "[DeepNetQAT] ==> clip[" << output << "] = " << clipPerOutput[output]
+            PRINTDEBUG(Utils::cwarning << "[DeepNetQAT] ==> clip[" << output << "] = " << clipPerOutput[output]
             << "is negatif ! Is the network correctly trained? Clipping value will be set to 0"
-                << Utils::cdef << std::endl;
+                << Utils::cdef)
             clipPerOutput[output] = 0.0;
         }
 
@@ -833,20 +836,20 @@ bool N2D2::DeepNetQAT::QuantizeFC(  std::pair <size_t, size_t>& rangeOpFc,
     std::size_t activationsRange = std::pow(2, 32) - 1;
     if(fcCellActivation) {
         if(fcCellActivation->getQuantizer()) {
-            std::cout << Utils::cnotice 
+            PRINTDEBUG(Utils::cnotice 
             <<  "[DeepNetQAT] ==> Quantization is also apply on outputs activations for cell "
             << fcCell->getName()
-            << Utils::cdef << std::endl;
+            << Utils::cdef)
             activationsRange = rangeOpFc.second;
             fcCellActivation->setQuantized(rintf(log2(activationsRange)) );
             isClipped = true;
         }
         else {
-            std::cout << Utils::cnotice  << "[DeepNetQAT] ==> "
+            PRINTDEBUG(Utils::cnotice  << "[DeepNetQAT] ==> "
                 << fcCell->getName()
                 <<  "   activation doesn't have quantizer "
                 << fcCell->getName()
-            << Utils::cdef << std::endl;
+            << Utils::cdef)
         }
     }
     else {
@@ -862,11 +865,11 @@ bool N2D2::DeepNetQAT::QuantizeFC(  std::pair <size_t, size_t>& rangeOpFc,
                 = std::make_shared<LinearActivation_Frame<float> >();
             fcCellTop->setActivation(activation);
         }
-        std::cout << Utils::cnotice << "[DeepNetQAT] ==> "
+        PRINTDEBUG(Utils::cnotice << "[DeepNetQAT] ==> "
         << fcCell->getName()
         <<  "   doesn't have output activation and quantizer "
         << fcCell->getName()
-        << Utils::cdef << std::endl;
+        << Utils::cdef)
     }
     if(fcCellActivation) {
         auto scalingCell = Registrar<ScalingCell>::create<Float_T>(getCellModelType(*fcCell))
@@ -882,10 +885,10 @@ bool N2D2::DeepNetQAT::QuantizeFC(  std::pair <size_t, size_t>& rangeOpFc,
         fcCellActivation->setQuantizer(std::shared_ptr<QuantizerActivation>());
         fcCellActivation->setActivationScaling( std::move(scalingCell->getScaling()) );
         fcCellActivation->setQuantized(rintf(log2(activationsRange)) );
-        std::cout << Utils::cnotice << "[DeepNetQAT] ==> "
+        PRINTDEBUG(Utils::cnotice << "[DeepNetQAT] ==> "
             <<  fcCell->getName() << " activations are quantized on "
             << rintf(log2(activationsRange)) << " bits"
-            << Utils::cdef << std::endl;
+            << Utils::cdef)
     }
 
     //Switch range and alpha
@@ -906,9 +909,8 @@ bool N2D2::DeepNetQAT::QuantizeAndfuseBatchNormWithConv(std::pair <size_t, size_
                                                         WeightsApprox cMode) 
 {
     // OK, Conv's only child is BatchNorm, fuse them...
-    std::cout << "[DeepNetQAT] ==> Fuse BatchNorm \"" << bnCell->getName()
-        << "\" with Conv \"" << convCell->getName() << "\""
-        << std::endl;
+    PRINTDEBUG("[DeepNetQAT] ==> Fuse BatchNorm \"" << bnCell->getName()
+        << "\" with Conv \"" << convCell->getName() << "\"")
     const bool noBias = convCell->getParameter<bool>("NoBias");
 
     const Tensor<double>& bnScales = tensor_cast<double>(*(bnCell->getScales()));
@@ -933,19 +935,19 @@ bool N2D2::DeepNetQAT::QuantizeAndfuseBatchNormWithConv(std::pair <size_t, size_
     // Fuse only if  the convolution has a linear activation
     if (convCellTop->getActivation()
         && std::string(convCellTop->getActivation()->getType()) != "Linear") {
-        std::cout << Utils::cwarning << "[DeepNetQAT] ==> non-linear "
+        PRINTDEBUG(Utils::cwarning << "[DeepNetQAT] ==> non-linear "
             "activation before BatchNorm prevents fuse!"
-            << Utils::cdef << std::endl;
+            << Utils::cdef)
         return false;
     }
 
     if(bnCellTop->getActivation()) {
         if(bnCellTop->getActivation()->getQuantizer()) {
             if(std::string(bnCellTop->getActivation()->getQuantizer()->getType()) != "SAT") {
-                std::cout << Utils::cnotice 
+                PRINTDEBUG(Utils::cnotice 
                 <<  "[DeepNetQAT] ==> batchnorm fusion only support SAT QAT method for cell "
                 << bnCell->getName()
-                << Utils::cdef << std::endl;
+                << Utils::cdef)
                 return false;
             }
 
@@ -970,11 +972,10 @@ bool N2D2::DeepNetQAT::QuantizeAndfuseBatchNormWithConv(std::pair <size_t, size_
             rangeConvBN.second 
                     = bnCellTop->getActivation()->getQuantizer()->getRange();
 
-            std::cout << Utils::cnotice 
+            PRINTDEBUG(Utils::cnotice 
                 << "[DeepNetQAT] ==> Dynamic range: [" << rangeConvBN.first << "->"  << rangeConvBN.second << "]\n" 
                 << "[DeepNetQAT] ==> Activation thresholds: [" << alphasConvBN.first << "->"  << alphasConvBN.second << "]" 
-                << Utils::cdef 
-                << std::endl;
+                << Utils::cdef)
         }
         else {
             return false;
@@ -1056,9 +1057,9 @@ bool N2D2::DeepNetQAT::QuantizeAndfuseBatchNormWithConv(std::pair <size_t, size_
     if (count > 0)
         meanVariance /= count;
     else {
-        std::cout << Utils::cwarning << "[DeepNetQAT] ==> variance < 1e-12 for all"
+        PRINTDEBUG(Utils::cwarning << "[DeepNetQAT] ==> variance < 1e-12 for all"
             " outputs! Is the network correctly trained?"
-            << Utils::cdef << std::endl;
+            << Utils::cdef)
     }
 
     convCellTop->synchronizeToH(false);
@@ -1116,14 +1117,14 @@ bool N2D2::DeepNetQAT::QuantizeAndfuseBatchNormWithConv(std::pair <size_t, size_
         }
 
         if(factor < 0.0){
-            std::cout << Utils::cwarning << "[DeepNetQAT] ==> factor[" << output << "] = " << factor
+            PRINTDEBUG(Utils::cwarning << "[DeepNetQAT] ==> factor[" << output << "] = " << factor
             << " is zero ! Is the network correctly trained? Clipping, bias and scaling will be set to 0!"
-                << Utils::cdef << std::endl;
+                << Utils::cdef)
         }
         if(factor == 0.0){
-            std::cout << Utils::cwarning << "[DeepNetQAT] ==> factor[" << output << "] = " << factor
+            PRINTDEBUG(Utils::cwarning << "[DeepNetQAT] ==> factor[" << output << "] = " << factor
             << " is zero ! Is the network correctly trained? Clipping, bias and scaling will be set to 0!"
-                << Utils::cdef << std::endl;
+                << Utils::cdef)
             scalingPerOutput[output] = 0.0;
             biasPerOutput[output] = 0.0;
             clipPerOutput[output] = 0.0;
@@ -1182,12 +1183,15 @@ bool N2D2::DeepNetQAT::QuantizeAndfuseBatchNormWithConv(std::pair <size_t, size_
         bias(0) = biasPerOutput[output];
         convCell->setBias(output, bias);
     }
+
+#if !defined(NDEBUG)
     std::cout << std::setprecision(7) << "[DeepNetQAT] ==> scaling min,max[" << mScalingMinMax.first << "," 
     << mScalingMinMax.second << "]" << std::endl; 
     std::cout << std::setprecision(7) << "[DeepNetQAT] ==> bias min,max[" << mBiasMinMax.first << "," 
     << mBiasMinMax.second << "]" << std::endl; 
     std::cout << std::setprecision(7) << "[DeepNetQAT] ==> clip min,max[" << mClipMinMax.first << "," 
     << mClipMinMax.second << "]" << std::endl; 
+#endif
 
     mVarNulName.push_back(bnCell->getName());
     mVarNul.push_back(factor0Count);
@@ -1289,8 +1293,8 @@ bool N2D2::DeepNetQAT::QuantizeAndfuseBatchNormWithConv(std::pair <size_t, size_
                 << std::endl;*/
                 scalingSingleShiftPerOutput[out] = singleDivApprox.first[0];
             } else {
-                std::cout << "[DeepNetQAT] ==> SCALING FACTOR["<< out << "]: 0.0"   
-                << " NO APPROXIMATION POSSIBLE" << std::endl;
+                PRINTDEBUG("[DeepNetQAT] ==> SCALING FACTOR["<< out << "]: 0.0"   
+                << " NO APPROXIMATION POSSIBLE")
             }
         }
 
@@ -1307,13 +1311,12 @@ bool N2D2::DeepNetQAT::QuantizeAndfuseBatchNormWithConv(std::pair <size_t, size_
     }
 
     //std::shared_ptr<Activation> convCellActivation = convCellTop->getActivation();
-    std::cout << Utils::cnotice 
+    PRINTDEBUG(Utils::cnotice 
             << "[DeepNetQAT] ==> " 
             << convCell->getName() << " is now quantized on " 
             << rintf(log2(rangeConvBN.second)) 
             << " bits"
-            << Utils::cdef
-            << std::endl;
+            << Utils::cdef)
 
 
     //Switch range and alpha
@@ -1335,9 +1338,7 @@ void N2D2::DeepNetQAT::exportOutputsLayers(StimuliProvider& sp,
     for(std::size_t iStimulus = 0; iStimulus < nbStimuli; iStimulus++) {
         const std::string stimuliDirName = dirName + "/" + "stimuli_" + std::to_string(iStimulus);
         Utils::createDirectories(stimuliDirName);
-        std::cout << "[DeepNetQAT] ==> LOG Features maps of Stimuli " 
-                    << iStimulus 
-                    << std::endl; 
+        PRINTDEBUG("[DeepNetQAT] ==> LOG Features maps of Stimuli " << iStimulus)
         sp.readStimulus(set, iStimulus);
         mDeepNet.test(set, timings);
 

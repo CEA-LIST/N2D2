@@ -80,6 +80,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
                 raise n2d2.error_handler.WrongInputType("activation", str(type(config_parameters["activation"])), [str(n2d2.activation.ActivationFunction)])
         else:
             config_parameters["activation"] = None
+            #config_parameters["activation"] = n2d2.activation.Linear()
         if 'name' in config_parameters:
             name = config_parameters.pop('name')
         else:
@@ -232,10 +233,13 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             dim_z = 0
             for ipt in tensor_inputs:
                 self._check_tensor(ipt)
+                #print('ipt.dimZ() = ', ipt.dimZ())
                 dim_z += ipt.dimZ()
             # Check for z dimension consistency
-            if not dim_z == self.get_nb_channels():
-                raise RuntimeError("Total number of input dimZ != cell '" + self.get_name() + "' number channels")
+            #print('dim_z = ', dim_z)
+            #print('and self.get_nb_channels()', self.get_nb_channels())
+            #if not dim_z == self.get_nb_channels():
+            #    raise RuntimeError("Total number of input dimZ != cell '" + self.get_name() + "' number channels")
         elif self.mappable and self._N2D2_object.getMapping().empty():
                 self._N2D2_object.setMapping(Tensor([self.get_nb_outputs(), inputs.dimZ()], value=True,
                                                              datatype="bool", dim_format="N2D2").N2D2())
@@ -250,6 +254,7 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             if isinstance(cell, MultipleOutputsProvider) or isinstance(inputs, Interface):
                 diffOutput = Tensor(ipt.dims(), value=0, dim_format="N2D2")
                 self._N2D2_object.addInputBis(ipt.N2D2(), diffOutput.N2D2())
+                #self._N2D2_object.linkInput(cell.N2D2())
             else:
                 self._N2D2_object.linkInput(cell.N2D2())
             if not initialized:
