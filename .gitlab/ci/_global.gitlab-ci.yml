@@ -35,6 +35,8 @@ variables:
     - python -m pip install -r pytorch_to_n2d2/requirements.txt
     # -> Check installed lib
     - python -m pip freeze
+    # Copy export folder in n2d2 folder
+    - cp -r ../export n2d2
 
 
 # Before_script used to perform coverage tests
