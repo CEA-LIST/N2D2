@@ -324,7 +324,7 @@ void N2D2::Cell_Frame_CUDA<T>::initializeDataDependent()
 }
 
 template <class T>
-void N2D2::Cell_Frame<T>::addLinkInput(Cell* cell)
+void N2D2::Cell_Frame_CUDA<T>::addLinkInput(Cell* cell)
 {
     // Define input-output sizes
     setInputsDims(cell->getOutputsDims());
@@ -354,7 +354,7 @@ void N2D2::Cell_Frame<T>::addLinkInput(Cell* cell)
 }
 
 template <class T>
-void N2D2::Cell_Frame<T>::addLinkInput(StimuliProvider& sp,  
+void N2D2::Cell_Frame_CUDA<T>::addLinkInput(StimuliProvider& sp,  
                                 unsigned int x0,
                                 unsigned int y0,
                                 unsigned int width,
@@ -374,7 +374,7 @@ void N2D2::Cell_Frame<T>::addLinkInput(StimuliProvider& sp,
         throw std::runtime_error("Cell has different number of channels than input");
     }*/
 
-     // Define input-output sizes
+    // Define input-output sizes
     setInputsDims(sp.getSize());
     mInputs.push_back(&sp.getData());
     mDiffOutputs.push_back(new Tensor<T>(mInputs[0].dims()), 0);
