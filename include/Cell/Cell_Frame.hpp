@@ -89,6 +89,12 @@ public:
     virtual void clearOutputTensors();
     virtual void initializeParameters(unsigned int /*nbChannels*/, unsigned int /*nbInputs*/){};
     virtual void initializeDataDependent();
+    virtual void addLinkInput(Cell* cell);
+    virtual void addLinkInput(StimuliProvider& sp,  
+                    unsigned int x0,
+                    unsigned int y0,
+                    unsigned int width,
+                    unsigned int height);
     virtual void linkInput(Cell* cell);
     virtual void linkInput(StimuliProvider& sp,  
                     unsigned int x0,
