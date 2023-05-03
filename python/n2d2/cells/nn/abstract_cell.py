@@ -238,8 +238,8 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             # Check for z dimension consistency
             #print('dim_z = ', dim_z)
             #print('and self.get_nb_channels()', self.get_nb_channels())
-            #if not dim_z == self.get_nb_channels():
-            #    raise RuntimeError("Total number of input dimZ != cell '" + self.get_name() + "' number channels")
+            if not dim_z == self.get_nb_channels():
+               raise RuntimeError("Total number of input dimZ != cell '" + self.get_name() + "' number channels")
         elif self.mappable and self._N2D2_object.getMapping().empty():
                 self._N2D2_object.setMapping(Tensor([self.get_nb_outputs(), inputs.dimZ()], value=True,
                                                              datatype="bool", dim_format="N2D2").N2D2())
@@ -252,9 +252,11 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
             # cells created by Interfaces out of any deepnet at initialization have an empty 
             # getData() method so data are manually passed to the input tensor
             if isinstance(cell, MultipleOutputsProvider) or isinstance(inputs, Interface):
-                diffOutput = Tensor(ipt.dims(), value=0, dim_format="N2D2")
-                self._N2D2_object.addInputBis(ipt.N2D2(), diffOutput.N2D2())
-                #self._N2D2_object.linkInput(cell.N2D2())
+                if isinstance(cell.N2D2(), N2D2.StimuliProvider):
+                    diffOutput = Tensor(ipt.dims(), value=0, dim_format="N2D2")
+                    self._N2D2_object.addInputBis(ipt.N2D2(), diffOutput.N2D2())
+                else:
+                    self._N2D2_object.addLinkInput(cell.N2D2())
             else:
                 self._N2D2_object.linkInput(cell.N2D2())
             if not initialized:

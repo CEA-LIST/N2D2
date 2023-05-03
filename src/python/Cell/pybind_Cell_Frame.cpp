@@ -42,6 +42,9 @@ void declare_Cell_Frame(py::module &m, const std::string& typeStr) {
     .def("clearInputTensors", &Cell_Frame<T>::clearInputTensors)
     .def("clearOutputTensors", &Cell_Frame<T>::clearOutputTensors)
     .def("initializeParameters", &Cell_Frame<T>::initializeParameters, py::arg("nbInputChannels"), py::arg("nbInputs"))
+    .def("addLinkInput",  (void (Cell_Frame<T>::*)(Cell*)) &Cell_Frame<T>::addLinkInput, py::arg("cell"))
+    .def("addLinkInput",  (void (Cell_Frame<T>::*)(StimuliProvider&, unsigned int, unsigned int, unsigned int, unsigned int)) &Cell_Frame<T>::addLinkInput, 
+        py::arg("sp"), py::arg("x0")=0, py::arg("y0")=0, py::arg("width")=0, py::arg("height")=0)
     .def("linkInput",  (void (Cell_Frame<T>::*)(Cell*)) &Cell_Frame<T>::linkInput, py::arg("cell"))
     .def("linkInput",  (void (Cell_Frame<T>::*)(StimuliProvider&, unsigned int, unsigned int, unsigned int, unsigned int)) &Cell_Frame<T>::linkInput, 
         py::arg("sp"), py::arg("x0")=0, py::arg("y0")=0, py::arg("width")=0, py::arg("height")=0)

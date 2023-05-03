@@ -323,6 +323,74 @@ void N2D2::Cell_Frame_CUDA<T>::initializeDataDependent()
     }
 }
 
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::addLinkInput(Cell* cell)
+{
+    // Define input-output sizes
+    setInputsDims(cell->getOutputsDims());
+
+    Cell_Frame_Top* cellFrame = dynamic_cast<Cell_Frame_Top*>(cell);
+
+    if (cellFrame != NULL) {
+        mInputs.push_back(&cellFrame->getOutputs());
+        mDiffOutputs.push_back(&cellFrame->getDiffInputs());
+    }
+    else {
+        throw std::runtime_error(
+            "Cell_Frame<T>::addLinkInput(): cell is NULL!");
+    }
+
+    setOutputsDims();
+
+    if (mOutputs.empty()) {
+        std::vector<size_t> outputsDims(mOutputsDims);
+        outputsDims.push_back(mInputs.dimB());
+
+        mOutputs.resize(outputsDims);
+        mDiffInputs.resize(outputsDims);
+    }
+
+    mMapping.resize({getNbOutputs(), getNbChannels()}, true);
+}
+
+template <class T>
+void N2D2::Cell_Frame_CUDA<T>::addLinkInput(StimuliProvider& sp,  
+                                unsigned int x0,
+                                unsigned int y0,
+                                unsigned int width,
+                                unsigned int height)
+{
+    if (width == 0)
+        width = sp.getSizeX() - x0;
+    if (height == 0)
+        height = sp.getSizeY() - y0;
+
+    if (x0 > 0 || y0 > 0 || width < sp.getSizeX() || height < sp.getSizeY())
+        throw std::runtime_error("Cell_Frame<T>::linkInput(): adding a cropped "
+                                 "environment channel map as input is not "
+                                 "supported");
+    
+    /*if (sp.getNbChannels() != getNbChannels()){
+        throw std::runtime_error("Cell has different number of channels than input");
+    }*/
+
+    // Define input-output sizes
+    setInputsDims(sp.getSize());
+    mInputs.push_back(&sp.getData());
+    mDiffOutputs.push_back(new Tensor<T>(mInputs[0].dims()), 0);
+
+    setOutputsDims();
+
+    if (mOutputs.empty()) {
+        std::vector<size_t> outputsDims(mOutputsDims);
+        outputsDims.push_back(mInputs.dimB());
+
+        mOutputs.resize(outputsDims);
+        mDiffInputs.resize(outputsDims);
+    }
+
+}
+
 /**
  * Link an input that has to be of the same size as the current input dimensions of the cell.
  * If the current input dimensions are empty, the input dimensions are initialized to 
