@@ -23,7 +23,8 @@ global_variables = GlobalVariables()
 
 # Set up N2D2_PATH for exports
 import os
-os.environ["N2D2_PATH"] = os.path.dirname(__file__)
+if "N2D2_PATH" not in os.environ:
+    os.environ["N2D2_PATH"] = os.path.dirname(__file__)
 
 # It's better to access these methods without mentioning utils in the path
 from n2d2.utils import *
