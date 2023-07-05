@@ -187,8 +187,6 @@ public:
     void synchronizeToH(bool keepInSync_) const;
     void synchronizeToD(bool keepInSync_);
     virtual ~ConvCell_Frame_CUDA();
-
-protected:
     inline void setWeight(unsigned int output,
                           unsigned int channel,
                           const BaseTensor& value);
@@ -198,6 +196,8 @@ protected:
                           const BaseTensor& value);
     */
     inline void setBias(unsigned int output, const BaseTensor& value);
+protected:
+    
     std::shared_ptr<CudaDeviceTensor<T> > extPad(
         unsigned int k,
         std::shared_ptr<CudaDeviceTensor<T> > input);
