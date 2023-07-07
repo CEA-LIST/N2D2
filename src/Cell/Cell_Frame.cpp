@@ -125,11 +125,11 @@ void N2D2::Cell_Frame<T>::applyMapping(Cell* cell,const Tensor<bool>&  mapping){
                                  "rows must be equal to the number of input "
                                  "channels");
 
-    if(mMapping.empty()){
+    // if(mMapping.empty()){
         mMapping.append((!mapping.empty())
             ? mapping
             : Tensor<bool>({getNbOutputs(), cellNbOutputs}, true));
-    }
+    // }
 }
 
 

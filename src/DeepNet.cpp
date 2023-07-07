@@ -1226,12 +1226,12 @@ void N2D2::DeepNet::fuseBatchNorm() {
                 idMapping(o,o)=true;
             }
 
-            identityConvCell->setMapping(idMapping);
-
             std::shared_ptr<Cell> cellPtr = std::dynamic_pointer_cast<Cell>(identityConvCell);
             
             this->addCellBefore(cellPtr, cell);
             identityConvCell->initialize(); // Initialize groups etc ..
+            identityConvCell->clearMapping();
+            identityConvCell->setMapping(idMapping);
             for(size_t o=0; o < featureSize; ++o){
                 for(size_t i=0; i < featureSize; ++i){
                     Tensor<float> weight({1}, 1.0);
