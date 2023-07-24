@@ -166,6 +166,13 @@ class NeuralNetworkCell(Cell, N2D2_Interface, ABC):
         """
         return Tensor.from_N2D2(self._N2D2_object.getOutputs())._set_cell(self)
 
+    def get_inputs(self):
+        """
+        :return: The input tensor of the cell.
+        :rtype: :py:class:`Tensor`
+        """
+        return Tensor.from_N2D2(self._N2D2_object.getInputs())._set_cell(self)
+
     def get_diffoutputs(self, index:int=0)->Tensor:
         """
         :param index: Index of the input of the cell to consider, default=0

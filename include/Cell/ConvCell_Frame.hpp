@@ -254,8 +254,6 @@ public:
     void loadFreeParameters(const std::string& fileName,
                             bool ignoreNotExists = false);
     virtual ~ConvCell_Frame();
-
-protected:
     /**
      * @brief Set the weight map connecting specific input channel and output according to the given value.
      * 
@@ -321,6 +319,8 @@ protected:
 
         (*mBias)(output) = tensor_cast<T>(value)(0);
     };
+protected:
+    
 
     // Internal
     std::vector<size_t> mNbGroups;

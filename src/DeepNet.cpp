@@ -33,11 +33,13 @@
 #include "Cell/ConvCell_Spike.hpp"
 #include "Cell/DropoutCell.hpp"
 #include "Cell/FcCell.hpp"
+#include "Cell/ConvCell_Frame.hpp"
 #include "Cell/PoolCell.hpp"
 #include "Cell/PaddingCell.hpp"
 #include "Cell/ReshapeCell.hpp"
 #include "Cell/TransposeCell.hpp"
 #include "Activation/LinearActivation.hpp"
+#include "Activation/LinearActivation_Frame.hpp"
 #include "Cell/SoftmaxCell.hpp"
 #include "Cell/Cell_CSpike_Top.hpp"
 #include "utils/Utils.hpp"
@@ -1182,7 +1184,68 @@ void N2D2::DeepNet::spikeCodingCompare(const std::string& dirName,
 */
 void N2D2::DeepNet::fuseBatchNorm() {
     std::cout << "Fuse BatchNorm with Conv/Fc..." << std::endl;
+    std::map<std::string, std::shared_ptr<N2D2::Cell>> tmpCpyCells(mCells);
+    for (auto it = tmpCpyCells.begin(); it != tmpCpyCells.end(); ++it) {
+        
+        std::shared_ptr<Cell>& cell = (*it).second;
 
+        if (cell->getType() != BatchNormCell::Type) {
+            continue;
+        }
+        // check if a Conv/Fc is preceding
+        const std::vector<std::shared_ptr<Cell> > bnParents = getParentCells(cell->getName());
+
+        if(bnParents.size() > 1) {
+            continue;
+        }
+
+        if(!bnParents[0] || (bnParents[0]->getType() != ConvCell::Type
+            && bnParents[0]->getType() != FcCell::Type))
+        {
+            std::cout << Utils::cnotice << " BatchNorm \""
+                << cell->getName() << "\" parent cell (\""
+                << ((bnParents[0]) ? bnParents[0]->getName() : "env")
+                << "\") is not a Conv/Fc, inserting an identity convolution" << Utils::cdef << std::endl;
+            
+            std::string cellName =  cell->getName() + "_conv";
+            size_t featureSize = cell->getNbChannels();
+
+            std::shared_ptr<ConvCell_Frame<float>> identityConvCell = std::make_shared<ConvCell_Frame<float>>(
+                *this,
+                cellName,
+                std::vector<unsigned int>(2, 1U), // Kernel dims
+                featureSize, // nb_outputs
+                std::vector<unsigned int>(2, 1U), // subSample Dims
+                std::vector<unsigned int>(2, 1U), // stride dims
+                std::vector<int>(2, 0), // padding
+                std::vector<unsigned int>(2, 1U)
+            );
+
+            Tensor<bool> idMapping({featureSize, featureSize}, false);
+            for(size_t o=0; o < featureSize; ++o){
+                idMapping(o,o)=true;
+            }
+
+            std::shared_ptr<Cell> cellPtr = std::dynamic_pointer_cast<Cell>(identityConvCell);
+            
+            this->addCellBefore(cellPtr, cell);
+            identityConvCell->initialize(); // Initialize groups etc ..
+            identityConvCell->clearMapping();
+            identityConvCell->setMapping(idMapping);
+            for(size_t o=0; o < featureSize; ++o){
+                for(size_t i=0; i < featureSize; ++i){
+                    Tensor<float> weight({1}, 1.0);
+                    identityConvCell->setWeight(i, o, weight);
+                }
+                Tensor<float> bias({1}, 0.0);
+                identityConvCell->setBias(o, bias);
+            }
+            std::shared_ptr<LinearActivation_Frame<float>> laf_ptr = std::make_shared<LinearActivation_Frame<float>>();
+            std::shared_ptr<Activation> act_ptr = std::dynamic_pointer_cast<Activation>(laf_ptr);
+            
+            identityConvCell->setActivation(act_ptr);
+        }
+    }
     for (auto it = mCells.begin(); it != mCells.end(); ) {
         const std::shared_ptr<Cell>& cell = (*it).second;
         ++it; // increase it before being potentially invalided by removeCell()

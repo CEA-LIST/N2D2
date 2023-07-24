@@ -146,6 +146,9 @@ public:
     {
         mDiffInputs = diffInputs;
     }
+    void clearMapping(){
+        mMapping.clear();
+    }
     virtual std::string getPyDataType();
     virtual std::string getPyModel();
     virtual BaseTensor& getDiffOutputs(unsigned int index = 0) {
