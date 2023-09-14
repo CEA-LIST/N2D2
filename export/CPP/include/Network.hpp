@@ -163,6 +163,37 @@ private:
         const WDATA_T* __restrict weights,
         const Rescaling_T& __restrict rescaling) const;
 
+
+    template<int NB_CHANNELS, 
+            int CHANNELS_HEIGHT, int CHANNELS_WIDTH,
+            int NB_OUTPUTS,
+            int OUTPUTS_HEIGHT, int OUTPUTS_WIDTH,
+            int PADDING_Y, int PADDING_X,
+            int STRIDE_Y, int STRIDE_X,
+            int DILATION_Y, int DILATION_X,
+            int KERNEL_HEIGHT, int KERNEL_WIDTH,
+            ActivationFunction_T ACTIVATION,
+            // Memory mapping: inputs
+            int INPUT_MEM_CONT_OFFSET,
+            int INPUT_MEM_CONT_SIZE,
+            int INPUT_MEM_WRAP_OFFSET,
+            int INPUT_MEM_WRAP_SIZE,
+            int INPUT_MEM_STRIDE,
+            // Memory mapping: outputs
+            int OUTPUT_MEM_CONT_OFFSET,
+            int OUTPUT_MEM_CONT_SIZE,
+            int OUTPUT_MEM_WRAP_OFFSET,
+            int OUTPUT_MEM_WRAP_SIZE,
+            int OUTPUT_MEM_STRIDE,
+            typename Input_T, typename Output_T,
+            typename Rescaling_T>
+    N2D2_ALWAYS_INLINE void convcellPropagate(
+        const Input_T* __restrict inputs,
+        Output_T* __restrict outputs,
+        const BDATA_T* __restrict biasses,
+        const WDATA_T* __restrict weights,
+        const Rescaling_T& __restrict rescaling) const;
+
     /*
      * inputs[CHANNELS_HEIGHT*CHANNELS_WIDTH*NB_CHANNELS]
      * outputs[OUTPUTS_HEIGHT*OUTPUTS_WIDTH*NB_OUTPUTS]
@@ -175,6 +206,36 @@ private:
             int OUTPUTS_HEIGHT, int OUTPUTS_WIDTH,
             int PADDING_Y, int PADDING_X,
             int STRIDE_Y, int STRIDE_X,
+            int KERNEL_HEIGHT, int KERNEL_WIDTH,
+            ActivationFunction_T ACTIVATION,
+            // Memory mapping: inputs
+            int INPUT_MEM_CONT_OFFSET,
+            int INPUT_MEM_CONT_SIZE,
+            int INPUT_MEM_WRAP_OFFSET,
+            int INPUT_MEM_WRAP_SIZE,
+            int INPUT_MEM_STRIDE,
+            // Memory mapping: outputs
+            int OUTPUT_MEM_CONT_OFFSET,
+            int OUTPUT_MEM_CONT_SIZE,
+            int OUTPUT_MEM_WRAP_OFFSET,
+            int OUTPUT_MEM_WRAP_SIZE,
+            int OUTPUT_MEM_STRIDE,
+            typename Input_T, typename Output_T,
+            typename Rescaling_T>
+    N2D2_ALWAYS_INLINE void convcellDWPropagate(
+        const Input_T* __restrict inputs,
+        Output_T* __restrict outputs,
+        const BDATA_T* __restrict biasses,
+        const WDATA_T* __restrict weights,
+        const Rescaling_T& __restrict rescaling) const;
+
+    template<int NB_CHANNELS, 
+            int CHANNELS_HEIGHT, int CHANNELS_WIDTH,
+            int NB_OUTPUTS,
+            int OUTPUTS_HEIGHT, int OUTPUTS_WIDTH,
+            int PADDING_Y, int PADDING_X,
+            int STRIDE_Y, int STRIDE_X,
+            int DILATION_Y, int DILATION_X,
             int KERNEL_HEIGHT, int KERNEL_WIDTH,
             ActivationFunction_T ACTIVATION,
             // Memory mapping: inputs
@@ -820,6 +881,159 @@ template<int NB_CHANNELS,
          int OUTPUTS_HEIGHT, int OUTPUTS_WIDTH,
          int PADDING_Y, int PADDING_X,
          int STRIDE_Y, int STRIDE_X,
+         int DILATION_Y, int DILATION_X,
+         int KERNEL_HEIGHT, int KERNEL_WIDTH,
+         ActivationFunction_T ACTIVATION,
+         // Memory mapping: inputs
+         int INPUT_MEM_CONT_OFFSET,
+         int INPUT_MEM_CONT_SIZE,
+         int INPUT_MEM_WRAP_OFFSET,
+         int INPUT_MEM_WRAP_SIZE,
+         int INPUT_MEM_STRIDE,
+         // Memory mapping: outputs
+         int OUTPUT_MEM_CONT_OFFSET,
+         int OUTPUT_MEM_CONT_SIZE,
+         int OUTPUT_MEM_WRAP_OFFSET,
+         int OUTPUT_MEM_WRAP_SIZE,
+         int OUTPUT_MEM_STRIDE,
+         typename Input_T, typename Output_T,
+         typename Rescaling_T>
+N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::convcellPropagate(
+    const Input_T* __restrict inputs,
+    Output_T* __restrict outputs,
+    const BDATA_T* __restrict biasses,
+    const WDATA_T* __restrict weights,
+    const Rescaling_T& __restrict rescaling) const
+{
+    constexpr int DILATED_KERNEL_HEIGHT 
+            = KERNEL_HEIGHT + (DILATION_Y - 1) * (KERNEL_HEIGHT - 1);
+
+    constexpr int DILATED_KERNEL_WIDTH 
+            = KERNEL_WIDTH + (DILATION_X - 1) * (KERNEL_WIDTH - 1);
+
+    constexpr int OUTPUTS_HEIGHT_NOPAD
+        = (CHANNELS_HEIGHT - DILATION_Y * (KERNEL_HEIGHT - 1) - 1 + STRIDE_Y) / STRIDE_Y;
+    constexpr int OUTPUTS_WIDTH_NOPAD
+        = (CHANNELS_WIDTH - DILATION_X * (KERNEL_WIDTH - 1) - 1 + STRIDE_X) / STRIDE_X;
+
+    for (int oy = 0; oy < OUTPUTS_HEIGHT; ++oy) {
+        const int syMin = (PADDING_Y == 0) ? 0
+            : max(PADDING_Y - (oy * STRIDE_Y), 0);
+        const int syMax = (PADDING_Y == 0
+                && OUTPUTS_HEIGHT == OUTPUTS_HEIGHT_NOPAD) ? DILATED_KERNEL_HEIGHT
+            : clamp(CHANNELS_HEIGHT + PADDING_Y - (oy * STRIDE_Y), 
+                    0, DILATED_KERNEL_HEIGHT);
+        const int iy = (oy * STRIDE_Y) - PADDING_Y;
+
+// #pragma omp parallel for collapse(2)
+        for (int ox = 0; ox < OUTPUTS_WIDTH; ++ox) {
+            for (int output = 0; output < NB_OUTPUTS; ++output) {
+                // moved to inner loop for collapsing -->
+                const int sxMin = (PADDING_X == 0) ? 0
+                    : max(PADDING_X - (ox * STRIDE_X), 0);
+                const int sxMax = (PADDING_X == 0
+                        && OUTPUTS_WIDTH == OUTPUTS_WIDTH_NOPAD)
+                            ? DILATED_KERNEL_WIDTH
+                    : clamp(CHANNELS_WIDTH + PADDING_X - (ox * STRIDE_X), 
+                            0, DILATED_KERNEL_WIDTH);
+                const int ix = (ox * STRIDE_X) - PADDING_X;
+
+                const int oPos = (ox + OUTPUTS_WIDTH * oy);
+                int oOffset = OUTPUT_MEM_STRIDE * oPos;
+
+                if (OUTPUT_MEM_WRAP_SIZE > 0 && oOffset >= OUTPUT_MEM_CONT_SIZE) {
+                    oOffset += OUTPUT_MEM_WRAP_OFFSET - OUTPUT_MEM_CONT_OFFSET
+                                - OUTPUT_MEM_CONT_SIZE;
+                }
+                // <--
+
+                // To change for a more generic system
+                SUM_T weightedSum = biasses[output];
+
+                for (int sy = 0; sy < KERNEL_HEIGHT; ++sy) {
+                    if ((PADDING_Y != 0
+                            || OUTPUTS_HEIGHT != OUTPUTS_HEIGHT_NOPAD)
+                        && ((sy*DILATION_Y < syMin) || (sy*DILATION_Y >= syMax)))
+                    {
+                        continue;
+                    }
+
+                    const int iPos = ix + CHANNELS_WIDTH * (iy + sy*DILATION_Y);
+                    int iOffset = INPUT_MEM_STRIDE * iPos;
+
+                    // Wrapping cannot occur in the middle of a line, except if
+                    // there is only one line (1D)!
+                    bool wrapInRange = false;
+
+                    if (INPUT_MEM_WRAP_SIZE > 0
+                        && iOffset >= INPUT_MEM_CONT_SIZE)
+                    {
+                        iOffset += INPUT_MEM_WRAP_OFFSET - INPUT_MEM_CONT_OFFSET
+                                    - INPUT_MEM_CONT_SIZE;
+                    }
+                    else if (INPUT_MEM_WRAP_SIZE > 0 && KERNEL_WIDTH > 1
+                        && CHANNELS_HEIGHT == 1 // single line (1D)!
+                        && iOffset + KERNEL_WIDTH * NB_CHANNELS
+                            > INPUT_MEM_CONT_SIZE)
+                    {
+                        wrapInRange = true;
+                    }
+
+                    const int wOffset = (output*KERNEL_HEIGHT + sy) 
+                                        * KERNEL_WIDTH * NB_CHANNELS;
+
+                    if (!wrapInRange && (NB_CHANNELS == INPUT_MEM_STRIDE
+                        && DILATION_X == 1 && ((PADDING_X == 0
+                            && OUTPUTS_WIDTH == OUTPUTS_WIDTH_NOPAD)
+                                || sxMax - sxMin == KERNEL_WIDTH)))
+                    {
+                        macsOnRange<KERNEL_WIDTH * NB_CHANNELS>(
+                            inputs + iOffset, 
+                            weights + wOffset, 
+                            weightedSum);
+                    }
+                    else {
+                        for (int sx = 0; sx < KERNEL_WIDTH; ++sx) {
+                            if ((PADDING_X != 0
+                                    || OUTPUTS_WIDTH != OUTPUTS_WIDTH_NOPAD)
+                                && ((sx*DILATION_X < sxMin) || (sx*DILATION_X >= sxMax)))
+                            {
+                                continue;
+                            }
+
+                            int iOffsetInRange = iOffset
+                                + sx * DILATION_X * INPUT_MEM_STRIDE;
+
+                            if (wrapInRange
+                                && iOffsetInRange >= INPUT_MEM_CONT_SIZE)
+                            {
+                                iOffsetInRange += INPUT_MEM_WRAP_OFFSET
+                                            - INPUT_MEM_CONT_OFFSET
+                                            - INPUT_MEM_CONT_SIZE;
+                            }
+                        
+                            macsOnRange<NB_CHANNELS>(
+                                // same input line so no wrapping can occur
+                                inputs + iOffsetInRange, 
+                                weights + wOffset + sx * NB_CHANNELS, 
+                                weightedSum);
+                        }
+                    }
+                }
+
+                outputs[oOffset + output]
+                    = sat<Output_T>(weightedSum, output, ACTIVATION, rescaling);
+            }
+        }
+    }
+}
+
+template<int NB_CHANNELS, 
+         int CHANNELS_HEIGHT, int CHANNELS_WIDTH,
+         int NB_OUTPUTS,
+         int OUTPUTS_HEIGHT, int OUTPUTS_WIDTH,
+         int PADDING_Y, int PADDING_X,
+         int STRIDE_Y, int STRIDE_X,
          int KERNEL_HEIGHT, int KERNEL_WIDTH,
          ActivationFunction_T ACTIVATION,
          // Memory mapping: inputs
@@ -939,6 +1153,159 @@ N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::convcellDWPropagate(
 
                             int iOffsetInRange = iOffset
                                 + sx * INPUT_MEM_STRIDE;
+
+                            if (wrapInRange &&
+                                iOffsetInRange >= INPUT_MEM_CONT_SIZE)
+                            {
+                                iOffsetInRange += INPUT_MEM_WRAP_OFFSET
+                                            - INPUT_MEM_CONT_OFFSET
+                                            - INPUT_MEM_CONT_SIZE;
+                            }
+
+                            weightedSum += inputs[iOffsetInRange + channel]
+                                * weights[wOffset + sx];
+                        }
+                    }
+                }
+
+                outputs[oOffset + output]
+                    = sat<Output_T>(weightedSum, output, ACTIVATION, rescaling);
+            }
+        }
+    }
+}
+
+template<int NB_CHANNELS, 
+         int CHANNELS_HEIGHT, int CHANNELS_WIDTH,
+         int NB_OUTPUTS,
+         int OUTPUTS_HEIGHT, int OUTPUTS_WIDTH,
+         int PADDING_Y, int PADDING_X,
+         int STRIDE_Y, int STRIDE_X,
+         int DILATION_Y, int DILATION_X,
+         int KERNEL_HEIGHT, int KERNEL_WIDTH,
+         ActivationFunction_T ACTIVATION,
+         // Memory mapping: inputs
+         int INPUT_MEM_CONT_OFFSET,
+         int INPUT_MEM_CONT_SIZE,
+         int INPUT_MEM_WRAP_OFFSET,
+         int INPUT_MEM_WRAP_SIZE,
+         int INPUT_MEM_STRIDE,
+         // Memory mapping: outputs
+         int OUTPUT_MEM_CONT_OFFSET,
+         int OUTPUT_MEM_CONT_SIZE,
+         int OUTPUT_MEM_WRAP_OFFSET,
+         int OUTPUT_MEM_WRAP_SIZE,
+         int OUTPUT_MEM_STRIDE,
+         typename Input_T, typename Output_T,
+         typename Rescaling_T>
+N2D2_ALWAYS_INLINE inline void N2D2_Export::Network::convcellDWPropagate(
+    const Input_T* __restrict inputs,
+    Output_T* __restrict outputs,
+    const BDATA_T* __restrict biasses,
+    const WDATA_T* __restrict weights,
+    const Rescaling_T& __restrict rescaling) const
+{
+    static_assert(NB_OUTPUTS % NB_CHANNELS == 0,
+        "NB_OUTPUTS should be a multiple of NB_CHANNELS.");
+
+    constexpr int DILATED_KERNEL_HEIGHT 
+            = KERNEL_HEIGHT + (DILATION_Y - 1) * (KERNEL_HEIGHT - 1);
+
+    constexpr int DILATED_KERNEL_WIDTH 
+            = KERNEL_WIDTH + (DILATION_X - 1) * (KERNEL_WIDTH - 1);
+
+    constexpr int OUTPUTS_HEIGHT_NOPAD
+        = (CHANNELS_HEIGHT - DILATION_Y * (KERNEL_HEIGHT - 1) - 1 + STRIDE_Y) / STRIDE_Y;
+    constexpr int OUTPUTS_WIDTH_NOPAD
+        = (CHANNELS_WIDTH - DILATION_X * (KERNEL_WIDTH - 1) - 1 + STRIDE_X) / STRIDE_X;
+
+    for (int oy = 0; oy < OUTPUTS_HEIGHT; ++oy) {
+        const int syMin = (PADDING_Y == 0) ? 0
+            : max(PADDING_Y - (oy * STRIDE_Y), 0);
+        const int syMax = (PADDING_Y == 0
+                && OUTPUTS_HEIGHT == OUTPUTS_HEIGHT_NOPAD) ? DILATED_KERNEL_HEIGHT
+            : clamp(CHANNELS_HEIGHT + PADDING_Y - (oy * STRIDE_Y), 
+                    0, DILATED_KERNEL_HEIGHT);
+        const int iy = (oy * STRIDE_Y) - PADDING_Y;
+
+#pragma omp parallel for collapse(2)
+        for (int ox = 0; ox < OUTPUTS_WIDTH; ++ox) {
+            for (int output = 0; output < NB_OUTPUTS; ++output) {
+                // moved to inner loop for collapsing -->
+                const int sxMin = (PADDING_X == 0) ? 0
+                    : max(PADDING_X - (ox * STRIDE_X), 0);
+                const int sxMax = (PADDING_X == 0
+                        && OUTPUTS_WIDTH == OUTPUTS_WIDTH_NOPAD)
+                            ? DILATED_KERNEL_WIDTH
+                    : clamp(CHANNELS_WIDTH + PADDING_X - (ox * STRIDE_X), 
+                            0, DILATED_KERNEL_WIDTH);
+                const int ix = (ox * STRIDE_X) - PADDING_X;
+
+                const int oPos = (ox + OUTPUTS_WIDTH * oy);
+                int oOffset = OUTPUT_MEM_STRIDE * oPos;
+
+                if (OUTPUT_MEM_WRAP_SIZE > 0 && oOffset >= OUTPUT_MEM_CONT_SIZE) {
+                    oOffset += OUTPUT_MEM_WRAP_OFFSET - OUTPUT_MEM_CONT_OFFSET
+                                - OUTPUT_MEM_CONT_SIZE;
+                }
+                // <--
+
+                const int channel = (output * NB_CHANNELS) / NB_OUTPUTS;
+
+                SUM_T weightedSum = biasses[output];
+
+                for (int sy = 0; sy < KERNEL_HEIGHT; ++sy) {
+                    if ((PADDING_Y != 0
+                            || OUTPUTS_HEIGHT != OUTPUTS_HEIGHT_NOPAD)
+                        && ((sy*DILATION_Y < syMin) || (sy*DILATION_Y >= syMax)))
+                    {
+                        continue;
+                    }
+
+                    const int iPos = ix + CHANNELS_WIDTH * (iy + sy*DILATION_Y);
+                    int iOffset = INPUT_MEM_STRIDE * iPos;
+
+                    // Wrapping cannot occur in the middle of a line, except if
+                    // there is only one line (1D)!
+                    bool wrapInRange = false;
+
+                    if (INPUT_MEM_WRAP_SIZE > 0
+                        && iOffset >= INPUT_MEM_CONT_SIZE)
+                    {
+                        iOffset += INPUT_MEM_WRAP_OFFSET - INPUT_MEM_CONT_OFFSET
+                                    - INPUT_MEM_CONT_SIZE;
+                    }
+                    else if (INPUT_MEM_WRAP_SIZE > 0 && KERNEL_WIDTH > 1
+                        && CHANNELS_HEIGHT == 1 // single line (1D)!
+                        && iOffset + KERNEL_WIDTH * INPUT_MEM_STRIDE
+                            > INPUT_MEM_CONT_SIZE)
+                    {
+                        wrapInRange = true;
+                    }
+
+                    const int wOffset = (output*KERNEL_HEIGHT + sy) 
+                                        * KERNEL_WIDTH * NB_CHANNELS;
+
+                    if (!wrapInRange && DILATION_X == 1 && ((PADDING_X == 0
+                            && OUTPUTS_WIDTH == OUTPUTS_WIDTH_NOPAD)
+                        || sxMax - sxMin == KERNEL_WIDTH))
+                    {
+                        macsOnRange<KERNEL_WIDTH, INPUT_MEM_STRIDE>(
+                            inputs + iOffset + channel, 
+                            weights + wOffset, 
+                            weightedSum);
+                    }
+                    else {
+                        for (int sx = 0; sx < KERNEL_WIDTH; ++sx) {
+                            if ((PADDING_X != 0
+                                    || OUTPUTS_WIDTH != OUTPUTS_WIDTH_NOPAD)
+                                && ((sx*DILATION_X < sxMin) || (sx*DILATION_X >= sxMax)))
+                            {
+                                continue;
+                            }
+
+                            int iOffsetInRange = iOffset
+                                + sx * DILATION_X * INPUT_MEM_STRIDE;
 
                             if (wrapInRange &&
                                 iOffsetInRange >= INPUT_MEM_CONT_SIZE)
