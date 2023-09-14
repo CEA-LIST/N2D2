@@ -32,7 +32,7 @@ static_analysis:python_api:
   allow_failure: true
   tags:
     - ubuntu
-  image: "python:3.7"
+  image: "python:3.8"
   script:
     - cd python
     - pip install pylint

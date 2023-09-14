@@ -25,9 +25,9 @@ variables:
     - cd python
     # Creating a new virtualenv
     - pip install virtualenv
-    - virtualenv -p python3.7 venv
+    - virtualenv -p python3.8 venv
     - shopt -s expand_aliases
-    - alias python='venv/bin/python3.7'
+    - alias python='venv/bin/python3.8'
     # -> verify env is clean
     - python -m pip freeze
     - python -m pip install -r requirements.txt
