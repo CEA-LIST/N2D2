@@ -396,37 +396,46 @@ TEST_DATASET(ConvCell_Frame_float,
               unsigned int paddingX,
               unsigned int paddingY,
               unsigned int channelsWidth,
-              unsigned int channelsHeight),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 24U),
+              unsigned int channelsHeight,
+              unsigned int dilationX,
+              unsigned int dilationY),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 24U, 1U, 1U),
              // 1
-             std::make_tuple(2U, 5U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 2U, 2U, 0U, 0U, 32U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 2U, 2U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 1U, 3U, 24U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 24U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 32U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 24U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 2U, 2U, 0U, 0U, 32U, 24U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 2U, 2U, 24U, 32U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 1U, 3U, 24U, 24U, 1U, 1U),
              // 2
-             std::make_tuple(2U, 5U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 24U),
-             std::make_tuple(2U, 5U, 1U, 1U, 1U, 1U, 0U, 0U, 32U, 24U),
-             std::make_tuple(2U, 5U, 1U, 1U, 2U, 2U, 0U, 0U, 24U, 24U),
-             std::make_tuple(2U, 5U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 32U),
-             std::make_tuple(2U, 5U, 1U, 1U, 1U, 1U, 2U, 2U, 24U, 24U),
-             std::make_tuple(2U, 5U, 1U, 1U, 1U, 1U, 1U, 3U, 32U, 24U),
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 24U, 1U, 1U),
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 1U, 0U, 0U, 32U, 24U, 1U, 1U),
+             std::make_tuple(2U, 5U, 1U, 1U, 2U, 2U, 0U, 0U, 24U, 24U, 1U, 1U),
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 32U, 1U, 1U),
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 1U, 2U, 2U, 24U, 24U, 1U, 1U),
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 1U, 1U, 3U, 32U, 24U, 1U, 1U),
              // 3
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 0U, 0U, 32U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 2U, 2U, 0U, 0U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 2U, 2U, 24U, 32U),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 1U, 3U, 32U, 24U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 0U, 0U, 24U, 32U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 0U, 0U, 32U, 24U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 2U, 2U, 0U, 0U, 24U, 24U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 2U, 2U, 24U, 32U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 1U, 1U, 3U, 32U, 24U, 1U, 1U),
              // 4
-             std::make_tuple(2U, 5U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 2U, 2U, 24U, 24U),
-             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 1U, 3U, 24U, 24U))
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 2U, 2U, 24U, 24U, 1U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 1U, 3U, 24U, 24U, 1U, 1U),
+             // 5
+             std::make_tuple(2U, 5U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U, 2U, 2U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U, 2U, 2U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U, 2U, 1U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 0U, 0U, 24U, 24U, 1U, 2U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 2U, 2U, 24U, 24U, 3U, 3U),
+             std::make_tuple(3U, 3U, 1U, 1U, 1U, 3U, 1U, 3U, 24U, 24U, 2U, 2U))
 {
     REQUIRED(UnitTest::DirExists(N2D2_DATA("mnist")));
 
@@ -441,7 +450,7 @@ TEST_DATASET(ConvCell_Frame_float,
         std::vector<unsigned int>({subSampleX, subSampleY}),
         std::vector<unsigned int>({strideX, strideY}),
         std::vector<int>({(int)paddingX, (int)paddingY}),
-        std::vector<unsigned int>({1U, 1U}),
+        std::vector<unsigned int>({dilationX, dilationY}),
         std::shared_ptr<Activation>());
     conv1.setParameter("NoBias", true);
 
@@ -494,22 +503,22 @@ TEST_DATASET(ConvCell_Frame_float,
                     const unsigned int sxMax = Utils::clamp<int>(
                         conv1.getChannelsWidth() + paddingX - ox * strideX,
                         0,
-                        kernelWidth);
+                        kernelWidth + (dilationX - 1) * (kernelWidth - 1));
                     const unsigned int syMax = Utils::clamp<int>(
                         conv1.getChannelsHeight() + paddingY - oy * strideY,
                         0,
-                        kernelHeight);
+                        kernelHeight + (dilationY - 1) * (kernelHeight - 1));
 
                     float sum = 0.0;
 
                     for (unsigned int channel = 0;
                          channel < conv1.getNbChannels();
                          ++channel) {
-                        for (unsigned int sy = syMin; sy < syMax; ++sy) {
-                            for (unsigned int sx = sxMin; sx < sxMax; ++sx) {
-                                const unsigned int ix = (int)(ox * strideX + sx)
+                        for (unsigned int sy = syMin; sy*dilationY < syMax; ++sy) {
+                            for (unsigned int sx = sxMin; sx*dilationX < sxMax; ++sx) {
+                                const unsigned int ix = (int)(ox * strideX + sx * dilationX)
                                                         - (int)paddingX;
-                                const unsigned int iy = (int)(oy * strideY + sy)
+                                const unsigned int iy = (int)(oy * strideY + sy * dilationY)
                                                         - (int)paddingY;
 
                                 sum += in(ix, iy, channel, batch)

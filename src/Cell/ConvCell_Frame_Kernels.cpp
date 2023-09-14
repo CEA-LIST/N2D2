@@ -36,12 +36,12 @@ void N2D2::ConvCell_Frame_Kernels::forward(const T* alpha,
     // size of the output feature on the x axis
     const unsigned int oxSize
         = (unsigned int)((inputs.dimX() + desc.padding[0] + desc.padding[2]
-                          - sharedSynapses.dimX() + desc.stride[0])
+                          - desc.dilation[0] * (sharedSynapses.dimX() - 1) - 1 + desc.stride[0])
                          / (double)desc.stride[0]);
     // size of the output feature on the y axis
     const unsigned int oySize
         = (unsigned int)((inputs.dimY() + desc.padding[1] + desc.padding[3]
-                          - sharedSynapses.dimY() + desc.stride[1])
+                          - desc.dilation[1] * (sharedSynapses.dimY() - 1) - 1 + desc.stride[1])
                          / (double)desc.stride[1]);
     // whether the ouput features undergo a subsampling step afer the convolution
     const bool subSample = (desc.subSample[0] > 1 || desc.subSample[1] > 1);
@@ -50,6 +50,11 @@ void N2D2::ConvCell_Frame_Kernels::forward(const T* alpha,
         for (unsigned int index = 0; index < outputs.size(); ++index)
             outputs(index) *= (*beta);
     }
+
+    const int dilated_kernel_x 
+            = sharedSynapses.dimX() + (desc.dilation[0] - 1) * (sharedSynapses.dimX() - 1);
+    const int dilated_kernel_y 
+            = sharedSynapses.dimY() + (desc.dilation[1] - 1) * (sharedSynapses.dimY() - 1);
 
     // number of forward operation
     const unsigned int size = inputs.dimB() * outputs.dimZ();
@@ -71,11 +76,11 @@ void N2D2::ConvCell_Frame_Kernels::forward(const T* alpha,
                     const unsigned int sxMax = Utils::clamp
                         <int>(inputs.dimX() + desc.padding[0] - ox * desc.stride[0],
                               0,
-                              sharedSynapses.dimX());
+                              dilated_kernel_x);
                     const unsigned int syMax = Utils::clamp
                         <int>(inputs.dimY() + desc.padding[1] - oy * desc.stride[1],
                               0,
-                              sharedSynapses.dimY());
+                              dilated_kernel_y);
 
                     const int ix = (int)(ox * desc.stride[0]) - desc.padding[0];
                     const int iy = (int)(oy * desc.stride[1]) - desc.padding[1];
@@ -113,13 +118,12 @@ void N2D2::ConvCell_Frame_Kernels::forward(const T* alpha,
                                   + sharedSynapses(2, 2, accessedChannel, output)
                                     * inputs(ix + 2, iy + 2, channel, batchPos));
                         } else {
-                            for (unsigned int sy = syMin; sy < syMax; ++sy) {
-                                for (unsigned int sx = sxMin; sx < sxMax;
-                                     ++sx) {
+                            for (unsigned int sy = syMin; sy*desc.dilation[1] < syMax; ++sy) {
+                                for (unsigned int sx = sxMin; sx*desc.dilation[0] < sxMax; ++sx) {
                                     weightedSum += sharedSynapses(
                                                        sx, sy, accessedChannel, output)
-                                                   * inputs(ix + sx,
-                                                            iy + sy,
+                                                   * inputs(ix + sx*desc.dilation[0],
+                                                            iy + sy*desc.dilation[1],
                                                             channel,
                                                             batchPos);
                                 }
