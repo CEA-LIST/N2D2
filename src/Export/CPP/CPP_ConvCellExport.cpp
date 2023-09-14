@@ -82,12 +82,12 @@ void N2D2::CPP_ConvCellExport::generateHeaderConstants(const ConvCell& cell, std
     padding[3] += cell.getPaddingY();  // Y_B
 
     const std::size_t oxSize = (std::size_t) (
-        (cell.getChannelsWidth() + padding[0] + padding[2] - cell.getKernelWidth() + cell.getStrideX())/
+        (cell.getChannelsWidth() + padding[0] + padding[2] - cell.getDilationX() * (cell.getKernelWidth() - 1) - 1 + cell.getStrideX())/
         static_cast<double>(cell.getStrideX())
     );
 
     const std::size_t oySize = (std::size_t)(
-        (cell.getChannelsHeight() + padding[1] + padding[3] - cell.getKernelHeight() + cell.getStrideY())/
+        (cell.getChannelsHeight() + padding[1] + padding[3] - cell.getDilationY() * (cell.getKernelHeight() - 1) - 1 + cell.getStrideY())/
         static_cast<double>(cell.getStrideY())
     );
 
@@ -107,6 +107,8 @@ void N2D2::CPP_ConvCellExport::generateHeaderConstants(const ConvCell& cell, std
            << "#define " << prefix << "_STRIDE_Y " << cell.getStrideY() << "\n"
            << "#define " << prefix << "_PADDING_X " << padding[0] << "\n"
            << "#define " << prefix << "_PADDING_Y " << padding[1] << "\n"
+           << "#define " << prefix << "_DILATION_X " << cell.getDilationX() << "\n"
+           << "#define " << prefix << "_DILATION_Y " << cell.getDilationY() << "\n"
            << "#define " << prefix << "_NO_BIAS " << (int) cell.getParameter<bool>("NoBias") << "\n\n";
 
     CPP_CellExport::generateActivation(cell, header);
@@ -503,25 +505,56 @@ void N2D2::CPP_ConvCellExport::generateCallCode(
     const std::string outputBuffer
         = Utils::CIdentifier(cell.getName() + "_output");
 
-    if(CPP_ConvCellExport::isDWConvolution(cell))
-        functionCalls << "    convcellDWPropagate";
-    else
-        functionCalls << "    convcellPropagate";
+    if (cell.getType() == ConvCell::Type) {
+        const auto convCell = std::dynamic_pointer_cast<ConvCell>(deepNet.getCell(cell.getName()));
 
-    functionCalls << "<"
-                << prefix << "_NB_CHANNELS, "
-                << prefix << "_CHANNELS_HEIGHT, "
-                << prefix << "_CHANNELS_WIDTH, "
-                << prefix << "_NB_OUTPUTS, "
-                << prefix << "_OUTPUTS_HEIGHT, " 
-                << prefix << "_OUTPUTS_WIDTH, "
-                << prefix << "_PADDING_Y, "
-                << prefix << "_PADDING_X, "
-                << prefix << "_STRIDE_Y, "
-                << prefix << "_STRIDE_X, "
-                << prefix << "_KERNEL_HEIGHT, "
-                << prefix << "_KERNEL_WIDTH, "
-                << prefix << "_ACTIVATION, ";
+        if (convCell->getDilationY() != 1 || convCell->getDilationX() != 1) {
+
+            if(CPP_ConvCellExport::isDWConvolution(cell))
+                functionCalls << "    convcellDWPropagate";
+            else
+                functionCalls << "    convcellPropagate";
+
+            functionCalls << "<"
+                        << prefix << "_NB_CHANNELS, "
+                        << prefix << "_CHANNELS_HEIGHT, "
+                        << prefix << "_CHANNELS_WIDTH, "
+                        << prefix << "_NB_OUTPUTS, "
+                        << prefix << "_OUTPUTS_HEIGHT, " 
+                        << prefix << "_OUTPUTS_WIDTH, "
+                        << prefix << "_PADDING_Y, "
+                        << prefix << "_PADDING_X, "
+                        << prefix << "_STRIDE_Y, "
+                        << prefix << "_STRIDE_X, "
+                        << prefix << "_DILATION_Y, "
+                        << prefix << "_DILATION_X, "
+                        << prefix << "_KERNEL_HEIGHT, "
+                        << prefix << "_KERNEL_WIDTH, "
+                        << prefix << "_ACTIVATION, ";
+        } 
+        else {
+
+            if(CPP_ConvCellExport::isDWConvolution(cell))
+                functionCalls << "    convcellDWPropagate";
+            else
+                functionCalls << "    convcellPropagate";
+
+            functionCalls << "<"
+                        << prefix << "_NB_CHANNELS, "
+                        << prefix << "_CHANNELS_HEIGHT, "
+                        << prefix << "_CHANNELS_WIDTH, "
+                        << prefix << "_NB_OUTPUTS, "
+                        << prefix << "_OUTPUTS_HEIGHT, " 
+                        << prefix << "_OUTPUTS_WIDTH, "
+                        << prefix << "_PADDING_Y, "
+                        << prefix << "_PADDING_X, "
+                        << prefix << "_STRIDE_Y, "
+                        << prefix << "_STRIDE_X, "
+                        << prefix << "_KERNEL_HEIGHT, "
+                        << prefix << "_KERNEL_WIDTH, "
+                        << prefix << "_ACTIVATION, ";
+        }
+    }
 
     // Memory mapping: input
     const std::string parentIdentifier
