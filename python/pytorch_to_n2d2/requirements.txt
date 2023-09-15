@@ -1,4 +1,4 @@
 torch==1.11.0
 torchvision==0.12.0
-onnx-simplifier==0.3.6
+onnx-simplifier
 onnx==1.11
