@@ -21,14 +21,18 @@
 
 from abc import ABC, abstractmethod
 
+import N2D2
 from n2d2 import converter
 from n2d2.error_handler import WrongInputType, deprecated
 from n2d2.n2d2_interface import N2D2_Interface
 from n2d2.quantizer import Quantizer
+from n2d2.scaling import FixedPointScaling
+# from n2d2.cells.nn.scaling import Scaling
 from n2d2.typed import ModelDatatyped
 
 _activation_parameters = {
-        "quantizer": "Quantizer"
+        "quantizer": "Quantizer",
+        "scaling": "Scaling"
 }
 class ActivationFunction(N2D2_Interface, ModelDatatyped, ABC):
 
@@ -48,10 +52,15 @@ class ActivationFunction(N2D2_Interface, ModelDatatyped, ABC):
         if N2D2_object.getQuantizer():
             parameters['quantizer'] = \
                 converter.from_N2D2_object(N2D2_object.getQuantizer())
+        if N2D2_object.getActivationScaling():
+            parameters['scaling'] = N2D2_object.getActivationScaling()
         return parameters
 
     def has_quantizer(self):
         return 'quantizer' in self._config_parameters
+    
+    def has_scaling(self):
+        return 'scaling' in self._config_parameters
 
     @deprecated
     def get_quantizer(self):
@@ -77,6 +86,7 @@ class ActivationFunction(N2D2_Interface, ModelDatatyped, ABC):
         parameter = super()._get_N2D2_complex_parameters(N2D2_object)
         parameter['quantizer'] = \
             converter.from_N2D2_object(N2D2_object.getQuantizer())
+        parameter['scaling'] = N2D2_object.getActivationScaling()
         return parameter
 
     def __setattr__(self, key: str, value) -> None:
@@ -86,5 +96,11 @@ class ActivationFunction(N2D2_Interface, ModelDatatyped, ABC):
                 self._config_parameters["quantizer"] = value
             else:
                 raise WrongInputType("quantizer", str(type(value)), [str(Quantizer)])
+        elif key == 'scaling':
+            if isinstance(value.N2D2(), N2D2.Scaling):
+                self._N2D2_object.setActivationScaling(value.N2D2())
+                self._config_parameters["scaling"] = value
+            else:
+                raise WrongInputType("scaling", str(type(value)), [str(N2D2.Scaling)])
         else:
             super().__setattr__(key, value)

@@ -33,5 +33,7 @@ void init_Activation(py::module &m) {
     a.def("getType", &Activation::getType);
     a.def("setQuantizer", &Activation::setQuantizer, py::arg("quantizer"));
     a.def("getQuantizer", &Activation::getQuantizer);
+    a.def("setActivationScaling", &Activation::setActivationScaling, py::arg("scaling"));
+    a.def("getActivationScaling", &Activation::getActivationScaling);
 }
 }

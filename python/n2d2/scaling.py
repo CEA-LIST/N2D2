@@ -113,7 +113,7 @@ class SingleShiftScaling(ScalingObject):
 
 class FixedPointScaling(ScalingObject):
 
-    @abstractmethod
+    # @abstractmethod
     def __init__(self, nb_fractional_bits:float, scaling:List[int], is_clipped:bool, clipping:List[float], **config_parameters)->None:
         # TODO : Add documentation on input parameters
         ScalingObject.__init__(self, **config_parameters)

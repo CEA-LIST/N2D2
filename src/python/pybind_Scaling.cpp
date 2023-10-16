@@ -61,7 +61,8 @@ void init_Scaling(py::module &m) {
     .def("getIsClipped", &DoubleShiftScaling::getIsClipped);
 
     py::class_<Scaling, std::shared_ptr<Scaling>> (m, "Scaling", py::multiple_inheritance())
-    .def(py::init<>());
+    .def(py::init<>())
+    .def("getFixedPointScaling", &Scaling::getFixedPointScaling);
 }
 }
 
