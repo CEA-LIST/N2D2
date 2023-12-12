@@ -29,6 +29,8 @@
 #include "Export/CPP/CPP_DeepNetExport.hpp"
 #include "utils/Registrar.hpp"
 #include "utils/Utils.hpp"
+#include "utils/IniParser.hpp"
+#include "Export/CPP/CPP_Config.hpp"
 
 #include <fstream>
 #include <string>
@@ -91,6 +93,11 @@ void N2D2::CPP_ConvCellExport::generateHeaderConstants(const ConvCell& cell, std
         static_cast<double>(cell.getStrideY())
     );
 
+    // kernel_size + (dilatation - 1) * 2
+    // dilation * (kernel_size - 1) + 1
+    const std::size_t dilatedKernelY = (std::size_t)(cell.getDilationY() * (cell.getKernelHeight() - 1) + 1);
+    const std::size_t dilatedKernelX = (std::size_t)(cell.getDilationX() * (cell.getKernelWidth() - 1) + 1);
+
     header << "#define " << prefix << "_NB_OUTPUTS " << cell.getNbOutputs() << "\n"
            << "#define " << prefix << "_NB_CHANNELS " << cell.getNbChannels() << "\n"
            << "#define " << prefix << "_OUTPUTS_WIDTH " << cell.getOutputsWidth() << "\n"
@@ -110,6 +117,10 @@ void N2D2::CPP_ConvCellExport::generateHeaderConstants(const ConvCell& cell, std
            << "#define " << prefix << "_DILATION_X " << cell.getDilationX() << "\n"
            << "#define " << prefix << "_DILATION_Y " << cell.getDilationY() << "\n"
            << "#define " << prefix << "_NO_BIAS " << (int) cell.getParameter<bool>("NoBias") << "\n\n";
+
+    header << "// Kernel size if dilation is included in weights\n"
+           << "#define " << prefix << "_DILATED_KERNEL_WIDTH " << dilatedKernelX << "\n"
+           << "#define " << prefix << "_DILATED_KERNEL_HEIGHT " << dilatedKernelY << "\n\n";
 
     CPP_CellExport::generateActivation(cell, header);
     CPP_CellExport::generateActivationScaling(cell, header);
@@ -162,35 +173,85 @@ void N2D2::CPP_ConvCellExport::generateHeaderBias(const ConvCell& cell, std::ofs
     header << "};\n\n";
 }
 
+void incrementStream(std::ofstream& header, unsigned int counter, unsigned int counterEndLine)
+{
+    header << ", ";
+    if (counter % counterEndLine == 0)
+        header << "\n";
+}
+
 void N2D2::CPP_ConvCellExport::generateHeaderWeights(const ConvCell& cell, std::ofstream& header) {
     const std::string identifier = Utils::CIdentifier(cell.getName());
     const std::string prefix = Utils::upperCase(identifier);
 
     const bool isDWConv = isDWConvolution(cell);
+
+    // Import user options for convolution generation
+    IniParser exportParams;
+    if(!DeepNetExport::mExportParameters.empty())
+        exportParams.load(DeepNetExport::mExportParameters);
+
+    // If the user requires to store dilated weights
+    const bool isDilatedWeights = exportParams.getProperty(
+        CPP_Config::DILATED_WEIGHTS,
+        CPP_Config::DILATED_WEIGHTS_DEFAULT);
+
+
+    if (isDilatedWeights) {
+
+        if(isDWConv) {
+            header << "#define " << prefix << "_NB_GROUPS "
+                    << cell.groupMap() << "\n"
+                "#define " << prefix << "_OUTPUT_GROUP_SIZE ("
+                    << prefix << "_NB_OUTPUTS / " << prefix << "_NB_GROUPS)\n"
+                "#define " << prefix << "_CHANNEL_GROUP_SIZE ("
+                    << prefix << "_NB_CHANNELS / " << prefix << "_NB_GROUPS)\n";
+
+            header << "#define " << prefix << "_WEIGHTS_SIZE (" 
+                                << prefix << "_NB_OUTPUTS*" 
+                                << prefix << "_DILATED_KERNEL_WIDTH*" 
+                                << prefix << "_DILATED_KERNEL_HEIGHT*"
+                                << prefix << "_CHANNEL_GROUP_SIZE)\n\n";
+        }
+        else {
+            header << "#define " << prefix << "_WEIGHTS_SIZE (" 
+                                << prefix << "_NB_OUTPUTS*" 
+                                << prefix << "_DILATED_KERNEL_WIDTH*" 
+                                << prefix << "_DILATED_KERNEL_HEIGHT*"
+                                << prefix << "_NB_CHANNELS)\n\n";
+        }
+
+    } else {
+
+        if(isDWConv) {
+            header << "#define " << prefix << "_NB_GROUPS "
+                    << cell.groupMap() << "\n"
+                "#define " << prefix << "_OUTPUT_GROUP_SIZE ("
+                    << prefix << "_NB_OUTPUTS / " << prefix << "_NB_GROUPS)\n"
+                "#define " << prefix << "_CHANNEL_GROUP_SIZE ("
+                    << prefix << "_NB_CHANNELS / " << prefix << "_NB_GROUPS)\n";
+
+            header << "#define " << prefix << "_WEIGHTS_SIZE (" 
+                                << prefix << "_NB_OUTPUTS*" 
+                                << prefix << "_KERNEL_WIDTH*" 
+                                << prefix << "_KERNEL_HEIGHT*"
+                                << prefix << "_CHANNEL_GROUP_SIZE)\n\n";
+        }
+        else {
+            header << "#define " << prefix << "_WEIGHTS_SIZE (" 
+                                << prefix << "_NB_OUTPUTS*" 
+                                << prefix << "_KERNEL_WIDTH*" 
+                                << prefix << "_KERNEL_HEIGHT*"
+                                << prefix << "_NB_CHANNELS)\n\n";
+        }
+
+    }
+
+
     if(isDWConv) {
-        header << "#define " << prefix << "_NB_GROUPS "
-                << cell.groupMap() << "\n"
-            "#define " << prefix << "_OUTPUT_GROUP_SIZE ("
-                << prefix << "_NB_OUTPUTS / " << prefix << "_NB_GROUPS)\n"
-            "#define " << prefix << "_CHANNEL_GROUP_SIZE ("
-                << prefix << "_NB_CHANNELS / " << prefix << "_NB_GROUPS)\n";
-
-        header << "#define " << prefix << "_WEIGHTS_SIZE (" 
-                             << prefix << "_NB_OUTPUTS*" 
-                             << prefix << "_KERNEL_WIDTH*" 
-                             << prefix << "_KERNEL_HEIGHT*"
-                             << prefix << "_CHANNEL_GROUP_SIZE)\n\n";
-
         header << "// Flatten weights with the order " 
             << "[NB_OUTPUTS][KERNEL_HEIGHT][KERNEL_WIDTH][CHANNEL_GROUP_SIZE]\n";
-    }
-    else {
-        header << "#define " << prefix << "_WEIGHTS_SIZE (" 
-                             << prefix << "_NB_OUTPUTS*" 
-                             << prefix << "_KERNEL_WIDTH*" 
-                             << prefix << "_KERNEL_HEIGHT*"
-                             << prefix << "_NB_CHANNELS)\n\n";
-
+    } else {
         header << "// Flatten weights with the order " 
             << "[NB_OUTPUTS][KERNEL_HEIGHT][KERNEL_WIDTH][NB_CHANNELS]\n";
     }
@@ -206,35 +267,110 @@ void N2D2::CPP_ConvCellExport::generateHeaderWeights(const ConvCell& cell, std::
 
     Tensor<Float_T> kernel;
 
-    std::size_t i = 0;
-    for(std::size_t o = 0; o < cell.getNbOutputs(); ++o) {
-        for(std::size_t sy = 0; sy < cell.getKernelHeight(); ++sy) {
-            for(std::size_t sx = 0; sx < cell.getKernelWidth(); ++sx) {
-                for(std::size_t ch = 0; ch < cell.getNbChannels(); ++ch) {
-                    if(isDWConv) {
-                        const size_t outputGroupSize = cell.getNbOutputs() / cell.groupMap();
-                        const size_t channelGroupSize = cell.getNbChannels() / cell.groupMap();
-                        const size_t outputGroup = o / outputGroupSize;
-                        const size_t channelGroup = ch / channelGroupSize;
+    if (isDilatedWeights) {
 
-                        if (outputGroup != channelGroup)
-                            continue;
+        const std::size_t dilatedKernelX = (std::size_t)(cell.getDilationX() * (cell.getKernelWidth() - 1) + 1);
+
+        std::size_t i = 0;
+        for(std::size_t o = 0; o < cell.getNbOutputs(); ++o) {
+            for(std::size_t sy = 0; sy < cell.getKernelHeight(); ++sy) {
+                for(std::size_t sx = 0; sx < cell.getKernelWidth(); ++sx) {
+                    for(std::size_t ch = 0; ch < cell.getNbChannels(); ++ch) {
+                        if(isDWConv) {
+                            const size_t outputGroupSize = cell.getNbOutputs() / cell.groupMap();
+                            const size_t channelGroupSize = cell.getNbChannels() / cell.groupMap();
+                            const size_t outputGroup = o / outputGroupSize;
+                            const size_t channelGroup = ch / channelGroupSize;
+
+                            if (outputGroup != channelGroup)
+                                continue;
+                        }
+
+                        if (!cell.isConnection(ch, o)) {
+                            header << "0";
+                        }
+                        else {
+                            cell.getWeight(o, ch, kernel);
+
+                            CellExport::generateFreeParameter(kernel(sx, sy), header);
+                        }
+                        i++;
+                        incrementStream(header, i, 24);
                     }
 
-                    if (!cell.isConnection(ch, o)) {
-                        header << "0";
+                    // Add zeros for dilation X
+                    if (sx != cell.getKernelWidth() - 1) {
+                        for (std::size_t dilat_x = 0; dilat_x < cell.getDilationX() - 1; ++dilat_x) {
+                            for(std::size_t ch = 0; ch < cell.getNbChannels(); ++ch) {
+                                if(isDWConv) {
+                                    const size_t outputGroupSize = cell.getNbOutputs() / cell.groupMap();
+                                    const size_t channelGroupSize = cell.getNbChannels() / cell.groupMap();
+                                    const size_t outputGroup = o / outputGroupSize;
+                                    const size_t channelGroup = ch / channelGroupSize;
+
+                                    if (outputGroup != channelGroup)
+                                        continue;
+                                }
+                                header << "0";
+                                i++;
+                                incrementStream(header, i, 24);
+                            }
+                        }
                     }
-                    else {
-                        cell.getWeight(o, ch, kernel);
 
-                        CellExport::generateFreeParameter(kernel(sx, sy), header);
+                }
+
+                // Add zeros for dilation Y
+                if (sy != cell.getKernelHeight() - 1) {
+                    for (std::size_t dilat_y = 0; dilat_y < cell.getDilationY() - 1; ++dilat_y) {
+                        for (std::size_t sx_dilat = 0; sx_dilat < dilatedKernelX; ++sx_dilat) {
+                            for(std::size_t ch = 0; ch < cell.getNbChannels(); ++ch) {
+                                if(isDWConv) {
+                                    const size_t outputGroupSize = cell.getNbOutputs() / cell.groupMap();
+                                    const size_t channelGroupSize = cell.getNbChannels() / cell.groupMap();
+                                    const size_t outputGroup = o / outputGroupSize;
+                                    const size_t channelGroup = ch / channelGroupSize;
+
+                                    if (outputGroup != channelGroup)
+                                        continue;
+                                }
+                                header << "0";
+                                i++;
+                                incrementStream(header, i, 24);
+                            }
+                        }
                     }
+                }
+            }
+        }
 
-                    header << ", ";
+    } else {
 
-                    i++;
-                    if(i % 24 == 0) {
-                        header << "\n";
+        std::size_t i = 0;
+        for(std::size_t o = 0; o < cell.getNbOutputs(); ++o) {
+            for(std::size_t sy = 0; sy < cell.getKernelHeight(); ++sy) {
+                for(std::size_t sx = 0; sx < cell.getKernelWidth(); ++sx) {
+                    for(std::size_t ch = 0; ch < cell.getNbChannels(); ++ch) {
+                        if(isDWConv) {
+                            const size_t outputGroupSize = cell.getNbOutputs() / cell.groupMap();
+                            const size_t channelGroupSize = cell.getNbChannels() / cell.groupMap();
+                            const size_t outputGroup = o / outputGroupSize;
+                            const size_t channelGroup = ch / channelGroupSize;
+
+                            if (outputGroup != channelGroup)
+                                continue;
+                        }
+
+                        if (!cell.isConnection(ch, o)) {
+                            header << "0";
+                        }
+                        else {
+                            cell.getWeight(o, ch, kernel);
+
+                            CellExport::generateFreeParameter(kernel(sx, sy), header);
+                        }
+                        i++;
+                        incrementStream(header, i, 24);
                     }
                 }
             }
@@ -505,10 +641,22 @@ void N2D2::CPP_ConvCellExport::generateCallCode(
     const std::string outputBuffer
         = Utils::CIdentifier(cell.getName() + "_output");
 
+    // Import user options for convolution generation
+    IniParser exportParams;
+    if(!DeepNetExport::mExportParameters.empty())
+        exportParams.load(DeepNetExport::mExportParameters);
+
+    // If the user requires to store dilated weights
+    const bool isDilatedWeights = exportParams.getProperty(
+        CPP_Config::DILATED_WEIGHTS,
+        CPP_Config::DILATED_WEIGHTS_DEFAULT);
+
     if (cell.getType() == ConvCell::Type) {
         const auto convCell = std::dynamic_pointer_cast<ConvCell>(deepNet.getCell(cell.getName()));
 
-        if (convCell->getDilationY() != 1 || convCell->getDilationX() != 1) {
+        // If the user requires to store dilated weights
+        // No need to use dilated convolution kernels
+        if (isDilatedWeights) {
 
             if(CPP_ConvCellExport::isDWConvolution(cell))
                 functionCalls << "    convcellDWPropagate";
@@ -526,33 +674,59 @@ void N2D2::CPP_ConvCellExport::generateCallCode(
                         << prefix << "_PADDING_X, "
                         << prefix << "_STRIDE_Y, "
                         << prefix << "_STRIDE_X, "
-                        << prefix << "_DILATION_Y, "
-                        << prefix << "_DILATION_X, "
-                        << prefix << "_KERNEL_HEIGHT, "
-                        << prefix << "_KERNEL_WIDTH, "
+                        << prefix << "_DILATED_KERNEL_HEIGHT, "
+                        << prefix << "_DILATED_KERNEL_WIDTH, "
                         << prefix << "_ACTIVATION, ";
-        } 
+
+        }
         else {
 
-            if(CPP_ConvCellExport::isDWConvolution(cell))
-                functionCalls << "    convcellDWPropagate";
-            else
-                functionCalls << "    convcellPropagate";
+            if (convCell->getDilationY() != 1 || convCell->getDilationX() != 1) {
 
-            functionCalls << "<"
-                        << prefix << "_NB_CHANNELS, "
-                        << prefix << "_CHANNELS_HEIGHT, "
-                        << prefix << "_CHANNELS_WIDTH, "
-                        << prefix << "_NB_OUTPUTS, "
-                        << prefix << "_OUTPUTS_HEIGHT, " 
-                        << prefix << "_OUTPUTS_WIDTH, "
-                        << prefix << "_PADDING_Y, "
-                        << prefix << "_PADDING_X, "
-                        << prefix << "_STRIDE_Y, "
-                        << prefix << "_STRIDE_X, "
-                        << prefix << "_KERNEL_HEIGHT, "
-                        << prefix << "_KERNEL_WIDTH, "
-                        << prefix << "_ACTIVATION, ";
+                if(CPP_ConvCellExport::isDWConvolution(cell))
+                    functionCalls << "    convcellDWPropagate";
+                else
+                    functionCalls << "    convcellPropagate";
+
+                functionCalls << "<"
+                            << prefix << "_NB_CHANNELS, "
+                            << prefix << "_CHANNELS_HEIGHT, "
+                            << prefix << "_CHANNELS_WIDTH, "
+                            << prefix << "_NB_OUTPUTS, "
+                            << prefix << "_OUTPUTS_HEIGHT, " 
+                            << prefix << "_OUTPUTS_WIDTH, "
+                            << prefix << "_PADDING_Y, "
+                            << prefix << "_PADDING_X, "
+                            << prefix << "_STRIDE_Y, "
+                            << prefix << "_STRIDE_X, "
+                            << prefix << "_DILATION_Y, "
+                            << prefix << "_DILATION_X, "
+                            << prefix << "_KERNEL_HEIGHT, "
+                            << prefix << "_KERNEL_WIDTH, "
+                            << prefix << "_ACTIVATION, ";
+            } 
+            else {
+
+                if(CPP_ConvCellExport::isDWConvolution(cell))
+                    functionCalls << "    convcellDWPropagate";
+                else
+                    functionCalls << "    convcellPropagate";
+
+                functionCalls << "<"
+                            << prefix << "_NB_CHANNELS, "
+                            << prefix << "_CHANNELS_HEIGHT, "
+                            << prefix << "_CHANNELS_WIDTH, "
+                            << prefix << "_NB_OUTPUTS, "
+                            << prefix << "_OUTPUTS_HEIGHT, " 
+                            << prefix << "_OUTPUTS_WIDTH, "
+                            << prefix << "_PADDING_Y, "
+                            << prefix << "_PADDING_X, "
+                            << prefix << "_STRIDE_Y, "
+                            << prefix << "_STRIDE_X, "
+                            << prefix << "_KERNEL_HEIGHT, "
+                            << prefix << "_KERNEL_WIDTH, "
+                            << prefix << "_ACTIVATION, ";
+            }
         }
     }
 

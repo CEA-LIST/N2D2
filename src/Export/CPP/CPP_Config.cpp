@@ -25,3 +25,6 @@ const int N2D2::CPP_Config::MEMORY_ALIGNMENT_DEFAULT = 1;
 
 const std::string N2D2::CPP_Config::MEMORY_MANAGER_STRATEGY = "MemoryManagerStrategy";
 const N2D2::MemoryManager::OptimizeStrategy N2D2::CPP_Config::MEMORY_MANAGER_STRATEGY_DEFAULT = N2D2::MemoryManager::OptimizeMaxLifetimeMaxSizeFirst;
+
+const std::string N2D2::CPP_Config::DILATED_WEIGHTS = "DilatedWeights";
+const bool N2D2::CPP_Config::DILATED_WEIGHTS_DEFAULT = false;

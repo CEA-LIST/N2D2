@@ -32,6 +32,9 @@ public:
     static const std::string MEMORY_MANAGER_STRATEGY;
     static const MemoryManager::OptimizeStrategy MEMORY_MANAGER_STRATEGY_DEFAULT;
 
+    static const std::string DILATED_WEIGHTS;
+    static const bool DILATED_WEIGHTS_DEFAULT;
+
 };
 }
 
