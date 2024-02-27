@@ -24,6 +24,7 @@
  */
 
 #include "Quantizer/QAT/Kernel/Quantizer_Frame_CUDA_Kernels.hpp"
+#include <thrust/iterator/constant_iterator.h>
 #include "CudaUtils.hpp"
 #include <stdlib.h>
 #include <math.h>

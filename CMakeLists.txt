@@ -142,6 +142,8 @@ function(add_n2d2_pybind name source linked_libs)
     # Python binding
     # Requires PyBind >= 2.2, because previous versions had a bug with virtual 
     # inherance: https://github.com/pybind/pybind11/issues/865
+
+    find_package (Python3 COMPONENTS Interpreter Development)
     
     message(STATUS "Using third_party/pybind11.")
     add_subdirectory(${N2D2_SOURCE_DIR}/third_party/pybind11)

@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <cuda_fp16.h>
+#include <thrust/iterator/constant_iterator.h>
 
 __global__ void
 cudaDivH_kernel(__half* srcData,
