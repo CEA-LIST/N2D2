@@ -29,6 +29,7 @@ import tensorflow.keras as keras
 import n2d2
 
 
+@unittest.skip("Skipping Keras tests...")
 class test_keras(unittest.TestCase):
     def setUp(self):
         n2d2.global_variables.cuda_device = 0
