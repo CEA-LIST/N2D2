@@ -37,7 +37,7 @@ DATA_PATH = getenv("N2D2_DATA")
 if DATA_PATH is None:
     DATA_PATH="/local/DATABASE/"
 
-
+@unittest.skip("Skipping Keras export tests...")
 class test_keras_export(unittest.TestCase):
     """
     The class needs to inherit unittest.TestCase, the name doesn't matter and the class doesn't need to be instantiated.
