@@ -305,7 +305,7 @@ public:
 
 private:
     /// Find a valid offset in the memory stack that can fit a contiguous chunk
-    /// of memory of size @size
+    /// of memory of size
     unsigned int onStack(unsigned int size);
     unsigned int offStack(unsigned int offset);
     std::map<unsigned int, unsigned int> getStack(
