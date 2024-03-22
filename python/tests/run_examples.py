@@ -39,7 +39,7 @@ def path_to(script_name:str)->str:
 # We use the environment variable set by git lab (see: https://docs.gitlab.com/ee/ci/variables/predefined_variables.html)
 if getenv("GITLAB_CI") is not None:
     print("Script run by gitlab")
-    python_path = join_path(dirname(abspath(__file__)), "..", "venv", "bin", "python3.7")
+    python_path = join_path(dirname(abspath(__file__)), "..", "venv", "bin", "python3")
 else:
     print("Script run by a user")
     python_path = "python"
