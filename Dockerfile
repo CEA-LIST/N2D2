@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y \
         wget \
         gnuplot \
         libopencv-dev \
-        python-dev \
         python3-dev \
+        python-is-python3 \
         protobuf-compiler \
         libprotoc-dev \
         libjsoncpp-dev
