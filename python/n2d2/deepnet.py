@@ -108,11 +108,12 @@ class DeepNet(N2D2_Interface):
 
     def get_output_cells(self):
         """
-        Return the last N2D2 cell in the deepNet
+        Return the last N2D2 cells in the deepNet
         """
         output = []
-        for cell in self.N2D2().getLayers()[-1]:
-            output.append(self._cells[cell])
+        for cell in self.N2D2().getCells():
+            if len(self._cells[cell].N2D2().getChildrenCells()) == 0:
+                output.append(self._cells[cell])
         return output
 
     def draw(self, filename):
