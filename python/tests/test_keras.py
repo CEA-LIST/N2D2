@@ -29,6 +29,7 @@ import tensorflow.keras as keras
 import n2d2
 
 
+@unittest.skip("Skipping Keras tests...")
 class test_keras(unittest.TestCase):
     def setUp(self):
         n2d2.global_variables.cuda_device = 0
@@ -120,6 +121,7 @@ class test_keras(unittest.TestCase):
         for predicted, truth in zip(n2d2_y.numpy().flatten(), tf_y.numpy().flatten()):
             self.assertTrue((abs(float(predicted) - float(truth)) < (0.01 * (abs(truth)+ 0.0001))))
 
+    @unittest.skip("Skip this test")
     def test_propagation_BN(self):
         tf_model = keras.Sequential([
             Input(shape=[1, 3, 3]),

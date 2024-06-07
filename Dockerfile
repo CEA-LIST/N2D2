@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.2.2-cudnn8-devel-ubuntu20.04
+FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y \
         wget \
         gnuplot \
         libopencv-dev \
-        python-dev \
         python3-dev \
+        python-is-python3 \
         protobuf-compiler \
         libprotoc-dev \
         libjsoncpp-dev

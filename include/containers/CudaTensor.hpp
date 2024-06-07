@@ -593,7 +593,7 @@ T* N2D2::CudaDeviceTensor<T>::getDevicePtr(int dev) const
 
         if (mDataDevice[dev] == NULL) {
             // Lazy memory allocation
-            CHECK_CUDA_STATUS(cudaMalloc(&(mDataDevice[dev]),
+            CHECK_CUDA_STATUS(cudaMalloc(reinterpret_cast<void**>(&(mDataDevice[dev])),
                                          mCudaBaseTensor.size() * sizeof(T)));
         }
 
@@ -782,7 +782,7 @@ void N2D2::CudaDeviceTensor<T>::aggregate(int srcDev, int dstDev) const
     if (mForeignDataDevice[dstDev] == NULL) {
 		// Lazy allocation
 		CHECK_CUDA_STATUS(cudaMalloc(
-		&mForeignDataDevice[dstDev], mCudaBaseTensor.size() * sizeof(T)));
+		reinterpret_cast<void**>(&mForeignDataDevice[dstDev]), mCudaBaseTensor.size() * sizeof(T)));
     }
 
     CHECK_CUDA_STATUS(cudaMemcpyPeer(

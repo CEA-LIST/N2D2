@@ -1,5 +1,5 @@
 """
-Example of exporting a ResNet18 model to TDA4VM C7x
+Example of exporting a ResNet18 model to any board which can support C++
 
 Download the onnx from 
 https://github.com/onnx/models/raw/main/vision/classification/resnet/model/resnet18-v1-7.onnx
